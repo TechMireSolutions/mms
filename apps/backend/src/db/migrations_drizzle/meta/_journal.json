@@ -477,6 +477,13 @@
       "when": 1786701600000,
       "tag": "0067_contacts_tag_column",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1786705200000,
+      "tag": "0068_schema_hardening_foreign_keys_and_timestamptz",
+      "breakpoints": true
     }
   ]
 }

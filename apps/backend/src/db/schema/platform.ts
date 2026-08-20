@@ -1,0 +1,91 @@
+import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, varchar, bigint } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import type { PlatformRole } from "@mms/shared";
+
+/** Apex workspaces registry — not tenant-scoped. */
+export const workspaces = pgTable('workspaces', {
+  id: text('id').primaryKey(),
+  subdomain: text('subdomain').notNull().unique(),
+  madrasaName: text('madrasa_name').notNull(),
+  tagline: text('tagline'),
+  country: text('country'),
+  enabled: boolean('enabled').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('workspaces_subdomain_idx').on(table.subdomain),
+  index('workspaces_enabled_idx').on(table.enabled),
+]);
+
+/** Apex platform super-users — not tenant-scoped. */
+export const platformUsers = pgTable('platform_users', {
+  id: text('id').primaryKey(),
+  email: text('email').notNull(),
+  name: text('name').notNull(),
+  passwordHash: text('password_hash').notNull(),
+  emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true, mode: 'date' }),
+  role: text('role').$type<PlatformRole>().notNull().default('admin'),
+  sessionVersion: integer('session_version').notNull().default(0),
+  disabledAt: timestamp('disabled_at', { withTimezone: true, mode: 'date' }),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('platform_users_email_idx').on(table.email),
+  uniqueIndex('platform_users_single_super_user_idx')
+    .on(table.role)
+    .where(sql`${table.role} = 'super_user'`),
+  // CHECK enforced in SQL migrations (platform_users_role_check).
+]);
+
+/** Normalized 3NF granular permission grants for platform admins. */
+export const platformUserPermissions = pgTable('platform_user_permissions', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  platformUserId: text('platform_user_id').notNull().references(() => platformUsers.id, { onDelete: 'cascade' }),
+  permissionKey: varchar('permission_key', { length: 40 }).notNull(),
+  isGranted: boolean('is_granted').notNull().default(true),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex('platform_user_perms_user_key_uidx').on(table.platformUserId, table.permissionKey),
+  index('platform_user_perms_user_idx').on(table.platformUserId),
+]);
+
+/** Apex platform settings — single row (id = 'global') for TLS & Certbot settings. */
+export const platformSettings = pgTable('platform_settings', {
+  id: text('id').primaryKey().default('global'),
+  syncTlsOnCreate: boolean('sync_tls_on_create').notNull().default(true),
+  tlsExtraSans: text('tls_extra_sans').notNull().default(''),
+  certbotEmail: text('certbot_email').notNull().default(''),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+});
+
+export const platformActivityLogs = pgTable('platform_activity_logs', {
+  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
+  /** Nullable so deleting a platform user retains audit history (ON DELETE SET NULL). */
+  userId: text('user_id').references(() => platformUsers.id, { onDelete: 'set null' }),
+  userEmail: text('user_email').notNull(),
+  action: varchar('action', { length: 80 }).notNull(),
+  targetResource: varchar('target_resource', { length: 120 }),
+  targetId: varchar('target_id', { length: 64 }),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  metadataMessage: varchar('metadata_message', { length: 500 }),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  index('platform_activity_logs_created_at_idx').on(table.createdAt),
+  index('platform_activity_logs_action_created_at_idx').on(table.action, table.createdAt),
+  index('platform_activity_logs_user_created_idx').on(table.userId, table.createdAt),
+]);
+
+/* ========================================================================= */
+/*                         ROW INFER TYPES                                   */
+/* ========================================================================= */
+
+export type WorkspaceRow = typeof workspaces.$inferSelect;
+export type InsertWorkspaceRow = typeof workspaces.$inferInsert;
+export type PlatformUserRow = typeof platformUsers.$inferSelect;
+export type InsertPlatformUserRow = typeof platformUsers.$inferInsert;
+export type PlatformUserPermissionRow = typeof platformUserPermissions.$inferSelect;
+export type InsertPlatformUserPermissionRow = typeof platformUserPermissions.$inferInsert;
+export type PlatformSettingRow = typeof platformSettings.$inferSelect;
+export type InsertPlatformSettingRow = typeof platformSettings.$inferInsert;
+export type PlatformActivityLogRow = typeof platformActivityLogs.$inferSelect;
+export type InsertPlatformActivityLogRow = typeof platformActivityLogs.$inferInsert;

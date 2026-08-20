@@ -1,0 +1,120 @@
+import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar, numeric , foreignKey } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { workspaces } from "./platform.js";
+
+export const financeInvoices = pgTable('finance_invoices', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  studentId: varchar('student_id', { length: 64 }).notNull(),
+  studentName: varchar('student_name', { length: 255 }).notNull().default(''),
+  class: varchar('class', { length: 120 }).notNull().default(''),
+  session: varchar('session', { length: 120 }).notNull().default(''),
+  baseFee: numeric('base_fee', { precision: 12, scale: 2 }).notNull().default('0'),
+  discountType: varchar('discount_type', { length: 50 }),
+  discountValue: numeric('discount_value', { precision: 12, scale: 2 }).notNull().default('0'),
+  discountAmt: numeric('discount_amt', { precision: 12, scale: 2 }).notNull().default('0'),
+  finalAmt: numeric('final_amt', { precision: 12, scale: 2 }).notNull().default('0'),
+  status: varchar('status', { length: 20 }).notNull().default('pending'),
+  dueDate: varchar('due_date', { length: 10 }).notNull(),
+  paidDate: varchar('paid_date', { length: 10 }),
+  method: varchar('method', { length: 50 }),
+  paidAmt: numeric('paid_amt', { precision: 12, scale: 2 }),
+  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('finance_invoices_workspace_student_idx').on(table.workspaceSubdomain, table.studentId),
+  index('finance_invoices_workspace_status_idx').on(table.workspaceSubdomain, table.status),
+  index('finance_invoices_workspace_due_date_idx').on(table.workspaceSubdomain, table.dueDate),
+  index('finance_invoices_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('finance_invoices_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+]);
+
+export const financePayments = pgTable('finance_payments', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  invoiceId: text('invoice_id').notNull(),
+  studentId: varchar('student_id', { length: 64 }),
+  studentName: varchar('student_name', { length: 255 }),
+  amount: numeric('amount', { precision: 12, scale: 2 }).notNull().default('0'),
+  date: varchar('date', { length: 10 }).notNull(),
+  method: varchar('method', { length: 50 }).notNull().default('cash'),
+  receivedByUserId: text('received_by_user_id'),
+  receivedBy: varchar('received_by', { length: 120 }),
+  note: text('note').notNull().default(''),
+  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.invoiceId],
+    foreignColumns: [financeInvoices.workspaceSubdomain, financeInvoices.id],
+  }).onDelete('cascade'),
+  index('finance_payments_workspace_invoice_idx').on(table.workspaceSubdomain, table.invoiceId),
+  index('finance_payments_workspace_student_idx').on(table.workspaceSubdomain, table.studentId),
+  index('finance_payments_workspace_date_idx').on(table.workspaceSubdomain, table.date),
+  index('finance_payments_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('finance_payments_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+]);
+
+export const financeFieldConfigs = pgTable('finance_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+export const financeModulePreferences = pgTable('finance_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+export const financeUserColumnPrefs = pgTable('finance_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+]);
+
+/** Per-user Finance payments Work column layout (was document-store `finance_payment_user_column_preferences`). */
+export const financePaymentUserColumnPrefs = pgTable('finance_payment_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+]);
+
+/* ========================================================================= */
+/*                         ROW INFER TYPES                                   */
+/* ========================================================================= */
+
+export type FinanceInvoiceRow = typeof financeInvoices.$inferSelect;
+export type InsertFinanceInvoiceRow = typeof financeInvoices.$inferInsert;
+export type FinancePaymentRow = typeof financePayments.$inferSelect;
+export type InsertFinancePaymentRow = typeof financePayments.$inferInsert;
+export type FinanceFieldConfigsRow = typeof financeFieldConfigs.$inferSelect;
+export type InsertFinanceFieldConfigsRow = typeof financeFieldConfigs.$inferInsert;
+export type FinanceModulePreferencesRow = typeof financeModulePreferences.$inferSelect;
+export type InsertFinanceModulePreferencesRow = typeof financeModulePreferences.$inferInsert;
+export type FinanceUserColumnPrefsRow = typeof financeUserColumnPrefs.$inferSelect;
+export type InsertFinanceUserColumnPrefsRow = typeof financeUserColumnPrefs.$inferInsert;
+export type FinancePaymentUserColumnPrefsRow = typeof financePaymentUserColumnPrefs.$inferSelect;
+export type InsertFinancePaymentUserColumnPrefsRow = typeof financePaymentUserColumnPrefs.$inferInsert;

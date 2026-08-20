@@ -1,0 +1,180 @@
+import { pgTable, text, timestamp, index, boolean, jsonb, primaryKey, varchar, numeric , foreignKey } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { workspaces } from "./platform.js";
+
+export const accountingAccounts = pgTable('accounting_accounts', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  code: varchar('code', { length: 50 }).notNull(),
+  name: varchar('name', { length: 150 }).notNull(),
+  type: varchar('type', { length: 50 }).notNull(),
+  subtype: varchar('subtype', { length: 100 }).notNull().default(''),
+  description: text('description').notNull().default(''),
+  isActive: boolean('is_active').notNull().default(true),
+  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('accounting_accounts_workspace_code_idx').on(table.workspaceSubdomain, table.code),
+  index('accounting_accounts_workspace_type_idx').on(table.workspaceSubdomain, table.type),
+  index('accounting_accounts_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('accounting_accounts_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+]);
+
+export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  label: varchar('label', { length: 120 }).notNull(),
+  startDate: varchar('start_date', { length: 10 }).notNull(),
+  endDate: varchar('end_date', { length: 10 }).notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('upcoming'),
+  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('accounting_fiscal_years_workspace_status_idx').on(table.workspaceSubdomain, table.status),
+  index('accounting_fiscal_years_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('accounting_fiscal_years_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+]);
+
+export const accountingEntries = pgTable('accounting_entries', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  date: varchar('date', { length: 10 }).notNull(),
+  ref: varchar('ref', { length: 100 }).notNull().default(''),
+  description: text('description').notNull().default(''),
+  status: varchar('status', { length: 20 }).notNull().default('posted'),
+  createdBy: varchar('created_by', { length: 120 }).notNull().default(''),
+  fiscalYear: varchar('fiscal_year', { length: 64 }).notNull().default(''),
+  transactionType: varchar('transaction_type', { length: 50 }),
+  reversedRef: varchar('reversed_ref', { length: 100 }),
+  simpleMode: boolean('simple_mode').notNull().default(false),
+  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
+  deletedBy: text('deleted_by'),
+  deletionReason: text('deletion_reason'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('accounting_entries_workspace_date_idx').on(table.workspaceSubdomain, table.date),
+  index('accounting_entries_workspace_status_idx').on(table.workspaceSubdomain, table.status),
+  index('accounting_entries_workspace_fiscal_idx').on(table.workspaceSubdomain, table.fiscalYear),
+  index('accounting_entries_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('accounting_entries_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+]);
+
+export const accountingJournalLines = pgTable('accounting_journal_lines', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  entryId: text('entry_id').notNull(),
+  accountId: text('account_id').notNull(),
+  debit: numeric('debit', { precision: 14, scale: 2 }).notNull().default('0'),
+  credit: numeric('credit', { precision: 14, scale: 2 }).notNull().default('0'),
+  description: text('description').notNull().default(''),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.entryId, table.id] }),
+  index('accounting_lines_workspace_entry_idx').on(table.workspaceSubdomain, table.entryId),
+  index('accounting_lines_workspace_account_idx').on(table.workspaceSubdomain, table.accountId),
+]);
+
+export const accountingEntryTags = pgTable('accounting_entry_tags', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  entryId: text('entry_id').notNull(),
+  tag: varchar('tag', { length: 64 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.entryId, table.tag] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.entryId],
+    foreignColumns: [accountingEntries.workspaceSubdomain, accountingEntries.id],
+  }).onDelete('cascade'),
+  index('accounting_entry_tags_workspace_entry_idx').on(table.workspaceSubdomain, table.entryId),
+]);
+
+export const accountingEntryAttachments = pgTable('accounting_entry_attachments', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  entryId: text('entry_id').notNull(),
+  url: text('url').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.entryId, table.url] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.entryId],
+    foreignColumns: [accountingEntries.workspaceSubdomain, accountingEntries.id],
+  }).onDelete('cascade'),
+  index('accounting_entry_attachments_workspace_entry_idx').on(table.workspaceSubdomain, table.entryId),
+]);
+
+export const accountingFieldConfigs = pgTable('accounting_field_configs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  config: jsonb('config').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+export const accountingModulePreferences = pgTable('accounting_module_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+/** Per-user Accounting accounts Work column layout (was document-store `accounting_account_user_column_preferences`). */
+export const accountingAccountUserColumnPrefs = pgTable('accounting_account_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+]);
+
+/** Per-user Accounting journal Work column layout (was document-store `accounting_journal_user_column_preferences`). */
+export const accountingJournalUserColumnPrefs = pgTable('accounting_journal_user_column_prefs', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+]);
+
+/* ========================================================================= */
+/*                         ROW INFER TYPES                                   */
+/* ========================================================================= */
+
+export type AccountingAccountRow = typeof accountingAccounts.$inferSelect;
+export type InsertAccountingAccountRow = typeof accountingAccounts.$inferInsert;
+export type AccountingFiscalYearRow = typeof accountingFiscalYears.$inferSelect;
+export type InsertAccountingFiscalYearRow = typeof accountingFiscalYears.$inferInsert;
+export type AccountingEntryRow = typeof accountingEntries.$inferSelect;
+export type InsertAccountingEntryRow = typeof accountingEntries.$inferInsert;
+export type AccountingJournalLineRow = typeof accountingJournalLines.$inferSelect;
+export type InsertAccountingJournalLineRow = typeof accountingJournalLines.$inferInsert;
+export type AccountingEntryTagRow = typeof accountingEntryTags.$inferSelect;
+export type InsertAccountingEntryTagRow = typeof accountingEntryTags.$inferInsert;
+export type AccountingEntryAttachmentRow = typeof accountingEntryAttachments.$inferSelect;
+export type InsertAccountingEntryAttachmentRow = typeof accountingEntryAttachments.$inferInsert;
+export type AccountingFieldConfigsRow = typeof accountingFieldConfigs.$inferSelect;
+export type InsertAccountingFieldConfigsRow = typeof accountingFieldConfigs.$inferInsert;
+export type AccountingModulePreferencesRow = typeof accountingModulePreferences.$inferSelect;
+export type InsertAccountingModulePreferencesRow = typeof accountingModulePreferences.$inferInsert;
+export type AccountingAccountUserColumnPrefsRow = typeof accountingAccountUserColumnPrefs.$inferSelect;
+export type InsertAccountingAccountUserColumnPrefsRow = typeof accountingAccountUserColumnPrefs.$inferInsert;
+export type AccountingJournalUserColumnPrefsRow = typeof accountingJournalUserColumnPrefs.$inferSelect;
+export type InsertAccountingJournalUserColumnPrefsRow = typeof accountingJournalUserColumnPrefs.$inferInsert;

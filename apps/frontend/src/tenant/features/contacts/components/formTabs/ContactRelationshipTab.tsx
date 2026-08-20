@@ -19,8 +19,6 @@ interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
 export function ContactRelationshipTab({
   contactDraft,
   getLocalId,
-  relationshipOptions,
-  onUpdateRelationships,
   isFieldEnabled,
   isFieldRequired,
   getListItemError,
@@ -30,10 +28,7 @@ export function ContactRelationshipTab({
   removeSubListItem,
 }: ContactRelationshipTabProps): JSX.Element {
   const { t } = useTranslation();
-  const options =
-    relationshipOptions && relationshipOptions.length > 0
-      ? relationshipOptions
-      : (STATIC_RELATIONSHIP_OPTIONS as string[]);
+  const options = STATIC_RELATIONSHIP_OPTIONS as string[];
   const links = contactDraft.relationshipContacts || [];
   const showLinkedContact = isFieldEnabled("relationship", "contactId");
   const showRelationshipType = isFieldEnabled("relationship", "relationship");
@@ -88,7 +83,6 @@ export function ContactRelationshipTab({
                       onChange={(val) =>
                         updateSubListItem("relationshipContacts", idx, { relationship: val })
                       }
-                      onUpdateOptions={onUpdateRelationships}
                       placeholder={t("common.selectPlaceholder")}
                       className="w-40 @sm:w-52 min-w-0"
                       id={`relationship-type-${idx}`}
