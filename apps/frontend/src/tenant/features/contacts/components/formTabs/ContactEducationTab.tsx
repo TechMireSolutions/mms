@@ -89,36 +89,27 @@ export function ContactEducationTab({
               key={getLocalId("education", idx)}
               id={getLocalId("education", idx)}
               index={idx}
-              icon={GraduationCap}
               accentClass={SUB_LIST_CARD_ACCENTS.education.accent}
-              iconClass={SUB_LIST_CARD_ACCENTS.education.icon}
-              label={t("contacts.form.educationNumber", { index: idx + 1 })}
+              label={showDegree ? `${t("contacts.fields.educationDegree")}:` : undefined}
+              typeSelect={
+                showDegree ? (
+                  <EditableSelect
+                    options={degreeOptions}
+                    value={edu.degree || defaultDegree || degreeOptions[0] || ""}
+                    onChange={(val) => updateEducation(idx, { degree: val })}
+                    onUpdateOptions={onUpdateDegreeOptions}
+                    className="w-40 @sm:w-52 min-w-0"
+                    id={`education-degree-${idx}`}
+                    name={`education-degree-${idx}`}
+                    placeholder={t("contacts.form.educationLevelPlaceholder")}
+                  />
+                ) : undefined
+              }
               onRemove={() => removeEducation(idx)}
               removeLabel={t("contacts.form.removeEducation", { index: idx + 1 })}
             >
               <div className="space-y-3">
-                {/* 1. Education Level (Full Width) */}
-                {showDegree ? (
-                  <Field
-                    label={t("contacts.fields.educationDegree")}
-                    required={isFieldRequired("education", "degree")}
-                    error={degreeError}
-                    id={`education-degree-${idx}`}
-                  >
-                    <EditableSelect
-                      options={degreeOptions}
-                      value={edu.degree || defaultDegree || degreeOptions[0] || ""}
-                      onChange={(val) => updateEducation(idx, { degree: val })}
-                      onUpdateOptions={onUpdateDegreeOptions}
-                      className="w-full min-w-0"
-                      id={`education-degree-${idx}`}
-                      name={`education-degree-${idx}`}
-                      placeholder={t("contacts.form.educationLevelPlaceholder")}
-                    />
-                  </Field>
-                ) : null}
-
-                {/* 2. Institution Name (Full Width) */}
+                {/* 1. Institution Name */}
                 {showInstitution ? (
                   <Field
                     label={t("contacts.fields.educationInstitution")}

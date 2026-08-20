@@ -2,7 +2,7 @@ import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { RELATIONSHIPS } from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
-import { Field, FieldErrorMessage, EditableSelect } from "@/components/ui/FormPrimitives";
+import { FieldErrorMessage, EditableSelect } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
@@ -78,10 +78,24 @@ export function ContactRelationshipTab({
                 key={getLocalId("relationship", idx)}
                 id={getLocalId("relationship", idx)}
                 index={idx}
-                icon={Heart}
                 accentClass={SUB_LIST_CARD_ACCENTS.relationships.accent}
-                iconClass={SUB_LIST_CARD_ACCENTS.relationships.icon}
-                label={t("contacts.form.relationshipNumber", { index: idx + 1 })}
+                label={showRelationshipType ? `${t("contacts.form.relationshipType")}:` : undefined}
+                typeSelect={
+                  showRelationshipType ? (
+                    <EditableSelect
+                      options={options}
+                      value={typeValue}
+                      onChange={(val) =>
+                        updateSubListItem("relationshipContacts", idx, { relationship: val })
+                      }
+                      onUpdateOptions={onUpdateRelationships}
+                      placeholder={t("common.selectPlaceholder")}
+                      className="w-40 @sm:w-52 min-w-0"
+                      id={`relationship-type-${idx}`}
+                      name={`relationship-type-${idx}`}
+                    />
+                  ) : undefined
+                }
                 onRemove={() => removeSubListItem("relationshipContacts", idx)}
                 removeLabel={t("contacts.form.removeRelationship", { index: idx + 1 })}
               >
@@ -106,28 +120,6 @@ export function ContactRelationshipTab({
                       />
                       <FieldErrorMessage message={pickerError} />
                     </div>
-                  ) : null}
-
-                  {showRelationshipType ? (
-                    <Field
-                      label={t("contacts.form.relationshipType")}
-                      required={isFieldRequired("relationship", "relationship")}
-                      error={typeError}
-                      id={`relationship-type-${idx}`}
-                    >
-                      <EditableSelect
-                        options={options}
-                        value={typeValue}
-                        onChange={(val) =>
-                          updateSubListItem("relationshipContacts", idx, { relationship: val })
-                        }
-                        onUpdateOptions={onUpdateRelationships}
-                        placeholder={t("common.selectPlaceholder")}
-                        className="w-full min-w-0"
-                        id={`relationship-type-${idx}`}
-                        name={`relationship-type-${idx}`}
-                      />
-                    </Field>
                   ) : null}
                 </div>
               </ListFieldCard>

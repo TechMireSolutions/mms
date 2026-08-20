@@ -109,15 +109,27 @@ export function ContactSkillsTab({
               key={getLocalId("skills", idx)}
               id={getLocalId("skills", idx)}
               index={idx}
-              icon={Award}
               accentClass={SUB_LIST_CARD_ACCENTS.skills.accent}
-              iconClass={SUB_LIST_CARD_ACCENTS.skills.icon}
-              label={t("contacts.form.skillNumber", { index: idx + 1 })}
+              label={showCategory ? `${t("contacts.fields.skillCategory")}:` : undefined}
+              typeSelect={
+                showCategory ? (
+                  <EditableSelect
+                    options={categoryOptions}
+                    value={skill.category || ""}
+                    onChange={(val) => updateSkill(idx, { category: val })}
+                    onUpdateOptions={onUpdateCategoryOptions}
+                    className="w-40 @sm:w-52 min-w-0"
+                    id={`skill-category-${idx}`}
+                    name={`skill-category-${idx}`}
+                    placeholder={t("contacts.form.skillCategoryPlaceholder")}
+                  />
+                ) : undefined
+              }
               onRemove={() => removeSkill(idx)}
               removeLabel={t("contacts.form.removeSkill", { index: idx + 1 })}
             >
               <div className="space-y-3">
-                {/* Row 1: Skill / Subject Name & Category */}
+                {/* Row 1: Skill / Subject Name & Proficiency Level */}
                 <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
                   {showName ? (
                     <Field
@@ -139,29 +151,6 @@ export function ContactSkillsTab({
                     </Field>
                   ) : null}
 
-                  {showCategory ? (
-                    <Field
-                      label={t("contacts.fields.skillCategory")}
-                      required={isFieldRequired("skills", "category")}
-                      error={categoryError}
-                      id={`skill-category-${idx}`}
-                    >
-                      <EditableSelect
-                        options={categoryOptions}
-                        value={skill.category || ""}
-                        onChange={(val) => updateSkill(idx, { category: val })}
-                        onUpdateOptions={onUpdateCategoryOptions}
-                        className="w-full"
-                        id={`skill-category-${idx}`}
-                        name={`skill-category-${idx}`}
-                        placeholder={t("contacts.form.skillCategoryPlaceholder")}
-                      />
-                    </Field>
-                  ) : null}
-                </div>
-
-                {/* Row 2: Proficiency Level & Experience (Years) */}
-                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
                   {showProficiency ? (
                     <Field
                       label={t("contacts.fields.skillProficiency")}
@@ -181,7 +170,10 @@ export function ContactSkillsTab({
                       />
                     </Field>
                   ) : null}
+                </div>
 
+                {/* Row 2: Experience (Years) & Issued By / Sanad Source */}
+                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
                   {showYears ? (
                     <Field
                       label={t("contacts.fields.skillYears")}
@@ -201,6 +193,26 @@ export function ContactSkillsTab({
                       />
                     </Field>
                   ) : null}
+
+                  {showIssuer ? (
+                    <Field
+                      label={t("contacts.fields.skillIssuer")}
+                      required={isFieldRequired("skills", "issuer")}
+                      error={issuerError}
+                      id={`skill-issuer-${idx}`}
+                    >
+                      <LeadingIconInput
+                        icon={Building2}
+                        id={`skill-issuer-${idx}`}
+                        name={`skill-issuer-${idx}`}
+                        value={skill.issuer || ""}
+                        required={isFieldRequired("skills", "issuer")}
+                        onChange={(e) => updateSkill(idx, { issuer: e.target.value })}
+                        placeholder={t("contacts.form.skillIssuerPlaceholder")}
+                        className={cn(issuerError && "border-destructive focus-visible:ring-destructive")}
+                      />
+                    </Field>
+                  ) : null}
                 </div>
 
                 {/* Inline Checkbox: Certified / Ijazah Holder */}
@@ -217,28 +229,6 @@ export function ContactSkillsTab({
                     label={t("contacts.fields.skillIsCertified")}
                     error={certifiedError}
                   />
-                ) : null}
-
-
-                {/* Row 3: Issued By / Sanad Source */}
-                {showIssuer ? (
-                  <Field
-                    label={t("contacts.fields.skillIssuer")}
-                    required={isFieldRequired("skills", "issuer")}
-                    error={issuerError}
-                    id={`skill-issuer-${idx}`}
-                  >
-                    <LeadingIconInput
-                      icon={Building2}
-                      id={`skill-issuer-${idx}`}
-                      name={`skill-issuer-${idx}`}
-                      value={skill.issuer || ""}
-                      required={isFieldRequired("skills", "issuer")}
-                      onChange={(e) => updateSkill(idx, { issuer: e.target.value })}
-                      placeholder={t("contacts.form.skillIssuerPlaceholder")}
-                      className={cn(issuerError && "border-destructive focus-visible:ring-destructive")}
-                    />
-                  </Field>
                 ) : null}
 
                 {/* Row 4: Notes / Specialization */}

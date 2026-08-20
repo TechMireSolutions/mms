@@ -11,10 +11,10 @@ import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 interface ListFieldCardProps {
   id: string;
   index: number;
-  icon: ElementType;
+  icon?: ElementType;
   accentClass?: string;
   iconClass?: string;
-  label: string;
+  label?: string;
   typeSelect?: ReactNode;
   onRemove: () => void;
   removeLabel: string;
@@ -33,6 +33,8 @@ export function ListFieldCard({
   removeLabel,
   children,
 }: ListFieldCardProps): JSX.Element {
+  const hasHeaderContent = Boolean(Icon || label || typeSelect);
+
   return (
     <motion.div
       key={id}
@@ -44,18 +46,28 @@ export function ListFieldCard({
       className={cn(FORM_CARD, "p-4.5 space-y-4", CARD_STRIPE_INSET)}
     >
       <div aria-hidden="true" className={cn(CARD_STRIPE_BASE, "transition-colors", accentClass)} />
-      <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-border/50">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-muted/70", iconClass)}>
-            <Icon className="w-3.5 h-3.5" aria-hidden />
+      {hasHeaderContent ? (
+        <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-border/50">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            {Icon ? (
+              <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-muted/70", iconClass)}>
+                <Icon className="w-3.5 h-3.5" aria-hidden />
+              </div>
+            ) : null}
+            {label ? (
+              <span className="min-w-0 truncate text-xs font-semibold text-foreground/80">
+                {label}
+              </span>
+            ) : null}
+            {typeSelect}
           </div>
-          <span className="min-w-0 truncate text-xs font-semibold text-foreground/80">
-            {label}
-          </span>
-          {typeSelect}
+          <CardRemoveButton onClick={onRemove} label={removeLabel} />
         </div>
-        <CardRemoveButton onClick={onRemove} label={removeLabel} />
-      </div>
+      ) : (
+        <div className="flex justify-end -mb-2">
+          <CardRemoveButton onClick={onRemove} label={removeLabel} />
+        </div>
+      )}
       {children}
     </motion.div>
   );

@@ -1,11 +1,22 @@
-import React from "react";
-import { FileText } from "lucide-react";
+import React, { useMemo } from "react";
+import { IdCard } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { EditableMultiSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DEFAULT_TAG_LABELS, type Contact, formatCnic, todayISO } from "@mms/shared";
 import { cn } from "@/lib/utils";
+
+export interface ContactBasicMetaFieldsProps {
+  contactDraft: Partial<Contact>;
+  formInstanceId: string;
+  isFieldEnabled: (tabId: string, fieldId: string) => boolean;
+  isFieldRequired: (tabId: string, fieldId: string) => boolean;
+  getFieldError: (fieldId: string) => string | undefined;
+  updateDraft: (patch: Partial<Contact>) => void;
+  tags?: string[];
+  onUpdateTags?: (tags: string[]) => void;
+}
 
 export function ContactBasicMetaFields({
   contactDraft,
@@ -16,24 +27,21 @@ export function ContactBasicMetaFields({
   updateDraft,
   tags,
   onUpdateTags,
-}: {
-  contactDraft: Partial<Contact>;
-  formInstanceId: string;
-  isFieldEnabled: (tabId: string, fieldId: string) => boolean;
-  isFieldRequired: (tabId: string, fieldId: string) => boolean;
-  getFieldError: (fieldId: string) => string | undefined;
-  updateDraft: (patch: Partial<Contact>) => void;
-  tags?: string[];
-  onUpdateTags?: (tags: string[]) => void;
-}): React.JSX.Element {
+}: ContactBasicMetaFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
   const isSyedId = `cf-${formInstanceId}-isSyed`;
   const dobError = getFieldError("dob");
   const tagError = getFieldError("tag");
 
-  const currentTags = Array.isArray(contactDraft.tags) && contactDraft.tags.length > 0
-    ? contactDraft.tags
-    : (contactDraft.tag ? contactDraft.tag.split(",").map((s) => s.trim()).filter(Boolean) : []);
+  const currentTags = useMemo(() => {
+    if (Array.isArray(contactDraft.tags) && contactDraft.tags.length > 0) {
+      return contactDraft.tags;
+    }
+    if (contactDraft.tag) {
+      return contactDraft.tag.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+    return [];
+  }, [contactDraft.tags, contactDraft.tag]);
 
   return (
     <>
@@ -68,7 +76,7 @@ export function ContactBasicMetaFields({
           error={getFieldError("cnic")}
         >
           <LeadingIconInput
-            icon={FileText}
+            icon={IdCard}
             id={`cf-${formInstanceId}-cnic`}
             name="cnic"
             value={contactDraft.cnic || ""}
@@ -101,14 +109,16 @@ export function ContactBasicMetaFields({
       )}
 
       {isFieldEnabled("basic", "isSyed") && (
-        <FormCheckboxCard
-          id={isSyedId}
-          name="isSyed"
-          checked={Boolean(contactDraft.isSyed)}
-          onCheckedChange={(checked) => updateDraft({ isSyed: checked })}
-          label={t("contacts.fields.isSyed")}
-          error={getFieldError("isSyed")}
-        />
+        <div className="@md:col-span-2">
+          <FormCheckboxCard
+            id={isSyedId}
+            name="isSyed"
+            checked={Boolean(contactDraft.isSyed)}
+            onCheckedChange={(checked) => updateDraft({ isSyed: checked })}
+            label={t("contacts.fields.isSyed")}
+            error={getFieldError("isSyed")}
+          />
+        </div>
       )}
     </>
   );

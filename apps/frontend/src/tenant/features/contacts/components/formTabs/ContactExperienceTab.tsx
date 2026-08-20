@@ -108,10 +108,22 @@ export function ContactExperienceTab({
               key={getLocalId("experience", idx)}
               id={getLocalId("experience", idx)}
               index={idx}
-              icon={Briefcase}
               accentClass={SUB_LIST_CARD_ACCENTS.experience.accent}
-              iconClass={SUB_LIST_CARD_ACCENTS.experience.icon}
-              label={t("contacts.form.experienceNumber", { index: idx + 1 })}
+              label={showEmploymentType ? `${t("contacts.fields.experienceEmploymentType")}:` : undefined}
+              typeSelect={
+                showEmploymentType ? (
+                  <EditableSelect
+                    options={employmentTypeOptions}
+                    value={exp.employmentType || ""}
+                    onChange={(val) => updateExperience(idx, { employmentType: val })}
+                    onUpdateOptions={onUpdateEmploymentTypeOptions}
+                    className="w-40 @sm:w-52 min-w-0"
+                    id={`experience-type-${idx}`}
+                    name={`experience-type-${idx}`}
+                    placeholder={t("contacts.form.employmentTypePlaceholder")}
+                  />
+                ) : undefined
+              }
               onRemove={() => removeExperience(idx)}
               removeLabel={t("contacts.form.removeExperience", { index: idx + 1 })}
             >
@@ -159,48 +171,26 @@ export function ContactExperienceTab({
                   ) : null}
                 </div>
 
-                {/* Row 2: Employment Type & Location */}
-                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-                  {showEmploymentType ? (
-                    <Field
-                      label={t("contacts.fields.experienceEmploymentType")}
-                      required={isFieldRequired("experience", "employmentType")}
-                      error={typeError}
-                      id={`experience-type-${idx}`}
-                    >
-                      <EditableSelect
-                        options={employmentTypeOptions}
-                        value={exp.employmentType || ""}
-                        onChange={(val) => updateExperience(idx, { employmentType: val })}
-                        onUpdateOptions={onUpdateEmploymentTypeOptions}
-                        id={`experience-type-${idx}`}
-                        name={`experience-type-${idx}`}
-                        placeholder={t("contacts.form.employmentTypePlaceholder")}
-                        className="w-full"
-                      />
-                    </Field>
-                  ) : null}
-
-                  {showLocation ? (
-                    <Field
-                      label={t("contacts.fields.experienceLocation")}
-                      required={isFieldRequired("experience", "location")}
-                      error={locationError}
+                {/* Row 2: Location */}
+                {showLocation ? (
+                  <Field
+                    label={t("contacts.fields.experienceLocation")}
+                    required={isFieldRequired("experience", "location")}
+                    error={locationError}
+                    id={`experience-location-${idx}`}
+                  >
+                    <LeadingIconInput
+                      icon={MapPin}
                       id={`experience-location-${idx}`}
-                    >
-                      <LeadingIconInput
-                        icon={MapPin}
-                        id={`experience-location-${idx}`}
-                        name={`experience-location-${idx}`}
-                        value={exp.location || ""}
-                        required={isFieldRequired("experience", "location")}
-                        onChange={(e) => updateExperience(idx, { location: e.target.value })}
-                        placeholder={t("contacts.form.locationPlaceholder")}
-                        className={cn(locationError && "border-destructive focus-visible:ring-destructive")}
-                      />
-                    </Field>
-                  ) : null}
-                </div>
+                      name={`experience-location-${idx}`}
+                      value={exp.location || ""}
+                      required={isFieldRequired("experience", "location")}
+                      onChange={(e) => updateExperience(idx, { location: e.target.value })}
+                      placeholder={t("contacts.form.locationPlaceholder")}
+                      className={cn(locationError && "border-destructive focus-visible:ring-destructive")}
+                    />
+                  </Field>
+                ) : null}
 
                 {/* Row 3: Start Date & End Date */}
                 <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">

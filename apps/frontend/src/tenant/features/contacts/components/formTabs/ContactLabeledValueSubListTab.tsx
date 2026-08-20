@@ -1,9 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
-import type { AppTranslationKey } from "@mms/shared";
-import type { Contact } from "@mms/shared";
-import { EditableSelect, Field, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import type { AppTranslationKey, Contact } from "@mms/shared";
+import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListKey, ContactSubListTabBaseProps } from "./types";
@@ -160,7 +159,7 @@ export function ContactLabeledValueSubListTab({
                     value={labelValue}
                     onChange={(val) => updateItem(idx, { [labelFieldKey]: val })}
                     onUpdateOptions={onUpdateOptions}
-                    className={TYPE_SELECT_WIDTH}
+                    className="w-36 @sm:w-48 min-w-0"
                     id={`${labelSelectIdPrefix}-${idx}`}
                     name={`${labelSelectIdPrefix}-${idx}`}
                   />

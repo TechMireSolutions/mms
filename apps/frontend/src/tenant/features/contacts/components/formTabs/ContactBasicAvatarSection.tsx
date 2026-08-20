@@ -1,4 +1,5 @@
-import React, { ChangeEvent } from "react";
+import React from "react";
+import type { ChangeEvent } from "react";
 import { Camera } from "lucide-react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { AvatarCropper } from "@/components/ui/AvatarCropper";
@@ -9,6 +10,15 @@ import { GenderIcon } from "@/components/ui/GenderIcon";
 import { Badge } from "@/components/ui/badge";
 import { genderBadgeClass } from "@/lib/semanticTone";
 
+export interface ContactBasicAvatarSectionProps {
+  contactDraft: Partial<Contact>;
+  formInstanceId: string;
+  cropSrc: string | null;
+  setCropSrc: (src: string | null) => void;
+  updateDraft: (patch: Partial<Contact>) => void;
+  handleAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
+}
+
 export function ContactBasicAvatarSection({
   contactDraft,
   formInstanceId,
@@ -16,16 +26,10 @@ export function ContactBasicAvatarSection({
   setCropSrc,
   updateDraft,
   handleAvatarChange,
-}: {
-  contactDraft: Partial<Contact>;
-  formInstanceId: string;
-  cropSrc: string | null;
-  setCropSrc: (src: string | null) => void;
-  updateDraft: (patch: Partial<Contact>) => void;
-  handleAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
-}): React.JSX.Element {
+}: ContactBasicAvatarSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const avatarInputId = `cf-${formInstanceId}-avatar-file`;
+  const previewDisplayName = getDisplayName(contactDraft) || t("contacts.form.draftHeading");
 
   return (
     <div className="mb-2 flex flex-col items-center gap-6 border-b border-border/60 pb-6 @sm:flex-row">
@@ -69,7 +73,7 @@ export function ContactBasicAvatarSection({
 
       <div className="min-w-0 flex-1 text-center @sm:text-start">
         <h3 className="truncate text-base font-bold text-foreground">
-          {contactDraft.name || t("contacts.form.draftHeading")}
+          {previewDisplayName}
         </h3>
         <div className="mt-1 flex flex-wrap items-center justify-center gap-2 @sm:justify-start">
           {contactDraft.gender && contactDraft.gender !== "unspecified" && (

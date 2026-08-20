@@ -1,6 +1,6 @@
 import { MapPin, Building, Landmark } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { EditableSelect, Field, TYPE_SELECT_WIDTH } from "@/components/ui/FormPrimitives";
+import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
@@ -97,7 +97,7 @@ export function ContactAddressesTab({
                     value={resolveAddressLabel(addr.label, addressLabels, t)}
                     onChange={(val) => updateAddress(idx, { label: val })}
                     onUpdateOptions={onUpdateAddressLabels}
-                    className={TYPE_SELECT_WIDTH}
+                    className="w-36 @sm:w-48 min-w-0"
                     id={`address-label-${idx}`}
                     name={`address-label-${idx}`}
                   />
@@ -127,7 +127,7 @@ export function ContactAddressesTab({
                   </Field>
                 ) : null}
                 {showCity || showState || showCountry ? (
-                  <div className="grid grid-cols-1 gap-2.5 @sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 @sm:grid-cols-3">
                     {showCity ? (
                       <Field
                         label={t("contacts.fields.city")}

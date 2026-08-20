@@ -1,6 +1,5 @@
 import React, { useMemo } from "react";
 import type { ChangeEvent } from "react";
-import { User } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Field, CustomFieldInput } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -56,8 +55,8 @@ export function ContactBasicTab({
   }, [fields]);
 
   return (
-    <div className="space-y-4 text-start">
-      <SectionCard title={t("contacts.tabs.basic")} icon={User} accentColor="primary">
+    <SectionCard accentColor="primary" className="text-start">
+      <div className="space-y-5">
         {isFieldEnabled("basic", "avatar") && (
           <ContactBasicAvatarSection
             contactDraft={contactDraft}
@@ -84,7 +83,7 @@ export function ContactBasicTab({
         />
 
         {customBasicFields.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-border/60">
+          <div className="pt-4 border-t border-border/60">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
               {t("contacts.form.additionalInfo")}
             </h4>
@@ -114,8 +113,8 @@ export function ContactBasicTab({
             </div>
           </div>
         )}
-      </SectionCard>
-    </div>
+      </div>
+    </SectionCard>
   );
 }
 
