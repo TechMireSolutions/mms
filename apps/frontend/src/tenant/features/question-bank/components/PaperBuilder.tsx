@@ -117,7 +117,7 @@ export function PaperBuilder({ questions, tests, activeTab, showHeader = true, o
       )}
 
       {!activeTab && (
-        <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)] xl:grid-cols-[minmax(0,1fr)_minmax(380px,0.8fr)]">
+        <div className="grid gap-3 lg:grid-cols-paper-builder-lg xl:grid-cols-paper-builder-xl">
           <PaperSectionsEditor
             activeSectionId={activeSection?.id ?? ""}
             questionsById={questionsById}

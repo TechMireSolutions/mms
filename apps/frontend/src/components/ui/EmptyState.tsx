@@ -35,6 +35,7 @@ export const EmptyState = React.memo(function EmptyState({
   return (
     <div
       role={role}
+      aria-live={role === "status" ? "polite" : role === "alert" ? "assertive" : undefined}
       className={cn(
         "flex flex-col items-center justify-center text-center",
         isDashed
@@ -69,6 +70,7 @@ export const EmptyState = React.memo(function EmptyState({
                 "text-muted-foreground",
                 compact ? "w-5 h-5" : "w-7 h-7",
               )}
+              aria-hidden="true"
             />
           </div>
         )

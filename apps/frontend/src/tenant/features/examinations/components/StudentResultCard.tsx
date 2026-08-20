@@ -89,7 +89,7 @@ export function StudentResultCard({ result, exam, allResults, onClose, onCertifi
       <div className="space-y-4">
         {/* Circular progress */}
         <div className="p-4 rounded-xl border border-border bg-muted/20 text-center relative overflow-hidden">
-          <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ background: `linear-gradient(135deg, ${grade.bg}, transparent)` }} />
+          <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ background: `linear-gradient(135deg, ${grade.bg}, transparent)` }} />
           <div className="relative w-28 h-28 mx-auto" aria-hidden="true">
             <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="42" fill="none" stroke="hsl(var(--border))" strokeWidth="8" />

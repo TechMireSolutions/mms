@@ -1,6 +1,7 @@
 import React from "react";
-import { Check, Lock, ShieldCheck, User, type LucideIcon } from "lucide-react";
+import { Lock, ShieldCheck, User, type LucideIcon } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { WizardStepIndicator, type WizardStepItem } from "@/components/ui/WizardStepIndicator";
 
 interface AddUserModalStepDefinition {
   id: number;
@@ -21,32 +22,18 @@ interface StepIndicatorProps {
 export function StepIndicator({ step }: StepIndicatorProps): JSX.Element {
   const { t } = useTranslation();
 
+  const steps: WizardStepItem[] = ADD_USER_MODAL_STEP_DEFS.map((def) => ({
+    id: def.id,
+    label: t(def.labelKey),
+    icon: def.icon,
+  }));
+
   return (
-    <div className="mb-6 flex max-w-full items-center gap-0 overflow-x-auto pb-1">
-      {ADD_USER_MODAL_STEP_DEFS.map((stepDefinition, stepIndex) => {
-        const done = step > stepDefinition.id;
-        const active = step === stepDefinition.id;
-        const Icon = stepDefinition.icon;
-        return (
-          <React.Fragment key={stepDefinition.id}>
-            <div className="flex min-w-20 flex-col items-center gap-1">
-              <div className={`flex h-11 w-11 items-center justify-center rounded-full border-2 transition-all ${
-                done ? "bg-primary border-primary text-primary-foreground" :
-                active ? "border-primary bg-primary/10 text-primary" :
-                "border-border bg-muted text-muted-foreground"
-              }`}>
-                {done ? <Check className="w-3.5 h-3.5" /> : <Icon className="w-3.5 h-3.5" />}
-              </div>
-              <span className={`text-xs font-semibold whitespace-nowrap ${active ? "text-primary" : "text-muted-foreground"}`}>
-                {t(stepDefinition.labelKey)}
-              </span>
-            </div>
-            {stepIndex < ADD_USER_MODAL_STEP_DEFS.length - 1 && (
-              <div className={`mx-1 mb-4 h-0.5 min-w-4 flex-1 transition-all ${step > stepDefinition.id ? "bg-primary" : "bg-border"}`} />
-            )}
-          </React.Fragment>
-        );
-      })}
-    </div>
+    <WizardStepIndicator
+      steps={steps}
+      current={step}
+      className="mb-6"
+      ariaLabel={t("users.stepIndicatorAria")}
+    />
   );
 }

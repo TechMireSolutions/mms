@@ -26,7 +26,7 @@ export const PageHeader = React.memo(function PageHeader({
       <div className="flex min-w-0 items-start gap-3">
         {Icon && (
           <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-            <Icon className="h-[1.125rem] w-[1.125rem] text-primary" aria-hidden />
+            <Icon className="h-4.5 w-4.5 text-primary" aria-hidden />
           </div>
         )}
         <div className="min-w-0">

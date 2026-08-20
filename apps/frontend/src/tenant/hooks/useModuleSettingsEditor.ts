@@ -1,11 +1,11 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
-import { type TabDefinition } from "@mms/shared";
+import { type FieldDefinition, type TabDefinition } from "@mms/shared";
 
 export interface ModuleSettingsShape {
-  fields?: Record<string, any>;
-  customFields?: any[];
+  fields?: Record<string, unknown>;
+  customFields?: unknown[];
   fieldOrder?: string[];
-  formTabs?: any[];
+  formTabs?: unknown[];
   enabledTabs?: string[];
   requiredTabs?: string[];
 }
@@ -84,7 +84,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
   // Content fingerprint — ignore fieldConfig object identity churn from Query/context.
   const settingsRehydrateFingerprint = moduleSettingsEditorFingerprint({
-    fields: settings.fields,
+    fields: settings.fields as Record<string, FieldDefinition[]> | undefined,
     enabledTabs: settings.enabledTabs,
     requiredTabs: settings.requiredTabs,
     formTabs: settings.formTabs as TabDefinition[] | undefined,
@@ -120,7 +120,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
   const fieldsEditor = useModuleFieldsEditor({
     initialTabs: tabRegistry,
-    initialFields: settings.fields || {},
+    initialFields: (settings.fields as Record<string, FieldDefinition[]>) || {},
     initialEnabledTabs: Array.from(new Set(activeEnabledTabs)),
     initialRequiredTabs: Array.from(new Set(settings.requiredTabs || defaultRequiredTabs)),
   });
@@ -173,7 +173,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
     resetRef.current(
       updatedTabs,
-      currentSettings.fields || {},
+      (currentSettings.fields as Record<string, FieldDefinition[]>) || {},
       currentActiveEnabledTabs,
       (currentSettings.requiredTabs || currentDefaultRequired).map((t) => t.toLowerCase()),
     );
@@ -249,7 +249,7 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
 
     resetRef.current(
       updatedTabs,
-      settings.fields || {},
+      (settings.fields as Record<string, FieldDefinition[]>) || {},
       currentActiveEnabledTabs,
       (settings.requiredTabs || defaultRequiredTabs).map((tab) => tab.toLowerCase()),
     );

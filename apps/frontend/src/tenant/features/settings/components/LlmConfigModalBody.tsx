@@ -79,7 +79,7 @@ export function LlmConfigModalBody({
 }: LlmConfigModalBodyProps): React.JSX.Element {
   return (
     <>
-      <div className="mb-4 max-h-[50vh] min-h-0 flex-1 space-y-4 overflow-y-auto pe-1">
+      <div className="mb-4 max-h-viewport-half min-h-0 flex-1 space-y-4 overflow-y-auto pe-1">
         <div className="space-y-2">
           <Label htmlFor="configName">{t('settings.llmModalName')}</Label>
           <Input id="configName" name="configName" value={formName} onChange={(event) => setFormName(event.target.value)} placeholder={t('settings.llmModalNamePlaceholder')} />

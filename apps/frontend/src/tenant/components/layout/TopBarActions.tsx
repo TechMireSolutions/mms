@@ -117,7 +117,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] p-0">
+        <PopoverContent align="end" className="w-popover-menu max-w-full p-0">
           {popoverOpen && (
             <>
               <div className="border-b border-border px-4 py-3">
@@ -139,7 +139,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
                   notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors bg-primary/[0.02]"
+                      className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors bg-primary/5"
                     >
                       <div className="flex items-start gap-3">
                         <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />

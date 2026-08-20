@@ -120,13 +120,13 @@ export function StepReview({
               </article>
             </div>
             <div className="hidden overflow-x-auto md:block rounded-lg border border-border text-xs">
-              <div className="min-w-[20rem]">
+              <div className="min-w-review-panel">
                 <div className="grid grid-cols-3 gap-0 bg-muted/60 border-b border-border">
                   <div className="px-3 py-2 font-bold text-muted-foreground uppercase">{t("accounting.journal.detail.account")}</div>
                   <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-end">{t("accounting.columns.journal.debit")}</div>
                   <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-end">{t("accounting.columns.journal.credit")}</div>
                 </div>
-                <div className="grid grid-cols-3 bg-info/10/50 border-b border-border">
+                <div className="grid grid-cols-3 bg-info/5 border-b border-border">
                   <div className="px-3 py-2 font-semibold text-foreground">{debitAccount?.name || "—"}</div>
                   <div className="px-3 py-2 text-end font-mono text-info font-bold">{formatCurrency(amount)}</div>
                   <div className="px-3 py-2 text-end text-muted-foreground">—</div>

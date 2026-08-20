@@ -41,7 +41,7 @@ export const AttendanceReportCharts = React.memo(function AttendanceReportCharts
             const className = getActiveLabel(state);
             if (className) onToggleClassFilter(className);
           }}
-          style={{ cursor: "pointer" }}
+          className="cursor-pointer"
         >
           <ChartGrid />
           <XAxis dataKey="class" tick={chartAxisTick(12)} />

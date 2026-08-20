@@ -62,7 +62,7 @@ export const FinancialReportCharts = React.memo(function FinancialReportCharts({
               const month = (state as { activeLabel?: string } | undefined)?.activeLabel;
               if (typeof month === "string" && month.length > 0) onToggleMonthFilter(month);
             }}
-            style={{ cursor: "pointer" }}
+            className="cursor-pointer"
           >
             <defs>
               <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">

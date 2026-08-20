@@ -103,7 +103,7 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
         }
       />
 
-      <div className="divide-y divide-border/40 max-h-[21.25rem] overflow-y-auto">
+      <div className="divide-y divide-border/40 max-h-notifications overflow-y-auto">
         <AnimatePresence initial={false}>
           {visible.length === 0 ? (
             <EmptyState

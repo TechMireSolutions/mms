@@ -38,7 +38,7 @@ export function MessagingWorkComposerSection({
                   className="flex min-w-0 items-center justify-between gap-2 text-xs text-muted-foreground"
                 >
                   <span className="min-w-0 truncate">{recipient.name}</span>
-                  <span className="shrink-0 font-mono truncate max-w-[50%]">{recipient.phone || recipient.email}</span>
+                  <span className="shrink-0 font-mono truncate max-w-1/2">{recipient.phone || recipient.email}</span>
                 </div>
               ))}
             </div>

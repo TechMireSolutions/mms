@@ -90,7 +90,7 @@ export function PlatformHeaderUserNav({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-[min(20rem,calc(100vw-1.5rem))] max-w-[calc(100vw-1.5rem)] p-0 rounded-2xl shadow-xl border-border/60 text-start">
+        <PopoverContent align="end" className="w-popover-menu max-w-full p-0 rounded-2xl shadow-xl border-border/60 text-start">
           {popoverOpen && (
             <>
               <div className="border-b border-border px-4 py-3">
@@ -112,7 +112,7 @@ export function PlatformHeaderUserNav({
                   notifications.map((notification) => (
                     <div
                       key={notification.id}
-                      className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors bg-primary/[0.02]"
+                      className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors bg-primary/5"
                     >
                       <div className="flex items-start gap-3">
                         <div

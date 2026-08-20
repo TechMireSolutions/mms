@@ -63,10 +63,10 @@ export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustom
                   e.stopPropagation();
                   toggle(col.key);
                 }}
-                className="min-w-11 min-h-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                className="min-w-11 min-h-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer"
                 aria-label={labels.hideColumn(col.label)}
               >
-                <Eye className="w-3.5 h-3.5" />
+                <Eye className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -86,13 +86,13 @@ export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustom
                 e.stopPropagation();
                 toggle(col.key);
               }}
-              className="flex items-center justify-between w-full px-2.5 min-h-11 rounded-lg border border-transparent hover:bg-muted transition-colors text-start group"
+              className="flex items-center justify-between w-full px-2.5 min-h-11 rounded-lg border border-transparent hover:bg-muted transition-colors text-start group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
               <div className="flex items-center gap-2">
-                <EyeOff className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
+                <EyeOff className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" aria-hidden="true" />
                 <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{col.label}</span>
               </div>
-              <Eye className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" />
+              <Eye className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" aria-hidden="true" />
             </button>
           ))}
         </div>

@@ -81,7 +81,7 @@ export function CollectionRowItem({
         <span className="font-semibold text-xs text-foreground block leading-relaxed truncate">{value}</span>
       </div>
       {value && (
-        <div className="flex max-w-[55%] flex-shrink-0 flex-wrap items-center justify-end gap-1">
+        <div className="flex max-w-3/5 flex-shrink-0 flex-wrap items-center justify-end gap-1">
           {copyable && (
             <CopyBtn
               text={value}

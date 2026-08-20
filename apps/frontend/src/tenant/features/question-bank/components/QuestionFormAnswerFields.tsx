@@ -3,6 +3,7 @@ import { type AppTranslationKey, type QuestionType } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
 import { Textarea } from "@/components/ui/textarea";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -36,24 +37,20 @@ export function QuestionFormAnswerFields({
     return (
       <div className="sm:col-span-2">
         <span className={FORM_LABEL}>{t("questionBank.optionsLabel")}</span>
-        <div className="space-y-2 mt-1.5" role="radiogroup">
+        <RadioGroup
+          name="qb-answer"
+          value={questionDraft.answer}
+          onValueChange={(val) => updateDraft({ answer: val })}
+          className="space-y-2 mt-1.5"
+        >
           {questionDraft.options.slice(0, 4).map((optionValue, optionIndex) => (
             <div key={optionIndex} className="relative flex items-center group/input w-full gap-2">
-              <label
-                htmlFor={`qb-choice-radio-${optionIndex}`}
-                className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center"
-              >
-                <input
-                  id={`qb-choice-radio-${optionIndex}`}
-                  type="radio"
-                  name="answer"
-                  value={optionValue}
-                  checked={questionDraft.answer === optionValue && !!optionValue}
-                  onChange={() => updateDraft({ answer: optionValue })}
-                  aria-label={t("questionBank.markChoiceCorrect", { n: optionIndex + 1 })}
-                  className="h-4 w-4 shrink-0 accent-primary cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-                />
-              </label>
+              <RadioGroupItem
+                id={`qb-choice-radio-${optionIndex}`}
+                value={optionValue}
+                disabled={!optionValue}
+                aria-label={t("questionBank.markChoiceCorrect", { n: optionIndex + 1 })}
+              />
               <div className="relative flex items-center w-full">
                 <HelpCircle className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
@@ -70,7 +67,7 @@ export function QuestionFormAnswerFields({
               </div>
             </div>
           ))}
-        </div>
+        </RadioGroup>
         <FieldErrorMessage message={errors.answer} />
       </div>
     );

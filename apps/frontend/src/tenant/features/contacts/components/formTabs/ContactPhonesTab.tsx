@@ -3,6 +3,7 @@ import { EditableSelect } from "@/components/ui/FormPrimitives";
 import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolvePhoneLabel } from "@/lib/contacts/contactI18n";
+import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { parsePhoneNumber } from "@mms/shared";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 
@@ -49,8 +50,8 @@ export function ContactPhonesTab({
         countryCode: defaultCountryCode,
       })}
       icon={Phone}
-      accentClass="bg-primary/60 group-hover:bg-primary"
-      iconClass="text-primary/70 group-hover:text-primary"
+      accentClass={SUB_LIST_CARD_ACCENTS.phones.accent}
+      iconClass={SUB_LIST_CARD_ACCENTS.phones.icon}
       emptyMessage={t("contacts.form.noPhoneNumbersYet")}
       addLabel={t("contacts.form.addPhoneNumber")}
       removeLabel={(index) => t("contacts.form.removePhoneNumber", { index })}
@@ -65,10 +66,10 @@ export function ContactPhonesTab({
           value={resolveDialCode(item)}
           onChange={(val) => updateItem(index, { countryCode: val })}
           onUpdateOptions={onUpdateDialCodeOptions}
-          className="w-[5.625rem] shrink-0"
+          className="w-phone-prefix shrink-0"
           id={`phone-country-${index}`}
           name={`phone-country-${index}`}
-          aria-label={t("contacts.form.dialCode") || "Country dial code"}
+          aria-label={t("contacts.form.dialCode")}
         />
       )}
       onValueChange={({ value, item, index, updateItem }) => {

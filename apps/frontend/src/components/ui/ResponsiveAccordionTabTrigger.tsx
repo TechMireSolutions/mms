@@ -17,7 +17,7 @@ export function TabTrigger({
 }): React.JSX.Element {
   const Icon = tab.icon;
   const className = cn(
-    "flex min-h-11 w-full items-start gap-3 px-4 py-3.5 text-start transition-colors",
+    "flex min-h-11 w-full items-start gap-3 px-4 py-3.5 text-start transition-colors rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
     active ? "text-primary" : "text-foreground hover:bg-muted/40",
   );
   const body = (

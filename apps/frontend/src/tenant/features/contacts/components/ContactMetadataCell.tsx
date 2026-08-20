@@ -140,7 +140,7 @@ export function ContactMetadataCell({
         if (contact.doNotContact) {
           return (
             <Badge pill variant="outline" className="px-2 font-medium border-destructive/40 text-destructive bg-destructive/10">
-              {t("contacts.columns.doNotContact") || "Do Not Contact"}
+              {t("contacts.columns.doNotContact")}
             </Badge>
           );
         }
@@ -231,7 +231,7 @@ export function ContactMetadataCell({
         const certified = (contact.skills || []).some((s) => s.isCertified);
         return certified ? (
           <Badge pill tone="success" className="px-2 font-medium">
-            {t("contacts.columns.skillsIsCertified") || "Certified"}
+            {t("contacts.columns.skillsIsCertified")}
           </Badge>
         ) : (
           renderDash()

@@ -102,7 +102,7 @@ export function SessionDetailsSection({
             value={sessionDraft.description || ""}
             onChange={(event) => onDraftChange({ description: event.target.value })}
             placeholder={t("sessions.form.descriptionPlaceholder")}
-            className="min-h-[5rem]"
+            className="min-h-textarea-lg"
           />
         </Field>
       </Card>

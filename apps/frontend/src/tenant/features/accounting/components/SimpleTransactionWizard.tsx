@@ -102,7 +102,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       title={t("accounting.journal.dashboard.recordTransaction")}
       subtitle={t("accounting.journal.dashboard.subtitleSimple")}
       size="lg"
-      panelClassName="max-h-[92vh]"
+      panelClassName="max-h-modal-xl"
       hideFooter
       headerExtra={
         <nav aria-label={t("accounting.journal.dashboard.wizard.stepsAria")} className="flex items-center gap-2">

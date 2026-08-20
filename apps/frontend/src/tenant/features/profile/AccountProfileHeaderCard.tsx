@@ -58,7 +58,7 @@ export function AccountProfileHeaderCard({
               )}
 
               {profile.contact && (
-                <div className="absolute inset-0 bg-foreground/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 flex items-center justify-center transition-all duration-300 rounded-full backdrop-blur-[1px]">
+                <div className="absolute inset-0 bg-foreground/40 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 flex items-center justify-center transition-all duration-300 rounded-full backdrop-blur-subtle">
                   <Camera className="w-6 h-6 text-white transform scale-90 group-hover:scale-100 transition-transform duration-300" />
                 </div>
               )}

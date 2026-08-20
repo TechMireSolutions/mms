@@ -123,7 +123,7 @@ export function CashbookViewTable({ rows, totalIn, totalOut, formatCurrency }: C
                     {flowBadge(row)}
                   </div>
                 </TableCell>
-                <TableCell className="px-3 py-2.5 text-foreground max-w-[12.5rem] truncate">
+                <TableCell className="px-3 py-2.5 text-foreground max-w-cell-trunc truncate">
                   <p className="font-medium m-0">{row.description}</p>
                   <p className="text-xs text-muted-foreground font-mono m-0">{row.ref}</p>
                 </TableCell>

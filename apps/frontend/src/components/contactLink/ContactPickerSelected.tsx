@@ -56,7 +56,7 @@ export function ContactPickerSelected({
         {label}
         {required ? <RequiredMark /> : null}
       </label>
-      <div className="group relative flex items-center gap-3.5 p-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/[0.01] to-primary/[0.04] dark:from-primary/[0.02] dark:to-primary/[0.06] shadow-sm hover:shadow-md transition-all duration-200">
+      <div className="group relative flex items-center gap-3.5 p-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 to-primary/10 shadow-sm hover:shadow-md transition-all duration-200">
         <div
           onClick={() => onAvatarChange && fileInputRef.current?.click()}
           className={cn(

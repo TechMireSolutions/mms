@@ -182,7 +182,7 @@ export function MessageComposerFormBody({
                 <div className="whitespace-pre-wrap leading-relaxed text-foreground">{previewText}</div>
               </div>
             ) : isSms ? (
-              <div className="max-w-[88%] space-y-1 rounded-2xl rounded-tl-none border border-info/20 bg-info/10 p-3 text-xs text-foreground shadow-xs">
+              <div className="max-w-bubble-wide space-y-1 rounded-2xl rounded-tl-none border border-info/20 bg-info/10 p-3 text-xs text-foreground shadow-xs">
                 <div className="whitespace-pre-wrap leading-relaxed">{previewText}</div>
                 <div className="flex items-center justify-between border-t border-info/10 pt-1 font-mono text-xs opacity-70">
                   <span>{recipient.phone}</span>
@@ -190,7 +190,7 @@ export function MessageComposerFormBody({
                 </div>
               </div>
             ) : (
-              <div className="max-w-[88%] space-y-1.5 rounded-2xl rounded-tl-none border border-success/20 bg-success/10 p-3 text-xs text-foreground shadow-xs">
+              <div className="max-w-bubble-wide space-y-1.5 rounded-2xl rounded-tl-none border border-success/20 bg-success/10 p-3 text-xs text-foreground shadow-xs">
                 <div className="flex items-center justify-between border-b border-success/15 pb-1 text-xs font-semibold text-success">
                   <span>{t('messaging.whatsappBroadcast')}</span>
                   <span>{recipient.phone}</span>

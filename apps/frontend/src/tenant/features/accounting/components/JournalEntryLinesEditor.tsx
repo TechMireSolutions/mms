@@ -20,6 +20,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
+import { cn } from '@/lib/utils';
+import { balanceToneClass } from '@/lib/semanticTone';
 import type { DraftLine } from './journalEntryFormTypes';
 import { JournalEntryLinesEditorMobile } from './JournalEntryLinesEditorMobile';
 
@@ -177,7 +179,7 @@ export function JournalEntryLinesEditor({
           </div>
         </div>
 
-        <div className={`mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 ${isBalanced ? "bg-success/10 text-success border-success/20 shadow-sm" : "bg-destructive/10 text-destructive border-destructive/20 shadow-sm"}`} role="status">
+        <div className={cn("mt-2 flex items-center gap-2 px-3 py-2.5 rounded-xl text-xs font-bold border transition-all duration-300 shadow-sm", balanceToneClass(isBalanced))} role="status">
           {isBalanced ? <CheckCircle2 className="w-4 h-4" aria-hidden="true" /> : <AlertCircle className="w-4 h-4" aria-hidden="true" />}
           {isBalanced ? t("accounting.journal.form.balanced") : t("accounting.journal.form.unbalanced", { diff: formatCurrency(Math.abs(totalDebit - totalCredit)) })}
         </div>

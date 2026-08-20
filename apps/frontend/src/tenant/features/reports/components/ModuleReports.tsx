@@ -103,7 +103,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
           </div>
           <div>
              <h3 className="text-sm font-black text-foreground leading-none tracking-tight">{t("reports.moduleTools.title")}</h3>
-             <p className="text-xs text-muted-foreground mt-1 uppercase font-bold tracking-[0.2em]">{t("reports.moduleTools.subtitle")}</p>
+             <p className="text-xs text-muted-foreground mt-1 uppercase font-bold tracking-widest">{t("reports.moduleTools.subtitle")}</p>
           </div>
         </div>
 

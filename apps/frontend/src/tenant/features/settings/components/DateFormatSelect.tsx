@@ -77,8 +77,8 @@ export default function DateFormatSelect({
             <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[min(calc(100%-2rem),22rem)] p-1" align="start">
-          <div className="max-h-[min(50vh,18rem)] overflow-y-auto">
+        <PopoverContent className="w-popover-md p-1" align="start">
+          <div className="max-h-popover-scroll-sm overflow-y-auto">
             {options.map((dateFormatOption) => (
               <Button
                 key={dateFormatOption.value}

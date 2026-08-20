@@ -19,7 +19,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
   const editor = useInvoiceTemplateEditor();
 
   return (
-    <div className={fullscreen ? "fixed inset-0 z-50 flex flex-col bg-background" : "flex flex-col bg-background rounded-xl border border-border overflow-hidden"} style={!fullscreen ? { height: "80vh" } : {}}>
+    <div className={fullscreen ? "fixed inset-0 z-modal flex flex-col bg-background" : "flex flex-col bg-background rounded-xl border border-border overflow-hidden h-max-h-modal max-h-modal min-h-preview-2xl"}>
       <InvoiceTemplateToolbar
         template={editor.template}
         historyLength={editor.history.length}

@@ -42,7 +42,7 @@ export const FormModalFooter = React.memo(function FormModalFooter({
           type="button"
           onClick={onSave}
           disabled={saving || saveDisabled || saved}
-          className="min-w-[7.5rem]"
+          className="min-w-filter-sm"
         >
           {saved ? (
             <>

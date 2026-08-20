@@ -28,7 +28,7 @@ export default function TopBar({ sidebarCollapsed, onOpenCommandPalette }: TopBa
       role="banner"
       className={cn(
         "fixed top-0 end-0 z-40 flex h-16 items-center gap-4 border-b border-border bg-card/80 px-4 backdrop-blur-xl transition-all duration-300 sm:px-6",
-        sidebarCollapsed ? "start-[4.5rem]" : "start-[16.25rem]",
+        sidebarCollapsed ? "start-sidebar-collapsed" : "start-sidebar",
       )}
     >
       <div className="hidden min-w-0 flex-1 md:flex md:max-w-md md:mx-auto">

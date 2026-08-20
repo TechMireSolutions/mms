@@ -165,13 +165,13 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
             </div>
 
             {/* Status pills */}
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-[repeat(auto-fit,minmax(4.5rem,1fr))]">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-autofit-sm">
               {statuses.map((status: AttendanceStatus) => {
                 const count = stats[status.id] || 0;
                 return (
-                  <div key={status.id} className={`min-w-0 rounded-xl ${status.bg} ${status.text} border ${status.border} px-2 py-2.5 text-center shadow-xs transition-all duration-300 hover:scale-[1.02]`}>
+                  <div key={status.id} className={`min-w-0 rounded-xl ${status.bg} ${status.text} border ${status.border} px-2 py-2.5 text-center shadow-xs transition-all duration-300 interactive-scale`}>
                     <p className="text-base font-black tabular-nums leading-none mb-1">{count}</p>
-                    <p className="text-xs font-bold uppercase tracking-wider opacity-90 m-0 truncate">{t(`attendance.status.${status.id}` as AppTranslationKey) || status.label}</p>
+                    <p className="text-xs font-bold uppercase tracking-wider opacity-90 m-0 truncate">{t(`attendance.status.${status.id}` as AppTranslationKey)}</p>
                   </div>
                 );
               })}

@@ -84,7 +84,7 @@ export function WidgetBuilderPreview({
           type="button"
           disabled={!canSave}
           onClick={onSave}
-          className="flex-[2] h-auto py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs uppercase tracking-wider disabled:opacity-40 shadow-lg hover:shadow-primary/20 shadow-primary/10"
+          className="flex-2 h-auto py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-xs uppercase tracking-wider disabled:opacity-40 shadow-lg hover:shadow-primary/20 shadow-primary/10"
         >
           {isEditing ? t("reports.widgets.builder.updateWidget") : t("reports.widgets.builder.createWidget")}
         </Button>

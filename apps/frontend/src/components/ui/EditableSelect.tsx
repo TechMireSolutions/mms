@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OptionSelectPopover } from "@/components/ui/OptionSelectPopover";
 import { useTranslation } from "@/hooks/useTranslation";
+import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 
 interface EditableSelectProps {
   options: string[];
@@ -25,8 +27,7 @@ interface EditableSelectProps {
   name?: string;
 }
 
-const INPUT_CLASS =
-  "h-auto min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-background px-2.5 py-2 text-xs focus-visible:border-primary/60 focus-visible:ring-1 focus-visible:ring-primary/40";
+const INPUT_CLASS = cn("h-auto min-w-0 flex-1", FORM_INPUT_COMPACT);
 
 export function EditableSelect({
   options,

@@ -112,7 +112,7 @@ export function AvatarCropper({ src, onCrop, onCancel }: AvatarCropperProps): Re
               disabled={saving}
               className="flex items-center gap-1.5 px-3 min-h-11 rounded-lg border border-border text-xs font-medium hover:bg-muted transition-colors text-foreground shadow-none"
             >
-              <RotateCw className="w-3.5 h-3.5 scale-x-[-1]" />
+              <RotateCw className="w-3.5 h-3.5 -scale-x-100" />
               <span>{t('contacts.form.rotate')}</span>
             </Button>
             <Button

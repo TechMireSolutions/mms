@@ -201,7 +201,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
     <>
       {/* Mobile Overlay & Drawer */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex">
+        <div className="md:hidden fixed inset-0 z-modal flex">
           <div
             className="fixed inset-0 bg-black/40 backdrop-blur-xs"
             onClick={() => closeMobileSidebar()}
@@ -212,7 +212,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
             role="dialog"
             aria-modal="true"
             aria-label={t('nav.openMenu')}
-            className="relative w-sidebar-mobile max-w-[85vw] bg-sidebar h-full shadow-2xl flex flex-col z-10 border-e border-sidebar-border"
+            className="relative w-sidebar-mobile max-w-sheet bg-sidebar h-full shadow-2xl flex flex-col z-10 border-e border-sidebar-border"
           >
             {sidebarContent(true)}
           </div>
@@ -222,7 +222,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
       {/* Desktop Sidebar */}
       <aside
         className={cn(
-          'hidden md:flex sticky top-0 h-screen shrink-0 border-e border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out flex-col justify-between select-none z-40',
+          'hidden md:flex sticky top-0 h-screen shrink-0 border-e border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out flex-col justify-between select-none z-sidebar',
           collapsed ? 'w-sidebar-collapsed' : 'w-sidebar',
         )}
         aria-label={t('platform.navAria')}

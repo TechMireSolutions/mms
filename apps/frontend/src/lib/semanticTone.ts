@@ -189,7 +189,7 @@ export const CARD_STRIPE_COLORS: Record<string, string> = {
   violet: "bg-primary/45 group-hover/card:bg-primary",
 };
 
-/** Sub-list form tab card accent styles (Education, Experience, Skills, Relationships). */
+/** Sub-list form tab card accent styles (Education, Experience, Skills, Relationships, Emails, Phones, Socials, Addresses). */
 export const SUB_LIST_CARD_ACCENTS = {
   education: {
     accent: "bg-info/70 group-hover:bg-info",
@@ -206,6 +206,22 @@ export const SUB_LIST_CARD_ACCENTS = {
   relationships: {
     accent: "bg-warning/70 group-hover:bg-warning",
     icon: "text-warning group-hover:text-warning",
+  },
+  emails: {
+    accent: "bg-warning/60 group-hover:bg-warning",
+    icon: "text-warning group-hover:text-warning",
+  },
+  phones: {
+    accent: "bg-primary/60 group-hover:bg-primary",
+    icon: "text-primary/70 group-hover:text-primary",
+  },
+  socials: {
+    accent: "bg-info/60 group-hover:bg-info",
+    icon: "text-info group-hover:text-info",
+  },
+  addresses: {
+    accent: "bg-success/60 group-hover:bg-success",
+    icon: "text-success group-hover:text-success",
   },
 } as const;
 
@@ -227,5 +243,16 @@ export function gradeBadgeClass(tone: string = 'primary'): string {
       return SEMANTIC_BADGE.primary;
   }
 }
+
+/** Double-entry balance status tone styling (TrialBalance, Journals, Financials). */
+export const BALANCE_TONE = {
+  balanced: 'bg-success/10 text-success border-success/30',
+  unbalanced: 'bg-destructive/10 text-destructive border-destructive/30',
+} as const;
+
+export function balanceToneClass(isBalanced: boolean): string {
+  return isBalanced ? BALANCE_TONE.balanced : BALANCE_TONE.unbalanced;
+}
+
 
 

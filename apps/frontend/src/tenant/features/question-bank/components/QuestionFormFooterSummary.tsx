@@ -25,7 +25,7 @@ export function QuestionFormFooterSummary({ questionDraft }: QuestionFormFooterS
 
   return (
     <div className="flex flex-wrap items-center gap-2.5 text-xs">
-      <FormFooterEntityChip className="truncate max-w-[12.5rem]">
+      <FormFooterEntityChip className="truncate max-w-cell-trunc">
         {questionDraft.text}
       </FormFooterEntityChip>
       <div className="flex items-center gap-1.5">

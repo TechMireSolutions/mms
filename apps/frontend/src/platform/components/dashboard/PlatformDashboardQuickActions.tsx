@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
-import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { DETAIL_SECTION_TITLE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { ROUTES } from "@/lib/config/routes";
 import { cn } from "@/lib/utils";
 
@@ -110,9 +110,9 @@ export function PlatformDashboardQuickActions({
 
       <div className={cn(WORK_SURFACE_INNER, "p-5 space-y-3")}>
         <div className="flex items-center gap-2">
-          <Database className="w-4 h-4 text-primary" />
-          <span className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-            Platform Stack
+          <Database className="w-4 h-4 text-primary" aria-hidden />
+          <span className={DETAIL_SECTION_TITLE}>
+            {t("platform.stackTitle")}
           </span>
         </div>
 

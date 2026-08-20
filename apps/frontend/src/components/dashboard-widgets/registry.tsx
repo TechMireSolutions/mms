@@ -56,8 +56,8 @@ export function isListSummaryWidgetType(type: string | undefined): boolean {
 const TITLE_WIDGETS = new Set<ComposedWidgetType>(LIST_SUMMARY_WIDGET_TYPES);
 
 const FALLBACK_CLASS = {
-  compact: 'min-h-[8.75rem] rounded-3xl',
-  tall: 'min-h-[18.75rem] rounded-3xl',
+  compact: 'min-h-card-compact rounded-3xl',
+  tall: 'min-h-preview-tall rounded-3xl',
 } as const;
 
 interface ComposedDashboardWidgetProps {

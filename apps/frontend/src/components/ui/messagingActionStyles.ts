@@ -1,7 +1,7 @@
 /** Shared Call / WhatsApp / SMS / Email action tone classes (detail grids + dense card icons). */
 
 export const MESSAGING_QUICK_ACTION_BASE =
-  "rounded-xl border text-center transition-colors";
+  "rounded-xl border text-center transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 touch-manipulation cursor-pointer";
 
 export const MESSAGING_QUICK_ACTION_TONES = {
   call: "bg-info/10 text-info border-info/20 hover:bg-info/20 hover:border-info/30",
@@ -15,7 +15,7 @@ export const MESSAGING_QUICK_ACTION_TONES = {
 
 /** Dense icon-only messaging / contact action buttons (directory cards, table cells, drawers). */
 export const MESSAGING_ICON_BTN =
-  "min-h-11 min-w-11 rounded-xl border shadow-none transition-colors";
+  "min-h-11 min-w-11 rounded-xl border shadow-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 touch-manipulation cursor-pointer";
 
 export const MESSAGING_ICON_BTN_TONES = {
   call: "border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40",

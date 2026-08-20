@@ -47,7 +47,7 @@ export function DashboardCustomizeWidgetsSection({
     <CustomizeSectionCard
       title={t('dashboard.chartsWidgetsSettings')}
       description={t('dashboard.chartsWidgetsSettingsDesc')}
-      maxHeightClass="max-h-[16.25rem]"
+      maxHeightClass="max-h-widget-customizer"
       headerContent={
         <div className="space-y-0.5">
           <p className="font-bold text-foreground">

@@ -69,7 +69,7 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
       <Button
         type="button"
         className={cn(
-          "font-bold min-h-11 rounded-xl shadow-sm shadow-primary/20 hover:scale-[1.01] active:scale-[0.99] transition-all cursor-pointer",
+          "font-bold min-h-11 rounded-xl shadow-sm shadow-primary/20 interactive-scale cursor-pointer",
           asTriggerOnly ? "px-5" : "w-full"
         )}
         onClick={() => setOpen(true)}

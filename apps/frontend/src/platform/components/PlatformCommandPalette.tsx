@@ -168,7 +168,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
   return (
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-50 flex items-start justify-center pt-16 px-4 bg-background/80 backdrop-blur-sm"
+        className="fixed inset-0 z-modal flex items-start justify-center pt-16 px-4 bg-background/80 backdrop-blur-sm"
         onClick={onClose}
         role="dialog"
         aria-modal="true"
@@ -184,7 +184,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
         >
           {/* Search Bar Header */}
           <div className="flex items-center gap-3 border-b border-border/60 px-4 py-3.5">
-            <Search className="h-5 w-5 shrink-0 text-primary pointer-events-none" aria-hidden />
+            <Search className="h-5 w-5 shrink-0 text-primary pointer-events-none" aria-hidden="true" />
             <Input
               type="text"
               autoFocus
@@ -194,6 +194,12 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
               placeholder={t('platform.searchConsolePlaceholder')}
               className="flex-1 bg-transparent text-sm font-semibold border-0 shadow-none focus-visible:ring-0 px-0 h-9"
               aria-label={t('platform.searchConsolePlaceholder')}
+              role="combobox"
+              aria-expanded={open}
+              aria-controls="platform-command-listbox"
+              aria-activedescendant={
+                filteredItems[selectedIndex] ? `platform-cmd-item-${filteredItems[selectedIndex].id}` : undefined
+              }
             />
             <kbd className="hidden sm:inline-flex items-center gap-1 rounded-md border border-border bg-muted/60 px-2 py-0.5 text-2xs font-mono font-bold text-muted-foreground select-none">
               ESC
@@ -201,7 +207,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
           </div>
 
           {/* Search Results List */}
-          <div className="max-h-80 overflow-y-auto p-2" role="listbox">
+          <div className="max-h-80 overflow-y-auto p-2" role="listbox" id="platform-command-listbox">
             {filteredItems.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm font-semibold text-muted-foreground">
                 {t('platform.noMatchingConsolePages', { query })}
@@ -215,6 +221,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
                 return (
                   <button
                     key={item.id}
+                    id={`platform-cmd-item-${item.id}`}
                     type="button"
                     role="option"
                     aria-selected={isSelected}
@@ -227,7 +234,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
                         : 'text-foreground hover:bg-muted/70 font-semibold',
                     )}
                   >
-                    <Icon className={cn('h-4.5 w-4.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')} aria-hidden />
+                    <Icon className={cn('h-4.5 w-4.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')} aria-hidden="true" />
                     <span className="flex-1 truncate">{translatedLabel}</span>
                     <span className={cn('text-xs opacity-80 font-mono', isSelected ? 'text-primary-foreground' : 'text-muted-foreground')}>
                       {item.path}

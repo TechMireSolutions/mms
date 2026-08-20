@@ -133,7 +133,7 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
                 </TableCell>
               )}
               {isColumnVisible("description") && (
-                <TableCell className="px-3 py-2.5 text-foreground max-w-[12.5rem] truncate">{entry.description}</TableCell>
+                <TableCell className="px-3 py-2.5 text-foreground max-w-cell-trunc truncate">{entry.description}</TableCell>
               )}
               {isColumnVisible("tags") && (
                 <TableCell className="px-3 py-2.5 hidden lg:table-cell">

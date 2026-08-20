@@ -88,9 +88,9 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps): Reac
           title={t('sessions.events.emptyTitle')}
         />
       ) : (
-        <div className="relative">
-          <div className="absolute start-[1.125rem] top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />
-          <div className="space-y-4 ps-10">
+        <div className="relative ps-6">
+          <div className="absolute start-6 top-0 bottom-0 w-0.5 -translate-x-1/2 rtl:translate-x-1/2 bg-border" aria-hidden="true" />
+          <div className="space-y-4 ps-4">
             {events.map((sessionEvent, index) => (
               <motion.article
                 key={sessionEvent.id}
@@ -99,7 +99,7 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps): Reac
                 transition={{ delay: index * 0.06 }}
                 className="relative"
               >
-                <div className="absolute -start-10 top-4 w-4 h-4 rounded-full bg-card border-2 border-primary" aria-hidden="true" />
+                <div className="absolute -start-4 top-4 w-4 h-4 -translate-x-1/2 rtl:translate-x-1/2 rounded-full bg-card border-2 border-primary" aria-hidden="true" />
                 <div className={`${WORK_SURFACE_INNER} p-4 hover:shadow-sm transition-all group`}>
                   <header className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                     <div className="flex min-w-0 flex-wrap items-center gap-2">

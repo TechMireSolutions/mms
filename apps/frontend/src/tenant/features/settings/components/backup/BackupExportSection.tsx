@@ -98,7 +98,7 @@ const BackupExportSection = React.memo(function BackupExportSection({
                 variant="default"
                 onClick={onStartExport}
                 disabled={isCreating || !adminEmail}
-                className="w-full sm:w-auto gap-2.5 min-h-11 px-6 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-lg active:scale-[0.98] rounded-xl relative overflow-hidden"
+                className="w-full sm:w-auto gap-2.5 min-h-11 px-6 shadow-md hover:shadow-lg interactive-scale rounded-xl relative overflow-hidden"
               >
                 {isCreating ? (
                   <RefreshCw className="h-4 w-4 animate-spin" aria-hidden />

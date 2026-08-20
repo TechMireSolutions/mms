@@ -79,7 +79,7 @@ export function PlatformDashboardBanner({
               <Button
                 asChild
                 size="sm"
-                className="rounded-xl font-bold gap-1.5 shadow-xs hover:scale-[1.02] active:scale-[0.98] transition-all min-h-11"
+                className="rounded-xl font-bold gap-1.5 shadow-xs interactive-scale min-h-11"
               >
                 <Link to={ROUTES.onboarding}>
                   <Building2 className="w-4 h-4" aria-hidden />

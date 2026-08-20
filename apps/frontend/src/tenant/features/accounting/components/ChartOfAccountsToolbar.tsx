@@ -41,7 +41,7 @@ export function ChartOfAccountsToolbar({
         value={search}
         onChange={setSearch}
         placeholder={t("accounting.coa.searchAccounts")}
-        className="flex-1 min-w-[11.25rem]"
+        className="flex-1 min-w-search"
       />
       <FormSelect
         aria-label={t("accounting.coa.filterTypeAria")}

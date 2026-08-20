@@ -47,11 +47,11 @@ export function LlmConfigCard({
               {status === 'testing' ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
               ) : status === 'verified' ? (
-                <span className="h-2 w-2 rounded-full bg-success shadow-[0_0_8px_var(--color-success)] shrink-0" title={t('settings.llmTestSuccess')} />
+                <span className="h-2 w-2 rounded-full bg-success shadow-glow-success-sm shrink-0" title={t('settings.llmTestSuccess')} />
               ) : status === 'failed' ? (
-                <span className="h-2 w-2 rounded-full bg-destructive shadow-[0_0_8px_var(--color-destructive)] shrink-0" title={t('settings.llmTestFailed')} />
+                <span className="h-2 w-2 rounded-full bg-destructive shadow-glow-destructive-sm shrink-0" title={t('settings.llmTestFailed')} />
               ) : (
-                <span className="h-2 w-2 rounded-full bg-warning shadow-[0_0_8px_var(--color-warning)] shrink-0" title={t('settings.llmTestResultDesc')} />
+                <span className="h-2 w-2 rounded-full bg-warning shadow-glow-warning-sm shrink-0" title={t('settings.llmTestResultDesc')} />
               )}
             </span>
             <h4 className="min-w-0 truncate text-sm font-bold">{config.name}</h4>

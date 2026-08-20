@@ -24,6 +24,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 export interface CommandPaletteProps {
@@ -304,15 +305,22 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
         >
           {/* Search Header */}
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
-            <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
-            <input
+            <Search className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
+            <Input
               type="text"
               autoFocus
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={translate("nav.globalSearchPlaceholder")}
-              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+              className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground border-0 shadow-none focus-visible:ring-0 px-0 h-9"
+              aria-label={translate("nav.globalSearchPlaceholder")}
+              role="combobox"
+              aria-expanded={open}
+              aria-controls="tenant-command-listbox"
+              aria-activedescendant={
+                filteredItems[selectedIndex] ? `tenant-cmd-item-${filteredItems[selectedIndex].id}` : undefined
+              }
             />
             <kbd className="hidden sm:inline-flex items-center gap-1 rounded border border-border bg-muted px-2 py-0.5 text-2xs font-medium text-muted-foreground select-none">
               ESC
@@ -320,7 +328,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
           </div>
 
           {/* Results List */}
-          <div className="max-h-80 overflow-y-auto p-2">
+          <div className="max-h-80 overflow-y-auto p-2" role="listbox" id="tenant-command-listbox">
             {filteredItems.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-muted-foreground">
                 {t("nav.globalSearchNoResults", { query })}
@@ -334,7 +342,10 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
                 return (
                   <button
                     key={item.id}
+                    id={`tenant-cmd-item-${item.id}`}
                     type="button"
+                    role="option"
+                    aria-selected={isSelected}
                     onClick={() => handleSelect(item.path)}
                     onMouseEnter={() => setSelectedIndex(index)}
                     className={cn(
@@ -344,7 +355,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
                         : "text-foreground hover:bg-muted/70",
                     )}
                   >
-                    <Icon className={cn("h-4.5 w-4.5 shrink-0", isSelected ? "text-primary-foreground" : "text-muted-foreground")} />
+                    <Icon className={cn("h-4.5 w-4.5 shrink-0", isSelected ? "text-primary-foreground" : "text-muted-foreground")} aria-hidden="true" />
                     <span className="flex-1 truncate">{translatedLabel}</span>
                     <span className={cn("text-xs opacity-70", isSelected ? "text-primary-foreground" : "text-muted-foreground")}>
                       {item.path}

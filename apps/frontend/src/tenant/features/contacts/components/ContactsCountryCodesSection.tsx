@@ -41,7 +41,7 @@ export function ContactsCountryCodesSection({
           {countryCodes.map((entry, index) => (
             <li
               key={`country-code-${index}`}
-              className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_8rem_auto] sm:items-end"
+              className="grid grid-cols-1 gap-2 sm:grid-row-code-3 sm:items-end"
             >
               <div>
                 <label className={FORM_LABEL} htmlFor={`country-name-${index}`}>

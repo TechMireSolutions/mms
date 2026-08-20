@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { SEMANTIC_BADGE, balanceToneClass } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { JournalEntryDetailLines } from "@/tenant/features/accounting/components/JournalEntryDetailLines";
@@ -119,7 +120,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
             t={t}
           />
 
-          <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border ${Math.abs(totalDebit - totalCredit) < 0.01 ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
+          <div className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border", balanceToneClass(Math.abs(totalDebit - totalCredit) < 0.01))} role="status">
             {Math.abs(totalDebit - totalCredit) < 0.01
               ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.detail.balanced")}</>
               : <>{t("accounting.journal.detail.unbalanced", { diff: formatCurrency(Math.abs(totalDebit - totalCredit)) })}</>

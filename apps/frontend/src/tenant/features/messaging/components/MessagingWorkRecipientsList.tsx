@@ -76,7 +76,7 @@ export function MessagingWorkRecipientsList({
 
   return (
     <div
-      className="max-h-[23.75rem] max-w-full overflow-y-auto rounded-lg border border-border/60"
+      className="max-h-list-lg max-w-full overflow-y-auto rounded-lg border border-border/60"
       aria-busy={isPending || isFetching ? true : undefined}
     >
       {showLoadingEmpty ? (

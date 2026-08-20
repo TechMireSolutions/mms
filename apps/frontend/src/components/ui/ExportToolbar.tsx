@@ -4,6 +4,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { SectionLabel } from '@/components/ui/SectionLabel';
+import { CompactSegmentedControl } from '@/components/ui/CompactSegmentedControl';
 import {
   exportExcel,
   exportPdf,
@@ -147,21 +148,15 @@ export function ExportToolbar({
           <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-xl p-3 shadow-xl z-popover flex flex-col gap-3 min-w-popover-md max-w-full">
             <div className="space-y-1.5">
               <SectionLabel as="label" htmlFor="export-orientation" weight="bold">{t('reports.export.orientation')}</SectionLabel>
-              <div className="flex gap-1 p-1 bg-muted rounded-lg">
-                {[
-                  { id: 'p', label: t('reports.export.portrait') },
-                  { id: 'l', label: t('reports.export.landscape') },
-                ].map((opt) => (
-                  <button
-                    key={opt.id}
-                    id={opt.id === 'p' ? 'export-orientation' : undefined}
-                    onClick={() => setOrientation(opt.id as 'p' | 'l')}
-                    className={`flex-1 min-h-11 px-2 py-2 rounded-md text-xs font-bold transition-all ${orientation === opt.id ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
+              <CompactSegmentedControl
+                options={[
+                  { value: 'p', label: t('reports.export.portrait') },
+                  { value: 'l', label: t('reports.export.landscape') },
+                ]}
+                value={orientation}
+                onChange={(val) => setOrientation(val as 'p' | 'l')}
+                fill
+              />
             </div>
             <div className="space-y-1.5">
               <SectionLabel as="label" htmlFor="export-page-size" weight="bold">{t('reports.export.pageSize')}</SectionLabel>

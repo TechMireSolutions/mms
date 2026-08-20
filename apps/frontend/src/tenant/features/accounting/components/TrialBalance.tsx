@@ -13,6 +13,8 @@ import { ACCOUNT_TYPES, computeTrialBalance, Account, JournalEntry, FiscalYear }
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
+import { balanceToneClass } from "@/lib/semanticTone";
 import { TrialBalanceTypeGroup } from "./TrialBalanceTypeGroup";
 import { exportTrialBalanceCsv } from "./trialBalanceExport";
 
@@ -54,7 +56,7 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
         idPrefix="tb"
       />
 
-      <div className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border ${isBalanced ? "bg-success/10 text-success border-success/30" : "bg-destructive/10 text-destructive border-destructive/30"}`} role="status">
+      <div className={cn("flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border", balanceToneClass(isBalanced))} role="status">
         {isBalanced ? <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> : <AlertCircle className="w-5 h-5" aria-hidden="true" />}
         {isBalanced
           ? t("accounting.tb.balancedMessage", { total: formatCurrency(grandDebit) })

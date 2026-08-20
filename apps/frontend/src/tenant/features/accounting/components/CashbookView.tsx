@@ -47,7 +47,7 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
       </section>
 
       <nav aria-label={t("accounting.cashbook.filterAria")} className="flex flex-wrap items-center gap-2">
-        <SearchBar value={search} onChange={setSearch} placeholder={t("reports.widgets.searchRecords")} className="flex-1 min-w-[11.25rem]" />
+        <SearchBar value={search} onChange={setSearch} placeholder={t("reports.widgets.searchRecords")} className="flex-1 min-w-search" />
         <SegmentedPillFilter
           value={filterType}
           onChange={setFilterType}

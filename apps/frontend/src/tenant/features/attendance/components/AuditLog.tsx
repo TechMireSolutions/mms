@@ -147,7 +147,7 @@ export function AuditLog({ filters }: AuditLogProps) {
           onChange={setClassId}
           placeholder={t("attendance.audit.allClasses")}
           options={allClasses.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
-          className="text-sm min-w-[10rem]"
+          className="text-sm min-w-audit-action"
         />
         
         <DatePicker

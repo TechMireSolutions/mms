@@ -132,7 +132,7 @@ export function DatePicker({
         <button
           type="button"
           onClick={handleClear}
-          className="min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0 ms-1"
+          className="min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0 ms-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           aria-label={t("datePicker.clearAria")}
         >
           <X className="h-3.5 w-3.5" />

@@ -45,7 +45,7 @@ export function MarkAttendanceFieldControl({
           value={value}
           onChange={(nextValue) => onFieldChange(row.studentId, field.id, nextValue)}
           disabled={row.status === "absent"}
-          className="w-full min-w-[6.5rem] text-xs disabled:opacity-40 md:max-w-[8rem]"
+          className="w-full min-w-attendance-status text-xs disabled:opacity-40 md:max-w-attendance-status"
         />
       </>
     );
@@ -80,7 +80,7 @@ export function MarkAttendanceFieldControl({
         onChange={(value: string) => onFieldChange(row.studentId, field.id, value)}
         options={field.options || []}
         placeholder={t("common.selectPlaceholder")}
-        className="w-full min-w-[7.5rem]"
+        className="w-full min-w-filter-sm"
       />
     );
   }

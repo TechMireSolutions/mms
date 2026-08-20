@@ -117,7 +117,7 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
               return (
                 <div key={log.id} className="relative group">
                   {/* Timeline Node Icon */}
-                  <div className="absolute -start-[37px] top-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-card border border-border shadow-xs">
+                  <div className="absolute -start-9 top-3.5 flex h-7 w-7 items-center justify-center rounded-full bg-card border border-border shadow-xs">
                     <Icon className="w-3.5 h-3.5 text-foreground" aria-hidden />
                   </div>
 

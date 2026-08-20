@@ -41,7 +41,7 @@ export function QuestionMatchingFields({
     <div className="space-y-3 sm:col-span-2">
       <span className={FORM_LABEL}>{t('questionBank.matchingPairs')}</span>
       {pairs.map((pair, index) => (
-        <div key={index} className="grid grid-cols-1 gap-2 rounded-lg border border-border/70 bg-muted/10 p-3 sm:grid-cols-[1fr_1fr_auto]">
+        <div key={index} className="grid grid-cols-1 gap-2 rounded-lg border border-border/70 bg-muted/10 p-3 sm:grid-row-matching-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingLeft')}</label>
             <Input

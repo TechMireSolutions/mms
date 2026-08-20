@@ -79,7 +79,7 @@ export function CustomReportBuilderPreviewVisualizer({
               </TableHeader>
               <TableBody className="divide-y divide-border/50">
                 {previewData.map((previewRow, rowIndex) => (
-                  <TableRow key={rowIndex} className="hover:bg-primary/[0.02] transition-colors group">
+                  <TableRow key={rowIndex} className="hover:bg-primary/5 transition-colors group">
                     {selectedFields.map((selectedField) => {
                       const fieldLabel = resolveFieldLabel(selectedField);
                       const cellValue = previewRow[fieldLabel];

@@ -12,21 +12,12 @@ import { SettingsTabProvider } from '@/lib/contexts/SettingsTabContext';
 import { SettingsBrandingDraftProvider } from '@/lib/contexts/SettingsBrandingDraftContext';
 import { SettingsGlobalDraftProvider } from '@/lib/contexts/SettingsGlobalDraftContext';
 
+import { ModulePanelSuspenseFallback } from '@/components/ui/ModulePanelSuspenseFallback';
+
 function SettingsContent({ section }: { section: SettingsSection }): React.JSX.Element {
-  const { t } = useTranslation();
   const Component = SETTINGS_SECTION_COMPONENTS[section];
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center py-12" role="status" aria-live="polite">
-          <div
-            className="h-6 w-6 animate-spin rounded-full border-2 border-primary/20 border-t-primary"
-            aria-hidden
-          />
-          <span className="sr-only">{t('common.loading')}</span>
-        </div>
-      }
-    >
+    <Suspense fallback={<ModulePanelSuspenseFallback />}>
       <Component />
     </Suspense>
   );

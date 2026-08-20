@@ -54,7 +54,7 @@ export function ExaminationsModalLayer({
           title={t("examinations.marks")}
           size="xl"
           hideFooter
-          panelClassName="h-[88vh] max-h-[43.75rem]"
+          panelClassName="h-modal-tall max-h-modal-tall"
         >
           <EnterMarks exams={exams} results={examResults} onSaveResults={onSaveResults} />
         </FormModal>

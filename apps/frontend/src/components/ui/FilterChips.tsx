@@ -1,6 +1,8 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
 
 export interface FilterChip {
   key: string;
@@ -23,6 +25,7 @@ export function FilterChips({
   chips = [],
   onClearAll,
 }: FilterChipsProps): React.ReactElement | null {
+  const { t } = useTranslation();
   if (chips.length === 0) return null;
 
   return (
@@ -36,17 +39,25 @@ export function FilterChips({
         {chips.map((chip) => (
           <button
             key={chip.key}
+            type="button"
             onClick={chip.onRemove}
-            className="flex min-h-11 items-center gap-1.5 text-xs font-semibold px-2.5 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+            aria-label={chip.label}
+            className="flex min-h-11 items-center gap-1.5 text-xs font-semibold px-2.5 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
           >
             {chip.label}
-            <X className="w-3 h-3" />
+            <X className="w-3 h-3" aria-hidden="true" />
           </button>
         ))}
         {chips.length > 1 && onClearAll && (
-          <button onClick={onClearAll} className="min-h-11 text-xs text-muted-foreground hover:text-foreground underline transition-colors">
-            Clear all
-          </button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onClearAll}
+            className="min-h-11 text-xs text-muted-foreground hover:text-foreground underline transition-colors px-2"
+          >
+            {t("common.clearFilters")}
+          </Button>
         )}
       </motion.div>
     </AnimatePresence>

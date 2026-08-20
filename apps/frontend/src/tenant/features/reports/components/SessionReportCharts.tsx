@@ -60,7 +60,7 @@ export const SessionReportCharts = React.memo(function SessionReportCharts({
               const className = getActiveLabel(state);
               if (className) onToggleClassFilter(className);
             }}
-            style={{ cursor: "pointer" }}
+            className="cursor-pointer"
           >
             <ChartGrid />
             <XAxis dataKey="class" tick={chartAxisTick(11)} />
@@ -80,7 +80,7 @@ export const SessionReportCharts = React.memo(function SessionReportCharts({
               const trendPayload = getTrendPayload(state);
               if (trendPayload?.sessionName) onToggleSessionFilter(trendPayload.sessionName);
             }}
-            style={{ cursor: "pointer" }}
+            className="cursor-pointer"
           >
             <ChartGrid />
             <XAxis dataKey="month" tick={chartAxisTick(11)} />

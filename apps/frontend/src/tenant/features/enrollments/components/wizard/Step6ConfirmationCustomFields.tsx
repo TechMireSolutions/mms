@@ -45,7 +45,7 @@ export function Step6ConfirmationCustomFields({
                 value={notes}
                 onChange={(event) => onNotesChange(event.target.value)}
                 placeholder={t('enrollments.wizard.step6NotesPlaceholder')}
-                className="min-h-[5rem]"
+                className="min-h-textarea-lg"
                 required={field.required}
               />
             </div>

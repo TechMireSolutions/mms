@@ -23,12 +23,16 @@ export function ResponsiveAccordionTabsDesktop({
   if (desktopLayout === "horizontal") {
     return (
       <div className="hidden space-y-4 lg:block">
-        <div className="flex gap-0 overflow-x-auto border-b border-border">
+        <div
+          role="tablist"
+          aria-label={sectionAriaLabel}
+          className="flex gap-0 overflow-x-auto border-b border-border"
+        >
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.id;
             const tabClass = cn(
-              "flex min-h-11 items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition-all",
+              "flex min-h-11 items-center gap-1.5 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-semibold transition-all rounded-t-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
               active
                 ? "border-primary text-primary"
                 : "border-transparent text-muted-foreground hover:text-foreground",
@@ -36,8 +40,14 @@ export function ResponsiveAccordionTabsDesktop({
 
             if (tab.href) {
               return (
-                <Link key={tab.id} to={tab.href} className={tabClass}>
-                  {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+                <Link
+                  key={tab.id}
+                  to={tab.href}
+                  role="tab"
+                  aria-selected={active}
+                  className={tabClass}
+                >
+                  {Icon ? <Icon className="h-3.5 w-3.5" aria-hidden /> : null}
                   {tab.label}
                 </Link>
               );
@@ -47,10 +57,12 @@ export function ResponsiveAccordionTabsDesktop({
               <button
                 key={tab.id}
                 type="button"
+                role="tab"
+                aria-selected={active}
                 onClick={() => onTabChange(tab.id)}
                 className={tabClass}
               >
-                {Icon ? <Icon className="h-3.5 w-3.5" /> : null}
+                {Icon ? <Icon className="h-3.5 w-3.5" aria-hidden /> : null}
                 {tab.label}
               </button>
             );
@@ -65,15 +77,15 @@ export function ResponsiveAccordionTabsDesktop({
     <div className="hidden gap-5 lg:flex lg:items-start">
       <nav
         aria-label={sectionAriaLabel}
-        className="sticky top-[4.75rem] w-sidebar-mobile shrink-0 space-y-0.5 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm backdrop-blur-sm"
+        className="sticky top-19 w-sidebar-mobile shrink-0 space-y-0.5 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm backdrop-blur-sm"
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           const linkClass = cn(
-            "block w-full min-h-11 rounded-lg border px-3 py-2.5 text-start transition-all",
+            "block w-full min-h-11 rounded-lg border px-3 py-2.5 text-start transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
             active
-              ? "border-primary/25 border-s-[3px] border-s-primary bg-primary/5 text-primary shadow-sm"
+              ? "border-primary/25 border-s-2 border-s-primary bg-primary/5 text-primary shadow-sm"
               : "border-transparent text-muted-foreground hover:border-border/50 hover:bg-muted/50 hover:text-foreground",
           );
 

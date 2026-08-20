@@ -65,7 +65,7 @@ export function WidgetBuilderIconPicker({
         }))}
       />
 
-      <div className="grid grid-cols-[repeat(auto-fill,minmax(2.75rem,1fr))] gap-1.5 bg-card/20 border border-border/50 p-2.5 rounded-2xl max-h-[6.875rem] overflow-y-auto pe-1">
+      <div className="grid grid-autofill-icons gap-1.5 bg-card/20 border border-border/50 p-2.5 rounded-2xl max-h-icon-picker overflow-y-auto pe-1">
         {filteredIcons.length === 0 ? (
           <p className="text-xs text-muted-foreground italic col-span-full py-2 text-center font-sans">{t("reports.widgets.builder.noIconsFound")}</p>
         ) : (

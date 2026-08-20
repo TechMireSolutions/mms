@@ -71,7 +71,7 @@ export function EnrollmentsModalLayer({
         title={wizardTitle}
         size="xl"
         hideFooter
-        panelClassName="h-[88vh] max-h-[43.75rem]"
+        panelClassName="h-modal-tall max-h-modal-tall"
       >
         <ErrorBoundary>
           <EnrollmentWizard

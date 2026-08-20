@@ -20,7 +20,7 @@ export const bulkSelectionRestoreClassName =
 
 const PLACEMENT: Record<BulkSelectionPlacement, string> = {
   floating:
-    "fixed inset-x-4 bottom-4 z-40 max-w-full sm:inset-x-auto sm:end-6 sm:bottom-6 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary",
+    "fixed inset-x-4 bottom-4 z-header max-w-full sm:inset-x-auto sm:end-6 sm:bottom-6 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary",
   inline: "flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl max-w-full",
 };
 

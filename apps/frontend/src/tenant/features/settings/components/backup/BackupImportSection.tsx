@@ -47,8 +47,8 @@ const BackupImportSection = React.memo(function BackupImportSection({
             }}
             className={`flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed py-8 transition-all duration-300 ${
               dragActive
-                ? 'border-primary bg-primary/5 shadow-inner scale-[0.99]'
-                : 'border-border bg-card hover:border-primary/40 hover:bg-muted/30 hover:scale-[1.01] shadow-sm'
+                ? 'border-primary bg-primary/5 shadow-inner'
+                : 'border-border bg-card hover:border-primary/40 hover:bg-muted/30 interactive-scale shadow-sm'
             }`}
           >
             <div className={`mb-3 p-3 rounded-full transition-colors duration-300 ${dragActive ? 'bg-primary/10' : 'bg-muted group-hover:bg-primary/5'}`}>
@@ -69,7 +69,7 @@ const BackupImportSection = React.memo(function BackupImportSection({
             {selectedFileName ? (
               <div className="mt-3 mx-4 flex items-center gap-2 rounded-lg bg-primary/10 border border-primary/20 px-3 py-1.5 animate-in fade-in zoom-in duration-200">
                 <FileJson className="h-4 w-4 text-primary shrink-0 animate-pulse" />
-                <span className="text-xs font-semibold text-primary truncate max-w-[12.5rem]">
+                <span className="text-xs font-semibold text-primary truncate max-w-cell-trunc">
                   {t('backup.fileSelected', { name: selectedFileName })}
                 </span>
               </div>

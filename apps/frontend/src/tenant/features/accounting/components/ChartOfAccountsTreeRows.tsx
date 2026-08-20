@@ -142,7 +142,7 @@ export function AccountTableRow({
         </TableCell>
       )}
       {isColumnVisible("subtype") && <TableCell className="hidden px-4 py-2.5 text-xs text-muted-foreground md:table-cell">{account.subtype || "—"}</TableCell>}
-      {isColumnVisible("description") && <TableCell className="hidden max-w-[12.5rem] truncate px-4 py-2.5 text-xs text-muted-foreground lg:table-cell">{account.description || "—"}</TableCell>}
+      {isColumnVisible("description") && <TableCell className="hidden max-w-cell-trunc truncate px-4 py-2.5 text-xs text-muted-foreground lg:table-cell">{account.description || "—"}</TableCell>}
       {isColumnVisible("normalBalance") && (
         <TableCell className="px-4 py-2.5">
           <StatusBadge

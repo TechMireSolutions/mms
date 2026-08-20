@@ -84,7 +84,7 @@ export function PaperQuestionPicker({
         />
       </div>
 
-      <div className="max-h-[22.5rem] space-y-2 overflow-y-auto pe-1 sm:max-h-[28.75rem] lg:max-h-[35rem]">
+      <div className="max-h-preview-sm space-y-2 overflow-y-auto pe-1 sm:max-h-preview-md lg:max-h-preview-xl">
         {questions.length === 0 ? (
           <EmptyState
             title={t("questionBank.noQuestionsAvailable")}

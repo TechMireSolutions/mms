@@ -7,6 +7,7 @@ import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
+import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import type { Address } from "@mms/shared";
 
 interface ContactAddressesTabProps extends ContactSubListTabBaseProps {
@@ -86,8 +87,8 @@ export function ContactAddressesTab({
               id={getLocalId("addresses", idx)}
               index={idx}
               icon={MapPin}
-              accentClass="bg-success/60 group-hover:bg-success"
-              iconClass="text-success group-hover:text-success"
+              accentClass={SUB_LIST_CARD_ACCENTS.addresses.accent}
+              iconClass={SUB_LIST_CARD_ACCENTS.addresses.icon}
               label={`${t("contacts.form.type")}:`}
               typeSelect={
                 showLabel ? (

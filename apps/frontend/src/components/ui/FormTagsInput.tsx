@@ -64,10 +64,10 @@ export function TagsInput({ selected = [], predefined = [], onChange, id, name }
               <button
                 type="button"
                 onClick={() => remove(tag)}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center -me-1 rounded-full hover:text-destructive focus:outline-none transition-colors"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center -me-1 rounded-full hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer"
                 aria-label={t("contacts.form.removeTag", { tag })}
               >
-                <X className="w-3 h-3" />
+                <X className="w-3 h-3" aria-hidden="true" />
               </button>
             </Badge>
           ))}

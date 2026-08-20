@@ -113,7 +113,7 @@ export function EventModal({ open, event, onClose, onSave, saving }: EventModalP
           <label className={FORM_LABEL} htmlFor="event-description">{t('sessions.events.form.description')}</label>
           <Textarea
             id="event-description"
-            className="min-h-[4rem] resize-none"
+            className="min-h-textarea-md resize-none"
             value={eventDraft.description || ''}
             onChange={(inputEvent) => updateEventDraft('description', inputEvent.target.value)}
             placeholder={t('sessions.events.form.descriptionPlaceholder')}

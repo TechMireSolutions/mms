@@ -126,7 +126,7 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: reducedMotion ? 0 : 0.2 }}
-            className="absolute inset-0 bg-black/30 backdrop-blur-[2px]"
+            className="absolute inset-0 bg-black/30 backdrop-blur-subtle"
             onClick={onClose}
           />
 
@@ -143,7 +143,7 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
             aria-label={ariaLabel}
             {...dragProps}
             className={cn(
-              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-[0_8px_40px_rgb(0,0,0,0.12)] backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-drawer sm:max-h-full rounded-t-[1.5rem] sm:rounded-none",
+              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-drawer backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-drawer sm:max-h-full rounded-t-3xl sm:rounded-none",
               SIZE_MAP[size],
               className
             )}

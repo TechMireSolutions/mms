@@ -133,7 +133,7 @@ export default function WizardLayout({
           initial={reducedMotion ? false : { opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
           transition={reducedMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
-          className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-border/60 bg-card/85 shadow-xl shadow-black/[0.04] backdrop-blur-xl dark:shadow-black/25"
+          className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-border/60 bg-card/85 shadow-surface-lg backdrop-blur-xl"
           aria-labelledby="wizard-step-title"
         >
           <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" aria-hidden />

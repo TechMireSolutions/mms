@@ -50,7 +50,7 @@ export const AcademicReportCharts = React.memo(function AcademicReportCharts({
               const studentName = getActiveLabel(state);
               if (studentName) onToggleStudentFilter(studentName);
             }}
-            style={{ cursor: "pointer" }}
+            className="cursor-pointer"
           >
             <ChartGrid />
             <XAxis dataKey="studentName" tick={chartAxisTick(10)} angle={-25} textAnchor="end" height={40} />
@@ -72,7 +72,7 @@ export const AcademicReportCharts = React.memo(function AcademicReportCharts({
                 const className = getActiveLabel(state);
                 if (className) onToggleClassFilter(className);
               }}
-              style={{ cursor: "pointer" }}
+              className="cursor-pointer"
             >
               <ChartGrid />
               <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(11)} />

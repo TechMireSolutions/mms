@@ -60,7 +60,7 @@ export function ContactDetailTimeline({
       </div>}
 
       <div className="space-y-6 relative ps-3">
-        <div className="absolute start-[3px] top-0 bottom-0 w-0.5 bg-border/50" />
+        <div className="absolute start-3 top-0 bottom-0 w-0.5 -translate-x-1/2 rtl:translate-x-1/2 bg-border/50" />
         {(!activities || activities.length === 0) ? (
           <EmptyState
             title={t('contacts.detail.quietTimeline')}
@@ -78,10 +78,7 @@ export function ContactDetailTimeline({
                 transition={{ duration: reducedMotion ? 0 : 0.15, delay: reducedMotion ? 0 : Math.min(idx * 0.03, 0.3) }}
                 className="relative ps-6 group"
               >
-                <div
-                  className="absolute start-0 top-1.5 w-6 h-6 rounded-full bg-card border-2 border-border flex items-center justify-center z-10 group-hover:border-primary transition-colors"
-                  style={{ insetInlineStart: '-15.5px' }}
-                >
+                <div className="absolute -start-3 top-1.5 w-6 h-6 -translate-x-1/2 rtl:translate-x-1/2 rounded-full bg-card border-2 border-border flex items-center justify-center z-10 group-hover:border-primary transition-colors">
                   <Icon className="w-2.5 h-2.5 text-muted-foreground group-hover:text-primary" />
                 </div>
                 <div className={`${WORK_SURFACE_INNER} p-4 hover:border-primary/20 group-hover:border-primary/20`}>

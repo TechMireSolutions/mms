@@ -2,6 +2,7 @@ import React from 'react';
 import { WidgetCard } from '@/components/ui/WidgetCard';
 import { WidgetChartHeader } from '@/components/ui/WidgetChartHeader';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { LegendChip } from '@/components/ui/LegendChip';
 import { formatNumber } from '@mms/shared';
 import { ChartPrefsControlGroup } from '@/components/dashboard-widgets/charts/ChartPrefsControlGroup';
 import { HasanatChartPlot } from '@/components/dashboard-widgets/charts/HasanatChartPlot';
@@ -58,12 +59,13 @@ export function HasanatChart({ isEditMode = false }: { isEditMode?: boolean }): 
             const percentage = total > 0 ? ((hasanatPoint.value / total) * 100).toFixed(0) : '0';
             return (
               <div key={hasanatPoint.name} aria-label={`${hasanatPoint.name}: ${percentage}%`}>
-                <div className="mb-1 flex min-w-0 items-center justify-between gap-2 select-none">
-                  <div className="flex min-w-0 items-center gap-1.5">
-                    <div className="w-2 h-2 shrink-0 rounded-full" style={{ background: hasanatPoint.color }} aria-hidden="true" />
-                    <span className="min-w-0 truncate text-xs text-muted-foreground">{hasanatPoint.name}</span>
-                  </div>
-                  <span className="text-xs font-semibold text-foreground">{percentage}%</span>
+                <div className="mb-1 select-none">
+                  <LegendChip
+                    dotStyle={{ background: hasanatPoint.color }}
+                    label={<span className="min-w-0 truncate text-muted-foreground">{hasanatPoint.name}</span>}
+                    value={`${percentage}%`}
+                    valueClassName="font-semibold text-foreground"
+                  />
                 </div>
                 <ProgressBar
                   value={Number(percentage)}

@@ -1,6 +1,8 @@
 import React from 'react';
 import { useAccountingCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
+import { cn } from '@/lib/utils';
+import { balanceToneClass } from '@/lib/semanticTone';
 import { ReportSection, type ReportRow } from './FinancialReportSection';
 import { CashFlowStatementPanel } from './CashFlowStatementPanel';
 
@@ -107,7 +109,7 @@ export function BalanceSheetPanel({
           <p className="font-mono font-bold text-primary text-lg m-0">{formatCurrency(liabilities + equity)}</p>
         </article>
       </div>
-      <div className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-semibold ${balanceDifference < 1 ? 'bg-success/10 text-success border-success/30' : 'bg-destructive/10 text-destructive border-destructive/30'}`} role="status">
+      <div className={cn("flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-semibold", balanceToneClass(balanceDifference < 1))} role="status">
         {balanceDifference < 1
           ? t('accounting.reports.balanceSheetBalanced')
           : t('accounting.reports.balanceSheetDifference', { diff: formatCurrency(balanceDifference) })}

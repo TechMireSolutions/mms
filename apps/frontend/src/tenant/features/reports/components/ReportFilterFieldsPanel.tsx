@@ -32,7 +32,7 @@ export function ReportFilterFieldsPanel({
   return (
     <div className="px-4 pb-4 flex flex-wrap gap-4 border-t border-border/50 pt-4">
       {allowed.includes('session') && (
-        <div className="flex flex-col gap-1 text-start min-w-[8.75rem] flex-1">
+        <div className="flex flex-col gap-1 text-start min-w-filter-lg flex-1">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('reports.filters.session')}</label>
           <FormSelect
             value={filters.session}
@@ -44,7 +44,7 @@ export function ReportFilterFieldsPanel({
       )}
 
       {allowed.includes('class') && (
-        <div className="flex flex-col gap-1 text-start min-w-[8.75rem] flex-1">
+        <div className="flex flex-col gap-1 text-start min-w-filter-lg flex-1">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('reports.filters.class')}</label>
           <FormSelect
             value={filters.class}
@@ -56,7 +56,7 @@ export function ReportFilterFieldsPanel({
       )}
 
       {allowed.includes('status') && (
-        <div className="flex flex-col gap-1 text-start min-w-[7.5rem] flex-1">
+        <div className="flex flex-col gap-1 text-start min-w-filter-sm flex-1">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('reports.filters.status')}</label>
           <FormSelect
             value={filters.status}
@@ -97,13 +97,13 @@ export function ReportFilterFieldsPanel({
               </span>
             ) : undefined
           }
-          className="min-w-[8.125rem] flex-1 gap-4"
+          className="min-w-filter-md flex-1 gap-4"
           pickerClassName="w-full min-w-0"
         />
       )}
 
       {allowed.includes('student') && (
-        <div className="flex flex-col gap-1 text-start min-w-[9.375rem] flex-1">
+        <div className="flex flex-col gap-1 text-start min-w-filter-xl flex-1">
           <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t('reports.filters.student')}</label>
           <Input
             type="text"

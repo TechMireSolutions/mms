@@ -4,6 +4,7 @@ import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import { formatNumber } from "@mms/shared";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { LegendChip } from "@/components/ui/LegendChip";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { HasanatFacultyBarItem, HasanatPieItem } from "./hasanatReportSectionTypes";
 
@@ -35,7 +36,7 @@ export const HasanatReportCharts = React.memo(function HasanatReportCharts({
               )?.activePayload?.[0]?.payload?.faculty;
               if (typeof faculty === "string" && faculty.length > 0) onToggleFacultyFilter(faculty);
             }}
-            style={{ cursor: "pointer" }}
+            className="cursor-pointer"
           >
             <ChartGrid />
             <XAxis dataKey="faculty" tick={chartAxisTick(11)} />
@@ -61,15 +62,14 @@ export const HasanatReportCharts = React.memo(function HasanatReportCharts({
               </PieChart>
             </SafeResponsiveContainer>
           </div>
-          <div className="w-full shrink-0 space-y-3 sm:w-[35%]">
+          <div className="w-full shrink-0 space-y-3 sm:w-1/3">
             {redemptionPieData.map((slice, index) => (
-              <div key={slice.name} className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-sm" style={{ background: pieColors[index] }} />
-                <div>
-                  <p className="text-xs text-muted-foreground">{slice.name}</p>
-                  <p className="text-sm font-bold text-foreground">{formatNumber(slice.value)}</p>
-                </div>
-              </div>
+              <LegendChip
+                key={slice.name}
+                dotStyle={{ background: pieColors[index % pieColors.length] }}
+                label={<span className="text-xs text-muted-foreground">{slice.name}</span>}
+                value={formatNumber(slice.value)}
+              />
             ))}
           </div>
         </div>

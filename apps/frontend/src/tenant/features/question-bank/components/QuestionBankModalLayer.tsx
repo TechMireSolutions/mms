@@ -61,7 +61,7 @@ export function QuestionBankModalLayer({
           tabs={paperBuilderTabs}
           activeTab={paperBuilderTab}
           onTabChange={onPaperBuilderTabChange}
-          panelClassName="h-[94vh] max-w-[calc(100%-1rem)] rounded-xl sm:h-[92vh] sm:max-w-[calc(100%-2rem)] sm:rounded-2xl xl:max-w-6xl"
+          panelClassName="h-modal-2xl max-w-modal-mobile rounded-xl sm:h-modal-xl sm:max-w-modal-sm sm:rounded-2xl xl:max-w-6xl"
         >
           <PaperBuilder
             key={paperBuilderSession}

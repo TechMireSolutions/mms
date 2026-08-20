@@ -69,7 +69,7 @@ export function DiscountModal({ open, discount, onClose, onSave, saving }: Disco
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="discount-conditions">{t("sessions.discounts.form.conditions")}</label>
-          <Textarea id="discount-conditions" className="min-h-[4rem] resize-none" value={discountDraft.conditions || ""} onChange={(event) => updateDiscountDraft("conditions", event.target.value)} placeholder={t("sessions.discounts.form.conditionsPlaceholder")} />
+          <Textarea id="discount-conditions" className="min-h-textarea-md resize-none" value={discountDraft.conditions || ""} onChange={(event) => updateDiscountDraft("conditions", event.target.value)} placeholder={t("sessions.discounts.form.conditionsPlaceholder")} />
         </div>
         <label className="flex items-center gap-2.5 cursor-pointer">
           <Checkbox checked={discountDraft.active || false} onCheckedChange={(checked) => updateDiscountDraft("active", !!checked)} />

@@ -56,7 +56,7 @@ export default function WelcomeBanner({
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-primary/95 to-primary/80 p-6 md:p-8 text-primary-foreground shadow-lg shadow-primary/10"
     >
-      <div className="absolute inset-0 islamic-pattern opacity-[0.06] mix-blend-overlay pointer-events-none" aria-hidden="true" />
+      <div className="absolute inset-0 islamic-pattern opacity-5 mix-blend-overlay pointer-events-none" aria-hidden="true" />
       <div className="absolute -top-24 -end-16 w-80 h-80 rounded-full bg-secondary/15 blur-3xl opacity-70 pointer-events-none" aria-hidden="true" />
       <div className="absolute -bottom-20 -start-16 w-72 h-72 rounded-full bg-warning/10 blur-3xl opacity-50 pointer-events-none" aria-hidden="true" />
 

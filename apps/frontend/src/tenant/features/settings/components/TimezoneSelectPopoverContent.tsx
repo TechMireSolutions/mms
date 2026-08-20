@@ -32,7 +32,7 @@ export function TimezoneSelectPopoverContent({
   onSelectTimezone,
 }: TimezoneSelectPopoverContentProps): React.JSX.Element {
   return (
-    <PopoverContent className="w-[min(calc(100%-2rem),24rem)] p-0" align="start">
+    <PopoverContent className="w-popover-wide p-0" align="start">
       <div className="flex items-center border-b px-3">
         <Search className="me-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
         <Input
@@ -43,7 +43,7 @@ export function TimezoneSelectPopoverContent({
           aria-label={t('global.timezoneSearch')}
         />
       </div>
-      <div className="max-h-[min(50vh,20rem)] overflow-y-auto p-1">
+      <div className="max-h-popover-scroll overflow-y-auto p-1">
         <Button
           type="button"
           variant="ghost"

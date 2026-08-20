@@ -146,8 +146,8 @@ export function PrintInvoiceModal({
         </div>
       }
     >
-      <div className="flex min-h-[18.75rem] justify-center overflow-x-auto rounded-xl border border-dashed border-border bg-muted/20 p-4">
-        <div className="origin-top-left scale-[0.55] sm:scale-[0.7] md:scale-[0.85] lg:scale-100" style={{ direction: "ltr" }}>
+      <div className="flex min-h-preview-tall justify-center overflow-x-auto rounded-xl border border-dashed border-border bg-muted/20 p-4">
+        <div className="origin-top-left scale-preview-sm sm:scale-preview-md md:scale-preview-lg lg:scale-preview-xl" style={{ direction: "ltr" }}>
           <div
             ref={printRef}
             style={{ lineHeight: 1.4, width: size.width, height: size.height }}

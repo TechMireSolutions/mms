@@ -16,7 +16,7 @@ export function CustomizeSectionCard({
   title,
   description,
   headerContent,
-  maxHeightClass = 'max-h-[18.75rem]',
+  maxHeightClass = 'max-h-preview-tall',
   children,
   footer,
 }: CustomizeSectionCardProps): React.JSX.Element {

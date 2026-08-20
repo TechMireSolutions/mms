@@ -140,7 +140,7 @@ export function DashedFileDropZone({
         onDrop={handleDrop}
         className={cn(
           "flex flex-col items-center justify-center gap-3 rounded-3xl border-2 border-dashed p-8 text-center transition-all",
-          isDragging && "scale-[1.02] motion-reduce:scale-100",
+          isDragging && "scale-102 motion-reduce:scale-100",
           draggingClass,
           className,
         )}

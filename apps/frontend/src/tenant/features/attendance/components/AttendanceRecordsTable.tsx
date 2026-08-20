@@ -162,7 +162,7 @@ export function AttendanceRecordsTable({
                         value={editingRecord.timeIn}
                         onChange={(nextValue) => updateDraft('timeIn', nextValue)}
                         aria-label={t('attendance.columns.timeIn')}
-                        className="w-full min-w-[6.5rem] max-w-[8rem] text-xs"
+                        className="w-full min-w-attendance-status max-w-attendance-status text-xs"
                       />
                     : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeIn || '—'}</span>
                   }
@@ -177,7 +177,7 @@ export function AttendanceRecordsTable({
                         value={editingRecord.timeOut}
                         onChange={(nextValue) => updateDraft('timeOut', nextValue)}
                         aria-label={t('attendance.columns.timeOut')}
-                        className="w-full min-w-[6.5rem] max-w-[8rem] text-xs"
+                        className="w-full min-w-attendance-status max-w-attendance-status text-xs"
                       />
                     : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeOut || '—'}</span>
                   }

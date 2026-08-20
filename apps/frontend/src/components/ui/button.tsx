@@ -57,12 +57,15 @@ export interface ButtonProps
  * Standard touch-first button component enforcing 44x44px minimum target bounds.
  */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
+  ({ className, variant, size, asChild = false, title, "aria-label": ariaLabel, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    const resolvedAriaLabel = ariaLabel || (typeof title === "string" ? title : undefined);
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
         ref={ref}
+        title={title}
+        aria-label={resolvedAriaLabel}
         {...props}
       />
     )

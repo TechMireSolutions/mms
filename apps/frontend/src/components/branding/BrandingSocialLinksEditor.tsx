@@ -40,7 +40,7 @@ export function SocialLinksEditor({ links, onChange }: SocialLinksEditorProps): 
         {linkEntries.map((link, index) => (
           <div
             key={`${link.platform}-${index}`}
-            className="grid grid-cols-1 gap-3 rounded-lg border border-border bg-muted/20 p-3 sm:grid-cols-[minmax(0,160px)_1fr_auto]"
+            className="grid grid-cols-1 gap-3 rounded-lg border border-border bg-muted/20 p-3 sm:grid-row-action-3"
           >
             <div className="space-y-1.5">
               <Label htmlFor={`social-platform-${index}`}>{t('branding.socialPlatform')}</Label>

@@ -72,7 +72,7 @@ export default function PlatformConsole(): React.JSX.Element {
       actions: canOnboard ? (
         <Button
           asChild
-          className="min-h-11 rounded-xl font-bold px-5 shadow-sm shadow-primary/20 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer"
+          className="min-h-11 rounded-xl font-bold px-5 shadow-sm shadow-primary/20 hover:shadow-md interactive-scale cursor-pointer"
           onMouseEnter={() => {
             void import('@/platform/pages/onboarding/OnboardingWizard');
           }}

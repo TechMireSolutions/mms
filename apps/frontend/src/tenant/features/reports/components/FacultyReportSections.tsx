@@ -28,7 +28,7 @@ export const FacultyReportChartSection = React.memo(function FacultyReportChartS
             )?.activePayload?.[0]?.payload?.faculty;
             if (typeof faculty === "string" && faculty.length > 0) onBarClick(faculty);
           }}
-          style={{ cursor: "pointer" }}
+          className="cursor-pointer"
         >
           <ChartGrid />
           <XAxis type="number" tick={chartAxisTick(11)} />

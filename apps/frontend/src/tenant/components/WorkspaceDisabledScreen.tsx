@@ -40,7 +40,7 @@ export default function WorkspaceDisabledScreen({
           header={
             <div className="space-y-4">
               <PlatformLogoMark />
-              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">
+              <p className="text-xs font-semibold uppercase tracking-widest text-primary">
                 {t("entry.productName")}
               </p>
               <AuthFormHeading

@@ -70,7 +70,7 @@ export function PermissionMatrix({
           <caption className="sr-only">{t('users.permissions.matrixCaption')}</caption>
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-              <ModuleTableHeaderCell columnKey="module" className="min-w-[8.75rem] px-3 py-2.5">
+              <ModuleTableHeaderCell columnKey="module" className="min-w-input-filter px-3 py-2.5">
                 {t('users.permissions.colModule')}
               </ModuleTableHeaderCell>
               {PERMISSION_ACTIONS.map((permissionAction) => (

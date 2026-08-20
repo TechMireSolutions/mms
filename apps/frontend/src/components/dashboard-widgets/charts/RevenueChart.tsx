@@ -7,6 +7,7 @@ import { ChartPrefsControlGroup } from "@/components/dashboard-widgets/charts/Ch
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { useRevenueChartData } from "@/components/dashboard-widgets/charts/useRevenueChartData";
+import { LegendChip } from "@/components/ui/LegendChip";
 import { RevenueChartPlot } from "@/components/dashboard-widgets/charts/RevenueChartPlot";
 import {
   DASHBOARD_CHART_TYPE_OPTIONS,
@@ -66,18 +67,14 @@ export default function RevenueChart({ isEditMode = false }: { isEditMode?: bool
       />
 
       <div className="flex items-center gap-4 mb-4" aria-hidden="true">
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: activeColors.revenue }} />
-          <span className="text-xs text-muted-foreground">
-            {t("accounting.dashboard.revenue")}
-          </span>
-        </div>
-        <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: activeColors.expenses }} />
-          <span className="text-xs text-muted-foreground">
-            {t("accounting.dashboard.expenses")}
-          </span>
-        </div>
+        <LegendChip
+          dotStyle={{ backgroundColor: activeColors.revenue }}
+          label={<span className="text-muted-foreground">{t("accounting.dashboard.revenue")}</span>}
+        />
+        <LegendChip
+          dotStyle={{ backgroundColor: activeColors.expenses }}
+          label={<span className="text-muted-foreground">{t("accounting.dashboard.expenses")}</span>}
+        />
       </div>
 
       <RevenueChartPlot

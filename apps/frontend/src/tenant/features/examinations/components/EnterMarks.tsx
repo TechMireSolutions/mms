@@ -11,6 +11,7 @@ import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments
 import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
 import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -166,9 +167,15 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                     </div>
                     <div className="flex shrink-0 flex-wrap items-center gap-3 self-end sm:self-auto">
                       {grade && (
-                        <span className="text-xs font-bold px-2 py-0.5 rounded-lg" style={{ color: grade.color, background: grade.bg }} role="status">
+                        <Badge
+                          as="span"
+                          tone={grade.tone ?? "primary"}
+                          pill
+                          className="text-xs font-bold px-2 py-0.5"
+                          role="status"
+                        >
                           {grade.label} · {percentage}%
-                        </span>
+                        </Badge>
                       )}
                       <div className="flex items-center gap-1.5">
                         <Input

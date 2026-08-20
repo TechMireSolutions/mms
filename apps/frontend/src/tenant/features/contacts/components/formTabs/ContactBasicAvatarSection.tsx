@@ -40,8 +40,8 @@ export function ContactBasicAvatarSection({
         />
       )}
       <div className="relative flex-shrink-0 group">
-        <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-primary/30 via-accent/30 to-secondary/30 group-hover:from-primary/60 group-hover:via-accent/60 group-hover:to-secondary/60 blur-[2px] transition-all duration-500 opacity-75 group-hover:opacity-100" />
-        <div className="relative w-20 h-20 rounded-full bg-card overflow-hidden flex items-center justify-center border border-border/80 shadow-surface group-hover:scale-[1.02] transition-transform duration-300">
+        <div className="absolute -inset-1 rounded-full bg-gradient-to-tr from-primary/30 via-accent/30 to-secondary/30 group-hover:from-primary/60 group-hover:via-accent/60 group-hover:to-secondary/60 blur-subtle transition-all duration-500 opacity-75 group-hover:opacity-100" />
+        <div className="relative w-20 h-20 rounded-full bg-card overflow-hidden flex items-center justify-center border border-border/80 shadow-surface group-hover:scale-105 transition-transform duration-300">
           <UserAvatar
             id={contactDraft.id}
             name={getDisplayName(contactDraft)}
@@ -51,7 +51,7 @@ export function ContactBasicAvatarSection({
 
           <label
             htmlFor={avatarInputId}
-            className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/40 text-white opacity-100 backdrop-blur-[1px] transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100"
+            className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/40 text-white opacity-100 backdrop-blur-subtle transition-opacity duration-300 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100"
           >
             <Camera className="h-6 w-6 scale-90 transition-transform duration-300 group-hover:scale-100" aria-hidden />
             <input

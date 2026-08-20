@@ -48,7 +48,7 @@ export function useFormModalLayout<K extends string>({
     !hasTabs && progress === undefined,
   );
 
-  const panelClassName = cn(tall ? 'h-[88vh] max-h-[43.75rem]' : undefined, panelClassNameProp);
+  const panelClassName = cn(tall ? 'h-modal-tall max-h-modal-tall' : undefined, panelClassNameProp);
 
   const effectiveSize = useMemo((): FormModalSize => {
     const requested = size ?? 'lg';
