@@ -57,8 +57,14 @@ export async function createTestContactJaneDoe(page: Page): Promise<void> {
   await page.waitForTimeout(200);
 
   await janeDialog.getByRole('tab', { name: 'Phones' }).click();
-  await janeDialog.getByRole('button', { name: /Add phone number|Add/i }).click();
   const phoneInput = janeDialog.locator('#phone-number-0');
+  const phoneInputVisible = await phoneInput.isVisible({ timeout: 2000 }).catch(() => false);
+  if (!phoneInputVisible) {
+    const addPhoneBtn = janeDialog.getByRole('button', { name: /Add phone number|Add/i });
+    if (await addPhoneBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await addPhoneBtn.click();
+    }
+  }
   await expect(phoneInput).toBeVisible({ timeout: 5000 });
   await phoneInput.fill('03001234567');
   await phoneInput.blur();
@@ -69,7 +75,7 @@ export async function createTestContactJaneDoe(page: Page): Promise<void> {
     (res) => res.url().includes('/api/contacts') && res.request().method() === 'POST',
     { timeout: 15_000 },
   );
-  await janeDialog.getByRole('button', { name: 'Save Contact' }).click();
+  await janeDialog.getByRole('button', { name: /Save Contact|Save/i }).click();
   const resp = await contactSave;
   if (!resp.ok()) {
     const text = await resp.text();
@@ -92,12 +98,32 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
   await johnDialog.locator('#cf-new-gender').click();
   await page.locator('[role="option"]').filter({ hasText: /^Male$/i }).click();
   await johnDialog.getByRole('tab', { name: 'Emails' }).click();
-  await johnDialog.locator('#email-address-0').fill('john.doe.e2e@example.com');
-  await johnDialog.locator('#email-address-0').blur();
+  const emailInput = johnDialog.locator('#email-address-0');
+  const emailInputVisible = await emailInput.isVisible({ timeout: 2000 }).catch(() => false);
+  if (!emailInputVisible) {
+    const addEmailBtn = johnDialog.getByRole('button', { name: /Add email address|Add/i });
+    if (await addEmailBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await addEmailBtn.click();
+    }
+  }
+  await expect(emailInput).toBeVisible({ timeout: 5000 });
+  await emailInput.fill('john.doe.e2e@example.com');
+  await emailInput.blur();
+  await johnDialog.getByRole('tab', { name: 'Basic' }).click();
   await waitForToastOverlayToClear(page, 'before saving John Doe');
-  await johnDialog.getByRole('button', { name: /Save/i }).click();
+  const johnSave = page.waitForResponse(
+    (res) => res.url().includes('/api/contacts') && res.request().method() === 'POST',
+    { timeout: 15_000 },
+  );
+  await johnDialog.getByRole('button', { name: /Save Contact|Save/i }).click();
+  const resp = await johnSave;
+  if (!resp.ok()) {
+    const text = await resp.text();
+    throw new Error(`Contact POST /api/contacts failed with status ${resp.status()}: ${text}`);
+  }
   await expect(johnDialog).toBeHidden({ timeout: 15_000 });
   await page.waitForSelector('tbody tr:has-text("John Doe") >> visible=true');
+  await waitForToastOverlayToClear(page, 'after creating John Doe');
 }
 
 /**
@@ -422,9 +448,16 @@ export async function recordInvoicePayment(page: Page): Promise<void> {
 export async function createMessagingTemplateAndCampaign(page: Page): Promise<void> {
   const messagingNav = page
     .locator('div.hidden.lg\\:block')
-    .filter({ has: page.getByRole('button', { name: 'Setup', exact: true }) })
+    .filter({
+      has: page
+        .getByRole('tab', { name: 'Setup', exact: true })
+        .or(page.getByRole('button', { name: 'Setup', exact: true })),
+    })
     .first();
-  await messagingNav.getByRole('button', { name: 'Setup', exact: true }).click();
+  await messagingNav
+    .getByRole('tab', { name: 'Setup', exact: true })
+    .or(messagingNav.getByRole('button', { name: 'Setup', exact: true }))
+    .click();
   await expect(page.getByRole('heading', { name: 'Create Preset Template' })).toBeVisible({
     timeout: 15_000,
   });
@@ -453,9 +486,16 @@ export async function createMessagingTemplateAndCampaign(page: Page): Promise<vo
 
   const messagingWorkNav = page
     .locator('div.hidden.lg\\:block')
-    .filter({ has: page.getByRole('button', { name: 'Work', exact: true }) })
+    .filter({
+      has: page
+        .getByRole('tab', { name: 'Work', exact: true })
+        .or(page.getByRole('button', { name: 'Work', exact: true })),
+    })
     .first();
-  await messagingWorkNav.getByRole('button', { name: 'Work', exact: true }).click();
+  await messagingWorkNav
+    .getByRole('tab', { name: 'Work', exact: true })
+    .or(messagingWorkNav.getByRole('button', { name: 'Work', exact: true }))
+    .click();
   await expect(page.getByRole('heading', { name: 'Select Recipients' })).toBeVisible({
     timeout: 15_000,
   });
@@ -499,9 +539,16 @@ export async function createMessagingTemplateAndCampaign(page: Page): Promise<vo
 
   const messagingReportsNav = page
     .locator('div.hidden.lg\\:block')
-    .filter({ has: page.getByRole('button', { name: 'Reports', exact: true }) })
+    .filter({
+      has: page
+        .getByRole('tab', { name: 'Reports', exact: true })
+        .or(page.getByRole('button', { name: 'Reports', exact: true })),
+    })
     .first();
-  await messagingReportsNav.getByRole('button', { name: 'Reports', exact: true }).click();
+  await messagingReportsNav
+    .getByRole('tab', { name: 'Reports', exact: true })
+    .or(messagingReportsNav.getByRole('button', { name: 'Reports', exact: true }))
+    .click();
   await expect(
     page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
   ).toBeVisible({ timeout: 20_000 });

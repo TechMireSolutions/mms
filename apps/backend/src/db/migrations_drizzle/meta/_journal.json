@@ -470,6 +470,13 @@
       "when": 1786698000000,
       "tag": "0066_contacts_unique_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1786701600000,
+      "tag": "0067_contacts_tag_column",
+      "breakpoints": true
     }
   ]
 }

@@ -72,7 +72,7 @@ export function FormModal<K extends string = string>({
   saveLabel,
   onSave,
   isDirty = false,
-  saveOnTabChange = true,
+  saveOnTabChange = false,
   saving = false,
   saveDisabled = false,
   saved = false,

@@ -16,18 +16,27 @@ export async function assertModuleTierSmoke(
 
   const desktopNav = page
     .locator('div.hidden.lg\\:block')
-    .filter({ has: page.getByRole('button', { name: 'Work', exact: true }) })
+    .filter({
+      has: page
+        .getByRole('tab', { name: 'Work', exact: true })
+        .or(page.getByRole('button', { name: 'Work', exact: true })),
+    })
     .first();
   await expect(desktopNav, `${modulePath} missing desktop tier nav`).toBeVisible({ timeout: 20_000 });
 
   for (const label of TIER_LABELS) {
-    const tab = desktopNav.getByRole('button', { name: label, exact: true });
+    const tab = desktopNav
+      .getByRole('tab', { name: label, exact: true })
+      .or(desktopNav.getByRole('button', { name: label, exact: true }));
     await expect(tab, `${modulePath} missing ${label} tab`).toBeVisible();
     await tab.click();
     await expect(tab).toBeVisible();
   }
 
-  await desktopNav.getByRole('button', { name: 'Work', exact: true }).click();
+  await desktopNav
+    .getByRole('tab', { name: 'Work', exact: true })
+    .or(desktopNav.getByRole('button', { name: 'Work', exact: true }))
+    .click();
 }
 
 /**
