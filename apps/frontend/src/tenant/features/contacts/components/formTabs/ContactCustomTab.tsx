@@ -141,7 +141,7 @@ export function ContactCustomTab({
 
   return (
     <div className="space-y-4 text-start">
-      <SectionCard title={tabLabel} accentColor="primary">
+      <SectionCard title={tabLabel} icon={FolderKanban} accentColor="primary">
         <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
           {tabFields.map((field) => {
             const error = getFieldError(field.key);

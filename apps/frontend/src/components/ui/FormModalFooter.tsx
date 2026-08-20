@@ -9,7 +9,7 @@ export interface FormModalFooterProps {
   saveLabel: string;
   savedLabel?: string;
   onClose: () => void;
-  onSave?: () => void | Promise<void>;
+  onSave?: (options?: { keepOpen?: boolean }) => void | Promise<unknown>;
   saving: boolean;
   saveDisabled: boolean;
   saved: boolean;
@@ -40,7 +40,9 @@ export const FormModalFooter = React.memo(function FormModalFooter({
         </Button>
         <Button
           type="button"
-          onClick={onSave}
+          onClick={() => {
+            void onSave?.();
+          }}
           disabled={saving || saveDisabled || saved}
           className="min-w-filter-sm"
         >

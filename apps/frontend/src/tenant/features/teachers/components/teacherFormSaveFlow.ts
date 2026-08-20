@@ -31,6 +31,8 @@ export interface TeacherSaveFlowInput {
   t: TranslationFunction;
   onSave: (teacher: Teacher) => void | Promise<void>;
   onClose: () => void;
+  keepOpen?: boolean;
+  onBaselineReset?: (payload: Partial<Teacher>) => void;
   setErrors: (errors: Record<string, string>) => void;
   setActiveTab: (tabId: string) => void;
   setSaving: (saving: boolean) => void;
@@ -97,7 +99,7 @@ function notifyTeacherSaveFailed(t: TranslationFunction, err: unknown, scope: st
 }
 
 /** Validate + persist teacher form draft; surfaces field errors and toasts on failure. */
-export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<void> {
+export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<boolean> {
   input.setErrors({});
   const payload = buildTeacherSavePayload(input);
 
@@ -118,7 +120,7 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<v
       focusTeacherValidationField(input.formInstanceId, firstField);
     }
     notify.error(input.t("common.formPleaseFixErrors"));
-    return;
+    return false;
   }
 
   input.setSaving(true);
@@ -135,13 +137,18 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<v
       input.setTypedDuplicateReason(duplicateReason);
       input.setDuplicateConfirmOpen(true);
       input.setSaving(false);
-      return;
+      return false;
     }
 
     await input.onSave(payload as unknown as Teacher);
-    input.onClose();
+    input.onBaselineReset?.(payload);
+    if (!input.keepOpen) {
+      input.onClose();
+    }
+    return true;
   } catch (err: unknown) {
     notifyTeacherSaveFailed(input.t, err, "teachers.form_save");
+    return false;
   } finally {
     input.setSaving(false);
   }

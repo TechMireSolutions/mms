@@ -41,15 +41,14 @@ export function AccountProfileContactTab({
     name !== originalName || phone !== originalPhone || contactEmail !== originalEmail;
 
   return (
-    <Card className="group/profile-card">
-      <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/profile-card:bg-primary" />
+    <Card accentColor="primary" className="group/profile-card">
       <CardTitleBar
         inset
         icon={<User className="h-4 w-4 text-primary" />}
         title={t("account.contactSection")}
         subtitle={t("account.contactSectionDesc")}
       />
-      <CardContent className="pt-5 space-y-4 ps-6.5">
+      <CardContent className="pt-5 space-y-4 ps-6">
         {!profile.contact ? (
           <WarningCallout
             icon={ShieldCheck}

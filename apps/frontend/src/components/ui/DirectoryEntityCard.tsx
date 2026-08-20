@@ -4,6 +4,8 @@ import { motion, type HTMLMotionProps } from "framer-motion";
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
+
 export const directoryEntityCardVariants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
@@ -41,7 +43,8 @@ export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
       }
       className={cn(
         FORM_CARD,
-        "p-4 ps-5.5 space-y-4 shadow-xs",
+        "p-4 space-y-4 shadow-xs",
+        accentClassName && CARD_STRIPE_INSET,
         reducedMotion ? "hover:shadow-none" : "hover:shadow-md",
         isSelected
           ? "border-primary/50 bg-primary/5 shadow-xs shadow-primary/5"
@@ -54,7 +57,7 @@ export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
         <div
           aria-hidden="true"
           className={cn(
-            "absolute start-0 top-0 bottom-0 w-1.5",
+            CARD_STRIPE_BASE,
             accentClassName,
             reducedMotion ? "" : "transition-colors duration-300",
           )}

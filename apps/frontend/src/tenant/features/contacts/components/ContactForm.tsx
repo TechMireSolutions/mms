@@ -156,9 +156,8 @@ export function ContactForm({
         dir={dir}
         cancelLabel={t("common.cancel")}
         saveLabel={t("contacts.form.saveContact")}
-        onSave={() => {
-          void draft.handleSave();
-        }}
+        onSave={draft.handleSave}
+        isDirty={draft.isDirty}
         saving={draft.saving}
         saveDisabled={
           !draft.contactDraft.firstName?.trim() || (Boolean(contact) && !draft.isDirty)

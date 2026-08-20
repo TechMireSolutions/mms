@@ -1,5 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 export interface CardTitleBarProps {
   title?: React.ReactNode;
@@ -30,7 +31,7 @@ export function CardTitleBar({
     <div
       className={cn(
         "flex min-w-0 items-center justify-between gap-2 border-b border-border/40 bg-muted/20 px-5 py-3.5",
-        inset && "ps-6.5",
+        inset && CARD_STRIPE_INSET,
         className,
       )}
     >

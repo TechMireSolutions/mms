@@ -8,6 +8,7 @@ import {
   DEFAULT_PHONE_LABELS,
   DEFAULT_SKILL_CATEGORY_LABELS,
   DEFAULT_SKILL_PROFICIENCY_LABELS,
+  DEFAULT_TAG_LABELS,
   GENDERS,
   RELATIONSHIPS,
   SOCIAL_PLATFORMS,
@@ -56,6 +57,8 @@ function defaultStringItems(kind: ContactStringLookupKind): string[] {
       return [...DEFAULT_SKILL_CATEGORY_LABELS];
     case 'skillProficiencies':
       return [...DEFAULT_SKILL_PROFICIENCY_LABELS];
+    case 'tags':
+      return [...DEFAULT_TAG_LABELS];
     default: {
       const _exhaustive: never = kind;
       return _exhaustive;
@@ -79,6 +82,7 @@ function emptyStringLookupsMap(): Record<ContactStringLookupKind, string[]> {
     employmentTypes: defaultStringItems('employmentTypes'),
     skillCategories: defaultStringItems('skillCategories'),
     skillProficiencies: defaultStringItems('skillProficiencies'),
+    tags: defaultStringItems('tags'),
   };
 }
 

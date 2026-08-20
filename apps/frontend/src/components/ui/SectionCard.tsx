@@ -2,7 +2,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { CardTitleBar } from "@/components/ui/CardTitleBar";
-import { KPI_TONE } from "@/lib/semanticTone";
+import { CARD_STRIPE_INSET, KPI_TONE } from "@/lib/semanticTone";
 
 export interface SectionCardProps {
   title?: React.ReactNode;
@@ -51,7 +51,7 @@ export function SectionCard({
           }
         />
       )}
-      <div className={cn(padding ? "px-5 py-4" : undefined, accentColor && "ps-6.5")}>{children}</div>
+      <div className={cn(padding ? "px-5 py-4" : undefined, accentColor && CARD_STRIPE_INSET)}>{children}</div>
     </Card>
   );
 }

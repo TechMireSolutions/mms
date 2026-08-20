@@ -2,6 +2,7 @@ import React from 'react';
 import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { cn } from '@/lib/utils';
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from '@/lib/semanticTone';
 
 export function UserDetailModalRow({
   label,
@@ -29,8 +30,8 @@ export function UserDetailModalSection({
 }): React.JSX.Element {
   return (
     <div className={cn(WORK_SURFACE_INNER, 'relative overflow-hidden group/card transition-all duration-300')}>
-      <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/60 transition-colors group-hover/card:bg-primary" />
-      <div className="flex items-center gap-2 border-b border-border/40 bg-muted/20 px-4 py-2.5 ps-5.5">
+      <div className={cn(CARD_STRIPE_BASE, "bg-primary/60 transition-colors group-hover/card:bg-primary")} />
+      <div className={cn("flex items-center gap-2 border-b border-border/40 bg-muted/20 px-4 py-2.5", CARD_STRIPE_INSET)}>
         <Icon className="h-3.5 w-3.5 text-primary/70 group-hover/card:text-primary transition-colors" aria-hidden />
         <SectionLabel as="p" tone="foreground" tracking="wider" className="m-0">{title}</SectionLabel>
       </div>

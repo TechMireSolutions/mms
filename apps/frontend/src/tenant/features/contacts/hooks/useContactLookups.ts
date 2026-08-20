@@ -27,6 +27,7 @@ const defaults = (): ContactLookupsMap => {
     employmentTypes: seeded.employmentTypes,
     skillCategories: seeded.skillCategories,
     skillProficiencies: seeded.skillProficiencies,
+    tags: seeded.tags,
   };
 };
 

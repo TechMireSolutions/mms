@@ -8,6 +8,7 @@ import {
   DEFAULT_EMPLOYMENT_TYPE_LABELS,
   DEFAULT_SKILL_CATEGORY_LABELS,
   DEFAULT_SKILL_PROFICIENCY_LABELS,
+  DEFAULT_TAG_LABELS,
   COUNTRY_CODES,
   RELATIONSHIPS,
 } from "@mms/shared";
@@ -25,6 +26,7 @@ export function getContactConfigCollectionDefaults(): {
   employmentTypes: string[];
   skillCategories: string[];
   skillProficiencies: string[];
+  tags: string[];
 } {
   return {
     genders: [...GENDERS],
@@ -38,5 +40,6 @@ export function getContactConfigCollectionDefaults(): {
     employmentTypes: [...DEFAULT_EMPLOYMENT_TYPE_LABELS],
     skillCategories: [...DEFAULT_SKILL_CATEGORY_LABELS],
     skillProficiencies: [...DEFAULT_SKILL_PROFICIENCY_LABELS],
+    tags: [...DEFAULT_TAG_LABELS],
   };
 }

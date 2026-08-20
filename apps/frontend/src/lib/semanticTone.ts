@@ -168,6 +168,11 @@ export const OBLIGATION_TYPE_BADGE: Record<string, string> = {
   Liability: SEMANTIC_BADGE.destructive,
 };
 
+/** SSOT for card and section left accent stripe geometry */
+export const CARD_STRIPE_WIDTH = "w-1.5";
+export const CARD_STRIPE_INSET = "ps-6";
+export const CARD_STRIPE_BASE = "absolute inset-y-0 start-0 w-1.5";
+
 /** Card left-border accent stripe colors (globle1). */
 export const CARD_STRIPE_COLORS: Record<string, string> = {
   primary: "bg-primary/45 group-hover/card:bg-primary",

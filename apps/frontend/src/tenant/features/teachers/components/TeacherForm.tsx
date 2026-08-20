@@ -74,7 +74,8 @@ export const TeacherForm = React.memo(function TeacherForm({
             dir={dir}
             cancelLabel={t("common.cancel")}
             saveLabel={saving ? t("teachers.form.saving") : teacher ? t("teachers.form.saveUpdate") : t("teachers.form.saveCreate")}
-            onSave={() => { void handleSave(); }}
+            onSave={handleSave}
+            isDirty={isDirty}
             saving={saving}
             error={validationErrorSummary}
             saveDisabled={

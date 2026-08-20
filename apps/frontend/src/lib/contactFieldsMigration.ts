@@ -3,6 +3,7 @@ import {
   DEFAULT_ENABLED_TABS,
   DEFAULT_REQUIRED_TABS,
   FieldConfig,
+  type FieldDefinition,
   INITIAL_FIELD_SEED,
   DEFAULT_PAGE_TABS,
   DEFAULT_FORM_TABS,
@@ -95,8 +96,24 @@ export function migrateContactFieldConfig(config: unknown): FieldConfig {
   }
   workingConfig.detailTabs.sort((a, b) => a.order - b.order);
   workingConfig.settingsSubTabs = normalizeTabs(workingConfig.settingsSubTabs) ?? defaults.settingsSubTabs;
-  workingConfig.columnRegistry = workingConfig.columnRegistry ?? defaults.columnRegistry;
-  workingConfig.fields = workingConfig.fields ?? defaults.fields;
+  const rawCols = workingConfig.columnRegistry ?? defaults.columnRegistry ?? [];
+  const existingColKeys = new Set(rawCols.map((c) => c.key));
+  const missingCols = (defaults.columnRegistry ?? []).filter((c) => !existingColKeys.has(c.key));
+  workingConfig.columnRegistry = [...rawCols, ...missingCols];
+
+  const rawFields = workingConfig.fields ?? defaults.fields ?? {};
+  const mergedFields: Record<string, FieldDefinition[]> = { ...defaults.fields, ...rawFields };
+  for (const [tabKey, defaultTabFields] of Object.entries(defaults.fields || {})) {
+    const currentTabFields = rawFields[tabKey];
+    if (Array.isArray(currentTabFields) && currentTabFields.length > 0) {
+      const existingFieldKeys = new Set(currentTabFields.map((f) => f.key));
+      const missingFields = defaultTabFields.filter((f) => !existingFieldKeys.has(f.key));
+      mergedFields[tabKey] = [...currentTabFields, ...missingFields];
+    } else {
+      mergedFields[tabKey] = [...defaultTabFields];
+    }
+  }
+  workingConfig.fields = mergedFields;
 
   if (isCorruptedEnabledTabs) {
     const activeFormTabKeys = repairedFormTabs

@@ -1,8 +1,9 @@
 import { BrainCircuit } from "lucide-react";
-import { type Contact, getDisplayName } from "@mms/shared";
+import { type Contact, getDisplayName, getContactTags } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ContactIdentityMeta } from "../ContactIdentityMeta";
 import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
+import { Badge } from "@/components/ui/badge";
 
 export function ContactDetailOverviewHero({
   contact,
@@ -11,6 +12,7 @@ export function ContactDetailOverviewHero({
 }): React.JSX.Element {
   const { t } = useTranslation();
   const aiSummary = typeof contact.aiSummary === "string" ? contact.aiSummary.trim() : "";
+  const contactTags = getContactTags(contact);
 
   return (
     <>
@@ -20,6 +22,20 @@ export function ContactDetailOverviewHero({
         avatar={contact.avatar}
       >
         <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} size="md" />
+        {contactTags.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mt-1.5">
+            {contactTags.map((tag) => (
+              <Badge
+                key={tag}
+                pill
+                variant="outline"
+                className="px-2 py-0.5 text-xs font-medium border-primary/30 text-primary bg-primary/5"
+              >
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        )}
       </PersonDetailHeroCard>
 
       {aiSummary ? (

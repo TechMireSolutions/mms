@@ -39,6 +39,12 @@ export function useContactConfigTabFields({
         return seedField?.enabled ?? false;
       }
       const field = tabFieldsList.find((fieldDefinition) => fieldDefinition.key === fieldId);
+      if (!field) {
+        const seedField = (INITIAL_FIELD_SEED[tabId] || []).find(
+          (f: FieldDefinition) => f.key === fieldId,
+        );
+        return seedField?.enabled ?? false;
+      }
       return field?.enabled ?? false;
     },
     [fields],
@@ -48,6 +54,12 @@ export function useContactConfigTabFields({
     (tabId: string, fieldId: string) => {
       if (isContactLockedField(tabId, fieldId)) return true;
       const field = (fields[tabId] || []).find((fieldDefinition) => fieldDefinition.key === fieldId);
+      if (!field) {
+        const seedField = (INITIAL_FIELD_SEED[tabId] || []).find(
+          (f: FieldDefinition) => f.key === fieldId,
+        );
+        return seedField?.required ?? false;
+      }
       return field?.required ?? false;
     },
     [fields],

@@ -6,6 +6,7 @@ import { CardRemoveButton } from "@/components/ui/FormPrimitives";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 interface ListFieldCardProps {
   id: string;
@@ -40,9 +41,9 @@ export function ListFieldCard({
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.15 }}
       style={{ zIndex: 100 - index }}
-      className={cn(FORM_CARD, "p-4.5 ps-6 space-y-4")}
+      className={cn(FORM_CARD, "p-4.5 space-y-4", CARD_STRIPE_INSET)}
     >
-      <div className={cn("absolute start-0 top-0 bottom-0 w-1.5 transition-colors", accentClass)} />
+      <div className={cn(CARD_STRIPE_BASE, "transition-colors", accentClass)} />
       <div className="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-border/50">
         <div className="flex min-w-0 flex-wrap items-center gap-2">
           <div className={cn("flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-muted/70", iconClass)}>

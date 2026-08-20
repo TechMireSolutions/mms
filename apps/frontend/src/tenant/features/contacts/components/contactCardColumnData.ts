@@ -25,6 +25,8 @@ export function hasContactCardColumnData(contact: Contact, colId: string): boole
       return Boolean(contact.socials && contact.socials.some((s) => s.url && s.url.trim().length > 0));
     case "cnic":
       return Boolean(contact.cnic && contact.cnic.trim().length > 0);
+    case "tag":
+      return Boolean((contact.tags && contact.tags.length > 0) || (contact.tag && contact.tag.trim().length > 0));
     case "notes":
       return Boolean(contact.notes && contact.notes.trim().length > 0);
     case "preferredLanguage":

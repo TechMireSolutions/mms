@@ -156,8 +156,8 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     else setDuplicateConfirmOpen(true);
   };
 
-  const handleSave = async () => {
-    await runTeacherSaveFlow({
+  const handleSave = async (options?: { keepOpen?: boolean }): Promise<boolean> => {
+    return await runTeacherSaveFlow({
       teacherDraft,
       teacher,
       autoGenerateId,
@@ -172,6 +172,10 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
       t,
       onSave,
       onClose,
+      keepOpen: options?.keepOpen,
+      onBaselineReset: (payload) => {
+        setBaselineSnapshot(teacherDraftSnapshot(payload));
+      },
       setErrors,
       setActiveTab,
       setSaving,

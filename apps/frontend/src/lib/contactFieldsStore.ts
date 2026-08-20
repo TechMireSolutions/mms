@@ -22,10 +22,17 @@ function mergeWithDefaults(parsed: FieldConfig): FieldConfig {
   if (migrated.fields && typeof migrated.fields === "object" && !Array.isArray(migrated.fields)) {
     for (const [tabKey, fieldsList] of Object.entries(migrated.fields)) {
       if (Array.isArray(fieldsList) && fieldsList.length > 0) {
-        mergedFields[tabKey] = fieldsList;
+        const fallbackTabFields = fallback.fields[tabKey] || [];
+        const existingKeys = new Set(fieldsList.map((f) => f.key));
+        const missingSystemFields = fallbackTabFields.filter((f) => !existingKeys.has(f.key));
+        mergedFields[tabKey] = [...fieldsList, ...missingSystemFields];
       }
     }
   }
+
+  const existingColKeys = new Set((migrated.columnRegistry || []).map((col) => col.key));
+  const missingColumns = (fallback.columnRegistry || []).filter((col) => !existingColKeys.has(col.key));
+  const mergedColumnRegistry = [...(migrated.columnRegistry || fallback.columnRegistry || []), ...missingColumns];
 
   const merged: FieldConfig = {
     ...fallback,
@@ -33,6 +40,7 @@ function mergeWithDefaults(parsed: FieldConfig): FieldConfig {
     enabledTabs: migrated.enabledTabs ?? fallback.enabledTabs,
     requiredTabs: migrated.requiredTabs ?? fallback.requiredTabs,
     fields: mergedFields,
+    columnRegistry: mergedColumnRegistry,
   };
   return sanitizeContactFieldConfig(merged);
 }
@@ -45,8 +53,10 @@ function fieldConfigWithoutFormTabs(config: FieldConfig): Omit<FieldConfig, "for
   return { ...rest, version: CONFIG_VERSION };
 }
 
-const normalizeFieldConfig = (config: unknown): FieldConfig =>
+export const normalizeContactFieldConfig = (config: unknown): FieldConfig =>
   mergeWithDefaults((config as FieldConfig | null) ?? getContactFieldSystemDefaults());
+
+const normalizeFieldConfig = normalizeContactFieldConfig;
 
 /** Default compose: normalized field config (preferences are stored separately). */
 function composeSettings(

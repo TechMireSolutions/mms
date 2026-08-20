@@ -7,7 +7,6 @@
  */
 export const CONTACT_RETIRED_CLASSIFICATION_KEYS = [
   "lifecycleStage",
-  "tag",
   "persona",
 ] as const;
 

@@ -58,6 +58,7 @@ const StudentForm = React.memo(function StudentForm({
             cancelLabel={form.t("common.cancel")}
             saveLabel={form.saving ? form.t("students.form.saving") : student ? form.t("students.form.saveUpdate") : form.t("students.form.saveRegister")}
             onSave={form.handleSave}
+            isDirty={form.isDirty}
             saving={form.saving}
             saveDisabled={
               (form.isFieldEnabled("contactId") && !form.studentDraft.contactId)

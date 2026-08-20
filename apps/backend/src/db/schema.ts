@@ -101,6 +101,7 @@ export const contacts = pgTable('contacts', {
   dob: varchar('dob', { length: 30 }),
   cnic: varchar('cnic', { length: 30 }),
   isSyed: boolean('is_syed').notNull().default(false),
+  tag: varchar('tag', { length: 100 }),
   avatar: text('avatar'),
   notes: text('notes'),
   whatsappStatus: varchar('whatsapp_status', { length: 30 }).notNull().default('unknown'),

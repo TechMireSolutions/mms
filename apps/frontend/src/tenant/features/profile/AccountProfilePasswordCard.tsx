@@ -40,15 +40,14 @@ export function AccountProfilePasswordCard({
   const { t } = useTranslation();
 
   return (
-    <Card className="group/password-card">
-      <div className="absolute start-0 top-0 bottom-0 w-1 bg-success/45 transition-colors group-hover/password-card:bg-success" />
+    <Card accentColor="success" className="group/password-card">
       <CardTitleBar
         inset
         icon={<Lock className="h-4 w-4 text-primary" />}
         title={t("account.changePassword")}
         subtitle={t("account.changePassword")}
       />
-      <CardContent className="pt-5 space-y-4 ps-6.5">
+      <CardContent className="pt-5 space-y-4 ps-6">
         {!showPasswordForm ? (
           <div className="pt-1">
             <Button type="button" variant="outline" onClick={onShowPasswordForm} className="w-full min-h-11">

@@ -168,6 +168,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     setDuplicateConfirmOpen,
     formInstanceId,
     onValidationTab: handleValidationTab,
+    onBaselineReset: (data) => setBaselineSnapshot(studentDraftSnapshot(data)),
   });
 
   return {

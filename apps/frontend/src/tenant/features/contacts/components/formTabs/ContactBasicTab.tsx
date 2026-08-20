@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import type { ChangeEvent } from "react";
+import { User } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Field, CustomFieldInput } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -19,6 +20,8 @@ export interface ContactBasicTabProps {
   setCropSrc: (src: string | null) => void;
   genders: string[];
   onUpdateGenders: (genders: string[]) => void;
+  tags?: string[];
+  onUpdateTags?: (tags: string[]) => void;
   lockGender: boolean;
   handleAvatarChange: (event: ChangeEvent<HTMLInputElement>) => void;
   fields?: Record<string, FieldDefinition[]>;
@@ -39,6 +42,8 @@ export function ContactBasicTab({
   setCropSrc,
   genders,
   onUpdateGenders,
+  tags,
+  onUpdateTags,
   lockGender,
   handleAvatarChange,
   fields,
@@ -52,7 +57,7 @@ export function ContactBasicTab({
 
   return (
     <div className="space-y-4 text-start">
-      <SectionCard accentColor="primary">
+      <SectionCard title={t("contacts.tabs.basic")} icon={User} accentColor="primary">
         {isFieldEnabled("basic", "avatar") && (
           <ContactBasicAvatarSection
             contactDraft={contactDraft}
@@ -73,6 +78,8 @@ export function ContactBasicTab({
           updateDraft={updateDraft}
           genders={genders}
           onUpdateGenders={onUpdateGenders}
+          tags={tags}
+          onUpdateTags={onUpdateTags}
           lockGender={lockGender}
         />
 

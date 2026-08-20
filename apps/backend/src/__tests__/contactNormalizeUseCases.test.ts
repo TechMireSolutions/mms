@@ -130,12 +130,12 @@ describe('contactNormalizeUseCases', () => {
       const contact = fakeContact('c1', {
         persona: 'student',
         lifecycleStage: 'lead',
-        tag: 'crm',
+        tag: 'VIP',
       });
       const prepared = await prepareContactRecord(contact, 'c1');
       expect(prepared.persona).toBeUndefined();
       expect(prepared.lifecycleStage).toBeUndefined();
-      expect(prepared.tag).toBeUndefined();
+      expect(prepared.tag).toBe('Vip');
     });
 
     it('uses the explicit id and falls back to a temp id otherwise', async () => {

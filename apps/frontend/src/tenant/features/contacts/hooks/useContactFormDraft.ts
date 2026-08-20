@@ -49,6 +49,7 @@ export function useContactFormDraft({
     employmentTypes,
     skillCategories,
     skillProficiencies,
+    tags,
     lookupsLoading,
     lookupsError,
     defaultPhoneCountryCode,
@@ -62,6 +63,7 @@ export function useContactFormDraft({
     updateEmploymentTypes,
     updateSkillCategories,
     updateSkillProficiencies,
+    updateTags,
     updateCountryCodes,
   } = useContactConfig();
 
@@ -114,6 +116,7 @@ export function useContactFormDraft({
     onSave,
     onClose,
     onValidationTab,
+    onBaselineReset: (finalized) => setBaselineSnapshot(contactDraftSnapshot(finalized)),
   });
 
   const isDirty = contactDraftSnapshot(contactDraft) !== baselineSnapshot;
@@ -233,6 +236,7 @@ export function useContactFormDraft({
     employmentTypes,
     skillCategories,
     skillProficiencies,
+    tags,
     lookupsLoading,
     lookupsError,
     updateGenders,
@@ -245,6 +249,7 @@ export function useContactFormDraft({
     updateEmploymentTypes,
     updateSkillCategories,
     updateSkillProficiencies,
+    updateTags,
     getLocalId,
     isFieldEnabled,
     isFieldRequired,

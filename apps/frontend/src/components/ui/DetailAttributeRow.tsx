@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { FORM_LABEL, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 export type DetailAttributeRowVariant = "card" | "list" | "inset";
 
@@ -67,13 +68,13 @@ export function DetailAttributeRow({
   return (
     <div
       className={cn(
-        `relative overflow-hidden group/row flex items-center gap-3 p-3 ${WORK_SURFACE_INNER} hover:shadow-md transition-all duration-200`,
+        `relative overflow-hidden group/row flex items-center gap-3 p-3 ${CARD_STRIPE_INSET} ${WORK_SURFACE_INNER} hover:shadow-md transition-all duration-200`,
         className,
       )}
     >
       <div
         aria-hidden
-        className="absolute start-0 top-0 bottom-0 w-1 bg-primary/40 group-hover/row:bg-primary transition-colors"
+        className={cn(CARD_STRIPE_BASE, "bg-primary/40 group-hover/row:bg-primary transition-colors")}
       />
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
         <Icon className={cn("h-4 w-4", iconClassName)} aria-hidden />

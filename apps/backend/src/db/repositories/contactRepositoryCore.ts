@@ -156,6 +156,8 @@ export function contactRowToRecord(
     dob: row.dob ?? undefined,
     cnic: row.cnic ?? undefined,
     isSyed: row.isSyed,
+    tag: row.tag ?? undefined,
+    tags: row.tag ? row.tag.split(',').map((t) => t.trim()).filter(Boolean) : [],
     avatar: row.avatar ?? undefined,
     notes: row.notes ?? undefined,
     whatsappStatus: (row.whatsappStatus as Contact['whatsappStatus']) ?? 'unknown',
@@ -500,6 +502,11 @@ export async function persistContactTx(
   const city = contact.city || contact.addresses?.find((a) => a.isPrimary)?.city || contact.addresses?.[0]?.city || null;
   const state = contact.state || contact.addresses?.find((a) => a.isPrimary)?.state || contact.addresses?.[0]?.state || null;
   const country = contact.country || contact.addresses?.find((a) => a.isPrimary)?.country || contact.addresses?.[0]?.country || null;
+  const tagValue = Array.isArray(contact.tags) && contact.tags.length > 0
+    ? contact.tags.map((t) => String(t).trim()).filter(Boolean).join(', ')
+    : typeof contact.tag === 'string' && contact.tag.trim()
+      ? contact.tag.trim()
+      : null;
 
   await tx
     .insert(contacts)
@@ -513,6 +520,7 @@ export async function persistContactTx(
       dob: contact.dob ?? null,
       cnic: contact.cnic ?? null,
       isSyed: contact.isSyed ?? false,
+      tag: tagValue,
       avatar: contact.avatar ?? null,
       notes: contact.notes ?? null,
       whatsappStatus: contact.whatsappStatus ?? 'unknown',
@@ -546,6 +554,7 @@ export async function persistContactTx(
         dob: contact.dob ?? null,
         cnic: contact.cnic ?? null,
         isSyed: contact.isSyed ?? false,
+        tag: tagValue,
         avatar: contact.avatar ?? null,
         notes: contact.notes ?? null,
         whatsappStatus: contact.whatsappStatus ?? 'unknown',

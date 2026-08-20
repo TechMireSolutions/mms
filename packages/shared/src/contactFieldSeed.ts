@@ -8,6 +8,7 @@ import {
   DEFAULT_PHONE_LABELS,
   DEFAULT_SKILL_CATEGORY_LABELS,
   DEFAULT_SKILL_PROFICIENCY_LABELS,
+  DEFAULT_TAG_LABELS,
   GENDERS,
   RELATIONSHIPS,
   SOCIAL_PLATFORMS,
@@ -27,6 +28,7 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
     { key: "gender",         label: "Gender (Male / Female)", labelKey: "contacts.fields.gender",         type: "select",  description: "Gender selector. Enables personalization & inclusive communication.", descriptionKey: "contacts.fields.genderDesc", options: GENDERS, defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
     { key: "dob",            label: "Date of Birth",          labelKey: "contacts.fields.dob",            type: "date",    description: "Date of birth for age tracking & milestone events.", descriptionKey: "contacts.fields.dobDesc", defaultValue: "", permissions: [], enabled: true, order: 5, required: false },
     { key: "cnic",           label: "CNIC / National ID",     labelKey: "contacts.form.cnic",             type: "text",    description: "National identity number when required by the madrasa.", descriptionKey: "contacts.fields.cnicDesc", defaultValue: "", permissions: [], enabled: true, order: 6, required: false, unique: true },
+    { key: "tag",            label: "Tag",                    labelKey: "contacts.fields.tag",            type: "select",  description: "Contact category or classification tag.", descriptionKey: "contacts.fields.tagDesc", options: DEFAULT_TAG_LABELS, defaultValue: "", permissions: [], enabled: true, order: 7, required: false },
   ],
   phones: [
     { key: "label",    label: "Phone Type / Label",               labelKey: "contacts.fields.phoneLabel",    type: "select", description: "Select type of phone number (e.g. Mobile, Home, Work).", descriptionKey: "contacts.fields.phoneLabelDesc", options: DEFAULT_PHONE_LABELS, defaultValue: "Mobile", permissions: [], enabled: true, order: 0, required: false },

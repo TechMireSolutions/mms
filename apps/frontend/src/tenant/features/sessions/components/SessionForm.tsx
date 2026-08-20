@@ -70,7 +70,7 @@ export const SessionForm = React.memo(function SessionForm({
 
       const isDirty = sessionFormDraftSnapshot(sessionDraft) !== baselineSnapshot;
 
-      const handleSave = async () => {
+      const handleSave = async (options?: { keepOpen?: boolean }): Promise<boolean> => {
         setErrors({});
         const newErrors: Record<string, string> = {};
 
@@ -87,7 +87,7 @@ export const SessionForm = React.memo(function SessionForm({
         if (Object.keys(newErrors).length > 0) {
           setErrors(newErrors);
           notify.error(t('common.formPleaseFixErrors'));
-          return;
+          return false;
         }
 
         setSaving(true);
@@ -113,14 +113,19 @@ export const SessionForm = React.memo(function SessionForm({
           const parsed = SessionSchema.safeParse(payload);
           if (!parsed.success) {
             notify.error(t('common.formPleaseFixErrors'));
-            return;
+            return false;
           }
 
           await onSave(payload);
-          notify.success(session ? t('sessions.toast.updated') : t('sessions.toast.created'));
-          onClose();
+          setBaselineSnapshot(sessionFormDraftSnapshot(sessionDraft));
+          if (!options?.keepOpen) {
+            notify.success(session ? t('sessions.toast.updated') : t('sessions.toast.created'));
+            onClose();
+          }
+          return true;
         } catch {
           notify.error(t('sessions.toast.saveFailed'));
+          return false;
         } finally {
           setSaving(false);
         }
@@ -159,7 +164,8 @@ export const SessionForm = React.memo(function SessionForm({
           lang={language}
           cancelLabel={t('common.cancel')}
           saveLabel={session ? t('sessions.action.update') : t('sessions.action.create')}
-          onSave={() => { void handleSave(); }}
+          onSave={handleSave}
+          isDirty={isDirty}
           saving={saving}
           saveDisabled={
             !sessionDraft.name?.trim()

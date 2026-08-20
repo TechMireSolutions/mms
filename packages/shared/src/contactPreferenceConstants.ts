@@ -27,6 +27,16 @@ export const COLOR_PALETTES = {
 export const DEFAULT_PHONE_LABELS = ["Mobile", "Home", "Work", "WhatsApp", "Other"];
 export const DEFAULT_EMAIL_LABELS = ["Personal", "Work", "Other"];
 export const DEFAULT_ADDRESS_LABELS = ["Home", "Work", "Billing", "Other"];
+export const DEFAULT_TAG_LABELS = [
+  "VIP",
+  "Donor",
+  "Parent",
+  "Scholar",
+  "Volunteer",
+  "Staff",
+  "Student",
+  "Other",
+];
 export const DEFAULT_EDUCATION_DEGREE_LABELS = [
   "Matric / Secondary",
   "Intermediate / HSSC",

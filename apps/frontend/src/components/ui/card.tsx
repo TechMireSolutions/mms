@@ -2,7 +2,7 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-import { CARD_STRIPE_COLORS } from "@/lib/semanticTone"
+import { CARD_STRIPE_BASE, CARD_STRIPE_COLORS } from "@/lib/semanticTone"
 
 const Card = React.forwardRef<
   HTMLDivElement,
@@ -21,7 +21,7 @@ const Card = React.forwardRef<
       {...props}
     >
       {accentColor && (
-        <div className={cn("absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300", CARD_STRIPE_COLORS[accentColor])} />
+        <div className={cn(CARD_STRIPE_BASE, "transition-colors duration-300", CARD_STRIPE_COLORS[accentColor])} />
       )}
       {props.children}
     </div>

@@ -22,6 +22,8 @@ interface StudentSaveFlowInput {
   t: TranslationFunction;
   onSave: (student: Student) => void | Promise<void>;
   onClose: () => void;
+  keepOpen?: boolean;
+  onBaselineReset?: (data: Partial<Student>) => void;
   onValidationTab?: (tabId: string, fieldId: string) => void;
   setValidationErrors: (errors: ValidationError[]) => void;
   setSaving: (saving: boolean) => void;
@@ -70,7 +72,7 @@ function notifyStudentSaveFailed(t: TranslationFunction, err: unknown, scope: st
   reportClientError(err, { scope });
 }
 
-export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<void> {
+export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<boolean> {
   input.setValidationErrors([]);
 
   const zodErrors = validateStudentDraft(input.studentDraft, {
@@ -87,7 +89,7 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<v
       focusStudentValidationField(input.formInstanceId, first.fieldId);
     }
     notify.error(input.t("common.formPleaseFixErrors"));
-    return;
+    return false;
   }
 
   input.setSaving(true);
@@ -107,7 +109,7 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<v
       input.setTypedDuplicateReason(duplicateReason);
       input.setDuplicateConfirmOpen(true);
       input.setSaving(false);
-      return;
+      return false;
     }
 
     await commitStudentSave({
@@ -116,9 +118,14 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<v
       blueprintVersion: input.blueprintVersion,
       onSave: input.onSave,
     });
-    input.onClose();
+    input.onBaselineReset?.(input.studentDraft);
+    if (!input.keepOpen) {
+      input.onClose();
+    }
+    return true;
   } catch (err: unknown) {
     notifyStudentSaveFailed(input.t, err, "students.form_save");
+    return false;
   } finally {
     input.setSaving(false);
   }

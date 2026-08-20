@@ -1,6 +1,10 @@
 import { createStandardModuleConfigHook } from "@/hooks/createStandardModuleConfigHook";
 import { getContactFieldSystemDefaults } from "@/lib/contactFieldsMigration";
-import { loadFieldConfig, setFieldConfigMemory } from "@/lib/contactFieldsStore";
+import {
+  loadFieldConfig,
+  normalizeContactFieldConfig,
+  setFieldConfigMemory,
+} from "@/lib/contactFieldsStore";
 import { setPreferencesMemory } from "@/lib/contacts/preferencesStorage";
 import {
   CONTACTS_FIELD_CONFIG_QUERY_KEY,
@@ -23,7 +27,7 @@ const useContactsConfigImpl = createStandardModuleConfigHook<
   defaultFieldDefs: [],
   useComposedSettings: function useComposedContactsSettings() {
     const fieldConfigQuery = useContactFieldConfigQuery();
-    return (fieldConfigQuery.data ?? loadFieldConfig()) as ContactsConfigSettings;
+    return normalizeContactFieldConfig(fieldConfigQuery.data ?? loadFieldConfig()) as ContactsConfigSettings;
   },
   useFieldConfigMutation: useContactFieldConfigMutation,
   usePreferencesMutation: useContactPreferencesMutation as unknown as () => {
@@ -34,10 +38,10 @@ const useContactsConfigImpl = createStandardModuleConfigHook<
   fieldConfigQueryKey: CONTACTS_FIELD_CONFIG_QUERY_KEY,
   preferencesQueryKey: CONTACTS_PREFERENCES_QUERY_KEY,
   normalizeSettings: (settings) =>
-    (settings as ContactsConfigSettings | null | undefined) ?? getContactFieldSystemDefaults(),
+    normalizeContactFieldConfig(settings) as ContactsConfigSettings,
   normalizePrefs: (prefs) => prefs,
   composeSettings: (settings, _prefs, formTabs) => {
-    const config = (settings as ContactsConfigSettings | null | undefined) ?? getContactFieldSystemDefaults();
+    const config = normalizeContactFieldConfig(settings);
     return formTabs ? ({ ...config, formTabs } as ContactsConfigSettings) : config;
   },
   // Contacts persists field config and preferences as separate REST documents.

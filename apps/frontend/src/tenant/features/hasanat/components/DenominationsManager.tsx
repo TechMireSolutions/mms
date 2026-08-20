@@ -7,6 +7,8 @@ import { Card } from '@/components/ui/card';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DenominationModal } from '@/tenant/features/hasanat/components/DenominationModal';
+import { cn } from '@/lib/utils';
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from '@/lib/semanticTone';
 
 const MotionCard = motion.create(Card);
 
@@ -66,9 +68,9 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.06 }}
-            className={`p-4 ps-5.5 group ${!denomination.active ? 'opacity-60' : ''}`}
+            className={cn("p-4 group", CARD_STRIPE_INSET, !denomination.active && "opacity-60")}
           >
-            <div className="absolute start-0 top-0 bottom-0 w-1 transition-colors duration-300" style={{ backgroundColor: denomination.active ? denomination.color : 'hsl(var(--muted-foreground))' }} />
+            <div className={cn(CARD_STRIPE_BASE, "transition-colors duration-300")} style={{ backgroundColor: denomination.active ? denomination.color : 'hsl(var(--muted-foreground))' }} />
             <header className="relative mb-3 flex h-16 items-center gap-3 overflow-hidden rounded-xl px-4 text-primary-foreground shadow-md" style={{ background: `linear-gradient(135deg, ${denomination.color}, color-mix(in srgb, ${denomination.color} 60%, transparent))` }}>
               <span className="shrink-0 text-3xl" aria-hidden="true">{denomination.icon}</span>
               <div className="min-w-0">

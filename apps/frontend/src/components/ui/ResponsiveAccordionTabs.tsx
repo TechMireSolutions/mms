@@ -18,6 +18,9 @@ export const ResponsiveAccordionTabs = React.memo(function ResponsiveAccordionTa
   activeTab,
   onTabChange,
   children,
+  isDirty = false,
+  onSave,
+  saveOnTabChange = true,
   desktopLayout = "horizontal",
   hideWhenSingle = false,
   collapsible = true,
@@ -29,14 +32,23 @@ export const ResponsiveAccordionTabs = React.memo(function ResponsiveAccordionTa
   const prefix = panelIdPrefix;
 
   const handleTabChange = useCallback(
-    (tabId: string) => {
+    async (tabId: string) => {
       if (collapsible && activeTab === tabId) {
         onTabChange("");
         return;
       }
+      if (tabId === activeTab) return;
+      if (saveOnTabChange && isDirty && onSave) {
+        try {
+          const res = await onSave();
+          if (res === false) return;
+        } catch {
+          return;
+        }
+      }
       onTabChange(tabId);
     },
-    [activeTab, collapsible, onTabChange],
+    [activeTab, collapsible, isDirty, onSave, onTabChange, saveOnTabChange],
   );
 
   useScrollSurfaceOnChange(activeTab, {

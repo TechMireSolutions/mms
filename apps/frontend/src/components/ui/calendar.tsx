@@ -20,57 +20,93 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       className={cn("p-3", className)}
       classNames={{
-        months: "flex flex-col sm:flex-row space-y-4 sm:gap-4 sm:space-y-0",
-        month: "space-y-4",
-        month_caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium",
-        nav: "gap-1 flex items-center",
+        months: "flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:gap-6 sm:divide-x sm:divide-border/40",
+        month: "space-y-3 transition-opacity duration-150 animate-in fade-in-50",
+        month_caption: "flex justify-center pt-1 relative items-center min-h-9",
+        caption_label: "text-xs font-semibold text-foreground tracking-wide",
+        nav: "flex items-center justify-between absolute inset-x-0 top-1 pointer-events-none z-10 px-0.5",
         button_previous: cn(
-          buttonVariants({ variant: "outline" }),
-          "min-h-11 min-w-11 bg-transparent p-0 opacity-50 hover:opacity-100 absolute start-1"
+          buttonVariants({ variant: "ghost", size: "icon" }),
+          "h-8 w-8 min-h-8 min-w-8 p-0 text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors pointer-events-auto cursor-pointer"
         ),
         button_next: cn(
-          buttonVariants({ variant: "outline" }),
-          "min-h-11 min-w-11 bg-transparent p-0 opacity-50 hover:opacity-100 absolute end-1"
+          buttonVariants({ variant: "ghost", size: "icon" }),
+          "h-8 w-8 min-h-8 min-w-8 p-0 text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors pointer-events-auto cursor-pointer"
         ),
         month_grid: "w-full border-collapse space-y-1",
-        weekdays: "flex",
-        weekday: "text-muted-foreground rounded-md w-8 font-normal text-xs",
-        week: "flex w-full mt-2",
+        weekdays: "flex justify-around border-b border-border/40 pb-1.5 mb-1",
+        weekday: "text-muted-foreground/70 font-semibold text-[11px] uppercase tracking-wider w-8 text-center select-none",
+        week: "flex w-full mt-1 justify-around",
         day: cn(
-          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent/60 [&:has([aria-selected].day-outside)]:bg-accent/30 [&:has([aria-selected].day-range-end)]:rounded-e-md",
+          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
           props.mode === "range"
-            ? "[&:has(>.day-range-end)]:rounded-e-md [&:has(>.day-range-start)]:rounded-s-md first:[&:has([aria-selected])]:rounded-s-md last:[&:has([aria-selected])]:rounded-e-md"
+            ? "[&:has(>.day-range-end)]:rounded-e-lg [&:has(>.day-range-start)]:rounded-s-lg first:[&:has([aria-selected])]:rounded-s-lg last:[&:has([aria-selected])]:rounded-e-lg [&:has([aria-selected])]:bg-primary/10"
             : "[&:has([aria-selected])]:rounded-lg"
         ),
         day_button: cn(
           buttonVariants({ variant: "ghost" }),
-          "min-h-11 min-w-11 p-0 font-normal aria-selected:opacity-100 rounded-lg hover:bg-muted/80 transition-colors"
+          "h-8 w-8 min-h-8 min-w-8 p-0 font-medium text-xs aria-selected:opacity-100 rounded-lg hover:bg-muted/80 transition-all duration-150 cursor-pointer"
         ),
         range_start: "day-range-start",
         range_end: "day-range-end",
         selected:
-          "bg-primary text-primary-foreground font-semibold shadow-sm shadow-primary/30 hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-lg",
+          "bg-primary text-primary-foreground font-bold shadow-sm shadow-primary/30 hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-lg",
         today:
-          "font-semibold text-primary ring-1 ring-primary/40 rounded-lg [&:not([aria-selected])]:bg-primary/5",
-        outside:
-          "day-outside text-muted-foreground/40 aria-selected:bg-accent/40 aria-selected:text-muted-foreground",
-        disabled: "text-muted-foreground/35 opacity-40 cursor-not-allowed pointer-events-none",
+          "font-bold text-primary ring-1.5 ring-primary/40 rounded-lg [&:not([aria-selected])]:bg-primary/5",
+        outside: "day-outside text-muted-foreground/40",
+        disabled: "text-muted-foreground/45 cursor-not-allowed pointer-events-none",
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
-        dropdowns: "flex justify-center gap-1.5 items-center",
+        dropdowns: "flex justify-center gap-1.5 items-center z-10",
         ...classNames,
       }}
       {...props}
       components={{
         Chevron: ({ className: chevronClassName, orientation, ...chevronProps }) => {
           if (orientation === "left") {
-            return <ChevronLeft className={cn("h-4 w-4", chevronClassName)} {...chevronProps} />
+            return <ChevronLeft className={cn("h-4 w-4 rtl:rotate-180 transition-transform", chevronClassName)} {...chevronProps} />
           }
-          return <ChevronRight className={cn("h-4 w-4", chevronClassName)} {...chevronProps} />
+          return <ChevronRight className={cn("h-4 w-4 rtl:rotate-180 transition-transform", chevronClassName)} {...chevronProps} />
         },
         Dropdown: CalendarDropdown,
+        DayButton: ({ day: _day, modifiers, className: buttonClassName, ...buttonProps }) => {
+          const isSelected = Boolean(modifiers.selected)
+          const isToday = Boolean(modifiers.today)
+          const isOutside = Boolean(modifiers.outside)
+          const isDisabled = Boolean(modifiers.disabled)
+          const isRangeStart = Boolean(modifiers.range_start)
+          const isRangeEnd = Boolean(modifiers.range_end)
+          const isRangeMiddle = Boolean(modifiers.range_middle)
+          const isSingleDayRange = isRangeStart && isRangeEnd
+
+          return (
+            <button
+              type="button"
+              className={cn(
+                "h-8 w-8 min-h-8 min-w-8 p-0 font-medium text-xs transition-all duration-100 flex items-center justify-center select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+                // Unselected default
+                !isSelected && !isRangeMiddle && !isOutside && !isDisabled && "text-foreground font-semibold hover:bg-muted/80 rounded-lg cursor-pointer active:scale-95",
+                // Today (unselected)
+                isToday && !isSelected && !isRangeMiddle && "text-primary font-bold ring-1.5 ring-primary/40 bg-primary/10 hover:bg-primary/20 rounded-lg cursor-pointer active:scale-95",
+                // Range Start
+                isRangeStart && !isSingleDayRange && "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/30 hover:bg-primary hover:text-primary-foreground rounded-s-lg rounded-e-none cursor-pointer",
+                // Range End
+                isRangeEnd && !isSingleDayRange && "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/30 hover:bg-primary hover:text-primary-foreground rounded-e-lg rounded-s-none cursor-pointer",
+                // Range Middle
+                isRangeMiddle && "bg-primary/15 text-primary font-semibold hover:bg-primary/25 rounded-none cursor-pointer",
+                // Selected single day
+                ((isSelected && !isRangeMiddle) || isSingleDayRange) && "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/30 hover:bg-primary hover:text-primary-foreground rounded-lg cursor-pointer",
+                // Outside month days (not disabled)
+                isOutside && !isDisabled && !isSelected && !isRangeMiddle && "text-muted-foreground/40 hover:bg-muted/40 rounded-lg cursor-pointer",
+                // Disabled days (clearly legible muted text without double-opacity fade)
+                isDisabled && !isSelected && "text-muted-foreground/45 cursor-not-allowed pointer-events-none rounded-lg",
+                buttonClassName,
+              )}
+              {...buttonProps}
+            />
+          )
+        },
         ...components,
       }}
     />

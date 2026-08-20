@@ -9,6 +9,7 @@ import {
   DEFAULT_PHONE_LABELS,
   DEFAULT_SKILL_CATEGORY_LABELS,
   DEFAULT_SKILL_PROFICIENCY_LABELS,
+  DEFAULT_TAG_LABELS,
   GENDERS,
   RELATIONSHIPS,
   SOCIAL_PLATFORMS,
@@ -54,6 +55,7 @@ export function useContactConfigCollections({
   const employmentTypes = lookupsQuery.data?.employmentTypes ?? DEFAULT_EMPLOYMENT_TYPE_LABELS;
   const skillCategories = lookupsQuery.data?.skillCategories ?? DEFAULT_SKILL_CATEGORY_LABELS;
   const skillProficiencies = lookupsQuery.data?.skillProficiencies ?? DEFAULT_SKILL_PROFICIENCY_LABELS;
+  const tags = lookupsQuery.data?.tags ?? DEFAULT_TAG_LABELS;
 
   // Prefer invalidate over query.refetch() — refetch() ignores `enabled: false` and
   // can storm /api/contacts/lookups + /api/auth/refresh on the login screen.
@@ -125,6 +127,10 @@ export function useContactConfigCollections({
     (options: string[]) => persistStringKind("skillProficiencies", options),
     [persistStringKind],
   );
+  const updateTags = useCallback(
+    (options: string[]) => persistStringKind("tags", options),
+    [persistStringKind],
+  );
   const updateCountryCodes = useCallback(
     async (countryCodeOptions: CountryCodeEntry[]) => {
       await lookupMutation.mutateAsync({ kind: "countryCodes", items: countryCodeOptions });
@@ -153,6 +159,7 @@ export function useContactConfigCollections({
     employmentTypes,
     skillCategories,
     skillProficiencies,
+    tags,
     reloadCollections,
     updateGenders,
     updateSocialPlatforms,
@@ -164,6 +171,7 @@ export function useContactConfigCollections({
     updateEmploymentTypes,
     updateSkillCategories,
     updateSkillProficiencies,
+    updateTags,
     updateCountryCodes,
     lookupsReady: lookupsQuery.isSuccess || lookupsQuery.isError,
     lookupsLoading: lookupsQuery.isLoading,

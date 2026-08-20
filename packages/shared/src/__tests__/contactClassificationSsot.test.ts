@@ -18,7 +18,6 @@ describe('contact classification SSOT', () => {
   it('strips retired fields from contact-shaped records', () => {
     const cleaned = stripContactRetiredClassificationFields({
       firstName: 'Fatima',
-      tag: 'Teacher',
       lifecycleStage: 'Staff',
       persona: 'staff',
       city: 'Karachi',
@@ -34,7 +33,7 @@ describe('contact classification SSOT', () => {
         columnRegistry: [
           { key: 'name', enabled: true },
           { key: 'lifecycleStage', enabled: true },
-          { key: 'tag', enabled: true },
+          { key: 'persona', enabled: true },
         ],
         fields: {
           basic: [

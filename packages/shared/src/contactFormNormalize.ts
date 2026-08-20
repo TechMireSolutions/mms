@@ -256,6 +256,14 @@ export function normalizeContactForEdit(
     experience,
     skills,
     relationshipContacts,
+    tags: Array.isArray(merged.tags)
+      ? merged.tags
+      : (typeof merged.tag === "string" && merged.tag.trim()
+          ? merged.tag.split(",").map((s) => s.trim()).filter(Boolean)
+          : []),
+    tag: typeof merged.tag === "string"
+      ? merged.tag
+      : (Array.isArray(merged.tags) ? merged.tags.join(", ") : ""),
   } as Partial<Contact>;
 }
 
@@ -295,6 +303,12 @@ export function syncContactScalarFields<T extends Partial<Contact>>(contact: T):
     delete result.state;
     delete result.country;
     delete result.address;
+  }
+
+  if (Array.isArray(contact.tags)) {
+    result.tag = contact.tags.map((t) => String(t).trim()).filter(Boolean).join(', ');
+  } else if (typeof contact.tag === 'string' && contact.tag.trim()) {
+    result.tags = contact.tag.split(',').map((s) => s.trim()).filter(Boolean);
   }
 
   return result as T;

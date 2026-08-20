@@ -37,6 +37,7 @@ export type ContactConfigExtras = {
   employmentTypes: string[];
   skillCategories: string[];
   skillProficiencies: string[];
+  tags: string[];
   lookupsReady: boolean;
   lookupsLoading: boolean;
   lookupsError: Error | null;
@@ -54,6 +55,7 @@ export type ContactConfigExtras = {
   updateEmploymentTypes: (employmentTypeOptions: string[]) => void | Promise<void>;
   updateSkillCategories: (skillCategoryOptions: string[]) => void | Promise<void>;
   updateSkillProficiencies: (skillProficiencyOptions: string[]) => void | Promise<void>;
+  updateTags: (tagOptions: string[]) => void | Promise<void>;
 
   // ── Column Layout & Visibility ──────────────────────────────────────────────
   columnRegistry: ColumnRegistryEntry[];

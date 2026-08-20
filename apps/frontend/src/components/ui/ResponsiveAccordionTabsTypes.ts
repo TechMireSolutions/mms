@@ -15,6 +15,9 @@ export interface ResponsiveAccordionTabsProps {
   activeTab: string;
   onTabChange: (id: string) => void;
   children: ReactNode;
+  isDirty?: boolean;
+  onSave?: () => void | Promise<void | boolean>;
+  saveOnTabChange?: boolean;
   desktopLayout?: "horizontal" | "sidebar";
   hideWhenSingle?: boolean;
   collapsible?: boolean;

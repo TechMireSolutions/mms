@@ -138,6 +138,8 @@ export interface Contact {
   dob?: string;
   cnic?: string;
   isSyed?: boolean;
+  tag?: string;
+  tags?: string[];
   avatar?: string | null;
   notes?: string;
   createdAt?: string;
@@ -175,4 +177,15 @@ export interface Contact {
   attachments?: ContactAttachment[];
   aiSummary?: string;
   [key: string]: unknown;
+}
+
+/** Resolves normalized array of tag strings from a Contact (supporting tags array or comma-delimited tag string). */
+export function getContactTags(contact: { tag?: string | null; tags?: string[] | null }): string[] {
+  if (Array.isArray(contact.tags) && contact.tags.length > 0) {
+    return contact.tags.map((t) => String(t).trim()).filter(Boolean);
+  }
+  if (typeof contact.tag === 'string' && contact.tag.trim()) {
+    return contact.tag.split(',').map((t) => t.trim()).filter(Boolean);
+  }
+  return [];
 }

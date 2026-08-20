@@ -17,6 +17,8 @@ export function ContactBasicIdentityFields({
   updateDraft,
   genders,
   onUpdateGenders,
+  tags,
+  onUpdateTags,
   lockGender,
 }: {
   contactDraft: Partial<Contact>;
@@ -27,6 +29,8 @@ export function ContactBasicIdentityFields({
   updateDraft: (patch: Partial<Contact>) => void;
   genders: string[];
   onUpdateGenders: (genders: string[]) => void;
+  tags?: string[];
+  onUpdateTags?: (tags: string[]) => void;
   lockGender: boolean;
 }): React.JSX.Element {
   const { t } = useTranslation();
@@ -115,6 +119,8 @@ export function ContactBasicIdentityFields({
           isFieldRequired={isFieldRequired}
           getFieldError={getFieldError}
           updateDraft={updateDraft}
+          tags={tags}
+          onUpdateTags={onUpdateTags}
         />
       </div>
     </>

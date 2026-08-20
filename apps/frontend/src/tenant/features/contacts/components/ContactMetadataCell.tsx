@@ -120,6 +120,21 @@ export function ContactMetadataCell({
         if (!contact.cnic) return renderDash();
         return <span className="font-mono">{formatCnic(contact.cnic) || contact.cnic}</span>;
       }
+      case "tag": {
+        const contactTags = Array.isArray(contact.tags) && contact.tags.length > 0
+          ? contact.tags
+          : (contact.tag ? contact.tag.split(",").map((s) => s.trim()).filter(Boolean) : []);
+        if (contactTags.length === 0) return renderDash();
+        return (
+          <div className="flex flex-wrap gap-1">
+            {contactTags.map((tag) => (
+              <Badge key={tag} pill variant="outline" className="px-2 font-medium border-primary/30 text-primary bg-primary/5">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+        );
+      }
       case "notes": {
         if (!contact.notes) return renderDash();
         return (

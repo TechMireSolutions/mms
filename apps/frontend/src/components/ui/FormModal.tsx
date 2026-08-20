@@ -30,7 +30,9 @@ export interface FormModalProps<K extends string = string> {
   dir?: 'ltr' | 'rtl';
   cancelLabel?: string;
   saveLabel?: string;
-  onSave?: () => void | Promise<void>;
+  onSave?: (options?: { keepOpen?: boolean } | any) => void | Promise<unknown>;
+  isDirty?: boolean;
+  saveOnTabChange?: boolean;
   saving?: boolean;
   saveDisabled?: boolean;
   saved?: boolean;
@@ -69,6 +71,8 @@ export function FormModal<K extends string = string>({
   cancelLabel,
   saveLabel,
   onSave,
+  isDirty = false,
+  saveOnTabChange = true,
   saving = false,
   saveDisabled = false,
   saved = false,
@@ -86,6 +90,22 @@ export function FormModal<K extends string = string>({
     if (!error) return [];
     return (Array.isArray(error) ? error : [error]).filter(Boolean);
   }, [error]);
+
+  const handleTabChange = React.useCallback(
+    async (nextTab: K) => {
+      if (nextTab === activeTab) return;
+      if (saveOnTabChange && isDirty && onSave && !saveDisabled && !saving) {
+        try {
+          const result = await onSave({ keepOpen: true });
+          if (result === false) return;
+        } catch {
+          return;
+        }
+      }
+      onTabChange?.(nextTab);
+    },
+    [activeTab, isDirty, onSave, onTabChange, saveDisabled, saveOnTabChange, saving],
+  );
 
   const {
     hasTabs,
@@ -130,7 +150,7 @@ export function FormModal<K extends string = string>({
     <div ref={containerRef} lang={lang} dir={dir} className="@container h-full" aria-busy={saving || undefined}>
       <FormErrorBanner errors={errors} />
       {hasTabs && activeTab !== undefined && onTabChange ? (
-        <FormModalTabs tabs={tabs!} activeTab={activeTab} onTabChange={onTabChange} dir={dir}>
+        <FormModalTabs tabs={tabs!} activeTab={activeTab} onTabChange={handleTabChange} dir={dir}>
           {children}
         </FormModalTabs>
       ) : (
@@ -159,7 +179,7 @@ export function FormModal<K extends string = string>({
             saveLabel={resolvedSaveLabel}
             savedLabel={savedLabel}
             onClose={onClose}
-            onSave={onSave}
+            onSave={onSave ? () => { void onSave(); } : undefined}
             saving={saving}
             saveDisabled={saveDisabled}
             saved={saved}

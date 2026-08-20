@@ -42,6 +42,7 @@ interface UseStudentFormActionHandlersOptions {
   setDuplicateConfirmOpen: (value: boolean) => void;
   formInstanceId: string;
   onValidationTab?: (tabId: string, fieldId: string) => void;
+  onBaselineReset?: (data: Partial<Student>) => void;
 }
 
 export function useStudentFormActionHandlers({
@@ -68,6 +69,7 @@ export function useStudentFormActionHandlers({
   setDuplicateConfirmOpen,
   formInstanceId,
   onValidationTab,
+  onBaselineReset,
 }: UseStudentFormActionHandlersOptions) {
   const clearDuplicatePrompt = useCallback(() => {
     setDuplicateConfirmOpen(false);
@@ -82,8 +84,8 @@ export function useStudentFormActionHandlers({
 
   const savingRef = useRef(false);
 
-  const handleSave = () => {
-    if (savingRef.current) return;
+  const handleSave = async (options?: { keepOpen?: boolean }): Promise<boolean> => {
+    if (savingRef.current) return false;
     savingRef.current = true;
     const draftForSave = resolveStudentGrForSave(
       student,
@@ -91,7 +93,7 @@ export function useStudentFormActionHandlers({
       nextGrNumber,
       autoGenerateId,
     );
-    void runStudentSaveFlow({
+    const success = await runStudentSaveFlow({
       studentDraft: draftForSave,
       student,
       linkedContact,
@@ -108,6 +110,8 @@ export function useStudentFormActionHandlers({
       t,
       onSave,
       onClose,
+      keepOpen: options?.keepOpen,
+      onBaselineReset,
       onValidationTab,
       setValidationErrors,
       setSaving: (value: boolean) => {
@@ -118,6 +122,7 @@ export function useStudentFormActionHandlers({
       setTypedDuplicateReason,
       setDuplicateConfirmOpen,
     });
+    return success;
   };
 
   const confirmDuplicateSave = () => {

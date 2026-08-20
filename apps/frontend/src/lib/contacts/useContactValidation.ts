@@ -51,6 +51,7 @@ export function useContactValidation(): (contactDraft: unknown) => ValidationErr
     employmentTypes,
     skillCategories,
     skillProficiencies,
+    tags,
   } = useContactConfig();
   const settings = useGlobalSettings();
   const { role } = usePermissions();
@@ -69,6 +70,7 @@ export function useContactValidation(): (contactDraft: unknown) => ValidationErr
         employmentTypes,
         skillCategories,
         skillProficiencies,
+        tags,
       }),
     [
       fields,
@@ -82,6 +84,7 @@ export function useContactValidation(): (contactDraft: unknown) => ValidationErr
       employmentTypes,
       skillCategories,
       skillProficiencies,
+      tags,
     ],
   );
 

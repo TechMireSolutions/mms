@@ -10,6 +10,8 @@ import { FormSelect } from '@/components/ui/FormSelect';
 import { Field } from '@/components/ui/FormPrimitives';
 import { Card } from '@/components/ui/card';
 import { ObligationCollectionWakalaSection } from '@/tenant/features/obligations/components/ObligationCollectionWakalaSection';
+import { cn } from '@/lib/utils';
+import { CARD_STRIPE_WIDTH } from '@/lib/semanticTone';
 
 export interface ObligationCollectionFormState {
   receipt_no: string;
@@ -57,7 +59,7 @@ export function ObligationCollectionFormFields({
   return (
     <div className="space-y-6">
       <header className="relative overflow-hidden group rounded-2xl border border-primary/25 bg-primary/5 backdrop-blur-sm p-4 px-5.5 flex items-center gap-3.5 shadow-sm transition-all duration-300">
-        <div className="absolute start-0 top-0 bottom-0 w-1.5 bg-primary/70" />
+        <div className={cn("absolute start-0 top-0 bottom-0 bg-primary/70", CARD_STRIPE_WIDTH)} />
         <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
         <div>
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{t('obligations.form.receiptAuto')}</h3>

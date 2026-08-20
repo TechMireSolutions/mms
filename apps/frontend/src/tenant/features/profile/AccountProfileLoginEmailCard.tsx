@@ -50,15 +50,14 @@ export function AccountProfileLoginEmailCard({
   const { t } = useTranslation();
 
   return (
-    <Card className="group/login-card">
-      <div className="absolute start-0 top-0 bottom-0 w-1 bg-primary/45 transition-colors group-hover/login-card:bg-primary" />
+    <Card accentColor="primary" className="group/login-card">
       <CardTitleBar
         inset
         icon={<Mail className="h-4 w-4 text-primary" />}
         title={t("account.loginSection")}
         subtitle={t("account.loginSectionDesc")}
       />
-      <CardContent className="pt-5 space-y-4 ps-6.5">
+      <CardContent className="pt-5 space-y-4 ps-6">
         <div className="flex items-center gap-3 p-3 bg-muted/30 border border-border/30 rounded-xl text-sm">
           <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
           <div className="text-start">
