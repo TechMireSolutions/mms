@@ -141,10 +141,12 @@
   --max-height-modal-tall: 43.75rem;
   --max-height-modal-xl: 92dvh;
   --max-height-modal-2xl: 94dvh;
+  --max-height-viewport-half: 50dvh;
   --max-height-drawer: 85dvh;
   --max-height-panel-sm: 13.75rem;
   --max-height-scroll-lg: 20rem;
   --max-height-list-lg: 23.75rem;
+  --max-height-chat-scroll: 22.5rem;
   --max-height-preview-tall: 18.75rem;
   --max-height-preview-sm: 22.5rem;
   --max-height-preview-md: 28.75rem;
@@ -156,6 +158,8 @@
   --max-height-widget-customizer: 16.25rem;
   --max-height-popover-scroll: min(50dvh, 20rem);
   --max-height-popover-scroll-sm: min(50dvh, 18rem);
+  --height-corner-preview: 5.5rem;
+  --width-corner-preview: 9rem;
   --max-width-toast: 26.25rem;
   --max-width-filter-sm: 9.375rem;
   --max-width-cell-sm: 10rem;

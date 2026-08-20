@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Switch } from '@/components/ui/switch';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
+import { cn } from '@/lib/utils';
 import {
   LLM_PROVIDERS_META,
   type LlmConfig,
@@ -136,13 +138,14 @@ export function LlmConfigModalBody({
 
         <div className="space-y-2">
           <Label htmlFor="apiKey">{t('settings.llmModalApiKey')}</Label>
-          <Input
+          <PasswordInput
             id="apiKey"
             name="apiKey"
-            type="password"
             value={formApiKey}
             onChange={(event) => setFormApiKey(event.target.value)}
             placeholder={editingConfig?.apiKey ? t('settings.llmModalApiKeyPlaceholderSaved') : t('settings.llmModalApiKeyPlaceholderEmpty')}
+            autoComplete="off"
+            required={false}
           />
         </div>
 
@@ -165,7 +168,14 @@ export function LlmConfigModalBody({
         </div>
 
         {modalTestResult && (
-          <div className={`mt-3 rounded-xl border p-4 text-xs ${modalTestResult.success ? 'border-success/20 bg-success/5 text-success' : 'border-destructive/20 bg-destructive/5 text-destructive-foreground'}`}>
+          <div
+            className={cn(
+              'mt-3 rounded-xl border p-4 text-xs',
+              modalTestResult.success
+                ? 'border-success/20 bg-success/5 text-success'
+                : 'border-destructive/20 bg-destructive/5 text-destructive-foreground',
+            )}
+          >
             <p className="mb-1 font-semibold">{modalTestResult.success ? t('settings.llmTestSuccess') : t('settings.llmTestFailed')}</p>
             <p className="mb-3 whitespace-pre-wrap font-mono text-xs leading-relaxed opacity-90">
               {modalTestResult.success ? modalTestResult.response : modalTestResult.message}

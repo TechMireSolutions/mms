@@ -121,17 +121,22 @@ function centerPixelWeight(
   return 1 + centerWeight * (1 - dist / maxDist);
 }
 
+export interface LogoDominantSwatch {
+  hex: string;
+  weight: number;
+  percentage: number;
+}
+
 /**
  * Counts weighted, quantized RGB buckets from raw RGBA canvas data.
- * Designed for logo marks: ignores transparent margins, down-weights neutrals,
- * and favours saturated centre pixels over flat backgrounds.
+ * Returns ranked dominant swatches with their proportional percentage.
  */
-export function extractDominantSwatchesFromRgba(
+export function extractDominantWeightedSwatchesFromRgba(
   rgbaPixels: Uint8ClampedArray,
   width: number,
   height: number,
   options?: LogoPaletteSamplingOptions,
-): string[] {
+): LogoDominantSwatch[] {
   const samplingOptions = { ...DEFAULT_SAMPLING, ...options };
   const background = parseHexRgb(samplingOptions.flattenOnto) ?? { r: 255, g: 255, b: 255 };
   const buckets = new Map<string, ColorBucket>();
@@ -182,15 +187,35 @@ export function extractDominantSwatchesFromRgba(
     .sort((a, b) => b.weight - a.weight);
 
   const picked: Rgb[] = [];
-  const palette: string[] = [];
+  const dominant: LogoDominantSwatch[] = [];
+  let totalPickedWeight = 0;
 
   for (const entry of ranked) {
-    if (palette.length >= samplingOptions.maxSwatches) break;
+    if (dominant.length >= samplingOptions.maxSwatches) break;
     const tooClose = picked.some((rgb) => rgbDistance(rgb, entry.rgb) < samplingOptions.minSwatchDistance);
     if (tooClose) continue;
     picked.push(entry.rgb);
-    palette.push(entry.hex);
+    dominant.push({ hex: entry.hex, weight: entry.weight, percentage: 0 });
+    totalPickedWeight += entry.weight;
   }
 
-  return palette;
+  const safeTotal = Math.max(1, totalPickedWeight);
+  return dominant.map((item) => ({
+    ...item,
+    percentage: Math.max(1, Math.round((item.weight / safeTotal) * 100)),
+  }));
+}
+
+/**
+ * Counts weighted, quantized RGB buckets from raw RGBA canvas data.
+ * Designed for logo marks: ignores transparent margins, down-weights neutrals,
+ * and favours saturated centre pixels over flat backgrounds.
+ */
+export function extractDominantSwatchesFromRgba(
+  rgbaPixels: Uint8ClampedArray,
+  width: number,
+  height: number,
+  options?: LogoPaletteSamplingOptions,
+): string[] {
+  return extractDominantWeightedSwatchesFromRgba(rgbaPixels, width, height, options).map((s) => s.hex);
 }

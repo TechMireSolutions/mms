@@ -13,6 +13,8 @@ import {
 } from '@/components/branding/BrandingShared';
 import { normalizePhoneInput, type BrandingSettings } from '@mms/shared';
 
+import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
+
 interface BrandingSettingsProfileSectionProps {
   data: BrandingSettings;
   upd: <K extends keyof BrandingSettings>(key: K, value: BrandingSettings[K]) => void;
@@ -112,54 +114,45 @@ export function BrandingSettingsContactSection({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="branding-email">{t('branding.email')}</Label>
-          <div className="relative">
-            <Mail className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input
-              id="branding-email"
-              name="brandingEmail"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              value={data.email}
-              placeholder={t('branding.emailPlaceholder')}
-              className="ps-9"
-              onChange={(event) => upd('email', event.target.value)}
-            />
-          </div>
+          <LeadingIconInput
+            id="branding-email"
+            name="brandingEmail"
+            type="email"
+            inputMode="email"
+            autoComplete="email"
+            icon={Mail}
+            value={data.email}
+            placeholder={t('branding.emailPlaceholder')}
+            onChange={(event) => upd('email', event.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="branding-phone">{t('branding.phone')}</Label>
-          <div className="relative">
-            <Phone className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input
-              id="branding-phone"
-              name="brandingPhone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              value={data.phone}
-              placeholder={t('branding.phonePlaceholder')}
-              className="ps-9"
-              onChange={(event) => upd('phone', event.target.value)}
-              onBlur={() => upd('phone', normalizePhoneInput(data.phone))}
-            />
-          </div>
+          <LeadingIconInput
+            id="branding-phone"
+            name="brandingPhone"
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
+            icon={Phone}
+            value={data.phone}
+            placeholder={t('branding.phonePlaceholder')}
+            onChange={(event) => upd('phone', event.target.value)}
+            onBlur={() => upd('phone', normalizePhoneInput(data.phone))}
+          />
         </div>
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="branding-website">{t('branding.website')}</Label>
-          <div className="relative">
-            <Globe className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            <Input
-              id="branding-website"
-              name="brandingWebsite"
-              type="url"
-              inputMode="url"
-              value={data.website}
-              placeholder={t('branding.websitePlaceholder')}
-              className="ps-9"
-              onChange={(event) => upd('website', event.target.value)}
-            />
-          </div>
+          <LeadingIconInput
+            id="branding-website"
+            name="brandingWebsite"
+            type="url"
+            inputMode="url"
+            icon={Globe}
+            value={data.website}
+            placeholder={t('branding.websitePlaceholder')}
+            onChange={(event) => upd('website', event.target.value)}
+          />
         </div>
       </div>
     </SectionCard>

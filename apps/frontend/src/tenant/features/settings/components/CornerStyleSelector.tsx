@@ -58,39 +58,73 @@ export default function CornerStyleSelector({
     : null;
 
   const handleSliderChange = (values: number[]): void => {
-    const val = values[0];
+    const val = values[0] ?? 10;
     const preset = getPresetForPx(val);
-    if (preset) {
-      onChange(preset);
-    } else {
-      onChange(`${val}px`);
-    }
+    React.startTransition(() => {
+      if (preset) {
+        onChange(preset);
+      } else {
+        onChange(`${val}px`);
+      }
+    });
   };
 
   const resolvedRadius = resolveBrandingCornerRadius(value);
+  const valueText = matchedPreset && activeOption
+    ? `${resolvedRadius} (${t(activeOption.labelKey)})`
+    : t('theme.cornerCustom', { radius: resolvedRadius });
 
   return (
-    <div className={cn(FORM_CARD, "flex flex-col gap-6 p-5 shadow-xs")}>
-      {/* Live Preview Box */}
+    <div className={cn(FORM_CARD, "flex flex-col gap-6 p-5 shadow-sm")}>
+      {/* Live Composite Preview Box */}
       <div 
-        className="flex items-center justify-center py-8 bg-muted/10 rounded-xl border border-border/40 relative overflow-hidden transition-all duration-300"
+        className="flex flex-col items-center justify-center p-6 bg-muted/20 backdrop-blur-sm rounded-2xl border border-border/60 relative overflow-hidden transition-all duration-300 shadow-inner"
         aria-hidden="true"
       >
-        <div
-          className="w-32 h-20 bg-primary/10 border border-primary/20 flex flex-col items-center justify-center gap-2 shadow-xs transition-all duration-300"
-          style={{ borderRadius: resolvedRadius }}
-        >
+        <div className="w-full max-w-sm flex flex-col gap-3.5">
+          {/* Mini Card Container */}
           <div
-            className="px-3.5 py-1.5 bg-primary text-primary-foreground text-xs font-extrabold shadow-sm transition-all duration-300"
+            className="bg-card border border-border/80 p-4 shadow-sm transition-all duration-300 ease-out space-y-3"
             style={{ borderRadius: resolvedRadius }}
           >
-            {matchedPreset && activeOption
-              ? t(activeOption.labelKey) 
-              : t('theme.cornerCustom', { radius: resolvedRadius })}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <div
+                  className="h-6 w-6 bg-primary/10 border border-primary/20 flex items-center justify-center text-3xs font-bold text-primary transition-all duration-300"
+                  style={{ borderRadius: resolvedRadius }}
+                >
+                  UI
+                </div>
+                <span className="text-xs font-bold text-foreground">
+                  {matchedPreset && activeOption
+                    ? t(activeOption.labelKey)
+                    : t('theme.cornerCustom', { radius: resolvedRadius })}
+                </span>
+              </div>
+              <span
+                className="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 text-3xs font-mono font-bold transition-all duration-300"
+                style={{ borderRadius: resolvedRadius }}
+              >
+                {resolvedRadius}
+              </span>
+            </div>
+
+            {/* Mini Input & Button Row */}
+            <div className="flex items-center gap-2 pt-1">
+              <div
+                className="h-8 flex-1 bg-muted/40 border border-input/80 px-2.5 flex items-center text-3xs text-muted-foreground transition-all duration-300"
+                style={{ borderRadius: resolvedRadius }}
+              >
+                <span>{t('theme.previewSearchPlaceholder')}</span>
+              </div>
+              <div
+                className="h-8 px-3 bg-primary text-primary-foreground font-semibold text-3xs flex items-center justify-center shadow-xs transition-all duration-300"
+                style={{ borderRadius: resolvedRadius }}
+              >
+                <span>{t('theme.cornerPreviewButton')}</span>
+              </div>
+            </div>
           </div>
-          <span className="text-xs text-muted-foreground font-mono">
-            {resolvedRadius}
-          </span>
         </div>
       </div>
 
@@ -98,7 +132,7 @@ export default function CornerStyleSelector({
       <div className="space-y-4 px-1.5">
         <div className="flex justify-between items-center text-xs font-semibold">
           <span className="text-muted-foreground">{t('theme.cornerPreviewRadius')}</span>
-          <span className="text-primary font-mono bg-primary/5 px-2 py-0.5 rounded border border-primary/10">
+          <span className="text-primary font-mono bg-primary/10 px-2.5 py-0.5 rounded-full border border-primary/20 font-bold">
             {resolvedRadius}
           </span>
         </div>
@@ -110,11 +144,12 @@ export default function CornerStyleSelector({
           value={[currentPx]}
           onValueChange={handleSliderChange}
           aria-label={t('theme.cornerStyleTitle')}
+          aria-valuetext={valueText}
           className="py-2"
         />
 
         {/* Step Snap Preset Buttons */}
-        <div className="flex justify-between px-0.5">
+        <div className="flex justify-between gap-1.5 px-0.5">
           {BRANDING_CORNER_STYLE_OPTIONS.map((opt) => {
             const isSelected = matchedPreset === opt.value;
 
@@ -124,11 +159,12 @@ export default function CornerStyleSelector({
                 type="button"
                 variant="ghost"
                 onClick={() => onChange(opt.value)}
+                aria-pressed={isSelected}
                 className={cn(
-                  "min-h-11 text-xs font-black uppercase tracking-widest px-2 rounded-sm shadow-none",
+                  "min-h-11 flex-1 text-xs font-bold tracking-wide px-2 rounded-lg transition-all duration-200",
                   isSelected
-                    ? "text-primary"
-                    : "text-muted-foreground hover:text-foreground"
+                    ? "text-primary bg-primary/10 border border-primary/20 shadow-sm font-extrabold"
+                    : "text-muted-foreground hover:bg-muted/40 hover:text-foreground"
                 )}
               >
                 {t(opt.labelKey)}

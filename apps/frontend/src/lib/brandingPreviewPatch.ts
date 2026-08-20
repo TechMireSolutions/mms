@@ -3,10 +3,11 @@ import {
   type BrandingSettings,
 } from '@mms/shared';
 
-/** Always live-preview theme colours when identity fields change (logo → colours). */
+/** Always live-preview theme colours & corner style when identity fields change (logo → colours). */
 export const BRANDING_COLOUR_PREVIEW_KEYS = [
   'primaryColor',
   'secondaryColor',
+  'cornerStyle',
 ] as const satisfies readonly (keyof BrandingSettings)[];
 
 /** Build branding preview patch; theme colours included even for identity-only drafts. */

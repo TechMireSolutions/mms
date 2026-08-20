@@ -35,6 +35,8 @@ export interface UseGlobalSettingsDraftResult {
   upd: <K extends keyof GlobalSettings>(field: K, value: GlobalSettings[K]) => void;
   handleSaveGlobal: (toast?: UseGlobalSettingsDraftSaveToast) => Promise<boolean>;
   handleSaveModules: (toast?: UseGlobalSettingsDraftSaveToast) => Promise<boolean>;
+  handleDiscardGlobal: () => void;
+  handleDiscardModules: () => void;
   applyPersisted: (globalSettings: GlobalSettings) => void;
   clearSaved: () => void;
 }
@@ -150,6 +152,29 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
     [data, flashSaved, t],
   );
 
+  const handleDiscardGlobal = useCallback((): void => {
+    setData((current) => ({
+      ...current,
+      language: baseline.language,
+      timezone: baseline.timezone,
+      dateFormat: baseline.dateFormat,
+      emailNotifications: baseline.emailNotifications,
+      smsNotifications: baseline.smsNotifications,
+      twoFactor: baseline.twoFactor,
+      sessionTimeout: baseline.sessionTimeout,
+      passwordPolicy: baseline.passwordPolicy,
+    }));
+    clearSaved();
+  }, [baseline, clearSaved]);
+
+  const handleDiscardModules = useCallback((): void => {
+    setData((current) => ({
+      ...current,
+      enabledModules: baseline.enabledModules,
+    }));
+    clearSaved();
+  }, [baseline.enabledModules, clearSaved]);
+
   return {
     data,
     baseline,
@@ -160,6 +185,8 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
     upd,
     handleSaveGlobal,
     handleSaveModules,
+    handleDiscardGlobal,
+    handleDiscardModules,
     applyPersisted,
     clearSaved,
   };

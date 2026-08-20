@@ -11,6 +11,7 @@ import {
 import {
   type DeriveBrandColorsFromPaletteOptions,
   type LogoBrandColors,
+  type LogoColorProportion,
   normalizeBrandHex,
 } from './logoBrandHexUtils.js';
 
@@ -185,7 +186,7 @@ function finalizeAccessiblePair(primaryColor: string, secondaryColor: string): {
  */
 export function deriveBrandColorsFromPalette(
   swatches: readonly string[],
-  options?: DeriveBrandColorsFromPaletteOptions,
+  options?: DeriveBrandColorsFromPaletteOptions & { proportions?: readonly LogoColorProportion[] },
 ): LogoBrandColors | null {
   const deriveOptions = { ...DEFAULT_DERIVE_OPTIONS, ...options };
   const palette = swatches
@@ -212,6 +213,7 @@ export function deriveBrandColorsFromPalette(
     primaryColor: finalized.primaryColor,
     secondaryColor: finalized.secondaryColor,
     palette,
+    proportions: options?.proportions,
     accessibility: finalized.accessibility,
   };
 }

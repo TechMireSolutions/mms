@@ -21,7 +21,7 @@ interface TimezoneSelectPopoverContentProps {
 
 export function TimezoneSelectPopoverContent({
   t,
-  language,
+  language: _language,
   normalizedValue,
   query,
   setQuery,
@@ -32,74 +32,81 @@ export function TimezoneSelectPopoverContent({
   onSelectTimezone,
 }: TimezoneSelectPopoverContentProps): React.JSX.Element {
   return (
-    <PopoverContent className="w-popover-wide p-0" align="start">
-      <div className="flex items-center border-b px-3">
-        <Search className="me-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
+    <PopoverContent className="w-popover-wide p-0 shadow-surface-lg" align="start">
+      <div className="flex items-center border-b border-border/80 px-3 py-1 bg-muted/20">
+        <Search className="me-2 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         <Input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder={t('global.timezoneSearch')}
-          className="h-10 border-0 bg-transparent px-0 shadow-none focus-visible:ring-0"
+          className="h-9 border-0 bg-transparent px-0 text-xs shadow-none focus-visible:ring-0 focus-visible:outline-none placeholder:text-muted-foreground/70"
           aria-label={t('global.timezoneSearch')}
         />
       </div>
-      <div className="max-h-popover-scroll overflow-y-auto p-1">
-        <Button
-          type="button"
-          variant="ghost"
-          className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-start font-normal hover:bg-accent hover:text-accent-foreground"
-          onClick={() => void onLocationDetect()}
-          disabled={detecting}
-        >
-          {detecting ? (
-            <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden />
-          ) : (
-            <MapPin className="h-4 w-4 text-primary" aria-hidden />
-          )}
-          {detecting ? t('global.timezoneDetecting') : t('global.timezoneDetectLocation')}
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          className="w-full justify-start items-center gap-2 rounded-sm px-2 py-2 text-start font-normal hover:bg-accent hover:text-accent-foreground"
-          onClick={onDeviceTimezone}
-        >
-          <LocateFixed className="h-4 w-4 text-primary" aria-hidden />
-          {t('global.timezoneUseDevice')}
-        </Button>
-        <div className="my-1 h-px bg-border" role="separator" />
+      <div className="max-h-popover-scroll overflow-y-auto p-1.5 space-y-1" role="listbox" aria-label={t('global.timezone')}>
+        <div className="grid grid-cols-1 gap-1 pb-1 border-b border-border/50">
+          <Button
+            type="button"
+            variant="ghost"
+            className="min-h-11 w-full justify-start items-center gap-2 rounded-lg px-2.5 py-2 text-start text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+            onClick={() => void onLocationDetect()}
+            disabled={detecting}
+          >
+            {detecting ? (
+              <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" aria-hidden />
+            ) : (
+              <MapPin className="h-4 w-4 text-primary shrink-0" aria-hidden />
+            )}
+            <span className="truncate">{detecting ? t('global.timezoneDetecting') : t('global.timezoneDetectLocation')}</span>
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            className="min-h-11 w-full justify-start items-center gap-2 rounded-lg px-2.5 py-2 text-start text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+            onClick={onDeviceTimezone}
+          >
+            <LocateFixed className="h-4 w-4 text-primary shrink-0" aria-hidden />
+            <span className="truncate">{t('global.timezoneUseDevice')}</span>
+          </Button>
+        </div>
+
         {filtered.length === 0 ? (
-          <p className="py-6 text-center text-sm text-muted-foreground">
+          <p className="py-6 text-center text-xs text-muted-foreground">
             {t('global.timezoneNoResults')}
           </p>
         ) : (
           filtered.map(({ region, options: regionOptions }) => (
-            <div key={region} className="mb-1">
-              <p className="px-2 py-1.5 text-xs font-medium text-muted-foreground">{region}</p>
-              {regionOptions.map((timezoneOption) => (
-                <Button
-                  key={timezoneOption.value}
-                  type="button"
-                  variant="ghost"
-                  className={cn(
-                    'w-full justify-start items-center gap-2 rounded-sm px-2 py-1.5 text-start font-normal hover:bg-accent hover:text-accent-foreground',
-                    normalizedValue === timezoneOption.value && 'bg-accent text-accent-foreground',
-                  )}
-                  onClick={() => onSelectTimezone(timezoneOption.value)}
-                >
-                  <Check
+            <div key={region} className="pt-1">
+              <p className="px-2.5 py-1 text-3xs font-bold uppercase tracking-wider text-muted-foreground/80">{region}</p>
+              {regionOptions.map((timezoneOption) => {
+                const isSelected = normalizedValue === timezoneOption.value;
+                return (
+                  <Button
+                    key={timezoneOption.value}
+                    type="button"
+                    role="option"
+                    aria-selected={isSelected}
+                    variant="ghost"
                     className={cn(
-                      'h-4 w-4 shrink-0',
-                      normalizedValue === timezoneOption.value ? 'opacity-100' : 'opacity-0',
+                      'min-h-11 w-full justify-start items-center gap-2 rounded-lg px-2.5 py-2 text-start font-normal transition-colors hover:bg-accent hover:text-accent-foreground',
+                      isSelected && 'bg-accent/80 font-medium text-accent-foreground',
                     )}
-                    aria-hidden
-                  />
-                  <span className="truncate">{timezoneOption.label}</span>
-                  <span className="ms-auto ps-2 font-mono text-xs text-muted-foreground">
-                    {timezoneOption.value}
-                  </span>
-                </Button>
-              ))}
+                    onClick={() => onSelectTimezone(timezoneOption.value)}
+                  >
+                    <Check
+                      className={cn(
+                        'h-4 w-4 shrink-0',
+                        isSelected ? 'opacity-100 text-primary' : 'opacity-0',
+                      )}
+                      aria-hidden
+                    />
+                    <span className="truncate text-xs">{timezoneOption.label}</span>
+                    <span className="ms-auto ps-2 font-mono text-3xs text-muted-foreground/80">
+                      {timezoneOption.value}
+                    </span>
+                  </Button>
+                );
+              })}
             </div>
           ))
         )}

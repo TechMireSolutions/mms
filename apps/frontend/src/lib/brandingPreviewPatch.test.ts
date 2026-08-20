@@ -22,11 +22,13 @@ describe('buildBrandingPreviewPatch', () => {
       madrasaName: 'Test Madrasa',
       primaryColor: '#112233',
       secondaryColor: '#445566',
+      cornerStyle: 'sharp',
     });
     const patch = buildBrandingPreviewPatch(merged, BRANDING_IDENTITY_FIELD_KEYS);
     expect(patch.madrasaName).toBe('Test Madrasa');
     expect(patch.primaryColor).toBe('#112233');
     expect(patch.secondaryColor).toBe('#445566');
+    expect(patch.cornerStyle).toBe('sharp');
     expect(patch.footerText).toBeUndefined();
   });
 

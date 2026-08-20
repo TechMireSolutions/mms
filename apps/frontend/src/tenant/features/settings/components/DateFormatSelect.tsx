@@ -63,6 +63,7 @@ export default function DateFormatSelect({
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-haspopup="listbox"
             aria-label={t('global.dateFormat')}
             disabled={disabled}
             className={cn(
@@ -77,38 +78,43 @@ export default function DateFormatSelect({
             <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" aria-hidden />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-popover-md p-1" align="start">
-          <div className="max-h-popover-scroll-sm overflow-y-auto">
-            {options.map((dateFormatOption) => (
-              <Button
-                key={dateFormatOption.value}
-                type="button"
-                variant="ghost"
-                className={cn(
-                  'min-h-11 h-auto w-full justify-start items-start gap-2 rounded-sm px-2 py-2 text-start font-normal hover:bg-accent hover:text-accent-foreground',
-                  normalizedValue === dateFormatOption.value && 'bg-accent text-accent-foreground',
-                )}
-                onClick={() => {
-                  onChange(dateFormatOption.value);
-                  setOpen(false);
-                }}
-              >
-                <Check
+        <PopoverContent className="w-popover-md p-1 shadow-surface-lg" align="start">
+          <div className="max-h-popover-scroll-sm overflow-y-auto" role="listbox" aria-label={t('global.dateFormat')}>
+            {options.map((dateFormatOption) => {
+              const isSelected = normalizedValue === dateFormatOption.value;
+              return (
+                <Button
+                  key={dateFormatOption.value}
+                  type="button"
+                  role="option"
+                  aria-selected={isSelected}
+                  variant="ghost"
                   className={cn(
-                    'mt-0.5 h-4 w-4 shrink-0',
-                    normalizedValue === dateFormatOption.value ? 'opacity-100' : 'opacity-0',
+                    'min-h-11 h-auto w-full justify-start items-start gap-2 rounded-lg px-2.5 py-2 text-start font-normal transition-colors hover:bg-accent hover:text-accent-foreground',
+                    isSelected && 'bg-accent/80 font-medium text-accent-foreground',
                   )}
-                  aria-hidden
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block font-mono text-xs">{dateFormatOption.pattern}</span>
-                  <span className="block text-muted-foreground text-start">{dateFormatOption.sample}</span>
-                  <span className="block text-start text-xs text-muted-foreground/80">
-                    {t(dateFormatOption.hintKey as AppTranslationKey)}
+                  onClick={() => {
+                    onChange(dateFormatOption.value);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      'mt-0.5 h-4 w-4 shrink-0',
+                      isSelected ? 'opacity-100 text-primary' : 'opacity-0',
+                    )}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-mono text-xs font-semibold">{dateFormatOption.pattern}</span>
+                    <span className="block text-muted-foreground text-start text-xs">{dateFormatOption.sample}</span>
+                    <span className="block text-start text-3xs text-muted-foreground/80">
+                      {t(dateFormatOption.hintKey as AppTranslationKey)}
+                    </span>
                   </span>
-                </span>
-              </Button>
-            ))}
+                </Button>
+              );
+            })}
           </div>
         </PopoverContent>
       </Popover>
@@ -118,10 +124,10 @@ export default function DateFormatSelect({
         variant="outline"
         disabled={disabled}
         onClick={applyLocaleFormat}
-        className="shrink-0 gap-2"
+        className="min-h-11 shrink-0 gap-2 px-3.5"
         aria-label={t('global.dateFormatMatchLanguage')}
       >
-        <Languages className="h-4 w-4" aria-hidden />
+        <Languages className="h-4 w-4 text-muted-foreground" aria-hidden />
         <span>{t('global.dateFormatMatchLanguage')}</span>
       </Button>
     </div>

@@ -43,6 +43,7 @@ export default function GlobalSettings(): React.JSX.Element {
     saving,
     upd,
     handleSaveGlobal,
+    handleDiscardGlobal,
   } = useSettingsGlobalDraft();
 
   const notificationChannel = useMemo(
@@ -61,6 +62,8 @@ export default function GlobalSettings(): React.JSX.Element {
           saveLabel={t('global.saveSettings')}
           savingLabel={t('global.saving')}
           onSave={() => void handleSaveGlobal()}
+          onDiscard={handleDiscardGlobal}
+          discardLabel={t('theme.discardChanges')}
           dirty={isGlobalDirty}
           saving={saving}
           saved={saved}

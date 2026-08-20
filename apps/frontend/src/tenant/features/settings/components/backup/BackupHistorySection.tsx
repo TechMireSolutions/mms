@@ -3,9 +3,11 @@ import { CheckCircle2, Clock, HardDriveDownload, RefreshCw, AlertTriangle } from
 import { BACKUP_HISTORY_MAX, formatDateTime, type WorkspaceBackupRecord } from '@mms/shared';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { useTranslation } from '@/hooks/useTranslation';
+import { cn } from '@/lib/utils';
 
 interface BackupHistorySectionProps {
   backups: WorkspaceBackupRecord[];
@@ -28,9 +30,9 @@ export default function BackupHistorySection({
       subtitle={t('backup.historyDesc')}
       icon={Clock}
       padding={false}
-      className="border border-border bg-card shadow-lg hover:shadow-xl transition-all duration-300"
+      className="overflow-hidden"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 px-5 py-3.5 bg-muted/10">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 px-5 py-3.5 bg-muted/20">
         <div className="flex items-center gap-2">
           <Clock className="h-4 w-4 text-muted-foreground" aria-hidden />
           <span className="text-xs font-semibold text-foreground">{t('backup.historyTitle')}</span>
@@ -51,7 +53,12 @@ export default function BackupHistorySection({
                 key={backup.id}
                 className="flex flex-wrap items-center gap-3 px-5 py-4 sm:gap-4 hover:bg-muted/30 transition-all duration-200 group/item"
               >
-                <div className={`p-2 rounded-lg transition-colors duration-200 shrink-0 ${isRestoringThis ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success'}`}>
+                <div
+                  className={cn(
+                    'p-2 rounded-lg transition-colors duration-200 shrink-0',
+                    isRestoringThis ? 'bg-primary/10 text-primary' : 'bg-success/10 text-success',
+                  )}
+                >
                   {isRestoringThis ? (
                     <RefreshCw className="h-4 w-4 animate-spin" aria-hidden />
                   ) : (
@@ -62,9 +69,9 @@ export default function BackupHistorySection({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-bold text-foreground truncate">{backup.name}</p>
-                    <span className="text-xs font-semibold text-muted-foreground/80 bg-muted/65 px-1.5 py-0.5 rounded border border-border/20">
+                    <Badge variant="outline" className="font-mono text-3xs py-0 px-1.5 font-semibold text-muted-foreground/80">
                       {backup.size}
-                    </span>
+                    </Badge>
                   </div>
                   
                   {backup.keyCount != null ? (
@@ -95,9 +102,10 @@ export default function BackupHistorySection({
                       variant="outline"
                       onClick={() => onRestore(backup)}
                       disabled={restoreId !== null || !backup.data}
-                      className={`min-h-11 px-3 font-semibold text-xs interactive-scale ${
-                        isRestoringThis ? 'border-primary/30 text-primary bg-primary/5' : ''
-                      }`}
+                      className={cn(
+                        'min-h-11 px-3 font-semibold text-xs interactive-scale',
+                        isRestoringThis && 'border-primary/30 text-primary bg-primary/5',
+                      )}
                     >
                       {isRestoringThis ? (
                         <>
@@ -116,7 +124,7 @@ export default function BackupHistorySection({
                       onClick={() => onDownload(backup)}
                       aria-label={t('backup.download')}
                       disabled={restoreId !== null || !backup.data}
-                      className="text-muted-foreground"
+                      className="min-h-11 min-w-11 text-muted-foreground"
                     >
                       <HardDriveDownload className="h-4 w-4 transition-transform duration-300 group-hover/item:translate-y-0.5" aria-hidden />
                     </Button>

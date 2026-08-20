@@ -82,3 +82,44 @@ export function ensureAccentButtonContrast(accentHex: string): string {
 
   return hslColorToHex(adjusted);
 }
+
+/**
+ * Automatically adjusts lightness and saturation of a hex colour so that it achieves
+ * the target WCAG contrast ratio (default 4.5:1 for text, or 3.0:1 for UI) against
+ * its optimal foreground (#ffffff for dark backgrounds, #0f172a for light backgrounds).
+ */
+export function ensureAccessibleBrandColor(
+  hex: string,
+  targetRatio = 4.5,
+  preferredForeground?: '#ffffff' | '#0f172a',
+): string {
+  const normalized = normalizeBrandingHex(hex, hex);
+  const base = hexToHslColor(normalized);
+  if (!base) return normalized;
+
+  const fg = preferredForeground ?? (base.l >= 55 ? '#0f172a' : '#ffffff');
+  const currentRatio = getContrastRatio(fg, normalized);
+  if (currentRatio !== null && currentRatio >= targetRatio) {
+    return normalized;
+  }
+
+  let adjusted = base;
+  if (fg === '#ffffff') {
+    for (let step = 0; step < 24; step += 1) {
+      adjusted = tone(adjusted, { l: -3, s: Math.min(4, Math.max(0, 70 - adjusted.s)) });
+      const candidate = hslColorToHex(adjusted);
+      const ratio = getContrastRatio('#ffffff', candidate);
+      if (ratio !== null && ratio >= targetRatio) return candidate;
+    }
+  } else {
+    for (let step = 0; step < 24; step += 1) {
+      adjusted = tone(adjusted, { l: 3, s: Math.max(-4, Math.min(0, 30 - adjusted.s)) });
+      const candidate = hslColorToHex(adjusted);
+      const ratio = getContrastRatio('#0f172a', candidate);
+      if (ratio !== null && ratio >= targetRatio) return candidate;
+    }
+  }
+
+  return hslColorToHex(adjusted);
+}
+

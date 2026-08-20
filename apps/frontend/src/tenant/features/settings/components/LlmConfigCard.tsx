@@ -3,6 +3,7 @@ import { Check, Edit2, Globe, Loader2, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { LlmConfig } from '@mms/shared';
 
@@ -34,31 +35,32 @@ export function LlmConfigCard({
       layout
       whileHover={{ y: -2 }}
       transition={{ duration: 0.15 }}
-      className={`relative flex flex-col justify-between rounded-xl border p-4 transition-all ${
+      className={cn(
+        'relative flex flex-col justify-between rounded-2xl border p-4 shadow-sm transition-all',
         config.isDefaultText
-          ? 'border-primary/40 bg-primary/5 dark:bg-primary/10 shadow-sm'
-          : 'border-border bg-card'
-      }`}
+          ? 'border-primary/40 bg-primary/5 dark:bg-primary/10 ring-1 ring-primary/20'
+          : 'border-border/70 bg-card',
+      )}
     >
       <div>
         <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-2">
-            <span className="flex shrink-0 items-center justify-center">
+            <span className="flex shrink-0 items-center justify-center" role="status" aria-label={status === 'testing' ? t('settings.llmThinking') : status === 'verified' ? t('settings.llmTestSuccess') : status === 'failed' ? t('settings.llmTestFailed') : t('settings.llmTestResultDesc')}>
               {status === 'testing' ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary shrink-0" aria-hidden />
               ) : status === 'verified' ? (
-                <span className="h-2 w-2 rounded-full bg-success shadow-glow-success-sm shrink-0" title={t('settings.llmTestSuccess')} />
+                <span className="h-2.5 w-2.5 rounded-full bg-success ring-2 ring-success/20 shrink-0" title={t('settings.llmTestSuccess')} />
               ) : status === 'failed' ? (
-                <span className="h-2 w-2 rounded-full bg-destructive shadow-glow-destructive-sm shrink-0" title={t('settings.llmTestFailed')} />
+                <span className="h-2.5 w-2.5 rounded-full bg-destructive ring-2 ring-destructive/20 shrink-0" title={t('settings.llmTestFailed')} />
               ) : (
-                <span className="h-2 w-2 rounded-full bg-warning shadow-glow-warning-sm shrink-0" title={t('settings.llmTestResultDesc')} />
+                <span className="h-2.5 w-2.5 rounded-full bg-warning ring-2 ring-warning/20 shrink-0" title={t('settings.llmTestResultDesc')} />
               )}
             </span>
             <h4 className="min-w-0 truncate text-sm font-bold">{config.name}</h4>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             {config.isDefaultText && (
-              <Badge pill tone="primary" className="gap-1 px-2 py-1">
+              <Badge pill tone="primary" className="gap-1 px-2.5 py-1 text-3xs font-semibold">
                 <Check className="h-3 w-3" /> {t('settings.llmTextDefault')}
               </Badge>
             )}
@@ -67,12 +69,12 @@ export function LlmConfigCard({
         <div className="space-y-2 text-xs text-muted-foreground">
           <div className="flex min-w-0 items-center gap-2">
             <span className="shrink-0 font-medium text-foreground">{t('settings.llmModelToken')}</span>
-            <span className="min-w-0 truncate rounded bg-muted px-2 py-1 font-mono text-xs leading-none">{config.model}</span>
+            <span className="min-w-0 truncate rounded-md border border-border/50 bg-muted px-2 py-0.5 font-mono text-3xs font-medium leading-normal">{config.model}</span>
           </div>
           {config.baseUrl && (
             <div className="flex min-w-0 items-center gap-2">
-              <Globe className="h-4 w-4 shrink-0" />
-              <span className="min-w-0 truncate font-mono text-xs">{config.baseUrl}</span>
+              <Globe className="h-3.5 w-3.5 text-muted-foreground/70 shrink-0" aria-hidden />
+              <span className="min-w-0 truncate font-mono text-3xs">{config.baseUrl}</span>
             </div>
           )}
         </div>
@@ -84,29 +86,30 @@ export function LlmConfigCard({
           variant="outline"
           onClick={() => void handleTestConnection(config.id)}
           disabled={testingId !== null || isGlobalDirty}
-          className="text-xs px-3"
+          className="min-h-11 text-xs px-3"
         >
           {testingId === config.id ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
-          ) : (
-            t('settings.llmTestApi')
-          )}
+            <Loader2 className="h-3.5 w-3.5 animate-spin me-1" aria-hidden />
+          ) : null}
+          <span>{t('settings.llmTestApi')}</span>
         </Button>
         <Button
           size="sm"
           variant="outline"
           onClick={() => openEditModal(config)}
-          className="text-xs"
+          className="min-h-11 min-w-11 px-3 text-xs"
+          aria-label={t('common.edit')}
         >
-          <Edit2 className="h-4 w-4" />
+          <Edit2 className="h-3.5 w-3.5" aria-hidden />
         </Button>
         <Button
           size="sm"
           variant="outline"
           onClick={() => handleDeleteConfig(config.id)}
-          className="text-xs text-destructive hover:bg-destructive/10"
+          className="min-h-11 min-w-11 px-3 text-xs text-destructive hover:bg-destructive/10 hover:border-destructive/30"
+          aria-label={t('common.delete')}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3.5 w-3.5" aria-hidden />
         </Button>
       </div>
     </motion.div>

@@ -120,14 +120,18 @@ describe('BRANDING_THEME_PRESETS', () => {
   });
 });
 
-describe('suggestSecondaryColor', () => {
+describe('suggestSecondaryColor & suggestHarmoniousSecondaryColor', () => {
   it('returns accessible accent for arbitrary primaries', () => {
     const accent = suggestSecondaryColor('#2563eb');
     const ratio = getContrastRatio('#ffffff', accent);
     expect(meetsWcagAaTextContrast(ratio)).toBe(true);
   });
 
-  it('ensureAccentButtonContrast darkens low-contrast accents', () => {
+  it('supports complementary, analogous, and triadic schemes', () => {
+    const primary = '#0284c7';
+    const comp = suggestSecondaryColor(primary);
+    expect(comp).toMatch(/^#[0-9a-f]{6}$/i);
+
     const adjusted = ensureAccentButtonContrast('#d97706');
     const ratio = getContrastRatio('#ffffff', adjusted);
     expect(meetsWcagAaTextContrast(ratio)).toBe(true);

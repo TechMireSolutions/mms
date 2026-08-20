@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Lock, Mail } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormModal } from '@/components/ui/FormModal';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { SettingsCallout } from '@/components/ui/SettingsShell';
 
 export interface BackupCredentialsModalProps {
@@ -66,27 +67,23 @@ export default function BackupCredentialsModal({
         <SettingsCallout>{t('backup.encryptNote')}</SettingsCallout>
         <div className="space-y-2">
           <Label htmlFor="backup-admin-email">{t('backup.adminEmailLabel')}</Label>
-          <div className="relative">
-            <Mail className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              id="backup-admin-email"
-              name="backupAdminEmail"
-              type="email"
-              value={email}
-              readOnly={emailReadOnly}
-              onChange={(event) => setEmail(event.target.value)}
-              className="ps-9"
-              autoComplete="username"
-              disabled={loading || emailReadOnly}
-            />
-          </div>
+          <LeadingIconInput
+            id="backup-admin-email"
+            name="backupAdminEmail"
+            type="email"
+            icon={Mail}
+            value={email}
+            readOnly={emailReadOnly}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="username"
+            disabled={loading || emailReadOnly}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="backup-admin-password">{t('backup.adminPasswordLabel')}</Label>
-          <Input
+          <PasswordInput
             id="backup-admin-password"
             name="backupAdminPassword"
-            type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
             autoComplete="current-password"

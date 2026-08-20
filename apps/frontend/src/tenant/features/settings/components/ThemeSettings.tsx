@@ -6,6 +6,7 @@ import { useApplyLogoColors } from '@/tenant/hooks/useApplyLogoColors';
 import { useThemeSettingsDraft } from '@/tenant/features/settings/hooks/useThemeSettingsDraft';
 import { useSettingsTab } from '@/lib/contexts/SettingsTabContext';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { Button } from '@/components/ui/button';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import ThemeModeSelector from '@/tenant/features/settings/components/ThemeModeSelector';
 import CornerStyleSelector from '@/tenant/features/settings/components/CornerStyleSelector';
@@ -36,10 +37,23 @@ export default function ThemeSettings(): React.JSX.Element {
     saved,
     upd,
     handleSave,
+    handleResetToDefaults,
+    handleDiscardChanges,
     defaultFooterPreview,
   } = useThemeSettingsDraft(t('theme.savedToast'), t('theme.savedToastDesc'));
 
-  const { applying: applyingLogoColors, apply: applyLogoColors } = useApplyLogoColors({
+  const {
+    applying: applyingLogoColors,
+    effectiveLogoUrl,
+    isSample,
+    extractedPalette,
+    proportions,
+    bestPair,
+    apply: applyLogoColors,
+    applyBestPair,
+    setSampleLogo,
+    clearSampleLogo,
+  } = useApplyLogoColors({
     logoUrl: data.logoUrl,
     onPrimaryChange: (hex) => upd('primaryColor', hex),
     onSecondaryChange: (hex) => upd('secondaryColor', hex),
@@ -58,10 +72,23 @@ export default function ThemeSettings(): React.JSX.Element {
           saveLabel={t('theme.save')}
           savingLabel={t('theme.saving')}
           onSave={() => void handleSave()}
+          onDiscard={handleDiscardChanges}
+          discardLabel={t('theme.discardChanges')}
           dirty={isDirty}
           saving={saving}
           saved={saved}
-        />
+        >
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleResetToDefaults}
+            disabled={saving}
+            className="min-h-11 px-3 text-muted-foreground hover:text-foreground"
+          >
+            <span>{t('theme.resetDefaults')}</span>
+          </Button>
+        </SettingsFormActions>
       }
     >
       <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
@@ -107,12 +134,19 @@ export default function ThemeSettings(): React.JSX.Element {
 
       <ThemeSettingsColoursSection
         t={t}
-        logoUrl={data.logoUrl}
+        logoUrl={effectiveLogoUrl}
+        isSample={isSample}
         primaryColor={data.primaryColor}
         secondaryColor={data.secondaryColor}
         previewMode={previewMode}
+        extractedPalette={extractedPalette}
+        proportions={proportions}
+        bestPair={bestPair}
         applyingLogoColors={applyingLogoColors}
         onApplyLogoColors={() => void applyLogoColors()}
+        onApplyBestPair={applyBestPair}
+        onSetSampleLogo={setSampleLogo}
+        onClearSampleLogo={clearSampleLogo}
         onGoToInstitution={() => setActiveTab('branding')}
         onPrimaryChange={(hex) => upd('primaryColor', hex)}
         onSecondaryChange={(hex) => upd('secondaryColor', hex)}

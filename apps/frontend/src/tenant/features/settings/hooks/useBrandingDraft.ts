@@ -42,6 +42,7 @@ export interface UseBrandingDraftResult {
   upd: <K extends keyof BrandingSettings>(field: K, value: BrandingSettings[K]) => void;
   handleSave: (toast?: UseBrandingDraftSaveToast, options?: UseBrandingDraftSaveOptions) => Promise<boolean>;
   handleSaveIdentity: (toast?: UseBrandingDraftSaveToast) => Promise<boolean>;
+  handleDiscardIdentity: () => void;
   applyPersisted: (brandingSettings: BrandingSettings) => void;
 }
 
@@ -173,5 +174,37 @@ export function useBrandingDraft({
     [baseline, data, flashSaved, saveSuccessDescription, saveSuccessMessage, t, trackKeys],
   );
 
-  return { data, baseline, isDirty, saved, saving, upd, handleSave, handleSaveIdentity, applyPersisted };
+  const handleDiscardIdentity = useCallback((): void => {
+    setData((current) => ({
+      ...current,
+      madrasaName: baseline.madrasaName,
+      logoUrl: baseline.logoUrl,
+      email: baseline.email,
+      phone: baseline.phone,
+      website: baseline.website,
+      addressLine1: baseline.addressLine1,
+      addressLine2: baseline.addressLine2,
+      city: baseline.city,
+      region: baseline.region,
+      postalCode: baseline.postalCode,
+      country: baseline.country,
+      legalName: baseline.legalName,
+      registrationNumber: baseline.registrationNumber,
+      socialLinks: baseline.socialLinks,
+    }));
+    clearSaved();
+  }, [baseline, clearSaved]);
+
+  return {
+    data,
+    baseline,
+    isDirty,
+    saved,
+    saving,
+    upd,
+    handleSave,
+    handleSaveIdentity,
+    handleDiscardIdentity,
+    applyPersisted,
+  };
 }

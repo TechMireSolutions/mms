@@ -34,6 +34,7 @@ function applyBrandingPreviewEffects(): void {
   applyBrandingTheme({
     primaryColor: branding.primaryColor,
     secondaryColor: branding.secondaryColor,
+    cornerStyle: branding.cornerStyle,
   });
 }
 

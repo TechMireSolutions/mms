@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSavedFlash } from '@/tenant/hooks/useSavedFlash';
 import {
+  DEFAULT_BRANDING_SETTINGS,
+  DEFAULT_GLOBAL_SETTINGS,
   formatBrandingFooterDefault,
   formatThemeDisplayModeSummary,
   mergeGlobalSettings,
@@ -31,6 +33,8 @@ export interface UseThemeSettingsDraftResult {
   saved: boolean;
   upd: ReturnType<typeof useSettingsBrandingDraft>['upd'];
   handleSave: () => Promise<void>;
+  handleResetToDefaults: () => void;
+  handleDiscardChanges: () => void;
   defaultFooterPreview: string;
 }
 
@@ -152,6 +156,24 @@ export function useThemeSettingsDraft(
     t,
   ]);
 
+  const handleResetToDefaults = useCallback((): void => {
+    setDisplayModeState(DEFAULT_GLOBAL_SETTINGS.theme);
+    branding.upd('primaryColor', DEFAULT_BRANDING_SETTINGS.primaryColor);
+    branding.upd('secondaryColor', DEFAULT_BRANDING_SETTINGS.secondaryColor);
+    branding.upd('cornerStyle', DEFAULT_BRANDING_SETTINGS.cornerStyle);
+    branding.upd('footerText', '');
+    clearSavedFlash();
+  }, [branding, clearSavedFlash]);
+
+  const handleDiscardChanges = useCallback((): void => {
+    setDisplayModeState(themeBaseline);
+    branding.upd('primaryColor', branding.baseline.primaryColor);
+    branding.upd('secondaryColor', branding.baseline.secondaryColor);
+    branding.upd('cornerStyle', branding.baseline.cornerStyle);
+    branding.upd('footerText', branding.baseline.footerText);
+    clearSavedFlash();
+  }, [branding, clearSavedFlash, themeBaseline]);
+
   const saved = !isDirty && (branding.saved || savedFlash);
 
   return {
@@ -165,6 +187,8 @@ export function useThemeSettingsDraft(
     saved,
     upd: branding.upd,
     handleSave,
+    handleResetToDefaults,
+    handleDiscardChanges,
     defaultFooterPreview,
   };
 }

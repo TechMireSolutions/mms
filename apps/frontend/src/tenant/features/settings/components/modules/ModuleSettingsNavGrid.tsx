@@ -12,6 +12,7 @@ import { resolveModuleIcon } from '@/lib/config/moduleIcons';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Switch } from '@/components/ui/switch';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
+import { cn } from '@/lib/utils';
 
 interface ModuleToggleCardProps {
   module: ModuleDefinition;
@@ -32,25 +33,32 @@ function ModuleToggleCard({
 }: ModuleToggleCardProps): React.JSX.Element {
   const Icon = resolveModuleIcon(module.icon);
   const toggleId = `module-toggle-${module.id}`;
+  const descId = `module-desc-${module.id}`;
 
   return (
     <div
-      className={`flex items-start gap-3 rounded-xl border p-3 transition-all ${
-        enabled ? 'border-border bg-card shadow-sm' : 'border-border/50 bg-muted/30 opacity-75'
-      }`}
+      className={cn(
+        'flex items-start gap-3.5 rounded-xl border p-3.5 transition-all duration-200',
+        enabled
+          ? 'border-border/80 bg-card shadow-sm hover:border-border'
+          : 'border-border/40 bg-muted/20 opacity-80 hover:opacity-100',
+      )}
     >
       <div
-        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-          enabled ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-        }`}
+        className={cn(
+          'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+          enabled ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground',
+        )}
       >
         <Icon className="h-4 w-4" aria-hidden />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start justify-between gap-2.5">
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold text-foreground">{label}</p>
-            <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{description}</p>
+            <label htmlFor={toggleId} className="block truncate text-sm font-semibold text-foreground cursor-pointer">
+              {label}
+            </label>
+            <p id={descId} className="mt-0.5 text-xs leading-snug text-muted-foreground">{description}</p>
           </div>
           {module.required ? (
             <SettingsMetaBadge variant="muted">{requiredLabel}</SettingsMetaBadge>
@@ -60,6 +68,7 @@ function ModuleToggleCard({
               checked={enabled}
               onCheckedChange={onToggle}
               aria-label={label}
+              aria-describedby={descId}
             />
           )}
         </div>
@@ -128,7 +137,7 @@ export default function ModuleSettingsNavGrid({
 
       const GroupIcon = resolveModuleIcon(entry.icon);
       nodes.push(
-        <div key={entry.labelKey} className="space-y-3 rounded-xl border border-border bg-muted/15 p-4">
+        <div key={entry.labelKey} className="space-y-3 rounded-2xl border border-border/70 bg-muted/20 p-4">
           <div className="flex items-center gap-2 border-b border-border/50 pb-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10">
               <GroupIcon className="h-3.5 w-3.5 text-primary" aria-hidden />

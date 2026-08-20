@@ -22,7 +22,7 @@ export default function BrandingIdentityPreview({ data }: BrandingIdentityPrevie
         {data.logoUrl ? (
           <img
             src={data.logoUrl}
-            alt=""
+            alt={data.madrasaName.trim() || t('branding.previewNameFallback')}
             className="h-14 w-14 shrink-0 rounded-xl border border-border bg-background object-cover"
           />
         ) : (

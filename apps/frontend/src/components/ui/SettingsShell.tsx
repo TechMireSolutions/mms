@@ -4,6 +4,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
+import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 
 export { SettingsMetaBadge, SettingsColoursBadge } from '@/components/ui/settingsShellBadges';
 
@@ -56,7 +57,7 @@ export function SettingsPanelIntro({ description, className }: SettingsPanelIntr
   return (
     <p
       className={cn(
-        'rounded-xl border border-border bg-muted/20 px-4 py-3 text-xs leading-relaxed text-muted-foreground sm:px-5',
+        'rounded-xl border border-border/70 bg-muted/20 px-4 py-3 text-xs leading-relaxed text-muted-foreground sm:px-5',
         className,
       )}
     >
@@ -78,7 +79,7 @@ export function SettingsStatusBadges({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2',
+        'flex flex-wrap items-center gap-2 rounded-lg border px-3 py-2 transition-all',
         isDirty
           ? 'border-warning/30 bg-warning/5'
           : 'border-border/60 bg-muted/20',
@@ -171,7 +172,7 @@ export function SettingsCallout({
         'rounded-lg border px-3 py-2.5 text-xs leading-relaxed',
         variant === 'warning'
           ? 'border-warning/30 bg-warning/10 text-warning dark:border-warning/30 dark:bg-warning/20 dark:text-warning'
-          : 'border-border bg-muted/30 text-muted-foreground',
+          : `${WORK_SURFACE_INNER} text-muted-foreground`,
       )}
     >
       {children}

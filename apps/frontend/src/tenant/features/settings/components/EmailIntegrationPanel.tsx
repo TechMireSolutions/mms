@@ -3,11 +3,16 @@ import { Loader2, Mail, PlugZap } from 'lucide-react';
 import { type AppTranslationKey, type EmailProviderId } from '@mms/shared';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { FieldErrorMessage } from '@/components/ui/FormField';
 import { SettingsCallout, SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { useEmailIntegrationPanel } from '@/tenant/features/settings/components/useEmailIntegrationPanel';
+import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
+import { cn } from '@/lib/utils';
+
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface EmailIntegrationPanelProps {
   emailNotificationsEnabled: boolean;
@@ -37,15 +42,27 @@ export default function EmailIntegrationPanel({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/10 px-3 py-4 text-sm text-muted-foreground">
-        <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
-        {t('email.loading')}
+      <div className={cn(WORK_SURFACE_INNER, "space-y-4 p-4")} aria-busy="true">
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-9 rounded-lg" />
+          <div className="space-y-1.5 flex-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+          <Skeleton className="h-5 w-20 rounded-full" />
+        </div>
+        <Skeleton className="h-10 w-full rounded-lg" />
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Skeleton className="h-10 w-full rounded-lg sm:col-span-2" />
+          <Skeleton className="h-10 w-full rounded-lg" />
+          <Skeleton className="h-10 w-full rounded-lg" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4 rounded-lg border border-border/60 bg-muted/10 p-4">
+    <div className={cn(WORK_SURFACE_INNER, "space-y-4 p-4")}>
       <div className="flex items-start gap-3">
         <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
           <Mail className="h-4 w-4 text-primary" aria-hidden />
@@ -114,9 +131,9 @@ export default function EmailIntegrationPanel({
 
         <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="email-smtp-password">{t('email.smtpPassword')}</Label>
-          <Input
+          <PasswordInput
             id="email-smtp-password"
-            type="password"
+            name="emailSmtpPassword"
             value={smtpPassword}
             onChange={(event) => setSmtpPassword(event.target.value)}
             placeholder={
@@ -153,19 +170,25 @@ export default function EmailIntegrationPanel({
         <FieldErrorMessage message={form.lastError} />
       ) : null}
 
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={() => void handleSave()} disabled={saving || testing}>
+      <div className="flex flex-wrap gap-2.5 pt-1">
+        <Button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={saving || testing}
+          className="min-h-11 gap-2 px-4 shadow-sm"
+        >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : <PlugZap className="h-4 w-4" aria-hidden />}
-          {t('email.saveConnection')}
+          <span>{t('email.saveConnection')}</span>
         </Button>
         <Button
           type="button"
           variant="outline"
           onClick={() => void handleTest()}
           disabled={saving || testing || !emailNotificationsEnabled}
+          className="min-h-11 gap-2 px-4"
         >
           {testing ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
-          {t('email.sendTest')}
+          <span>{t('email.sendTest')}</span>
         </Button>
       </div>
     </div>

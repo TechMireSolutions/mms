@@ -77,13 +77,13 @@ export function ResponsiveAccordionTabsDesktop({
     <div className="hidden gap-5 lg:flex lg:items-start">
       <nav
         aria-label={sectionAriaLabel}
-        className="sticky top-19 w-sidebar-mobile shrink-0 space-y-0.5 rounded-xl border border-border/70 bg-card/70 p-2 shadow-sm backdrop-blur-sm"
+        className="sticky top-header w-sidebar-mobile shrink-0 space-y-0.5 rounded-2xl border border-border/70 bg-card/70 p-2 shadow-sm backdrop-blur-sm"
       >
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           const linkClass = cn(
-            "block w-full min-h-11 rounded-lg border px-3 py-2.5 text-start transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+            "block w-full min-h-11 rounded-xl border px-3 py-2.5 text-start transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
             active
               ? "border-primary/25 border-s-2 border-s-primary bg-primary/5 text-primary shadow-sm"
               : "border-transparent text-muted-foreground hover:border-border/50 hover:bg-muted/50 hover:text-foreground",
@@ -155,7 +155,7 @@ export function ResponsiveAccordionTabsDesktop({
           );
         })}
       </nav>
-      <div className="min-w-0 flex-1 rounded-xl border border-border/70 bg-card/80 p-5 shadow-sm backdrop-blur-sm lg:p-6">
+      <div className="min-w-0 flex-1 rounded-2xl border border-border/70 bg-card/80 p-5 shadow-sm backdrop-blur-sm lg:p-6">
         {panelContent}
       </div>
     </div>

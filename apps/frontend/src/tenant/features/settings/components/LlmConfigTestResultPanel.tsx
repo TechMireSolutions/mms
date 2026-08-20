@@ -1,6 +1,7 @@
 import type React from 'react';
 import { AlertTriangle, CheckCircle, Sparkles } from 'lucide-react';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { cn } from '@/lib/utils';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { LlmTestResult } from '@mms/shared';
 
@@ -22,11 +23,12 @@ export function LlmConfigTestResultPanel({
       icon={Sparkles}
     >
       <div
-        className={`rounded-xl border p-4 text-sm ${
+        className={cn(
+          'rounded-xl border p-4 text-sm',
           testResult.success
             ? 'border-success/20 bg-success/5 text-success'
-            : 'border-destructive/20 bg-destructive/5 text-destructive-foreground'
-        }`}
+            : 'border-destructive/20 bg-destructive/5 text-destructive-foreground',
+        )}
       >
         <div className="flex items-start gap-3">
           {testResult.success ? (

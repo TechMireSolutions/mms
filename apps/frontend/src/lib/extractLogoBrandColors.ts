@@ -1,6 +1,6 @@
 import {
   deriveBrandColorsFromPalette,
-  extractDominantSwatchesFromRgba,
+  extractDominantWeightedSwatchesFromRgba,
   type LogoBrandColors,
   type LogoPaletteSamplingOptions,
 } from '@mms/shared';
@@ -157,9 +157,11 @@ export async function extractLogoBrandColors(
 
     context.drawImage(image, 0, 0, width, height);
     const { data } = context.getImageData(0, 0, width, height);
-    const swatches = extractDominantSwatchesFromRgba(data, width, height, samplingOptions);
+    const weightedSwatches = extractDominantWeightedSwatchesFromRgba(data, width, height, samplingOptions);
+    const swatches = weightedSwatches.map((s) => s.hex);
+    const proportions = weightedSwatches.map((s) => ({ hex: s.hex, percentage: s.percentage }));
 
-    return deriveBrandColorsFromPalette(swatches);
+    return deriveBrandColorsFromPalette(swatches, { proportions });
   } catch (error: unknown) {
     if (error && typeof error === 'object' && 'name' in error && error.name === 'AbortError') {
       throw error;

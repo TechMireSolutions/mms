@@ -112,6 +112,7 @@ export default function TimezoneSelect({
             variant="outline"
             role="combobox"
             aria-expanded={open}
+            aria-haspopup="listbox"
             aria-label={t('global.timezone')}
             disabled={disabled}
             className={cn(
@@ -142,7 +143,7 @@ export default function TimezoneSelect({
         variant="outline"
         disabled={disabled || detecting}
         onClick={() => void handleLocationDetect()}
-        className="shrink-0 gap-2"
+        className="min-h-11 shrink-0 gap-2 px-3.5"
         aria-label={t('global.timezoneDetectLocation')}
       >
         {detecting ? (

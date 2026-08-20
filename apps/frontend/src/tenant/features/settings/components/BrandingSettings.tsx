@@ -20,8 +20,15 @@ import {
  */
 export default function BrandingSettings(): React.JSX.Element {
   const { t } = useTranslation();
-  const { data, isIdentityDirty, saved, saving, upd, handleSaveIdentity } =
-    useSettingsBrandingDraft();
+  const {
+    data,
+    isIdentityDirty,
+    saved,
+    saving,
+    upd,
+    handleSaveIdentity,
+    handleDiscardIdentity,
+  } = useSettingsBrandingDraft();
 
   return (
     <SettingsPanel
@@ -39,6 +46,8 @@ export default function BrandingSettings(): React.JSX.Element {
               saveSuccessDescription: t('branding.savedToastDesc'),
             })
           }
+          onDiscard={handleDiscardIdentity}
+          discardLabel={t('theme.discardChanges')}
           dirty={isIdentityDirty}
           saving={saving}
           saved={saved}

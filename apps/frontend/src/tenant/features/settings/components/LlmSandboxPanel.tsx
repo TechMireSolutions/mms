@@ -9,6 +9,9 @@ import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { LlmConfig } from '@mms/shared';
 import type { SandboxMessage } from './llmSettingsTypes';
 
+import { cn } from '@/lib/utils';
+import { EmptyState } from '@/components/ui/EmptyState';
+
 interface LlmSandboxPanelProps {
   configs: LlmConfig[];
   sandboxMessages: SandboxMessage[];
@@ -77,11 +80,11 @@ export function LlmSandboxPanel({
         </div>
 
         {/* Chat Session Window */}
-        <div className="border border-border bg-muted/10 rounded-2xl flex flex-col overflow-hidden shadow-inner">
+        <div className="border border-border/70 bg-card/40 rounded-2xl flex flex-col overflow-hidden shadow-inner">
           {/* Chat Header */}
-          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 border-b border-border bg-muted/20 shrink-0">
+          <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 border-b border-border/60 bg-muted/20 shrink-0">
             <div className="flex min-w-0 items-center gap-1.5 text-xs font-semibold text-muted-foreground/80 uppercase tracking-wider">
-              <MessageSquare className="h-3.5 w-3.5 shrink-0" />
+              <MessageSquare className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
               <span className="min-w-0 truncate">{t('settings.llmSandboxHistory')}</span>
             </div>
             {sandboxMessages.length > 0 && (
@@ -91,37 +94,44 @@ export function LlmSandboxPanel({
                 onClick={() => setSandboxMessages([])}
                 className="shrink-0 text-xs px-2 text-muted-foreground hover:text-foreground gap-1.5"
               >
-                <RotateCcw className="h-3 w-3" /> {t('settings.llmClearHistory')}
+                <RotateCcw className="h-3 w-3" aria-hidden />
+                <span>{t('settings.llmClearHistory')}</span>
               </Button>
             )}
           </div>
 
           {/* Messages Panel */}
-          <div className="flex-1 min-h-panel-sm max-h-90 overflow-y-auto p-4 space-y-4 scroll-smooth">
+          <div
+            className="flex-1 min-h-panel-sm max-h-chat-scroll overflow-y-auto p-4 space-y-4 scroll-smooth"
+            role="log"
+            aria-live="polite"
+            aria-label={t('settings.llmSandboxHistory')}
+          >
             {sandboxMessages.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center p-6 my-6 opacity-60">
-                <Sparkles className="h-8 w-8 text-primary mb-2.5 animate-pulse" />
-                <p className="font-semibold text-xs text-foreground">{t('settings.llmSandboxReady')}</p>
-                <p className="text-xs text-muted-foreground max-w-sidebar-mobile mt-1">
-                  {t('settings.llmSandboxReadyDesc')}
-                </p>
-              </div>
+              <EmptyState
+                icon={Sparkles}
+                title={t('settings.llmSandboxReady')}
+                description={t('settings.llmSandboxReadyDesc')}
+                compact
+                className="my-4 py-6"
+              />
             ) : (
               sandboxMessages.map((msg) => {
                 const isUser = msg.role === 'user';
                 return (
                   <div
                     key={msg.id}
-                    className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
+                    className={cn('flex flex-col', isUser ? 'items-end' : 'items-start')}
                   >
                     <div
-                      className={`max-w-bubble rounded-2xl px-4 py-2.5 text-xs shadow-sm leading-relaxed ${
+                      className={cn(
+                        'max-w-bubble rounded-2xl px-4 py-2.5 text-xs shadow-sm leading-relaxed',
                         isUser
                           ? 'bg-primary text-primary-foreground rounded-tr-none'
                           : msg.error
                           ? 'bg-destructive/10 text-destructive border border-destructive/20 rounded-tl-none font-mono text-xs'
-                          : 'bg-card text-foreground border border-border rounded-tl-none'
-                      }`}
+                          : 'bg-card text-foreground border border-border rounded-tl-none',
+                      )}
                     >
                       <p className="whitespace-pre-wrap">{msg.content}</p>
                     </div>

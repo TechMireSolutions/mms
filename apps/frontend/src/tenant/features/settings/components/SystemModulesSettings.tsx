@@ -20,6 +20,7 @@ export default function SystemModulesSettings(): React.JSX.Element {
     saving,
     upd,
     handleSaveModules,
+    handleDiscardModules,
     clearSaved,
   } = useSettingsGlobalDraft();
 
@@ -49,6 +50,8 @@ export default function SystemModulesSettings(): React.JSX.Element {
           saveLabel={t('module.system.save')}
           savingLabel={t('module.system.saving')}
           onSave={() => void handleSaveModules()}
+          onDiscard={handleDiscardModules}
+          discardLabel={t('theme.discardChanges')}
           dirty={isModulesDirty}
           saving={saving}
           saved={saved}
