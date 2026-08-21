@@ -17,9 +17,11 @@ import {
 } from "@mms/shared";
 import { useSessions } from '@/tenant/hooks/collections/sessions';
 import { useContactsByIds, useContactById } from '@/tenant/hooks/collections/contacts';
+import { useStudentsPaginated } from '@/tenant/features/students/hooks/useStudentsListQueries';
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
+import type { SiblingStudentItem } from "@/tenant/features/students/components/StudentDetailSiblingsSection";
 
 export function useStudentDetailModel(student: Student) {
   const { t } = useTranslation();
@@ -165,6 +167,49 @@ export function useStudentDetailModel(student: Student) {
     return true;
   });
 
+  const allStudentsQuery = useStudentsPaginated({ page: 1, limit: 100 });
+  const allStudents = useMemo(() => allStudentsQuery.data?.students ?? [], [allStudentsQuery.data?.students]);
+
+  const siblings: SiblingStudentItem[] = useMemo(() => {
+    if (!student.id) return [];
+    const fatherId = guardians.fatherContactId ? String(guardians.fatherContactId) : null;
+    const guardianId = guardians.guardianContactId ? String(guardians.guardianContactId) : null;
+    const fatherName = (guardians.fatherName || student.fatherName || "").trim().toLowerCase();
+
+    if (!fatherId && !guardianId && !fatherName) return [];
+
+    const matched: SiblingStudentItem[] = [];
+
+    for (const other of allStudents) {
+      if (String(other.id) === String(student.id)) continue;
+      const otherFatherId = other.fatherContactId ? String(other.fatherContactId) : null;
+      const otherGuardianId = other.guardianContactId ? String(other.guardianContactId) : null;
+      const otherFatherName = (other.fatherName || "").trim().toLowerCase();
+
+      const isMatch =
+        (fatherId && otherFatherId && fatherId === otherFatherId) ||
+        (guardianId && otherGuardianId && guardianId === otherGuardianId) ||
+        (fatherName && otherFatherName && fatherName === otherFatherName);
+
+      if (isMatch) {
+        const sessionNames = sessions
+          .filter((sess) => other.enrolledSessions?.includes(sess.id))
+          .map((sess) => sess.name);
+
+        matched.push({
+          id: String(other.id),
+          name: other.name || "",
+          grNumber: other.grNumber,
+          status: other.status,
+          gender: other.gender,
+          sessionNames,
+        });
+      }
+    }
+
+    return matched;
+  }, [student, guardians, allStudents, sessions]);
+
   const showNotesSection = Boolean(student.notes) && sortedEnabledFields.some((field) => field.key === "notes");
 
   return {
@@ -183,5 +228,7 @@ export function useStudentDetailModel(student: Student) {
     hasWhatsAppContact: hasWhatsApp({ phone: primaryPhone ?? undefined }),
     hasVisibleDetailFields,
     showNotesSection,
+    siblings,
+    allStudents,
   };
 }

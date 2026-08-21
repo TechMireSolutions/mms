@@ -484,6 +484,20 @@
       "when": 1786705200000,
       "tag": "0068_schema_hardening_foreign_keys_and_timestamptz",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1786708800000,
+      "tag": "0069_contacts_composite_foreign_keys",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1786712400000,
+      "tag": "0070_tenant_user_composite_foreign_keys",
+      "breakpoints": true
     }
   ]
 }

@@ -30,6 +30,10 @@ export type StudentsPageOverlaysProps = {
   bulkRestoreOpen: boolean;
   onBulkRestoreOpenChange: (open: boolean) => void;
   onConfirmBulkRestore: () => void | Promise<void>;
+  idCardStudents: Student[];
+  onCloseIdCards: () => void;
+  onPrintIdCard?: (student: Student) => void;
+  onViewStudent?: (student: Student) => void;
 };
 
 /** Work-tier interaction slice of page-owned overlays (list + bulk bar). */
@@ -43,4 +47,6 @@ export type StudentsWorkOverlayInteractions = Pick<
   | "setConfirmBulkRestoreOpen"
   | "setDeleteTarget"
   | "setViewStudent"
+  | "openIdCards"
 >;
+

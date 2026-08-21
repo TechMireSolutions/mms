@@ -1,4 +1,5 @@
 import {
+  getContactTags,
   mergeContacts as mergeContactRecords,
   type Contact,
   type User,
@@ -193,4 +194,50 @@ export async function bulkSaveContacts(
   const tenant = getRequestTenant();
   if (!tenant || contacts.length === 0) return;
   await repo.bulkSave(tenant, contacts);
+}
+
+export async function bulkTagContacts(
+  ids: string[],
+  options: { addTags?: string[]; removeTags?: string[] },
+  repo: ContactsRepository = contactsRepository,
+): Promise<{ updatedCount: number }> {
+  const result = await runInTransaction(async () => {
+    const tenant = getRequestTenant();
+    if (!tenant) throw new Error('Tenant context required');
+    const contactsToUpdate = await repo.findByIds(tenant, ids);
+    const toAdd = options.addTags?.map((t) => t.trim()).filter(Boolean) ?? [];
+    const toRemove = new Set(options.removeTags?.map((t) => t.trim().toLowerCase()).filter(Boolean) ?? []);
+
+    let updatedCount = 0;
+    for (const c of contactsToUpdate) {
+      if (c.deletedAt) continue;
+      const currentTags = getContactTags(c);
+      const tagSet = new Set(currentTags);
+
+      for (const tag of toAdd) {
+        tagSet.add(tag);
+      }
+      for (const tag of Array.from(tagSet)) {
+        if (toRemove.has(tag.toLowerCase())) {
+          tagSet.delete(tag);
+        }
+      }
+
+      const nextTags = Array.from(tagSet);
+      const tagStr = nextTags.length > 0 ? nextTags.join(', ') : undefined;
+      const next: Contact = {
+        ...c,
+        tags: nextTags,
+        tag: tagStr,
+        updatedAt: new Date().toISOString(),
+      };
+      await repo.save(tenant, next);
+      updatedCount++;
+    }
+    return { updatedCount };
+  });
+  if (result.updatedCount > 0) {
+    await broadcastCollection('contacts');
+  }
+  return result;
 }

@@ -18,12 +18,21 @@ export function useStudentsPageOverlayState() {
   const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<StudentsDeleteTarget | null>(null);
   const [viewStudent, setViewStudent] = useState<Student | null>(null);
+  const [idCardStudents, setIdCardStudents] = useState<Student[]>([]);
 
   const openSelectionMessage = (channel: MessageChannel, targets: Student[]) => {
     openComposer(
       channel,
       targets.map((student) => toMessagingRecipient(student)),
     );
+  };
+
+  const openIdCards = (students: Student[]) => {
+    setIdCardStudents(students);
+  };
+
+  const closeIdCards = () => {
+    setIdCardStudents([]);
   };
 
   return {
@@ -41,5 +50,8 @@ export function useStudentsPageOverlayState() {
     setDeleteTarget,
     viewStudent,
     setViewStudent,
+    idCardStudents,
+    openIdCards,
+    closeIdCards,
   };
 }

@@ -61,6 +61,8 @@ const mockMatchContactIdentityIndex = vi.fn().mockResolvedValue({
   names: [],
 });
 
+const mockBulkTagContacts = vi.fn();
+
 vi.mock('../contacts/use-cases/contactUseCases.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../contacts/use-cases/contactUseCases.js')>();
   return {
@@ -76,6 +78,7 @@ vi.mock('../contacts/use-cases/contactUseCases.js', async (importOriginal) => {
       restoreContactById: (...args: unknown[]) => mockRestoreContactById(...args),
       bulkSoftDeleteContacts: (...args: unknown[]) => mockBulkSoftDeleteContacts(...args),
       bulkRestoreContacts: (...args: unknown[]) => mockBulkRestoreContacts(...args),
+      bulkTagContacts: (...args: unknown[]) => mockBulkTagContacts(...args),
       mergeContactsById: (...args: unknown[]) => mockMergeContactsById(...args),
       loadContactsCommandMetrics: (...args: unknown[]) => mockLoadContactsCommandMetrics(...args),
       loadContactsReportAnalytics: (...args: unknown[]) => mockLoadContactsReportAnalytics(...args),
@@ -1394,6 +1397,46 @@ describe('contacts REST routes', () => {
     });
     expect(prefsWriteOk.statusCode).toBe(200);
     expect(mockSaveContactPreferences).toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/contacts/bulk-tag applies and removes tags with permissions check', async () => {
+    const app = await buildApp();
+    mockBulkTagContacts.mockResolvedValue({ updatedCount: 2 });
+
+    const denied = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/bulk-tag',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+      payload: {
+        ids: ['c-1', 'c-2'],
+        addTags: ['VIP'],
+      },
+    });
+    expect(denied.statusCode).toBe(403);
+
+    const ok = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/bulk-tag',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: {
+        ids: ['c-1', 'c-2'],
+        addTags: ['VIP', 'Donor'],
+        removeTags: ['Lead'],
+      },
+    });
+    expect(ok.statusCode).toBe(200);
+    expect(ok.json()).toEqual({ success: true, updatedCount: 2 });
+    expect(mockBulkTagContacts).toHaveBeenCalledWith(['c-1', 'c-2'], {
+      addTags: ['VIP', 'Donor'],
+      removeTags: ['Lead'],
+    });
     await app.close();
   });
 });

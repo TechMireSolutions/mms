@@ -260,3 +260,98 @@ export async function countStudentsByWorkspace(
     return Number(rows[0]?.count ?? 0);
   });
 }
+
+export async function bulkEnrollStudentsTx(
+  tx: AppDb,
+  subdomain: string,
+  studentIds: string[],
+  sessionIds: string[],
+  mode: 'add' | 'replace' | 'remove' = 'add',
+): Promise<{ succeeded: number; failed: number }> {
+  if (studentIds.length === 0 || sessionIds.length === 0) {
+    return { succeeded: 0, failed: 0 };
+  }
+
+  const existingRows = await tx
+    .select()
+    .from(studentEnrolledSessions)
+    .where(
+      and(
+        eq(studentEnrolledSessions.workspaceSubdomain, subdomain),
+        inArray(studentEnrolledSessions.studentId, studentIds),
+      ),
+    );
+
+  const existingByStudentId = new Map<string, string[]>();
+  for (const row of existingRows) {
+    const list = existingByStudentId.get(row.studentId) ?? [];
+    list.push(row.sessionId);
+    existingByStudentId.set(row.studentId, list);
+  }
+
+  await tx
+    .delete(studentEnrolledSessions)
+    .where(
+      and(
+        eq(studentEnrolledSessions.workspaceSubdomain, subdomain),
+        inArray(studentEnrolledSessions.studentId, studentIds),
+      ),
+    );
+
+  const newRows: Array<typeof studentEnrolledSessions.$inferInsert> = [];
+
+  for (const studentId of studentIds) {
+    const current = existingByStudentId.get(studentId) ?? [];
+    let next: string[] = [];
+
+    if (mode === 'add') {
+      const set = new Set([...current, ...sessionIds]);
+      next = [...set];
+    } else if (mode === 'replace') {
+      const set = new Set(sessionIds);
+      next = [...set];
+    } else if (mode === 'remove') {
+      const removeSet = new Set(sessionIds);
+      next = current.filter((s) => !removeSet.has(s));
+    }
+
+    next.forEach((sessionId, idx) => {
+      newRows.push({
+        id: `${studentId}_sess_${idx}_${String(sessionId).slice(0, 30)}`,
+        workspaceSubdomain: subdomain,
+        studentId,
+        sessionId: String(sessionId),
+        sortOrder: idx,
+      });
+    });
+  }
+
+  if (newRows.length > 0) {
+    await tx.insert(studentEnrolledSessions).values(newRows);
+  }
+
+  await tx
+    .update(students)
+    .set({ updatedAt: new Date() })
+    .where(
+      and(
+        eq(students.workspaceSubdomain, subdomain),
+        inArray(students.id, studentIds),
+      ),
+    );
+
+  return { succeeded: studentIds.length, failed: 0 };
+}
+
+export async function bulkEnrollStudents(
+  tenant: string,
+  studentIds: string[],
+  sessionIds: string[],
+  mode: 'add' | 'replace' | 'remove' = 'add',
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantTransaction(subdomain, async (tx) => {
+    return bulkEnrollStudentsTx(tx, subdomain, studentIds, sessionIds, mode);
+  });
+}
+

@@ -1,8 +1,9 @@
-import { type Student } from "@mms/shared";
+import { type Student, type StudentsBulkEnrollBody } from "@mms/shared";
 import {
   useStudentMutations,
   type StudentRecord,
 } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentsBulkEnrollMutation } from "@/tenant/features/students/hooks/useStudentMutations";
 import { useStudentsCrudNotify } from "@/tenant/features/students/hooks/useStudentsCrudNotify";
 
 /** Mutate + notify wrappers for Students Work (Contacts-shaped action cluster). */
@@ -14,6 +15,7 @@ export function useStudentsCrudActions({
   mutations: ReturnType<typeof useStudentMutations>;
 }) {
   const { handleError, notifyBulkResult } = useStudentsCrudNotify();
+  const bulkEnrollMutation = useStudentsBulkEnrollMutation();
   const {
     deleteStudent,
     bulkDeleteStudents,
@@ -109,6 +111,28 @@ export function useStudentsCrudActions({
     }
   };
 
+  const handleBulkEnroll = async (
+    studentIds: string[],
+    payload: { sessionIds: string[]; mode: StudentsBulkEnrollBody["mode"] },
+  ): Promise<void> => {
+    try {
+      const result = await bulkEnrollMutation.mutateAsync({
+        studentIds,
+        sessionIds: payload.sessionIds,
+        mode: payload.mode,
+      });
+      notifyBulkResult(
+        result.succeeded,
+        result.failed,
+        "students.bulkEnrollSuccess",
+        "students.bulkEnrollSuccess",
+      );
+    } catch (error) {
+      handleError(error, "students.bulk_enroll", "students.saveFailed");
+      throw error;
+    }
+  };
+
   return {
     handleSaveStudent,
     handleDelete,
@@ -116,5 +140,7 @@ export function useStudentsCrudActions({
     handleBulkDelete,
     handleBulkRestore,
     handleBulkStatusChange,
+    handleBulkEnroll,
+    bulkEnrollPending: bulkEnrollMutation.isPending,
   };
 }

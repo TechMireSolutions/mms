@@ -16,6 +16,7 @@ type CrudActions = ReturnType<typeof useContactsCrudActions>;
 export function useContactsPageWriteActions({
   canWrite,
   shownCount,
+  selected,
   editContact,
   setEditContact,
   setShowForm,
@@ -26,6 +27,7 @@ export function useContactsPageWriteActions({
 }: {
   canWrite: boolean;
   shownCount: number;
+  selected?: Array<string | number>;
   editContact: Contact | null;
   setEditContact: (contact: Contact | null) => void;
   setShowForm: (open: boolean) => void;
@@ -39,6 +41,7 @@ export function useContactsPageWriteActions({
     | "saveContact"
     | "mergeContacts"
     | "importContacts"
+    | "bulkTagContacts"
   >;
 }) {
   const { t } = useTranslation();
@@ -49,6 +52,7 @@ export function useContactsPageWriteActions({
     saveContact,
     mergeContacts,
     importContacts,
+    bulkTagContacts,
   } = crud;
 
   const handleOpenDuplicates = useCallback(async () => {
@@ -134,6 +138,18 @@ export function useContactsPageWriteActions({
     [canWrite, mergeContacts, t],
   );
 
+  const handleBulkTag = useCallback(
+    async (tags: string[]) => {
+      if (!canWrite) {
+        throw new Error(t("contacts.form.writeDenied"));
+      }
+      const ids = (selected ?? []).map(String);
+      if (ids.length === 0 || tags.length === 0) return;
+      await bulkTagContacts(ids, tags);
+    },
+    [canWrite, selected, bulkTagContacts, t],
+  );
+
   return {
     handleOpenDuplicates,
     handleEdit,
@@ -142,5 +158,6 @@ export function useContactsPageWriteActions({
     handleUpdateContact,
     handleImport,
     handleMerge,
+    handleBulkTag,
   };
 }

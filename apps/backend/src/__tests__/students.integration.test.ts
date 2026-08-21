@@ -42,6 +42,7 @@ const mockBulkRestoreStudents = vi.fn();
 const mockDeleteStudentById = vi.fn();
 const mockRestoreStudentById = vi.fn();
 const mockUpdateStudentById = vi.fn();
+const mockBulkEnrollStudents = vi.fn();
 
 vi.mock('../students/use-cases/studentUseCases.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../students/use-cases/studentUseCases.js')>();
@@ -56,6 +57,7 @@ vi.mock('../students/use-cases/studentUseCases.js', async (importOriginal) => {
       migrateStudentsMissingGrNumbers: (...args: unknown[]) => mockMigrateStudentsMissingGrNumbers(...args),
       bulkSoftDeleteStudents: (...args: unknown[]) => mockBulkSoftDeleteStudents(...args),
       bulkRestoreStudents: (...args: unknown[]) => mockBulkRestoreStudents(...args),
+      bulkEnrollStudents: (...args: unknown[]) => mockBulkEnrollStudents(...args),
       softDeleteStudentById: (...args: unknown[]) => mockDeleteStudentById(...args),
       restoreStudentById: (...args: unknown[]) => mockRestoreStudentById(...args),
       sanitizeStudentForViewer: async (student: unknown) => student,
@@ -634,4 +636,37 @@ describe('students routes', () => {
     );
     await app.close();
   });
+
+  it('POST /api/students/bulk-enroll performs bulk session enrollment and audits', async () => {
+    mockBulkEnrollStudents.mockResolvedValue({ succeeded: 2, failed: 0 });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/students/bulk-enroll',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {
+        studentIds: ['s1', 's2'],
+        sessionIds: ['sess-1', 'sess-2'],
+        mode: 'add',
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockBulkEnrollStudents).toHaveBeenCalledWith({
+      studentIds: ['s1', 's2'],
+      sessionIds: ['sess-1', 'sess-2'],
+      mode: 'add',
+    });
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({
+        action: 'student.bulk_enroll',
+        summary: expect.stringContaining('Updated session enrollments (add) for 2 student(s)'),
+      }),
+    );
+    await app.close();
+  });
 });
+

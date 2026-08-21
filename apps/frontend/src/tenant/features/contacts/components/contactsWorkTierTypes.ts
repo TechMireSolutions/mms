@@ -46,6 +46,7 @@ export interface ContactsWorkTierProps {
   onBulkExport: () => void | Promise<void>;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
+  onBulkTag?: (tags: string[]) => Promise<void> | void;
   isWorkError: boolean;
   isWorkLoading: boolean;
   isWorkFetching: boolean;

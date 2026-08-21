@@ -78,5 +78,9 @@ export function useStudentsPageOverlayProps({
       await workActions.handleBulkRestore(selectedIds);
       clearSelection();
     },
+    idCardStudents: overlays.idCardStudents,
+    onCloseIdCards: overlays.closeIdCards,
+    onPrintIdCard: (student: Student) => overlays.openIdCards([student]),
+    onViewStudent: (student: Student) => overlays.setViewStudent(student),
   };
 }

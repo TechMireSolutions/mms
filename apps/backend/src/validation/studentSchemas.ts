@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { bulkIdsBodySchema } from './commonSchemas.js';
-import { isQueryFlagTrue, studentsListQuerySchema } from '@mms/shared';
+import { isQueryFlagTrue, studentsListQuerySchema, studentsBulkEnrollBodySchema } from '@mms/shared';
 import {
   csvExportBodySchema,
   moduleFieldsPrefsAuditBodySchema,
 } from './csvExportBodySchema.js';
 
-export { studentsListQuerySchema };
+export { studentsListQuerySchema, studentsBulkEnrollBodySchema };
 
 export const studentsNextGrNumberQuerySchema = z.object({
   registeredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),

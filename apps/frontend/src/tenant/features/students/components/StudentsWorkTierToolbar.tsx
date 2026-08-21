@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { ScanBarcode } from "lucide-react";
 import type { StudentsQuickFilter } from "@mms/shared";
 import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
@@ -94,7 +95,11 @@ export function StudentsWorkTierToolbar({
             placeholder={t("students.searchPlaceholder")}
             className="w-full min-w-0"
           />
-          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
+          <div
+            className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1.5 md:flex"
+            title={t("students.toolbar.scanShortcut")}
+          >
+            <ScanBarcode className="w-3.5 h-3.5 text-muted-foreground/70" aria-hidden />
             <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
               /
             </kbd>

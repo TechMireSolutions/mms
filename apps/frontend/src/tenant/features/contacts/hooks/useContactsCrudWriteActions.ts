@@ -21,7 +21,12 @@ export function useContactsCrudWriteActions({
   handleError: (err: unknown, scope: string, messageKey?: AppTranslationKey) => void;
   notifyBulkResult: NotifyBulkResult;
 }) {
-  const { upsertContact, updateContact, mergeContacts: mergeContactsMutation } = useContactMutations();
+  const {
+    upsertContact,
+    updateContact,
+    mergeContacts: mergeContactsMutation,
+    bulkTagContacts: bulkTagMutation,
+  } = useContactMutations();
 
   const saveContact = useCallback(
     async (contact: Contact, isNew: boolean): Promise<void> => {
@@ -76,10 +81,25 @@ export function useContactsCrudWriteActions({
     [upsertContact, notifyBulkResult],
   );
 
+  const bulkTagContacts = useCallback(
+    async (ids: string[], addTags?: string[], removeTags?: string[]): Promise<number> => {
+      try {
+        const res = await bulkTagMutation.mutateAsync({ ids, addTags, removeTags });
+        notify.success(t("contacts.bulkTagSuccess", { count: res.updatedCount }));
+        return res.updatedCount;
+      } catch (err) {
+        handleError(err, "contacts.bulk_tag");
+        throw err;
+      }
+    },
+    [bulkTagMutation, t, handleError],
+  );
+
   return {
     updateContact,
     saveContact,
     mergeContacts,
     importContacts,
+    bulkTagContacts,
   };
 }

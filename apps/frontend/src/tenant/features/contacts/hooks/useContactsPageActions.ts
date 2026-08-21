@@ -54,6 +54,7 @@ export function useContactsPageActions({
     | "removeContact"
     | "mergeContacts"
     | "importContacts"
+    | "bulkTagContacts"
     | "bulkDeleteContactsAction"
     | "restoreContactAction"
     | "bulkRestoreContactsAction"
@@ -69,6 +70,7 @@ export function useContactsPageActions({
   const writeActions = useContactsPageWriteActions({
     canWrite,
     shownCount,
+    selected,
     editContact,
     setEditContact,
     setShowForm,

@@ -724,3 +724,42 @@ describe('duplicate-scan use cases (DI)', () => {
     expect(mockLoadDuplicatePairsPage).toHaveBeenCalledWith({ page: 1, limit: 10 }, repo);
   });
 });
+
+describe('bulkTagContacts use case', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetRequestTenant.mockReturnValue('demo');
+  });
+
+  it('adds and removes tags atomically and broadcasts collection change', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('c-1', fakeContact('c-1', { tags: ['VIP', 'Donor'] }));
+    store.set('c-2', fakeContact('c-2', { tags: ['Volunteer'] }));
+
+    const useCases = createContactsUseCases(repo);
+    const result = await useCases.bulkTagContacts(['c-1', 'c-2'], {
+      addTags: ['2026', 'Ramadan'],
+      removeTags: ['vip'],
+    });
+
+    expect(result.updatedCount).toBe(2);
+    expect(store.get('c-1')?.tags).toEqual(['Donor', '2026', 'Ramadan']);
+    expect(store.get('c-2')?.tags).toEqual(['Volunteer', '2026', 'Ramadan']);
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('contacts');
+  });
+
+  it('skips soft-deleted contacts during bulk tagging', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('c-1', fakeContact('c-1', { tags: ['Active'] }));
+    store.set('c-2', fakeContact('c-2', { tags: ['Deleted'], deletedAt: new Date().toISOString() }));
+
+    const useCases = createContactsUseCases(repo);
+    const result = await useCases.bulkTagContacts(['c-1', 'c-2'], {
+      addTags: ['Tagged'],
+    });
+
+    expect(result.updatedCount).toBe(1);
+    expect(store.get('c-1')?.tags).toEqual(['Active', 'Tagged']);
+    expect(store.get('c-2')?.tags).toEqual(['Deleted']);
+  });
+});

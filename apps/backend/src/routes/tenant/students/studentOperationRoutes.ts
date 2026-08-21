@@ -9,6 +9,7 @@ import { studentUseCases } from '../../../students/use-cases/studentUseCases.js'
 import { StudentRestoreConflictError, StudentPermissionError } from '../../../students/use-cases/studentNormalizeUseCases.js';
 import { validateStudentDynamic } from '../../../services/studentValidationService.js';
 import {
+  studentsBulkEnrollBodySchema,
   studentsBulkStatusSchema,
   studentsDuplicateCheckBodySchema,
   studentsNextGrNumberQuerySchema,
@@ -102,6 +103,28 @@ export async function studentOperationRoutes(fastify: FastifyInstance): Promise<
       return reply.send({ success: true, ...result });
     } catch {
       return sendDatabaseError(reply, 'Failed to bulk update student status');
+    }
+  });
+
+  fastify.post('/bulk-enroll', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, 'students')) return sendForbidden(reply);
+    const parsed = parseRequest(studentsBulkEnrollBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await studentUseCases.bulkEnrollStudents({
+        studentIds: parsed.data.studentIds.map(String),
+        sessionIds: parsed.data.sessionIds.map(String),
+        mode: parsed.data.mode,
+      });
+      await auditStudent(
+        user,
+        'student.bulk_enroll',
+        `Updated session enrollments (${parsed.data.mode}) for ${result.succeeded} student(s)`,
+      );
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk update student session enrollments');
     }
   });
 

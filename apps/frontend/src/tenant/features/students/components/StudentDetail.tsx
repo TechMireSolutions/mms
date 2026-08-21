@@ -1,9 +1,10 @@
 import React, { useMemo } from "react";
-import { GraduationCap } from "lucide-react";
+import { GraduationCap, IdCard } from "lucide-react";
 import type { Student } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
+import { Button } from "@/components/ui/button";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
@@ -11,6 +12,7 @@ import { StudentDetailHero } from "@/tenant/features/students/components/Student
 import { StudentDetailNotesSection } from "@/tenant/features/students/components/StudentDetailNotesSection";
 import { StudentDetailQuickActions } from "@/tenant/features/students/components/StudentDetailQuickActions";
 import { StudentDetailSessionsSection } from "@/tenant/features/students/components/StudentDetailSessionsSection";
+import { StudentDetailSiblingsSection } from "@/tenant/features/students/components/StudentDetailSiblingsSection";
 import { useStudentDetailModel } from "@/tenant/features/students/components/useStudentDetailModel";
 
 interface StudentDetailProps {
@@ -22,6 +24,8 @@ interface StudentDetailProps {
   /** Page-owned composer — do not create a second MessageComposer in the drawer. */
   openComposer: ReturnType<typeof useMessageComposerState>["openComposer"];
   canWriteMessaging: boolean;
+  onPrintIdCard?: (student: Student) => void;
+  onViewStudent?: (student: Student) => void;
 }
 
 export const StudentDetail = React.memo(function StudentDetail({
@@ -32,6 +36,8 @@ export const StudentDetail = React.memo(function StudentDetail({
   onRestore,
   openComposer,
   canWriteMessaging,
+  onPrintIdCard,
+  onViewStudent,
 }: StudentDetailProps): React.JSX.Element {
   const {
     t,
@@ -47,23 +53,41 @@ export const StudentDetail = React.memo(function StudentDetail({
     hasWhatsAppContact,
     hasVisibleDetailFields,
     showNotesSection,
+    siblings,
+    allStudents,
   } = useStudentDetailModel(student);
 
   const isArchived = Boolean(student.deletedAt);
 
   const headerActionsNode = useMemo(
     () => (
-      <DetailDrawerRestoreOrEditAction
-        isArchived={isArchived}
-        canRestore={canDelete}
-        canEdit={Boolean(onEdit)}
-        restoreLabel={t("students.restore")}
-        editLabel={t("students.detail.editTitle")}
-        onRestore={onRestore ? () => onRestore(String(student.id)) : undefined}
-        onEdit={onEdit ? () => onEdit(student) : undefined}
-      />
+      <div className="flex items-center gap-1.5">
+        {!isArchived && onPrintIdCard && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => onPrintIdCard(student)}
+            className="min-h-11 px-3 gap-1.5 font-medium text-xs border-border/60 hover:bg-muted/80"
+            title={t("students.detail.printIdCard")}
+            aria-label={t("students.detail.printIdCard")}
+          >
+            <IdCard className="w-3.5 h-3.5" aria-hidden />
+            <span className="hidden sm:inline">{t("students.detail.printIdCard")}</span>
+          </Button>
+        )}
+        <DetailDrawerRestoreOrEditAction
+          isArchived={isArchived}
+          canRestore={canDelete}
+          canEdit={Boolean(onEdit)}
+          restoreLabel={t("students.restore")}
+          editLabel={t("students.detail.editTitle")}
+          onRestore={onRestore ? () => onRestore(String(student.id)) : undefined}
+          onEdit={onEdit ? () => onEdit(student) : undefined}
+        />
+      </div>
     ),
-    [isArchived, canDelete, onEdit, t, onRestore, student],
+    [isArchived, onPrintIdCard, canDelete, onEdit, t, onRestore, student],
   );
 
   const headerExtraNode = useMemo(
@@ -123,6 +147,19 @@ export const StudentDetail = React.memo(function StudentDetail({
       )}
 
       {showNotesSection && student.notes ? <StudentDetailNotesSection notes={student.notes} /> : null}
+
+      <StudentDetailSiblingsSection
+        siblings={siblings}
+        statusBadgeConfig={statusBadgeConfig}
+        onViewSibling={
+          onViewStudent
+            ? (siblingId) => {
+                const target = allStudents.find((s) => String(s.id) === String(siblingId));
+                if (target) onViewStudent(target);
+              }
+            : undefined
+        }
+      />
 
       <StudentDetailSessionsSection
         sessions={enrolledSessionDetails}

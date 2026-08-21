@@ -179,6 +179,8 @@ export interface Contact {
   [key: string]: unknown;
 }
 
+import { z } from 'zod';
+
 /** Resolves normalized array of tag strings from a Contact (supporting tags array or comma-delimited tag string). */
 export function getContactTags(contact: { tag?: string | null; tags?: string[] | null }): string[] {
   if (Array.isArray(contact.tags) && contact.tags.length > 0) {
@@ -189,3 +191,18 @@ export function getContactTags(contact: { tag?: string | null; tags?: string[] |
   }
   return [];
 }
+
+/** Payload schema for bulk tagging contact records. */
+export const contactsBulkTagBodySchema = z
+  .object({
+    ids: z.array(z.string().min(1)).min(1, 'At least one contact ID is required'),
+    addTags: z.array(z.string().trim().min(1)).optional(),
+    removeTags: z.array(z.string().trim().min(1)).optional(),
+  })
+  .strict()
+  .refine(
+    (data) => (data.addTags?.length ?? 0) > 0 || (data.removeTags?.length ?? 0) > 0,
+    { message: 'At least one tag to add or remove must be provided' },
+  );
+
+export type ContactsBulkTagBody = z.infer<typeof contactsBulkTagBodySchema>;

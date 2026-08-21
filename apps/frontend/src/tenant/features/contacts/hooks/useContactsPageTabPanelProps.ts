@@ -40,7 +40,7 @@ export function useContactsPageTabPanelProps({
   messaging: Pick<Messaging, "canWriteMessaging" | "handleWhatsApp" | "handleSms" | "handleEmail">;
   actions: Pick<
     Actions,
-    "requestBulkDelete" | "requestBulkRestore" | "handleImport"
+    "requestBulkDelete" | "requestBulkRestore" | "handleImport" | "handleBulkTag"
   >;
   selectedTargets: SelectedTargets;
   viewingDeleted: boolean;
@@ -91,6 +91,7 @@ export function useContactsPageTabPanelProps({
       onBulkExport: handleBulkExport,
       onRequestBulkDelete: actions.requestBulkDelete,
       onRequestBulkRestore: actions.requestBulkRestore,
+      onBulkTag: actions.handleBulkTag,
       isWorkError: directory.isWorkError,
       isWorkLoading: directory.isWorkLoading,
       isWorkFetching: directory.isWorkFetching,

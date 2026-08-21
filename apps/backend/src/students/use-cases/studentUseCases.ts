@@ -50,6 +50,8 @@ export function createStudentsUseCases(repo: StudentsRepository = studentsReposi
       softDelete.bulkRestoreStudents(ids, repo),
     bulkUpdateStudentStatus: (ids: string[], status: string) =>
       operation.bulkUpdateStudentStatus(ids, status, repo),
+    bulkEnrollStudents: (input: Parameters<typeof operation.bulkEnrollStudents>[0]) =>
+      operation.bulkEnrollStudents(input, repo),
     computeNextGrNumberForDate: (
       regDate: string,
       settings: Parameters<typeof operation.computeNextGrNumberForDate>[1],

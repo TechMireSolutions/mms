@@ -628,16 +628,16 @@ export const teachersRelations = relations(teachers, ({ one, many }) => ({
     references: [contacts.workspaceSubdomain, contacts.id],
   }),
   user: one(tenantUsers, {
-    fields: [teachers.userId],
-    references: [tenantUsers.id],
+    fields: [teachers.workspaceSubdomain, teachers.userId],
+    references: [tenantUsers.workspaceSubdomain, tenantUsers.id],
   }),
   hasanatDistributions: many(hasanatDistributions),
 }));
 
 export const backgroundJobsRelations = relations(backgroundJobs, ({ one }) => ({
   user: one(tenantUsers, {
-    fields: [backgroundJobs.userId],
-    references: [tenantUsers.id],
+    fields: [backgroundJobs.tenantId, backgroundJobs.userId],
+    references: [tenantUsers.workspaceSubdomain, tenantUsers.id],
   }),
 }));
 

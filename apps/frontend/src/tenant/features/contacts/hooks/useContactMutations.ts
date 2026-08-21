@@ -102,6 +102,19 @@ export function useContactMutations() {
       }),
   });
 
+  const bulkTagContacts = useMutation({
+    mutationFn: async (payload: {
+      ids: string[];
+      addTags?: string[];
+      removeTags?: string[];
+    }) =>
+      apiJson<{ success: boolean; updatedCount: number }>(`${CONTACTS_API}/bulk-tag`, {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      }),
+    onSuccess: invalidate,
+  });
+
   return {
     upsertContact,
     updateContact,
@@ -111,6 +124,7 @@ export function useContactMutations() {
     bulkRestoreContacts,
     mergeContacts,
     matchContactIdentity,
+    bulkTagContacts,
     logExportAudit,
     logSetupAudit,
   };

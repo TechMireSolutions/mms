@@ -18,6 +18,7 @@ export function useContactsCrudActions() {
     removeContact: remove.removeContact,
     mergeContacts: write.mergeContacts,
     importContacts: write.importContacts,
+    bulkTagContacts: write.bulkTagContacts,
     bulkDeleteContactsAction: remove.bulkDeleteContactsAction,
     restoreContactAction: remove.restoreContactAction,
     bulkRestoreContactsAction: remove.bulkRestoreContactsAction,

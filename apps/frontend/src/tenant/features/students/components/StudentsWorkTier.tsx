@@ -49,6 +49,9 @@ export function StudentsWorkTier({
   onEdit,
   onRestore,
   onBulkStatusChange,
+  onBulkEnroll,
+  bulkEnrollPending,
+  onBulkPrintIdCards,
   onBulkExport,
   bulkStatusPending,
   sortField,
@@ -126,6 +129,9 @@ export function StudentsWorkTier({
               // Toast already emitted by the crud action; keep selection for retry.
             }
           }}
+          onBulkEnroll={onBulkEnroll}
+          isBulkEnrollPending={bulkEnrollPending}
+          onBulkPrintIdCards={onBulkPrintIdCards}
           onBulkExport={() => {
             void onBulkExport();
           }}

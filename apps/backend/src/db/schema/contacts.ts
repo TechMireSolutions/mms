@@ -90,6 +90,10 @@ export const contactPhones = pgTable('contact_phones', {
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_phones_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
   index('contact_phones_workspace_number_idx').on(table.workspaceSubdomain, table.number),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 export const contactEmails = pgTable('contact_emails', {
@@ -106,6 +110,10 @@ export const contactEmails = pgTable('contact_emails', {
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_emails_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
   index('contact_emails_workspace_address_idx').on(table.workspaceSubdomain, table.address),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 export const contactAddresses = pgTable('contact_addresses', {
@@ -123,6 +131,10 @@ export const contactAddresses = pgTable('contact_addresses', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_addresses_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 export const contactSocials = pgTable('contact_socials', {
@@ -136,6 +148,10 @@ export const contactSocials = pgTable('contact_socials', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_socials_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 export const contactEducations = pgTable('contact_educations', {
@@ -153,6 +169,10 @@ export const contactEducations = pgTable('contact_educations', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_educations_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 export const contactExperiences = pgTable('contact_experiences', {
@@ -172,6 +192,10 @@ export const contactExperiences = pgTable('contact_experiences', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_experiences_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 export const contactSkills = pgTable('contact_skills', {
@@ -190,6 +214,10 @@ export const contactSkills = pgTable('contact_skills', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_skills_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 export const contactRelationships = pgTable('contact_relationships', {
@@ -209,6 +237,10 @@ export const contactRelationships = pgTable('contact_relationships', {
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_relationships_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
   index('contact_relationships_workspace_related_idx').on(table.workspaceSubdomain, table.relatedContactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 export const contactActivities = pgTable('contact_activities', {
@@ -224,6 +256,10 @@ export const contactActivities = pgTable('contact_activities', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_activities_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 export const contactAttachments = pgTable('contact_attachments', {
@@ -240,6 +276,10 @@ export const contactAttachments = pgTable('contact_attachments', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_attachments_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
 ]);
 
 /** Madrasa workspace auth users — isolated per subdomain. */

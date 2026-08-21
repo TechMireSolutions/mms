@@ -168,6 +168,21 @@ export function useStudentsPageController() {
     openEditForm: formState.openEditForm,
     handleRestore: workActions.handleRestore,
     handleBulkStatusChange: workActions.handleBulkStatusChange,
+    handleBulkEnroll: async (payload) => {
+      try {
+        await workActions.handleBulkEnroll(directory.selectedIds, payload);
+        directory.clearSelection();
+      } catch {
+        // Keep selection on error
+      }
+    },
+    bulkEnrollPending: workActions.bulkEnrollPending,
+    handleBulkPrintIdCards: () => {
+      const selectedList = workStudents.filter((s) => directory.selectedIds.includes(String(s.id)));
+      if (selectedList.length > 0) {
+        overlays.openIdCards(selectedList);
+      }
+    },
     handleBulkExport,
     bulkStatusPending: mutations.bulkUpdateStudentStatus.isPending,
     sortField: directory.sortField,
@@ -182,6 +197,7 @@ export function useStudentsPageController() {
       setConfirmBulkRestoreOpen: overlays.setConfirmBulkRestoreOpen,
       setDeleteTarget: overlays.setDeleteTarget,
       setViewStudent: overlays.setViewStudent,
+      openIdCards: overlays.openIdCards,
     },
   });
 

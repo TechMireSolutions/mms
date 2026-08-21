@@ -39,6 +39,7 @@ export function ContactsWorkTier({
   onBulkExport,
   onRequestBulkDelete,
   onRequestBulkRestore,
+  onBulkTag,
   isWorkError,
   isWorkLoading,
   isWorkFetching,
@@ -61,8 +62,8 @@ export function ContactsWorkTier({
   });
 
   return (
-    <div className="space-y-5">
-      <ErrorBoundary>
+    <div className="space-y-4">
+      <ErrorBoundary fallback={<div className="p-4 text-sm text-destructive">Failed to load toolbar</div>}>
         <ContactsToolbar
           search={search}
           onSearchChange={onSearchChange}
@@ -93,6 +94,7 @@ export function ContactsWorkTier({
         canWriteMessaging={canWriteMessaging}
         canExport={canExport}
         canDelete={canDelete}
+        canWrite={canWrite}
         selectedTargets={selectedTargets}
         onWhatsApp={onWhatsApp}
         onSms={onSms}
@@ -101,6 +103,7 @@ export function ContactsWorkTier({
         onRequestBulkDelete={onRequestBulkDelete}
         onRequestBulkRestore={onRequestBulkRestore}
         onClearSelection={onClearSelection}
+        onBulkTag={onBulkTag}
       />
 
       <ContactsWorkListBody

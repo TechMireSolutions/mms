@@ -48,6 +48,9 @@ export type StudentsWorkTierSource = {
   openEditForm: WorkTierProps["onEdit"];
   handleRestore: WorkTierProps["onRestore"];
   handleBulkStatusChange: WorkTierProps["onBulkStatusChange"];
+  handleBulkEnroll?: WorkTierProps["onBulkEnroll"];
+  bulkEnrollPending?: WorkTierProps["bulkEnrollPending"];
+  handleBulkPrintIdCards?: WorkTierProps["onBulkPrintIdCards"];
   handleBulkExport: WorkTierProps["onBulkExport"];
   bulkStatusPending: WorkTierProps["bulkStatusPending"];
   sortField: WorkTierProps["sortField"];
@@ -103,6 +106,9 @@ export function buildStudentsWorkTierProps(
     onEdit: source.openEditForm,
     onRestore: source.handleRestore,
     onBulkStatusChange: source.handleBulkStatusChange,
+    onBulkEnroll: source.handleBulkEnroll,
+    bulkEnrollPending: source.bulkEnrollPending,
+    onBulkPrintIdCards: source.handleBulkPrintIdCards,
     onBulkExport: source.handleBulkExport,
     bulkStatusPending: source.bulkStatusPending,
     sortField: source.sortField,
@@ -111,3 +117,4 @@ export function buildStudentsWorkTierProps(
     workOverlays: source.workOverlays,
   };
 }
+

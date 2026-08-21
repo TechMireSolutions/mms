@@ -4,6 +4,7 @@ import {
   findStudentsByIds,
   saveStudent,
   bulkSaveStudents,
+  bulkEnrollStudents,
 } from '../../db/repositories/studentRepository.js';
 import type { Student } from '@mms/shared';
 import {
@@ -47,6 +48,8 @@ function createStudentsRepository(): StudentsRepository {
       findSoftDeletedStudentByContactIdSql(tenant, contactId),
     listActiveMissingGrNumber: (tenant) => listActiveStudentsMissingGrNumber(tenant),
     bulkUpdateStatusSql: (tenant, ids, status) => bulkUpdateStudentsStatusSql(tenant, ids, status),
+    bulkEnroll: (tenant, studentIds, sessionIds, mode) =>
+      bulkEnrollStudents(tenant, studentIds, sessionIds, mode),
   };
 }
 

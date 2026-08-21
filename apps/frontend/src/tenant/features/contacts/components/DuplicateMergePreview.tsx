@@ -55,6 +55,29 @@ export function MergePreview({
         next.gender = source.gender ?? next.gender;
       } else if (field === "cnic") {
         next.cnic = source.cnic ?? next.cnic;
+      } else if (field === "phone") {
+        next.phone = source.phone ?? next.phone;
+        if (source.phones && source.phones.length > 0) {
+          next.phones = source.phones;
+        }
+      } else if (field === "email") {
+        next.email = source.email ?? next.email;
+        if (source.emails && source.emails.length > 0) {
+          next.emails = source.emails;
+        }
+      } else if (field === "address" || field === "city") {
+        next.address = source.address ?? next.address;
+        next.city = source.city ?? next.city;
+        next.state = source.state ?? next.state;
+        next.country = source.country ?? next.country;
+        if (source.addresses && source.addresses.length > 0) {
+          next.addresses = source.addresses;
+        }
+      } else if (field === "notes") {
+        next.notes = source.notes ?? next.notes;
+      } else if (field === "tag") {
+        next.tag = source.tag ?? next.tag;
+        next.tags = source.tags ?? next.tags;
       }
     }
     return next;

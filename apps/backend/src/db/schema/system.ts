@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, primaryKey, varchar, bigint } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, primaryKey, varchar, bigint, foreignKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import type { PersistedSavedReportCategory } from "@mms/shared";
 import { workspaces } from "./platform.js";
@@ -30,17 +30,17 @@ export const authArtifacts = pgTable('auth_artifacts', {
 }, (table) => [
   index('auth_artifacts_kind_expires_idx').on(table.kind, table.expiresAt),
   uniqueIndex('auth_artifacts_lookup_key_uidx')
-    .on(table.lookupKey)
-    .where(sql`${table.lookupKey} is not null`),
+  .on(table.lookupKey)
+  .where(sql`${table.lookupKey} is not null`),
   index('auth_artifacts_scope_key_idx')
-    .on(table.scopeKey)
-    .where(sql`${table.scopeKey} is not null`),
+  .on(table.scopeKey)
+  .where(sql`${table.scopeKey} is not null`),
 ]);
 
 export const backgroundJobs = pgTable('background_jobs', {
   id: text('id').primaryKey(),
   tenantId: text('tenant_id').notNull(),
-  userId: text('user_id').notNull().references(() => tenantUsers.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
   moduleId: text('module_id').notNull(),
   kind: text('kind').notNull(),
   status: text('status').notNull().default('pending'),
@@ -55,6 +55,10 @@ export const backgroundJobs = pgTable('background_jobs', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
+  foreignKey({
+    columns: [table.tenantId, table.userId],
+    foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],
+  }).onDelete('cascade'),
   index('background_jobs_tenant_user_idx').on(table.tenantId, table.userId),
   index('background_jobs_status_idx').on(table.status),
 ]);

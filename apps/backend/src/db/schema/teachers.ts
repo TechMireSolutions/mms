@@ -41,8 +41,8 @@ export const teachers = pgTable('teachers', {
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
   }).onDelete('set null'),
   foreignKey({
-    columns: [table.userId],
-    foreignColumns: [tenantUsers.id],
+    columns: [table.workspaceSubdomain, table.userId],
+    foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],
   }).onDelete('set null'),
 ]);
 

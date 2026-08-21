@@ -64,3 +64,14 @@ export function buildStudentWriteSchema(extraFieldKeys: string[] = []): z.ZodTyp
 
 /** System-keys-only write schema (no Setup custom keys). Prefer `buildStudentWriteSchema` on tenant writes. */
 export const studentWriteSchema = buildStudentWriteSchema();
+
+export const studentsBulkEnrollBodySchema = z
+  .object({
+    studentIds: z.array(z.union([z.string(), z.number()])).min(1).max(500),
+    sessionIds: z.array(z.string().min(1)).min(1).max(50),
+    mode: z.enum(['add', 'replace', 'remove']).default('add'),
+  })
+  .strict();
+
+export type StudentsBulkEnrollBody = z.infer<typeof studentsBulkEnrollBodySchema>;
+
