@@ -32,7 +32,6 @@ export interface FormModalProps<K extends string = string> {
   saveLabel?: string;
   onSave?: (options?: { keepOpen?: boolean } | any) => void | Promise<unknown>;
   isDirty?: boolean;
-  saveOnTabChange?: boolean;
   saving?: boolean;
   saveDisabled?: boolean;
   saved?: boolean;
@@ -72,7 +71,6 @@ export function FormModal<K extends string = string>({
   saveLabel,
   onSave,
   isDirty = false,
-  saveOnTabChange = false,
   saving = false,
   saveDisabled = false,
   saved = false,
@@ -94,7 +92,7 @@ export function FormModal<K extends string = string>({
   const handleTabChange = React.useCallback(
     async (nextTab: K) => {
       if (nextTab === activeTab) return;
-      if (saveOnTabChange && isDirty && onSave && !saveDisabled && !saving) {
+      if (isDirty && onSave && !saveDisabled && !saving) {
         try {
           const result = await onSave({ keepOpen: true });
           if (result === false) return;
@@ -104,7 +102,7 @@ export function FormModal<K extends string = string>({
       }
       onTabChange?.(nextTab);
     },
-    [activeTab, isDirty, onSave, onTabChange, saveDisabled, saveOnTabChange, saving],
+    [activeTab, isDirty, onSave, onTabChange, saveDisabled, saving],
   );
 
   const {

@@ -20,7 +20,6 @@ export const ResponsiveAccordionTabs = React.memo(function ResponsiveAccordionTa
   children,
   isDirty = false,
   onSave,
-  saveOnTabChange = true,
   desktopLayout = "horizontal",
   hideWhenSingle = false,
   collapsible = true,
@@ -38,7 +37,7 @@ export const ResponsiveAccordionTabs = React.memo(function ResponsiveAccordionTa
         return;
       }
       if (tabId === activeTab) return;
-      if (saveOnTabChange && isDirty && onSave) {
+      if (isDirty && onSave) {
         try {
           const res = await onSave();
           if (res === false) return;
@@ -48,7 +47,7 @@ export const ResponsiveAccordionTabs = React.memo(function ResponsiveAccordionTa
       }
       onTabChange(tabId);
     },
-    [activeTab, collapsible, isDirty, onSave, onTabChange, saveOnTabChange],
+    [activeTab, collapsible, isDirty, onSave, onTabChange],
   );
 
   useScrollSurfaceOnChange(activeTab, {

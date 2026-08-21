@@ -68,10 +68,12 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
     [min, max],
   )
 
-  const commitIso = (iso: string, nextDisplayMonth?: Date) => {
+  const commitIso = (iso: string, nextDisplayMonth?: Date, updateInput = true) => {
     lastParsedRef.current = iso
     onChange?.(iso)
-    setInputValue(formatIsoDateToDisplay(iso, dateFormat))
+    if (updateInput) {
+      setInputValue(formatIsoDateToDisplay(iso, dateFormat))
+    }
     if (nextDisplayMonth) setDisplayMonth(nextDisplayMonth)
   }
 
@@ -105,7 +107,7 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
     if (!parsed) return
     const parsedDate = parseIsoDate(parsed)
     if (!parsedDate || !isDateWithinIsoBounds(parsedDate, min, max)) return
-    commitIso(parsed, parsedDate)
+    commitIso(parsed, parsedDate, false)
   }
 
   const handleBlur = () => {
