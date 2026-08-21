@@ -331,7 +331,7 @@ describe('fetchBackupSnapshot', () => {
       expect(Array.isArray(snapshot.collections?.[key])).toBe(true);
     }
     expect(snapshot.collections?.genders).toEqual([{ id: 'g-1' }]);
-    expect(snapshot.objects).toEqual({ branding: { madrasaName: 'Dar ul Quran' } });
+    expect(snapshot.objects).toEqual(expect.objectContaining({ branding: { madrasaName: 'Dar ul Quran' } }));
   });
 
   it('keeps document-store-only collections and objects', async () => {
@@ -339,7 +339,7 @@ describe('fetchBackupSnapshot', () => {
     const snapshot = await fetchBackupSnapshot();
 
     expect(snapshot.collections?.genders).toEqual([{ id: 'g-1' }]);
-    expect(snapshot.objects).toEqual({ branding: { madrasaName: 'Dar ul Quran' } });
+    expect(snapshot.objects).toEqual(expect.objectContaining({ branding: { madrasaName: 'Dar ul Quran' } }));
   });
 
   it('falls back to the document store when no tenant is in scope', async () => {

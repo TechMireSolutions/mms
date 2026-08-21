@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar, boolean, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 
@@ -81,6 +81,25 @@ export const messagingTemplatesUserColumnPrefs = pgTable('messaging_templates_us
   primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
 ]);
 
+/** Tenant-scoped email integration config & credentials — replaces objects KV (email_integration / email_integration_secrets). */
+export const emailIntegrations = pgTable('email_integrations', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  providerId: varchar('provider_id', { length: 40 }).notNull().default('gmail'),
+  fromAddress: varchar('from_address', { length: 255 }).notNull().default(''),
+  fromName: varchar('from_name', { length: 255 }).notNull().default('Madrasa Management System'),
+  smtpUsername: varchar('smtp_username', { length: 255 }).notNull().default(''),
+  smtpHost: varchar('smtp_host', { length: 255 }),
+  smtpPort: integer('smtp_port'),
+  smtpSecure: boolean('smtp_secure'),
+  smtpPassword: text('smtp_password'),
+  connected: boolean('connected').notNull().default(false),
+  hasCredentials: boolean('has_credentials').notNull().default(false),
+  lastTestAt: timestamp('last_test_at', { withTimezone: true, mode: 'date' }),
+  lastTestOk: boolean('last_test_ok'),
+  lastError: text('last_error'),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+});
+
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -95,3 +114,5 @@ export type MessagingHistoryUserColumnPrefsRow = typeof messagingHistoryUserColu
 export type InsertMessagingHistoryUserColumnPrefsRow = typeof messagingHistoryUserColumnPrefs.$inferInsert;
 export type MessagingTemplatesUserColumnPrefsRow = typeof messagingTemplatesUserColumnPrefs.$inferSelect;
 export type InsertMessagingTemplatesUserColumnPrefsRow = typeof messagingTemplatesUserColumnPrefs.$inferInsert;
+export type EmailIntegrationRow = typeof emailIntegrations.$inferSelect;
+export type InsertEmailIntegrationRow = typeof emailIntegrations.$inferInsert;

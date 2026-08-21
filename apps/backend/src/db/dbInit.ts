@@ -103,6 +103,8 @@ const dataMigrationsToRun = [
   { id: '079', load: async () => (await import('./migrations/079_clear_legacy_branding_objects.js')).runMigration079 },
   { id: '080', load: async () => (await import('./migrations/080_migrate_global_settings_to_workspace_columns.js')).runMigration080 },
   { id: '081', load: async () => (await import('./migrations/081_clear_legacy_global_settings_objects.js')).runMigration081 },
+  { id: '082', load: async () => (await import('./migrations/082_migrate_email_integration_to_table.js')).runMigration082 },
+  { id: '083', load: async () => (await import('./migrations/083_clear_legacy_email_integration_objects.js')).runMigration083 },
 ];
 
 /** Resolve Drizzle SQL migrations folder (src in tsx, dist in production). */

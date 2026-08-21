@@ -70,8 +70,11 @@ export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
     const { getWorkspaceBranding, getWorkspaceGlobalSettings } = await import(
       '../db/repositories/workspaceRepository.js'
     );
+    const { loadEmailIntegrationConfig } = await import('./email/emailIntegrationService.js');
+    
     const branding = await getWorkspaceBranding(tenant);
     const globalSettings = await getWorkspaceGlobalSettings(tenant);
+    const emailIntegration = await loadEmailIntegrationConfig();
 
     return {
       ...snapshot,
@@ -80,6 +83,7 @@ export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
         ...(snapshot.objects ?? {}),
         ...(branding ? { branding } : {}),
         ...(globalSettings ? { global_settings: globalSettings } : {}),
+        ...(emailIntegration ? { email_integration: emailIntegration } : {}),
       },
     };
   });
@@ -175,6 +179,13 @@ export async function synchronizeData(
             const { upsertWorkspaceGlobalSettings } = await import('../db/repositories/workspaceRepository.js');
             const { mergeGlobalSettings } = await import('@mms/shared');
             await upsertWorkspaceGlobalSettings(tenant, mergeGlobalSettings(objectValue as Record<string, unknown>));
+          }
+        } else if (key === 'email_integration') {
+          const tenant = getRequestTenant();
+          if (tenant) {
+            const { saveEmailIntegrationConfig } = await import('./email/emailIntegrationService.js');
+            const { mergeEmailIntegrationConfig } = await import('@mms/shared');
+            await saveEmailIntegrationConfig(mergeEmailIntegrationConfig(objectValue as Record<string, unknown>));
           }
         }
         await dbSaveObject(key, objectValue);
