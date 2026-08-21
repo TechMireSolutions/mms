@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, primaryKey, foreignKey, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, primaryKey, foreignKey, varchar, unique } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 
@@ -301,6 +301,7 @@ export const tenantUsers = pgTable('tenant_users', {
   /** Non-auth profile fields from legacy JSON user rows. */
   profileJson: jsonb('profile_json').$type<Record<string, unknown>>(),
 }, (table) => [
+  unique('tenant_users_workspace_subdomain_id_uniq').on(table.workspaceSubdomain, table.id),
   uniqueIndex('tenant_users_workspace_login_email_active_idx')
     .on(table.workspaceSubdomain, table.loginEmail)
     .where(sql`${table.deletedAt} is null`),

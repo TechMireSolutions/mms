@@ -82,22 +82,30 @@ export async function findWorkspaceRowBySubdomain(subdomain: string): Promise<Wo
 
 /** Read all branding fields for a workspace. Returns null when workspace not found. */
 export async function getWorkspaceBranding(subdomain: string): Promise<BrandingSettings | null> {
-  const rows = await getDb()
-    .select()
-    .from(workspacesTable)
-    .where(eq(workspacesTable.subdomain, subdomain));
-  const ws = rows[0];
-  return ws ? rowToBranding(ws) : null;
+  try {
+    const rows = await getDb()
+      .select()
+      .from(workspacesTable)
+      .where(eq(workspacesTable.subdomain, subdomain));
+    const ws = rows[0];
+    return ws ? rowToBranding(ws) : null;
+  } catch {
+    return null;
+  }
 }
 
 /** Read all global settings for a workspace. Returns null when workspace not found. */
 export async function getWorkspaceGlobalSettings(subdomain: string): Promise<GlobalSettings | null> {
-  const rows = await getDb()
-    .select()
-    .from(workspacesTable)
-    .where(eq(workspacesTable.subdomain, subdomain));
-  const ws = rows[0];
-  return ws ? rowToGlobalSettings(ws) : null;
+  try {
+    const rows = await getDb()
+      .select()
+      .from(workspacesTable)
+      .where(eq(workspacesTable.subdomain, subdomain));
+    const ws = rows[0];
+    return ws ? rowToGlobalSettings(ws) : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function insertWorkspaceRow(values: {

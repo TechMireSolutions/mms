@@ -67,9 +67,20 @@ export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
     if (!tenant) return snapshot;
 
     const relational = await loadRelationalSnapshotCollections(tenant);
+    const { getWorkspaceBranding, getWorkspaceGlobalSettings } = await import(
+      '../db/repositories/workspaceRepository.js'
+    );
+    const branding = await getWorkspaceBranding(tenant);
+    const globalSettings = await getWorkspaceGlobalSettings(tenant);
+
     return {
       ...snapshot,
       collections: { ...(snapshot.collections ?? {}), ...relational },
+      objects: {
+        ...(snapshot.objects ?? {}),
+        ...(branding ? { branding } : {}),
+        ...(globalSettings ? { global_settings: globalSettings } : {}),
+      },
     };
   });
 }
@@ -151,6 +162,21 @@ export async function synchronizeData(
         // platform-authoritative grants from a (possibly stale/crafted) payload.
         if (isBackupExcludedObjectKey(key)) continue;
         if (skipLegacySetupObjects.has(key)) continue;
+        if (key === 'branding') {
+          const tenant = getRequestTenant();
+          if (tenant) {
+            const { upsertWorkspaceBranding } = await import('../db/repositories/workspaceRepository.js');
+            const { mergeBrandingSettings } = await import('@mms/shared');
+            await upsertWorkspaceBranding(tenant, mergeBrandingSettings(objectValue as Record<string, unknown>));
+          }
+        } else if (key === 'global_settings') {
+          const tenant = getRequestTenant();
+          if (tenant) {
+            const { upsertWorkspaceGlobalSettings } = await import('../db/repositories/workspaceRepository.js');
+            const { mergeGlobalSettings } = await import('@mms/shared');
+            await upsertWorkspaceGlobalSettings(tenant, mergeGlobalSettings(objectValue as Record<string, unknown>));
+          }
+        }
         await dbSaveObject(key, objectValue);
         restoredKeys.add(key);
       }

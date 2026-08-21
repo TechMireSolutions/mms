@@ -28,7 +28,8 @@ import {
   syncWorkspaceFromBranding,
   upsertWorkspaceBranding,
 } from '../../services/workspaceService.js';
-import { saveGlobalSettings } from '../../services/globalSettingsService.js';
+import { getWorkspaceBranding } from '../../db/repositories/workspaceRepository.js';
+import { loadGlobalSettings, saveGlobalSettings } from '../../services/globalSettingsService.js';
 import {
   recordAudit,
   AUDITED_COLLECTIONS,
@@ -292,6 +293,16 @@ export default async function dbRoutes(
       if (!canReadObject(user, key)) {
         return sendForbidden(reply, `You do not have permission to read object "${key}"`);
       }
+      if (key === 'branding') {
+        const tenant = getRequestTenant()!;
+        const branding = await getWorkspaceBranding(tenant);
+        if (branding) return reply.send(branding);
+      } else if (key === 'global_settings') {
+        const tenant = getRequestTenant()!;
+        const globalSettings = await loadGlobalSettings(tenant);
+        if (globalSettings) return reply.send(globalSettings);
+      }
+
       const objectValue = await fetchObject(key);
       if (objectValue === null) {
         return reply.status(404).send({
