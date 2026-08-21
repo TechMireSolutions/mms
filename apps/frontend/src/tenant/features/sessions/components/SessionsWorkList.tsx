@@ -55,6 +55,8 @@ interface SessionsWorkListProps {
   onRestore: (id: string) => void;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
+  onBulkStatusChange?: (status: string) => void;
+  statusPending?: boolean;
   onClearSelection: () => void;
   onPageChange: (page: number) => void;
   canExport?: boolean;
@@ -92,6 +94,8 @@ export function SessionsWorkList({
   onRestore,
   onRequestBulkDelete,
   onRequestBulkRestore,
+  onBulkStatusChange,
+  statusPending = false,
   onClearSelection,
   onPageChange,
   canExport = false,
@@ -104,8 +108,12 @@ export function SessionsWorkList({
       <SessionsBulkActionBar
         selectedCount={selectedIds.length}
         showDeleted={showDeleted}
+        canWrite={canWrite}
         canDelete={canDelete}
         canExport={canExport}
+        statusConfig={statusConfig}
+        onBulkStatusChange={onBulkStatusChange}
+        statusPending={statusPending}
         onRequestBulkDelete={onRequestBulkDelete}
         onRequestBulkRestore={onRequestBulkRestore}
         onClearSelection={onClearSelection}

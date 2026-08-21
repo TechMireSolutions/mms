@@ -50,6 +50,8 @@ export function createTeachersUseCases(repo: TeachersRepository = teachersReposi
       softDelete.bulkRestoreTeachers(ids, repo),
     bulkUpdateTeacherStatus: (ids: string[], status: string) =>
       operation.bulkUpdateTeacherStatus(ids, status, repo),
+    bulkUpdateTeacherSpecialization: (ids: string[], specialization: string) =>
+      operation.bulkUpdateTeacherSpecialization(ids, specialization, repo),
     computeNextTeacherEmployeeIdForSettings: (
       settings: Parameters<typeof operation.computeNextTeacherEmployeeIdForSettings>[0],
     ) => operation.computeNextTeacherEmployeeIdForSettings(settings, repo),

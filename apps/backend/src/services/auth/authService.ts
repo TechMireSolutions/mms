@@ -2,12 +2,11 @@ import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
 import { requiresTwoFactor, type BrandingSocialLink } from '@mms/shared';
 import { validateCredentials, createUser, type PublicUser } from './userService.js';
-import { createWorkspace, assertWorkspaceActive } from '../workspaceService.js';
-import { saveObject } from '../../db/database.js';
+import { createWorkspace, assertWorkspaceActive, upsertWorkspaceBranding } from '../workspaceService.js';
 import { upsertContactModulePreferences } from '../../db/repositories/contactModulePreferencesRepository.js';
 import type { Workspace } from '@mms/shared';
 import { buildBrandingFromOnboarding } from '@mms/shared';
-import { assertPasswordMeetsPolicy, getJwtExpiresIn, loadGlobalSettings } from '../globalSettingsService.js';
+import { assertPasswordMeetsPolicy, getJwtExpiresIn, loadGlobalSettings, saveGlobalSettings } from '../globalSettingsService.js';
 import { runWithTenant } from '../../lib/tenantContext.js';
 import { seedTenantDefaults } from '../tenantSeedService.js';
 import { createTwoFactorChallenge, issueRefreshToken } from './twoFactorService.js';
@@ -143,9 +142,8 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
     await seedTenantDefaults();
 
     if (input.modules) {
-      const { getObject } = await import('../../db/database.js');
       const { SYSTEM_MODULES } = await import('@mms/shared');
-      const globalSettings = await getObject('global_settings') || {};
+      const globalSettings = await loadGlobalSettings(workspace.subdomain);
       const enabledModules: Record<string, boolean> = {};
 
       for (const mod of SYSTEM_MODULES) {
@@ -156,10 +154,10 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
         }
       }
 
-      await saveObject('global_settings', {
+      await saveGlobalSettings({
         ...globalSettings,
         enabledModules,
-      });
+      }, workspace.subdomain);
     }
 
     const branding = buildBrandingFromOnboarding({
@@ -190,7 +188,7 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
       socialLinks: input.socialLinks ?? branding.socialLinks,
       subdomain: workspace.subdomain,
     };
-    await saveObject('branding', fullBranding);
+    await upsertWorkspaceBranding(workspace.subdomain, fullBranding);
 
     const contactPreferences = {
       defaultCountry: input.country || '',

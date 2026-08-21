@@ -9,8 +9,9 @@ export {
   findTeacherRegistrationConflictSql,
 } from './teacherRepositoryListQuery.js';
 
-/** Teachers bulk-status + command metrics SQL. */
+/** Teachers bulk-status + bulk-specialization + command metrics SQL. */
 export {
   bulkUpdateTeachersStatusSql,
+  bulkUpdateTeachersSpecializationSql,
   aggregateTeachersCommandMetrics,
 } from './teacherRepositoryListOps.js';

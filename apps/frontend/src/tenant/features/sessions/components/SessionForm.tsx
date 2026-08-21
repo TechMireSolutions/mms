@@ -119,7 +119,6 @@ export const SessionForm = React.memo(function SessionForm({
           await onSave(payload);
           setBaselineSnapshot(sessionFormDraftSnapshot(sessionDraft));
           if (!options?.keepOpen) {
-            notify.success(session ? t('sessions.toast.updated') : t('sessions.toast.created'));
             onClose();
           }
           return true;

@@ -48,6 +48,7 @@ export function useFinancePageController() {
     restoreInvoice,
     bulkDeleteInvoices,
     bulkRestoreInvoices,
+    bulkUpdateInvoiceStatus,
     deletePayment,
     restorePayment,
     bulkDeletePayments,
@@ -130,6 +131,21 @@ export function useFinancePageController() {
     setCreatingInvoice(true);
   };
 
+  const handleBulkStatusChange = async (ids: string[], status: string): Promise<void> => {
+    try {
+      const result = await bulkUpdateInvoiceStatus.mutateAsync({ ids, status: status as import('@mms/shared').InvoicesBulkStatusBody['status'] });
+      if (result.failed > 0) {
+        notify.error(t('finance.bulkStatusFailed'), { description: `${result.succeeded} updated, ${result.failed} failed` });
+      } else if (result.succeeded > 1) {
+        notify.success(t('finance.bulkStatusSuccessMany', { count: result.succeeded }));
+      } else {
+        notify.success(t('finance.bulkStatusSuccess'));
+      }
+    } catch {
+      notify.error(t('finance.bulkStatusFailed'));
+    }
+  };
+
   return {
     t,
     canWrite,
@@ -169,6 +185,8 @@ export function useFinancePageController() {
     restorePayment,
     bulkDeletePayments,
     bulkRestorePayments,
+    bulkUpdateInvoiceStatus,
+    handleBulkStatusChange,
   };
 }
 

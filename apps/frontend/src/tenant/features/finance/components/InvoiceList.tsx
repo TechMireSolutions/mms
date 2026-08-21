@@ -30,6 +30,9 @@ interface InvoiceListProps {
   onRestore?: (id: string) => void;
   onBulkDelete?: (ids: string[]) => void;
   onBulkRestore?: (ids: string[]) => void;
+  onBulkStatusChange?: (ids: string[], status: string) => void;
+  onBulkPrintReceipts?: (invoices: Invoice[]) => void;
+  isBulkStatusPending?: boolean;
   selectionResetKey?: string;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
@@ -49,6 +52,9 @@ export function InvoiceList({
   onRestore,
   onBulkDelete,
   onBulkRestore,
+  onBulkStatusChange,
+  onBulkPrintReceipts,
+  isBulkStatusPending = false,
   selectionResetKey,
   isColumnVisible,
   getColumnWidth,
@@ -135,6 +141,10 @@ export function InvoiceList({
           onRequestBulkDelete={() => setConfirmBulkOpen(true)}
           onRequestBulkRestore={() => setConfirmBulkOpen(true)}
           onClearSelection={clearSelection}
+          onBulkStatusChange={onBulkStatusChange ? (status) => onBulkStatusChange(selectedIds, status) : undefined}
+          onBulkPrintReceipts={onBulkPrintReceipts ? () => onBulkPrintReceipts(filtered.filter((inv) => selectedIds.includes(inv.id))) : undefined}
+          isBulkStatusPending={isBulkStatusPending}
+          statusBadgeConfig={statusConfig}
         />
       )}
 

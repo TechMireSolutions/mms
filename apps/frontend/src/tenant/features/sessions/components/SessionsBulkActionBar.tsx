@@ -2,13 +2,19 @@ import type { ReactElement } from "react";
 import { Calendar } from "lucide-react";
 import { SESSIONS_MODULE_MANIFEST } from "@mms/shared";
 import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar";
+import { BulkSelectionStatusAction } from "@/components/ui/BulkSelectionActions";
+import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface SessionsBulkActionBarProps {
   selectedCount: number;
   showDeleted: boolean;
+  canWrite?: boolean;
   canDelete: boolean;
   canExport?: boolean;
+  statusConfig?: Record<string, StatusBadgeConfigItem>;
+  onBulkStatusChange?: (status: string) => void;
+  statusPending?: boolean;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
   onClearSelection: () => void;
@@ -20,8 +26,12 @@ export interface SessionsBulkActionBarProps {
 export function SessionsBulkActionBar({
   selectedCount,
   showDeleted,
+  canWrite = false,
   canDelete,
   canExport = false,
+  statusConfig,
+  onBulkStatusChange,
+  statusPending = false,
   onRequestBulkDelete,
   onRequestBulkRestore,
   onClearSelection,
@@ -50,6 +60,21 @@ export function SessionsBulkActionBar({
         bulkActions.includes("delete") && canDelete
           ? { label: t("sessions.archive"), onClick: onRequestBulkDelete }
           : undefined
+      }
+      extraActions={
+        !showDeleted && bulkActions.includes("status") && canWrite && onBulkStatusChange && statusConfig ? (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <BulkSelectionStatusAction
+              label={t("sessions.bulkStatus")}
+              statuses={Object.keys(statusConfig)}
+              statusBadgeConfig={statusConfig}
+              disabled={statusPending}
+              onSelectStatus={(statusVal) => {
+                onBulkStatusChange(statusVal);
+              }}
+            />
+          </div>
+        ) : undefined
       }
     />
   );

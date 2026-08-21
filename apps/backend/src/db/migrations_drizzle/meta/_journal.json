@@ -498,6 +498,20 @@
       "when": 1786712400000,
       "tag": "0070_tenant_user_composite_foreign_keys",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1786716000000,
+      "tag": "0071_workspaces_branding_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1786719600000,
+      "tag": "0072_workspaces_global_settings_columns",
+      "breakpoints": true
     }
   ]
 }

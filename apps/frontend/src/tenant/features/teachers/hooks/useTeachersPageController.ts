@@ -228,6 +228,8 @@ export function useTeachersPageController() {
     handleRestore: pageActions.handleRestore,
     handleBulkStatusChange: showDeleted ? undefined : pageActions.handleBulkStatusChange,
     bulkStatusPending: mutations.bulkUpdateTeacherStatus.isPending,
+    handleBulkSpecializationChange: showDeleted ? undefined : pageActions.handleBulkSpecializationChange,
+    bulkSpecializationPending: pageActions.isBulkSpecializationPending,
     handleWhatsApp: showDeleted ? undefined : pageActions.handleWhatsApp,
     handleSms: showDeleted ? undefined : pageActions.handleSms,
     handleEmail: showDeleted ? undefined : pageActions.handleEmail,
@@ -242,6 +244,9 @@ export function useTeachersPageController() {
       setConfirmBulkRestoreOpen: overlays.setConfirmBulkRestoreOpen,
       setDeleteTarget: overlays.setDeleteTarget,
       setViewTeacher: overlays.setViewTeacher,
+      idCardTeachers: overlays.idCardTeachers,
+      openIdCardsModal: overlays.openIdCardsModal,
+      closeIdCardsModal: overlays.closeIdCardsModal,
     },
   });
 

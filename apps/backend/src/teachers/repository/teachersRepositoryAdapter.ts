@@ -7,6 +7,7 @@ import {
 } from '../../db/repositories/teacherRepository.js';
 import {
   aggregateTeachersCommandMetrics,
+  bulkUpdateTeachersSpecializationSql,
   bulkUpdateTeachersStatusSql,
   countTeachersActive,
   countTeachersForNextEmployeeId,
@@ -34,7 +35,8 @@ function createTeachersRepository(): TeachersRepository {
     findSoftDeletedByContactId: (tenant, contactId) =>
       findSoftDeletedTeacherByContactIdSql(tenant, contactId),
     save: (tenant, teacher) => saveTeacher(tenant, teacher as Teacher),
-    bulkSave: (tenant, teachers) => bulkSaveTeachers(tenant, teachers as Teacher[]),    aggregateCommandMetrics: (tenant, periodDays) =>
+    bulkSave: (tenant, teachers) => bulkSaveTeachers(tenant, teachers as Teacher[]),
+    aggregateCommandMetrics: (tenant, periodDays) =>
       aggregateTeachersCommandMetrics(tenant, periodDays),
     aggregateWidgetQueries: (tenant, queries) => aggregateTeachersWidgetQueries(tenant, queries),
     listLinkedContactIds: (tenant, excludeTeacherId) =>
@@ -43,6 +45,8 @@ function createTeachersRepository(): TeachersRepository {
     listActiveMissingEmployeeId: (tenant) => listActiveTeachersMissingEmployeeId(tenant),
     findRegistrationConflict: (tenant, input) => findTeacherRegistrationConflictSql(tenant, input),
     bulkUpdateStatusSql: (tenant, ids, status) => bulkUpdateTeachersStatusSql(tenant, ids, status),
+    bulkUpdateSpecializationSql: (tenant, ids, specialization) =>
+      bulkUpdateTeachersSpecializationSql(tenant, ids, specialization),
   };
 }
 

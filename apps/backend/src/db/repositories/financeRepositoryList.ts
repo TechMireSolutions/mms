@@ -251,3 +251,37 @@ export async function aggregateFinanceCommandMetrics(
     };
   });
 }
+
+export async function bulkUpdateInvoicesStatusSql(
+  tenant: string,
+  ids: string[],
+  status: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  let succeeded = 0;
+  let failed = 0;
+
+  await withTenantTransaction(subdomain, async (tx) => {
+    for (const id of ids) {
+      try {
+        const result = await tx
+          .update(financeInvoices)
+          .set({ status: status as 'paid' | 'pending' | 'overdue' | 'partial' | 'cancelled', updatedAt: sql`now()` })
+          .where(
+            and(
+              eq(financeInvoices.workspaceSubdomain, subdomain),
+              eq(financeInvoices.id, id),
+              isNull(financeInvoices.deletedAt),
+            ),
+          )
+          .returning({ id: financeInvoices.id });
+        if (result.length > 0) succeeded++;
+        else failed++;
+      } catch {
+        failed++;
+      }
+    }
+  });
+
+  return { succeeded, failed };
+}

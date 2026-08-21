@@ -1,7 +1,9 @@
-import { pgTable, text, timestamp, index, integer, boolean, jsonb, primaryKey, varchar , foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index, integer, boolean, jsonb, primaryKey, varchar, foreignKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { tenantUsers } from "./contacts.js";
+import { students } from "./students.js";
+import { teachers } from "./teachers.js";
 
 export const hasanatDenoms = pgTable('hasanat_denoms', {
   id: text('id').notNull(),
@@ -66,6 +68,22 @@ export const hasanatDistributions = pgTable('hasanat_distributions', {
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.batchId],
+    foreignColumns: [hasanatBatches.workspaceSubdomain, hasanatBatches.id],
+  }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.denominationId],
+    foreignColumns: [hasanatDenoms.workspaceSubdomain, hasanatDenoms.id],
+  }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.recipientStudentId],
+    foreignColumns: [students.workspaceSubdomain, students.id],
+  }).onDelete('set null'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.recipientTeacherId],
+    foreignColumns: [teachers.workspaceSubdomain, teachers.id],
+  }).onDelete('set null'),
   index('hasanat_dist_workspace_student_idx').on(table.workspaceSubdomain, table.recipientStudentId),
   index('hasanat_dist_workspace_batch_idx').on(table.workspaceSubdomain, table.batchId),
   index('hasanat_dist_workspace_denom_idx').on(table.workspaceSubdomain, table.denominationId),
@@ -91,6 +109,10 @@ export const hasanatRedemptions = pgTable('hasanat_redemptions', {
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.distributionId],
+    foreignColumns: [hasanatDistributions.workspaceSubdomain, hasanatDistributions.id],
+  }).onDelete('cascade'),
   index('hasanat_redemp_workspace_dist_idx').on(table.workspaceSubdomain, table.distributionId),
   index('hasanat_redemp_workspace_date_idx').on(table.workspaceSubdomain, table.date),
 ]);

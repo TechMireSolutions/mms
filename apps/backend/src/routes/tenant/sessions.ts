@@ -8,6 +8,7 @@ import {
   restoreSessionById,
   bulkSoftDeleteSessions,
   bulkRestoreSessions,
+  bulkUpdateSessionsStatus,
   loadSessionsPage,
   countSessions,
   loadSessionsCommandMetrics,
@@ -23,6 +24,7 @@ import {
   sessionCreateBodySchema,
   sessionsListQuerySchema,
   sessionsBulkIdsSchema,
+  sessionsBulkStatusSchema,
 } from '../../validation/sessionSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sessionExportRoutes } from './sessions/sessionExportRoutes.js';
@@ -95,6 +97,22 @@ export default async function sessionsRoutes(
       return reply.send({ success: true, ...result });
     } catch {
       return sendDatabaseError(reply, 'Failed to bulk delete sessions');
+    }
+  });
+
+  fastify.post('/bulk-status', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(sessionsBulkStatusSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkUpdateSessionsStatus(
+        parsed.data.ids.map(String),
+        parsed.data.status,
+      );
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk update session status');
     }
   });
 

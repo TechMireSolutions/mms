@@ -1,4 +1,15 @@
+import { z } from 'zod';
 import type { Permission } from './permissions.js';
+
+/** Bulk status update payload schema for Sessions. */
+export const sessionsBulkStatusSchema = z
+  .object({
+    ids: z.array(z.string().min(1)).min(1),
+    status: z.string().min(1),
+  })
+  .strict();
+
+export type SessionsBulkStatusBody = z.infer<typeof sessionsBulkStatusSchema>;
 
 /** Sessions module manifest — aligns with globle1 universal module architecture. */
 export const SESSIONS_MODULE_MANIFEST = {
@@ -25,7 +36,7 @@ export const SESSIONS_MODULE_MANIFEST = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['table', 'cards'] as const,
-    bulkActions: ['export', 'delete'] as const,
+    bulkActions: ['export', 'status', 'delete'] as const,
   },
   defaultExportFilename: 'sessions.csv',
   exportInlineMaxRows: 500,

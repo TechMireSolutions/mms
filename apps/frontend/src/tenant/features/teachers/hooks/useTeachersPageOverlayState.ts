@@ -14,12 +14,21 @@ export function useTeachersPageOverlayState() {
   const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<TeachersDeleteTarget | null>(null);
   const [viewTeacher, setViewTeacher] = useState<Teacher | null>(null);
+  const [idCardTeachers, setIdCardTeachers] = useState<Teacher[]>([]);
 
   const openSelectionMessage = (channel: MessageChannel, targets: Teacher[]) => {
     openComposer(
       channel,
       targets.map((teacher) => toMessagingRecipient(teacher)),
     );
+  };
+
+  const openIdCardsModal = (teachers: Teacher[]) => {
+    setIdCardTeachers(teachers);
+  };
+
+  const closeIdCardsModal = () => {
+    setIdCardTeachers([]);
   };
 
   return {
@@ -36,5 +45,9 @@ export function useTeachersPageOverlayState() {
     setDeleteTarget,
     viewTeacher,
     setViewTeacher,
+    idCardTeachers,
+    setIdCardTeachers,
+    openIdCardsModal,
+    closeIdCardsModal,
   };
 }

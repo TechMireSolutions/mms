@@ -40,6 +40,24 @@ export async function bulkUpdateTeacherStatus(
   return { succeeded, failed: uniqueIds.length - succeeded };
 }
 
+export async function bulkUpdateTeacherSpecialization(
+  ids: string[],
+  specialization: string,
+  repo: TeachersRepository = teachersRepository,
+): Promise<{ succeeded: number; failed: number }> {
+  const tenant = getRequestTenant();
+  if (!tenant) return { succeeded: 0, failed: ids.length };
+
+  const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+
+  const succeeded = await repo.bulkUpdateSpecializationSql(tenant, uniqueIds, specialization);
+  if (succeeded > 0) {
+    await broadcastCollection('teachers');
+  }
+  return { succeeded, failed: uniqueIds.length - succeeded };
+}
+
 /** Next employee id from active roster count + tenant settings (Students GR-count parity). */
 export async function computeNextTeacherEmployeeIdForSettings(
   settings: TeacherEmployeeIdSettings,

@@ -8,6 +8,7 @@ import {
   financeListQuerySchema,
   invoiceCreateBodySchema,
   invoiceRecordSchema,
+  invoicesBulkStatusSchema,
   paymentCreateBodySchema,
   paymentRecordSchema,
 } from '../../validation/financeSchemas.js';
@@ -21,6 +22,7 @@ import {
   restoreInvoiceById,
   bulkSoftDeleteInvoices,
   bulkRestoreInvoices,
+  bulkUpdateInvoicesStatus,
   loadPayments,
   loadPaymentsPage,
   createPayment,
@@ -163,4 +165,17 @@ export default async function financeRoutes(
 
   registerBulkTrashRoutes('/invoices', FINANCE_COLLECTION, bulkSoftDeleteInvoices, bulkRestoreInvoices);
   registerBulkTrashRoutes('/payments', PAYMENT_COLLECTION, bulkSoftDeletePayments, bulkRestorePayments);
+
+  fastify.post('/invoices/bulk-status', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, FINANCE_COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(invoicesBulkStatusSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await bulkUpdateInvoicesStatus(parsed.data.ids, parsed.data.status);
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk update invoice status');
+    }
+  });
 }

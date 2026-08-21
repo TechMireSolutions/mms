@@ -56,6 +56,8 @@ export type TeachersWorkTierSource = {
   handleRestore: WorkTierProps["onRestore"];
   handleBulkStatusChange: WorkTierProps["onBulkStatusChange"];
   bulkStatusPending: WorkTierProps["bulkStatusPending"];
+  handleBulkSpecializationChange?: WorkTierProps["onBulkSpecializationChange"];
+  bulkSpecializationPending?: WorkTierProps["bulkSpecializationPending"];
   handleWhatsApp: WorkTierProps["onWhatsApp"];
   handleSms: WorkTierProps["onSms"];
   handleEmail: WorkTierProps["onEmail"];
@@ -117,6 +119,8 @@ export function buildTeachersWorkTierProps(
     onRestore: source.handleRestore,
     onBulkStatusChange: source.handleBulkStatusChange,
     bulkStatusPending: source.bulkStatusPending,
+    onBulkSpecializationChange: source.handleBulkSpecializationChange,
+    bulkSpecializationPending: source.bulkSpecializationPending,
     onWhatsApp: source.handleWhatsApp,
     onSms: source.handleSms,
     onEmail: source.handleEmail,

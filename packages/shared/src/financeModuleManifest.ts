@@ -58,6 +58,15 @@ export const invoiceCreateSchema = invoiceRecordInsertSchema;
 export type InvoiceCreateInput = InvoiceInsert;
 export const invoiceListSchema = z.array(invoiceRecordSchema);
 
+export const invoicesBulkStatusSchema = z
+  .object({
+    ids: z.array(z.string().min(1)).min(1, 'At least one invoice ID is required'),
+    status: z.enum(['paid', 'pending', 'overdue', 'partial', 'cancelled']),
+  })
+  .strict();
+
+export type InvoicesBulkStatusBody = z.infer<typeof invoicesBulkStatusSchema>;
+
 /** Invoice statuses that still carry an unpaid balance (shared finance/dashboard SSOT). */
 export const OPEN_INVOICE_STATUSES = ['pending', 'overdue', 'partial'] as const;
 export type OpenInvoiceStatus = (typeof OPEN_INVOICE_STATUSES)[number];
@@ -140,7 +149,7 @@ export const FINANCE_MODULE_MANIFEST = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['invoices', 'payments'] as const,
-    bulkActions: ['delete'] as const,
+    bulkActions: ['delete', 'status', 'receipts', 'export'] as const,
   },
   defaultPageSize: 10,
   maxPageSize: 500,

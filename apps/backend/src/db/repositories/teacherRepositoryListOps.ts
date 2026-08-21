@@ -42,6 +42,39 @@ export async function bulkUpdateTeachersStatusSql(
   });
 }
 
+/**
+ * Set typed `specialization` for active teachers in one UPDATE.
+ * Returns how many rows were updated; callers treat missing/deleted ids as failed.
+ */
+export async function bulkUpdateTeachersSpecializationSql(
+  workspaceSubdomain: string,
+  ids: string[],
+  specialization: string,
+): Promise<number> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+  if (!subdomain || uniqueIds.length === 0) return 0;
+  const normalizedSpecialization = specialization.trim();
+
+  return withTenantTransaction(subdomain, async (tx) => {
+    const updated = await tx
+      .update(teachers)
+      .set({
+        specialization: normalizedSpecialization || null,
+        updatedAt: new Date(),
+      })
+      .where(
+        and(
+          eq(teachers.workspaceSubdomain, subdomain),
+          inArray(teachers.id, uniqueIds),
+          isNull(teachers.deletedAt),
+        ),
+      )
+      .returning({ id: teachers.id });
+    return updated.length;
+  });
+}
+
 /** SQL aggregates for Teachers command-centre metrics (active rows only). */
 export async function aggregateTeachersCommandMetrics(
   tenant: string,

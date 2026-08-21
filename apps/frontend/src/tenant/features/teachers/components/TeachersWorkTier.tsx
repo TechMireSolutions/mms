@@ -67,6 +67,8 @@ export interface TeachersWorkTierProps {
   onRestore: (id: string) => void | Promise<void>;
   onBulkStatusChange?: (ids: string[], status: string) => void | Promise<void>;
   bulkStatusPending?: boolean;
+  onBulkSpecializationChange?: (ids: string[], specialization: string) => void | Promise<void>;
+  bulkSpecializationPending?: boolean;
   onWhatsApp?: (teachers: Teacher[]) => void;
   onSms?: (teachers: Teacher[]) => void;
   onEmail?: (teachers: Teacher[]) => void;
@@ -95,6 +97,15 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
   const handleBulkStatusChange = async (status: string): Promise<void> => {
     try {
       await props.onBulkStatusChange?.(props.selectedIds, status);
+      props.onClearSelection();
+    } catch {
+      // Toast already emitted by the crud action; keep selection for retry.
+    }
+  };
+
+  const handleBulkSpecializationChange = async (specialization: string): Promise<void> => {
+    try {
+      await props.onBulkSpecializationChange?.(props.selectedIds, specialization);
       props.onClearSelection();
     } catch {
       // Toast already emitted by the crud action; keep selection for retry.
@@ -163,16 +174,19 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           canDelete={props.canDelete}
           canWriteMessaging={props.workOverlays.canWriteMessaging}
           statusConfig={statusConfig}
+          specializationOptions={props.specializationOptions}
           onSms={props.onSms}
           onWhatsApp={props.onWhatsApp}
           onEmail={props.onEmail}
           onBulkStatusChange={handleBulkStatusChange}
+          onBulkSpecializationChange={handleBulkSpecializationChange}
           onRequestBulkDelete={() => props.workOverlays.setConfirmBulkDeleteOpen(true)}
           onRequestBulkRestore={() => props.workOverlays.setConfirmBulkRestoreOpen(true)}
           onClearSelection={props.onClearSelection}
           canExport={props.canExport}
           onBulkExport={props.onBulkExport ? () => void props.onBulkExport?.() : undefined}
           statusPending={props.bulkStatusPending}
+          specializationPending={props.bulkSpecializationPending}
         />
 
         <ModuleWorkListStateShell

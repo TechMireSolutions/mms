@@ -1,7 +1,14 @@
 import type { ReactElement } from 'react';
-import { Users } from 'lucide-react';
+import { Briefcase, ChevronDown, IdCard, Users } from 'lucide-react';
 import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import {
   BulkSelectionStatusAction,
   type BulkSelectionMessageChannel,
@@ -19,10 +26,13 @@ export interface TeachersBulkActionBarProps {
   canDelete: boolean;
   canWriteMessaging?: boolean;
   statusConfig: Record<string, StatusBadgeConfigItem>;
+  specializationOptions?: readonly string[];
   onSms?: (teachers: Teacher[]) => void;
   onWhatsApp?: (teachers: Teacher[]) => void;
   onEmail?: (teachers: Teacher[]) => void;
   onBulkStatusChange?: (status: string) => void;
+  onBulkSpecializationChange?: (specialization: string) => void;
+  onBulkPrintIdCards?: () => void;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
   onClearSelection: () => void;
@@ -31,6 +41,7 @@ export interface TeachersBulkActionBarProps {
   bulkActions?: readonly string[];
   /** Disables the bulk status action while the status mutation is pending. */
   statusPending?: boolean;
+  specializationPending?: boolean;
 }
 
 /** Teachers Work bulk bar — Students-shaped composition over shared ModuleWorkBulkActionBar. */
@@ -42,10 +53,13 @@ export function TeachersBulkActionBar({
   canDelete,
   canWriteMessaging = false,
   statusConfig,
+  specializationOptions,
   onSms,
   onWhatsApp,
   onEmail,
   onBulkStatusChange,
+  onBulkSpecializationChange,
+  onBulkPrintIdCards,
   onRequestBulkDelete,
   onRequestBulkRestore,
   onClearSelection,
@@ -53,6 +67,7 @@ export function TeachersBulkActionBar({
   onBulkExport,
   bulkActions = TEACHERS_MODULE_MANIFEST.work.bulkActions,
   statusPending = false,
+  specializationPending = false,
 }: TeachersBulkActionBarProps): ReactElement {
   const { t } = useTranslation();
 
@@ -103,17 +118,63 @@ export function TeachersBulkActionBar({
           : undefined
       }
       extraActions={
-        bulkActions.includes('status') && canWrite && onBulkStatusChange ? (
-          <BulkSelectionStatusAction
-            label={t('teachers.bulkStatus')}
-            statuses={Object.keys(statusConfig)}
-            statusBadgeConfig={statusConfig}
-            disabled={statusPending}
-            onSelectStatus={(statusVal) => {
-              onBulkStatusChange(statusVal);
-            }}
-          />
-        ) : undefined
+        !showDeleted && (
+          <div className="flex items-center gap-1.5 flex-wrap">
+            {bulkActions.includes('status') && canWrite && onBulkStatusChange && (
+              <BulkSelectionStatusAction
+                label={t('teachers.bulkStatus')}
+                statuses={Object.keys(statusConfig)}
+                statusBadgeConfig={statusConfig}
+                disabled={statusPending}
+                onSelectStatus={(statusVal) => {
+                  onBulkStatusChange(statusVal);
+                }}
+              />
+            )}
+            {bulkActions.includes('specialization') &&
+              canWrite &&
+              onBulkSpecializationChange &&
+              specializationOptions &&
+              specializationOptions.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={specializationPending}
+                      className="min-h-11 gap-1.5 px-3 font-medium text-xs border-border/60 hover:bg-muted/80"
+                    >
+                      <Briefcase className="w-3.5 h-3.5 text-primary" aria-hidden />
+                      <span>{t('teachers.bulkSpecialization')}</span>
+                      <ChevronDown className="w-3 h-3 ms-0.5" aria-hidden />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    {specializationOptions.map((spec) => (
+                      <DropdownMenuItem
+                        key={spec}
+                        onClick={() => onBulkSpecializationChange(spec)}
+                      >
+                        <span className="text-xs font-medium">{spec}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            {bulkActions.includes('idCards') && onBulkPrintIdCards && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onBulkPrintIdCards}
+                className="min-h-11 gap-1.5 px-3 font-medium text-xs border-border/60 hover:bg-muted/80"
+              >
+                <IdCard className="w-3.5 h-3.5 text-primary" aria-hidden />
+                <span>{t('teachers.idCard.print')}</span>
+              </Button>
+            )}
+          </div>
+        )
       }
       deleteAction={
         bulkActions.includes('delete') && canDelete

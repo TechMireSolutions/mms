@@ -12,19 +12,22 @@ import {
   toPublicBranding,
 } from '@mms/shared';
 import {
-  getObject,
-  saveObject,
   purgeTenantDataBySubdomain,
   runInTransaction,
 } from '../db/database.js';
-import { getRequestTenant, runWithTenant } from '../lib/tenantContext.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   deleteWorkspaceRow,
   findWorkspaceRowBySubdomain,
+  getWorkspaceBranding,
+  getWorkspaceGlobalSettings,
+  getWorkspaceGrantedModulesRepo,
   insertWorkspaceRow,
   listWorkspaceRows,
   updateWorkspaceBrandingRow,
   updateWorkspaceEnabledRow,
+  updateWorkspaceGrantedAndEnabledModulesRepo,
+  upsertWorkspaceBranding as upsertWorkspaceBrandingRepo,
 } from '../db/repositories/workspaceRepository.js';
 
 async function listWorkspaces(): Promise<Workspace[]> {
@@ -33,10 +36,8 @@ async function listWorkspaces(): Promise<Workspace[]> {
 
 /** Public branding for a workspace subdomain (login shell, registry cards). */
 export async function fetchPublicBrandingForSubdomain(subdomain: string) {
-  return runWithTenant(subdomain, async () => {
-    const raw = await getObject('branding');
-    return toPublicBranding(mergeBrandingSettings(raw as Record<string, unknown> | null));
-  });
+  const branding = await getWorkspaceBranding(subdomain);
+  return toPublicBranding(branding ? branding : mergeBrandingSettings(null));
 }
 
 export function normalizeSubdomainInput(value: string): string {
@@ -162,6 +163,15 @@ export async function syncWorkspaceFromBranding(
   await updateWorkspaceBrandingRow(normalized, branding);
 }
 
+/** Write the full BrandingSettings into the workspaces typed columns. */
+export async function upsertWorkspaceBranding(
+  subdomain: string,
+  branding: BrandingSettings,
+): Promise<void> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  await upsertWorkspaceBrandingRepo(normalized, branding);
+}
+
 export async function createWorkspace(workspaceInput: {
   subdomain: string;
   madrasaName: string;
@@ -209,13 +219,7 @@ export async function createWorkspace(workspaceInput: {
  */
 export async function getWorkspaceGrantedModules(subdomain: string): Promise<string[]> {
   const normalized = normalizeSubdomainInput(subdomain);
-  return runWithTenant(normalized, async () => {
-    const platformSettings = (await getObject('platform_settings')) as Record<string, unknown> | null;
-    const grantedModules = (platformSettings?.grantedModules as Record<string, boolean> | undefined) || {};
-    return Object.entries(grantedModules)
-      .filter(([_, granted]) => Boolean(granted))
-      .map(([id]) => id);
-  });
+  return getWorkspaceGrantedModulesRepo(normalized);
 }
 
 /**
@@ -226,43 +230,31 @@ export async function updateWorkspaceModules(
   modules: string[],
 ): Promise<{ modules: string[] }> {
   const normalized = normalizeSubdomainInput(subdomain);
-  return runWithTenant(normalized, async () => {
-    const platformSettings = ((await getObject('platform_settings')) as Record<string, unknown> | null) || {};
-    const globalSettings = ((await getObject('global_settings')) as Record<string, unknown> | null) || {};
+  const globalSettings = await getWorkspaceGlobalSettings(normalized);
+  const prevGrantedIds = await getWorkspaceGrantedModulesRepo(normalized);
+  const prevGranted = Object.fromEntries(prevGrantedIds.map((id) => [id, true]));
+  const prevEnabled = globalSettings?.enabledModules || {};
 
-    const prevGranted = (platformSettings.grantedModules as Record<string, boolean> | undefined) || {};
-    const prevEnabled = (globalSettings.enabledModules as Record<string, boolean> | undefined) || {};
+  const grantedModules: Record<string, boolean> = {};
+  const enabledModules: Record<string, boolean> = { ...prevEnabled };
 
-    const grantedModules: Record<string, boolean> = {};
-    const enabledModules: Record<string, boolean> = { ...prevEnabled };
+  for (const mod of SYSTEM_MODULES) {
+    if (mod.required) {
+      grantedModules[mod.id] = true;
+      enabledModules[mod.id] = true;
+    } else {
+      const isGranted = modules.includes(mod.id);
+      const wasGranted = prevGranted[mod.id] === true;
+      grantedModules[mod.id] = isGranted;
 
-    for (const mod of SYSTEM_MODULES) {
-      if (mod.required) {
-        grantedModules[mod.id] = true;
+      if (!isGranted) {
+        enabledModules[mod.id] = false;
+      } else if (!wasGranted) {
         enabledModules[mod.id] = true;
-      } else {
-        const isGranted = modules.includes(mod.id);
-        const wasGranted = prevGranted[mod.id] === true;
-        grantedModules[mod.id] = isGranted;
-
-        if (!isGranted) {
-          enabledModules[mod.id] = false;
-        } else if (!wasGranted) {
-          enabledModules[mod.id] = true;
-        }
       }
     }
+  }
 
-    await saveObject('platform_settings', {
-      ...platformSettings,
-      grantedModules,
-    });
-
-    await saveObject('global_settings', {
-      ...globalSettings,
-      enabledModules,
-    });
-
-    return { modules };
-  });
+  await updateWorkspaceGrantedAndEnabledModulesRepo(normalized, grantedModules, enabledModules);
+  return { modules };
 }

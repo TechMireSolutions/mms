@@ -78,5 +78,8 @@ export function useTeachersPageOverlayProps({
       await workActions.handleBulkRestore(selectedIds);
       clearSelection();
     },
+    idCardTeachers: overlays.idCardTeachers,
+    onCloseIdCards: overlays.closeIdCardsModal,
+    onPrintIdCard: (teacher: Teacher) => overlays.openIdCardsModal([teacher]),
   };
 }

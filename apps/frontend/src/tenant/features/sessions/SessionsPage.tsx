@@ -89,6 +89,8 @@ export default function Sessions() {
               onRestore={c.handleRestore}
               onRequestBulkDelete={() => c.setConfirmBulkDeleteOpen(true)}
               onRequestBulkRestore={() => c.setConfirmBulkRestoreOpen(true)}
+              onBulkStatusChange={c.handleBulkStatusChange}
+              bulkStatusPending={c.bulkStatusPending}
               onClearSelection={c.clearSelection}
               onPageChange={c.setListPage}
               canExport={c.canExport}

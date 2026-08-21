@@ -8,6 +8,7 @@ import {
   listSessionsPage,
   countSessionsActive,
   aggregateSessionsCommandMetrics,
+  bulkUpdateSessionsStatusSql,
 } from '../db/repositories/sessionRepositoryList.js';
 import { aggregateSessionsWidgetQueries } from '../db/repositories/sessionRepositoryWidgets.js';
 import { loadSessionsReportAggregatesSql } from '../db/repositories/sessionRepositoryReport.js';
@@ -44,6 +45,20 @@ export const deleteSessionById = crud.deleteById;
 export const restoreSessionById = crud.restoreById;
 export const bulkSoftDeleteSessions = crud.bulkDeleteByIds;
 export const bulkRestoreSessions = crud.bulkRestoreByIds;
+
+export async function bulkUpdateSessionsStatus(
+  ids: string[],
+  status: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const tenant = getRequestTenant();
+  if (!tenant) return { succeeded: 0, failed: ids.length };
+  const result = await bulkUpdateSessionsStatusSql(tenant, ids, status);
+  if (result.succeeded > 0) {
+    const { broadcastTenantUpdate } = await import('./websocketService.js');
+    broadcastTenantUpdate(tenant, 'collection', 'sessions');
+  }
+  return result;
+}
 
 export async function loadSessionsPage(query: SessionsListQuery & { includeDeleted?: boolean }) {
   const tenant = getRequestTenant();

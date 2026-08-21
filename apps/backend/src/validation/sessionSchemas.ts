@@ -22,4 +22,9 @@ export const sessionsBulkIdsSchema = z.object({
 
 export const sessionsCsvExportBodySchema = csvExportBodySchema(sessionsListQuerySchema);
 
+export {
+  sessionsBulkStatusSchema,
+  type SessionsBulkStatusBody,
+} from '@mms/shared';
+
 export type SessionRecord = z.infer<typeof sessionRecordSchema>;

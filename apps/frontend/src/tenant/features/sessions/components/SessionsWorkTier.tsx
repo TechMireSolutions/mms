@@ -59,6 +59,8 @@ interface SessionsWorkTierProps {
   onRestore: (id: string) => void;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
+  onBulkStatusChange?: (ids: string[], status: string) => void | Promise<void>;
+  bulkStatusPending?: boolean;
   onClearSelection: () => void;
   onPageChange: (page: number) => void;
   canExport?: boolean;
@@ -108,12 +110,21 @@ export function SessionsWorkTier({
   onRestore,
   onRequestBulkDelete,
   onRequestBulkRestore,
+  onBulkStatusChange,
+  bulkStatusPending,
   onClearSelection,
   onPageChange,
   canExport,
   onBulkExport,
 }: SessionsWorkTierProps): React.JSX.Element {
   const activeFilterCount = filterStatus.length + filterType.length;
+
+  const handleBulkStatusChange = onBulkStatusChange
+    ? (status: string) => {
+        void onBulkStatusChange(selectedIds, status);
+      }
+    : undefined;
+
   return (
     <motion.div
       key="work"
@@ -175,6 +186,8 @@ export function SessionsWorkTier({
         onRestore={onRestore}
         onRequestBulkDelete={onRequestBulkDelete}
         onRequestBulkRestore={onRequestBulkRestore}
+        onBulkStatusChange={handleBulkStatusChange}
+        statusPending={bulkStatusPending}
         onClearSelection={onClearSelection}
         onPageChange={onPageChange}
         canExport={canExport}

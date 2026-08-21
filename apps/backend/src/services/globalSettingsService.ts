@@ -1,15 +1,39 @@
-import { getObject } from '../db/database.js';
 import {
   mergeGlobalSettings,
   parseSessionTimeoutMinutes,
   validatePasswordPolicy,
   type GlobalSettings,
 } from '@mms/shared';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  getWorkspaceGlobalSettings,
+  upsertWorkspaceGlobalSettings as upsertWorkspaceGlobalSettingsRepo,
+} from '../db/repositories/workspaceRepository.js';
 
-/** Loads merged global settings from the objects store. */
-export async function loadGlobalSettings(): Promise<GlobalSettings> {
-  const raw = await getObject('global_settings');
-  return mergeGlobalSettings(raw as Partial<GlobalSettings> | null);
+/** Loads merged global settings for the current request tenant (or specified subdomain). */
+export async function loadGlobalSettings(subdomain?: string): Promise<GlobalSettings> {
+  const tenant = subdomain ?? getRequestTenant();
+  if (!tenant) {
+    return mergeGlobalSettings(null);
+  }
+  try {
+    const settings = await getWorkspaceGlobalSettings(tenant);
+    return settings ?? mergeGlobalSettings(null);
+  } catch {
+    return mergeGlobalSettings(null);
+  }
+}
+
+/** Saves full global settings for the current request tenant (or specified subdomain). */
+export async function saveGlobalSettings(
+  settings: GlobalSettings,
+  subdomain?: string,
+): Promise<void> {
+  const tenant = subdomain ?? getRequestTenant();
+  if (!tenant) {
+    throw new Error('Tenant context required to save global settings');
+  }
+  await upsertWorkspaceGlobalSettingsRepo(tenant, settings);
 }
 
 /** JWT `expiresIn` string from session timeout preference. */

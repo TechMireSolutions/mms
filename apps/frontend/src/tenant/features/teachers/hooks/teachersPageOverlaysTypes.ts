@@ -30,6 +30,9 @@ export type TeachersPageOverlaysProps = {
   bulkRestoreOpen: boolean;
   onBulkRestoreOpenChange: (open: boolean) => void;
   onConfirmBulkRestore: () => void | Promise<void>;
+  idCardTeachers?: Teacher[];
+  onCloseIdCards?: () => void;
+  onPrintIdCard?: (teacher: Teacher) => void;
 };
 
 /** Work-tier interaction slice of page-owned overlays (list + bulk bar). */
@@ -42,4 +45,7 @@ export type TeachersWorkOverlayInteractions = Pick<
   | "setConfirmBulkRestoreOpen"
   | "setDeleteTarget"
   | "setViewTeacher"
+  | "idCardTeachers"
+  | "openIdCardsModal"
+  | "closeIdCardsModal"
 >;

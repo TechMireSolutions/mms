@@ -49,4 +49,5 @@ export interface TeachersRepository {
     input: TeacherDuplicateCheckInput,
   ): Promise<TeacherDuplicateReason | null>;
   bulkUpdateStatusSql(tenant: string, ids: string[], status: string): Promise<number>;
+  bulkUpdateSpecializationSql(tenant: string, ids: string[], specialization: string): Promise<number>;
 }

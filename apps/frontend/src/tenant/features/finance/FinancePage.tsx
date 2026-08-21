@@ -21,11 +21,18 @@ import { Invoice } from '@/lib/data/financeData';
 import { FinanceCommandMetrics } from "@/tenant/features/finance/components/FinanceCommandMetrics";
 import { notify } from "@/lib/notify";
 
+const InvoiceReceiptModal = React.lazy(() =>
+  import("@/tenant/features/finance/components/InvoiceReceiptModal").then((m) => ({
+    default: m.InvoiceReceiptModal,
+  }))
+);
+
 /**
  * Finance — invoices and payments. Work | Reports | Setup.
  */
 export default function Finance() {
   const c = useFinancePageController();
+  const [receiptInvoices, setReceiptInvoices] = React.useState<Invoice[]>([]);
 
   return (
     <ModulePageShell
@@ -97,6 +104,9 @@ export default function Finance() {
                   onRestore={(id) => c.restoreInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
                   onBulkDelete={(ids) => c.bulkDeleteInvoices.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}
                   onBulkRestore={(ids) => c.bulkRestoreInvoices.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.restored"), onError: c.mutationError })}
+                  onBulkStatusChange={(ids, status) => void c.handleBulkStatusChange(ids, status)}
+                  onBulkPrintReceipts={(inv) => setReceiptInvoices(inv)}
+                  isBulkStatusPending={c.bulkUpdateInvoiceStatus.isPending}
                   selectionResetKey={`${c.activeSubTab}:${c.showDeleted}`}
                   isColumnVisible={c.invoiceColumnLayout.isColumnVisible}
                   getColumnWidth={c.invoiceColumnLayout.getColumnWidth}
@@ -153,6 +163,7 @@ export default function Finance() {
             invoice={c.viewInvoice}
             onClose={() => c.setViewInvoice(null)}
             onRecord={(invoiceToRecord: Invoice) => { c.setViewInvoice(null); c.setRecordInvoice(invoiceToRecord); }}
+            onPrintReceipt={(inv) => { c.setViewInvoice(null); setReceiptInvoices([inv]); }}
             canWrite={c.canWrite}
           />
         )}
@@ -160,6 +171,15 @@ export default function Finance() {
           <PaymentForm open={!!c.recordInvoice} invoice={c.recordInvoice} onClose={() => c.setRecordInvoice(null)} onSave={c.handleRecordPayment} />
         )}
       </AnimatePresence>
+
+      {receiptInvoices.length > 0 && (
+        <React.Suspense fallback={null}>
+          <InvoiceReceiptModal
+            invoices={receiptInvoices}
+            onClose={() => setReceiptInvoices([])}
+          />
+        </React.Suspense>
+      )}
     </ModulePageShell>
   );
 }

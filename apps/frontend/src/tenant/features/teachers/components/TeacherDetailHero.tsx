@@ -1,5 +1,6 @@
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
+import { EmployeeIdBadge } from "@/tenant/features/teachers/components/EmployeeIdBadge";
 import { resolveTeacherStatus, type Teacher } from "@mms/shared";
 
 interface TeacherDetailHeroProps {
@@ -22,6 +23,7 @@ export function TeacherDetailHero({
       {showStatus ? (
         <StatusBadge status={resolveTeacherStatus(teacher.status)} config={statusConfig} />
       ) : null}
+      <EmployeeIdBadge employeeId={teacher.employeeId} />
     </PersonDetailHeroCard>
   );
 }

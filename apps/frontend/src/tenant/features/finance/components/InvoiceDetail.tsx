@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { ReceiptText, User, Calendar, CreditCard } from "lucide-react";
+import { ReceiptText, User, Calendar, CreditCard, Printer } from "lucide-react";
 import { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
@@ -17,6 +17,7 @@ interface InvoiceDetailProps {
   invoice: Invoice;
   onClose: () => void;
   onRecord: (invoice: Invoice) => void;
+  onPrintReceipt?: (invoice: Invoice) => void;
   canWrite?: boolean;
 }
 
@@ -33,6 +34,7 @@ export const InvoiceDetail = React.memo(function InvoiceDetail({
   invoice,
   onClose,
   onRecord,
+  onPrintReceipt,
   canWrite = true,
 }: InvoiceDetailProps) {
   const { t } = useTranslation();
@@ -55,15 +57,26 @@ export const InvoiceDetail = React.memo(function InvoiceDetail({
   ], [t, formatCurrency, invoice]);
 
   const footerNode = useMemo(() => (
-    canWrite && invoice.status !== "paid" && invoice.status !== "cancelled" ? (
-      <Button
-        onClick={() => { onRecord(invoice); onClose(); }}
-        className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
-      >
-        <ReceiptText className="w-4 h-4" aria-hidden="true" /> {t("finance.recordPayment")}
-      </Button>
-    ) : null
-  ), [canWrite, invoice, onRecord, onClose, t]);
+    <div className="space-y-2">
+      {canWrite && invoice.status !== "paid" && invoice.status !== "cancelled" && (
+        <Button
+          onClick={() => { onRecord(invoice); onClose(); }}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+        >
+          <ReceiptText className="w-4 h-4" aria-hidden="true" /> {t("finance.recordPayment")}
+        </Button>
+      )}
+      {onPrintReceipt && (
+        <Button
+          variant="outline"
+          onClick={() => { onPrintReceipt(invoice); onClose(); }}
+          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-colors"
+        >
+          <Printer className="w-4 h-4" aria-hidden="true" /> {t("finance.printReceipt")}
+        </Button>
+      )}
+    </div>
+  ), [canWrite, invoice, onRecord, onPrintReceipt, onClose, t]);
 
   return (
     <DetailDrawerShell

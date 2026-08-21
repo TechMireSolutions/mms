@@ -24,7 +24,11 @@ import {
 } from '@mms/shared';
 import type { User } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { syncWorkspaceFromBranding } from '../../services/workspaceService.js';
+import {
+  syncWorkspaceFromBranding,
+  upsertWorkspaceBranding,
+} from '../../services/workspaceService.js';
+import { saveGlobalSettings } from '../../services/globalSettingsService.js';
 import {
   recordAudit,
   AUDITED_COLLECTIONS,
@@ -337,6 +341,10 @@ export default async function dbRoutes(
       if (key === 'branding') {
         const tenant = getRequestTenant()!;
         await syncWorkspaceFromBranding(tenant, objectValueToSave as BrandingSettings);
+        await upsertWorkspaceBranding(tenant, objectValueToSave as BrandingSettings);
+      } else if (key === 'global_settings') {
+        const tenant = getRequestTenant()!;
+        await saveGlobalSettings(objectValueToSave as GlobalSettings, tenant);
       }
 
       return reply.send({ success: true });

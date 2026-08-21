@@ -1,8 +1,8 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, varchar, bigint } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, varchar, bigint, jsonb } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
-import type { PlatformRole } from "@mms/shared";
+import type { PlatformRole, LlmConfig } from "@mms/shared";
 
-/** Apex workspaces registry — not tenant-scoped. */
+/** Apex workspaces registry — not tenant-scoped. Branding fields migrated from objects store (migration 0071). */
 export const workspaces = pgTable('workspaces', {
   id: text('id').primaryKey(),
   subdomain: text('subdomain').notNull().unique(),
@@ -10,6 +10,40 @@ export const workspaces = pgTable('workspaces', {
   tagline: text('tagline'),
   country: text('country'),
   enabled: boolean('enabled').notNull().default(true),
+  // Branding — theme
+  primaryColor: varchar('primary_color', { length: 20 }),
+  secondaryColor: varchar('secondary_color', { length: 20 }),
+  cornerStyle: varchar('corner_style', { length: 20 }),
+  logoUrl: text('logo_url'),
+  faviconUrl: text('favicon_url'),
+  footerText: varchar('footer_text', { length: 120 }),
+  // Branding — institution identity
+  email: varchar('email', { length: 255 }),
+  phone: varchar('phone', { length: 40 }),
+  website: text('website'),
+  legalName: varchar('legal_name', { length: 255 }),
+  registrationNumber: varchar('registration_number', { length: 100 }),
+  addressLine1: varchar('address_line1', { length: 255 }),
+  addressLine2: varchar('address_line2', { length: 255 }),
+  city: varchar('city', { length: 100 }),
+  region: varchar('region', { length: 100 }),
+  postalCode: varchar('postal_code', { length: 20 }),
+  socialLinks: jsonb('social_links').$type<{ platform: string; url: string }[]>(),
+  // Global settings (migrated from objects store in migration 0072)
+  language: varchar('language', { length: 10 }),
+  timezone: varchar('timezone', { length: 50 }),
+  dateFormat: varchar('date_format', { length: 20 }),
+  emailNotifications: boolean('email_notifications'),
+  smsNotifications: boolean('sms_notifications'),
+  twoFactor: boolean('two_factor'),
+  sessionTimeout: varchar('session_timeout', { length: 20 }),
+  passwordPolicy: varchar('password_policy', { length: 20 }),
+  theme: varchar('theme', { length: 20 }),
+  enabledModules: jsonb('enabled_modules').$type<Record<string, boolean>>(),
+  grantedModules: jsonb('granted_modules').$type<Record<string, boolean>>(),
+  llmProvider: varchar('llm_provider', { length: 30 }),
+  llmApiKey: text('llm_api_key'),
+  llmConfigs: jsonb('llm_configs').$type<LlmConfig[]>(),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -81,6 +115,26 @@ export const platformActivityLogs = pgTable('platform_activity_logs', {
 
 export type WorkspaceRow = typeof workspaces.$inferSelect;
 export type InsertWorkspaceRow = typeof workspaces.$inferInsert;
+/** All branding-related columns projected from a workspace row. */
+export type WorkspaceBrandingRow = Pick<
+  WorkspaceRow,
+  | 'subdomain' | 'madrasaName' | 'tagline' | 'country'
+  | 'primaryColor' | 'secondaryColor' | 'cornerStyle'
+  | 'logoUrl' | 'faviconUrl' | 'footerText'
+  | 'email' | 'phone' | 'website' | 'legalName' | 'registrationNumber'
+  | 'addressLine1' | 'addressLine2' | 'city' | 'region' | 'postalCode'
+  | 'socialLinks'
+>;
+/** All global-settings-related columns projected from a workspace row. */
+export type WorkspaceGlobalSettingsRow = Pick<
+  WorkspaceRow,
+  | 'subdomain'
+  | 'language' | 'timezone' | 'dateFormat'
+  | 'emailNotifications' | 'smsNotifications' | 'twoFactor'
+  | 'sessionTimeout' | 'passwordPolicy' | 'theme'
+  | 'enabledModules' | 'grantedModules'
+  | 'llmProvider' | 'llmApiKey' | 'llmConfigs'
+>;
 export type PlatformUserRow = typeof platformUsers.$inferSelect;
 export type InsertPlatformUserRow = typeof platformUsers.$inferInsert;
 export type PlatformUserPermissionRow = typeof platformUserPermissions.$inferSelect;

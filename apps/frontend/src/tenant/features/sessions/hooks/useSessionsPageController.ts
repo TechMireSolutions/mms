@@ -16,6 +16,7 @@ import { SESSIONS_MODULE_MANIFEST } from '@mms/shared';
 import {
   createSessionBulkDeleteHandler,
   createSessionBulkRestoreHandler,
+  createSessionBulkStatusHandler,
   createSessionDeleteHandler,
   createSessionRestoreHandler,
   createSessionSaveHandler,
@@ -32,8 +33,16 @@ export function useSessionsPageController() {
     useModulePermissions(SESSIONS_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const { t } = useTranslation();
-  const { createSession, updateSession, deleteSession, restoreSession, bulkDeleteSessions, bulkRestoreSessions, logExportAudit } =
-    useSessionMutations();
+  const {
+    createSession,
+    updateSession,
+    deleteSession,
+    restoreSession,
+    bulkDeleteSessions,
+    bulkRestoreSessions,
+    bulkUpdateSessionStatus,
+    logExportAudit,
+  } = useSessionMutations();
   const { settings, statuses, types } = useSessionConfig();
   const { statusOptions, typeOptions, statusLabels, typeLabels, statusConfig, typeConfig } =
     useSessionDisplayConfig({ statuses, types, t });
@@ -136,6 +145,11 @@ export function useSessionsPageController() {
   const handleRestore = createSessionRestoreHandler(mutationDeps);
   const handleBulkDelete = createSessionBulkDeleteHandler(mutationDeps);
   const handleBulkRestore = createSessionBulkRestoreHandler(mutationDeps);
+  const handleBulkStatusChange = createSessionBulkStatusHandler({
+    t,
+    bulkUpdateSessionStatus,
+    setSelectedIds,
+  });
 
   const exportColumns = useMemo(
     () => defaultSessionsExportColumns(t),
@@ -253,6 +267,8 @@ export function useSessionsPageController() {
     confirmDelete,
     handleBulkDelete,
     handleBulkRestore,
+    handleBulkStatusChange,
+    bulkStatusPending: bulkUpdateSessionStatus.isPending,
     handleExportCSV,
     handleBulkExport,
     setListPage,

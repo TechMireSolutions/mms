@@ -5,6 +5,7 @@ import {
   teacherListSchema,
   teachersListQuerySchema,
   teachersBulkStatusSchema,
+  teachersBulkSpecializationSchema,
   teachersNextEmployeeIdQuerySchema,
   type TeacherRecord,
 } from '@mms/shared';
@@ -20,6 +21,7 @@ export {
   teacherListSchema,
   teachersListQuerySchema,
   teachersBulkStatusSchema,
+  teachersBulkSpecializationSchema,
   teachersNextEmployeeIdQuerySchema,
   type TeacherRecord,
 };

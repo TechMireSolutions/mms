@@ -7,6 +7,7 @@ import type {
   FinancePaymentsListPageResult,
   Invoice,
   InvoiceCreateInput,
+  InvoicesBulkStatusBody,
   Payment,
   PaymentCreateInput,
 } from '@mms/shared';
@@ -175,6 +176,15 @@ export function useFinanceMutations() {
     onSuccess: invalidateAll,
   });
 
+  const bulkUpdateInvoiceStatus = useMutation({
+    mutationFn: async (body: InvoicesBulkStatusBody) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(
+        `${FINANCE_API}/invoices/bulk-status`,
+        { method: 'POST', body: JSON.stringify(body) },
+      ),
+    onSuccess: invalidateAll,
+  });
+
   const createPayment = useMutation({
     mutationFn: async (payment: PaymentCreateInput) =>
       apiJson<{ payment: Payment }>(`${FINANCE_API}/payments`, {
@@ -230,6 +240,7 @@ export function useFinanceMutations() {
     restoreInvoice,
     bulkDeleteInvoices,
     bulkRestoreInvoices,
+    bulkUpdateInvoiceStatus,
     createPayment,
     updatePayment,
     deletePayment,

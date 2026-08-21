@@ -14,6 +14,7 @@ import {
   listInvoicesPage,
   listPaymentsPage,
   aggregateFinanceCommandMetrics,
+  bulkUpdateInvoicesStatusSql,
 } from '../db/repositories/financeRepositoryList.js';
 import {
   listInvoicesByWorkspace,
@@ -48,6 +49,19 @@ export const deleteInvoiceById = invoiceCrud.deleteById;
 export const restoreInvoiceById = invoiceCrud.restoreById;
 export const bulkSoftDeleteInvoices = invoiceCrud.bulkDeleteByIds;
 export const bulkRestoreInvoices = invoiceCrud.bulkRestoreByIds;
+
+export async function bulkUpdateInvoicesStatus(
+  ids: string[],
+  status: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const tenant = getRequestTenant();
+  if (!tenant) return { succeeded: 0, failed: ids.length };
+  const result = await bulkUpdateInvoicesStatusSql(tenant, ids, status);
+  const { broadcastTenantUpdate } = await import('./websocketService.js');
+  broadcastTenantUpdate(tenant, 'collection', 'finance_invoices');
+  broadcastTenantUpdate(tenant, 'collection', 'finance_metrics');
+  return result;
+}
 
 export async function loadInvoicesPage(query: FinanceListQuery & { includeDeleted?: boolean }) {
   const tenant = getRequestTenant();

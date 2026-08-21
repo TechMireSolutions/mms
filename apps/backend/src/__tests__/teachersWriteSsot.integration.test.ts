@@ -35,6 +35,7 @@ const mockUpdateTeacherById = vi.fn();
 const mockCheckTeacherRegistrationDuplicate = vi.fn();
 const mockMigrateTeachersMissingEmployeeIds = vi.fn();
 const mockLoadTeachersPage = vi.fn();
+const mockBulkUpdateTeacherSpecialization = vi.fn();
 
 vi.mock('../teachers/use-cases/teacherUseCases.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../teachers/use-cases/teacherUseCases.js')>();
@@ -49,6 +50,8 @@ vi.mock('../teachers/use-cases/teacherUseCases.js', async (importOriginal) => {
       migrateTeachersMissingEmployeeIds: (...args: unknown[]) =>
         mockMigrateTeachersMissingEmployeeIds(...args),
       loadTeachersPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
+      bulkUpdateTeacherSpecialization: (...args: unknown[]) =>
+        mockBulkUpdateTeacherSpecialization(...args),
       sanitizeTeacherForViewer: async (teacher: unknown) => teacher,
       sanitizeTeachersForViewer: async (teachers: unknown) => teachers,
     },
@@ -286,18 +289,45 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('GET /api/teachers rejects an unknown quickFilter preset', async () => {
+  it('POST /api/teachers/bulk-specialization updates specialization for writers', async () => {
+    mockBulkUpdateTeacherSpecialization.mockResolvedValueOnce({ succeeded: 2, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
-      method: 'GET',
-      url: '/api/teachers?page=1&quickFilter=bogus',
+      method: 'POST',
+      url: '/api/teachers/bulk-specialization',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {
+        ids: ['t1', 't2'],
+        specialization: 'Tajweed',
       },
     });
-    expect(res.statusCode).toBe(400);
-    expect(mockLoadTeachersPage).not.toHaveBeenCalled();
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toMatchObject({ success: true, succeeded: 2, failed: 0 });
+    expect(mockBulkUpdateTeacherSpecialization).toHaveBeenCalledWith(['t1', 't2'], 'Tajweed');
+    await app.close();
+  });
+
+  it('POST /api/teachers/bulk-specialization rejects non-writers', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/teachers/bulk-specialization',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+        'content-type': 'application/json',
+      },
+      payload: {
+        ids: ['t1'],
+        specialization: 'Hifz',
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockBulkUpdateTeacherSpecialization).not.toHaveBeenCalled();
     await app.close();
   });
 });

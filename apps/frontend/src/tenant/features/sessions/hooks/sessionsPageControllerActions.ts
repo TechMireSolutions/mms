@@ -126,6 +126,40 @@ export function createSessionBulkRestoreHandler(deps: Pick<SessionMutationHandle
   };
 }
 
+export function createSessionBulkStatusHandler(
+  deps: Pick<SessionMutationHandlersDeps, 't' | 'setSelectedIds'> & {
+    bulkUpdateSessionStatus: {
+      mutateAsync: (payload: { ids: string[]; status: string }) => Promise<{ success: boolean; succeeded: number; failed: number }>;
+    };
+  },
+) {
+  return async (ids: string[], status: string) => {
+    try {
+      const result = await deps.bulkUpdateSessionStatus.mutateAsync({ ids, status });
+      if (result.failed > 0) {
+        notify.error(
+          deps.t('sessions.toast.bulkPartial', {
+            succeeded: result.succeeded,
+            failed: result.failed,
+          }),
+        );
+      } else {
+        notify.success(
+          ids.length > 1
+            ? deps.t('sessions.bulkStatusSuccessMany', { count: ids.length })
+            : deps.t('sessions.bulkStatusSuccess'),
+        );
+      }
+      deps.setSelectedIds([]);
+    } catch (error) {
+      notify.error(deps.t('sessions.toast.bulkStatusFailed'), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+  };
+}
+
 export function toggleFilterValue<T>(
   selectedValues: T[],
   setSelectedValues: Dispatch<SetStateAction<T[]>>,

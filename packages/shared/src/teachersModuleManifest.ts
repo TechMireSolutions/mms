@@ -47,6 +47,14 @@ export const teachersBulkStatusSchema = z.object({
   status: z.string().min(1).max(TEACHER_STATUS_WRITE_MAX),
 });
 
+/** POST /api/teachers/bulk-specialization body. */
+export const teachersBulkSpecializationSchema = z.object({
+  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
+  specialization: z.string().min(1).max(150),
+});
+
+export type TeachersBulkSpecializationBody = z.infer<typeof teachersBulkSpecializationSchema>;
+
 /** GET /api/teachers/next-employee-id query. */
 export const teachersNextEmployeeIdQuerySchema = z.object({
   prefix: z.string().max(16).optional(),
@@ -84,7 +92,7 @@ export const TEACHERS_MODULE_MANIFEST = {
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['table', 'cards'] as const,
-    bulkActions: ['whatsapp', 'sms', 'email', 'export', 'delete', 'status'] as const,
+    bulkActions: ['whatsapp', 'sms', 'email', 'idCards', 'export', 'delete', 'status', 'specialization'] as const,
   },
   defaultExportFilename: 'teachers.csv',
   searchableFieldKeys: ['name', 'employeeId', 'phone', 'email', 'specialization'] as const,

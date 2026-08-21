@@ -23,6 +23,8 @@ export function useTeachersPageActions({
     restoreTeacher,
     bulkRestoreTeachers,
     bulkUpdateTeacherStatus,
+    bulkUpdateTeacherSpecialization,
+    isBulkSpecializationPending,
   } = useTeacherMutations();
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
 
@@ -122,6 +124,24 @@ export function useTeachersPageActions({
     }
   };
 
+  const handleBulkSpecializationChange = async (
+    ids: string[],
+    specialization: string,
+  ): Promise<void> => {
+    try {
+      const result = await bulkUpdateTeacherSpecialization({ ids, specialization });
+      notifyBulkResult(
+        result.succeeded,
+        result.failed,
+        "teachers.bulkSpecializationSuccess",
+        "teachers.bulkSpecializationSuccess",
+      );
+    } catch (error) {
+      handleError(error, "teachers.bulk_specialization", "teachers.bulkStatusFailed");
+      throw error;
+    }
+  };
+
   return {
     messagingTarget,
     openComposer,
@@ -136,5 +156,7 @@ export function useTeachersPageActions({
     handleBulkDelete,
     handleBulkRestore,
     handleBulkStatusChange,
+    handleBulkSpecializationChange,
+    isBulkSpecializationPending,
   };
 }

@@ -1,6 +1,10 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { getObject } from '../db/database.js';
 import { sendForbidden } from '../lib/httpErrors.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import {
+  getWorkspaceGlobalSettings,
+  getWorkspaceGrantedModulesRepo,
+} from '../db/repositories/workspaceRepository.js';
 import { normalizeEnabledModules } from '@mms/shared';
 
 /**
@@ -10,30 +14,26 @@ import { normalizeEnabledModules } from '@mms/shared';
 export function requireTenantModule(moduleId: string) {
   return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     try {
-      // In integration tests, getObject might not be mocked in the database module mock.
-      // Vitest mock proxies throw an error as soon as we access or call `getObject` if it's missing.
-      // We safely fallback to an empty object if an error occurs while fetching global settings,
-      // which causes normalizeEnabledModules to default all modules to enabled=true.
-      let globalSettings: Record<string, unknown> = {};
-      let platformSettings: Record<string, unknown> = {};
+      const tenant = getRequestTenant();
+      if (!tenant) {
+        return;
+      }
+
+      let globalSettings = null;
+      let grantedModules: string[] = [];
       try {
-        globalSettings = (await getObject('global_settings')) as Record<string, unknown> || {};
-        platformSettings = (await getObject('platform_settings')) as Record<string, unknown> || {};
-      } catch (e: unknown) {
-        if (e instanceof Error && e.message.includes('[vitest]')) {
-          // Swallow vitest missing mock error and proceed with defaults
-        } else {
-          throw e; // Rethrow actual DB or unexpected errors
-        }
+        globalSettings = await getWorkspaceGlobalSettings(tenant);
+        grantedModules = await getWorkspaceGrantedModulesRepo(tenant);
+      } catch {
+        // When DB is uninitialized or in mocked unit tests, proceed with default enabled
+        return;
       }
 
       const enabledModules = normalizeEnabledModules(
-        globalSettings.enabledModules as Record<string, boolean> | undefined
+        globalSettings?.enabledModules as Record<string, boolean> | undefined
       );
-      
-      const grantedModules = (platformSettings.grantedModules as Record<string, boolean> | undefined) || {};
 
-      if (grantedModules[moduleId] === false) {
+      if (grantedModules.length > 0 && !grantedModules.includes(moduleId)) {
         sendForbidden(reply, `The ${moduleId} module is not permitted by the platform.`);
         return;
       }

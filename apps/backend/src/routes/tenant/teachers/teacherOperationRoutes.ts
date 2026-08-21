@@ -9,6 +9,7 @@ import { canReadCollection, canWriteCollection } from '../../../services/rbacSer
 import { teacherUseCases } from '../../../teachers/use-cases/teacherUseCases.js';
 import {
   teacherRecordSchema,
+  teachersBulkSpecializationSchema,
   teachersBulkStatusSchema,
   teachersDuplicateCheckBodySchema,
   teachersNextEmployeeIdQuerySchema,
@@ -93,6 +94,27 @@ export async function teacherOperationRoutes(fastify: FastifyInstance): Promise<
       return reply.send({ success: true, ...result });
     } catch {
       return sendDatabaseError(reply, 'Failed to bulk update teacher status');
+    }
+  });
+
+  fastify.post('/bulk-specialization', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, 'teachers')) return sendForbidden(reply);
+    const parsed = parseRequest(teachersBulkSpecializationSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    try {
+      const result = await teacherUseCases.bulkUpdateTeacherSpecialization(
+        parsed.data.ids.map(String),
+        parsed.data.specialization,
+      );
+      await auditTeacher(
+        user,
+        'teacher.bulk_specialization',
+        `Updated specialization to ${parsed.data.specialization} for ${result.succeeded} teacher(s); ${result.failed} failed`,
+      );
+      return reply.send({ success: true, ...result });
+    } catch {
+      return sendDatabaseError(reply, 'Failed to bulk update teacher specialization');
     }
   });
 

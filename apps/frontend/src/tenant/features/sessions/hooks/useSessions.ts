@@ -152,6 +152,15 @@ export function useSessionMutations() {
     onSuccess: invalidate,
   });
 
+  const bulkUpdateSessionStatus = useMutation({
+    mutationFn: async ({ ids, status }: { ids: string[]; status: string }) =>
+      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${SESSIONS_API}/bulk-status`, {
+        method: 'POST',
+        body: JSON.stringify({ ids, status }),
+      }),
+    onSuccess: invalidate,
+  });
+
   const logExportAudit = useMutation({
     mutationFn: async (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) =>
       apiJson<{ success: boolean }>(`${SESSIONS_API}/export-audit`, {
@@ -167,6 +176,7 @@ export function useSessionMutations() {
     restoreSession,
     bulkDeleteSessions,
     bulkRestoreSessions,
+    bulkUpdateSessionStatus,
     logExportAudit,
   };
 }
