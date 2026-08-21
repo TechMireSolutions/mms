@@ -46,7 +46,7 @@ export function useStudentsPageController() {
   });
   const { data: metrics } = useStudentsMetrics();
   const mutations = useStudentMutations();
-  const { settings, statuses: configuredStatuses, genderFilters } = useStudentConfig();
+  const { settings, statuses: configuredStatuses, genderFilters, isFieldEnabled } = useStudentConfig();
   const studentStatusOptions = resolveStudentStatuses(configuredStatuses);
   const [activeTab, setActiveTab] = usePersistedTabState<string>("students_active_tab", "work");
   const effectiveTab = resolveModuleTierTab(
@@ -143,6 +143,8 @@ export function useStudentsPageController() {
     canWrite,
     canDelete,
     canExport,
+    isStatusEnabled: isFieldEnabled("status"),
+    isGenderEnabled: isFieldEnabled("gender"),
     bulkActions: STUDENTS_MODULE_MANIFEST.work.bulkActions,
     workStudents,
     workPageQuery,

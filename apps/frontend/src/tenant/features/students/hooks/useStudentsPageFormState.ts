@@ -24,6 +24,7 @@ export function useStudentsPageFormState() {
   return {
     showStudentForm,
     editStudent,
+    setEditStudent,
     openCreateForm,
     openEditForm,
     closeStudentForm,

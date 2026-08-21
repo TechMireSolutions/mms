@@ -23,6 +23,8 @@ interface StudentsFilterMenuButtonProps {
   onQuickFilterChange: (preset: string) => void;
   studentStatusOptions: readonly string[];
   genderFilters: string[];
+  isStatusEnabled?: boolean;
+  isGenderEnabled?: boolean;
   activeFilterCount: number;
   sortField: StudentListSortField | null;
   sortOptions: Array<{ field: StudentListSortField; label: string }>;
@@ -39,6 +41,8 @@ export function StudentsFilterMenuButton({
   onQuickFilterChange,
   studentStatusOptions,
   genderFilters,
+  isStatusEnabled = true,
+  isGenderEnabled = true,
   activeFilterCount,
   sortField,
   sortOptions,
@@ -69,34 +73,42 @@ export function StudentsFilterMenuButton({
         }))}
       />
 
-      <ModuleFilterDivider />
-      <ModuleFilterCheckboxGroup
-        label={t("students.filterByStatus")}
-        options={studentStatusOptions.map((status) => ({
-          value: status,
-          label: studentStatusLabel(t, status),
-        }))}
-        selected={studentFilterStatus}
-        onToggle={onToggleStatus}
-      />
+      {isStatusEnabled && (
+        <>
+          <ModuleFilterDivider />
+          <ModuleFilterCheckboxGroup
+            label={t("students.filterByStatus")}
+            options={studentStatusOptions.map((status) => ({
+              value: status,
+              label: studentStatusLabel(t, status),
+            }))}
+            selected={studentFilterStatus}
+            onToggle={onToggleStatus}
+          />
+        </>
+      )}
 
-      <ModuleFilterDivider />
-      <ModuleFilterRadioGroup
-        label={t("students.gender")}
-        value={studentFilterGender}
-        onValueChange={onGenderChange}
-        options={["", ...genderFilters].map((genderFilter) => ({
-          value: genderFilter,
-          label: genderFilter ? (
-            <span className="inline-flex items-center gap-1.5">
-              <GenderIcon gender={genderFilter} className="w-3.5 h-3.5" />
-              {formatContactGenderLabel(genderFilter, t)}
-            </span>
-          ) : (
-            t("students.allGenders")
-          ),
-        }))}
-      />
+      {isGenderEnabled && (
+        <>
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t("students.gender")}
+            value={studentFilterGender}
+            onValueChange={onGenderChange}
+            options={["", ...genderFilters].map((genderFilter) => ({
+              value: genderFilter,
+              label: genderFilter ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <GenderIcon gender={genderFilter} className="w-3.5 h-3.5" />
+                  {formatContactGenderLabel(genderFilter, t)}
+                </span>
+              ) : (
+                t("students.allGenders")
+              ),
+            }))}
+          />
+        </>
+      )}
 
       <ModuleFilterDivider />
       <ModuleFilterRadioGroup

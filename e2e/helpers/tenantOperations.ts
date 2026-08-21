@@ -42,7 +42,7 @@ export async function createTestContactJaneDoe(page: Page): Promise<void> {
 
   await page.click('button:has-text("Add Contact")');
   await page.waitForSelector('input[name="firstName"]');
-  const janeDialog = page.getByRole('dialog', { name: 'Add New Contact' });
+  const janeDialog = page.getByRole('dialog', { name: /(Add New Contact|Edit Jane Doe|Edit Contact)/i });
   
   await janeDialog.locator('input[name="firstName"]').fill('Jane');
   await janeDialog.locator('input[name="lastName"]').fill('Doe');
@@ -72,7 +72,7 @@ export async function createTestContactJaneDoe(page: Page): Promise<void> {
 
   await waitForToastOverlayToClear(page, 'before saving Jane Doe');
   const contactSave = page.waitForResponse(
-    (res) => res.url().includes('/api/contacts') && res.request().method() === 'POST',
+    (res) => res.url().includes('/api/contacts') && (res.request().method() === 'POST' || res.request().method() === 'PUT'),
     { timeout: 15_000 },
   );
   await janeDialog.getByRole('button', { name: /Save Contact|Save/i }).click();
@@ -92,7 +92,7 @@ export async function createTestContactJaneDoe(page: Page): Promise<void> {
 export async function createTestContactJohnDoe(page: Page): Promise<void> {
   await page.click('button:has-text("Add Contact")');
   await page.waitForSelector('input[name="firstName"]');
-  const johnDialog = page.getByRole('dialog', { name: 'Add New Contact' });
+  const johnDialog = page.getByRole('dialog', { name: /(Add New Contact|Edit John Doe|Edit Contact)/i });
   await johnDialog.locator('input[name="firstName"]').fill('John');
   await johnDialog.locator('input[name="lastName"]').fill('Doe');
   await johnDialog.locator('#cf-new-gender').click();
@@ -112,7 +112,7 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
   await johnDialog.getByRole('tab', { name: 'Basic' }).click();
   await waitForToastOverlayToClear(page, 'before saving John Doe');
   const johnSave = page.waitForResponse(
-    (res) => res.url().includes('/api/contacts') && res.request().method() === 'POST',
+    (res) => res.url().includes('/api/contacts') && (res.request().method() === 'POST' || res.request().method() === 'PUT'),
     { timeout: 15_000 },
   );
   await johnDialog.getByRole('button', { name: /Save Contact|Save/i }).click();
@@ -131,7 +131,7 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
  */
 export async function registerStudentJaneDoe(page: Page): Promise<void> {
   await page.click('button:has-text("Add Student")');
-  const registerDialog = page.getByRole('dialog', { name: 'Register student' });
+  const registerDialog = page.getByRole('dialog', { name: /(Register student|Edit student)/i });
   await expect(registerDialog).toBeVisible();
 
   const studentContactSearch = registerDialog.getByLabel('Student contact');
@@ -238,7 +238,7 @@ export function seedTestClassAndEnrollment(subdomain: string): void {
  */
 export async function createTeacherFromContact(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Add Teacher' }).first().click();
-  const teacherDialog = page.getByRole('dialog', { name: 'Add teacher' });
+  const teacherDialog = page.getByRole('dialog', { name: /(Add teacher|Edit teacher)/i });
   await expect(teacherDialog).toBeVisible();
 
   const teacherContactSearch = teacherDialog.getByRole('combobox', { name: 'Contact' });

@@ -78,7 +78,6 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     setTeacherDraft(nextDraft);
     setBaselineSnapshot(teacherDraftSnapshot(nextDraft));
     setErrors({});
-    setActiveTab("basic");
   }, [teacher, defaultSpecialization]);
 
   const updateDraft = (patch: Partial<Teacher>) => {

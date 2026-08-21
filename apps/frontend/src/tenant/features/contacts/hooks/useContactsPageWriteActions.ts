@@ -95,11 +95,12 @@ export function useContactsPageWriteActions({
       const isCreatingContact = !editContact;
       const payload = mergeContactEditSavePayload(editContact, contactDraft);
 
-      await saveContact(payload, isCreatingContact);
-      setShowForm(false);
-      setEditContact(null);
+      const saved = await saveContact(payload, isCreatingContact);
+      if (isCreatingContact && saved) {
+        setEditContact(saved);
+      }
     },
-    [editContact, saveContact, canWrite, setShowForm, setEditContact, t],
+    [editContact, saveContact, setEditContact, canWrite, t],
   );
 
   const handleUpdateContact = useCallback(

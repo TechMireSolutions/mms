@@ -46,16 +46,18 @@ export function useTeachersPageActions({
     openComposer("email", toTeacherRecipients(teachersList));
   };
 
-  const handleSaveTeacher = async (teacherToSave: Teacher) => {
+  const handleSaveTeacher = async (teacherToSave: Teacher): Promise<Teacher> => {
     if (editTeacher) {
-      await updateTeacher.mutateAsync({
+      const res = await updateTeacher.mutateAsync({
         id: String(teacherToSave.id),
         teacher: teacherToSave as unknown as TeacherRecord,
       });
       notify.success(t("teachers.toast.updated"));
+      return res.item as unknown as Teacher;
     } else {
-      await createTeacher.mutateAsync(teacherToSave as unknown as TeacherRecord);
+      const res = await createTeacher.mutateAsync(teacherToSave as unknown as TeacherRecord);
       notify.success(t("teachers.toast.created"));
+      return res.item as unknown as Teacher;
     }
   };
 

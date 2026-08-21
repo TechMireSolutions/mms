@@ -20,6 +20,8 @@ export function StudentsWorkTier({
   canWrite,
   canDelete,
   canExport,
+  isStatusEnabled = true,
+  isGenderEnabled = true,
   bulkActions,
   hasActiveFilters,
   activeFilterCount,
@@ -90,6 +92,8 @@ export function StudentsWorkTier({
           genderFilters={genderFilters}
           viewingDeleted={viewingDeleted}
           canDelete={canDelete}
+          isStatusEnabled={isStatusEnabled}
+          isGenderEnabled={isGenderEnabled}
           hasActiveFilters={hasActiveFilters}
           activeFilterCount={activeFilterCount}
           columnLayout={columnLayout}

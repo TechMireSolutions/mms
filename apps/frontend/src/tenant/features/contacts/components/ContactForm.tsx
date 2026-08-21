@@ -75,7 +75,7 @@ export function ContactForm({
     if (!open) return;
     setTab("basic");
     setConfirmDiscardOpen(false);
-  }, [open, contact, initialDraft]);
+  }, [open]);
 
   const handleRequestClose = () => {
     if (draft.isDirty) {

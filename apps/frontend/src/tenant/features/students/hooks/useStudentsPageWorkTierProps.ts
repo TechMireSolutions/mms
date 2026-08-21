@@ -17,6 +17,8 @@ export type StudentsWorkTierSource = {
   canWrite: WorkTierProps["canWrite"];
   canDelete: WorkTierProps["canDelete"];
   canExport: WorkTierProps["canExport"];
+  isStatusEnabled?: WorkTierProps["isStatusEnabled"];
+  isGenderEnabled?: WorkTierProps["isGenderEnabled"];
   bulkActions: WorkTierProps["bulkActions"];
   workStudents: WorkTierProps["workStudents"];
   workPageQuery: {
@@ -75,6 +77,8 @@ export function buildStudentsWorkTierProps(
     canWrite: source.canWrite,
     canDelete: source.canDelete,
     canExport: source.canExport,
+    isStatusEnabled: source.isStatusEnabled,
+    isGenderEnabled: source.isGenderEnabled,
     bulkActions: source.bulkActions,
     workStudents: source.workStudents,
     workPageData: source.workPageQuery.data,

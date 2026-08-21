@@ -28,6 +28,8 @@ interface StudentsWorkTierToolbarProps {
   genderFilters: string[];
   viewingDeleted: boolean;
   canDelete: boolean;
+  isStatusEnabled?: boolean;
+  isGenderEnabled?: boolean;
   hasActiveFilters: boolean;
   activeFilterCount: number;
   columnLayout: ReturnType<typeof useStudentColumnLayout>;
@@ -53,6 +55,8 @@ export function StudentsWorkTierToolbar({
   genderFilters,
   viewingDeleted,
   canDelete,
+  isStatusEnabled = true,
+  isGenderEnabled = true,
   hasActiveFilters,
   activeFilterCount,
   columnLayout,
@@ -114,6 +118,8 @@ export function StudentsWorkTierToolbar({
             onQuickFilterChange={onQuickFilterChange}
             studentStatusOptions={studentStatusOptions}
             genderFilters={genderFilters}
+            isStatusEnabled={isStatusEnabled}
+            isGenderEnabled={isGenderEnabled}
             activeFilterCount={activeFilterCount}
             sortField={sortField}
             sortOptions={sortOptions}

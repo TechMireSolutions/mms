@@ -17,6 +17,8 @@ export interface StudentsWorkTierProps {
   canWrite: boolean;
   canDelete: boolean;
   canExport: boolean;
+  isStatusEnabled?: boolean;
+  isGenderEnabled?: boolean;
   bulkActions: readonly string[];
   hasActiveFilters: boolean;
   activeFilterCount: number;

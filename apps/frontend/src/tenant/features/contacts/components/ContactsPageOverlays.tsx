@@ -100,7 +100,6 @@ export function ContactsPageOverlays({
               {formTabsReady ? (
                 <ContactForm
                   open={showForm}
-                  key={editContact?.id || "new"}
                   contact={editContact ?? undefined}
                   defaultCountry={defaultCountry}
                   defaultCity={defaultCity}

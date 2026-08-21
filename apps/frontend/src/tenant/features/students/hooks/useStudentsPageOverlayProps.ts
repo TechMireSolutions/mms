@@ -33,7 +33,12 @@ export function useStudentsPageOverlayProps({
     showStudentForm: formState.showStudentForm,
     editStudent: formState.editStudent,
     onCloseForm: formState.closeStudentForm,
-    onSave: workActions.handleSaveStudent,
+    onSave: async (student: Student) => {
+      const savedStudent = await workActions.handleSaveStudent(student);
+      if (!formState.editStudent && savedStudent) {
+        formState.setEditStudent(savedStudent);
+      }
+    },
     viewStudent: overlays.viewStudent,
     onCloseView: () => overlays.setViewStudent(null),
     onEditFromDrawer: (student: Student) => {

@@ -33,7 +33,12 @@ export function useTeachersPageOverlayProps({
     showForm: formState.showForm,
     editTeacher: formState.editTeacher,
     onCloseForm: formState.close,
-    onSave: workActions.handleSaveTeacher,
+    onSave: async (teacher: Teacher) => {
+      const savedTeacher = await workActions.handleSaveTeacher(teacher);
+      if (!formState.editTeacher && savedTeacher) {
+        formState.setEditTeacher(savedTeacher);
+      }
+    },
     viewTeacher: overlays.viewTeacher,
     onCloseView: () => overlays.setViewTeacher(null),
     onEditFromDrawer: (teacher: Teacher) => {

@@ -72,7 +72,6 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     setStudentDraft(nextDraft);
     setBaselineSnapshot(studentDraftSnapshot(nextDraft));
     setValidationErrors([]);
-    setActiveTab("basic");
     grManuallyEdited.current = false;
   }, [student?.id]);
 

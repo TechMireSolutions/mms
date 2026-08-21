@@ -29,12 +29,14 @@ export function useContactsCrudWriteActions({
   } = useContactMutations();
 
   const saveContact = useCallback(
-    async (contact: Contact, isNew: boolean): Promise<void> => {
+    async (contact: Contact, isNew: boolean): Promise<Contact> => {
       try {
         if (isNew) {
-          await upsertContact.mutateAsync(contact);
+          const res = await upsertContact.mutateAsync(contact);
+          return res.contact;
         } else {
-          await updateContact.mutateAsync({ id: String(contact.id), contact });
+          const res = await updateContact.mutateAsync({ id: String(contact.id), contact });
+          return res.contact;
         }
       } catch (err) {
         handleError(err, "contacts.save_contact");

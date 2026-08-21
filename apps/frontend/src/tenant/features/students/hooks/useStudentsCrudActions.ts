@@ -26,14 +26,16 @@ export function useStudentsCrudActions({
     updateStudent,
   } = mutations;
 
-  const handleSaveStudent = async (studentToSave: Student): Promise<void> => {
+  const handleSaveStudent = async (studentToSave: Student): Promise<Student> => {
     if (editStudent) {
-      await updateStudent.mutateAsync({
+      const res = await updateStudent.mutateAsync({
         id: String(studentToSave.id),
         student: studentToSave as StudentRecord,
       });
+      return res.item as Student;
     } else {
-      await createStudent.mutateAsync(studentToSave as StudentRecord);
+      const res = await createStudent.mutateAsync(studentToSave as StudentRecord);
+      return res.item as Student;
     }
   };
 
