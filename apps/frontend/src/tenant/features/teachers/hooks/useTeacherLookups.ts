@@ -4,16 +4,14 @@ import {
   type TeacherLookupKind,
   type TeacherLookupsMap,
 } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
+import { apiContract } from "@/lib/api";
 import { createModuleLookupsHooks } from "@/lib/query/createModuleLookupsHooks";
-import { TEACHERS_API } from "@/tenant/features/teachers/hooks/teachersQueryShared";
 
 export const TEACHERS_LOOKUPS_QUERY_KEY = [TEACHERS_MODULE_MANIFEST.collectionKey, "lookups"] as const;
 
 export async function fetchTeacherLookups(signal?: AbortSignal): Promise<TeacherLookupsMap> {
-  const response = await apiJson<{ lookups: TeacherLookupsMap }>(`${TEACHERS_API}/lookups`, {
-    signal,
-  });
+  const res = await apiContract.teachers.getLookups({ query: undefined, extraHeaders: {} });
+    const response = res.body as any;
   return response.lookups ?? emptyTeacherLookupsMap();
 }
 
@@ -21,11 +19,8 @@ export async function putTeacherLookupKind(
   kind: TeacherLookupKind,
   items: string[],
 ): Promise<string[]> {
-  const response = await apiJson<{ items: string[] }>(`${TEACHERS_API}/lookups/${kind}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ items }),
-  });
+  const res = await apiContract.teachers.updateLookupKind({ params: { kind: kind as any }, body: { items }, query: undefined, extraHeaders: {} });
+  const response = res.body as any;
   return response.items;
 }
 

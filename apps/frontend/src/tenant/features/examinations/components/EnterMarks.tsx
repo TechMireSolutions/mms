@@ -71,8 +71,8 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
          .map((enrollment) => [String(enrollment.studentId), enrollment]),
     );
     return resolvedStudents
-      .filter((student) => enrollmentByStudent.has(String(student.id)))
-      .map((student) => {
+      .filter((student: any) => enrollmentByStudent.has(String(student.id)))
+      .map((student: any) => {
         const enrollment = enrollmentByStudent.get(String(student.id))!;
         return {
           ...student,
@@ -95,7 +95,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
 
   const handleSave = async () => {
     if (!exam) return;
-    const newResults: ExamResult[] = students.map((student) => ({
+    const newResults: ExamResult[] = students.map((student: any) => ({
       id: `er_${exam.id}_${student.id}`,
       examId: exam.id,
       studentId: String(student.id),

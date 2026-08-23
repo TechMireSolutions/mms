@@ -1,7 +1,7 @@
 import { applyTitleCaseRecursive } from '@mms/shared';
 import { eq } from 'drizzle-orm';
 import { getRequestTenant } from '../lib/tenantContext.js';
-import { activeDb } from './dbConnection.js';
+import { withTenant } from './tenant-context.js';
 import * as schema from './schema.js';
 import { resolveObjectStorageKey } from './documentStoreKeys.js';
 import { deleteObjectByStorageKey } from './documentStoreAdmin.js';
@@ -9,10 +9,13 @@ import { deleteObjectByStorageKey } from './documentStoreAdmin.js';
 export async function getObject(key: string): Promise<unknown | null> {
   try {
     const storageKey = resolveObjectStorageKey(key);
-    const rows = await activeDb().select().from(schema.objects).where(eq(schema.objects.key, storageKey));
-    const row = rows[0];
-    if (!row) return null;
-    return row.data;
+    const tenant = getRequestTenant();
+    return await withTenant(tenant, async (tx) => {
+      const rows = await tx.select().from(schema.objects).where(eq(schema.objects.key, storageKey));
+      const row = rows[0];
+      if (!row) return null;
+      return row.data;
+    });
   } catch (error) {
     console.error(`Error getting object "${key}":`, error);
     throw error;
@@ -24,12 +27,15 @@ export async function saveObject(key: string, data: unknown): Promise<void> {
     const storageKey = resolveObjectStorageKey(key);
     const tenant = getRequestTenant();
     const processedData = applyTitleCaseRecursive(data);
-    await activeDb().insert(schema.objects)
-      .values({ key: storageKey, data: processedData })
-      .onConflictDoUpdate({
-        target: schema.objects.key,
-        set: { data: processedData },
-      });
+    
+    await withTenant(tenant, async (tx) => {
+      await tx.insert(schema.objects)
+        .values({ key: storageKey, data: processedData })
+        .onConflictDoUpdate({
+          target: schema.objects.key,
+          set: { data: processedData },
+        });
+    });
 
     if (tenant) {
       const { broadcastTenantUpdate } = await import('../services/websocketService.js');

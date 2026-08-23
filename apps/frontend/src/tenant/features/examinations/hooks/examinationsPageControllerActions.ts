@@ -1,7 +1,7 @@
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { Exam, ExamResult } from '@/lib/data/examinationData';
 import { notify } from '@/lib/notify';
-import { NotifiedExaminationsMutationError } from '@/tenant/features/examinations/hooks/useExaminationsApi';
+import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 
 interface ExaminationsMutationDeps {
   exams: Exam[];
@@ -19,7 +19,7 @@ interface ExaminationsMutationDeps {
 
 export function createExaminationsNotifySaveFailure(t: TranslationFunction) {
   return (error: unknown) => {
-    if (error instanceof NotifiedExaminationsMutationError) return;
+    if (error instanceof NotifiedMutationError) return;
     notify.error(t('examinations.saveFailed'), {
       description: error instanceof Error ? error.message : String(error),
     });

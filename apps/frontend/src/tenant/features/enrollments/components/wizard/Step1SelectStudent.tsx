@@ -5,7 +5,7 @@ import { STUDENTS_MODULE_MANIFEST } from "@mms/shared";
 import { calcAge, Student } from '@/lib/data/studentsData';
 import { Session } from '@/lib/data/sessionsData';
 import { WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
-import { useStudentsByIds, useStudentsPaginated } from "@/tenant/hooks/collections/students";
+import { useStudentsByIds, useStudentsContractList } from "@/tenant/hooks/collections/students";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -32,7 +32,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
     [t],
   );
 
-  const { data: studentPage, isFetching } = useStudentsPaginated({
+  const { data: studentPage, isFetching } = useStudentsContractList({
     page: 1,
     limit: STUDENTS_MODULE_MANIFEST.maxPageSize,
     search,
@@ -40,13 +40,13 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
   });
 
   const selectedId = value?.id ? String(value.id) : "";
-  const valueInPage = (studentPage?.students ?? []).some((student) => String(student.id) === selectedId);
+  const valueInPage = (studentPage?.body?.students ?? []).some((student: { id: string | number }) => String(student.id) === selectedId);
   const { data: resolvedSelected = [] } = useStudentsByIds(
     selectedId && !valueInPage ? [selectedId] : [],
   );
 
   const students = useMemo(() => {
-    const rows = (studentPage?.students ?? []) as unknown as Student[];
+    const rows = (studentPage?.body?.students ?? []) as unknown as Student[];
     if (value && !rows.some((student) => String(student.id) === String(value.id))) {
       return [value, ...rows];
     }
@@ -57,7 +57,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
   }, [studentPage, value, resolvedSelected]);
 
   const sessionName = (sessionId: string): string => sessions.find((session) => session.id === sessionId)?.name || sessionId;
-  const hasMore = Boolean(studentPage?.hasMore);
+  const hasMore = Boolean(studentPage?.body?.hasMore);
 
   return (
     <section className="space-y-4" aria-labelledby="step1-title">

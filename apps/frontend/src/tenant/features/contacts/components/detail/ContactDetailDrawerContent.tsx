@@ -153,18 +153,21 @@ export function ContactDetailDrawerContent({
                 className="uppercase tracking-widest"
               />
             ) : (
-              customTabFields.map(({ groupName, fields: groupFields }) => (
-                <FieldGroupCard
-                  key={groupName}
-                  group={groupName}
-                  fields={groupFields}
-                  formatValue={formatFieldValue}
-                  getRawValue={(key) =>
-                    
-                    (contactState as Record<string, unknown>)[key]
-                  }
-                />
-              ))
+              customTabFields.map(({ groupName, fields: groupFields }, index) => {
+                const ACCENT_COLORS = ["info", "warning", "success", "primary", "secondary", "purple", "amber", "rose", "teal", "indigo", "pink"] as const;
+                return (
+                  <FieldGroupCard
+                    key={groupName}
+                    group={groupName}
+                    fields={groupFields}
+                    formatValue={formatFieldValue}
+                    getRawValue={(key) =>
+                      (contactState as Record<string, unknown>)[key]
+                    }
+                    accentColor={ACCENT_COLORS[index % ACCENT_COLORS.length]}
+                  />
+                );
+              })
             )}
           </div>
         )}

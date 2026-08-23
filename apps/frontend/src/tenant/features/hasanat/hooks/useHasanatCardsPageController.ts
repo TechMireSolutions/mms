@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
+import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
@@ -13,8 +13,8 @@ import {
   useHasanatBatches,
   useHasanatDistributions,
   useHasanatMutations,
-  NotifiedHasanatMutationError,
 } from '@/tenant/features/hasanat/hooks/useHasanatApi';
+import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 import { useHasanatDistributionTrashActions } from '@/tenant/features/hasanat/hooks/useHasanatDistributionTrashActions';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 import { notify } from '@/lib/notify';
@@ -91,7 +91,7 @@ export function useHasanatCardsPageController() {
   });
 
   const notifySaveFailure = useCallback((error: unknown) => {
-    if (error instanceof NotifiedHasanatMutationError) return;
+    if (error instanceof NotifiedMutationError) return;
     notify.error(t('hasanat.saveFailed'), {
       description: error instanceof Error ? error.message : String(error),
     });
@@ -124,13 +124,20 @@ export function useHasanatCardsPageController() {
     setFilteredCount(distributions.length);
   }, [effectiveSubTab, distributions.length]);
 
-  useModuleCreateHotkey({
-    enabled: canWrite && !showDeleted,
+  useModuleShortcuts({
+    searchInputId: 'hasanat-search-input',
+    selectedCount: 0,
+    hasActiveFilters: false,
+    clearFilters: () => {},
+    clearSelection: () => {},
+    canWrite,
+    showDeleted,
     onCreate: () => {
       setActiveTab('work');
       setActiveSubTab('distribute');
       setCreateDistributeKey((key) => key + 1);
     },
+    enabled: activeTab === 'work',
   });
 
   const runHasanatSave = async (save: () => Promise<unknown>): Promise<void> => {

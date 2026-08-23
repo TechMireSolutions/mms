@@ -292,7 +292,7 @@ run_dev_foreground() {
   trap 'kill 0 2>/dev/null; exit 0' INT TERM
   (cd apps/backend && npx tsx watch src/index.ts) &
   sleep 2
-  (cd apps/backend && npx tsx watch src/worker.ts) &
+  (cd apps/backend && npx tsx watch src/worker/index.ts) &
   sleep 2
   (cd apps/frontend && npx vite) &
   wait

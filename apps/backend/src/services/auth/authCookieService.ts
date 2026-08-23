@@ -4,9 +4,15 @@ import { secureCookieBase } from '../../lib/cookieOptions.js';
 
 const ACCESS_COOKIE = 'mms_access';
 const REFRESH_COOKIE = 'mms_refresh';
+const CSRF_COOKIE = 'csrf_token';
 
 const ACCESS_TTL_SEC = 15 * 60;
 const REFRESH_TTL_SEC = 7 * 24 * 60 * 60;
+const CSRF_TTL_SEC = 7 * 24 * 60 * 60;
+
+export function generateCsrfToken(): string {
+  return randomBytes(32).toString('hex');
+}
 
 function extractBearerToken(request: FastifyRequest): string | null {
   const header = request.headers.authorization;
@@ -24,10 +30,24 @@ export function attachAccessTokenFromCookie(request: FastifyRequest): void {
   }
 }
 
+export function setCsrfCookie(reply: FastifyReply, token?: string): string {
+  const csrfToken = token || generateCsrfToken();
+  const base = secureCookieBase();
+  reply.setCookie(CSRF_COOKIE, csrfToken, {
+    path: '/',
+    httpOnly: false, // Required for double-submit client read
+    secure: base.secure,
+    sameSite: 'lax',
+    maxAge: CSRF_TTL_SEC,
+  });
+  return csrfToken;
+}
+
 export function setAuthCookies(
   reply: FastifyReply,
   accessToken: string,
   refreshToken: string,
+  csrfToken?: string,
 ): void {
   const base = secureCookieBase();
   reply.setCookie(ACCESS_COOKIE, accessToken, {
@@ -44,12 +64,14 @@ export function setAuthCookies(
     sameSite: 'lax',
     maxAge: REFRESH_TTL_SEC,
   });
+  setCsrfCookie(reply, csrfToken);
 }
 
 export function clearAuthCookies(reply: FastifyReply): void {
   const base = secureCookieBase();
   reply.clearCookie(ACCESS_COOKIE, base);
   reply.clearCookie(REFRESH_COOKIE, base);
+  reply.clearCookie(CSRF_COOKIE, { path: '/', secure: base.secure, sameSite: 'lax' });
 }
 
 export function hashOtpCode(code: string): string {
@@ -79,4 +101,5 @@ export function createRefreshTokenValue(): string {
   return randomBytes(32).toString('hex');
 }
 
-export { ACCESS_COOKIE, REFRESH_COOKIE };
+export { ACCESS_COOKIE, REFRESH_COOKIE, CSRF_COOKIE };
+

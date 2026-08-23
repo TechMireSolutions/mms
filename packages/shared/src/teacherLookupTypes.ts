@@ -20,7 +20,7 @@ export type TeacherLookupLegacyCollectionKey = keyof typeof TEACHER_LOOKUP_LEGAC
 
 export const teacherLookupKindSchema = z.enum(TEACHER_LOOKUP_KINDS);
 
-export const teacherLookupStringItemsSchema = z.array(z.string().min(1).max(200)).max(500);
+import { teacherLookupStringItemsSchema } from './schemas/teacherLookup.dto.js';
 
 export const teacherLookupsMapSchema = z.object({
   statuses: teacherLookupStringItemsSchema,
@@ -34,9 +34,7 @@ export const teacherLookupKindParamsSchema = z.object({
   kind: teacherLookupKindSchema,
 });
 
-export const teacherLookupPutBodySchema = z.object({
-  items: teacherLookupStringItemsSchema,
-});
+export * from './schemas/teacherLookup.dto.js';
 
 export function isTeacherLookupKind(value: string): value is TeacherLookupKind {
   return (TEACHER_LOOKUP_KINDS as readonly string[]).includes(value);

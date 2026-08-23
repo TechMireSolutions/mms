@@ -28,7 +28,13 @@ Query factories SSOT: before hand-rolling per-module `queryOptions` / `mutationO
 
 1. Read the rule row for the surface (table below).
 2. Large shells: hard ~300 / soft ~220 splits behind stable barrels — do not break public import paths.
-3. Work chrome: prefer shared `EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` + `BulkSelectionActions` (incl. `BulkSelectionDeleteAction`) / `QuickActionButton` / `ModuleCommandMetricsGrid` (KPI strips) / person-module chrome (`LeadingIconInput` leading-icon inputs, `DetailSectionTitle` detail headings, `FormFooterChip` form footers, `ModuleFilterDropdown` filter menus, `DrawerSyncStatusFooter` drawer synced/archived footer) / `formStyles` tokens (`WORK_SURFACE`, `FORM_CARD`, `FORM_INPUT_BUILDER`, `FORM_ERROR`, …) / `@theme` layout sizes (`h-chart-*`, `z-modal*`, `max-w-toast`) — `mms-ui-ux-design.md` · `mms-dry.md`. Column gates: `isColumnVisible` into leaves (no `show*` fans).
+3. Work chrome & BiDi UI: Enforce Tailwind v4 logical CSS properties for zero-compromise RTL/LTR rendering. **Do not use physical classes** (`pl-`, `pr-`, `left-`, `right-`).
+   * `pl-4`, `pr-2` -> `ps-4`, `pe-2`
+   * `ml-auto`, `mr-2` -> `ms-auto`, `me-2`
+   * `left-0`, `right-4` -> `inset-inline-start-0`, `inset-inline-end-4`
+   * `text-left`, `text-right` -> `text-start`, `text-end`
+   * `border-l-2`, `border-r-0` -> `border-s-2`, `border-e-0`
+   Prefer shared `EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` + `BulkSelectionActions` / `QuickActionButton` / `ModuleCommandMetricsGrid` / person-module chrome / `formStyles` tokens / `@theme` layout sizes — `mms-ui-ux-design.md` · `mms-dry.md`. Column gates: `isColumnVisible` into leaves (no `show*` fans).
 4. Quality gate: `cd apps/frontend && pnpm typecheck && pnpm lint && pnpm test` · E2E: `pnpm exec playwright test`
 
 ## API calls

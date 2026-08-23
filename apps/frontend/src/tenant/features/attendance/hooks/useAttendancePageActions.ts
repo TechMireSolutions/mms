@@ -37,16 +37,16 @@ export function useAttendancePageActions() {
   };
 
   const persistRecords = useCallback(async (recordsForClassDate: AttendanceRecord[]) => {
-    await bulkUpsert.mutateAsync(recordsForClassDate);
+    await bulkUpsert.mutateAsync({ body: { records: recordsForClassDate } } as any);
   }, [bulkUpsert]);
 
   const handleUpdateRecord = useCallback(async (record: AttendanceRecord) => {
-    await updateRecord.mutateAsync({ id: record.id, record });
+    await updateRecord.mutateAsync({ params: { id: record.id }, body: record } as any);
   }, [updateRecord]);
 
   const handleDeleteRecord = useCallback(async (id: string) => {
     try {
-      await deleteRecord.mutateAsync(id);
+      await deleteRecord.mutateAsync({ params: { id } } as any);
       notify.success(t("attendance.toast.archived"));
     } catch (error) {
       notify.error(t("attendance.toast.saveFailed"), {
@@ -57,7 +57,7 @@ export function useAttendancePageActions() {
 
   const handleRestoreRecord = useCallback(async (id: string) => {
     try {
-      await restoreRecord.mutateAsync(id);
+      await restoreRecord.mutateAsync({ params: { id }, body: {} } as any);
       notify.success(t("attendance.toast.restored"));
     } catch (error) {
       notify.error(t("attendance.toast.saveFailed"), {
@@ -68,8 +68,8 @@ export function useAttendancePageActions() {
 
   const handleBulkDeleteRecords = useCallback(async (ids: string[]) => {
     try {
-      const result = await bulkDeleteRecords.mutateAsync(ids);
-      const succeeded = result?.succeeded ?? ids.length;
+      const result = await bulkDeleteRecords.mutateAsync({ body: { ids } } as any);
+      const succeeded = (result as any)?.body?.succeeded ?? (result as any)?.succeeded ?? ids.length;
       notify.success(
         t(succeeded > 1 ? "attendance.trash.bulkDeleted" : "attendance.toast.archived", {
           count: succeeded,
@@ -84,8 +84,8 @@ export function useAttendancePageActions() {
 
   const handleBulkRestoreRecords = useCallback(async (ids: string[]) => {
     try {
-      const result = await bulkRestoreRecords.mutateAsync(ids);
-      const succeeded = result?.succeeded ?? ids.length;
+      const result = await bulkRestoreRecords.mutateAsync({ body: { ids } } as any);
+      const succeeded = (result as any)?.body?.succeeded ?? (result as any)?.succeeded ?? ids.length;
       notify.success(
         t(succeeded > 1 ? "attendance.trash.bulkRestored" : "attendance.toast.restored", {
           count: succeeded,

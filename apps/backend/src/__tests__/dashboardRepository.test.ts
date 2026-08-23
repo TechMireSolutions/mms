@@ -20,8 +20,8 @@ const mockTx = {
   delete: vi.fn(),
 };
 
-vi.mock('../db/withTenantTransaction.js', () => ({
-  withTenantTransaction: vi.fn((_subdomain: string, cb: (tx: typeof mockTx) => Promise<unknown>) =>
+vi.mock('../db/tenant-context.js', () => ({
+  withTenant: vi.fn((_subdomain: string, cb: (tx: typeof mockTx) => Promise<unknown>) =>
     cb(mockTx),
   ),
 }));

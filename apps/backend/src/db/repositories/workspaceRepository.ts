@@ -6,7 +6,7 @@ import {
   mergeGlobalSettings,
   SYSTEM_MODULES,
 } from '@mms/shared';
-import { getDb } from '../dbClient.js';
+import { activeDb } from '../dbConnection.js';
 import { workspaces as workspacesTable } from '../schema.js';
 
 function rowToWorkspace(ws: typeof workspacesTable.$inferSelect): Workspace {
@@ -67,12 +67,12 @@ function rowToGlobalSettings(ws: typeof workspacesTable.$inferSelect): GlobalSet
 }
 
 export async function listWorkspaceRows(): Promise<Workspace[]> {
-  const rows = await getDb().select().from(workspacesTable);
+  const rows = await activeDb().select().from(workspacesTable);
   return rows.map(rowToWorkspace);
 }
 
 export async function findWorkspaceRowBySubdomain(subdomain: string): Promise<Workspace | null> {
-  const rows = await getDb()
+  const rows = await activeDb()
     .select()
     .from(workspacesTable)
     .where(eq(workspacesTable.subdomain, subdomain));
@@ -83,7 +83,7 @@ export async function findWorkspaceRowBySubdomain(subdomain: string): Promise<Wo
 /** Read all branding fields for a workspace. Returns null when workspace not found. */
 export async function getWorkspaceBranding(subdomain: string): Promise<BrandingSettings | null> {
   try {
-    const rows = await getDb()
+    const rows = await activeDb()
       .select()
       .from(workspacesTable)
       .where(eq(workspacesTable.subdomain, subdomain));
@@ -97,7 +97,7 @@ export async function getWorkspaceBranding(subdomain: string): Promise<BrandingS
 /** Read all global settings for a workspace. Returns null when workspace not found. */
 export async function getWorkspaceGlobalSettings(subdomain: string): Promise<GlobalSettings | null> {
   try {
-    const rows = await getDb()
+    const rows = await activeDb()
       .select()
       .from(workspacesTable)
       .where(eq(workspacesTable.subdomain, subdomain));
@@ -116,7 +116,7 @@ export async function insertWorkspaceRow(values: {
   country?: string | null;
   enabled?: boolean;
 }): Promise<void> {
-  await getDb().insert(workspacesTable).values({
+  await activeDb().insert(workspacesTable).values({
     id: values.id,
     subdomain: values.subdomain,
     madrasaName: values.madrasaName,
@@ -127,7 +127,7 @@ export async function insertWorkspaceRow(values: {
 }
 
 export async function updateWorkspaceEnabledRow(subdomain: string, enabled: boolean): Promise<void> {
-  await getDb()
+  await activeDb()
     .update(workspacesTable)
     .set({ enabled })
     .where(eq(workspacesTable.subdomain, subdomain));
@@ -138,7 +138,7 @@ export async function updateWorkspaceBrandingRow(
   subdomain: string,
   branding: { madrasaName: string; tagline?: string | null },
 ): Promise<void> {
-  await getDb()
+  await activeDb()
     .update(workspacesTable)
     .set({
       madrasaName: branding.madrasaName.trim(),
@@ -152,7 +152,7 @@ export async function upsertWorkspaceBranding(
   subdomain: string,
   b: BrandingSettings,
 ): Promise<void> {
-  await getDb()
+  await activeDb()
     .update(workspacesTable)
     .set({
       madrasaName:        b.madrasaName.trim(),
@@ -183,7 +183,7 @@ export async function upsertWorkspaceGlobalSettings(
   subdomain: string,
   g: GlobalSettings,
 ): Promise<void> {
-  await getDb()
+  await activeDb()
     .update(workspacesTable)
     .set({
       language:           g.language           || null,
@@ -205,7 +205,7 @@ export async function upsertWorkspaceGlobalSettings(
 
 /** Returns granted module IDs for the specified workspace. */
 export async function getWorkspaceGrantedModulesRepo(subdomain: string): Promise<string[]> {
-  const rows = await getDb()
+  const rows = await activeDb()
     .select({
       grantedModules: workspacesTable.grantedModules,
     })
@@ -227,7 +227,7 @@ export async function updateWorkspaceGrantedAndEnabledModulesRepo(
   grantedModules: Record<string, boolean>,
   enabledModules: Record<string, boolean>,
 ): Promise<void> {
-  await getDb()
+  await activeDb()
     .update(workspacesTable)
     .set({
       grantedModules,
@@ -237,6 +237,6 @@ export async function updateWorkspaceGrantedAndEnabledModulesRepo(
 }
 
 export async function deleteWorkspaceRow(subdomain: string): Promise<void> {
-  await getDb().delete(workspacesTable).where(eq(workspacesTable.subdomain, subdomain));
+  await activeDb().delete(workspacesTable).where(eq(workspacesTable.subdomain, subdomain));
 }
 

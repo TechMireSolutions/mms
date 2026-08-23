@@ -64,14 +64,15 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
   const activeMonths = months.slice(-monthsCount);
 
   const enrollmentData: EnrollmentPoint[] = useMemo(() => {
-    const byKey = new Map(
-      (reportAggregates?.cumulativeTrends ?? []).map((trend) => [trend.monthKey, trend.students]),
+    const trends = (reportAggregates as any)?.body?.cumulativeTrends ?? (reportAggregates as any)?.cumulativeTrends ?? [];
+    const byKey = new Map<string, number>(
+      trends.map((trend: any) => [String(trend.monthKey), Number(trend.students) || 0]),
     );
     return buildBucketedSeries(activeMonths, byKey, (month, students) => ({
       month: month.label || formatMonthName(`${month.key}-01`),
       students: students ?? 0,
     }));
-  }, [activeMonths, reportAggregates?.cumulativeTrends]);
+  }, [activeMonths, reportAggregates]);
 
   const start = enrollmentData[0]?.students || 0;
   const end = enrollmentData[enrollmentData.length - 1]?.students || 0;

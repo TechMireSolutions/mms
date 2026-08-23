@@ -1,9 +1,9 @@
-import { useState, useMemo, type JSX } from "react";
+import { useState, type JSX } from "react";
 import { BookOpen, Loader2, Check } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useSessions } from "@/tenant/hooks/collections/sessions";
+import { useSessions, useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import type { StudentsBulkEnrollBody } from "@mms/shared";
 
 export interface StudentsBulkEnrollModalProps {
@@ -23,7 +23,7 @@ export function StudentsBulkEnrollModal({
 }: StudentsBulkEnrollModalProps): JSX.Element | null {
   const { t } = useTranslation();
   const sessionsQuery = useSessions();
-  const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data]);
+  const sessions = useSessionsCollection();
 
   const [selectedSessionIds, setSelectedSessionIds] = useState<string[]>([]);
   const [mode, setMode] = useState<StudentsBulkEnrollBody["mode"]>("add");
@@ -153,7 +153,7 @@ export function StudentsBulkEnrollModal({
 
           {sessionsQuery.isLoading ? (
             <div className="flex items-center justify-center p-6 text-muted-foreground">
-              <Loader2 className="w-5 h-5 animate-spin mr-2" />
+              <Loader2 className="w-5 h-5 animate-spin me-2" />
               <span className="text-sm">{t("common.loading")}</span>
             </div>
           ) : sessions.length === 0 ? (
@@ -161,7 +161,7 @@ export function StudentsBulkEnrollModal({
               {t("students.detail.noClassesConfigured")}
             </p>
           ) : (
-            <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1 border border-border/40 rounded-xl p-2 bg-muted/20">
+            <div className="max-h-56 overflow-y-auto space-y-1.5 pe-1 border border-border/40 rounded-xl p-2 bg-muted/20">
               {sessions.map((session) => {
                 const isChecked = selectedSessionIds.includes(String(session.id));
                 return (
@@ -186,7 +186,7 @@ export function StudentsBulkEnrollModal({
                       )}
                     </div>
                     <div
-                      className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ml-2 ${
+                      className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 ms-2 ${
                         isChecked
                           ? "border-primary bg-primary text-primary-foreground"
                           : "border-muted-foreground/30 bg-background"

@@ -20,9 +20,46 @@ const activeConnections = new Set<ActiveConnection>();
 
 // Redis Pub/Sub adapter for horizontal multi-node cluster scaling
 let redisPublisher: { publish: (channel: string, message: string) => Promise<unknown> } | null = null;
+let redisSubscriber: {
+  subscribe: (...channels: string[]) => Promise<unknown>;
+  on: (event: string, listener: (...args: any[]) => void) => void;
+} | null = null;
 
-export function configureRedisPubSub(publisher: { publish: (channel: string, message: string) => Promise<unknown> }): void {
+export function configureRedisPubSub(
+  publisher: { publish: (channel: string, message: string) => Promise<unknown> },
+  subscriber?: {
+    subscribe: (...channels: string[]) => Promise<unknown>;
+    on: (event: string, listener: (...args: any[]) => void) => void;
+  }
+): void {
   redisPublisher = publisher;
+  if (subscriber) {
+    redisSubscriber = subscriber;
+    redisSubscriber.subscribe('mms:ws-invalidation').catch((err) => {
+      console.warn('[WS PubSub] Failed to subscribe to mms:ws-invalidation:', err);
+    });
+    redisSubscriber.subscribe('mms:job-event').catch((err) => {
+      console.warn('[WS PubSub] Failed to subscribe to mms:job-event:', err);
+    });
+
+    redisSubscriber.on('message', (channel: string, message: string) => {
+      try {
+        if (channel === 'mms:ws-invalidation') {
+          const { subdomain, type, key } = JSON.parse(message);
+          if (subdomain && type && key) {
+            broadcastLocalTenantUpdate(subdomain, type, key);
+          }
+        } else if (channel === 'mms:job-event') {
+          const jobEvent = JSON.parse(message);
+          if (jobEvent && jobEvent.tenantId) {
+            broadcastLocalJobEvent(jobEvent);
+          }
+        }
+      } catch (err) {
+        console.error('[WS PubSub] Failed to process Redis message:', err);
+      }
+    });
+  }
 }
 
 /**
@@ -114,6 +151,42 @@ export function broadcastTenantUpdate(
     redisPublisher.publish('mms:ws-invalidation', payload).catch((err) => {
       console.error('[WS] Failed to publish WS invalidation to Redis:', err);
     });
+  }
+}
+
+/**
+ * Broadcasts a background job status/progress event locally to connected sockets.
+ */
+export function broadcastLocalJobEvent(jobEvent: {
+  event: string;
+  tenantId: string;
+  userId?: string;
+  jobId: string;
+  moduleId?: string;
+  kind?: string;
+  progress?: { current: number; total: number; percent: number };
+  label?: string;
+  hasDownload?: boolean;
+  error?: string;
+}): void {
+  const message = JSON.stringify(jobEvent);
+
+  let sentCount = 0;
+  for (const connection of activeConnections) {
+    if (connection.subdomain === jobEvent.tenantId) {
+      if (!jobEvent.userId || connection.userId === jobEvent.userId) {
+        try {
+          connection.socket.send(message);
+          sentCount++;
+        } catch (err) {
+          console.error(`[WS] Failed to send job event to user "${connection.userId}":`, err);
+        }
+      }
+    }
+  }
+
+  if (sentCount > 0) {
+    console.log(`[WS] Broadcasted job event (${jobEvent.event} for job ${jobEvent.jobId}) to ${sentCount} clients.`);
   }
 }
 

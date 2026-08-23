@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 
 import { workspaces, platformUsers, platformUserPermissions, platformActivityLogs } from "./platform.js";
 import { backgroundJobs, savedReports, auditLogEntries, userActivityLogs } from "./system.js";
-import { contacts, contactPhones, contactEmails, contactAddresses, contactSocials, contactEducations, contactExperiences, contactSkills, contactRelationships, contactActivities, contactAttachments, tenantUsers } from "./contacts.js";
+import { contacts, contactTags, contactPhones, contactEmails, contactAddresses, contactSocials, contactEducations, contactExperiences, contactSkills, contactRelationships, contactActivities, contactAttachments, tenantUsers } from "./contacts.js";
 import { students, studentEnrolledSessions } from "./students.js";
 import { teachers } from "./teachers.js";
 import { sessions, sessionClasses, sessionTimetable, sessionDiscounts, sessionBudgetExpenses, sessionBudgetIncomes, sessionEvents, sessionTabarruk } from "./sessions.js";
@@ -483,6 +483,7 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
   phones: many(contactPhones),
   emails: many(contactEmails),
   addresses: many(contactAddresses),
+  tags: many(contactTags),
   socials: many(contactSocials),
   educations: many(contactEducations),
   experiences: many(contactExperiences),
@@ -513,6 +514,13 @@ export const contactEmailsRelations = relations(contactEmails, ({ one }) => ({
 export const contactAddressesRelations = relations(contactAddresses, ({ one }) => ({
   contact: one(contacts, {
     fields: [contactAddresses.workspaceSubdomain, contactAddresses.contactId],
+    references: [contacts.workspaceSubdomain, contacts.id],
+  }),
+}));
+
+export const contactTagsRelations = relations(contactTags, ({ one }) => ({
+  contact: one(contacts, {
+    fields: [contactTags.workspaceSubdomain, contactTags.contactId],
     references: [contacts.workspaceSubdomain, contacts.id],
   }),
 }));

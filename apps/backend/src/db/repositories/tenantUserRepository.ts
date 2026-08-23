@@ -1,8 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { type StoredTenantUser, resolveTenantLoginEmail, applyTitleCaseRecursive } from '@mms/shared';
-import { getDb } from '../dbClient.js';
-import { activeDb } from '../dbConnection.js';
+import { withTenant } from '../tenant-context.js';
 import { tenantUsers } from '../schema.js';
 
 export type TenantUserRow = StoredTenantUser & Record<string, unknown>;
@@ -104,20 +103,24 @@ export function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUse
 export async function listTenantUsersByIds(ids: string[]): Promise<TenantUserRow[]> {
   const uniqueIds = [...new Set(ids.map(String).filter(Boolean))];
   if (uniqueIds.length === 0) return [];
-  const rows = await getDb()
-    .select()
-    .from(tenantUsers)
-    .where(inArray(tenantUsers.id, uniqueIds));
-  return rows.map(rowToTenantUser);
+  return withTenant(null, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(tenantUsers)
+      .where(inArray(tenantUsers.id, uniqueIds));
+    return rows.map(rowToTenantUser);
+  });
 }
 
 export async function countTenantUsersByWorkspace(workspaceSubdomain: string): Promise<number> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const rows = await getDb()
-    .select({ count: sql<string>`count(*)` })
-    .from(tenantUsers)
-    .where(and(eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)));
-  return parseInt(rows[0]?.count ?? '0', 10);
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({ count: sql<string>`count(*)` })
+      .from(tenantUsers)
+      .where(and(eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)));
+    return parseInt(rows[0]?.count ?? '0', 10);
+  });
 }
 
 export async function listTenantUsersByWorkspace(
@@ -126,15 +129,17 @@ export async function listTenantUsersByWorkspace(
 ): Promise<TenantUserRow[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const includeDeleted = options?.includeDeleted === true;
-  const rows = await getDb()
-    .select()
-    .from(tenantUsers)
-    .where(
-      includeDeleted
-        ? and(eq(tenantUsers.workspaceSubdomain, subdomain), sql`${tenantUsers.deletedAt} is not null`)
-        : and(eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)),
-    );
-  return rows.map(rowToTenantUser);
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(tenantUsers)
+      .where(
+        includeDeleted
+          ? and(eq(tenantUsers.workspaceSubdomain, subdomain), sql`${tenantUsers.deletedAt} is not null`)
+          : and(eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)),
+      );
+    return rows.map(rowToTenantUser);
+  });
 }
 
 /** Every workspace row, active and soft-deleted — backup snapshots and restore merges. */
@@ -142,17 +147,21 @@ export async function listAllTenantUsersByWorkspace(
   workspaceSubdomain: string,
 ): Promise<TenantUserRow[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const rows = await activeDb()
-    .select()
-    .from(tenantUsers)
-    .where(eq(tenantUsers.workspaceSubdomain, subdomain));
-  return rows.map(rowToTenantUser);
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select()
+      .from(tenantUsers)
+      .where(eq(tenantUsers.workspaceSubdomain, subdomain));
+    return rows.map(rowToTenantUser);
+  });
 }
 
 export async function findTenantUserRowById(id: string): Promise<TenantUserRow | null> {
-  const rows = await getDb().select().from(tenantUsers).where(eq(tenantUsers.id, id));
-  const row = rows[0];
-  return row ? rowToTenantUser(row) : null;
+  return withTenant(null, async (tx) => {
+    const rows = await tx.select().from(tenantUsers).where(eq(tenantUsers.id, id));
+    const row = rows[0];
+    return row ? rowToTenantUser(row) : null;
+  });
 }
 
 export async function replaceTenantUsersForWorkspace(
@@ -160,8 +169,6 @@ export async function replaceTenantUsersForWorkspace(
   users: TenantUserRow[],
 ): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const db = activeDb();
-
   // Backup payloads never carry password hashes, so keep the current credential
   // for any account the payload still contains — a restore must not lock admins out.
   const existingRows = await listAllTenantUsersByWorkspace(subdomain);
@@ -211,11 +218,13 @@ export async function replaceTenantUsersForWorkspace(
     throw err;
   }
 
-  await db.delete(tenantUsers).where(eq(tenantUsers.workspaceSubdomain, subdomain));
+  await withTenant(subdomain, async (tx) => {
+    await tx.delete(tenantUsers).where(eq(tenantUsers.workspaceSubdomain, subdomain));
 
-  if (values.length === 0) return;
+    if (values.length === 0) return;
 
-  await db.insert(tenantUsers).values(values);
+    await tx.insert(tenantUsers).values(values);
+  });
 }
 
 function omitUndefinedColumns<T extends Record<string, unknown>>(columns: T): Partial<T> {
@@ -238,7 +247,6 @@ function tenantUserIdWhere(id: string, workspaceSubdomain: string) {
 export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
   const processedUser = applyTitleCaseRecursive(user) as TenantUserRow;
   const { columns } = splitProfileFields(processedUser);
-  const db = getDb();
   const existing = await findTenantUserRowById(columns.id);
 
   if (existing) {
@@ -254,11 +262,15 @@ export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
       passwordHash: nonEmptyString(columns.passwordHash) || existing.passwordHash || '',
       updatedAt: new Date(),
     };
-    await db.update(tenantUsers).set(merged).where(tenantUserIdWhere(columns.id, existingWorkspace));
+    await withTenant(existingWorkspace, async (tx) => {
+      await tx.update(tenantUsers).set(merged).where(tenantUserIdWhere(columns.id, existingWorkspace));
+    });
     return;
   }
 
-  await db.insert(tenantUsers).values(omitUndefinedColumns(columns) as typeof columns);
+  await withTenant(columns.workspaceSubdomain, async (tx) => {
+    await tx.insert(tenantUsers).values(omitUndefinedColumns(columns) as typeof columns);
+  });
 }
 
 export async function softDeleteTenantUserRow(
@@ -269,14 +281,16 @@ export async function softDeleteTenantUserRow(
   if (!existing || existing.deletedAt) return false;
   const workspaceSubdomain =
     typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
-  await getDb()
-    .update(tenantUsers)
-    .set({
-      deletedAt: new Date(),
-      deletedBy,
-      updatedAt: new Date(),
-    })
-    .where(tenantUserIdWhere(id, workspaceSubdomain));
+  await withTenant(workspaceSubdomain, async (tx) => {
+    await tx
+      .update(tenantUsers)
+      .set({
+        deletedAt: new Date(),
+        deletedBy,
+        updatedAt: new Date(),
+      })
+      .where(tenantUserIdWhere(id, workspaceSubdomain));
+  });
   return true;
 }
 
@@ -285,13 +299,15 @@ export async function restoreTenantUserRow(id: string): Promise<boolean> {
   if (!existing || !existing.deletedAt) return false;
   const workspaceSubdomain =
     typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
-  await getDb()
-    .update(tenantUsers)
-    .set({
-      deletedAt: null,
-      deletedBy: null,
-      updatedAt: new Date(),
-    })
-    .where(tenantUserIdWhere(id, workspaceSubdomain));
+  await withTenant(workspaceSubdomain, async (tx) => {
+    await tx
+      .update(tenantUsers)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        updatedAt: new Date(),
+      })
+      .where(tenantUserIdWhere(id, workspaceSubdomain));
+  });
   return true;
 }

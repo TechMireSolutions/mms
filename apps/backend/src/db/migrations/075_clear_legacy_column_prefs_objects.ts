@@ -11,7 +11,7 @@ import { eq } from 'drizzle-orm';
 import { parseTenantScopedStorageKey } from '@mms/shared';
 import * as schema from '../schema.js';
 import { deleteObjectByStorageKey, listObjectStorageKeys } from '../database.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 type Target = {
   logicalKey: string;
@@ -56,7 +56,7 @@ export async function runMigration075(): Promise<void> {
   const toDelete: string[] = [];
   let skipped = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     // tenant|targetIndex -> has typed rows
     const hasRowsCache = new Map<string, boolean>();
 

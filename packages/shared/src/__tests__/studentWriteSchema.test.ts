@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildStudentWriteSchema,
   studentWriteSchema,
-} from '../studentWriteSchema.js';
+} from '../schemas/students.dto.js';
 import { collectStudentWriteExtraFieldKeys } from '../studentValidation.js';
 import type { StudentsSettings } from '../studentsModuleSettings.js';
 

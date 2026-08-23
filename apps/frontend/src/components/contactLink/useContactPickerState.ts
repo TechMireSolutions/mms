@@ -16,7 +16,8 @@ import { uploadUserImage } from "@/lib/imageUpload";
 import type { ContactCreateDefaults } from "./ContactCreateModal";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactById, useContactsPaginated } from "@/tenant/hooks/collections/contacts";
+import { useContactById } from "@/tenant/hooks/collections/contacts";
+import { useContactsContractList } from "@/tenant/features/contacts/hooks/useContactsTsrHooks";
 import { notify } from "@/lib/notify";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { useAnchorMenuStyle } from "./useAnchorMenuStyle";
@@ -70,23 +71,22 @@ export function useContactPickerState({
   );
 
   const debouncedQuery = useDebounce(query, 250);
-  const { data: searchPage, isFetching: isSearching } = useContactsPaginated({
+  const { data: searchPage, isFetching: isSearching } = useContactsContractList({
     page: 1,
     limit: PICKER_PAGE_SIZE,
     search: debouncedQuery,
     gender: filterGender,
     hasPhone,
     excludeIds: normalizedExcludeIds,
-    enabled: serverMode && open,
-  });
+  }, serverMode && open);
   const { data: selectedFromServer } = useContactById(
     value != null ? String(value) : undefined,
     serverMode && value != null,
   );
 
   const directory = useMemo(
-    () => (serverMode ? (searchPage?.contacts ?? []) : contacts),
-    [serverMode, searchPage?.contacts, contacts],
+    () => (serverMode ? ((searchPage?.body?.contacts ?? []) as Contact[]) : contacts),
+    [serverMode, searchPage?.body?.contacts, contacts],
   );
 
   const closeDropdown = useCallback(() => {

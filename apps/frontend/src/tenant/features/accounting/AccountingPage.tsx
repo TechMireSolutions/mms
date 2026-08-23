@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -17,7 +17,12 @@ import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/h
 import { useAccountingAccountColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingAccountColumnLayout";
 import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
-import { ACCOUNTING_MODULE_MANIFEST } from "@mms/shared";
+import {
+  ACCOUNTING_MODULE_MANIFEST,
+  type Account,
+  type JournalEntry,
+  type FiscalYear,
+} from "@mms/shared";
 import {
   useAccountingAccountsPaginated,
   useAccountingEntriesPaginated,
@@ -59,9 +64,9 @@ export default function Accounting() {
   const accountsResult = useAccountingAccountsPaginated({ includeDeleted: false, page: 1, limit: 100 });
   const entriesResult = useAccountingEntriesPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
   const fiscalYearsResult = useAccountingFiscalYearsPaginated({ page: 1, limit: 100 });
-  const accounts = accountsResult.data?.accounts ?? [];
-  const journalEntries = entriesResult.data?.entries ?? [];
-  const fiscalYears = fiscalYearsResult.data?.fiscalYears ?? [];
+  const accounts: Account[] = (accountsResult.data as any)?.body?.accounts ?? (accountsResult.data as any)?.accounts ?? [];
+  const journalEntries: JournalEntry[] = (entriesResult.data as any)?.body?.entries ?? (entriesResult.data as any)?.entries ?? [];
+  const fiscalYears: FiscalYear[] = (fiscalYearsResult.data as any)?.body?.fiscalYears ?? (fiscalYearsResult.data as any)?.fiscalYears ?? [];
   const { settings } = useAccountingConfig();
   const { activeCurrency } = useAccountingCurrency();
   const [filteredCount, setFilteredCount] = useState(0);
@@ -89,9 +94,16 @@ export default function Accounting() {
     setCreateJournalRequestKey((key) => key + 1);
   };
 
-  useModuleCreateHotkey({
-    enabled: canWrite && !showDeleted,
+  useModuleShortcuts({
+    searchInputId: "accounting-search-input",
+    selectedCount: 0,
+    hasActiveFilters: false,
+    clearFilters: () => {},
+    clearSelection: () => {},
+    canWrite,
+    showDeleted,
     onCreate: openJournalCreate,
+    enabled: activeTab === "work",
   });
 
   const activeFiscalYear = fiscalYears.find((fiscalYear) => fiscalYear.status === "active");

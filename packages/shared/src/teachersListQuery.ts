@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { AppTranslationKey } from './appTranslations.js';
-import { baseListQuerySchema } from './apiSchemas.js';
+import { baseListQueryFields, baseListQuerySchema } from './apiSchemas.js';
 import { TEACHER_STATUS_WRITE_MAX } from './teachersModuleManifest.js';
 import {
   TEACHER_SORT_FIELDS,
@@ -62,7 +62,8 @@ export function teachersQuickFilterStatusValue(preset: TeachersQuickFilter): str
 }
 
 /** Validates Teachers Work list query received over HTTP (SQL page is authoritative). */
-export const teachersListQuerySchema = baseListQuerySchema.extend({
+export const teachersListQuerySchema = z.object({
+  ...baseListQueryFields,
   status: z.string().max(TEACHER_STATUS_WRITE_MAX).optional(),
   specialization: z.string().optional(),
   gender: z.string().optional(),

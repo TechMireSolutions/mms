@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 let lockCount = 0;
 let previousOverflow = "";
-let previousPaddingRight = "";
+let previousPaddingInlineEnd = "";
 
 /**
  * Locks background (document body) scrolling while an overlay is mounted, so
@@ -22,11 +22,11 @@ export function useBodyScrollLock(active: boolean = true): void {
     if (lockCount === 0) {
       const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       previousOverflow = body.style.overflow;
-      previousPaddingRight = body.style.paddingRight;
+      previousPaddingInlineEnd = body.style.paddingInlineEnd;
       body.style.overflow = "hidden";
       if (scrollbarWidth > 0) {
-        const current = parseFloat(getComputedStyle(body).paddingRight) || 0;
-        body.style.paddingRight = `${current + scrollbarWidth}px`;
+        const current = parseFloat(getComputedStyle(body).paddingInlineEnd) || 0;
+        body.style.paddingInlineEnd = `${current + scrollbarWidth}px`;
       }
     }
 
@@ -36,7 +36,7 @@ export function useBodyScrollLock(active: boolean = true): void {
       lockCount -= 1;
       if (lockCount === 0) {
         body.style.overflow = previousOverflow;
-        body.style.paddingRight = previousPaddingRight;
+        body.style.paddingInlineEnd = previousPaddingInlineEnd;
       }
     };
   }, [active]);

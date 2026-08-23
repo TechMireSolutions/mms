@@ -6,7 +6,7 @@ import {
   type SessionsListQuery,
 } from '@mms/shared';
 import { sessions } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { findSessionsByIds } from './sessionRepository.js';
 
@@ -111,7 +111,7 @@ export async function listSessionsPage(
 ): Promise<SessionsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, sessions, {
       conditions: buildListConditions(subdomain, query),
       orderBy: buildOrderBy(query.sortField, query.sortDir),
@@ -152,7 +152,7 @@ export async function listSessionsPage(
 
 export async function countSessionsActive(tenant: string): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(sessions)
@@ -166,7 +166,7 @@ export async function aggregateSessionsCommandMetrics(
   tenant: string,
 ): Promise<SessionsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await tx.execute(sql`
       SELECT
         COUNT(*)::int AS total,
@@ -235,7 +235,7 @@ export async function bulkUpdateSessionsStatusSql(
   if (!subdomain || uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
   const normalizedStatus = status.trim().toLowerCase() || 'active';
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const updated = await tx
       .update(sessions)
       .set({

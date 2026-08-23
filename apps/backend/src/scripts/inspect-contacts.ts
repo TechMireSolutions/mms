@@ -28,8 +28,6 @@ async function main() {
     console.log(`[#${idx + 1}] ID: ${r.id}`);
     console.log(`  Name: ${r.name} (First: "${r.firstName}", Last: "${r.lastName || ''}")`);
     console.log(`  Gender: ${r.gender || 'N/A'} | DOB: ${r.dob || 'N/A'} | Syed Lineage: ${r.isSyed ? 'Yes' : 'No'}`);
-    console.log(`  Phone: ${r.phone || 'N/A'} | Email: ${r.email || 'N/A'}`);
-    console.log(`  Location: City="${r.city || ''}", State="${r.state || ''}", Country="${r.country || ''}"`);
     console.log(`  Notes: ${r.notes || 'None'}`);
     console.log(`  Soft Deleted: ${r.deletedAt ? `Yes (${r.deletedAt})` : 'No'}`);
     console.log('----------------------------------------------------');

@@ -53,6 +53,24 @@ services:
       redis:
         condition: service_healthy
 
+  worker:
+    build:
+      context: .
+      dockerfile: apps/backend/Dockerfile
+    container_name: mms-worker
+    command: ["node", "dist/worker/index.js"]
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/mms
+      REDIS_URL: redis://redis:6379
+      JWT_SECRET: production_jwt_secret_mms_enterprise_key_change_me
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
 volumes:
   mms-pgdata:
   mms-redisdata:

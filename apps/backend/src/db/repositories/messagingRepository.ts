@@ -2,7 +2,7 @@ import { and, eq, gte, ilike, isNull, lte, or, sql, desc } from 'drizzle-orm';
 import { messageTemplates, messageLogs } from '../schema.js';
 import type { MessageTemplate, Message } from '@mms/shared';
 import { MESSAGE_LOGS_DEFAULT_PAGE_SIZE } from '@mms/shared';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 /** Matches messagingLogsQuerySchema pageSize max — defensive for direct callers. */
 const MESSAGE_LOGS_MAX_PAGE_SIZE = 500;
@@ -26,7 +26,7 @@ export function templateRowToRecord(row: TemplateRow): MessageTemplate {
 
 export async function listMessageTemplatesByWorkspace(tenant: string): Promise<MessageTemplate[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(messageTemplates)
@@ -37,7 +37,7 @@ export async function listMessageTemplatesByWorkspace(tenant: string): Promise<M
 
 export async function findMessageTemplateById(tenant: string, id: string): Promise<MessageTemplate | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(messageTemplates)
@@ -50,7 +50,7 @@ export async function findMessageTemplateById(tenant: string, id: string): Promi
 export async function bulkSaveMessageTemplates(tenant: string, records: MessageTemplate[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(messageTemplates)
@@ -85,7 +85,7 @@ export async function replaceMessageTemplatesForWorkspace(
   records: MessageTemplate[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(messageTemplates).where(eq(messageTemplates.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(messageTemplates).values({
@@ -105,7 +105,7 @@ export async function replaceMessageTemplatesForWorkspace(
 
 export async function deleteMessageTemplateById(tenant: string, id: string): Promise<boolean> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     await tx
       .delete(messageTemplates)
       .where(and(eq(messageTemplates.workspaceSubdomain, subdomain), eq(messageTemplates.id, id)));
@@ -139,7 +139,7 @@ export function logRowToRecord(row: LogRow): Message {
 
 export async function listMessageLogsByWorkspace(tenant: string): Promise<Message[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(messageLogs)
@@ -150,7 +150,7 @@ export async function listMessageLogsByWorkspace(tenant: string): Promise<Messag
 
 export async function replaceMessageLogsForWorkspace(tenant: string, records: Message[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(messageLogs).where(eq(messageLogs.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(messageLogs).values({
@@ -178,7 +178,7 @@ export async function replaceMessageLogsForWorkspace(tenant: string, records: Me
 export async function bulkSaveMessageLogs(tenant: string, records: Message[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(messageLogs)
@@ -224,7 +224,7 @@ export async function bulkSaveMessageLogs(tenant: string, records: Message[]): P
 
 export async function deleteMessageLogsByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(messageLogs).where(eq(messageLogs.workspaceSubdomain, subdomain));
     await tx.delete(messageTemplates).where(eq(messageTemplates.workspaceSubdomain, subdomain));
   });
@@ -256,7 +256,7 @@ export async function insertMessageLogs(workspaceSubdomain: string, logs: Messag
     };
   });
 
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(messageLogs)
       .values(values)
@@ -298,7 +298,7 @@ export async function queryFilteredMessageLogs(
   const pageSize = Math.min(rawPageSize, MESSAGE_LOGS_MAX_PAGE_SIZE);
   const offset = (page - 1) * pageSize;
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const conditions = [eq(messageLogs.workspaceSubdomain, subdomain)];
 
     if (!includeDeleted) {
@@ -389,7 +389,7 @@ export async function queryMessagingMetrics(
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const startDate = filters.startDate?.trim() || null;
   const endDate = filters.endDate?.trim() || null;
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await tx.execute(sql`
       SELECT
         COUNT(*)::int AS total,
@@ -453,7 +453,7 @@ export async function queryMessagingMetrics(
 /** Soft-archives active message logs for a workspace in one tenant-scoped update. */
 export async function softDeleteActiveMessageLogs(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .update(messageLogs)
       .set({

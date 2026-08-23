@@ -6,7 +6,7 @@ import {
 import { eq, sql } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 /**
  * Renames contact JSONB `emergencyContacts` → `relationshipContacts` and remaps
@@ -16,7 +16,7 @@ export async function runMigration037(): Promise<void> {
   const db = getDb();
   let configCount = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     const colCheck = (await tx.execute(sql`
       SELECT 1 FROM information_schema.columns
       WHERE table_schema = 'public' AND table_name = 'contacts' AND column_name = 'custom_data'

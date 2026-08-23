@@ -8,7 +8,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useTeachersByIds, useTeachersPaginated } from "@/tenant/hooks/collections/teachers";
+import { useTeachersByIds, useTeachersContractList } from "@/tenant/hooks/collections/teachers";
 import type { Class } from "@/lib/data/sessionsData";
 import {
   assignClassTeacher,
@@ -30,15 +30,14 @@ export function ClassModal({ open, sessionClass, onClose, onSave, saving }: Clas
   const [classDraft, setClassDraft] = useState<Partial<Class>>(sessionClass ? { ...sessionClass } : { ...EMPTY_CLASS });
   const updateClassDraft = <K extends keyof Class>(field: K, value: Class[K]) => setClassDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
-  const { data: activeTeachersPage } = useTeachersPaginated({
+  const { data: activeTeachersPage } = useTeachersContractList({
     page: 1,
     limit: TEACHERS_MODULE_MANIFEST.maxPageSize,
     status: "active",
-    enabled: open,
-  });
+  }, open);
 
   const currentTeacherId = classDraft.teacherId || sessionClass?.teacherId;
-  const activeTeachers = useMemo(() => (activeTeachersPage?.teachers ?? []) as Teacher[], [activeTeachersPage?.teachers]);
+  const activeTeachers = useMemo(() => (activeTeachersPage?.body?.teachers ?? []) as Teacher[], [activeTeachersPage?.body?.teachers]);
   const needsCurrentResolve = Boolean(
     currentTeacherId
     && !activeTeachers.some((teacher) => String(teacher.id) === String(currentTeacherId)),

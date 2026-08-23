@@ -1,14 +1,11 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import type {
   SessionsCommandMetricsSnapshot,
-  SessionsListPageResult,
-  SessionsReportAggregates,
-  SessionsWidgetAggregateResult,
 } from '@mms/shared';
 import { SESSIONS_MODULE_MANIFEST, sessionsWidgetQueryFromWidget } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { tsrClient, apiContract } from '@/lib/api';
 import type { Session } from '@/lib/data/sessionsData';
 import { invalidateSessionsQueries } from '@/tenant/features/sessions/hooks/invalidateSessionsQueries';
 
@@ -64,31 +61,34 @@ function buildSessionsPageUrl(params: SessionsPaginatedParams): string {
 export function useSessionsPaginated(params: SessionsPaginatedParams) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
-  return useQuery({
-    queryKey: [...SESSIONS_QUERY_KEY, 'page', params] as const,
-    queryFn: async ({ signal }) => apiJson<SessionsListPageResult>(buildSessionsPageUrl(params), { signal }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.sessions.list.useQuery({
+    queryKey: [...SESSIONS_QUERY_KEY, 'page', params] as any,
+    queryData: { query: { 
+      page: params.page, 
+      limit: params.limit ?? SESSIONS_MODULE_MANIFEST.defaultPageSize,
+      search: params.search?.trim(),
+      status: params.status?.trim(),
+      type: params.type?.trim(),
+      sortField: params.sortField?.trim(),
+      sortDir: params.sortDir,
+      includeDeleted: params.includeDeleted ? 'true' : undefined
+    } as any },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
-    placeholderData: (previousData) => previousData,
+    placeholderData: (previousData: unknown) => previousData,
   });
 }
 
 export function useSessions(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<Session[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.sessions.list.useQuery({
     queryKey: SESSIONS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ sessions: Session[] }>(
-        `${SESSIONS_API}?page=1&limit=${SESSIONS_MODULE_MANIFEST.maxPageSize}`,
-        { signal },
-      );
-      return res?.sessions ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
+    queryData: { query: { page: 1, limit: SESSIONS_MODULE_MANIFEST.maxPageSize } as any },
     staleTime: 15_000,
   });
 }
-
 export function useSessionMutations() {
   const queryClient = useQueryClient();
 
@@ -96,93 +96,93 @@ export function useSessionMutations() {
     invalidateSessionsQueries(queryClient);
   };
 
-  const createSession = useMutation({
-    mutationFn: async (session: Session) =>
-      apiJson<{ session: Session }>(SESSIONS_API, {
-        method: 'POST',
-        body: JSON.stringify(session),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const createSession = tsrClient.sessions.create.useMutation({
     onSuccess: invalidate,
   });
 
-  const updateSession = useMutation({
-    mutationFn: async ({ id, session }: { id: string; session: Session }) =>
-      apiJson<{ session: Session }>(`${SESSIONS_API}/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(session),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const updateSession = tsrClient.sessions.update.useMutation({
     onSuccess: invalidate,
   });
 
-  const deleteSession = useMutation({
-    mutationFn: async ({ id, deletionReason }: { id: string; deletionReason?: string }) =>
-      apiJson<{ success: boolean }>(`${SESSIONS_API}/${id}`, {
-        method: 'DELETE',
-        body: JSON.stringify(deletionReason ? { deletionReason } : {}),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const deleteSession = tsrClient.sessions.delete.useMutation({
     onSuccess: invalidate,
   });
 
-  const restoreSession = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${SESSIONS_API}/${encodeURIComponent(id)}/restore`, {
-        method: 'POST',
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const restoreSession = tsrClient.sessions.restore.useMutation({
     onSuccess: invalidate,
   });
 
-  const bulkDeleteSessions = useMutation({
-    mutationFn: async ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${SESSIONS_API}/bulk-delete`, {
-        method: 'POST',
-        body: JSON.stringify({
-          ids,
-          ...(deletionReason ? { deletionReason } : {}),
-        }),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkDeleteSessions = tsrClient.sessions.bulkDelete.useMutation({
     onSuccess: invalidate,
   });
 
-  const bulkRestoreSessions = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${SESSIONS_API}/bulk-restore`, {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkRestoreSessions = tsrClient.sessions.bulkRestore.useMutation({
     onSuccess: invalidate,
   });
 
-  const bulkUpdateSessionStatus = useMutation({
-    mutationFn: async ({ ids, status }: { ids: string[]; status: string }) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${SESSIONS_API}/bulk-status`, {
-        method: 'POST',
-        body: JSON.stringify({ ids, status }),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkUpdateSessionStatus = tsrClient.sessions.bulkStatus.useMutation({
     onSuccess: invalidate,
   });
 
-  const logExportAudit = useMutation({
-    mutationFn: async (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) =>
-      apiJson<{ success: boolean }>(`${SESSIONS_API}/export-audit`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-  });
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const logExportAudit = tsrClient.sessions.exportAudit.useMutation({});
 
   return {
-    createSession,
-    updateSession,
-    deleteSession,
-    restoreSession,
-    bulkDeleteSessions,
-    bulkRestoreSessions,
-    bulkUpdateSessionStatus,
-    logExportAudit,
+    createSession: {
+      ...createSession,
+      mutate: (session: Session, opts?: any) => createSession.mutate({ body: session }, opts),
+      mutateAsync: (session: Session) => createSession.mutateAsync({ body: session }),
+    },
+    updateSession: {
+      ...updateSession,
+      mutate: ({ id, session }: { id: string; session: Session }, opts?: any) => updateSession.mutate({ params: { id }, body: session }, opts),
+      mutateAsync: ({ id, session }: { id: string; session: Session }) => updateSession.mutateAsync({ params: { id }, body: session }),
+    },
+    deleteSession: {
+      ...deleteSession,
+      mutate: ({ id, deletionReason }: { id: string; deletionReason?: string }, opts?: any) => deleteSession.mutate({ params: { id }, body: deletionReason ? { deletionReason } : {} }, opts),
+      mutateAsync: ({ id, deletionReason }: { id: string; deletionReason?: string }) => deleteSession.mutateAsync({ params: { id }, body: deletionReason ? { deletionReason } : {} }),
+    },
+    restoreSession: {
+      ...restoreSession,
+      mutate: (id: string, opts?: any) => restoreSession.mutate({ params: { id }, body: {} }, opts),
+      mutateAsync: (id: string) => restoreSession.mutateAsync({ params: { id }, body: {} }),
+    },
+    bulkDeleteSessions: {
+      ...bulkDeleteSessions,
+      mutate: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }, opts?: any) => bulkDeleteSessions.mutate({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }, opts),
+      mutateAsync: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }) => bulkDeleteSessions.mutateAsync({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }),
+    },
+    bulkRestoreSessions: {
+      ...bulkRestoreSessions,
+      mutate: (ids: string[], opts?: any) => bulkRestoreSessions.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkRestoreSessions.mutateAsync({ body: { ids } }),
+    },
+    bulkUpdateSessionStatus: {
+      ...bulkUpdateSessionStatus,
+      mutate: ({ ids, status }: { ids: string[]; status: string }, opts?: any) => bulkUpdateSessionStatus.mutate({ body: { ids, status } }, opts),
+      mutateAsync: ({ ids, status }: { ids: string[]; status: string }) => bulkUpdateSessionStatus.mutateAsync({ body: { ids, status } }),
+    },
+    logExportAudit: {
+      ...logExportAudit,
+      mutate: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }, opts?: any) => logExportAudit.mutate({ body: payload }, opts),
+      mutateAsync: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) => logExportAudit.mutateAsync({ body: payload }),
+    },
   };
 }
 
 export function useSessionsCollection(options?: { enabled?: boolean }): Session[] {
-  return useSessions(options).data ?? [];
+  const query = useSessions(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.sessions ?? []);
 }
 
 export function useSessionsWidgetAggregates(
@@ -196,22 +196,17 @@ export function useSessionsWidgetAggregates(
     .map((widget) => sessionsWidgetQueryFromWidget(widget));
   const querySignature = sessionQueries.map((query) => query.id).sort().join(',');
 
-  return useQuery({
+  const query = useQuery({
     queryKey: [...SESSIONS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async ({ signal }) => {
-      const aggregateResponse = await apiJson<{ results: Record<string, SessionsWidgetAggregateResult> }>(
-        `${SESSIONS_API}/widget-aggregates`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ widgets: sessionQueries }),
-          signal,
-        },
-      );
-      return aggregateResponse?.results ?? {};
+    queryFn: async () => {
+      const res = await apiContract.sessions.widgetAggregates({ body: { widgets: sessionQueries } });
+      return (res.body as any)?.results ?? {};
     },
     enabled: isAuthenticated && enabled && sessionQueries.length > 0,
     staleTime: 30_000,
   });
+
+  return { ...query, data: query.data ?? {} };
 }
 
 export function useSessionsMetrics(options?: { enabled?: boolean }) {
@@ -225,10 +220,9 @@ export function useSessionsMetrics(options?: { enabled?: boolean }) {
 export function useSessionsReportAggregates(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
-  return useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.sessions.reportAggregates.useQuery({
     queryKey: SESSIONS_REPORT_AGGREGATES_QUERY_KEY,
-    queryFn: async ({ signal }): Promise<SessionsReportAggregates> =>
-      apiJson<SessionsReportAggregates>(`${SESSIONS_API}/report-aggregates`, { signal }),
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });

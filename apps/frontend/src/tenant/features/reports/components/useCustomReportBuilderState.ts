@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { useContactsPaginated } from '@/tenant/hooks/collections/contacts';
-import { useStudentsPaginated } from '@/tenant/hooks/collections/students';
+import { useContactsContractList } from '@/tenant/hooks/collections/contacts';
+import { useStudentsContractList } from '@/tenant/hooks/collections/students';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
+import { useFinanceInvoicesPaginated } from '@/tenant/hooks/collections/finance';
 import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
 import { useHasanatDistributionsCollection } from '@/tenant/hooks/collections/hasanat';
 import { useExaminationsResultsCollection } from '@/tenant/hooks/collections/examinations';
@@ -41,26 +41,24 @@ export function useCustomReportBuilderState(initialSource?: string) {
   const [reportName, setReportName] = useState<string>(() => t('reports.builder.defaultName'));
   const [previewData, setPreviewData] = useState<PreviewRow[]>([]);
 
-  const { data: contactsPreviewPage } = useContactsPaginated({
+  const { data: contactsPreviewPage } = useContactsContractList({
     page: 1,
     limit: CONTACTS_MODULE_MANIFEST.defaultPageSize,
-    enabled: source === 'contacts',
-  });
-  const { data: studentsPreviewPage } = useStudentsPaginated({
+  }, source === 'contacts');
+  const { data: studentsPreviewPage } = useStudentsContractList({
     page: 1,
     limit: STUDENTS_MODULE_MANIFEST.defaultPageSize,
-    enabled: source === 'students',
-  });
+  }, source === 'students');
   const contactsColl = useMemo(
-    () => (contactsPreviewPage?.contacts ?? []) as unknown as Record<string, unknown>[],
-    [contactsPreviewPage?.contacts],
+    () => (contactsPreviewPage?.body?.contacts ?? []) as unknown as Record<string, unknown>[],
+    [contactsPreviewPage?.body?.contacts],
   );
   const studentsColl = useMemo(
-    () => (studentsPreviewPage?.students ?? []) as unknown as Record<string, unknown>[],
-    [studentsPreviewPage?.students],
+    () => (studentsPreviewPage?.body?.students ?? []) as unknown as Record<string, unknown>[],
+    [studentsPreviewPage?.body?.students],
   );
   const sessionsColl = useSessionsCollection() as unknown as Record<string, unknown>[];
-  const financialColl = useFinanceInvoicesCollection() as unknown as Record<string, unknown>[];
+  const financialColl = (useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? []) as unknown as Record<string, unknown>[];
   const attendanceColl = useAttendanceRecordsCollection() as unknown as Record<string, unknown>[];
   const hasanatColl = useHasanatDistributionsCollection() as unknown as Record<string, unknown>[];
   const academicColl = useExaminationsResultsCollection() as unknown as Record<string, unknown>[];

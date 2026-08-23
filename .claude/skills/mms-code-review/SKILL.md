@@ -141,7 +141,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Icon buttons `aria-label` from `t()`; Suspense `role="status"`; honor `prefers-reduced-motion`
 
 ### Performance / deps / React 19
-- [ ] jspdf/xlsx/html2canvas dynamically imported via Vite 8 tree-shaking; no ad-hoc poll loops
+- [ ] Export artifacts generated via backend BullMQ + Typst/ExcelJS; no client-side DOM canvas/jspdf injection
 - [ ] React 19: Prefer `useEffectEvent`, `startTransition`, `useDeferredValue` over `useMemo`/`useCallback` unless referential equality is strictly required.
 - [ ] Dependency bumps → skill **`mms-dependency-upgrade`**
 

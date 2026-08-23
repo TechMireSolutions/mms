@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildContactWriteSchema,
-  collectContactWriteExtraFieldKeys,
   contactWriteSchema,
-} from '../contactWriteSchema.js';
+  collectContactWriteExtraFieldKeys,
+} from '../schemas/contacts.dto.js';
 import type { FieldConfig } from '../contactTypes.js';
 
 describe('contactWriteSchema allowlist', () => {

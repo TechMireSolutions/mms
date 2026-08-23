@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { Card } from "@/components/ui/card";
-import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { cn } from "@/lib/utils";
-import { CARD_STRIPE_INSET, SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDate } from "@mms/shared";
@@ -106,21 +106,17 @@ export const InvoiceDetail = React.memo(function InvoiceDetail({
         </div>
 
         {/* Fee breakdown */}
-        <Card accentColor="primary" className="p-0 overflow-hidden">
-          <CardTitleBar
-            headingLevel={3}
-            inset
-            title={t("finance.detail.breakdown")}
-          />
-          <div className={cn("divide-y divide-border/50", CARD_STRIPE_INSET)}>
+        <div className="space-y-2">
+          <DetailSectionTitle>{t("finance.detail.breakdown")}</DetailSectionTitle>
+          <Card className="divide-y divide-border/50 p-0">
             {rows.map((row) => (
-              <div key={row.label} className={`flex items-center justify-between px-4 py-2.5 ${row.highlight ? "bg-primary/5" : ""}`}>
-                <span className={`text-sm ${row.highlight ? "font-bold text-foreground" : "text-muted-foreground"}`}>{row.label}</span>
-                <span className={`text-sm font-bold ${row.highlight ? "text-primary" : row.neg ? "text-destructive" : "text-foreground"}`}>{row.value}</span>
+              <div key={row.label} className={cn("flex items-center justify-between px-3 py-2", row.highlight ? "bg-primary/5" : "")}>
+                <span className={cn("text-xs font-bold uppercase leading-none tracking-tight", row.highlight ? "text-foreground" : "text-muted-foreground")}>{row.label}</span>
+                <span className={cn("text-sm font-semibold text-end", row.highlight ? "text-primary" : row.neg ? "text-destructive" : "text-foreground")}>{row.value}</span>
               </div>
             ))}
-          </div>
-        </Card>
+          </Card>
+        </div>
 
         {/* Payment info */}
         {invoice.paidDate && (

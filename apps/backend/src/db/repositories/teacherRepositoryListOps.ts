@@ -6,7 +6,7 @@ import {
   type TeachersCommandMetricsSnapshot,
 } from '@mms/shared';
 import { teachers } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { teacherStatusExpr } from './teacherRepositoryListQuery.js';
 
 /**
@@ -23,7 +23,7 @@ export async function bulkUpdateTeachersStatusSql(
   if (!subdomain || uniqueIds.length === 0) return 0;
   const normalizedStatus = status.trim().toLowerCase() || DEFAULT_TEACHER_STATUS;
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const updated = await tx
       .update(teachers)
       .set({
@@ -56,7 +56,7 @@ export async function bulkUpdateTeachersSpecializationSql(
   if (!subdomain || uniqueIds.length === 0) return 0;
   const normalizedSpecialization = specialization.trim();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const updated = await tx
       .update(teachers)
       .set({
@@ -81,7 +81,7 @@ export async function aggregateTeachersCommandMetrics(
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): Promise<TeachersCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const joinDateRaw = sql`NULLIF(trim(COALESCE(
       ${teachers.joinDate},
       to_char(${teachers.createdAt}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),

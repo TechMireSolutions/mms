@@ -2,7 +2,6 @@ import { ArrowUpRight } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
@@ -56,7 +55,7 @@ export function ContactNetworkLinkCard({
   const hasActions = showTargetMessaging || showLegacyCall || canNavigate;
 
   return (
-    <Card className={`flex flex-col gap-2.5 p-4 ${DETAIL_STYLES.networkItemCard}`}>
+    <div className={`flex flex-col gap-2.5 p-4 transition-colors hover:bg-muted/30 ${DETAIL_STYLES.networkItemCard}`}>
       <div className="flex min-w-0 items-start gap-3">
         <UserAvatar
           id={avatarId}
@@ -120,6 +119,6 @@ export function ContactNetworkLinkCard({
           ) : null}
         </div>
       ) : null}
-    </Card>
+    </div>
   );
 }

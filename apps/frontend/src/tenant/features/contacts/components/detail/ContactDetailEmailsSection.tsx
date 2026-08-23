@@ -18,12 +18,7 @@ export function ContactDetailEmailsSection({
   onEmail?: (contacts: Contact[]) => void;
 }): React.JSX.Element {
   const { t } = useTranslation();
-  const emails =
-    contact.emails && contact.emails.length > 0
-      ? contact.emails
-      : contact.email
-        ? [{ address: contact.email, label: "Personal" }]
-        : [];
+  const emails = contact.emails && contact.emails.length > 0 ? contact.emails : [];
 
   return (
     <DetailSection title={t("contacts.form.emailsLabel")}>

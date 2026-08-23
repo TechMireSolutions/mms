@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
+import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
@@ -110,13 +110,20 @@ export function useExaminationsPageController() {
     setFilteredCount(exams.length);
   }, [effectiveSubTab, exams.length]);
 
-  useModuleCreateHotkey({
-    enabled: canWrite && !showDeleted,
+  useModuleShortcuts({
+    searchInputId: 'examinations-search-input',
+    selectedCount: 0,
+    hasActiveFilters: false,
+    clearFilters: () => {},
+    clearSelection: () => {},
+    canWrite,
+    showDeleted,
     onCreate: () => {
       setActiveTab('work');
       setActiveSubTab('exams');
       setCreateExamKey((key) => key + 1);
     },
+    enabled: activeTab === 'work',
   });
 
   const listLoadFailed = examsResult.isError;

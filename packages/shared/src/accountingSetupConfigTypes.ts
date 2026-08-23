@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import type { FieldDefinition, TabDefinition } from './contactTypes.js';
 import { DEFAULT_ACCOUNTING_SETTINGS, type AccountingSettings } from './accountingModuleSettings.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 import {
   ACCOUNTING_TAB_REGISTRY,
   INITIAL_ACCOUNTING_FIELD_SEED,
@@ -81,7 +82,7 @@ export function resolveAccountingFieldsMap(
 }
 
 /** PUT /api/accounting/field-config — field registry JSON without prefs keys. */
-export const accountingFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema;
+const accountingFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema;
 
 /** PUT /api/accounting/preferences — strongly typed module preferences. */
 export const accountingPreferencesPutBodySchema = z
@@ -100,7 +101,12 @@ export const accountingPreferencesPutBodySchema = z
     organizationName: z.string().default('Al-Madrasa Al-Islamiyya'),
     defaultViewLayout: z.string().optional(),
   })
-  .passthrough();
+  .strict();
+
+export const accountingFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, accountingFieldConfigPutBodyBaseSchema);
 
 /** Typed preference state extracted from legacy AccountingSettings. */
 export interface AccountingModulePreferences {

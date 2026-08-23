@@ -1,7 +1,6 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { WorkspaceUser, ActivityLog, UsersCommandMetricsSnapshot } from '@mms/shared';
 import { USERS_MODULE_MANIFEST, normalizeWorkspaceUser, type SystemUser } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import {
@@ -9,7 +8,7 @@ import {
   USERS_LIST_QUERY_KEY,
   USERS_METRICS_QUERY_KEY,
 } from '@/tenant/features/users/hooks/usersQueryKeys';
-import { fetchAllUsersForQuery } from '@/tenant/features/users/hooks/useUsersListQueries';
+import { tsrClient } from '@/lib/api';
 
 const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
 
@@ -19,17 +18,12 @@ function useUsers(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
   const enabled = options?.enabled ?? true;
-  return useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.users.list.useQuery({
     queryKey: [...USERS_LIST_QUERY_KEY, 'all', { includeDeleted }] as const,
-    queryFn: async ({ signal }) => {
-      const users = await fetchAllUsersForQuery({ includeDeleted }, undefined);
-      void signal;
-      return users.map((user) =>
-        normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
-      );
-    },
-    enabled: isAuthenticated && enabled,
+    queryData: { query: { includeDeleted: includeDeleted ? 'true' : undefined } },
     staleTime: 30_000,
+    enabled: isAuthenticated && enabled,
   });
 }
 
@@ -38,7 +32,12 @@ export function useUsersCollection(options?: {
   includeDeleted?: boolean;
 }): WorkspaceUser[] {
   const query = useUsers(options);
-  return query.data ?? [];
+  if (!query.data || query.data.status !== 200) return [];
+  const responseData = query.data.body as any;
+  const users = Array.isArray(responseData) ? responseData : (responseData?.users ?? []);
+  return users.map((user: any) =>
+    normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
+  );
 }
 
 export function useUsersMetrics(options?: { enabled?: boolean }) {
@@ -50,15 +49,9 @@ export function useUsersMetrics(options?: { enabled?: boolean }) {
 }
 
 export function useActivityLogs(options?: { enabled?: boolean }) {
-  const { isAuthenticated } = useAuth();
-  const enabled = options?.enabled ?? true;
-  return useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.users.activity.useQuery({
     queryKey: ACTIVITY_LOGS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const response = await apiJson<{ logs: ActivityLog[] }>(`${USERS_API}/activity`, { signal });
-      return response.logs ?? [];
-    },
-    enabled: isAuthenticated && enabled,
     staleTime: 15_000,
   });
 }
@@ -72,78 +65,78 @@ export function useUsersMutations() {
     void queryClient.invalidateQueries({ queryKey: ACTIVITY_LOGS_QUERY_KEY });
   };
 
-  const replaceUsers = useMutation({
-    mutationFn: async (users: WorkspaceUser[]) =>
-      apiJson<{ users: WorkspaceUser[] }>(`${USERS_API}/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(users),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceUsers = tsrClient.users.bulkUpdate.useMutation({
     onSuccess: () => {
       invalidate();
     },
   });
 
-  const replaceLogs = useMutation({
-    mutationFn: async (logs: ActivityLog[]) =>
-      apiJson<{ logs: ActivityLog[] }>(`${USERS_API}/activity/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(logs),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceLogs = tsrClient.users.activityBulkUpdate.useMutation({
     onSuccess: () => {
       invalidate();
     },
   });
 
-  const deleteUser = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${USERS_API}/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const deleteUser = tsrClient.users.delete.useMutation({
     onSuccess: () => invalidate(),
   });
 
-  const restoreUser = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(
-        `${USERS_API}/${encodeURIComponent(id)}/restore`,
-        { method: 'POST' },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const restoreUser = tsrClient.users.restore.useMutation({
     onSuccess: () => invalidate(),
   });
 
-  const bulkDeleteUsers = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${USERS_API}/bulk-delete`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkDeleteUsers = tsrClient.users.bulkDelete.useMutation({
     onSuccess: () => invalidate(),
   });
 
-  const bulkRestoreUsers = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${USERS_API}/bulk-restore`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkRestoreUsers = tsrClient.users.bulkRestore.useMutation({
     onSuccess: () => invalidate(),
   });
 
-  const logExportAudit = useMutation({
-    mutationFn: async (payload: { count: number; scope: string }) =>
-      apiJson(`${USERS_API}/export-audit`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-  });
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const logExportAudit = tsrClient.users.exportAudit.useMutation();
 
   return {
-    replaceUsers,
-    replaceLogs,
-    deleteUser,
-    restoreUser,
-    bulkDeleteUsers,
-    bulkRestoreUsers,
-    logExportAudit,
+    replaceUsers: {
+      ...replaceUsers,
+      mutate: (users: WorkspaceUser[], opts?: any) => replaceUsers.mutate({ body: users as any }, opts),
+      mutateAsync: (users: WorkspaceUser[]) => replaceUsers.mutateAsync({ body: users as any }),
+    },
+    replaceLogs: {
+      ...replaceLogs,
+      mutate: (logs: ActivityLog[], opts?: any) => replaceLogs.mutate({ body: logs as any }, opts),
+      mutateAsync: (logs: ActivityLog[]) => replaceLogs.mutateAsync({ body: logs as any }),
+    },
+    deleteUser: {
+      ...deleteUser,
+      mutate: (id: string, opts?: any) => deleteUser.mutate({ params: { id }, body: {} }, opts),
+      mutateAsync: (id: string) => deleteUser.mutateAsync({ params: { id }, body: {} }),
+    },
+    restoreUser: {
+      ...restoreUser,
+      mutate: (id: string, opts?: any) => restoreUser.mutate({ params: { id }, body: {} }, opts),
+      mutateAsync: (id: string) => restoreUser.mutateAsync({ params: { id }, body: {} }),
+    },
+    bulkDeleteUsers: {
+      ...bulkDeleteUsers,
+      mutate: (ids: string[], opts?: any) => bulkDeleteUsers.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkDeleteUsers.mutateAsync({ body: { ids } }),
+    },
+    bulkRestoreUsers: {
+      ...bulkRestoreUsers,
+      mutate: (ids: string[], opts?: any) => bulkRestoreUsers.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkRestoreUsers.mutateAsync({ body: { ids } }),
+    },
+    logExportAudit: {
+      ...logExportAudit,
+      mutate: (payload: { count: number; scope: string }, opts?: any) => logExportAudit.mutate({ body: payload }, opts),
+      mutateAsync: (payload: { count: number; scope: string }) => logExportAudit.mutateAsync({ body: payload }),
+    },
   };
 }

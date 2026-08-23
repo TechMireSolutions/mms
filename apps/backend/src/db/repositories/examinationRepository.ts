@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { type Exam, type ExamResult } from '@mms/shared';
 import { exams, examClasses, examResults } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 // --- Exams ---
 
@@ -27,7 +27,7 @@ export function examRowToRecord(row: ExamRow, classIds: string[] = []): Exam {
 
 export async function listExamsByWorkspace(tenant: string): Promise<Exam[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const examRows = await tx
       .select()
       .from(exams)
@@ -59,7 +59,7 @@ export async function listExamsByWorkspace(tenant: string): Promise<Exam[]> {
 
 export async function findExamById(tenant: string, id: string): Promise<Exam | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(exams)
@@ -87,7 +87,7 @@ export async function findExamById(tenant: string, id: string): Promise<Exam | n
 
 export async function saveExam(tenant: string, record: Exam): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(exams)
       .values({
@@ -151,7 +151,7 @@ export async function saveExam(tenant: string, record: Exam): Promise<void> {
 export async function bulkSaveExams(tenant: string, records: Exam[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(exams)
@@ -215,7 +215,7 @@ export async function bulkSaveExams(tenant: string, records: Exam[]): Promise<vo
 
 export async function replaceExamsForWorkspace(tenant: string, records: Exam[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(examClasses).where(eq(examClasses.workspaceSubdomain, subdomain));
     await tx.delete(exams).where(eq(exams.workspaceSubdomain, subdomain));
     for (const r of records) {
@@ -266,7 +266,7 @@ function resultRowToRecord(row: ResultRow): ExamResult {
 
 export async function listExamResultsByWorkspace(tenant: string): Promise<ExamResult[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(examResults)
@@ -277,7 +277,7 @@ export async function listExamResultsByWorkspace(tenant: string): Promise<ExamRe
 
 export async function findExamResultById(tenant: string, id: string): Promise<ExamResult | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(examResults)
@@ -294,7 +294,7 @@ export async function findExamResultById(tenant: string, id: string): Promise<Ex
 
 export async function saveExamResult(tenant: string, record: ExamResult): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(examResults)
       .values({
@@ -320,7 +320,7 @@ export async function saveExamResult(tenant: string, record: ExamResult): Promis
 export async function bulkSaveExamResults(tenant: string, records: ExamResult[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(examResults)
@@ -347,7 +347,7 @@ export async function bulkSaveExamResults(tenant: string, records: ExamResult[])
 
 export async function replaceExamResultsForWorkspace(tenant: string, records: ExamResult[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(examResults).where(eq(examResults.workspaceSubdomain, subdomain));
     for (const r of records) {
       await tx.insert(examResults).values({
@@ -364,7 +364,7 @@ export async function replaceExamResultsForWorkspace(tenant: string, records: Ex
 
 export async function deleteExaminationsByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(examResults).where(eq(examResults.workspaceSubdomain, subdomain));
     await tx.delete(examClasses).where(eq(examClasses.workspaceSubdomain, subdomain));
     await tx.delete(exams).where(eq(exams.workspaceSubdomain, subdomain));

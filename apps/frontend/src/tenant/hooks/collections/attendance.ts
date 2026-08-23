@@ -14,3 +14,13 @@ export {
   useAttendanceMetrics,
 } from '@/tenant/features/attendance/hooks/useAttendance';
 export { invalidateAttendanceQueries } from '@/tenant/features/attendance/hooks/invalidateAttendanceQueries';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useAttendanceContractList,
+  useAttendanceContractCreate,
+  useAttendanceContractBulk,
+  useAttendanceContractBulkDelete,
+  useAttendanceContractBulkRestore,
+  useAttendanceContractUpdate,
+  useAttendanceContractDelete,
+} from '@/tenant/features/attendance/hooks/useAttendanceTsrHooks';

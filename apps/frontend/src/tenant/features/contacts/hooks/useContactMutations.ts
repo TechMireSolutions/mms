@@ -1,131 +1,148 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import {
-  CONTACTS_MODULE_MANIFEST,
   type Contact,
   type ContactIdentityMatchBody,
-  type ContactIdentityMatchResult,
 } from '@mms/shared';
-import { apiFetch, apiJson } from '@/lib/apiClient';
+import { tsrClient } from '@/lib/api';
 import { enqueueContactsOutbox } from '@/lib/contacts/contactsSyncOutbox';
-import { createModuleCrudMutations } from '@/lib/query/createModuleCrudMutations';
+import {
+  useContactsContractRestore,
+  useContactsContractBulkDelete,
+  useContactsContractBulkRestore,
+  useContactsContractLogExportAudit,
+  useContactsContractLogSetupAudit,
+} from '@/tenant/features/contacts/hooks/useContactsTsrHooks';
 import { invalidateContactsQueries } from '@/tenant/features/contacts/hooks/invalidateContactsQueries';
-
-const CONTACTS_API = CONTACTS_MODULE_MANIFEST.restBasePath;
 
 export function useInvalidateContactsQueries() {
   const queryClient = useQueryClient();
   return () => invalidateContactsQueries(queryClient);
 }
 
-const useSharedCrudMutations = createModuleCrudMutations<Contact>({
-  apiBase: CONTACTS_API,
-  normalizeStored: (contact) => contact,
-  invalidate: (queryClient) => invalidateContactsQueries(queryClient),
-  updateRecordKey: 'contact',
-});
-
 /**
- * Server mutations for Contact records. Bulk-delete/restore/audit reuse the shared
- * module CRUD factory; create/update/delete/merge stay local because they need the
- * `{ contact }` response shape and the offline-outbox `onError` hook the factory
- * does not expose.
+ * Server mutations for Contact records. Bulk-delete/restore/audit use ts-rest contracts;
+ * create/update/delete/merge use tsrClient.contacts.
  */
 export function useContactMutations() {
   const queryClient = useQueryClient();
   const invalidate = () => invalidateContactsQueries(queryClient);
 
-  const { bulkDelete, restore, bulkRestore, logExportAudit, logSetupAudit } =
-    useSharedCrudMutations();
+  const bulkDeleteMutation = useContactsContractBulkDelete();
+  const restoreMutation = useContactsContractRestore();
+  const bulkRestoreMutation = useContactsContractBulkRestore();
+  const logExportAuditMutation = useContactsContractLogExportAudit();
+  const logSetupAuditMutation = useContactsContractLogSetupAudit();
 
-  const upsertContact = useMutation({
-    mutationFn: async (contact: Contact) =>
-      apiJson<{ contact: Contact }>(CONTACTS_API, {
-        method: 'POST',
-        body: JSON.stringify(contact),
-      }),
-    onSuccess: invalidate,
-    onError: (_err, contact) => {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        enqueueContactsOutbox({ kind: 'upsert', contact });
-      }
-    },
-  });
-
-  const updateContact = useMutation({
-    mutationFn: async ({ id, contact }: { id: string; contact: Contact }) =>
-      apiJson<{ contact: Contact }>(`${CONTACTS_API}/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(contact),
-      }),
-    onSuccess: invalidate,
-    onError: (_err, { id, contact }) => {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        enqueueContactsOutbox({ kind: 'update', contactId: id, contact });
-      }
-    },
-  });
-
-  const deleteContact = useMutation({
-    mutationFn: async ({ id, deletionReason }: { id: string; deletionReason?: string }) =>
-      apiFetch(`${CONTACTS_API}/${id}`, {
-        method: 'DELETE',
-        body: JSON.stringify(deletionReason ? { deletionReason } : {}),
-      }),
-    onSuccess: invalidate,
-    onError: (_err, { id, deletionReason }) => {
-      if (typeof navigator !== 'undefined' && !navigator.onLine) {
-        enqueueContactsOutbox({ kind: 'delete', contactId: id, deletionReason });
-      }
-    },
-  });
-
-  const bulkRestoreContacts = bulkRestore;
-
-  const mergeContacts = useMutation({
-    mutationFn: async (payload: {
-      keepId: string | number;
-      deleteId: string | number;
-      merged?: Contact;
-    }) =>
-      apiJson<{ success: boolean; contact: Contact }>(`${CONTACTS_API}/merge`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const upsertContactMutation = tsrClient.contacts.create.useMutation({
     onSuccess: invalidate,
   });
 
-  const matchContactIdentity = useMutation({
-    mutationFn: async (body: ContactIdentityMatchBody) =>
-      apiJson<ContactIdentityMatchResult>(`${CONTACTS_API}/identity-match`, {
-        method: 'POST',
-        body: JSON.stringify(body),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const updateContactMutation = tsrClient.contacts.update.useMutation({
+    onSuccess: invalidate,
   });
 
-  const bulkTagContacts = useMutation({
-    mutationFn: async (payload: {
-      ids: string[];
-      addTags?: string[];
-      removeTags?: string[];
-    }) =>
-      apiJson<{ success: boolean; updatedCount: number }>(`${CONTACTS_API}/bulk-tag`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const deleteContactMutation = tsrClient.contacts.delete.useMutation({
+    onSuccess: invalidate,
+  });
+
+  const bulkRestoreContacts = bulkRestoreMutation;
+
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const mergeContactsMutation = tsrClient.contacts.merge.useMutation({
+    onSuccess: invalidate,
+  });
+
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const matchContactIdentity = tsrClient.contacts.identityMatch.useMutation();
+
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkTagContactsMutation = tsrClient.contacts.bulkTag.useMutation({
     onSuccess: invalidate,
   });
 
   return {
-    upsertContact,
-    updateContact,
-    deleteContact,
-    bulkDeleteContacts: bulkDelete,
-    restoreContact: restore,
-    bulkRestoreContacts,
-    mergeContacts,
-    matchContactIdentity,
-    bulkTagContacts,
-    logExportAudit,
-    logSetupAudit,
+    upsertContact: {
+      ...upsertContactMutation,
+      mutateAsync: async (contact: Contact) => {
+        try {
+          return await upsertContactMutation.mutateAsync({ body: contact });
+        } catch (error) {
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            enqueueContactsOutbox({ kind: 'upsert', contact });
+          }
+          throw error;
+        }
+      }
+    },
+    updateContact: {
+      ...updateContactMutation,
+      mutateAsync: async ({ id, contact }: { id: string; contact: Contact }) => {
+        try {
+          return await updateContactMutation.mutateAsync({ params: { id }, body: contact });
+        } catch (error) {
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            enqueueContactsOutbox({ kind: 'update', contactId: id, contact });
+          }
+          throw error;
+        }
+      }
+    },
+    deleteContact: {
+      ...deleteContactMutation,
+      mutateAsync: async ({ id, deletionReason }: { id: string; deletionReason?: string }) => {
+        try {
+          return await deleteContactMutation.mutateAsync({
+            params: { id },
+            body: deletionReason ? { deletionReason } : {}
+          });
+        } catch (error) {
+          if (typeof navigator !== 'undefined' && !navigator.onLine) {
+            enqueueContactsOutbox({ kind: 'delete', contactId: id, deletionReason });
+          }
+          throw error;
+        }
+      }
+    },
+    bulkDeleteContacts: {
+      mutateAsync: (payload: { ids: string[]; deletionReason?: string }) => bulkDeleteMutation.mutateAsync({ body: payload }),
+      isPending: bulkDeleteMutation.isPending,
+    },
+    restoreContact: {
+      mutateAsync: (id: string) => restoreMutation.mutateAsync({ params: { id } }),
+      isPending: restoreMutation.isPending,
+    },
+    bulkRestoreContacts: {
+      mutateAsync: (ids: string[]) => bulkRestoreMutation.mutateAsync({ body: { ids } }),
+      isPending: bulkRestoreMutation.isPending,
+    },
+    mergeContacts: {
+      ...mergeContactsMutation,
+      mutateAsync: async (payload: { keepId: string | number; deleteId: string | number; merged?: Contact }) => {
+        return mergeContactsMutation.mutateAsync({ body: payload });
+      }
+    },
+    matchContactIdentity: {
+      ...matchContactIdentity,
+      mutateAsync: async (body: ContactIdentityMatchBody) => {
+        return matchContactIdentity.mutateAsync({ body });
+      }
+    },
+    bulkTagContacts: {
+      ...bulkTagContactsMutation,
+      mutateAsync: async (payload: { ids: string[]; addTags?: string[]; removeTags?: string[] }) => {
+        return bulkTagContactsMutation.mutateAsync({ body: payload });
+      }
+    },
+    logExportAudit: {
+      mutateAsync: (payload: any) => logExportAuditMutation.mutateAsync({ body: payload }),
+      isPending: logExportAuditMutation.isPending,
+    },
+    logSetupAudit: {
+      mutateAsync: (payload: any) => logSetupAuditMutation.mutateAsync({ body: payload }),
+      isPending: logSetupAuditMutation.isPending,
+    },
   };
 }

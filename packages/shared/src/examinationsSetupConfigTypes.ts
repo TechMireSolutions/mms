@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import type { FieldDefinition, TabDefinition } from './contactTypes.js';
 import { DEFAULT_EXAMINATIONS_SETTINGS, type ExaminationsSettings } from './examinationsModuleSettings.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 import {
   EXAMINATIONS_TAB_REGISTRY,
   INITIAL_EXAMINATIONS_FIELD_SEED,
@@ -81,7 +82,7 @@ export function resolveExaminationFieldsMap(
 }
 
 /** PUT /api/examinations/field-config — field registry JSON without prefs keys. */
-export const examinationsFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const examinationsFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
     fieldOrder: z.array(z.string()).optional(),
@@ -89,7 +90,12 @@ export const examinationsFieldConfigPutBodySchema = moduleFieldConfigPutBodySche
     enabledTabs: z.array(z.string()).optional(),
     requiredTabs: z.array(z.string()).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const examinationsFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, examinationsFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/examinations/preferences — examinations prefs only. */
 export const examinationsPreferencesPutBodySchema = z

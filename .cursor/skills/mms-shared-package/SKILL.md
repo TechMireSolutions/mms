@@ -32,8 +32,9 @@ packages/shared/src/
 
 ## Shared Contract Standards (`packages/shared/src/...`)
 
-1. **Strict Validation**: Define write schemas using Zod with `.strict()` enforcement to reject unknown keys.
-2. **DTO Type Exports**: Export explicit Insert, Update, and Response DTO types inferred from the Zod schemas:
+1. **Deterministic Contract Typing**: Route definitions, parameters, write payloads, and response envelopes must be strictly derived from `@ts-rest` contracts.
+2. **Strict Validation & Sanitization**: Define write schemas using Zod with `.strict()` enforcement to reject unknown keys. Use a `safeString` Zod transform to prevent Unicode Directional Spoofing (e.g., Right-to-Left Override attacks `U+202E`).
+3. **DTO Type Exports**: Export explicit Insert, Update, and Response DTO types inferred from the Zod schemas:
    ```ts
    export const insertEntitySchema = z.object({ ... }).strict();
    export type InsertEntityDto = z.infer<typeof insertEntitySchema>;
@@ -42,7 +43,7 @@ packages/shared/src/
    export const entityResponseSchema = z.object({ ... }).strict();
    export type EntityResponseDto = z.infer<typeof entityResponseSchema>;
    ```
-3. **1:1 Alignment**: Ensure Zod schemas align 1:1 with Drizzle PostgreSQL table definitions.
+4. **1:1 Alignment**: Ensure Zod schemas align 1:1 with Drizzle PostgreSQL table definitions.
 
 ## Do / Don't
 

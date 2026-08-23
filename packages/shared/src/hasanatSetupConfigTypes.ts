@@ -1,7 +1,8 @@
 import { z } from 'zod';
 import type { FieldDefinition, TabDefinition } from './contactTypes.js';
 import { DEFAULT_HASANAT_SETTINGS, type HasanatSettings } from './hasanatModuleSettings.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 import {
   HASANAT_TAB_REGISTRY,
   INITIAL_HASANAT_FIELD_SEED,
@@ -81,7 +82,7 @@ export function resolveHasanatFieldsMap(
 }
 
 /** PUT /api/hasanat/field-config — field registry JSON without prefs keys. */
-export const hasanatFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const hasanatFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
     fieldOrder: z.array(z.string()).optional(),
@@ -89,7 +90,12 @@ export const hasanatFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
     enabledTabs: z.array(z.string()).optional(),
     requiredTabs: z.array(z.string()).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const hasanatFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, hasanatFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/hasanat/preferences — hasanat prefs only. */
 export const hasanatPreferencesPutBodySchema = z

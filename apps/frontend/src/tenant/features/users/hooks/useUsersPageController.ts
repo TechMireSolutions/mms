@@ -100,7 +100,7 @@ export function useUsersPageController() {
 
   const users = useMemo(
     () =>
-      (workPageQuery.data?.users ?? []).map((user) =>
+      (workPageQuery.data?.users ?? []).map((user: any) =>
         normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
       ),
     [workPageQuery.data],

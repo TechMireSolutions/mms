@@ -18,7 +18,7 @@ type StudentLookupLegacyCollectionKey = keyof typeof STUDENT_LOOKUP_LEGACY_COLLE
 
 const studentLookupKindSchema = z.enum(STUDENT_LOOKUP_KINDS);
 
-const studentLookupStringItemsSchema = z.array(z.string().min(1).max(200)).max(500);
+import { studentLookupStringItemsSchema } from './schemas/studentLookup.dto.js';
 
 const studentLookupsMapSchema = z.object({
   statuses: studentLookupStringItemsSchema,
@@ -34,9 +34,7 @@ export const studentLookupKindParamsSchema = z.object({
 });
 
 /** Schema for validating student lookup put request body. */
-export const studentLookupPutBodySchema = z.object({
-  items: studentLookupStringItemsSchema,
-});
+export * from './schemas/studentLookup.dto.js';
 
 /** Type guard checking if a string is a valid StudentLookupKind. */
 export function isStudentLookupKind(value: string): value is StudentLookupKind {

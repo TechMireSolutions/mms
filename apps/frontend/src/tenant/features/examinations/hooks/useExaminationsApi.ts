@@ -1,19 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Exam, ExamResult, ExaminationsCommandMetricsSnapshot } from '@mms/shared';
 import { EXAMINATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { NotifiedMutationError } from '@/lib/notifiedMutationError';
-import { createModulePaginatedListQuery } from '@/lib/query/createModulePaginatedListQuery';
-import {
-  buildExaminationsPageUrl,
-  examinationsPaginatedQueryKey,
-  examinationsListQueryKeyParams,
-  sameExaminationsListFilters,
-  type ExaminationsPaginatedParams,
-  type ExaminationsListPageResult,
-} from '@/tenant/features/examinations/hooks/examinationsListQueryBuilders';
+import { tsrClient } from '@/lib/api';
+
+
+
 
 export const EXAMINATIONS_EXAMS_QUERY_KEY = ['examinations', 'exams', 'list'] as const;
 export const EXAMINATIONS_RESULTS_QUERY_KEY = ['examinations', 'results', 'list'] as const;
@@ -21,22 +14,15 @@ export const EXAMINATIONS_METRICS_QUERY_KEY = ['examinations', 'metrics'] as con
 
 export const EXAMINATIONS_API = EXAMINATIONS_MODULE_MANIFEST.restBasePath;
 
-/** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
-export class NotifiedExaminationsMutationError extends NotifiedMutationError {}
+
 
 export function useExaminationsExams(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
-  return useQuery<Exam[]>({
-    queryKey: [...EXAMINATIONS_EXAMS_QUERY_KEY, { includeDeleted }],
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ exams: Exam[] }>(
-        `${EXAMINATIONS_API}/exams?includeDeleted=${includeDeleted}`,
-        { signal },
-      );
-      return res?.exams ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.examinations.listExams.useQuery({
+    queryKey: [...EXAMINATIONS_EXAMS_QUERY_KEY, { includeDeleted }] as any,
+    queryData: { query: { includeDeleted: includeDeleted ? 'true' : undefined } },
     staleTime: 30_000,
   });
 }
@@ -45,39 +31,28 @@ export function useExaminationsExamsCollection(options?: {
   enabled?: boolean;
   includeDeleted?: boolean;
 }): Exam[] {
-  return useExaminationsExams(options).data ?? [];
+  const query = useExaminationsExams(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.exams ?? []);
 }
 
-/** SQL-paged exams Work list (server-side search/status/soft-delete). */
-export const useExaminationsPaginated = createModulePaginatedListQuery<
-  ExaminationsListPageResult,
-  ExaminationsPaginatedParams,
-  ReturnType<typeof examinationsListQueryKeyParams>
->({
-  queryKey: examinationsPaginatedQueryKey,
-  keyParams: examinationsListQueryKeyParams,
-  sameFilters: sameExaminationsListFilters,
-  buildUrl: buildExaminationsPageUrl,
-});
+
 
 export function useExaminationsResults(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<ExamResult[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.examinations.listResults.useQuery({
     queryKey: EXAMINATIONS_RESULTS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ results: ExamResult[] }>(
-        `${EXAMINATIONS_API}/results`,
-        { signal },
-      );
-      return res?.results ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useExaminationsResultsCollection(options?: { enabled?: boolean }): ExamResult[] {
-  return useExaminationsResults(options).data ?? [];
+  const query = useExaminationsResults(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.results ?? []);
 }
 
 export function useExaminationsMetrics(options?: { enabled?: boolean }) {
@@ -96,70 +71,71 @@ export function useExaminationsMutations() {
     void queryClient.invalidateQueries({ queryKey: EXAMINATIONS_METRICS_QUERY_KEY });
   };
 
-  const replaceExams = useMutation({
-    mutationFn: async (exams: Exam[]) =>
-      apiJson<{ exams: Exam[] }>(`${EXAMINATIONS_API}/exams/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(exams),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceExams = tsrClient.examinations.bulkUpdateExams.useMutation({
     onSuccess: () => {
       invalidateExams();
     },
   });
 
-  const replaceExamResults = useMutation({
-    mutationFn: async (results: ExamResult[]) =>
-      apiJson<{ results: ExamResult[] }>(`${EXAMINATIONS_API}/results/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(results),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceExamResults = tsrClient.examinations.bulkUpdateResults.useMutation({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: EXAMINATIONS_RESULTS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: EXAMINATIONS_METRICS_QUERY_KEY });
     },
   });
 
-  const deleteExam = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${EXAMINATIONS_API}/exams/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const deleteExam = tsrClient.examinations.deleteExam.useMutation({
     onSuccess: () => invalidateExams(),
   });
 
-  const restoreExam = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(
-        `${EXAMINATIONS_API}/exams/${encodeURIComponent(id)}/restore`,
-        { method: 'POST' },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const restoreExam = tsrClient.examinations.restoreExam.useMutation({
     onSuccess: () => invalidateExams(),
   });
 
-  const bulkDeleteExams = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${EXAMINATIONS_API}/exams/bulk-delete`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkDeleteExams = tsrClient.examinations.bulkDeleteExams.useMutation({
     onSuccess: () => invalidateExams(),
   });
 
-  const bulkRestoreExams = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${EXAMINATIONS_API}/exams/bulk-restore`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkRestoreExams = tsrClient.examinations.bulkRestoreExams.useMutation({
     onSuccess: () => invalidateExams(),
   });
 
   return {
-    replaceExams,
-    replaceExamResults,
-    deleteExam,
-    restoreExam,
-    bulkDeleteExams,
-    bulkRestoreExams,
+    replaceExams: {
+      ...replaceExams,
+      mutate: (exams: Exam[], opts?: any) => replaceExams.mutate({ body: exams }, opts),
+      mutateAsync: (exams: Exam[]) => replaceExams.mutateAsync({ body: exams }),
+    },
+    replaceExamResults: {
+      ...replaceExamResults,
+      mutate: (results: ExamResult[], opts?: any) => replaceExamResults.mutate({ body: results }, opts),
+      mutateAsync: (results: ExamResult[]) => replaceExamResults.mutateAsync({ body: results }),
+    },
+    deleteExam: {
+      ...deleteExam,
+      mutate: (id: string, opts?: any) => deleteExam.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => deleteExam.mutateAsync({ params: { id } }),
+    },
+    restoreExam: {
+      ...restoreExam,
+      mutate: (id: string, opts?: any) => restoreExam.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => restoreExam.mutateAsync({ params: { id } }),
+    },
+    bulkDeleteExams: {
+      ...bulkDeleteExams,
+      mutate: (ids: string[], opts?: any) => bulkDeleteExams.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkDeleteExams.mutateAsync({ body: { ids } }),
+    },
+    bulkRestoreExams: {
+      ...bulkRestoreExams,
+      mutate: (ids: string[], opts?: any) => bulkRestoreExams.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkRestoreExams.mutateAsync({ body: { ids } }),
+    },
   };
 }

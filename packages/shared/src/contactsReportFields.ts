@@ -153,11 +153,11 @@ export function getContactReportCellValue(
       return addresses?.[0]?.line1 || '—';
     }
     case 'city':
-      return contact.addresses?.[0]?.city || String(contact.city || '—');
+      return contact.addresses?.[0]?.city || '—';
     case 'state':
-      return contact.addresses?.[0]?.state || String(contact.state || '—');
+      return contact.addresses?.[0]?.state || '—';
     case 'country':
-      return contact.addresses?.[0]?.country || String(contact.country || '—');
+      return contact.addresses?.[0]?.country || '—';
     case 'relationshipContact': {
       const linked = contact.relationshipContacts;
       return linked?.[0]?.name || linked?.[0]?.contactId || '—';

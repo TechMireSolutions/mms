@@ -1,7 +1,13 @@
 import { useMemo } from "react";
-import { getCollectedAmountForInvoice, getRecentMonthsList, buildBucketedSeries } from "@mms/shared";
-import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
-import { useAccountingEntriesCollection, useAccountingAccountsCollection } from "@/tenant/hooks/collections/accounting";
+import {
+  getCollectedAmountForInvoice,
+  getRecentMonthsList,
+  buildBucketedSeries,
+  type Account,
+  type JournalEntry,
+} from "@mms/shared";
+import { useFinanceInvoicesPaginated } from "@/tenant/hooks/collections/finance";
+import { useAccountingEntriesPaginated, useAccountingAccountsPaginated } from "@/tenant/hooks/collections/accounting";
 
 export interface RevenuePoint {
   month: string;
@@ -10,9 +16,11 @@ export interface RevenuePoint {
 }
 
 export function useRevenueChartData() {
-  const invoices = useFinanceInvoicesCollection();
-  const entries = useAccountingEntriesCollection();
-  const accounts = useAccountingAccountsCollection();
+  const invoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
+  const entriesQueryResult = useAccountingEntriesPaginated({ page: 1, limit: 500 }).data;
+  const accountsQueryResult = useAccountingAccountsPaginated({ page: 1, limit: 500 }).data;
+  const entries: JournalEntry[] = (entriesQueryResult as any)?.body?.entries ?? (entriesQueryResult as any)?.entries ?? [];
+  const accounts: Account[] = (accountsQueryResult as any)?.body?.accounts ?? (accountsQueryResult as any)?.accounts ?? [];
   const months = useMemo((): { key: string; label: string }[] => getRecentMonthsList(10), []);
 
   const revenueData: RevenuePoint[] = useMemo(() => {

@@ -7,48 +7,44 @@ import type {
   PlatformSetupRegisterResult,
   PlatformUser,
 } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 
 /** Hook to start platform setup registration. */
 export function usePlatformSetupRegister() {
   return useMutation({
-    mutationFn: async (input: PlatformSetupRegisterInput) =>
-      apiJson<PlatformSetupRegisterResult>('/api/platform/auth/setup/register', {
-        method: 'POST',
-        body: JSON.stringify(input),
-      }),
+    mutationFn: async (input: PlatformSetupRegisterInput) => {
+      const res = await apiContract.platform.setupRegister({ body: input });
+      return res.body as PlatformSetupRegisterResult;
+    },
   });
 }
 
 /** Hook to request a platform password reset code. */
 export function usePlatformPasswordForgot() {
   return useMutation({
-    mutationFn: async (input: PlatformPasswordForgotInput) =>
-      apiJson<PlatformPasswordForgotResult>('/api/platform/auth/password/forgot', {
-        method: 'POST',
-        body: JSON.stringify(input),
-      }),
+    mutationFn: async (input: PlatformPasswordForgotInput) => {
+      const res = await apiContract.platform.passwordForgot({ body: input });
+      return res.body as PlatformPasswordForgotResult;
+    },
   });
 }
 
 /** Hook to complete platform password reset with OTP code and new password. */
 export function usePlatformPasswordReset() {
   return useMutation({
-    mutationFn: async (input: PlatformPasswordResetInput) =>
-      apiJson<{ user: PlatformUser }>('/api/platform/auth/password/reset', {
-        method: 'POST',
-        body: JSON.stringify(input),
-      }),
+    mutationFn: async (input: PlatformPasswordResetInput) => {
+      const res = await apiContract.platform.passwordReset({ body: input });
+      return res.body as { user: PlatformUser };
+    },
   });
 }
 
 /** Hook to resend platform password reset code. */
 export function usePlatformPasswordResetResend() {
   return useMutation({
-    mutationFn: async (resetId: string) =>
-      apiJson<PlatformPasswordForgotResult>('/api/platform/auth/password/resend', {
-        method: 'POST',
-        body: JSON.stringify({ resetId }),
-      }),
+    mutationFn: async (resetId: string) => {
+      const res = await apiContract.platform.passwordResend({ body: { resetId } });
+      return res.body as PlatformPasswordForgotResult;
+    },
   });
 }

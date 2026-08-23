@@ -4,9 +4,10 @@ import { isWorkspaceEnabled } from '@mms/shared';
 import { bindRequestUserId, getRequestTenant } from '../lib/tenantContext.js';
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
+import { isTenantBlocked, isTokenRevoked, isUserSessionRevoked } from '../services/session.service.js';
 
 export interface AuthenticatedRequest extends FastifyRequest {
-  user: User & { twoFactorVerified?: boolean; tokenType?: string };
+  user: User & { twoFactorVerified?: boolean; tokenType?: string; jti?: string; iat?: number; exp?: number };
 }
 
 /**
@@ -19,21 +20,42 @@ export async function authenticateTenant(
   try {
     await request.jwtVerify();
   } catch {
-    sendUnauthorized(reply);
+    await sendUnauthorized(reply);
     return;
   }
 
-  const user = request.user as User & { twoFactorVerified?: boolean; tokenType?: string };
+  const user = request.user as User & { twoFactorVerified?: boolean; tokenType?: string; jti?: string; iat?: number };
   const tenant = getRequestTenant();
 
   if (!tenant) {
-    sendForbidden(reply, 'This endpoint requires a tenant subdomain');
+    await sendForbidden(reply, 'This endpoint requires a tenant subdomain');
+    return;
+  }
+
+  // Fast-path Redis tenant blocklist check
+  const isBlocked = await isTenantBlocked(tenant);
+  if (isBlocked) {
+    await reply.status(403).send({
+      type: 'workspace_disabled',
+      message: 'This madrasa workspace has been disabled by the platform administrator.',
+    });
+    return;
+  }
+
+  // Redis-backed token and session revocation checks
+  if (user.jti && (await isTokenRevoked(user.jti))) {
+    await sendUnauthorized(reply, 'Session revoked');
+    return;
+  }
+
+  if (user.id && user.iat && (await isUserSessionRevoked(user.id, user.iat * 1000))) {
+    await sendUnauthorized(reply, 'Session revoked');
     return;
   }
 
   const workspace = await getWorkspaceBySubdomain(tenant);
   if (!workspace || !isWorkspaceEnabled(workspace)) {
-    reply.status(403).send({
+    await reply.status(403).send({
       type: 'workspace_disabled',
       message: 'This madrasa workspace has been disabled by the platform administrator.',
     });
@@ -41,27 +63,28 @@ export async function authenticateTenant(
   }
 
   if (user.workspaceSubdomain?.toLowerCase() !== tenant.toLowerCase()) {
-    sendForbidden(reply, 'Token is not valid for this workspace');
+    await sendForbidden(reply, 'Token is not valid for this workspace');
     return;
   }
 
   if (user.tokenType === 'refresh') {
-    sendUnauthorized(reply, 'Refresh token cannot access this resource');
+    await sendUnauthorized(reply, 'Refresh token cannot access this resource');
     return;
   }
 
   if (user.tokenType === 'platform_access') {
-    sendUnauthorized(reply, 'Platform session cannot access tenant resources');
+    await sendUnauthorized(reply, 'Platform session cannot access tenant resources');
     return;
   }
 
   if (user.twoFactorVerified === false) {
-    reply.status(403).send({
+    await reply.status(403).send({
       type: 'two_factor_required',
-      message: 'Two-factor verification is required',
+      message: 'Two-factor authentication is required to access this resource',
     });
     return;
   }
 
   bindRequestUserId(user.id ? String(user.id) : null);
 }
+

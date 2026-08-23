@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { contactGoogleSyncCredentials } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 export interface ContactGoogleSyncCredentialRecord {
   clientId?: string;
@@ -27,7 +27,7 @@ export async function findContactGoogleSyncCredentials(
   userId: string,
 ): Promise<ContactGoogleSyncCredentialRecord> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .select()
       .from(contactGoogleSyncCredentials)
@@ -57,7 +57,7 @@ export async function upsertContactGoogleSyncCredentials(
     updatedAt: now,
   };
 
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .insert(contactGoogleSyncCredentials)
       .values(values)
@@ -84,7 +84,7 @@ export async function deleteContactGoogleSyncCredentials(
   userId: string,
 ): Promise<void> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(tenant, async (tx) => {
+  await withTenant(tenant, async (tx) => {
     await tx
       .delete(contactGoogleSyncCredentials)
       .where(and(
@@ -100,7 +100,7 @@ export async function replaceContactGoogleSyncCredentialsForWorkspace(
   entries: Array<{ userId: string } & ContactGoogleSyncCredentialRecord>,
 ): Promise<void> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(tenant, async (tx) => {
+  await withTenant(tenant, async (tx) => {
     await tx
       .delete(contactGoogleSyncCredentials)
       .where(eq(contactGoogleSyncCredentials.workspaceSubdomain, tenant));

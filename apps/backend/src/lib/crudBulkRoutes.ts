@@ -15,7 +15,7 @@ export interface BulkRoutesOptions<T> {
   path: string;
   collection: string;
   schema: ZodType<T>;
-  loadFn: () => Promise<unknown>;
+  loadFn?: () => Promise<unknown>;
   loadPageFn?: (query: any) => Promise<unknown>;
   /** When provided, the GET branch validates the full query (page/limit/search/sort/filters) and forwards it to `loadPageFn`. */
   listQuerySchema?: ZodType;
@@ -26,6 +26,8 @@ export interface BulkRoutesOptions<T> {
   errorMessagePrefix: string;
   columnPreferencesObjectKey?: string;
   columnPreferencesPath?: string;
+  /** When true, omits registering the GET endpoint (e.g. handled by @ts-rest contract router). */
+  customGetRoute?: boolean;
 }
 
 /**
@@ -48,50 +50,53 @@ export function registerBulkRoutes<T>(
     errorMessagePrefix,
     columnPreferencesObjectKey,
     columnPreferencesPath,
+    customGetRoute,
   } = options;
 
-  fastify.get(path, async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, collection)) return sendForbidden(reply);
+  if (!customGetRoute && loadFn) {
+    fastify.get(path, async (request, reply) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, collection)) return sendForbidden(reply);
 
-    try {
-      let pageQuery: Record<string, unknown> | undefined;
-      if (listQuerySchema) {
-        const parsed = parseRequest(listQuerySchema, request.query);
-        if (!parsed.ok) return replyValidationError(reply, parsed.message);
-        const query = parsed.data as Record<string, unknown>;
-        if (query.page != null && loadPageFn) pageQuery = query;
-      } else {
-        const queryParams = request.query as Record<string, string>;
-        const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
-        if (isPaginated && loadPageFn) {
-          const page = parseInt(queryParams.page || '1', 10);
-          const limit = parseInt(queryParams.limit || '50', 10);
+      try {
+        let pageQuery: Record<string, unknown> | undefined;
+        if (listQuerySchema) {
+          const parsed = parseRequest(listQuerySchema, request.query);
+          if (!parsed.ok) return replyValidationError(reply, parsed.message);
+          const query = parsed.data as Record<string, unknown>;
+          if (query.page != null && loadPageFn) pageQuery = query;
+        } else {
+          const queryParams = request.query as Record<string, string>;
+          const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
+          if (isPaginated && loadPageFn) {
+            const page = parseInt(queryParams.page || '1', 10);
+            const limit = parseInt(queryParams.limit || '50', 10);
+            const data = await loadPageFn({
+              page,
+              limit,
+              search: queryParams.search,
+              sortField: queryParams.sortField,
+              sortDir: queryParams.sortDir as 'asc' | 'desc',
+            });
+            return reply.send(data);
+          }
+        }
+
+        if (pageQuery && loadPageFn) {
           const data = await loadPageFn({
-            page,
-            limit,
-            search: queryParams.search,
-            sortField: queryParams.sortField,
-            sortDir: queryParams.sortDir as 'asc' | 'desc',
+            ...pageQuery,
+            limit: pageQuery.limit ?? defaultPageSize,
           });
           return reply.send(data);
         }
-      }
 
-      if (pageQuery && loadPageFn) {
-        const data = await loadPageFn({
-          ...pageQuery,
-          limit: pageQuery.limit ?? defaultPageSize,
-        });
-        return reply.send(data);
+        const data = await loadFn();
+        return reply.send({ [responseKey]: data });
+      } catch {
+        return sendDatabaseError(reply, `Failed to load ${errorMessagePrefix}`);
       }
-
-      const data = await loadFn();
-      return reply.send({ [responseKey]: data });
-    } catch {
-      return sendDatabaseError(reply, `Failed to load ${errorMessagePrefix}`);
-    }
-  });
+    });
+  }
 
   fastify.put(path === '/' ? '/bulk' : `${path}/bulk`, async (request, reply) => {
     const user = request.user as User;
@@ -159,7 +164,7 @@ export function registerIncludableBulkRoutes<T>(
     path: string;
     collection: string;
     schema: ZodType<T>;
-    loadFn: (options?: { includeDeleted?: boolean }) => Promise<unknown>;
+    loadFn?: (options?: { includeDeleted?: boolean }) => Promise<unknown>;
     loadPageFn?: (query: any) => Promise<unknown>;
     /** When provided, the GET branch validates the full query (page/limit/search/sort/filters) and forwards it to `loadPageFn`. */
     listQuerySchema?: ZodType;
@@ -170,6 +175,7 @@ export function registerIncludableBulkRoutes<T>(
     errorMessagePrefix: string;
     columnPreferencesObjectKey?: string;
     columnPreferencesPath?: string;
+    customGetRoute?: boolean;
   },
 ): void {
   const {
@@ -185,66 +191,69 @@ export function registerIncludableBulkRoutes<T>(
     errorMessagePrefix,
     columnPreferencesObjectKey,
     columnPreferencesPath,
+    customGetRoute,
   } = options;
 
   const bulkPath = path === '/' ? '/bulk' : `${path}/bulk`;
 
-  fastify.get(path, async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, collection)) return sendForbidden(reply);
+  if (!customGetRoute && loadFn) {
+    fastify.get(path, async (request, reply) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, collection)) return sendForbidden(reply);
 
-    let includeDeleted: boolean;
-    let pageQuery: Record<string, unknown> | undefined;
-    if (listQuerySchema) {
-      const parsed = parseRequest(listQuerySchema, request.query);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const query = parsed.data as Record<string, unknown>;
-      includeDeleted = isQueryFlagTrue(query.includeDeleted);
-      if (query.page != null && loadPageFn) pageQuery = query;
-    } else {
-      const parsed = parseRequest(includeDeletedQuerySchema, request.query);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      includeDeleted = isQueryFlagTrue(parsed.data.includeDeleted);
-    }
-
-    if (includeDeleted && !canDeleteCollection(user, collection)) {
-      return sendForbidden(reply);
-    }
-
-    try {
-      if (pageQuery && loadPageFn) {
-        const data = await loadPageFn({
-          ...pageQuery,
-          limit: pageQuery.limit ?? defaultPageSize,
-          includeDeleted,
-        });
-        return reply.send(data);
+      let includeDeleted: boolean;
+      let pageQuery: Record<string, unknown> | undefined;
+      if (listQuerySchema) {
+        const parsed = parseRequest(listQuerySchema, request.query);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+        const query = parsed.data as Record<string, unknown>;
+        includeDeleted = isQueryFlagTrue(query.includeDeleted);
+        if (query.page != null && loadPageFn) pageQuery = query;
+      } else {
+        const parsed = parseRequest(includeDeletedQuerySchema, request.query);
+        if (!parsed.ok) return replyValidationError(reply, parsed.message);
+        includeDeleted = isQueryFlagTrue(parsed.data.includeDeleted);
       }
 
-      if (!listQuerySchema) {
-        const queryParams = request.query as Record<string, string>;
-        const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
-        if (isPaginated && loadPageFn) {
-          const page = parseInt(queryParams.page || '1', 10);
-          const limit = parseInt(queryParams.limit || '50', 10);
+      if (includeDeleted && !canDeleteCollection(user, collection)) {
+        return sendForbidden(reply);
+      }
+
+      try {
+        if (pageQuery && loadPageFn) {
           const data = await loadPageFn({
-            page,
-            limit,
-            search: queryParams.search,
-            sortField: queryParams.sortField,
-            sortDir: queryParams.sortDir as 'asc' | 'desc',
+            ...pageQuery,
+            limit: pageQuery.limit ?? defaultPageSize,
             includeDeleted,
           });
           return reply.send(data);
         }
-      }
 
-      const data = await loadFn({ includeDeleted });
-      return reply.send({ [responseKey]: data });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, `Failed to load ${errorMessagePrefix}`, error);
-    }
-  });
+        if (!listQuerySchema) {
+          const queryParams = request.query as Record<string, string>;
+          const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
+          if (isPaginated && loadPageFn) {
+            const page = parseInt(queryParams.page || '1', 10);
+            const limit = parseInt(queryParams.limit || '50', 10);
+            const data = await loadPageFn({
+              page,
+              limit,
+              search: queryParams.search,
+              sortField: queryParams.sortField,
+              sortDir: queryParams.sortDir as 'asc' | 'desc',
+              includeDeleted,
+            });
+            return reply.send(data);
+          }
+        }
+
+        const data = await loadFn({ includeDeleted });
+        return reply.send({ [responseKey]: data });
+      } catch (error: unknown) {
+        return sendDatabaseError(reply, `Failed to load ${errorMessagePrefix}`, error);
+      }
+    });
+  }
 
   fastify.put(bulkPath, async (request, reply) => {
     const user = request.user as User;
@@ -359,7 +368,7 @@ export function registerSoftDeletableBulkTrashRoutes(
  */
 export function registerSoftDeletableBulkRoutes<T>(
   fastify: FastifyInstance,
-  options: SoftDeletableBulkRoutesOptions<T>,
+  options: SoftDeletableBulkRoutesOptions<T> & { customGetRoute?: boolean; customBulkTrashRoutes?: boolean },
 ): void {
   const {
     path,
@@ -378,6 +387,8 @@ export function registerSoftDeletableBulkRoutes<T>(
     columnPreferencesPath,
     bulkBodySchema = bulkIdsBodySchema,
     mapDeleteError,
+    customGetRoute,
+    customBulkTrashRoutes,
   } = options;
 
   const idPath = path === '/' ? '/:id' : `${path}/:id`;
@@ -394,17 +405,20 @@ export function registerSoftDeletableBulkRoutes<T>(
     saveFn,
     responseKey,
     errorMessagePrefix,
+    customGetRoute,
   });
 
   // Static bulk paths before /:id to avoid parametric capture.
-  registerSoftDeletableBulkTrashRoutes(fastify, {
-    path,
-    collection,
-    errorMessagePrefix,
-    bulkBodySchema,
-    bulkDeleteFn,
-    bulkRestoreFn: (ids) => bulkRestoreFn(ids),
-  });
+  if (!customBulkTrashRoutes) {
+    registerSoftDeletableBulkTrashRoutes(fastify, {
+      path,
+      collection,
+      errorMessagePrefix,
+      bulkBodySchema,
+      bulkDeleteFn,
+      bulkRestoreFn: (ids) => bulkRestoreFn(ids),
+    });
+  }
 
   fastify.delete<{ Params: { id: string } }>(idPath, async (request, reply) => {
     const user = request.user as User;

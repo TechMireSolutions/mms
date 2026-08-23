@@ -1,13 +1,9 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
+import { tsrClient } from "@/lib/api";
 import type { PlatformSetupStatus } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
 import { useTenant } from "@/lib/contexts/TenantContext";
 
 export const PLATFORM_SETUP_STATUS_QUERY_KEY = ["platform", "setup", "status"] as const;
-
-async function fetchPlatformSetupStatus(signal?: AbortSignal): Promise<PlatformSetupStatus> {
-  return apiJson<PlatformSetupStatus>("/api/platform/auth/setup/status", { signal });
-}
 
 /** First-run platform super-user setup status (apex only). */
 export function usePlatformSetupStatus(): {
@@ -18,17 +14,18 @@ export function usePlatformSetupStatus(): {
 } {
   const { isApex } = useTenant();
 
-  const query = useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const query = tsrClient.platform.getSetupStatus.useQuery({
     queryKey: PLATFORM_SETUP_STATUS_QUERY_KEY,
-    queryFn: ({ signal }) => fetchPlatformSetupStatus(signal),
+    queryData: {},
     enabled: isApex,
     staleTime: 60_000,
     retry: 5,
-    retryDelay: (attempt) => Math.min(attempt * 1000, 5000),
+    retryDelay: (attempt: number) => Math.min(attempt * 1000, 5000),
   });
 
   return {
-    setupStatus: query.data,
+    setupStatus: (query.data?.body as any) as PlatformSetupStatus | undefined,
     isLoadingSetup: isApex && query.isLoading,
     isError: query.isError,
     refetch: query.refetch,

@@ -9,8 +9,11 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: var(--font-sans);
-  --font-display: var(--font-display);
+  --font-sans: var(--font-sans, "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
+  --font-display: var(--font-display, "Geist", "Inter", sans-serif);
+  --font-arabic: var(--font-arabic, "Readex Pro", "Noto Sans Arabic", "Amiri", sans-serif);
+  --font-urdu: var(--font-urdu, "Noto Nastaliq Urdu", "Amiri", serif);
+  --font-persian: var(--font-persian, "Vazirmatn", "Noto Sans Arabic", sans-serif);
   --font-size-3xs: 0.6875rem;
   --font-size-2xs: 0.625rem;
 
@@ -60,6 +63,13 @@
   --color-sidebar-border: hsl(var(--sidebar-border));
   --color-sidebar-ring: hsl(var(--sidebar-ring));
   --color-sidebar-muted-foreground: hsl(var(--sidebar-muted-foreground));
+
+  /* OKLCH wide-gamut design tokens */
+  --color-oklch-primary: var(--oklch-primary, oklch(0.68 0.16 75));
+  --color-oklch-secondary: var(--oklch-secondary, oklch(0.35 0.08 60));
+  --color-oklch-surface: var(--oklch-surface, oklch(0.98 0.01 75));
+  --color-oklch-surface-card: var(--oklch-surface-card, oklch(1 0 0));
+  --color-oklch-border: var(--oklch-border, oklch(0.9 0.02 75));
 
   --shadow-surface:
     0 1px 2px 0 hsl(var(--foreground) / 0.04),
@@ -273,6 +283,12 @@
   --sidebar-border: 28 30% 18%;
   --sidebar-ring: 42 85% 48%;
   --sidebar-muted-foreground: 40 15% 60%;
+
+  --oklch-primary: oklch(0.68 0.16 75);
+  --oklch-secondary: oklch(0.35 0.08 60);
+  --oklch-surface: oklch(0.98 0.01 75);
+  --oklch-surface-card: oklch(1 0 0);
+  --oklch-border: oklch(0.9 0.02 75);
 }
 
 .dark {
@@ -317,6 +333,12 @@
   --sidebar-border: 32 20% 15%;
   --sidebar-ring: 42 90% 50%;
   --sidebar-muted-foreground: 40 15% 55%;
+
+  --oklch-primary: oklch(0.72 0.18 75);
+  --oklch-secondary: oklch(0.65 0.08 70);
+  --oklch-surface: oklch(0.18 0.02 60);
+  --oklch-surface-card: oklch(0.22 0.02 60);
+  --oklch-border: oklch(0.28 0.02 60);
 }
 
 @layer base {
@@ -376,6 +398,18 @@
       scroll-behavior: auto !important;
     }
   }
+}
+
+@utility font-arabic {
+  font-family: var(--font-arabic);
+}
+
+@utility font-urdu {
+  font-family: var(--font-urdu);
+}
+
+@utility font-persian {
+  font-family: var(--font-persian);
 }
 
 @utility surface-glass {
@@ -500,7 +534,7 @@
   [role="group"],
   .shadow-sm,
   .shadow-xl,
-  .flex.items-center.justify-between.gap-3.flex-wrap.py-2.text-left {
+  .flex.items-center.justify-between.gap-3.flex-wrap.py-2.text-start {
     display: none !important;
   }
 

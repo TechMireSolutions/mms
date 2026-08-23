@@ -13,6 +13,7 @@ import ContactPicker from "@/components/contactLink/ContactPicker";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Input } from "@/components/ui/input";
 import { FieldError, Label } from "./AddUserModalFieldHelpers";
 import type { AddUserStepProps } from "./addUserModalTypes";
 
@@ -61,9 +62,22 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
         >
           <div className="flex items-center gap-3">
             <UserAvatar id={form.contactId} name={form.name} className="w-10 h-10 rounded-full text-xs font-semibold" />
-            <div>
+            <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-foreground">{form.name}</p>
-              <p className="text-xs text-muted-foreground">{form.email}</p>
+              {form.email ? (
+                <p className="text-xs text-muted-foreground">{form.email}</p>
+              ) : (
+                <div className="mt-1.5 space-y-1">
+                  <Input
+                    type="email"
+                    placeholder={t("auth.emailAddress") || "Email address"}
+                    value={form.email}
+                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                    className="h-8 text-xs bg-background"
+                  />
+                  <p className="text-[11px] text-muted-foreground">{t("users.addErrorContactEmail")}</p>
+                </div>
+              )}
             </div>
           </div>
           {form.phone ? (

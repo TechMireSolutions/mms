@@ -5,7 +5,7 @@ import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers
 import { useSessionsWidgetAggregates } from '@/tenant/hooks/collections/sessions';
 import { useEnrollmentsWidgetAggregates } from '@/tenant/hooks/collections/enrollments';
 import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
-import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
+import { useFinanceInvoicesPaginated } from '@/tenant/hooks/collections/finance';
 import {
   useHasanatDenomsCollection,
   useHasanatDistributionsCollection,
@@ -105,7 +105,7 @@ export function useKpiSummaryCustomCards(
     enabled: isEnrollmentsCategory && hasEnrollmentCustomCards,
   });
 
-  const invoices = useFinanceInvoicesCollection({ enabled: needsFinance });
+  const invoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }, { enabled: needsFinance }).data?.invoices ?? [];
   const attendanceRecords = useAttendanceRecordsCollection({ enabled: needsAttendance });
   const distributions = useHasanatDistributionsCollection({ enabled: needsHasanat });
   const denominations = useHasanatDenomsCollection({ enabled: needsHasanat });

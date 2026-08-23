@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm';
 import type { PlatformSettings, PlatformSettingsUpdateInput } from '@mms/shared';
-import { getDb } from '../dbClient.js';
+import { activeDb } from '../dbConnection.js';
 import { platformSettings } from '../schema.js';
 
 export const GLOBAL_SETTINGS_ID = 'global';
@@ -16,7 +16,7 @@ function rowToPlatformSettings(row: typeof platformSettings.$inferSelect): Platf
 }
 
 export async function findPlatformSettingsRow(id = GLOBAL_SETTINGS_ID): Promise<PlatformSettings | null> {
-  const rows = await getDb()
+  const rows = await activeDb()
     .select()
     .from(platformSettings)
     .where(eq(platformSettings.id, id))
@@ -31,7 +31,7 @@ export async function insertPlatformSettingsDefaultRow(defaults: {
   tlsExtraSans: string;
   certbotEmail: string;
 }): Promise<PlatformSettings | null> {
-  const inserted = await getDb()
+  const inserted = await activeDb()
     .insert(platformSettings)
     .values({
       id: defaults.id || GLOBAL_SETTINGS_ID,
@@ -56,7 +56,7 @@ export async function upsertPlatformSettingsRow(
   const certbotEmail = input.certbotEmail !== undefined ? input.certbotEmail.trim() : current.certbotEmail;
   const updatedAt = new Date();
 
-  await getDb()
+  await activeDb()
     .insert(platformSettings)
     .values({
       id,

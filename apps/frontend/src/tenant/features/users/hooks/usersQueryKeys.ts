@@ -41,12 +41,13 @@ export function usersPaginatedQueryKey(params: UsersPaginatedParams) {
 
 export function usersListQueryKeyParams(params: UsersPaginatedParams) {
   return {
-    search: params.search?.trim() || '',
-    status: params.status?.trim() || '',
-    role: params.role?.trim() || '',
-    sortField: params.sortField || '',
-    sortDir: params.sortDir || '',
-    includeDeleted: Boolean(params.includeDeleted),
+    ...(params.search?.trim() ? { search: params.search.trim() } : {}),
+    ...(params.status?.trim() && params.status !== 'all' ? { status: params.status.trim() } : {}),
+    ...(params.role?.trim() && params.role !== 'all' ? { role: params.role.trim() } : {}),
+    ...(params.sortField?.trim() ? { sortField: params.sortField.trim() } : {}),
+    ...(params.sortDir ? { sortDir: params.sortDir } : {}),
+    ...(params.includeDeleted ? { includeDeleted: true } : {}),
+    page: params.page,
     limit: params.limit ?? USERS_MODULE_MANIFEST.defaultPageSize,
   };
 }

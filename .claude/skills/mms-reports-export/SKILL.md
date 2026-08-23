@@ -50,8 +50,8 @@ saveCollection('students', rows)  // widget toggle
 | Format | Import |
 |--------|--------|
 | Print | CSS `@media print` |
-| Excel | `await import('xlsx')` |
-| PDF | `await import('jspdf')` + autotable |
+| Excel | Backend ExcelJS Stream Pipe (via BullMQ) |
+| PDF | Backend Headless Typst Worker (via BullMQ) |
 
 Use shared `ExportToolbar` — not a deleted `ReportExportBar`. Escape formula-prefix cells (`=`, `+`, `-`, `@`). Respect filters, RBAC, field visibility, soft-delete policy, `can()`.
 

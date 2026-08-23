@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 
 type TokenRole = 'admin' | 'teacher' | 'accountant' | 'assistant_teacher' | 'viewer' | 'guardian';
@@ -9,6 +10,7 @@ type TenantTokenOptions = {
   name?: string;
   workspaceSubdomain?: string;
   twoFactorVerified?: boolean;
+  jti?: string;
 };
 
 export function signTenantToken(
@@ -24,6 +26,7 @@ export function signTenantToken(
     workspaceSubdomain: options.workspaceSubdomain ?? 'demo',
     twoFactorVerified: options.twoFactorVerified ?? true,
     tokenType: 'access',
+    jti: options.jti ?? randomUUID(),
   });
 }
 

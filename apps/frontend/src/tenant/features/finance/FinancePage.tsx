@@ -102,8 +102,8 @@ export default function Finance() {
                   showDeleted={c.showDeleted}
                   onDelete={(id) => c.deleteInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.deleted")), onError: c.mutationError })}
                   onRestore={(id) => c.restoreInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
-                  onBulkDelete={(ids) => c.bulkDeleteInvoices.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}
-                  onBulkRestore={(ids) => c.bulkRestoreInvoices.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.restored"), onError: c.mutationError })}
+                  onBulkDelete={(ids) => c.bulkDeleteInvoices.mutate(ids, { onSuccess: (result: any) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}
+                  onBulkRestore={(ids) => c.bulkRestoreInvoices.mutate(ids, { onSuccess: (result: any) => c.handleBulkResult(result, "finance.trash.restored"), onError: c.mutationError })}
                   onBulkStatusChange={(ids, status) => void c.handleBulkStatusChange(ids, status)}
                   onBulkPrintReceipts={(inv) => setReceiptInvoices(inv)}
                   isBulkStatusPending={c.bulkUpdateInvoiceStatus.isPending}
@@ -131,8 +131,8 @@ export default function Finance() {
                   showDeleted={c.showDeleted}
                   onDelete={(id) => c.deletePayment.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.deleted")), onError: c.mutationError })}
                   onRestore={(id) => c.restorePayment.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
-                  onBulkDelete={(ids) => c.bulkDeletePayments.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}
-                  onBulkRestore={(ids) => c.bulkRestorePayments.mutate(ids, { onSuccess: (result) => c.handleBulkResult(result, "finance.trash.restored"), onError: c.mutationError })}
+                  onBulkDelete={(ids) => c.bulkDeletePayments.mutate(ids, { onSuccess: (result: any) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}
+                  onBulkRestore={(ids) => c.bulkRestorePayments.mutate(ids, { onSuccess: (result: any) => c.handleBulkResult(result, "finance.trash.restored"), onError: c.mutationError })}
                   selectionResetKey={`${c.activeSubTab}:${c.showDeleted}`}
                   isColumnVisible={c.paymentColumnLayout.isColumnVisible}
                   getColumnWidth={c.paymentColumnLayout.getColumnWidth}

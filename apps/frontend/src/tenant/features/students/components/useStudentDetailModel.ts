@@ -15,9 +15,9 @@ import {
   getPrimaryEmail,
   hasWhatsApp,
 } from "@mms/shared";
-import { useSessions } from '@/tenant/hooks/collections/sessions';
+import { useSessions, useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useContactsByIds, useContactById } from '@/tenant/hooks/collections/contacts';
-import { useStudentsPaginated } from '@/tenant/features/students/hooks/useStudentsListQueries';
+import { useStudentsContractList } from '@/tenant/features/students/hooks/useStudentsTsrHooks';
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
@@ -27,7 +27,7 @@ export function useStudentDetailModel(student: Student) {
   const { t } = useTranslation();
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
   const sessionsQuery = useSessions();
-  const sessions = sessionsQuery.data ?? [];
+  const sessions = useSessionsCollection();
   const { data: primaryContact } = useContactById(
     student.contactId != null ? String(student.contactId) : undefined,
   );
@@ -167,8 +167,8 @@ export function useStudentDetailModel(student: Student) {
     return true;
   });
 
-  const allStudentsQuery = useStudentsPaginated({ page: 1, limit: 100 });
-  const allStudents = useMemo(() => allStudentsQuery.data?.students ?? [], [allStudentsQuery.data?.students]);
+  const allStudentsQuery = useStudentsContractList({ page: 1, limit: 100 });
+  const allStudents = useMemo(() => allStudentsQuery.data?.body?.students ?? [], [allStudentsQuery.data?.body?.students]);
 
   const siblings: SiblingStudentItem[] = useMemo(() => {
     if (!student.id) return [];

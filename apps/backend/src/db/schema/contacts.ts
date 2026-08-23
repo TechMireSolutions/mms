@@ -12,18 +12,10 @@ export const contacts = pgTable('contacts', {
   dob: varchar('dob', { length: 30 }),
   cnic: varchar('cnic', { length: 30 }),
   isSyed: boolean('is_syed').notNull().default(false),
-  tag: varchar('tag', { length: 100 }),
   avatar: text('avatar'),
   notes: text('notes'),
   whatsappStatus: varchar('whatsapp_status', { length: 30 }).notNull().default('unknown'),
   lastCheckedAt: varchar('last_checked_at', { length: 35 }),
-  phone: varchar('phone', { length: 50 }),
-  email: varchar('email', { length: 255 }),
-  line1: varchar('line1', { length: 255 }),
-  address: text('address'),
-  city: varchar('city', { length: 100 }),
-  state: varchar('state', { length: 100 }),
-  country: varchar('country', { length: 100 }),
   preferredLanguage: varchar('preferred_language', { length: 50 }),
   preferredContactMethod: varchar('preferred_contact_method', { length: 50 }),
   doNotContact: boolean('do_not_contact').notNull().default(false),
@@ -40,11 +32,8 @@ export const contacts = pgTable('contacts', {
   index('contacts_workspace_name_idx').on(table.workspaceSubdomain, table.name),
   index('contacts_workspace_first_name_idx').on(table.workspaceSubdomain, table.firstName),
   index('contacts_workspace_last_name_idx').on(table.workspaceSubdomain, table.lastName),
-  index('contacts_workspace_phone_idx').on(table.workspaceSubdomain, table.phone),
-  index('contacts_workspace_email_idx').on(table.workspaceSubdomain, table.email),
   index('contacts_workspace_cnic_idx').on(table.workspaceSubdomain, table.cnic),
   index('contacts_workspace_gender_idx').on(table.workspaceSubdomain, table.gender),
-  index('contacts_workspace_city_idx').on(table.workspaceSubdomain, table.city),
   index('contacts_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('contacts_workspace_active_idx')
     .on(table.workspaceSubdomain)
@@ -56,22 +45,6 @@ export const contacts = pgTable('contacts', {
     )
     .where(
       sql`${table.deletedAt} is null and nullif(regexp_replace(${table.cnic}, '[^0-9]', '', 'g'), '') is not null`,
-    ),
-  uniqueIndex('contacts_workspace_phone_active_uidx')
-    .on(
-      table.workspaceSubdomain,
-      sql`(regexp_replace(${table.phone}, '[^0-9]', '', 'g'))`,
-    )
-    .where(
-      sql`${table.deletedAt} is null and nullif(regexp_replace(${table.phone}, '[^0-9]', '', 'g'), '') is not null`,
-    ),
-  uniqueIndex('contacts_workspace_email_active_uidx')
-    .on(
-      table.workspaceSubdomain,
-      sql`(lower(trim(${table.email})))`,
-    )
-    .where(
-      sql`${table.deletedAt} is null and nullif(trim(${table.email}), '') is not null`,
     ),
 ]);
 
@@ -131,6 +104,21 @@ export const contactAddresses = pgTable('contact_addresses', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
   index('contact_addresses_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
+]);
+export const contactTags = pgTable('contact_tags', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  contactId: text('contact_id').notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
+  index('contact_tags_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  uniqueIndex('contact_tags_contact_name_uidx').on(table.workspaceSubdomain, table.contactId, table.name),
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
@@ -395,6 +383,9 @@ export type ContactExperienceRow = typeof contactExperiences.$inferSelect;
 export type InsertContactExperienceRow = typeof contactExperiences.$inferInsert;
 export type ContactSkillRow = typeof contactSkills.$inferSelect;
 export type InsertContactSkillRow = typeof contactSkills.$inferInsert;
+
+export type ContactTagRow = typeof contactTags.$inferSelect;
+export type InsertContactTagRow = typeof contactTags.$inferInsert;
 export type ContactRelationshipRow = typeof contactRelationships.$inferSelect;
 export type InsertContactRelationshipRow = typeof contactRelationships.$inferInsert;
 export type ContactActivityRow = typeof contactActivities.$inferSelect;

@@ -7,6 +7,7 @@ allowBuilds:
   better-sqlite3: true
   core-js: true
   esbuild: true
+  msgpackr-extract: true
   puppeteer: true
 
 catalog:
@@ -17,6 +18,7 @@ catalog:
   react-dom: "^19.2.8"
   vite: "^8.2.1"
   "@tanstack/react-query": "^5.101.4"
+  "@ts-rest/react-query": "3.52.1"
 
 minimumReleaseAgeExclude:
   - nodemailer@9.0.1

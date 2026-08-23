@@ -92,7 +92,7 @@ export function createGenericRelationalService<
     return true;
   }
 
-  async function restoreById(id: string): Promise<boolean> {
+  async function restoreById(id: string, _userId?: string): Promise<boolean> {
     const tenant = getRequestTenant();
     if (!tenant) return false;
     const existing = await repo.findById(tenant, id);

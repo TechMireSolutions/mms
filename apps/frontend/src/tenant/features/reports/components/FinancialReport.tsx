@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { AlertCircle, DollarSign, Tag, TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useFinanceInvoicesCollection, useFinanceMetrics } from "@/tenant/hooks/collections/finance";
+import { useFinanceInvoicesPaginated, useFinanceMetrics } from "@/tenant/hooks/collections/finance";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import {
   FinancialMonthFilterBanner,
@@ -46,7 +46,7 @@ const FinancialReport = React.memo(function FinancialReport({ filters }: Financi
     () => [palette.primary, palette.secondary, palette.charts[2], palette.charts[3], palette.charts[0]],
     [palette],
   );
-  const financeInvoices = useFinanceInvoicesCollection();
+  const financeInvoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
   const { data: financeMetrics } = useFinanceMetrics();
 
   const monthlyFeeCollection = useMemo<MonthlyFeeCollectionItem[]>(() => {

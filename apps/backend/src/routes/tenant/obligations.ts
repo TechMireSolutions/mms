@@ -16,16 +16,14 @@ import {
 } from '../../lib/crudRouter.js';
 import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 
+import { obligationContractRouter } from './obligations/obligationContractRouter.js';
 import {
-  loadObligationTypes,
   upsertObligationTypes,
-  loadMujtahids,
   upsertMujtahids,
   loadMujtahidReps,
   upsertMujtahidReps,
   loadWakalaTypes,
   upsertWakalaTypes,
-  loadObligationDistributions,
   upsertObligationDistributions,
   loadObligationCollections,
   upsertObligationCollections,
@@ -47,80 +45,88 @@ export default async function obligationsRoutes(
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
 
-  registerBulkRoutes(fastify, {
-    path: '/types',
-    collection: OBLIGATIONS_COLLECTION,
-    schema: obligationTypeListSchema,
-    loadFn: loadObligationTypes,
-    saveFn: upsertObligationTypes,
-    responseKey: 'types',
-    errorMessagePrefix: 'obligation types',
-  });
+  await fastify.register(
+    async (sub) => {
+      registerBulkRoutes(sub, {
+        path: '/types',
+        collection: OBLIGATIONS_COLLECTION,
+        schema: obligationTypeListSchema,
+        saveFn: upsertObligationTypes,
+        responseKey: 'types',
+        errorMessagePrefix: 'obligation types',
+        customGetRoute: true,
+      });
 
-  registerBulkRoutes(fastify, {
-    path: '/mujtahids',
-    collection: OBLIGATIONS_COLLECTION,
-    schema: mujtahidListSchema,
-    loadFn: loadMujtahids,
-    saveFn: upsertMujtahids,
-    responseKey: 'mujtahids',
-    errorMessagePrefix: 'mujtahids',
-  });
+      registerBulkRoutes(sub, {
+        path: '/mujtahids',
+        collection: OBLIGATIONS_COLLECTION,
+        schema: mujtahidListSchema,
+        saveFn: upsertMujtahids,
+        responseKey: 'mujtahids',
+        errorMessagePrefix: 'mujtahids',
+        customGetRoute: true,
+      });
 
-  registerBulkRoutes(fastify, {
-    path: '/reps',
-    collection: OBLIGATIONS_COLLECTION,
-    schema: mujtahidRepListSchema,
-    loadFn: loadMujtahidReps,
-    saveFn: upsertMujtahidReps,
-    responseKey: 'reps',
-    errorMessagePrefix: 'mujtahid reps',
-  });
+      registerBulkRoutes(sub, {
+        path: '/reps',
+        collection: OBLIGATIONS_COLLECTION,
+        schema: mujtahidRepListSchema,
+        loadFn: loadMujtahidReps,
+        saveFn: upsertMujtahidReps,
+        responseKey: 'reps',
+        errorMessagePrefix: 'mujtahid reps',
+      });
 
-  registerBulkRoutes(fastify, {
-    path: '/wakala',
-    collection: OBLIGATIONS_COLLECTION,
-    schema: wakalaTypeListSchema,
-    loadFn: loadWakalaTypes,
-    saveFn: upsertWakalaTypes,
-    responseKey: 'wakalaTypes',
-    errorMessagePrefix: 'wakala types',
-  });
+      registerBulkRoutes(sub, {
+        path: '/wakala',
+        collection: OBLIGATIONS_COLLECTION,
+        schema: wakalaTypeListSchema,
+        loadFn: loadWakalaTypes,
+        saveFn: upsertWakalaTypes,
+        responseKey: 'wakalaTypes',
+        errorMessagePrefix: 'wakala types',
+      });
 
-  registerBulkRoutes(fastify, {
-    path: '/distributions',
-    collection: OBLIGATIONS_COLLECTION,
-    schema: obligationDistributionListSchema,
-    loadFn: loadObligationDistributions,
-    saveFn: upsertObligationDistributions,
-    responseKey: 'distributions',
-    errorMessagePrefix: 'obligation distributions',
-  });
+      registerBulkRoutes(sub, {
+        path: '/distributions',
+        collection: OBLIGATIONS_COLLECTION,
+        schema: obligationDistributionListSchema,
+        saveFn: upsertObligationDistributions,
+        responseKey: 'distributions',
+        errorMessagePrefix: 'obligation distributions',
+        customGetRoute: true,
+      });
 
-  registerSoftDeletableBulkRoutes(fastify, {
-    path: '/collections',
-    collection: OBLIGATIONS_COLLECTION,
-    schema: obligationCollectionListSchema,
-    loadFn: loadObligationCollections,
-    saveFn: upsertObligationCollections,
-    deleteFn: deleteObligationCollectionById,
-    restoreFn: restoreObligationCollectionById,
-    bulkDeleteFn: bulkSoftDeleteObligationCollections,
-    bulkRestoreFn: bulkRestoreObligationCollections,
-    responseKey: 'collections',
-    errorMessagePrefix: 'obligation collections',
-    nameSingular: 'Obligation collection',
-  });
+      registerSoftDeletableBulkRoutes(sub, {
+        path: '/collections',
+        collection: OBLIGATIONS_COLLECTION,
+        schema: obligationCollectionListSchema,
+        loadFn: loadObligationCollections,
+        saveFn: upsertObligationCollections as any,
+        deleteFn: deleteObligationCollectionById,
+        restoreFn: restoreObligationCollectionById,
+        bulkDeleteFn: bulkSoftDeleteObligationCollections,
+        bulkRestoreFn: bulkRestoreObligationCollections,
+        responseKey: 'collections',
+        errorMessagePrefix: 'obligation collections',
+        nameSingular: 'Obligation collection',
+        customGetRoute: true,
+      });
 
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/column-preferences',
-    collection: OBLIGATIONS_COLLECTION,
-    objectKey: OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
-  });
+      registerColumnPreferencesRoutes(sub, {
+        path: '/column-preferences',
+        collection: OBLIGATIONS_COLLECTION,
+        objectKey: OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
+      });
 
-  registerMetricsRoute(fastify, {
-    collection: OBLIGATIONS_COLLECTION,
-    loadMetricsFn: loadObligationsCommandMetrics,
-    errorMessagePrefix: 'obligation',
-  });
+      registerMetricsRoute(sub, {
+        collection: OBLIGATIONS_COLLECTION,
+        loadMetricsFn: loadObligationsCommandMetrics,
+        errorMessagePrefix: 'obligation',
+      });
+    },
+    { prefix: '/api/obligations' },
+  );
+
+  await fastify.register(obligationContractRouter);
 }

@@ -1,7 +1,7 @@
 import type { AppLanguageCode } from '@mms/shared';
 
 const LOCALE_FONT_STYLESHEETS: Partial<Record<AppLanguageCode, string>> = {
-  ar: 'https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;600;700&display=swap',
+  ar: 'https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Sans+Arabic:wght@400;600;700&family=Readex+Pro:wght@400;500;600;700&display=swap',
   ur: 'https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap',
   fa: 'https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700&display=swap',
 };

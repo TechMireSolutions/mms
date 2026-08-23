@@ -8,7 +8,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { mergeGlobalSettings, parseTenantScopedStorageKey, SYSTEM_MODULES } from '@mms/shared';
 
 const GLOBAL_SETTINGS_KEY = 'global_settings';
@@ -43,7 +43,7 @@ export async function runMigration080(): Promise<void> {
 
   let migrated = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     for (const ws of workspaces) {
       const tenant = ws.subdomain;
       const rawGlobal = globalByTenant.get(tenant) ?? null;

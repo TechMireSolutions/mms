@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import type { UseQueryResult } from "@tanstack/react-query";
 import type { Distribution } from '@/lib/data/hasanatData';
-import { HASANAT_MODULE_MANIFEST, type HasanatDistributionsListPageResult } from '@mms/shared';
+import { HASANAT_MODULE_MANIFEST } from '@mms/shared';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDebounce } from "@/hooks/useDebounce";
-import { useHasanatPaginated } from "@/tenant/features/hasanat/hooks/useHasanatApi";
+import { useHasanatContractList } from "@/tenant/features/hasanat/hooks/useHasanatTsrHooks";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
@@ -56,7 +55,7 @@ export function useDistributionManagerState({
     setListPage(1);
   }, [debouncedSearch, filterStatus, showDeleted]);
 
-  const pageQuery: UseQueryResult<HasanatDistributionsListPageResult> = useHasanatPaginated({
+  const pageQuery = useHasanatContractList({
     page: listPage,
     limit: HASANAT_MODULE_MANIFEST.defaultPageSize,
     search: debouncedSearch,
@@ -64,11 +63,11 @@ export function useDistributionManagerState({
     includeDeleted: showDeleted,
   });
 
-  const pageDistributions: Distribution[] = pageQuery.data?.distributions ?? [];
-  const serverTotal = pageQuery.data?.total ?? 0;
-  const serverPage = pageQuery.data?.page ?? listPage;
-  const serverLimit = pageQuery.data?.limit ?? HASANAT_MODULE_MANIFEST.defaultPageSize;
-  const serverHasMore = pageQuery.data?.hasMore ?? false;
+  const pageDistributions: Distribution[] = (pageQuery.data?.body?.distributions ?? []) as Distribution[];
+  const serverTotal = pageQuery.data?.body?.total ?? 0;
+  const serverPage = pageQuery.data?.body?.page ?? listPage;
+  const serverLimit = pageQuery.data?.body?.limit ?? HASANAT_MODULE_MANIFEST.defaultPageSize;
+  const serverHasMore = pageQuery.data?.body?.hasMore ?? false;
 
   useEffect(() => {
     onFilteredCountChange?.(serverTotal);

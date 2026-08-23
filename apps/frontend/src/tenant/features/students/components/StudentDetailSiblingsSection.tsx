@@ -1,6 +1,7 @@
 import React from "react";
-import { Users, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
@@ -33,24 +34,19 @@ export function StudentDetailSiblingsSection({
 
   return (
     <div className="space-y-3 pt-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users className="w-4 h-4 text-primary" />
-          <h4 className="text-xs font-bold text-foreground">
-            {t("students.detail.siblings")} ({siblings.length})
-          </h4>
-        </div>
-      </div>
+      <DetailSectionTitle>
+        {t("students.detail.siblings")} ({siblings.length})
+      </DetailSectionTitle>
 
-      <div className="grid grid-cols-1 gap-2">
+      <Card accentColor="success" className="divide-y divide-border/50 p-0">
         {siblings.map((sibling) => (
-          <Card
+          <div
             key={sibling.id}
             onClick={onViewSibling ? () => onViewSibling(sibling.id) : undefined}
             className={`p-3 transition-colors ${
               onViewSibling
-                ? "hover:bg-muted/60 cursor-pointer border-border/60 hover:border-primary/40"
-                : "border-border/40"
+                ? "hover:bg-muted/60 cursor-pointer"
+                : ""
             }`}
           >
             <div className="flex items-center justify-between gap-3">
@@ -86,9 +82,9 @@ export function StudentDetailSiblingsSection({
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
               )}
             </div>
-          </Card>
+          </div>
         ))}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import type {
   ObligationType,
   Mujtahid,
@@ -10,9 +9,9 @@ import type {
 } from '@mms/shared';
 import { OBLIGATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
+import { tsrClient } from '@/lib/api';
 import {
   OBLIGATIONS_TYPES_QUERY_KEY,
   OBLIGATIONS_MUJTAHIDS_QUERY_KEY,
@@ -41,105 +40,91 @@ export class NotifiedObligationsMutationError extends NotifiedMutationError {}
 
 export function useObligationsTypes(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<ObligationType[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.obligations.listTypes.useQuery({
     queryKey: OBLIGATIONS_TYPES_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ types: ObligationType[] }>(`${OBLIGATIONS_API}/types`, { signal });
-      return res?.types ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useObligationsTypesCollection(options?: { enabled?: boolean }): ObligationType[] {
-  return useObligationsTypes(options).data ?? [];
+  const query = useObligationsTypes(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.types ?? []);
 }
 
 export function useObligationsMujtahids(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<Mujtahid[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.obligations.listMujtahids.useQuery({
     queryKey: OBLIGATIONS_MUJTAHIDS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ mujtahids: Mujtahid[] }>(`${OBLIGATIONS_API}/mujtahids`, { signal });
-      return res?.mujtahids ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useObligationsMujtahidsCollection(options?: { enabled?: boolean }): Mujtahid[] {
-  return useObligationsMujtahids(options).data ?? [];
+  const query = useObligationsMujtahids(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.mujtahids ?? []);
 }
 
 export function useObligationsReps(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<MujtahidRep[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.obligations.listReps.useQuery({
     queryKey: OBLIGATIONS_REPS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ reps: MujtahidRep[] }>(`${OBLIGATIONS_API}/reps`, { signal });
-      return res?.reps ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useObligationsRepsCollection(options?: { enabled?: boolean }): MujtahidRep[] {
-  return useObligationsReps(options).data ?? [];
+  const query = useObligationsReps(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.reps ?? []);
 }
 
 export function useObligationsWakala(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<WakalaType[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.obligations.listWakala.useQuery({
     queryKey: OBLIGATIONS_WAKALA_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ wakalaTypes: WakalaType[] }>(`${OBLIGATIONS_API}/wakala`, { signal });
-      return res?.wakalaTypes ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useObligationsWakalaCollection(options?: { enabled?: boolean }): WakalaType[] {
-  return useObligationsWakala(options).data ?? [];
+  const query = useObligationsWakala(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.wakalaTypes ?? []);
 }
 
 export function useObligationsDistributions(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<ObligationDistribution[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.obligations.listDistributions.useQuery({
     queryKey: OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ distributions: ObligationDistribution[] }>(
-        `${OBLIGATIONS_API}/distributions`,
-        { signal },
-      );
-      return res?.distributions ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useObligationsDistributionsCollection(options?: { enabled?: boolean }): ObligationDistribution[] {
-  return useObligationsDistributions(options).data ?? [];
+  const query = useObligationsDistributions(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.distributions ?? []);
 }
 
 export function useObligationsCollections(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
-  return useQuery<ObligationCollection[]>({
-    queryKey: [...OBLIGATIONS_COLLECTIONS_QUERY_KEY, { includeDeleted }],
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ collections: ObligationCollection[] }>(
-        `${OBLIGATIONS_API}/collections?includeDeleted=${includeDeleted}`,
-        { signal },
-      );
-      return res?.collections ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.obligations.listCollections.useQuery({
+    queryKey: [...OBLIGATIONS_COLLECTIONS_QUERY_KEY, { includeDeleted }] as any,
+    queryData: { query: { includeDeleted: includeDeleted ? 'true' : undefined } },
     staleTime: 30_000,
   });
 }
@@ -148,7 +133,10 @@ export function useObligationsCollectionsCollection(options?: {
   enabled?: boolean;
   includeDeleted?: boolean;
 }): ObligationCollection[] {
-  return useObligationsCollections(options).data ?? [];
+  const query = useObligationsCollections(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.collections ?? []);
 }
 
 export function useObligationsMetrics(options?: { enabled?: boolean }) {

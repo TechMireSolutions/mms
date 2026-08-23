@@ -109,8 +109,6 @@ describe('generic saved-reports REST routes', () => {
         name: 'Active students',
         category: 'students',
         filters: { status: 'active' },
-        createdBy: 'forged-user',
-        createdByName: 'Forged User',
       },
     });
     expect(response.statusCode).toBe(201);

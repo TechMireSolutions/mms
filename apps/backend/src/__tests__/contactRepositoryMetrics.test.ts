@@ -3,8 +3,8 @@ import type { FieldConfig } from '@mms/shared';
 
 const mockWithTenantTransaction = vi.fn();
 
-vi.mock('../db/withTenantTransaction.js', () => ({
-  withTenantTransaction: (...args: unknown[]) => mockWithTenantTransaction(...args),
+vi.mock('../db/tenant-context.js', () => ({
+  withTenant: (...args: unknown[]) => mockWithTenantTransaction(...args),
 }));
 
 import {

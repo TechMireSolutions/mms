@@ -9,8 +9,6 @@ export {
   FINANCE_REPORT_AGGREGATES_QUERY_KEY,
   useFinanceInvoicesPaginated,
   useFinancePaymentsPaginated,
-  useFinanceInvoicesCollection,
-  useFinancePaymentsCollection,
   useFinanceReportAggregates,
   useFinanceMutations,
 } from "@/tenant/features/finance/hooks/useFinanceApi";
@@ -25,3 +23,16 @@ export {
   useFinancePreferencesMutation,
   useComposedFinanceSettings,
 } from "@/tenant/features/finance/hooks/useFinanceSetupConfig";
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useFinanceContractInvoices,
+  useFinanceContractPayments,
+  useFinanceContractMetrics,
+  useFinanceContractCreateInvoice,
+  useFinanceContractUpdateInvoice,
+  useFinanceContractDeleteInvoice,
+  useFinanceContractCreatePayment,
+  useFinanceContractUpdatePayment,
+  useFinanceContractBulkDeleteInvoices,
+  useFinanceContractBulkStatusInvoices,
+} from '@/tenant/features/finance/hooks/useFinanceTsrHooks';

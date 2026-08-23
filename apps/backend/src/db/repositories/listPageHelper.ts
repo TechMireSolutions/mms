@@ -30,7 +30,7 @@ export interface ListPageResult<Record> {
  * Shared SQL list-page body: clamp page/limit, `count(*)` + `LIMIT/OFFSET` over
  * the same WHERE, then map rows. Extracted from `financeRepositoryList` /
  * `accountingRepositoryList` so new modules don't copy the 6-step skeleton.
- * Runs inside the caller's `withTenantTransaction` (RLS SET LOCAL).
+ * Runs inside the caller's `withTenant` (RLS SET LOCAL).
  */
 export async function runListPage<Row, Record>(
   tx: AppDb,

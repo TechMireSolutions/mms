@@ -13,7 +13,7 @@ import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGr
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
-import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
+import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
@@ -73,9 +73,16 @@ export default function MessagingPage(): React.JSX.Element {
     else notify.info(t('messaging.selectRecipientsDesc'));
   }, [selectedList.length, setActiveTab, t, triggerCompose]);
 
-  useModuleCreateHotkey({
-    enabled: canWrite,
+  useModuleShortcuts({
+    searchInputId: 'messaging-search-input',
+    selectedCount: selectedList.length,
+    hasActiveFilters: false,
+    clearFilters: () => {},
+    clearSelection: () => setSelectedById({}),
+    canWrite,
+    showDeleted: false,
     onCreate: startCampaign,
+    enabled: activeTab === 'work',
   });
 
   const resend = (log: Message, recipient: MessagingRecipient): void => {
@@ -85,7 +92,7 @@ export default function MessagingPage(): React.JSX.Element {
   const confirmDeleteTemplate = async (): Promise<void> => {
     if (!deleteTemplateId) return;
     try {
-      await deleteTemplate.mutateAsync(deleteTemplateId);
+      await deleteTemplate.mutateAsync({ params: { id: deleteTemplateId } } as any);
       setDeleteTemplateId(null);
       notify.success(t('common.delete'));
     } catch {
@@ -95,7 +102,7 @@ export default function MessagingPage(): React.JSX.Element {
 
   const confirmClearLogs = async (): Promise<void> => {
     try {
-      await clearLogs.mutateAsync(undefined);
+      await clearLogs.mutateAsync({ body: {} } as any);
       setConfirmClearLogsOpen(false);
       notify.success(t('messaging.clearLogs'));
     } catch {

@@ -7,8 +7,6 @@ import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
-import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
@@ -22,24 +20,11 @@ import { WarningCallout } from "@/components/ui/WarningCallout";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
+import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
+import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
-
-interface RowProps {
-  label: string;
-  value?: string | number | null;
-  mono?: boolean;
-}
-
-function Row({ label, value, mono = false }: RowProps) {
-  return (
-    <div className="flex justify-between items-start gap-4 py-2.5 border-b border-border last:border-0">
-      <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex-shrink-0">{label}</span>
-      <span className={`text-sm text-end font-medium text-foreground ${mono ? "font-mono" : ""}`}>{value || "—"}</span>
-    </div>
-  );
-}
 
 export interface ObligationCollectionDetailProps {
   collection: ObligationCollection;
@@ -132,7 +117,7 @@ export const ObligationCollectionDetail = React.memo(function ObligationCollecti
   return (
     <DetailDrawerShell open onClose={onClose} title={t("obligations.detail.title")} icon={Receipt} className="max-w-2xl">
       <div className="space-y-5">
-        <Card accentColor="primary" className={cn("p-4 flex items-center gap-3.5 bg-primary/5 border-primary/25", CARD_STRIPE_INSET)}>
+        <Card className="p-4 flex items-center gap-3.5 bg-primary/5 border-primary/25">
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
           <div>
             <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide m-0">{t("obligations.columns.receiptNo")}</h3>
@@ -144,21 +129,26 @@ export const ObligationCollectionDetail = React.memo(function ObligationCollecti
           </div>
         </Card>
 
-        <Card accentColor="info" className={cn("divide-y divide-border px-5 pb-2.5", CARD_STRIPE_INSET)}>
-          <Row label={t("obligations.columns.sender")} value={sender?.name} />
-          {reference && <Row label={t("obligations.form.reference")} value={reference?.name} />}
-          <Row label={t("obligations.columns.obligationType")} value={obType?.name} />
-          <Row label={t("obligations.detail.designatedFor")} value={obType?.designated_for} />
-          <Row label={t("obligations.form.representative")} value={rep?.name} />
-          <Row label={t("obligations.form.mujtahidLabel")} value={mujtahid?.name} />
-          <Row label={t("obligations.columns.amount")} value={formatMoney(collection.amount, currency?.code)} mono />
-          <div className="flex justify-between items-start gap-4 py-2.5 border-b border-border last:border-0">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide flex-shrink-0">{t("obligations.columns.paymentMode")}</span>
-            <StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />
-          </div>
-          <Row label={t("obligations.form.receivedBy")} value={user?.name} />
-          <Row label={t("obligations.detail.created")} value={formatDate(collection.created_at)} />
-        </Card>
+        <div className="space-y-2">
+          <DetailSectionTitle>{t("obligations.detail.title")}</DetailSectionTitle>
+          <Card className="divide-y divide-border/50 p-0">
+            <DetailAttributeRow variant="inset" label={t("obligations.columns.sender")} value={sender?.name} />
+            {reference && <DetailAttributeRow variant="inset" label={t("obligations.form.reference")} value={reference?.name} />}
+            <DetailAttributeRow variant="inset" label={t("obligations.columns.obligationType")} value={obType?.name} />
+            <DetailAttributeRow variant="inset" label={t("obligations.detail.designatedFor")} value={obType?.designated_for} />
+            <DetailAttributeRow variant="inset" label={t("obligations.form.representative")} value={rep?.name} />
+            <DetailAttributeRow variant="inset" label={t("obligations.form.mujtahidLabel")} value={mujtahid?.name} />
+            <DetailAttributeRow variant="inset" label={t("obligations.columns.amount")} value={
+              <span className="font-mono">{formatMoney(collection.amount, currency?.code)}</span>
+            } />
+            <div className="flex justify-between items-center px-3 py-2 border-b border-border/50 last:border-0 group/row">
+              <span className="mb-1 block text-xs font-bold uppercase leading-none tracking-tight text-muted-foreground">{t("obligations.columns.paymentMode")}</span>
+              <StatusBadge status={collection.payment_mode} config={paymentModeConfig} size="sm" />
+            </div>
+            <DetailAttributeRow variant="inset" label={t("obligations.form.receivedBy")} value={user?.name} />
+            <DetailAttributeRow variant="inset" label={t("obligations.detail.created")} value={formatDate(collection.created_at)} />
+          </Card>
+        </div>
 
         {dists.length > 0 && (
           <section aria-label={t("obligations.detail.distribution")}>

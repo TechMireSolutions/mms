@@ -4,10 +4,10 @@
  * Idempotent: only updates rows that still contain any of the keys.
  */
 import { sql } from 'drizzle-orm';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 export async function runMigration053(): Promise<void> {
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     const colCheck = (await tx.execute(sql`
       SELECT 1 FROM information_schema.columns
       WHERE table_schema = 'public' AND table_name = 'teachers' AND column_name = 'custom_data'

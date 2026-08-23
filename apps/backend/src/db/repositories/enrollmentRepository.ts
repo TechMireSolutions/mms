@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { Enrollment, EnrollmentTimelineItem } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 type EnrollmentRow = typeof enrollments.$inferSelect;
 type EnrollmentInsert = typeof enrollments.$inferInsert;
@@ -73,7 +73,7 @@ function recordToInsert(tenant: string, record: Enrollment): EnrollmentInsert {
 }
 
 async function writeTimelineEvents(
-  tx: Parameters<Parameters<typeof withTenantTransaction>[1]>[0],
+  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
   subdomain: string,
   enrollmentId: string,
   timeline: EnrollmentTimelineItem[] | undefined,
@@ -101,7 +101,7 @@ async function writeTimelineEvents(
 
 export async function listEnrollmentsByWorkspace(tenant: string): Promise<Enrollment[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(enrollments)
@@ -140,7 +140,7 @@ export async function findEnrollmentById(
   id: string,
 ): Promise<Enrollment | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(enrollments)
@@ -173,7 +173,7 @@ export async function findEnrollmentsByIds(
 ): Promise<Enrollment[]> {
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(enrollments)
@@ -212,7 +212,7 @@ export async function saveEnrollment(
   record: Enrollment,
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     const values = recordToInsert(subdomain, record);
     await tx
       .insert(enrollments)
@@ -254,7 +254,7 @@ export async function bulkSaveEnrollments(
 ): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       const values = recordToInsert(subdomain, record);
       await tx
@@ -296,7 +296,7 @@ export async function replaceEnrollmentsForWorkspace(
   records: Enrollment[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(enrollmentTimelineEvents).where(eq(enrollmentTimelineEvents.workspaceSubdomain, subdomain));
     await tx.delete(enrollments).where(eq(enrollments.workspaceSubdomain, subdomain));
     if (records.length > 0) {

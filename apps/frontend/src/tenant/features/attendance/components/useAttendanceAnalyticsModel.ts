@@ -95,18 +95,18 @@ export function useAttendanceAnalyticsModel(filters: AnalyticsFilters, records: 
   const { data: students = [] } = useStudentsByIds(studentIds);
 
   const studentRates = useMemo<StudentRateEntry[]>(() =>
-    students.map((student) => {
+    students.map((student: any) => {
       const studentName = student.name || t("attendance.analytics.unknown");
       return {
         name: studentName.split(" ")[0] + " " + (studentName.split(" ")[1]?.[0] ?? "") + ".",
         rate: calcStudentRate(student.id, records),
       };
-    }).sort((firstStudent, secondStudent) => firstStudent.rate - secondStudent.rate),
+    }).sort((firstStudent: any, secondStudent: any) => firstStudent.rate - secondStudent.rate),
     [students, records, t]
   );
 
   const lowAttendance = studentRates.filter((studentRate) => studentRate.rate < 75);
-  const topStudents = [...studentRates].sort((firstStudent, secondStudent) => secondStudent.rate - firstStudent.rate).slice(0, 3);
+  const topStudents = [...studentRates].sort((firstStudent: any, secondStudent: any) => secondStudent.rate - firstStudent.rate).slice(0, 3);
 
   const pieData = useMemo(() =>
     statuses.map((status: AttendanceStatus) => ({

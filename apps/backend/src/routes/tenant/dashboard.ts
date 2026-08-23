@@ -1,17 +1,16 @@
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import type { FastifyPluginAsync } from 'fastify';
 import {
   DASHBOARD_MODULE_MANIFEST,
   roleHasPermission,
-  dashboardPreferencesPutBodySchema,
-  dashboardWidgetsPutBodySchema,
+  rootContract,
   normalizeDashboardPreferences,
   type DashboardPreferences,
   type DashboardWidgetDto,
   type User,
 } from '@mms/shared';
+import { initServer } from '@ts-rest/fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { withTenant } from '../../db/tenant-context.js';
 import { createCollectionAuditHelper } from '../../lib/createCollectionAuditHelper.js';
 import {
   loadDashboardPreferences,
@@ -24,6 +23,7 @@ import {
 } from '../../lib/dashboardWidgetsService.js';
 
 const auditDashboard = createCollectionAuditHelper('dashboard');
+const s = initServer();
 
 function canWriteDashboard(user: User): boolean {
   if (!user || !user.role) return false;
@@ -35,94 +35,93 @@ function canWriteDashboard(user: User): boolean {
   );
 }
 
+const dashboardRouter = s.router(rootContract.dashboard, {
+  getPreferences: async ({ request }: any) => {
+    try {
+      const preferences = await withTenant(String((request as any).tenant?.id), () => loadDashboardPreferences(), { readOnly: true });
+      return {
+        status: 200 as const,
+        body: { preferences: preferences ?? normalizeDashboardPreferences(null) },
+      };
+    } catch {
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load dashboard preferences' } as any };
+    }
+  },
+  putPreferences: async ({ body, request }: any) => {
+    const user = (request as any).user as User;
+    if (!canWriteDashboard(user)) {
+      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+    }
+    try {
+      const saved = await withTenant(String((request as any).tenant?.id), async () => {
+        const result = await saveDashboardPreferences(
+          normalizeDashboardPreferences(body as DashboardPreferences) as DashboardPreferences,
+        );
+        try {
+          await auditDashboard(user, 'dashboard.preferences', 'Updated dashboard preferences', 'preferences');
+        } catch { /* non-critical */ }
+        return result;
+      }, { readOnly: false });
+      return { status: 200 as const, body: { success: true, preferences: saved } };
+    } catch {
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save dashboard preferences' } as any };
+    }
+  },
+  getWidgets: async ({ request }: any) => {
+    try {
+      const widgets = await withTenant(String((request as any).tenant?.id), () => loadDashboardWidgets(), { readOnly: true });
+      return { status: 200 as const, body: { widgets } };
+    } catch {
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load dashboard widgets' } as any };
+    }
+  },
+  putWidgets: async ({ body, request }: any) => {
+    const user = (request as any).user as User;
+    if (!canWriteDashboard(user)) {
+      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+    }
+    try {
+      const widgets = await withTenant(String((request as any).tenant?.id), async () => {
+        const result = await upsertDashboardWidgets(body as DashboardWidgetDto[]);
+        try {
+          await auditDashboard(user, 'dashboard.widgets', 'Updated dashboard widgets', 'widgets');
+        } catch { /* non-critical */ }
+        return result;
+      }, { readOnly: false });
+      return { status: 200 as const, body: { success: true, widgets } };
+    } catch {
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save dashboard widgets' } as any };
+    }
+  },
+  deleteWidget: async ({ params: { id }, request }: any) => {
+    const user = (request as any).user as User;
+    if (!canWriteDashboard(user)) {
+      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+    }
+    if (!id?.trim()) {
+      return { status: 400 as const, body: { type: 'validation_error', message: 'Widget id is required' } as any };
+    }
+    try {
+      await withTenant(String((request as any).tenant?.id), async () => {
+        await deleteDashboardWidget(id);
+        try {
+          await auditDashboard(user, 'dashboard.widget.delete', `Deleted dashboard widget ${id}`, id);
+        } catch { /* non-critical */ }
+      }, { readOnly: false });
+      return { status: 200 as const, body: { success: true } };
+    } catch {
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete dashboard widget' } as any };
+    }
+  },
+} as any);
+
 /**
  * Server-authoritative dashboard layout/preferences + pinned widgets REST.
- * Preferences-only (no field-config) + normalized widgets collection (GET / PUT upsert / DELETE :id).
+ * Migrated to @ts-rest contract router (Phase 3).
  */
-export default async function dashboardRoutes(
-  fastify: FastifyInstance,
-  _options: FastifyPluginOptions,
-): Promise<void> {
+const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.addHook('preHandler', authenticateTenant);
+  await fastify.register(s.plugin(dashboardRouter));
+};
 
-  fastify.get('/preferences', async (_request, reply) => {
-    try {
-      const preferences = await loadDashboardPreferences();
-      return reply.send({
-        preferences: preferences ?? normalizeDashboardPreferences(null),
-      });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to load dashboard preferences', error);
-    }
-  });
-
-  fastify.put('/preferences', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteDashboard(user)) return sendForbidden(reply);
-    const body = parseRequest(dashboardPreferencesPutBodySchema, request.body);
-    if (!body.ok) return replyValidationError(reply, body.message);
-    try {
-      const saved = await saveDashboardPreferences(
-        normalizeDashboardPreferences(body.data) as DashboardPreferences,
-      );
-      try {
-        await auditDashboard(user, 'dashboard.preferences', 'Updated dashboard preferences', 'preferences');
-      } catch (auditError) {
-        fastify.log.warn({ err: auditError }, 'Failed to record dashboard preferences audit log');
-      }
-      return reply.send({ success: true, preferences: saved });
-    } catch (error: unknown) {
-      fastify.log.error({ err: error }, 'Failed to save dashboard preferences in database');
-      return sendDatabaseError(reply, 'Failed to save dashboard preferences', error);
-    }
-  });
-
-  fastify.get('/widgets', async (_request, reply) => {
-    try {
-      const widgets = await loadDashboardWidgets();
-      return reply.send({ widgets });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to load dashboard widgets', error);
-    }
-  });
-
-  fastify.put('/widgets', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteDashboard(user)) return sendForbidden(reply);
-    const body = parseRequest(dashboardWidgetsPutBodySchema, request.body);
-    if (!body.ok) {
-      fastify.log.warn({ err: body.message, body: request.body }, 'Dashboard widgets PUT validation failed');
-      return replyValidationError(reply, body.message);
-    }
-    try {
-      const widgets = await upsertDashboardWidgets(body.data as DashboardWidgetDto[]);
-      try {
-        await auditDashboard(user, 'dashboard.widgets', 'Updated dashboard widgets', 'widgets');
-      } catch (auditError) {
-        fastify.log.warn({ err: auditError }, 'Failed to record dashboard widgets audit log');
-      }
-      return reply.send({ success: true, widgets });
-    } catch (error: unknown) {
-      fastify.log.error({ err: error }, 'Failed to save dashboard widgets in database');
-      return sendDatabaseError(reply, 'Failed to save dashboard widgets', error);
-    }
-  });
-
-  fastify.delete('/widgets/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteDashboard(user)) return sendForbidden(reply);
-    const { id } = request.params as { id: string };
-    if (!id?.trim()) return replyValidationError(reply, 'Widget id is required');
-    try {
-      await deleteDashboardWidget(id);
-      try {
-        await auditDashboard(user, 'dashboard.widget.delete', `Deleted dashboard widget ${id}`, id);
-      } catch (auditError) {
-        fastify.log.warn({ err: auditError }, 'Failed to record dashboard widget delete audit log');
-      }
-      return reply.send({ success: true });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to delete dashboard widget', error);
-    }
-  });
-}
+export default dashboardRoutes;

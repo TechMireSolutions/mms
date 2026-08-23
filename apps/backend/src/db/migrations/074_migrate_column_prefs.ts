@@ -19,7 +19,7 @@ import { eq } from 'drizzle-orm';
 import { parseTenantScopedStorageKey } from '@mms/shared';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 type Target = {
   logicalKey: string;
@@ -66,7 +66,7 @@ export async function runMigration074(): Promise<void> {
 
   let totalRows = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     for (let index = 0; index < TARGETS.length; index += 1) {
       const target = TARGETS[index];
       const tenantMap = byTarget[index];

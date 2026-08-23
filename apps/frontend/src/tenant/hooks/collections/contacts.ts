@@ -7,7 +7,6 @@ export {
   CONTACTS_QUERY_KEY,
   CONTACTS_METRICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
-  useContactsPaginated,
   useContactById,
   useContactsByIds,
   useContactMutations,
@@ -32,3 +31,12 @@ export {
   useContactPreferencesMutation,
 } from '@/tenant/features/contacts/hooks/useContactSetupConfig';
 export { invalidateContactsQueries } from '@/tenant/features/contacts/hooks/invalidateContactsQueries';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useContactsContractList,
+  useContactsContractGet,
+  useContactsContractReportAnalytics,
+  useContactsContractCreate,
+  useContactsContractUpdate,
+  useContactsContractDelete,
+} from '@/tenant/features/contacts/hooks/useContactsTsrHooks';

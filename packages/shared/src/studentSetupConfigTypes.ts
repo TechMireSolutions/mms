@@ -6,15 +6,21 @@ import {
 } from './studentsModuleSettings.js';
 import { STUDENT_TAB_REGISTRY, STUDENT_LOCKED_ENABLED_TABS } from './moduleFieldSetupPersons.js';
 import { normalizeStudentsSettings } from './studentSettingsUtils.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 
 /** PUT /api/students/field-config — field registry JSON without formTabs SSOT. */
-export const studentFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const studentFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     columnRegistry: z.array(z.record(z.string(), z.unknown())).optional(),
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const studentFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, studentFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/students/preferences — GR / auto-id prefs only. */
 export const studentPreferencesPutBodySchema = z

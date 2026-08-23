@@ -20,7 +20,6 @@ export function getContactSearchHaystack(contact: Contact): string {
     contact.lastName,
     getPrimaryPhone(contact),
     getPrimaryEmail(contact),
-    (contact.city as string) || '',
     ...((contact.emails || []).map((email) => email.address)),
     ...((contact.addresses || []).map((address) => [address.city, address.state, address.country, address.line1].filter(Boolean).join(' '))),
   ];

@@ -8,7 +8,7 @@ import {
   type StudentsListQuery,
 } from '@mms/shared';
 import { students, studentEnrolledSessions, contacts, sessions, sessionClasses } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { hydrateStudentsList } from './studentRepository.js';
 
 const STUDENT_SORT_FIELDS = new Set([
@@ -222,7 +222,7 @@ export async function listStudentsPage(
   const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
   const offset = (page - 1) * limit;
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const conditions = buildListConditions(subdomain, query);
     const whereClause = and(...conditions);
     const orderBy = buildOrderBy(query.sortField, query.sortDir);
@@ -259,7 +259,7 @@ export async function aggregateStudentsCommandMetrics(
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): Promise<StudentsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const registeredRaw = sql`NULLIF(trim(COALESCE(
       ${students.registeredDate},
       to_char(${students.createdAt}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
@@ -298,7 +298,7 @@ export async function listActiveStudentsMissingGrNumber(
   workspaceSubdomain: string,
 ): Promise<Student[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(students)
@@ -328,7 +328,7 @@ export async function bulkUpdateStudentsStatusSql(
   if (!subdomain || uniqueIds.length === 0) return 0;
   const normalizedStatus = status.trim().toLowerCase() || 'active';
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const updated = await tx
       .update(students)
       .set({

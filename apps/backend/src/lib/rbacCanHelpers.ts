@@ -22,6 +22,7 @@ import {
  * Their permission mappings live in `COLLECTION_*_PERMISSION` maps.
  */
 const REST_ONLY_TYPED_COLLECTIONS = new Set([
+  'attendance',
   'attendance_records',
   'finance_invoices',
   'finance_payments',
@@ -33,7 +34,9 @@ const REST_ONLY_TYPED_COLLECTIONS = new Set([
   'obligation_distributions',
   'accounting_entries',
   'accounting_accounts',
+  'accounts',
   'accounting_fiscal_years',
+  'fiscal_years',
   'hasanat_distributions',
   'hasanat_batches',
   'hasanat_denoms',

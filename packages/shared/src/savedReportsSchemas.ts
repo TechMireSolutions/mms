@@ -1,28 +1,7 @@
 import { z } from 'zod';
 
-export const CONTACTS_SAVED_REPORT_CATEGORY = 'contacts' as const;
-
-/** Report categories supported by the generic saved-reports REST resource. */
-export const GENERIC_SAVED_REPORT_CATEGORIES = [
-  'students',
-  'teachers',
-  'attendance',
-  'financial',
-  'examinations',
-  'questionBank',
-  'hasanat',
-  'sessions',
-  'faculty',
-] as const;
-
-/** Validates a category supported by the generic saved-reports REST resource. */
-export const genericSavedReportCategorySchema = z.enum(GENERIC_SAVED_REPORT_CATEGORIES);
-
-/** A category supported by the generic saved-reports REST resource. */
-export type GenericSavedReportCategory = z.infer<typeof genericSavedReportCategorySchema>;
-
-/** Categories persisted in `saved_reports` (includes Contacts share presets). */
-export type PersistedSavedReportCategory = GenericSavedReportCategory | typeof CONTACTS_SAVED_REPORT_CATEGORY;
+export * from './schemas/savedReports.dto.js';
+import { CONTACTS_SAVED_REPORT_CATEGORY, genericSavedReportCategorySchema } from './schemas/savedReports.dto.js';
 
 /** Validates a persisted generic saved-report preset returned by the API. */
 export const genericSavedReportSchema = z.object({
@@ -39,16 +18,6 @@ export const genericSavedReportSchema = z.object({
 /** A personal saved-report preset containing report logic rather than report data. */
 export type GenericSavedReport = z.infer<typeof genericSavedReportSchema>;
 
-/** Validates the request body used to create a generic saved-report preset. */
-export const genericSavedReportCreateSchema = z.object({
-  name: z.string().trim().min(1).max(200),
-  category: genericSavedReportCategorySchema,
-  filters: z.record(z.string(), z.unknown()),
-});
-
-/** Request body used to create a generic saved-report preset. */
-export type GenericSavedReportCreateInput = z.infer<typeof genericSavedReportCreateSchema>;
-
 /** Validates the category query required by generic saved-report operations. */
 export const genericSavedReportListQuerySchema = z.object({
   category: genericSavedReportCategorySchema,
@@ -58,3 +27,5 @@ export const genericSavedReportListQuerySchema = z.object({
 export const genericSavedReportIdParamsSchema = z.object({
   id: z.string().min(1),
 });
+
+export * from './schemas/savedReports.dto.js';

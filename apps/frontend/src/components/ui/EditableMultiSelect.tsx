@@ -46,6 +46,7 @@ export function EditableMultiSelect({
   const listboxId = `${resolvedId}-multi-listbox`;
   const resolvedPlaceholder = placeholder ?? t("contacts.form.selectOption");
   const addInputLabel = addPlaceholder ?? t("contacts.form.addNewTypePlaceholder");
+  const triggerRef = React.useRef<HTMLButtonElement>(null);
 
   const canAdd = Boolean(onUpdateOptions);
 
@@ -63,12 +64,26 @@ export function EditableMultiSelect({
   const removeValue = (valToRemove: string, event: React.MouseEvent): void => {
     event.stopPropagation();
     onChange(values.filter((v) => v !== valToRemove));
+    triggerRef.current?.focus();
+  };
+
+  const getBadgeTone = (val: string): "primary" | "success" | "warning" | "info" | "secondary" => {
+    const ACCENT_COLORS = ["info", "warning", "success", "primary", "secondary"] as const;
+    let hash = 0;
+    for (let i = 0; i < val.length; i++) {
+      hash = val.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const index = Math.abs(hash) % ACCENT_COLORS.length;
+    return ACCENT_COLORS[index];
   };
 
   const handleAdd = (): void => {
     if (!canAdd || isAdding || !onUpdateOptions) return;
-    const text = newTagValue.trim();
-    if (!text) return;
+    const rawText = newTagValue.trim();
+    if (!rawText) return;
+
+    // Normalize: Capitalize first letter of each word
+    const text = rawText.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
 
     const existingInOptions = options.find(
       (opt) => opt.trim().toLowerCase() === text.toLowerCase(),
@@ -86,9 +101,9 @@ export function EditableMultiSelect({
     setNewTagValue("");
   };
 
-  const filteredOptions = options.filter((opt) =>
-    opt.toLowerCase().includes(searchQuery.trim().toLowerCase()),
-  );
+  const filteredOptions = options
+    .filter((opt) => opt.toLowerCase().includes(searchQuery.trim().toLowerCase()))
+    .sort((a, b) => a.localeCompare(b));
 
   return (
     <Popover
@@ -102,6 +117,7 @@ export function EditableMultiSelect({
       }}
     >
       <PopoverTrigger
+        ref={triggerRef}
         type="button"
         id={resolvedId}
         name={resolvedName}
@@ -118,31 +134,34 @@ export function EditableMultiSelect({
           {values.length === 0 ? (
             <span className="text-muted-foreground select-none">{resolvedPlaceholder}</span>
           ) : (
-            values.map((val) => (
-              <Badge
-                key={val}
-                pill
-                tone="primary"
-                className="gap-1 px-2 py-0.5 text-xs font-medium border-primary/30 text-primary bg-primary/10"
-              >
-                <span>{formatContactOptionLabel(val, t) || val}</span>
-                <span
-                  role="button"
-                  tabIndex={0}
-                  onClick={(e) => removeValue(val, e)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      removeValue(val, e as unknown as React.MouseEvent);
-                    }
-                  }}
-                  className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-primary/20 hover:text-destructive transition-colors cursor-pointer"
-                  aria-label={t("contacts.form.removeTag", { tag: val })}
+            values.map((val) => {
+              const tone = getBadgeTone(val);
+              return (
+                <Badge
+                  key={val}
+                  pill
+                  tone={tone}
+                  className="gap-1 px-2 py-0.5 text-xs font-medium"
                 >
-                  <X className="w-2.5 h-2.5" />
-                </span>
-              </Badge>
-            ))
+                  <span>{formatContactOptionLabel(val, t) || val}</span>
+                  <span
+                    role="button"
+                    tabIndex={0}
+                    onClick={(e) => removeValue(val, e)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        removeValue(val, e as unknown as React.MouseEvent);
+                      }
+                    }}
+                    className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-black/10 dark:hover:bg-white/20 transition-colors cursor-pointer"
+                    aria-label={t("contacts.form.removeTag", { tag: val })}
+                  >
+                    <X className="w-2.5 h-2.5" />
+                  </span>
+                </Badge>
+              );
+            })
           )}
         </div>
         <ChevronDown

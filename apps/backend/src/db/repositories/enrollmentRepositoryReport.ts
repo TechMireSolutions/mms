@@ -11,7 +11,7 @@ import {
   type EnrollmentsReportStatusCounts,
 } from '@mms/shared';
 import { getQueryRows } from '../documentStoreKeys.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 /**
  * SQL report aggregates for EnrollmentChart + EnrollmentReports
@@ -23,7 +23,7 @@ export async function loadEnrollmentsReportAggregatesSql(
 ): Promise<EnrollmentsReportAggregates> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const trendsResult = await tx.execute(sql`
       WITH months AS (
         SELECT

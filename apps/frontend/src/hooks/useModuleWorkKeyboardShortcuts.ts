@@ -4,12 +4,12 @@ import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 export interface UseModuleWorkKeyboardShortcutsOptions {
   /** Stable DOM id of the Work SearchBar input. */
   searchInputId: string;
-  selectedCount: number;
-  hasActiveFilters: boolean;
-  clearFilters: () => void;
-  clearSelection: () => void;
-  canWrite: boolean;
-  showDeleted: boolean;
+  selectedCount?: number;
+  hasActiveFilters?: boolean;
+  clearFilters?: () => void;
+  clearSelection?: () => void;
+  canWrite?: boolean;
+  showDeleted?: boolean;
   onCreate: () => void;
   /** When false, search/Escape/create shortcuts are inactive (e.g. other Work sub-tab). */
   enabled?: boolean;
@@ -21,12 +21,12 @@ export interface UseModuleWorkKeyboardShortcutsOptions {
  */
 export function useModuleWorkKeyboardShortcuts({
   searchInputId,
-  selectedCount,
-  hasActiveFilters,
+  selectedCount = 0,
+  hasActiveFilters = false,
   clearFilters,
   clearSelection,
-  canWrite,
-  showDeleted,
+  canWrite = true,
+  showDeleted = false,
   onCreate,
   enabled = true,
 }: UseModuleWorkKeyboardShortcutsOptions): void {
@@ -56,9 +56,9 @@ export function useModuleWorkKeyboardShortcuts({
         searchInput?.select();
       } else if (event.key === "Escape") {
         if (selectedCount > 0) {
-          clearSelection();
+          clearSelection?.();
         } else if (hasActiveFilters) {
-          clearFilters();
+          clearFilters?.();
         }
       }
     };

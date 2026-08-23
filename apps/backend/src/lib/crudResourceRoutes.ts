@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import type { ZodType } from 'zod';
+import { z, type ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from './rbacCanHelpers.js';
@@ -135,7 +135,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     const routeOptions = validateDynamicFn
       ? {
           bodyLimit: 1048576,
-          schema: { body: { type: 'object', additionalProperties: true } },
+          schema: { body: z.record(z.string(), z.any()) },
         }
       : {};
 
@@ -178,7 +178,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     const routeOptions = validateDynamicFn
       ? {
           bodyLimit: 1048576,
-          schema: { body: { type: 'object', additionalProperties: true } },
+          schema: { body: z.record(z.string(), z.any()), params: resourceIdParamsSchema },
         }
       : {};
 

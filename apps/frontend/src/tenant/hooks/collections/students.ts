@@ -7,7 +7,6 @@ export {
   STUDENTS_QUERY_KEY,
   STUDENTS_METRICS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
-  useStudentsPaginated,
   fetchAllStudentsForQuery,
   useStudentMutations,
   useStudentsByIds,
@@ -31,3 +30,14 @@ export {
 } from '@/tenant/features/students/hooks/studentSetupConfigApi';
 export { applyStudentsWorkDrillDown } from '@/tenant/features/students/hooks/studentsWorkDrillDown';
 export { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useStudentsContractList,
+  useStudentsContractCreate,
+  useStudentsContractUpdate,
+  useStudentsContractDelete,
+  useStudentsContractBulkStatus,
+  useStudentsContractBulkEnroll,
+  useStudentsContractNextGrNumber,
+  useStudentsContractDuplicateCheck,
+} from '@/tenant/features/students/hooks/useStudentsTsrHooks';

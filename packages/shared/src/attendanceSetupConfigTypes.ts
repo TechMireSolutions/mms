@@ -6,7 +6,8 @@ import {
   INITIAL_ATTENDANCE_FIELD_SEED,
 } from './moduleFieldSetupAcademic.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 
 /** Deep clone {@link INITIAL_ATTENDANCE_FIELD_SEED} for default and Setup states. */
 export function cloneAttendanceFieldSeed(): Record<string, FieldDefinition[]> {
@@ -81,7 +82,7 @@ export function resolveAttendanceFieldsMap(
 }
 
 /** PUT /api/attendance/field-config — field registry JSON without prefs keys. */
-export const attendanceFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const attendanceFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
     fieldOrder: z.array(z.string()).optional(),
@@ -89,7 +90,12 @@ export const attendanceFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
     enabledTabs: z.array(z.string()).optional(),
     requiredTabs: z.array(z.string()).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const attendanceFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, attendanceFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/attendance/preferences — attendance prefs only. */
 export const attendancePreferencesPutBodySchema = z

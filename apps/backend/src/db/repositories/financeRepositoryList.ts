@@ -8,7 +8,7 @@ import {
   type FinancePaymentsListPageResult,
 } from '@mms/shared';
 import { financeInvoices, financePayments } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { invoiceRowToRecord, paymentRowToRecord } from './financeRepository.js';
 
@@ -127,7 +127,7 @@ export async function listInvoicesPage(
 ): Promise<FinanceInvoicesListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, financeInvoices, {
       conditions: buildInvoiceListConditions(subdomain, query),
       orderBy: buildInvoiceOrderBy(query.sortField, query.sortDir),
@@ -153,7 +153,7 @@ export async function listPaymentsPage(
 ): Promise<FinancePaymentsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, financePayments, {
       conditions: buildPaymentListConditions(subdomain, query),
       orderBy: buildPaymentOrderBy(query.sortField, query.sortDir),
@@ -190,7 +190,7 @@ export async function aggregateFinanceCommandMetrics(
   const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const prevMonth = `${prev.getFullYear()}-${pad2(prev.getMonth() + 1)}`;
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const activeInvoices = and(
       eq(financeInvoices.workspaceSubdomain, subdomain),
       isNull(financeInvoices.deletedAt),
@@ -261,7 +261,7 @@ export async function bulkUpdateInvoicesStatusSql(
   let succeeded = 0;
   let failed = 0;
 
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const id of ids) {
       try {
         const result = await tx

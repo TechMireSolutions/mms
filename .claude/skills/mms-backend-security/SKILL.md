@@ -12,7 +12,7 @@ description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, CSRF/Ori
 - New protected route or auth endpoint
 - Security review / PR audit
 - Tenant isolation or cross-workspace bugs
-- Cookie, CSRF/Origin, refresh, 2FA, or handoff changes
+- Cookie, CSRF Double-Submit Token, refresh, 2FA, or handoff changes
 
 ## Mandatory middleware
 
@@ -63,7 +63,7 @@ Store in PostgreSQL `auth_artifacts` via `authArtifactService` — **never** in-
 |------|-----|
 | `handoff` | 2 min |
 | `two_factor_challenge` | 10 min |
-| `refresh_token` | 7 days (rotate on refresh) |
+| `refresh_token` | 7 days (rotate on refresh). High-Entropy UUIDv4. |
 | `platform_password_reset` | Platform TTLs via shared constants — do not reintroduce unused `platform_setup` artifact kind |
 
 OTP: `crypto.randomInt()` — never `Math.random()`.
@@ -76,7 +76,7 @@ OTP: `crypto.randomInt()` — never `Math.random()`.
 
 | Cookie | Purpose & Path |
 |--------|----------------|
-| `mms_access` | Tenant JWT, httpOnly, 15 min, `SameSite=Lax`, `Path=/` |
+| `mms_access` | Tenant JWT, httpOnly, 15 min, `SameSite=Lax`, `Secure`, `Path=/` |
 | `mms_refresh` | Tenant opaque refresh; hash in `auth_artifacts`; `Path=/api/auth/refresh` |
 | `mms_platform_access` | Platform JWT (`tokenType: 'platform_access'`), httpOnly **session** cookie, `Path=/api/platform` |
 
@@ -85,8 +85,11 @@ Mutual exclusion: issuing/clearing a platform session also clears tenant auth co
 CORS: `credentials: true`; production requires explicit `ALLOWED_ORIGIN`.
 
 Security Invariants:
+- **Session Hijacking**: 15-minute JWT stored in `HttpOnly`, `SameSite=Lax`, `Secure` cookie.
+- **Instant Termination**: Redis `jti` Revocation Registry. Session revoked immediately across WebSocket and REST gateways on suspension.
+- **Cross-Site Request Forgery**: Double-Submit Token. Read CSRF cookie -> inject `X-CSRF-Token` header on mutating requests (`POST`/`PUT`/`DELETE`).
+- **Privilege Escalation**: Tenant-Scoped RBAC Bitmasks. Permissions calculated and asserted in-memory per request; cannot cross tenant boundaries.
 - Constant-time string/hash comparisons (`crypto.timingSafeEqual`) for passwords, tokens, and OTP codes to eliminate side-channel timing attacks.
-- Cookie-auth mutations: enforce same-origin (`Origin` / `Sec-Fetch-Site`) check on all state-changing routes. Reject JSON writes without `application/json`.
 - Rate limiting: on `429`, emit `Retry-After` header — `mms-auth-security.md`.
 
 ## Tenant isolation checklist

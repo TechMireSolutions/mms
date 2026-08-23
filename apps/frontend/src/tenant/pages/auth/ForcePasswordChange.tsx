@@ -8,8 +8,8 @@ import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
 import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { ROUTES } from "@/lib/config/routes";
-import { apiJson } from "@/lib/apiClient";
 import { useTranslation } from "@/hooks/useTranslation";
+import { tsrClient } from "@/lib/api";
 
 /** Stable ids for e2e (onboarding + responsive authenticated bootstrap). */
 const CURRENT_PASSWORD_ID = "current-password";
@@ -48,10 +48,13 @@ export default function ForcePasswordChange(): React.ReactElement {
 
     setBusy(true);
     try {
-      await apiJson<{ success: true; requiresSignIn?: boolean }>("/api/auth/change-password", {
-        method: "POST",
-        body: JSON.stringify({ currentPassword, newPassword }),
+      // @ts-expect-error - TS union discrimination limit with ts-rest
+      const { status, body } = await tsrClient.auth.changePassword.mutate({
+        body: { currentPassword, newPassword }
       });
+      if (status !== 200) {
+        throw new Error(body?.error || t("account.wrongPassword"));
+      }
       logout(false);
       navigate(ROUTES.login, { replace: true });
     } catch (err: unknown) {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 import { getLlmProviderDefaultModel, type LlmConfig, type LlmProviderType } from '@mms/shared';
 
 interface UseLlmModelFetchOptions {
@@ -36,24 +36,24 @@ export function useLlmModelFetch({
       const fetchModels = async () => {
         setFetchingModels(true);
         try {
-          const res = await apiJson<{ success: boolean; models: string[] }>('/api/ai/models', {
-            method: 'POST',
-            body: JSON.stringify({
+          const { status, body } = await apiContract.ai.models({
+            body: {
               provider: formProvider,
               apiKey: key || undefined,
               configId: editingConfig?.id,
               baseUrl: formBaseUrl.trim() || undefined,
-            }),
+            },
           });
-          if (res.success && res.models && res.models.length > 0) {
-            setFetchedModels(res.models);
+          if (status === 200 && body.success && body.models && body.models.length > 0) {
+            const models = body.models;
+            setFetchedModels(models);
             setShowCustomModelInput(false);
-            if (formModel.trim() === '' || !res.models.includes(formModel)) {
+            if (formModel.trim() === '' || !models.includes(formModel)) {
               const defaultModel = getLlmProviderDefaultModel(formProvider);
-              if (res.models.includes(defaultModel)) {
+              if (models.includes(defaultModel)) {
                 setFormModel(defaultModel);
               } else if (!formModel) {
-                setFormModel(res.models[0]);
+                setFormModel(models[0]);
               }
             }
           } else {

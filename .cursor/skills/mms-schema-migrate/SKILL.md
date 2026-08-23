@@ -21,8 +21,24 @@ Use when designing and implementing PostgreSQL database schemas, Drizzle ORM mod
   tenantId: uuid("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
   ```
   *(or `workspaceSubdomain: text("workspace_subdomain").notNull()` where workspace scope applies)*.
-- **Row-Level Security (RLS):** Every query must execute within a database transaction scoped with `SET LOCAL app.current_tenant = :tenant_id`.
+- **Row-Level Security (RLS):** Every query must execute within a database transaction scoped with `SET LOCAL app.current_tenant = :tenant_id` (via the `withTenant` wrapper).
+  To prevent RLS context pollution across pooled connections (`pg`), tenant execution context must be encapsulated within transaction scopes using `set_config('app.current_tenant', :tenant_id, true)`.
+  Tables must enforce `FORCE ROW LEVEL SECURITY`.
+  Use the standard dynamic tenant isolation policy:
+  ```sql
+  CREATE POLICY tenant_isolation_policy ON [table]
+    FOR ALL
+    USING (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid)
+    WITH CHECK (tenant_id = NULLIF(current_setting('app.current_tenant', true), '')::uuid);
+
+  CREATE POLICY platform_superadmin_policy ON [table]
+    FOR ALL
+    TO mms_platform_admin
+    USING (true)
+    WITH CHECK (true);
+  ```
 - **Composite Tenant Uniqueness:** Any entity-level unique constraint must include the tenant identifier (e.g., `UNIQUE(tenant_id, email)` or `UNIQUE(tenant_id, code)`).
+- **Immutable Audit Ledger:** Every balance change, grade modification, and attendance update must be backed by an append-only audit trail (`audit_trail_ledger`) verified via cryptographic hashing.
 
 ## 3. Data Typing & Column Standards
 - **Primary Keys:** Standardize on:

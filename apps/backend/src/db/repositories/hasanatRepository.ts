@@ -11,7 +11,7 @@ import {
   hasanatDistributions,
   hasanatRedemptions,
 } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 // --- Denominations ---
 
@@ -32,7 +32,7 @@ function denomRowToRecord(row: DenomRow): Denomination {
 
 export async function listDenomsByWorkspace(tenant: string): Promise<Denomination[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(hasanatDenoms)
@@ -44,7 +44,7 @@ export async function listDenomsByWorkspace(tenant: string): Promise<Denominatio
 export async function bulkSaveDenoms(tenant: string, records: Denomination[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(hasanatDenoms)
@@ -77,7 +77,7 @@ export async function bulkSaveDenoms(tenant: string, records: Denomination[]): P
 
 export async function replaceDenomsForWorkspace(tenant: string, records: Denomination[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(hasanatDenoms).where(eq(hasanatDenoms.workspaceSubdomain, subdomain));
     for (const r of records) {
       await tx.insert(hasanatDenoms).values({
@@ -116,7 +116,7 @@ function batchRowToRecord(row: BatchRow): StockBatch {
 
 export async function listBatchesByWorkspace(tenant: string): Promise<StockBatch[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(hasanatBatches)
@@ -128,7 +128,7 @@ export async function listBatchesByWorkspace(tenant: string): Promise<StockBatch
 export async function bulkSaveBatches(tenant: string, records: StockBatch[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(hasanatBatches)
@@ -165,7 +165,7 @@ export async function bulkSaveBatches(tenant: string, records: StockBatch[]): Pr
 
 export async function replaceBatchesForWorkspace(tenant: string, records: StockBatch[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(hasanatBatches).where(eq(hasanatBatches.workspaceSubdomain, subdomain));
     for (const r of records) {
       await tx.insert(hasanatBatches).values({
@@ -213,7 +213,7 @@ export function distributionRowToRecord(row: DistRow): Distribution {
 
 export async function listDistributionsByWorkspace(tenant: string): Promise<Distribution[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(hasanatDistributions)
@@ -229,7 +229,7 @@ export async function listDistributionsByWorkspace(tenant: string): Promise<Dist
 
 export async function findDistributionById(tenant: string, id: string): Promise<Distribution | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(hasanatDistributions)
@@ -246,7 +246,7 @@ export async function findDistributionById(tenant: string, id: string): Promise<
 
 export async function saveDistribution(tenant: string, record: Distribution): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(hasanatDistributions)
       .values({
@@ -300,7 +300,7 @@ export async function saveDistribution(tenant: string, record: Distribution): Pr
 export async function bulkSaveDistributions(tenant: string, records: Distribution[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(hasanatDistributions)
@@ -355,7 +355,7 @@ export async function bulkSaveDistributions(tenant: string, records: Distributio
 
 export async function replaceDistributionsForWorkspace(tenant: string, records: Distribution[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(hasanatDistributions).where(eq(hasanatDistributions.workspaceSubdomain, subdomain));
     for (const r of records) {
       await tx.insert(hasanatDistributions).values({
@@ -402,7 +402,7 @@ function redemptionRowToRecord(row: RedempRow): Redemption {
 
 export async function listRedemptionsByWorkspace(tenant: string): Promise<Redemption[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(hasanatRedemptions)
@@ -414,7 +414,7 @@ export async function listRedemptionsByWorkspace(tenant: string): Promise<Redemp
 export async function bulkSaveRedemptions(tenant: string, records: Redemption[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(hasanatRedemptions)
@@ -449,7 +449,7 @@ export async function bulkSaveRedemptions(tenant: string, records: Redemption[])
 
 export async function replaceRedemptionsForWorkspace(tenant: string, records: Redemption[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(hasanatRedemptions).where(eq(hasanatRedemptions.workspaceSubdomain, subdomain));
     for (const r of records) {
       await tx.insert(hasanatRedemptions).values({
@@ -470,7 +470,7 @@ export async function replaceRedemptionsForWorkspace(tenant: string, records: Re
 
 export async function deleteHasanatByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(hasanatRedemptions).where(eq(hasanatRedemptions.workspaceSubdomain, subdomain));
     await tx.delete(hasanatDistributions).where(eq(hasanatDistributions.workspaceSubdomain, subdomain));
     await tx.delete(hasanatBatches).where(eq(hasanatBatches.workspaceSubdomain, subdomain));

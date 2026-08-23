@@ -1,10 +1,10 @@
 import { sql, type SQL } from 'drizzle-orm';
-import { contacts, contactPhones, contactEmails } from '../schema.js';
+import { contacts, contactPhones, contactEmails, contactAddresses } from '../schema.js';
+
 
 /** Primary dialable phone digits: contact_phones (isPrimary first) then scalar phone. */
 export function primaryPhoneDigitsSql(): SQL {
-  return sql`COALESCE(
-    NULLIF((
+  return sql`(
       SELECT regexp_replace(
         CASE
           WHEN NULLIF(trim(p.number), '') LIKE '+%'
@@ -25,17 +25,13 @@ export function primaryPhoneDigitsSql(): SQL {
         AND NULLIF(trim(p.number), '') IS NOT NULL
       ORDER BY CASE WHEN p.is_primary THEN 0 ELSE 1 END, p.sort_order ASC
       LIMIT 1
-    ), ''),
-    NULLIF(regexp_replace(COALESCE(${contacts.phone}, ''), '[^0-9]', '', 'g'), ''),
-    ''
   )`;
 }
 
 /** True when contact has a non-empty primary/legacy phone number. */
 export function hasPhoneSql(): SQL {
   return sql`(
-    NULLIF(trim(COALESCE(${contacts.phone}, '')), '') IS NOT NULL
-    OR EXISTS (
+    EXISTS (
       SELECT 1
       FROM ${contactPhones} p
       WHERE p.workspace_subdomain = ${contacts.workspaceSubdomain}
@@ -48,8 +44,7 @@ export function hasPhoneSql(): SQL {
 /** True when contact has a non-empty primary/legacy email. */
 export function hasEmailSql(): SQL {
   return sql`(
-    NULLIF(trim(COALESCE(${contacts.email}, '')), '') IS NOT NULL
-    OR EXISTS (
+    EXISTS (
       SELECT 1
       FROM ${contactEmails} e
       WHERE e.workspace_subdomain = ${contacts.workspaceSubdomain}
@@ -99,13 +94,13 @@ export function contactFieldNonEmptySql(fieldKey: string): SQL {
     case 'address':
     case 'addresses':
     case 'line1':
-      return sql`NULLIF(trim(${contacts.line1}), '') IS NOT NULL`;
+      return sql`EXISTS (SELECT 1 FROM ${contactAddresses} a WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain} AND a.contact_id = ${contacts.id} AND NULLIF(trim(a.line1), '') IS NOT NULL)`;
     case 'city':
-      return sql`NULLIF(trim(${contacts.city}), '') IS NOT NULL`;
+      return sql`EXISTS (SELECT 1 FROM ${contactAddresses} a WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain} AND a.contact_id = ${contacts.id} AND NULLIF(trim(a.city), '') IS NOT NULL)`;
     case 'state':
-      return sql`NULLIF(trim(${contacts.state}), '') IS NOT NULL`;
+      return sql`EXISTS (SELECT 1 FROM ${contactAddresses} a WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain} AND a.contact_id = ${contacts.id} AND NULLIF(trim(a.state), '') IS NOT NULL)`;
     case 'country':
-      return sql`NULLIF(trim(${contacts.country}), '') IS NOT NULL`;
+      return sql`EXISTS (SELECT 1 FROM ${contactAddresses} a WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain} AND a.contact_id = ${contacts.id} AND NULLIF(trim(a.country), '') IS NOT NULL)`;
     default:
       return sql`true`;
   }

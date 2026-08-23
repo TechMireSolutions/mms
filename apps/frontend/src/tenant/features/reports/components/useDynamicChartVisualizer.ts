@@ -153,7 +153,7 @@ export function useDynamicChartVisualizer({
   const processedData = useMemo<AggregatedItem[]>(() => {
     if (isContacts) {
       const chartData = contactsAggregates?.[CONTACTS_VISUALIZER_QUERY_ID]?.chartData ?? [];
-      const items: AggregatedItem[] = chartData.map((row) => ({
+      const items: AggregatedItem[] = chartData.map((row: any) => ({
         name: row.name,
         value: row.value,
         count: row.value,
@@ -162,7 +162,7 @@ export function useDynamicChartVisualizer({
     }
     if (isStudents) {
       const chartData = studentsAggregates?.[STUDENTS_VISUALIZER_QUERY_ID]?.chartData ?? [];
-      const items: AggregatedItem[] = chartData.map((row) => ({
+      const items: AggregatedItem[] = chartData.map((row: any) => ({
         name: row.name,
         value: row.value,
         count: row.value,

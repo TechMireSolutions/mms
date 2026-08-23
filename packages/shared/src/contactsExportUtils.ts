@@ -69,21 +69,21 @@ function cellValue(
   if (columnId === 'name') return contact.name || '';
   if (columnId === 'phone') return getPrimaryPhone(contact) || '';
   if (columnId === 'email') {
-    return (contact.emails || [])[0]?.address || (contact.email as string) || '';
+    return (contact.emails || [])[0]?.address || '';
   }
   if (columnId === 'whatsapp') return hasWhatsApp(contact) ? labels.yes : labels.no;
   if (columnId === 'isSyed') return contact.isSyed ? labels.yes : labels.no;
   if (columnId === 'line1') {
-    return (contact.addresses || [])[0]?.line1 || (contact.line1 as string) || '';
+    return (contact.addresses || [])[0]?.line1 || '';
   }
   if (columnId === 'city') {
-    return (contact.addresses || [])[0]?.city || (contact.city as string) || '';
+    return (contact.addresses || [])[0]?.city || '';
   }
   if (columnId === 'state') {
-    return (contact.addresses || [])[0]?.state || (contact.state as string) || '';
+    return (contact.addresses || [])[0]?.state || '';
   }
   if (columnId === 'country') {
-    return (contact.addresses || [])[0]?.country || (contact.country as string) || '';
+    return (contact.addresses || [])[0]?.country || '';
   }
   if (columnId === 'socials_platform') {
     return (contact.socials || []).map((s) => s.platform).filter(Boolean).join('; ');

@@ -8,10 +8,14 @@ import {
   type ContactsPaginatedParams,
 } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
 
-const apiJson = vi.hoisted(() => vi.fn());
+const apiContractMock = vi.hoisted(() => ({
+  contacts: {
+    get: vi.fn(),
+  },
+}));
 
-vi.mock("@/lib/apiClient", () => ({
-  apiJson,
+vi.mock("@/lib/api", () => ({
+  apiContract: apiContractMock,
 }));
 
 const base: ContactsPaginatedParams = { page: 1 };
@@ -109,15 +113,15 @@ describe("sameContactsListFilters", () => {
   });
 });
 
-describe("fetch helpers", () => {
-  beforeEach(() => {
-    apiJson.mockReset();
-  });
+  describe("fetchContactById", () => {
+    beforeEach(() => {
+      apiContractMock.contacts.get.mockReset();
+    });
 
-  it("fetchContactById unwraps the contact", async () => {
-    apiJson.mockResolvedValue({ contact: { id: 7, name: "Seven" } });
-    const contact = await fetchContactById("7");
-    expect(apiJson).toHaveBeenCalledWith("/api/contacts/7", { signal: undefined });
-    expect(contact).toEqual({ id: 7, name: "Seven" });
+    it("should fetch a contact by id", async () => {
+      apiContractMock.contacts.get.mockResolvedValue({ status: 200, body: { contact: { id: 7, name: "Seven" } } });
+      const contact = await fetchContactById("7");
+      expect(apiContractMock.contacts.get).toHaveBeenCalledWith({ params: { id: "7" } });
+      expect(contact).toEqual({ id: 7, name: "Seven" });
+    });
   });
-});

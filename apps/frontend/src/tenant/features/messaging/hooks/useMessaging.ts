@@ -3,9 +3,7 @@ export {
   MESSAGING_TEMPLATES_QUERY_KEY,
   MESSAGING_LOGS_QUERY_KEY,
   MESSAGING_METRICS_QUERY_KEY,
-  messagingTemplatesQueryOptions,
-  messagingLogsQueryOptions,
-  messagingMetricsQueryOptions,
+
   useMessageTemplates,
   useMessageLogs,
   useMessagingMetrics,

@@ -40,3 +40,15 @@ export function getGenderIconClass(gender: string | null | undefined): string {
       return 'text-muted-foreground';
   }
 }
+
+/** Card accent tone based on gender. */
+export function getGenderCardAccent(gender?: string | null | undefined): "info" | "secondary" | "primary" {
+  switch (normalizeGenderKey(gender)) {
+    case 'male':
+      return 'info';
+    case 'female':
+      return 'secondary';
+    default:
+      return 'primary';
+  }
+}

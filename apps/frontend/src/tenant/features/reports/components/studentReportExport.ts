@@ -1,5 +1,5 @@
 import { ENROLLMENTS_MODULE_MANIFEST, formatDate, type Enrollment, type Session, type Student } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 import { fetchAllStudentsForQuery } from '@/tenant/hooks/collections/students';
 import { mapStudentRow, type EnrollmentHistoryItem } from './studentReportTypes';
 
@@ -12,17 +12,8 @@ export async function fetchAllEnrollmentsForQuery(params: {
   const all: Enrollment[] = [];
   let page = 1;
   for (;;) {
-    const query = new URLSearchParams();
-    query.set('page', String(page));
-    query.set('limit', String(limit));
-    if (params.search?.trim()) query.set('search', params.search.trim());
-    if (params.sessionId?.trim() && params.sessionId !== 'all') {
-      query.set('sessionId', params.sessionId.trim());
-    }
-    const result = await apiJson<{
-      enrollments: Enrollment[];
-      hasMore: boolean;
-    }>(`${ENROLLMENTS_MODULE_MANIFEST.restBasePath}?${query.toString()}`);
+    const res = await apiContract.enrollments.list({ query: { page, limit, search: params.search?.trim(), sessionId: (params.sessionId?.trim() && params.sessionId !== "all") ? params.sessionId.trim() : undefined } });
+    const result = res.body as any;
     all.push(...(result.enrollments ?? []));
     if (!result.hasMore || page >= 200) break;
     page += 1;

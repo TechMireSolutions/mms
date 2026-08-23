@@ -1,30 +1,28 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformAdminPermissions, PlatformCreateAdminInput, PlatformUserProfile } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
+import { tsrClient, apiContract } from '@/lib/api';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 
 export const PLATFORM_ADMINS_QUERY_KEY = ['platform', 'admins'] as const;
 
-async function fetchPlatformAdmins(signal?: AbortSignal): Promise<PlatformUserProfile[]> {
-  const usersResponse = await apiJson<{ users: PlatformUserProfile[] }>('/api/platform/users', {
-    signal,
-  });
-  return usersResponse.users;
-}
-
 /** Hook for super-users to retrieve the list of platform operators. */
-export function usePlatformAdmins() {
+export function usePlatformAdmins(): { data: PlatformUserProfile[] | undefined; isLoading: boolean; isError: boolean; refetch: () => Promise<unknown> } {
   const { platformUser } = usePlatformAuth();
   const isSuperUser = platformUser?.role === 'super_user';
 
-  return useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const { data: rawData, ...rest } = tsrClient.platform.listAdmins.useQuery({
     queryKey: PLATFORM_ADMINS_QUERY_KEY,
-    queryFn: ({ signal }) => fetchPlatformAdmins(signal),
+    queryData: {},
     enabled: isSuperUser,
     staleTime: 60_000,
   });
+
+  const data: PlatformUserProfile[] | undefined = (rawData?.body as any)?.users;
+
+  return { ...rest, data };
 }
 
 /** Hook for super-users to create/invite new platform administrators. */
@@ -33,11 +31,10 @@ export function useAddPlatformAdmin() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: async (adminData: PlatformCreateAdminInput) =>
-      apiJson<{ user: PlatformUserProfile }>('/api/platform/users', {
-        method: 'POST',
-        body: JSON.stringify(adminData),
-      }),
+    mutationFn: async (adminData: PlatformCreateAdminInput) => {
+      const res = await apiContract.platform.createAdmin({ body: adminData });
+      return res.body as { user: PlatformUserProfile };
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       notify.success(t('platform.addAdminSuccess'));
@@ -51,21 +48,22 @@ export function useUpdatePlatformAdminPermissions() {
   const { t } = useTranslation();
   const { checkPlatformAuth, platformUser } = usePlatformAuth();
 
-  return useMutation({
+  return useMutation<
+    { user: PlatformUserProfile },
+    Error,
+    { adminId: string; permissions: PlatformAdminPermissions },
+    { previousUsers: PlatformUserProfile[] | undefined }
+  >({
     mutationFn: async ({
       adminId,
       permissions,
-    }: {
-      adminId: string;
-      permissions: PlatformAdminPermissions;
-    }) =>
-      apiJson<{ user: PlatformUserProfile }>(
-        `/api/platform/users/${encodeURIComponent(adminId)}/permissions`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({ permissions }),
-        },
-      ),
+    }) => {
+      const res = await apiContract.platform.updateAdminPermissions({
+        params: { adminId },
+        body: { permissions },
+      });
+      return res.body as { user: PlatformUserProfile };
+    },
     onMutate: async ({ adminId, permissions }) => {
       await queryClient.cancelQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       const previousUsers = queryClient.getQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY);
@@ -98,23 +96,23 @@ export function useSetPlatformAdminDisabled() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
 
-  return useMutation({
+  return useMutation<
+    { user: PlatformUserProfile },
+    Error,
+    { adminId: string; disabled: boolean; password: string },
+    { previousUsers: PlatformUserProfile[] | undefined }
+  >({
     mutationFn: async ({
       adminId,
       disabled,
       password,
-    }: {
-      adminId: string;
-      disabled: boolean;
-      password: string;
-    }) =>
-      apiJson<{ user: PlatformUserProfile }>(
-        `/api/platform/users/${encodeURIComponent(adminId)}/disabled`,
-        {
-          method: 'PATCH',
-          body: JSON.stringify({ disabled, password }),
-        },
-      ),
+    }) => {
+      const res = await apiContract.platform.setAdminDisabled({
+        params: { adminId },
+        body: { disabled, password },
+      });
+      return res.body as { user: PlatformUserProfile };
+    },
     onMutate: async ({ adminId, disabled }) => {
       await queryClient.cancelQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       const previousUsers = queryClient.getQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY);
@@ -153,14 +151,13 @@ export function useDeletePlatformAdmin() {
     }: {
       adminId: string;
       password: string;
-    }) =>
-      apiJson<{ deleted: true; id: string }>(
-        `/api/platform/users/${encodeURIComponent(adminId)}`,
-        {
-          method: 'DELETE',
-          body: JSON.stringify({ password }),
-        },
-      ),
+    }) => {
+      const res = await apiContract.platform.deleteAdmin({
+        params: { adminId },
+        body: { password },
+      });
+      return res.body as { deleted: true; id: string };
+    },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       notify.success(t('platform.deleteAdminSuccess'));

@@ -4,7 +4,7 @@ import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { LegendChip } from "@/components/ui/LegendChip";
 import { TrendingUp, TrendingDown } from "lucide-react";
-import { useFinanceInvoicesCollection } from "@/tenant/hooks/collections/finance";
+import { useFinanceInvoicesPaginated } from "@/tenant/hooks/collections/finance";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatMonthYear, formatMonthName, getCollectedAmountForMonth, getOutstandingAmountForMonth } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
@@ -20,7 +20,7 @@ import { percentChange } from "@/tenant/features/dashboard/hooks/dashboardMetric
  */
 export default function FeeCollectionSummary({ title }: { title?: string }) {
   const { t } = useTranslation();
-  const invoices = useFinanceInvoicesCollection();
+  const invoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
   const { formatCurrency } = useFinanceCurrency();
 
   const now = useMemo(() => new Date(), []);

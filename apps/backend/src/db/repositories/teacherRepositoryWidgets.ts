@@ -4,7 +4,7 @@ import type {
   TeachersWidgetQuery,
 } from '@mms/shared';
 import { teachers, contacts } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(teachers.workspaceSubdomain, subdomain), isNull(teachers.deletedAt))!;
@@ -89,7 +89,7 @@ export async function aggregateTeachersWidgetQueries(
   const results: Record<string, TeachersWidgetAggregateResult> = {};
   if (queries.length === 0) return results;
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const totalRows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(teachers)

@@ -1,7 +1,7 @@
 import { CartesianGrid, PolarGrid } from "recharts";
 import type { CartesianGridProps, PolarGridProps } from "recharts";
 
-export interface ChartGridProps extends CartesianGridProps {}
+export type ChartGridProps = CartesianGridProps;
 
 /**
  * SSOT for the `strokeDasharray="3 3" stroke="hsl(var(--border))"` Recharts

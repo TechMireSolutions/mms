@@ -1,7 +1,7 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
 import type { DashboardWidgetDto } from '@mms/shared';
 import { dashboardWidgets } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 type DashboardWidgetRow = typeof dashboardWidgets.$inferSelect;
 
@@ -89,7 +89,7 @@ export async function listDashboardWidgetsByWorkspace(
   workspaceSubdomain: string,
 ): Promise<DashboardWidgetDto[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(dashboardWidgets)
@@ -106,7 +106,7 @@ export async function upsertDashboardWidgetsForWorkspace(
 ): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   if (widgets.length === 0) return;
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(dashboardWidgets)
       .values(widgets.map((widget, index) => toRow(subdomain, widget, index)))
@@ -136,7 +136,7 @@ export async function deleteDashboardWidgetById(
   id: string,
 ): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .delete(dashboardWidgets)
       .where(
@@ -153,7 +153,7 @@ export async function listAllDashboardWidgetsByWorkspace(
   workspaceSubdomain: string,
 ): Promise<DashboardWidgetRow[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     return tx
       .select()
       .from(dashboardWidgets)
@@ -167,7 +167,7 @@ export async function replaceDashboardWidgetsForWorkspace(
   records: Array<Record<string, unknown>>,
 ): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .delete(dashboardWidgets)
       .where(eq(dashboardWidgets.workspaceSubdomain, subdomain));

@@ -1,35 +1,18 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { canDeleteCollection } from '../../services/rbacService.js';
+
 
 import {
-  createAttendanceRecord,
-  deleteAttendanceRecordById,
-  restoreAttendanceRecordById,
-  bulkSoftDeleteAttendance,
-  bulkRestoreAttendance,
-  loadAttendancePage,
   countAttendanceRecords,
   loadAttendanceCommandMetrics,
-  upsertAttendanceRecords,
-  updateAttendanceRecordById,
 } from '../../services/attendanceService.js';
-import { ATTENDANCE_MODULE_MANIFEST, type User } from '@mms/shared';
-import { registerStandardTenantRoutes, registerBulkPutRoute } from '../../lib/crudRouter.js';
-import {
-  attendanceBulkSchema,
-  attendanceRecordSchema,
-} from '@mms/shared';
-import {
-  attendanceBulkIdsSchema,
-  attendanceListQuerySchema,
-} from '../../validation/attendanceSchemas.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
+import { ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
+import { registerStandardExtendedRoutes } from '../../lib/crudRouter.js';
 import { attendanceReportRoutes } from './attendance/attendanceReportRoutes.js';
 import { attendanceSetupConfigRoutes } from './attendanceSetupConfigRoutes.js';
 import { attendanceLookupRoutes } from './attendance/attendanceLookupRoutes.js';
+import { attendanceContractRouter } from './attendance/attendanceContractRouter.js';
 
 const COLLECTION = ATTENDANCE_MODULE_MANIFEST.collectionKey;
 
@@ -43,64 +26,23 @@ export default async function attendanceRoutes(
   fastify.addHook('preHandler', authenticateTenant);
   fastify.addHook('preHandler', requireTenantModule('attendance'));
 
-  await fastify.register(attendanceReportRoutes);
-  await fastify.register(attendanceSetupConfigRoutes);
-  await fastify.register(attendanceLookupRoutes);
+  await fastify.register(
+    async (sub) => {
+      await sub.register(attendanceReportRoutes);
+      await sub.register(attendanceSetupConfigRoutes);
+      await sub.register(attendanceLookupRoutes);
 
-  registerStandardTenantRoutes(fastify, {
-    collection: COLLECTION,
-    schema: attendanceRecordSchema,
-    listQuerySchema: attendanceListQuerySchema,
-    defaultPageSize: ATTENDANCE_MODULE_MANIFEST.defaultPageSize,
-    errorMessagePrefix: 'attendance',
-    loadPageFn: loadAttendancePage,
-    canWriteDeletedCheck: (user) => canDeleteCollection(user, COLLECTION),
-    loadCountFn: countAttendanceRecords,
-    loadMetricsFn: loadAttendanceCommandMetrics,
-    createFn: createAttendanceRecord,
-    updateFn: updateAttendanceRecordById,
-    deleteFn: deleteAttendanceRecordById,
-    restoreFn: restoreAttendanceRecordById,
-    nameSingular: 'record',
-    namePlural: 'records',
-    columnPreferencesObjectKey: ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey,
-  });
+      registerStandardExtendedRoutes(sub, {
+        collection: COLLECTION,
+        errorMessagePrefix: 'attendance',
+        loadCountFn: countAttendanceRecords,
+        loadMetricsFn: loadAttendanceCommandMetrics,
+        nameSingular: 'record',
+        columnPreferencesObjectKey: ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey,
+      });
+    },
+    { prefix: '/api/attendance' },
+  );
 
-  registerBulkPutRoute(fastify, {
-    collection: COLLECTION,
-    schema: attendanceBulkSchema,
-    saveFn: async (data) => upsertAttendanceRecords(data.records),
-    responseKey: 'records',
-    errorMessagePrefix: 'attendance records',
-  });
-
-  fastify.post('/bulk-delete', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(attendanceBulkIdsSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const result = await bulkSoftDeleteAttendance(
-        parsed.data.ids.map(String),
-        String(user.id),
-        parsed.data.deletionReason,
-      );
-      return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk delete attendance records');
-    }
-  });
-
-  fastify.post('/bulk-restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(attendanceBulkIdsSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const result = await bulkRestoreAttendance(parsed.data.ids.map(String));
-      return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk restore attendance records');
-    }
-  });
+  await fastify.register(attendanceContractRouter);
 }

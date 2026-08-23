@@ -9,7 +9,8 @@ import {
   INITIAL_SESSIONS_FIELD_SEED,
 } from './moduleFieldSetupAcademic.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 import { normalizeSessionsViewLayout } from './sessionsExportUtils.js';
 
 /** Deep clone {@link INITIAL_SESSIONS_FIELD_SEED} for default and Setup states. */
@@ -80,12 +81,17 @@ export function resolveSessionsFieldsMap(
 }
 
 /** PUT /api/sessions/field-config — field registry JSON without formTabs SSOT. */
-export const sessionFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const sessionFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     columnRegistry: z.array(z.record(z.string(), z.unknown())).optional(),
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const sessionFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, sessionFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/sessions/preferences — academic/session prefs only. */
 export const sessionPreferencesPutBodySchema = z

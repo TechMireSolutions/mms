@@ -66,7 +66,7 @@ export function ContactPickerMenu({
       {matches.map((contact) => {
         const contactPhone = getPrimaryPhone(contact);
         const primaryAddr = getPrimaryAddress(contact);
-        const contactCity = primaryAddr?.city || (contact.city as string | undefined);
+        const contactCity = primaryAddr?.city;
         const contactName = getDisplayName(contact);
 
         return (
@@ -75,9 +75,6 @@ export function ContactPickerMenu({
             type="button"
             variant="ghost"
             role="option"
-            onMouseDown={(event) => {
-              event.preventDefault();
-            }}
             onClick={() => {
               onSelect(contact);
             }}

@@ -1,8 +1,7 @@
 /**
- * Accounting Setup field-config + preferences via typed REST.
+ * Setup field-config + preferences via typed REST.
  */
 import {
-  ACCOUNTING_MODULE_MANIFEST,
   composeAccountingSettings,
   normalizeAccountingModulePreferences,
   normalizeAccountingSettings,
@@ -10,72 +9,36 @@ import {
   type AccountingModulePreferences,
   type AccountingSettings,
 } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
+import { apiContract } from "@/lib/api";
+import { createModuleSetupConfigApi } from "@/lib/query/createModuleSetupConfigApi";
 
-const FIELD_CONFIG_API = `${ACCOUNTING_MODULE_MANIFEST.restBasePath}/field-config`;
-const PREFERENCES_API = `${ACCOUNTING_MODULE_MANIFEST.restBasePath}/preferences`;
+const api = createModuleSetupConfigApi<AccountingSettings, AccountingModulePreferences>({
+  fetchFieldConfigFn: async (signal) => {
+    const res = await apiContract.accounting.getFieldConfig({ query: undefined, extraHeaders: {} });
+    return (res.body as any).config;
+  },
+  saveFieldConfigFn: async (config) => {
+    const res = await apiContract.accounting.updateFieldConfig({ body: config as any });
+    return (res.body as any).config;
+  },
+  fetchPreferencesFn: async (signal) => {
+    const res = await apiContract.accounting.getPreferences({ query: undefined, extraHeaders: {} });
+    return (res.body as any).preferences;
+  },
+  savePreferencesFn: async (prefs) => {
+    const res = await apiContract.accounting.updatePreferences({ body: prefs as any });
+    return (res.body as any).preferences;
+  },
+  normalizeFieldConfig: normalizeAccountingSettings,
+  composeSettings: composeAccountingSettings as any,
+  normalizePrefs: normalizeAccountingModulePreferences as any,
+  stripFieldConfig: stripAccountingFieldConfigForPersist as any,
+});
 
-let memoryFieldConfig: AccountingSettings | null = null;
-let memoryPreferences: AccountingModulePreferences | null = null;
-
-export function setAccountingFieldConfigMemory(config: AccountingSettings): void {
-  memoryFieldConfig = normalizeAccountingSettings(config);
-}
-
-export function setAccountingPreferencesMemory(preferences: AccountingModulePreferences): void {
-  memoryPreferences = normalizeAccountingModulePreferences(preferences);
-}
-
-export async function fetchAccountingFieldConfig(signal?: AbortSignal): Promise<AccountingSettings> {
-  const response = await apiJson<{ config: AccountingSettings | null }>(FIELD_CONFIG_API, { signal });
-  const merged = normalizeAccountingSettings(response.config);
-  memoryFieldConfig = merged;
-  return merged;
-}
-
-export async function saveAccountingFieldConfigAsync(
-  config: AccountingSettings,
-): Promise<AccountingSettings> {
-  const body = stripAccountingFieldConfigForPersist(config);
-  const response = await apiJson<{ success: boolean; config: AccountingSettings }>(FIELD_CONFIG_API, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const saved = normalizeAccountingSettings({
-    ...(response.config ?? body),
-    formTabs: response.config?.formTabs ?? config.formTabs,
-  });
-  memoryFieldConfig = saved;
-  return saved;
-}
-
-export async function fetchAccountingPreferences(signal?: AbortSignal): Promise<AccountingModulePreferences> {
-  const response = await apiJson<{ preferences: AccountingModulePreferences | null }>(PREFERENCES_API, { signal });
-  const merged = normalizeAccountingModulePreferences(response.preferences);
-  memoryPreferences = merged;
-  return merged;
-}
-
-export async function saveAccountingPreferencesAsync(
-  preferences: AccountingModulePreferences | AccountingSettings,
-): Promise<AccountingModulePreferences> {
-  const body = normalizeAccountingModulePreferences(preferences as AccountingModulePreferences);
-  const response = await apiJson<{ success: boolean; preferences: AccountingModulePreferences }>(PREFERENCES_API, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const saved = normalizeAccountingModulePreferences(response.preferences ?? body);
-  memoryPreferences = saved;
-  return saved;
-}
-
-export function getAccountingSettingsMemoryFallback(): AccountingSettings | null {
-  if (!memoryFieldConfig) return null;
-  return composeAccountingSettings(
-    memoryFieldConfig,
-    memoryPreferences ?? normalizeAccountingModulePreferences(null),
-    memoryFieldConfig.formTabs,
-  );
-}
+export const setAccountingFieldConfigMemory = api.setFieldConfigMemory;
+export const setAccountingPreferencesMemory = api.setPreferencesMemory;
+export const fetchAccountingFieldConfig = api.fetchFieldConfig;
+export const saveAccountingFieldConfigAsync = api.saveFieldConfigAsync;
+export const fetchAccountingPreferences = api.fetchPreferences;
+export const saveAccountingPreferencesAsync = api.savePreferencesAsync;
+export const getAccountingSettingsMemoryFallback = api.getSettingsMemoryFallback;

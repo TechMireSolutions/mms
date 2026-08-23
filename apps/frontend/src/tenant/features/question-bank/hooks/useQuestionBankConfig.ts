@@ -85,16 +85,16 @@ export function useQuestionBankConfig(
   const enabledDifficulties = useMemo(
     () =>
       (settings.difficultyLevels ?? [])
-        .filter((entry) => entry.enabled)
-        .map((entry) => entry.id),
+        .filter((entry: any) => entry.enabled)
+        .map((entry: any) => entry.id),
     [settings.difficultyLevels],
   );
 
   const enabledQuestionTypes = useMemo(
     () =>
       (settings.questionTypes ?? [])
-        .filter((entry) => entry.enabled)
-        .map((entry) => entry.id),
+        .filter((entry: any) => entry.enabled)
+        .map((entry: any) => entry.id),
     [settings.questionTypes],
   );
 

@@ -30,26 +30,28 @@ export const inviteWorkspaceUserSchema = z.object({
 /** Values accepted by the workspace user invite form. */
 export type InviteWorkspaceUserInput = z.infer<typeof inviteWorkspaceUserSchema>;
 
-export const workspaceUserRecordSchema = z.object({
-  id: z.string(),
-  contactId: z.union([z.string(), z.number()]).optional(),
-  name: z.string(),
-  email: z.string(),
-  loginEmail: z.string().optional(),
-  mustChangePassword: z.boolean().optional(),
-  temporaryPassword: z.string().optional(),
-  phone: z.string(),
-  role: z.string(),
-  status: userStatusSchema,
-  twoFactorEnabled: z.boolean(),
-  lastLogin: z.string(),
-  createdDate: z.string(),
-  failedLoginAttempts: z.number(),
-  activeSessions: z.number(),
-  avatarInitials: z.string(),
-  deletedAt: z.string().nullable().optional(),
-  deletedBy: z.string().nullable().optional(),
-});
+export const workspaceUserRecordSchema = z
+  .object({
+    id: z.string(),
+    contactId: z.union([z.string(), z.number()]).optional(),
+    name: z.string(),
+    email: z.string(),
+    loginEmail: z.string().optional(),
+    mustChangePassword: z.boolean().optional(),
+    temporaryPassword: z.string().optional(),
+    phone: z.string().optional().default(''),
+    role: z.string(),
+    status: userStatusSchema.optional().default('active'),
+    twoFactorEnabled: z.boolean().optional().default(false),
+    lastLogin: z.string().optional().default(''),
+    createdDate: z.string().optional().default(''),
+    failedLoginAttempts: z.number().optional().default(0),
+    activeSessions: z.number().optional().default(0),
+    avatarInitials: z.string().optional().default(''),
+    deletedAt: z.string().nullable().optional(),
+    deletedBy: z.string().nullable().optional(),
+  })
+  .passthrough();
 
 export const workspaceUserListSchema = z.array(workspaceUserRecordSchema);
 

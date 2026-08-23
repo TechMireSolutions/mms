@@ -1,0 +1,22 @@
+import { z } from 'zod';
+import { deepSanitizeStrings } from './sanitize.js';
+import { invoiceRecordInsertSchema, paymentRecordInsertSchema } from '../financeModuleManifest.js';
+
+const financeBulkIdsBaseSchema = z.object({
+  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
+}).strict();
+
+export const financeBulkIdsSchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, financeBulkIdsBaseSchema);
+
+export const invoiceCreateSchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, invoiceRecordInsertSchema);
+
+export const paymentCreateSchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, paymentRecordInsertSchema);

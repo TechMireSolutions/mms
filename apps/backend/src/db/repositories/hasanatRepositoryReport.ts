@@ -9,7 +9,7 @@ import {
   type HasanatReportComparisonSession,
 } from '@mms/shared';
 import { getQueryRows } from '../documentStoreKeys.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 function activeDistributionWhere(subdomain: string, alias = 'hd'): ReturnType<typeof sql> {
   return sql`
@@ -46,7 +46,7 @@ export async function loadHasanatReportAggregatesSql(
   const subdomain = tenant.trim().toLowerCase();
   if (!subdomain) return { ...EMPTY_HASANAT_REPORT_AGGREGATES };
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const aggregates: HasanatReportAggregates = { ...EMPTY_HASANAT_REPORT_AGGREGATES };
     if (!hasanatReportComparisonQueryActive(comparisonQuery) || !comparisonQuery) {
       return aggregates;

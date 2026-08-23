@@ -54,7 +54,6 @@ export const invoiceRecordUpdateSchema = invoiceRecordInsertSchema.partial().str
 export type Invoice = z.infer<typeof invoiceRecordSchema>;
 export type InvoiceInsert = z.infer<typeof invoiceRecordInsertSchema>;
 export type InvoiceUpdate = z.infer<typeof invoiceRecordUpdateSchema>;
-export const invoiceCreateSchema = invoiceRecordInsertSchema;
 export type InvoiceCreateInput = InvoiceInsert;
 export const invoiceListSchema = z.array(invoiceRecordSchema);
 
@@ -115,7 +114,6 @@ export const paymentRecordUpdateSchema = paymentRecordInsertSchema.partial().str
 export type Payment = z.infer<typeof paymentRecordSchema>;
 export type PaymentInsert = z.infer<typeof paymentRecordInsertSchema>;
 export type PaymentUpdate = z.infer<typeof paymentRecordUpdateSchema>;
-export const paymentCreateSchema = paymentRecordInsertSchema;
 export type PaymentCreateInput = PaymentInsert;
 export const paymentListSchema = z.array(paymentRecordSchema);
 

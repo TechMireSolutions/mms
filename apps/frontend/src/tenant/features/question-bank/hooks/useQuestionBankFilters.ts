@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import { QUESTION_BANK_MODULE_MANIFEST, type QuestionBankQuestion as Question } from '@mms/shared';
 import { useDebounce } from '@/hooks/useDebounce';
-import { useQuestionBankPaginated } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
-import type { UseQueryResult } from '@tanstack/react-query';
-import type { QuestionBankListPageResult } from '@mms/shared';
+import { useQuestionBankContractList } from '@/tenant/features/question-bank/hooks/useQuestionBankTsrHooks';
 
 const QUESTION_SEARCH_DEBOUNCE_MS = 300;
 
@@ -34,7 +32,7 @@ export function useQuestionBankFilters({
     setListPage(1);
   }, [debouncedSearch, filterCats, filterDiff, showDeleted]);
 
-  const pageQuery: UseQueryResult<QuestionBankListPageResult> = useQuestionBankPaginated({
+  const pageQuery = useQuestionBankContractList({
     page: listPage,
     limit: QUESTION_BANK_MODULE_MANIFEST.defaultPageSize,
     search: debouncedSearch,
@@ -43,11 +41,11 @@ export function useQuestionBankFilters({
     includeDeleted: showDeleted,
   });
 
-  const pageQuestions: Question[] = pageQuery.data?.questions ?? [];
-  const serverTotal = pageQuery.data?.total ?? 0;
-  const serverPage = pageQuery.data?.page ?? listPage;
-  const serverLimit = pageQuery.data?.limit ?? QUESTION_BANK_MODULE_MANIFEST.defaultPageSize;
-  const serverHasMore = pageQuery.data?.hasMore ?? false;
+  const pageQuestions: Question[] = (pageQuery.data?.body?.questions ?? []) as Question[];
+  const serverTotal = pageQuery.data?.body?.total ?? 0;
+  const serverPage = pageQuery.data?.body?.page ?? listPage;
+  const serverLimit = pageQuery.data?.body?.limit ?? QUESTION_BANK_MODULE_MANIFEST.defaultPageSize;
+  const serverHasMore = pageQuery.data?.body?.hasMore ?? false;
 
   useEffect(() => {
     onFilteredCountChange?.(serverTotal);

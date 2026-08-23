@@ -2,6 +2,7 @@ export interface ServerConfig {
   isProd: boolean;
   jwtSecret: string;
   databaseUrl: string;
+  readReplicaDatabaseUrl: string;
   trustProxy: boolean | string[];
   logLevel: string;
   allowedOrigin: string;
@@ -51,6 +52,8 @@ export function loadServerConfig(): ServerConfig {
     }
   }
 
+  const readReplicaDatabaseUrl = process.env.READ_REPLICA_DATABASE_URL || databaseUrl;
+
   const trustProxyValue = process.env.TRUST_PROXY?.trim();
   if (trustProxyValue === 'true') {
     throw new Error(
@@ -75,6 +78,7 @@ export function loadServerConfig(): ServerConfig {
     isProd,
     jwtSecret,
     databaseUrl,
+    readReplicaDatabaseUrl,
     trustProxy: trustedProxies.length > 0 ? trustedProxies : false,
     logLevel: process.env.LOG_LEVEL || 'info',
     allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',

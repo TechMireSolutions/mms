@@ -1,25 +1,23 @@
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import type { FastifyPluginAsync } from 'fastify';
 import {
+  rootContract,
+  roleHasPermission,
+  type GenericSavedReportCategory,
+  type Permission,
+  type User,
   ATTENDANCE_MODULE_MANIFEST,
   EXAMINATIONS_MODULE_MANIFEST,
   FINANCE_MODULE_MANIFEST,
-  genericSavedReportCreateSchema,
-  genericSavedReportIdParamsSchema,
-  genericSavedReportListQuerySchema,
   HASANAT_MODULE_MANIFEST,
   QUESTION_BANK_MODULE_MANIFEST,
-  roleHasPermission,
   SESSIONS_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
   TEACHERS_MODULE_MANIFEST,
   USERS_MODULE_MANIFEST,
-  type GenericSavedReportCategory,
-  type Permission,
-  type User,
 } from '@mms/shared';
+import { initServer } from '@ts-rest/fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { sendDatabaseError, sendForbidden, sendNotFound } from '../../lib/httpErrors.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { withTenant } from '../../db/tenant-context.js';
 import {
   createSavedReport,
   deleteSavedReport,
@@ -27,6 +25,8 @@ import {
   runSavedReport,
 } from '../../services/savedReportsService.js';
 import { recordAudit } from '../../services/auditService.js';
+
+const s = initServer();
 
 const REPORT_PERMISSION_BY_CATEGORY = {
   students: STUDENTS_MODULE_MANIFEST.permissions.reports,
@@ -61,92 +61,73 @@ async function auditSavedReport(
   });
 }
 
-export default async function savedReportsRoutes(
-  fastify: FastifyInstance,
-  _options: FastifyPluginOptions,
-): Promise<void> {
-  fastify.addHook('preHandler', authenticateTenant);
-
-  fastify.get('/', async (request, reply) => {
-    const query = parseRequest(genericSavedReportListQuerySchema, request.query);
-    if (!query.ok) return replyValidationError(reply, query.message);
-    const user = request.user as User;
-    if (!canUseSavedReports(user, query.data.category)) return sendForbidden(reply);
-
-    try {
-      const reports = await listSavedReports(query.data.category, String(user.id));
-      return reply.send({ reports });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to list saved reports', error);
+const savedReportsRouter = s.router(rootContract.savedReports, {
+  list: async ({ query, request }: any) => {
+    const user = (request as any).user as User;
+    if (!canUseSavedReports(user, query.category)) {
+      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
     }
-  });
-
-  fastify.post('/', async (request, reply) => {
-    const body = parseRequest(genericSavedReportCreateSchema, request.body);
-    if (!body.ok) return replyValidationError(reply, body.message);
-    const user = request.user as User;
-    if (!canUseSavedReports(user, body.data.category)) return sendForbidden(reply);
-
     try {
-      const report = await createSavedReport({
-        ...body.data,
+      const reports = await withTenant(String((request as any).tenant?.id), () => listSavedReports(query.category, String(user.id)), { readOnly: true });
+      return { status: 200 as const, body: { reports } };
+    } catch {
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list saved reports' } as any };
+    }
+  },
+  create: async ({ body, request }: any) => {
+    const user = (request as any).user as User;
+    if (!canUseSavedReports(user, body.category)) {
+      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+    }
+    try {
+      const report = await withTenant(String((request as any).tenant?.id), () => createSavedReport({
+        ...body,
         createdBy: String(user.id),
         createdByName: user.name || user.email,
-      });
-      await auditSavedReport(user, 'create', body.data.category, report.id, `Saved report "${report.name}"`);
-      return reply.status(201).send({ report });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to save report', error);
+      }), { readOnly: false });
+      await auditSavedReport(user, 'create', body.category, report.id, `Saved report "${report.name}"`);
+      return { status: 201 as const, body: { report } };
+    } catch {
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save report' } as any };
     }
-  });
-
-  fastify.delete('/:id', async (request, reply) => {
-    const params = parseRequest(genericSavedReportIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    const query = parseRequest(genericSavedReportListQuerySchema, request.query);
-    if (!query.ok) return replyValidationError(reply, query.message);
-    const user = request.user as User;
-    if (!canUseSavedReports(user, query.data.category)) return sendForbidden(reply);
-
+  },
+  delete: async ({ params: { id }, query, request }: any) => {
+    const user = (request as any).user as User;
+    if (!canUseSavedReports(user, query.category)) {
+      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+    }
     try {
-      const deleted = await deleteSavedReport(
-        params.data.id,
-        query.data.category,
-        String(user.id),
-      );
-      if (!deleted) return sendNotFound(reply, 'Saved report not found');
-      await auditSavedReport(
-        user,
-        'delete',
-        query.data.category,
-        params.data.id,
-        `Deleted saved report ${params.data.id}`,
-      );
-      return reply.send({ success: true });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to delete saved report', error);
+      const deleted = await withTenant(String((request as any).tenant?.id), () => deleteSavedReport(id, query.category, String(user.id)), { readOnly: false });
+      if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Saved report not found' } };
+      await auditSavedReport(user, 'delete', query.category, id, `Deleted saved report ${id}`);
+      return { status: 200 as const, body: { success: true } };
+    } catch {
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete saved report' } as any };
     }
-  });
-
-  fastify.post('/:id/run', async (request, reply) => {
-    const params = parseRequest(genericSavedReportIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    const query = parseRequest(genericSavedReportListQuerySchema, request.query);
-    if (!query.ok) return replyValidationError(reply, query.message);
-    const user = request.user as User;
-    if (!canUseSavedReports(user, query.data.category)) return sendForbidden(reply);
-
+  },
+  run: async ({ params: { id }, query, request }: any) => {
+    const user = (request as any).user as User;
+    if (!canUseSavedReports(user, query.category)) {
+      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+    }
     try {
-      const report = await runSavedReport(
-        params.data.id,
-        query.data.category,
-        String(user.id),
-      );
-      if (!report) return sendNotFound(reply, 'Saved report not found');
-      await auditSavedReport(user, 'run', query.data.category, report.id, `Ran saved report "${report.name}"`);
-      return reply.send({ report });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, 'Failed to run saved report', error);
+      const report = await withTenant(String((request as any).tenant?.id), () => runSavedReport(id, query.category, String(user.id)), { readOnly: true });
+      if (!report) return { status: 404 as const, body: { type: 'not_found', message: 'Saved report not found' } };
+      await auditSavedReport(user, 'run', query.category, report.id, `Ran saved report "${report.name}"`);
+      return { status: 200 as const, body: { report } };
+    } catch {
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to run saved report' } as any };
     }
-  });
+  },
+} as any);
+
+/**
+ * Generic saved-report preset routes — migrated to @ts-rest contract router (Phase 3).
+ */
+export default async function savedReportsRoutes(
+  fastify: Parameters<FastifyPluginAsync>[0],
+): Promise<void> {
+  fastify.addHook('preHandler', authenticateTenant);
+  await fastify.register(s.plugin(savedReportsRouter));
 }
+

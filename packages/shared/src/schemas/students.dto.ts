@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { stripStudentClientSoftDeleteFields } from './studentUtils.js';
+import { stripStudentClientSoftDeleteFields } from '../studentUtils.js';
+import { deepSanitizeStrings } from './sanitize.js';
 import {
   STUDENT_WRITE_SYSTEM_KEYS,
-} from './studentValidation.js';
+} from '../studentValidation.js';
 
 const STUDENT_WRITE_SYSTEM_KEY_SET = new Set<string>(STUDENT_WRITE_SYSTEM_KEYS);
 
@@ -58,7 +59,8 @@ export function buildStudentWriteSchema(extraFieldKeys: string[] = []): z.ZodTyp
 
   return z.preprocess((raw) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
-    return stripStudentClientSoftDeleteFields(raw as Record<string, unknown>);
+    const stripped = stripStudentClientSoftDeleteFields(raw as Record<string, unknown>);
+    return deepSanitizeStrings(stripped);
   }, shapeSchema);
 }
 
@@ -75,3 +77,26 @@ export const studentsBulkEnrollBodySchema = z
 
 export type StudentsBulkEnrollBody = z.infer<typeof studentsBulkEnrollBodySchema>;
 
+const studentsDuplicateCheckBodyBaseSchema = z.object({
+  excludeId: z.string().optional(),
+  contactId: z.union([z.string(), z.number()]).optional(),
+  email: z.string().max(320).optional(),
+  name: z.string().max(500).optional(),
+  dob: z.string().max(32).optional(),
+  grNumber: z.string().max(64).optional(),
+}).strict();
+
+export const studentsDuplicateCheckBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, studentsDuplicateCheckBodyBaseSchema);
+
+const studentsBulkStatusBaseSchema = z.object({
+  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
+  status: z.string().min(1).max(64),
+}).strict();
+
+export const studentsBulkStatusSchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, studentsBulkStatusBaseSchema);

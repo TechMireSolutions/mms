@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { type Teacher } from '@mms/shared';
 import { teachers } from '../schema.js';
-import { withTenantTransaction, type AppDb } from '../withTenantTransaction.js';
+import { withTenant, type AppDb } from '../tenant-context.js';
 
 export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
   return {
@@ -100,7 +100,7 @@ export async function listTeachersByWorkspace(
   options?: ListTeachersOptions,
 ): Promise<Teacher[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const conditions = [eq(teachers.workspaceSubdomain, subdomain)];
     const deletedCond = resolveDeletedCondition(options);
     if (deletedCond) conditions.push(deletedCond);
@@ -115,7 +115,7 @@ export async function listTeachersByWorkspace(
 
 export async function findTeacherById(tenant: string, id: string): Promise<Teacher | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(teachers)
@@ -130,7 +130,7 @@ export async function findTeacherById(tenant: string, id: string): Promise<Teach
 export async function findTeachersByIds(tenant: string, ids: string[]): Promise<Teacher[]> {
   const subdomain = tenant.trim().toLowerCase();
   if (ids.length === 0) return [];
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(teachers)
@@ -141,7 +141,7 @@ export async function findTeachersByIds(tenant: string, ids: string[]): Promise<
 
 export async function saveTeacher(tenant: string, teacher: Teacher): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     await persistTeacherTx(tx, subdomain, teacher);
   });
 }
@@ -149,7 +149,7 @@ export async function saveTeacher(tenant: string, teacher: Teacher): Promise<voi
 export async function bulkSaveTeachers(tenant: string, items: Teacher[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   if (items.length === 0) return;
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     for (const item of items) {
       await persistTeacherTx(tx, subdomain, item);
     }
@@ -158,7 +158,7 @@ export async function bulkSaveTeachers(tenant: string, items: Teacher[]): Promis
 
 export async function replaceTeachersForWorkspace(tenant: string, items: Teacher[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     await tx.delete(teachers).where(eq(teachers.workspaceSubdomain, subdomain));
     for (const item of items) {
       await persistTeacherTx(tx, subdomain, item);
@@ -171,7 +171,7 @@ export async function countTeachersByWorkspace(
   options?: ListTeachersOptions,
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const conditions = [eq(teachers.workspaceSubdomain, subdomain)];
     const deletedCond = resolveDeletedCondition(options);
     if (deletedCond) conditions.push(deletedCond);

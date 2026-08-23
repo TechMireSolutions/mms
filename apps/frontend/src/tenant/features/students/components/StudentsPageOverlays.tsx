@@ -6,7 +6,7 @@ import {
   ModuleOverlayLoadingFallback,
 } from "@/components/ui/ModuleOverlayLoadingChrome";
 import { useStudentFieldConfigQuery } from "@/tenant/features/students/hooks/useStudentSetupConfig";
-import { useSessions } from "@/tenant/hooks/collections/sessions";
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { StudentsPageConfirmDialogs } from "@/tenant/features/students/components/StudentsPageConfirmDialogs";
 import type { StudentsPageOverlaysProps } from "@/tenant/features/students/hooks/studentsPageOverlaysTypes";
 import React from "react";
@@ -55,8 +55,7 @@ export const StudentsPageOverlays = React.memo(function StudentsPageOverlays({
   onViewStudent,
 }: StudentsPageOverlaysProps): React.JSX.Element {
   const { isPending: configPending } = useStudentFieldConfigQuery();
-  const sessionsQuery = useSessions();
-  const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data]);
+  const sessions = useSessionsCollection();
   const formNeedsTabs = showStudentForm || Boolean(viewStudent);
   const tabsPending = formNeedsTabs && configPending;
 

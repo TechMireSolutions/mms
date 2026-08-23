@@ -1,58 +1,46 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { normalizeStoredTeacher, type TeacherRecord } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
-import { createModuleCrudMutations } from '@/lib/query/createModuleCrudMutations';
-import { invalidateTeachersQueries } from '@/tenant/features/teachers/hooks/invalidateTeachersQueries';
-import { TEACHERS_API } from '@/tenant/features/teachers/hooks/teachersQueryShared';
-
-const useTeachersModuleMutations = createModuleCrudMutations<TeacherRecord>({
-  apiBase: TEACHERS_API,
-  normalizeStored: normalizeStoredTeacher,
-  invalidate: invalidateTeachersQueries,
-  updateRecordKey: "teacher",
-});
+import {
+  useTeachersContractCreate,
+  useTeachersContractUpdate,
+  useTeachersContractDelete,
+  useTeachersContractBulkDelete,
+  useTeachersContractRestore,
+  useTeachersContractBulkRestore,
+  useTeachersContractBulkStatus,
+  useTeachersContractBulkSpecialization,
+  useTeachersContractLogExportAudit,
+  useTeachersContractLogSetupAudit,
+} from '@/tenant/features/teachers/hooks/useTeachersTsrHooks';
 
 /** Server mutations for Teacher records (create, update, delete, bulk delete, bulk status, bulk specialization). */
 export function useTeacherMutations() {
-  const queryClient = useQueryClient();
-  const {
-    create,
-    update,
-    remove,
-    bulkDelete,
-    restore,
-    bulkRestore,
-    bulkStatus,
-    logExportAudit,
-    logSetupAudit,
-  } = useTeachersModuleMutations();
-
-  const bulkSpecializationMutation = useMutation({
-    mutationFn: async ({ ids, specialization }: { ids: string[]; specialization: string }) => {
-      return apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${TEACHERS_API}/bulk-specialization`,
-        {
-          method: "POST",
-          body: JSON.stringify({ ids, specialization }),
-        },
-      );
-    },
-    onSuccess: async () => {
-      await invalidateTeachersQueries(queryClient);
-    },
-  });
+  const createTeacherMutation = useTeachersContractCreate();
+  const updateTeacherMutation = useTeachersContractUpdate();
+  const deleteTeacherMutation = useTeachersContractDelete();
+  const bulkDeleteTeachersMutation = useTeachersContractBulkDelete();
+  const restoreTeacherMutation = useTeachersContractRestore();
+  const bulkRestoreTeachersMutation = useTeachersContractBulkRestore();
+  const bulkUpdateTeacherStatusMutation = useTeachersContractBulkStatus();
+  const bulkSpecializationMutation = useTeachersContractBulkSpecialization();
+  const logExportAuditMutation = useTeachersContractLogExportAudit();
+  const logSetupAuditMutation = useTeachersContractLogSetupAudit();
 
   return {
-    createTeacher: create,
-    updateTeacher: update,
-    deleteTeacher: remove,
-    bulkDeleteTeachers: bulkDelete,
-    restoreTeacher: restore,
-    bulkRestoreTeachers: bulkRestore,
-    bulkUpdateTeacherStatus: bulkStatus,
+    createTeacher: createTeacherMutation,
+    updateTeacher: updateTeacherMutation,
+    deleteTeacher: deleteTeacherMutation,
+    bulkDeleteTeachers: bulkDeleteTeachersMutation,
+    restoreTeacher: restoreTeacherMutation,
+    bulkRestoreTeachers: bulkRestoreTeachersMutation,
+    bulkUpdateTeacherStatus: bulkUpdateTeacherStatusMutation,
     bulkUpdateTeacherSpecialization: bulkSpecializationMutation.mutateAsync,
     isBulkSpecializationPending: bulkSpecializationMutation.isPending,
-    logExportAudit,
-    logSetupAudit,
+    logExportAudit: {
+      mutateAsync: (payload: any) => logExportAuditMutation.mutateAsync({ body: payload }),
+      isPending: logExportAuditMutation.isPending,
+    },
+    logSetupAudit: {
+      mutateAsync: (payload: any) => logSetupAuditMutation.mutateAsync({ body: payload }),
+      isPending: logSetupAuditMutation.isPending,
+    },
   };
 }

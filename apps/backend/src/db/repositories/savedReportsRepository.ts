@@ -8,7 +8,7 @@ import type {
 } from '@mms/shared';
 import { CONTACTS_SAVED_REPORT_CATEGORY } from '@mms/shared';
 import { savedReports } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 export interface CreateSavedReportRecord extends GenericSavedReportCreateInput {
   createdBy: string;
@@ -47,7 +47,7 @@ export async function listSavedReportsByOwner(
   createdBy: string,
 ): Promise<GenericSavedReport[]> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .select()
       .from(savedReports)
@@ -66,7 +66,7 @@ export async function listSavedReportsByCategory(
   category: PersistedSavedReportCategory,
 ): Promise<GenericSavedReport[]> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .select()
       .from(savedReports)
@@ -86,7 +86,7 @@ export async function findSavedReportByOwner(
   createdBy: string,
 ): Promise<GenericSavedReport | null> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .select()
       .from(savedReports)
@@ -107,7 +107,7 @@ export async function findSavedReportById(
   category: PersistedSavedReportCategory,
 ): Promise<GenericSavedReport | null> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .select()
       .from(savedReports)
@@ -147,7 +147,7 @@ export async function createPersistedSavedReport(
     updatedAt: now,
   };
 
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx.insert(savedReports).values(values).returning();
     return toGenericSavedReport(rows[0]!);
   });
@@ -160,7 +160,7 @@ export async function deleteSavedReportByOwner(
   createdBy: string,
 ): Promise<boolean> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .delete(savedReports)
       .where(and(
@@ -180,7 +180,7 @@ export async function deleteSavedReportById(
   category: PersistedSavedReportCategory,
 ): Promise<boolean> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .delete(savedReports)
       .where(and(
@@ -201,7 +201,7 @@ export async function touchSavedReportRunByOwner(
 ): Promise<GenericSavedReport | null> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
   const now = new Date();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .update(savedReports)
       .set({ lastRunAt: now, updatedAt: now })
@@ -223,7 +223,7 @@ export async function touchSavedReportRunById(
 ): Promise<GenericSavedReport | null> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
   const now = new Date();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .update(savedReports)
       .set({ lastRunAt: now, updatedAt: now })
@@ -242,7 +242,7 @@ export async function listAllSavedReportsByWorkspace(
   workspaceSubdomain: string,
 ): Promise<GenericSavedReport[]> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(tenant, async (tx) => {
+  return withTenant(tenant, async (tx) => {
     const rows = await tx
       .select()
       .from(savedReports)
@@ -258,7 +258,7 @@ export async function replaceSavedReportsForWorkspace(
   reports: GenericSavedReport[],
 ): Promise<void> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(tenant, async (tx) => {
+  await withTenant(tenant, async (tx) => {
     await tx.delete(savedReports).where(eq(savedReports.workspaceSubdomain, tenant));
     if (reports.length === 0) return;
 

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ReceiptText, CreditCard } from "lucide-react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -11,8 +11,8 @@ import {
   useFinanceInvoicesPaginated,
   useFinancePaymentsPaginated,
   useFinanceMutations,
-  NotifiedFinanceMutationError,
 } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { NotifiedMutationError } from "@/lib/notifiedMutationError";
 import { useFinanceInvoiceColumnLayout } from "@/tenant/features/finance/hooks/useFinanceInvoiceColumnLayout";
 import { useFinancePaymentColumnLayout } from "@/tenant/features/finance/hooks/useFinancePaymentColumnLayout";
 import { notify } from "@/lib/notify";
@@ -62,12 +62,20 @@ export function useFinancePageController() {
   const invoiceColumnLayout = useFinanceInvoiceColumnLayout();
   const paymentColumnLayout = useFinancePaymentColumnLayout();
 
-  useModuleCreateHotkey({
-    enabled: canWrite && !showDeleted,
+  useModuleShortcuts({
+    enabled: activeTab === "work",
+    canWrite,
+    showDeleted,
     onCreate: () => {
       setActiveTab("work");
       setActiveSubTab("invoices");
       setCreatingInvoice(true);
+    },
+    searchInputId: "finance-search-input",
+    clearSelection: () => {
+      setViewInvoice(null);
+      setRecordInvoice(null);
+      setCreatingInvoice(false);
     },
   });
 
@@ -83,7 +91,7 @@ export function useFinancePageController() {
       notify.error(t("finance.paymentSaveFailed"), {
         description: error instanceof Error ? error.message : String(error),
       });
-      throw new NotifiedFinanceMutationError(error instanceof Error ? error.message : String(error));
+      throw new NotifiedMutationError(error instanceof Error ? error.message : String(error));
     }
   };
 
@@ -97,7 +105,7 @@ export function useFinancePageController() {
       notify.error(t("finance.invoiceSaveFailed"), {
         description: error instanceof Error ? error.message : String(error),
       });
-      throw new NotifiedFinanceMutationError(error instanceof Error ? error.message : String(error));
+      throw new NotifiedMutationError(error instanceof Error ? error.message : String(error));
     }
   };
 

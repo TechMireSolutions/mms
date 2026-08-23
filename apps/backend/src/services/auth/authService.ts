@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
 import { requiresTwoFactor, type BrandingSocialLink } from '@mms/shared';
@@ -62,8 +63,9 @@ export async function establishSession(
   twoFactorVerified = true,
 ): Promise<AuthResult> {
   const accessExpiresIn = await getJwtExpiresIn();
+  const jti = randomUUID();
   const accessToken = jwtSigner.sign(
-    { ...user, twoFactorVerified, tokenType: 'access' },
+    { ...user, twoFactorVerified, tokenType: 'access', jti },
     { expiresIn: accessExpiresIn },
   );
   const refreshToken = await issueRefreshToken(user);

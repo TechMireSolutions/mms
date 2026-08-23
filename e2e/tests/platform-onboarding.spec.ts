@@ -88,8 +88,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
     await page.fill('#confirmPassword', adminPassword);
     await page.check('#terms');
     await page.click('button:has-text("Create workspace")');
-
-    await expect(page).toHaveURL(/\/|\/platform\/dashboard/);
+    await page.waitForURL((url) => !url.pathname.includes('/onboarding'), { timeout: 45_000 });
     await expect(platformConsoleLanding.first()).toBeVisible({ timeout: 25_000 });
 
     // 5. Navigate to tenant login page & login with temporary password

@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
 import type { PlatformUser, PlatformUserProfile } from '@mms/shared';
@@ -17,6 +18,7 @@ export interface PlatformAccessTokenPayload {
   id: string;
   tokenType: 'platform_access';
   sessionVersion?: number;
+  jti?: string;
 }
 
 export type PlatformLoginFailure = 'invalid_credentials' | 'account_disabled';
@@ -39,6 +41,7 @@ export function issuePlatformSession(
       id: user.id,
       tokenType: 'platform_access',
       sessionVersion,
+      jti: randomUUID(),
     } satisfies PlatformAccessTokenPayload,
     { expiresIn: PLATFORM_ACCESS_TTL },
   );

@@ -1,6 +1,5 @@
 /** Stable barrel — list + analytics query hooks (Contacts-shaped split). */
 export {
-  useStudentsPaginated,
   fetchAllStudentsForQuery,
   useStudentLinkedContactIds,
   useStudentsByIds,

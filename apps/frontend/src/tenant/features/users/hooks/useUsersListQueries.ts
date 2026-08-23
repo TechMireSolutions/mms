@@ -1,9 +1,7 @@
-import { useQuery } from '@tanstack/react-query';
 import { USERS_MODULE_MANIFEST } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { apiJson } from '@/lib/apiClient';
+import { tsrClient, apiContract } from '@/lib/api';
 import {
-  buildUsersPageUrl,
   sameUsersListFilters,
   usersListQueryKeyParams,
   usersPaginatedQueryKey,
@@ -14,13 +12,14 @@ import {
 export function useUsersPaginated(params: UsersPaginatedParams) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
-  return useQuery({
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const query = tsrClient.users.list.useQuery({
     queryKey: usersPaginatedQueryKey(params),
-    queryFn: async ({ signal }) =>
-      apiJson<UsersListPageResult>(buildUsersPageUrl(params), { signal }),
+    queryData: { query: usersListQueryKeyParams(params) as any },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
-    placeholderData: (previousData, previousQuery) => {
+    placeholderData: (previousData: any, previousQuery: any) => {
       const previousParams = previousQuery?.queryKey[3] as
         | ReturnType<typeof usersListQueryKeyParams>
         | undefined;
@@ -28,6 +27,8 @@ export function useUsersPaginated(params: UsersPaginatedParams) {
       return sameUsersListFilters(previousParams, keyParams) ? previousData : undefined;
     },
   });
+  
+  return { ...query, data: query.data?.body as UsersListPageResult | undefined };
 }
 
 /** Fetches all pages matching Work filters (non-Work consumers / export). */
@@ -41,9 +42,10 @@ export async function fetchAllUsersForQuery(
   let total = 0;
 
   for (;;) {
-    const usersPage = await apiJson<UsersListPageResult>(
-      buildUsersPageUrl({ ...params, page, limit }),
-    );
+    const response = await apiContract.users.list({
+      query: { ...(params as any), page, limit }
+    });
+    const usersPage = response.body as UsersListPageResult;
     all.push(...usersPage.users);
     total = usersPage.total;
     onProgress?.(all.length, total);

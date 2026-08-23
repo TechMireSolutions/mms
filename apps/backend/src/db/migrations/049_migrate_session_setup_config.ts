@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { parseTenantScopedStorageKey, splitSessionsSettingsBlob } from '@mms/shared';
 
 const SETTINGS_KEY = 'sessions_settings';
@@ -36,7 +36,7 @@ export async function runMigration049(): Promise<void> {
   let prefsCount = 0;
   let columnUserCount = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     for (const [tenant, raw] of settingsByTenant) {
       const { fieldConfig, preferences } = splitSessionsSettingsBlob(raw);
 

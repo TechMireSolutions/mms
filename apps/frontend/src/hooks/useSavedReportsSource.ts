@@ -6,7 +6,7 @@ import type {
   GenericSavedReportCreateInput,
 } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { apiFetch, apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 import { getCollection, saveCollectionCacheOnly } from '@/lib/db';
 import {
   LEGACY_SAVED_REPORTS_COLLECTION_KEY,
@@ -45,11 +45,14 @@ export function useGenericSavedReportsSource(
   const reportsQuery = useQuery({
     queryKey,
     queryFn: async ({ signal }) => {
-      const response = await apiJson<{ reports: GenericSavedReport[] }>(
-        `/api/saved-reports?category=${encodeURIComponent(category)}`,
-        { signal },
-      );
-      return response.reports;
+      const response = await apiContract.savedReports.list({
+        query: { category },
+        extraHeaders: {},
+      });
+      if (response.status === 200) {
+        return response.body.reports as GenericSavedReport[];
+      }
+      return [];
     },
     enabled: isAuthenticated,
     staleTime: 30_000,
@@ -60,33 +63,49 @@ export function useGenericSavedReportsSource(
   };
 
   const createSavedReport = useMutation({
-    mutationFn: async (input: GenericSavedReportCreateInput) =>
-      apiJson<{ report: GenericSavedReport }>('/api/saved-reports', {
-        method: 'POST',
-        body: JSON.stringify({
+    mutationFn: async (input: GenericSavedReportCreateInput) => {
+      const res = await apiContract.savedReports.create({
+        body: {
           name: input.name,
           category,
           filters: input.filters,
-        }),
-      }),
+        },
+      });
+      if (res.status === 201) {
+        return res.body;
+      }
+      throw new Error('Failed to create saved report');
+    },
     onSuccess: invalidateCategory,
   });
 
   const deleteSavedReport = useMutation({
-    mutationFn: async (id: string) =>
-      apiFetch(
-        `/api/saved-reports/${encodeURIComponent(id)}?category=${encodeURIComponent(category)}`,
-        { method: 'DELETE' },
-      ),
+    mutationFn: async (id: string) => {
+      const res = await apiContract.savedReports.delete({
+        params: { id },
+        query: { category },
+        body: {},
+      });
+      if (res.status === 200) {
+        return res.body;
+      }
+      throw new Error('Failed to delete saved report');
+    },
     onSuccess: invalidateCategory,
   });
 
   const runSavedReport = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ report: GenericSavedReport }>(
-        `/api/saved-reports/${encodeURIComponent(id)}/run?category=${encodeURIComponent(category)}`,
-        { method: 'POST' },
-      ),
+    mutationFn: async (id: string) => {
+      const res = await apiContract.savedReports.run({
+        params: { id },
+        query: { category },
+        body: {},
+      });
+      if (res.status === 200) {
+        return res.body;
+      }
+      throw new Error('Failed to run saved report');
+    },
     onSuccess: invalidateCategory,
   });
 

@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { getDb } from '../dbClient.js';
+import { withTenant } from '../tenant-context.js';
 import * as schema from '../schema.js';
 import { type EmailIntegrationRow } from '../schema/messaging.js';
 import type { EmailIntegrationConfig, EmailIntegrationSecrets } from '@mms/shared';
@@ -7,14 +7,15 @@ import { DEFAULT_EMAIL_INTEGRATION } from '@mms/shared';
 
 export async function getEmailIntegrationRow(workspaceSubdomain: string): Promise<EmailIntegrationRow | null> {
   try {
-    const db = getDb();
-    const rows = await db
+    return await withTenant(workspaceSubdomain, async (tx) => {
+      if (!tx || typeof (tx as any).select !== 'function') return null;
+      const rows = await tx
       .select()
       .from(schema.emailIntegrations)
       .where(eq(schema.emailIntegrations.workspaceSubdomain, workspaceSubdomain))
       .limit(1);
-
-    return rows[0] ?? null;
+      return rows[0] ?? null;
+    });
   } catch (err) {
     if (err instanceof Error && err.message === 'Database not initialized') {
       return null;
@@ -27,8 +28,9 @@ export async function upsertEmailIntegrationConfigRow(
   workspaceSubdomain: string,
   config: EmailIntegrationConfig,
 ): Promise<void> {
-  const db = getDb();
-  await db
+  await withTenant(workspaceSubdomain, async (tx) => {
+    if (!tx || typeof (tx as any).insert !== 'function') return;
+    await tx
     .insert(schema.emailIntegrations)
     .values({
       workspaceSubdomain,
@@ -64,14 +66,16 @@ export async function upsertEmailIntegrationConfigRow(
         updatedAt: new Date(),
       },
     });
+  });
 }
 
 export async function upsertEmailIntegrationSecretsRow(
   workspaceSubdomain: string,
   secrets: EmailIntegrationSecrets,
 ): Promise<void> {
-  const db = getDb();
-  await db
+  await withTenant(workspaceSubdomain, async (tx) => {
+    if (!tx || typeof (tx as any).insert !== 'function') return;
+    await tx
     .insert(schema.emailIntegrations)
     .values({
       workspaceSubdomain,
@@ -86,4 +90,5 @@ export async function upsertEmailIntegrationSecretsRow(
         updatedAt: new Date(),
       },
     });
+  });
 }

@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { STUDENTS_MODULE_MANIFEST, type Student, type StudentsQuickFilter } from "@mms/shared";
-import { useStudentsPaginated } from "@/tenant/features/students/hooks/useStudents";
+import { useStudentsContractList } from "@/tenant/features/students/hooks/useStudentsTsrHooks";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
 
 const SORT_FIELD_TO_API: Record<StudentListSortField, string> = {
@@ -38,7 +38,7 @@ export function useStudentsPageWorkQuery({
 }: StudentsPageWorkQueryInput) {
   const workLimit = STUDENTS_MODULE_MANIFEST.defaultPageSize;
 
-  const workPageQuery = useStudentsPaginated({
+  const workPageQuery = useStudentsContractList({
     page: listPage,
     limit: workLimit,
     search: debouncedSearch,
@@ -48,14 +48,13 @@ export function useStudentsPageWorkQuery({
     sortField: sortField ? SORT_FIELD_TO_API[sortField] : undefined,
     sortDir: sortField ? sortDir : undefined,
     includeDeleted: viewingDeleted,
-    enabled,
-  });
+  }, enabled);
 
   const workStudents = useMemo(
-    () => (workPageQuery.data?.students ?? []) as Student[],
+    () => (workPageQuery.data?.body?.students ?? []) as Student[],
     [workPageQuery.data],
   );
-  const shownCount = workPageQuery.data?.total ?? 0;
+  const shownCount = workPageQuery.data?.body?.total ?? 0;
 
   return {
     workPageQuery,

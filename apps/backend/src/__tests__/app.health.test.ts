@@ -41,4 +41,15 @@ describe("health routes", () => {
     expect(res.json()).toMatchObject({ status: "not_ready", database: "disconnected" });
     await app.close();
   });
+
+  it("GET /api/openapi.json returns generated OpenAPI schema", async () => {
+    const app = await buildApp();
+    const res = await app.inject({ method: "GET", url: "/api/openapi.json" });
+    expect(res.statusCode).toBe(200);
+    const json = res.json();
+    expect(json.openapi).toBeDefined();
+    expect(json.info.title).toBe("MMS API");
+    expect(json.paths).toBeDefined();
+    await app.close();
+  });
 });

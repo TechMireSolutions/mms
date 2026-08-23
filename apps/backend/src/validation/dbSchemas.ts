@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { tenantDatabaseSnapshotSchema } from '@mms/shared';
+import { tenantDatabaseSnapshotSchema, collectionSaveBodySchema } from '@mms/shared';
 
 /**
  * Lookup collections (`genders`, `relationships`, `phoneLabels`, …) store plain strings.
@@ -7,12 +7,7 @@ import { tenantDatabaseSnapshotSchema } from '@mms/shared';
  */
 export const syncPayloadSchema = tenantDatabaseSnapshotSchema;
 
-const collectionItemSchema = z.union([z.string(), z.record(z.string(), z.unknown())]);
-
-export const collectionSaveBodySchema = z.union([
-  z.array(collectionItemSchema),
-  z.object({ data: z.array(collectionItemSchema) }),
-]);
+export { collectionSaveBodySchema };
 
 export function normalizeCollectionSaveBody(
   body: z.infer<typeof collectionSaveBodySchema>,

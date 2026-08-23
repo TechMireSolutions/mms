@@ -17,7 +17,7 @@ import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type PaymentCreateInput } from "@mms/shared";
-import { NotifiedFinanceMutationError } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { NotifiedMutationError } from "@/lib/notifiedMutationError";
 import {
   PAYMENT_METHOD_LABEL_KEYS,
   buildInitialPaymentDraft,
@@ -81,7 +81,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       notify.success(t("finance.paymentSaved"));
       onClose();
     } catch (err: unknown) {
-      if (!(err instanceof NotifiedFinanceMutationError)) {
+      if (!(err instanceof NotifiedMutationError)) {
         notify.error(t("finance.paymentSaveFailed"), { description: err instanceof Error ? err.message : String(err) });
       }
     } finally {

@@ -12,10 +12,12 @@ export {
   useDashboardWidgetsMutation,
   useDashboardWidgetDeleteMutation,
 } from '@/tenant/features/dashboard/hooks/useDashboardSetupConfig';
+// Phase 7: contract-driven tsrClient hooks
 export {
-  fetchDashboardPreferences,
-  saveDashboardPreferencesAsync,
-  fetchDashboardWidgets,
-  saveDashboardWidgetsAsync,
-  deleteDashboardWidgetAsync,
-} from '@/tenant/features/dashboard/hooks/dashboardApi';
+  useDashboardPreferencesQuery as useDashboardContractPreferencesQuery,
+  useDashboardPreferencesMutation as useDashboardContractPreferencesMutation,
+  useDashboardWidgetsQuery as useDashboardContractWidgetsQuery,
+  useDashboardWidgetsMutation as useDashboardContractWidgetsMutation,
+  useDashboardWidgetDeleteMutation as useDashboardContractWidgetDeleteMutation,
+} from '@/tenant/features/dashboard/hooks/useDashboardSetupConfig';
+

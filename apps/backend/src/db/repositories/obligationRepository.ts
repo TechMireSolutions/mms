@@ -15,7 +15,7 @@ import {
   obligationDistributions,
   obligationCollections,
 } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 // --- Obligation Types ---
 
@@ -34,7 +34,7 @@ export function obligationTypeRowToRecord(row: ObligationTypeRow): ObligationTyp
 
 export async function listObligationTypesByWorkspace(tenant: string): Promise<ObligationType[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(obligationTypes)
@@ -46,7 +46,7 @@ export async function listObligationTypesByWorkspace(tenant: string): Promise<Ob
 export async function bulkSaveObligationTypes(tenant: string, records: ObligationType[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(obligationTypes)
@@ -77,7 +77,7 @@ export async function replaceObligationTypesForWorkspace(
   records: ObligationType[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(obligationTypes).where(eq(obligationTypes.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(obligationTypes).values({
@@ -106,7 +106,7 @@ export function mujtahidRowToRecord(row: MujtahidRow): Mujtahid {
 
 export async function listMujtahidsByWorkspace(tenant: string): Promise<Mujtahid[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(mujtahids)
@@ -118,7 +118,7 @@ export async function listMujtahidsByWorkspace(tenant: string): Promise<Mujtahid
 export async function bulkSaveMujtahids(tenant: string, records: Mujtahid[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(mujtahids)
@@ -142,7 +142,7 @@ export async function bulkSaveMujtahids(tenant: string, records: Mujtahid[]): Pr
 
 export async function replaceMujtahidsForWorkspace(tenant: string, records: Mujtahid[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(mujtahids).where(eq(mujtahids.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(mujtahids).values({
@@ -170,7 +170,7 @@ export function mujtahidRepRowToRecord(row: MujtahidRepRow): MujtahidRep {
 
 export async function listMujtahidRepsByWorkspace(tenant: string): Promise<MujtahidRep[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(mujtahidReps)
@@ -182,7 +182,7 @@ export async function listMujtahidRepsByWorkspace(tenant: string): Promise<Mujta
 export async function bulkSaveMujtahidReps(tenant: string, records: MujtahidRep[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(mujtahidReps)
@@ -208,7 +208,7 @@ export async function bulkSaveMujtahidReps(tenant: string, records: MujtahidRep[
 
 export async function replaceMujtahidRepsForWorkspace(tenant: string, records: MujtahidRep[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(mujtahidReps).where(eq(mujtahidReps.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(mujtahidReps).values({
@@ -237,7 +237,7 @@ export function wakalaTypeRowToRecord(row: WakalaTypeRow): WakalaType {
 
 export async function listWakalaTypesByWorkspace(tenant: string): Promise<WakalaType[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(wakalaTypes)
@@ -249,7 +249,7 @@ export async function listWakalaTypesByWorkspace(tenant: string): Promise<Wakala
 export async function bulkSaveWakalaTypes(tenant: string, records: WakalaType[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(wakalaTypes)
@@ -275,7 +275,7 @@ export async function bulkSaveWakalaTypes(tenant: string, records: WakalaType[])
 
 export async function replaceWakalaTypesForWorkspace(tenant: string, records: WakalaType[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(wakalaTypes).where(eq(wakalaTypes.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(wakalaTypes).values({
@@ -306,7 +306,7 @@ export function obligationDistributionRowToRecord(row: ObligationDistributionRow
 
 export async function listObligationDistributionsByWorkspace(tenant: string): Promise<ObligationDistribution[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(obligationDistributions)
@@ -321,7 +321,7 @@ export async function bulkSaveObligationDistributions(
 ): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(obligationDistributions)
@@ -354,7 +354,7 @@ export async function replaceObligationDistributionsForWorkspace(
   records: ObligationDistribution[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(obligationDistributions).where(eq(obligationDistributions.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(obligationDistributions).values({
@@ -398,7 +398,7 @@ export function obligationCollectionRowToRecord(row: ObligationCollectionRow): O
 
 export async function listObligationCollectionsByWorkspace(tenant: string): Promise<ObligationCollection[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(obligationCollections)
@@ -409,7 +409,7 @@ export async function listObligationCollectionsByWorkspace(tenant: string): Prom
 
 export async function findObligationCollectionById(tenant: string, id: string): Promise<ObligationCollection | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(obligationCollections)
@@ -421,7 +421,7 @@ export async function findObligationCollectionById(tenant: string, id: string): 
 
 export async function saveObligationCollection(tenant: string, record: ObligationCollection): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(obligationCollections)
       .values({
@@ -471,7 +471,7 @@ export async function bulkSaveObligationCollections(
 ): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(obligationCollections)
@@ -522,7 +522,7 @@ export async function replaceObligationCollectionsForWorkspace(
   records: ObligationCollection[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(obligationCollections).where(eq(obligationCollections.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(obligationCollections).values({
@@ -550,7 +550,7 @@ export async function replaceObligationCollectionsForWorkspace(
 
 export async function deleteObligationsByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(obligationCollections).where(eq(obligationCollections.workspaceSubdomain, subdomain));
     await tx.delete(obligationDistributions).where(eq(obligationDistributions.workspaceSubdomain, subdomain));
     await tx.delete(wakalaTypes).where(eq(wakalaTypes.workspaceSubdomain, subdomain));

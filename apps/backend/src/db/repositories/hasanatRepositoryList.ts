@@ -19,7 +19,7 @@ import {
   type HasanatDistributionsListPageResult,
 } from '@mms/shared';
 import { hasanatBatches, hasanatDenoms, hasanatDistributions } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { distributionRowToRecord } from './hasanatRepository.js';
 
@@ -104,7 +104,7 @@ export async function listDistributionsPage(
   query: HasanatListQuery,
 ): Promise<HasanatDistributionsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage<DistributionRow, Distribution>(tx, hasanatDistributions, {
       conditions: buildDistributionsListConditions(subdomain, query),
       orderBy: buildDistributionsOrderBy(query.sortField, query.sortDir),
@@ -151,7 +151,7 @@ export async function aggregateHasanatCommandMetrics(
   const lastWeekStartStr = localDateStr(lastWeekStart);
   const lastWeekEndStr = localDateStr(lastWeekEnd);
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     // Batches (no soft-delete): stock totals.
     const [batchRow] = await tx
       .select({

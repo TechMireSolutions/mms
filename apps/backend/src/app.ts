@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { misconfiguredAppDomainHint } from '@mms/shared';
 import fastify, { FastifyInstance } from 'fastify';
+import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { loadBackendEnv } from './config/loadEnv.js';
 import { loadServerConfig } from './config/serverConfig.js';
 import { initDb } from './db/database.js';
@@ -25,6 +26,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     },
   });
 
+  app.setValidatorCompiler(validatorCompiler);
+  app.setSerializerCompiler(serializerCompiler);
+
   await initDb();
   await registerPlugins(app, config);
 
@@ -45,6 +49,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   }
 
   await registerRoutes(app);
+
   const spaActive = await registerFrontendSpa(app, config);
 
   // setNotFoundHandler must be called exactly once per Fastify instance.

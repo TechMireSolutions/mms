@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState, useEffect } from 'react';
-import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
+import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
@@ -17,6 +17,7 @@ import type { PaperBuilderTab } from '@/tenant/features/question-bank/components
 import { useQuestionBankColumnLayout } from '@/tenant/features/question-bank/hooks/useQuestionBankColumnLayout';
 import {
   useQuestionBankQuestions,
+  useQuestionBankQuestionsCollection,
   useQuestionBankTestsCollection,
   useQuestionBankResultsCollection,
   useQuestionBankMutations,
@@ -46,7 +47,7 @@ export function useQuestionBankPageController() {
   );
   const [showDeleted, setShowDeleted] = useState(false);
   const questionsResult = useQuestionBankQuestions({ includeDeleted: showDeleted });
-  const questions = questionsResult.data ?? [];
+  const questions = useQuestionBankQuestionsCollection({ includeDeleted: showDeleted });
   const tests = useQuestionBankTestsCollection();
   const questionBankResults = useQuestionBankResultsCollection();
   const questionBankConfig = useQuestionBankConfig(questions);
@@ -154,12 +155,16 @@ export function useQuestionBankPageController() {
     setFilteredCount(questions.length);
   }, [effectiveTab, effectiveSubTab, questions.length]);
 
-  useModuleCreateHotkey({
-    enabled: canWrite
-      && !showDeleted
-      && effectiveTab === 'work'
-      && effectiveSubTab === 'questions',
+  useModuleShortcuts({
+    searchInputId: 'question-bank-search-input',
+    selectedCount: 0,
+    hasActiveFilters: false,
+    clearFilters: () => {},
+    clearSelection: () => {},
+    canWrite,
+    showDeleted,
     onCreate: openAddQuestion,
+    enabled: canWrite && !showDeleted && effectiveTab === 'work' && effectiveSubTab === 'questions',
   });
 
   return {

@@ -10,6 +10,7 @@ export * from "./ageUtils.js";
 export * from "./blueprintVersionUtils.js";
 export * from "./widgetFilterUtils.js";
 export * from "./dateFormatUtils.js";
+export * from "./settingsDateFormatters.js";
 export * from "./hasanatPointsUtils.js";
 export * from "./identityFormatUtils.js";
 export * from "./numberUtils.js";

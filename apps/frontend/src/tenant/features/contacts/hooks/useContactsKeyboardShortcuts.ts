@@ -1,4 +1,4 @@
-import { useModuleWorkKeyboardShortcuts } from "@/hooks/useModuleWorkKeyboardShortcuts";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 
 /** Stable id for Contacts Work search — used by `/` / Cmd+K focus shortcut. */
 export const CONTACTS_WORK_SEARCH_INPUT_ID = "contacts-work-search";
@@ -21,7 +21,7 @@ export function useContactsKeyboardShortcuts({
   viewingDeleted: boolean;
   onCreate: () => void;
 }): void {
-  useModuleWorkKeyboardShortcuts({
+  useModuleShortcuts({
     searchInputId: CONTACTS_WORK_SEARCH_INPUT_ID,
     selectedCount,
     hasActiveFilters,

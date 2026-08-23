@@ -15,6 +15,7 @@ import {
 } from '@mms/shared';
 import {
   contacts,
+  contactTags,
   contactPhones,
   contactEmails,
   contactAddresses,
@@ -26,14 +27,15 @@ import {
   contactActivities,
   contactAttachments,
 } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
-type Transaction = Parameters<Parameters<typeof withTenantTransaction>[1]>[0];
+type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
 
 type ContactRow = typeof contacts.$inferSelect;
 type PhoneRow = typeof contactPhones.$inferSelect;
 type EmailRow = typeof contactEmails.$inferSelect;
 type AddressRow = typeof contactAddresses.$inferSelect;
+type TagRow = typeof contactTags.$inferSelect;
 type SocialRow = typeof contactSocials.$inferSelect;
 type EducationRow = typeof contactEducations.$inferSelect;
 type ExperienceRow = typeof contactExperiences.$inferSelect;
@@ -47,6 +49,7 @@ export function contactRowToRecord(
   phones: PhoneRow[] = [],
   emails: EmailRow[] = [],
   addresses: AddressRow[] = [],
+  tagsRows: TagRow[] = [],
   socials: SocialRow[] = [],
   educations: EducationRow[] = [],
   experiences: ExperienceRow[] = [],
@@ -156,19 +159,11 @@ export function contactRowToRecord(
     dob: row.dob ?? undefined,
     cnic: row.cnic ?? undefined,
     isSyed: row.isSyed,
-    tag: row.tag ?? undefined,
-    tags: row.tag ? row.tag.split(',').map((t) => t.trim()).filter(Boolean) : [],
+    tags: tagsRows.map((t) => t.name),
     avatar: row.avatar ?? undefined,
     notes: row.notes ?? undefined,
     whatsappStatus: (row.whatsappStatus as Contact['whatsappStatus']) ?? 'unknown',
     lastCheckedAt: row.lastCheckedAt ?? undefined,
-    phone: row.phone ?? undefined,
-    email: row.email ?? undefined,
-    line1: row.line1 ?? undefined,
-    address: row.address ?? undefined,
-    city: row.city ?? undefined,
-    state: row.state ?? undefined,
-    country: row.country ?? undefined,
     preferredLanguage: (row.preferredLanguage as Contact['preferredLanguage']) ?? undefined,
     preferredContactMethod: (row.preferredContactMethod as Contact['preferredContactMethod']) ?? undefined,
     doNotContact: row.doNotContact,
@@ -211,6 +206,7 @@ export async function hydrateContactsList(
     phonesRows,
     emailsRows,
     addressesRows,
+    tagsRows,
     socialsRows,
     educationsRows,
     experiencesRows,
@@ -249,6 +245,16 @@ export async function hydrateContactsList(
         ),
       )
       .orderBy(contactAddresses.sortOrder),
+    tx
+      .select()
+      .from(contactTags)
+      .where(
+        and(
+          eq(contactTags.workspaceSubdomain, subdomain),
+          inArray(contactTags.contactId, contactIds),
+        ),
+      )
+      .orderBy(contactTags.createdAt),
     tx
       .select()
       .from(contactSocials)
@@ -342,6 +348,13 @@ export async function hydrateContactsList(
     addressesMap.set(a.contactId, list);
   }
 
+  const tagsMap = new Map<string, TagRow[]>();
+  for (const t of tagsRows) {
+    const list = tagsMap.get(t.contactId) ?? [];
+    list.push(t);
+    tagsMap.set(t.contactId, list);
+  }
+
   const socialsMap = new Map<string, SocialRow[]>();
   for (const s of socialsRows) {
     const list = socialsMap.get(s.contactId) ?? [];
@@ -397,6 +410,7 @@ export async function hydrateContactsList(
       phonesMap.get(row.id) ?? [],
       emailsMap.get(row.id) ?? [],
       addressesMap.get(row.id) ?? [],
+      tagsMap.get(row.id) ?? [],
       socialsMap.get(row.id) ?? [],
       educationsMap.get(row.id) ?? [],
       experiencesMap.get(row.id) ?? [],
@@ -428,7 +442,7 @@ export async function listContactsByWorkspace(
   options?: ListByWorkspaceOptions,
 ): Promise<Contact[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const conditions = [eq(contacts.workspaceSubdomain, subdomain)];
     const deletedCond = resolveDeletedFilter(options);
     if (deletedCond) conditions.push(deletedCond);
@@ -447,7 +461,7 @@ export async function countContactsByWorkspace(
   options?: ListByWorkspaceOptions,
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const conditions = [eq(contacts.workspaceSubdomain, subdomain)];
     const deletedCond = resolveDeletedFilter(options);
     if (deletedCond) conditions.push(deletedCond);
@@ -462,7 +476,7 @@ export async function countContactsByWorkspace(
 
 export async function findContactById(tenant: string, id: string): Promise<Contact | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(contacts)
@@ -477,7 +491,7 @@ export async function findContactById(tenant: string, id: string): Promise<Conta
 export async function findContactsByIds(tenant: string, ids: string[]): Promise<Contact[]> {
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(contacts)
@@ -495,19 +509,6 @@ export async function persistContactTx(
   const contactId = String(contact.id);
   const fullName = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed';
 
-  // Primary scalar fallbacks
-  const primaryPhone = contact.phone || contact.phones?.find((p) => p.isPrimary)?.number || contact.phones?.[0]?.number || null;
-  const primaryEmail = contact.email || contact.emails?.find((e) => e.isPrimary)?.address || contact.emails?.[0]?.address || null;
-  const primaryAddress = contact.address || contact.addresses?.find((a) => a.isPrimary)?.line1 || contact.addresses?.[0]?.line1 || null;
-  const city = contact.city || contact.addresses?.find((a) => a.isPrimary)?.city || contact.addresses?.[0]?.city || null;
-  const state = contact.state || contact.addresses?.find((a) => a.isPrimary)?.state || contact.addresses?.[0]?.state || null;
-  const country = contact.country || contact.addresses?.find((a) => a.isPrimary)?.country || contact.addresses?.[0]?.country || null;
-  const tagValue = Array.isArray(contact.tags) && contact.tags.length > 0
-    ? contact.tags.map((t) => String(t).trim()).filter(Boolean).join(', ')
-    : typeof contact.tag === 'string' && contact.tag.trim()
-      ? contact.tag.trim()
-      : null;
-
   await tx
     .insert(contacts)
     .values({
@@ -520,18 +521,10 @@ export async function persistContactTx(
       dob: contact.dob ?? null,
       cnic: contact.cnic ?? null,
       isSyed: contact.isSyed ?? false,
-      tag: tagValue,
       avatar: contact.avatar ?? null,
       notes: contact.notes ?? null,
       whatsappStatus: contact.whatsappStatus ?? 'unknown',
       lastCheckedAt: contact.lastCheckedAt ?? null,
-      phone: primaryPhone,
-      email: primaryEmail,
-      line1: contact.line1 ?? primaryAddress,
-      address: contact.address ?? primaryAddress,
-      city,
-      state,
-      country,
       preferredLanguage: contact.preferredLanguage ?? null,
       preferredContactMethod: contact.preferredContactMethod ?? null,
       doNotContact: contact.doNotContact ?? false,
@@ -554,18 +547,10 @@ export async function persistContactTx(
         dob: contact.dob ?? null,
         cnic: contact.cnic ?? null,
         isSyed: contact.isSyed ?? false,
-        tag: tagValue,
         avatar: contact.avatar ?? null,
         notes: contact.notes ?? null,
         whatsappStatus: contact.whatsappStatus ?? 'unknown',
         lastCheckedAt: contact.lastCheckedAt ?? null,
-        phone: primaryPhone,
-        email: primaryEmail,
-        line1: contact.line1 ?? primaryAddress,
-        address: contact.address ?? primaryAddress,
-        city,
-        state,
-        country,
         preferredLanguage: contact.preferredLanguage ?? null,
         preferredContactMethod: contact.preferredContactMethod ?? null,
         doNotContact: contact.doNotContact ?? false,
@@ -596,6 +581,23 @@ export async function persistContactTx(
         sortOrder: idx,
       })),
     );
+  }
+
+  await tx
+    .delete(contactTags)
+    .where(and(eq(contactTags.workspaceSubdomain, subdomain), eq(contactTags.contactId, contactId)));
+  if (contact.tags && contact.tags.length > 0) {
+    const validTags = Array.from(new Set(contact.tags.map((t) => String(t).trim()).filter(Boolean)));
+    if (validTags.length > 0) {
+      await tx.insert(contactTags).values(
+        validTags.map((t, idx) => ({
+          id: `tag-${idx + 1}`,
+          workspaceSubdomain: subdomain,
+          contactId,
+          name: t,
+        })),
+      );
+    }
   }
 
   await tx
@@ -777,7 +779,7 @@ export async function persistContactTx(
 
 export async function saveContact(tenant: string, contact: Contact): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await persistContactTx(tx, subdomain, contact);
   });
 }
@@ -785,7 +787,7 @@ export async function saveContact(tenant: string, contact: Contact): Promise<voi
 export async function bulkSaveContacts(tenant: string, records: Contact[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await persistContactTx(tx, subdomain, record);
     }
@@ -794,7 +796,7 @@ export async function bulkSaveContacts(tenant: string, records: Contact[]): Prom
 
 export async function replaceContactsForWorkspace(tenant: string, records: Contact[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(contacts).where(eq(contacts.workspaceSubdomain, subdomain));
     for (const record of records) {
       await persistContactTx(tx, subdomain, record);

@@ -8,7 +8,6 @@ export {
 
 export {
   fetchContactById,
-  useContactsPaginated,
   useContactById,
   useContactsByIds,
 } from '@/tenant/features/contacts/hooks/useContactsListQueries';

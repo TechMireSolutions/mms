@@ -13,9 +13,7 @@ import {
 } from '../../lib/crudRouter.js';
 import {
   loadExams,
-  loadExamsPage,
   upsertExams,
-  loadExamResults,
   upsertExamResults,
   deleteExamById,
   restoreExamById,
@@ -25,7 +23,7 @@ import {
 } from '../../services/examinationService.js';
 
 import { examinationSetupConfigRoutes } from './examinationSetupConfigRoutes.js';
-import { examinationsListQuerySchema } from '../../validation/examinationsSchemas.js';
+import { examinationContractRouter } from './examinations/examinationContractRouter.js';
 
 const EXAMS_COLLECTION = EXAMINATIONS_MODULE_MANIFEST.collectionKey;
 const RESULTS_COLLECTION = EXAMINATIONS_MODULE_MANIFEST.resultsCollectionKey;
@@ -40,41 +38,47 @@ export default async function examinationsRoutes(
   fastify.addHook('preHandler', authenticateTenant);
   fastify.addHook('preHandler', requireTenantModule('examination'));
 
-  fastify.register(examinationSetupConfigRoutes);
+  await fastify.register(
+    async (sub) => {
+      await sub.register(examinationSetupConfigRoutes);
 
-  registerMetricsRoute(fastify, {
-    collection: EXAMS_COLLECTION,
-    loadMetricsFn: loadExaminationsCommandMetrics,
-    errorMessagePrefix: 'examination',
-  });
+      registerMetricsRoute(sub, {
+        collection: EXAMS_COLLECTION,
+        loadMetricsFn: loadExaminationsCommandMetrics,
+        errorMessagePrefix: 'examination',
+      });
 
-  registerSoftDeletableBulkRoutes(fastify, {
-    path: '/exams',
-    collection: EXAMS_COLLECTION,
-    schema: examListSchema,
-    loadFn: loadExams,
-    loadPageFn: loadExamsPage,
-    listQuerySchema: examinationsListQuerySchema,
-    defaultPageSize: EXAMINATIONS_MODULE_MANIFEST.defaultPageSize,
-    saveFn: upsertExams,
-    deleteFn: deleteExamById,
-    restoreFn: restoreExamById,
-    bulkDeleteFn: bulkSoftDeleteExams,
-    bulkRestoreFn: bulkRestoreExams,
-    responseKey: 'exams',
-    errorMessagePrefix: 'exams',
-    nameSingular: 'Exam',
-    columnPreferencesObjectKey: EXAMINATIONS_MODULE_MANIFEST.examColumnPreferencesObjectKey,
-  });
+      registerSoftDeletableBulkRoutes(sub, {
+        path: '/exams',
+        collection: EXAMS_COLLECTION,
+        schema: examListSchema,
+        loadFn: loadExams,
+        saveFn: upsertExams as any,
+        deleteFn: deleteExamById,
+        restoreFn: restoreExamById,
+        bulkDeleteFn: bulkSoftDeleteExams,
+        bulkRestoreFn: bulkRestoreExams,
+        responseKey: 'exams',
+        errorMessagePrefix: 'exams',
+        nameSingular: 'Exam',
+        columnPreferencesObjectKey: EXAMINATIONS_MODULE_MANIFEST.examColumnPreferencesObjectKey,
+        customGetRoute: true,
+        customBulkTrashRoutes: true,
+      });
 
-  registerBulkRoutes(fastify, {
-    path: '/results',
-    collection: RESULTS_COLLECTION,
-    schema: examResultListSchema,
-    loadFn: loadExamResults,
-    saveFn: upsertExamResults,
-    responseKey: 'results',
-    errorMessagePrefix: 'exam results',
-    columnPreferencesObjectKey: EXAMINATIONS_MODULE_MANIFEST.resultsColumnPreferencesObjectKey,
-  });
+      registerBulkRoutes(sub, {
+        path: '/results',
+        collection: RESULTS_COLLECTION,
+        schema: examResultListSchema,
+        saveFn: upsertExamResults,
+        responseKey: 'results',
+        errorMessagePrefix: 'exam results',
+        columnPreferencesObjectKey: EXAMINATIONS_MODULE_MANIFEST.resultsColumnPreferencesObjectKey,
+        customGetRoute: true,
+      });
+    },
+    { prefix: '/api/examinations' },
+  );
+
+  await fastify.register(examinationContractRouter);
 }

@@ -10,7 +10,7 @@ import {
   tenantUsers,
   messageLogs,
 } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { activeWorkspaceWhere } from './contactRepositoryAggregateHelpers.js';
 
 export interface ContactDuplicateCandidateKeys {
@@ -83,7 +83,6 @@ export async function findContactDuplicateCandidateIds(
         AND ${phoneComparisonKeySql(sql`p.number`)}
           IN (${sql.join(phones.map((p) => sql`${p}`), sql`, `)})
     )`);
-    matchClauses.push(sql`${phoneComparisonKeySql(sql`${contacts.phone}`)} IN (${sql.join(phones.map((p) => sql`${p}`), sql`, `)})`);
   }
 
   if (emails.length > 0) {
@@ -95,7 +94,6 @@ export async function findContactDuplicateCandidateIds(
         AND ${emailKeySql(sql`e.address`)}
           IN (${sql.join(emails.map((e) => sql`${e}`), sql`, `)})
     )`);
-    matchClauses.push(sql`${emailKeySql(sql`${contacts.email}`)} IN (${sql.join(emails.map((e) => sql`${e}`), sql`, `)})`);
   }
 
   if (cnic && cnic.length === 13) {
@@ -114,7 +112,7 @@ export async function findContactDuplicateCandidateIds(
     whereParts.push(notInArray(contacts.id, excluded));
   }
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select({ id: contacts.id })
       .from(contacts)
@@ -137,7 +135,7 @@ export async function findContactDuplicateBlockedIds(
   const subdomain = tenant.trim().toLowerCase();
   const prefixRegex = buildNamePrefixRegex(namePrefixes);
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await tx.execute(sql`
       WITH keyed AS (
         SELECT p.contact_id AS id,
@@ -212,7 +210,7 @@ export async function reparentContactReferences(
   deleteId: string,
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     // 1. Remove relationship links that would create a self-loop (keepId <-> deleteId or deleteId <-> deleteId)
     await tx.execute(sql`
       DELETE FROM ${contactRelationships}

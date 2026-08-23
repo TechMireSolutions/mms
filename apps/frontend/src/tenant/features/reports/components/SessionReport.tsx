@@ -53,15 +53,16 @@ const SessionReport = React.memo(function SessionReport({ filters }: SessionRepo
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
-  const sessionCapacity = reportAggregates?.capacity ?? [];
-  const todaysSessions = reportAggregates?.todaysSessions ?? [];
+  const reportBody = (reportAggregates as any);
+  const sessionCapacity: SessionCapacityItem[] = reportBody?.capacity ?? [];
+  const todaysSessions = reportBody?.todaysSessions ?? [];
 
   const enrollmentTrends = useMemo<EnrollmentTrendItem[]>(() => {
-    const trends = reportAggregates?.enrollmentTrends ?? [];
+    const trends = reportBody?.enrollmentTrends ?? [];
     if (trends.length === 0) {
       return [{ month: formatMonthName(new Date()), students: 0, sessionName: null }];
     }
-    return trends.map((trend) => ({
+    return trends.map((trend: any) => ({
       month: formatMonthName(`${trend.monthKey}-01`),
       students: trend.students,
       sessionName: trend.sessionName,

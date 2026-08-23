@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-import { useTeachersPaginated } from '@/tenant/hooks/collections/teachers';
+import { useTeachersContractList } from '@/tenant/hooks/collections/teachers';
 import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { activeTeachersForAssignment } from '@/lib/teachers/teacherAssignment';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -42,13 +42,13 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const sessions = useSessionsCollection();
-  const { data: activeTeachersPage } = useTeachersPaginated({
+  const { data: activeTeachersPage } = useTeachersContractList({
     page: 1,
     limit: TEACHERS_MODULE_MANIFEST.maxPageSize,
     status: 'active',
   });
   const assignableTeachers = useMemo(
-    () => activeTeachersForAssignment((activeTeachersPage?.teachers ?? []) as import('@mms/shared').Teacher[]),
+    () => activeTeachersForAssignment((activeTeachersPage?.body?.teachers ?? []) as import('@mms/shared').Teacher[]),
     [activeTeachersPage],
   );
   

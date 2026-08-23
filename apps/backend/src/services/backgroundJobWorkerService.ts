@@ -1,12 +1,14 @@
 import { and, eq } from 'drizzle-orm';
 import type { BackgroundJobRecord } from '@mms/shared';
 import { runWithTenant, getRequestTenant } from '../lib/tenantContext.js';
-import { getDb } from '../db/dbClient.js';
+import { withTenant } from '../db/tenant-context.js';
 import { backgroundJobs } from '../db/schema.js';
 import {
   rowToJobRecord,
   createDatabaseBackgroundJob,
 } from './backgroundJobService.js';
+import { dispatchJobToQueue } from '../worker/queues/index.js';
+import { publishJobEvent } from '../worker/processors/jobProcessor.js';
 
 export interface BackgroundJobRunContext {
   tenant: string;
@@ -33,7 +35,6 @@ async function patchJob(
   jobId: string,
   patch: Partial<BackgroundJobRecord>,
 ): Promise<BackgroundJobRecord> {
-  const db = getDb();
   const tenantId = getRequestTenant();
   if (!tenantId) throw new Error('Tenant context is required to patch background job');
 
@@ -62,20 +63,22 @@ async function patchJob(
     updateValues.completedAt = patch.completedAt ? new Date(patch.completedAt) : null;
   }
 
-  const updatedRows = await db.update(backgroundJobs)
-    .set(updateValues)
-    .where(and(
-      eq(backgroundJobs.tenantId, tenantId),
-      eq(backgroundJobs.userId, userId),
-      eq(backgroundJobs.id, jobId),
-    ))
-    .returning();
+  return withTenant(tenantId, async (tx) => {
+    const updatedRows = await tx.update(backgroundJobs)
+      .set(updateValues)
+      .where(and(
+        eq(backgroundJobs.tenantId, tenantId),
+        eq(backgroundJobs.userId, userId),
+        eq(backgroundJobs.id, jobId),
+      ))
+      .returning();
 
-  const row = updatedRows[0];
-  if (!row) {
-    throw new Error(`Background job not found: ${jobId}`);
-  }
-  return rowToJobRecord(row);
+    const row = updatedRows[0];
+    if (!row) {
+      throw new Error(`Background job not found: ${jobId}`);
+    }
+    return rowToJobRecord(row);
+  });
 }
 
 export async function executeJob(
@@ -95,6 +98,16 @@ export async function executeJob(
     jobId,
     updateProgress: async (current, total) => {
       await patchJob(userId, jobId, { progress: { current, total } });
+      const percent = total > 0 ? Math.round((current / total) * 100) : 0;
+      await publishJobEvent({
+        event: 'job-progress',
+        tenantId: tenant,
+        userId,
+        jobId,
+        moduleId,
+        kind,
+        progress: { current, total, percent },
+      });
     },
     complete: async (patch) => {
       await patchJob(userId, jobId, {
@@ -102,10 +115,31 @@ export async function executeJob(
         completedAt: new Date().toISOString(),
         ...patch,
       });
+      await publishJobEvent({
+        event: 'job-completed',
+        tenantId: tenant,
+        userId,
+        jobId,
+        moduleId,
+        kind,
+        label: patch?.label,
+        hasDownload: patch?.hasDownload,
+        completedAt: new Date().toISOString(),
+      });
     },
     fail: async (error) => {
       await patchJob(userId, jobId, {
         status: 'failed',
+        error,
+        completedAt: new Date().toISOString(),
+      });
+      await publishJobEvent({
+        event: 'job-failed',
+        tenantId: tenant,
+        userId,
+        jobId,
+        moduleId,
+        kind,
         error,
         completedAt: new Date().toISOString(),
       });
@@ -138,6 +172,10 @@ export async function enqueueBackgroundJob(
     status: 'pending',
   };
   await runWithTenant(tenant, () => createDatabaseBackgroundJob(tenant, userId, pendingJob, payload));
+
+  // Dispatch to BullMQ Queue
+  await dispatchJobToQueue(tenant, userId, pendingJob, payload);
+
   return job;
 }
 
@@ -145,21 +183,22 @@ export async function getUserBackgroundJob(
   userId: string,
   jobId: string,
 ): Promise<BackgroundJobRecord | null> {
-  const db = getDb();
   const tenantId = getRequestTenant();
   if (!tenantId) return null;
 
-  const rows = await db.select()
-    .from(backgroundJobs)
-    .where(and(
-      eq(backgroundJobs.tenantId, tenantId),
-      eq(backgroundJobs.userId, userId),
-      eq(backgroundJobs.id, jobId)
-    ))
-    .limit(1);
+  return withTenant(tenantId, async (tx) => {
+    const rows = await tx.select()
+      .from(backgroundJobs)
+      .where(and(
+        eq(backgroundJobs.tenantId, tenantId),
+        eq(backgroundJobs.userId, userId),
+        eq(backgroundJobs.id, jobId)
+      ))
+      .limit(1);
 
-  const row = rows[0];
-  return row ? rowToJobRecord(row) : null;
+    const row = rows[0];
+    return row ? rowToJobRecord(row) : null;
+  });
 }
 
 /** Returns the stored enqueue payload for an existing user job (idempotency body binding). */
@@ -167,18 +206,19 @@ export async function getUserBackgroundJobPayload(
   userId: string,
   jobId: string,
 ): Promise<Record<string, unknown> | null> {
-  const db = getDb();
   const tenantId = getRequestTenant();
   if (!tenantId) return null;
 
-  const rows = await db.select({ payload: backgroundJobs.payload })
-    .from(backgroundJobs)
-    .where(and(
-      eq(backgroundJobs.tenantId, tenantId),
-      eq(backgroundJobs.userId, userId),
-      eq(backgroundJobs.id, jobId),
-    ))
-    .limit(1);
+  return withTenant(tenantId, async (tx) => {
+    const rows = await tx.select({ payload: backgroundJobs.payload })
+      .from(backgroundJobs)
+      .where(and(
+        eq(backgroundJobs.tenantId, tenantId),
+        eq(backgroundJobs.userId, userId),
+        eq(backgroundJobs.id, jobId),
+      ))
+      .limit(1);
 
-  return rows[0]?.payload ?? null;
+    return rows[0]?.payload ?? null;
+  });
 }

@@ -154,8 +154,8 @@ export const StudentDetail = React.memo(function StudentDetail({
         onViewSibling={
           onViewStudent
             ? (siblingId) => {
-                const target = allStudents.find((s) => String(s.id) === String(siblingId));
-                if (target) onViewStudent(target);
+                const target = allStudents.find((s: { id: string | number }) => String(s.id) === String(siblingId));
+                if (target) onViewStudent(target as Student);
               }
             : undefined
         }

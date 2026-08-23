@@ -4,7 +4,7 @@ import type {
   StudentsWidgetQuery,
 } from '@mms/shared';
 import { students, contacts, contactEmails } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { studentRowToRecord } from './studentRepository.js';
 
 function activeWorkspaceWhere(subdomain: string): SQL {
@@ -96,7 +96,7 @@ export async function aggregateStudentsWidgetQueries(
   const results: Record<string, StudentsWidgetAggregateResult> = {};
   if (queries.length === 0) return results;
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const totalRows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(students)
@@ -200,7 +200,7 @@ export async function listStudentLinkedContactIdsSql(
   excludeStudentId?: string,
 ): Promise<Array<string | number>> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const conditions: SQL[] = [eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt)];
     if (excludeStudentId?.trim()) {
       conditions.push(ne(students.id, excludeStudentId.trim()));
@@ -224,7 +224,7 @@ export async function countStudentsForNextGrNumber(
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
   const year = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const base = and(eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt));
     if (!restartAnnually) {
       const rows = await tx
@@ -262,7 +262,7 @@ export async function findStudentRegistrationConflictSql(
   },
 ): Promise<'contact' | 'email' | 'nameDob' | 'grNumber' | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const exclude = input.excludeId?.trim();
     const baseConditions: SQL[] = [
       eq(students.workspaceSubdomain, subdomain),
@@ -365,7 +365,7 @@ export async function findSoftDeletedStudentByContactIdSql(
   const subdomain = tenant.trim().toLowerCase();
   const trimmedContactId = contactId.trim();
   if (!trimmedContactId) return null;
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(students)

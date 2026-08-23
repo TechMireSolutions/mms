@@ -3,8 +3,8 @@ import type {
   ContactsWidgetAggregateResult,
   ContactsWidgetQuery,
 } from '@mms/shared';
-import { contacts } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { contacts, contactPhones, contactEmails, contactAddresses } from '../schema.js';
+import { withTenant } from '../tenant-context.js';
 import { activeWorkspaceWhere } from './contactRepositoryAggregateHelpers.js';
 
 function typedColumnExpr(field: string): SQL {
@@ -24,15 +24,45 @@ function typedColumnExpr(field: string): SQL {
     case 'isSyed':
       return sql`${contacts.isSyed}::text`;
     case 'phone':
-      return sql`${contacts.phone}`;
+      return sql`(
+        SELECT p.number FROM ${contactPhones} p
+        WHERE p.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND p.contact_id = ${contacts.id}
+        ORDER BY CASE WHEN p.is_primary THEN 0 ELSE 1 END, p.sort_order ASC
+        LIMIT 1
+      )`;
     case 'email':
-      return sql`${contacts.email}`;
+      return sql`(
+        SELECT e.address FROM ${contactEmails} e
+        WHERE e.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND e.contact_id = ${contacts.id}
+        ORDER BY CASE WHEN e.is_primary THEN 0 ELSE 1 END, e.id ASC
+        LIMIT 1
+      )`;
     case 'city':
-      return sql`${contacts.city}`;
+      return sql`(
+        SELECT a.city FROM ${contactAddresses} a
+        WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND a.contact_id = ${contacts.id}
+        ORDER BY CASE WHEN a.is_primary THEN 0 ELSE 1 END, a.sort_order ASC
+        LIMIT 1
+      )`;
     case 'state':
-      return sql`${contacts.state}`;
+      return sql`(
+        SELECT a.state FROM ${contactAddresses} a
+        WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND a.contact_id = ${contacts.id}
+        ORDER BY CASE WHEN a.is_primary THEN 0 ELSE 1 END, a.sort_order ASC
+        LIMIT 1
+      )`;
     case 'country':
-      return sql`${contacts.country}`;
+      return sql`(
+        SELECT a.country FROM ${contactAddresses} a
+        WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND a.contact_id = ${contacts.id}
+        ORDER BY CASE WHEN a.is_primary THEN 0 ELSE 1 END, a.sort_order ASC
+        LIMIT 1
+      )`;
     case 'whatsappStatus':
       return sql`${contacts.whatsappStatus}`;
     case 'preferredLanguage':
@@ -98,7 +128,7 @@ export async function aggregateContactsWidgetQueries(
   const results: Record<string, ContactsWidgetAggregateResult> = {};
   if (queries.length === 0) return results;
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const totalRows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(contacts)

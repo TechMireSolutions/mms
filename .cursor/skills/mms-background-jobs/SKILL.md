@@ -25,8 +25,11 @@ Use this skill when adding or changing background processing, export/download ar
 2. Add an authenticated tenant route to enqueue the job. Check RBAC before creating the job.
 3. Register a runner with a stable `{moduleId}:{kind}` key.
 4. Run the job in tenant context and re-apply permission/visibility/soft-delete rules while generating results. Bind tenant + user; prefer an idempotency key when retries are likely (`mms-api-interface.mdc` §6).
-5. Claim next job with **`FOR UPDATE SKIP LOCKED`** (`worker.ts`) — norms → `mms-module-architecture.mdc` §5.
-6. Store job state and artifacts scoped by tenant and user.
+5. Enqueue the job to **BullMQ** (via Redis 7+) for background execution. Wait for completion via WebSocket or polling.
+   - **Headless BiDi Document Engine**: For BiDi documents (Urdu Nastaliq, Arabic, Farsi), use the headless **Typst** compiler with native HarfBuzz text shaping. The pipeline: Fastify API -> BullMQ Queue -> Typst Worker (`.typ` templates) -> Redis PubSub -> S3/MinIO.
+   - **Heavy Exports**: Use ExcelJS stream pipes.
+   - **Messaging**: Use a dedicated WhatsApp/SMS gateway.
+6. Store job state and artifacts scoped by tenant and user (e.g., S3 URLs).
 7. Update progress, complete with a clear label, or fail with an actionable reason.
 8. Surface status in `BackgroundJobsTray` and provide download/result links only for owned artifacts.
 9. Audit sensitive queued work such as export, bulk delete/restore, import, merge, messaging, and sync recovery.
@@ -34,7 +37,6 @@ Use this skill when adding or changing background processing, export/download ar
 ## Job Checklist
 
 ```
-- [ ] Claim uses FOR UPDATE SKIP LOCKED (or equivalent)
 - [ ] Enqueue route uses authenticateTenant
 - [ ] RBAC checked before enqueue
 - [ ] Runner key is registered exactly once
@@ -44,7 +46,7 @@ Use this skill when adding or changing background processing, export/download ar
 - [ ] Download requires current user ownership
 - [ ] Export respects field visibility and soft-delete policy
 - [ ] Sensitive job is audited
-- [ ] Multi-instance: durable queue planned before horizontal scale (in-process is current)
+- [ ] Jobs use BullMQ + Redis 7+ for durable queuing
 - [ ] Tests cover success, forbidden, and failure paths
 ```
 
@@ -54,6 +56,6 @@ Use this skill when adding or changing background processing, export/download ar
 - Use queued jobs to bypass field, report, export, or soft-delete rules.
 - Leave failed jobs invisible.
 - Store long-lived artifacts without expiry.
-- Depend on the in-process runner for critical multi-instance production work without adding a durable queue — `mms-module-architecture.mdc` §5.
+- Bypass BullMQ for heavy report generation; do not block Fastify event loop.
 
 Related skills: `mms-module-work`, `mms-module-page`, `mms-reports-export`, `mms-backend-security`.

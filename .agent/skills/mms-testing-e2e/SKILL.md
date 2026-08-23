@@ -40,6 +40,41 @@ test('POST /api/contacts rejects unauthenticated tenant', async () => {
 });
 ```
 
+### Multi-Tenant RLS Concurrency Test
+When adding tenant tables, ensure the shared connection pool prevents cross-tenant data leakage:
+```typescript
+// apps/backend/test/integration/rls-isolation.test.ts
+import { describe, it, expect } from 'vitest';
+import { withTenant } from '../../src/db/tenant-context';
+import { students } from '../../src/db/schema';
+
+describe('Row Level Security Concurrency Test', () => {
+  it('prevents cross-tenant data leakage within the shared connection pool', async () => {
+    const tenantA = '00000000-0000-0000-0000-000000000001';
+    const tenantB = '00000000-0000-0000-0000-000000000002';
+
+    // Seed records
+    await withTenant(tenantA, async (tx) => {
+      await tx.insert(students).values({ name: 'Tenant A Student', tenantId: tenantA });
+    });
+    await withTenant(tenantB, async (tx) => {
+      await tx.insert(students).values({ name: 'Tenant B Student', tenantId: tenantB });
+    });
+
+    // Concurrently query across both tenants
+    const [resultA, resultB] = await Promise.all([
+      withTenant(tenantA, async (tx) => tx.select().from(students)),
+      withTenant(tenantB, async (tx) => tx.select().from(students)),
+    ]);
+
+    expect(resultA.every((s) => s.tenantId === tenantA)).toBe(true);
+    expect(resultB.every((s) => s.tenantId === tenantB)).toBe(true);
+    expect(resultA.find((s) => s.name === 'Tenant B Student')).toBeUndefined();
+    expect(resultB.find((s) => s.name === 'Tenant A Student')).toBeUndefined();
+  });
+});
+```
+
 ### Network Mocking (MSW - Mock Service Worker)
 - **Do not mock `fetch` manually with ad-hoc `vi.fn()`**: Use MSW HTTP handlers in `apps/frontend/src/test/mocks/handlers.ts` to simulate server responses and errors realistically at the network boundary.
 
@@ -60,6 +95,28 @@ pnpm test:e2e tests/responsive-authenticated.spec.ts
 3. **No Flaky Timeouts**: Avoid `page.waitForTimeout()`; use locator assertions (`expect(locator).toBeVisible()`, `expect(locator).toBeEnabled()`) that auto-retry.
 4. **Auth Fixtures**: Reuse authenticated browser contexts via `e2e/helpers/tenantBootstrap.ts` rather than repeatedly walking through the login form on every test.
 5. **RTL Verification**: Test RTL layout mirroring by mounting in Arabic/Urdu (`dir="rtl"`) and verifying no page-level horizontal scroll (`document.documentElement.scrollWidth <= window.innerWidth`).
+
+### BiDi Visual Assertion Test (Playwright)
+```typescript
+// e2e/specs/bidi-layout.spec.ts
+import { test, expect } from '@playwright/test';
+
+test('verifies bidirectional layout and Nastaliq rendering parity', async ({ page }) => {
+  // English LTR View
+  await page.goto('/tenant/students?lang=en');
+  await expect(page.locator('h1')).toHaveCSS('text-align', 'start');
+  const enBox = await page.locator('[data-testid="search-input"]').boundingBox();
+
+  // Urdu RTL View
+  await page.goto('/tenant/students?lang=ur');
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await expect(page.locator('h1')).toHaveCSS('font-family', /Noto Nastaliq Urdu/);
+  
+  // Verify mirrored search icon position
+  const urBox = await page.locator('[data-testid="search-input"]').boundingBox();
+  expect(urBox?.x).not.toEqual(enBox?.x);
+});
+```
 
 ---
 

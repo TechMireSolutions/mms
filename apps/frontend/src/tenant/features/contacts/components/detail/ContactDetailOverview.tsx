@@ -84,15 +84,19 @@ export function ContactDetailOverview({
       ) : null}
 
       <div className="space-y-4">
-        {basicGroups.map(({ groupName, fields }) => (
-          <FieldGroupCard
-            key={groupName}
-            group={groupName}
-            fields={fields}
-            formatValue={formatFieldValue}
-            getRawValue={(key) => (contact as Record<string, unknown>)[key]}
-          />
-        ))}
+        {basicGroups.map(({ groupName, fields }, index) => {
+          const ACCENT_COLORS = ["info", "warning", "success", "primary", "secondary", "purple", "amber", "rose", "teal", "indigo", "pink"] as const;
+          return (
+            <FieldGroupCard
+              key={groupName}
+              group={groupName}
+              fields={fields}
+              formatValue={formatFieldValue}
+              getRawValue={(key) => (contact as Record<string, unknown>)[key]}
+              accentColor={ACCENT_COLORS[index % ACCENT_COLORS.length]}
+            />
+          );
+        })}
 
         <ContactDetailCollections
           contact={contact}

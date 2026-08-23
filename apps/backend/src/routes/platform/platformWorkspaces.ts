@@ -23,6 +23,7 @@ import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendInvalidCurrentPassword, sendNotFound } from '../../lib/httpErrors.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
+import { blockTenant, unblockTenant } from '../../services/session.service.js';
 
 export default async function platformWorkspaceRoutes(
   fastify: FastifyInstance,
@@ -46,6 +47,12 @@ export default async function platformWorkspaceRoutes(
     const updated = await setWorkspaceEnabled(params.data.subdomain, body.data.enabled);
     if (!updated) {
       return sendNotFound(reply, 'Workspace not found');
+    }
+
+    if (body.data.enabled) {
+      await unblockTenant(params.data.subdomain);
+    } else {
+      await blockTenant(params.data.subdomain);
     }
 
     await insertPlatformActivityLog({
@@ -120,6 +127,8 @@ export default async function platformWorkspaceRoutes(
       if (!removed) {
         return sendNotFound(reply, 'Workspace not found');
       }
+
+      await blockTenant(params.data.subdomain);
 
       await insertPlatformActivityLog({
         userId: platformUser.id,

@@ -9,13 +9,14 @@ import { COLLECTION_CONTAINER_CLASS, ICON_MAP } from "./contactDetailStyles";
 interface DetailSectionProps {
   title: string;
   children: ReactNode;
+  accentColor?: "info" | "success" | "warning" | "destructive" | "primary" | "secondary" | "purple" | "amber" | "rose" | "teal" | "indigo" | "pink";
 }
 
-export function DetailSection({ title, children }: DetailSectionProps): JSX.Element {
+export function DetailSection({ title, children, accentColor }: DetailSectionProps): JSX.Element {
   return (
     <div className="space-y-2">
       <DetailSectionTitle>{title}</DetailSectionTitle>
-      <Card className={COLLECTION_CONTAINER_CLASS}>{children}</Card>
+      <Card accentColor={accentColor} className={COLLECTION_CONTAINER_CLASS}>{children}</Card>
     </div>
   );
 }
@@ -26,14 +27,15 @@ interface FieldGroupCardProps {
   formatValue: (field: { key: string; type: string }) => string | null;
   /** Raw field values (needed for gender icon SSOT). */
   getRawValue?: (fieldKey: string) => unknown;
+  accentColor?: "info" | "success" | "warning" | "destructive" | "primary" | "secondary" | "purple" | "amber" | "rose" | "teal" | "indigo" | "pink";
 }
 
-export function FieldGroupCard({ group, fields, formatValue, getRawValue }: FieldGroupCardProps): JSX.Element | null {
+export function FieldGroupCard({ group, fields, formatValue, getRawValue, accentColor }: FieldGroupCardProps): JSX.Element | null {
   const validFields = fields.map((f) => ({ field: f, val: formatValue(f) })).filter((item) => Boolean(item.val));
   if (validFields.length === 0) return null;
 
   return (
-    <DetailSection title={group}>
+    <DetailSection title={group} accentColor={accentColor}>
       {validFields.map(({ field, val }) => {
         const isGender = field.key === "gender";
         const rawGender = isGender ? String(getRawValue?.(field.key) ?? val ?? "") : "";

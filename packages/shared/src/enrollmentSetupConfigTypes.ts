@@ -9,7 +9,8 @@ import {
   INITIAL_ENROLLMENTS_FIELD_SEED,
 } from './moduleFieldSetupAcademic.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 
 /** Deep clone {@link INITIAL_ENROLLMENTS_FIELD_SEED} for default and Setup states. */
 export function cloneEnrollmentFieldSeed(): Record<string, FieldDefinition[]> {
@@ -84,12 +85,17 @@ export function resolveEnrollmentFieldsMap(
 }
 
 /** PUT /api/enrollments/field-config — field registry JSON without formTabs SSOT. */
-export const enrollmentFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const enrollmentFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     columnRegistry: z.array(z.record(z.string(), z.unknown())).optional(),
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const enrollmentFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, enrollmentFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/enrollments/preferences — enrollment prefs only. */
 export const enrollmentPreferencesPutBodySchema = z

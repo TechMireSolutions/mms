@@ -17,7 +17,7 @@ import {
   assessmentResults,
   assessmentAnswers,
 } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 // --- Questions ---
 
@@ -50,7 +50,7 @@ export function questionRowToRecord(
 }
 
 async function syncQuestionChildren(
-  tx: Parameters<Parameters<typeof withTenantTransaction>[1]>[0],
+  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
   subdomain: string,
   record: QuestionBankQuestion,
 ): Promise<void> {
@@ -142,7 +142,7 @@ async function syncQuestionChildren(
 
 export async function listQuestionsByWorkspace(tenant: string): Promise<QuestionBankQuestion[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(questions)
@@ -240,7 +240,7 @@ export async function listQuestionsByWorkspace(tenant: string): Promise<Question
 
 export async function findQuestionById(tenant: string, id: string): Promise<QuestionBankQuestion | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(questions)
@@ -313,7 +313,7 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
 
 export async function saveQuestion(tenant: string, record: QuestionBankQuestion): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(questions)
       .values({
@@ -353,7 +353,7 @@ export async function saveQuestion(tenant: string, record: QuestionBankQuestion)
 export async function bulkSaveQuestions(tenant: string, records: QuestionBankQuestion[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(questions)
@@ -394,7 +394,7 @@ export async function bulkSaveQuestions(tenant: string, records: QuestionBankQue
 
 export async function replaceQuestionsForWorkspace(tenant: string, records: QuestionBankQuestion[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(questionCitations).where(eq(questionCitations.workspaceSubdomain, subdomain));
     await tx.delete(questionTags).where(eq(questionTags.workspaceSubdomain, subdomain));
     await tx.delete(questionOptions).where(eq(questionOptions.workspaceSubdomain, subdomain));
@@ -450,7 +450,7 @@ export function testRowToRecord(
 }
 
 async function syncTestChildren(
-  tx: Parameters<Parameters<typeof withTenantTransaction>[1]>[0],
+  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
   subdomain: string,
   record: QuestionBankTest,
 ): Promise<void> {
@@ -522,7 +522,7 @@ async function syncTestChildren(
 
 export async function listTestsByWorkspace(tenant: string): Promise<QuestionBankTest[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(tests)
@@ -611,7 +611,7 @@ export async function listTestsByWorkspace(tenant: string): Promise<QuestionBank
 
 export async function findTestById(tenant: string, id: string): Promise<QuestionBankTest | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(tests)
@@ -681,7 +681,7 @@ export async function findTestById(tenant: string, id: string): Promise<Question
 
 export async function saveTest(tenant: string, record: QuestionBankTest): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(tests)
       .values({
@@ -723,7 +723,7 @@ export async function saveTest(tenant: string, record: QuestionBankTest): Promis
 export async function bulkSaveTests(tenant: string, records: QuestionBankTest[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(tests)
@@ -766,7 +766,7 @@ export async function bulkSaveTests(tenant: string, records: QuestionBankTest[])
 
 export async function replaceTestsForWorkspace(tenant: string, records: QuestionBankTest[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(testSectionQuestions).where(eq(testSectionQuestions.workspaceSubdomain, subdomain));
     await tx.delete(testSections).where(eq(testSections.workspaceSubdomain, subdomain));
     await tx.delete(testQuestions).where(eq(testQuestions.workspaceSubdomain, subdomain));
@@ -818,7 +818,7 @@ export function resultRowToRecord(
 }
 
 async function syncResultChildren(
-  tx: Parameters<Parameters<typeof withTenantTransaction>[1]>[0],
+  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
   subdomain: string,
   record: QuestionBankResult,
 ): Promise<void> {
@@ -851,7 +851,7 @@ async function syncResultChildren(
 
 export async function listResultsByWorkspace(tenant: string): Promise<QuestionBankResult[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(assessmentResults)
@@ -890,7 +890,7 @@ export async function listResultsByWorkspace(tenant: string): Promise<QuestionBa
 
 export async function findResultById(tenant: string, id: string): Promise<QuestionBankResult | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(assessmentResults)
@@ -922,7 +922,7 @@ export async function findResultById(tenant: string, id: string): Promise<Questi
 
 export async function saveResult(tenant: string, record: QuestionBankResult): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(assessmentResults)
       .values({
@@ -958,7 +958,7 @@ export async function saveResult(tenant: string, record: QuestionBankResult): Pr
 export async function bulkSaveResults(tenant: string, records: QuestionBankResult[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(assessmentResults)
@@ -995,7 +995,7 @@ export async function bulkSaveResults(tenant: string, records: QuestionBankResul
 
 export async function replaceResultsForWorkspace(tenant: string, records: QuestionBankResult[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(assessmentAnswers).where(eq(assessmentAnswers.workspaceSubdomain, subdomain));
     await tx.delete(assessmentResults).where(eq(assessmentResults.workspaceSubdomain, subdomain));
 
@@ -1020,7 +1020,7 @@ export async function replaceResultsForWorkspace(tenant: string, records: Questi
 
 export async function deleteQuestionBankByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(assessmentAnswers).where(eq(assessmentAnswers.workspaceSubdomain, subdomain));
     await tx.delete(assessmentResults).where(eq(assessmentResults.workspaceSubdomain, subdomain));
     await tx.delete(testSectionQuestions).where(eq(testSectionQuestions.workspaceSubdomain, subdomain));

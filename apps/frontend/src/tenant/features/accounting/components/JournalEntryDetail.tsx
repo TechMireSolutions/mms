@@ -12,6 +12,9 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { JournalEntryDetailLines } from "@/tenant/features/accounting/components/JournalEntryDetailLines";
+import { Card } from "@/components/ui/card";
+import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
+import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 
 interface JournalEntryDetailProps {
   entry: JournalEntry;
@@ -78,26 +81,15 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
       }
     >
       <div className="space-y-5">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
-            <div>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.date")}</h3>
-              <p className="font-semibold text-foreground m-0">
-                {formatDate(entry.date)}
-              </p>
-            </div>
-            <div>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.createdBy")}</h3>
-              <p className="font-semibold text-foreground m-0">{entry.created_by || "—"}</p>
-            </div>
-            <div>
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.fiscalYear")}</h3>
-              <p className="font-semibold text-foreground m-0">{entry.fiscal_year || "—"}</p>
-            </div>
-            <div className="col-span-2 sm:col-span-3">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.narration")}</h3>
-              <p className="font-medium text-foreground m-0">{entry.description}</p>
-            </div>
-          </div>
+        <div className="space-y-2">
+          <DetailSectionTitle>{t("common.overview" as AppTranslationKey)}</DetailSectionTitle>
+          <Card className="divide-y divide-border/50 p-0">
+            <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.date")} value={formatDate(entry.date)} />
+            <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.createdBy")} value={entry.created_by || "—"} />
+            <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.fiscalYear")} value={entry.fiscal_year || "—"} />
+            <DetailAttributeRow variant="inset" label={t("accounting.journal.detail.narration")} value={entry.description} />
+          </Card>
+        </div>
 
           {(entry.tags || []).length > 0 && (
             <div className="flex flex-wrap gap-1.5" aria-label={t("accounting.columns.journal.tags")}>

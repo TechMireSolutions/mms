@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiJson } from "@/lib/apiClient";
+import { apiContract } from "@/lib/api";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { invalidateStudentsQueries } from "@/tenant/features/students/hooks/invalidateStudentsQueries";
-import { STUDENTS_API } from "@/tenant/features/students/hooks/studentsQueryKeys";
 
 const STUDENTS_GR_MIGRATION_KEY = "mms_students_gr_migration_v1";
 
@@ -42,12 +41,8 @@ export function useGrMigration(activeTab: string, canEditSetup: boolean): void {
   const migrationAppliedRef = useRef(false);
 
   const { mutate } = useMutation({
-    mutationFn: () =>
-      apiJson<GrMigrationResult>(`${STUDENTS_API}/migrate-gr-numbers`, {
-        method: "POST",
-        body: JSON.stringify({}),
-      }),
-    onSuccess: (result) => {
+    mutationFn: () => apiContract.students.migrateGrNumbers({ body: {} }).then((res: any) => res.body as GrMigrationResult),
+    onSuccess: (result: GrMigrationResult) => {
       invalidateStudentsQueries(queryClient);
       markGrMigrationDone();
       setNeedsMigrationScan(false);

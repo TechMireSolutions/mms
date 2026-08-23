@@ -6,6 +6,8 @@ import { reportClientError } from "@/lib/clientErrorReporting";
 const EMPTY_ARRAY: unknown[] = [];
 
 /**
+ * @deprecated Do not use for REST entities. Use TanStack Query (tsrClient) instead.
+ * 
  * A custom React hook that reads a local database collection and subscribes to
  * the 'local-database-update' event, returning a reactive state representation
  * that updates instantly when writes occur.

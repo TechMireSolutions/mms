@@ -1,6 +1,5 @@
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+
 import type {
-  FinanceReportAggregates,
   FinanceReportComparisonQuery,
   FinanceListQuery,
   FinanceInvoicesListPageResult,
@@ -12,9 +11,12 @@ import type {
   PaymentCreateInput,
 } from '@mms/shared';
 import { FINANCE_MODULE_MANIFEST, normalizeFinanceReportComparisonQuery } from '@mms/shared';
-import { apiFetch, apiJson } from '@/lib/apiClient';
-import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import {
+  useFinanceContractInvoices,
+  useFinanceContractPayments,
+  useFinanceContractReportAggregates
+} from '@/tenant/features/finance/hooks/useFinanceTsrHooks';
 
 export const FINANCE_INVOICES_QUERY_KEY = ['finance', 'invoices', 'list'] as const;
 export const FINANCE_PAYMENTS_QUERY_KEY = ['finance', 'payments', 'list'] as const;
@@ -26,72 +28,48 @@ export const FINANCE_REPORT_AGGREGATES_QUERY_KEY = [
 
 const FINANCE_API = FINANCE_MODULE_MANIFEST.restBasePath;
 
-/** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
-export class NotifiedFinanceMutationError extends NotifiedMutationError {}
 
-export function useFinanceInvoicesPaginated(query: FinanceListQuery, options?: { enabled?: boolean }) {
+
+
+export function useFinanceInvoicesPaginated(query: FinanceListQuery, options?: { enabled?: boolean }): Omit<any, 'data'> & { data: FinanceInvoicesListPageResult | undefined } {
   const { isAuthenticated } = useAuth();
   const enabled = (options?.enabled ?? true) && isAuthenticated;
   
-  const queryParams = new URLSearchParams();
-  if (query.page) queryParams.set('page', String(query.page));
-  if (query.limit) queryParams.set('limit', String(query.limit));
-  if (query.search) queryParams.set('search', query.search);
-  if (query.sortField) queryParams.set('sortField', query.sortField);
-  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
-  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
+  const queryParams: Record<string, unknown> = {};
+  if (query.page) queryParams.page = query.page;
+  if (query.limit) queryParams.limit = query.limit;
+  if (query.search) queryParams.search = query.search;
+  if (query.sortField) queryParams.sortField = query.sortField;
+  if (query.sortDir) queryParams.sortDir = query.sortDir;
+  if (query.includeDeleted) queryParams.includeDeleted = 'true';
   
-  const queryString = queryParams.toString();
-
-  return useQuery({
-    queryKey: [...FINANCE_INVOICES_QUERY_KEY, query],
-    queryFn: async ({ signal }): Promise<FinanceInvoicesListPageResult> =>
-      apiJson<FinanceInvoicesListPageResult>(
-        `${FINANCE_API}/invoices${queryString ? `?${queryString}` : ''}`,
-        { signal },
-      ),
-    enabled,
-    placeholderData: keepPreviousData,
-  });
+  const result = useFinanceContractInvoices(queryParams, enabled);
+  return {
+    ...result,
+    data: result.data?.status === 200 ? (result.data.body as FinanceInvoicesListPageResult) : undefined,
+  };
 }
 
-export function useFinancePaymentsPaginated(query: FinanceListQuery, options?: { enabled?: boolean }) {
+export function useFinancePaymentsPaginated(query: FinanceListQuery, options?: { enabled?: boolean }): Omit<any, 'data'> & { data: FinancePaymentsListPageResult | undefined } {
   const { isAuthenticated } = useAuth();
   const enabled = (options?.enabled ?? true) && isAuthenticated;
   
-  const queryParams = new URLSearchParams();
-  if (query.page) queryParams.set('page', String(query.page));
-  if (query.limit) queryParams.set('limit', String(query.limit));
-  if (query.search) queryParams.set('search', query.search);
-  if (query.sortField) queryParams.set('sortField', query.sortField);
-  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
-  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
+  const queryParams: Record<string, unknown> = {};
+  if (query.page) queryParams.page = query.page;
+  if (query.limit) queryParams.limit = query.limit;
+  if (query.search) queryParams.search = query.search;
+  if (query.sortField) queryParams.sortField = query.sortField;
+  if (query.sortDir) queryParams.sortDir = query.sortDir;
+  if (query.includeDeleted) queryParams.includeDeleted = 'true';
   
-  const queryString = queryParams.toString();
-
-  return useQuery({
-    queryKey: [...FINANCE_PAYMENTS_QUERY_KEY, query],
-    queryFn: async ({ signal }): Promise<FinancePaymentsListPageResult> =>
-      apiJson<FinancePaymentsListPageResult>(
-        `${FINANCE_API}/payments${queryString ? `?${queryString}` : ''}`,
-        { signal },
-      ),
-    enabled,
-    placeholderData: keepPreviousData,
-  });
+  const result = useFinanceContractPayments(queryParams, enabled);
+  return {
+    ...result,
+    data: result.data?.status === 200 ? (result.data.body as FinancePaymentsListPageResult) : undefined,
+  };
 }
 
-/** @deprecated Use useFinanceInvoicesPaginated instead */
-export function useFinanceInvoicesCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Invoice[] {
-  const query = useFinanceInvoicesPaginated({ page: 1, limit: 500, includeDeleted: options?.includeDeleted }, options);
-  return query.data?.invoices ?? [];
-}
 
-/** @deprecated Use useFinancePaymentsPaginated instead */
-export function useFinancePaymentsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Payment[] {
-  const query = useFinancePaymentsPaginated({ page: 1, limit: 500, includeDeleted: options?.includeDeleted }, options);
-  return query.data?.payments ?? [];
-}
 
 export function useFinanceReportAggregates(
   options?: { enabled?: boolean; comparison?: FinanceReportComparisonQuery },
@@ -99,153 +77,124 @@ export function useFinanceReportAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
   const comparison = normalizeFinanceReportComparisonQuery(options?.comparison);
-  const queryParams = new URLSearchParams();
-  if (comparison?.sessionIds?.length) queryParams.set('sessionIds', comparison.sessionIds.join(','));
-  if (comparison?.rangeAFrom) queryParams.set('rangeAFrom', comparison.rangeAFrom);
-  if (comparison?.rangeATo) queryParams.set('rangeATo', comparison.rangeATo);
-  if (comparison?.rangeBFrom) queryParams.set('rangeBFrom', comparison.rangeBFrom);
-  if (comparison?.rangeBTo) queryParams.set('rangeBTo', comparison.rangeBTo);
-  const queryString = queryParams.toString();
-
-  return useQuery({
-    queryKey: [...FINANCE_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,
-    queryFn: async ({ signal }): Promise<FinanceReportAggregates> =>
-      apiJson<FinanceReportAggregates>(
-        `${FINANCE_API}/report-aggregates${queryString ? `?${queryString}` : ''}`,
-        { signal },
-      ),
-    enabled: isAuthenticated && enabled,
-    staleTime: 30_000,
-  });
+  
+  const queryParams: Record<string, unknown> = {};
+  if (comparison?.sessionIds?.length) queryParams.sessionIds = comparison.sessionIds.join(',');
+  if (comparison?.rangeAFrom) queryParams.rangeAFrom = comparison.rangeAFrom;
+  if (comparison?.rangeATo) queryParams.rangeATo = comparison.rangeATo;
+  if (comparison?.rangeBFrom) queryParams.rangeBFrom = comparison.rangeBFrom;
+  if (comparison?.rangeBTo) queryParams.rangeBTo = comparison.rangeBTo;
+  
+  return useFinanceContractReportAggregates(queryParams, isAuthenticated && enabled);
 }
+
+import {
+  useFinanceContractCreateInvoice,
+  useFinanceContractUpdateInvoice,
+  useFinanceContractDeleteInvoice,
+  useFinanceContractCreatePayment,
+  useFinanceContractUpdatePayment,
+  useFinanceContractDeletePayment,
+  useFinanceContractBulkDeleteInvoices,
+  useFinanceContractBulkStatusInvoices,
+  useFinanceContractRestoreInvoice,
+  useFinanceContractRestorePayment,
+  useFinanceContractBulkRestoreInvoices,
+  useFinanceContractBulkRestorePayments,
+  useFinanceContractBulkDeletePayments,
+} from '@/tenant/features/finance/hooks/useFinanceTsrHooks';
+import { useQueryClient } from '@tanstack/react-query';
 
 export function useFinanceMutations() {
   const queryClient = useQueryClient();
 
-  const invalidateAll = () => {
-    void queryClient.invalidateQueries({ queryKey: FINANCE_INVOICES_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: FINANCE_PAYMENTS_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: FINANCE_METRICS_QUERY_KEY });
-  };
+  const createInvoice = useFinanceContractCreateInvoice();
+  const updateInvoice = useFinanceContractUpdateInvoice();
+  const deleteInvoice = useFinanceContractDeleteInvoice();
+  const restoreInvoice = useFinanceContractRestoreInvoice();
+  
+  const bulkDeleteInvoices = useFinanceContractBulkDeleteInvoices();
+  const bulkRestoreInvoices = useFinanceContractBulkRestoreInvoices();
+  const bulkUpdateInvoiceStatus = useFinanceContractBulkStatusInvoices();
 
-  const createInvoice = useMutation({
-    mutationFn: async (invoice: InvoiceCreateInput) =>
-      apiJson<{ invoice: Invoice }>(`${FINANCE_API}/invoices`, {
-        method: 'POST',
-        body: JSON.stringify(invoice),
-      }),
-    onSuccess: invalidateAll,
-  });
+  const createPayment = useFinanceContractCreatePayment();
+  const updatePayment = useFinanceContractUpdatePayment();
+  const deletePayment = useFinanceContractDeletePayment();
+  const restorePayment = useFinanceContractRestorePayment();
 
-  const updateInvoice = useMutation({
-    mutationFn: async ({ id, invoice }: { id: string; invoice: Invoice }) =>
-      apiJson<{ invoice: Invoice }>(`${FINANCE_API}/invoices/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(invoice),
-      }),
-    onSuccess: invalidateAll,
-  });
-
-  const deleteInvoice = useMutation({
-    mutationFn: async (id: string) =>
-      apiFetch(`${FINANCE_API}/invoices/${id}`, { method: 'DELETE' }),
-    onSuccess: invalidateAll,
-  });
-
-  const restoreInvoice = useMutation({
-    mutationFn: async (id: string) =>
-      apiFetch(`${FINANCE_API}/invoices/${id}/restore`, { method: 'POST' }),
-    onSuccess: invalidateAll,
-  });
-
-  const bulkDeleteInvoices = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${FINANCE_API}/invoices/bulk-delete`, {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      }),
-    onSuccess: invalidateAll,
-  });
-
-  const bulkRestoreInvoices = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${FINANCE_API}/invoices/bulk-restore`, {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      }),
-    onSuccess: invalidateAll,
-  });
-
-  const bulkUpdateInvoiceStatus = useMutation({
-    mutationFn: async (body: InvoicesBulkStatusBody) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${FINANCE_API}/invoices/bulk-status`,
-        { method: 'POST', body: JSON.stringify(body) },
-      ),
-    onSuccess: invalidateAll,
-  });
-
-  const createPayment = useMutation({
-    mutationFn: async (payment: PaymentCreateInput) =>
-      apiJson<{ payment: Payment }>(`${FINANCE_API}/payments`, {
-        method: 'POST',
-        body: JSON.stringify(payment),
-      }),
-    onSuccess: invalidateAll,
-  });
-
-  const updatePayment = useMutation({
-    mutationFn: async ({ id, payment }: { id: string; payment: Payment }) =>
-      apiJson<{ payment: Payment }>(`${FINANCE_API}/payments/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(payment),
-      }),
-    onSuccess: invalidateAll,
-  });
-
-  const deletePayment = useMutation({
-    mutationFn: async (id: string) =>
-      apiFetch(`${FINANCE_API}/payments/${id}`, { method: 'DELETE' }),
-    onSuccess: invalidateAll,
-  });
-
-  const restorePayment = useMutation({
-    mutationFn: async (id: string) =>
-      apiFetch(`${FINANCE_API}/payments/${id}/restore`, { method: 'POST' }),
-    onSuccess: invalidateAll,
-  });
-
-  const bulkDeletePayments = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${FINANCE_API}/payments/bulk-delete`, {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      }),
-    onSuccess: invalidateAll,
-  });
-
-  const bulkRestorePayments = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${FINANCE_API}/payments/bulk-restore`, {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      }),
-    onSuccess: invalidateAll,
-  });
+  const bulkDeletePayments = useFinanceContractBulkDeletePayments();
+  const bulkRestorePayments = useFinanceContractBulkRestorePayments();
 
   return {
-    createInvoice,
-    updateInvoice,
-    deleteInvoice,
-    restoreInvoice,
-    bulkDeleteInvoices,
-    bulkRestoreInvoices,
-    bulkUpdateInvoiceStatus,
-    createPayment,
-    updatePayment,
-    deletePayment,
-    restorePayment,
-    bulkDeletePayments,
-    bulkRestorePayments,
+    createInvoice: {
+      ...createInvoice,
+      mutate: (invoice: InvoiceCreateInput, opts?: any) => createInvoice.mutate({ body: invoice }, opts),
+      mutateAsync: (invoice: InvoiceCreateInput) => createInvoice.mutateAsync({ body: invoice }),
+    },
+    updateInvoice: {
+      ...updateInvoice,
+      mutate: ({ id, invoice }: { id: string; invoice: Invoice }, opts?: any) =>
+        updateInvoice.mutate({ params: { id }, body: invoice }, opts),
+      mutateAsync: ({ id, invoice }: { id: string; invoice: Invoice }) =>
+        updateInvoice.mutateAsync({ params: { id }, body: invoice }),
+    },
+    deleteInvoice: {
+      ...deleteInvoice,
+      mutate: (id: string, opts?: any) => deleteInvoice.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => deleteInvoice.mutateAsync({ params: { id } }),
+    },
+    restoreInvoice: restoreInvoice ? {
+      ...restoreInvoice,
+      mutate: (id: string, opts?: any) => restoreInvoice.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => restoreInvoice.mutateAsync({ params: { id } }),
+    } : null,
+    bulkDeleteInvoices: {
+      ...bulkDeleteInvoices,
+      mutate: (ids: string[], opts?: any) => bulkDeleteInvoices.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkDeleteInvoices.mutateAsync({ body: { ids } }),
+    },
+    bulkRestoreInvoices: bulkRestoreInvoices ? {
+      ...bulkRestoreInvoices,
+      mutate: (ids: string[], opts?: any) => bulkRestoreInvoices.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkRestoreInvoices.mutateAsync({ body: { ids } }),
+    } : null,
+    bulkUpdateInvoiceStatus: {
+      ...bulkUpdateInvoiceStatus,
+      mutate: (body: InvoicesBulkStatusBody, opts?: any) => bulkUpdateInvoiceStatus.mutate({ body }, opts),
+      mutateAsync: (body: InvoicesBulkStatusBody) => bulkUpdateInvoiceStatus.mutateAsync({ body }),
+    },
+    createPayment: {
+      ...createPayment,
+      mutate: (payment: PaymentCreateInput, opts?: any) => createPayment.mutate({ body: payment }, opts),
+      mutateAsync: (payment: PaymentCreateInput) => createPayment.mutateAsync({ body: payment }),
+    },
+    updatePayment: {
+      ...updatePayment,
+      mutate: ({ id, payment }: { id: string; payment: Payment }, opts?: any) =>
+        updatePayment.mutate({ params: { id }, body: payment }, opts),
+      mutateAsync: ({ id, payment }: { id: string; payment: Payment }) =>
+        updatePayment.mutateAsync({ params: { id }, body: payment }),
+    },
+    deletePayment: {
+      ...deletePayment,
+      mutate: (id: string, opts?: any) => deletePayment.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => deletePayment.mutateAsync({ params: { id } }),
+    },
+    restorePayment: restorePayment ? {
+      ...restorePayment,
+      mutate: (id: string, opts?: any) => restorePayment.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => restorePayment.mutateAsync({ params: { id } }),
+    } : null,
+    bulkDeletePayments: {
+      ...bulkDeletePayments,
+      mutate: (ids: string[], opts?: any) => bulkDeletePayments.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkDeletePayments.mutateAsync({ body: { ids } }),
+    },
+    bulkRestorePayments: bulkRestorePayments ? {
+      ...bulkRestorePayments,
+      mutate: (ids: string[], opts?: any) => bulkRestorePayments.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkRestorePayments.mutateAsync({ body: { ids } }),
+    } : null,
   };
 }
+

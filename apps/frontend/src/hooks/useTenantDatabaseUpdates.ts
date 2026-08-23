@@ -2,6 +2,9 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { connectTenantDatabaseSocket } from '@/lib/tenantWebSocket';
+import type { TenantJobEventMessage } from '@/lib/tenantWebSocket';
+import { upsertLocalBackgroundJob } from '@/lib/backgroundJobs/backgroundJobStore';
+import { fetchBackgroundJob } from '@/lib/backgroundJobs/pollBackgroundJob';
 import { invalidateContactsQueries } from '@/tenant/hooks/collections/contacts';
 import { invalidateEnrollmentsQueries } from '@/tenant/features/enrollments/hooks/invalidateEnrollmentsQueries';
 import { invalidateMessagingQueries } from '@/tenant/features/messaging/hooks/invalidateMessagingQueries';
@@ -20,6 +23,8 @@ import { invalidateDashboardQueries } from '@/tenant/hooks/collections/dashboard
 
 /**
  * Subscribes to tenant `/api/ws` and invalidates Query keys for live collection updates.
+ * Also handles job-progress/completed/failed events from the BullMQ worker pipeline,
+ * updating the local job store and triggering collection invalidations on completion.
  * Mount once under TenantScopedProviders when authenticated.
  */
 export function useTenantDatabaseUpdates(): void {
@@ -106,6 +111,34 @@ export function useTenantDatabaseUpdates(): void {
         }
         if (message.key === 'message_logs' || message.key === 'message_templates') {
           invalidateMessagingQueries(queryClient);
+        }
+      },
+
+      onJobEvent: (message: TenantJobEventMessage) => {
+        // Fetch fresh record from server and merge into local job store
+        void fetchBackgroundJob(message.jobId).then((job) => {
+          if (job) upsertLocalBackgroundJob(job);
+        });
+
+        // On completion, invalidate the relevant module collection so directory
+        // refreshes automatically (e.g. after a CSV import or bulk operation).
+        if (message.event === 'job-completed' && message.moduleId) {
+          const key = message.moduleId;
+          if (key === 'students') invalidateStudentsQueries(queryClient);
+          else if (key === 'teachers') invalidateTeachersQueries(queryClient);
+          else if (key === 'contacts') invalidateContactsQueries(queryClient);
+          else if (key === 'attendance') invalidateAttendanceQueries(queryClient);
+          else if (key === 'finance') invalidateFinanceQueries(queryClient);
+          else if (key === 'accounting') invalidateAccountingQueries(queryClient);
+          else if (key === 'messaging') invalidateMessagingQueries(queryClient);
+          else if (key === 'enrollments') invalidateEnrollmentsQueries(queryClient);
+          else if (key === 'sessions') invalidateSessionsQueries(queryClient);
+          else if (key === 'users') invalidateUsersQueries(queryClient);
+          else if (key === 'hasanat') invalidateHasanatQueries(queryClient);
+          else if (key === 'examinations') invalidateExaminationsQueries(queryClient);
+          else if (key === 'questionBank') invalidateQuestionBankQueries(queryClient);
+          else if (key === 'obligations') invalidateObligationsQueries(queryClient);
+          else if (key === 'dashboard') invalidateDashboardQueries(queryClient);
         }
       },
     });

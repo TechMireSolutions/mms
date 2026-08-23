@@ -70,13 +70,13 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
 
   const handleRemind = (overdueStudent: OverdueStudent) => {
     const student = studentMap.get(String(overdueStudent.id));
-    const phone = student?.phone || "";
+    const phone = (student as any)?.phone || "";
     if (!phone) return;
     openComposer("sms", [{
       id: overdueStudent.id,
       name: overdueStudent.name,
       phone,
-      email: student?.email || "",
+      email: (student as any)?.email || "",
       amount: overdueStudent.amount,
       dueDate: overdueStudent.dueDate,
     }]);
@@ -94,8 +94,8 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
         return {
           id: overdueStudent.id,
           name: overdueStudent.name,
-          phone: student?.phone || "",
-          email: student?.email || "",
+          phone: (student as any)?.phone || "",
+          email: (student as any).email || "",
           amount: overdueStudent.amount,
           dueDate: overdueStudent.dueDate,
         };

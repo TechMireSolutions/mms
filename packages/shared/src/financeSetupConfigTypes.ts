@@ -6,7 +6,8 @@ import {
   INITIAL_FINANCE_FIELD_SEED,
 } from './moduleFieldSetupFinance.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 
 /** Deep clone {@link INITIAL_FINANCE_FIELD_SEED} for default and Setup states. */
 export function cloneFinanceFieldSeed(): Record<string, FieldDefinition[]> {
@@ -81,7 +82,7 @@ export function resolveFinanceFieldsMap(
 }
 
 /** PUT /api/finance/field-config — field registry JSON without prefs keys. */
-export const financeFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const financeFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
     fieldOrder: z.array(z.string()).optional(),
@@ -89,7 +90,12 @@ export const financeFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
     enabledTabs: z.array(z.string()).optional(),
     requiredTabs: z.array(z.string()).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const financeFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, financeFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/finance/preferences — finance prefs only. */
 export const financePreferencesPutBodySchema = z

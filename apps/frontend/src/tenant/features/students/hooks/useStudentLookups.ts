@@ -4,16 +4,14 @@ import {
   type StudentLookupKind,
   type StudentLookupsMap,
 } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
+import { apiContract } from "@/lib/api";
 import { createModuleLookupsHooks } from "@/lib/query/createModuleLookupsHooks";
-import { STUDENTS_API } from "@/tenant/features/students/hooks/studentsQueryKeys";
 
 export const STUDENTS_LOOKUPS_QUERY_KEY = [STUDENTS_MODULE_MANIFEST.collectionKey, "lookups"] as const;
 
 async function fetchStudentLookups(signal?: AbortSignal): Promise<StudentLookupsMap> {
-  const response = await apiJson<{ lookups: StudentLookupsMap }>(`${STUDENTS_API}/lookups`, {
-    signal,
-  });
+  const res = await apiContract.students.getLookups({ query: undefined, extraHeaders: {} });
+    const response = res.body as any;
   return response.lookups ?? emptyStudentLookupsMap();
 }
 
@@ -21,11 +19,8 @@ async function putStudentLookupKind(
   kind: StudentLookupKind,
   items: string[],
 ): Promise<string[]> {
-  const response = await apiJson<{ items: string[] }>(`${STUDENTS_API}/lookups/${kind}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ items }),
-  });
+  const res = await apiContract.students.updateLookupKind({ params: { kind: kind as any }, body: { items }, query: undefined, extraHeaders: {} });
+  const response = res.body as any;
   return response.items;
 }
 

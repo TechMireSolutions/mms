@@ -1,10 +1,10 @@
 import { CreditCard, Trash2 } from "lucide-react";
 
-import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
 import {
+  BulkActionDock,
   BulkSelectionDeleteAction,
   BulkSelectionRestoreAction,
-} from "@/components/ui/BulkSelectionActions";
+} from "@/components/common/BulkActionDock";
 import { Card } from "@/components/ui/card";
 import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
@@ -53,11 +53,13 @@ export function PaymentSelectionBar({
   const { t } = useTranslation();
 
   return (
-    <BulkSelectionBar
+    <BulkActionDock
       placement="inline"
       tone="plain"
       selectedCount={selectedCount}
       countLabel={t("finance.trash.selected", { count: selectedCount })}
+      onClearSelection={() => {}}
+      enableEscapeKey={false}
     >
       {showDeleted ? (
         <BulkSelectionRestoreAction
@@ -71,7 +73,7 @@ export function PaymentSelectionBar({
           icon={Trash2}
         />
       )}
-    </BulkSelectionBar>
+    </BulkActionDock>
   );
 }
 

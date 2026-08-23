@@ -11,3 +11,14 @@ export {
   useExaminationsMutations,
 } from "@/tenant/features/examinations/hooks/useExaminationsApi";
 export { invalidateExaminationsQueries } from '@/tenant/features/examinations/hooks/invalidateExaminationsQueries';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useExaminationsContractList,
+  useExaminationsContractResults,
+  useExaminationsContractBulkDelete,
+  useExaminationsContractBulkRestore,
+  useExaminationsContractBulkUpdateExams,
+  useExaminationsContractBulkUpdateResults,
+  useExaminationsContractDeleteExam,
+  useExaminationsContractRestoreExam,
+} from '@/tenant/features/examinations/hooks/useExaminationsTsrHooks';

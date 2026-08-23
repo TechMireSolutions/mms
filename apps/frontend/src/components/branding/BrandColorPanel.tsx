@@ -290,7 +290,7 @@ export default function BrandColorPanel({
 
           {parsedCandidate ? (
             <div className="flex items-center gap-3 p-3 rounded-xl border border-border/80 bg-muted/30 animate-in fade-in duration-200">
-              <div className="flex items-center -space-x-2">
+              <div className="flex items-center -space-x-2 rtl:space-x-reverse">
                 <span
                   className="h-8 w-8 rounded-full border-2 border-background shadow-xs shrink-0"
                   style={{ backgroundColor: parsedCandidate.primary }}
@@ -341,7 +341,7 @@ export default function BrandColorPanel({
         />
 
         {/* Quick Swap Button centered between fields on desktop */}
-        <div className="hidden lg:flex absolute left-1/2 top-10 -translate-x-1/2 z-10">
+        <div className="hidden lg:flex absolute start-1/2 top-10 -translate-x-1/2 rtl:translate-x-1/2 z-10">
           <Button
             type="button"
             variant="outline"

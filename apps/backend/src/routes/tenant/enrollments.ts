@@ -3,14 +3,13 @@ import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection } from '../../services/rbacService.js';
 import { ENROLLMENTS_MODULE_MANIFEST, type User } from '@mms/shared';
-import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
-import {
-  enrollmentRecordSchema,
-  enrollmentsListQuerySchema,
-  enrollmentsBulkIdsSchema,
-} from '../../validation/enrollmentSchemas.js';
-import { sendDatabaseError, sendForbidden } from '../../lib/httpErrors.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { registerCountRoute, registerMetricsRoute, registerWidgetAggregatesRoute } from '../../lib/crudRouter.js';
+import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+
+import { rootContract } from '@mms/shared';
+import { initServer } from '@ts-rest/fastify';
+import { withTenant } from '../../db/tenant-context.js';
+import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 
 import {
   loadEnrollmentsPage,
@@ -40,58 +39,130 @@ export default async function enrollmentsRoutes(
   fastify.addHook('preHandler', authenticateTenant);
   fastify.addHook('preHandler', requireTenantModule('enrollment'));
 
-  await fastify.register(enrollmentSetupConfigRoutes);
-  await fastify.register(enrollmentExportRoutes);
-  await fastify.register(enrollmentReportRoutes);
+  await fastify.register(
+    async (sub) => {
+      await sub.register(enrollmentSetupConfigRoutes);
+      await sub.register(enrollmentExportRoutes);
+      await sub.register(enrollmentReportRoutes);
 
-  registerStandardTenantRoutes(fastify, {
-    collection: ENROLLMENTS_COLLECTION,
-    schema: enrollmentRecordSchema,
-    listQuerySchema: enrollmentsListQuerySchema,
-    defaultPageSize: ENROLLMENTS_MODULE_MANIFEST.defaultPageSize,
-    errorMessagePrefix: 'enrollments',
-    nameSingular: 'enrollment',
-    namePlural: 'enrollments',
-    loadPageFn: (query) => loadEnrollmentsPage(query),
-    loadCountFn: countEnrollments,
-    loadMetricsFn: loadEnrollmentsCommandMetrics,
-    loadWidgetAggregatesFn: loadEnrollmentsWidgetAggregates as unknown as (
-      queries: unknown[],
-    ) => Promise<unknown>,
-    createFn: createEnrollment,
-    updateFn: updateEnrollmentById,
-    deleteFn: deleteEnrollmentById,
-    restoreFn: restoreEnrollmentById,
-    columnPreferencesObjectKey: ENROLLMENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
-  });
+      registerCountRoute(sub, {
+        collection: ENROLLMENTS_COLLECTION,
+        loadCountFn: countEnrollments,
+        errorMessagePrefix: 'enrollments',
+      });
 
-  fastify.post('/bulk-delete', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(enrollmentsBulkIdsSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const result = await bulkSoftDeleteEnrollments(
-        parsed.data.ids.map(String),
-        String(user.id),
-        parsed.data.deletionReason,
-      );
-      return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk delete enrollments');
-    }
-  });
+      registerMetricsRoute(sub, {
+        collection: ENROLLMENTS_COLLECTION,
+        loadMetricsFn: loadEnrollmentsCommandMetrics,
+        errorMessagePrefix: 'enrollment',
+      });
 
-  fastify.post('/bulk-restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION)) return sendForbidden(reply);
-    const parsed = parseRequest(enrollmentsBulkIdsSchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    try {
-      const result = await bulkRestoreEnrollments(parsed.data.ids.map(String));
-      return reply.send({ success: true, ...result });
-    } catch {
-      return sendDatabaseError(reply, 'Failed to bulk restore enrollments');
-    }
-  });
+      registerWidgetAggregatesRoute(sub, {
+        collection: ENROLLMENTS_COLLECTION,
+        loadAggregatesFn: loadEnrollmentsWidgetAggregates as unknown as (
+          queries: unknown[],
+        ) => Promise<unknown>,
+        errorMessagePrefix: 'enrollment',
+      });
+
+      registerColumnPreferencesRoutes(sub, {
+        collection: ENROLLMENTS_COLLECTION,
+        objectKey: ENROLLMENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
+      });
+
+      sub.post<{ Params: { id: string } }>('/:id/restore', async (request, reply) => {
+        const user = request.user as User;
+        if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION)) {
+          return reply.status(403).send({ type: 'forbidden', message: 'Insufficient permissions' });
+        }
+        const { id } = request.params;
+        try {
+          const restored = await withTenant(String((request as any).tenant?.id), () => restoreEnrollmentById(id, String(user.id)), { readOnly: false });
+          if (!restored) {
+            return reply.status(404).send({ type: 'not_found', message: 'Enrollment not found or not deleted' });
+          }
+          return reply.send({ success: true });
+        } catch {
+          return reply.status(500).send({ type: 'database_error', message: 'Failed to restore enrollment' });
+        }
+      });
+    },
+    { prefix: '/api/enrollments' },
+  );
+
+  const s = initServer();
+  const router = s.router(rootContract.enrollments, {
+    list: async ({ query, request }: any) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, ENROLLMENTS_COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+      try {
+        const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true ? true : (query?.includeDeleted === 'false' || query?.includeDeleted === false ? false : undefined);
+        const result = await withTenant(String((request as any).tenant?.id), () => loadEnrollmentsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
+        return { status: 200 as const, body: result };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list enrollments' } as any };
+      }
+    },
+    get: async () => ({ status: 404 as const, body: { type: 'not_found', message: 'Not implemented' } as any }),
+    create: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+      try {
+        const item = await withTenant(String((request as any).tenant?.id), () => createEnrollment(body as any), { readOnly: false });
+        return { status: 201 as const, body: item };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create enrollment' } as any };
+      }
+    },
+    update: async ({ params: { id }, body, request }: any) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+      try {
+        const updated = await withTenant(String((request as any).tenant?.id), () => updateEnrollmentById(id, body as any), { readOnly: false });
+        if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } as any };
+        return { status: 200 as const, body: updated };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update enrollment' } as any };
+      }
+    },
+    delete: async ({ params: { id }, body, request }: any) => {
+      const user = request.user as User;
+      if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+      try {
+        const deleted = await withTenant(String((request as any).tenant?.id), () => deleteEnrollmentById(id, String(user.id), body?.deletionReason), { readOnly: false });
+        if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } as any };
+        return { status: 200 as const, body: { success: true } };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete enrollment' } as any };
+      }
+    },
+    bulkDelete: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+      try {
+        const result = await withTenant(String((request as any).tenant?.id), () => bulkSoftDeleteEnrollments(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
+        return { status: 200 as const, body: { success: true, ...result } };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete enrollments' } as any };
+      }
+    },
+    bulkRestore: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+      try {
+        const result = await withTenant(String((request as any).tenant?.id), () => bulkRestoreEnrollments(body.ids.map(String)), { readOnly: false });
+        return { status: 200 as const, body: { success: true, ...result } };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore enrollments' } as any };
+      }
+    },
+  } as any);
+
+  await fastify.register(s.plugin(router));
 }

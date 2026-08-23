@@ -13,7 +13,7 @@ import type { Denomination, Distribution } from '@/lib/data/hasanatData';
 import type { Session } from '@/lib/data/sessionsData';
 import type { Student } from '@/lib/data/studentsData';
 import { useAttendanceRecordsCollection } from '@/tenant/hooks/collections/attendance';
-import { useFinanceInvoicesCollection } from '@/tenant/hooks/collections/finance';
+import { useFinanceInvoicesPaginated } from '@/tenant/hooks/collections/finance';
 import {
   useHasanatDenomsCollection,
   useHasanatDistributionsCollection,
@@ -67,7 +67,7 @@ export function useWidgetCollections(options?: {
   const teachers: Teacher[] = [];
   const sessions: Session[] = [];
   const enrollments: Enrollment[] = [];
-  const financeInvoices = useFinanceInvoicesCollection({ enabled: needs('finance_invoices') });
+  const financeInvoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }, { enabled: needs('finance_invoices') }).data?.invoices ?? [];
   const attendanceRecords = useAttendanceRecordsCollection({ enabled: needs('attendance_records') });
   const hasanatDistributions = useHasanatDistributionsCollection({
     enabled: needs('hasanat_distributions'),
@@ -116,9 +116,10 @@ export function useReportCollectionRows(
   const teachers: Teacher[] = [];
   const sessions: Session[] = [];
   const enrollments: Enrollment[] = [];
-  const financeInvoices = useFinanceInvoicesCollection({
-    enabled: isAuthenticated && key === 'finance_invoices',
-  });
+  const financeInvoices = useFinanceInvoicesPaginated(
+    { page: 1, limit: 500 },
+    { enabled: isAuthenticated && key === 'finance_invoices' }
+  ).data?.invoices ?? [];
   const attendanceRecords = useAttendanceRecordsCollection({
     enabled: isAuthenticated && key === 'attendance_records',
   });

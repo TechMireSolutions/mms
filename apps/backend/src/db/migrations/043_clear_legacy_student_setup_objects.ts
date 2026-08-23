@@ -6,13 +6,13 @@ import { eq } from 'drizzle-orm';
 import { parseTenantScopedStorageKey } from '@mms/shared';
 import * as schema from '../schema.js';
 import { deleteObjectByStorageKey, listObjectStorageKeys } from '../database.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import {
   STUDENTS_COLUMN_PREFS_OBJECT_KEY,
   STUDENTS_SETTINGS_OBJECT_KEY,
 } from '../hydrateStudentsSetupFromLegacyBackup.js';
 
-type Tx = Parameters<Parameters<typeof withTenantTransaction>[1]>[0];
+type Tx = Parameters<Parameters<typeof withTenant>[1]>[0];
 
 async function tenantHasTypedFieldOrPrefs(tx: Tx, tenant: string): Promise<boolean> {
   const [field] = await tx
@@ -68,7 +68,7 @@ export async function runMigration043(): Promise<void> {
   const toDelete: string[] = [];
   let skipped = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     const setupCache = new Map<string, boolean>();
     const columnCache = new Map<string, boolean>();
 

@@ -1,5 +1,5 @@
 import { desc } from 'drizzle-orm';
-import { getDb } from '../dbClient.js';
+import { activeDb } from '../dbConnection.js';
 import { platformActivityLogs } from '../schema.js';
 
 export interface InsertPlatformActivityLog {
@@ -13,7 +13,7 @@ export interface InsertPlatformActivityLog {
 }
 
 export async function insertPlatformActivityLog(log: InsertPlatformActivityLog): Promise<void> {
-  await getDb().insert(platformActivityLogs).values({
+  await activeDb().insert(platformActivityLogs).values({
     userId: log.userId ?? null,
     userEmail: log.userEmail,
     action: log.action,
@@ -27,7 +27,7 @@ export async function insertPlatformActivityLog(log: InsertPlatformActivityLog):
 export async function listPlatformActivityLogs(limit = 50, offset = 0) {
   const safeLimit = Math.min(Math.max(1, limit), 200);
   const safeOffset = Math.max(0, offset);
-  const rows = await getDb()
+  const rows = await activeDb()
     .select()
     .from(platformActivityLogs)
     .orderBy(desc(platformActivityLogs.createdAt))

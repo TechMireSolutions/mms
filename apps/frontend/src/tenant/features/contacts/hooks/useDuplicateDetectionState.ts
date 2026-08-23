@@ -8,7 +8,8 @@ import {
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactsDuplicatePairs } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactsDuplicatePairs } from "@/tenant/features/contacts/hooks/useContactsAnalyticsQueries";
+import type { ContactsDuplicatePairsPageResult } from "@mms/shared";
 import { DUPLICATE_REASON_I18N } from "@/lib/contacts/contactI18n";
 import { notify } from "@/lib/notify";
 import { reportClientError } from "@/lib/clientErrorReporting";
@@ -46,7 +47,7 @@ export function useDuplicateDetectionState({
   const [tierFilter, setTierFilter] = useState<DuplicateTierFilter>("all");
 
   const {
-    data: serverPairs,
+    data,
     isLoading: pairsLoading,
     isFetching: pairsFetching,
     isError: pairsError,
@@ -56,6 +57,7 @@ export function useDuplicateDetectionState({
     page: dupPage,
     limit: 50,
   });
+  const serverPairs = data as ContactsDuplicatePairsPageResult | undefined;
   const [dismissedPairIds, setDismissedPairIds] = useState<Set<string>>(new Set());
   const [mergedPairIds, setMergedPairIds] = useState<Set<string>>(new Set());
   const [keepIndex, setKeepIndex] = useState<Record<string, number>>({});

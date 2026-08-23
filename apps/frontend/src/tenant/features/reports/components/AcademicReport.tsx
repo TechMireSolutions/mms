@@ -44,7 +44,7 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
 
     examResults.forEach((examResult) => {
       const exam = exams.find((examOption) => examOption.id === examResult.examId);
-      const student = students.find((studentOption) => String(studentOption.id) === String(examResult.studentId));
+      const student = students.find((studentOption: any) => String(studentOption.id) === String(examResult.studentId));
       if (!exam || !student) return;
 
       const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
@@ -81,7 +81,7 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
     const resultsByClass: Record<string, { class: string; studentName: string; marks: number }[]> = {};
     const rankingSourceResults = examResults.map((examResult) => {
       const exam = exams.find((examOption) => examOption.id === examResult.examId);
-      const student = students.find((studentOption) => String(studentOption.id) === String(examResult.studentId));
+      const student = students.find((studentOption: any) => String(studentOption.id) === String(examResult.studentId));
       if (!exam || !student) return null;
       return {
         class: exam.name,

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import type React from 'react';
-import { apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { LlmConfig, LlmTestResult } from '@mms/shared';
+import type { LlmConfig } from '@mms/shared';
 import type { SandboxMessage } from './llmSettingsTypes';
 
 export function useLlmSettingsSandbox(configs: LlmConfig[]) {
@@ -37,24 +37,23 @@ export function useLlmSettingsSandbox(configs: LlmConfig[]) {
     }));
 
     try {
-      const res = await apiJson<LlmTestResult>('/api/ai/test', {
-        method: 'POST',
-        body: JSON.stringify({
+      const { status, body } = await apiContract.ai.test({
+        body: {
           prompt: promptText,
           systemInstruction: sandboxSystemInstruction.trim() || undefined,
           configId: targetConfigId,
           messages: historyForApi,
-        }),
+        },
       });
 
-      if (res.success && res.response) {
+      if (status === 200 && body.success && body.response) {
         setSandboxMessages((prev) => [
           ...prev,
           {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content: res.response as string,
-            metrics: res.metrics,
+            content: body.response as string,
+            metrics: body.metrics,
           },
         ]);
       } else {
@@ -63,18 +62,18 @@ export function useLlmSettingsSandbox(configs: LlmConfig[]) {
           {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content: res.message || t('settings.llmTestConnectionError'),
+            content: body?.message || t('settings.llmTestConnectionError'),
             error: true,
           },
         ]);
       }
-    } catch (err: unknown) {
+    } catch (err: any) {
       setSandboxMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: err instanceof Error ? err.message : t('settings.llmSendFailed'),
+          content: err.message || t('settings.llmSendFailed'),
           error: true,
         },
       ]);

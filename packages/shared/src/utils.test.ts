@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { calculateSmsSegments } from "./smsUtils.js";
-import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, applyTitleCaseToContact, formatMoney, formatNumber, formatDateToIso, todayISO, parseIsoDate, parseIsoYear, parseTimeHHmm, formatTimeHHmm, normalizeTimeHHmm, splitIsoDateTime, combineIsoDateAndTime, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS, normalizeContactForEdit, cleanContactDraft, syncContactScalarFields, mergeContactEditSavePayload } from "./utils.js";
+import { parsePhoneNumber, normalizeToE164, formatPhoneWithCountryCode, getPrimaryPhone, mergeContacts, applyTitleCaseRecursive, applyTitleCaseToContact, formatMoney, formatNumber, formatDateToIso, todayISO, parseIsoDate, parseIsoYear, parseTimeHHmm, formatTimeHHmm, normalizeTimeHHmm, splitIsoDateTime, combineIsoDateAndTime, calcPercentage, calculateDetailedSolarAge, getSolarAgeComponents, formatSolarAgeComponents, getLunarDateString, calculateDetailedLunarAge, parseUtcDateParts, capitalize, getPrimaryAddress, compareByField, paginateArray, personalizeMessage, validateRecipientAddress, getDisplayName, MESSAGING_VARIABLE_TOKENS, formatHijriDate, formatSolarHijriDate } from "./utils.js";
+import { normalizeContactForEdit, syncContactScalarFields, mergeContactEditSavePayload } from "./contactFormNormalize.js";
+import { cleanContactDraft } from "./contactItemNormalize.js";
 
 
 
@@ -444,6 +446,57 @@ describe("getLunarDateString", () => {
     ["invalid string", "invalid"],
   ])("returns empty string for %s", (_, input) => {
     expect(getLunarDateString(input)).toBe("");
+  });
+});
+
+describe("formatHijriDate", () => {
+  it("formats date into Hijri calendar string", () => {
+    const result = formatHijriDate("2026-03-20");
+    expect(result).toBeTruthy();
+    expect(result).not.toBe("—");
+  });
+
+  it("supports explicit Umm al-Qura calendar option", () => {
+    const umAlQura = formatHijriDate("2026-03-20", { calendar: "islamic-umalqura" });
+    expect(umAlQura).toBeTruthy();
+    expect(umAlQura).not.toBe("—");
+  });
+
+  it.each([
+    ["null", null],
+    ["undefined", undefined],
+    ["empty string", ""],
+  ])("returns em-dash for %s", (_, input) => {
+    expect(formatHijriDate(input)).toBe("—");
+  });
+
+  it("returns empty string for invalid date string", () => {
+    expect(formatHijriDate("not-a-date")).toBe("");
+  });
+});
+
+describe("formatSolarHijriDate", () => {
+  it("formats date into Solar Hijri (Persian / Shamsi) calendar string", () => {
+    const result = formatSolarHijriDate("2026-03-20");
+    expect(result).toBeTruthy();
+    expect(result).not.toBe("—");
+  });
+
+  it("supports locale override for Persian Solar calendar", () => {
+    const resultFa = formatSolarHijriDate("2026-03-20", "fa-IR");
+    expect(resultFa).toBeTruthy();
+  });
+
+  it.each([
+    ["null", null],
+    ["undefined", undefined],
+    ["empty string", ""],
+  ])("returns em-dash for %s", (_, input) => {
+    expect(formatSolarHijriDate(input)).toBe("—");
+  });
+
+  it("returns empty string for invalid date string", () => {
+    expect(formatSolarHijriDate("not-a-date")).toBe("");
   });
 });
 

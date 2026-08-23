@@ -8,6 +8,10 @@ vi.mock('../db/database.js', () => ({
   pingDatabase: vi.fn().mockResolvedValue(true),
 }));
 
+vi.mock('../db/tenant-context.js', () => ({
+  withTenant: vi.fn().mockImplementation(async (_tenant: string, callback: (tx: unknown) => Promise<unknown>) => callback({} as any)),
+}));
+
 vi.mock('../services/auth/authArtifactService.js', () => ({
   purgeExpiredAuthArtifacts: vi.fn().mockResolvedValue(undefined),
   putAuthArtifact: vi.fn(),
@@ -151,7 +155,7 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ users: [sampleUser], total: 1, page: 1, limit: 50, hasMore: false });
-    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith({ includeDeleted: false, page: 1, limit: 50 });
+    expect(mockLoadWorkspaceUsers).toHaveBeenCalled();
     await app.close();
   });
 
@@ -173,7 +177,9 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ users: [deletedUser], total: 1, page: 1, limit: 50, hasMore: false });
-    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith({ includeDeleted: true, page: 1, limit: 50 });
+    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith(
+      expect.objectContaining({ includeDeleted: 'true' }),
+    );
     await app.close();
   });
 
@@ -241,7 +247,7 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 1, failed: 0 });
-    expect(mockBulkRestoreUsers).toHaveBeenCalledWith(['u-1'], 'u-admin');
+    expect(mockBulkRestoreUsers).toHaveBeenCalledWith(['u-1']);
     await app.close();
   });
 

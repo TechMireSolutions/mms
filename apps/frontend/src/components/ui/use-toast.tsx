@@ -5,7 +5,6 @@ import {
   dispatch,
   genToastId,
   getToastMemoryState,
-  reducer,
   subscribe,
   type ToasterToast,
 } from '@/components/ui/toastStore';

@@ -1,7 +1,7 @@
 import { eq, desc } from 'drizzle-orm';
 import { type ActivityLog, type AuditLogEntry } from '@mms/shared';
 import { userActivityLogs, auditLogEntries } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 type ActivityLogRow = typeof userActivityLogs.$inferSelect;
 type AuditLogRow = typeof auditLogEntries.$inferSelect;
@@ -34,7 +34,7 @@ function auditLogRowToRecord(row: AuditLogRow): AuditLogEntry {
 
 export async function listActivityLogsByWorkspace(tenant: string): Promise<ActivityLog[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(userActivityLogs)
@@ -47,7 +47,7 @@ export async function listActivityLogsByWorkspace(tenant: string): Promise<Activ
 export async function bulkSaveActivityLogs(tenant: string, records: ActivityLog[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(userActivityLogs)
@@ -84,7 +84,7 @@ export async function replaceActivityLogsForWorkspace(
   records: ActivityLog[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(userActivityLogs).where(eq(userActivityLogs.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(userActivityLogs).values({
@@ -105,7 +105,7 @@ export async function replaceActivityLogsForWorkspace(
 
 export async function listAuditLogEntriesByWorkspace(tenant: string): Promise<AuditLogEntry[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(auditLogEntries)
@@ -117,7 +117,7 @@ export async function listAuditLogEntriesByWorkspace(tenant: string): Promise<Au
 
 export async function saveAuditLogEntry(tenant: string, record: AuditLogEntry): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(auditLogEntries)
       .values({
@@ -156,7 +156,7 @@ export async function replaceAuditLogEntriesForWorkspace(
   records: AuditLogEntry[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(auditLogEntries).where(eq(auditLogEntries.workspaceSubdomain, subdomain));
     for (const record of records) {
       await tx.insert(auditLogEntries).values({
@@ -179,7 +179,7 @@ export async function replaceAuditLogEntriesForWorkspace(
 
 export async function deleteLogsByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(userActivityLogs).where(eq(userActivityLogs.workspaceSubdomain, subdomain));
     await tx.delete(auditLogEntries).where(eq(auditLogEntries.workspaceSubdomain, subdomain));
   });

@@ -1,8 +1,9 @@
 import { z } from 'zod';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 
 /** PUT /api/contacts/field-config — FieldConfig JSON without formTabs SSOT. */
-export const contactFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema;
+const contactFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema;
 const relationshipPairSchema = z
   .object({
     id: z.string().optional(),
@@ -12,6 +13,11 @@ const relationshipPairSchema = z
     inverseFemale: z.string().optional(),
   })
   .strict();
+
+export const contactFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, contactFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/contacts/preferences — ContactPreferences JSON. */
 export const contactPreferencesPutBodySchema = z

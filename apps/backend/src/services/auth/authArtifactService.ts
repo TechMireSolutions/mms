@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { and, eq, lt } from 'drizzle-orm';
 import { authArtifacts } from '../../db/schema.js';
-import { getDb } from '../../db/dbClient.js';
+import { activeDb } from '../../db/dbConnection.js';
 import { isUniqueViolation } from '../../lib/pgErrors.js';
 
 export type AuthArtifactKind =
@@ -29,7 +29,7 @@ export interface PutAuthArtifactOptions {
 }
 
 function db() {
-  return getDb();
+  return activeDb();
 }
 
 export function createArtifactId(): string {

@@ -188,8 +188,9 @@ export function formatLongDate(date: string | Date | null | undefined): string {
 
 /**
  * Formats a Date object or date string as a Hijri date using active global settings.
+ * Supports lunar Hijri with Umm al-Qura calendar extension when available.
  */
-export function formatHijriDate(date: string | Date | null | undefined): string {
+export function formatHijriDate(date: string | Date | null | undefined, options?: { calendar?: 'islamic' | 'islamic-umalqura' }): string {
   if (!date) return "—";
   const parsedDate = typeof date === "string" ? new Date(date) : date;
   if (isNaN(parsedDate.getTime())) return "";
@@ -199,8 +200,42 @@ export function formatHijriDate(date: string | Date | null | undefined): string 
   const language = stored.language;
 
   const intlLocale = getIntlLocaleForLanguage(language);
+  const calendarType = options?.calendar ?? 'islamic-umalqura';
   try {
-    return new Intl.DateTimeFormat(intlLocale + "-u-ca-islamic", {
+    return new Intl.DateTimeFormat(`${intlLocale}-u-ca-${calendarType}`, {
+      timeZone: timezone,
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    }).format(parsedDate);
+  } catch {
+    try {
+      return new Intl.DateTimeFormat(`${intlLocale}-u-ca-islamic`, {
+        timeZone: timezone,
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }).format(parsedDate);
+    } catch {
+      return "";
+    }
+  }
+}
+
+/**
+ * Formats a Date object or date string as a Solar Hijri (Persian / Shamsi) date.
+ */
+export function formatSolarHijriDate(date: string | Date | null | undefined, localeOverride?: string): string {
+  if (!date) return "—";
+  const parsedDate = typeof date === "string" ? new Date(date) : date;
+  if (isNaN(parsedDate.getTime())) return "";
+
+  const stored = getStoredGlobalSettings();
+  const timezone = stored.timezone;
+  const language = localeOverride ?? (stored.language === 'fa' ? 'fa' : 'fa-IR');
+
+  try {
+    return new Intl.DateTimeFormat(`${language}-u-ca-persian`, {
       timeZone: timezone,
       day: "numeric",
       month: "long",

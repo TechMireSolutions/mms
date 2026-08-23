@@ -5,31 +5,15 @@ import { messageTemplateInputSchema } from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-import { canReadMessaging, canWriteMessaging } from '../../../services/rbacService.js';
+import { canWriteMessaging } from '../../../services/rbacService.js';
 import {
   getMessageTemplateById,
-  loadMessageTemplates,
   removeMessageTemplate,
   saveMessageTemplate,
 } from '../../../services/messagingService.js';
 
 /** Messaging template list/create/delete routes. */
 export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.get('/templates', async (req, reply) => {
-    const user = req.user as User;
-    if (!canReadMessaging(user)) return sendForbidden(reply);
-    const tenantSubdomain = getRequestTenant();
-    if (!tenantSubdomain) {
-      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
-    }
-    try {
-      const templates = await loadMessageTemplates();
-      return reply.send({ templates });
-    } catch (err) {
-      return sendDatabaseError(reply, 'Failed to load message templates', err);
-    }
-  });
-
   fastify.post('/templates', async (req, reply) => {
     const user = req.user as User;
     if (!canWriteMessaging(user)) return sendForbidden(reply);

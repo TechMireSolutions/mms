@@ -9,8 +9,8 @@ import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useEnrollmentsPaginated } from '@/tenant/hooks/collections/enrollments';
 import {
   useStudentsMetrics,
-  useStudentsPaginated,
   useStudentsWidgetAggregates,
+  useStudentsContractList,
 } from '@/tenant/hooks/collections/students';
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
 import { studentStatusBadgeConfig } from '@/lib/students/studentStatusUi';
@@ -77,15 +77,14 @@ export function useStudentReportController({ filters }: StudentReportProps) {
     { id: 'female', collection: 'students', operation: 'count', filterField: 'gender', filterOperator: 'equals', filterValue: 'female' },
   ]);
 
-  const studentsPageQuery = useStudentsPaginated({
+  const studentsPageQuery = useStudentsContractList({
     page: listPage,
     limit: STUDENTS_MODULE_MANIFEST.defaultPageSize,
     search: searchParam,
     status: statusParam,
     sessionId: sessionFilter,
     className: classFilter,
-    enabled: activeSubTab === 'list',
-  });
+  }, activeSubTab === 'list');
 
   const enrollmentsPageQuery = useEnrollmentsPaginated({
     page: historyPage,
@@ -102,12 +101,12 @@ export function useStudentReportController({ filters }: StudentReportProps) {
   const historyLoading = enrollmentsPageQuery.isLoading;
 
   const students = useMemo<ReportStudent[]>(() => {
-    const studentRows = (studentsPageQuery.data?.students ?? []) as unknown as Student[];
+    const studentRows = (studentsPageQuery.data?.body?.students ?? []) as unknown as Student[];
     return studentRows.map((student) => mapStudentRow(student, sessions));
   }, [studentsPageQuery.data, sessions]);
 
-  const listTotal = studentsPageQuery.data?.total ?? 0;
-  const listHasMore = Boolean(studentsPageQuery.data?.hasMore);
+  const listTotal = studentsPageQuery.data?.body?.total ?? 0;
+  const listHasMore = Boolean(studentsPageQuery.data?.body?.hasMore);
 
   const enrollments = useMemo<EnrollmentHistoryItem[]>(
     () => (enrollmentsPageQuery.data?.enrollments ?? []).map(mapEnrollmentRow),

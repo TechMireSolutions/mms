@@ -1,10 +1,12 @@
-import { apiJson } from "@/lib/apiClient";
 
 export interface CreateModuleSetupConfigApiOptions<
   TFieldConfig extends { formTabs?: unknown[] },
   TPreferences,
 > {
-  restBasePath: string;
+  fetchFieldConfigFn: (signal?: AbortSignal) => Promise<TFieldConfig | null>;
+  saveFieldConfigFn: (config: unknown) => Promise<TFieldConfig>;
+  fetchPreferencesFn: (signal?: AbortSignal) => Promise<TPreferences | null>;
+  savePreferencesFn: (prefs: unknown) => Promise<TPreferences>;
   normalizeFieldConfig: (config: unknown) => TFieldConfig;
   composeSettings: (
     fieldConfig: unknown,
@@ -23,15 +25,15 @@ export function createModuleSetupConfigApi<
   TFieldConfig extends { formTabs?: unknown[] },
   TPreferences,
 >({
-  restBasePath,
+  fetchFieldConfigFn,
+  saveFieldConfigFn,
+  fetchPreferencesFn,
+  savePreferencesFn,
   normalizeFieldConfig,
   composeSettings,
   normalizePrefs,
   stripFieldConfig,
 }: CreateModuleSetupConfigApiOptions<TFieldConfig, TPreferences>) {
-  const FIELD_CONFIG_API = `${restBasePath}/field-config`;
-  const PREFERENCES_API = `${restBasePath}/preferences`;
-
   let memoryFieldConfig: TFieldConfig | null = null;
   let memoryPreferences: TPreferences | null = null;
 
@@ -44,32 +46,26 @@ export function createModuleSetupConfigApi<
   }
 
   async function fetchFieldConfig(signal?: AbortSignal): Promise<TFieldConfig> {
-    const response = await apiJson<{ config: TFieldConfig | null }>(FIELD_CONFIG_API, { signal });
-    const merged = normalizeFieldConfig(response.config);
+    const response = await fetchFieldConfigFn(signal);
+    const merged = normalizeFieldConfig(response);
     memoryFieldConfig = merged;
     return merged;
   }
 
   async function saveFieldConfigAsync(config: TFieldConfig): Promise<TFieldConfig> {
     const body = stripFieldConfig(config);
-    const response = await apiJson<{ success: boolean; config: TFieldConfig }>(FIELD_CONFIG_API, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    const response = await saveFieldConfigFn(body);
     const saved = normalizeFieldConfig({
-      ...(response.config ?? body),
-      formTabs: response.config?.formTabs ?? config.formTabs,
+      ...(response ?? body),
+      formTabs: (response as any)?.formTabs ?? config.formTabs,
     });
     memoryFieldConfig = saved;
     return saved;
   }
 
   async function fetchPreferences(signal?: AbortSignal): Promise<TPreferences> {
-    const response = await apiJson<{ preferences: TPreferences }>(PREFERENCES_API, {
-      signal,
-    });
-    const normalized = normalizePrefs(response.preferences ?? null);
+    const response = await fetchPreferencesFn(signal);
+    const normalized = normalizePrefs(response ?? null);
     memoryPreferences = normalized;
     return normalized;
   }
@@ -78,15 +74,8 @@ export function createModuleSetupConfigApi<
     preferences: TPreferences | TFieldConfig,
   ): Promise<TPreferences> {
     const normalized = normalizePrefs(preferences);
-    const response = await apiJson<{ success: boolean; preferences: TPreferences }>(
-      PREFERENCES_API,
-      {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(normalized),
-      },
-    );
-    const saved = normalizePrefs(response.preferences ?? normalized);
+    const response = await savePreferencesFn(normalized);
+    const saved = normalizePrefs(response ?? normalized);
     memoryPreferences = saved;
     return saved;
   }

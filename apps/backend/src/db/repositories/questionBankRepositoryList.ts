@@ -25,7 +25,7 @@ import {
   questionCitations,
   tests,
 } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { questionRowToRecord } from './questionBankRepository.js';
 
@@ -110,7 +110,7 @@ export async function listQuestionsPage(
 ): Promise<QuestionBankListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, questions, {
       conditions: buildQuestionsListConditions(subdomain, query),
       orderBy: buildQuestionsOrderBy(query.sortField, query.sortDir),
@@ -235,7 +235,7 @@ export async function aggregateQuestionBankCommandMetrics(
   tenant: string,
 ): Promise<QuestionBankCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const activeQuestions = and(
       eq(questions.workspaceSubdomain, subdomain),
       isNull(questions.deletedAt),

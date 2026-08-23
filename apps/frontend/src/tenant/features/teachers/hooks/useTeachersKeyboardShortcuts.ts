@@ -1,4 +1,4 @@
-import { useModuleWorkKeyboardShortcuts } from "@/hooks/useModuleWorkKeyboardShortcuts";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 
 /** Stable id for Teachers Work search — used by `/` / Cmd+K focus shortcut. */
 export const TEACHERS_WORK_SEARCH_INPUT_ID = "teachers-work-search";
@@ -21,7 +21,7 @@ export function useTeachersKeyboardShortcuts({
   showDeleted: boolean;
   onCreate: () => void;
 }): void {
-  useModuleWorkKeyboardShortcuts({
+  useModuleShortcuts({
     searchInputId: TEACHERS_WORK_SEARCH_INPUT_ID,
     selectedCount,
     hasActiveFilters,

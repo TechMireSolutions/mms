@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
+import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { todayISO, ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
 import { useAttendanceRecords } from '@/tenant/features/attendance/hooks/useAttendance';
@@ -59,11 +59,17 @@ export function useAttendancePageController() {
     effectiveAnalyticsTab,
   } = useAttendancePageTabs(activeTab, activeOpsTab, activeAnalyticsTab, canViewSetup);
 
-  useModuleCreateHotkey({
-    enabled: canWriteAttendance && !showDeleted,
+  useModuleShortcuts({
+    enabled: activeTab === 'work',
+    canWrite: canWriteAttendance,
+    showDeleted,
     onCreate: () => {
       setActiveTab('work');
       setActiveOpsTab('mark');
+    },
+    searchInputId: 'attendance-search-input',
+    clearSelection: () => {
+      closeComposer();
     },
   });
 

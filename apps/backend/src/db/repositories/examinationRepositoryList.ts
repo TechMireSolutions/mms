@@ -19,7 +19,7 @@ import {
   type ExaminationsListPageResult,
 } from '@mms/shared';
 import { examResults, exams, examClasses } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { examRowToRecord } from './examinationRepository.js';
 
@@ -90,7 +90,7 @@ export async function listExamsPage(
   query: ExaminationsListQuery,
 ): Promise<ExaminationsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage<ExamRow, ExamRow>(tx, exams, {
       conditions: buildExamsListConditions(subdomain, query),
       orderBy: buildExamsOrderBy(query.sortField, query.sortDir),
@@ -140,7 +140,7 @@ export async function aggregateExaminationsCommandMetrics(
   tenant: string,
 ): Promise<ExaminationsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const [examRow] = await tx
       .select({
         total: sql<number>`count(*)::int`,

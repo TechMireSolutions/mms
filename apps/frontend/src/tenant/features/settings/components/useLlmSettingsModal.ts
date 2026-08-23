@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   LLM_PROVIDERS_META,
@@ -104,18 +104,20 @@ export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions
     };
 
     try {
-      const res = await apiJson<LlmTestResult>('/api/ai/test', {
-        method: 'POST',
-        body: JSON.stringify({
+      const { status, body } = await apiContract.ai.test({
+        body: {
           prompt: 'Test connectivity check',
           customConfig,
-        }),
+        },
       });
-      setModalTestResult(res);
-    } catch (err: unknown) {
+      if (status !== 200) {
+        throw new Error(body.message || 'Failed to test connection');
+      }
+      setModalTestResult(body as any);
+    } catch (err: any) {
       setModalTestResult({
         success: false,
-        message: err instanceof Error ? err.message : t('settings.llmTestConnectionFailed'),
+        message: err.message || t('settings.llmTestConnectionFailed'),
       });
     } finally {
       setModalTesting(false);

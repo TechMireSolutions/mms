@@ -9,7 +9,6 @@ export {
 export { useStudentMutations } from '@/tenant/features/students/hooks/useStudentMutations';
 
 export {
-  useStudentsPaginated,
   fetchAllStudentsForQuery,
   useStudentLinkedContactIds,
   useStudentNextGrNumber,

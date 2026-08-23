@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import {
   teacherCoreSchema,
   teacherRecordSchema,
@@ -7,6 +6,7 @@ import {
   teachersBulkStatusSchema,
   teachersBulkSpecializationSchema,
   teachersNextEmployeeIdQuerySchema,
+  teachersDuplicateCheckBodySchema,
   type TeacherRecord,
 } from '@mms/shared';
 import { bulkIdsBodySchema } from './commonSchemas.js';
@@ -23,14 +23,9 @@ export {
   teachersBulkStatusSchema,
   teachersBulkSpecializationSchema,
   teachersNextEmployeeIdQuerySchema,
+  teachersDuplicateCheckBodySchema,
   type TeacherRecord,
 };
-
-export const teachersDuplicateCheckBodySchema = z.object({
-  excludeId: z.string().optional(),
-  contactId: z.union([z.string(), z.number()]).optional(),
-  employeeId: z.string().max(64).optional(),
-});
 
 export const teachersBulkIdsSchema = bulkIdsBodySchema;
 

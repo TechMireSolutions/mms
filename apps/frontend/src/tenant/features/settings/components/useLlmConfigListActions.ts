@@ -1,5 +1,5 @@
 import { useState, type Dispatch, type SetStateAction } from 'react';
-import { apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { LlmConfig, LlmTestResult } from '@mms/shared';
 import type { LlmHealthStatus } from './llmSettingsControllerTypes';
@@ -40,23 +40,25 @@ export function useLlmConfigListActions({
     try {
       setHealthStatuses((prev) => ({ ...prev, [configId]: 'testing' }));
 
-      const res = await apiJson<LlmTestResult>('/api/ai/test', {
-        method: 'POST',
-        body: JSON.stringify({ prompt: 'Write a short greeting for a school portal.', configId }),
+      const { status, body } = await apiContract.ai.test({
+        body: { prompt: 'Write a short greeting for a school portal.', configId },
       });
+      if (status !== 200) {
+        throw new Error(body.message || 'Failed to test connection');
+      }
       setTestResult({
         configId,
-        success: res.success,
-        response: res.response,
-        message: res.message,
-        metrics: res.metrics,
+        success: body.success,
+        response: body.response,
+        message: body.message,
+        metrics: body.metrics,
       });
-      setHealthStatuses((prev) => ({ ...prev, [configId]: res.success ? 'verified' : 'failed' }));
-    } catch (err: unknown) {
+      setHealthStatuses((prev) => ({ ...prev, [configId]: body.success ? 'verified' : 'failed' }));
+    } catch (err: any) {
       setTestResult({
         configId,
         success: false,
-        message: err instanceof Error ? err.message : t('settings.llmTestRequestFailed'),
+        message: err.message || t('settings.llmTestRequestFailed'),
       });
       setHealthStatuses((prev) => ({ ...prev, [configId]: 'failed' }));
     } finally {

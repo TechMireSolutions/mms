@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { parseTenantScopedStorageKey } from '@mms/shared';
 
 const FIELD_CONFIG_KEY = 'contact_field_config';
@@ -47,7 +47,7 @@ export async function runMigration041(): Promise<void> {
   let prefsCount = 0;
   let columnUserCount = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     for (const [tenant, config] of fieldByTenant) {
       const existing = await tx
         .select({ workspaceSubdomain: schema.contactFieldConfigs.workspaceSubdomain })

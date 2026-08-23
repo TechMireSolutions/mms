@@ -37,21 +37,21 @@ export function mergeContactPatch(existing: Contact, patch: Contact): Contact {
 
 async function normalizeContactPhones(contact: Contact): Promise<Contact> {
   let phones = contact.phones;
-  // Explicit `phones: []` means clear — do not rebuild from legacy scalar.
-  // Scalar `phone` is synced afterward via syncContactScalarFields.
   const phonesProvided = Array.isArray(contact.phones);
-  const scalarPhone = typeof contact.phone === 'string' ? contact.phone.trim() : '';
   const { defaultPhoneCountryCode, phoneLabel } = await loadContactRuntimeDefaults();
   const dialDefault = defaultPhoneCountryCode || '';
-  const labelDefault = phoneLabel || '';
+  const labelDefault = phoneLabel || 'Mobile';
 
-  if (!phonesProvided && scalarPhone) {
-    phones = [{
-      label: labelDefault,
-      number: scalarPhone,
-      countryCode: dialDefault,
-      isPrimary: true,
-    }];
+  // phones: undefined (not provided) + scalar phone present → rebuild a single row
+  if (!phonesProvided && (contact.phone || '').trim()) {
+    phones = [
+      {
+        label: labelDefault,
+        number: (contact.phone || '').trim(),
+        countryCode: dialDefault,
+        isPrimary: true,
+      },
+    ];
   }
 
   if (!phones?.length) {

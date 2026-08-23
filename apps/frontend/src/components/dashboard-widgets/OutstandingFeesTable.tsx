@@ -33,7 +33,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
 
     return unpaidInvoices.map((invoice) => {
       const student = studentMap.get(String(invoice.studentId));
-      const contact = student?.phone || "";
+      const contact = (student as any)?.phone || "";
       const amount = getOutstandingAmountForInvoice(invoice);
 
       const due = new Date(invoice.dueDate);
@@ -47,7 +47,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         amount,
         months: diffMonths,
         contact,
-        email: student?.email || "",
+        email: (student as any)?.email || "",
         dueDate: invoice.dueDate,
       };
     });

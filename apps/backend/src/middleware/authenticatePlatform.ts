@@ -9,6 +9,7 @@ import {
   toPublicPlatformUser,
 } from '../services/platform/platformUserService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
+import { isTokenRevoked } from '../services/session.service.js';
 
 export interface PlatformAuthenticatedRequest extends FastifyRequest {
   platformUser: PlatformUser;
@@ -61,6 +62,10 @@ export async function resolvePlatformUser(
   const payload = request.user as PlatformAccessTokenPayload;
   if (payload.tokenType !== 'platform_access') {
     return { ok: false, reason: 'invalid_session' };
+  }
+
+  if (payload.jti && (await isTokenRevoked(payload.jti))) {
+    return { ok: false, reason: 'session_revoked' };
   }
 
   const stored = await getStoredPlatformUserById(payload.id);

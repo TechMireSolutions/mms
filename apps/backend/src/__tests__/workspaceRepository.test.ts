@@ -18,10 +18,18 @@ const mockDb = {
   insert: mockInsert,
   update: mockUpdate,
   delete: mockDelete,
+  transaction: vi.fn(async (cb) => cb(mockDb)),
+  execute: vi.fn(),
 };
 
 vi.mock('../db/dbClient.js', () => ({
   getDb: () => mockDb,
+}));
+
+vi.mock('../db/dbConnection.js', () => ({
+  activeDb: () => mockDb,
+  getRootDb: () => mockDb,
+  getReadReplicaDb: () => mockDb,
 }));
 
 import {

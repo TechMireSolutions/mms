@@ -1,6 +1,6 @@
 import { and, asc, eq } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 type WorkspaceCol = PgColumn;
 type UpdatedAtCol = PgColumn;
@@ -23,7 +23,7 @@ export function createWorkspaceSingletonJsonRepo(options: {
     workspaceSubdomain: string,
   ): Promise<Record<string, unknown> | null> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    return withTenantTransaction(subdomain, async (tx) => {
+    return withTenant(subdomain, async (tx) => {
       const rows = await tx
         .select()
         .from(table)
@@ -43,7 +43,7 @@ export function createWorkspaceSingletonJsonRepo(options: {
   ): Promise<void> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const now = new Date();
-    await withTenantTransaction(subdomain, async (tx) => {
+    await withTenant(subdomain, async (tx) => {
       await tx
         .insert(table)
         .values({
@@ -60,7 +60,7 @@ export function createWorkspaceSingletonJsonRepo(options: {
 
   async function listAllByWorkspace(workspaceSubdomain: string) {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    return withTenantTransaction(subdomain, async (tx) => {
+    return withTenant(subdomain, async (tx) => {
       return tx
         .select()
         .from(table)
@@ -74,7 +74,7 @@ export function createWorkspaceSingletonJsonRepo(options: {
   ): Promise<void> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const now = new Date();
-    await withTenantTransaction(subdomain, async (tx) => {
+    await withTenant(subdomain, async (tx) => {
       await tx.delete(table).where(eq(table.workspaceSubdomain, subdomain));
       const first = records[0];
       if (!first) return;
@@ -112,7 +112,7 @@ export function createUserColumnPrefsRepo(options: {
   ): Promise<unknown[]> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const uid = userId.trim();
-    return withTenantTransaction(subdomain, async (tx) => {
+    return withTenant(subdomain, async (tx) => {
       const rows = await tx
         .select()
         .from(table)
@@ -136,7 +136,7 @@ export function createUserColumnPrefsRepo(options: {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const uid = userId.trim();
     const now = new Date();
-    await withTenantTransaction(subdomain, async (tx) => {
+    await withTenant(subdomain, async (tx) => {
       await tx
         .insert(table)
         .values({
@@ -154,7 +154,7 @@ export function createUserColumnPrefsRepo(options: {
 
   async function listAllByWorkspace(workspaceSubdomain: string) {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    return withTenantTransaction(subdomain, async (tx) => {
+    return withTenant(subdomain, async (tx) => {
       return tx
         .select()
         .from(table)
@@ -168,7 +168,7 @@ export function createUserColumnPrefsRepo(options: {
   ): Promise<void> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const now = new Date();
-    await withTenantTransaction(subdomain, async (tx) => {
+    await withTenant(subdomain, async (tx) => {
       await tx.delete(table).where(eq(table.workspaceSubdomain, subdomain));
       if (records.length === 0) return;
       await tx.insert(table).values(
@@ -210,7 +210,7 @@ export function createModuleLookupsRepo(options: {
 
   async function listByWorkspace(workspaceSubdomain: string) {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    return withTenantTransaction(subdomain, async (tx) => {
+    return withTenant(subdomain, async (tx) => {
       return tx
         .select()
         .from(table)
@@ -221,7 +221,7 @@ export function createModuleLookupsRepo(options: {
 
   async function listByKind(workspaceSubdomain: string, kind: string) {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    return withTenantTransaction(subdomain, async (tx) => {
+    return withTenant(subdomain, async (tx) => {
       return tx
         .select()
         .from(table)
@@ -242,7 +242,7 @@ export function createModuleLookupsRepo(options: {
   ): Promise<void> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const now = new Date();
-    await withTenantTransaction(subdomain, async (tx) => {
+    await withTenant(subdomain, async (tx) => {
       await tx
         .delete(table)
         .where(
@@ -276,7 +276,7 @@ export function createModuleLookupsRepo(options: {
   ): Promise<void> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const now = new Date();
-    await withTenantTransaction(subdomain, async (tx) => {
+    await withTenant(subdomain, async (tx) => {
       await tx.delete(table).where(eq(table.workspaceSubdomain, subdomain));
       if (records.length === 0) return;
       await tx.insert(table).values(

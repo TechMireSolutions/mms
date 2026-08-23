@@ -9,7 +9,7 @@ import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useCont
 import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 import { useContactFormDraftHelpers } from "@/tenant/features/contacts/hooks/useContactFormDraftHelpers";
 import { useContactFormDraftOptions } from "@/tenant/features/contacts/hooks/useContactFormDraftOptions";
-import { apiJson } from "@/lib/apiClient";
+import { apiContract } from "@/lib/api";
 
 export function useContactFormDraft({
   open,
@@ -176,9 +176,7 @@ export function useContactFormDraft({
     const hasCandidateKey = Boolean(
       contactDraft.name?.trim() ||
       contactDraft.firstName?.trim() ||
-      contactDraft.phone?.trim() ||
       (contactDraft.phones && contactDraft.phones.some((p) => p.number?.trim())) ||
-      contactDraft.email?.trim() ||
       (contactDraft.emails && contactDraft.emails.some((e) => e.address?.trim())) ||
       contactDraft.cnic?.trim()
     );
@@ -189,11 +187,12 @@ export function useContactFormDraft({
 
     const timer = setTimeout(async () => {
       try {
-        const res = await apiJson<{ matchCount: number }>('/api/contacts/duplicate-check', {
-          method: 'POST',
-          body: JSON.stringify({ contact: contactDraft }),
+        const res = await apiContract.contacts.duplicateCheck({
+          body: { contact: contactDraft },
         });
-        setDuplicateCount(res.matchCount ?? 0);
+        if (res.status === 200) {
+          setDuplicateCount((res.body as any)?.matchCount ?? 0);
+        }
       } catch {
         // Non-blocking duplicate check: ignore gracefully
       }
@@ -205,8 +204,6 @@ export function useContactFormDraft({
     contact?.id,
     contactDraft.name,
     contactDraft.firstName,
-    contactDraft.phone,
-    contactDraft.email,
     contactDraft.cnic,
     contactDraft.phones,
     contactDraft.emails,

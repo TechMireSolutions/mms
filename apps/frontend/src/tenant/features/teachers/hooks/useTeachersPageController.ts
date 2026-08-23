@@ -10,7 +10,8 @@ import {
   teacherColumnLabelKey,
   TEACHERS_MODULE_MANIFEST,
 } from '@mms/shared';
-import { useTeacherMutations, useTeachersPaginated, useTeachersMetrics } from '@/tenant/features/teachers/hooks/useTeachers';
+import { useTeacherMutations, useTeachersMetrics } from '@/tenant/features/teachers/hooks/useTeachers';
+import { useTeachersContractList } from '@/tenant/features/teachers/hooks/useTeachersTsrHooks';
 import { useTeachersDirectoryFilters } from '@/tenant/features/teachers/hooks/useTeachersDirectoryFilters';
 import { useEmployeeIdMigration } from '@/tenant/features/teachers/hooks/useEmployeeIdMigration';
 import { useTeachersKeyboardShortcuts } from '@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts';
@@ -148,7 +149,7 @@ export function useTeachersPageController() {
   });
 
   const useServerWork = effectiveTab === 'work';
-  const workPageQuery = useTeachersPaginated({
+  const workPageQuery = useTeachersContractList({
     page: listPage,
     limit: TEACHERS_MODULE_MANIFEST.defaultPageSize,
     ...buildTeachersDirectoryQuery({
@@ -161,14 +162,13 @@ export function useTeachersPageController() {
       sortDir,
     }),
     includeDeleted: showDeleted,
-    enabled: useServerWork,
-  });
+  }, useServerWork);
 
   const workTeachers = useMemo(
-    () => (workPageQuery.data?.teachers ?? []) as unknown as Teacher[],
+    () => (workPageQuery.data?.body?.teachers ?? []) as unknown as Teacher[],
     [workPageQuery.data],
   );
-  const shownCount = workPageQuery.data?.total ?? workTeachers.length;
+  const shownCount = workPageQuery.data?.body?.total ?? workTeachers.length;
 
   const tabPanelProps = useTeachersPageTabPanelProps(effectiveTab, {
     search,

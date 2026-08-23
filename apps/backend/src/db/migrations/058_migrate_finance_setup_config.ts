@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { parseTenantScopedStorageKey, splitFinanceSettingsBlob } from '@mms/shared';
 
 const SETTINGS_KEY = 'finance_settings';
@@ -36,7 +36,7 @@ export async function runMigration058(): Promise<void> {
   let prefsCount = 0;
   let columnUserCount = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     for (const [tenant, raw] of settingsByTenant) {
       const [workspace] = await tx
         .select({ subdomain: schema.workspaces.subdomain })

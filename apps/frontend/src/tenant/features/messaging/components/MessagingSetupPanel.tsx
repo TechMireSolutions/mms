@@ -95,7 +95,9 @@ export function MessagingSetupPanel({
       return;
     }
     try {
-      await saveTemplate.mutateAsync({ id: editingId || undefined, label: label.trim(), body: body.trim(), category, channel });
+      await saveTemplate.mutateAsync({
+        body: { id: editingId || undefined, label: label.trim(), body: body.trim(), category, channel },
+      } as any);
       notify.success(t('messaging.saveTemplate'));
       resetForm();
     } catch {
@@ -122,11 +124,13 @@ export function MessagingSetupPanel({
     }
     try {
       await saveTemplate.mutateAsync({
-        label: `${template.label} (${t('messaging.tagCustom')})`,
-        body: template.body,
-        category: template.category || 'general',
-        channel: template.channel || 'all',
-      });
+        body: {
+          label: `${template.label} (${t('messaging.tagCustom')})`,
+          body: template.body,
+          category: template.category || 'general',
+          channel: template.channel || 'all',
+        },
+      } as any);
       notify.success(t('messaging.duplicateSuccess'));
     } catch {
       // Mutation hook reports the failure.

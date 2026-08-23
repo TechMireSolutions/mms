@@ -4,7 +4,7 @@ import {
   type ObligationsCommandMetricsSnapshot,
 } from '@mms/shared';
 import { obligationCollections, obligationTypes } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 /** SQL aggregates for Obligations command-centre metrics (active rows only). */
 export async function aggregateObligationsCommandMetrics(
@@ -12,7 +12,7 @@ export async function aggregateObligationsCommandMetrics(
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): Promise<ObligationsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const activeCollections = and(
       eq(obligationCollections.workspaceSubdomain, subdomain),
       isNull(obligationCollections.deletedAt),

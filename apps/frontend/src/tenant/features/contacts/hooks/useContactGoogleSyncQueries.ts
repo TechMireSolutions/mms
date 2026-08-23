@@ -1,21 +1,16 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { ContactGoogleSyncConfigClient, GoogleContactsSyncRunResult } from '@mms/shared';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { apiJson } from '@/lib/apiClient';
-import { CONTACTS_API, CONTACTS_GOOGLE_SYNC_QUERY_KEY } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
+import { tsrClient } from '@/lib/api';
+import { CONTACTS_GOOGLE_SYNC_QUERY_KEY } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
 
 export function useContactGoogleSyncConfig(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
-  return useQuery({
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.contacts.getGoogleSyncConfig.useQuery({
     queryKey: CONTACTS_GOOGLE_SYNC_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const googleSyncResponse = await apiJson<{ config: ContactGoogleSyncConfigClient }>(
-        `${CONTACTS_API}/google-sync`,
-        { signal },
-      );
-      return googleSyncResponse.config;
-    },
+    queryData: {},
     enabled: isAuthenticated && enabled,
     staleTime: 60_000,
   });
@@ -23,40 +18,26 @@ export function useContactGoogleSyncConfig(options?: { enabled?: boolean }) {
 
 export function useContactGoogleSyncMutations() {
   const queryClient = useQueryClient();
-  const saveConfig = useMutation({
-    mutationFn: async (config: ContactGoogleSyncConfigClient) =>
-      apiJson<{ config: ContactGoogleSyncConfigClient }>(`${CONTACTS_API}/google-sync`, {
-        method: 'PUT',
-        body: JSON.stringify(config),
-      }),
-    onSuccess: (configResponse) => {
-      queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, configResponse.config);
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const saveConfig = tsrClient.contacts.updateGoogleSyncConfig.useMutation({
+    onSuccess: (res: any) => {
+      if (res.status === 200) {
+        queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, (res.body as any).config);
+      }
     },
   });
-  const logSyncAudit = useMutation({
-    mutationFn: async (auditPayload: {
-      action: 'credentials_saved' | 'disconnected';
-    }) =>
-      apiJson<{ success: boolean }>(`${CONTACTS_API}/google-sync/audit`, {
-        method: 'POST',
-        body: JSON.stringify(auditPayload),
-      }),
-  });
-  const exchangeOAuth = useMutation({
-    mutationFn: async (oauthPayload: { code: string; redirectUri: string }) =>
-      apiJson<{ config: ContactGoogleSyncConfigClient }>(`${CONTACTS_API}/google-sync/exchange`, {
-        method: 'POST',
-        body: JSON.stringify(oauthPayload),
-      }),
-    onSuccess: (configResponse) => {
-      queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, configResponse.config);
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const logSyncAudit = tsrClient.contacts.logGoogleSyncAudit.useMutation();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const exchangeOAuth = tsrClient.contacts.exchangeGoogleSyncOAuth.useMutation({
+    onSuccess: (res: any) => {
+      if (res.status === 200) {
+        queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, (res.body as any).config);
+      }
     },
   });
-  const runGoogleSync = useMutation({
-    mutationFn: async () =>
-      apiJson<GoogleContactsSyncRunResult>(`${CONTACTS_API}/google-sync/run`, {
-        method: 'POST',
-      }),
-  });
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const runGoogleSync = tsrClient.contacts.runGoogleSync.useMutation();
+  
   return { saveConfig, logSyncAudit, exchangeOAuth, runGoogleSync };
 }

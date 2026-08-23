@@ -1,27 +1,25 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformUserProfile } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
+import { tsrClient, apiContract } from '@/lib/api';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 
 export const PLATFORM_PROFILE_QUERY_KEY = ['platform', 'profile'] as const;
-
-async function fetchPlatformProfile(signal?: AbortSignal): Promise<PlatformUserProfile> {
-  const profileResponse = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me', {
-    signal,
-  });
-  return profileResponse.user;
-}
 
 /** Full platform super-user profile (extends session user with timestamps). */
 export function usePlatformProfile(options?: { enabled?: boolean }) {
   const { isPlatformAuthenticated } = usePlatformAuth();
 
-  return useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const { data: rawData, ...rest } = tsrClient.platform.getMe.useQuery({
     queryKey: PLATFORM_PROFILE_QUERY_KEY,
-    queryFn: ({ signal }) => fetchPlatformProfile(signal),
+    queryData: {},
     enabled: (options?.enabled ?? true) && isPlatformAuthenticated,
     staleTime: 60_000,
   });
+
+  const data: PlatformUserProfile | undefined = (rawData?.body as any)?.user;
+
+  return { ...rest, data };
 }
 
 export function useUpdatePlatformProfileName() {
@@ -30,11 +28,8 @@ export function useUpdatePlatformProfileName() {
 
   return useMutation({
     mutationFn: async (name: string) => {
-      const profileResponse = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me', {
-        method: 'PATCH',
-        body: JSON.stringify({ name: name.trim() }),
-      });
-      return profileResponse.user;
+      const res = await apiContract.platform.patchMe({ body: { name: name.trim() } });
+      return (res.body as any)?.user as PlatformUserProfile;
     },
     onSuccess: async (user) => {
       queryClient.setQueryData(PLATFORM_PROFILE_QUERY_KEY, user);
@@ -51,11 +46,10 @@ export function useUpdatePlatformPassword() {
     }: {
       currentPassword: string;
       newPassword: string;
-    }) =>
-      apiJson<{ success: boolean }>('/api/platform/auth/change-password', {
-        method: 'POST',
-        body: JSON.stringify({ currentPassword, newPassword }),
-      }),
+    }) => {
+      const res = await apiContract.platform.changePassword({ body: { currentPassword, newPassword } });
+      return res.body as { success: boolean };
+    },
   });
 }
 

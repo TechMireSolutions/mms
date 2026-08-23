@@ -23,17 +23,7 @@ export const contactSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     customPostRoute: true,
     customPutRoute: true,
     canDelete: canDeleteContacts,
-    deleteFn: (id, userId, reason) => contactUseCases.softDeleteContactById(id, userId, reason),
     restoreFn: (id) => contactUseCases.restoreContactById(id),
-    onAfterDelete: async (user, id, deletionReason) => {
-      const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
-      await auditContact(
-        user,
-        'contact.soft_delete',
-        `Soft-deleted contact ${id}${reasonNote}`,
-        id,
-      );
-    },
     onAfterRestore: async (user, id) => {
       await auditContact(user, 'contact.restore', `Restored contact ${id}`, id);
     },

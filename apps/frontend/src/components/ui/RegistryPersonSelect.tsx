@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
-import { useStudentsPaginated } from '@/tenant/hooks/collections/students';
-import { useTeachersPaginated } from '@/tenant/hooks/collections/teachers';
+import { useStudentsContractList } from '@/tenant/features/students/hooks/useStudentsTsrHooks';
+import { useTeachersContractList } from '@/tenant/features/teachers/hooks/useTeachersTsrHooks';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -34,35 +34,33 @@ export function RegistryPersonSelect({
   const studentsEnabled = kind === 'student';
   const teachersEnabled = kind === 'teacher';
 
-  const { data: studentPage } = useStudentsPaginated({
+  const { data: studentPage } = useStudentsContractList({
     page: 1,
     limit: PERSON_SELECT_PAGE_SIZE,
     search,
-    enabled: studentsEnabled,
-  });
+  }, studentsEnabled);
 
-  const { data: teacherPage } = useTeachersPaginated({
+  const { data: teacherPage } = useTeachersContractList({
     page: 1,
     limit: PERSON_SELECT_PAGE_SIZE,
     search,
-    enabled: teachersEnabled,
-  });
+  }, teachersEnabled);
 
   const excludeIdsKey = excludeIds.join(',');
 
-  const options = useMemo(() => {
-    const rows = kind === 'student'
-      ? (studentPage?.students ?? [])
-      : (teacherPage?.teachers ?? []);
+  const options = useMemo<Array<{ id: string | number; name?: string | null }>>(() => {
+    const rows = (kind === 'student'
+      ? (studentPage?.body?.students ?? [])
+      : (teacherPage?.body?.teachers ?? [])) as Array<{ id: string | number; name?: string | null }>;
     const excluded = new Set(excludeIds.map(String));
     return rows
-      .filter((row) => !excluded.has(String(row.id)))
-      .sort((a, b) => (a.name ?? '').localeCompare(b.name ?? ''));
+      .filter((row: { id: string | number; name?: string | null }) => !excluded.has(String(row.id)))
+      .sort((a: { id: string | number; name?: string | null }, b: { id: string | number; name?: string | null }) => (a.name ?? '').localeCompare(b.name ?? ''));
   }, [kind, studentPage, teacherPage, excludeIdsKey]);
 
   const hasMore = kind === 'student'
-    ? Boolean(studentPage?.hasMore)
-    : Boolean(teacherPage?.hasMore);
+    ? Boolean(studentPage?.body?.hasMore)
+    : Boolean(teacherPage?.body?.hasMore);
 
   const valueInOptions = options.some((row) => String(row.id) === value);
 

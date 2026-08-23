@@ -1,6 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { MigrateAndRestartAccepted, PlatformSettings } from '@mms/shared';
-import { apiFetch, apiJson } from '@/lib/apiClient';
+import { apiFetch } from '@/lib/apiClient';
+import { tsrClient, apiContract } from '@/lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
@@ -46,15 +47,17 @@ export async function waitForBackendReadyAfterMigrate(delayMs: number): Promise<
 export function usePlatformSettingsQuery() {
   const { isPlatformAuthenticated, isSuperUser } = usePlatformPermissions();
 
-  return useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const { data: rawData, ...rest } = tsrClient.platform.getSettings.useQuery({
     queryKey: PLATFORM_SETTINGS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ settings: PlatformSettings }>('/api/platform/settings', { signal });
-      return res.settings;
-    },
+    queryData: {},
     enabled: isPlatformAuthenticated && isSuperUser,
     staleTime: 60_000,
   });
+
+  const data: PlatformSettings | undefined = (rawData?.body as any)?.settings;
+
+  return { ...rest, data };
 }
 
 /** Hook for platform super-users to update global platform settings. */
@@ -62,11 +65,10 @@ export function useUpdatePlatformSettings() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (patch: Partial<PlatformSettings>) =>
-      apiJson<{ settings: PlatformSettings; success: boolean }>('/api/platform/settings', {
-        method: 'PUT',
-        body: JSON.stringify(patch),
-      }),
+    mutationFn: async (patch: Partial<PlatformSettings>) => {
+      const res = await apiContract.platform.updateSettings({ body: patch });
+      return res.body as { settings: PlatformSettings; success: boolean };
+    },
     onSuccess: (data) => {
       queryClient.setQueryData(PLATFORM_SETTINGS_QUERY_KEY, data.settings);
       void queryClient.invalidateQueries({ queryKey: PLATFORM_SETTINGS_QUERY_KEY });
@@ -79,11 +81,10 @@ export function useResetPlatformDatabase() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: async (input: { confirm: string; password: string }) =>
-      apiJson<{ success: boolean; message: string }>('/api/platform/settings/reset-database', {
-        method: 'POST',
-        body: JSON.stringify(input),
-      }),
+    mutationFn: async (input: { confirm: string; password: string }) => {
+      const res = await apiContract.platform.resetDatabase({ body: input });
+      return res.body as { success: boolean; message: string };
+    },
     onSuccess: () => {
       notify.success(t('platform.profileDestroyDatabaseSuccess'));
     },
@@ -95,11 +96,10 @@ export function useMigrateAndRestartPlatform() {
   const { t } = useTranslation();
 
   return useMutation({
-    mutationFn: async (input: { confirm: string; password: string }) =>
-      apiJson<MigrateAndRestartAccepted>('/api/platform/admin/system/migrate-and-restart', {
-        method: 'POST',
-        body: JSON.stringify(input),
-      }),
+    mutationFn: async (input: { confirm: string; password: string }) => {
+      const res = await apiContract.platform.migrateAndRestart({ body: input });
+      return res.body as MigrateAndRestartAccepted;
+    },
     onSuccess: () => {
       notify.success(t('platform.profileMigrateRestartSuccess'));
     },

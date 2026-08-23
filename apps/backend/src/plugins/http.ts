@@ -5,6 +5,8 @@ import jwt from '@fastify/jwt';
 import websocket from '@fastify/websocket';
 import { isOriginAllowedForAppDomain, isTrustedWorkspaceOrigin } from '@mms/shared';
 import type { ServerConfig } from '../config/serverConfig.js';
+import { getRedisClient, getRedisSubscriberClient } from '../lib/redis.js';
+import { configureRedisPubSub } from '../lib/livePush.js';
 
 export async function registerHttpPlugins(
   app: FastifyInstance,
@@ -38,4 +40,11 @@ export async function registerHttpPlugins(
   });
   await app.register(jwt, { secret: config.jwtSecret });
   await app.register(websocket);
+
+  const redisPub = getRedisClient();
+  const redisSub = getRedisSubscriberClient();
+  if (redisPub) {
+    configureRedisPubSub(redisPub, redisSub || undefined);
+  }
 }
+

@@ -1,0 +1,72 @@
+import { z } from 'zod';
+import { deepSanitizeStrings } from './sanitize.js';
+
+const onboardBodyBaseSchema = z.object({
+  madrasaName: z.string().min(1),
+  adminName: z.string().min(1),
+  email: z.string().min(3),
+  password: z.string().min(6),
+  subdomain: z.string().min(2),
+  tagline: z.string().optional(),
+  country: z.string().optional(),
+  primaryColor: z.string().optional(),
+  secondaryColor: z.string().optional(),
+  logoUrl: z.string().optional(),
+  adminPhone: z.string().optional(),
+  website: z.string().optional(),
+  footerText: z.string().optional(),
+  // Extended Institution Fields
+  faviconUrl: z.string().optional(),
+  legalName: z.string().optional(),
+  registrationNumber: z.string().optional(),
+  addressLine1: z.string().optional(),
+  addressLine2: z.string().optional(),
+  city: z.string().optional(),
+  region: z.string().optional(),
+  postalCode: z.string().optional(),
+  socialLinks: z.array(z.object({ platform: z.string(), url: z.string() })).optional(),
+  modules: z.array(z.string()).optional(),
+}).strict();
+
+export const onboardBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, onboardBodyBaseSchema);
+
+const loginBodyBaseSchema = z.object({
+  email: z.string().min(3),
+  password: z.string().min(6),
+}).strict();
+
+export const loginBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, loginBodyBaseSchema);
+
+const challengeCodeBodyBaseSchema = z.object({
+  challengeId: z.string().min(1),
+  code: z.string().min(1),
+}).strict();
+
+export const challengeCodeBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, challengeCodeBodyBaseSchema);
+
+const challengeIdBodyBaseSchema = z.object({
+  challengeId: z.string().min(1),
+}).strict();
+
+export const challengeIdBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, challengeIdBodyBaseSchema);
+
+const handoffBodyBaseSchema = z.object({
+  code: z.string().min(1),
+}).strict();
+
+export const handoffBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, handoffBodyBaseSchema);

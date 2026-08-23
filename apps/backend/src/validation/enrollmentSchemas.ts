@@ -3,11 +3,14 @@ import { baseListQuerySchema } from './commonSchemas.js';
 import { csvExportBodySchema } from './csvExportBodySchema.js';
 import {
   enrollmentRecordSchema as sharedEnrollmentRecordSchema,
+  enrollmentsBulkIdsSchema,
   type Enrollment,
 } from '@mms/shared';
 
 export const enrollmentRecordSchema = sharedEnrollmentRecordSchema.passthrough();
 export type EnrollmentRecord = Enrollment;
+
+export { enrollmentsBulkIdsSchema };
 
 export const enrollmentsListQuerySchema = baseListQuerySchema.extend({
   status: z.string().max(200).optional(),
@@ -15,8 +18,3 @@ export const enrollmentsListQuerySchema = baseListQuerySchema.extend({
 });
 
 export const enrollmentsCsvExportBodySchema = csvExportBodySchema(enrollmentsListQuerySchema);
-
-export const enrollmentsBulkIdsSchema = z.object({
-  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
-  deletionReason: z.string().max(500).optional(),
-});

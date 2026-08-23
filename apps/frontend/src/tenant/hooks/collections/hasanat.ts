@@ -28,3 +28,14 @@ export {
   useHasanatPreferencesQuery,
   useHasanatPreferencesMutation,
 } from '@/tenant/features/hasanat/hooks/useHasanatSetupConfig';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useHasanatContractList,
+  useHasanatContractDenoms,
+  useHasanatContractBatches,
+  useHasanatContractRedemptions,
+  useHasanatContractBulkDelete,
+  useHasanatContractBulkRestore,
+  useHasanatContractDeleteDistribution,
+  useHasanatContractRestoreDistribution,
+} from '@/tenant/features/hasanat/hooks/useHasanatTsrHooks';

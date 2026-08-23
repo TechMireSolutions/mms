@@ -6,13 +6,13 @@ import {
   DEFAULT_COLUMN_REGISTRY,
   getContactFieldRemovalIssues,
   syncContactColumnRegistryWithFields,
-  CONTACTS_MODULE_MANIFEST,
 } from "@mms/shared";
 import {
   createModuleFieldDeletePreflight,
   type ModuleFieldsDraftSnapshot,
   type ModuleSetupDeleteNotify,
 } from "@/lib/setup/moduleFieldDeletePreflight";
+import { apiContract } from "@/lib/api";
 
 export type FieldsDraftSnapshot = ModuleFieldsDraftSnapshot<FieldDefinition>;
 
@@ -31,7 +31,16 @@ const { preflightFieldDelete, preflightFieldsDelete } =
     ColumnRegistryEntry,
     ContactPreflightContext
   >({
-    restBasePath: CONTACTS_MODULE_MANIFEST.restBasePath,
+    getFieldUsage: async (fieldKey) => {
+      const res = await apiContract.contacts.getFieldUsage({ params: { fieldId: fieldKey } });
+      if (res.status !== 200) throw new Error("Failed to get field usage");
+      return (res.body as any)?.count ?? 0;
+    },
+    getFieldsUsage: async (fieldKeys) => {
+      const res = await apiContract.contacts.getFieldsUsage({ body: { fieldKeys } });
+      if (res.status !== 200) throw new Error("Failed to get fields usage");
+      return (res.body as any)?.counts ?? {};
+    },
     usageMessageKey: "contacts.setup.fieldHasContactData",
     saveFailedKey: "contacts.saveFailed",
     defaultColumnRegistry: DEFAULT_COLUMN_REGISTRY,

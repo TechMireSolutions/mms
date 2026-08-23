@@ -7,49 +7,57 @@ import {
   deleteDashboardWidgetAsync,
 } from './dashboardApi';
 
-const mockApiJson = vi.hoisted(() => vi.fn());
-
-vi.mock('@/lib/apiClient', () => ({
-  apiJson: (...args: unknown[]) => mockApiJson(...args),
+const mockApiContract = vi.hoisted(() => ({
+  dashboard: {
+    getPreferences: vi.fn(),
+    putPreferences: vi.fn(),
+    getWidgets: vi.fn(),
+    putWidgets: vi.fn(),
+    deleteWidget: vi.fn(),
+  },
 }));
 
-const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
+vi.mock('@/lib/api', () => ({
+  apiContract: mockApiContract,
+}));
 
 describe('dashboardApi', () => {
   beforeEach(() => {
-    mockApiJson.mockReset();
+    vi.clearAllMocks();
   });
 
   it('fetchDashboardPreferences calls GET /api/dashboard/preferences', async () => {
-    mockApiJson.mockResolvedValueOnce({
-      preferences: { disabledCardIds: [], gridMode: 'comfortable' },
+    mockApiContract.dashboard.getPreferences.mockResolvedValueOnce({
+      status: 200,
+      body: { preferences: { disabledCardIds: [], gridMode: 'comfortable' } },
     });
 
     const res = await fetchDashboardPreferences();
-    expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/preferences', { signal: undefined });
+    expect(mockApiContract.dashboard.getPreferences).toHaveBeenCalledWith({ query: {} });
     expect(res?.gridMode).toBe('comfortable');
   });
 
   it('saveDashboardPreferencesAsync calls PUT /api/dashboard/preferences', async () => {
-    mockApiJson.mockResolvedValueOnce({
-      preferences: { disabledCardIds: ['c1'], gridMode: 'compact' },
+    mockApiContract.dashboard.putPreferences.mockResolvedValueOnce({
+      status: 200,
+      body: { preferences: { disabledCardIds: ['c1'], gridMode: 'compact' } },
     });
 
     const res = await saveDashboardPreferencesAsync({ gridMode: 'compact' });
-    expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/preferences', {
-      method: 'PUT',
-      headers: JSON_HEADERS,
-      body: JSON.stringify({ gridMode: 'compact' }),
-      signal: undefined,
+    expect(mockApiContract.dashboard.putPreferences).toHaveBeenCalledWith({
+      body: { gridMode: 'compact' },
     });
     expect(res.gridMode).toBe('compact');
   });
 
   it('fetchDashboardWidgets calls GET /api/dashboard/widgets', async () => {
-    mockApiJson.mockResolvedValueOnce({ widgets: [{ id: 'w1' }] });
+    mockApiContract.dashboard.getWidgets.mockResolvedValueOnce({
+      status: 200,
+      body: { widgets: [{ id: 'w1' }] },
+    });
 
     const res = await fetchDashboardWidgets();
-    expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/widgets', { signal: undefined });
+    expect(mockApiContract.dashboard.getWidgets).toHaveBeenCalledWith({ query: {} });
     expect(res).toEqual([{ id: 'w1' }]);
   });
 
@@ -63,25 +71,28 @@ describe('dashboardApi', () => {
       color: 'emerald',
       isPinnedToDashboard: true,
     };
-    mockApiJson.mockResolvedValueOnce({ widgets: [sampleWidget] });
+    mockApiContract.dashboard.putWidgets.mockResolvedValueOnce({
+      status: 200,
+      body: { widgets: [sampleWidget] },
+    });
 
     const res = await saveDashboardWidgetsAsync([sampleWidget]);
-    expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/widgets', {
-      method: 'PUT',
-      headers: JSON_HEADERS,
-      body: JSON.stringify([sampleWidget]),
-      signal: undefined,
+    expect(mockApiContract.dashboard.putWidgets).toHaveBeenCalledWith({
+      body: [sampleWidget],
     });
     expect(res).toEqual([sampleWidget]);
   });
 
   it('deleteDashboardWidgetAsync calls DELETE /api/dashboard/widgets/:id', async () => {
-    mockApiJson.mockResolvedValueOnce({ success: true });
+    mockApiContract.dashboard.deleteWidget.mockResolvedValueOnce({
+      status: 200,
+      body: { success: true },
+    });
 
     await deleteDashboardWidgetAsync('w1');
-    expect(mockApiJson).toHaveBeenCalledWith('/api/dashboard/widgets/w1', {
-      method: 'DELETE',
-      signal: undefined,
+    expect(mockApiContract.dashboard.deleteWidget).toHaveBeenCalledWith({
+      params: { id: 'w1' },
+      body: {},
     });
   });
 });

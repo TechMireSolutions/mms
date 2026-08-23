@@ -1,35 +1,13 @@
 import { STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
-import { createModulePaginatedListQuery } from "@/lib/query/createModulePaginatedListQuery";
-import { createPersonModuleResolveQueries } from "@/lib/query/createPersonModuleResolveQueries";
+import { apiContract, tsrClient } from "@/lib/api";
+import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import {
-  STUDENTS_API,
   STUDENTS_QUERY_KEY,
-  buildStudentsPageUrl,
-  sameStudentsListFilters,
-  studentsListQueryKeyParams,
-  studentsPaginatedQueryKey,
   type StudentRecord,
   type StudentsListPageResult,
   type StudentsPaginatedParams,
 } from "@/tenant/features/students/hooks/studentsQueryKeys";
-
-const useStudentsPaginatedList = createModulePaginatedListQuery<
-  StudentsListPageResult,
-  StudentsPaginatedParams,
-  ReturnType<typeof studentsListQueryKeyParams>
->({
-  queryKey: studentsPaginatedQueryKey,
-  keyParams: studentsListQueryKeyParams,
-  sameFilters: sameStudentsListFilters,
-  buildUrl: buildStudentsPageUrl,
-  staleTime: 15_000,
-});
-
-/** Performs server-authoritative paginated query for Student directory views. */
-export function useStudentsPaginated(params: StudentsPaginatedParams) {
-  return useStudentsPaginatedList(params);
-}
 
 /** Fetches all pages matching Work filters for export (globle1 §8). */
 export async function fetchAllStudentsForQuery(
@@ -42,9 +20,10 @@ export async function fetchAllStudentsForQuery(
   let total = 0;
 
   for (;;) {
-    const studentsPage = await apiJson<StudentsListPageResult>(
-      buildStudentsPageUrl({ ...params, page, limit }),
-    );
+    const response = await apiContract.students.list({
+      query: { ...(params as any), page, limit }
+    });
+    const studentsPage = response.body as StudentsListPageResult;
     all.push(...(studentsPage.students as StudentRecord[]));
     total = studentsPage.total;
     onProgress?.(all.length, total);
@@ -54,15 +33,38 @@ export async function fetchAllStudentsForQuery(
 
   return all;
 }
+import { useAuth } from '@/lib/contexts/AuthContext';
+import { uniqueRegistryIds } from '@/lib/registryResolve';
 
-const studentResolveQueries = createPersonModuleResolveQueries<StudentRecord, Student>({
-  moduleQueryKey: STUDENTS_QUERY_KEY,
-  apiBase: STUDENTS_API,
-  responseKey: "students",
-  toHydrated: (rows) => rows as unknown as Student[],
-});
+export function useStudentLinkedContactIds(excludeId?: string, enabled = true) {
+  const { isAuthenticated } = useAuth();
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const query = tsrClient.students.linkedContactIds.useQuery({
+    queryKey: [...STUDENTS_QUERY_KEY, 'linked-contact-ids', excludeId ?? ''] as const,
+    queryData: { query: { excludeId } },
+    enabled: isAuthenticated && enabled,
+    staleTime: 30_000,
+  });
+  
+  return { ...query, data: (query.data?.body as any)?.contactIds as Array<string | number> | undefined };
+}
 
-export const useStudentLinkedContactIds = studentResolveQueries.useLinkedContactIds;
-export const useStudentsByIds = studentResolveQueries.useByIds;
+export function useStudentsByIds(ids: (string | number | null | undefined)[]) {
+  const { isAuthenticated } = useAuth();
+  const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
+  
+  const query = useQuery({
+    queryKey: [...STUDENTS_QUERY_KEY, 'resolve', normalized.join(',')] as const,
+    queryFn: async () => {
+      const res = await apiContract.students.resolve({ body: { ids: normalized } });
+      return (res.body as any)?.students as Student[] | undefined;
+    },
+    enabled: isAuthenticated && normalized.length > 0,
+    staleTime: 30_000,
+  });
+  
+  return { ...query, data: query.data };
+}
 
 export type { StudentsPaginatedParams };

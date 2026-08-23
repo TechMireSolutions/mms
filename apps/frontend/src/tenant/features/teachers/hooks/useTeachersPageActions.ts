@@ -49,21 +49,23 @@ export function useTeachersPageActions({
   const handleSaveTeacher = async (teacherToSave: Teacher): Promise<Teacher> => {
     if (editTeacher) {
       const res = await updateTeacher.mutateAsync({
-        id: String(teacherToSave.id),
-        teacher: teacherToSave as unknown as TeacherRecord,
+        params: { id: String(teacherToSave.id) },
+        body: teacherToSave as unknown as TeacherRecord,
       });
       notify.success(t("teachers.toast.updated"));
-      return res.item as unknown as Teacher;
+      return res.body as unknown as Teacher;
     } else {
-      const res = await createTeacher.mutateAsync(teacherToSave as unknown as TeacherRecord);
+      const res = await createTeacher.mutateAsync({
+        body: teacherToSave as unknown as TeacherRecord
+      });
       notify.success(t("teachers.toast.created"));
-      return res.item as unknown as Teacher;
+      return res.body as unknown as Teacher;
     }
   };
 
   const handleDelete = async (id: string, deletionReason?: string): Promise<void> => {
     try {
-      await deleteTeacher.mutateAsync({ id, deletionReason });
+      await deleteTeacher.mutateAsync({ params: { id }, body: { deletionReason } });
       notifyBulkResult(1, 0, "teachers.toast.deleted", "teachers.toast.deleted");
     } catch (error) {
       handleError(error, "teachers.delete", "teachers.deleteFailed");
@@ -73,7 +75,7 @@ export function useTeachersPageActions({
 
   const handleRestore = async (id: string): Promise<void> => {
     try {
-      await restoreTeacher.mutateAsync(id);
+      await restoreTeacher.mutateAsync({ params: { id }, body: {} });
       notifyBulkResult(1, 0, "teachers.restoreSuccess", "teachers.restoreSuccess");
     } catch (error) {
       handleError(error, "teachers.restore", "teachers.restoreFailed");
@@ -83,10 +85,10 @@ export function useTeachersPageActions({
 
   const handleBulkDelete = async (ids: string[], deletionReason?: string): Promise<void> => {
     try {
-      const result = await bulkDeleteTeachers.mutateAsync({ ids, deletionReason });
+      const result = await bulkDeleteTeachers.mutateAsync({ body: { ids, deletionReason } });
       notifyBulkResult(
-        result.succeeded,
-        result.failed,
+        result.body.succeeded,
+        result.body.failed,
         "teachers.toast.deleted",
         "teachers.toast.deleted",
       );
@@ -98,10 +100,10 @@ export function useTeachersPageActions({
 
   const handleBulkRestore = async (ids: string[]): Promise<void> => {
     try {
-      const result = await bulkRestoreTeachers.mutateAsync(ids);
+      const result = await bulkRestoreTeachers.mutateAsync({ body: { ids } });
       notifyBulkResult(
-        result.succeeded,
-        result.failed,
+        result.body.succeeded,
+        result.body.failed,
         "teachers.restoreSuccess",
         "teachers.restoreSuccess",
       );
@@ -113,10 +115,10 @@ export function useTeachersPageActions({
 
   const handleBulkStatusChange = async (ids: string[], status: string): Promise<void> => {
     try {
-      const result = await bulkUpdateTeacherStatus.mutateAsync({ ids, status });
+      const result = await bulkUpdateTeacherStatus.mutateAsync({ body: { ids, status } });
       notifyBulkResult(
-        result.succeeded,
-        result.failed,
+        result.body.succeeded,
+        result.body.failed,
         "teachers.toast.statusUpdated",
         "teachers.toast.statusUpdated",
       );
@@ -131,10 +133,10 @@ export function useTeachersPageActions({
     specialization: string,
   ): Promise<void> => {
     try {
-      const result = await bulkUpdateTeacherSpecialization({ ids, specialization });
+      const result = await bulkUpdateTeacherSpecialization({ body: { ids, specialization } });
       notifyBulkResult(
-        result.succeeded,
-        result.failed,
+        result.body.succeeded,
+        result.body.failed,
         "teachers.bulkSpecializationSuccess",
         "teachers.bulkSpecializationSuccess",
       );

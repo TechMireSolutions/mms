@@ -24,6 +24,31 @@ vi.mock('../db/dbClient.js', () => {
   };
 });
 
+vi.mock('../db/dbConnection.js', () => {
+  const mockRows: Record<string, unknown>[] = [];
+  const mockDb = {
+    select: () => ({
+      from: () => ({
+        where: () => ({
+          limit: async () => mockRows,
+        }),
+      }),
+    }),
+    insert: () => ({
+      values: (val: Record<string, unknown>) => ({
+        onConflictDoNothing: () => ({
+          returning: async () => [val],
+        }),
+        onConflictDoUpdate: async () => [val],
+      }),
+    }),
+  };
+  return {
+    getRootDb: () => mockDb,
+    activeDb: () => mockDb,
+  };
+});
+
 describe('platformSettingsService', () => {
   beforeEach(() => {
     vi.clearAllMocks();

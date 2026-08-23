@@ -4,7 +4,8 @@ import {
   DEFAULT_QUESTION_BANK_SETTINGS,
   type QuestionBankSettings,
 } from './questionBankModuleSettings.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 import {
   QUESTION_BANK_TAB_REGISTRY,
   INITIAL_QUESTION_BANK_FIELD_SEED,
@@ -90,12 +91,17 @@ export function resolveQuestionBankFieldsMap(
 }
 
 /** PUT /api/question-bank/config/fields — field registry JSON without prefs keys. */
-export const questionBankFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const questionBankFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
     fieldOrder: z.array(z.string()).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const questionBankFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, questionBankFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/question-bank/config/preferences — question bank prefs only. */
 export const questionBankPreferencesPutBodySchema = z

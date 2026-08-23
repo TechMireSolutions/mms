@@ -12,7 +12,9 @@ export type DbClient = NodePgDatabase<typeof schema>;
 
 const txStorage = new AsyncLocalStorage<DbClient>();
 let pool: pg.Pool | null = null;
+let readReplicaPool: pg.Pool | null = null;
 let rootDb: DbClient | null = null;
+let readReplicaDb: DbClient | null = null;
 
 export function initializeDatabaseConnection(): void {
   if (pool) return;
@@ -27,7 +29,16 @@ export function initializeDatabaseConnection(): void {
     console.error('Unexpected database pool client error:', error);
   });
 
+  readReplicaPool = new pg.Pool({
+    connectionString: config.readReplicaDatabaseUrl,
+    max: config.pgPoolMax,
+  });
+  readReplicaPool.on('error', (error) => {
+    console.error('Unexpected read-replica database pool client error:', error);
+  });
+
   rootDb = drizzle(pool, { schema });
+  readReplicaDb = drizzle(readReplicaPool, { schema });
   setDb(rootDb);
 }
 
@@ -36,8 +47,17 @@ export function getRootDb(): DbClient {
   return rootDb;
 }
 
+export function getReadReplicaDb(): DbClient {
+  if (!readReplicaDb) throw new Error('Read replica database not initialized');
+  return readReplicaDb;
+}
+
 export function activeDb(): DbClient {
   return txStorage.getStore() ?? getRootDb();
+}
+
+export function hasActiveTransaction(): boolean {
+  return txStorage.getStore() !== undefined;
 }
 
 export function getPool(): pg.Pool {
@@ -73,15 +93,19 @@ export async function pingDatabase(): Promise<boolean> {
   }
 }
 
-/** Gracefully close the database on shutdown or before a full schema wipe. */
 export async function closeDatabase(): Promise<void> {
   if (!pool) return;
   const ending = pool;
+  const endingReplica = readReplicaPool;
   pool = null;
+  readReplicaPool = null;
   rootDb = null;
+  readReplicaDb = null;
   setDb(null);
   try {
-    await ending.end();
+    const promises = [ending.end()];
+    if (endingReplica) promises.push(endingReplica.end());
+    await Promise.all(promises);
   } catch (error) {
     console.error('Error closing database pool:', error);
   }

@@ -1,8 +1,6 @@
-import { Card } from "@/components/ui/card";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/utils";
-import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface GuardianContactCardProps {
@@ -32,41 +30,39 @@ export function GuardianContactCard({
   const { t } = useTranslation();
 
   return (
-    <Card accentColor="info" className={cn("p-3", CARD_STRIPE_INSET)}>
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex min-w-0 items-center gap-3 text-start ms-1">
-          <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0", badgeTone)}>
-            {badgeCode}
-          </div>
-          <div className="min-w-0">
-            <SectionLabel toneClassName={badgeTone} className="mb-0.5 block bg-transparent border-0">{label}</SectionLabel>
-            <h5 className="text-xs font-bold text-foreground truncate">{name}</h5>
-            {(phone || email) && (
-              <p className="text-xs text-muted-foreground mt-0.5 truncate">{phone || email}</p>
-            )}
-          </div>
+    <div className={cn("p-3 flex flex-wrap items-center justify-between gap-2 transition-colors hover:bg-muted/30")}>
+      <div className="flex min-w-0 items-center gap-3 text-start ms-1">
+        <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0", badgeTone)}>
+          {badgeCode}
         </div>
-        {phone || email ? (
-          <EntityMessagingIconActions
-            primaryPhone={phone}
-            primaryEmail={email}
-            labels={{
-              call: t("students.detail.call"),
-              whatsapp: t("students.list.actionWhatsApp"),
-              sms: t("students.list.actionSms"),
-              email: t("students.list.actionEmail"),
-            }}
-            callAriaLabel={phone ? t("students.detail.callPhone", { phone }) : undefined}
-            whatsappAriaLabel={t("students.list.actionWhatsApp")}
-            smsAriaLabel={t("students.list.actionSms")}
-            emailAriaLabel={t("students.list.actionEmail")}
-            onWhatsApp={onWhatsApp}
-            onSms={onSms}
-            onEmail={onEmail}
-            className="shrink-0 me-1"
-          />
-        ) : null}
+        <div className="min-w-0">
+          <SectionLabel toneClassName={badgeTone} className="mb-0.5 block bg-transparent border-0">{label}</SectionLabel>
+          <h5 className="text-xs font-bold text-foreground truncate">{name}</h5>
+          {(phone || email) && (
+            <p className="text-xs text-muted-foreground mt-0.5 truncate">{phone || email}</p>
+          )}
+        </div>
       </div>
-    </Card>
+      {phone || email ? (
+        <EntityMessagingIconActions
+          primaryPhone={phone}
+          primaryEmail={email}
+          labels={{
+            call: t("students.detail.call"),
+            whatsapp: t("students.list.actionWhatsApp"),
+            sms: t("students.list.actionSms"),
+            email: t("students.list.actionEmail"),
+          }}
+          callAriaLabel={phone ? t("students.detail.callPhone", { phone }) : undefined}
+          whatsappAriaLabel={t("students.list.actionWhatsApp")}
+          smsAriaLabel={t("students.list.actionSms")}
+          emailAriaLabel={t("students.list.actionEmail")}
+          onWhatsApp={onWhatsApp}
+          onSms={onSms}
+          onEmail={onEmail}
+          className="shrink-0 me-1"
+        />
+      ) : null}
+    </div>
   );
 }

@@ -6,11 +6,11 @@ import { eq } from 'drizzle-orm';
 import { parseTenantScopedStorageKey, QUESTION_BANK_MODULE_MANIFEST } from '@mms/shared';
 import * as schema from '../schema.js';
 import { deleteObjectByStorageKey, listObjectStorageKeys } from '../database.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 const SETTINGS_KEY = QUESTION_BANK_MODULE_MANIFEST.settingsObjectKey;
 
-type Tx = Parameters<Parameters<typeof withTenantTransaction>[1]>[0];
+type Tx = Parameters<Parameters<typeof withTenant>[1]>[0];
 
 async function tenantHasTypedSetup(tx: Tx, tenant: string): Promise<boolean> {
   const [field] = await tx
@@ -49,7 +49,7 @@ export async function runMigration073(): Promise<void> {
   const toDelete: string[] = [];
   let skipped = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     const cache = new Map<string, boolean>();
     const hasSetup = async (tenant: string): Promise<boolean> => {
       const cached = cache.get(tenant);

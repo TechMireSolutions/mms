@@ -1,7 +1,7 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import { type Invoice, type Payment } from '@mms/shared';
 import { financeInvoices, financePayments } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 // --- Invoices ---
 
@@ -34,7 +34,7 @@ export function invoiceRowToRecord(row: InvoiceRow): Invoice {
 
 export async function listInvoicesByWorkspace(tenant: string): Promise<Invoice[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(financeInvoices)
@@ -45,7 +45,7 @@ export async function listInvoicesByWorkspace(tenant: string): Promise<Invoice[]
 
 export async function findInvoiceById(tenant: string, id: string): Promise<Invoice | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(financeInvoices)
@@ -57,7 +57,7 @@ export async function findInvoiceById(tenant: string, id: string): Promise<Invoi
 
 export async function saveInvoice(tenant: string, record: Invoice): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(financeInvoices)
       .values({
@@ -111,7 +111,7 @@ export async function saveInvoice(tenant: string, record: Invoice): Promise<void
 export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(financeInvoices)
@@ -166,7 +166,7 @@ export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Prom
 
 export async function replaceInvoicesForWorkspace(tenant: string, records: Invoice[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(financeInvoices).where(eq(financeInvoices.workspaceSubdomain, subdomain));
     for (const r of records) {
       await tx.insert(financeInvoices).values({
@@ -197,7 +197,7 @@ export async function replaceInvoicesForWorkspace(tenant: string, records: Invoi
 
 export async function deleteInvoice(tenant: string, id: string): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .delete(financeInvoices)
       .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), eq(financeInvoices.id, id)));
@@ -230,7 +230,7 @@ export function paymentRowToRecord(row: PaymentRow): Payment {
 
 export async function listPaymentsByWorkspace(tenant: string): Promise<Payment[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(financePayments)
@@ -241,7 +241,7 @@ export async function listPaymentsByWorkspace(tenant: string): Promise<Payment[]
 
 export async function findPaymentById(tenant: string, id: string): Promise<Payment | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(financePayments)
@@ -253,7 +253,7 @@ export async function findPaymentById(tenant: string, id: string): Promise<Payme
 
 export async function savePayment(tenant: string, record: Payment): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(financePayments)
       .values({
@@ -297,7 +297,7 @@ export async function savePayment(tenant: string, record: Payment): Promise<void
 export async function bulkSavePayments(tenant: string, records: Payment[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(financePayments)
@@ -342,7 +342,7 @@ export async function bulkSavePayments(tenant: string, records: Payment[]): Prom
 
 export async function replacePaymentsForWorkspace(tenant: string, records: Payment[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(financePayments).where(eq(financePayments.workspaceSubdomain, subdomain));
     for (const r of records) {
       await tx.insert(financePayments).values({
@@ -368,7 +368,7 @@ export async function replacePaymentsForWorkspace(tenant: string, records: Payme
 
 export async function deletePayment(tenant: string, id: string): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .delete(financePayments)
       .where(and(eq(financePayments.workspaceSubdomain, subdomain), eq(financePayments.id, id)));
@@ -377,7 +377,7 @@ export async function deletePayment(tenant: string, id: string): Promise<void> {
 
 export async function deleteFinanceByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(financePayments).where(eq(financePayments.workspaceSubdomain, subdomain));
     await tx.delete(financeInvoices).where(eq(financeInvoices.workspaceSubdomain, subdomain));
   });

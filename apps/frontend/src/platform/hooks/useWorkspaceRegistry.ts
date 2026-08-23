@@ -1,25 +1,22 @@
-import { useQuery } from "@tanstack/react-query";
-import type { PublicWorkspaceSummary, WorkspaceRegistryResponse } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
+import type { PublicWorkspaceSummary } from "@mms/shared";
+import { tsrClient } from "@/lib/api";
 import { useTenant } from "@/lib/contexts/TenantContext";
 
 export const WORKSPACE_REGISTRY_QUERY_KEY = ["workspace", "registry"] as const;
 
-async function fetchWorkspaceRegistry(signal?: AbortSignal): Promise<PublicWorkspaceSummary[]> {
-  const registryResponse = await apiJson<WorkspaceRegistryResponse>("/api/workspace/registry", {
-    signal,
-  });
-  return registryResponse.workspaces;
-}
-
 /** Apex-only list of registered madrasa workspaces (TanStack Query). */
-export function useWorkspaceRegistry(options?: { enabled?: boolean }) {
+export function useWorkspaceRegistry(options?: { enabled?: boolean }): { data: PublicWorkspaceSummary[] | undefined; isLoading: boolean; isError: boolean; refetch: () => Promise<unknown> } {
   const { isApex } = useTenant();
 
-  return useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const { data: rawData, ...rest } = tsrClient.workspace.registry.useQuery({
     queryKey: WORKSPACE_REGISTRY_QUERY_KEY,
-    queryFn: ({ signal }) => fetchWorkspaceRegistry(signal),
+    queryData: {},
     enabled: options?.enabled ?? isApex,
     staleTime: 60_000,
   });
+
+  const data: PublicWorkspaceSummary[] | undefined = (rawData?.body as any)?.workspaces;
+
+  return { ...rest, data };
 }

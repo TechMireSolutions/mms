@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
 import type { Contact } from '@mms/shared';
-import { contacts, contactPhones, contactEmails } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { contacts, contactPhones, contactEmails, contactAddresses } from '../schema.js';
+import { withTenant } from '../tenant-context.js';
 import { hydrateContactsList } from './contactRepositoryCore.js';
 
 export interface ContactUniqueLookupValues {
@@ -27,7 +27,7 @@ export async function findExistingNormalizedContactNames(
   if (normalized.length === 0) return new Set();
 
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select({
         name: sql<string>`lower(trim(${contacts.name}))`,
@@ -55,7 +55,29 @@ function scalarFieldSql(fieldKey: string): SQL {
     case 'dob':
       return sql`lower(trim(COALESCE(${contacts.dob}, '')))`;
     case 'city':
-      return sql`lower(trim(COALESCE(${contacts.city}, '')))`;
+      return sql`lower(trim(COALESCE((
+        SELECT a.city FROM ${contactAddresses} a
+        WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND a.contact_id = ${contacts.id}
+        ORDER BY CASE WHEN a.is_primary THEN 0 ELSE 1 END, a.sort_order ASC
+        LIMIT 1
+      ), '')))`;
+    case 'state':
+      return sql`lower(trim(COALESCE((
+        SELECT a.state FROM ${contactAddresses} a
+        WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND a.contact_id = ${contacts.id}
+        ORDER BY CASE WHEN a.is_primary THEN 0 ELSE 1 END, a.sort_order ASC
+        LIMIT 1
+      ), '')))`;
+    case 'country':
+      return sql`lower(trim(COALESCE((
+        SELECT a.country FROM ${contactAddresses} a
+        WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain}
+          AND a.contact_id = ${contacts.id}
+        ORDER BY CASE WHEN a.is_primary THEN 0 ELSE 1 END, a.sort_order ASC
+        LIMIT 1
+      ), ')))`;
     default:
       return sql`lower(trim(COALESCE(${contacts.name}, '')))`;
   }
@@ -105,8 +127,6 @@ export async function findActiveContactsMatchingUniqueValues(
             'g'
           ) IN (${sql.join(phoneDigits.map((digit) => sql`${digit}`), sql`, `)})
       )
-      OR regexp_replace(COALESCE(${contacts.phone}, ''), '[^0-9]', '', 'g')
-        IN (${sql.join(phoneDigits.map((digit) => sql`${digit}`), sql`, `)})
     )`);
   }
 
@@ -120,8 +140,6 @@ export async function findActiveContactsMatchingUniqueValues(
           AND lower(trim(COALESCE(e.address, '')))
             IN (${sql.join(emails.map((email) => sql`${email}`), sql`, `)})
       )
-      OR lower(trim(COALESCE(${contacts.email}, '')))
-        IN (${sql.join(emails.map((email) => sql`${email}`), sql`, `)})
     )`);
   }
 
@@ -138,7 +156,7 @@ export async function findActiveContactsMatchingUniqueValues(
     whereParts.push(notInArray(contacts.id, excluded));
   }
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(contacts)

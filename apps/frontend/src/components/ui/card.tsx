@@ -1,41 +1,43 @@
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
-import { CARD_STRIPE_BASE, type CardAccentColor, getCardStripeClass } from "@/lib/semanticTone";
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET, type CardAccentColor, getCardStripeClass } from "@/lib/semanticTone";
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  accentColor?: CardAccentColor | string;
+  accentColor?: CardAccentColor | string | false | null;
   interactive?: boolean;
 }
 
-export interface CardHeaderProps extends React.HTMLAttributes<HTMLDivElement> {}
+export type CardHeaderProps = React.HTMLAttributes<HTMLDivElement>;
 
 export interface CardTitleProps extends React.HTMLAttributes<HTMLHeadingElement> {
   as?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "div";
 }
 
-export interface CardDescriptionProps extends React.HTMLAttributes<HTMLParagraphElement> {}
+export type CardDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
-export interface CardContentProps extends React.HTMLAttributes<HTMLDivElement> {}
+export type CardContentProps = React.HTMLAttributes<HTMLDivElement>;
 
-export interface CardFooterProps extends React.HTMLAttributes<HTMLDivElement> {}
+export type CardFooterProps = React.HTMLAttributes<HTMLDivElement>;
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, accentColor, interactive = false, ...props }, ref) => {
+  ({ className, accentColor = "primary", interactive = false, ...props }, ref) => {
+    const hasStripe = accentColor && accentColor !== "none";
     return (
       <div
         ref={ref}
         className={cn(
           "relative overflow-hidden group/card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm text-card-foreground shadow-sm hover:shadow-md transition-all duration-300",
           interactive && "cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-hidden active:scale-[0.995]",
+          hasStripe && CARD_STRIPE_INSET,
           className,
         )}
         {...props}
       >
-        {accentColor && (
+        {hasStripe && (
           <div
             aria-hidden="true"
-            className={cn(CARD_STRIPE_BASE, "transition-colors duration-300", getCardStripeClass(accentColor))}
+            className={cn(CARD_STRIPE_BASE, "transition-colors duration-300", getCardStripeClass(accentColor as string))}
           />
         )}
         {props.children}

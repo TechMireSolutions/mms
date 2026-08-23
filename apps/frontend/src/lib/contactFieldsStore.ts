@@ -6,7 +6,6 @@
  */
 import {
   CONFIG_VERSION,
-  CONTACTS_MODULE_MANIFEST,
   type FieldConfig,
   type FieldDefinition,
 } from "@mms/shared";
@@ -69,8 +68,25 @@ function composeSettings(
   return config;
 }
 
+import { apiContract } from "@/lib/api";
+
 const api = createModuleSetupConfigApi<FieldConfig, unknown>({
-  restBasePath: CONTACTS_MODULE_MANIFEST.restBasePath,
+  fetchFieldConfigFn: async (signal) => {
+    const res = await apiContract.contacts.getFieldConfig({ query: undefined, extraHeaders: {} });
+    return (res.body as any).config;
+  },
+  saveFieldConfigFn: async (config) => {
+    const res = await apiContract.contacts.updateFieldConfig({ body: config as any });
+    return (res.body as any).config;
+  },
+  fetchPreferencesFn: async (signal) => {
+    const res = await apiContract.contacts.getPreferences({ query: undefined, extraHeaders: {} });
+    return (res.body as any).preferences;
+  },
+  savePreferencesFn: async (prefs) => {
+    const res = await apiContract.contacts.updatePreferences({ body: prefs as any });
+    return (res.body as any).preferences;
+  },
   normalizeFieldConfig,
   composeSettings,
   normalizePrefs: (prefs: unknown) => prefs,

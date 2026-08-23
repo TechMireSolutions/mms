@@ -4,3 +4,23 @@
  */
 export { MESSAGING_CONTACTS_RESOLVE_QUERY_KEY } from '@/tenant/features/messaging/hooks/useMessagingContactsByIds';
 export { MESSAGING_RECIPIENTS_QUERY_KEY } from '@/tenant/features/messaging/hooks/useMessagingWorkRecipients';
+export { invalidateMessagingQueries } from '@/tenant/features/messaging/hooks/invalidateMessagingQueries';
+export {
+  MESSAGING_TEMPLATES_QUERY_KEY,
+  MESSAGING_LOGS_QUERY_KEY,
+  MESSAGING_METRICS_QUERY_KEY,
+  useMessageTemplates,
+  useMessageLogs,
+  useMessagingMetrics,
+  useMessagingMutations,
+} from '@/tenant/features/messaging/hooks/useMessaging';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useMessagingContractListLogs,
+  useMessagingContractListTemplates,
+  useMessagingContractListRecipients,
+  useMessagingContractSaveTemplate,
+  useMessagingContractDeleteTemplate,
+  useMessagingContractRecordLogs,
+  useMessagingContractClearLogs,
+} from '@/tenant/features/messaging/hooks/useMessagingTsrHooks';

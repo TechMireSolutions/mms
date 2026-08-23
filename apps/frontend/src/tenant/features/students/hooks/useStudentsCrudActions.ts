@@ -29,19 +29,21 @@ export function useStudentsCrudActions({
   const handleSaveStudent = async (studentToSave: Student): Promise<Student> => {
     if (editStudent) {
       const res = await updateStudent.mutateAsync({
-        id: String(studentToSave.id),
-        student: studentToSave as StudentRecord,
+        params: { id: String(studentToSave.id) },
+        body: studentToSave as StudentRecord,
       });
-      return res.item as Student;
+      return res.body as Student;
     } else {
-      const res = await createStudent.mutateAsync(studentToSave as StudentRecord);
-      return res.item as Student;
+      const res = await createStudent.mutateAsync({
+        body: studentToSave as StudentRecord,
+      });
+      return res.body as Student;
     }
   };
 
   const handleDelete = async (studentId: string, deletionReason?: string): Promise<void> => {
     try {
-      await deleteStudent.mutateAsync({ id: String(studentId), deletionReason });
+      await deleteStudent.mutateAsync({ params: { id: String(studentId) }, body: { deletionReason } });
       notifyBulkResult(1, 0, "students.deleteSuccess", "students.bulkDeleteSuccess");
     } catch (error) {
       handleError(error, "students.delete", "students.deleteFailed");
@@ -50,7 +52,7 @@ export function useStudentsCrudActions({
 
   const handleRestore = async (studentId: string): Promise<void> => {
     try {
-      await restoreStudent.mutateAsync(String(studentId));
+      await restoreStudent.mutateAsync({ params: { id: String(studentId) }, body: {} });
       notifyBulkResult(1, 0, "students.restoreSuccess", "students.bulkRestoreSuccess");
     } catch (error) {
       handleError(error, "students.restore", "students.restoreFailed");
@@ -64,12 +66,11 @@ export function useStudentsCrudActions({
   ): Promise<void> => {
     try {
       const result = await bulkDeleteStudents.mutateAsync({
-        ids: studentIds.map(String),
-        deletionReason,
+        body: { ids: studentIds.map(String), deletionReason },
       });
       notifyBulkResult(
-        result.succeeded,
-        result.failed,
+        result.body.succeeded,
+        result.body.failed,
         "students.deleteSuccess",
         "students.bulkDeleteSuccess",
       );
@@ -80,10 +81,10 @@ export function useStudentsCrudActions({
 
   const handleBulkRestore = async (studentIds: string[]): Promise<void> => {
     try {
-      const result = await bulkRestoreStudents.mutateAsync(studentIds.map(String));
+      const result = await bulkRestoreStudents.mutateAsync({ body: { ids: studentIds.map(String) } });
       notifyBulkResult(
-        result.succeeded,
-        result.failed,
+        result.body.succeeded,
+        result.body.failed,
         "students.restoreSuccess",
         "students.bulkRestoreSuccess",
       );
@@ -98,12 +99,11 @@ export function useStudentsCrudActions({
   ): Promise<void> => {
     try {
       const result = await bulkUpdateStudentStatus.mutateAsync({
-        ids: studentIds.map(String),
-        status,
+        body: { ids: studentIds.map(String), status },
       });
       notifyBulkResult(
-        result.succeeded,
-        result.failed,
+        result.body.succeeded,
+        result.body.failed,
         "students.bulkStatusSuccess",
         "students.bulkStatusSuccessMany",
       );

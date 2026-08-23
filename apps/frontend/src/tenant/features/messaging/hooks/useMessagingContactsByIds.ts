@@ -1,8 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { MessagingResolveResponseDto, StandardMessagingRecipient } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { tsrClient } from '@/lib/api';
 
 /** Kept stable so contact mutations keep invalidating Reports hydrate. */
 export const MESSAGING_CONTACTS_RESOLVE_QUERY_KEY = ['messaging', 'contacts', 'resolve'] as const;
@@ -28,16 +28,15 @@ export function useMessagingRecipientsByIds(ids: (string | number | null | undef
 
   return useQuery({
     queryKey: [...MESSAGING_CONTACTS_RESOLVE_QUERY_KEY, signature] as const,
-    queryFn: async ({ signal }) => {
+    queryFn: async () => {
       const recipients: StandardMessagingRecipient[] = [];
       for (let index = 0; index < normalized.length; index += RESOLVE_BATCH_SIZE) {
         const chunk = normalized.slice(index, index + RESOLVE_BATCH_SIZE);
-        const response = await apiJson<MessagingResolveResponseDto>('/api/messaging/contacts/resolve', {
-          method: 'POST',
-          body: JSON.stringify({ ids: chunk }),
-          signal,
+        // @ts-expect-error - TS union discrimination limit with ts-rest
+        const response = await tsrClient.messaging.resolveContacts.query({
+          body: { ids: chunk },
         });
-        recipients.push(...(response.recipients ?? []));
+        recipients.push(...((response.body as MessagingResolveResponseDto).recipients ?? []));
       }
       return recipients;
     },
@@ -46,5 +45,3 @@ export function useMessagingRecipientsByIds(ids: (string | number | null | undef
   });
 }
 
-/** @deprecated Use useMessagingRecipientsByIds */
-export const useMessagingContactsByIds = useMessagingRecipientsByIds;

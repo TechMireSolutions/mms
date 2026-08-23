@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type {
   QuestionBankCommandMetricsSnapshot,
   QuestionBankQuestion,
@@ -7,17 +7,11 @@ import type {
 } from '@mms/shared';
 import { QUESTION_BANK_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { createModulePaginatedListQuery } from '@/lib/query/createModulePaginatedListQuery';
-import {
-  buildQuestionBankPageUrl,
-  questionBankPaginatedQueryKey,
-  questionBankListQueryKeyParams,
-  sameQuestionBankListFilters,
-  type QuestionBankPaginatedParams,
-  type QuestionBankListPageResult,
-} from '@/tenant/features/question-bank/hooks/questionBankListQueryBuilders';
+import { tsrClient } from '@/lib/api';
+
+
+
 
 export const QUESTION_BANK_API = QUESTION_BANK_MODULE_MANIFEST.restBasePath;
 
@@ -30,16 +24,10 @@ export const QUESTION_BANK_RESULTS_QUERY_KEY = [QUESTION_BANK_MODULE_MANIFEST.mo
 export function useQuestionBankQuestions(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
-  return useQuery<QuestionBankQuestion[]>({
-    queryKey: [...QUESTION_BANK_QUESTIONS_QUERY_KEY, { includeDeleted }],
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ questions: QuestionBankQuestion[] }>(
-        `${QUESTION_BANK_API}/questions?includeDeleted=${includeDeleted}`,
-        { signal },
-      );
-      return res?.questions ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.questionBank.listQuestions.useQuery({
+    queryKey: [...QUESTION_BANK_QUESTIONS_QUERY_KEY, { includeDeleted }] as any,
+    queryData: { query: { includeDeleted: includeDeleted ? 'true' : undefined } },
     staleTime: 30_000,
   });
 }
@@ -48,59 +36,44 @@ export function useQuestionBankQuestionsCollection(options?: {
   enabled?: boolean;
   includeDeleted?: boolean;
 }): QuestionBankQuestion[] {
-  return useQuestionBankQuestions(options).data ?? [];
+  const query = useQuestionBankQuestions(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.questions ?? []);
 }
 
-/** SQL-paged questions Work list (server-side search/category/difficulty/soft-delete). */
-export const useQuestionBankPaginated = createModulePaginatedListQuery<
-  QuestionBankListPageResult,
-  QuestionBankPaginatedParams,
-  ReturnType<typeof questionBankListQueryKeyParams>
->({
-  queryKey: questionBankPaginatedQueryKey,
-  keyParams: questionBankListQueryKeyParams,
-  sameFilters: sameQuestionBankListFilters,
-  buildUrl: buildQuestionBankPageUrl,
-});
+
 
 export function useQuestionBankTests(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<QuestionBankTest[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.questionBank.listTests.useQuery({
     queryKey: QUESTION_BANK_TESTS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ tests: QuestionBankTest[] }>(
-        `${QUESTION_BANK_API}/tests`,
-        { signal },
-      );
-      return res?.tests ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useQuestionBankTestsCollection(options?: { enabled?: boolean }): QuestionBankTest[] {
-  return useQuestionBankTests(options).data ?? [];
+  const query = useQuestionBankTests(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.tests ?? []);
 }
 
 export function useQuestionBankResults(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<QuestionBankResult[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.questionBank.listResults.useQuery({
     queryKey: QUESTION_BANK_RESULTS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ results: QuestionBankResult[] }>(
-        `${QUESTION_BANK_API}/assessment-results`,
-        { signal },
-      );
-      return res?.results ?? [];
-    },
-    enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useQuestionBankResultsCollection(options?: { enabled?: boolean }): QuestionBankResult[] {
-  return useQuestionBankResults(options).data ?? [];
+  const query = useQuestionBankResults(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.results ?? []);
 }
 
 export function useQuestionBankMutations() {
@@ -117,84 +90,85 @@ export function useQuestionBankMutations() {
     void queryClient.invalidateQueries({ queryKey: QUESTION_BANK_RESULTS_QUERY_KEY });
   };
 
-  const replaceQuestions = useMutation({
-    mutationFn: async (questions: QuestionBankQuestion[]) =>
-      apiJson<{ questions: QuestionBankQuestion[] }>(`${QUESTION_BANK_API}/questions/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(questions),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceQuestions = tsrClient.questionBank.bulkUpdateQuestions.useMutation({
     onSuccess: () => {
       invalidateQuestions();
     },
   });
 
-  const replaceTests = useMutation({
-    mutationFn: async (tests: QuestionBankTest[]) =>
-      apiJson<{ tests: QuestionBankTest[] }>(`${QUESTION_BANK_API}/tests/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(tests),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceTests = tsrClient.questionBank.bulkUpdateTests.useMutation({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUESTION_BANK_TESTS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: QUESTION_BANK_METRICS_QUERY_KEY });
     },
   });
 
-  const replaceResults = useMutation({
-    mutationFn: async (results: QuestionBankResult[]) =>
-      apiJson<{ results: QuestionBankResult[] }>(`${QUESTION_BANK_API}/assessment-results/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(results),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceResults = tsrClient.questionBank.bulkUpdateResults.useMutation({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: QUESTION_BANK_RESULTS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: QUESTION_BANK_METRICS_QUERY_KEY });
     },
   });
 
-  const deleteQuestion = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${QUESTION_BANK_API}/questions/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const deleteQuestion = tsrClient.questionBank.deleteQuestion.useMutation({
     onSuccess: () => invalidateQuestions(),
   });
 
-  const restoreQuestion = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(
-        `${QUESTION_BANK_API}/questions/${encodeURIComponent(id)}/restore`,
-        { method: 'POST' },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const restoreQuestion = tsrClient.questionBank.restoreQuestion.useMutation({
     onSuccess: () => invalidateQuestions(),
   });
 
-  const bulkDeleteQuestions = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${QUESTION_BANK_API}/questions/bulk-delete`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkDeleteQuestions = tsrClient.questionBank.bulkDeleteQuestions.useMutation({
     onSuccess: () => invalidateQuestions(),
   });
 
-  const bulkRestoreQuestions = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${QUESTION_BANK_API}/questions/bulk-restore`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkRestoreQuestions = tsrClient.questionBank.bulkRestoreQuestions.useMutation({
     onSuccess: () => invalidateQuestions(),
   });
 
   return {
-    replaceQuestions,
-    replaceTests,
-    replaceResults,
-    deleteQuestion,
-    restoreQuestion,
-    bulkDeleteQuestions,
-    bulkRestoreQuestions,
+    replaceQuestions: {
+      ...replaceQuestions,
+      mutate: (questions: QuestionBankQuestion[], opts?: any) => replaceQuestions.mutate({ body: questions }, opts),
+      mutateAsync: (questions: QuestionBankQuestion[]) => replaceQuestions.mutateAsync({ body: questions }),
+    },
+    replaceTests: {
+      ...replaceTests,
+      mutate: (tests: QuestionBankTest[], opts?: any) => replaceTests.mutate({ body: tests }, opts),
+      mutateAsync: (tests: QuestionBankTest[]) => replaceTests.mutateAsync({ body: tests }),
+    },
+    replaceResults: {
+      ...replaceResults,
+      mutate: (results: QuestionBankResult[], opts?: any) => replaceResults.mutate({ body: results }, opts),
+      mutateAsync: (results: QuestionBankResult[]) => replaceResults.mutateAsync({ body: results }),
+    },
+    deleteQuestion: {
+      ...deleteQuestion,
+      mutate: (id: string, opts?: any) => deleteQuestion.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => deleteQuestion.mutateAsync({ params: { id } }),
+    },
+    restoreQuestion: {
+      ...restoreQuestion,
+      mutate: (id: string, opts?: any) => restoreQuestion.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => restoreQuestion.mutateAsync({ params: { id } }),
+    },
+    bulkDeleteQuestions: {
+      ...bulkDeleteQuestions,
+      mutate: (ids: string[], opts?: any) => bulkDeleteQuestions.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkDeleteQuestions.mutateAsync({ body: { ids } }),
+    },
+    bulkRestoreQuestions: {
+      ...bulkRestoreQuestions,
+      mutate: (ids: string[], opts?: any) => bulkRestoreQuestions.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkRestoreQuestions.mutateAsync({ body: { ids } }),
+    },
     invalidate,
   };
 }

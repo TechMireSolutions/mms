@@ -1,8 +1,8 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-import { activeDb } from '../dbConnection.js';
+
 import { attendance, attendanceLeaves } from '../schema.js';
 import type { AttendanceRecord } from '@mms/shared';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 type AttendanceRow = typeof attendance.$inferSelect;
 type AttendanceInsert = typeof attendance.$inferInsert;
@@ -49,7 +49,7 @@ function recordToInsert(tenant: string, record: AttendanceRecord): AttendanceIns
 
 export async function listAttendanceRecordsByWorkspace(tenant: string): Promise<AttendanceRecord[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(attendance)
@@ -68,7 +68,7 @@ export async function findAttendanceRecordById(
   id: string,
 ): Promise<AttendanceRecord | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(attendance)
@@ -89,7 +89,7 @@ export async function findAttendanceRecordsByIds(
 ): Promise<AttendanceRecord[]> {
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(attendance)
@@ -108,7 +108,7 @@ export async function saveAttendanceRecord(
   record: AttendanceRecord,
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     const values = recordToInsert(subdomain, record);
     await tx
       .insert(attendance)
@@ -140,7 +140,7 @@ export async function bulkSaveAttendanceRecords(
 ): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       const values = recordToInsert(subdomain, record);
       await tx
@@ -173,7 +173,7 @@ export async function deleteAttendanceRecord(
   id: string,
 ): Promise<boolean> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await tx
       .delete(attendance)
       .where(
@@ -191,7 +191,7 @@ export async function replaceAttendanceRecordsForWorkspace(
   records: AttendanceRecord[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(attendanceLeaves).where(eq(attendanceLeaves.workspaceSubdomain, subdomain));
     await tx.delete(attendance).where(eq(attendance.workspaceSubdomain, subdomain));
     if (records.length > 0) {
@@ -205,7 +205,8 @@ export async function replaceAttendanceRecordsForWorkspace(
 
 export async function deleteAttendanceRecordsByWorkspace(tenant: string): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  const db = activeDb();
-  await db.delete(attendanceLeaves).where(eq(attendanceLeaves.workspaceSubdomain, subdomain));
-  await db.delete(attendance).where(eq(attendance.workspaceSubdomain, subdomain));
+  await withTenant(subdomain, async (tx) => {
+    await tx.delete(attendanceLeaves).where(eq(attendanceLeaves.workspaceSubdomain, subdomain));
+    await tx.delete(attendance).where(eq(attendance.workspaceSubdomain, subdomain));
+  });
 }

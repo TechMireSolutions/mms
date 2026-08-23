@@ -7,7 +7,7 @@ import {
 import { and, eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 function slugifyLabel(label: string, index: number): string {
   const base = label
@@ -68,7 +68,7 @@ export async function runMigration068(): Promise<void> {
 
     if (values.length === 0) continue;
 
-    const inserted = await withTenantTransaction(null, async (tx) => {
+    const inserted = await withTenant(null, async (tx) => {
       const existing = await tx
         .select({ id: schema.sessionLookups.id })
         .from(schema.sessionLookups)

@@ -1,65 +1,58 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { normalizeStoredStudent, type StudentRecord, type StudentsBulkEnrollBody } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
-import { createModuleCrudMutations } from '@/lib/query/createModuleCrudMutations';
-import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
-import { STUDENTS_API } from '@/tenant/features/students/hooks/studentsQueryKeys';
-import { SESSIONS_QUERY_KEY } from '@/tenant/hooks/collections/sessions';
+import type { StudentsBulkEnrollBody } from '@mms/shared';
 
-const useStudentsModuleMutations = createModuleCrudMutations<StudentRecord>({
-  apiBase: STUDENTS_API,
-  normalizeStored: normalizeStoredStudent,
-  invalidate: invalidateStudentsQueries,
-  updateRecordKey: 'student',
-});
+import {
+  useStudentsContractCreate,
+  useStudentsContractUpdate,
+  useStudentsContractDelete,
+  useStudentsContractBulkDelete,
+  useStudentsContractRestore,
+  useStudentsContractBulkRestore,
+  useStudentsContractBulkStatus,
+  useStudentsContractLogExportAudit,
+  useStudentsContractLogSetupAudit,
+} from '@/tenant/features/students/hooks/useStudentsTsrHooks';
 
 /** Server mutations for Student records (create, update, delete, bulk delete, bulk status). */
 export function useStudentMutations() {
-  const {
-    create,
-    update,
-    remove,
-    bulkDelete,
-    restore,
-    bulkRestore,
-    bulkStatus,
-    logExportAudit,
-    logSetupAudit,
-  } = useStudentsModuleMutations();
+  const createStudentMutation = useStudentsContractCreate();
+  const updateStudentMutation = useStudentsContractUpdate();
+  const deleteStudentMutation = useStudentsContractDelete();
+  const bulkDeleteStudentsMutation = useStudentsContractBulkDelete();
+  const restoreStudentMutation = useStudentsContractRestore();
+  const bulkRestoreStudentsMutation = useStudentsContractBulkRestore();
+  const bulkUpdateStudentStatusMutation = useStudentsContractBulkStatus();
+  const logExportAuditMutation = useStudentsContractLogExportAudit();
+  const logSetupAuditMutation = useStudentsContractLogSetupAudit();
 
   return {
-    createStudent: create,
-    updateStudent: update,
-    deleteStudent: remove,
-    bulkDeleteStudents: bulkDelete,
-    restoreStudent: restore,
-    bulkRestoreStudents: bulkRestore,
-    bulkUpdateStudentStatus: bulkStatus,
-    logExportAudit,
-    logSetupAudit,
+    createStudent: createStudentMutation,
+    updateStudent: updateStudentMutation,
+    deleteStudent: deleteStudentMutation,
+    bulkDeleteStudents: bulkDeleteStudentsMutation,
+    restoreStudent: restoreStudentMutation,
+    bulkRestoreStudents: bulkRestoreStudentsMutation,
+    bulkUpdateStudentStatus: bulkUpdateStudentStatusMutation,
+    logExportAudit: {
+      mutateAsync: (payload: any) => logExportAuditMutation.mutateAsync({ body: payload }),
+      isPending: logExportAuditMutation.isPending,
+    },
+    logSetupAudit: {
+      mutateAsync: (payload: any) => logSetupAuditMutation.mutateAsync({ body: payload }),
+      isPending: logSetupAuditMutation.isPending,
+    },
   };
 }
 
+import { useStudentsContractBulkEnroll } from '@/tenant/features/students/hooks/useStudentsTsrHooks';
+
 /** Atomic bulk session enrollment mutation for selected students. */
 export function useStudentsBulkEnrollMutation() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (body: StudentsBulkEnrollBody) => {
-      return apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${STUDENTS_API}/bulk-enroll`,
-        {
-          method: 'POST',
-          body: JSON.stringify(body),
-        },
-      );
-    },
-    onSuccess: async () => {
-      await Promise.all([
-        invalidateStudentsQueries(queryClient),
-        queryClient.invalidateQueries({ queryKey: [SESSIONS_QUERY_KEY] }),
-      ]);
-    },
-  });
+  const bulkEnrollMutation = useStudentsContractBulkEnroll();
+  
+  return {
+    mutateAsync: (payload: StudentsBulkEnrollBody) => bulkEnrollMutation.mutateAsync({ body: payload }),
+    isPending: bulkEnrollMutation.isPending,
+  };
 }
 
 

@@ -9,8 +9,8 @@ vi.mock('../db/database.js', () => ({
   deleteObjectByStorageKey: (...args: unknown[]) => mockDeleteObjectByStorageKey(...args),
 }));
 
-vi.mock('../db/withTenantTransaction.js', () => ({
-  withTenantTransaction: (...args: unknown[]) => mockWithTenantTransaction(...args),
+vi.mock('../db/tenant-context.js', () => ({
+  withTenant: (...args: unknown[]) => mockWithTenantTransaction(...args),
 }));
 
 function chainSelect(result: unknown[]) {

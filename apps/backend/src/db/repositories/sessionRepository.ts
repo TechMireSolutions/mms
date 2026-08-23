@@ -19,9 +19,9 @@ import {
   sessionEvents,
   sessionTabarruk,
 } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
-type Transaction = Parameters<Parameters<typeof withTenantTransaction>[1]>[0];
+type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
 
 type SessionRow = typeof sessions.$inferSelect;
 type ClassRow = typeof sessionClasses.$inferSelect;
@@ -292,7 +292,7 @@ async function hydrateSessionsList(
 
 export async function listSessionsByWorkspace(tenant: string): Promise<Session[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(sessions)
@@ -304,7 +304,7 @@ export async function listSessionsByWorkspace(tenant: string): Promise<Session[]
 
 export async function findSessionById(tenant: string, id: string): Promise<Session | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(sessions)
@@ -319,7 +319,7 @@ export async function findSessionById(tenant: string, id: string): Promise<Sessi
 export async function findSessionsByIds(tenant: string, ids: string[]): Promise<Session[]> {
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(sessions)
@@ -519,7 +519,7 @@ async function persistSessionTx(
 
 export async function saveSession(tenant: string, record: Session): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await persistSessionTx(tx, subdomain, record);
   });
 }
@@ -527,7 +527,7 @@ export async function saveSession(tenant: string, record: Session): Promise<void
 export async function bulkSaveSessions(tenant: string, records: Session[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await persistSessionTx(tx, subdomain, record);
     }
@@ -536,7 +536,7 @@ export async function bulkSaveSessions(tenant: string, records: Session[]): Prom
 
 export async function replaceSessionsForWorkspace(tenant: string, records: Session[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(sessions).where(eq(sessions.workspaceSubdomain, subdomain));
     for (const record of records) {
       await persistSessionTx(tx, subdomain, record);

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiContract } from "@/lib/api";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
-import { migrateTeachersEmployeeIds } from "@/tenant/features/teachers/hooks/useTeachers";
 import { invalidateTeachersQueries } from "@/tenant/features/teachers/hooks/invalidateTeachersQueries";
 
 const TEACHERS_EMPLOYEE_ID_MIGRATION_KEY = "mms_teachers_employee_id_migration_v1";
@@ -36,8 +36,8 @@ export function useEmployeeIdMigration(activeTab: string, canEditSetup: boolean)
   const migrationAppliedRef = useRef(false);
 
   const { mutate } = useMutation({
-    mutationFn: () => migrateTeachersEmployeeIds(),
-    onSuccess: (result) => {
+    mutationFn: () => apiContract.teachers.migrateEmployeeIds({ body: {} }).then((res: any) => ({ updated: (res.body as any)?.updated ?? 0 })),
+    onSuccess: (result: { updated: number }) => {
       invalidateTeachersQueries(queryClient);
       markEmployeeIdMigrationDone();
       setNeedsMigrationScan(false);

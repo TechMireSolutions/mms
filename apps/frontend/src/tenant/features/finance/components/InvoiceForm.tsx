@@ -6,7 +6,7 @@ import { type InvoiceCreateInput } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { useFinanceConfig } from "@/hooks/useStandardModuleConfig";
-import { NotifiedFinanceMutationError } from "@/tenant/features/finance/hooks/useFinanceApi";
+import { NotifiedMutationError } from "@/lib/notifiedMutationError";
 import { InvoiceFormFieldsSection } from "@/tenant/features/finance/components/InvoiceFormFieldsSection";
 import { InvoiceFormSummarySection } from "@/tenant/features/finance/components/InvoiceFormSummarySection";
 import {
@@ -80,7 +80,7 @@ export const InvoiceForm = React.memo(function InvoiceForm({
           notify.success(t("finance.invoiceSaved"));
           resetAndClose();
         } catch (error: unknown) {
-          if (!(error instanceof NotifiedFinanceMutationError)) {
+          if (!(error instanceof NotifiedMutationError)) {
             notify.error(t("finance.invoiceSaveFailed"), {
               description: error instanceof Error ? error.message : String(error),
             });

@@ -12,7 +12,7 @@ import { useSessionsDirectoryFilters } from '@/tenant/features/sessions/hooks/us
 import { useSessionsKeyboardShortcuts } from '@/tenant/features/sessions/hooks/useSessionsKeyboardShortcuts';
 import { useSessionConfig } from '@/hooks/useStandardModuleConfig';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import { SESSIONS_MODULE_MANIFEST } from '@mms/shared';
+import { SESSIONS_MODULE_MANIFEST, type SessionsListPageResult } from '@mms/shared';
 import {
   createSessionBulkDeleteHandler,
   createSessionBulkRestoreHandler,
@@ -90,9 +90,11 @@ export function useSessionsPageController() {
       enabled: useServerWork,
     });
 
+  const pageData = (workPageData?.body ?? workPageData) as SessionsListPageResult | undefined;
+
   const sessions = useMemo(
-    () => (workPageData?.sessions ?? []) as Session[],
-    [workPageData],
+    () => (pageData?.sessions ?? []) as Session[],
+    [pageData],
   );
 
   const {
@@ -122,7 +124,7 @@ export function useSessionsPageController() {
     },
   });
 
-  const shownCount = workPageData?.total ?? sessions.length;
+  const shownCount = pageData?.total ?? sessions.length;
 
   const mutationDeps = {
     t,
@@ -226,7 +228,7 @@ export function useSessionsPageController() {
     detailSession,
     setDetailSession,
     showDeleted,
-    workPageData,
+    workPageData: pageData,
     isError,
     isWorkLoading,
     isWorkFetching,

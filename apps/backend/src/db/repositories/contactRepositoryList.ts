@@ -6,7 +6,7 @@ import {
   type ContactsListQuery,
 } from '@mms/shared';
 import { contacts, students, teachers, tenantUsers, contactEmails, contactAddresses } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import {
   hasEmailSql,
@@ -94,9 +94,6 @@ function buildSearchSql(search: string): SQL | null {
       COALESCE(${contacts.name}, ''),
       COALESCE(${contacts.firstName}, ''),
       COALESCE(${contacts.lastName}, ''),
-      COALESCE(${contacts.city}, ''),
-      COALESCE(${contacts.phone}, ''),
-      COALESCE(${contacts.email}, ''),
       NULLIF(${primaryPhoneDigitsSql()}, ''),
       COALESCE((
         SELECT string_agg(NULLIF(trim(e.address), ''), ' ')
@@ -142,9 +139,6 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
   }
   if (field === 'lastName') {
     return dir === 'desc' ? desc(contacts.lastName) : asc(contacts.lastName);
-  }
-  if (field === 'city') {
-    return dir === 'desc' ? desc(contacts.city) : asc(contacts.city);
   }
   if (field === 'gender') {
     return dir === 'desc' ? desc(contacts.gender) : asc(contacts.gender);
@@ -255,7 +249,7 @@ export async function listContactsPage(
     return { contacts: [], total: 0, page, limit, hasMore: false };
   }
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, contacts, {
       conditions: buildListConditions(subdomain, query, excludeIds, includeIds),
       orderBy: buildOrderBy(query.sortField, query.sortDir),

@@ -88,7 +88,7 @@ export function AuditLog({ filters }: AuditLogProps) {
 
   const studentNameFor = (id?: string): string => {
     if (!id) return "";
-    return students.find((student) => String(student.id) === String(id))?.name ?? "";
+    return students.find((student: any) => String(student.id) === String(id))?.name ?? "";
   };
   
   const allClasses = useMemo(() => {

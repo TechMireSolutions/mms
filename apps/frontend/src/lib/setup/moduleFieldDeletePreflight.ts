@@ -1,6 +1,8 @@
-import { apiJson } from "@/lib/apiClient";
+
 
 /** Draft Fields map used when simulating column registry after a field disable. */
+import { apiJson } from "@/lib/apiClient";
+
 export type ModuleFieldsDraftSnapshot<TField extends { key: string } = { key: string }> = {
   buildFieldsMap: () => Record<string, TField[]>;
   enabledTabs: Iterable<string>;
@@ -23,7 +25,9 @@ export type CreateModuleFieldDeletePreflightOptions<
     onBlocked: ModuleSetupDeleteNotify;
   },
 > = {
-  restBasePath: string;
+  restBasePath?: string;
+  getFieldUsage?: (fieldKey: string) => Promise<number>;
+  getFieldsUsage?: (fieldKeys: string[]) => Promise<Record<string, number>>;
   usageMessageKey: string;
   saveFailedKey: string;
   defaultColumnRegistry: TColumn[];
@@ -106,9 +110,13 @@ export function createModuleFieldDeletePreflight<
     }
 
     try {
-      const { count } = await apiJson<{ count: number }>(
-        `${options.restBasePath}/field-usage/${encodeURIComponent(fieldId)}`,
-      );
+      let count = 0;
+      if (options.getFieldUsage) {
+        count = await options.getFieldUsage(fieldId);
+      } else if (options.restBasePath) {
+        const res = await apiJson<{ count: number }>(`${options.restBasePath}/field-usage/${encodeURIComponent(fieldId)}`);
+        count = res.count;
+      }
       if (count > 0) {
         notifyBlock(context.onBlocked, {
           messageKey: options.usageMessageKey,
@@ -139,13 +147,19 @@ export function createModuleFieldDeletePreflight<
     if (fieldIds.length === 0) return true;
 
     try {
-      const { counts } = await apiJson<{ counts: Record<string, number> }>(
-        `${options.restBasePath}/field-usage`,
-        {
-          method: "POST",
-          body: JSON.stringify({ fieldKeys: fieldIds }),
-        },
-      );
+      let counts: Record<string, number> = {};
+      if (options.getFieldsUsage) {
+        counts = await options.getFieldsUsage(fieldIds);
+      } else if (options.restBasePath) {
+        const res = await apiJson<{ counts: Record<string, number> }>(
+          `${options.restBasePath}/field-usage`,
+          {
+            method: "POST",
+            body: JSON.stringify({ fieldKeys: fieldIds }),
+          },
+        );
+        counts = res.counts;
+      }
 
       for (const fieldId of fieldIds) {
         const count = counts[fieldId] ?? 0;

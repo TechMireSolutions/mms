@@ -7,11 +7,13 @@ import { registerProductionHostGuard } from './productionHostGuard.js';
 import { registerRequestHooks } from './requestHooks.js';
 import { registerSecurityPlugins } from './security.js';
 import { registerStaticAssets } from './staticAssets.js';
+import { registerTelemetryPlugin } from './telemetryPlugin.js';
 
 export async function registerPlugins(
   app: FastifyInstance,
   config: ServerConfig,
 ): Promise<void> {
+  registerTelemetryPlugin(app);
   registerErrorHandlers(app, config.isProd);
   await registerSecurityPlugins(app);
   registerCsrfOriginGuard(app, config);

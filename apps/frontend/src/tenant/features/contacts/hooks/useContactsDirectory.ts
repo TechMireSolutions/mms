@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import type { Contact } from "@mms/shared";
 import { CONTACTS_MODULE_MANIFEST } from "@mms/shared";
-import { useContactsPaginated } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactsContractList } from "@/tenant/features/contacts/hooks/useContactsTsrHooks";
 import { useContactsDirectoryFilters } from "@/tenant/features/contacts/hooks/useContactsDirectoryFilters";
 import { useContactsDirectoryLinks } from "@/tenant/features/contacts/hooks/useContactsDirectoryLinks";
 
@@ -34,7 +34,7 @@ export function useContactsDirectory({
     isError: isWorkError,
     refetch: refetchWork,
     isFetching: isWorkFetching,
-  } = useContactsPaginated({
+  } = useContactsContractList({
     page: filters.listPage,
     limit: workLimit,
     search: filters.debouncedSearch,
@@ -43,11 +43,10 @@ export function useContactsDirectory({
     sortField: filters.sortField,
     sortDir: filters.sortDir,
     quickFilter: filters.quickFilter,
-    enabled: useServerWork,
-  });
+  }, useServerWork);
 
-  const workContacts = workPageData?.contacts ?? [];
-  const shownCount = workPageData?.total ?? 0;
+  const workContacts = (workPageData?.body?.contacts ?? []) as Contact[];
+  const shownCount = workPageData?.body?.total ?? 0;
 
   const allContactsForLinks = useContactsDirectoryLinks({
     workContacts,

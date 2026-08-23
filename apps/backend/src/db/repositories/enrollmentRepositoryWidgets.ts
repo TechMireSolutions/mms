@@ -4,7 +4,7 @@ import type {
   EnrollmentsWidgetQuery,
 } from '@mms/shared';
 import { enrollments } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(enrollments.workspaceSubdomain, subdomain), isNull(enrollments.deletedAt))!;
@@ -72,7 +72,7 @@ export async function aggregateEnrollmentsWidgetQueries(
   const results: Record<string, EnrollmentsWidgetAggregateResult> = {};
   if (queries.length === 0) return results;
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const totalRows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(enrollments)

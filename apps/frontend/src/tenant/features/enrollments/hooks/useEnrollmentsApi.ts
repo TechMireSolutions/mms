@@ -1,11 +1,8 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
 import type {
   Enrollment,
   EnrollmentsCommandMetricsSnapshot,
-  EnrollmentsListPageResult,
-  EnrollmentsReportAggregates,
   EnrollmentsReportComparisonQuery,
-  EnrollmentsWidgetAggregateResult,
   EnrollmentsWidgetOperation,
   EnrollmentsWidgetFilterOperator,
 } from '@mms/shared';
@@ -15,8 +12,8 @@ import {
   normalizeEnrollmentsReportComparisonQuery,
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { tsrClient, apiContract } from '@/lib/api';
 import { invalidateEnrollmentsQueries } from '@/tenant/features/enrollments/hooks/invalidateEnrollmentsQueries';
 
 export const ENROLLMENTS_QUERY_KEY = ['enrollments', 'list'] as const;
@@ -67,33 +64,41 @@ function buildEnrollmentsPageUrl(params: EnrollmentsPaginatedParams): string {
 export function useEnrollmentsPaginated(params: EnrollmentsPaginatedParams) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
-  return useQuery({
-    queryKey: [...ENROLLMENTS_QUERY_KEY, 'page', params] as const,
-    queryFn: async ({ signal }) => apiJson<EnrollmentsListPageResult>(buildEnrollmentsPageUrl(params), { signal }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.enrollments.list.useQuery({
+    queryKey: [...ENROLLMENTS_QUERY_KEY, 'page', params] as any,
+    queryData: {
+      query: {
+        page: params.page,
+        limit: params.limit ?? ENROLLMENTS_MODULE_MANIFEST.defaultPageSize,
+        search: params.search?.trim(),
+        status: params.status?.trim() && params.status !== 'all' ? params.status.trim() : undefined,
+        sessionId: params.sessionId?.trim() && params.sessionId !== 'all' ? params.sessionId.trim() : undefined,
+        includeDeleted: params.includeDeleted ? 'true' : undefined,
+      } as any,
+    },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
-    placeholderData: (previousData) => previousData,
+    placeholderData: (previousData: unknown) => previousData,
   });
 }
 
 export function useEnrollments(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<Enrollment[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.enrollments.list.useQuery({
     queryKey: ENROLLMENTS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ enrollments: Enrollment[] }>(
-        `${ENROLLMENTS_API}?page=1&limit=${ENROLLMENTS_MODULE_MANIFEST.maxPageSize}`,
-        { signal },
-      );
-      return res?.enrollments ?? [];
-    },
+    queryData: { query: { page: 1, limit: ENROLLMENTS_MODULE_MANIFEST.maxPageSize } as any },
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 15_000,
   });
 }
 
 export function useEnrollmentsCollection(options?: { enabled?: boolean }): Enrollment[] {
-  return useEnrollments(options).data ?? [];
+  const query = useEnrollments(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.enrollments ?? []);
 }
 
 export function useEnrollmentsMetrics(options?: { enabled?: boolean }) {
@@ -110,21 +115,19 @@ export function useEnrollmentsReportAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
   const comparison = normalizeEnrollmentsReportComparisonQuery(options?.comparison);
-  const queryParams = new URLSearchParams();
-  if (comparison?.sessionIds?.length) queryParams.set('sessionIds', comparison.sessionIds.join(','));
-  if (comparison?.rangeAFrom) queryParams.set('rangeAFrom', comparison.rangeAFrom);
-  if (comparison?.rangeATo) queryParams.set('rangeATo', comparison.rangeATo);
-  if (comparison?.rangeBFrom) queryParams.set('rangeBFrom', comparison.rangeBFrom);
-  if (comparison?.rangeBTo) queryParams.set('rangeBTo', comparison.rangeBTo);
-  const queryString = queryParams.toString();
-
-  return useQuery({
-    queryKey: [...ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,
-    queryFn: async ({ signal }): Promise<EnrollmentsReportAggregates> =>
-      apiJson<EnrollmentsReportAggregates>(
-        `${ENROLLMENTS_API}/report-aggregates${queryString ? `?${queryString}` : ''}`,
-        { signal },
-      ),
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.enrollments.reportAggregates.useQuery({
+    queryKey: [...ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as any,
+    queryData: {
+      query: {
+        sessionIds: comparison?.sessionIds?.length ? comparison.sessionIds.join(',') : undefined,
+        rangeAFrom: comparison?.rangeAFrom,
+        rangeATo: comparison?.rangeATo,
+        rangeBFrom: comparison?.rangeBFrom,
+        rangeBTo: comparison?.rangeBTo,
+      } as any,
+    },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
@@ -141,21 +144,17 @@ export function useEnrollmentsWidgetAggregates(
     .map((widget) => enrollmentsWidgetQueryFromWidget(widget));
   const querySignature = enrollmentQueries.map((query) => query.id).sort().join(',');
 
-  return useQuery({
+  const query = useQuery({
     queryKey: [...ENROLLMENTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async ({ signal }) => {
-      const aggregateResponse = await apiJson<{
-        results: Record<string, EnrollmentsWidgetAggregateResult>;
-      }>(`${ENROLLMENTS_API}/widget-aggregates`, {
-        method: 'POST',
-        body: JSON.stringify({ widgets: enrollmentQueries }),
-        signal,
-      });
-      return aggregateResponse?.results ?? {};
+    queryFn: async () => {
+      const res = await apiContract.enrollments.widgetAggregates({ body: { widgets: enrollmentQueries } });
+      return (res.body as any)?.results ?? {};
     },
     enabled: isAuthenticated && enabled && enrollmentQueries.length > 0,
     staleTime: 30_000,
   });
+
+  return { ...query, data: query.data ?? {} };
 }
 
 export function useEnrollmentMutations() {
@@ -165,80 +164,74 @@ export function useEnrollmentMutations() {
     invalidateEnrollmentsQueries(queryClient);
   };
 
-  const createEnrollment = useMutation({
-    mutationFn: async (enrollment: Enrollment) =>
-      apiJson<{ enrollment: Enrollment }>(ENROLLMENTS_API, {
-        method: 'POST',
-        body: JSON.stringify(enrollment),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const createEnrollment = tsrClient.enrollments.create.useMutation({
     onSuccess: invalidate,
   });
 
-  const updateEnrollment = useMutation({
-    mutationFn: async ({ id, enrollment }: { id: string; enrollment: Enrollment }) =>
-      apiJson<{ enrollment: Enrollment }>(`${ENROLLMENTS_API}/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(enrollment),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const updateEnrollment = tsrClient.enrollments.update.useMutation({
     onSuccess: invalidate,
   });
 
-  const deleteEnrollment = useMutation({
-    mutationFn: async ({ id, deletionReason }: { id: string; deletionReason?: string }) =>
-      apiJson<{ success: boolean }>(`${ENROLLMENTS_API}/${id}`, {
-        method: 'DELETE',
-        body: JSON.stringify(deletionReason ? { deletionReason } : {}),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const deleteEnrollment = tsrClient.enrollments.delete.useMutation({
     onSuccess: invalidate,
   });
 
-  const restoreEnrollment = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${ENROLLMENTS_API}/${encodeURIComponent(id)}/restore`, {
-        method: 'POST',
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const restoreEnrollment = tsrClient.enrollments.restore.useMutation({
     onSuccess: invalidate,
   });
 
-  const bulkDeleteEnrollments = useMutation({
-    mutationFn: async ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${ENROLLMENTS_API}/bulk-delete`, {
-        method: 'POST',
-        body: JSON.stringify({
-          ids,
-          ...(deletionReason ? { deletionReason } : {}),
-        }),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkDeleteEnrollments = tsrClient.enrollments.bulkDelete.useMutation({
     onSuccess: invalidate,
   });
 
-  const bulkRestoreEnrollments = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${ENROLLMENTS_API}/bulk-restore`, {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkRestoreEnrollments = tsrClient.enrollments.bulkRestore.useMutation({
     onSuccess: invalidate,
   });
 
-  const logExportAudit = useMutation({
-    mutationFn: async (payload: {
-      count: number;
-      scope: 'all' | 'filtered' | 'selection';
-    }) =>
-      apiJson<{ success: boolean }>(`${ENROLLMENTS_API}/export-audit`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
-  });
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const logExportAudit = tsrClient.enrollments.exportAudit.useMutation({});
 
   return {
-    createEnrollment,
-    updateEnrollment,
-    deleteEnrollment,
-    restoreEnrollment,
-    bulkDeleteEnrollments,
-    bulkRestoreEnrollments,
-    logExportAudit,
+    createEnrollment: {
+      ...createEnrollment,
+      mutate: (enrollment: Enrollment, opts?: any) => createEnrollment.mutate({ body: enrollment }, opts),
+      mutateAsync: (enrollment: Enrollment) => createEnrollment.mutateAsync({ body: enrollment }),
+    },
+    updateEnrollment: {
+      ...updateEnrollment,
+      mutate: ({ id, enrollment }: { id: string; enrollment: Enrollment }, opts?: any) => updateEnrollment.mutate({ params: { id }, body: enrollment }, opts),
+      mutateAsync: ({ id, enrollment }: { id: string; enrollment: Enrollment }) => updateEnrollment.mutateAsync({ params: { id }, body: enrollment }),
+    },
+    deleteEnrollment: {
+      ...deleteEnrollment,
+      mutate: ({ id, deletionReason }: { id: string; deletionReason?: string }, opts?: any) => deleteEnrollment.mutate({ params: { id }, body: deletionReason ? { deletionReason } : {} }, opts),
+      mutateAsync: ({ id, deletionReason }: { id: string; deletionReason?: string }) => deleteEnrollment.mutateAsync({ params: { id }, body: deletionReason ? { deletionReason } : {} }),
+    },
+    restoreEnrollment: {
+      ...restoreEnrollment,
+      mutate: (id: string, opts?: any) => restoreEnrollment.mutate({ params: { id }, body: {} }, opts),
+      mutateAsync: (id: string) => restoreEnrollment.mutateAsync({ params: { id }, body: {} }),
+    },
+    bulkDeleteEnrollments: {
+      ...bulkDeleteEnrollments,
+      mutate: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }, opts?: any) => bulkDeleteEnrollments.mutate({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }, opts),
+      mutateAsync: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }) => bulkDeleteEnrollments.mutateAsync({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }),
+    },
+    bulkRestoreEnrollments: {
+      ...bulkRestoreEnrollments,
+      mutate: (ids: string[], opts?: any) => bulkRestoreEnrollments.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkRestoreEnrollments.mutateAsync({ body: { ids } }),
+    },
+    logExportAudit: {
+      ...logExportAudit,
+      mutate: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }, opts?: any) => logExportAudit.mutate({ body: payload }, opts),
+      mutateAsync: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) => logExportAudit.mutateAsync({ body: payload }),
+    },
   };
 }

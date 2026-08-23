@@ -116,9 +116,11 @@ export function useMessageComposerDispatch({
       }));
       try {
         await recordDispatches.mutateAsync({
-          logs: messages,
-          idempotencyKey: `${idempotencyKey}:${auditSavedCountRef.current + index}`,
-        });
+          body: {
+            logs: messages,
+            idempotencyKey: `${idempotencyKey}:${auditSavedCountRef.current + index}`,
+          },
+        } as any);
         auditSavedCountRef.current += chunk.length;
       } catch {
         return false;

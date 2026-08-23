@@ -4,10 +4,9 @@ import {
   type ContactLookupCountryCode,
   type ContactLookupsMap,
 } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
+import { apiContract } from "@/lib/api";
 import { createModuleLookupsHooks } from "@/lib/query/createModuleLookupsHooks";
 import { getContactConfigCollectionDefaults } from "@/lib/contacts/contactConfigSeeds";
-import { CONTACTS_API } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
 
 export const CONTACTS_LOOKUPS_QUERY_KEY = [CONTACTS_MODULE_MANIFEST.collectionKey, "lookups"] as const;
 
@@ -32,22 +31,21 @@ const defaults = (): ContactLookupsMap => {
 };
 
 export async function fetchContactLookups(signal?: AbortSignal): Promise<ContactLookupsMap> {
-  const response = await apiJson<{ lookups: ContactLookupsMap }>(`${CONTACTS_API}/lookups`, {
-    signal,
-  });
-  return response.lookups ?? defaults();
+  const response = await apiContract.contacts.getLookups({ query: {} });
+  if (response.status !== 200) return defaults();
+  return (response.body as any)?.lookups ?? defaults();
 }
 
 async function putContactLookupKind(
   kind: ContactLookupKind,
   items: ContactLookupItems,
 ): Promise<ContactLookupItems> {
-  const response = await apiJson<{ items: ContactLookupItems }>(`${CONTACTS_API}/lookups/${kind}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ items }),
+  const response = await apiContract.contacts.updateLookups({
+    params: { kind },
+    body: { items }
   });
-  return response.items;
+  if (response.status !== 200) throw new Error("Failed to update contact lookups");
+  return (response.body as any)?.items;
 }
 
 const lookupsHooks = createModuleLookupsHooks<

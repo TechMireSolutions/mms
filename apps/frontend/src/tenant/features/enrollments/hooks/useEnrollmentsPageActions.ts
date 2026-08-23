@@ -1,13 +1,12 @@
 import { useTranslation } from "@/hooks/useTranslation";
-import { apiJson } from "@/lib/apiClient";
+import { apiContract } from "@/lib/api";
 import { notify } from "@/lib/notify";
 import type { Enrollment } from "@/lib/data/enrollmentData";
-import { useStudentMutations, type StudentRecord } from "@/tenant/hooks/collections/students";
+import { useStudentMutations } from "@/tenant/hooks/collections/students";
 import { useEnrollmentViewerRole } from "@/tenant/hooks/useViewerRole";
 import {
   useEnrollmentMutations,
 } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
-import { STUDENTS_MODULE_MANIFEST } from "@mms/shared";
 
 interface UseEnrollmentsPageActionsParams {
   enrollments: Enrollment[];
@@ -38,14 +37,10 @@ export function useEnrollmentsPageActions({
     try {
       await createEnrollment.mutateAsync(enrollment);
       try {
-        const studentsResponse = await apiJson<{ students: StudentRecord[] }>(
-          `${STUDENTS_MODULE_MANIFEST.restBasePath}/resolve`,
-          {
-            method: "POST",
-            body: JSON.stringify({ ids: [String(enrollment.studentId)] }),
-          },
-        );
-        const student = studentsResponse.students[0];
+        const res = await apiContract.students.resolve({
+          body: { ids: [String(enrollment.studentId)] },
+        });
+        const student = res.body.students[0];
         if (student) {
           const enrolled = (student.enrolledSessions as string[] | undefined) ?? [];
           if (!enrolled.includes(enrollment.sessionId)) {
@@ -83,7 +78,7 @@ export function useEnrollmentsPageActions({
       },
     }, {
       onSuccess: () => notify.info(t("enrollments.toast.cancelled")),
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
         description: err instanceof Error ? err.message : String(err),
       }),
     });
@@ -95,7 +90,7 @@ export function useEnrollmentsPageActions({
         notify.info(t("enrollments.toast.deleted"));
         if (viewing?.id === id) onViewingChange(null);
       },
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
         description: err instanceof Error ? err.message : String(err),
       }),
     });
@@ -104,7 +99,7 @@ export function useEnrollmentsPageActions({
   const handleRestore = (id: string) => {
     restoreEnrollment.mutate(id, {
       onSuccess: () => notify.success(t("enrollments.toast.restored")),
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
         description: err instanceof Error ? err.message : String(err),
       }),
     });
@@ -112,14 +107,14 @@ export function useEnrollmentsPageActions({
 
   const handleBulkDelete = (ids: string[], deletionReason?: string) => {
     bulkDeleteEnrollments.mutate({ ids, deletionReason }, {
-      onSuccess: (result) => {
+      onSuccess: (result: any) => {
         notify.success(
-          result.failed > 0
+          result?.failed > 0
             ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded, failed: result.failed })
-            : t("enrollments.toast.bulkDeleted", { count: result.succeeded }),
+            : t("enrollments.toast.bulkDeleted", { count: result?.succeeded ?? ids.length }),
         );
       },
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
         description: err instanceof Error ? err.message : String(err),
       }),
     });
@@ -127,14 +122,14 @@ export function useEnrollmentsPageActions({
 
   const handleBulkRestore = (ids: string[]) => {
     bulkRestoreEnrollments.mutate(ids, {
-      onSuccess: (result) => {
+      onSuccess: (result: any) => {
         notify.success(
-          result.failed > 0
+          result?.failed > 0
             ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded, failed: result.failed })
-            : t("enrollments.toast.bulkRestored", { count: result.succeeded }),
+            : t("enrollments.toast.bulkRestored", { count: result?.succeeded ?? ids.length }),
         );
       },
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
         description: err instanceof Error ? err.message : String(err),
       }),
     });
@@ -167,7 +162,7 @@ export function useEnrollmentsPageActions({
         if (viewing?.id === id) onViewingChange(updated);
         notify.success(t("enrollments.toast.updated"));
       },
-      onError: (err) => notify.error(t("enrollments.toast.saveFailed"), {
+      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
         description: err instanceof Error ? err.message : String(err),
       }),
     });

@@ -66,7 +66,7 @@ export function useResultsViewData({
         const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
         return {
           ...examResult,
-          student: student ? { name: student.name || t("common.unnamedStudent"), rollNo: student.grNumber || String(student.id) } : undefined,
+          student: student ? { name: (student as any).name || t("common.unnamedStudent"), rollNo: (student as any).grNumber || String((student as any).id) } : undefined,
           cls: classId ? { name: classNamesById.get(classId) || classId } : undefined,
           pct: percentage,
           grade: getGrade(percentage),

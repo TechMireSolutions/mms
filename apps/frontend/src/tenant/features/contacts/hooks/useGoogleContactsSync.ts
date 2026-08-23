@@ -7,7 +7,6 @@ import { useGoogleContactsOAuth } from "@/tenant/features/contacts/hooks/useGoog
 import { useInvalidateContactsQueries } from "@/tenant/features/contacts/hooks/useContactMutations";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type AppTranslationKey, type ContactGoogleSyncConfigClient, type GoogleContactsSyncRunResult } from "@mms/shared";
-import { isApiError } from "@/lib/apiClient";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { notify } from "@/lib/notify";
 
@@ -15,9 +14,10 @@ function mapGoogleSyncError(
   error: unknown,
   translate: (key: AppTranslationKey) => string,
 ): string {
-  if (isApiError(error)) {
-    if (error.type === "session_expired") return translate("contacts.sync.sessionExpired");
-    if (error.type === "forbidden") return translate("errors.state.permission");
+  if (typeof error === 'object' && error !== null && 'status' in error) {
+    const err = error as any;
+    if (err.body?.code === "session_expired") return translate("contacts.sync.sessionExpired");
+    if (err.status === 403) return translate("errors.state.permission");
     return translate("contacts.sync.oauthError");
   }
   return translate("contacts.sync.oauthError");
@@ -115,8 +115,8 @@ export function useGoogleContactsSync({
         skippedName: result.skippedName ?? 0,
         skippedUnique: result.skippedUnique ?? 0,
       });
-    } catch (syncError) {
-      if (isApiError(syncError) && syncError.type === "session_expired") {
+    } catch (syncError: any) {
+      if (typeof syncError === 'object' && syncError !== null && syncError.body?.code === "session_expired") {
         invalidateContacts();
       }
       setError(mapGoogleSyncError(syncError, t));

@@ -1,20 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
-import type { Contact, ContactsListPageResult } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { createModulePaginatedListQuery } from "@/lib/query/createModulePaginatedListQuery";
-import { createPersonModuleResolveQueries } from "@/lib/query/createPersonModuleResolveQueries";
+
+import { uniqueRegistryIds } from '@/lib/registryResolve';
+import { useMemo } from 'react';
+import { apiContract } from '@/lib/api';
 import {
-  CONTACTS_API,
   CONTACTS_QUERY_KEY,
   contactDetailQueryKey,
 } from "@/tenant/features/contacts/hooks/contactsQueryKeys";
 import {
-  buildContactsPageUrl,
-  contactsListQueryKeyParams,
-  contactsPaginatedQueryKey,
   fetchContactById,
-  sameContactsListFilters,
-  type ContactsPaginatedParams,
 } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
 
 export type { ContactsPaginatedParams } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
@@ -23,21 +19,7 @@ export {
   fetchContactById,
 } from "@/tenant/features/contacts/hooks/contactsListQueryBuilders";
 
-const useContactsPaginatedList = createModulePaginatedListQuery<
-  ContactsListPageResult,
-  ContactsPaginatedParams,
-  ReturnType<typeof contactsListQueryKeyParams>
->({
-  queryKey: contactsPaginatedQueryKey,
-  keyParams: contactsListQueryKeyParams,
-  sameFilters: sameContactsListFilters,
-  buildUrl: buildContactsPageUrl,
-  staleTime: 15_000,
-});
 
-export function useContactsPaginated(params: ContactsPaginatedParams) {
-  return useContactsPaginatedList(params);
-}
 
 export function useContactById(contactId: string | undefined, enabled = true) {
   const { isAuthenticated } = useAuth();
@@ -49,13 +31,31 @@ export function useContactById(contactId: string | undefined, enabled = true) {
   });
 }
 
-const contactResolveQueries = createPersonModuleResolveQueries<Contact, Contact>({
-  moduleQueryKey: CONTACTS_QUERY_KEY,
-  apiBase: CONTACTS_API,
-  responseKey: "contacts",
-  toHydrated: (rows) => rows,
-  chunkSize: 100,
-});
-
 /** Batch-resolve contact labels by id (pickers & cross-module links). */
-export const useContactsByIds = contactResolveQueries.useByIds;
+export function useContactsByIds(ids: (string | number | null | undefined)[]) {
+  const { isAuthenticated } = useAuth();
+  const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
+  return useQuery({
+    queryKey: [...CONTACTS_QUERY_KEY, 'resolve', normalized.join(',')] as const,
+    queryFn: async ({ signal }) => {
+      const hydrated: Contact[] = [];
+      const resolveChunk = async (chunk: string[]) => {
+        const response = await apiContract.contacts.resolve({
+          body: { ids: chunk },
+        });
+        if (response.status === 200) {
+          hydrated.push(...((response.body as any)?.contacts ?? []));
+        }
+      };
+      
+      const chunkSize = 100;
+      for (let index = 0; index < normalized.length; index += chunkSize) {
+        await resolveChunk(normalized.slice(index, index + chunkSize));
+      }
+      
+      return hydrated;
+    },
+    enabled: isAuthenticated && normalized.length > 0,
+    staleTime: 30_000,
+  });
+}

@@ -9,7 +9,7 @@ import {
   type FinanceReportComparisonSession,
 } from '@mms/shared';
 import { getQueryRows } from '../documentStoreKeys.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 /**
  * Collected amount SQL — mirrors `getCollectedAmountForInvoice`:
@@ -47,7 +47,7 @@ export async function loadFinanceReportAggregatesSql(
   const subdomain = tenant.trim().toLowerCase();
   if (!subdomain) return { ...EMPTY_FINANCE_REPORT_AGGREGATES };
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const aggregates: FinanceReportAggregates = { ...EMPTY_FINANCE_REPORT_AGGREGATES };
     if (!financeReportComparisonQueryActive(comparisonQuery) || !comparisonQuery) {
       return aggregates;

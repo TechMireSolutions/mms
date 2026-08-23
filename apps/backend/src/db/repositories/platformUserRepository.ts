@@ -8,7 +8,7 @@ import {
   normalizePlatformAdminPermissions,
   FULL_PLATFORM_ADMIN_PERMISSIONS,
 } from '@mms/shared';
-import { getDb } from '../dbClient.js';
+import { activeDb } from '../dbConnection.js';
 import { platformUsers, platformUserPermissions } from '../schema.js';
 
 // ---------------------------------------------------------------------------
@@ -18,7 +18,7 @@ import { platformUsers, platformUserPermissions } from '../schema.js';
 const PERMISSION_KEYS: PlatformAdminPermissionKey[] = ['workspaces', 'onboard'];
 
 async function loadPermissions(userId: string): Promise<PlatformAdminPermissions> {
-  const rows = await getDb()
+  const rows = await activeDb()
     .select({ permissionKey: platformUserPermissions.permissionKey, isGranted: platformUserPermissions.isGranted })
     .from(platformUserPermissions)
     .where(eq(platformUserPermissions.platformUserId, userId));
@@ -36,7 +36,7 @@ async function loadPermissionsForUsers(
   const map = new Map<string, PlatformAdminPermissions>();
   if (userIds.length === 0) return map;
 
-  const rows = await getDb()
+  const rows = await activeDb()
     .select({
       userId: platformUserPermissions.platformUserId,
       permissionKey: platformUserPermissions.permissionKey,
@@ -59,7 +59,7 @@ async function loadPermissionsForUsers(
 
 async function writePermissions(userId: string, permissions: PlatformAdminPermissions): Promise<void> {
   // Delete existing then insert — simple and correct for ≤10 keys.
-  await getDb().delete(platformUserPermissions).where(eq(platformUserPermissions.platformUserId, userId));
+  await activeDb().delete(platformUserPermissions).where(eq(platformUserPermissions.platformUserId, userId));
 
   const rows = PERMISSION_KEYS.map((key) => ({
     platformUserId: userId,
@@ -67,7 +67,7 @@ async function writePermissions(userId: string, permissions: PlatformAdminPermis
     isGranted: Boolean(permissions[key]),
   }));
   if (rows.length > 0) {
-    await getDb().insert(platformUserPermissions).values(rows);
+    await activeDb().insert(platformUserPermissions).values(rows);
   }
 }
 
@@ -102,12 +102,12 @@ function rowToStored(
 // ---------------------------------------------------------------------------
 
 export async function countPlatformUserRows(): Promise<number> {
-  const rows = await getDb().select({ value: count() }).from(platformUsers);
+  const rows = await activeDb().select({ value: count() }).from(platformUsers);
   return Number(rows[0]?.value ?? 0);
 }
 
 export async function listPlatformUsers(): Promise<StoredPlatformUser[]> {
-  const rows = await getDb().select().from(platformUsers).orderBy(asc(platformUsers.createdAt));
+  const rows = await activeDb().select().from(platformUsers).orderBy(asc(platformUsers.createdAt));
   if (rows.length === 0) return [];
 
   const userIds = rows.map((r) => r.id);
@@ -120,7 +120,7 @@ export async function listPlatformUsers(): Promise<StoredPlatformUser[]> {
 
 export async function findPlatformUserRowByEmail(email: string): Promise<StoredPlatformUser | null> {
   const normalized = email.trim().toLowerCase();
-  const rows = await getDb()
+  const rows = await activeDb()
     .select()
     .from(platformUsers)
     .where(eq(platformUsers.email, normalized));
@@ -131,7 +131,7 @@ export async function findPlatformUserRowByEmail(email: string): Promise<StoredP
 }
 
 export async function findPlatformUserRowById(id: string): Promise<StoredPlatformUser | null> {
-  const rows = await getDb().select().from(platformUsers).where(eq(platformUsers.id, id));
+  const rows = await activeDb().select().from(platformUsers).where(eq(platformUsers.id, id));
   const row = rows[0];
   if (!row) return null;
   const perms = await loadPermissions(row.id);
@@ -139,7 +139,7 @@ export async function findPlatformUserRowById(id: string): Promise<StoredPlatfor
 }
 
 export async function findPlatformUserRowByRole(role: PlatformRole): Promise<StoredPlatformUser | null> {
-  const rows = await getDb().select().from(platformUsers).where(eq(platformUsers.role, role));
+  const rows = await activeDb().select().from(platformUsers).where(eq(platformUsers.role, role));
   const row = rows[0];
   if (!row) return null;
   const perms = await loadPermissions(row.id);
@@ -157,7 +157,7 @@ export async function insertPlatformUser(user: StoredPlatformUser): Promise<void
       ? FULL_PLATFORM_ADMIN_PERMISSIONS
       : normalizePlatformAdminPermissions(processedUser.permissions);
 
-  await getDb().insert(platformUsers).values({
+  await activeDb().insert(platformUsers).values({
     id: processedUser.id,
     email: processedUser.email.toLowerCase(),
     name: processedUser.name,
@@ -209,7 +209,7 @@ export async function updatePlatformUserRow(
     next.permissions = FULL_PLATFORM_ADMIN_PERMISSIONS;
   }
 
-  await getDb()
+  await activeDb()
     .update(platformUsers)
     .set({
       email: next.email,
@@ -244,6 +244,6 @@ export async function deletePlatformUserRow(userId: string): Promise<boolean> {
   const existing = await findPlatformUserRowById(userId);
   if (!existing) return false;
   // Child rows cascade-deleted by FK constraint.
-  await getDb().delete(platformUsers).where(eq(platformUsers.id, userId));
+  await activeDb().delete(platformUsers).where(eq(platformUsers.id, userId));
   return true;
 }

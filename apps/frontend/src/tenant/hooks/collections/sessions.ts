@@ -15,3 +15,12 @@ export {
   useSessionMutations,
   useSessionsMetrics,
 } from '@/tenant/features/sessions/hooks/useSessions';
+export { invalidateSessionsQueries } from '@/tenant/features/sessions/hooks/invalidateSessionsQueries';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useSessionsContractList,
+  useSessionsContractCreate,
+  useSessionsContractBulkDelete,
+  useSessionsContractBulkStatus,
+  useSessionsContractBulkRestore,
+} from '@/tenant/features/sessions/hooks/useSessionsTsrHooks';

@@ -24,3 +24,12 @@ export {
   setUserPreferencesMemory,
 } from '@/tenant/features/users/hooks/userSetupConfigApi';
 export { invalidateUsersQueries } from '@/tenant/features/users/hooks/invalidateUsersQueries';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useUsersContractList,
+  useUsersContractBulkUpdate,
+  useUsersContractBulkDelete,
+  useUsersContractBulkRestore,
+  useUsersContractDelete,
+  useUsersContractRestore,
+} from '@/tenant/features/users/hooks/useUsersTsrHooks';

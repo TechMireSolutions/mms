@@ -2,7 +2,6 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { User } from '@mms/shared';
 import {
   messagingRecipientsMatchQuerySchema,
-  messagingRecipientsQuerySchema,
 } from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
@@ -10,7 +9,6 @@ import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { entityResolveBodySchema } from '../../../validation/commonSchemas.js';
 import { canReadMessaging } from '../../../services/rbacService.js';
 import {
-  loadMessagingRecipients,
   matchMessagingRecipients,
   resolveMessagingRecipients,
 } from '../../../services/messagingService.js';
@@ -31,23 +29,6 @@ export const messagingRecipientRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send(result);
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to match messaging recipients', err);
-    }
-  });
-
-  fastify.get('/recipients', async (req, reply) => {
-    const user = req.user as User;
-    if (!canReadMessaging(user)) return sendForbidden(reply);
-    const parsedQuery = parseRequest(messagingRecipientsQuerySchema, req.query);
-    if (!parsedQuery.ok) return replyValidationError(reply, parsedQuery.message);
-    const tenantSubdomain = getRequestTenant();
-    if (!tenantSubdomain) {
-      return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
-    }
-    try {
-      const page = await loadMessagingRecipients(tenantSubdomain, parsedQuery.data);
-      return reply.send(page);
-    } catch (err) {
-      return sendDatabaseError(reply, 'Failed to load messaging recipients', err);
     }
   });
 

@@ -7,8 +7,7 @@ import type {
   StandardMessagingRecipient,
 } from '@mms/shared';
 import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
-import { useQuery } from '@tanstack/react-query';
-import { apiJson } from '@/lib/apiClient';
+import { tsrClient } from '@/lib/api';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
 export const MESSAGING_RECIPIENTS_QUERY_KEY = ['messaging', 'recipients'] as const;
@@ -71,13 +70,19 @@ export async function loadMatchingRecipients(params: {
   const search = params.search.trim();
   if (search) queryParams.set('search', search);
 
-  const response = await apiJson<MessagingRecipientsMatchResponseDto>(
-    `/api/messaging/recipients/match?${queryParams.toString()}`,
-    { signal: params.signal },
-  );
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const response = await tsrClient.messaging.matchRecipients.query({
+    query: {
+      role: params.roleFilter,
+      kind: params.kind,
+      gender: params.genderFilter !== 'all' ? params.genderFilter : undefined,
+      search: search || undefined,
+    },
+  });
+  const data = response.body as MessagingRecipientsMatchResponseDto;
   return {
-    recipients: response.recipients ?? [],
-    truncated: Boolean(response.truncated),
+    recipients: data.recipients ?? [],
+    truncated: Boolean(data.truncated),
   };
 }
 
@@ -103,13 +108,22 @@ export function useMessagingWorkRecipients(
     pageSize,
   });
 
-  const query = useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+
+  const query = tsrClient.messaging.listRecipients.useQuery({
     queryKey: [...MESSAGING_RECIPIENTS_QUERY_KEY, role, gender, search, page, pageSize] as const,
-    queryFn: async ({ signal }) =>
-      apiJson<ContactsListPageResult>(`/api/messaging/recipients?${queryString}`, { signal }),
+    queryData: {
+      query: {
+        role,
+        page,
+        pageSize,
+        gender: gender !== 'all' ? gender : undefined,
+        search: search || undefined,
+      } as any,
+    },
     enabled,
     staleTime: 15_000,
-    placeholderData: (previousData, previousQuery) => {
+    placeholderData: (previousData: any, previousQuery: any) => {
       const previousKey = previousQuery?.queryKey;
       if (!previousKey || previousKey.length < 6) return undefined;
       const [, , prevRole, prevGender, prevSearch, , prevPageSize] = previousKey;
@@ -124,13 +138,15 @@ export function useMessagingWorkRecipients(
       return undefined;
     },
   });
+  
+  const data = query.data?.body as ContactsListPageResult | undefined;
 
   return {
-    contacts: query.data?.contacts ?? [],
-    page: query.data?.page ?? page,
-    total: query.data?.total ?? 0,
-    limit: query.data?.limit ?? pageSize,
-    hasMore: Boolean(query.data?.hasMore),
+    contacts: data?.contacts ?? [],
+    page: data?.page ?? page,
+    total: data?.total ?? 0,
+    limit: data?.limit ?? pageSize,
+    hasMore: Boolean(data?.hasMore),
     isError: query.isError,
     isPending: query.isPending,
     isFetching: query.isFetching,

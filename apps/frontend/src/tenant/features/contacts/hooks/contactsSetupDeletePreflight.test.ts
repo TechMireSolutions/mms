@@ -10,10 +10,15 @@ import {
   preflightContactFieldsDelete,
 } from "@/tenant/features/contacts/hooks/contactsSetupDeletePreflight";
 
-const apiJson = vi.hoisted(() => vi.fn());
+const apiContractMock = vi.hoisted(() => ({
+  contacts: {
+    getFieldUsage: vi.fn(),
+    getFieldsUsage: vi.fn(),
+  },
+}));
 
-vi.mock("@/lib/apiClient", () => ({
-  apiJson,
+vi.mock("@/lib/api", () => ({
+  apiContract: apiContractMock,
 }));
 
 const emptyPrefs: Pick<ContactPreferences, "duplicateDetectionFields"> = {
@@ -35,8 +40,8 @@ function baseConfig(overrides?: Partial<FieldConfig>): FieldConfig {
 
 describe("preflightContactFieldDelete", () => {
   beforeEach(() => {
-    apiJson.mockReset();
-    apiJson.mockResolvedValue({ count: 0 });
+    apiContractMock.contacts.getFieldUsage.mockReset();
+    apiContractMock.contacts.getFieldUsage.mockResolvedValue({ status: 200, body: { count: 0 } });
   });
 
   it("blocks seed / system fields without calling usage API", async () => {
@@ -55,7 +60,7 @@ describe("preflightContactFieldDelete", () => {
 
     expect(allowed).toBe(false);
     expect(onBlocked).toHaveBeenCalledWith("contacts.setup.cannotDeleteSystemField", undefined);
-    expect(apiJson).not.toHaveBeenCalled();
+    expect(apiContractMock.contacts.getFieldUsage).not.toHaveBeenCalled();
   });
 
   it("allows delete when no column/prefs deps and usage is zero", async () => {
@@ -74,7 +79,7 @@ describe("preflightContactFieldDelete", () => {
 
     expect(allowed).toBe(true);
     expect(onBlocked).not.toHaveBeenCalled();
-    expect(apiJson).toHaveBeenCalledOnce();
+    expect(apiContractMock.contacts.getFieldUsage).toHaveBeenCalledOnce();
   });
 
   it("clears matching draft columns so delete is not blocked by persisted column enablement", async () => {
@@ -102,11 +107,11 @@ describe("preflightContactFieldDelete", () => {
 
     expect(allowed).toBe(true);
     expect(onBlocked).not.toHaveBeenCalled();
-    expect(apiJson).toHaveBeenCalledOnce();
+    expect(apiContractMock.contacts.getFieldUsage).toHaveBeenCalledOnce();
   });
 
   it("blocks when field-usage reports contacts with data", async () => {
-    apiJson.mockResolvedValue({ count: 3 });
+    apiContractMock.contacts.getFieldUsage.mockResolvedValue({ status: 200, body: { count: 3 } });
     const onBlocked = vi.fn();
     const allowed = await preflightContactFieldDelete("customNotes", {
       config: baseConfig({ columnRegistry: [] }),
@@ -125,7 +130,7 @@ describe("preflightContactFieldDelete", () => {
   });
 
   it("blocks with saveFailed when usage API errors", async () => {
-    apiJson.mockRejectedValue(new Error("network"));
+    apiContractMock.contacts.getFieldUsage.mockRejectedValue(new Error("network"));
     const onBlocked = vi.fn();
     const allowed = await preflightContactFieldDelete("customNotes", {
       config: baseConfig({ columnRegistry: [] }),
@@ -157,11 +162,11 @@ describe("preflightContactFieldsDelete", () => {
   };
 
   beforeEach(() => {
-    apiJson.mockReset();
+    apiContractMock.contacts.getFieldsUsage.mockReset();
   });
 
   it("uses one batch POST and allows when all counts are zero", async () => {
-    apiJson.mockResolvedValue({ counts: { a: 0, b: 0, c: 0 } });
+    apiContractMock.contacts.getFieldsUsage.mockResolvedValue({ status: 200, body: { counts: { a: 0, b: 0, c: 0 } } });
     const onBlocked = vi.fn();
     const allowed = await preflightContactFieldsDelete(["a", "b", "c"], {
       config: baseConfig({ columnRegistry: [] }),
@@ -172,18 +177,16 @@ describe("preflightContactFieldsDelete", () => {
 
     expect(allowed).toBe(true);
     expect(onBlocked).not.toHaveBeenCalled();
-    expect(apiJson).toHaveBeenCalledOnce();
-    expect(apiJson).toHaveBeenCalledWith(
-      expect.stringContaining("/field-usage"),
+    expect(apiContractMock.contacts.getFieldsUsage).toHaveBeenCalledOnce();
+    expect(apiContractMock.contacts.getFieldsUsage).toHaveBeenCalledWith(
       expect.objectContaining({
-        method: "POST",
-        body: JSON.stringify({ fieldKeys: ["a", "b", "c"] }),
+        body: { fieldKeys: ["a", "b", "c"] },
       }),
     );
   });
 
   it("notifies once when batch reports a field with contact data", async () => {
-    apiJson.mockResolvedValue({ counts: { a: 0, b: 2, c: 0 } });
+    apiContractMock.contacts.getFieldsUsage.mockResolvedValue({ status: 200, body: { counts: { a: 0, b: 2, c: 0 } } });
     const onBlocked = vi.fn();
     const allowed = await preflightContactFieldsDelete(["a", "b", "c"], {
       config: baseConfig({ columnRegistry: [] }),
@@ -214,6 +217,6 @@ describe("preflightContactFieldsDelete", () => {
 
     expect(allowed).toBe(false);
     expect(onBlocked).toHaveBeenCalledWith("contacts.setup.cannotDeleteSystemField", undefined);
-    expect(apiJson).not.toHaveBeenCalled();
+    expect(apiContractMock.contacts.getFieldsUsage).not.toHaveBeenCalled();
   });
 });

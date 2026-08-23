@@ -9,7 +9,8 @@ import {
   INITIAL_USERS_FIELD_SEED,
 } from './moduleFieldSetupPersons.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 import type { WorkspaceRole } from './userEntityTypes.js';
 
 /** Deep clone {@link INITIAL_USERS_FIELD_SEED} for default and Setup states. */
@@ -85,12 +86,17 @@ export function resolveUsersFieldsMap(
 }
 
 /** PUT /api/users/field-config — field registry JSON without formTabs SSOT. */
-export const userFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const userFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     columnRegistry: z.array(z.record(z.string(), z.unknown())).optional(),
     customFields: z.array(z.record(z.string(), z.unknown())).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const userFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, userFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/users/preferences — registration policy + workspace roles. */
 export const userPreferencesPutBodySchema = z

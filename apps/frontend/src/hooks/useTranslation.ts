@@ -17,7 +17,13 @@ export function useTranslation(): {
 } {
   const context = useContext(TranslationContext);
   if (!context) {
-    throw new Error("useTranslation must be used within a TranslationProvider");
+    return {
+      language: 'en',
+      t: ((key: string, _params?: Record<string, string | number>) => key) as TranslationFunction,
+      isLoading: false,
+      dir: 'ltr',
+      isRtl: false,
+    };
   }
   return {
     language: context.language,

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { messageCategorySchema, messageChannelSchema } from './messagingCategorySchemas.js';
+import type { MessageTemplate } from './schemas/messagingTemplate.dto.js';
 
 export const messageTemplateSchema = z
   .object({
@@ -15,30 +16,8 @@ export const messageTemplateSchema = z
   })
   .strict();
 
-export const messageTemplateInputSchema = z
-  .object({
-    id: z.string().optional(),
-    label: z.string().min(1).max(200),
-    labelKey: z.string().optional(),
-    body: z.string().min(1).max(10_000),
-    category: messageCategorySchema.default('general'),
-    channel: messageChannelSchema.default('all'),
-    createdAt: z.string().optional(),
-    updatedAt: z.string().optional(),
-  })
-  .strict();
+export * from './schemas/messagingTemplate.dto.js';
 
-/** Message template DTO payload structure. */
-export type MessageTemplateDto = z.infer<typeof messageTemplateSchema>;
-/** Canonical message template domain type (Zod-inferred). */
-export type MessageTemplate = MessageTemplateDto;
-/** Message template creation/update input payload structure. */
-export type MessageTemplateInputDto = z.infer<typeof messageTemplateInputSchema>;
-
-export const messageTemplateInsertSchema = messageTemplateInputSchema;
-export type MessageTemplateInsert = z.infer<typeof messageTemplateInsertSchema>;
-export const messageTemplateUpdateSchema = messageTemplateInputSchema.partial();
-export type MessageTemplateUpdate = z.infer<typeof messageTemplateUpdateSchema>;
 
 /** Built-in templates seeded for every workspace messaging setup. */
 export const DEFAULT_MESSAGE_TEMPLATES: MessageTemplate[] = [

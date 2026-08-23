@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import type { SessionsReportAggregates } from '@mms/shared';
 import { getQueryRows } from '../documentStoreKeys.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 const WEEKDAY_KEYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
@@ -14,7 +14,7 @@ export async function loadSessionsReportAggregatesSql(
   const subdomain = tenant.trim().toLowerCase();
   const todayKey = WEEKDAY_KEYS[new Date().getDay()] ?? 'Mon';
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const capacityResult = await tx.execute(sql`
       SELECT
         s.id AS "sessionId",

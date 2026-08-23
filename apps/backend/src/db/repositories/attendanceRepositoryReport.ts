@@ -9,7 +9,7 @@ import {
   type AttendanceReportComparisonSession,
 } from '@mms/shared';
 import { getQueryRows } from '../documentStoreKeys.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 function activeAttendanceWhere(subdomain: string, alias = 'a'): ReturnType<typeof sql> {
   return sql`
@@ -30,7 +30,7 @@ export async function loadAttendanceReportAggregatesSql(
   const subdomain = tenant.trim().toLowerCase();
   if (!subdomain) return { ...EMPTY_ATTENDANCE_REPORT_AGGREGATES };
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const aggregates: AttendanceReportAggregates = { ...EMPTY_ATTENDANCE_REPORT_AGGREGATES };
     if (!attendanceReportComparisonQueryActive(comparisonQuery) || !comparisonQuery) {
       return aggregates;

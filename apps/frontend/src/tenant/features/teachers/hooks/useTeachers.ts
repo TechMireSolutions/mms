@@ -12,7 +12,6 @@ export {
 export { useTeacherMutations } from '@/tenant/features/teachers/hooks/useTeacherMutations';
 
 export {
-  useTeachersPaginated,
   fetchAllTeachersForQuery,
   useTeacherLinkedContactIds,
   useTeacherNextEmployeeId,

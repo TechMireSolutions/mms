@@ -1,9 +1,8 @@
 import {
   CONTACTS_MODULE_MANIFEST,
-  type Contact,
   type ContactsQuickFilter,
 } from "@mms/shared";
-import { apiJson } from "@/lib/apiClient";
+import { apiContract } from "@/lib/api";
 import {
   CONTACTS_API,
   CONTACTS_QUERY_KEY,
@@ -90,12 +89,8 @@ export function sameContactsListFilters(
 }
 
 /** Single SQL page — preferred for report visualizer (no unbounded walk). */
-export async function fetchContactById(
-  contactId: string,
-  signal?: AbortSignal,
-): Promise<Contact> {
-  const contactResponse = await apiJson<{ contact: Contact }>(`${CONTACTS_API}/${contactId}`, {
-    signal,
-  });
-  return contactResponse.contact;
+export async function fetchContactById(contactId: string, signal?: AbortSignal) {
+  const response = await apiContract.contacts.get({ params: { id: contactId } });
+  if (response.status !== 200) throw new Error("Failed to fetch contact");
+  return (response.body as any)?.contact;
 }

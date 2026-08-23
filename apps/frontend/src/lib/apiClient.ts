@@ -85,6 +85,12 @@ async function isAuthenticationRequired(response: Response): Promise<boolean> {
   return body?.type === 'auth_required';
 }
 
+function getCsrfCookieValue(): string | null {
+  if (typeof document === 'undefined') return null;
+  const match = document.cookie.match(/(?:^|;\s*)csrf_token=([^;]*)/);
+  return match && match[1] ? decodeURIComponent(match[1]) : null;
+}
+
 /** Cookie-first API client (`credentials: 'include'`). */
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers ?? {});
@@ -98,6 +104,14 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
       ? crypto.randomUUID()
       : Math.random().toString(36).substring(2, 15);
     headers.set('X-Request-Id', reqId);
+  }
+
+  const method = (init.method || 'GET').toUpperCase();
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && !headers.has('X-CSRF-Token')) {
+    const csrf = getCsrfCookieValue();
+    if (csrf) {
+      headers.set('X-CSRF-Token', csrf);
+    }
   }
 
   const sanitizedInit = sanitizeColumnPreferencesBody(path, init);

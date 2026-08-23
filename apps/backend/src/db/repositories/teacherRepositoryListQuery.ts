@@ -10,7 +10,7 @@ import {
   type TeachersListQuery,
 } from '@mms/shared';
 import { teachers, contacts } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { teacherRowToRecord } from './teacherRepository.js';
 
@@ -170,10 +170,11 @@ export async function listTeachersPage(
 ): Promise<TeachersListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
+    const sortDir = query.sortDir === 'desc' ? 'desc' : query.sortDir === 'asc' ? 'asc' : undefined;
     const result = await runListPage(tx, teachers, {
       conditions: buildListConditions(subdomain, query),
-      orderBy: buildOrderBy(query.sortField, query.sortDir),
+      orderBy: buildOrderBy(query.sortField, sortDir),
       page: query.page,
       limit: query.limit,
       defaultPageSize: TEACHERS_MODULE_MANIFEST.defaultPageSize,
@@ -195,7 +196,7 @@ export async function countTeachersActive(
   options?: { includeDeleted?: boolean },
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const whereClause = options?.includeDeleted
       ? eq(teachers.workspaceSubdomain, subdomain)
       : and(eq(teachers.workspaceSubdomain, subdomain), isNull(teachers.deletedAt));
@@ -217,7 +218,7 @@ export async function listActiveTeachersMissingEmployeeId(
   workspaceSubdomain: string,
 ): Promise<Teacher[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(teachers)
@@ -239,7 +240,7 @@ export async function listTeacherLinkedContactIdsSql(
   excludeTeacherId?: string,
 ): Promise<Array<string | number>> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const conditions: SQL[] = [
       eq(teachers.workspaceSubdomain, subdomain),
       isNull(teachers.deletedAt),
@@ -271,7 +272,7 @@ export async function findSoftDeletedTeacherByContactIdSql(
   const subdomain = tenant.trim().toLowerCase();
   const trimmedContactId = contactId.trim();
   if (!trimmedContactId) return null;
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(teachers)
@@ -301,7 +302,7 @@ export async function findTeacherRegistrationConflictSql(
   },
 ): Promise<'contact' | 'employeeId' | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const exclude = input.excludeId?.trim();
     const baseConditions: SQL[] = [
       eq(teachers.workspaceSubdomain, subdomain),

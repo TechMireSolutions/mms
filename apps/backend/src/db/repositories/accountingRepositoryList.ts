@@ -14,7 +14,7 @@ import {
   accountingEntryTags,
   accountingEntryAttachments,
 } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import {
   accountRowToRecord,
@@ -182,7 +182,7 @@ export async function listAccountsPage(
 ): Promise<AccountingAccountsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, accountingAccounts, {
       conditions: buildAccountListConditions(subdomain, query),
       orderBy: buildAccountOrderBy(query.sortField, query.sortDir),
@@ -211,7 +211,7 @@ export async function listEntriesPage(
   const limit = Math.min(Math.max(1, query.limit ?? 12), 500);
   const offset = (page - 1) * limit;
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const conditions = buildEntryListConditions(subdomain, query);
     const whereClause = and(...conditions);
     const orderBy = buildEntryOrderBy(query.sortField, query.sortDir);
@@ -317,7 +317,7 @@ export async function listFiscalYearsPage(
 ): Promise<AccountingFiscalYearsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, accountingFiscalYears, {
       conditions: buildFiscalYearListConditions(subdomain, query),
       orderBy: buildFiscalYearOrderBy(query.sortField, query.sortDir),

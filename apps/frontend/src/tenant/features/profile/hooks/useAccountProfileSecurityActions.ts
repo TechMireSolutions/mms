@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTenantProfile, TENANT_PROFILE_KEY } from '@/tenant/hooks/useTenantProfile';
-import { apiJson, ApiError } from '@/lib/apiClient';
 import { notify } from '@/lib/notify';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
@@ -10,6 +9,7 @@ import {
   requestLoginEmailChangeBodySchema,
   confirmLoginEmailChangeBodySchema,
 } from '@mms/shared';
+import { tsrClient } from '@/lib/api';
 
 export function useAccountProfileSecurityActions() {
   const { t } = useTranslation();
@@ -32,6 +32,13 @@ export function useAccountProfileSecurityActions() {
   const [showEmailForm, setShowEmailForm] = useState(false);
   const [showPasswordForm, setShowPasswordForm] = useState(false);
 
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const requestLoginEmailMutation = tsrClient.auth.requestLoginEmail.useMutation();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const confirmLoginEmailMutation = tsrClient.auth.confirmLoginEmail.useMutation();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const changePasswordMutation = tsrClient.auth.changePassword.useMutation();
+
   const handleRequestLoginEmail = async (): Promise<void> => {
     setLoginEmailBusy(true);
     setDevCode(null);
@@ -45,23 +52,20 @@ export function useAccountProfileSecurityActions() {
         notify.error(t('common.formPleaseFixErrors'));
         return;
       }
-      const result = await apiJson<{
-        challengeId: string;
-        devCode?: string;
-      }>('/api/auth/login-email/request', {
-        method: 'POST',
-        body: JSON.stringify(checked.data),
+      const { status, body } = await requestLoginEmailMutation.mutateAsync({
+        body: checked.data
       });
-      setChallengeId(result.challengeId);
-      if (result.devCode) setDevCode(result.devCode);
+      if (status !== 200) {
+        if (status === 401) {
+          throw new Error(t('account.wrongPassword'));
+        }
+        throw new Error(t('errors.boundary.description'));
+      }
+      setChallengeId(body.challengeId);
+      if (body.devCode) setDevCode(body.devCode);
       notify.success(t('account.sendCode'));
-    } catch (error: unknown) {
-      const message =
-        error instanceof ApiError && error.type === 'invalid_credentials'
-          ? t('account.wrongPassword')
-          : error instanceof ApiError
-            ? error.message
-            : t('errors.boundary.description');
+    } catch (error: any) {
+      const message = error.message || t('errors.boundary.description');
       notify.error(message);
     } finally {
       setLoginEmailBusy(false);
@@ -80,10 +84,10 @@ export function useAccountProfileSecurityActions() {
         notify.error(t('common.formPleaseFixErrors'));
         return;
       }
-      await apiJson('/api/auth/login-email/confirm', {
-        method: 'POST',
-        body: JSON.stringify(checked.data),
+      const { status } = await confirmLoginEmailMutation.mutateAsync({
+        body: checked.data,
       });
+      if (status !== 200) throw new Error(t('errors.boundary.description'));
       setChallengeId(null);
       setVerifyCode('');
       setNewLoginEmail('');
@@ -93,8 +97,8 @@ export function useAccountProfileSecurityActions() {
       await queryClient.invalidateQueries({ queryKey: TENANT_PROFILE_KEY });
       await refetch();
       notify.success(t('account.loginEmailChanged'));
-    } catch (error: unknown) {
-      const message = error instanceof ApiError ? error.message : t('errors.boundary.description');
+    } catch (error: any) {
+      const message = error.message || t('errors.boundary.description');
       notify.error(message);
     } finally {
       setLoginEmailBusy(false);
@@ -116,21 +120,21 @@ export function useAccountProfileSecurityActions() {
         notify.error(t('common.formPleaseFixErrors'));
         return;
       }
-      await apiJson('/api/auth/change-password', {
-        method: 'POST',
-        body: JSON.stringify(checked.data),
+      const { status } = await changePasswordMutation.mutateAsync({
+        body: checked.data,
       });
+      if (status !== 200) {
+        if (status === 401) {
+          throw new Error(t('account.wrongPassword'));
+        }
+        throw new Error(t('errors.boundary.description'));
+      }
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
       notify.success(t('account.passwordChanged'));
-    } catch (error: unknown) {
-      const message =
-        error instanceof ApiError && error.type === 'invalid_credentials'
-          ? t('account.wrongPassword')
-          : error instanceof ApiError
-            ? error.message
-            : t('errors.boundary.description');
+    } catch (error: any) {
+      const message = error.message || t('errors.boundary.description');
       notify.error(message);
     } finally {
       setPasswordBusy(false);

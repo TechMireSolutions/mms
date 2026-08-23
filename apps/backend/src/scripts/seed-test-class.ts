@@ -28,12 +28,21 @@ async function main() {
     process.exit(1);
   }
 
-  // 2. Find student record for Jane Doe
+  // 2. Find or create student record for Jane Doe
   const studentRows = await db.select().from(students).where(eq(students.workspaceSubdomain, subdomain));
-  const janeStudent = studentRows.find(r => r.contactId === janeContact.id);
+  let janeStudent = studentRows.find(r => r.contactId === janeContact.id);
   if (!janeStudent) {
-    console.error('Could not find student record linking to Jane Doe.');
-    process.exit(1);
+    console.log('Creating student record for Jane Doe...');
+    const studentId = `std-jane-${Date.now()}`;
+    await db.insert(students).values({
+      id: studentId,
+      workspaceSubdomain: subdomain,
+      contactId: janeContact.id,
+      status: 'active',
+      registeredDate: '2026-01-01',
+      grNumber: 'GR-0001',
+    });
+    janeStudent = { id: studentId, workspaceSubdomain: subdomain, contactId: janeContact.id } as any;
   }
 
   const sessionId = 'sess-hifz-2026';
@@ -89,6 +98,10 @@ async function main() {
       enrolled: 1,
     },
   });
+
+  if (!janeStudent) {
+    throw new Error('Could not find or create student for Jane Doe');
+  }
 
   // 4. Insert enrollment for Jane Doe in class c1
   await db.insert(enrollments).values({

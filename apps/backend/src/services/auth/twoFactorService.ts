@@ -139,8 +139,9 @@ export async function rotateRefreshToken(
   // Rotation: issue new pair; old refresh artifact was deleted by the caller.
   const refreshToken = await issueRefreshToken(user);
 
+  const jti = randomBytes(16).toString('hex');
   const accessToken = jwtSigner.sign(
-    { ...user, twoFactorVerified: true, tokenType: 'access' },
+    { ...user, twoFactorVerified: true, tokenType: 'access', jti },
     { expiresIn: accessExpiresIn },
   );
 

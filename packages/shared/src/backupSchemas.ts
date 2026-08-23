@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AppTranslationKey } from './appTranslations.js';
+import type { WorkspaceBackupDataSource, WorkspaceBackupStats } from './schemas/backup.dto.js';
 
 export type WorkspaceBackupStatus = 'success';
 
@@ -33,12 +34,6 @@ MODULE_TO_SETTINGS_KEY['question-bank'] = 'question_bank_settings';
 MODULE_TO_SETTINGS_KEY['enrollment'] = 'enrollments_settings';
 MODULE_TO_SETTINGS_KEY['examination'] = 'examinations_settings';
 
-/** Identifies MMS workspace backup envelope files. */
-export const BACKUP_FORMAT_ID = 'mms-workspace-backup' as const;
-
-/** Current envelope schema version. */
-export const BACKUP_FORMAT_VERSION = 1;
-
 /** Max upload size for restore file picker (bytes). */
 export const BACKUP_UPLOAD_MAX_BYTES = 50 * 1024 * 1024;
 
@@ -68,62 +63,7 @@ export const BACKUP_HISTORY_MAX = 10;
 /** Max JSON payload stored per history row (bytes). */
 export const BACKUP_HISTORY_MAX_BYTES = 512_000;
 
-/** Authoritative tenant data shape from `GET /api/db/sync`. */
-export interface TenantDatabaseSnapshot {
-  collections?: Record<string, unknown[]>;
-  objects?: Record<string, unknown>;
-}
-
-export const tenantDatabaseSnapshotSchema = z.object({
-  collections: z.record(z.string(), z.array(z.unknown())).optional(),
-  objects: z.record(z.string(), z.unknown()).optional(),
-});
-
-export type WorkspaceBackupDataSource = 'server' | 'local';
-
-/** Versioned export envelope written by tenant backup export. */
-export interface WorkspaceBackupEnvelope {
-  format: typeof BACKUP_FORMAT_ID;
-  version: number;
-  minCompatibleVersion?: number;
-  exportedAt: string;
-  subdomain: string | null;
-  /** `server` = PostgreSQL snapshot; `local` = browser cache only. */
-  dataSource?: WorkspaceBackupDataSource;
-  /** Cryptographic SHA-256 integrity checksum across sorted payload keys. */
-  checksum?: string;
-  stats: WorkspaceBackupStats;
-  keys: Record<string, string>;
-}
-
-export interface WorkspaceBackupStats {
-  keyCount: number;
-  collectionCount: number;
-  objectCount: number;
-  byteSize: number;
-  /** Breakdown of entity counts per logical collection. */
-  entityBreakdown?: Record<string, number>;
-}
-
-const workspaceBackupStatsSchema = z.object({
-  keyCount: z.number(),
-  collectionCount: z.number(),
-  objectCount: z.number(),
-  byteSize: z.number(),
-  entityBreakdown: z.record(z.string(), z.number()).optional(),
-});
-
-export const workspaceBackupEnvelopeSchema = z.object({
-  format: z.literal(BACKUP_FORMAT_ID),
-  version: z.number().int().min(1),
-  minCompatibleVersion: z.number().int().min(1).optional(),
-  exportedAt: z.string(),
-  subdomain: z.string().nullable(),
-  dataSource: z.enum(['server', 'local']).optional(),
-  checksum: z.string().regex(/^[a-f0-9]{64}$/i).optional(),
-  stats: workspaceBackupStatsSchema,
-  keys: z.record(z.string(), z.string()),
-});
+export * from './schemas/backup.dto.js';
 
 export interface WorkspaceBackupSummary extends WorkspaceBackupStats {
   exportedAt: string | null;

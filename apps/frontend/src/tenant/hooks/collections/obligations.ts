@@ -26,3 +26,16 @@ export {
   useObligationsMutations,
 } from '@/tenant/features/obligations/hooks/useObligationsApi';
 export { invalidateObligationsQueries } from '@/tenant/features/obligations/hooks/invalidateObligationsQueries';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useObligationsContractCollections,
+  useObligationsContractTypes,
+  useObligationsContractMujtahids,
+  useObligationsContractDistributions,
+  useObligationsContractReps,
+  useObligationsContractWakala,
+  useObligationsContractDeleteCollection,
+  useObligationsContractRestoreCollection,
+  useObligationsContractBulkDeleteCollections,
+  useObligationsContractBulkRestoreCollections,
+} from '@/tenant/features/obligations/hooks/useObligationsTsrHooks';

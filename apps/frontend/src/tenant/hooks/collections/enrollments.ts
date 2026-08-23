@@ -15,3 +15,14 @@ export {
   useEnrollmentsReportAggregates,
   useEnrollmentsWidgetAggregates,
 } from '@/tenant/features/enrollments/hooks/useEnrollmentsApi';
+export { invalidateEnrollmentsQueries } from '@/tenant/features/enrollments/hooks/invalidateEnrollmentsQueries';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useEnrollmentsContractList,
+  useEnrollmentsContractGet,
+  useEnrollmentsContractCreate,
+  useEnrollmentsContractUpdate,
+  useEnrollmentsContractDelete,
+  useEnrollmentsContractBulkDelete,
+  useEnrollmentsContractBulkRestore,
+} from '@/tenant/features/enrollments/hooks/useEnrollmentsTsrHooks';

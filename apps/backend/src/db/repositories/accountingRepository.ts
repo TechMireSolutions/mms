@@ -8,7 +8,7 @@ import {
   accountingEntryTags,
   accountingEntryAttachments,
 } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 // --- Accounts ---
 
@@ -33,7 +33,7 @@ export function accountRowToRecord(row: AccountRow): Account {
 
 export async function listAccountsByWorkspace(tenant: string): Promise<Account[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(accountingAccounts)
@@ -44,7 +44,7 @@ export async function listAccountsByWorkspace(tenant: string): Promise<Account[]
 
 export async function findAccountById(tenant: string, id: string): Promise<Account | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(accountingAccounts)
@@ -56,7 +56,7 @@ export async function findAccountById(tenant: string, id: string): Promise<Accou
 
 export async function saveAccount(tenant: string, record: Account): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(accountingAccounts)
       .values({
@@ -94,7 +94,7 @@ export async function saveAccount(tenant: string, record: Account): Promise<void
 export async function bulkSaveAccounts(tenant: string, records: Account[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(accountingAccounts)
@@ -133,7 +133,7 @@ export async function bulkSaveAccounts(tenant: string, records: Account[]): Prom
 
 export async function replaceAccountsForWorkspace(tenant: string, records: Account[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(accountingAccounts).where(eq(accountingAccounts.workspaceSubdomain, subdomain));
     for (const r of records) {
       await tx.insert(accountingAccounts).values({
@@ -175,7 +175,7 @@ export function fiscalYearRowToRecord(row: FiscalYearRow): FiscalYear {
 
 export async function listFiscalYearsByWorkspace(tenant: string): Promise<FiscalYear[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(accountingFiscalYears)
@@ -186,7 +186,7 @@ export async function listFiscalYearsByWorkspace(tenant: string): Promise<Fiscal
 
 export async function findFiscalYearById(tenant: string, id: string): Promise<FiscalYear | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(accountingFiscalYears)
@@ -198,7 +198,7 @@ export async function findFiscalYearById(tenant: string, id: string): Promise<Fi
 
 export async function saveFiscalYear(tenant: string, record: FiscalYear): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(accountingFiscalYears)
       .values({
@@ -232,7 +232,7 @@ export async function saveFiscalYear(tenant: string, record: FiscalYear): Promis
 export async function bulkSaveFiscalYears(tenant: string, records: FiscalYear[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const r of records) {
       await tx
         .insert(accountingFiscalYears)
@@ -267,7 +267,7 @@ export async function bulkSaveFiscalYears(tenant: string, records: FiscalYear[])
 
 export async function replaceFiscalYearsForWorkspace(tenant: string, records: FiscalYear[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(accountingFiscalYears).where(eq(accountingFiscalYears.workspaceSubdomain, subdomain));
     for (const r of records) {
       await tx.insert(accountingFiscalYears).values({
@@ -326,7 +326,7 @@ export function entryRowToRecord(
 
 export async function listEntriesByWorkspace(tenant: string): Promise<JournalEntry[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(accountingEntries)
@@ -398,7 +398,7 @@ export async function listEntriesByWorkspace(tenant: string): Promise<JournalEnt
 
 export async function findEntryById(tenant: string, id: string): Promise<JournalEntry | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(accountingEntries)
@@ -446,7 +446,7 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
 }
 
 async function syncEntryChildren(
-  tx: Parameters<Parameters<typeof withTenantTransaction>[1]>[0],
+  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
   subdomain: string,
   entry: JournalEntry,
 ): Promise<void> {
@@ -518,7 +518,7 @@ async function syncEntryChildren(
 
 export async function saveEntry(tenant: string, record: JournalEntry): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx
       .insert(accountingEntries)
       .values({
@@ -564,7 +564,7 @@ export async function saveEntry(tenant: string, record: JournalEntry): Promise<v
 export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     for (const record of records) {
       await tx
         .insert(accountingEntries)
@@ -611,7 +611,7 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
 
 export async function replaceEntriesForWorkspace(tenant: string, records: JournalEntry[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(accountingEntryAttachments).where(eq(accountingEntryAttachments.workspaceSubdomain, subdomain));
     await tx.delete(accountingEntryTags).where(eq(accountingEntryTags.workspaceSubdomain, subdomain));
     await tx.delete(accountingJournalLines).where(eq(accountingJournalLines.workspaceSubdomain, subdomain));
@@ -643,7 +643,7 @@ export async function replaceEntriesForWorkspace(tenant: string, records: Journa
 
 export async function deleteAccountingByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  await withTenantTransaction(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(accountingEntryAttachments).where(eq(accountingEntryAttachments.workspaceSubdomain, subdomain));
     await tx.delete(accountingEntryTags).where(eq(accountingEntryTags.workspaceSubdomain, subdomain));
     await tx.delete(accountingJournalLines).where(eq(accountingJournalLines.workspaceSubdomain, subdomain));

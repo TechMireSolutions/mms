@@ -189,18 +189,23 @@ export function StudentDetailFieldsSection({
       .filter((entry) => entry.rows.length > 0);
   })();
 
+  const ACCENT_COLORS: string[] = ["info", "warning", "success", "primary", "secondary"];
+
   if (groups.length === 0) return null;
 
   return (
     <div className="space-y-4">
-      {groups.map(({ group, rows }) => (
-        <div key={group} className="space-y-2">
-          <DetailSectionTitle>{group}</DetailSectionTitle>
-          <Card className="divide-y divide-border/50">
-            {rows}
-          </Card>
-        </div>
-      ))}
+      {groups.map(({ group, rows }, index) => {
+        const accent = ACCENT_COLORS[index % ACCENT_COLORS.length];
+        return (
+          <div key={group} className="space-y-2">
+            <DetailSectionTitle>{group}</DetailSectionTitle>
+            <Card accentColor={accent} className="divide-y divide-border/50 p-0">
+              {rows}
+            </Card>
+          </div>
+        );
+      })}
     </div>
   );
 }

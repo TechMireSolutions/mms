@@ -7,7 +7,6 @@ export {
   TEACHERS_QUERY_KEY,
   TEACHERS_METRICS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-  useTeachersPaginated,
   fetchAllTeachersForQuery,
   useTeacherMutations,
   useTeachersByIds,
@@ -31,3 +30,14 @@ export {
 } from '@/tenant/features/teachers/hooks/teacherSetupConfigApi';
 export { applyTeachersWorkDrillDown } from '@/tenant/features/teachers/hooks/teachersWorkDrillDown';
 export { invalidateTeachersQueries } from '@/tenant/features/teachers/hooks/invalidateTeachersQueries';
+// Phase 7: contract-driven tsrClient hooks
+export {
+  useTeachersContractList,
+  useTeachersContractGet,
+  useTeachersContractCreate,
+  useTeachersContractUpdate,
+  useTeachersContractDelete,
+  useTeachersContractBulkStatus,
+  useTeachersContractDuplicateCheck,
+  useTeachersContractNextEmployeeId,
+} from '@/tenant/features/teachers/hooks/useTeachersTsrHooks';

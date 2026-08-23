@@ -1,27 +1,19 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type {
   Denomination,
   StockBatch,
   Distribution,
   Redemption,
   HasanatCommandMetricsSnapshot,
-  HasanatReportAggregates,
   HasanatReportComparisonQuery,
-  HasanatDistributionsListPageResult,
 } from '@mms/shared';
 import { HASANAT_MODULE_MANIFEST, normalizeHasanatReportComparisonQuery } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiJson } from '@/lib/apiClient';
-import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { createModulePaginatedListQuery } from '@/lib/query/createModulePaginatedListQuery';
-import {
-  buildHasanatPageUrl,
-  hasanatPaginatedQueryKey,
-  hasanatListQueryKeyParams,
-  sameHasanatListFilters,
-  type HasanatPaginatedParams,
-} from '@/tenant/features/hasanat/hooks/hasanatListQueryBuilders';
+import { tsrClient } from '@/lib/api';
+
+
+
 
 export const HASANAT_DENOMS_QUERY_KEY = ['hasanat', 'denoms', 'list'] as const;
 export const HASANAT_BATCHES_QUERY_KEY = ['hasanat', 'batches', 'list'] as const;
@@ -35,55 +27,49 @@ export const HASANAT_REPORT_AGGREGATES_QUERY_KEY = [
 
 export const HASANAT_API = HASANAT_MODULE_MANIFEST.restBasePath;
 
-/** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
-export class NotifiedHasanatMutationError extends NotifiedMutationError {}
+
 
 export function useHasanatDenoms(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<Denomination[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.hasanat.listDenoms.useQuery({
     queryKey: HASANAT_DENOMS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ denoms: Denomination[] }>(`${HASANAT_API}/denoms`, { signal });
-      return res?.denoms ?? [];
-    },
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useHasanatDenomsCollection(options?: { enabled?: boolean }): Denomination[] {
-  return useHasanatDenoms(options).data ?? [];
+  const query = useHasanatDenoms(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.denoms ?? []);
 }
 
 export function useHasanatBatches(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<StockBatch[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.hasanat.listBatches.useQuery({
     queryKey: HASANAT_BATCHES_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ batches: StockBatch[] }>(`${HASANAT_API}/batches`, { signal });
-      return res?.batches ?? [];
-    },
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useHasanatBatchesCollection(options?: { enabled?: boolean }): StockBatch[] {
-  return useHasanatBatches(options).data ?? [];
+  const query = useHasanatBatches(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.batches ?? []);
 }
 
 export function useHasanatDistributions(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
-  return useQuery<Distribution[]>({
-    queryKey: [...HASANAT_DISTRIBUTIONS_QUERY_KEY, { includeDeleted }],
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ distributions: Distribution[] }>(
-        `${HASANAT_API}/distributions?includeDeleted=${includeDeleted}`,
-        { signal },
-      );
-      return res?.distributions ?? [];
-    },
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.hasanat.listDistributions.useQuery({
+    queryKey: [...HASANAT_DISTRIBUTIONS_QUERY_KEY, { includeDeleted }] as any,
+    queryData: { query: { includeDeleted: includeDeleted ? 'true' : 'false' } as any },
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
@@ -93,20 +79,13 @@ export function useHasanatDistributionsCollection(options?: {
   enabled?: boolean;
   includeDeleted?: boolean;
 }): Distribution[] {
-  return useHasanatDistributions(options).data ?? [];
+  const query = useHasanatDistributions(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.distributions ?? []);
 }
 
-/** SQL-paged distributions Work list (server-side search/status/soft-delete). */
-export const useHasanatPaginated = createModulePaginatedListQuery<
-  HasanatDistributionsListPageResult,
-  HasanatPaginatedParams,
-  ReturnType<typeof hasanatListQueryKeyParams>
->({
-  queryKey: hasanatPaginatedQueryKey,
-  keyParams: hasanatListQueryKeyParams,
-  sameFilters: sameHasanatListFilters,
-  buildUrl: buildHasanatPageUrl,
-});
+
 
 export function useHasanatReportAggregates(
   options?: { enabled?: boolean; comparison?: HasanatReportComparisonQuery },
@@ -114,21 +93,19 @@ export function useHasanatReportAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
   const comparison = normalizeHasanatReportComparisonQuery(options?.comparison);
-  const queryParams = new URLSearchParams();
-  if (comparison?.sessionIds?.length) queryParams.set('sessionIds', comparison.sessionIds.join(','));
-  if (comparison?.rangeAFrom) queryParams.set('rangeAFrom', comparison.rangeAFrom);
-  if (comparison?.rangeATo) queryParams.set('rangeATo', comparison.rangeATo);
-  if (comparison?.rangeBFrom) queryParams.set('rangeBFrom', comparison.rangeBFrom);
-  if (comparison?.rangeBTo) queryParams.set('rangeBTo', comparison.rangeBTo);
-  const queryString = queryParams.toString();
-
-  return useQuery({
-    queryKey: [...HASANAT_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,
-    queryFn: async ({ signal }): Promise<HasanatReportAggregates> =>
-      apiJson<HasanatReportAggregates>(
-        `${HASANAT_API}/report-aggregates${queryString ? `?${queryString}` : ''}`,
-        { signal },
-      ),
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.hasanat.reportAggregates.useQuery({
+    queryKey: [...HASANAT_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as any,
+    queryData: {
+      query: {
+        sessionIds: comparison?.sessionIds?.length ? comparison.sessionIds.join(',') : undefined,
+        rangeAFrom: comparison?.rangeAFrom,
+        rangeATo: comparison?.rangeATo,
+        rangeBFrom: comparison?.rangeBFrom,
+        rangeBTo: comparison?.rangeBTo,
+      } as any,
+    },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
@@ -136,19 +113,19 @@ export function useHasanatReportAggregates(
 
 export function useHasanatRedemptions(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<Redemption[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.hasanat.listRedemptions.useQuery({
     queryKey: HASANAT_REDEMPTIONS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ redemptions: Redemption[] }>(`${HASANAT_API}/redemptions`, { signal });
-      return res?.redemptions ?? [];
-    },
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
 
 export function useHasanatRedemptionsCollection(options?: { enabled?: boolean }): Redemption[] {
-  return useHasanatRedemptions(options).data ?? [];
+  const query = useHasanatRedemptions(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  return Array.isArray(body) ? body : (body?.redemptions ?? []);
 }
 
 export function useHasanatMetrics(options?: { enabled?: boolean }) {
@@ -167,96 +144,97 @@ export function useHasanatMutations() {
     void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
   };
 
-  const replaceDenoms = useMutation({
-    mutationFn: async (denoms: Denomination[]) =>
-      apiJson<{ denoms: Denomination[] }>(`${HASANAT_API}/denoms/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(denoms),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceDenoms = tsrClient.hasanat.replaceDenoms.useMutation({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: HASANAT_DENOMS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },
   });
 
-  const replaceBatches = useMutation({
-    mutationFn: async (batches: StockBatch[]) =>
-      apiJson<{ batches: StockBatch[] }>(`${HASANAT_API}/batches/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(batches),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceBatches = tsrClient.hasanat.replaceBatches.useMutation({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: HASANAT_BATCHES_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },
   });
 
-  const replaceDistributions = useMutation({
-    mutationFn: async (distributions: Distribution[]) =>
-      apiJson<{ distributions: Distribution[] }>(`${HASANAT_API}/distributions/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(distributions),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceDistributions = tsrClient.hasanat.replaceDistributions.useMutation({
     onSuccess: () => {
       invalidateDistributions();
     },
   });
 
-  const replaceRedemptions = useMutation({
-    mutationFn: async (redemptions: Redemption[]) =>
-      apiJson<{ redemptions: Redemption[] }>(`${HASANAT_API}/redemptions/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(redemptions),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceRedemptions = tsrClient.hasanat.replaceRedemptions.useMutation({
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: HASANAT_REDEMPTIONS_QUERY_KEY });
       void queryClient.invalidateQueries({ queryKey: HASANAT_METRICS_QUERY_KEY });
     },
   });
 
-  const deleteDistribution = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${HASANAT_API}/distributions/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const deleteDistribution = tsrClient.hasanat.deleteDistribution.useMutation({
     onSuccess: () => invalidateDistributions(),
   });
 
-  const restoreDistribution = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(
-        `${HASANAT_API}/distributions/${encodeURIComponent(id)}/restore`,
-        { method: 'POST' },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const restoreDistribution = tsrClient.hasanat.restoreDistribution.useMutation({
     onSuccess: () => invalidateDistributions(),
   });
 
-  const bulkDeleteDistributions = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${HASANAT_API}/distributions/bulk-delete`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkDeleteDistributions = tsrClient.hasanat.bulkDeleteDistributions.useMutation({
     onSuccess: () => invalidateDistributions(),
   });
 
-  const bulkRestoreDistributions = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${HASANAT_API}/distributions/bulk-restore`,
-        { method: 'POST', body: JSON.stringify({ ids }) },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkRestoreDistributions = tsrClient.hasanat.bulkRestoreDistributions.useMutation({
     onSuccess: () => invalidateDistributions(),
   });
 
   return {
-    replaceDenoms,
-    replaceBatches,
-    replaceDistributions,
-    replaceRedemptions,
-    deleteDistribution,
-    restoreDistribution,
-    bulkDeleteDistributions,
-    bulkRestoreDistributions,
+    replaceDenoms: {
+      ...replaceDenoms,
+      mutate: (denoms: Denomination[], opts?: any) => replaceDenoms.mutate({ body: denoms }, opts),
+      mutateAsync: (denoms: Denomination[]) => replaceDenoms.mutateAsync({ body: denoms }),
+    },
+    replaceBatches: {
+      ...replaceBatches,
+      mutate: (batches: StockBatch[], opts?: any) => replaceBatches.mutate({ body: batches }, opts),
+      mutateAsync: (batches: StockBatch[]) => replaceBatches.mutateAsync({ body: batches }),
+    },
+    replaceDistributions: {
+      ...replaceDistributions,
+      mutate: (distributions: Distribution[], opts?: any) => replaceDistributions.mutate({ body: distributions }, opts),
+      mutateAsync: (distributions: Distribution[]) => replaceDistributions.mutateAsync({ body: distributions }),
+    },
+    replaceRedemptions: {
+      ...replaceRedemptions,
+      mutate: (redemptions: Redemption[], opts?: any) => replaceRedemptions.mutate({ body: redemptions }, opts),
+      mutateAsync: (redemptions: Redemption[]) => replaceRedemptions.mutateAsync({ body: redemptions }),
+    },
+    deleteDistribution: {
+      ...deleteDistribution,
+      mutate: (id: string, opts?: any) => deleteDistribution.mutate({ params: { id }, body: {} }, opts),
+      mutateAsync: (id: string) => deleteDistribution.mutateAsync({ params: { id }, body: {} }),
+    },
+    restoreDistribution: {
+      ...restoreDistribution,
+      mutate: (id: string, opts?: any) => restoreDistribution.mutate({ params: { id }, body: {} }, opts),
+      mutateAsync: (id: string) => restoreDistribution.mutateAsync({ params: { id }, body: {} }),
+    },
+    bulkDeleteDistributions: {
+      ...bulkDeleteDistributions,
+      mutate: (ids: string[], opts?: any) => bulkDeleteDistributions.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkDeleteDistributions.mutateAsync({ body: { ids } }),
+    },
+    bulkRestoreDistributions: {
+      ...bulkRestoreDistributions,
+      mutate: (ids: string[], opts?: any) => bulkRestoreDistributions.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkRestoreDistributions.mutateAsync({ body: { ids } }),
+    },
   };
 }

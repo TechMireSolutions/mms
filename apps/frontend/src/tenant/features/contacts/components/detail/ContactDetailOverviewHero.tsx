@@ -4,6 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ContactIdentityMeta } from "../ContactIdentityMeta";
 import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
 import { Badge } from "@/components/ui/badge";
+import { getGenderCardAccent } from "@/lib/genderUi";
 
 export function ContactDetailOverviewHero({
   contact,
@@ -20,6 +21,7 @@ export function ContactDetailOverviewHero({
         id={contact.id}
         displayName={getDisplayName(contact)}
         avatar={contact.avatar}
+        accentColor={getGenderCardAccent(contact.gender)}
       >
         <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} size="md" />
         {contactTags.length > 0 && (

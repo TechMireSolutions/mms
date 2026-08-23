@@ -17,11 +17,8 @@ import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRout
 import { loadQuestionBankCommandMetrics } from '../../services/questionBankMetricsService.js';
 import {
   loadQuestions,
-  loadQuestionsPage,
   upsertQuestions,
-  loadTests,
   upsertTests,
-  loadResults,
   upsertResults,
   deleteQuestionById,
   restoreQuestionById,
@@ -30,7 +27,7 @@ import {
 } from '../../services/questionBankService.js';
 
 import { questionBankSetupConfigRoutes } from './questionBankSetupConfigRoutes.js';
-import { questionBankListQuerySchema } from '../../validation/questionBankSchemas.js';
+import { questionBankContractRouter } from './questionBank/questionBankContractRouter.js';
 
 const QUESTIONS_COLLECTION = QUESTION_BANK_MODULE_MANIFEST.collectionKey;
 const TESTS_COLLECTION = QUESTION_BANK_MODULE_MANIFEST.testsCollectionKey;
@@ -46,55 +43,61 @@ export default async function questionBankRoutes(
   fastify.addHook('preHandler', authenticateTenant);
   fastify.addHook('preHandler', requireTenantModule('questionBank'));
 
-  fastify.register(questionBankSetupConfigRoutes);
+  await fastify.register(
+    async (sub) => {
+      await sub.register(questionBankSetupConfigRoutes);
 
-  registerMetricsRoute(fastify, {
-    collection: QUESTIONS_COLLECTION,
-    loadMetricsFn: loadQuestionBankCommandMetrics,
-    errorMessagePrefix: 'question bank',
-  });
+      registerMetricsRoute(sub, {
+        collection: QUESTIONS_COLLECTION,
+        loadMetricsFn: loadQuestionBankCommandMetrics,
+        errorMessagePrefix: 'question bank',
+      });
 
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/column-preferences',
-    collection: QUESTIONS_COLLECTION,
-    objectKey: QUESTION_BANK_MODULE_MANIFEST.columnPreferencesObjectKey,
-  });
+      registerColumnPreferencesRoutes(sub, {
+        path: '/column-preferences',
+        collection: QUESTIONS_COLLECTION,
+        objectKey: QUESTION_BANK_MODULE_MANIFEST.columnPreferencesObjectKey,
+      });
 
-  registerSoftDeletableBulkRoutes(fastify, {
-    path: '/questions',
-    collection: QUESTIONS_COLLECTION,
-    schema: questionBankQuestionListSchema,
-    loadFn: loadQuestions,
-    loadPageFn: loadQuestionsPage,
-    listQuerySchema: questionBankListQuerySchema,
-    defaultPageSize: QUESTION_BANK_MODULE_MANIFEST.defaultPageSize,
-    saveFn: upsertQuestions,
-    deleteFn: deleteQuestionById,
-    restoreFn: restoreQuestionById,
-    bulkDeleteFn: bulkSoftDeleteQuestions,
-    bulkRestoreFn: bulkRestoreQuestions,
-    responseKey: 'questions',
-    errorMessagePrefix: 'questions',
-    nameSingular: 'Question',
-  });
+      registerSoftDeletableBulkRoutes(sub, {
+        path: '/questions',
+        collection: QUESTIONS_COLLECTION,
+        schema: questionBankQuestionListSchema,
+        loadFn: loadQuestions,
+        saveFn: upsertQuestions as any,
+        deleteFn: deleteQuestionById,
+        restoreFn: restoreQuestionById,
+        bulkDeleteFn: bulkSoftDeleteQuestions,
+        bulkRestoreFn: bulkRestoreQuestions,
+        responseKey: 'questions',
+        errorMessagePrefix: 'questions',
+        nameSingular: 'Question',
+        customGetRoute: true,
+        customBulkTrashRoutes: true,
+      });
 
-  registerBulkRoutes(fastify, {
-    path: '/tests',
-    collection: TESTS_COLLECTION,
-    schema: questionBankTestListSchema,
-    loadFn: loadTests,
-    saveFn: upsertTests,
-    responseKey: 'tests',
-    errorMessagePrefix: 'tests',
-  });
+      registerBulkRoutes(sub, {
+        path: '/tests',
+        collection: TESTS_COLLECTION,
+        schema: questionBankTestListSchema,
+        saveFn: upsertTests,
+        responseKey: 'tests',
+        errorMessagePrefix: 'tests',
+        customGetRoute: true,
+      });
 
-  registerBulkRoutes(fastify, {
-    path: '/assessment-results',
-    collection: RESULTS_COLLECTION,
-    schema: questionBankResultListSchema,
-    loadFn: loadResults,
-    saveFn: upsertResults,
-    responseKey: 'results',
-    errorMessagePrefix: 'assessment results',
-  });
+      registerBulkRoutes(sub, {
+        path: '/assessment-results',
+        collection: RESULTS_COLLECTION,
+        schema: questionBankResultListSchema,
+        saveFn: upsertResults,
+        responseKey: 'results',
+        errorMessagePrefix: 'assessment results',
+        customGetRoute: true,
+      });
+    },
+    { prefix: '/api/question-bank' },
+  );
+
+  await fastify.register(questionBankContractRouter);
 }

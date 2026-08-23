@@ -7,44 +7,14 @@ import { Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { formatDate, formatDateTime } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EnrollmentArchivedBanner } from "@/tenant/features/enrollments/components/EnrollmentArchivedBanner";
-
-interface SectionProps {
-  icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
-  title: string;
-  children: React.ReactNode;
-}
-
-function Section({ icon: Icon, title, children }: SectionProps): React.ReactElement {
-  return (
-    <section className={`${WORK_SURFACE} overflow-hidden`} aria-label={title}>
-      <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40 border-b border-border">
-        <Icon className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-        <h3 className="text-xs font-bold text-foreground uppercase tracking-wide">{title}</h3>
-      </div>
-      <div className="px-4 py-1">{children}</div>
-    </section>
-  );
-}
-
-interface RowProps {
-  label: string;
-  value: React.ReactNode;
-}
-
-function Row({ label, value }: RowProps): React.ReactElement {
-  return (
-    <div className="flex items-center justify-between py-2 border-b border-border/50 last:border-b-0">
-      <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-xs font-semibold text-foreground text-end">{value}</span>
-    </div>
-  );
-}
+import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
+import { Card } from "@/components/ui/card";
+import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
 
 interface EnrollmentDetailProps {
   enrollment: Enrollment | null | undefined;
@@ -114,61 +84,78 @@ export const EnrollmentDetail = React.memo(function EnrollmentDetail({
       headerExtra={headerExtraNode}
     >
       <div className="space-y-4">
-        <Section icon={User} title={t("enrollments.detail.sectionStudent")}>
-          <Row label={t("enrollments.detail.name")} value={enrollment.studentName} />
-          {student?.grNumber && <Row label={t("enrollments.detail.grNumber")} value={student.grNumber} />}
-          <Row label={t("enrollments.detail.studentId")} value={enrollment.studentId} />
-        </Section>
+        <div className="space-y-2">
+          <DetailSectionTitle>{t("enrollments.detail.sectionStudent")}</DetailSectionTitle>
+          <Card className="divide-y divide-border/50 p-0">
+            <DetailAttributeRow variant="inset" icon={User} label={t("enrollments.detail.name")} value={enrollment.studentName} />
+            {student?.grNumber && <DetailAttributeRow variant="inset" icon={User} label={t("enrollments.detail.grNumber")} value={student.grNumber} />}
+            <DetailAttributeRow variant="inset" icon={User} label={t("enrollments.detail.studentId")} value={enrollment.studentId} />
+          </Card>
+        </div>
 
-        <Section icon={BookOpen} title={t("enrollments.detail.sectionSession")}>
-          <Row label={t("enrollments.detail.session")} value={enrollment.sessionName} />
-          <Row label={t("enrollments.detail.sessionId")} value={enrollment.sessionId} />
-          <Row label={t("enrollments.detail.enrolledOn")} value={formatDate(enrollment.enrolledDate)} />
-        </Section>
+        <div className="space-y-2">
+          <DetailSectionTitle>{t("enrollments.detail.sectionSession")}</DetailSectionTitle>
+          <Card className="divide-y divide-border/50 p-0">
+            <DetailAttributeRow variant="inset" icon={BookOpen} label={t("enrollments.detail.session")} value={enrollment.sessionName} />
+            <DetailAttributeRow variant="inset" icon={BookOpen} label={t("enrollments.detail.sessionId")} value={enrollment.sessionId} />
+            <DetailAttributeRow variant="inset" icon={Clock} label={t("enrollments.detail.enrolledOn")} value={formatDate(enrollment.enrolledDate)} />
+          </Card>
+        </div>
 
-        <Section icon={Layers} title={t("enrollments.detail.sectionClass")}>
-          <Row label={t("enrollments.detail.class")} value={enrollment.className} />
-          <Row label={t("enrollments.detail.classId")} value={enrollment.classId} />
-        </Section>
+        <div className="space-y-2">
+          <DetailSectionTitle>{t("enrollments.detail.sectionClass")}</DetailSectionTitle>
+          <Card className="divide-y divide-border/50 p-0">
+            <DetailAttributeRow variant="inset" icon={Layers} label={t("enrollments.detail.class")} value={enrollment.className} />
+            <DetailAttributeRow variant="inset" icon={Layers} label={t("enrollments.detail.classId")} value={enrollment.classId} />
+          </Card>
+        </div>
 
-        <Section icon={DollarSign} title={t("enrollments.detail.sectionFee")}>
-          <Row label={t("enrollments.detail.baseFee")} value={formatCurrency(enrollment.baseFee)} />
-          <Row
-            label={enrollment.discountLabel || t("enrollments.detail.discount")}
-            value={enrollment.discountPct > 0
-              ? `– ${formatCurrency(enrollment.discountAmt)} (${enrollment.discountPct}%)`
-              : t("enrollments.detail.none")}
-          />
-          <div className="flex items-center justify-between py-2.5">
-            <span className="text-xs font-bold text-foreground">{t("enrollments.detail.totalDue")}</span>
-            <span className="text-sm font-bold text-primary">{formatCurrency(enrollment.finalFee)}</span>
-          </div>
-          <Row label={t("enrollments.detail.paymentStatus")} value={
-            enrollment.paymentStatus
-              ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
-              : "—"
-          } />
-        </Section>
+        <div className="space-y-2">
+          <DetailSectionTitle>{t("enrollments.detail.sectionFee")}</DetailSectionTitle>
+          <Card className="divide-y divide-border/50 p-0">
+            <DetailAttributeRow variant="inset" icon={DollarSign} label={t("enrollments.detail.baseFee")} value={formatCurrency(enrollment.baseFee)} />
+            <DetailAttributeRow
+              variant="inset"
+              icon={DollarSign}
+              label={enrollment.discountLabel || t("enrollments.detail.discount")}
+              value={enrollment.discountPct > 0
+                ? `– ${formatCurrency(enrollment.discountAmt)} (${enrollment.discountPct}%)`
+                : t("enrollments.detail.none")}
+            />
+            <div className="flex items-center justify-between p-3">
+              <span className="text-xs font-bold text-foreground">{t("enrollments.detail.totalDue")}</span>
+              <span className="text-sm font-bold text-primary">{formatCurrency(enrollment.finalFee)}</span>
+            </div>
+            <DetailAttributeRow variant="inset" icon={DollarSign} label={t("enrollments.detail.paymentStatus")} value={
+              enrollment.paymentStatus
+                ? <StatusBadge status={enrollment.paymentStatus} config={paymentConfig} size="sm" />
+                : "—"
+            } />
+          </Card>
+        </div>
 
         {enrollment.timeline && enrollment.timeline.length > 0 && (
-          <Section icon={Clock} title={t("enrollments.detail.sectionTimeline")}>
-            <div className="py-2 space-y-3" role="list">
-              {enrollment.timeline.map((timelineItem, index) => (
-                <div key={`${timelineItem.ts}-${timelineItem.event}`} className="flex gap-3" role="listitem">
-                  <div className="flex flex-col items-center">
-                    <div className="w-2 h-2 rounded-full bg-primary mt-1 flex-shrink-0" aria-hidden="true" />
-                    {enrollment.timeline && index < enrollment.timeline.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" aria-hidden="true" />}
+          <div className="space-y-2">
+            <DetailSectionTitle>{t("enrollments.detail.sectionTimeline")}</DetailSectionTitle>
+            <Card className="divide-y divide-border/50 p-0">
+              <div className="p-3 space-y-3" role="list">
+                {enrollment.timeline.map((timelineItem, index) => (
+                  <div key={`${timelineItem.ts}-${timelineItem.event}`} className="flex gap-3" role="listitem">
+                    <div className="flex flex-col items-center">
+                      <div className="w-2 h-2 rounded-full bg-primary mt-1 flex-shrink-0" aria-hidden="true" />
+                      {enrollment.timeline && index < enrollment.timeline.length - 1 && <div className="w-0.5 flex-1 bg-border mt-1" aria-hidden="true" />}
+                    </div>
+                    <div className="pb-2">
+                      <p className="text-xs font-semibold text-foreground">{timelineItem.event}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {formatDateTime(timelineItem.ts)} · {timelineItem.by}
+                      </p>
+                    </div>
                   </div>
-                  <div className="pb-2">
-                    <p className="text-xs font-semibold text-foreground">{timelineItem.event}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {formatDateTime(timelineItem.ts)} · {timelineItem.by}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Section>
+                ))}
+              </div>
+            </Card>
+          </div>
         )}
 
         {canWrite && nextStatuses.length > 0 && (

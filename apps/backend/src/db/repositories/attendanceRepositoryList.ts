@@ -8,7 +8,7 @@ import {
   type AttendanceListPageResult,
 } from '@mms/shared';
 import { attendance } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 
 function buildAttendanceListConditions(subdomain: string, query: AttendanceListQuery): SQL[] {
@@ -110,7 +110,7 @@ export async function listAttendancePage(
   query: AttendanceListQuery,
 ): Promise<AttendanceListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage<AttendanceRow, AttendanceRecord>(tx, attendance, {
       conditions: buildAttendanceListConditions(subdomain, query),
       orderBy: buildAttendanceOrderBy(query.sortField, query.sortDir),
@@ -132,7 +132,7 @@ export async function listAttendancePage(
 /** Active (non-deleted) attendance count for the tenant — used by `/count`. */
 export async function countAttendanceActiveByWorkspace(tenant: string): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(attendance)
@@ -167,7 +167,7 @@ export async function aggregateAttendanceCommandMetrics(
     .toISOString()
     .slice(0, 10);
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const active = and(
       eq(attendance.workspaceSubdomain, subdomain),
       isNull(attendance.deletedAt),

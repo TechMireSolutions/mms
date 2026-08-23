@@ -1,46 +1,15 @@
 import React from "react";
-import { PageHeader, type PageHeaderProps } from "@/components/ui/PageHeader";
+import { ModuleScaffold, type ModuleScaffoldProps } from "@/components/common/ModuleScaffold";
 
-interface ModulePageShellProps {
-  seoTitle: string;
-  seoDescription: string;
-  headerIcon?: PageHeaderProps["icon"];
-  headerTitle?: string;
-  headerSubtitle?: string;
-  headerActions?: PageHeaderProps["actions"];
-  metricsStrip?: React.ReactNode;
-  children: React.ReactNode;
-}
+export type ModulePageShellProps = ModuleScaffoldProps;
 
 /**
- * ModulePageShell — DRY top-level layout wrapper for all module pages.
- * Handles SEO metadata, standardized page header formatting, metrics banner alignment,
- * and responsive grid spacing.
+ * ModulePageShell — DRY top-level layout wrapper for module pages.
+ * Delegates to Universal ModuleScaffold with ErrorBoundary and SEO metadata.
  */
-export function ModulePageShell({
-  seoTitle,
-  seoDescription,
-  headerIcon,
-  headerTitle,
-  headerSubtitle,
-  headerActions,
-  metricsStrip,
-  children,
-}: ModulePageShellProps): React.JSX.Element {
-  return (
-    <div className="box-border mx-auto w-full min-w-0 max-w-7xl space-y-5">
-      <title>{seoTitle}</title>
-      <meta name="description" content={seoDescription} />
-      {headerTitle && (
-        <PageHeader
-          icon={headerIcon}
-          title={headerTitle}
-          subtitle={headerSubtitle}
-          actions={headerActions}
-        />
-      )}
-      {metricsStrip}
-      {children}
-    </div>
-  );
+export function ModulePageShell(props: ModulePageShellProps): React.JSX.Element {
+  return <ModuleScaffold {...props} />;
 }
+
+export type { ModuleScaffoldProps };
+

@@ -2,10 +2,8 @@ import { useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import type { Account, FiscalYear, JournalEntry } from "@mms/shared";
-import {
-  NotifiedAccountingMutationError,
-  useAccountingMutations,
-} from "@/tenant/features/accounting/hooks/useAccountingApi";
+import { useAccountingMutations } from "@/tenant/features/accounting/hooks/useAccountingApi";
+import { NotifiedMutationError } from "@/lib/notifiedMutationError";
 
 interface UseAccountingPageActionsParams {
   accounts: Account[];
@@ -30,7 +28,7 @@ export function useAccountingPageActions({
   } = useAccountingMutations();
 
   const notifySaveFailure = useCallback((error: unknown) => {
-    if (error instanceof NotifiedAccountingMutationError) return;
+    if (error instanceof NotifiedMutationError) return;
     notify.error(t("accounting.settings.saveEntriesFailed"), {
       description: error instanceof Error ? error.message : String(error),
     });

@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import { useModuleCreateHotkey } from '@/hooks/useModuleCreateHotkey';
+import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
@@ -18,6 +18,7 @@ import {
   useObligationsWakala,
   useObligationsDistributions,
   useObligationsCollections,
+  useObligationsCollectionsCollection,
   useObligationsMutations,
   NotifiedObligationsMutationError,
 } from '@/tenant/features/obligations/hooks/useObligationsApi';
@@ -59,13 +60,13 @@ export function useObligationsPageController() {
   const wakalaResult = useObligationsWakala();
   const distributionsResult = useObligationsDistributions();
   const collectionsResult = useObligationsCollections({ includeDeleted: showDeleted });
+  const collections = useObligationsCollectionsCollection({ includeDeleted: showDeleted });
 
-  const obligationTypes = typesResult.data ?? [];
-  const mujtahids = mujtahidsResult.data ?? [];
-  const reps = repsResult.data ?? [];
-  const wakalaTypes = wakalaResult.data ?? [];
-  const distributions = distributionsResult.data ?? [];
-  const collections = collectionsResult.data ?? [];
+  const obligationTypes = (typesResult.data?.status === 200 ? (typesResult.data.body as any) : null) ?? [];
+  const mujtahids = (mujtahidsResult.data?.status === 200 ? (mujtahidsResult.data.body as any) : null) ?? [];
+  const reps = (repsResult.data?.status === 200 ? (repsResult.data.body as any) : null) ?? [];
+  const wakalaTypes = (wakalaResult.data?.status === 200 ? (wakalaResult.data.body as any) : null) ?? [];
+  const distributions = (distributionsResult.data?.status === 200 ? (distributionsResult.data.body as any) : null) ?? [];
 
   const {
     replaceTypes,
@@ -121,12 +122,19 @@ export function useObligationsPageController() {
     setFilteredCount(collections.length);
   }, [collections.length]);
 
-  useModuleCreateHotkey({
-    enabled: canWrite && !showDeleted,
+  useModuleShortcuts({
+    searchInputId: 'obligations-search-input',
+    selectedCount: 0,
+    hasActiveFilters: false,
+    clearFilters: () => {},
+    clearSelection: () => {},
+    canWrite,
+    showDeleted,
     onCreate: () => {
       setActiveTab('work');
       setShowForm(true);
     },
+    enabled: activeTab === 'work',
   });
 
   const handleSaveCollection = async (collectionPayload: ObligationCollection) => {

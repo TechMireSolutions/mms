@@ -14,13 +14,13 @@ import {
   deleteCollectionByStorageName,
   listCollectionStorageNames,
 } from '../database.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 async function tenantHasTypedLookupKind(
   tenant: string,
   kind: StudentLookupKind,
 ): Promise<boolean> {
-  return withTenantTransaction(null, async (tx) => {
+  return withTenant(null, async (tx) => {
     const [row] = await tx
       .select({ id: schema.studentLookups.id })
       .from(schema.studentLookups)

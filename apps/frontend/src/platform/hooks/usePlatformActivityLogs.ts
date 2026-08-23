@@ -1,5 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
-import { apiJson } from '@/lib/apiClient';
+import { tsrClient } from '@/lib/api';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 
 export interface PlatformActivityLogItem {
@@ -20,21 +19,19 @@ export interface PlatformActivityLogsResponse {
 
 export const PLATFORM_ACTIVITY_LOGS_QUERY_KEY = ['platform', 'activity-logs'] as const;
 
-async function fetchPlatformActivityLogs(signal?: AbortSignal): Promise<PlatformActivityLogItem[]> {
-  const res = await apiJson<PlatformActivityLogsResponse>('/api/platform/admin/system/activity-logs', {
-    signal,
-  });
-  return res.logs;
-}
-
 /** Super-user activity logs query hook. */
-export function usePlatformActivityLogs() {
+export function usePlatformActivityLogs(): { data: PlatformActivityLogItem[] | undefined; isLoading: boolean; isError: boolean; refetch: () => Promise<unknown> } {
   const { isPlatformAuthenticated, isSuperUser } = usePlatformPermissions();
 
-  return useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const { data: rawData, ...rest } = tsrClient.platform.getActivityLogs.useQuery({
     queryKey: PLATFORM_ACTIVITY_LOGS_QUERY_KEY,
-    queryFn: ({ signal }) => fetchPlatformActivityLogs(signal),
+    queryData: {},
     enabled: isPlatformAuthenticated && isSuperUser,
     staleTime: 30_000,
   });
+
+  const data: PlatformActivityLogItem[] | undefined = (rawData?.body as any)?.logs;
+
+  return { ...rest, data };
 }

@@ -5,6 +5,11 @@ const mockDb = {
   from: vi.fn().mockReturnThis(),
   where: vi.fn().mockReturnThis(),
   delete: vi.fn().mockReturnThis(),
+  insert: vi.fn().mockReturnThis(),
+  update: vi.fn().mockReturnThis(),
+  set: vi.fn().mockReturnThis(),
+  transaction: vi.fn(async (cb) => cb(mockDb)),
+  execute: vi.fn(),
 };
 
 const mocks = vi.hoisted(() => ({
@@ -21,6 +26,12 @@ vi.mock('../db/database.js', () => ({
 
 vi.mock('../db/dbClient.js', () => ({
   getDb: () => mockDb,
+}));
+
+vi.mock('../db/dbConnection.js', () => ({
+  activeDb: () => mockDb,
+  getRootDb: () => mockDb,
+  getReadReplicaDb: () => mockDb,
 }));
 
 import { deleteWorkspace } from '../services/workspaceService.js';

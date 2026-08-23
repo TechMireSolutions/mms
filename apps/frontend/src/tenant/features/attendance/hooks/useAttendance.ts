@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type {
   AttendanceCommandMetricsSnapshot,
   AttendanceListPageResult,
@@ -10,7 +10,8 @@ import {
   normalizeAttendanceReportComparisonQuery,
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiFetch, apiJson } from '@/lib/apiClient';
+import { tsrClient } from '@/lib/api';
+import { apiContract } from '@/lib/api';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
@@ -38,47 +39,50 @@ export interface AttendancePaginatedParams {
   enabled?: boolean;
 }
 
-function buildAttendancePageUrl(params: AttendancePaginatedParams): string {
-  const queryParams = new URLSearchParams();
-  queryParams.set('page', String(params.page));
-  queryParams.set('limit', String(params.limit ?? ATTENDANCE_MODULE_MANIFEST.defaultPageSize));
-  if (params.search?.trim()) queryParams.set('search', params.search.trim());
-  if (params.classId?.trim()) queryParams.set('classId', params.classId.trim());
-  if (params.date?.trim()) queryParams.set('date', params.date.trim());
-  if (params.dateFrom?.trim()) queryParams.set('dateFrom', params.dateFrom.trim());
-  if (params.dateTo?.trim()) queryParams.set('dateTo', params.dateTo.trim());
-  if (params.status?.trim()) queryParams.set('status', params.status.trim());
-  if (params.sortField?.trim()) queryParams.set('sortField', params.sortField.trim());
-  if (params.sortDir) queryParams.set('sortDir', params.sortDir);
-  if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
-  return `${ATTENDANCE_API}?${queryParams.toString()}`;
-}
-
 export function useAttendancePaginated(params: AttendancePaginatedParams) {
   const { isAuthenticated } = useAuth();
-  return useQuery({
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  
+  const query = tsrClient.attendance.list.useQuery({
     queryKey: [...ATTENDANCE_QUERY_KEY, 'page', params] as const,
-    queryFn: ({ signal }) => apiJson<AttendanceListPageResult>(buildAttendancePageUrl(params), { signal }),
+    queryData: {
+      query: {
+        page: params.page,
+        limit: params.limit ?? ATTENDANCE_MODULE_MANIFEST.defaultPageSize,
+        search: params.search?.trim(),
+        classId: params.classId?.trim(),
+        date: params.date?.trim(),
+        dateFrom: params.dateFrom?.trim(),
+        dateTo: params.dateTo?.trim(),
+        status: params.status?.trim(),
+        sortField: params.sortField?.trim(),
+        sortDir: params.sortDir,
+        includeDeleted: params.includeDeleted ? 'true' : undefined,
+      },
+    },
     enabled: isAuthenticated && (params.enabled ?? true),
     staleTime: 15_000,
-    placeholderData: (previousData) => previousData,
+    placeholderData: (previousData: any) => previousData,
   });
+  
+  return { ...query, data: query.data?.body as AttendanceListPageResult | undefined };
 }
 
 export function useAttendanceRecords(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
-  return useQuery<AttendanceRecord[]>({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const query = tsrClient.attendance.list.useQuery({
     queryKey: ATTENDANCE_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ records: AttendanceRecord[] }>(
-        `${ATTENDANCE_API}?page=1&limit=${ATTENDANCE_MODULE_MANIFEST.maxPageSize}`,
-        { signal },
-      );
-      return res?.records ?? [];
+    queryData: {
+      query: { page: 1, limit: ATTENDANCE_MODULE_MANIFEST.maxPageSize },
     },
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 15_000,
   });
+  
+  const records = query.data?.body ? (query.data.body as any).records ?? [] : [];
+  return { ...query, data: records as AttendanceRecord[] };
 }
 
 export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {
@@ -94,61 +98,44 @@ export function useAttendanceMutations() {
   };
 
   /** Bulk upsert. The legacy name is retained for callers while the endpoint remains PUT /bulk. */
-  const bulkUpsert = useMutation({
-    mutationFn: async (records: AttendanceRecord[]) =>
-      apiJson<{ records: AttendanceRecord[] }>(`${ATTENDANCE_API}/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify({ records }),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkUpsert = tsrClient.attendance.bulk.useMutation({
     onSuccess: invalidate,
   });
 
-  const createRecord = useMutation({
-    mutationFn: async (record: AttendanceRecord) =>
-      apiJson<{ record: AttendanceRecord }>(ATTENDANCE_API, {
-        method: 'POST',
-        body: JSON.stringify(record),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+
+  const createRecord = tsrClient.attendance.create.useMutation({
     onSuccess: invalidate,
   });
 
-  const updateRecord = useMutation({
-    mutationFn: async ({ id, record }: { id: string; record: AttendanceRecord }) =>
-      apiJson<{ record: AttendanceRecord }>(`${ATTENDANCE_API}/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(record),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+
+  const updateRecord = tsrClient.attendance.update.useMutation({
     onSuccess: invalidate,
   });
 
-  const deleteRecord = useMutation({
-    mutationFn: async (id: string) => apiFetch(`${ATTENDANCE_API}/${id}`, { method: 'DELETE' }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+
+  const deleteRecord = tsrClient.attendance.delete.useMutation({
     onSuccess: invalidate,
   });
 
-  const restoreRecord = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${ATTENDANCE_API}/${encodeURIComponent(id)}/restore`, {
-        method: 'POST',
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+
+  const restoreRecord = tsrClient.attendance.restore.useMutation({
     onSuccess: invalidate,
   });
 
-  const bulkDeleteRecords = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${ATTENDANCE_API}/bulk-delete`, {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+
+  const bulkDeleteRecords = tsrClient.attendance.bulkDelete.useMutation({
     onSuccess: invalidate,
   });
 
-  const bulkRestoreRecords = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(`${ATTENDANCE_API}/bulk-restore`, {
-        method: 'POST',
-        body: JSON.stringify({ ids }),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+
+  const bulkRestoreRecords = tsrClient.attendance.bulkRestore.useMutation({
     onSuccess: invalidate,
   });
 
@@ -182,10 +169,7 @@ export function useAttendanceReportAggregates(
   return useQuery({
     queryKey: [...ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,
     queryFn: async ({ signal }): Promise<AttendanceReportAggregates> =>
-      apiJson<AttendanceReportAggregates>(
-        `${ATTENDANCE_API}/report-aggregates${queryString ? `?${queryString}` : ''}`,
-        { signal },
-      ),
+      apiContract.attendance.reportAggregates({ query: comparison as any }).then((res: any) => res.body as AttendanceReportAggregates),
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });

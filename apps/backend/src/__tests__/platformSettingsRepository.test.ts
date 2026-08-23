@@ -23,6 +23,11 @@ vi.mock('../db/dbClient.js', () => ({
   getDb: () => mockDb,
 }));
 
+vi.mock('../db/dbConnection.js', () => ({
+  getRootDb: () => mockDb,
+    activeDb: () => mockDb,
+}));
+
 import {
   findPlatformSettingsRow,
   insertPlatformSettingsDefaultRow,

@@ -81,7 +81,7 @@ export function MessagingReportsPanel({
     startDate: queryStartDate,
     endDate: queryEndDate,
   });
-  const contactIds = useMemo(() => logsQuery.logs.map((log) => log.contactId), [logsQuery.logs]);
+  const contactIds = useMemo(() => logsQuery.logs.map((log: Message) => log.contactId), [logsQuery.logs]);
   const { data: recipients = [] } = useMessagingRecipientsByIds(contactIds);
   const recipientMap = useMemo(
     () => new Map(recipients.flatMap((recipient) => [[recipient.id, recipient], [String(recipient.id), recipient]])),

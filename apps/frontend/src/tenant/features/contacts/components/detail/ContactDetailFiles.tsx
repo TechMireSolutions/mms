@@ -65,49 +65,51 @@ export function ContactDetailFiles({
         {!contact.attachments || contact.attachments.length === 0 ? (
           <DetailCollectionEmpty title={t("contacts.detail.repositoryEmpty")} />
         ) : (
-          contact.attachments.map((file) => (
-            <Card key={file.id} className="flex items-center justify-between p-4 hover:border-primary/20 transition-all">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="p-2 rounded-lg bg-muted text-muted-foreground">
-                  <FileText className="w-5 h-5" />
+          <Card className="divide-y divide-border/50 p-0">
+            {contact.attachments.map((file) => (
+              <div key={file.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="p-2 rounded-lg bg-muted text-muted-foreground">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h5 className="text-xs font-bold text-foreground truncate">{file.name}</h5>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {(file.size / 1024).toFixed(1)} {t("contacts.detail.kbLabel")} · {formatDate(file.date)}
+                    </p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <h5 className="text-xs font-bold text-foreground truncate">{file.name}</h5>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {(file.size / 1024).toFixed(1)} {t("contacts.detail.kbLabel")} · {formatDate(file.date)}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1">
-                <a
-                  href={file.url}
-                  download={file.name}
-                  aria-label={t("contacts.detail.downloadFile", { name: file.name })}
-                  className={cn(
-                    MESSAGING_ICON_BTN,
-                    MESSAGING_ICON_BTN_TONES.link,
-                    "flex items-center justify-center",
-                  )}
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </a>
-                {canPersistContact && (
-                  <Button
-                    variant="ghost"
-                    aria-label={t("contacts.detail.deleteFile", { name: file.name })}
-                    onClick={() => onRequestDelete({ id: file.id, name: file.name })}
+                <div className="flex items-center gap-1">
+                  <a
+                    href={file.url}
+                    download={file.name}
+                    aria-label={t("contacts.detail.downloadFile", { name: file.name })}
                     className={cn(
                       MESSAGING_ICON_BTN,
-                      "border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 flex items-center justify-center shadow-none",
+                      MESSAGING_ICON_BTN_TONES.link,
+                      "flex items-center justify-center",
                     )}
-                    type="button"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </Button>
-                )}
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
+                  {canPersistContact && (
+                    <Button
+                      variant="ghost"
+                      aria-label={t("contacts.detail.deleteFile", { name: file.name })}
+                      onClick={() => onRequestDelete({ id: file.id, name: file.name })}
+                      className={cn(
+                        MESSAGING_ICON_BTN,
+                        "border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 flex items-center justify-center shadow-none",
+                      )}
+                      type="button"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                  )}
+                </div>
               </div>
-            </Card>
-          ))
+            ))}
+          </Card>
         )}
       </div>
     </div>

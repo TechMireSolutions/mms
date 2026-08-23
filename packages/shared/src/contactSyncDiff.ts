@@ -38,7 +38,7 @@ function snapshotValue(contact: Contact, field: (typeof SYNC_DIFF_FIELDS)[number
     case 'email':
       return getPrimaryEmail(contact) || '—';
     case 'city':
-      return contact.addresses?.[0]?.city || String(contact.city || '') || '—';
+      return contact.addresses?.[0]?.city || '—';
     default: {
       const fieldValue = contact[field as keyof Contact];
       if (fieldValue === undefined || fieldValue === null || fieldValue === '') return '—';

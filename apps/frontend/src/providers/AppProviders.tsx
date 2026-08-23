@@ -6,6 +6,7 @@ import { BrandingPaletteProvider } from '@/lib/contexts/BrandingPaletteContext';
 import { PlatformAuthProvider } from '@/platform/lib/PlatformAuthContext';
 import { TenantProvider } from '@/lib/contexts/TenantContext';
 import { TranslationProvider } from '@/lib/contexts/TranslationContext';
+import { DirectionProvider } from '@/providers/DirectionProvider';
 import { ApexBootPrefetch } from '@/platform/components/ApexBootPrefetch';
 import TenantScopedProviders from '@/providers/TenantScopedProviders';
 import { queryClientInstance } from '@/lib/queryClient';
@@ -27,10 +28,12 @@ export function AppProviders({ children }: AppProvidersProps): React.JSX.Element
             <BrandingPaletteProvider>
               <TenantProvider>
                 <TranslationProvider>
-                  <PlatformAuthProvider>
-                    <ApexBootPrefetch />
-                    <TenantScopedProviders>{children}</TenantScopedProviders>
-                  </PlatformAuthProvider>
+                  <DirectionProvider>
+                    <PlatformAuthProvider>
+                      <ApexBootPrefetch />
+                      <TenantScopedProviders>{children}</TenantScopedProviders>
+                    </PlatformAuthProvider>
+                  </DirectionProvider>
                 </TranslationProvider>
               </TenantProvider>
             </BrandingPaletteProvider>

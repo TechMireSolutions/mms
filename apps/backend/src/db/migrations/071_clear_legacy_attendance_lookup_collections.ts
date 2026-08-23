@@ -12,7 +12,7 @@ import {
 import { and, eq, inArray } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 export async function runMigration071(): Promise<void> {
   const db = getDb();
@@ -38,7 +38,7 @@ export async function runMigration071(): Promise<void> {
   const toDelete: string[] = [];
   let skipped = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     const cache = new Map<string, boolean>();
     const hasTyped = async (tenant: string, kind: AttendanceLookupKind): Promise<boolean> => {
       const cacheKey = `${tenant}:${kind}`;

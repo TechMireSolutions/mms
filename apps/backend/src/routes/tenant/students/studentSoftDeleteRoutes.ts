@@ -27,17 +27,7 @@ export const studentSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     customPostRoute: true,
     customPutRoute: true,
     canDelete: (user) => canDeleteCollection(user, 'students'),
-    deleteFn: (id, userId, reason) => studentUseCases.softDeleteStudentById(id, userId, reason),
     restoreFn: (id) => studentUseCases.restoreStudentById(id),
-    onAfterDelete: async (user, id, deletionReason) => {
-      const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
-      await auditStudent(
-        user,
-        'student.soft_delete',
-        `Soft-deleted student ${id}${reasonNote}`,
-        id,
-      );
-    },
     onAfterRestore: async (user, id) => {
       await auditStudent(user, 'student.restore', `Restored student ${id}`, id);
     },

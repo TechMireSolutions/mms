@@ -1,10 +1,13 @@
 import type { ReactNode } from 'react';
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { Card } from '@/components/ui/card';
+import type { CardAccentColor } from '@/lib/semanticTone';
 
 export interface PersonDetailHeroCardProps {
   id: string | number;
   displayName: string;
   avatar?: string | null;
+  accentColor?: CardAccentColor | string | false | null;
   /** Meta row (badges / identity chips) rendered under the title. */
   children?: ReactNode;
 }
@@ -19,10 +22,11 @@ export function PersonDetailHeroCard({
   id,
   displayName,
   avatar,
+  accentColor,
   children,
 }: PersonDetailHeroCardProps): React.JSX.Element {
   return (
-    <div className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-br from-card via-card to-muted/40 border border-border/80 shadow-xs">
+    <Card accentColor={accentColor} className="flex items-center gap-4 p-4 bg-gradient-to-br from-card via-card to-muted/40 shadow-xs">
       <UserAvatar
         id={id}
         name={displayName}
@@ -33,6 +37,6 @@ export function PersonDetailHeroCard({
         <h3 className="text-base font-bold text-foreground truncate leading-tight">{displayName}</h3>
         {children ? <div className="flex flex-wrap gap-1.5 mt-2 items-center">{children}</div> : null}
       </div>
-    </div>
+    </Card>
   );
 }

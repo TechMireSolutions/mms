@@ -49,7 +49,7 @@ async function hydrateStudentValidationSubject(
     dob: studentRecord.dob ?? contact.dob,
     phone: studentRecord.phone ?? getPrimaryPhone(contact),
     email: studentRecord.email ?? getPrimaryEmail(contact),
-    city: studentRecord.city ?? contact.city,
+    city: studentRecord.city ?? contact.addresses?.[0]?.city ?? null,
     ...resolveStudentGuardianLinks(
       studentRecord as {
         fatherContactId?: string | number;

@@ -4,7 +4,7 @@ import {
   type SessionLookupKind,
   type SessionLookupsMap,
 } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 import { createModuleLookupsHooks } from '@/lib/query/createModuleLookupsHooks';
 
 const SESSIONS_API = SESSIONS_MODULE_MANIFEST.restBasePath;
@@ -17,12 +17,8 @@ export const SESSIONS_LOOKUPS_QUERY_KEY = [
 export async function fetchSessionLookups(
   signal?: AbortSignal,
 ): Promise<SessionLookupsMap> {
-  const response = await apiJson<{ lookups: SessionLookupsMap }>(
-    `${SESSIONS_API}/lookups`,
-    {
-      signal,
-    },
-  );
+  const res = await apiContract.sessions.getLookups({ query: undefined, extraHeaders: {} });
+  const response = res.body as any;
   return response.lookups ?? emptySessionLookupsMap;
 }
 
@@ -30,14 +26,8 @@ export async function putSessionLookupKind(
   kind: SessionLookupKind,
   items: string[],
 ): Promise<string[]> {
-  const response = await apiJson<{ items: string[] }>(
-    `${SESSIONS_API}/lookups/${kind}`,
-    {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ items }),
-    },
-  );
+  const res = await apiContract.sessions.updateLookupKind({ params: { kind: kind as any }, body: { items }, query: undefined, extraHeaders: {} });
+  const response = res.body as any;
   return response.items;
 }
 

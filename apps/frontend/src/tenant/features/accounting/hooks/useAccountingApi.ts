@@ -1,21 +1,15 @@
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import type {
   AccountingCommandMetricsSnapshot,
   AccountingListQuery,
-  AccountingAccountsListPageResult,
-  AccountingEntriesListPageResult,
-  AccountingFiscalYearsListPageResult,
   Account,
   JournalEntry,
   FiscalYear,
 } from '@mms/shared';
 import { ACCOUNTING_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
-import { apiJson } from '@/lib/apiClient';
-import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 import { useAuth } from '@/lib/contexts/AuthContext';
-
-const ACCOUNTING_API = ACCOUNTING_MODULE_MANIFEST.restBasePath;
+import { tsrClient } from '@/lib/api';
 
 export const ACCOUNTING_METRICS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'metrics'] as const;
 
@@ -23,30 +17,23 @@ export const ACCOUNTING_ACCOUNTS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleI
 export const ACCOUNTING_ENTRIES_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'entries', 'list'] as const;
 export const ACCOUNTING_FISCAL_YEARS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'fiscal_years', 'list'] as const;
 
-/** @deprecated Prefer NotifiedMutationError — kept for form catch compatibility. */
-export class NotifiedAccountingMutationError extends NotifiedMutationError {}
-
 export function useAccountingAccountsPaginated(query: AccountingListQuery, options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
   const enabled = (options?.enabled ?? true) && isAuthenticated;
   
-  const queryParams = new URLSearchParams();
-  if (query.page) queryParams.set('page', String(query.page));
-  if (query.limit) queryParams.set('limit', String(query.limit));
-  if (query.search) queryParams.set('search', query.search);
-  if (query.sortField) queryParams.set('sortField', query.sortField);
-  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
-  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
-  
-  const queryString = queryParams.toString();
-
-  return useQuery({
-    queryKey: [...ACCOUNTING_ACCOUNTS_QUERY_KEY, query],
-    queryFn: async ({ signal }): Promise<AccountingAccountsListPageResult> =>
-      apiJson<AccountingAccountsListPageResult>(
-        `${ACCOUNTING_API}/accounts${queryString ? `?${queryString}` : ''}`,
-        { signal },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.accounting.listAccounts.useQuery({
+    queryKey: [...ACCOUNTING_ACCOUNTS_QUERY_KEY, query] as any,
+    queryData: {
+      query: {
+        page: query.page,
+        limit: query.limit,
+        search: query.search,
+        sortField: query.sortField,
+        sortDir: query.sortDir,
+        includeDeleted: query.includeDeleted ? 'true' : undefined,
+      } as any,
+    },
     enabled,
     placeholderData: keepPreviousData,
   });
@@ -56,23 +43,19 @@ export function useAccountingEntriesPaginated(query: AccountingListQuery, option
   const { isAuthenticated } = useAuth();
   const enabled = (options?.enabled ?? true) && isAuthenticated;
   
-  const queryParams = new URLSearchParams();
-  if (query.page) queryParams.set('page', String(query.page));
-  if (query.limit) queryParams.set('limit', String(query.limit));
-  if (query.search) queryParams.set('search', query.search);
-  if (query.sortField) queryParams.set('sortField', query.sortField);
-  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
-  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
-  
-  const queryString = queryParams.toString();
-
-  return useQuery({
-    queryKey: [...ACCOUNTING_ENTRIES_QUERY_KEY, query],
-    queryFn: async ({ signal }): Promise<AccountingEntriesListPageResult> =>
-      apiJson<AccountingEntriesListPageResult>(
-        `${ACCOUNTING_API}/entries${queryString ? `?${queryString}` : ''}`,
-        { signal },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.accounting.listEntries.useQuery({
+    queryKey: [...ACCOUNTING_ENTRIES_QUERY_KEY, query] as any,
+    queryData: {
+      query: {
+        page: query.page,
+        limit: query.limit,
+        search: query.search,
+        sortField: query.sortField,
+        sortDir: query.sortDir,
+        includeDeleted: query.includeDeleted ? 'true' : undefined,
+      } as any,
+    },
     enabled,
     placeholderData: keepPreviousData,
   });
@@ -82,45 +65,24 @@ export function useAccountingFiscalYearsPaginated(query: AccountingListQuery, op
   const { isAuthenticated } = useAuth();
   const enabled = (options?.enabled ?? true) && isAuthenticated;
   
-  const queryParams = new URLSearchParams();
-  if (query.page) queryParams.set('page', String(query.page));
-  if (query.limit) queryParams.set('limit', String(query.limit));
-  if (query.search) queryParams.set('search', query.search);
-  if (query.sortField) queryParams.set('sortField', query.sortField);
-  if (query.sortDir) queryParams.set('sortDir', query.sortDir);
-  if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
-  
-  const queryString = queryParams.toString();
-
-  return useQuery({
-    queryKey: [...ACCOUNTING_FISCAL_YEARS_QUERY_KEY, query],
-    queryFn: async ({ signal }): Promise<AccountingFiscalYearsListPageResult> =>
-      apiJson<AccountingFiscalYearsListPageResult>(
-        `${ACCOUNTING_API}/fiscal-years${queryString ? `?${queryString}` : ''}`,
-        { signal },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.accounting.listFiscalYears.useQuery({
+    queryKey: [...ACCOUNTING_FISCAL_YEARS_QUERY_KEY, query] as any,
+    queryData: {
+      query: {
+        page: query.page,
+        limit: query.limit,
+        search: query.search,
+        sortField: query.sortField,
+        sortDir: query.sortDir,
+        includeDeleted: query.includeDeleted ? 'true' : undefined,
+      } as any,
+    },
     enabled,
     placeholderData: keepPreviousData,
   });
 }
 
-/** @deprecated Use useAccountingAccountsPaginated instead */
-export function useAccountingAccountsCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): Account[] {
-  const query = useAccountingAccountsPaginated({ page: 1, limit: 500, includeDeleted: options?.includeDeleted }, options);
-  return query.data?.accounts ?? [];
-}
-
-/** @deprecated Use useAccountingEntriesPaginated instead */
-export function useAccountingEntriesCollection(options?: { enabled?: boolean; includeDeleted?: boolean }): JournalEntry[] {
-  const query = useAccountingEntriesPaginated({ page: 1, limit: 500, includeDeleted: options?.includeDeleted }, options);
-  return query.data?.entries ?? [];
-}
-
-/** @deprecated Use useAccountingFiscalYearsPaginated instead */
-export function useAccountingFiscalYearsCollection(options?: { enabled?: boolean }): FiscalYear[] {
-  const query = useAccountingFiscalYearsPaginated({ page: 1, limit: 500 }, options);
-  return query.data?.fiscalYears ?? [];
-}
 
 export function useAccountingMutations() {
   const queryClient = useQueryClient();
@@ -132,87 +94,83 @@ export function useAccountingMutations() {
     void queryClient.invalidateQueries({ queryKey: ACCOUNTING_METRICS_QUERY_KEY });
   };
 
-  const replaceAccounts = useMutation({
-    mutationFn: async (accounts: Account[]) =>
-      apiJson<{ accounts: Account[] }>(`${ACCOUNTING_API}/accounts/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(accounts),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceAccounts = tsrClient.accounting.replaceAccounts.useMutation({
     onSuccess: () => {
       invalidate();
     },
   });
 
-  const replaceEntries = useMutation({
-    mutationFn: async (entries: JournalEntry[]) =>
-      apiJson<{ entries: JournalEntry[] }>(`${ACCOUNTING_API}/entries/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(entries),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceEntries = tsrClient.accounting.replaceEntries.useMutation({
     onSuccess: () => {
       invalidate();
     },
   });
 
-  const replaceFiscalYears = useMutation({
-    mutationFn: async (fiscalYears: FiscalYear[]) =>
-      apiJson<{ fiscalYears: FiscalYear[] }>(`${ACCOUNTING_API}/fiscal-years/bulk`, {
-        method: 'PUT',
-        body: JSON.stringify(fiscalYears),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const replaceFiscalYears = tsrClient.accounting.replaceFiscalYears.useMutation({
     onSuccess: () => {
       invalidate();
     },
   });
 
-  const deleteEntry = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${ACCOUNTING_API}/entries/${encodeURIComponent(id)}`, {
-        method: 'DELETE',
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const deleteEntry = tsrClient.accounting.deleteEntry.useMutation({
     onSuccess: () => invalidate(),
   });
 
-  const restoreEntry = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ success: boolean }>(`${ACCOUNTING_API}/entries/${encodeURIComponent(id)}/restore`, {
-        method: 'POST',
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const restoreEntry = tsrClient.accounting.restoreEntry.useMutation({
     onSuccess: () => invalidate(),
   });
 
-  const bulkDeleteEntries = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${ACCOUNTING_API}/entries/bulk-delete`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ ids }),
-        },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkDeleteEntries = tsrClient.accounting.bulkDeleteEntries.useMutation({
     onSuccess: () => invalidate(),
   });
 
-  const bulkRestoreEntries = useMutation({
-    mutationFn: async (ids: string[]) =>
-      apiJson<{ success: boolean; succeeded: number; failed: number }>(
-        `${ACCOUNTING_API}/entries/bulk-restore`,
-        {
-          method: 'POST',
-          body: JSON.stringify({ ids }),
-        },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const bulkRestoreEntries = tsrClient.accounting.bulkRestoreEntries.useMutation({
     onSuccess: () => invalidate(),
   });
 
   return {
-    replaceAccounts,
-    replaceEntries,
-    replaceFiscalYears,
-    deleteEntry,
-    restoreEntry,
-    bulkDeleteEntries,
-    bulkRestoreEntries,
+    replaceAccounts: {
+      ...replaceAccounts,
+      mutate: (accounts: Account[], opts?: any) => replaceAccounts.mutate({ body: accounts }, opts),
+      mutateAsync: (accounts: Account[]) => replaceAccounts.mutateAsync({ body: accounts }),
+    },
+    replaceEntries: {
+      ...replaceEntries,
+      mutate: (entries: JournalEntry[], opts?: any) => replaceEntries.mutate({ body: entries }, opts),
+      mutateAsync: (entries: JournalEntry[]) => replaceEntries.mutateAsync({ body: entries }),
+    },
+    replaceFiscalYears: {
+      ...replaceFiscalYears,
+      mutate: (fiscalYears: FiscalYear[], opts?: any) => replaceFiscalYears.mutate({ body: fiscalYears }, opts),
+      mutateAsync: (fiscalYears: FiscalYear[]) => replaceFiscalYears.mutateAsync({ body: fiscalYears }),
+    },
+    deleteEntry: {
+      ...deleteEntry,
+      mutate: (id: string, opts?: any) => deleteEntry.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => deleteEntry.mutateAsync({ params: { id } }),
+    },
+    restoreEntry: {
+      ...restoreEntry,
+      mutate: (id: string, opts?: any) => restoreEntry.mutate({ params: { id } }, opts),
+      mutateAsync: (id: string) => restoreEntry.mutateAsync({ params: { id } }),
+    },
+    bulkDeleteEntries: {
+      ...bulkDeleteEntries,
+      mutate: (ids: string[], opts?: any) => bulkDeleteEntries.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkDeleteEntries.mutateAsync({ body: { ids } }),
+    },
+    bulkRestoreEntries: {
+      ...bulkRestoreEntries,
+      mutate: (ids: string[], opts?: any) => bulkRestoreEntries.mutate({ body: { ids } }, opts),
+      mutateAsync: (ids: string[]) => bulkRestoreEntries.mutateAsync({ body: { ids } }),
+    },
   };
 }
 

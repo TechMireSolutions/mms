@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query';
 import {
   TEACHERS_MODULE_MANIFEST,
   type Teacher,
@@ -6,49 +5,27 @@ import {
   type TeacherDuplicateReason,
   type TeacherRecord,
   type TeachersCommandMetricsSnapshot,
-  type TeachersWidgetAggregateResult,
-  type TeachersWidgetQuery,
   teachersWidgetQueryFromWidget,
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { apiJson } from '@/lib/apiClient';
-import { createModulePaginatedListQuery } from '@/lib/query/createModulePaginatedListQuery';
-import { createModuleWidgetAggregatesQuery } from '@/lib/query/createModuleWidgetAggregatesQuery';
-import { createPersonModuleResolveQueries } from '@/lib/query/createPersonModuleResolveQueries';
+
+import { tsrClient, apiContract } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+import { uniqueRegistryIds } from '@/lib/registryResolve';
+import { useMemo } from 'react';
 import {
-  TEACHERS_API,
   TEACHERS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
   type TeacherNextEmployeeIdParams,
   type TeachersWidgetAggregateWidgetInput,
 } from '@/tenant/features/teachers/hooks/teachersQueryKeys';
 import {
-  buildTeachersPageUrl,
-  sameTeachersListFilters,
-  teachersListQueryKeyParams,
-  teachersPaginatedQueryKey,
   type TeachersListPageResult,
   type TeachersPaginatedParams,
 } from '@/tenant/features/teachers/hooks/teachersListQueryBuilders';
 
 export type { TeachersListPageResult };
-
-const useTeachersPaginatedList = createModulePaginatedListQuery<
-  TeachersListPageResult,
-  TeachersPaginatedParams,
-  ReturnType<typeof teachersListQueryKeyParams>
->({
-  queryKey: teachersPaginatedQueryKey,
-  keyParams: teachersListQueryKeyParams,
-  sameFilters: sameTeachersListFilters,
-  buildUrl: buildTeachersPageUrl,
-  staleTime: 15_000,
-});
-
-export function useTeachersPaginated(params: TeachersPaginatedParams) {
-  return useTeachersPaginatedList(params);
-}
 
 /** Fetches all pages matching Work filters for export (parity with Students §8). */
 export async function fetchAllTeachersForQuery(
@@ -61,9 +38,10 @@ export async function fetchAllTeachersForQuery(
   let total = 0;
 
   for (;;) {
-    const teachersPage = await apiJson<TeachersListPageResult>(
-      buildTeachersPageUrl({ ...params, page, limit }),
-    );
+    const response = await apiContract.teachers.list({
+      query: { ...(params as any), page, limit }
+    });
+    const teachersPage = response.body as TeachersListPageResult;
     all.push(...(teachersPage.teachers as TeacherRecord[]));
     total = teachersPage.total;
     onProgress?.(all.length, total);
@@ -74,49 +52,59 @@ export async function fetchAllTeachersForQuery(
   return all;
 }
 
-const teacherResolveQueries = createPersonModuleResolveQueries<TeacherRecord, Teacher>({
-  moduleQueryKey: TEACHERS_QUERY_KEY,
-  apiBase: TEACHERS_API,
-  responseKey: 'teachers',
-  toHydrated: (rows) => rows as unknown as Teacher[],
-});
+export function useTeacherLinkedContactIds(excludeId?: string, enabled = true) {
+  const { isAuthenticated } = useAuth();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const query = tsrClient.teachers.linkedContactIds.useQuery({
+    queryKey: [...TEACHERS_QUERY_KEY, 'linked-contact-ids', excludeId ?? ''] as const,
+    queryData: { query: { excludeId } },
+    enabled: isAuthenticated && enabled,
+    staleTime: 30_000,
+  });
+  
+  return { ...query, data: (query.data?.body as any)?.contactIds as Array<string | number> | undefined };
+}
 
-export const useTeacherLinkedContactIds = teacherResolveQueries.useLinkedContactIds;
-export const useTeachersByIds = teacherResolveQueries.useByIds;
+export function useTeachersByIds(ids: (string | number | null | undefined)[]) {
+  const { isAuthenticated } = useAuth();
+  const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
+  
+  const query = useQuery({
+    queryKey: [...TEACHERS_QUERY_KEY, 'resolve', normalized.join(',')] as const,
+    queryFn: async () => {
+      const res = await apiContract.teachers.resolve({ body: { ids: normalized } });
+      return (res.body as any)?.teachers as Teacher[] | undefined;
+    },
+    enabled: isAuthenticated && normalized.length > 0,
+    staleTime: 30_000,
+  });
+  
+  return { ...query, data: query.data };
+}
 
 export function useTeacherNextEmployeeId(params: TeacherNextEmployeeIdParams = {}) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
-  const queryParams = new URLSearchParams();
-  if (params.prefix) queryParams.set('prefix', params.prefix);
 
-  return useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+
+  const query = tsrClient.teachers.nextEmployeeId.useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'next-employee-id', params] as const,
-    queryFn: async ({ signal }) => {
-      const suffix = queryParams.toString() ? `?${queryParams.toString()}` : '';
-      const nextEmployeeIdResponse = await apiJson<{ employeeId: string }>(
-        `${TEACHERS_API}/next-employee-id${suffix}`,
-        { signal },
-      );
-      return nextEmployeeIdResponse.employeeId;
-    },
+    queryData: { query: { prefix: params.prefix } },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
   });
+  
+  return { ...query, data: (query.data?.body as any)?.employeeId as string | undefined };
 }
 
 /** Server-authoritative active duplicate probe (contact / employeeId) before save. */
 export async function checkTeacherRegistrationDuplicate(
   input: TeacherDuplicateCheckInput,
 ): Promise<TeacherDuplicateReason | null> {
-  const duplicateCheckResponse = await apiJson<{ reason: TeacherDuplicateReason | null }>(
-    `${TEACHERS_API}/duplicate-check`,
-    {
-      method: 'POST',
-      body: JSON.stringify(input),
-    },
-  );
-  return duplicateCheckResponse.reason;
+  const res = await apiContract.teachers.duplicateCheck({ body: input });
+  if (res.status !== 200) throw new Error("Duplicate check failed");
+  return (res.body as any)?.reason ?? null;
 }
 
 export function useTeachersMetrics(options?: { enabled?: boolean }) {
@@ -127,35 +115,53 @@ export function useTeachersMetrics(options?: { enabled?: boolean }) {
   });
 }
 
-const buildTeachersWidgetAggregatesQuery = createModuleWidgetAggregatesQuery<
-  TeachersWidgetQuery,
-  TeachersWidgetAggregateResult
->({
-  apiBase: TEACHERS_API,
-  queryKey: TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-  collection: 'teachers',
-  toWidgetQuery: teachersWidgetQueryFromWidget,
-});
-
 export function useTeachersWidgetAggregates(
   widgets: TeachersWidgetAggregateWidgetInput[],
   options?: { enabled?: boolean },
 ) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
-  return useQuery(buildTeachersWidgetAggregatesQuery(widgets, isAuthenticated && enabled));
+
+  const queries = useMemo(
+    () =>
+      widgets
+        .filter((widget) => widget.collection === 'teachers')
+        .map((widget) => teachersWidgetQueryFromWidget(widget)),
+    [widgets],
+  );
+
+  const querySignature = useMemo(() => {
+    return JSON.stringify(
+      [...queries]
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map((query) => ({
+          id: query.id,
+          target: query.targetField,
+          filter: query.filterValue,
+          filterOperator: query.filterOperator,
+          xAxis: query.xAxisField,
+        })),
+    );
+  }, [queries]);
+
+  const query = useQuery({
+    queryKey: [...TEACHERS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
+    queryFn: async () => {
+      const res = await apiContract.teachers.widgetAggregates({ body: { widgets: queries } });
+      return (res.body as any)?.results ?? {};
+    },
+    enabled: isAuthenticated && enabled && queries.length > 0,
+    staleTime: 30_000,
+  });
+  
+  return { ...query, data: query.data ?? {} };
 }
 
 /** One-shot employee-id backfill for active teachers missing one (Setup writers). */
 export async function migrateTeachersEmployeeIds(): Promise<{ updated: number }> {
-  const migrateResponse = await apiJson<{ success: boolean; updated: number }>(
-    `${TEACHERS_API}/migrate-employee-ids`,
-    {
-      method: 'POST',
-      body: JSON.stringify({}),
-    },
-  );
-  return { updated: migrateResponse.updated ?? 0 };
+  const res = await apiContract.teachers.migrateEmployeeIds({ body: {} });
+  if (res.status !== 200) throw new Error("Migration failed");
+  return { updated: (res.body as any)?.updated ?? 0 };
 }
 
 export type { TeachersPaginatedParams, TeacherNextEmployeeIdParams, TeachersWidgetAggregateWidgetInput };

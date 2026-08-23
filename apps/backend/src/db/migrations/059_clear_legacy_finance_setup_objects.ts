@@ -6,14 +6,14 @@ import { eq } from 'drizzle-orm';
 import { parseTenantScopedStorageKey, FINANCE_MODULE_MANIFEST } from '@mms/shared';
 import * as schema from '../schema.js';
 import { deleteObjectByStorageKey, listObjectStorageKeys } from '../database.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 
 const SETTINGS_KEY = FINANCE_MODULE_MANIFEST.settingsObjectKey;
 // Finance has no single columnPreferencesObjectKey (invoice/payment are separate);
 // set to undefined so the candidate guard below skips it safely.
 const COLUMN_PREFS_KEY: string | undefined = undefined;
 
-type Tx = Parameters<Parameters<typeof withTenantTransaction>[1]>[0];
+type Tx = Parameters<Parameters<typeof withTenant>[1]>[0];
 
 async function tenantHasTypedFieldOrPrefs(tx: Tx, tenant: string): Promise<boolean> {
   const [field] = await tx
@@ -69,7 +69,7 @@ export async function runMigration059(): Promise<void> {
   const toDelete: string[] = [];
   let skipped = 0;
 
-  await withTenantTransaction(null, async (tx) => {
+  await withTenant(null, async (tx) => {
     const setupCache = new Map<string, boolean>();
     const columnCache = new Map<string, boolean>();
 

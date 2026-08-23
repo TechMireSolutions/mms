@@ -50,6 +50,12 @@ export const restoreInvoiceById = invoiceCrud.restoreById;
 export const bulkSoftDeleteInvoices = invoiceCrud.bulkDeleteByIds;
 export const bulkRestoreInvoices = invoiceCrud.bulkRestoreByIds;
 
+export async function getInvoiceById(id: string): Promise<Invoice | null> {
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  return findInvoiceById(tenant, id);
+}
+
 export async function bulkUpdateInvoicesStatus(
   ids: string[],
   status: string,
@@ -95,6 +101,12 @@ export const deletePaymentById = paymentCrud.deleteById;
 export const restorePaymentById = paymentCrud.restoreById;
 export const bulkSoftDeletePayments = paymentCrud.bulkDeleteByIds;
 export const bulkRestorePayments = paymentCrud.bulkRestoreByIds;
+
+export async function getPaymentById(id: string): Promise<Payment | null> {
+  const tenant = getRequestTenant();
+  if (!tenant) return null;
+  return findPaymentById(tenant, id);
+}
 
 export async function loadPaymentsPage(query: FinanceListQuery & { includeDeleted?: boolean }) {
   const tenant = getRequestTenant();

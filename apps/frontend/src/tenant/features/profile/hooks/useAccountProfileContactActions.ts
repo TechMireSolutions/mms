@@ -8,12 +8,13 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTenantProfile } from '@/tenant/hooks/useTenantProfile';
-import { apiJson, ApiError } from '@/lib/apiClient';
+
 import { getApiValidationMessage } from '@/lib/apiValidationMessage';
 import { notify } from '@/lib/notify';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useQueryClient } from '@tanstack/react-query';
 import { TENANT_PROFILE_KEY } from '@/tenant/hooks/useTenantProfile';
+import { tsrClient } from '@/lib/api';
 
 /** Replaces the primary phone entry, preserving any secondary numbers. */
 function upsertPrimaryPhone(existing: readonly PhoneNumber[], number: string): PhoneNumber[] {
@@ -54,6 +55,9 @@ export function useAccountProfileContactActions() {
   const { checkUserAuth } = useAuth();
   const queryClient = useQueryClient();
   const { data: profile, refetch } = useTenantProfile();
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const updateContactMutation = tsrClient.profile.updateContact.useMutation();
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -90,19 +94,21 @@ export function useAccountProfileContactActions() {
         notify.error(t('common.formPleaseFixErrors'));
         return;
       }
-      await apiJson('/api/auth/me/contact', {
-        method: 'PUT',
-        body: JSON.stringify(checked.data),
+      
+      const { status } = await updateContactMutation.mutateAsync({
+        body: checked.data
       });
+      if (status !== 200) {
+        throw new Error(t('errors.boundary.description'));
+      }
+      
       await queryClient.invalidateQueries({ queryKey: TENANT_PROFILE_KEY });
       await refetch();
       await checkUserAuth();
       notify.success(t('account.contactSaved'));
     } catch (error: unknown) {
       const validationMessage = getApiValidationMessage(error);
-      const message =
-        validationMessage ||
-        (error instanceof ApiError ? error.message : t('errors.boundary.description'));
+      const message = validationMessage || t('errors.boundary.description');
       notify.error(validationMessage ? t('account.contactUniqueConflict') : message, {
         description: validationMessage || undefined,
       });

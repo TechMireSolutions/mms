@@ -1,4 +1,4 @@
-import { apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 import {
   normalizeDashboardWidgets,
   type DashboardPreferences,
@@ -7,36 +7,37 @@ import {
   type DashboardWidgetsPutBody,
 } from '@mms/shared';
 
-const PREFERENCES_API = '/api/dashboard/preferences';
-const WIDGETS_API = '/api/dashboard/widgets';
-const JSON_HEADERS = { 'Content-Type': 'application/json' } as const;
-
 export async function fetchDashboardPreferences(
   signal?: AbortSignal,
 ): Promise<DashboardPreferences | null> {
-  const res = await apiJson<{ preferences: DashboardPreferences }>(PREFERENCES_API, { signal });
-  return res?.preferences ?? null;
+  const res = await apiContract.dashboard.getPreferences({
+    query: {},
+  });
+  if (res.status === 200) {
+    return (res.body as any).preferences;
+  }
+  return null;
 }
 
 export async function saveDashboardPreferencesAsync(
   prefs: DashboardPreferencesPutBody,
   signal?: AbortSignal,
 ): Promise<DashboardPreferences> {
-  const res = await apiJson<{ success: boolean; preferences: DashboardPreferences }>(
-    PREFERENCES_API,
-    {
-      method: 'PUT',
-      headers: JSON_HEADERS,
-      body: JSON.stringify(prefs),
-      signal,
-    },
-  );
-  return res.preferences;
+  const res = await apiContract.dashboard.putPreferences({
+    body: prefs,
+  });
+  if (res.status === 200) {
+    return (res.body as any).preferences;
+  }
+  throw new Error('Failed to save dashboard preferences');
 }
 
 export async function fetchDashboardWidgets(signal?: AbortSignal): Promise<DashboardWidgetDto[]> {
-  const res = await apiJson<{ widgets: DashboardWidgetDto[] }>(WIDGETS_API, { signal });
-  return res?.widgets ?? [];
+  const res = await apiContract.dashboard.getWidgets({ query: {} });
+  if (res.status === 200) {
+    return (res.body as any).widgets;
+  }
+  return [];
 }
 
 export async function saveDashboardWidgetsAsync(
@@ -44,18 +45,18 @@ export async function saveDashboardWidgetsAsync(
   signal?: AbortSignal,
 ): Promise<DashboardWidgetDto[]> {
   const sanitizedWidgets = normalizeDashboardWidgets(widgets);
-  const res = await apiJson<{ success: boolean; widgets: DashboardWidgetDto[] }>(WIDGETS_API, {
-    method: 'PUT',
-    headers: JSON_HEADERS,
-    body: JSON.stringify(sanitizedWidgets),
-    signal,
+  const res = await apiContract.dashboard.putWidgets({
+    body: sanitizedWidgets,
   });
-  return res.widgets;
+  if (res.status === 200) {
+    return (res.body as any).widgets;
+  }
+  throw new Error('Failed to save dashboard widgets');
 }
 
 export async function deleteDashboardWidgetAsync(id: string, signal?: AbortSignal): Promise<void> {
-  await apiJson<{ success: boolean }>(`${WIDGETS_API}/${encodeURIComponent(id)}`, {
-    method: 'DELETE',
-    signal,
+  await apiContract.dashboard.deleteWidget({
+    params: { id },
+    body: {},
   });
 }

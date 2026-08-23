@@ -10,7 +10,7 @@ import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import {
   useTeachersByIds,
   useTeachersMetrics,
-  useTeachersPaginated,
+  useTeachersContractList,
 } from '@/tenant/hooks/collections/teachers';
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
 import { teacherStatusBadgeConfig } from '@/lib/teachers/teacherStatusUi';
@@ -59,25 +59,24 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
 
   const { data: metrics, isLoading: metricsLoading } = useTeachersMetrics();
 
-  const rosterQuery = useTeachersPaginated({
+  const rosterQuery = useTeachersContractList({
     page: listPage,
     limit: TEACHERS_MODULE_MANIFEST.defaultPageSize,
     search: searchParam,
     status: statusParam,
-    enabled: activeSubTab === 'roster',
-  });
+  }, activeSubTab === 'roster');
 
   const listError = rosterQuery.isError;
   const listLoading = rosterQuery.isLoading;
   const listRefetch = rosterQuery.refetch;
 
   const teachers = useMemo<ReportTeacher[]>(
-    () => ((rosterQuery.data?.teachers ?? []) as unknown as Teacher[]).map(mapTeacherRow),
+    () => ((rosterQuery.data?.body?.teachers ?? []) as unknown as Teacher[]).map(mapTeacherRow),
     [rosterQuery.data],
   );
 
-  const listTotal = rosterQuery.data?.total ?? 0;
-  const listHasMore = Boolean(rosterQuery.data?.hasMore);
+  const listTotal = rosterQuery.data?.body?.total ?? 0;
+  const listHasMore = Boolean(rosterQuery.data?.body?.hasMore);
 
   const sessions = useSessionsCollection();
   const teacherIds = useMemo(() => collectTeacherIdsFromSessions(sessions), [sessions]);

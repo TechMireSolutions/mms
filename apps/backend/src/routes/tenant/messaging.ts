@@ -8,6 +8,7 @@ import { messagingExportRoutes } from './messaging/messagingExportRoutes.js';
 import { messagingLogRoutes } from './messaging/messagingLogRoutes.js';
 import { messagingRecipientRoutes } from './messaging/messagingRecipientRoutes.js';
 import { messagingTemplateRoutes } from './messaging/messagingTemplateRoutes.js';
+import { messagingContractRouter } from './messaging/messagingContractRouter.js';
 
 let backgroundJobRunnersReady = false;
 
@@ -25,24 +26,31 @@ export default async function messagingRoutes(
   fastify.addHook('preHandler', authenticateTenant);
   fastify.addHook('preHandler', requireTenantModule('messaging'));
 
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/recipients/column-preferences',
-    collection: 'message_logs',
-    objectKey: MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey,
-  });
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/history/column-preferences',
-    collection: 'message_logs',
-    objectKey: MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey,
-  });
-  registerColumnPreferencesRoutes(fastify, {
-    path: '/templates/column-preferences',
-    collection: 'message_logs',
-    objectKey: MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey,
-  });
+  await fastify.register(
+    async (sub) => {
+      registerColumnPreferencesRoutes(sub, {
+        path: '/recipients/column-preferences',
+        collection: 'message_logs',
+        objectKey: MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey,
+      });
+      registerColumnPreferencesRoutes(sub, {
+        path: '/history/column-preferences',
+        collection: 'message_logs',
+        objectKey: MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey,
+      });
+      registerColumnPreferencesRoutes(sub, {
+        path: '/templates/column-preferences',
+        collection: 'message_logs',
+        objectKey: MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey,
+      });
 
-  await fastify.register(messagingRecipientRoutes);
-  await fastify.register(messagingTemplateRoutes);
-  await fastify.register(messagingLogRoutes);
-  await fastify.register(messagingExportRoutes);
+      await sub.register(messagingRecipientRoutes);
+      await sub.register(messagingTemplateRoutes);
+      await sub.register(messagingLogRoutes);
+      await sub.register(messagingExportRoutes);
+    },
+    { prefix: '/api/messaging' },
+  );
+
+  await fastify.register(messagingContractRouter);
 }

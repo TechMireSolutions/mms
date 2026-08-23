@@ -64,16 +64,15 @@ export function StudentDetailSessionsSection({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-2">
       <DetailSectionTitle>{t("students.detail.enrolledSessions", { count: sessions.length })}</DetailSectionTitle>
-      <div className="space-y-2.5">
+      <Card accentColor="purple" className="divide-y divide-border/50 p-0">
         {sessions.map((session) => {
           const typeKey = sessionTypeI18nKey(session.type);
           const typeLabel = typeKey ? t(typeKey) : t("sessions.types.other");
           return (
-            <Card
+            <div
               key={session.id}
-              accentColor="primary"
               className="p-3.5 space-y-2"
             >
               <div className="flex items-center justify-between ms-1">
@@ -100,10 +99,10 @@ export function StudentDetailSessionsSection({
               ) : (
                 <p className="text-xs text-muted-foreground italic ms-1">{t("students.detail.noClassesConfigured")}</p>
               )}
-            </Card>
+            </div>
           );
         })}
-      </div>
+      </Card>
     </div>
   );
 }

@@ -22,12 +22,10 @@ export interface ContactLike {
   lastName?: string;
   gender?: string;
   dob?: string;
-  phone?: string;
-  email?: string;
-  city?: string;
   avatar?: string | null;
-  phones?: { number?: string }[];
-  emails?: { address?: string }[];
+  phones?: { number?: string; isPrimary?: boolean }[];
+  emails?: { address?: string; isPrimary?: boolean }[];
+  addresses?: { city?: string; state?: string; country?: string; line1?: string; isPrimary?: boolean }[];
 }
 
 function nonEmpty(value: unknown): string {
@@ -101,8 +99,16 @@ export function hydrateContactProfile<T extends Record<string, unknown>>(
   const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(contactId));
   if (!contact) return record;
   const contactName = contactDisplayName(contact);
-  const contactEmail = nonEmpty(contact.emails?.[0]?.address) || nonEmpty(contact.email);
-  const contactPhone = nonEmpty(contact.phones?.[0]?.number) || nonEmpty(contact.phone);
+  // Prefer collections; fall back to scalar mirrors for legacy/test fixtures.
+  const contactEmail =
+    nonEmpty(contact.emails?.[0]?.address) ||
+    nonEmpty(((contact as unknown) as Record<string, unknown>).email as string | undefined);
+  const contactPhone =
+    nonEmpty(contact.phones?.[0]?.number) ||
+    nonEmpty(((contact as unknown) as Record<string, unknown>).phone as string | undefined);
+  const contactCity =
+    nonEmpty(contact.addresses?.[0]?.city as string | undefined) ||
+    nonEmpty(((contact as unknown) as Record<string, unknown>).city as string | undefined);
   return {
     ...record,
     // Prefer non-empty contact values — `??` would keep "" and wipe stored auth names.
@@ -111,7 +117,7 @@ export function hydrateContactProfile<T extends Record<string, unknown>>(
     dob: nonEmpty(contact.dob) || record.dob,
     phone: contactPhone || record.phone,
     email: contactEmail || record.email,
-    city: nonEmpty(contact.city) || record.city,
+    city: contactCity || record.city,
   };
 }
 

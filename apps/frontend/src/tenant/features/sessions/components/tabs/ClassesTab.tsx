@@ -41,7 +41,7 @@ export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
   const deletePendingRef = React.useRef(false);
 
   const handleClassMessage = (channel: 'sms' | 'whatsapp' | 'email', sessionClass: Class) => {
-    const teacher = teachers.find((t) => t.id === sessionClass.teacherId);
+    const teacher = teachers.find((t: any) => t.id === sessionClass.teacherId);
     const recipientName = (teacher ? teacher.name : sessionClass.teacherName || sessionClass.name) || t("sessions.classes.fallbackName");
     const teacherObj = teacher as unknown as { phone?: string; email?: string } | undefined;
     const phoneStr: string = teacherObj?.phone ?? "";

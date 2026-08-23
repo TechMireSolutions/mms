@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type {
   ContactColumnPreference,
   ContactsSavedReport,
@@ -7,9 +7,8 @@ import type {
 } from '@mms/shared';
 import { clampModuleColumnWidth } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { apiFetch, apiJson } from '@/lib/apiClient';
+import { tsrClient } from '@/lib/api';
 import {
-  CONTACTS_API,
   CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
   CONTACTS_SAVED_REPORTS_QUERY_KEY,
 } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
@@ -26,15 +25,11 @@ interface ContactsSavedReportCreateInput {
 export function useContactColumnPrefs(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
-  return useQuery({
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.contacts.getColumnPreferences.useQuery({
     queryKey: CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const preferencesResponse = await apiJson<{ preferences: ContactColumnPreference[] }>(
-        `${CONTACTS_API}/column-preferences`,
-        { signal },
-      );
-      return preferencesResponse.preferences ?? [];
-    },
+    queryData: {},
     enabled: isAuthenticated && enabled,
     staleTime: 60_000,
   });
@@ -42,8 +37,19 @@ export function useContactColumnPrefs(options?: { enabled?: boolean }) {
 
 export function useContactColumnPrefsMutation() {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (rawPreferences: ContactColumnPreference[]) => {
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const mutation = tsrClient.contacts.updateColumnPreferences.useMutation({
+    onSuccess: (response: any) => {
+      queryClient.setQueryData(
+        CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
+        response.body?.preferences ?? [],
+      );
+    },
+  });
+
+  return {
+    ...mutation,
+    mutateAsync: async (rawPreferences: ContactColumnPreference[]) => {
       const preferences: ContactColumnPreference[] = rawPreferences
         .filter((columnPreference) => columnPreference && typeof columnPreference.key === 'string' && columnPreference.key.trim().length > 0)
         .map((columnPreference, index) => {
@@ -60,34 +66,19 @@ export function useContactColumnPrefsMutation() {
           }
           return preference;
         });
-      return apiJson<{ success: boolean; preferences: ContactColumnPreference[] }>(
-        `${CONTACTS_API}/column-preferences`,
-        {
-          method: 'PUT',
-          body: JSON.stringify({ preferences }),
-        },
-      );
-    },
-    onSuccess: (preferencesResponse) => {
-      queryClient.setQueryData(
-        CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
-        preferencesResponse.preferences ?? [],
-      );
-    },
-  });
+      
+      return mutation.mutateAsync({ body: { preferences } });
+    }
+  };
 }
 
 function useContactsSavedReports() {
   const { isAuthenticated } = useAuth();
-  return useQuery({
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.contacts.getSavedReports.useQuery({
     queryKey: CONTACTS_SAVED_REPORTS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      const reportsResponse = await apiJson<{ reports: ContactsSavedReport[] }>(
-        `${CONTACTS_API}/saved-reports`,
-        { signal },
-      );
-      return reportsResponse.reports;
-    },
+    queryData: {},
     enabled: isAuthenticated,
     staleTime: 30_000,
   });
@@ -100,27 +91,18 @@ function useContactsSavedReportMutations() {
     void queryClient.invalidateQueries({ queryKey: CONTACTS_SAVED_REPORTS_QUERY_KEY });
   };
 
-  const createSavedReport = useMutation({
-    mutationFn: async (payload: ContactsSavedReportCreateInput) =>
-      apiJson<{ report: ContactsSavedReport }>(`${CONTACTS_API}/saved-reports`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-      }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const createSavedReport = tsrClient.contacts.createSavedReport.useMutation({
     onSuccess: invalidate,
   });
 
-  const deleteSavedReport = useMutation({
-    mutationFn: async (id: string) =>
-      apiFetch(`${CONTACTS_API}/saved-reports/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const deleteSavedReport = tsrClient.contacts.deleteSavedReport.useMutation({
     onSuccess: invalidate,
   });
 
-  const runSavedReport = useMutation({
-    mutationFn: async (id: string) =>
-      apiJson<{ report: ContactsSavedReport }>(
-        `${CONTACTS_API}/saved-reports/${encodeURIComponent(id)}/run`,
-        { method: 'POST' },
-      ),
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const runSavedReport = tsrClient.contacts.runSavedReport.useMutation({
     onSuccess: invalidate,
   });
 
@@ -135,20 +117,20 @@ export function useContactsSavedReportsSource(): SavedReportsSource<
   const { createSavedReport, deleteSavedReport, runSavedReport } = useContactsSavedReportMutations();
 
   return {
-    reports: reportsQuery.data ?? [],
+    reports: reportsQuery.data?.body ? ((reportsQuery.data.body as any)?.reports ?? []) : [],
     isLoading: reportsQuery.isLoading,
     isError: reportsQuery.isError,
     retry: () => {
       void reportsQuery.refetch();
     },
     createReport: async (input) => {
-      await createSavedReport.mutateAsync(input);
+      await createSavedReport.mutateAsync({ body: input });
     },
     deleteReport: async (id) => {
-      await deleteSavedReport.mutateAsync(id);
+      await deleteSavedReport.mutateAsync({ params: { id } });
     },
     runReport: async (id) => {
-      await runSavedReport.mutateAsync(id);
+      await runSavedReport.mutateAsync({ params: { id }, body: {} });
     },
   };
 }

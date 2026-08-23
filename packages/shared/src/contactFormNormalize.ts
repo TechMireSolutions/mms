@@ -16,8 +16,8 @@ import {
   type ContactSkill,
   type RelationshipContact,
 } from "./contactTypes.js";
-import { getPrimaryPhone, normalizeToE164 } from "./phoneUtils.js";
-import { getPrimaryEmail } from "./contactDisplayUtils.js";
+import { normalizeToE164 } from "./phoneUtils.js";
+
 import {
   normalizeAddressItem,
   normalizeEducationItem,
@@ -256,59 +256,45 @@ export function normalizeContactForEdit(
     experience,
     skills,
     relationshipContacts,
-    tags: Array.isArray(merged.tags)
-      ? merged.tags
-      : (typeof merged.tag === "string" && merged.tag.trim()
-          ? merged.tag.split(",").map((s) => s.trim()).filter(Boolean)
-          : []),
-    tag: typeof merged.tag === "string"
-      ? merged.tag
-      : (Array.isArray(merged.tags) ? merged.tags.join(", ") : ""),
+    tags: Array.isArray(merged.tags) ? merged.tags : [],
   } as Partial<Contact>;
 }
 
 /**
- * Sync legacy scalar mirrors from collection arrays.
- * When an array is present it is authoritative (empty → `""`) so merges cannot resurrect deletes.
+ * Derives and clears scalar mirror fields (phone/email/address) from the
+ * canonical collection arrays. When a collection is explicitly provided as
+ * an empty array, the corresponding scalar is cleared. When a collection
+ * has rows, the scalar is derived from the primary (or first) row.
+ * Collections that are absent (undefined) leave existing scalars untouched.
  */
 export function syncContactScalarFields<T extends Partial<Contact>>(contact: T): T {
-  const result = { ...contact } as Record<string, unknown>;
+  const result: Partial<Contact> = { ...contact };
 
+  // Phone scalar
   if (Array.isArray(contact.phones)) {
-    result.phone = getPrimaryPhone({ phones: contact.phones }) || "";
-  } else {
-    const primaryPhoneStr = getPrimaryPhone(contact);
-    if (primaryPhoneStr) result.phone = primaryPhoneStr;
-    else delete result.phone;
+    const primary = contact.phones.find((p) => p.isPrimary) ?? contact.phones[0];
+    if (primary) {
+      const { countryCode = '', number = '' } = primary;
+      result.phone = countryCode ? `${countryCode} ${number}`.trim() : number.trim();
+    } else {
+      result.phone = '';
+    }
   }
 
+  // Email scalar
   if (Array.isArray(contact.emails)) {
-    result.email = getPrimaryEmail({ emails: contact.emails }) || "";
-  } else {
-    const primaryEmailStr = getPrimaryEmail(contact);
-    if (primaryEmailStr) result.email = primaryEmailStr;
-    else delete result.email;
+    const primary = contact.emails.find((e) => e.isPrimary) ?? contact.emails[0];
+    result.email = primary?.address ?? '';
   }
 
+  // Address scalars
   if (Array.isArray(contact.addresses)) {
-    const firstAddr = contact.addresses[0];
-    result.line1 = firstAddr?.line1 || "";
-    result.city = firstAddr?.city || "";
-    result.state = firstAddr?.state || "";
-    result.country = firstAddr?.country || "";
-    result.address = firstAddr?.line1 || "";
-  } else {
-    delete result.line1;
-    delete result.city;
-    delete result.state;
-    delete result.country;
-    delete result.address;
-  }
-
-  if (Array.isArray(contact.tags)) {
-    result.tag = contact.tags.map((t) => String(t).trim()).filter(Boolean).join(', ');
-  } else if (typeof contact.tag === 'string' && contact.tag.trim()) {
-    result.tags = contact.tag.split(',').map((s) => s.trim()).filter(Boolean);
+    const primary = contact.addresses.find((a) => a.isPrimary) ?? contact.addresses[0];
+    result.line1 = primary?.line1 ?? '';
+    result.city = primary?.city ?? '';
+    result.state = primary?.state ?? '';
+    result.country = primary?.country ?? '';
+    result.address = primary?.line1 ?? '';
   }
 
   return result as T;

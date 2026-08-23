@@ -1,20 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
 import {
   CONTACTS_MODULE_MANIFEST,
   type ContactsCommandMetricsSnapshot,
-  type ContactsDuplicatePairsPageResult,
   type ContactsMonthlyYearCounts,
   type ContactsReportAnalyticsSnapshot,
-  type ContactsWidgetAggregateResult,
   type ContactsWidgetQuery,
   contactsWidgetQueryFromWidget,
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { apiJson } from '@/lib/apiClient';
-import { createModuleWidgetAggregatesQuery } from '@/lib/query/createModuleWidgetAggregatesQuery';
+import { apiContract, tsrClient } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+import { useMemo } from 'react';
 import {
-  CONTACTS_API,
   CONTACTS_DUPLICATES_QUERY_KEY,
   CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
@@ -42,20 +39,13 @@ interface ContactsReportAnalyticsResult {
 export function useContactsReportAnalytics(params: ContactsReportAnalyticsParams = {}) {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
-  const yearsKey = params.compareYears?.filter(Boolean).join(',') ?? '';
+  const compareYears = params.compareYears?.filter(Boolean) ?? [];
   const language = params.language ?? 'en';
-  return useQuery({
-    queryKey: [...CONTACTS_REPORT_ANALYTICS_QUERY_KEY, yearsKey, language] as const,
-    queryFn: async ({ signal }) => {
-      const query = new URLSearchParams();
-      if (yearsKey) query.set('years', yearsKey);
-      if (language) query.set('lang', language);
-      const queryString = query.toString() ? `?${query.toString()}` : '';
-      return apiJson<ContactsReportAnalyticsResult>(
-        `${CONTACTS_API}/report-analytics${queryString}`,
-        { signal },
-      );
-    },
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.contacts.reportAnalytics.useQuery({
+    queryKey: [...CONTACTS_REPORT_ANALYTICS_QUERY_KEY, compareYears.join(','), language] as const,
+    queryData: { query: { years: compareYears, lang: language } },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
@@ -74,23 +64,46 @@ interface ContactsWidgetAggregateWidgetInput {
   chartLimit?: number;
 }
 
-const buildContactsWidgetAggregatesQuery = createModuleWidgetAggregatesQuery<
-  ContactsWidgetQuery,
-  ContactsWidgetAggregateResult
->({
-  apiBase: CONTACTS_API,
-  queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
-  collection: 'contacts',
-  toWidgetQuery: contactsWidgetQueryFromWidget,
-});
-
 export function useContactsWidgetAggregates(
   widgets: ContactsWidgetAggregateWidgetInput[],
   options?: { enabled?: boolean },
 ) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
-  return useQuery(buildContactsWidgetAggregatesQuery(widgets, isAuthenticated && enabled));
+
+  const queries = useMemo(
+    () =>
+      widgets
+        .filter((widget) => widget.collection === 'contacts')
+        .map((widget) => contactsWidgetQueryFromWidget(widget)),
+    [widgets],
+  );
+
+  const querySignature = useMemo(() => {
+    return JSON.stringify(
+      [...queries]
+        .sort((a, b) => a.id.localeCompare(b.id))
+        .map((query) => ({
+          id: query.id,
+          target: query.targetField,
+          filter: query.filterValue,
+          filterOperator: query.filterOperator,
+          xAxis: query.xAxisField,
+        })),
+    );
+  }, [queries]);
+
+  const query = useQuery({
+    queryKey: [...CONTACTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
+    queryFn: async () => {
+      const res = await apiContract.contacts.widgetAggregates({ body: { widgets: queries } });
+      return (res.body as any)?.results ?? {};
+    },
+    enabled: isAuthenticated && enabled && queries.length > 0,
+    staleTime: 30_000,
+  });
+  
+  return { ...query, data: query.data ?? {} };
 }
 
 interface ContactsDuplicatesParams {
@@ -104,15 +117,11 @@ export function useContactsDuplicatePairs(params: ContactsDuplicatesParams = {})
   const enabled = params.enabled ?? true;
   const page = params.page ?? 1;
   const limit = params.limit ?? 100;
-  return useQuery({
+  
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.contacts.getDuplicates.useQuery({
     queryKey: [...CONTACTS_DUPLICATES_QUERY_KEY, page, limit] as const,
-    queryFn: async ({ signal }) => {
-      const queryParams = new URLSearchParams({ page: String(page), limit: String(limit) });
-      return apiJson<ContactsDuplicatePairsPageResult>(
-        `${CONTACTS_API}/duplicates?${queryParams.toString()}`,
-        { signal },
-      );
-    },
+    queryData: { query: { page, limit } },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });

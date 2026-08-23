@@ -198,4 +198,91 @@ export function registerDefaultBackgroundJobRunners(): void {
       hasDownload: true,
     });
   });
+
+  // Phase 6: Headless BiDi Document Engine & Streaming Excel exports
+  registerBackgroundJobRunner('students:render-report-card', async (payload, ctx) => {
+    const { processPdfRenderJob } = await import('../worker/processors/pdf-rendering.js');
+    await ctx.updateProgress(10, 100);
+    const data = (payload as { data: Record<string, unknown>; filename?: string }).data || {};
+    const filename = (payload as { filename?: string }).filename || 'report-card.pdf';
+    const result = await processPdfRenderJob(
+      ctx.tenant,
+      {
+        template: 'report-card',
+        data,
+        filename,
+      },
+      async (pct) => ctx.updateProgress(pct, 100)
+    );
+    await ctx.complete({
+      label: `Generated Report Card (${result.key})`,
+      progress: { current: 100, total: 100 },
+      hasDownload: true,
+    });
+  });
+
+  registerBackgroundJobRunner('finance:render-receipt', async (payload, ctx) => {
+    const { processPdfRenderJob } = await import('../worker/processors/pdf-rendering.js');
+    await ctx.updateProgress(10, 100);
+    const data = (payload as { data: Record<string, unknown>; filename?: string }).data || {};
+    const filename = (payload as { filename?: string }).filename || 'fee-receipt.pdf';
+    const result = await processPdfRenderJob(
+      ctx.tenant,
+      {
+        template: 'fee-receipt',
+        data,
+        filename,
+      },
+      async (pct) => ctx.updateProgress(pct, 100)
+    );
+    await ctx.complete({
+      label: `Generated Fee Receipt (${result.key})`,
+      progress: { current: 100, total: 100 },
+      hasDownload: true,
+    });
+  });
+
+  registerBackgroundJobRunner('finance:render-ledger', async (payload, ctx) => {
+    const { processPdfRenderJob } = await import('../worker/processors/pdf-rendering.js');
+    await ctx.updateProgress(10, 100);
+    const data = (payload as { data: Record<string, unknown>; filename?: string }).data || {};
+    const filename = (payload as { filename?: string }).filename || 'financial-ledger.pdf';
+    const result = await processPdfRenderJob(
+      ctx.tenant,
+      {
+        template: 'financial-ledger',
+        data,
+        filename,
+      },
+      async (pct) => ctx.updateProgress(pct, 100)
+    );
+    await ctx.complete({
+      label: `Generated Financial Ledger (${result.key})`,
+      progress: { current: 100, total: 100 },
+      hasDownload: true,
+    });
+  });
+
+  registerBackgroundJobRunner('finance:export-excel', async (payload, ctx) => {
+    const { streamLedgerToS3 } = await import('../worker/processors/excel-export.js');
+    const { filename = 'ledger-export.xlsx', entries = [] } = payload as {
+      filename?: string;
+      entries?: Record<string, unknown>[];
+    };
+
+    async function* generateRows() {
+      for (const entry of entries) {
+        yield entry;
+      }
+    }
+
+    await ctx.updateProgress(10, 100);
+    const key = await streamLedgerToS3(ctx.tenant, filename, generateRows());
+    await ctx.complete({
+      label: `Streamed Ledger to Excel (${key})`,
+      progress: { current: 100, total: 100 },
+      hasDownload: true,
+    });
+  });
 }
+

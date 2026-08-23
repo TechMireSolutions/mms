@@ -12,6 +12,7 @@ import {
   relationshipSchema,
   socialLinkSchema,
 } from './contactNestedSchemas.js';
+import { contactWriteSchema } from './schemas/contacts.dto.js';
 
 export {
   activitySchema,
@@ -28,7 +29,7 @@ export {
   collectContactWriteExtraFieldKeys,
   buildContactWriteSchema,
   contactWriteSchema,
-} from './contactWriteSchema.js';
+} from './schemas/contacts.dto.js';
 
 export const contactRecordSchema = z
   .object({

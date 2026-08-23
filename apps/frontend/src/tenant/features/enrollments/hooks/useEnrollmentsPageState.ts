@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { ClipboardList, UserCheck } from "lucide-react";
@@ -71,11 +71,13 @@ export function useEnrollmentsPageState() {
     enabled: useServerWork,
   });
 
+  const pageData = (workPageData?.body ?? workPageData) as { enrollments?: Enrollment[]; total?: number } | undefined;
+
   const enrollments = useMemo(
-    () => (workPageData?.enrollments ?? []) as Enrollment[],
-    [workPageData]
+    () => (pageData?.enrollments ?? []) as Enrollment[],
+    [pageData]
   );
-  const filteredCount = workPageData?.total ?? enrollments.length;
+  const filteredCount = pageData?.total ?? enrollments.length;
 
   const [viewing, setViewing] = useState<Enrollment | null>(null);
   const [showWizard, setShowWizard] = useState(false);
@@ -108,12 +110,23 @@ export function useEnrollmentsPageState() {
     }
   }, [canWriteEnrollments, activeSubTab]);
 
-  useModuleCreateHotkey({
-    enabled: canWriteEnrollments && !showDeleted,
+  useModuleShortcuts({
+    searchInputId: "enrollments-search-input",
+    selectedCount: selection.selectedIds.length,
+    hasActiveFilters: statusFilter !== "all" || sessionFilter !== "all" || Boolean(search),
+    clearFilters: () => {
+      setStatusFilter("all");
+      setSessionFilter("all");
+      setSearch("");
+    },
+    clearSelection: selection.clearSelection,
+    canWrite: canWriteEnrollments,
+    showDeleted,
     onCreate: () => {
       setTab("work");
       setShowWizard(true);
     },
+    enabled: tab === "work",
   });
 
   const pageActions = useEnrollmentsPageActions({

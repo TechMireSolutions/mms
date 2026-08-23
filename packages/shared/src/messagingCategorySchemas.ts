@@ -20,3 +20,5 @@ export const messageChannelSchema = z.enum(MESSAGE_CHANNELS);
 
 /** Message category union derived from MESSAGE_CATEGORIES. */
 export type MessageCategory = (typeof MESSAGE_CATEGORIES)[number];
+
+export type MessageChannel = (typeof MESSAGE_CHANNELS)[number];

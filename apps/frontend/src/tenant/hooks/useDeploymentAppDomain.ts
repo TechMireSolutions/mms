@@ -1,14 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
 import { resolveAppDomainForRequest } from '@mms/shared';
-import { apiJson } from '@/lib/apiClient';
 import { env } from '@/lib/config/env';
+import { tsrClient } from '@/lib/api';
 
 export const DEPLOYMENT_CONFIG_KEY = ['public', 'deployment-config'] as const;
 
-async function fetchDeploymentAppDomain(): Promise<string> {
-  const deploymentConfig = await apiJson<{ appDomain: string }>('/api/public/deployment-config');
-  return deploymentConfig.appDomain;
-}
+
 
 /**
  * Server-authoritative apex domain — applies the same self-correction as the backend
@@ -18,12 +14,12 @@ export function useDeploymentAppDomain(): string {
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const fallback = resolveAppDomainForRequest(hostname, env.appDomain);
 
-  const { data: appDomain } = useQuery({
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const { data: deploymentConfig } = tsrClient.public.deploymentConfig.useQuery({
     queryKey: DEPLOYMENT_CONFIG_KEY,
-    queryFn: fetchDeploymentAppDomain,
     staleTime: 5 * 60_000,
     retry: 1,
   });
 
-  return appDomain ?? fallback;
+  return deploymentConfig?.appDomain ?? fallback;
 }

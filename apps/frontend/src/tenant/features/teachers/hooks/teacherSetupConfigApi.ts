@@ -2,7 +2,6 @@
  * Teachers Setup field-config + preferences via typed REST.
  */
 import {
-  TEACHERS_MODULE_MANIFEST,
   composeTeachersSettings,
   normalizeTeacherModulePreferences,
   normalizeTeachersSettings,
@@ -10,10 +9,26 @@ import {
   type TeacherModulePreferences,
   type TeachersSettings,
 } from "@mms/shared";
+import { apiContract } from "@/lib/api";
 import { createModuleSetupConfigApi } from "@/lib/query/createModuleSetupConfigApi";
 
 const api = createModuleSetupConfigApi<TeachersSettings, TeacherModulePreferences>({
-  restBasePath: TEACHERS_MODULE_MANIFEST.restBasePath,
+    fetchFieldConfigFn: async (signal) => {
+    const res = await apiContract.teachers.getFieldConfig({ query: undefined, extraHeaders: {} });
+    return (res.body as any).config;
+  },
+  saveFieldConfigFn: async (config) => {
+    const res = await apiContract.teachers.updateFieldConfig({ body: config as any });
+    return (res.body as any).config;
+  },
+  fetchPreferencesFn: async (signal) => {
+    const res = await apiContract.teachers.getPreferences({ query: undefined, extraHeaders: {} });
+    return (res.body as any).preferences;
+  },
+  savePreferencesFn: async (prefs) => {
+    const res = await apiContract.teachers.updatePreferences({ body: prefs as any });
+    return (res.body as any).preferences;
+  },
   normalizeFieldConfig: normalizeTeachersSettings,
   composeSettings: composeTeachersSettings as (
     fieldConfig: unknown,

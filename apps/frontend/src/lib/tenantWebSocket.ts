@@ -1,10 +1,27 @@
 import { resolveApiUrl } from '@/lib/apiClientHelpers';
+import { queryClientInstance } from '@/lib/queryClient';
 
 export type TenantDatabaseUpdateMessage = {
   event: 'database-update';
   type: 'collection' | 'object';
   key: string;
 };
+
+export type TenantJobEventMessage = {
+  event: 'job-progress' | 'job-completed' | 'job-failed';
+  tenantId: string;
+  userId?: string;
+  jobId: string;
+  moduleId?: string;
+  kind?: string;
+  label?: string;
+  progress?: { current: number; total: number; percent: number };
+  hasDownload?: boolean;
+  error?: string;
+  completedAt?: string;
+};
+
+export type TenantWebSocketMessage = TenantDatabaseUpdateMessage | TenantJobEventMessage;
 
 export function resolveTenantWebSocketUrl(): string {
   const httpUrl = resolveApiUrl('/api/ws');
@@ -34,8 +51,27 @@ export function parseTenantDatabaseUpdate(raw: string): TenantDatabaseUpdateMess
   }
 }
 
+export function parseTenantJobEvent(raw: string): TenantJobEventMessage | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
+    const record = parsed as Record<string, unknown>;
+    if (
+      record.event !== 'job-progress' &&
+      record.event !== 'job-completed' &&
+      record.event !== 'job-failed'
+    ) return null;
+    if (typeof record.jobId !== 'string') return null;
+    if (typeof record.tenantId !== 'string') return null;
+    return record as unknown as TenantJobEventMessage;
+  } catch {
+    return null;
+  }
+}
+
 type TenantWebSocketHandlers = {
   onDatabaseUpdate: (message: TenantDatabaseUpdateMessage) => void;
+  onJobEvent?: (message: TenantJobEventMessage) => void;
   onError?: (error: unknown) => void;
 };
 
@@ -81,8 +117,15 @@ export function connectTenantDatabaseSocket(handlers: TenantWebSocketHandlers): 
 
     socket.addEventListener('message', (event) => {
       if (typeof event.data !== 'string') return;
-      const message = parseTenantDatabaseUpdate(event.data);
-      if (message) handlers.onDatabaseUpdate(message);
+      const dbUpdate = parseTenantDatabaseUpdate(event.data);
+      if (dbUpdate) { handlers.onDatabaseUpdate(dbUpdate); return; }
+      const jobEvent = parseTenantJobEvent(event.data);
+      if (jobEvent) {
+        handlers.onJobEvent?.(jobEvent);
+        if (jobEvent.event === 'job-completed') {
+          queryClientInstance.invalidateQueries();
+        }
+      }
     });
 
     socket.addEventListener('error', (event) => {

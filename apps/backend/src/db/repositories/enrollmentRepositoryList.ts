@@ -7,7 +7,7 @@ import {
   type EnrollmentsListQuery,
 } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
-import { withTenantTransaction } from '../withTenantTransaction.js';
+import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { enrollmentRowToRecord } from './enrollmentRepository.js';
 
@@ -104,7 +104,7 @@ export async function listEnrollmentsPage(
 ): Promise<EnrollmentsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, enrollments, {
       conditions: buildListConditions(subdomain, query),
       orderBy: buildOrderBy(query.sortField, query.sortDir),
@@ -153,7 +153,7 @@ export async function listEnrollmentsPage(
 
 export async function countEnrollmentsActive(tenant: string): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(enrollments)
@@ -169,7 +169,7 @@ export async function aggregateEnrollmentsCommandMetrics(
 ): Promise<EnrollmentsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
   const days = Math.max(1, periodDays);
-  return withTenantTransaction(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select({
         total: sql<number>`count(*)::int`,

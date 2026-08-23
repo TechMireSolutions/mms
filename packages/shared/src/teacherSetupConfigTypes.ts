@@ -5,14 +5,20 @@ import {
   type TeachersSettings,
 } from './teachersModuleSettings.js';
 import { TEACHERS_TAB_REGISTRY } from './moduleFieldSetupPersons.js';
-import { moduleFieldConfigPutBodySchema } from './moduleFieldConfigPutBodySchema.js';
+import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
+import { deepSanitizeStrings } from './schemas/sanitize.js';
 
 /** PUT /api/teachers/field-config — field registry JSON without formTabs SSOT. */
-export const teacherFieldConfigPutBodySchema = moduleFieldConfigPutBodySchema
+const teacherFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     columnRegistry: z.array(z.record(z.string(), z.unknown())).optional(),
   })
-  .passthrough();
+  .strict();
+
+export const teacherFieldConfigPutBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, teacherFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/teachers/preferences — employee ID / contact-link prefs only. */
 export const teacherPreferencesPutBodySchema = z

@@ -1,4 +1,4 @@
-import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { Card } from "@/components/ui/card";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FileText } from "lucide-react";
@@ -13,13 +13,13 @@ export function StudentDetailNotesSection({ notes }: StudentDetailNotesSectionPr
   return (
     <div className="space-y-2">
       <DetailSectionTitle>{t("students.form.notesSection")}</DetailSectionTitle>
-      <div className={`p-3.5 ${WORK_SURFACE_INNER} border-border/60 text-xs text-foreground space-y-1`}>
+      <Card accentColor="amber" className="p-4 bg-muted/20 border-border/60">
         <div className="flex items-center gap-2 text-muted-foreground mb-1">
-          <FileText className="w-3.5 h-3.5 text-primary" />
+          <FileText className="w-3.5 h-3.5 text-warning" />
           <span className="text-xs font-bold uppercase">{t("students.form.notesSection")}</span>
         </div>
-        <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">{notes}</p>
-      </div>
+        <p className="whitespace-pre-wrap leading-relaxed text-sm text-foreground mt-2">{notes}</p>
+      </Card>
     </div>
   );
 }

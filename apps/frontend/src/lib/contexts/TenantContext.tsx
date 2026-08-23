@@ -58,8 +58,9 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     refetch,
   } = useWorkspaceBySubdomain(subdomain, tenantLookupEnabled);
   const workspaceLoading = tenantLookupEnabled && isPending && !isFetched;
-  const workspace = workspaceLookup?.workspace ?? null;
-  const notFound = isWorkspaceNotFoundError(workspaceError);
+  const lookupBody = workspaceLookup?.body as { workspace?: PublicWorkspace; branding?: PublicBranding | null } | undefined;
+  const workspace = lookupBody?.workspace ?? (workspaceLookup as any)?.workspace ?? null;
+  const notFound = isWorkspaceNotFoundError(workspaceError) || workspaceLookup?.status === 404;
   const workspaceMissing =
     tenantLookupEnabled &&
     !workspaceLoading &&
@@ -67,7 +68,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const workspaceLookupFailed =
     tenantLookupEnabled && !workspaceLoading && isError && !notFound;
   // Missing tenants hard-redirect to apex Tenant Not Found — skip branding fetch.
-  const publicBranding = workspaceLookup?.branding ?? null;
+  const publicBranding = lookupBody?.branding ?? (workspaceLookup as any)?.branding ?? null;
 
   const workspaceUrl = subdomain
     ? buildTenantUrl(subdomain, "/", getTenantUrlOptions())

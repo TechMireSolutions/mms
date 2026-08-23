@@ -1,4 +1,4 @@
-import { useModuleWorkKeyboardShortcuts } from "@/hooks/useModuleWorkKeyboardShortcuts";
+import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 
 /** Stable id for Sessions Work search — used by `/` / Cmd+K focus shortcut. */
 export const SESSIONS_WORK_SEARCH_INPUT_ID = "sessions-work-search";
@@ -21,7 +21,7 @@ export function useSessionsKeyboardShortcuts({
   showDeleted: boolean;
   onCreate: () => void;
 }): void {
-  useModuleWorkKeyboardShortcuts({
+  useModuleShortcuts({
     searchInputId: SESSIONS_WORK_SEARCH_INPUT_ID,
     selectedCount,
     hasActiveFilters,

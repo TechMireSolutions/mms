@@ -6,7 +6,7 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useExamSelection } from "@/tenant/features/examinations/hooks/useExamSelection";
-import { useExaminationsPaginated } from "@/tenant/features/examinations/hooks/useExaminationsApi";
+import { useExaminationsContractList } from "@/tenant/features/examinations/hooks/useExaminationsTsrHooks";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -86,7 +86,7 @@ export default function ExamsList({
     setListPage(1);
   }, [debouncedSearch, filterStatus, showDeleted]);
 
-  const examsPageQuery = useExaminationsPaginated({
+  const examsPageQuery = useExaminationsContractList({
     page: listPage,
     limit: EXAMINATIONS_MODULE_MANIFEST.defaultPageSize,
     search: debouncedSearch,
@@ -94,11 +94,11 @@ export default function ExamsList({
     includeDeleted: showDeleted,
   });
 
-  const pageExams = examsPageQuery.data?.exams ?? [];
-  const serverTotal = examsPageQuery.data?.total ?? 0;
-  const serverPage = examsPageQuery.data?.page ?? listPage;
-  const serverLimit = examsPageQuery.data?.limit ?? EXAMINATIONS_MODULE_MANIFEST.defaultPageSize;
-  const serverHasMore = examsPageQuery.data?.hasMore ?? false;
+  const pageExams = (examsPageQuery.data?.body?.exams ?? []) as Exam[];
+  const serverTotal = examsPageQuery.data?.body?.total ?? 0;
+  const serverPage = examsPageQuery.data?.body?.page ?? listPage;
+  const serverLimit = examsPageQuery.data?.body?.limit ?? EXAMINATIONS_MODULE_MANIFEST.defaultPageSize;
+  const serverHasMore = examsPageQuery.data?.body?.hasMore ?? false;
 
   useEffect(() => {
     onFilteredCountChange?.(serverTotal);
