@@ -1,10 +1,3 @@
-ALTER TABLE "custom_fields" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "custom_fields" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation_policy ON "custom_fields";
-CREATE POLICY tenant_isolation_policy ON "custom_fields" FOR ALL USING (
-  current_setting('app.rls_bypass', true) = 'on'
-  OR workspace_subdomain = current_setting('app.current_tenant', true)
-);
 
 ALTER TABLE "dashboard_preferences" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "dashboard_preferences" FORCE ROW LEVEL SECURITY;
@@ -294,13 +287,6 @@ CREATE POLICY tenant_isolation_policy ON "exam_results" FOR ALL USING (
   OR workspace_subdomain = current_setting('app.current_tenant', true)
 );
 
-ALTER TABLE "custom_tabs" ENABLE ROW LEVEL SECURITY;
-ALTER TABLE "custom_tabs" FORCE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS tenant_isolation_policy ON "custom_tabs";
-CREATE POLICY tenant_isolation_policy ON "custom_tabs" FOR ALL USING (
-  current_setting('app.rls_bypass', true) = 'on'
-  OR workspace_subdomain = current_setting('app.current_tenant', true)
-);
 
 ALTER TABLE "saved_reports" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "saved_reports" FORCE ROW LEVEL SECURITY;
