@@ -31,6 +31,7 @@ import {
 } from "./contactItemNormalize.js";
 import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
 import { hydrateContactRelationshipFields } from "./contactRelationshipHydrate.js";
+import { getContactTags } from "./contactEntityTypes.js";
 
 export type { ContactItemNormalizeDefaults } from "./contactItemNormalize.js";
 
@@ -256,7 +257,8 @@ export function normalizeContactForEdit(
     experience,
     skills,
     relationshipContacts,
-    tags: Array.isArray(merged.tags) ? merged.tags : [],
+    tags: getContactTags(merged),
+    tag: getContactTags(merged).join(", "),
   } as Partial<Contact>;
 }
 

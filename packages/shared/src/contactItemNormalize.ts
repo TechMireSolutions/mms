@@ -6,6 +6,7 @@ import { isContactCustomCollectionTab } from "./contactEnabledTabs.js";
 import { stripContactClientSoftDeleteFields } from "./contactSoftDelete.js";
 import { hydrateContactRelationshipFields } from "./contactRelationshipHydrate.js";
 import { formatCnic } from "./identityFormatUtils.js";
+import { getContactTags } from "./contactEntityTypes.js";
 import {
   PHONE_SYSTEM_KEYS,
   EMAIL_SYSTEM_KEYS,
@@ -90,6 +91,12 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
     )
       .trim()
       .toLowerCase();
+  }
+
+  if (result.tags !== undefined || result.tag !== undefined) {
+    const normalizedTags = getContactTags(result);
+    result.tags = normalizedTags;
+    result.tag = normalizedTags.join(", ");
   }
 
   if (Array.isArray(result.phones)) {

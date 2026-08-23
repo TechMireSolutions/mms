@@ -94,9 +94,15 @@ export function ContactBasicMetaFields({
             id={`cf-${formInstanceId}-tag`}
             options={tags && tags.length > 0 ? tags : DEFAULT_TAG_LABELS}
             values={currentTags}
-            onChange={(selected) => updateDraft({ tags: selected })}
+            onChange={(selected) =>
+              updateDraft({
+                tags: selected,
+                tag: selected.join(", "),
+              })
+            }
             onUpdateOptions={onUpdateTags}
             placeholder={t("contacts.form.selectOption")}
+            error={Boolean(tagError)}
             className="w-full"
           />
         </Field>
