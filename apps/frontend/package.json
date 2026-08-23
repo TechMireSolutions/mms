@@ -13,7 +13,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@hello-pangea/dnd": "^18.0.1",
     "@hookform/resolvers": "^5.7.1",
     "@mms/shared": "workspace:*",
     "@photostructure/tz-lookup": "^11.6.1",

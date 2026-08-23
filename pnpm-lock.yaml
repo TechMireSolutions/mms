@@ -126,12 +126,6 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.8.1(jiti@2.7.0))
-      '@types/exceljs':
-        specifier: ^1.3.2
-        version: 1.3.2
-      '@types/ioredis':
-        specifier: ^5.0.0
-        version: 5.0.0
       '@types/node':
         specifier: ^26.2.0
         version: 26.2.0
@@ -165,9 +159,6 @@ importers:
 
   apps/frontend:
     dependencies:
-      '@hello-pangea/dnd':
-        specifier: ^18.0.1
-        version: 18.0.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@hookform/resolvers':
         specifier: ^5.7.1
         version: 5.7.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.85.0(react@19.2.8))(zod@4.4.3)
@@ -822,12 +813,6 @@ packages:
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
-
-  '@hello-pangea/dnd@18.0.1':
-    resolution: {integrity: sha512-xojVWG8s/TGrKT1fC8K2tIWeejJYTAeJuj36zM//yEm/ZrnZUSFGS15BpO+jGZT1ybWvyXmeDJwPYb4dhWlbZQ==}
-    peerDependencies:
-      react: ^18.0.0 || ^19.0.0
-      react-dom: ^18.0.0 || ^19.0.0
 
   '@hookform/resolvers@5.7.1':
     resolution: {integrity: sha512-8wS/P4UDr5sQDe4nFaV51TVyfDPrWgNIXweqG0Bs9Z5LSuzKLb+RQNPvkN2oHM5SRrJyWrVH/F+LOUcFjUyvwQ==}
@@ -1838,14 +1823,6 @@ packages:
   '@types/estree@1.0.9':
     resolution: {integrity: sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==}
 
-  '@types/exceljs@1.3.2':
-    resolution: {integrity: sha512-etq4LpmL5vZKzf29U5u7cWjoCWGc67hTc2WrvwmcBUyRiHydUPg5ZXGFwBHcEkTLinyT6fRmJiVSRwf4RdnjUA==}
-    deprecated: This is a stub types definition. exceljs provides its own type definitions, so you do not need this installed.
-
-  '@types/ioredis@5.0.0':
-    resolution: {integrity: sha512-zJbJ3FVE17CNl5KXzdeSPtdltc4tMT3TzC6fxQS0sQngkbFZ6h+0uTafsRqu+eSLIugf6Yb0Ea0SUuRr42Nk9g==}
-    deprecated: This is a stub types definition. ioredis provides its own type definitions, so you do not need this installed.
-
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
 
@@ -2396,9 +2373,6 @@ packages:
   cross-spawn@7.0.6:
     resolution: {integrity: sha512-uV2QOWP2nWzsy2aMp8aRibhi9dlzF5Hgh5SHaB9OiTGEyDTiJJyx0uy51QXdyWbtAHNua4XJzUKca3OzKUd3vA==}
     engines: {node: '>= 8'}
-
-  css-box-model@1.2.1:
-    resolution: {integrity: sha512-a7Vr4Q/kd/aw96bnJG332W9V9LkJO69JRcaCYDUqjp6/z0w6VcZjgAcTbgFxEPfBgdnAwlh3iwu+hLopa+flJw==}
 
   css-line-break@2.1.0:
     resolution: {integrity: sha512-FHcKFCZcAha3LwfVBhCQbW2nCNbkZXn7KVUJcsT5/P8YmfsVja0FMPJr0B903j/E69HUphKiV9iQArX8SDYA4w==}
@@ -3805,9 +3779,6 @@ packages:
   quick-format-unescaped@4.0.4:
     resolution: {integrity: sha512-tYC1Q1hgyRuHgloV/YXs2w15unPVh8qfu/qCTfhTYamaw7fyhumKa2yGpdSo87vY32rIclj+4fWYQXUMs9EHvg==}
 
-  raf-schd@4.0.3:
-    resolution: {integrity: sha512-tQkJl2GRWh83ui2DiPTJz9wEiMN20syf+5oKfB03yYP7ioZcJwsIK8FjrtLwH1m7C7e+Tt2yYBlrOpdT+dyeIQ==}
-
   raf@3.4.1:
     resolution: {integrity: sha512-Sq4CW4QhwOHE8ucn6J34MqtZCeWFP2aQSmrlroYgqAV1PjStIhJXxYuTgUIfkEk7zTLjmIjLmU5q+fbD1NnOJA==}
 
@@ -5101,18 +5072,6 @@ snapshots:
 
   '@floating-ui/utils@0.2.12': {}
 
-  '@hello-pangea/dnd@18.0.1(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
-    dependencies:
-      '@babel/runtime': 7.29.7
-      css-box-model: 1.2.1
-      raf-schd: 4.0.3
-      react: 19.2.8
-      react-dom: 19.2.8(react@19.2.8)
-      react-redux: 9.3.0(@types/react@19.2.18)(react@19.2.8)(redux@5.0.1)
-      redux: 5.0.1
-    transitivePeerDependencies:
-      - '@types/react'
-
   '@hookform/resolvers@5.7.1(@standard-schema/spec@1.1.0)(ajv@8.20.0)(react-hook-form@7.85.0(react@19.2.8))(zod@4.4.3)':
     dependencies:
       '@standard-schema/utils': 0.3.0
@@ -5974,16 +5933,6 @@ snapshots:
 
   '@types/estree@1.0.9': {}
 
-  '@types/exceljs@1.3.2':
-    dependencies:
-      exceljs: 4.4.0
-
-  '@types/ioredis@5.0.0':
-    dependencies:
-      ioredis: 6.0.0
-    transitivePeerDependencies:
-      - supports-color
-
   '@types/json-schema@7.0.15': {}
 
   '@types/node@14.18.63': {}
@@ -6556,10 +6505,6 @@ snapshots:
       path-key: 3.1.1
       shebang-command: 2.0.0
       which: 2.0.2
-
-  css-box-model@1.2.1:
-    dependencies:
-      tiny-invariant: 1.3.3
 
   css-line-break@2.1.0:
     dependencies:
@@ -8010,8 +7955,6 @@ snapshots:
   punycode@2.3.1: {}
 
   quick-format-unescaped@4.0.4: {}
-
-  raf-schd@4.0.3: {}
 
   raf@3.4.1:
     dependencies:
