@@ -20,7 +20,7 @@ import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
 import { relationshipBadgeCode } from "@/tenant/features/students/components/guardianRelationshipBadge";
-import { formatStudentListCustomValue } from "@/tenant/features/students/components/studentListCustomColumns";
+import { formatStudentsListContentCustomValue } from "@/tenant/features/students/components/studentsListCustomColumns";
 import type { StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
 
 interface SortedField {
@@ -147,7 +147,7 @@ export function StudentDetailFieldsSection({
     }
 
     const rawValue = (student as Record<string, unknown>)[field.key];
-    const displayValue = formatStudentListCustomValue(rawValue, t, field.type);
+    const displayValue = formatStudentsListContentCustomValue(rawValue, t, field.type);
     if (displayValue == null) return null;
     return (
       <DetailAttributeRow

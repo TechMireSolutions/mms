@@ -43,7 +43,7 @@ export function ContactsPreferencesDuplicateSection({
   };
 
   return (
-    <SectionCard title={t("contacts.setup.duplicateDetection")} icon={Copy}>
+    <SectionCard title={t("contacts.setup.duplicateDetection")} icon={Copy} headingLevel={2}>
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">{t("contacts.setup.duplicateDetectionDesc")}</p>
         <fieldset className="space-y-2">

@@ -71,7 +71,12 @@ export function ExaminationsListCards(props: ExaminationsListCardsProps): JSX.El
           const isSelected = selectedIds.includes(exam.id);
 
           return (
-            <DirectoryEntityCard key={exam.id} isSelected={isSelected} reducedMotion={reducedMotion}>
+            <DirectoryEntityCard 
+              key={exam.id} 
+              isSelected={isSelected} 
+              reducedMotion={reducedMotion}
+              onClick={props.onRowClick ? () => props.onRowClick!(exam.id) : undefined}
+            >
               <DirectoryCardHeader
                 id={exam.id}
                 displayName={exam.name}

@@ -3,7 +3,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
-import { DistributionManager } from "@/tenant/features/hasanat/components/DistributionManager";
+import { DistributionsList } from "@/tenant/features/hasanat/components/DistributionsList";
 import { HasanatDashboard } from "@/tenant/features/hasanat/components/HasanatDashboard";
 import { RedemptionTracker } from "@/tenant/features/hasanat/components/RedemptionTracker";
 import { StockManager } from "@/tenant/features/hasanat/components/StockManager";
@@ -38,6 +38,7 @@ interface HasanatWorkTierProps {
   onFilteredCountChange: (count: number) => void;
   onDelete: (id: string) => Promise<void>;
   onRestore: (id: string) => Promise<void>;
+  onRowClick?: (id: string) => void;
   onBulkDelete: (ids: string[]) => Promise<void>;
   onBulkRestore: (ids: string[]) => Promise<void>;
   onMessage: (channel: "sms" | "whatsapp" | "email", distributions: Array<{ id: string; recipientName?: string; phone?: string; email?: string }>) => void;
@@ -65,6 +66,7 @@ export function HasanatWorkTier({
   onFilteredCountChange,
   onDelete,
   onRestore,
+  onRowClick,
   onBulkDelete,
   onBulkRestore,
   onMessage,
@@ -108,7 +110,7 @@ export function HasanatWorkTier({
             <StockManager batches={batches} denoms={denoms} onUpdate={onUpdateBatches} canWrite={canWrite} />
           )}
           {activeSubTab === "distribute" && (
-            <DistributionManager
+            <DistributionsList
               distributions={distributions}
               denoms={denoms}
               batches={batches}
@@ -120,6 +122,7 @@ export function HasanatWorkTier({
               createRequestKey={createDistributeKey}
               onDelete={onDelete}
               onRestore={onRestore}
+            onRowClick={onRowClick}
               onBulkDelete={onBulkDelete}
               onBulkRestore={onBulkRestore}
               isColumnVisible={distributionColumnLayout.isColumnVisible}

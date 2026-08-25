@@ -38,6 +38,7 @@ interface QuestionBankWorkTierProps {
   onBulkRestore: (ids: string[]) => Promise<void>;
   onFilteredCountChange: (count: number) => void;
   onCreatePaper: () => void;
+  onRowClick?: (id: string) => void;
 }
 
 export function QuestionBankWorkTier({
@@ -63,6 +64,7 @@ export function QuestionBankWorkTier({
   onBulkRestore,
   onFilteredCountChange,
   onCreatePaper,
+  onRowClick,
 }: QuestionBankWorkTierProps) {
   const { t } = useTranslation();
 
@@ -116,6 +118,7 @@ export function QuestionBankWorkTier({
           isColumnVisible={columnLayout.isColumnVisible}
           getColumnWidth={columnLayout.getColumnWidth}
           onColumnResize={columnLayout.setColumnWidth}
+          onRowClick={onRowClick}
           columnCustomizer={{
             columnRegistry: columnLayout.columnRegistry,
             updateUserColumnLayout: columnLayout.updateUserColumnLayout,

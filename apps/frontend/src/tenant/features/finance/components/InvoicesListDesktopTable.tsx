@@ -1,7 +1,6 @@
 import type React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
   TableBody,
@@ -10,11 +9,11 @@ import {
 } from "@/components/ui/table";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { useTranslation } from "@/hooks/useTranslation";
-import { InvoiceListRowActions } from "@/tenant/features/finance/components/InvoiceListRowActions";
+import { InvoicesRowActions } from "@/tenant/features/finance/components/InvoicesRowActions";
 import { renderInvoiceWorkColumnValue } from "@/tenant/features/finance/components/invoiceWorkColumnCell";
-import type { InvoiceListContentProps } from "@/tenant/features/finance/components/invoiceListContentShared";
+import type { InvoicesListContentProps } from "@/tenant/features/finance/components/invoicesListShared";
 
-type InvoicesListDesktopTableProps = InvoiceListContentProps;
+type InvoicesListDesktopTableProps = InvoicesListContentProps;
 
 export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): React.JSX.Element {
   const {
@@ -124,7 +123,7 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
                   </TableCell>
                 )}
                 <TableCell className="px-4 py-3">
-                  <InvoiceListRowActions
+                  <InvoicesRowActions
                     invoice={invoice}
                     canWrite={canWrite}
                     canDelete={canDelete}

@@ -5,11 +5,14 @@ import { ContactsCommandMetrics } from "@/tenant/features/contacts/components/Co
 import ContactsDataBanner from "@/tenant/features/contacts/components/ContactsDataBanner";
 import ContactsSyncConflictPanel from "@/tenant/features/contacts/components/ContactsSyncConflictPanel";
 import { ContactsPageOverlays } from "@/tenant/features/contacts/components/ContactsPageOverlays";
-import { ContactsPageTabPanel } from "@/tenant/features/contacts/components/ContactsPageTabPanel";
+import { AnimatePresence } from "framer-motion";
+import ContactsSetupTier from "@/tenant/features/contacts/components/ContactsSetupTier";
+import { ContactsWorkTier } from "@/tenant/features/contacts/components/ContactsWorkTier";
+import { ContactsReportsTier } from "@/tenant/features/contacts/components/ContactsReportsTier";
 import { ContactsPageHeaderActions } from "@/tenant/features/contacts/components/ContactsPageHeaderActions";
-import type { useContactsPageView } from "@/tenant/features/contacts/hooks/useContactsPageController";
+import type { useContactsPageController } from "@/tenant/features/contacts/hooks/useContactsPageController";
 
-type ContactsPageViewProps = ReturnType<typeof useContactsPageView>;
+type ContactsPageViewProps = ReturnType<typeof useContactsPageController>;
 
 export function ContactsPageView({
   t,
@@ -81,7 +84,15 @@ export function ContactsPageView({
         onTabChange={setActiveTab}
         panelIdPrefix="contacts-tab"
       >
-        <ContactsPageTabPanel {...tabPanelProps} />
+        <AnimatePresence mode="wait">
+          {effectiveTab === "work" ? (
+            <ContactsWorkTier {...tabPanelProps.workTierProps} />
+          ) : effectiveTab === "reports" ? (
+            <ContactsReportsTier />
+          ) : effectiveTab === "setup" ? (
+            <ContactsSetupTier {...tabPanelProps.setupTierProps} />
+          ) : null}
+        </AnimatePresence>
       </ResponsiveAccordionTabs>
 
       <ContactsPageOverlays {...overlayProps} />

@@ -73,8 +73,10 @@ export function useExaminationsPageController() {
   const resultsColumnLayout = useExaminationResultsColumnLayout();
 
   const [showExamForm, setShowExamForm] = useState(false);
-  const [showMarksModal, setShowMarksModal] = useState(false);
+  const [showExamModal, setShowExamModal] = useState(false);
   const [editExam, setEditExam] = useState<Exam | null>(null);
+  const [activeExam, setActiveExam] = useState<Exam | null>(null);
+  const [showMarksModal, setShowMarksModal] = useState(false);
   const [filteredCount, setFilteredCount] = useState(0);
 
   const mutationDeps = {
@@ -154,10 +156,14 @@ export function useExaminationsPageController() {
     createExamKey,
     showExamForm,
     setShowExamForm,
+    showExamModal,
+    setShowExamModal,
     showMarksModal,
     setShowMarksModal,
     editExam,
     setEditExam,
+    activeExam,
+    setActiveExam,
     filteredCount,
     setFilteredCount,
     exams,

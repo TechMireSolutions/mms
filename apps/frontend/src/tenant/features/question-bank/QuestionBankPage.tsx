@@ -9,6 +9,7 @@ import { QuestionBankPageActions } from '@/tenant/features/question-bank/compone
 import { QuestionBankReportsTier } from '@/tenant/features/question-bank/components/QuestionBankReportsTier';
 import { QuestionBankSetupTier } from '@/tenant/features/question-bank/components/QuestionBankSetupTier';
 import { QuestionBankWorkTier } from '@/tenant/features/question-bank/components/QuestionBankWorkTier';
+import { QuestionBankDetail } from '@/tenant/features/question-bank/components/QuestionBankDetail';
 import { useQuestionBankPageController } from '@/tenant/features/question-bank/hooks/useQuestionBankPageController';
 
 /**
@@ -93,9 +94,30 @@ export default function QuestionBankPage(): JSX.Element {
                 onBulkRestore={c.handleBulkRestore}
                 onFilteredCountChange={c.setFilteredCount}
                 onCreatePaper={c.openCreatePaper}
+                onRowClick={(id) => {
+                  const q = c.questions.find(q => q.id === id);
+                  if (q) c.setActiveQuestion(q);
+                }}
               />
             )}
           </motion.div>
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {c.activeQuestion && (
+            <QuestionBankDetail
+              question={c.activeQuestion}
+              config={c.questionBankConfig}
+              onClose={() => c.setActiveQuestion(null)}
+              onEdit={(q) => {
+                c.setActiveQuestion(null);
+                c.setEditQuestion(q);
+                c.setShowQuestionModal(true);
+              }}
+              canDelete={c.canDelete}
+              onRestore={c.handleRestoreQuestion}
+            />
+          )}
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 

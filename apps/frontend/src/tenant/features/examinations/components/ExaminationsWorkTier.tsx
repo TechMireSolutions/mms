@@ -3,7 +3,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
-import ExamsList from "@/tenant/features/examinations/components/ExamsList";
+import ExaminationsList from "@/tenant/features/examinations/components/ExaminationsList";
 import { ResultsView } from "@/tenant/features/examinations/components/ResultsView";
 import type { useExaminationExamColumnLayout } from "@/tenant/features/examinations/hooks/useExaminationExamColumnLayout";
 import type { useExaminationResultsColumnLayout } from "@/tenant/features/examinations/hooks/useExaminationResultsColumnLayout";
@@ -36,6 +36,7 @@ interface ExaminationsWorkTierProps {
   onNew: () => void;
   onEdit: (exam: Exam) => void;
   onFilteredCountChange: (count: number) => void;
+  onRowClick?: (id: string) => void;
 }
 
 export function ExaminationsWorkTier({
@@ -60,6 +61,7 @@ export function ExaminationsWorkTier({
   onNew,
   onEdit,
   onFilteredCountChange,
+  onRowClick,
 }: ExaminationsWorkTierProps) {
   const { t } = useTranslation();
 
@@ -94,7 +96,7 @@ export function ExaminationsWorkTier({
       ) : (
         <>
           {activeSubTab === "exams" && (
-            <ExamsList
+            <ExaminationsList
               canWrite={canWrite}
               canDelete={canDelete}
               showDeleted={showDeleted}
@@ -109,6 +111,7 @@ export function ExaminationsWorkTier({
               isColumnVisible={examColumnLayout.isColumnVisible}
               getColumnWidth={examColumnLayout.getColumnWidth}
               onColumnResize={examColumnLayout.setColumnWidth}
+              onRowClick={onRowClick}
               columnCustomizer={{
                 columnRegistry: examColumnLayout.columnRegistry,
                 updateUserColumnLayout: examColumnLayout.updateUserColumnLayout,

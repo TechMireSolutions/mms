@@ -14,7 +14,7 @@ import { GenderIcon } from "@/components/ui/GenderIcon";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 
 interface StudentsFilterMenuButtonProps {
   studentFilterStatus: string[];
@@ -26,11 +26,11 @@ interface StudentsFilterMenuButtonProps {
   isStatusEnabled?: boolean;
   isGenderEnabled?: boolean;
   activeFilterCount: number;
-  sortField: StudentListSortField | null;
-  sortOptions: Array<{ field: StudentListSortField; label: string }>;
+  sortField: StudentsListContentSortField | null;
+  sortOptions: Array<{ field: StudentsListContentSortField; label: string }>;
   onToggleStatus: (status: string) => void;
   onGenderChange: (value: string) => void;
-  onSortChange: (field: StudentListSortField) => void;
+  onSortChange: (field: StudentsListContentSortField) => void;
   onClearFilters: () => void;
 }
 

@@ -3,7 +3,7 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import { useTranslation } from "@/hooks/useTranslation";
 import ContactsListFilters from "@/tenant/features/contacts/components/ContactsListFilters";
 import { ContactsBulkActionBar } from "@/tenant/features/contacts/components/ContactsBulkActionBar";
-import { ContactsWorkListBody } from "@/tenant/features/contacts/components/ContactsWorkListBody";
+import { ContactsList } from "@/tenant/features/contacts/components/ContactsList";
 import { buildContactsWorkFilterChips } from "@/tenant/features/contacts/components/buildContactsWorkFilterChips";
 import type { ContactsWorkTierProps } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 
@@ -106,7 +106,7 @@ export function ContactsWorkTier({
         onBulkTag={onBulkTag}
       />
 
-      <ContactsWorkListBody
+      <ContactsList
         isWorkError={isWorkError}
         isWorkLoading={isWorkLoading}
         isWorkFetching={isWorkFetching}

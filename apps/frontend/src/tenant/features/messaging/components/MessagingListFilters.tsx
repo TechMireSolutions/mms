@@ -2,7 +2,6 @@ import React, { type JSX } from 'react';
 import type { ModuleColumnRegistryEntry } from '@mms/shared';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { ModuleClearFiltersButton } from '@/components/ui/ModuleClearFiltersButton';
 import { MessagingFilterMenuButton } from './MessagingFilterMenuButton';
 import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';

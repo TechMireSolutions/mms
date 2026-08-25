@@ -13,7 +13,7 @@ import {
   consumeStudentsWorkDrillDown,
   type StudentsWorkDrillDown,
 } from "@/tenant/features/students/hooks/studentsWorkDrillDown";
-import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 
 /** Directory filters, sort, trash, and selection SSOT for Students Work (Contacts-shaped). */
 export function useStudentsDirectoryFilters({
@@ -23,7 +23,7 @@ export function useStudentsDirectoryFilters({
 }) {
   const [listPage, setListPage] = useState(1);
   const [viewingDeleted, setViewingDeleted] = useState(false);
-  const [sortField, setSortField] = useState<StudentListSortField | null>("grNumber");
+  const [sortField, setSortField] = useState<StudentsListContentSortField | null>("grNumber");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [studentSearch, setStudentSearch] = useState("");
   const debouncedSearch = useDebounce(studentSearch, 250);
@@ -100,7 +100,7 @@ export function useStudentsDirectoryFilters({
     (quickFilter !== "all" ? 1 : 0);
 
   const handleServerSort = useCallback(
-    (field: StudentListSortField) => {
+    (field: StudentsListContentSortField) => {
       if (sortField === field) {
         setSortDir((currentDir) => (currentDir === "asc" ? "desc" : "asc"));
       } else {

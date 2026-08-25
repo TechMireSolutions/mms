@@ -2,7 +2,7 @@ import type { Contact } from "@mms/shared";
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
 import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
-import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
+import { ContactsRowActions } from "@/tenant/features/contacts/components/ContactsRowActions";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface ContactCardActionsProps {
@@ -48,7 +48,7 @@ export function ContactCardActions({
             ariaLabel={`${t("contacts.table.viewProfile")} - ${displayName}`}
             onClick={() => onView?.(contact)}
           />
-          <ContactActionMenu
+          <ContactsRowActions
             contact={contact}
             onView={onView}
             onEdit={onEdit}

@@ -8,9 +8,9 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { useTranslation } from "@/hooks/useTranslation";
 import { MessagingCommandMetrics } from "./MessagingCommandMetrics";
 import { MessagingPageHeaderActions } from "./MessagingPageHeaderActions";
-import { MessagingReportsPanel } from "./MessagingReportsPanel";
-import { MessagingSetupPanel } from "./MessagingSetupPanel";
-import { MessagingWorkPanel } from "./MessagingWorkPanel";
+import { MessagingReportsTier } from "./MessagingReportsTier";
+import { MessagingSetupTier } from "./MessagingSetupTier";
+import { MessagingWorkTier } from "./MessagingWorkTier";
 
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -112,7 +112,7 @@ export function MessagingPageView({
           panelIdPrefix="messaging-tab"
         >
           {activeTab === "work" && (
-            <MessagingWorkPanel
+            <MessagingWorkTier
               canWrite={canWrite}
               canClearLogs={canClearLogs}
               onClearLogsRequest={() => setConfirmClearLogsOpen(true)}
@@ -122,9 +122,9 @@ export function MessagingPageView({
               onChannelChange={setChannelFilter}
             />
           )}
-          {activeTab === "reports" && <MessagingReportsPanel canWrite={canWrite} />}
+          {activeTab === "reports" && <MessagingReportsTier canWrite={canWrite} />}
           {activeTab === "setup" && (
-            <MessagingSetupPanel
+            <MessagingSetupTier
               canWrite={canWrite}
               canEditSetup={canEditSetup}
               onDeleteRequest={setDeleteTemplateId}

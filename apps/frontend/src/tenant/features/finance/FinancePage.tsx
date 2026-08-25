@@ -8,11 +8,12 @@ import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { InvoiceList } from "@/tenant/features/finance/components/InvoiceList";
+import { InvoicesList } from "@/tenant/features/finance/components/InvoicesList";
 import { InvoiceDetail } from "@/tenant/features/finance/components/InvoiceDetail";
 import { InvoiceForm } from "@/tenant/features/finance/components/InvoiceForm";
 import { PaymentForm } from "@/tenant/features/finance/components/PaymentForm";
-import { PaymentTracker } from "@/tenant/features/finance/components/PaymentTracker";
+import { PaymentsList } from "@/tenant/features/finance/components/PaymentsList";
+import { PaymentDetail } from "@/tenant/features/finance/components/PaymentDetail";
 import { FinanceSettings } from "@/tenant/features/finance/components/FinanceSettings";
 import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
 import KPISummary from "@/tenant/features/reports/components/KPISummary";
@@ -35,6 +36,7 @@ export default function Finance() {
   const [receiptInvoices, setReceiptInvoices] = React.useState<Invoice[]>([]);
 
   return (
+    <>
     <ModulePageShell
       seoTitle={`MMS - ${c.t("nav.finance")}`}
       seoDescription={c.t("page.finance.subtitle")}
@@ -92,7 +94,7 @@ export default function Finance() {
                   onRetry={() => void c.invoicesResult.refetch()}
                 />
               ) : c.activeTab === "work" && c.activeSubTab === "invoices" && (
-                <InvoiceList
+                <InvoicesList
                   invoices={c.invoices}
                   onView={c.setViewInvoice}
                   onRecord={c.setRecordInvoice}
@@ -125,7 +127,7 @@ export default function Finance() {
                   onRetry={() => void c.paymentsResult.refetch()}
                 />
               ) : c.activeTab === "work" && c.activeSubTab === "payments" && (
-                <PaymentTracker
+                <PaymentsList
                   payments={c.payments}
                   canDelete={c.canDelete}
                   showDeleted={c.showDeleted}
@@ -141,6 +143,10 @@ export default function Finance() {
                     columnRegistry: c.paymentColumnLayout.columnRegistry,
                     updateUserColumnLayout: c.paymentColumnLayout.updateUserColumnLayout,
                     labels: c.paymentColumnLayout.customizerLabels,
+                  }}
+                  onRowClick={(id: string) => {
+                    const p = c.payments.find((x: any) => x.id === id);
+                    if (p) c.setActivePayment(p);
                   }}
                 />
               )}
@@ -181,5 +187,17 @@ export default function Finance() {
         </React.Suspense>
       )}
     </ModulePageShell>
+
+      <AnimatePresence>
+        {c.activePayment && (
+          <PaymentDetail
+            payment={c.activePayment}
+            onClose={() => c.setActivePayment(null)}
+            canDelete={c.canDelete}
+            onRestore={c.restorePayment.mutateAsync}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

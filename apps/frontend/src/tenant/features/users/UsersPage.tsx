@@ -1,8 +1,7 @@
 import React from 'react';
-import { UserCog, UserPlus, Download } from 'lucide-react';
+import { UserCog, Download } from 'lucide-react';
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
-import { Button } from '@/components/ui/button';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { UsersModalLayer } from '@/tenant/features/users/components/UsersModalLayer';
 import { UsersReportsTier } from '@/tenant/features/users/components/UsersReportsTier';
@@ -15,7 +14,7 @@ import { useUsersPageController } from '@/tenant/features/users/hooks/useUsersPa
 /**
  * Users and roles — Work | Reports | Setup.
  */
-export default function Users(): React.JSX.Element {
+export default function UsersPage(): React.JSX.Element {
   const controller = useUsersPageController();
 
   return (

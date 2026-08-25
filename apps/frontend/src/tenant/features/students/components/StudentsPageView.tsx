@@ -4,11 +4,14 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { StudentsCommandMetrics } from "@/tenant/features/students/components/StudentsCommandMetrics";
 import { StudentsPageHeaderActions } from "@/tenant/features/students/components/StudentsPageHeaderActions";
 import { StudentsPageOverlays } from "@/tenant/features/students/components/StudentsPageOverlays";
-import { StudentsPageTabPanel } from "@/tenant/features/students/components/StudentsPageTabPanel";
+import { AnimatePresence } from "framer-motion";
+import { StudentsReportsTier } from "@/tenant/features/students/components/StudentsReportsTier";
+import StudentsSetupTier from "@/tenant/features/students/components/StudentsSetupTier";
+import { StudentsWorkTier } from "@/tenant/features/students/components/StudentsWorkTier";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { useStudentsPageView } from "@/tenant/features/students/hooks/useStudentsPageView";
+import type { useStudentsPageController } from "@/tenant/features/students/hooks/useStudentsPageController";
 
-type StudentsPageViewProps = ReturnType<typeof useStudentsPageView>;
+type StudentsPageViewProps = ReturnType<typeof useStudentsPageController>;
 
 /** Presentational Students page shell — Work / Reports / Setup + create form. */
 export function StudentsPageView({
@@ -55,7 +58,15 @@ export function StudentsPageView({
         onTabChange={setActiveTab}
         panelIdPrefix="students-tab"
       >
-        <StudentsPageTabPanel {...tabPanelProps} />
+        <AnimatePresence mode="wait">
+          {activeTab === "work" ? (
+            <StudentsWorkTier {...tabPanelProps.workTierProps} />
+          ) : activeTab === "reports" ? (
+            <StudentsReportsTier />
+          ) : activeTab === "setup" ? (
+            <StudentsSetupTier />
+          ) : null}
+        </AnimatePresence>
       </ResponsiveAccordionTabs>
 
       <StudentsPageOverlays {...pageOverlaysProps} />

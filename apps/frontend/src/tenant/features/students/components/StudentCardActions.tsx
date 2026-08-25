@@ -3,8 +3,8 @@ import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directory
 import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { useTranslation } from "@/hooks/useTranslation";
-import { StudentListActionsMenu } from "@/tenant/features/students/components/StudentListActionsMenu";
-import type { StudentListMessagingRecipient } from "@/tenant/features/students/components/StudentListContentTypes";
+import { StudentsRowActions } from "@/tenant/features/students/components/StudentsRowActions";
+import type { StudentsListContentMessagingRecipient } from "@/tenant/features/students/components/studentsListTypes";
 
 interface StudentCardActionsProps {
   student: Student;
@@ -20,7 +20,7 @@ interface StudentCardActionsProps {
   onRestore?: (id: string) => void;
   onOpenComposer?: (
     mode: "whatsapp" | "sms" | "email",
-    recipients: StudentListMessagingRecipient[],
+    recipients: StudentsListContentMessagingRecipient[],
   ) => void;
 }
 
@@ -49,7 +49,7 @@ export function StudentCardActions({
             ariaLabel={`${t("students.list.viewProfile")} - ${displayName}`}
             onClick={() => onViewStudent(student)}
           />
-          <StudentListActionsMenu
+          <StudentsRowActions
             student={student}
             studentId={studentId}
             viewingDeleted={viewingDeleted}

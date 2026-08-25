@@ -1,11 +1,9 @@
 import React from "react";
 import { type AppTranslationKey } from "@mms/shared";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import {
   Table,
   TableBody,
-  TableRow,
 } from "@/components/ui/table";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { WORK_SURFACE } from "@/components/ui/formStyles";

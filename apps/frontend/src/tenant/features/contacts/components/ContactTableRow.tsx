@@ -5,7 +5,7 @@ import { TableCell } from "@/components/ui/table";
 import { getDisplayName, type Contact, type ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
-import { ContactActionMenu } from "@/tenant/features/contacts/components/ContactActionMenu";
+import { ContactsRowActions } from "@/tenant/features/contacts/components/ContactsRowActions";
 import { renderContactTableCell } from "@/tenant/features/contacts/components/ContactTableCells";
 import {
   type ContactsColumnConfig,
@@ -105,7 +105,7 @@ export function ContactTableRow({
         }),
       )}
       <TableCell className="px-4 py-3">
-        <ContactActionMenu
+        <ContactsRowActions
           contact={contact}
           onView={onView}
           onEdit={onEdit}

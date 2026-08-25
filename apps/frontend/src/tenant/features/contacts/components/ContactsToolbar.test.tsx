@@ -20,8 +20,8 @@ vi.mock('@/hooks/useTranslation', () => ({
   }),
 }));
 
-vi.mock('@/tenant/features/contacts/hooks/useContactsListFiltersModel', () => ({
-  useContactsListFiltersModel: () => ({
+vi.mock('@/tenant/features/contacts/hooks/useContactsToolbarModel', () => ({
+  useContactsToolbarModel: () => ({
     t: (key: AppTranslationKey, params?: Record<string, string | number>) => {
       const map: Partial<Record<AppTranslationKey, string>> = {
         'contacts.shownCount': `Showing ${params?.count ?? 0} contacts`,

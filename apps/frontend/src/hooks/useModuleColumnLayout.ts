@@ -9,7 +9,7 @@ import {
   type AppTranslationKey,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useUiPreference } from '@/lib/uiStateStore';
+import { useUiPreference } from '@/lib/useUiStateStore';
 
 export interface UseModuleColumnLayoutOptions {
   moduleId: string;

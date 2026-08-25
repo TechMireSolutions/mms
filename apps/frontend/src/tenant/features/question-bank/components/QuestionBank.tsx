@@ -9,11 +9,11 @@ import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { ListPagination } from '@/components/ui/ListPagination';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { QuestionBankEmptyState } from '@/tenant/features/question-bank/components/QuestionBankEmptyState';
-import { QuestionBankList } from '@/tenant/features/question-bank/components/QuestionBankList';
-import { QuestionBankListFilters } from '@/tenant/features/question-bank/components/QuestionBankListFilters';
+import { QuestionsList } from '@/tenant/features/question-bank/components/QuestionsList';
+import { QuestionsListFilters } from '@/tenant/features/question-bank/components/QuestionsListFilters';
 import { QuestionBankBulkActionBar } from '@/tenant/features/question-bank/components/QuestionBankBulkActionBar';
 import {
-  buildQuestionBankListMetaFields,
+  buildQuestionsListMetaFields,
   shouldShowQuestionSourceCitation,
   useQuestionBankDisplayConfig,
 } from '@/tenant/features/question-bank/components/useQuestionBankDisplayConfig';
@@ -41,6 +41,7 @@ interface QuestionBankProps {
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
+  onRowClick?: (id: string) => void;
 }
 
 export function QuestionBank({
@@ -63,6 +64,7 @@ export function QuestionBank({
   getColumnWidth,
   onColumnResize,
   columnCustomizer,
+  onRowClick,
 }: QuestionBankProps): React.ReactElement {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
@@ -117,7 +119,7 @@ export function QuestionBank({
   const showSource = columnVisible('source');
 
   const listMetaFields = useMemo(
-    () => buildQuestionBankListMetaFields(config, columnVisible),
+    () => buildQuestionsListMetaFields(config, columnVisible),
     [config, columnVisible],
   );
 
@@ -153,7 +155,7 @@ export function QuestionBank({
 
   return (
     <div className="space-y-4">
-      <QuestionBankListFilters
+      <QuestionsListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         config={config}
@@ -190,7 +192,7 @@ export function QuestionBank({
       ) : pageQuestions.length === 0 && !pageQuery.isPending ? (
         <QuestionBankEmptyState />
       ) : pageQuestions.length > 0 && (
-        <QuestionBankList
+        <QuestionsList
           viewMode={viewMode}
           questions={pageQuestions}
           config={config}
@@ -215,6 +217,7 @@ export function QuestionBank({
           }}
           onToggleSelectedQuestion={toggleSelectedQuestion}
           onToggleSelectAll={toggleSelectAll}
+          onRowClick={onRowClick}
         />
       )}
 

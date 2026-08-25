@@ -15,10 +15,13 @@ const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer
 /**
  * Hasanat Cards — denominations, stock, and redemptions. Work | Reports | Setup.
  */
+import { DistributionDetail } from '@/tenant/features/hasanat/components/DistributionDetail';
+
 export default function HasanatCards() {
   const c = useHasanatCardsPageController();
 
   return (
+    <>
     <ModulePageShell
       seoTitle={`MMS - ${c.t('nav.hasanatCards')}`}
       seoDescription={c.t('page.hasanat.subtitle')}
@@ -88,6 +91,7 @@ export default function HasanatCards() {
                 onUpdateDistributions={(next) => c.runHasanatSave(() => c.replaceDistributions.mutateAsync(next))}
                 onFilteredCountChange={c.setFilteredCount}
                 onDelete={c.handleDeleteDistribution}
+                onRowClick={(id) => { const d = c.distributions.find((x: any) => x.id === id); if (d) c.setActiveDistribution(d); }}
                 onRestore={c.handleRestoreDistribution}
                 onBulkDelete={c.handleBulkDelete}
                 onBulkRestore={c.handleBulkRestore}
@@ -108,5 +112,17 @@ export default function HasanatCards() {
         </Suspense>
       )}
     </ModulePageShell>
+
+      <AnimatePresence>
+        {c.activeDistribution && (
+          <DistributionDetail
+            distribution={c.activeDistribution}
+            onClose={() => c.setActiveDistribution(null)}
+            canDelete={c.canDelete}
+            onRestore={(id) => c.handleRestoreDistribution(id)}
+          />
+        )}
+      </AnimatePresence>
+    </>
   );
 }

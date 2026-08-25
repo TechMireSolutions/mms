@@ -6,7 +6,7 @@ interface GrBadgeProps {
   grNumber: string | null | undefined;
 }
 
-/** GR number pill badge — shared across StudentDetail, StudentList, and StudentForm. */
+/** GR number pill badge — shared across StudentDetail, StudentsListContent, and StudentForm. */
 export function GrBadge({ grNumber }: GrBadgeProps): React.JSX.Element | null {
   const { t } = useTranslation();
   if (!grNumber) return null;

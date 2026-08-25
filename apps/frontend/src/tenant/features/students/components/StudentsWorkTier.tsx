@@ -4,7 +4,7 @@ import { FilterChips } from "@/components/ui/FilterChips";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildStudentsWorkFilterChips } from "@/tenant/features/students/components/buildStudentsWorkFilterChips";
 import { StudentsBulkActionBar } from "@/tenant/features/students/components/StudentsBulkActionBar";
-import { StudentsWorkListBody } from "@/tenant/features/students/components/StudentsWorkListBody";
+import { StudentsList } from "@/tenant/features/students/components/StudentsList";
 import { StudentsListFilters } from "@/tenant/features/students/components/StudentsListFilters";
 import type { StudentsWorkTierProps } from "@/tenant/features/students/components/StudentsWorkTierTypes";
 
@@ -149,7 +149,7 @@ export function StudentsWorkTier({
           statusPending={bulkStatusPending}
         />
 
-        <StudentsWorkListBody
+        <StudentsList
           isWorkPageLoading={isWorkPageLoading}
           isWorkPageError={isWorkPageError}
           isWorkPageFetching={isWorkPageFetching}

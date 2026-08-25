@@ -10,9 +10,9 @@ export {
 } from './MessagingListDesktopTable';
 
 export {
-  MessagingWorkCards,
-  type MessagingWorkCardsProps,
-} from './MessagingWorkCards';
+  MessagingListCards,
+  type MessagingListCardsProps,
+} from './MessagingListCards';
 
 export {
   MessagingWorkBulkActionBar,
@@ -20,6 +20,6 @@ export {
 } from './MessagingWorkBulkActionBar';
 
 export {
-  MessagingDetailDrawer,
-  type MessagingDetailDrawerProps,
-} from './MessagingDetailDrawer';
+  MessagingDetail,
+  type MessagingDetailProps,
+} from './MessagingDetail';

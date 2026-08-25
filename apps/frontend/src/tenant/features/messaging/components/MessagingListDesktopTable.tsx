@@ -31,7 +31,7 @@ import { SEMANTIC_TEXT, SEMANTIC_BG } from '@/lib/semanticTone';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
-import { type MessagingSelectedLogsMap } from './MessagingWorkPanel';
+import { type MessagingSelectedLogsMap } from './MessagingWorkTier';
 
 export interface MessagingListDesktopTableProps {
   logs: Message[];

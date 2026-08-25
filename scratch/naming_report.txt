@@ -1,0 +1,1599 @@
+
+File: apps/frontend/src/components/branding/BrandColorPanelSections.tsx
+Basename: BrandColorPanelSections
+Exports: DERIVED_SWATCHES, CustomThemePreset, BrandPresetPicker, BrandSemanticPreview, BrandDerivedTokens
+
+File: apps/frontend/src/components/branding/BrandingFieldHint.tsx
+Basename: BrandingFieldHint
+Exports: FieldHint
+
+File: apps/frontend/src/components/branding/BrandingImageUploadField.tsx
+Basename: BrandingImageUploadField
+Exports: ImageUploadField
+
+File: apps/frontend/src/components/branding/BrandingSocialLinksEditor.tsx
+Basename: BrandingSocialLinksEditor
+Exports: SocialLinksEditor
+
+File: apps/frontend/src/components/dashboard-widgets/OverdueObligationsWidgetParts.tsx
+Basename: OverdueObligationsWidgetParts
+Exports: OverdueStudent, daysBetweenUtc, OverdueUrgencyBadge, OverdueRemindButton
+
+File: apps/frontend/src/components/dashboard-widgets/charts/attendanceChartData.ts
+Basename: attendanceChartData
+Exports: AttendancePoint, buildWeeklyAttendancePoints
+
+File: apps/frontend/src/components/dashboard-widgets/charts/chartPrimitives.tsx
+Basename: chartPrimitives
+Exports: CHART_AXIS_LINE_PROPS, ChartAreaGradient, ChartTooltipValueFormatter, buildChartTooltip
+
+File: apps/frontend/src/components/entry/AuthFormControls.tsx
+Basename: AuthFormControls
+Exports: AuthBackLink, AuthSubmitButton, AuthResendCodeControl
+
+File: apps/frontend/src/components/entry/AuthPageShell.tsx
+Basename: AuthPageShell
+Exports: AuthPageBackdrop, AuthCardShell, AuthPageFrame
+
+File: apps/frontend/src/components/entry/authValidation.ts
+Basename: authValidation
+Exports: SignInFieldErrors, validateAuthEmail, validateSignInCredentials, focusAuthField, firstSignInErrorFieldId
+
+File: apps/frontend/src/components/ui/FormCardChrome.tsx
+Basename: FormCardChrome
+Exports: CardTypeLabel, CardRemoveButton
+
+File: apps/frontend/src/components/ui/FormField.tsx
+Basename: FormField
+Exports: FieldErrorMessage, RequiredMark, Field
+
+File: apps/frontend/src/components/ui/FormTagsInput.tsx
+Basename: FormTagsInput
+Exports: TagsInput
+
+File: apps/frontend/src/components/ui/ModuleOverlayLoadingChrome.tsx
+Basename: ModuleOverlayLoadingChrome
+Exports: ModuleOverlayLoadingFallback, ModuleDrawerLoadingSkeleton
+
+File: apps/frontend/src/components/ui/ResponsiveAccordionTabTrigger.tsx
+Basename: ResponsiveAccordionTabTrigger
+Exports: TabTrigger
+
+File: apps/frontend/src/components/ui/ResponsiveAccordionTabsTypes.ts
+Basename: ResponsiveAccordionTabsTypes
+Exports: AccordionTabItem, ResponsiveAccordionTabsProps
+
+File: apps/frontend/src/components/ui/avatar.tsx
+Basename: avatar
+Exports: AvatarProps, Avatar, AvatarImage, AvatarFallback, avatarVariants
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/badge.tsx
+Basename: badge
+Exports: BadgeTone, BadgeProps, Badge, badgeVariants
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/button.tsx
+Basename: button
+Exports: ButtonProps, Button, buttonVariants
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/calendar.tsx
+Basename: calendar
+Exports: CalendarProps, Calendar
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/checkbox.tsx
+Basename: checkbox
+Exports: Checkbox
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/directoryCardChrome.ts
+Basename: directoryCardChrome
+Exports: DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS
+
+File: apps/frontend/src/components/ui/exportToolbarUtils.ts
+Basename: exportToolbarUtils
+Exports: ExportColumn, ExportTable, extractExportTable, downloadExcelFallback
+
+File: apps/frontend/src/components/ui/input.tsx
+Basename: input
+Exports: InputProps, Input
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/label.tsx
+Basename: label
+Exports: Label
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/messagingActionStyles.ts
+Basename: messagingActionStyles
+Exports: MESSAGING_QUICK_ACTION_BASE, MESSAGING_QUICK_ACTION_TONES, MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES
+
+File: apps/frontend/src/components/ui/moduleColumnCustomizerTypes.ts
+Basename: moduleColumnCustomizerTypes
+Exports: ModuleColumnCustomizerLabels, ModuleColumnCustomizerProps, ModuleColumnCustomizerListProps
+
+File: apps/frontend/src/components/ui/popover.tsx
+Basename: popover
+Exports: Popover, PopoverTrigger, PopoverContent, PopoverAnchor
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/settingsShellBadges.tsx
+Basename: settingsShellBadges
+Exports: SettingsMetaBadge, SettingsColoursBadge
+
+File: apps/frontend/src/components/ui/skeleton.tsx
+Basename: skeleton
+Exports: Skeleton
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/slider.tsx
+Basename: slider
+Exports: Slider
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/statCardAccent.ts
+Basename: statCardAccent
+Exports: AccentConfig, AccentColor, ACCENT_MAP, resolveAccent
+
+File: apps/frontend/src/components/ui/switch.tsx
+Basename: switch
+Exports: Switch
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/tableWorkSticky.ts
+Basename: tableWorkSticky
+Exports: workTableStickyCellBg
+
+File: apps/frontend/src/components/ui/textarea.tsx
+Basename: textarea
+Exports: Textarea
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/toaster.tsx
+Basename: toaster
+Exports: Toaster
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/tooltip.tsx
+Basename: tooltip
+Exports: Tooltip, TooltipTrigger, TooltipContent, TooltipProvider
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/components/ui/use-toast.tsx
+Basename: use-toast
+Exports: reducer, useToast, toast
+
+File: apps/frontend/src/hooks/standardModuleConfigRegistry.ts
+Basename: standardModuleConfigRegistry
+Exports: STANDARD_MODULES_CONFIG_REGISTRY, StandardModuleId, StandardModuleSettingsMap, StandardModuleConfigExtraMap
+
+File: apps/frontend/src/hooks/useSavedReportsSource.ts
+Basename: useSavedReportsSource
+Exports: SavedReportsSource, genericSavedReportsQueryKey, useGenericSavedReportsSource
+
+File: apps/frontend/src/lib/api.ts
+Basename: api
+Exports: tsrClient, apiContract
+
+File: apps/frontend/src/lib/apiClient.ts
+Basename: apiClient
+Exports: ApiErrorBody, ApiError, isApiError, resolveApiUrl
+
+File: apps/frontend/src/lib/apiClientHelpers.ts
+Basename: apiClientHelpers
+Exports: resolveApiUrl, isTenantSessionRequest, sanitizeColumnPreferencesBody, API_REFRESH_PATH
+
+File: apps/frontend/src/lib/apiErrorNotify.ts
+Basename: apiErrorNotify
+Exports: notifyApiFailure
+
+File: apps/frontend/src/lib/apiValidationMessage.ts
+Basename: apiValidationMessage
+Exports: getApiValidationMessage, getApiValidationErrors
+
+File: apps/frontend/src/lib/attendanceStatusUi.ts
+Basename: attendanceStatusUi
+Exports: attendanceStatusLabel
+
+File: apps/frontend/src/lib/authErrors.ts
+Basename: authErrors
+Exports: AuthError, isAuthErrorType
+
+File: apps/frontend/src/lib/brandingChartPalette.ts
+Basename: brandingChartPalette
+Exports: getBrandingChartPalette, readThemeCssColor, getBrandingChartPaletteCss, resolveWidgetChartHex, resolveThresholdChartHex
+
+File: apps/frontend/src/lib/brandingIdentityDraft.ts
+Basename: brandingIdentityDraft
+Exports: mergeBrandingIdentityForSave, retainThemeDraftAfterIdentitySave
+
+File: apps/frontend/src/lib/brandingPreviewPatch.ts
+Basename: brandingPreviewPatch
+Exports: BRANDING_COLOUR_PREVIEW_KEYS, buildBrandingPreviewPatch
+
+File: apps/frontend/src/lib/brandingTheme.ts
+Basename: brandingTheme
+Exports: applyBrandingTheme, AppThemeOverrides, applyAppTheme, applyApexPlatformTheme, applyTenantEntryTheme
+
+File: apps/frontend/src/lib/clientErrorReporting.ts
+Basename: clientErrorReporting
+Exports: initErrorReporting, reportClientError
+
+File: apps/frontend/src/lib/config/moduleIcons.ts
+Basename: moduleIcons
+Exports: MODULE_ICONS, resolveModuleIcon
+
+File: apps/frontend/src/lib/config/navConfig.tsx
+Basename: navConfig
+Exports: NavSubItem, NavItem, NAV_ITEMS
+
+File: apps/frontend/src/lib/config/settingsNavConfig.ts
+Basename: settingsNavConfig
+Exports: SettingsNavItem, SETTINGS_NAV
+
+File: apps/frontend/src/lib/config/settingsSectionComponents.tsx
+Basename: settingsSectionComponents
+Exports: SETTINGS_SECTION_COMPONENTS
+
+File: apps/frontend/src/lib/contactFieldsMigration.ts
+Basename: contactFieldsMigration
+Exports: getContactFieldSystemDefaults, migrateContactFieldConfig
+
+File: apps/frontend/src/lib/contactFieldsSanitize.ts
+Basename: contactFieldsSanitize
+Exports: sanitizeContactFieldConfig
+
+File: apps/frontend/src/lib/contactLink/collectionSync.ts
+Basename: collectionSync
+Exports: normalizeCollectionRows, hydrateCollectionRows, hydrateSessionRowClasses, normalizeSessionRowClasses
+
+File: apps/frontend/src/lib/contacts/contactConfigContextTypes.ts
+Basename: contactConfigContextTypes
+Exports: ContactsColumnConfig, ContactConfigContextType, ContactConfigContext
+
+File: apps/frontend/src/lib/contacts/contactConfigSeeds.ts
+Basename: contactConfigSeeds
+Exports: getContactConfigCollectionDefaults
+
+File: apps/frontend/src/lib/contacts/contactI18nKeys.ts
+Basename: contactI18nKeys
+Exports: DUPLICATE_REASON_I18N, DUPLICATE_FIELD_I18N, ACTIVITY_TYPE_I18N
+
+File: apps/frontend/src/lib/contacts/contactLinkIds.ts
+Basename: contactLinkIds
+Exports: collectLinkedContactIds, mergeContactLinkDirectory
+
+File: apps/frontend/src/lib/contacts/contactsSyncOutboxConflicts.ts
+Basename: contactsSyncOutboxConflicts
+Exports: clearContactsSyncConflicts, dismissContactsSyncConflict, requeueContactsSyncConflict, requeueAllContactsSyncConflicts, recordContactsSyncConflict
+
+File: apps/frontend/src/lib/contacts/contactsSyncOutboxFlush.ts
+Basename: contactsSyncOutboxFlush
+Exports: enqueueContactsOutbox
+
+File: apps/frontend/src/lib/contacts/contactsWidgetWorkDrillDown.ts
+Basename: contactsWidgetWorkDrillDown
+Exports: contactsWidgetToWorkDrillDown, applyContactsWidgetWorkDrillDown
+
+File: apps/frontend/src/lib/contacts/contactsWorkDrillDown.ts
+Basename: contactsWorkDrillDown
+Exports: CONTACTS_WORK_DRILLDOWN_EVENT, applyContactsWorkDrillDown, consumeContactsWorkDrillDown
+
+File: apps/frontend/src/lib/contacts/countryCodeOptions.ts
+Basename: countryCodeOptions
+Exports: CountryCodeEntry, mergeCountryDialCodeOptions, mergeCountryNameOptions, normalizeContactDialCode
+
+File: apps/frontend/src/lib/contacts/googleContactsOAuthListener.ts
+Basename: googleContactsOAuthListener
+Exports: useGoogleContactsOAuthListener
+
+File: apps/frontend/src/lib/contacts/preferencesStorage.ts
+Basename: preferencesStorage
+Exports: syncOptionsInConfig, loadPreferences, setPreferencesMemory, savePreferences
+
+File: apps/frontend/src/lib/contacts/useContactConfigTypes.ts
+Basename: useContactConfigTypes
+Exports: ContactsConfigSettings, ContactConfigExtras
+
+File: apps/frontend/src/lib/contexts/AuthContext.tsx
+Basename: AuthContext
+Exports: AuthProvider, useAuth
+
+File: apps/frontend/src/lib/contexts/BrandingPaletteContext.tsx
+Basename: BrandingPaletteContext
+Exports: BrandingPaletteProvider, useBrandPalette
+
+File: apps/frontend/src/lib/contexts/SettingsBrandingDraftContext.tsx
+Basename: SettingsBrandingDraftContext
+Exports: SettingsBrandingDraftContextValue, SettingsBrandingDraftProvider, useSettingsBrandingDraft
+
+File: apps/frontend/src/lib/contexts/SettingsGlobalDraftContext.tsx
+Basename: SettingsGlobalDraftContext
+Exports: SettingsGlobalDraftProvider, useSettingsGlobalDraft
+
+File: apps/frontend/src/lib/contexts/SettingsTabContext.tsx
+Basename: SettingsTabContext
+Exports: SettingsTabContextValue, SettingsTabProvider, useSettingsTab
+
+File: apps/frontend/src/lib/contexts/TenantContext.tsx
+Basename: TenantContext
+Exports: TenantContextValue, TenantProvider, useTenant
+
+File: apps/frontend/src/lib/dashboardQuickActions.ts
+Basename: dashboardQuickActions
+Exports: QuickActionColor, DashboardQuickAction, DASHBOARD_QUICK_ACTIONS, getQuickActionsForRole
+
+File: apps/frontend/src/lib/data/hasanatData.ts
+Basename: hasanatData
+Exports: STOCK_BATCHES, DISTRIBUTIONS, REDEMPTIONS
+
+File: apps/frontend/src/lib/data/studentsData.ts
+Basename: studentsData
+Exports: StudentSession, SESSIONS, STUDENTS, calcAge
+
+File: apps/frontend/src/lib/dbBackupSync.ts
+Basename: dbBackupSync
+Exports: applySnapshotToLocalCache
+
+File: apps/frontend/src/lib/dbCollections.ts
+Basename: dbCollections
+Exports: hasCollectionInCache, saveCollectionCacheOnly, getCollection, saveCollection
+
+File: apps/frontend/src/lib/dbLinkHydration.ts
+Basename: dbLinkHydration
+Exports: LINK_MANAGED_COLLECTIONS, readRawCollection, getLinkHydrationContext, hydrateLinkedCollection, normalizeLinkedCollection
+
+File: apps/frontend/src/lib/dbObjectStorage.ts
+Basename: dbObjectStorage
+Exports: shouldSkipTitleCase, getObject, readObjectLocal, writeObjectLocal
+
+File: apps/frontend/src/lib/denominationColors.ts
+Basename: denominationColors
+Exports: DEFAULT_DENOMINATION_COLOR, getDenominationPresetColors
+
+File: apps/frontend/src/lib/detectTimezoneFromLocation.ts
+Basename: detectTimezoneFromLocation
+Exports: TimezoneDetectionSource, TimezoneDetectionFailure, TimezoneDetectionResult
+
+File: apps/frontend/src/lib/deviceSms.ts
+Basename: deviceSms
+Exports: openDeviceSmsComposer
+
+File: apps/frontend/src/lib/directoryCardAccent.ts
+Basename: directoryCardAccent
+Exports: getGenderAccentBarClass
+
+File: apps/frontend/src/lib/directorySelection.ts
+Basename: directorySelection
+Exports: getDirectoryPageSelection, toggleIdInSelection, togglePageIdsInSelection
+
+File: apps/frontend/src/lib/download.ts
+Basename: download
+Exports: triggerFileDownload
+
+File: apps/frontend/src/lib/emailIntegrationApi.ts
+Basename: emailIntegrationApi
+Exports: SaveEmailIntegrationInput
+
+File: apps/frontend/src/lib/extractLogoBrandColors.ts
+Basename: extractLogoBrandColors
+Exports: ExtractLogoBrandColorsOptions
+
+File: apps/frontend/src/lib/formCompleteness.ts
+Basename: formCompleteness
+Exports: calculateModuleFieldsCompleteness, calculateKeyedUnitsCompleteness, hasFieldValue
+
+File: apps/frontend/src/lib/forms/translateZodError.ts
+Basename: translateZodError
+Exports: firstZodFieldError
+
+File: apps/frontend/src/lib/genderStatusBadge.ts
+Basename: genderStatusBadge
+Exports: genderStatusBadgeConfig
+
+File: apps/frontend/src/lib/genderUi.ts
+Basename: genderUi
+Exports: GenderUiKey, normalizeGenderKey, getGenderIcon, getGenderIconClass, getGenderCardAccent
+
+File: apps/frontend/src/lib/host/tenantHost.ts
+Basename: tenantHost
+Exports: isBrowserOnTenantHost
+
+File: apps/frontend/src/lib/invoiceTemplateBranding.ts
+Basename: invoiceTemplateBranding
+Exports: getInvoiceTemplateBranding
+
+File: apps/frontend/src/lib/invoiceTemplateDefaults.ts
+Basename: invoiceTemplateDefaults
+Exports: getDefaultTemplate
+
+File: apps/frontend/src/lib/invoiceTemplateElements.ts
+Basename: invoiceTemplateElements
+Exports: buildDefaultInvoiceTemplateElements
+
+File: apps/frontend/src/lib/invoiceTemplateFooterElements.ts
+Basename: invoiceTemplateFooterElements
+Exports: buildInvoiceTemplateFooterElements
+
+File: apps/frontend/src/lib/invoiceTemplateHeaderElements.ts
+Basename: invoiceTemplateHeaderElements
+Exports: buildInvoiceTemplateHeaderElements
+
+File: apps/frontend/src/lib/invoiceTemplatePersistence.ts
+Basename: invoiceTemplatePersistence
+Exports: loadTemplate, saveTemplate, AVAILABLE_FIELDS, resolveField
+
+File: apps/frontend/src/lib/localeFonts.ts
+Basename: localeFonts
+Exports: ensureLocaleFontsLoaded
+
+File: apps/frontend/src/lib/moduleColumnPreferencesApi.ts
+Basename: moduleColumnPreferencesApi
+Exports: ModuleColumnPreferencesResponse, readModuleColumnPreferences, writeModuleColumnPreferences
+
+File: apps/frontend/src/lib/moduleStatusUi.ts
+Basename: moduleStatusUi
+Exports: StatusTranslate, createModuleStatusUi
+
+File: apps/frontend/src/lib/notifiedMutationError.ts
+Basename: notifiedMutationError
+Exports: NotifiedMutationError, isNotifiedMutationError
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/lib/printBrandingTokens.ts
+Basename: printBrandingTokens
+Exports: PRINT_NEUTRAL, PrintBrandingTokens, getPrintBrandingTokens
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/lib/queryCacheCollections.ts
+Basename: queryCacheCollections
+Exports: readQueryCollection, findCachedCollectionRecord
+
+File: apps/frontend/src/lib/queryClient.ts
+Basename: queryClient
+Exports: queryClientInstance
+
+File: apps/frontend/src/lib/registryResolve.ts
+Basename: registryResolve
+Exports: uniqueRegistryIds, collectTeacherIdsFromClasses, collectTeacherIdsFromSessions
+
+File: apps/frontend/src/lib/reports/pinnedWidgetTypes.ts
+Basename: pinnedWidgetTypes
+Exports: CustomWidget, ALERT_COLOR_MAP, WIDGET_CHART_PALETTES, COLOR_MAP, ICONS_LIST
+
+File: apps/frontend/src/lib/reports/reportCollectionTypes.ts
+Basename: reportCollectionTypes
+Exports: ReportCollection, CustomCard, COLLECTION_OPTIONS
+
+File: apps/frontend/src/lib/reports/reportCustomCardCompute.ts
+Basename: reportCustomCardCompute
+Exports: computeCustomCard
+
+File: apps/frontend/src/lib/reports/reportCustomCardTrend.ts
+Basename: reportCustomCardTrend
+Exports: calculateCustomCardDynamicTrend
+
+File: apps/frontend/src/lib/reports/reportMetadataFields.ts
+Basename: reportMetadataFields
+Exports: METADATA_FIELDS
+
+File: apps/frontend/src/lib/reports/reportVisualizerConfig.ts
+Basename: reportVisualizerConfig
+Exports: VisualizerConfig, getFieldLabel, getCollectionLabel
+
+File: apps/frontend/src/lib/reports/useReportCollections.ts
+Basename: useReportCollections
+Exports: ReportCollectionsSnapshot, useWidgetCollections, useReportCollectionRows
+
+File: apps/frontend/src/lib/reports/widgetCollectionSnapshot.ts
+Basename: widgetCollectionSnapshot
+Exports: getWidgetCollections, getFilteredRecords
+
+File: apps/frontend/src/lib/reports/widgetCustomCardValues.ts
+Basename: widgetCustomCardValues
+Exports: computeContactsCustomCardValue, computeStudentsCustomCardValue, computeTeachersCustomCardValue, computeSessionsCustomCardValue, computeEnrollmentsCustomCardValue
+
+File: apps/frontend/src/lib/reports/widgetDefaultSeeds.ts
+Basename: widgetDefaultSeeds
+Exports: withDefaultI18nKeys, getDefaultCustomWidgets
+
+File: apps/frontend/src/lib/reports/widgetDefaults.ts
+Basename: widgetDefaults
+Exports: getDefaultCustomWidgets, buildDefaultCustomWidgets, getOrInitializeCustomWidgets
+
+File: apps/frontend/src/lib/reports/widgetDefaultsStore.ts
+Basename: widgetDefaultsStore
+Exports: buildDefaultCustomWidgets, getOrInitializeCustomWidgets
+
+File: apps/frontend/src/lib/reports/widgetRecordToggle.ts
+Basename: widgetRecordToggle
+Exports: isRestWidgetCollection
+
+File: apps/frontend/src/lib/reports/widgetSeedsContacts.ts
+Basename: widgetSeedsContacts
+Exports: contactsWidgetSeeds
+
+File: apps/frontend/src/lib/reports/widgetSeedsFinancial.ts
+Basename: widgetSeedsFinancial
+Exports: financialWidgetSeeds
+
+File: apps/frontend/src/lib/reports/widgetSeedsHasanat.ts
+Basename: widgetSeedsHasanat
+Exports: hasanatWidgetSeeds
+
+File: apps/frontend/src/lib/reports/widgetSeedsSessions.ts
+Basename: widgetSeedsSessions
+Exports: sessionsWidgetSeeds
+
+File: apps/frontend/src/lib/reports/widgetSeedsStudents.ts
+Basename: widgetSeedsStudents
+Exports: studentsWidgetSeeds
+
+File: apps/frontend/src/lib/routing/routePrefetch.ts
+Basename: routePrefetch
+Exports: prefetchRoute
+
+File: apps/frontend/src/lib/serverSyncErrors.ts
+Basename: serverSyncErrors
+Exports: serverSyncErrorKey
+
+File: apps/frontend/src/lib/setup/canonicalizeFields.ts
+Basename: canonicalizeFields
+Exports: canonicalizeField, fieldsForTab, canonicalizeFieldsMap
+
+File: apps/frontend/src/lib/setup/moduleFieldDeletePreflight.ts
+Basename: moduleFieldDeletePreflight
+Exports: ModuleFieldsDraftSnapshot, ModuleSetupDeleteNotify, CreateModuleFieldDeletePreflightOptions, createModuleFieldDeletePreflight
+
+File: apps/frontend/src/lib/setup/useModuleSetupDeleteGuards.ts
+Basename: useModuleSetupDeleteGuards
+Exports: useModuleSetupFieldDeleteGuard, useModuleSetupTabDeleteGuard
+
+File: apps/frontend/src/lib/students/studentStatusUi.ts
+Basename: studentStatusUi
+Exports: studentStatusLabel, studentStatusBadgeConfig
+
+File: apps/frontend/src/lib/teachers/teacherAssignment.ts
+Basename: teacherAssignment
+Exports: teacherNameById, assignClassTeacher, activeTeachersForAssignment, teacherOptionsForClass
+
+File: apps/frontend/src/lib/teachers/teacherPrimaryChannels.ts
+Basename: teacherPrimaryChannels
+Exports: TeacherPrimaryChannels, resolveTeacherPrimaryChannels
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/lib/teachers/teacherStatusUi.ts
+Basename: teacherStatusUi
+Exports: teacherStatusLabel, teacherStatusOptions, teacherStatusBadgeConfig, teacherStatusMetricAccent
+
+File: apps/frontend/src/platform/hooks/usePlatformAuthActions.ts
+Basename: usePlatformAuthActions
+Exports: usePlatformSetupRegister, usePlatformPasswordForgot, usePlatformPasswordReset, usePlatformPasswordResetResend
+
+File: apps/frontend/src/platform/hooks/usePlatformSettings.ts
+Basename: usePlatformSettings
+Exports: PLATFORM_SETTINGS_QUERY_KEY, usePlatformSettingsQuery, useUpdatePlatformSettings, useResetPlatformDatabase, useMigrateAndRestartPlatform
+
+File: apps/frontend/src/platform/lib/PlatformAuthContext.tsx
+Basename: PlatformAuthContext
+Exports: PlatformAuthContextType, PlatformAuthProvider, usePlatformAuth
+
+File: apps/frontend/src/platform/lib/PlatformSidebarContext.tsx
+Basename: PlatformSidebarContext
+Exports: PlatformSidebarProvider, usePlatformSidebar
+
+File: apps/frontend/src/platform/lib/animations.ts
+Basename: animations
+Exports: containerVariants, containerVariantsConsole, cardVariants, itemVariants
+
+File: apps/frontend/src/platform/lib/platformAuthErrors.ts
+Basename: platformAuthErrors
+Exports: mapPlatformAuthError, getPlatformErrorMessage
+
+File: apps/frontend/src/platform/lib/platformNav.ts
+Basename: platformNav
+Exports: PlatformNavItem, PLATFORM_NAV_ITEMS, getVisiblePlatformNavItems
+
+File: apps/frontend/src/platform/lib/platformValidation.ts
+Basename: platformValidation
+Exports: getPlatformNameError, getPlatformPasswordError, getPlatformPasswordMatchError, getPlatformRegisterError
+
+File: apps/frontend/src/platform/lib/themeScope.ts
+Basename: themeScope
+Exports: MMS_PLATFORM_BRANDING, MMS_PLATFORM_GLOBAL_SETTINGS, isTenantHost, shouldForcePlatformEnglish
+
+File: apps/frontend/src/platform/pages/account/platformAccountStyles.ts
+Basename: platformAccountStyles
+Exports: PLATFORM_PROFILE_SUBMIT_CLASS
+
+File: apps/frontend/src/platform/pages/onboarding/onboardingWizardTypes.ts
+Basename: onboardingWizardTypes
+Exports: OnboardingData, ONBOARDING_STEP_DEFS, ONBOARDING_INITIAL_DATA
+
+File: apps/frontend/src/tenant/components/moduleReports.ts
+Basename: moduleReports
+Exports: default, default
+
+File: apps/frontend/src/tenant/features/accounting/AccountingPage.tsx
+Basename: AccountingPage
+Exports: Accounting
+
+File: apps/frontend/src/tenant/features/accounting/accountingPageSubTabs.ts
+Basename: accountingPageSubTabs
+Exports: ACCOUNTING_SUB_TAB_IDS, AccountingSubTabId, ACCOUNTING_SUB_TAB_ICONS, ACCOUNTING_SUB_TAB_KEYS, ACCOUNTING_PAGE_ICON
+
+File: apps/frontend/src/tenant/features/accounting/components/ChartOfAccountsTreeRows.tsx
+Basename: ChartOfAccountsTreeRows
+Exports: AccountRecordProps, AccountMobileCard, AccountTableRow
+
+File: apps/frontend/src/tenant/features/accounting/components/FinancialReportSection.tsx
+Basename: FinancialReportSection
+Exports: ReportRow, ReportSection
+
+File: apps/frontend/src/tenant/features/accounting/components/FinancialStatementPanels.tsx
+Basename: FinancialStatementPanels
+Exports: IncomeStatementPanel, BalanceSheetPanel, CashFlowStatementPanel
+
+File: apps/frontend/src/tenant/features/accounting/components/SimpleTransactionStepForm.tsx
+Basename: SimpleTransactionStepForm
+Exports: StepTransactionForm
+
+File: apps/frontend/src/tenant/features/accounting/components/SimpleTransactionStepReview.tsx
+Basename: SimpleTransactionStepReview
+Exports: StepReview
+
+File: apps/frontend/src/tenant/features/accounting/components/SimpleTransactionStepTypeSelection.tsx
+Basename: SimpleTransactionStepTypeSelection
+Exports: StepTypeSelection
+
+File: apps/frontend/src/tenant/features/accounting/components/accountingSettingsPreferencesShared.ts
+Basename: accountingSettingsPreferencesShared
+Exports: DATE_FORMATS, FY_MONTHS, localizedFiscalMonths
+
+File: apps/frontend/src/tenant/features/accounting/components/generalLedgerExport.ts
+Basename: generalLedgerExport
+Exports: exportGeneralLedgerCsv
+
+File: apps/frontend/src/tenant/features/accounting/components/journalEntriesControllerConfig.ts
+Basename: journalEntriesControllerConfig
+Exports: buildJournalStatusConfig, buildJournalSubTabs, buildJournalModeTabs
+
+File: apps/frontend/src/tenant/features/accounting/components/journalEntriesControllerFilters.ts
+Basename: journalEntriesControllerFilters
+Exports: JournalEntryFilterState, filterJournalEntries, computeJournalGrandTotals
+
+File: apps/frontend/src/tenant/features/accounting/components/journalEntriesControllerSelection.tsx
+Basename: journalEntriesControllerSelection
+Exports: createJournalNlHandlers, JournalEntryActionsRendererOptions, createJournalEntryActionsRenderer
+
+File: apps/frontend/src/tenant/features/accounting/components/journalEntriesQuickActions.ts
+Basename: journalEntriesQuickActions
+Exports: QuickActionType, QUICK_ACTIONS, parseNaturalLanguage
+
+File: apps/frontend/src/tenant/features/accounting/components/journalEntriesTypes.ts
+Basename: journalEntriesTypes
+Exports: JournalEntriesProps
+
+File: apps/frontend/src/tenant/features/accounting/components/journalEntryFormTypes.ts
+Basename: journalEntryFormTypes
+Exports: DraftLine, DraftForm
+
+File: apps/frontend/src/tenant/features/accounting/components/trialBalanceExport.ts
+Basename: trialBalanceExport
+Exports: exportTrialBalanceCsv
+
+File: apps/frontend/src/tenant/features/accounting/hooks/accountingSetupConfigApi.ts
+Basename: accountingSetupConfigApi
+Exports: setAccountingPreferencesMemory, fetchAccountingPreferences, saveAccountingPreferencesAsync, getAccountingSettingsMemoryFallback
+
+File: apps/frontend/src/tenant/features/accounting/hooks/useAccountingSetupConfig.ts
+Basename: useAccountingSetupConfig
+Exports: ACCOUNTING_PREFERENCES_QUERY_KEY, useAccountingPreferencesQuery, useAccountingPreferencesMutation, useComposedAccountingSettings
+
+File: apps/frontend/src/tenant/features/attendance/AttendancePage.tsx
+Basename: AttendancePage
+Exports: Attendance
+
+File: apps/frontend/src/tenant/features/attendance/hooks/attendanceSetupConfigApi.ts
+Basename: attendanceSetupConfigApi
+Exports: setAttendancePreferencesMemory, fetchAttendancePreferences, saveAttendancePreferencesAsync, getAttendanceSettingsMemoryFallback
+
+File: apps/frontend/src/tenant/features/attendance/hooks/useAttendanceLookups.ts
+Basename: useAttendanceLookups
+Exports: ATTENDANCE_LOOKUPS_QUERY_KEY, useAttendanceLookupsQuery, useAttendanceLookupMutation
+
+File: apps/frontend/src/tenant/features/attendance/hooks/useAttendanceSetupConfig.ts
+Basename: useAttendanceSetupConfig
+Exports: ATTENDANCE_PREFERENCES_QUERY_KEY, useAttendancePreferencesQuery, useAttendancePreferencesMutation, useComposedAttendanceSettings
+
+File: apps/frontend/src/tenant/features/contacts/components/ContactCardSections.tsx
+Basename: ContactCardSections
+Exports: ContactCardInfoPills, ContactCardMetadataGrid, ContactCardDeletedBanner
+
+File: apps/frontend/src/tenant/features/contacts/components/ContactTableCells.tsx
+Basename: ContactTableCells
+Exports: renderContactTableCell
+
+File: apps/frontend/src/tenant/features/contacts/components/ContactsDataBannerRows.tsx
+Basename: ContactsDataBannerRows
+Exports: ContactsOfflineBanner, ContactsPendingBanner, ContactsConflictBanner
+
+File: apps/frontend/src/tenant/features/contacts/components/DuplicateDetectionParts.tsx
+Basename: DuplicateDetectionParts
+Exports: ConfidenceBadge, DuplicateContactCard
+
+File: apps/frontend/src/tenant/features/contacts/components/DuplicateMergePreview.tsx
+Basename: DuplicateMergePreview
+Exports: MergePreview
+
+File: apps/frontend/src/tenant/features/contacts/components/contactCardColumnData.ts
+Basename: contactCardColumnData
+Exports: hasContactCardColumnData
+
+File: apps/frontend/src/tenant/features/contacts/components/contactCustomCollectionRows.ts
+Basename: contactCustomCollectionRows
+Exports: CustomCollectionRow, readContactCustomCollectionRows
+
+File: apps/frontend/src/tenant/features/contacts/components/contactMetadataCollections.tsx
+Basename: contactMetadataCollections
+Exports: renderSocialMetadata, renderRelationshipMetadata, renderEducationMetadata, renderExperienceMetadata, renderSkillsMetadata
+
+File: apps/frontend/src/tenant/features/contacts/components/contactMetadataDates.tsx
+Basename: contactMetadataDates
+Exports: renderSolarDobMetadata, renderLunarDobMetadata
+
+File: apps/frontend/src/tenant/features/contacts/components/contactMetadataIdentity.tsx
+Basename: contactMetadataIdentity
+Exports: renderGenderMetadata, renderSyedMetadata, renderAddressFieldMetadata, renderWhatsAppMetadata
+
+File: apps/frontend/src/tenant/features/contacts/components/contactTablePrimaryCells.tsx
+Basename: contactTablePrimaryCells
+Exports: renderContactNameCell, renderContactPhoneCell, renderContactEmailCell
+
+File: apps/frontend/src/tenant/features/contacts/components/contactTableTypes.ts
+Basename: contactTableTypes
+Exports: columnWidthStyle
+
+File: apps/frontend/src/tenant/features/contacts/components/contactsWorkTierTypes.ts
+Basename: contactsWorkTierTypes
+Exports: ContactsWorkViewMode, ContactsWorkTierProps
+
+File: apps/frontend/src/tenant/features/contacts/components/detail/ContactDetailShared.tsx
+Basename: ContactDetailShared
+Exports: CollectionRowItem, type CollectionRowAction, DetailSection, FieldGroupCard
+
+File: apps/frontend/src/tenant/features/contacts/components/detail/contactDetailChannelHelpers.tsx
+Basename: contactDetailChannelHelpers
+Exports: DetailCollectionEmpty, withPrimaryPhone, withPrimaryEmail
+
+File: apps/frontend/src/tenant/features/contacts/components/detail/contactDetailMessagingActions.ts
+Basename: contactDetailMessagingActions
+Exports: buildDetailPhoneMessagingActions, buildDetailEmailMessagingActions
+
+File: apps/frontend/src/tenant/features/contacts/components/duplicateDetectionTypes.ts
+Basename: duplicateDetectionTypes
+Exports: DuplicatePair, getDuplicateThemeColors
+
+File: apps/frontend/src/tenant/features/contacts/components/formTabs/ContactSubListCards.tsx
+Basename: ContactSubListCards
+Exports: ListFieldCard, resolveSubListAllowAdd, ContactSubListShell
+
+File: apps/frontend/src/tenant/features/contacts/components/sync/AppleContactsPanelSections.tsx
+Basename: AppleContactsPanelSections
+Exports: AppleContactsExportGuide, AppleContactsImportResult, AppleContactsExportBar, AppleContactsFileInput, AppleContactsPreviewList
+
+File: apps/frontend/src/tenant/features/contacts/components/sync/GoogleContactsPanelSections.tsx
+Basename: GoogleContactsPanelSections
+Exports: GoogleContactsSetupForm, GoogleContactsSetupHint, GoogleContactsConnectStep, GoogleContactsConnectedState
+
+File: apps/frontend/src/tenant/features/contacts/hooks/appleContactsIdentity.ts
+Basename: appleContactsIdentity
+Exports: buildAppleImportIdentityCandidates, filterAppleImportFreshContacts
+
+File: apps/frontend/src/tenant/features/contacts/hooks/contactFormDraftUtils.ts
+Basename: contactFormDraftUtils
+Exports: contactDraftSnapshot, buildOptionDefaults, buildInitialContactDraft
+
+File: apps/frontend/src/tenant/features/contacts/hooks/contactsListQueryBuilders.ts
+Basename: contactsListQueryBuilders
+Exports: ContactsPaginatedParams, buildContactsPageUrl, contactsListQueryKeyParams, contactsPaginatedQueryKey, sameContactsListFilters
+
+File: apps/frontend/src/tenant/features/contacts/hooks/contactsSelectionTargets.ts
+Basename: contactsSelectionTargets
+Exports: computeContactsSelectionTargets
+
+File: apps/frontend/src/tenant/features/contacts/hooks/contactsSetupDeletePreflight.ts
+Basename: contactsSetupDeletePreflight
+Exports: FieldsDraftSnapshot
+
+File: apps/frontend/src/tenant/features/contacts/hooks/contactsSetupPanelEditor.ts
+Basename: contactsSetupPanelEditor
+Exports: buildCountrySelectOptions
+
+File: apps/frontend/src/tenant/features/contacts/hooks/useContactGoogleSyncQueries.ts
+Basename: useContactGoogleSyncQueries
+Exports: useContactGoogleSyncConfig, useContactGoogleSyncMutations
+
+File: apps/frontend/src/tenant/features/contacts/hooks/useContactLookups.ts
+Basename: useContactLookups
+Exports: CONTACTS_LOOKUPS_QUERY_KEY, useContactLookupsQuery, useContactLookupMutation
+
+File: apps/frontend/src/tenant/features/contacts/hooks/useContactPrefsQueries.ts
+Basename: useContactPrefsQueries
+Exports: useContactColumnPrefs, useContactColumnPrefsMutation, useContactsSavedReportsSource
+
+File: apps/frontend/src/tenant/features/contacts/hooks/useContactSetupConfig.ts
+Basename: useContactSetupConfig
+Exports: CONTACTS_PREFERENCES_QUERY_KEY, useContactPreferencesQuery, useContactPreferencesMutation
+
+File: apps/frontend/src/tenant/features/contacts/hooks/useContactsAnalyticsQueries.ts
+Basename: useContactsAnalyticsQueries
+Exports: useContactsMetrics, useContactsReportAnalytics, useContactsWidgetAggregates, useContactsDuplicatePairs
+
+File: apps/frontend/src/tenant/features/contacts/hooks/useContactsListQueries.ts
+Basename: useContactsListQueries
+Exports: useContactById, useContactsByIds, contactsPaginatedQueryKey, fetchContactById
+
+File: apps/frontend/src/tenant/features/contacts/hooks/useContactsPageController.ts
+Basename: useContactsPageController
+Exports: useContactsPageView
+
+File: apps/frontend/src/tenant/features/contacts/hooks/useContactsSetupConfigApi.ts
+Basename: useContactsSetupConfigApi
+Exports: contactsSetupConfigApi, fetchContactPreferences, saveContactPreferencesAsync, setContactPreferencesMemory
+
+File: apps/frontend/src/tenant/features/dashboard/DashboardPage.tsx
+Basename: DashboardPage
+Exports: Dashboard
+
+File: apps/frontend/src/tenant/features/dashboard/components/StatisticsGrid.tsx
+Basename: StatisticsGrid
+Exports: StatsGrid
+
+File: apps/frontend/src/tenant/features/dashboard/hooks/dashboardMetricTrends.ts
+Basename: dashboardMetricTrends
+Exports: percentChange, computeDashboardMetricTrends
+
+File: apps/frontend/src/tenant/features/enrollments/components/enrollmentListContentShared.ts
+Basename: enrollmentListContentShared
+Exports: EnrollmentMessageChannel, EnrollmentListContentProps, getEnrollmentStudentDisplayName, findEnrollmentStudent
+
+File: apps/frontend/src/tenant/features/enrollments/components/enrollmentListVisibleColumns.ts
+Basename: enrollmentListVisibleColumns
+Exports: ENROLLMENT_CARD_FACE_COLUMN_IDS, getEnrollmentVisibleWorkColumns
+
+File: apps/frontend/src/tenant/features/enrollments/components/enrollmentWizardBuildPayload.ts
+Basename: enrollmentWizardBuildPayload
+Exports: buildEnrollmentPayload
+
+File: apps/frontend/src/tenant/features/enrollments/components/enrollmentWorkColumnCell.tsx
+Basename: enrollmentWorkColumnCell
+Exports: renderEnrollmentWorkColumnValue
+
+File: apps/frontend/src/tenant/features/enrollments/components/wizard/step6ConfirmationLayout.tsx
+Basename: step6ConfirmationLayout
+Exports: Step6ConfirmationRow, Step6ConfirmationSection
+
+File: apps/frontend/src/tenant/features/enrollments/hooks/enrollmentSetupConfigApi.ts
+Basename: enrollmentSetupConfigApi
+Exports: setEnrollmentPreferencesMemory, fetchEnrollmentPreferences, saveEnrollmentPreferencesAsync, getEnrollmentSettingsMemoryFallback
+
+File: apps/frontend/src/tenant/features/enrollments/hooks/useEnrollmentSetupConfig.ts
+Basename: useEnrollmentSetupConfig
+Exports: ENROLLMENTS_PREFERENCES_QUERY_KEY, useEnrollmentPreferencesQuery, useEnrollmentPreferencesMutation, useComposedEnrollmentsSettings
+
+File: apps/frontend/src/tenant/features/examinations/ExaminationsPage.tsx
+Basename: ExaminationsPage
+Exports: Examinations
+
+File: apps/frontend/src/tenant/features/examinations/components/ExamForm.tsx
+Basename: ExamForm
+Exports: default
+
+File: apps/frontend/src/tenant/features/examinations/components/examinationFormConstants.ts
+Basename: examinationFormConstants
+Exports: EXAMINATION_SUBJECT_OPTIONS, EXAMINATION_FORM_EMPTY
+
+File: apps/frontend/src/tenant/features/examinations/components/examinationsListContentShared.ts
+Basename: examinationsListContentShared
+Exports: ExamClassOption, ExaminationsListContentProps, getExamMeta
+
+File: apps/frontend/src/tenant/features/examinations/components/gradeUtils.ts
+Basename: gradeUtils
+Exports: getGrade, getRankSuffix
+
+File: apps/frontend/src/tenant/features/examinations/components/resultsViewTypes.ts
+Basename: resultsViewTypes
+Exports: ResultsViewProps, RankedResult, ResultsViewStatsData, RANK_ICONS
+
+File: apps/frontend/src/tenant/features/examinations/hooks/examinationSetupConfigApi.ts
+Basename: examinationSetupConfigApi
+Exports: setExaminationPreferencesMemory, fetchExaminationPreferences, saveExaminationPreferencesAsync, getExaminationSettingsMemoryFallback
+
+File: apps/frontend/src/tenant/features/examinations/hooks/useExaminationSetupConfig.ts
+Basename: useExaminationSetupConfig
+Exports: EXAMINATIONS_PREFERENCES_QUERY_KEY, useExaminationPreferencesQuery, useExaminationPreferencesMutation, useComposedExaminationsSettings
+
+File: apps/frontend/src/tenant/features/finance/FinancePage.tsx
+Basename: FinancePage
+Exports: Finance
+
+File: apps/frontend/src/tenant/features/finance/components/PaymentsListFilters.tsx
+Basename: PaymentsListFilters
+Exports: PaymentMethodSummary, PaymentSelectionBar, PaymentLogHeader
+
+File: apps/frontend/src/tenant/features/finance/components/invoiceFormDraft.ts
+Basename: invoiceFormDraft
+Exports: InvoiceDraft, nextInvoiceId, createInitialDraft, computeInvoiceAmounts, canSaveInvoiceDraft
+
+File: apps/frontend/src/tenant/features/finance/components/invoiceListVisibleColumns.ts
+Basename: invoiceListVisibleColumns
+Exports: INVOICE_CARD_FACE_COLUMN_IDS, getInvoiceVisibleWorkColumns
+
+File: apps/frontend/src/tenant/features/finance/components/invoiceWorkColumnCell.tsx
+Basename: invoiceWorkColumnCell
+Exports: renderInvoiceWorkColumnValue
+
+File: apps/frontend/src/tenant/features/finance/components/invoicesListShared.ts
+Basename: invoicesListShared
+Exports: InvoicesListContentProps
+
+File: apps/frontend/src/tenant/features/finance/components/paymentFormHelpers.ts
+Basename: paymentFormHelpers
+Exports: PaymentFormDraft, validatePaymentFormDraft, buildInitialPaymentDraft, buildPaymentCreatePayload, PAYMENT_METHOD_LABEL_KEYS
+
+File: apps/frontend/src/tenant/features/finance/hooks/useFinanceSetupConfig.ts
+Basename: useFinanceSetupConfig
+Exports: FINANCE_PREFERENCES_QUERY_KEY, useFinancePreferencesQuery, useFinancePreferencesMutation, useComposedFinanceSettings
+
+File: apps/frontend/src/tenant/features/hasanat/HasanatCardsPage.tsx
+Basename: HasanatCardsPage
+Exports: HasanatCards
+
+File: apps/frontend/src/tenant/features/hasanat/components/distributionsListShared.ts
+Basename: distributionsListShared
+Exports: DistributionStatus, DISTRIBUTION_COLUMN_KEYS, DistributionsListContentProps, getDistributionDenomination, getDistributionStatuses
+
+File: apps/frontend/src/tenant/features/hasanat/hooks/hasanatSetupConfigApi.ts
+Basename: hasanatSetupConfigApi
+Exports: setHasanatPreferencesMemory, fetchHasanatPreferences, saveHasanatPreferencesAsync, getHasanatSettingsMemoryFallback
+
+File: apps/frontend/src/tenant/features/hasanat/hooks/useHasanatSetupConfig.ts
+Basename: useHasanatSetupConfig
+Exports: HASANAT_PREFERENCES_QUERY_KEY, useHasanatPreferencesQuery, useHasanatPreferencesMutation, useComposedHasanatSettings
+
+File: apps/frontend/src/tenant/features/messaging/components/MessagingWorkComposerSection.tsx
+Basename: MessagingWorkComposerSection
+Exports: MessagingWorkBulkActionBar
+
+File: apps/frontend/src/tenant/features/messaging/components/MessagingWorkRecipientsSection.tsx
+Basename: MessagingWorkRecipientsSection
+Exports: MessagingWorkRecipientsList
+
+File: apps/frontend/src/tenant/features/messaging/components/messagingReportsExport.ts
+Basename: messagingReportsExport
+Exports: messagingExportEndDateBound
+
+File: apps/frontend/src/tenant/features/messaging/components/messagingWorkPanelShared.ts
+Basename: messagingWorkPanelShared
+Exports: MessagingSelectedMap, contactToRecipient
+
+File: apps/frontend/src/tenant/features/messaging/config.ts
+Basename: config
+Exports: MessagingChannel, MessagingChannelConfig, MESSAGING_CHANNEL_CONFIG
+
+File: apps/frontend/src/tenant/features/messaging/hooks/useMessagingColumnLayouts.ts
+Basename: useMessagingColumnLayouts
+Exports: useMessagingRecipientsColumnLayout, useMessagingHistoryColumnLayout, useMessagingTemplatesColumnLayout
+
+File: apps/frontend/src/tenant/features/messaging/hooks/useMessagingContactsByIds.ts
+Basename: useMessagingContactsByIds
+Exports: MESSAGING_CONTACTS_RESOLVE_QUERY_KEY, useMessagingRecipientsByIds
+
+File: apps/frontend/src/tenant/features/obligations/ObligationsPage.tsx
+Basename: ObligationsPage
+Exports: Obligations
+
+File: apps/frontend/src/tenant/features/obligations/components/MujtahidNameFormModal.tsx
+Basename: MujtahidNameFormModal
+Exports: NameFormModalProps, NameFormModal
+
+File: apps/frontend/src/tenant/features/obligations/components/invoice/InvoiceTemplateStyleControls.tsx
+Basename: InvoiceTemplateStyleControls
+Exports: StyleBtnProps, StyleBtn, StyleInputProps, StyleInput
+
+File: apps/frontend/src/tenant/features/obligations/components/invoice/invoiceTemplateEditorUtils.ts
+Basename: invoiceTemplateEditorUtils
+Exports: SNAP, snap, newId
+
+File: apps/frontend/src/tenant/features/obligations/components/mujtahidManagerTypes.ts
+Basename: mujtahidManagerTypes
+Exports: Mujtahid, MujtahidRep, MujtahidManagerProps, ModalState
+
+File: apps/frontend/src/tenant/features/obligations/components/obligationCollectionListContentShared.ts
+Basename: obligationCollectionListContentShared
+Exports: ObligationContact, ObligationCollectionListContentProps, OBLIGATION_COLLECTION_CURRENCIES, getObligationCollectionResolvedFields, formatObligationCollectionAmount
+
+File: apps/frontend/src/tenant/features/obligations/components/obligationTypeManagerShared.ts
+Basename: obligationTypeManagerShared
+Exports: DesignatedFor, DESIGNATED_LABEL_KEYS, OBLIGATION_TYPE_EMPTY, ObligationTypeModalState
+
+File: apps/frontend/src/tenant/features/obligations/components/wakalaTypeManagerTypes.ts
+Basename: wakalaTypeManagerTypes
+Exports: DistributionType, WakalaTypeManagerProps
+
+File: apps/frontend/src/tenant/features/obligations/hooks/useObligationLookups.ts
+Basename: useObligationLookups
+Exports: useMergedObligationContacts, useMergedObligationUsers
+
+File: apps/frontend/src/tenant/features/profile/AccountProfilePage.tsx
+Basename: AccountProfilePage
+Exports: AccountProfile
+
+File: apps/frontend/src/tenant/features/profile/passwordStrength.ts
+Basename: passwordStrength
+Exports: PasswordStrengthResult, getPasswordStrength
+
+File: apps/frontend/src/tenant/features/question-bank/components/performanceAnalyticsUtils.ts
+Basename: performanceAnalyticsUtils
+Exports: sumScores, testTotalMarks, PerformanceAnalyticsProps, StudentStatItem, CategoryPerformance
+
+File: apps/frontend/src/tenant/features/question-bank/components/questionFormTypes.ts
+Basename: questionFormTypes
+Exports: QuestionFormProps, QuestionFormDraft, QuestionFormErrors, UpdateQuestionDraft
+
+File: apps/frontend/src/tenant/features/question-bank/components/questionsListShared.tsx
+Basename: questionsListShared
+Exports: SYSTEM_FIELD_IDS, renderQuestionMetaChip
+
+File: apps/frontend/src/tenant/features/question-bank/hooks/useQuestionBankSetupConfig.ts
+Basename: useQuestionBankSetupConfig
+Exports: useComposedQuestionBankSettings
+
+File: apps/frontend/src/tenant/features/reports/components/AcademicReportSections.tsx
+Basename: AcademicReportSections
+Exports: AcademicReportKpis, AcademicReportFilterBanner, AcademicReportResultsTable
+
+File: apps/frontend/src/tenant/features/reports/components/CustomReportBuilderDraggableField.tsx
+Basename: CustomReportBuilderDraggableField
+Exports: DraggableFieldProps, DraggableField
+
+File: apps/frontend/src/tenant/features/reports/components/DynamicChartVisualizerPreviewHeader.tsx
+Basename: DynamicChartVisualizerPreviewHeader
+Exports: VisualizerPreviewHeader
+
+File: apps/frontend/src/tenant/features/reports/components/DynamicChartVisualizerPreviewSections.tsx
+Basename: DynamicChartVisualizerPreviewSections
+Exports: VisualizerKpiCards, VisualizerDataMatrix
+
+File: apps/frontend/src/tenant/features/reports/components/FacultyReportSections.tsx
+Basename: FacultyReportSections
+Exports: FacultyReportChartSection
+
+File: apps/frontend/src/tenant/features/reports/components/FinancialReportSections.tsx
+Basename: FinancialReportSections
+Exports: MonthlyFeeCollectionItem, DiscountUsageByTypeItem, FinancialReportCharts, FinancialMonthFilterBanner
+
+File: apps/frontend/src/tenant/features/reports/components/FinancialReportTable.tsx
+Basename: FinancialReportTable
+Exports: FinancialInvoiceTable, FinancialDashboardWidgets
+
+File: apps/frontend/src/tenant/features/reports/components/HasanatReport.tsx
+Basename: HasanatReport
+Exports: HasanatReportItem, HasanatByFacultyItem
+
+File: apps/frontend/src/tenant/features/reports/components/HasanatReportSections.tsx
+Basename: HasanatReportSections
+Exports: HasanatReportKpis, HasanatReportCharts, HasanatFacultyFilterBanner, HasanatDistributionTable, HasanatDashboardWidgets
+
+File: apps/frontend/src/tenant/features/reports/components/academicReportTypes.ts
+Basename: academicReportTypes
+Exports: AcademicReportFilters, AcademicReportProps, AcademicResultItem, ClassRankingItem
+
+File: apps/frontend/src/tenant/features/reports/components/attendanceReportTypes.ts
+Basename: attendanceReportTypes
+Exports: AttendanceReportProps, AttendanceSummaryItem, StudentAttendanceItem, RateBarRenderer
+
+File: apps/frontend/src/tenant/features/reports/components/comparisonModeCompute.ts
+Basename: comparisonModeCompute
+Exports: computeDynamicSessionComparison, buildContactsDateRangeComparison, computeDynamicDateRangeComparison
+
+File: apps/frontend/src/tenant/features/reports/components/comparisonModeDateHelpers.ts
+Basename: comparisonModeDateHelpers
+Exports: COMPARISON_MONTH_NAMES, isInComparisonDateRange, getComparisonMonthIndex
+
+File: apps/frontend/src/tenant/features/reports/components/comparisonModeDateRangeCompute.ts
+Basename: comparisonModeDateRangeCompute
+Exports: computeDynamicDateRangeComparison, buildContactsDateRangeComparison
+
+File: apps/frontend/src/tenant/features/reports/components/comparisonModeSessionCompute.ts
+Basename: comparisonModeSessionCompute
+Exports: computeDynamicSessionComparison
+
+File: apps/frontend/src/tenant/features/reports/components/comparisonModeTypes.ts
+Basename: comparisonModeTypes
+Exports: ComparisonDataItem, DateRangeDataItem, DateRange, ComparisonModeProps
+
+File: apps/frontend/src/tenant/features/reports/components/customReportBuilderPreview.ts
+Basename: customReportBuilderPreview
+Exports: buildCustomReportPreviewRows
+
+File: apps/frontend/src/tenant/features/reports/components/dynamicChartVisualizerConfigPanelTypes.ts
+Basename: dynamicChartVisualizerConfigPanelTypes
+Exports: DynamicChartVisualizerConfigPanelProps, DynamicChartVisualizerFiltersPanelProps
+
+File: apps/frontend/src/tenant/features/reports/components/hasanatReportSectionTypes.ts
+Basename: hasanatReportSectionTypes
+Exports: HasanatFacultyBarItem, HasanatPieItem
+
+File: apps/frontend/src/tenant/features/reports/components/kpiDefaultCardConfig.ts
+Basename: kpiDefaultCardConfig
+Exports: getDefaultCardConfig, getDefaultKPICollection, getCategoryLabelKey
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummaryCardHandlers.ts
+Basename: kpiSummaryCardHandlers
+Exports: CustomCardLocalCollections, filterStandardPossibleCards, buildPossibleCards, computeCustomCardItems, createKpiCardHandlers
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummaryCards.tsx
+Basename: kpiSummaryCards
+Exports: KPICardsGrid
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummaryCategoryFlags.ts
+Basename: kpiSummaryCategoryFlags
+Exports: KpiCategoryFlags, getKpiCategoryFlags
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummaryConfig.ts
+Basename: kpiSummaryConfig
+Exports: areStringListsEqual, areCustomCardsEqual, KPI_ROLE_ATTENDANCE_ONLY_IDS, KPI_ROLE_FINANCE_ONLY_IDS, KPI_TITLE_KEYS
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummaryDerivedMetrics.ts
+Basename: kpiSummaryDerivedMetrics
+Exports: computeDerivedKpiMetrics, formatNumber
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummaryIcons.ts
+Basename: kpiSummaryIcons
+Exports: KPI_ICONS
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummaryPrimaryVolume.ts
+Basename: kpiSummaryPrimaryVolume
+Exports: PrimaryVolumeInputs, computePrimaryVolume
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummaryQuestionBankCards.ts
+Basename: kpiSummaryQuestionBankCards
+Exports: buildQuestionBankKPICards
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummarySettings.tsx
+Basename: kpiSummarySettings
+Exports: KPISummarySettings
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/tenant/features/reports/components/kpiSummaryStandardCards.ts
+Basename: kpiSummaryStandardCards
+Exports: buildStandardKPICards
+
+File: apps/frontend/src/tenant/features/reports/components/pinnedWidgets/WidgetBuilderCardOptions.tsx
+Basename: WidgetBuilderCardOptions
+Exports: WidgetBuilderCardRoleOptions, WidgetBuilderCardTextOptions, WidgetBuilderIconPicker, type WidgetBuilderIconTab
+
+File: apps/frontend/src/tenant/features/reports/components/pinnedWidgets/WidgetProgressRing.tsx
+Basename: WidgetProgressRing
+Exports: ProgressRing
+
+File: apps/frontend/src/tenant/features/reports/components/pinnedWidgets/widgetBuilderIconCategories.ts
+Basename: widgetBuilderIconCategories
+Exports: WidgetBuilderIconTab, WIDGET_BUILDER_ICON_CATEGORIES
+
+File: apps/frontend/src/tenant/features/reports/components/pinnedWidgets/widgetBuilderStateHelpers.ts
+Basename: widgetBuilderStateHelpers
+Exports: buildWidgetBuilderPreview, buildWidgetSavePayload
+
+File: apps/frontend/src/tenant/features/reports/components/pinnedWidgets/widgetDrilldownStatusConfig.ts
+Basename: widgetDrilldownStatusConfig
+Exports: buildWidgetDrilldownStatusConfig
+
+File: apps/frontend/src/tenant/features/reports/components/pinnedWidgets/widgetRecordDisplay.ts
+Basename: widgetRecordDisplay
+Exports: WidgetRecordFields, WidgetRecordDisplay, getWidgetRecordDisplay
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/tenant/features/reports/components/savedReportsConstants.ts
+Basename: savedReportsConstants
+Exports: SAVED_REPORT_CATEGORY_BADGE_CLS
+
+File: apps/frontend/src/tenant/features/reports/components/sessionReportUtils.ts
+Basename: sessionReportUtils
+Exports: utilisationColour
+
+File: apps/frontend/src/tenant/features/reports/components/studentReportExport.ts
+Basename: studentReportExport
+Exports: mapEnrollmentRow
+
+File: apps/frontend/src/tenant/features/reports/components/studentReportMetrics.ts
+Basename: studentReportMetrics
+Exports: StudentReportMetricItem, applyStudentsReportDrillDown, buildStudentReportMetricItems
+
+File: apps/frontend/src/tenant/features/reports/components/teacherReportMetrics.ts
+Basename: teacherReportMetrics
+Exports: TeacherReportMetricItem, applyTeachersReportDrillDown, buildTeacherReportMetricItems
+
+File: apps/frontend/src/tenant/features/reports/components/useDynamicChartVisualizerEffects.ts
+Basename: useDynamicChartVisualizerEffects
+Exports: useDynamicChartVisualizerMetaEffects
+
+File: apps/frontend/src/tenant/features/reports/components/useDynamicChartVisualizerHandlers.ts
+Basename: useDynamicChartVisualizerHandlers
+Exports: buildDynamicChartVisualizerHandlers
+
+File: apps/frontend/src/tenant/features/sessions/SessionsPage.tsx
+Basename: SessionsPage
+Exports: Sessions
+
+File: apps/frontend/src/tenant/features/sessions/components/SessionFormSections.tsx
+Basename: SessionFormSections
+Exports: SessionSelectOption, SessionDetailsSection, SessionFinancialSection
+
+File: apps/frontend/src/tenant/features/sessions/components/SessionsWorkListViews.tsx
+Basename: SessionsWorkListViews
+Exports: SessionsWorkCardGrid, SessionsWorkTable
+
+File: apps/frontend/src/tenant/features/sessions/components/sessionListVisibleColumns.ts
+Basename: sessionListVisibleColumns
+Exports: SESSION_CARD_FACE_COLUMN_IDS, getSessionVisibleWorkColumns
+
+File: apps/frontend/src/tenant/features/sessions/components/sessionPageTypes.ts
+Basename: sessionPageTypes
+Exports: SessionStatus, SessionType, SessionSortField
+
+File: apps/frontend/src/tenant/features/sessions/components/sessionWorkColumnCell.tsx
+Basename: sessionWorkColumnCell
+Exports: getSessionCapacityMeta, renderSessionWorkColumnValue
+
+File: apps/frontend/src/tenant/features/sessions/components/sessionsWorkListViewsShared.ts
+Basename: sessionsWorkListViewsShared
+Exports: SessionsWorkColumnLayout, SessionsWorkViewProps, getSessionEnrollmentTotals
+
+File: apps/frontend/src/tenant/features/sessions/components/tabs/timetableTabConfig.ts
+Basename: timetableTabConfig
+Exports: TIMETABLE_TYPE_CONFIG, TIMETABLE_EMPTY_DRAFT
+
+File: apps/frontend/src/tenant/features/sessions/hooks/sessionSetupConfigApi.ts
+Basename: sessionSetupConfigApi
+Exports: setSessionPreferencesMemory, fetchSessionPreferences, saveSessionPreferencesAsync, getSessionSettingsMemoryFallback
+
+File: apps/frontend/src/tenant/features/sessions/hooks/sessionsSetupPanelSnapshots.ts
+Basename: sessionsSetupPanelSnapshots
+Exports: sessionsFieldsSetupSnapshot
+
+File: apps/frontend/src/tenant/features/sessions/hooks/useSessionLookups.ts
+Basename: useSessionLookups
+Exports: SESSIONS_LOOKUPS_QUERY_KEY, useSessionLookupsQuery, useSessionLookupMutation
+
+File: apps/frontend/src/tenant/features/sessions/hooks/useSessionSetupConfig.ts
+Basename: useSessionSetupConfig
+Exports: SESSIONS_PREFERENCES_QUERY_KEY, useSessionPreferencesQuery, useSessionPreferencesMutation, useComposedSessionsSettings
+
+File: apps/frontend/src/tenant/features/sessions/hooks/useSessionsTsrHooks.ts
+Basename: useSessionsTsrHooks
+Exports: useSessionsContractList, useSessionsContractCreate, useSessionsContractBulkDelete, useSessionsContractBulkStatus, useSessionsContractBulkRestore
+
+File: apps/frontend/src/tenant/features/settings/SettingsPage.tsx
+Basename: SettingsPage
+Exports: Settings
+
+File: apps/frontend/src/tenant/features/settings/components/BackupRestoreConfirmModal.tsx
+Basename: BackupRestoreConfirmModal
+Exports: BackupRestoreConfirmModalProps
+
+File: apps/frontend/src/tenant/features/settings/components/branding/BrandingSettingsIdentitySections.tsx
+Basename: BrandingSettingsIdentitySections
+Exports: BrandingSettingsProfileSection, BrandingSettingsContactSection
+
+File: apps/frontend/src/tenant/features/settings/components/llmSettingsControllerTypes.ts
+Basename: llmSettingsControllerTypes
+Exports: LlmHealthStatus
+
+File: apps/frontend/src/tenant/features/settings/components/llmSettingsTypes.ts
+Basename: llmSettingsTypes
+Exports: SandboxMessage
+
+File: apps/frontend/src/tenant/features/settings/components/timezoneSelectUtils.ts
+Basename: timezoneSelectUtils
+Exports: filterGroupedTimezones, timezoneDetectionErrorKey
+
+File: apps/frontend/src/tenant/features/settings/hooks/backupRestoreImportTypes.ts
+Basename: backupRestoreImportTypes
+Exports: TranslateFn, UseBackupRestoreImportOptions
+
+File: apps/frontend/src/tenant/features/settings/hooks/backupRestoreTypes.ts
+Basename: backupRestoreTypes
+Exports: WorkspaceExportStats, UseBackupRestoreOptions
+
+File: apps/frontend/src/tenant/features/settings/hooks/backupRestoreUtils.ts
+Basename: backupRestoreUtils
+Exports: BackupSubdomainCompare, compareBackupSubdomains
+
+File: apps/frontend/src/tenant/features/students/StudentsPage.tsx
+Basename: StudentsPage
+Exports: Students
+
+File: apps/frontend/src/tenant/features/students/components/StudentFormSectionShared.tsx
+Basename: StudentFormSectionShared
+Exports: StudentFieldErrorGetter, StudentStatusSelectOption, resolveStudentFieldLabel, ContactProfileValue, FieldErrorMessage
+
+File: apps/frontend/src/tenant/features/students/components/StudentFormSections.tsx
+Basename: StudentFormSections
+Exports: StudentContactSection, StudentRegistrationSection, StudentGuardianSection, StudentNotesSection
+
+File: apps/frontend/src/tenant/features/students/components/StudentsListDesktopTableCells.tsx
+Basename: StudentsListDesktopTableCells
+Exports: renderStudentsListDesktopTableCell
+
+File: apps/frontend/src/tenant/features/students/components/StudentsListDesktopTableSimpleCells.tsx
+Basename: StudentsListDesktopTableSimpleCells
+Exports: renderStudentDobCell, renderStudentSessionsCell, renderStudentStatusCell
+
+File: apps/frontend/src/tenant/features/students/components/StudentsWorkTierTypes.ts
+Basename: StudentsWorkTierTypes
+Exports: StudentsWorkTierProps
+
+File: apps/frontend/src/tenant/features/students/components/guardianRelationshipBadge.ts
+Basename: guardianRelationshipBadge
+Exports: relationshipBadgeCode
+
+File: apps/frontend/src/tenant/features/students/components/studentFormDraft.ts
+Basename: studentFormDraft
+Exports: getInitialStudentDraft, studentDraftSnapshot
+
+File: apps/frontend/src/tenant/features/students/components/studentFormTabs.ts
+Basename: studentFormTabs
+Exports: normalizeStudentFormModalTab, resolveStudentFormModalTabs
+
+File: apps/frontend/src/tenant/features/students/components/studentWorkColumnCell.tsx
+Basename: studentWorkColumnCell
+Exports: renderStudentWorkColumnValue
+
+File: apps/frontend/src/tenant/features/students/components/studentsListCustomColumns.ts
+Basename: studentsListCustomColumns
+Exports: formatStudentsListContentCustomValue, studentCustomFieldKeyFromColumn
+
+File: apps/frontend/src/tenant/features/students/components/studentsListTypes.ts
+Basename: studentsListTypes
+Exports: StudentsListContentSortField, StudentsListContentMessagingRecipient, StudentsListCardsProps, StudentsListContentTableProps, StudentsListViewsProps
+
+File: apps/frontend/src/tenant/features/students/components/studentsListVisibleColumns.ts
+Basename: studentsListVisibleColumns
+Exports: getStudentVisibleWorkColumns, toStudentsListContentSortField
+
+File: apps/frontend/src/tenant/features/students/hooks/studentFormHandlers.ts
+Basename: studentFormHandlers
+Exports: isStudentCreate, buildContactSelectPatch, resolveStudentGrForSave
+
+File: apps/frontend/src/tenant/features/students/hooks/studentFormValidation.ts
+Basename: studentFormValidation
+Exports: DUPLICATE_ERROR_KEYS, StudentValidationContext, validateStudentDraft, prepareStudentForSave, buildStudentContactExcludeIds
+
+File: apps/frontend/src/tenant/features/students/hooks/studentSetupConfigApi.ts
+Basename: studentSetupConfigApi
+Exports: setStudentPreferencesMemory, fetchStudentPreferences, saveStudentPreferencesAsync, getStudentSettingsMemoryFallback
+
+File: apps/frontend/src/tenant/features/students/hooks/studentsListQueryBuilders.ts
+Basename: studentsListQueryBuilders
+Exports: StudentsPaginatedParams, buildStudentsPageUrl, studentsListQueryKeyParams, studentsPaginatedQueryKey, sameStudentsListFilters
+
+File: apps/frontend/src/tenant/features/students/hooks/studentsPageOverlaysTypes.ts
+Basename: studentsPageOverlaysTypes
+Exports: StudentsPageOverlaysProps, StudentsWorkOverlayInteractions
+
+File: apps/frontend/src/tenant/features/students/hooks/studentsSelectionTargets.ts
+Basename: studentsSelectionTargets
+Exports: StudentsSelectionTargets, computeStudentsSelectionTargets
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/tenant/features/students/hooks/studentsSetupDeletePreflight.ts
+Basename: studentsSetupDeletePreflight
+Exports: StudentsFieldsDraftSnapshot
+
+File: apps/frontend/src/tenant/features/students/hooks/studentsSetupPanelSnapshots.ts
+Basename: studentsSetupPanelSnapshots
+Exports: studentsFieldsSetupSnapshot
+
+File: apps/frontend/src/tenant/features/students/hooks/studentsWorkDrillDown.ts
+Basename: studentsWorkDrillDown
+Exports: STUDENTS_WORK_DRILLDOWN_EVENT, StudentsWorkDrillDown, applyStudentsWorkDrillDown, consumeStudentsWorkDrillDown
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/tenant/features/students/hooks/useStudentLookups.ts
+Basename: useStudentLookups
+Exports: STUDENTS_LOOKUPS_QUERY_KEY, useStudentLookupsQuery, useStudentLookupMutation
+
+File: apps/frontend/src/tenant/features/students/hooks/useStudentSetupConfig.ts
+Basename: useStudentSetupConfig
+Exports: STUDENTS_PREFERENCES_QUERY_KEY, useStudentPreferencesQuery, useStudentPreferencesMutation, useComposedStudentsSettings
+
+File: apps/frontend/src/tenant/features/students/hooks/useStudentsAnalyticsQueries.ts
+Basename: useStudentsAnalyticsQueries
+Exports: useStudentNextGrNumber, useStudentsMetrics, useStudentsWidgetAggregates
+
+File: apps/frontend/src/tenant/features/students/hooks/useStudentsListQueries.ts
+Basename: useStudentsListQueries
+Exports: useStudentLinkedContactIds, useStudentsByIds
+
+File: apps/frontend/src/tenant/features/students/hooks/useStudentsPageView.ts
+Basename: useStudentsPageView
+Exports: useStudentsPageController
+
+File: apps/frontend/src/tenant/features/students/hooks/useStudentsPageWorkTierProps.ts
+Basename: useStudentsPageWorkTierProps
+Exports: StudentsWorkTierSource, buildStudentsWorkTierProps
+
+File: apps/frontend/src/tenant/features/teachers/TeachersPage.tsx
+Basename: TeachersPage
+Exports: Teachers
+
+File: apps/frontend/src/tenant/features/teachers/components/TeacherFormSectionShared.tsx
+Basename: TeacherFormSectionShared
+Exports: resolveTeacherFieldLabel, findTeacherTabField
+
+File: apps/frontend/src/tenant/features/teachers/components/TeacherFormSections.tsx
+Basename: TeacherFormSections
+Exports: TeacherStatusOption, TeacherBasicSection, TeacherEmploymentSection
+
+File: apps/frontend/src/tenant/features/teachers/components/TeacherListTypes.ts
+Basename: TeacherListTypes
+Exports: TeacherDeleteTarget, TeacherListProps
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherCardFaceVisibility.ts
+Basename: teacherCardFaceVisibility
+Exports: resolveTeacherCardFaceVisibility
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherDetailFields.ts
+Basename: teacherDetailFields
+Exports: TeacherDetailFieldRow, listTeacherDetailAttributeFields
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherFieldDisplay.ts
+Basename: teacherFieldDisplay
+Exports: resolveTeacherDisplayName, teacherRowIdentity, formatTeacherCustomFieldValue, getTeacherCustomFieldValue, resolveTeacherFieldDisplayText
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherFormDraft.ts
+Basename: teacherFormDraft
+Exports: getInitialTeacherDraft, teacherDraftSnapshot
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherFormSaveFlow.ts
+Basename: teacherFormSaveFlow
+Exports: TeacherSaveFlowInput
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherFormTabs.ts
+Basename: teacherFormTabs
+Exports: TeacherFormTabItem, resolveTeacherFormModalTabs
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherFormValidation.ts
+Basename: teacherFormValidation
+Exports: DUPLICATE_ERROR_KEYS, TeacherDuplicateCheckInput, TeacherValidationContext, validateTeacherDraft, teacherValidationErrorsByField
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherListContentShared.ts
+Basename: teacherListContentShared
+Exports: TeacherListContentProps
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherListVisibleColumns.ts
+Basename: teacherListVisibleColumns
+Exports: getTeacherVisibleWorkColumns, toTeacherListSortField, buildTeacherCustomFieldsById, teacherWorkColumnCellClass, teacherWorkColumnHeadClass
+
+File: apps/frontend/src/tenant/features/teachers/components/teacherWorkColumnCell.tsx
+Basename: teacherWorkColumnCell
+Exports: renderTeacherWorkColumnValue
+
+File: apps/frontend/src/tenant/features/teachers/hooks/teacherSetupConfigApi.ts
+Basename: teacherSetupConfigApi
+Exports: setTeacherPreferencesMemory, fetchTeacherPreferences, saveTeacherPreferencesAsync, getTeacherSettingsMemoryFallback
+
+File: apps/frontend/src/tenant/features/teachers/hooks/teachersListQueryBuilders.ts
+Basename: teachersListQueryBuilders
+Exports: TeachersPaginatedParams, buildTeachersPageUrl, teachersListQueryKeyParams, teachersPaginatedQueryKey, sameTeachersListFilters
+
+File: apps/frontend/src/tenant/features/teachers/hooks/teachersPageOverlaysTypes.ts
+Basename: teachersPageOverlaysTypes
+Exports: TeachersPageOverlaysProps, TeachersWorkOverlayInteractions
+
+File: apps/frontend/src/tenant/features/teachers/hooks/teachersSelectionTargets.ts
+Basename: teachersSelectionTargets
+Exports: TeachersSelectionTargets, computeTeachersSelectionTargets
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/tenant/features/teachers/hooks/teachersSetupDeletePreflight.ts
+Basename: teachersSetupDeletePreflight
+Exports: TeachersFieldsDraftSnapshot, TeachersSetupDeleteNotify
+
+File: apps/frontend/src/tenant/features/teachers/hooks/teachersSetupPanelSnapshots.ts
+Basename: teachersSetupPanelSnapshots
+Exports: teachersFieldsSetupSnapshot
+
+File: apps/frontend/src/tenant/features/teachers/hooks/teachersWorkDrillDown.ts
+Basename: teachersWorkDrillDown
+Exports: TEACHERS_WORK_DRILLDOWN_EVENT, TeachersWorkDrillDown, applyTeachersWorkDrillDown, consumeTeachersWorkDrillDown
+  -> Has case-insensitive match!
+
+File: apps/frontend/src/tenant/features/teachers/hooks/useTeacherLookups.ts
+Basename: useTeacherLookups
+Exports: TEACHERS_LOOKUPS_QUERY_KEY, useTeacherLookupsQuery, useTeacherLookupMutation
+
+File: apps/frontend/src/tenant/features/teachers/hooks/useTeacherSetupConfig.ts
+Basename: useTeacherSetupConfig
+Exports: TEACHERS_PREFERENCES_QUERY_KEY, useTeacherPreferencesQuery, useTeacherPreferencesMutation, useComposedTeachersSettings
+
+File: apps/frontend/src/tenant/features/teachers/hooks/useTeachersPageView.ts
+Basename: useTeachersPageView
+Exports: useTeachersPageController
+
+File: apps/frontend/src/tenant/features/teachers/hooks/useTeachersPageWorkTierProps.ts
+Basename: useTeachersPageWorkTierProps
+Exports: TeachersWorkTierSource, buildTeachersWorkTierProps
+
+File: apps/frontend/src/tenant/features/teachers/hooks/useTeachersQueries.ts
+Basename: useTeachersQueries
+Exports: useTeacherLinkedContactIds, useTeachersByIds, useTeacherNextEmployeeId, useTeachersMetrics, useTeachersWidgetAggregates
+
+File: apps/frontend/src/tenant/features/users/UsersPage.tsx
+Basename: UsersPage
+Exports: Users
+
+File: apps/frontend/src/tenant/features/users/components/AddUserModalFieldHelpers.tsx
+Basename: AddUserModalFieldHelpers
+Exports: FieldError, Label
+
+File: apps/frontend/src/tenant/features/users/components/AddUserModalRoleCard.tsx
+Basename: AddUserModalRoleCard
+Exports: RoleCard
+
+File: apps/frontend/src/tenant/features/users/components/AddUserModalStep1.tsx
+Basename: AddUserModalStep1
+Exports: Step1
+
+File: apps/frontend/src/tenant/features/users/components/AddUserModalStep2.tsx
+Basename: AddUserModalStep2
+Exports: Step2
+
+File: apps/frontend/src/tenant/features/users/components/AddUserModalStep3.tsx
+Basename: AddUserModalStep3
+Exports: Step3
+
+File: apps/frontend/src/tenant/features/users/components/AddUserModalStepIndicator.tsx
+Basename: AddUserModalStepIndicator
+Exports: ADD_USER_MODAL_STEP_DEFS, StepIndicator
+
+File: apps/frontend/src/tenant/features/users/components/RolesPermCell.tsx
+Basename: RolesPermCell
+Exports: PermCell
+
+File: apps/frontend/src/tenant/features/users/components/UserBadges.tsx
+Basename: UserBadges
+Exports: UserRoleBadge, UserStatusBadge, ActivityActionBadge
+
+File: apps/frontend/src/tenant/features/users/components/addUserModalTypes.ts
+Basename: addUserModalTypes
+Exports: AddUserFormValue, AddUserFormState, AddUserFormErrors, AddUserFormDispatch, AddUserStepProps
+
+File: apps/frontend/src/tenant/features/users/components/userWorkColumnCell.tsx
+Basename: userWorkColumnCell
+Exports: renderUserWorkColumnValue
+
+File: apps/frontend/src/tenant/features/users/hooks/useUserSetupConfig.ts
+Basename: useUserSetupConfig
+Exports: USERS_PREFERENCES_QUERY_KEY, useUserPreferencesQuery, useUserPreferencesMutation, useComposedUsersSettings
+
+File: apps/frontend/src/tenant/features/users/hooks/useUsersListQueries.ts
+Basename: useUsersListQueries
+Exports: useUsersPaginated
+
+File: apps/frontend/src/tenant/features/users/hooks/userSetupConfigApi.ts
+Basename: userSetupConfigApi
+Exports: setUserFieldConfigMemory, setUserPreferencesMemory, getUserSettingsMemoryFallback
+
+File: apps/frontend/src/tenant/features/users/hooks/usersSetupPanelSnapshots.ts
+Basename: usersSetupPanelSnapshots
+Exports: usersFieldsSetupSnapshot
+
+File: apps/frontend/src/tenant/pages/auth/loginRememberEmail.ts
+Basename: loginRememberEmail
+Exports: REMEMBER_EMAIL_KEY, readRememberedLoginEmail, readRememberMeEnabled, persistRememberedLoginEmail

@@ -2,7 +2,7 @@ import type { SystemUser } from "@mms/shared";
 import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { useTranslation } from "@/hooks/useTranslation";
-import { UsersListRowActions } from "@/tenant/features/users/components/UsersListRowActions";
+import { UsersRowActions } from "@/tenant/features/users/components/UsersRowActions";
 
 export interface UserCardActionsProps {
   user: SystemUser;
@@ -39,7 +39,7 @@ export function UserCardActions({
             ariaLabel={t("users.actionView", { name: user.name })}
             onClick={() => onView(user)}
           />
-          <UsersListRowActions
+          <UsersRowActions
             user={user}
             canWrite={canWrite}
             canDelete={canDelete}

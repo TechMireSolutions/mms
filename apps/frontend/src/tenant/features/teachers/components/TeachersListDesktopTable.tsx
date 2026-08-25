@@ -3,15 +3,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
-import { WORK_STICKY_HEAD } from "@/components/ui/formStyles";
 import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import {
   Table,
   TableBody,
   TableCell,
-  TableRow,
 } from "@/components/ui/table";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { UserAvatar } from "@/components/ui/UserAvatar";
@@ -26,7 +23,6 @@ import {
   getTeacherVisibleWorkColumns,
   teacherWorkColumnCellClass,
   teacherWorkColumnHeadClass,
-  toTeacherListSortField,
 } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
 import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import { renderTeacherWorkColumnValue } from "@/tenant/features/teachers/components/teacherWorkColumnCell";

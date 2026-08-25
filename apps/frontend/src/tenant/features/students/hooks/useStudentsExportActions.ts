@@ -8,7 +8,7 @@ import {
 } from "@mms/shared";
 import { startServerStudentsCsvExport } from "@/lib/backgroundJobs/startServerStudentsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
-import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 import type { StudentsQuickFilter } from "@mms/shared";
 import { useStudentsCrudNotify } from "@/tenant/features/students/hooks/useStudentsCrudNotify";
 
@@ -21,7 +21,7 @@ interface UseStudentsExportActionsOptions {
   filterStatus: string[];
   filterGender: string;
   quickFilter: StudentsQuickFilter;
-  sortField: StudentListSortField | null;
+  sortField: StudentsListContentSortField | null;
   sortDir: "asc" | "desc";
   viewingDeleted: boolean;
   selectedIds: string[];

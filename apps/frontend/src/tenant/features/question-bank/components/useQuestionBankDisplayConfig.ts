@@ -31,7 +31,7 @@ export function useQuestionBankDisplayConfig(config: QuestionBankConfig) {
   return { difficultyConfig, typeConfig };
 }
 
-export function buildQuestionBankListMetaFields(
+export function buildQuestionsListMetaFields(
   config: QuestionBankConfig,
   isColumnVisible?: (key: string) => boolean,
 ) {

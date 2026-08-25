@@ -55,6 +55,7 @@ export function useHasanatCardsPageController() {
   const [configSubTab, setConfigSubTab] = useState<string>('denominations');
   const [showDeleted, setShowDeleted] = useState(false);
   const [createDistributeKey, setCreateDistributeKey] = useState(0);
+  const [activeDistribution, setActiveDistribution] = useState<any>(null);
 
   const denomsResult = useHasanatDenoms();
   const batchesResult = useHasanatBatches();
@@ -158,6 +159,8 @@ export function useHasanatCardsPageController() {
   };
 
   return {
+    activeDistribution,
+    setActiveDistribution,
     t,
     canWrite,
     canDelete,

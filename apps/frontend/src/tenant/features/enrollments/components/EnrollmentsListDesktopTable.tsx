@@ -1,6 +1,5 @@
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import {
   Table,

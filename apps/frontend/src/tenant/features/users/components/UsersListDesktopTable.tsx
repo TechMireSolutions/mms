@@ -2,18 +2,16 @@ import type { JSX } from 'react';
 import { motion } from 'framer-motion';
 import type { SystemUser } from '@mms/shared';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
 import {
   Table,
   TableBody,
   TableCell,
-  TableRow,
 } from '@/components/ui/table';
 import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useListRowMotion } from '@/hooks/useListRowMotion';
 import { UsersListAvatar } from '@/tenant/features/users/components/UsersListAvatar';
-import { UsersListRowActions } from '@/tenant/features/users/components/UsersListRowActions';
+import { UsersRowActions } from '@/tenant/features/users/components/UsersRowActions';
 import { renderUserWorkColumnValue } from '@/tenant/features/users/components/userWorkColumnCell';
 
 interface UsersListDesktopTableProps {
@@ -133,7 +131,7 @@ export function UsersListDesktopTable({
               </TableCell>
             )}
             <TableCell className="px-3 py-2.5 text-end">
-              <UsersListRowActions
+              <UsersRowActions
                 user={user}
                 canWrite={canWrite}
                 canDelete={canDelete}

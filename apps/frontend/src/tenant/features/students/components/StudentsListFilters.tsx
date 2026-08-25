@@ -5,11 +5,11 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { StudentsFilterMenuButton } from "@/tenant/features/students/components/StudentsFilterMenuButton";
-import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 import {
   getStudentVisibleWorkColumns,
-  toStudentListSortField,
-} from "@/tenant/features/students/components/studentListVisibleColumns";
+  toStudentsListContentSortField,
+} from "@/tenant/features/students/components/studentsListVisibleColumns";
 import { STUDENTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/students/hooks/useStudentsKeyboardShortcuts";
 
 interface StudentsListFiltersProps {
@@ -28,12 +28,12 @@ interface StudentsListFiltersProps {
   activeFilterCount: number;
   columnLayout: ReturnType<typeof useStudentColumnLayout>;
   viewMode: WorkDirectoryViewMode;
-  sortField: StudentListSortField | null;
+  sortField: StudentsListContentSortField | null;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;
   onGenderChange: (value: string) => void;
-  onSortChange: (field: StudentListSortField) => void;
+  onSortChange: (field: StudentsListContentSortField) => void;
   onToggleDeleted: () => void;
   onClearFilters: () => void;
   shownCount?: number;
@@ -71,10 +71,10 @@ export function StudentsListFilters({
     () =>
       getStudentVisibleWorkColumns(columnLayout.columnRegistry, columnLayout.isColumnVisible)
         .map((col) => {
-          const field = toStudentListSortField(col.key);
+          const field = toStudentsListContentSortField(col.key);
           return field ? { field, label: col.label } : null;
         })
-        .filter((option): option is { field: StudentListSortField; label: string } => option !== null),
+        .filter((option): option is { field: StudentsListContentSortField; label: string } => option !== null),
     [columnLayout],
   );
 

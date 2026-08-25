@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { normalizeModuleTierTabId } from "@mms/shared";
-import { useUiPreference } from "@/lib/uiStateStore";
+import { useUiPreference } from "@/lib/useUiStateStore";
 
 /**
  * Tab state synced to backend UI state so module navigation does not reset the active tier across devices.

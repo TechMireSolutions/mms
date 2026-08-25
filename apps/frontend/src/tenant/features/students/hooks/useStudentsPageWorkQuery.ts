@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { STUDENTS_MODULE_MANIFEST, type Student, type StudentsQuickFilter } from "@mms/shared";
 import { useStudentsContractList } from "@/tenant/features/students/hooks/useStudentsTsrHooks";
-import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 
-const SORT_FIELD_TO_API: Record<StudentListSortField, string> = {
+const SORT_FIELD_TO_API: Record<StudentsListContentSortField, string> = {
   name: "name",
   dob: "dob",
   status: "status",
@@ -20,7 +20,7 @@ type StudentsPageWorkQueryInput = {
   studentFilterStatus: string[];
   studentFilterGender: string;
   quickFilter: StudentsQuickFilter;
-  sortField: StudentListSortField | null;
+  sortField: StudentsListContentSortField | null;
   sortDir: "asc" | "desc";
   viewingDeleted: boolean;
 };

@@ -23,7 +23,7 @@ export function ContactsPreferencesGeneralSection({
   const { t } = useTranslation();
 
   return (
-    <SectionCard title={t("contacts.setup.generalPreferences")} icon={Users}>
+    <SectionCard title={t("contacts.setup.generalPreferences")} icon={Users} headingLevel={2}>
       <div className="space-y-1">
         <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>

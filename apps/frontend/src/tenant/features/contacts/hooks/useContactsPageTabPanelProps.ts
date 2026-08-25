@@ -1,6 +1,5 @@
 import { useMemo, type ComponentProps } from "react";
-import type { ContactsPageTabPanelProps } from "@/tenant/features/contacts/components/ContactsPageTabPanel";
-import type ContactCards from "@/tenant/features/contacts/components/ContactCards";
+import type ContactsListCards from "@/tenant/features/contacts/components/ContactsListCards";
 import type ContactsListDesktopTable from "@/tenant/features/contacts/components/ContactsListDesktopTable";
 import type { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
 import type { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
@@ -50,12 +49,14 @@ export function useContactsPageTabPanelProps({
   canDelete: boolean;
   canEditSetup: boolean;
   tableColumns: ContactsColumnConfig[];
-  commonDirectoryProps: ComponentProps<typeof ContactCards>;
+  commonDirectoryProps: ComponentProps<typeof ContactsListCards>;
   tableProps: ComponentProps<typeof ContactsListDesktopTable>;
   handleBulkExport: () => void | Promise<void>;
-}): ContactsPageTabPanelProps {
+}): any {
   return useMemo(
-    (): ContactsPageTabPanelProps => ({
+    () => ({
+      workTierProps: {
+
       effectiveTab,
       search: directory.search,
       onSearchChange: directory.setSearch,
@@ -105,9 +106,13 @@ export function useContactsPageTabPanelProps({
       useServerWork: directory.useServerWork,
       workPageData: directory.workPageData,
       onPageChange: directory.setListPage,
-      canWrite,
-      canEditSetup,
-      onImport: actions.handleImport,
+      canWrite
+      },
+      setupTierProps: {
+        canWrite,
+        canEditSetup,
+        onImport: actions.handleImport
+      }
     }),
     [
       effectiveTab,

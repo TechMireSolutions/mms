@@ -36,6 +36,7 @@ export function useFinancePageController() {
   );
   const [activeTab, setActiveTab] = usePersistedTabState<string>("finance_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
+  const [activePayment, setActivePayment] = useState<any>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const invoicesResult = useFinanceInvoicesPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
   const paymentsResult = useFinancePaymentsPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
@@ -155,6 +156,8 @@ export function useFinancePageController() {
   };
 
   return {
+    activePayment,
+    setActivePayment,
     t,
     canWrite,
     canDelete,

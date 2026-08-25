@@ -14,7 +14,7 @@ import {
 } from "@mms/shared";
 import type { ContactConfigContextType } from "@/lib/contacts/contactConfigContextTypes";
 import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
-import { useUiPreference } from "@/lib/uiStateStore";
+import { useUiPreference } from "@/lib/useUiStateStore";
 
 /**
  * Builds ContactConfig context value.

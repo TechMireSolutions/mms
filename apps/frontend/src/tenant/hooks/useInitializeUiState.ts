@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { apiJson } from '@/lib/apiClient';
-import { useUiStateStore } from '@/lib/uiStateStore';
+import { useUiStateStore } from '@/lib/useUiStateStore';
 import type { UserUiState } from '@mms/shared';
 
 export function useInitializeUiState() {

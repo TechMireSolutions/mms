@@ -5,10 +5,13 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { TeachersCommandMetrics } from "@/tenant/features/teachers/components/TeachersCommandMetrics";
 import { TeachersPageHeaderActions } from "@/tenant/features/teachers/components/TeachersPageHeaderActions";
 import { TeachersPageOverlays } from "@/tenant/features/teachers/components/TeachersPageOverlays";
-import { TeachersPageTabPanel } from "@/tenant/features/teachers/components/TeachersPageTabPanel";
-import type { useTeachersPageView } from "@/tenant/features/teachers/hooks/useTeachersPageView";
+import { AnimatePresence } from "framer-motion";
+import { TeachersReportsTier } from "@/tenant/features/teachers/components/TeachersReportsTier";
+import { TeachersSetupTier } from "@/tenant/features/teachers/components/TeachersSetupTier";
+import { TeachersWorkTier } from "@/tenant/features/teachers/components/TeachersWorkTier";
+import type { useTeachersPageController } from "@/tenant/features/teachers/hooks/useTeachersPageController";
 
-type TeachersPageViewProps = ReturnType<typeof useTeachersPageView>;
+type TeachersPageViewProps = ReturnType<typeof useTeachersPageController>;
 
 /** Presentational Teachers page shell — Work / Reports / Setup + create form. */
 export function TeachersPageView({
@@ -55,7 +58,15 @@ export function TeachersPageView({
         onTabChange={setActiveTab}
         panelIdPrefix="teachers-tab"
       >
-        <TeachersPageTabPanel {...tabPanelProps} />
+        <AnimatePresence mode="wait">
+          {activeTab === "work" ? (
+            <TeachersWorkTier {...tabPanelProps.workTierProps} />
+          ) : activeTab === "reports" ? (
+            <TeachersReportsTier />
+          ) : activeTab === "setup" ? (
+            <TeachersSetupTier />
+          ) : null}
+        </AnimatePresence>
       </ResponsiveAccordionTabs>
 
       <TeachersPageOverlays {...pageOverlaysProps} />

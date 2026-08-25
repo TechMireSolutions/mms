@@ -1,6 +1,5 @@
 import type React from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
 import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { Checkbox } from '@/components/ui/checkbox';

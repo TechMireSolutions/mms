@@ -28,6 +28,7 @@ export interface ExaminationsListContentProps {
   onToggleSelectAll: (checked: boolean) => void;
   onToggleSelectedExam: (id: string, checked: boolean) => void;
   onTrashAction: (id: string) => void;
+  onRowClick?: (id: string) => void;
 }
 
 export function getExamMeta(

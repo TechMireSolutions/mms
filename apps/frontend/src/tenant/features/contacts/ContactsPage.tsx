@@ -1,8 +1,8 @@
 import { ContactsPageView } from "@/tenant/features/contacts/components/ContactsPageView";
-import { useContactsPageView } from "@/tenant/features/contacts/hooks/useContactsPageController";
+import { useContactsPageController } from "@/tenant/features/contacts/hooks/useContactsPageController";
 
 function ContactsInner() {
-  const view = useContactsPageView();
+  const view = useContactsPageController();
   return <ContactsPageView {...view} />;
 }
 

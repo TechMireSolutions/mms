@@ -63,6 +63,7 @@ export function useQuestionBankPageController() {
   const [configSubTab, setConfigSubTab] = usePersistedTabState<string>('question_bank_config_subtab', 'preferences');
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [editQuestion, setEditQuestion] = useState<QuestionBankQuestion | null>(null);
+  const [activeQuestion, setActiveQuestion] = useState<QuestionBankQuestion | null>(null);
   const [filteredCount, setFilteredCount] = useState(0);
   const [paperBuilderSession, setPaperBuilderSession] = useState(0);
   const [paperBuilderOpen, setPaperBuilderOpen] = useState(false);
@@ -186,6 +187,8 @@ export function useQuestionBankPageController() {
     setShowQuestionModal,
     editQuestion,
     setEditQuestion,
+    activeQuestion,
+    setActiveQuestion,
     filteredCount,
     setFilteredCount,
     paperBuilderSession,

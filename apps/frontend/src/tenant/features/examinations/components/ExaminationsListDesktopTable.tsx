@@ -72,7 +72,14 @@ export function ExaminationsListDesktopTable(props: ExaminationsListDesktopTable
           const isSelected = selectedIds.includes(exam.id);
 
           return (
-            <motion.tr key={exam.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: index * 0.03 }} className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/5" : ""}`}>
+            <motion.tr 
+              key={exam.id} 
+              onClick={() => props.onRowClick?.(exam.id)}
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              transition={{ delay: index * 0.03 }} 
+              className={`hover:bg-muted/50 cursor-pointer transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
+            >
               {canDelete && (
                 <TableCell className="px-3 py-3">
                   <Checkbox

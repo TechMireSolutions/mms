@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import type { Contact, ContactsQuickFilter } from "@mms/shared";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
-import type ContactCards from "@/tenant/features/contacts/components/ContactCards";
+import type ContactsListCards from "@/tenant/features/contacts/components/ContactsListCards";
 import type ContactsListDesktopTable from "@/tenant/features/contacts/components/ContactsListDesktopTable";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 
@@ -53,7 +53,7 @@ export interface ContactsWorkTierProps {
   onRetryWork: () => void;
   workContacts: Contact[];
   tableColumns: ContactsWorkTierColumn[];
-  commonDirectoryProps: ComponentProps<typeof ContactCards>;
+  commonDirectoryProps: ComponentProps<typeof ContactsListCards>;
   tableProps: ComponentProps<typeof ContactsListDesktopTable>;
   useServerWork: boolean;
   workPageData?: { page: number; total: number; limit: number; hasMore: boolean } | null;

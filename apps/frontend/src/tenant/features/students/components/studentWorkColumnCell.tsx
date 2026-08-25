@@ -9,11 +9,11 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import {
   renderStudentDobCell,
   renderStudentStatusCell,
-} from "@/tenant/features/students/components/studentListDesktopTableSimpleCells";
+} from "@/tenant/features/students/components/StudentsListDesktopTableSimpleCells";
 import {
-  formatStudentListCustomValue,
+  formatStudentsListContentCustomValue,
   studentCustomFieldKeyFromColumn,
-} from "@/tenant/features/students/components/studentListCustomColumns";
+} from "@/tenant/features/students/components/studentsListCustomColumns";
 
 /** Render a Students Work column value (non-face system or custom:`id`). */
 export function renderStudentWorkColumnValue(
@@ -31,7 +31,7 @@ export function renderStudentWorkColumnValue(
   if (columnKey.startsWith("custom:")) {
     const fieldKey = studentCustomFieldKeyFromColumn(columnKey);
     const raw = fieldKey ? (student as Record<string, unknown>)[fieldKey] : undefined;
-    return formatStudentListCustomValue(raw, t) ?? emptyFallback;
+    return formatStudentsListContentCustomValue(raw, t) ?? emptyFallback;
   }
 
   switch (columnKey) {

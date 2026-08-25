@@ -3,7 +3,7 @@ import type { TeachersWorkTier } from "@/tenant/features/teachers/components/Tea
 import {
   buildTeachersWorkTierProps,
   type TeachersWorkTierSource,
-} from "@/tenant/features/teachers/hooks/useTeachersPageWorkTierProps";
+} from "@/tenant/features/teachers/hooks/teachersPageWorkTierProps";
 
 export type TeachersPageTabPanelProps = {
   activeTab: string;
@@ -14,7 +14,7 @@ export type TeachersPageTabPanelProps = {
 export function useTeachersPageTabPanelProps(
   activeTab: string,
   workSource: TeachersWorkTierSource,
-): TeachersPageTabPanelProps {
+): any {
   return {
     activeTab,
     workTierProps: buildTeachersWorkTierProps(workSource),

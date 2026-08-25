@@ -9,6 +9,7 @@ import { ExaminationsPageActions } from '@/tenant/features/examinations/componen
 import { ExaminationsReportsTier } from '@/tenant/features/examinations/components/ExaminationsReportsTier';
 import { ExaminationsSetupTier } from '@/tenant/features/examinations/components/ExaminationsSetupTier';
 import { ExaminationsWorkTier } from '@/tenant/features/examinations/components/ExaminationsWorkTier';
+import { ExaminationDetail } from '@/tenant/features/examinations/components/ExaminationDetail';
 import { useExaminationsPageController } from '@/tenant/features/examinations/hooks/useExaminationsPageController';
 
 /**
@@ -91,9 +92,29 @@ export default function Examinations(): JSX.Element {
                   c.setShowExamForm(true);
                 }}
                 onFilteredCountChange={c.setFilteredCount}
+                onRowClick={(id) => {
+                  const e = c.exams.find((ex: any) => ex.id === id);
+                  if (e) c.setActiveExam(e);
+                }}
               />
             )}
           </motion.div>
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {c.activeExam && (
+            <ExaminationDetail
+              exam={c.activeExam}
+                            onClose={() => c.setActiveExam(null)}
+              onEdit={(exam) => {
+                c.setActiveExam(null);
+                c.setEditExam(exam);
+                c.setShowExamForm(true);
+              }}
+              canDelete={c.canDelete}
+              onRestore={c.handleRestoreExam}
+            />
+          )}
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 

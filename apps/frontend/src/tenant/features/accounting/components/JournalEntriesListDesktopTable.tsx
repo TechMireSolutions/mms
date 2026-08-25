@@ -1,7 +1,6 @@
 import React from "react";
 import { formatDate } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
   TableBody,

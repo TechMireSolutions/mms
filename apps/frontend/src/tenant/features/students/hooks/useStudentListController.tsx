@@ -1,16 +1,16 @@
 import { type Student } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 
-interface UseStudentListControllerOptions {
+interface UseStudentsListContentControllerOptions {
   students: Student[];
   onSelectOne: (id: string) => void;
   onSelectAll: (pageIds: string[]) => void;
   allSelected: boolean;
   someSelected: boolean;
   isColumnVisible: (key: string) => boolean;
-  onSort: (field: StudentListSortField) => void;
+  onSort: (field: StudentsListContentSortField) => void;
   openComposer: ReturnType<typeof useMessageComposerState>["openComposer"];
   canWriteMessaging: boolean;
 }
@@ -25,10 +25,10 @@ export function useStudentListController({
   onSort,
   openComposer,
   canWriteMessaging,
-}: UseStudentListControllerOptions) {
+}: UseStudentsListContentControllerOptions) {
   const { t } = useTranslation();
 
-  const handleSort = (field: StudentListSortField) => {
+  const handleSort = (field: StudentsListContentSortField) => {
     onSort(field);
   };
 

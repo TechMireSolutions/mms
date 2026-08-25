@@ -1,12 +1,12 @@
 import type { Student } from "@mms/shared";
 import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getStudentVisibleWorkColumns } from "@/tenant/features/students/components/studentListVisibleColumns";
+import { getStudentVisibleWorkColumns } from "@/tenant/features/students/components/studentsListVisibleColumns";
 import { renderStudentWorkColumnValue } from "@/tenant/features/students/components/studentWorkColumnCell";
-import type { StudentListCardsProps } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsListCardsProps } from "@/tenant/features/students/components/studentsListTypes";
 
 type StudentCardMetadataProps = Pick<
-  StudentListCardsProps,
+  StudentsListCardsProps,
   "statusBadgeConfig" | "isColumnVisible" | "columnRegistry" | "sessions"
 > & {
   student: Student;

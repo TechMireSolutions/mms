@@ -11,7 +11,7 @@ import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusB
 import { TableCell } from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CategoryColorChip } from '@/tenant/features/question-bank/components/CategoryColorChip';
-import { QuestionBankRowActions } from '@/tenant/features/question-bank/components/QuestionBankRowActions';
+import { QuestionsRowActions } from '@/tenant/features/question-bank/components/QuestionsRowActions';
 import type { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 
 type QuestionBankConfig = ReturnType<typeof useQuestionBankConfig>;
@@ -31,6 +31,7 @@ export interface QuestionBankTableRowProps {
   onEditQuestion: (question: Question) => void;
   onTrashAction: (id: string) => void;
   onToggleSelected: (id: string, checked: boolean) => void;
+  onRowClick?: (id: string) => void;
 }
 
 export function QuestionBankTableRow({
@@ -48,6 +49,7 @@ export function QuestionBankTableRow({
   onEditQuestion,
   onTrashAction,
   onToggleSelected,
+  onRowClick,
 }: QuestionBankTableRowProps): JSX.Element {
   const { t } = useTranslation();
   const getCategory = (id: string) => config.categories.find((category) => category.id === id);
@@ -59,10 +61,11 @@ export function QuestionBankTableRow({
 
   return (
     <motion.tr
+      onClick={() => onRowClick?.(question.id)}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ delay: questionIndex * 0.03 }}
-      className={`group transition-colors hover:bg-muted/20 ${isSelected ? "bg-primary/5" : ""}`}
+      className={`group transition-colors hover:bg-muted/50 cursor-pointer ${isSelected ? "bg-primary/5" : ""}`}
     >
       {canDelete && (
         <TableCell className="px-3 py-3">
@@ -112,7 +115,7 @@ export function QuestionBankTableRow({
         </TableCell>
       )}
       <TableCell className="px-4 py-3 text-end">
-        <QuestionBankRowActions
+        <QuestionsRowActions
           question={question}
           canWrite={canWrite}
           canDelete={canDelete}

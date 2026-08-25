@@ -1,0 +1,144 @@
+import { useMemo, type JSX } from "react";
+import {
+  CONTACT_CARD_FACE_COLUMN_IDS,
+  getVisibleWorkColumns,
+  type Contact,
+} from "@mms/shared";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import { buildContactsMap } from "@/lib/contacts/contactI18n";
+import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
+import { useTranslation } from "@/hooks/useTranslation";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
+import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
+import { ContactCardItem } from "@/tenant/features/contacts/components/ContactCardItem";
+
+interface ContactsListCardsProps {
+  contacts: Contact[];
+  selected: (string | number)[];
+  onSelect: (id: string | number) => void;
+  onView?: (contact: Contact) => void;
+  onEdit: (contact: Contact) => void;
+  onDelete: (id: string | number) => void;
+  onRestore?: (id: string | number) => void;
+  showArchived?: boolean;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
+  allContacts?: Contact[];
+  canWrite?: boolean;
+  canDelete?: boolean;
+  columns?: ContactsColumnConfig[];
+  onSelectAll?: () => void;
+  allSelected?: boolean;
+  someSelected?: boolean;
+}
+
+/** Mobile-first card directory with dynamic, config-driven preferences. */
+export default function ContactsListCards({
+  contacts,
+  selected,
+  onSelect,
+  onView,
+  onEdit,
+  onDelete,
+  onRestore,
+  showArchived = false,
+  onWhatsApp,
+  onSms,
+  onEmail,
+  allContacts = [],
+  canWrite = false,
+  canDelete = false,
+  columns = [],
+  onSelectAll,
+  allSelected = false,
+  someSelected = false,
+}: ContactsListCardsProps): JSX.Element {
+  const { t } = useTranslation();
+  const {
+    prefs,
+    countryCodesMap,
+    countryCodes,
+    columnRegistry,
+    isColumnVisible: isRegistryColumnVisible,
+  } = useContactConfig();
+
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
+
+  const isColumnVisible = useMemo(() => {
+    if (columns.length > 0) {
+      const visibleIds = new Set(columns.map((col) => col.id));
+      return (id: string) => visibleIds.has(id);
+    }
+    return isRegistryColumnVisible;
+  }, [columns, isRegistryColumnVisible]);
+
+  const otherColumns = useMemo(() => {
+    const metaColumns = getVisibleWorkColumns(columnRegistry, isColumnVisible, {
+      excludeFace: CONTACT_CARD_FACE_COLUMN_IDS,
+    });
+    if (columns.length > 0) {
+      const metaKeys = new Set(metaColumns.map((col) => col.key));
+      return columns.filter((col) => metaKeys.has(col.id));
+    }
+    return metaColumns.map(
+      (col): ContactsColumnConfig => ({
+        id: col.key,
+        label: col.label,
+      }),
+    );
+  }, [columnRegistry, columns, isColumnVisible]);
+
+  const pageCountLabel = formatDirectoryPageCountLabel(contacts.length, t, {
+    singular: "contacts.form.contact",
+    plural: "contacts.table.contacts",
+  });
+
+  return (
+    <>
+      {onSelectAll && contacts.length > 0 ? (
+        <DirectoryCardsSelectAllBar
+          checkboxId="contacts-select-all-cards"
+          allSelected={allSelected}
+          someSelected={someSelected}
+          onSelectAll={onSelectAll}
+          selectLabel={t("contacts.table.selectAll")}
+          deselectLabel={t("common.deselect")}
+          selectedCount={selected.length}
+          selectedCountLabel={t("contacts.selectedCount", { count: selected.length })}
+          pageCountLabel={pageCountLabel}
+        />
+      ) : null}
+
+      <DirectoryCardsGrid>
+        {contacts.map((contact) => (
+          <ContactCardItem
+            key={contact.id}
+            contact={contact}
+            isSelected={selectedSet.has(contact.id)}
+            prefs={prefs}
+            countryCodesMap={countryCodesMap}
+            countryCodes={countryCodes}
+            contactsMap={contactsMap}
+            allContacts={allContacts}
+            otherColumns={otherColumns}
+            isColumnVisible={isColumnVisible}
+            showArchived={showArchived}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            onSelect={onSelect}
+            onView={onView}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onRestore={onRestore}
+            onWhatsApp={onWhatsApp}
+            onSms={onSms}
+            onEmail={onEmail}
+          />
+        ))}
+      </DirectoryCardsGrid>
+    </>
+  );
+}

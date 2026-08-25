@@ -1,7 +1,7 @@
 import type { Student, StudentsListPageResult, StudentsQuickFilter } from "@mms/shared";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
-import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
+import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/studentsSelectionTargets";
 import type { StudentsWorkOverlayInteractions } from "@/tenant/features/students/hooks/studentsPageOverlaysTypes";
 
@@ -54,9 +54,9 @@ export interface StudentsWorkTierProps {
   onBulkExport: () => void | Promise<void>;
   /** Disables the bulk status action while the status mutation is pending. */
   bulkStatusPending?: boolean;
-  sortField: StudentListSortField | null;
+  sortField: StudentsListContentSortField | null;
   sortDir: "asc" | "desc";
-  onServerSort: (field: StudentListSortField) => void;
+  onServerSort: (field: StudentsListContentSortField) => void;
   workOverlays: StudentsWorkOverlayInteractions;
 }
 

@@ -1,29 +1,23 @@
 import { AnimatePresence } from "framer-motion";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
-import { WORK_STICKY_HEAD } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
-  TableRow,
 } from "@/components/ui/table";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
-import { StudentListDesktopTableRow } from "@/tenant/features/students/components/StudentListDesktopTableRow";
+import { StudentsListDesktopTableRow } from "@/tenant/features/students/components/StudentsListDesktopTableRow";
 import type {
-  StudentListSortField,
-  StudentListTableProps,
-} from "@/tenant/features/students/components/StudentListContentTypes";
+  StudentsListContentSortField,
+  StudentsListContentTableProps,
+} from "@/tenant/features/students/components/studentsListTypes";
 import {
   getStudentVisibleWorkColumns,
-  toStudentListSortField,
-} from "@/tenant/features/students/components/studentListVisibleColumns";
+} from "@/tenant/features/students/components/studentsListVisibleColumns";
 
 type StudentsListDesktopTableProps = Pick<
-  StudentListTableProps,
+  StudentsListContentTableProps,
   | "paginatedStudents"
   | "sessions"
   | "selectedIds"
@@ -78,7 +72,7 @@ export function StudentsListDesktopTable({
 }: StudentsListDesktopTableProps) {
   const { t } = useTranslation();
   const visibleColumns = getStudentVisibleWorkColumns(columnRegistry, isColumnVisible);
-  const handleSort = (field: string) => onSort(field as StudentListSortField);
+  const handleSort = (field: string) => onSort(field as StudentsListContentSortField);
 
   const pageCountLabel = formatDirectoryPageCountLabel(paginatedStudents.length, t, {
     singular: "students.form.student",
@@ -107,7 +101,7 @@ export function StudentsListDesktopTable({
       <TableBody className="divide-y divide-border/50">
         <AnimatePresence>
           {paginatedStudents.map((studentRow, rowIndex) => (
-            <StudentListDesktopTableRow
+            <StudentsListDesktopTableRow
               key={String(studentRow.id)}
               studentRow={studentRow}
               rowIndex={rowIndex}

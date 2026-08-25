@@ -14,7 +14,7 @@ describe('syncContactColumnRegistryWithFields', () => {
     expect(next.find((col) => col.key === 'phone')?.enabled).toBe(false);
   });
 
-  it('restores default enabled when field/tab become active again', () => {
+  it('preserves user preference for column visibility when field is active', () => {
     const disabledPhone = DEFAULT_COLUMN_REGISTRY.map((col) =>
       col.key === 'phone' ? { ...col, enabled: false } : col,
     );
@@ -25,6 +25,6 @@ describe('syncContactColumnRegistryWithFields', () => {
       },
       ['phones', 'custom'],
     );
-    expect(next.find((col) => col.key === 'phone')?.enabled).toBe(true);
+    expect(next.find((col) => col.key === 'phone')?.enabled).toBe(false);
   });
 });

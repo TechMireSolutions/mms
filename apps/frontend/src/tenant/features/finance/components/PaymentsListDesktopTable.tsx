@@ -4,7 +4,6 @@ import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
