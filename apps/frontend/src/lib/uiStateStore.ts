@@ -44,7 +44,7 @@ export const useUiStateStore = create<UiStateStore>((set, get) => ({
       }
       
       try {
-        await apiJson('/api/me/ui-state', { 
+        await apiJson('/api/auth/me/ui-state', { 
           method: 'PATCH',
           body: JSON.stringify({ state: updatesToSend }) 
         });

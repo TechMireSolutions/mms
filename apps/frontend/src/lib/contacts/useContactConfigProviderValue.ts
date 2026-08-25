@@ -7,10 +7,14 @@ import {
   DEFAULT_FORM_TABS,
   normalizeContactPreferences,
   INITIAL_FIELD_SEED,
+  syncContactColumnRegistryWithFields,
+  resolveContactEnabledTabIds,
+  CONTACTS_MODULE_MANIFEST,
   type ColumnRegistryEntry,
 } from "@mms/shared";
 import type { ContactConfigContextType } from "@/lib/contacts/contactConfigContextTypes";
 import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
+import { useUiPreference } from "@/lib/uiStateStore";
 
 /**
  * Builds ContactConfig context value.
@@ -69,41 +73,55 @@ export function useContactConfigProviderValue(
 
   const prefs = React.useMemo(() => normalizeContactPreferences(rawPrefs), [rawPrefs]);
 
-  const [columnRegistry, setColumnRegistry] = React.useState<ColumnRegistryEntry[]>(
-    config?.columnRegistry?.length ? config.columnRegistry : DEFAULT_COLUMN_REGISTRY
-  );
+  const prefKey = `${CONTACTS_MODULE_MANIFEST.moduleId}.table.columns`;
+  const [userOverlayRaw, setUserOverlayRaw] = useUiPreference<ColumnRegistryEntry[] | null>(prefKey, null);
+
+  const columnRegistry = React.useMemo(() => {
+    if (userOverlayRaw && userOverlayRaw.length > 0) {
+      return userOverlayRaw;
+    }
+    return config?.columnRegistry?.length ? config.columnRegistry : DEFAULT_COLUMN_REGISTRY;
+  }, [userOverlayRaw, config?.columnRegistry]);
+
+  const syncedColumnRegistry = React.useMemo(() => {
+    return syncContactColumnRegistryWithFields(
+      columnRegistry,
+      resolvedFields,
+      enabledTabs.length > 0 ? enabledTabs : DEFAULT_FORM_TABS.filter(t => t.enabled).map(t => t.key)
+    );
+  }, [columnRegistry, resolvedFields, enabledTabs]);
 
   const updateUserColumnLayout = React.useCallback((layout: ColumnRegistryEntry[]) => {
-    setColumnRegistry(layout);
-  }, []);
+    setUserOverlayRaw(layout);
+  }, [setUserOverlayRaw]);
 
 
 
   const getColumnWidth = React.useCallback((key: string) => {
-    return columnRegistry.find((c) => c.key === key)?.width;
-  }, [columnRegistry]);
+    return syncedColumnRegistry.find((c) => c.key === key)?.width;
+  }, [syncedColumnRegistry]);
 
   const setColumnWidth = React.useCallback((key: string, width: number) => {
-    setColumnRegistry((prev) =>
-      prev.map((c) => (c.key === key ? { ...c, width } : c)),
+    setUserOverlayRaw(
+      columnRegistry.map((c: ColumnRegistryEntry) => (c.key === key ? { ...c, width } : c)),
     );
-  }, []);
+  }, [columnRegistry, setUserOverlayRaw]);
 
   const isColumnVisible = React.useCallback((key: string) => {
-    return columnRegistry.find((c) => c.key === key)?.enabled ?? false;
-  }, [columnRegistry]);
+    return syncedColumnRegistry.find((c) => c.key === key)?.enabled ?? false;
+  }, [syncedColumnRegistry]);
 
   const availableColumns = React.useMemo(() => {
-    return columnRegistry.map((entry) => ({
+    return syncedColumnRegistry.map((entry) => ({
       id: entry.key,
       label: entry.label,
       sortField: entry.sortField,
       width: entry.width,
     }));
-  }, [columnRegistry]);
+  }, [syncedColumnRegistry]);
 
   const visibleColumns = React.useMemo(() => {
-    return columnRegistry
+    return syncedColumnRegistry
       .filter((entry) => entry.enabled)
       .map((entry) => ({
         id: entry.key,
@@ -111,7 +129,7 @@ export function useContactConfigProviderValue(
         sortField: entry.sortField,
         width: entry.width,
       }));
-  }, [columnRegistry]);
+  }, [syncedColumnRegistry]);
 
   const defaultPhoneCountryCode = React.useMemo(
     () => getFallbackCountryCode(prefs, countryCodesMap, countryCodes),
@@ -129,9 +147,7 @@ export function useContactConfigProviderValue(
   return React.useMemo(
     () => ({
       formTabsReady: true,
-      enabledTabIds: enabledTabs.length > 0 
-        ? new Set(enabledTabs) 
-        : new Set(DEFAULT_FORM_TABS.filter((t) => t.enabled).map((t) => t.key)),
+      enabledTabIds: resolveContactEnabledTabIds({ formTabs, enabledTabs }, "admin"),
       requiredTabIds: new Set(requiredTabs),
       fields: resolvedFields,
       formTabs,
@@ -168,7 +184,7 @@ export function useContactConfigProviderValue(
       lookupsLoading,
       lookupsError,
       defaultPhoneCountryCode,
-      columnRegistry,
+      columnRegistry: syncedColumnRegistry,
       availableColumns,
       visibleColumns,
       updateGenders,
@@ -215,7 +231,7 @@ export function useContactConfigProviderValue(
       lookupsLoading,
       lookupsError,
       defaultPhoneCountryCode,
-      columnRegistry,
+      syncedColumnRegistry,
       availableColumns,
       visibleColumns,
       updateGenders,

@@ -5,6 +5,7 @@ import {
 } from './contactTabRegistry.js';
 import { CONTACT_LOCKED_ENABLED_TABS } from './contactEnabledTabs.js';
 import { syncModuleColumnRegistryWithFields } from './moduleColumnRegistrySync.js';
+import { listEnabledCustomContactFormFields } from './contactFormCustomFields.js';
 
 /**
  * Aligns `columnRegistry.enabled` with Setup Fields tab/field enablement.
@@ -23,5 +24,6 @@ export function syncContactColumnRegistryWithFields(
     columnRegistry,
     fields,
     enabledTabIds,
+    listEnabledCustomFields: listEnabledCustomContactFormFields,
   });
 }

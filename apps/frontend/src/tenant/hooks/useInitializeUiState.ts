@@ -11,7 +11,7 @@ export function useInitializeUiState() {
   const { data, isSuccess } = useQuery({
     queryKey: ['me', 'ui-state'],
     queryFn: async () => {
-      const response = await apiJson<{ state: UserUiState }>('/api/me/ui-state');
+      const response = await apiJson<{ state: UserUiState }>('/api/auth/me/ui-state');
       return response.state;
     },
     staleTime: Infinity, // fetch once per session
