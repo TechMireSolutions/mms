@@ -537,9 +537,9 @@ export async function createMessagingTemplateAndCampaign(page: Page): Promise<vo
 
   // New Campaign flow: header button → dropdown → SMS → composer opens in 'pick' step
   // Navigate back to Work tab first so the header "New Campaign" button is visible.
-  await messagingWorkNav
+  await messagingNav
     .getByRole('tab', { name: 'Work', exact: true })
-    .or(messagingWorkNav.getByRole('button', { name: 'Work', exact: true }))
+    .or(messagingNav.getByRole('button', { name: 'Work', exact: true }))
     .click();
 
   // Click "New Campaign" dropdown trigger
