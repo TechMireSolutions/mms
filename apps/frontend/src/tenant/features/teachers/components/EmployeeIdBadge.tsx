@@ -6,7 +6,7 @@ interface EmployeeIdBadgeProps {
   employeeId: string | null | undefined;
 }
 
-/** Employee ID pill badge — shared across TeacherDetail, TeacherList, and TeacherForm. */
+/** Employee ID pill badge — shared across TeacherDetail, TeachersList, and TeacherForm. */
 export function EmployeeIdBadge({ employeeId }: EmployeeIdBadgeProps): React.JSX.Element | null {
   const { t } = useTranslation();
   if (!employeeId) return null;

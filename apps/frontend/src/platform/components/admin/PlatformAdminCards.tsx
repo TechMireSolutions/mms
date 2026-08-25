@@ -5,7 +5,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
-import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
+import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
 
 interface PlatformAdminCardsProps {
@@ -24,8 +24,10 @@ export function PlatformAdminCards({
   const { t } = useTranslation();
 
   return (
-    <DirectoryCardsGrid>
-      {admins.map((admin) => {
+    <ModuleDirectoryCards
+      items={admins}
+      selectedIds={[]}
+      renderItem={(admin) => {
         const isDisabled = Boolean(admin.disabledAt);
 
         return (
@@ -141,7 +143,7 @@ export function PlatformAdminCards({
             </div>
           </DirectoryEntityCard>
         );
-      })}
-    </DirectoryCardsGrid>
+      }}
+    />
   );
 }

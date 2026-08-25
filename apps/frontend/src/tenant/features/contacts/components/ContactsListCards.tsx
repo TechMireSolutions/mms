@@ -8,8 +8,7 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { buildContactsMap } from "@/lib/contacts/contactI18n";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { useTranslation } from "@/hooks/useTranslation";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
+import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactCardItem } from "@/tenant/features/contacts/components/ContactCardItem";
 
@@ -97,48 +96,43 @@ export default function ContactsListCards({
   });
 
   return (
-    <>
-      {onSelectAll && contacts.length > 0 ? (
-        <DirectoryCardsSelectAllBar
-          checkboxId="contacts-select-all-cards"
-          allSelected={allSelected}
-          someSelected={someSelected}
-          onSelectAll={onSelectAll}
-          selectLabel={t("contacts.table.selectAll")}
-          deselectLabel={t("common.deselect")}
-          selectedCount={selected.length}
-          selectedCountLabel={t("contacts.selectedCount", { count: selected.length })}
-          pageCountLabel={pageCountLabel}
+    <ModuleDirectoryCards
+      items={contacts}
+      selectedIds={selected}
+      onSelectAll={onSelectAll}
+      allSelected={allSelected}
+      someSelected={someSelected}
+      selectAllLabel={t("contacts.table.selectAll")}
+      deselectAllLabel={t("common.deselect")}
+      selectedCountLabel={t("contacts.selectedCount", { count: selected.length })}
+      pageCountLabel={pageCountLabel}
+      checkboxIdPrefix="contacts"
+      renderItem={(contact) => (
+        <ContactCardItem
+          key={contact.id}
+          contact={contact}
+          isSelected={selectedSet.has(contact.id)}
+          prefs={prefs}
+          countryCodesMap={countryCodesMap}
+          countryCodes={countryCodes}
+          contactsMap={contactsMap}
+          allContacts={allContacts}
+          otherColumns={otherColumns}
+          isColumnVisible={isColumnVisible}
+          showArchived={showArchived}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          onSelect={onSelect}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onWhatsApp={onWhatsApp}
+          onSms={onSms}
+          onEmail={onEmail}
         />
-      ) : null}
-
-      <DirectoryCardsGrid>
-        {contacts.map((contact) => (
-          <ContactCardItem
-            key={contact.id}
-            contact={contact}
-            isSelected={selectedSet.has(contact.id)}
-            prefs={prefs}
-            countryCodesMap={countryCodesMap}
-            countryCodes={countryCodes}
-            contactsMap={contactsMap}
-            allContacts={allContacts}
-            otherColumns={otherColumns}
-            isColumnVisible={isColumnVisible}
-            showArchived={showArchived}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            onSelect={onSelect}
-            onView={onView}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onRestore={onRestore}
-            onWhatsApp={onWhatsApp}
-            onSms={onSms}
-            onEmail={onEmail}
-          />
-        ))}
-      </DirectoryCardsGrid>
-    </>
+      )}
+    />
   );
 }
+

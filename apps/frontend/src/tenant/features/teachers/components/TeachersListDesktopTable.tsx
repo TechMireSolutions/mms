@@ -16,8 +16,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { cn } from "@/lib/utils";
-import { TeacherListRowActions } from "@/tenant/features/teachers/components/TeacherListRowActions";
-import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherListTypes";
+import { TeachersListRowActions } from "@/tenant/features/teachers/components/TeachersListRowActions";
+import type { TeacherSortField } from "@/tenant/features/teachers/components/TeachersListTypes";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
 import {
   getTeacherVisibleWorkColumns,
@@ -169,7 +169,7 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
                     </TableCell>
                   ))}
                   <TableCell className="px-4 py-3">
-                    <TeacherListRowActions
+                    <TeachersListRowActions
                       teacher={teacher}
                       teacherId={teacherIdStr}
                       showDeleted={showDeleted}

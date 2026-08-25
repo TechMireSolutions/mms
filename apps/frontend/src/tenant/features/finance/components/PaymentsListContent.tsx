@@ -79,9 +79,11 @@ export function PaymentsListContent({
         <WorkViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
       </div>
       {viewMode === "cards" ? (
-        <div className="space-y-3 p-3">
-          <PaymentsListCards {...listProps} />
-        </div>
+        <PaymentsListCards
+          {...listProps}
+          onToggleSelectAll={onToggleAll}
+          allSelected={allSelected}
+        />
       ) : (
         <div>
           <PaymentsListDesktopTable

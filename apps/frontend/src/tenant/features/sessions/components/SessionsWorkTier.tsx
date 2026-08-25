@@ -3,7 +3,7 @@ import type { SessionsListPageResult } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Session } from "@/lib/data/sessionsData";
 import { SessionsWorkFilters } from "@/tenant/features/sessions/components/SessionsWorkFilters";
-import { SessionsWorkList } from "@/tenant/features/sessions/components/SessionsWorkList";
+import { SessionsList } from "@/tenant/features/sessions/components/SessionsList";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { SessionSortField, SessionStatus, SessionType } from "@/tenant/features/sessions/components/sessionPageTypes";
 
@@ -155,7 +155,7 @@ export function SessionsWorkTier({
         onToggleDeleted={onToggleDeleted}
       />
 
-      <SessionsWorkList
+      <SessionsList
         sessions={sessions}
         workPageData={useServerWork ? workPageData : undefined}
         isError={isError}

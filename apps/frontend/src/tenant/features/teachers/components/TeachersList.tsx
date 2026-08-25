@@ -1,14 +1,14 @@
 import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { TeacherListContent } from '@/tenant/features/teachers/components/TeacherListContent';
-import type { TeacherListProps } from '@/tenant/features/teachers/components/TeacherListTypes';
+import { TeachersListContent } from '@/tenant/features/teachers/components/TeachersListContent';
+import type { TeacherListProps } from '@/tenant/features/teachers/components/TeachersListTypes';
 import { resolveTeacherDisplayName } from '@/tenant/features/teachers/components/teacherFieldDisplay';
 import { useTeacherListState } from '@/tenant/features/teachers/components/useTeacherListState';
 
-export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeacherListTypes';
+export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeachersListTypes';
 
 /** Work directory content (table/cards + empty state) — confirms/drawer live at page level. */
-export function TeacherList({
+export function TeachersList({
   teachers,
   onEdit,
   onRestore,
@@ -67,7 +67,7 @@ export function TeacherList({
 
   return (
     <div className="space-y-4">
-      <TeacherListContent
+      <TeachersListContent
         teachers={sorted}
         viewMode={viewMode}
         hasActiveFilters={hasActiveFilters}

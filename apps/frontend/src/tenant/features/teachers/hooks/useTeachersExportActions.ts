@@ -10,7 +10,7 @@ import {
 import { startServerTeachersCsvExport } from "@/lib/backgroundJobs/startServerTeachersCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
 import { buildTeachersDirectoryQuery } from "@/tenant/features/teachers/hooks/teachersQueryShared";
-import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherList";
+import type { TeacherSortField } from "@/tenant/features/teachers/components/TeachersList";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 

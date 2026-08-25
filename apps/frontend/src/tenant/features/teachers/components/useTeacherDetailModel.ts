@@ -3,10 +3,10 @@ import { hasWhatsApp, type Teacher } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
-import { useSessions } from "@/tenant/hooks/collections/sessions";
+import { useSessions, useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useTeacherStatusConfig } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
 import { listTeacherDetailAttributeFields } from "@/tenant/features/teachers/components/teacherDetailFields";
-import type { TeacherAssignedClassItem } from "@/tenant/features/teachers/components/TeacherDetailSessionsSection";
+import { getTeacherAssignedClasses, type TeacherAssignedClassItem } from "@/lib/teachers/teacherAssignment";
 
 /** Teacher detail drawer model — mirrors useStudentDetailModel (Students parity). */
 export function useTeacherDetailModel(teacher: Teacher) {
@@ -17,34 +17,12 @@ export function useTeacherDetailModel(teacher: Teacher) {
     Boolean(teacher.contactId),
   );
   const sessionsQuery = useSessions();
-  const sessions = sessionsQuery.data ?? [];
+  const sessions = useSessionsCollection();
 
   const assignedClasses: TeacherAssignedClassItem[] = useMemo(() => {
-    const list: TeacherAssignedClassItem[] = [];
-    const teacherIdStr = String(teacher.id);
-    for (const session of sessions) {
-      if (!session.classes || session.classes.length === 0) continue;
-      for (const cls of session.classes) {
-        if (String(cls.teacherId) === teacherIdStr) {
-          list.push({
-            sessionId: session.id,
-            sessionName: session.name,
-            sessionType: session.type,
-            sessionStatus: session.status,
-            classId: cls.id,
-            className: cls.name,
-            room: cls.room,
-            capacity: cls.capacity,
-            enrolled: cls.enrolled,
-            gender: cls.gender,
-            ageMin: cls.ageMin,
-            ageMax: cls.ageMax,
-          });
-        }
-      }
-    }
-    return list;
-  }, [sessions, teacher.id]);
+    if (!teacher.id) return [];
+    return getTeacherAssignedClasses(teacher.id, sessions);
+  }, [teacher.id, sessions]);
 
   const detailFields = useMemo(
     () => listTeacherDetailAttributeFields(settings),

@@ -1,5 +1,20 @@
-import type { Teacher } from '@mms/shared';
+import type { Session, Teacher } from '@mms/shared';
 import { DEFAULT_TEACHER_STATUS } from '@mms/shared';
+
+export interface TeacherAssignedClassItem {
+  sessionId: string;
+  sessionName: string;
+  sessionType?: string;
+  sessionStatus?: string;
+  classId: string;
+  className: string;
+  room?: string;
+  capacity?: number;
+  enrolled?: number;
+  gender?: string;
+  ageMin?: number;
+  ageMax?: number;
+}
 
 /** Resolves a teacher display name from the faculty registry. */
 export function teacherNameById(teachers: Teacher[], id: string): string {
@@ -29,3 +44,32 @@ export function teacherOptionsForClass(
   const currentTeacher = teachers.find((teacher) => String(teacher.id) === currentTeacherId);
   return currentTeacher ? [currentTeacher, ...active] : active;
 }
+
+/** Extracts all classes assigned to a specific teacher from the sessions array. */
+export function getTeacherAssignedClasses(teacherId: string | number, sessions: Session[]): TeacherAssignedClassItem[] {
+  const list: TeacherAssignedClassItem[] = [];
+  const teacherIdStr = String(teacherId);
+  for (const session of sessions) {
+    if (!session.classes || session.classes.length === 0) continue;
+    for (const cls of session.classes) {
+      if (String(cls.teacherId) === teacherIdStr) {
+        list.push({
+          sessionId: session.id,
+          sessionName: session.name,
+          sessionType: session.type,
+          sessionStatus: session.status,
+          classId: cls.id,
+          className: cls.name,
+          room: cls.room,
+          capacity: cls.capacity,
+          enrolled: cls.enrolled,
+          gender: cls.gender,
+          ageMin: cls.ageMin,
+          ageMax: cls.ageMax,
+        });
+      }
+    }
+  }
+  return list;
+}
+

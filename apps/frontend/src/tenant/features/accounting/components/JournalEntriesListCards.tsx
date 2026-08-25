@@ -12,11 +12,10 @@ import {
   isJournalBalanced,
   type JournalEntriesListProps,
 } from "@/tenant/features/accounting/components/journalEntriesListShared";
-import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
 import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -55,21 +54,18 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
 
   return (
     <div className="space-y-4">
-      {canDelete && entries.length > 0 ? (
-        <DirectoryCardsSelectAllBar
-          checkboxId="accounting-select-all-cards"
-          allSelected={allVisibleSelected}
-          someSelected={someVisibleSelected}
-          onSelectAll={() => onToggleSelectAll(!allVisibleSelected)}
-          selectLabel={t("accounting.trash.selectAll")}
-          deselectLabel={t("common.deselect")}
-          selectedCount={selectedIds.length}
-          selectedCountLabel={t("accounting.trash.selected", { count: selectedIds.length })}
-          pageCountLabel={pageCountLabel}
-        />
-      ) : null}
-      <DirectoryCardsGrid>
-        {entries.map((entry) => {
+      <ModuleDirectoryCards
+        items={entries}
+        selectedIds={selectedIds}
+        onSelectAll={canDelete ? () => onToggleSelectAll(!allVisibleSelected) : undefined}
+        allSelected={allVisibleSelected}
+        someSelected={someVisibleSelected}
+        selectAllLabel={t("accounting.trash.selectAll")}
+        deselectAllLabel={t("common.deselect")}
+        selectedCountLabel={t("accounting.trash.selected", { count: selectedIds.length })}
+        pageCountLabel={pageCountLabel}
+        checkboxIdPrefix="accounting-select-cards"
+        renderItem={(entry) => {
           const isSelected = selectedIds.includes(entry.id);
           const { totalDebit, totalCredit } = getJournalEntryLineTotals(entry);
           return (
@@ -157,8 +153,8 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
               />
             </DirectoryEntityCard>
           );
-        })}
-      </DirectoryCardsGrid>
+        }}
+      />
       <div className={cn(WORK_SURFACE, "flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between")}>
         <p className="text-xs font-bold text-muted-foreground uppercase m-0">{pageCountLabel}</p>
         <StatGrid>
@@ -190,3 +186,4 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
     </div>
   );
 }
+

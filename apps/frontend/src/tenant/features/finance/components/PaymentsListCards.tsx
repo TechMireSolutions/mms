@@ -1,14 +1,17 @@
-import { motion } from 'framer-motion';
-import { RotateCcw, Trash2 } from 'lucide-react';
+import type React from 'react';
 import { formatDate } from '@mms/shared';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
-import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
-import { StatGrid, StatRow } from '@/components/ui/StatGrid';
+import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
+import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
+import { DirectoryCardMetadata } from '@/components/ui/DirectoryCardMetadata';
+import { DirectoryCardFooter } from '@/components/ui/DirectoryCardFooter';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
+import { RotateCcw, Trash2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { Payment } from '@/lib/data/financeData';
+import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
 
 interface PaymentsListCardsProps {
   payments: Payment[];
@@ -21,6 +24,8 @@ interface PaymentsListCardsProps {
   onTogglePayment: (paymentId: string, checked: boolean) => void;
   onRequestDelete: (paymentId: string) => void;
   onRestore?: (paymentId: string) => void;
+  onToggleSelectAll?: (checked: boolean) => void;
+  allSelected?: boolean;
 }
 
 export function PaymentsListCards({
@@ -34,80 +39,83 @@ export function PaymentsListCards({
   onTogglePayment,
   onRequestDelete,
   onRestore,
-}: PaymentsListCardsProps) {
+  onToggleSelectAll,
+  allSelected = false,
+}: PaymentsListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
-
-  const renderRowAction = (paymentId: string) => (
-    <Button
-      type="button"
-      variant="ghost"
-      size="icon"
-      onClick={() => showDeleted ? onRestore?.(paymentId) : onRequestDelete(paymentId)}
-      aria-label={showDeleted ? t('finance.trash.restore') : t('common.delete')}
-    >
-      {showDeleted ? <RotateCcw className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
-    </Button>
-  );
-
-  if (payments.length === 0) {
-    return <EmptyState title={t('finance.empty.payments')} compact />;
-  }
+  const reducedMotion = useReducedMotion();
 
   return (
-    <>
-      {payments.map((payment, index) => (
-        <motion.article
-          key={payment.id}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: index * 0.03 }}
-          className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
-        >
-          <div className="flex min-w-0 items-start justify-between gap-3">
-            <div className="min-w-0">
-              {isColumnVisible("student") && <h4 className="truncate text-sm font-semibold text-foreground">{payment.studentName}</h4>}
-              {isColumnVisible("invoice") && <p className="truncate font-mono text-xs text-muted-foreground">{payment.invoiceId}</p>}
-            </div>
-            {isColumnVisible("amount") && <span className="shrink-0 text-sm font-bold text-success">{formatCurrency(payment.amount)}</span>}
-          </div>
-          <StatGrid columns="sm2">
-            {isColumnVisible("date") && (
-              <StatRow label={t('finance.columns.paymentDate')} value={formatDate(payment.date)} />
-            )}
-            {isColumnVisible("method") && (
-              <StatRow
-                label={t('finance.columns.method')}
-                value={<StatusBadge status={payment.method} config={methodConfig} size="sm" />}
-                dtClassName="mb-1"
+    <ModuleDirectoryCards
+      items={payments}
+      selectedIds={selectedIds}
+      onSelectAll={canDelete && onToggleSelectAll ? () => onToggleSelectAll(!allSelected) : undefined}
+      allSelected={allSelected}
+      someSelected={selectedIds.length > 0 && selectedIds.length < payments.length}
+      selectAllLabel={t("finance.table.selectAll")}
+      deselectAllLabel={t("common.deselect")}
+      selectedCountLabel={t("finance.trash.selected", { count: selectedIds.length })}
+      checkboxIdPrefix="finance-payments"
+      renderItem={(payment) => {
+        const isSelected = selectedIds.includes(payment.id);
+        
+        const metadataColumns = [];
+        if (isColumnVisible("amount")) metadataColumns.push({ key: "amount", label: t('finance.columns.amount') });
+        if (isColumnVisible("date")) metadataColumns.push({ key: "date", label: t('finance.columns.paymentDate') });
+        if (isColumnVisible("method")) metadataColumns.push({ key: "method", label: t('finance.columns.method') });
+        if (isColumnVisible("receivedBy")) metadataColumns.push({ key: "receivedBy", label: t('finance.columns.receivedBy') });
+        if (isColumnVisible("note")) metadataColumns.push({ key: "note", label: t('finance.columns.note') });
+
+        return (
+          <DirectoryEntityCard key={payment.id} isSelected={isSelected} reducedMotion={reducedMotion}>
+            <DirectoryCardHeader
+              id={payment.id}
+              displayName={payment.studentName || t("finance.payments")}
+              isSelected={isSelected}
+              showSelect={canDelete}
+              onSelect={() => onTogglePayment(payment.id, !isSelected)}
+              selectAriaLabel={t("finance.trash.selectPayment", { id: payment.id })}
+              reducedMotion={reducedMotion}
+              subtitle={
+                isColumnVisible("invoice") && payment.invoiceId 
+                  ? <p className="font-mono text-xs text-muted-foreground truncate">{payment.invoiceId}</p>
+                  : undefined
+              }
+            />
+
+            <DirectoryCardMetadata
+              columns={metadataColumns}
+              keyFor={(col) => col.key}
+              labelFor={(col) => col.label}
+              renderValue={(col) => {
+                if (col.key === "amount") return <span className="font-bold text-success">{formatCurrency(payment.amount)}</span>;
+                if (col.key === "date") return formatDate(payment.date);
+                if (col.key === "method") return <StatusBadge status={payment.method} config={methodConfig} size="sm" />;
+                if (col.key === "receivedBy") return payment.receivedBy || '—';
+                if (col.key === "note") return payment.note || '—';
+                return null;
+              }}
+            />
+
+            {canDelete && (
+              <DirectoryCardFooter
+                trailing={
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+                    onClick={() => showDeleted ? onRestore?.(payment.id) : onRequestDelete(payment.id)}
+                    aria-label={showDeleted ? t('finance.trash.restore') : t('common.delete')}
+                  >
+                    {showDeleted ? <RotateCcw className="h-4 w-4 text-muted-foreground" /> : <Trash2 className="h-4 w-4 text-destructive/70" />}
+                  </Button>
+                }
               />
             )}
-            {isColumnVisible("receivedBy") && (
-              <StatRow
-                label={t('finance.columns.receivedBy')}
-                value={payment.receivedBy || '—'}
-                ddClassName="break-words"
-              />
-            )}
-            {isColumnVisible("note") && (
-              <StatRow
-                label={t('finance.columns.note')}
-                value={payment.note || '—'}
-                ddClassName="break-words"
-              />
-            )}
-          </StatGrid>
-          {canDelete && (
-            <div className="flex items-center justify-between border-t border-border pt-2">
-              <Checkbox
-                checked={selectedIds.includes(payment.id)}
-                onCheckedChange={(checked) => onTogglePayment(payment.id, checked === true)}
-                aria-label={t('finance.trash.selectPayment', { id: payment.id })}
-              />
-              {renderRowAction(payment.id)}
-            </div>
-          )}
-        </motion.article>
-      ))}
-    </>
+          </DirectoryEntityCard>
+        );
+      }}
+    />
   );
 }

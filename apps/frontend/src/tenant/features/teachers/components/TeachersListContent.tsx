@@ -4,7 +4,7 @@ import { ModuleWorkDirectoryEmpty } from "@/components/ui/ModuleWorkDirectoryEmp
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { TeacherListCards } from "@/tenant/features/teachers/components/TeacherListCards";
+import { TeachersListCards } from "@/tenant/features/teachers/components/TeachersListCards";
 import { TeachersListDesktopTable } from "@/tenant/features/teachers/components/TeachersListDesktopTable";
 import { buildTeacherCustomFieldsById } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
@@ -13,7 +13,7 @@ export type { TeacherListContentProps } from "@/tenant/features/teachers/compone
 
 type TeacherListContentInput = Omit<TeacherListContentProps, "customFieldsById">;
 
-export function TeacherListContent(props: TeacherListContentInput): React.JSX.Element {
+export function TeachersListContent(props: TeacherListContentInput): React.JSX.Element {
   const { t } = useTranslation();
   const { teachers, showDeleted, viewMode, columnRegistry, hasActiveFilters, onClearFilters, onShowActive, canWrite } = props;
   const customFieldsById = useMemo(
@@ -53,7 +53,7 @@ export function TeacherListContent(props: TeacherListContentInput): React.JSX.El
   }
 
   if (viewMode === "cards") {
-    return <TeacherListCards {...contentProps} />;
+    return <TeachersListCards {...contentProps} />;
   }
 
   return (

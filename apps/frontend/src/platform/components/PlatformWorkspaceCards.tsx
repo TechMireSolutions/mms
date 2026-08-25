@@ -4,7 +4,7 @@ import { WorkspaceIdentityCell } from "@/platform/components/workspace/Workspace
 import { WorkspaceStatusBadge } from "@/platform/components/workspace/WorkspaceStatusBadge";
 import { WorkspaceRowActions } from "@/platform/components/workspace/WorkspaceRowActions";
 import { tenantUrl } from "@/lib/config/tenantConfig";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 
 export interface PlatformWorkspaceCardsProps {
@@ -29,8 +29,10 @@ export function PlatformWorkspaceCards({
   onOpenDelete,
 }: PlatformWorkspaceCardsProps): React.JSX.Element {
   return (
-    <DirectoryCardsGrid>
-      {workspaces.map((workspace) => {
+    <ModuleDirectoryCards
+      items={workspaces}
+      selectedIds={[]}
+      renderItem={(workspace) => {
         const isTargetDelete = deletePending && targetDeleteSubdomain === workspace.subdomain;
         return (
           <DirectoryEntityCard
@@ -57,7 +59,7 @@ export function PlatformWorkspaceCards({
             </div>
           </DirectoryEntityCard>
         );
-      })}
-    </DirectoryCardsGrid>
+      }}
+    />
   );
 }

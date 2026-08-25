@@ -2,7 +2,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ObligationCollectionList } from "@/tenant/features/obligations/components/ObligationCollectionList";
+import { ObligationCollectionsList } from "@/tenant/features/obligations/components/ObligationCollectionsList";
 import type { useObligationColumnLayout } from "@/tenant/features/obligations/hooks/useObligationColumnLayout";
 import type { ObligationCollection, ObligationType, Mujtahid, MujtahidRep } from "@/lib/data/obligationsData";
 
@@ -77,7 +77,7 @@ export function ObligationsWorkTier({
             />
           </div>
         )}
-        <ObligationCollectionList
+        <ObligationCollectionsList
           collections={collections}
           obligationTypes={obligationTypes}
           reps={reps}

@@ -8,21 +8,7 @@ import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/useTranslation";
-
-export interface TeacherAssignedClassItem {
-  sessionId: string;
-  sessionName: string;
-  sessionType?: string;
-  sessionStatus?: string;
-  classId: string;
-  className: string;
-  room?: string;
-  capacity?: number;
-  enrolled?: number;
-  gender?: string;
-  ageMin?: number;
-  ageMax?: number;
-}
+import type { TeacherAssignedClassItem } from "@/lib/teachers/teacherAssignment";
 
 interface TeacherDetailSessionsSectionProps {
   assignedClasses: TeacherAssignedClassItem[];

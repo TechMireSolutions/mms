@@ -1,3 +1,5 @@
+import { getTeacherAssignedClasses } from "@/lib/teachers/teacherAssignment";
+
 import { lazy, Suspense, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
@@ -63,19 +65,13 @@ export const TeachersPageOverlays = React.memo(function TeachersPageOverlays({
 
   const idCardItems = useMemo(() => {
     return idCardTeachers.map((teacher) => {
-      const assignedClassesList: string[] = [];
-      const teacherIdStr = String(teacher.id);
-      for (const session of sessions) {
-        if (!session.classes) continue;
-        for (const cls of session.classes) {
-          if (String(cls.teacherId) === teacherIdStr) {
-            assignedClassesList.push(`${cls.name} (${session.name})`);
-          }
-        }
-      }
+      const assignedClasses = teacher.id
+        ? getTeacherAssignedClasses(teacher.id, sessions)
+        : [];
+        
       return {
         teacher,
-        assignedClasses: assignedClassesList,
+        assignedClasses: assignedClasses.map(cls => `${cls.className} (${cls.sessionName})`),
         qualification: teacher.qualification,
         emergencyPhone: teacher.phone ? String(teacher.phone) : undefined,
       };

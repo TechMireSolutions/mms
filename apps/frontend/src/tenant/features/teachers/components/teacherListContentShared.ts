@@ -1,7 +1,7 @@
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { ModuleColumnRegistryEntry, Teacher, TeacherCustomField } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import type { TeacherSortField } from "@/tenant/features/teachers/components/TeacherListTypes";
+import type { TeacherSortField } from "@/tenant/features/teachers/components/TeachersListTypes";
 
 export interface TeacherListContentProps {
   viewMode: WorkDirectoryViewMode;

@@ -5,8 +5,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { TimePicker } from '@/components/ui/TimePicker';
 import { DirectoryCardFooter } from '@/components/ui/DirectoryCardFooter';
 import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
-import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
-import { DirectoryCardsSelectAllBar } from '@/components/ui/DirectoryCardsSelectAllBar';
+import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
 import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
@@ -31,7 +30,7 @@ interface AttendanceRecordsMobileListProps {
   t: TranslationFunction;
 }
 
-export function AttendanceRecordsMobileList({
+export function AttendanceListCards({
   paginatedRecords,
   isColumnVisible,
   editingRecord,
@@ -65,21 +64,18 @@ export function AttendanceRecordsMobileList({
 
   return (
     <div className="space-y-4">
-      {canDelete ? (
-        <DirectoryCardsSelectAllBar
-          checkboxId="attendance-select-all-cards"
-          allSelected={allVisibleSelected}
-          someSelected={someVisibleSelected}
-          onSelectAll={() => onToggleSelectAll(!allVisibleSelected)}
-          selectLabel={t('attendance.trash.selectAll')}
-          deselectLabel={t('common.deselect')}
-          selectedCount={selectedIds.length}
-          selectedCountLabel={t('attendance.trash.selected', { count: selectedIds.length })}
-          pageCountLabel={pageCountLabel}
-        />
-      ) : null}
-      <DirectoryCardsGrid>
-        {paginatedRecords.map((attendanceRecord) => {
+      <ModuleDirectoryCards
+        items={paginatedRecords}
+        selectedIds={selectedIds}
+        onSelectAll={canDelete ? () => onToggleSelectAll(!allVisibleSelected) : undefined}
+        allSelected={allVisibleSelected}
+        someSelected={someVisibleSelected}
+        selectAllLabel={t('attendance.trash.selectAll')}
+        deselectAllLabel={t('common.deselect')}
+        selectedCountLabel={t('attendance.trash.selected', { count: selectedIds.length })}
+        pageCountLabel={pageCountLabel}
+        checkboxIdPrefix="attendance-select-cards"
+        renderItem={(attendanceRecord) => {
           const isSelected = selectedIds.includes(attendanceRecord.id);
           return (
             <DirectoryEntityCard key={attendanceRecord.id} isSelected={isSelected} reducedMotion={reducedMotion}>
@@ -165,8 +161,8 @@ export function AttendanceRecordsMobileList({
               <DirectoryCardFooter trailing={renderRowActions(attendanceRecord)} />
             </DirectoryEntityCard>
           );
-        })}
-      </DirectoryCardsGrid>
+        }}
+      />
     </div>
   );
 }

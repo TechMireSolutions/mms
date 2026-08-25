@@ -13,7 +13,7 @@ import {
   consumeTeachersWorkDrillDown,
   type TeachersWorkDrillDown,
 } from '@/tenant/features/teachers/hooks/teachersWorkDrillDown';
-import type { TeacherSortField } from '@/tenant/features/teachers/components/TeacherList';
+import type { TeacherSortField } from '@/tenant/features/teachers/components/TeachersList';
 
 /** Directory filters, sort, trash, and selection SSOT for Teachers Work (Students-shaped). */
 export function useTeachersDirectoryFilters({

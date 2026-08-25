@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ObligationCollectionListCards } from "@/tenant/features/obligations/components/ObligationCollectionListCards";
-import { ObligationsListDesktopTable } from "@/tenant/features/obligations/components/ObligationsListDesktopTable";
+import { ObligationCollectionsListCards } from "@/tenant/features/obligations/components/ObligationCollectionsListCards";
+import { ObligationCollectionsListDesktopTable } from "@/tenant/features/obligations/components/ObligationCollectionsListDesktopTable";
 import type { ObligationCollectionListContentProps } from "@/tenant/features/obligations/components/obligationCollectionListContentShared";
 import { Plus, Receipt } from "lucide-react";
 
-export function ObligationCollectionListContent(props: ObligationCollectionListContentProps): React.JSX.Element {
+export function ObligationCollectionsListContent(props: ObligationCollectionListContentProps): React.JSX.Element {
   const { t } = useTranslation();
   const { collections, search, typeFilter, canWrite, showDeleted, onAddNew } = props;
 
@@ -39,10 +39,10 @@ export function ObligationCollectionListContent(props: ObligationCollectionListC
   }
 
   return props.viewMode === "cards" ? (
-    <ObligationCollectionListCards {...props} />
+    <ObligationCollectionsListCards {...props} />
   ) : (
     <div className={WORK_SURFACE}>
-      <ObligationsListDesktopTable {...props} />
+      <ObligationCollectionsListDesktopTable {...props} />
     </div>
   );
 }

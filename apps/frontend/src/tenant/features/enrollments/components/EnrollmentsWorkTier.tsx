@@ -5,7 +5,7 @@ import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EnrollmentsBulkActionBar } from "@/tenant/features/enrollments/components/EnrollmentsBulkActionBar";
 import { EligibilityCheck } from "@/tenant/features/enrollments/components/EligibilityCheck";
-import { EnrollmentList } from "@/tenant/features/enrollments/components/EnrollmentList";
+import { EnrollmentsList } from "@/tenant/features/enrollments/components/EnrollmentsList";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 
 type EnrollmentSubTab = {
@@ -14,7 +14,7 @@ type EnrollmentSubTab = {
 };
 
 type EnrollmentColumnProps = Pick<
-  React.ComponentProps<typeof EnrollmentList>,
+  React.ComponentProps<typeof EnrollmentsList>,
   "isColumnVisible" | "getColumnWidth" | "onColumnResize" | "columnCustomizer"
 >;
 
@@ -135,7 +135,7 @@ export function EnrollmentsWorkTier({
                 onClearSelection={onClearSelection}
                 onBulkExport={onBulkExport}
               />
-              <EnrollmentList
+              <EnrollmentsList
                 enrollments={enrollments}
                 total={total}
                 page={page}

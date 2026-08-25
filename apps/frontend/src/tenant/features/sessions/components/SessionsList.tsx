@@ -9,7 +9,8 @@ import type { SessionSortField } from "@/tenant/features/sessions/components/ses
 import type { Session } from "@/lib/data/sessionsData";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { SessionsBulkActionBar } from "@/tenant/features/sessions/components/SessionsBulkActionBar";
-import { SessionsWorkCardGrid, SessionsWorkTable } from "@/tenant/features/sessions/components/SessionsWorkListViews";
+import { SessionsListCards } from "@/tenant/features/sessions/components/SessionsListCards";
+import { SessionsListDesktopTable } from "@/tenant/features/sessions/components/SessionsListDesktopTable";
 
 interface SessionsWorkPageData {
   page: number;
@@ -63,7 +64,7 @@ interface SessionsWorkListProps {
   onBulkExport?: () => void;
 }
 
-export function SessionsWorkList({
+export function SessionsList({
   sessions,
   workPageData,
   isError,
@@ -148,7 +149,7 @@ export function SessionsWorkList({
             ) : undefined}
           />
         ) : viewMode === "table" ? (
-          <SessionsWorkTable
+          <SessionsListDesktopTable
             sessions={sessions}
             showDeleted={showDeleted}
             canDelete={canDelete}
@@ -157,7 +158,6 @@ export function SessionsWorkList({
             allVisibleSelected={allVisibleSelected}
             someVisibleSelected={someVisibleSelected}
             isColumnVisible={isColumnVisible}
-            columnRegistry={columnLayout.columnRegistry}
             sortField={sortField}
             sortDir={sortDir}
             columnLayout={columnLayout}
@@ -171,7 +171,7 @@ export function SessionsWorkList({
             onRestore={onRestore}
           />
         ) : (
-          <SessionsWorkCardGrid
+          <SessionsListCards
             sessions={sessions}
             showDeleted={showDeleted}
             canDelete={canDelete}

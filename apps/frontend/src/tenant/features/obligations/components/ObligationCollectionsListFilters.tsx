@@ -8,7 +8,7 @@ import { ObligationsFiltersMenuButton } from "@/tenant/features/obligations/comp
 
 export const OBLIGATIONS_WORK_SEARCH_INPUT_ID = "obligations-work-search";
 
-interface ObligationsListFiltersProps {
+interface ObligationCollectionsListFiltersProps {
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
@@ -19,7 +19,7 @@ interface ObligationsListFiltersProps {
   onTypeFilterChange: (value: string) => void;
 }
 
-export function ObligationsListFilters({
+export function ObligationCollectionsListFilters({
   viewMode,
   onViewModeChange,
   search,
@@ -28,7 +28,7 @@ export function ObligationsListFilters({
   columnCustomizer,
   onSearchChange,
   onTypeFilterChange,
-}: ObligationsListFiltersProps): React.JSX.Element {
+}: ObligationCollectionsListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
   const activeFilterCount = typeFilter !== "all" ? 1 : 0;
   const selectedType = obligationTypes.find((item) => item.id === typeFilter);

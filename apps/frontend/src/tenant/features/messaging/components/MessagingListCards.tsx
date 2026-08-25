@@ -8,8 +8,7 @@ import {
 } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
-import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
-import { DirectoryCardsSelectAllBar } from '@/components/ui/DirectoryCardsSelectAllBar';
+import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
 import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
 import { DirectoryCardFooter } from '@/components/ui/DirectoryCardFooter';
@@ -88,22 +87,23 @@ export const MessagingListCards = React.memo(function MessagingListCards({
     return "bg-muted-foreground/35 group-hover:bg-muted-foreground/60";
   };
 
+  // Convert map to array for ModuleDirectoryCards
+  const selectedIdsArray = Object.keys(selectedIds).filter((k) => selectedIds[k]);
+
   return (
     <div className="space-y-3">
-      <DirectoryCardsSelectAllBar
-        checkboxId="messaging-cards-select-all"
+      <ModuleDirectoryCards
+        items={logs}
+        selectedIds={selectedIdsArray}
+        onSelectAll={() => onToggleAllVisible(!allVisibleSelected)}
         allSelected={allVisibleSelected}
         someSelected={someVisibleSelected}
-        onSelectAll={() => onToggleAllVisible(!allVisibleSelected)}
-        selectLabel={t('messaging.selectAllVisible')}
-        deselectLabel={t('common.deselect')}
-        selectedCount={selectedCount}
-        selectedCountLabel={selectedCountLabel}
-        pageCountLabel={pageCountLabel}
-      />
-
-      <DirectoryCardsGrid>
-        {logs.map((log) => {
+        selectAllLabel={t('messaging.selectAllVisible')}
+        deselectAllLabel={t('common.deselect')}
+        selectedCountLabel={selectedCountLabel as string}
+        pageCountLabel={pageCountLabel as string}
+        checkboxIdPrefix="messaging-cards"
+        renderItem={(log) => {
           const isSelected = Boolean(selectedIds[String(log.id)]);
           const name = getRecipientName(log.contactId);
           const isFailed = log.status === 'failed';
@@ -241,8 +241,9 @@ export const MessagingListCards = React.memo(function MessagingListCards({
               />
             </DirectoryEntityCard>
           );
-        })}
-      </DirectoryCardsGrid>
+        }}
+      />
     </div>
   );
 });
+

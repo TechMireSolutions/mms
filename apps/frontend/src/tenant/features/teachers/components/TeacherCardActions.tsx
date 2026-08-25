@@ -3,7 +3,7 @@ import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Teacher } from '@mms/shared';
-import { TeacherListRowActions } from "@/tenant/features/teachers/components/TeacherListRowActions";
+import { TeachersListRowActions } from "@/tenant/features/teachers/components/TeachersListRowActions";
 
 export interface TeacherCardActionsProps {
   teacher: Teacher;
@@ -48,7 +48,7 @@ export function TeacherCardActions({
             ariaLabel={`${t("teachers.list.viewDetails")} - ${displayName}`}
             onClick={() => onView(teacher)}
           />
-          <TeacherListRowActions
+          <TeachersListRowActions
             teacher={teacher}
             teacherId={teacherId}
             showDeleted={showDeleted}

@@ -30,7 +30,7 @@ interface TeacherListRowActionsProps {
  * {@link ModuleRowActionsMenu}; messaging items are injected as module extras
  * and omitted (not disabled) when handlers are undefined or the channel is unavailable.
  */
-export function TeacherListRowActions({
+export function TeachersListRowActions({
   teacher,
   teacherId,
   showDeleted,

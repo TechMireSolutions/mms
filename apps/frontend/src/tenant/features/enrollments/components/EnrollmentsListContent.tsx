@@ -5,12 +5,12 @@ import { ListPagination } from "@/components/ui/ListPagination";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { EnrollmentListCards } from "@/tenant/features/enrollments/components/EnrollmentListCards";
+import { EnrollmentsListCards } from "@/tenant/features/enrollments/components/EnrollmentsListCards";
 import { EnrollmentsListDesktopTable } from "@/tenant/features/enrollments/components/EnrollmentsListDesktopTable";
 import type { EnrollmentListContentProps } from "@/tenant/features/enrollments/components/enrollmentListContentShared";
 import { Search } from "lucide-react";
 
-export function EnrollmentListContent(props: EnrollmentListContentProps): React.JSX.Element {
+export function EnrollmentsListContent(props: EnrollmentListContentProps): React.JSX.Element {
   const { t } = useTranslation();
   const { enrollments, filteredCount, page, pageSize, showDeleted, onPageChange } = props;
 
@@ -27,7 +27,7 @@ export function EnrollmentListContent(props: EnrollmentListContentProps): React.
       ) : (
         <Card accentColor="primary" className="p-0 overflow-hidden">
           {props.viewMode === "cards" ? (
-            <EnrollmentListCards {...props} />
+            <EnrollmentsListCards {...props} />
           ) : (
             <div className={cn(WORK_SURFACE, "overflow-hidden")}>
               <EnrollmentsListDesktopTable {...props} />

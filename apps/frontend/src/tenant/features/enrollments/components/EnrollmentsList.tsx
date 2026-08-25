@@ -9,7 +9,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
-import { EnrollmentListContent } from "@/tenant/features/enrollments/components/EnrollmentListContent";
+import { EnrollmentsListContent } from "@/tenant/features/enrollments/components/EnrollmentsListContent";
 import { EnrollmentsListFilters } from "@/tenant/features/enrollments/components/EnrollmentsListFilters";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
@@ -52,7 +52,7 @@ interface EnrollmentListProps {
 /**
  * Renders a server-paginated, filterable table/list of enrollment records.
  */
-export function EnrollmentList({
+export function EnrollmentsList({
   enrollments,
   total,
   page,
@@ -125,7 +125,7 @@ export function EnrollmentList({
         onShowDeletedChange={onShowDeletedChange}
       />
 
-      <EnrollmentListContent
+      <EnrollmentsListContent
         viewMode={viewMode}
         enrollments={enrollments}
         filteredCount={total}

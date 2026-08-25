@@ -18,12 +18,12 @@ import {
   type ObligationCollectionListContentProps,
 } from "@/tenant/features/obligations/components/obligationCollectionListContentShared";
 
-type ObligationsListDesktopTableProps = Omit<
+type ObligationCollectionsListDesktopTableProps = Omit<
   ObligationCollectionListContentProps,
   "search" | "typeFilter" | "onAddNew"
 >;
 
-export function ObligationsListDesktopTable(props: ObligationsListDesktopTableProps): React.JSX.Element {
+export function ObligationCollectionsListDesktopTable(props: ObligationCollectionsListDesktopTableProps): React.JSX.Element {
   const {
     collections,
     selectedIds,

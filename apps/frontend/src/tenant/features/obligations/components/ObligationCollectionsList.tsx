@@ -10,8 +10,8 @@ import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCu
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { ObligationCollectionListContent } from "@/tenant/features/obligations/components/ObligationCollectionListContent";
-import { ObligationsListFilters } from "@/tenant/features/obligations/components/ObligationsListFilters";
+import { ObligationCollectionsListContent } from "@/tenant/features/obligations/components/ObligationCollectionsListContent";
+import { ObligationCollectionsListFilters } from "@/tenant/features/obligations/components/ObligationCollectionsListFilters";
 import { ObligationsBulkActionBar } from "@/tenant/features/obligations/components/ObligationsBulkActionBar";
 import { useObligationSelection } from "@/tenant/features/obligations/hooks/useObligationSelection";
 
@@ -41,7 +41,7 @@ export interface ObligationCollectionListProps {
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', collections: ObligationCollection[]) => void;
 }
 
-export function ObligationCollectionList({
+export function ObligationCollectionsList({
   collections,
   obligationTypes,
   reps,
@@ -135,7 +135,7 @@ export function ObligationCollectionList({
 
   return (
     <div className="space-y-4">
-      <ObligationsListFilters
+      <ObligationCollectionsListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={search}
@@ -157,7 +157,7 @@ export function ObligationCollectionList({
         />
       )}
 
-      <ObligationCollectionListContent
+      <ObligationCollectionsListContent
         viewMode={viewMode}
         collections={filtered}
         search={search}

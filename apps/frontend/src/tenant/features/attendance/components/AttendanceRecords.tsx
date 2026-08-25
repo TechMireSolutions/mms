@@ -13,7 +13,7 @@ import { AttendanceFilterState } from "@/tenant/features/attendance/components/A
 import { notify } from "@/lib/notify";
 import { AttendanceRecordRowActions } from "./AttendanceRecordRowActions";
 import { AttendanceListDesktopTable } from "./AttendanceListDesktopTable";
-import { AttendanceRecordsMobileList } from "./AttendanceRecordsMobileList";
+import { AttendanceListCards } from "./AttendanceListCards";
 import { AttendanceListFilters } from "./AttendanceListFilters";
 import { AttendanceBulkActionBar } from "./AttendanceBulkActionBar";
 import { AttendanceRecordsConfirmDialogs } from "./AttendanceRecordsConfirmDialogs";
@@ -226,7 +226,7 @@ export function AttendanceRecords({
           onRetry={() => { void attendancePageQuery.refetch(); }}
         />
       ) : viewMode === "cards" ? (
-        <AttendanceRecordsMobileList
+        <AttendanceListCards
           paginatedRecords={pageRecords}
           isColumnVisible={columnVisible}
           editingRecord={editingRecord}

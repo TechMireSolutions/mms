@@ -12,7 +12,7 @@ import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
-import { TeacherList } from "@/tenant/features/teachers/components/TeacherList";
+import { TeachersList } from "@/tenant/features/teachers/components/TeachersList";
 import { buildTeachersWorkFilterChips } from "@/tenant/features/teachers/components/buildTeachersWorkFilterChips";
 import { TeachersBulkActionBar } from "@/tenant/features/teachers/components/TeachersBulkActionBar";
 import { TeachersListFilters } from "@/tenant/features/teachers/components/TeachersListFilters";
@@ -205,7 +205,7 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           showPagination={props.teachers.length > 0}
           loadingLabel={t("common.loading")}
         >
-          <TeacherList
+          <TeachersList
             teachers={props.teachers}
             viewMode={props.viewMode}
             hasActiveFilters={props.hasActiveFilters}

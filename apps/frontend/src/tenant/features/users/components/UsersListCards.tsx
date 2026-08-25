@@ -1,7 +1,6 @@
 import type { SystemUser } from "@mms/shared";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { DirectoryCardsSelectAllBar } from "@/components/ui/DirectoryCardsSelectAllBar";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
@@ -56,59 +55,54 @@ export function UsersListCards({
   });
 
   return (
-    <>
-      {canDelete && users.length > 0 ? (
-        <DirectoryCardsSelectAllBar
-          checkboxId="users-select-all-cards"
-          allSelected={allSelected}
-          someSelected={someSelected}
-          onSelectAll={onToggleAll}
-          selectLabel={t("users.selectAll")}
-          deselectLabel={t("common.deselect")}
-          selectedCount={selectedIds.length}
-          selectedCountLabel={t("users.selectedCount", { count: selectedIds.length })}
-          pageCountLabel={pageCountLabel}
-        />
-      ) : null}
-
-      <DirectoryCardsGrid>
-        {users.map((user) => {
-          const isSelected = selectedIds.includes(user.id);
-          return (
-            <DirectoryEntityCard
-              key={user.id}
+    <ModuleDirectoryCards
+      items={users}
+      selectedIds={selectedIds}
+      onSelectAll={canDelete ? onToggleAll : undefined}
+      allSelected={allSelected}
+      someSelected={someSelected}
+      selectAllLabel={t("users.selectAll")}
+      deselectAllLabel={t("common.deselect")}
+      selectedCountLabel={t("users.selectedCount", { count: selectedIds.length })}
+      pageCountLabel={pageCountLabel}
+      checkboxIdPrefix="users"
+      renderItem={(user) => {
+        const isSelected = selectedIds.includes(user.id);
+        return (
+          <DirectoryEntityCard
+            key={user.id}
+            isSelected={isSelected}
+            reducedMotion={reducedMotion}
+          >
+            <UserCardHeader
+              user={user}
               isSelected={isSelected}
+              showSelect={canDelete}
+              onToggleSelect={onToggleSelect}
+              onView={onView}
               reducedMotion={reducedMotion}
-            >
-              <UserCardHeader
-                user={user}
-                isSelected={isSelected}
-                showSelect={canDelete}
-                onToggleSelect={onToggleSelect}
-                onView={onView}
-                reducedMotion={reducedMotion}
-              />
-              <UserArchivedBanner user={user} />
-              <UserCardMetadata
-                user={user}
-                formatLoginDate={formatLoginDate}
-                isColumnVisible={isColumnVisible}
-              />
-              <UserCardActions
-                user={user}
-                canWrite={canWrite}
-                canDelete={canDelete}
-                showDeleted={showDeleted}
-                onView={onView}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onRestore={onRestore}
-                onResetPassword={onResetPassword}
-              />
-            </DirectoryEntityCard>
-          );
-        })}
-      </DirectoryCardsGrid>
-    </>
+            />
+            <UserArchivedBanner user={user} />
+            <UserCardMetadata
+              user={user}
+              formatLoginDate={formatLoginDate}
+              isColumnVisible={isColumnVisible}
+            />
+            <UserCardActions
+              user={user}
+              canWrite={canWrite}
+              canDelete={canDelete}
+              showDeleted={showDeleted}
+              onView={onView}
+              onEdit={onEdit}
+              onDelete={onDelete}
+              onRestore={onRestore}
+              onResetPassword={onResetPassword}
+            />
+          </DirectoryEntityCard>
+        );
+      }}
+    />
   );
 }
+
