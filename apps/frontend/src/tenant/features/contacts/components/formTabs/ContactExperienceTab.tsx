@@ -1,16 +1,11 @@
-import { Briefcase, Building2, MapPin } from "lucide-react";
+import { Briefcase } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { EditableSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
-import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
+import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
+import { ContactExperienceEntryCard } from "./ContactExperienceEntryCard";
+import { createEmptyExperience } from "./contactExperienceShared";
 import type { ContactSubListTabBaseProps } from "./types";
-import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactExperience } from "@mms/shared";
-import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
-
 
 /**
  * TypeScript type representing an individual experience entry.
@@ -60,16 +55,9 @@ export function ContactExperienceTab({
   ]);
 
   const experiences = contactDraft.experience || [];
-  const emptyExperience = (): ContactExperience => ({
-    title: "",
-    organization: "",
-    employmentType: defaultEmploymentType || employmentTypeOptions[0] || "",
-    location: "",
-    startDate: "",
-    endDate: "",
-    isCurrent: false,
-    description: "",
-  });
+
+  const emptyExperience = () =>
+    createEmptyExperience(defaultEmploymentType, employmentTypeOptions);
 
   const addExperience = () => {
     addSubListItem("experience", emptyExperience());
@@ -94,214 +82,29 @@ export function ContactExperienceTab({
       allowAdd={allowAdd}
     >
       <AnimatePresence initial={false}>
-        {experiences.map((exp, idx) => {
-          const titleError = getListItemError("experience", "title", idx);
-          const orgError = getListItemError("experience", "organization", idx);
-          const typeError = getListItemError("experience", "employmentType", idx);
-          const locationError = getListItemError("experience", "location", idx);
-          const startDateError = getListItemError("experience", "startDate", idx);
-          const endDateError = getListItemError("experience", "endDate", idx);
-          const isCurrentError = getListItemError("experience", "isCurrent", idx);
-          const descriptionError = getListItemError("experience", "description", idx);
-
-          return (
-            <ListFieldCard
-              key={getLocalId("experience", idx)}
-              id={getLocalId("experience", idx)}
-              index={idx}
-              accentClass={SUB_LIST_CARD_ACCENTS.experience.accent}
-              label={showEmploymentType ? `${t("contacts.fields.experienceEmploymentType")}:` : undefined}
-              typeSelect={
-                showEmploymentType ? (
-                  <EditableSelect
-                    options={employmentTypeOptions}
-                    value={exp.employmentType || ""}
-                    onChange={(val) => updateExperience(idx, { employmentType: val })}
-                    onUpdateOptions={onUpdateEmploymentTypeOptions}
-                    className="w-40 @sm:w-52 min-w-0"
-                    id={`cf-${formInstanceId}-experience-type-${idx}`}
-                    name={`cf-${formInstanceId}-experience-type-${idx}`}
-                    placeholder={t("contacts.form.employmentTypePlaceholder")}
-                  />
-                ) : undefined
-              }
-              onRemove={() => removeExperience(idx)}
-              removeLabel={t("contacts.form.removeExperience", { index: idx + 1 })}
-            >
-              <div className="space-y-3">
-                {/* Row 1: Job Title & Organization */}
-                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-                  {showTitle ? (
-                    <Field
-                      label={t("contacts.fields.experienceTitle")}
-                      required={isFieldRequired("experience", "title")}
-                      error={titleError}
-                      id={`cf-${formInstanceId}-experience-title-${idx}`}
-                    >
-                      <LeadingIconInput
-                        icon={Briefcase}
-                        id={`cf-${formInstanceId}-experience-title-${idx}`}
-                        name={`cf-${formInstanceId}-experience-title-${idx}`}
-                        autoComplete="organization-title"
-                        autoCapitalize="words"
-                        enterKeyHint="next"
-                        aria-invalid={Boolean(titleError)}
-                        value={exp.title || ""}
-                        required={isFieldRequired("experience", "title")}
-                        onChange={(e) => updateExperience(idx, { title: e.target.value })}
-                        placeholder={t("contacts.form.jobTitlePlaceholder")}
-                        className={cn(titleError && "border-destructive focus-visible:ring-destructive")}
-                      />
-                    </Field>
-                  ) : null}
-
-                  {showOrganization ? (
-                    <Field
-                      label={t("contacts.fields.experienceOrganization")}
-                      required={isFieldRequired("experience", "organization")}
-                      error={orgError}
-                      id={`cf-${formInstanceId}-experience-org-${idx}`}
-                    >
-                      <LeadingIconInput
-                        icon={Building2}
-                        id={`cf-${formInstanceId}-experience-org-${idx}`}
-                        name={`cf-${formInstanceId}-experience-org-${idx}`}
-                        autoComplete="organization"
-                        autoCapitalize="words"
-                        enterKeyHint="next"
-                        aria-invalid={Boolean(orgError)}
-                        value={exp.organization || ""}
-                        required={isFieldRequired("experience", "organization")}
-                        onChange={(e) => updateExperience(idx, { organization: e.target.value })}
-                        placeholder={t("contacts.form.organizationPlaceholder")}
-                        className={cn(orgError && "border-destructive focus-visible:ring-destructive")}
-                      />
-                    </Field>
-                  ) : null}
-                </div>
-
-                {/* Row 2: Location */}
-                {showLocation ? (
-                  <Field
-                    label={t("contacts.fields.experienceLocation")}
-                    required={isFieldRequired("experience", "location")}
-                    error={locationError}
-                    id={`cf-${formInstanceId}-experience-location-${idx}`}
-                  >
-                    <LeadingIconInput
-                      icon={MapPin}
-                      id={`cf-${formInstanceId}-experience-location-${idx}`}
-                      name={`cf-${formInstanceId}-experience-location-${idx}`}
-                      autoCapitalize="words"
-                      enterKeyHint="next"
-                      aria-invalid={Boolean(locationError)}
-                      value={exp.location || ""}
-                      required={isFieldRequired("experience", "location")}
-                      onChange={(e) => updateExperience(idx, { location: e.target.value })}
-                      placeholder={t("contacts.form.locationPlaceholder")}
-                      className={cn(locationError && "border-destructive focus-visible:ring-destructive")}
-                    />
-                  </Field>
-                ) : null}
-
-                {/* Row 3: Start Date & End Date */}
-                <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-                  {showStartDate ? (
-                    <Field
-                      label={t("contacts.fields.experienceStartDate")}
-                      required={isFieldRequired("experience", "startDate")}
-                      error={startDateError}
-                      id={`cf-${formInstanceId}-experience-start-${idx}`}
-                    >
-                      <DatePicker
-                        id={`cf-${formInstanceId}-experience-start-${idx}`}
-                        name={`cf-${formInstanceId}-experience-start-${idx}`}
-                        value={exp.startDate || undefined}
-                        required={isFieldRequired("experience", "startDate")}
-                        onChange={(dateStr) => updateExperience(idx, { startDate: dateStr })}
-                        placeholder={t("contacts.form.startDatePlaceholder")}
-                        max={exp.endDate || undefined}
-                        aria-invalid={Boolean(startDateError)}
-                        className={cn(
-                          startDateError &&
-                            "border-destructive focus-within:border-destructive focus-within:ring-destructive",
-                        )}
-                      />
-                    </Field>
-                  ) : null}
-
-                  {showEndDate ? (
-                    <Field
-                      label={t("contacts.fields.experienceEndDate")}
-                      required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
-                      error={endDateError}
-                      id={`cf-${formInstanceId}-experience-end-${idx}`}
-                    >
-                      <DatePicker
-                        id={`cf-${formInstanceId}-experience-end-${idx}`}
-                        name={`cf-${formInstanceId}-experience-end-${idx}`}
-                        value={exp.isCurrent ? undefined : exp.endDate || undefined}
-                        disabled={Boolean(exp.isCurrent)}
-                        required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
-                        onChange={(dateStr) => updateExperience(idx, { endDate: dateStr })}
-                        placeholder={
-                          exp.isCurrent
-                            ? t("contacts.form.present")
-                            : t("contacts.form.endDatePlaceholder")
-                        }
-                        min={exp.startDate || undefined}
-                        aria-invalid={Boolean(endDateError)}
-                        className={cn(
-                          endDateError &&
-                            "border-destructive focus-within:border-destructive focus-within:ring-destructive",
-                        )}
-                      />
-                    </Field>
-                  ) : null}
-                </div>
-
-                {/* Inline Checkbox: Currently Working Here */}
-                {showIsCurrent ? (
-                  <FormCheckboxCard
-                    id={`cf-${formInstanceId}-experience-current-${idx}`}
-                    name={`cf-${formInstanceId}-experience-current-${idx}`}
-                    checked={Boolean(exp.isCurrent)}
-                    onCheckedChange={(checked) =>
-                      updateExperience(idx, {
-                        isCurrent: checked,
-                        endDate: checked ? "" : exp.endDate,
-                      })
-                    }
-                    label={t("contacts.form.currentlyWorkingHere")}
-                    error={isCurrentError}
-                  />
-                ) : null}
-
-
-                {/* Row 4: Description */}
-                {showDescription ? (
-                  <Field
-                    label={t("contacts.fields.experienceDescription")}
-                    required={isFieldRequired("experience", "description")}
-                    error={descriptionError}
-                    id={`cf-${formInstanceId}-experience-desc-${idx}`}
-                  >
-                    <Textarea
-                      id={`cf-${formInstanceId}-experience-desc-${idx}`}
-                      name={`cf-${formInstanceId}-experience-desc-${idx}`}
-                      rows={2}
-                      value={exp.description || ""}
-                      required={isFieldRequired("experience", "description")}
-                      onChange={(e) => updateExperience(idx, { description: e.target.value })}
-                      placeholder={t("contacts.form.jobDescriptionPlaceholder")}
-                      className={cn("text-xs resize-y min-h-16", descriptionError && "border-destructive focus-visible:ring-destructive")}
-                    />
-                  </Field>
-                ) : null}
-              </div>
-            </ListFieldCard>
-          );
-        })}
+        {experiences.map((exp, idx) => (
+          <ContactExperienceEntryCard
+            key={getLocalId("experience", idx)}
+            exp={exp}
+            idx={idx}
+            formInstanceId={formInstanceId}
+            getLocalId={getLocalId}
+            getListItemError={getListItemError}
+            isFieldRequired={isFieldRequired}
+            showTitle={showTitle}
+            showOrganization={showOrganization}
+            showEmploymentType={showEmploymentType}
+            showLocation={showLocation}
+            showStartDate={showStartDate}
+            showEndDate={showEndDate}
+            showIsCurrent={showIsCurrent}
+            showDescription={showDescription}
+            employmentTypeOptions={employmentTypeOptions}
+            onUpdateEmploymentTypeOptions={onUpdateEmploymentTypeOptions}
+            onUpdate={(patch) => updateExperience(idx, patch)}
+            onRemove={() => removeExperience(idx)}
+          />
+        ))}
       </AnimatePresence>
     </ContactSubListShell>
   );

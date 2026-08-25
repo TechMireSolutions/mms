@@ -1,221 +1,18 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Search,
-  LayoutDashboard,
-  Users,
-  GraduationCap,
-  UserCheck,
-  BookOpen,
-  Calendar,
-  ClipboardCheck,
-  DollarSign,
-  Award,
-  FileText,
-  HelpCircle,
-  Calculator,
-  ShieldAlert,
-  MessageSquare,
-  UserCog,
-  Settings,
-  User,
-} from "lucide-react";
+import { Search } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { OVERLAY_BACKDROP } from "@/components/ui/formStyles";
+import { COMMAND_ITEMS } from "@/components/ui/commandPaletteItems";
 
 export interface CommandPaletteProps {
   open: boolean;
   onClose: () => void;
 }
-
-interface CommandItem {
-  id: string;
-  labelKey: string;
-  fallbackLabel: string;
-  categoryKey: string;
-  fallbackCategory: string;
-  path: string;
-  icon: React.ElementType;
-  keywords: string[];
-}
-
-const COMMAND_ITEMS: CommandItem[] = [
-  {
-    id: "dashboard",
-    labelKey: "nav.dashboard",
-    fallbackLabel: "Dashboard",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.home,
-    icon: LayoutDashboard,
-    keywords: ["home", "analytics", "kpi", "metrics", "dashboard"],
-  },
-  {
-    id: "contacts",
-    labelKey: "nav.contacts",
-    fallbackLabel: "Contacts",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.contacts,
-    icon: Users,
-    keywords: ["contacts", "directory", "people", "guardian", "phone"],
-  },
-  {
-    id: "students",
-    labelKey: "nav.students",
-    fallbackLabel: "Students",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.students,
-    icon: GraduationCap,
-    keywords: ["students", "pupils", "learners", "class", "grade"],
-  },
-  {
-    id: "teachers",
-    labelKey: "nav.teachers",
-    fallbackLabel: "Teachers",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.teachers,
-    icon: UserCheck,
-    keywords: ["teachers", "faculty", "instructors", "staff"],
-  },
-  {
-    id: "enrollments",
-    labelKey: "nav.enrollments",
-    fallbackLabel: "Enrollments",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.enrollments,
-    icon: BookOpen,
-    keywords: ["enrollments", "admissions", "classes", "registration"],
-  },
-  {
-    id: "sessions",
-    labelKey: "nav.sessions",
-    fallbackLabel: "Sessions",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.sessions,
-    icon: Calendar,
-    keywords: ["sessions", "timetable", "schedule", "term"],
-  },
-  {
-    id: "attendance",
-    labelKey: "nav.attendance",
-    fallbackLabel: "Attendance",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.attendance,
-    icon: ClipboardCheck,
-    keywords: ["attendance", "present", "absent", "tardy", "rollcall"],
-  },
-  {
-    id: "finance",
-    labelKey: "nav.finance",
-    fallbackLabel: "Finance",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.finance,
-    icon: DollarSign,
-    keywords: ["finance", "fees", "invoices", "payments", "dues", "billing"],
-  },
-  {
-    id: "hasanatCards",
-    labelKey: "nav.hasanatCards",
-    fallbackLabel: "Hasanat Cards",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.hasanatCards,
-    icon: Award,
-    keywords: ["hasanat", "cards", "rewards", "merit", "points"],
-  },
-  {
-    id: "examinations",
-    labelKey: "nav.examinations",
-    fallbackLabel: "Examinations",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.examinations,
-    icon: FileText,
-    keywords: ["examinations", "exams", "grades", "marks", "tests", "results"],
-  },
-  {
-    id: "questionBank",
-    labelKey: "nav.questionBank",
-    fallbackLabel: "Question Bank",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.questionBank,
-    icon: HelpCircle,
-    keywords: ["question bank", "questions", "quiz", "assessment"],
-  },
-  {
-    id: "accounting",
-    labelKey: "nav.accounting",
-    fallbackLabel: "Accounting",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.accounting,
-    icon: Calculator,
-    keywords: ["accounting", "ledger", "journal", "expenses", "revenue"],
-  },
-  {
-    id: "obligations",
-    labelKey: "nav.obligations",
-    fallbackLabel: "Obligations",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.obligations,
-    icon: ShieldAlert,
-    keywords: ["obligations", "compliance", "dues", "liabilities"],
-  },
-  {
-    id: "messaging",
-    labelKey: "nav.messaging",
-    fallbackLabel: "Messaging",
-    categoryKey: "nav.modules",
-    fallbackCategory: "Navigation",
-    path: ROUTES.messaging,
-    icon: MessageSquare,
-    keywords: ["messaging", "sms", "whatsapp", "notifications", "broadcast"],
-  },
-  {
-    id: "users",
-    labelKey: "nav.users",
-    fallbackLabel: "Users",
-    categoryKey: "nav.system",
-    fallbackCategory: "System",
-    path: ROUTES.users,
-    icon: UserCog,
-    keywords: ["users", "admins", "staff", "permissions", "roles"],
-  },
-  {
-    id: "settings",
-    labelKey: "nav.settings",
-    fallbackLabel: "Settings",
-    categoryKey: "nav.system",
-    fallbackCategory: "System",
-    path: ROUTES.settings,
-    icon: Settings,
-    keywords: ["settings", "branding", "theme", "backup", "configuration"],
-  },
-  {
-    id: "profile",
-    labelKey: "account.title",
-    fallbackLabel: "Account Profile",
-    categoryKey: "nav.system",
-    fallbackCategory: "System",
-    path: ROUTES.profile,
-    icon: User,
-    keywords: ["profile", "account", "password", "security", "me"],
-  },
-];
 
 export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JSX.Element | null {
   const [query, setQuery] = useState("");
@@ -304,7 +101,6 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
           className="relative w-full max-w-xl overflow-hidden rounded-xl border border-border bg-card shadow-surface-lg surface-glass"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Search Header */}
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">
             <Search className="h-5 w-5 shrink-0 text-muted-foreground" aria-hidden="true" />
             <Input
@@ -328,7 +124,6 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
             </kbd>
           </div>
 
-          {/* Results List */}
           <div className="max-h-80 overflow-y-auto p-2" role="listbox" id="tenant-command-listbox">
             {filteredItems.length === 0 ? (
               <div className="px-4 py-8 text-center text-sm text-muted-foreground">
@@ -356,9 +151,20 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
                         : "text-foreground hover:bg-muted/70",
                     )}
                   >
-                    <Icon className={cn("h-4.5 w-4.5 shrink-0", isSelected ? "text-primary-foreground" : "text-muted-foreground")} aria-hidden="true" />
+                    <Icon
+                      className={cn(
+                        "h-4.5 w-4.5 shrink-0",
+                        isSelected ? "text-primary-foreground" : "text-muted-foreground",
+                      )}
+                      aria-hidden="true"
+                    />
                     <span className="flex-1 truncate">{translatedLabel}</span>
-                    <span className={cn("text-xs opacity-70", isSelected ? "text-primary-foreground" : "text-muted-foreground")}>
+                    <span
+                      className={cn(
+                        "text-xs opacity-70",
+                        isSelected ? "text-primary-foreground" : "text-muted-foreground",
+                      )}
+                    >
                       {item.path}
                     </span>
                   </button>

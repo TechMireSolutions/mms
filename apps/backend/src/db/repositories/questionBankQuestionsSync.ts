@@ -1,0 +1,125 @@
+import { and, eq } from 'drizzle-orm';
+import { type QuestionBankQuestion } from '@mms/shared';
+import {
+  questions,
+  questionCategories,
+  questionOptions,
+  questionTags,
+  questionCitations,
+} from '../schema.js';
+import { withTenant } from '../tenant-context.js';
+
+type QuestionRow = typeof questions.$inferSelect;
+type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+
+export function questionRowToRecord(
+  row: QuestionRow,
+  categories: string[] = [],
+  options: string[] = [],
+  tags: string[] = [],
+  citations: Array<{ bookId: string; citation: Record<string, unknown> }> = [],
+): QuestionBankQuestion {
+  return {
+    id: row.id,
+    categoryIds: categories,
+    categoryId: categories[0] ?? undefined,
+    type: row.type as QuestionBankQuestion['type'],
+    difficulty: row.difficulty as QuestionBankQuestion['difficulty'],
+    questionLanguage: row.questionLanguage as QuestionBankQuestion['questionLanguage'],
+    text: row.text,
+    options,
+    answer: row.answer,
+    marks: row.marks,
+    tags: tags.length > 0 ? tags : undefined,
+    sourceCitations: citations.length > 0 ? citations : undefined,
+    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
+    deletedBy: row.deletedBy ?? undefined,
+    deletionReason: row.deletionReason ?? undefined,
+  };
+}
+
+export async function syncQuestionChildren(
+  tx: Transaction,
+  subdomain: string,
+  record: QuestionBankQuestion,
+): Promise<void> {
+  await Promise.all([
+    tx
+      .delete(questionCategories)
+      .where(
+        and(
+          eq(questionCategories.workspaceSubdomain, subdomain),
+          eq(questionCategories.questionId, record.id),
+        ),
+      ),
+    tx
+      .delete(questionOptions)
+      .where(
+        and(
+          eq(questionOptions.workspaceSubdomain, subdomain),
+          eq(questionOptions.questionId, record.id),
+        ),
+      ),
+    tx
+      .delete(questionTags)
+      .where(
+        and(
+          eq(questionTags.workspaceSubdomain, subdomain),
+          eq(questionTags.questionId, record.id),
+        ),
+      ),
+    tx
+      .delete(questionCitations)
+      .where(
+        and(
+          eq(questionCitations.workspaceSubdomain, subdomain),
+          eq(questionCitations.questionId, record.id),
+        ),
+      ),
+  ]);
+
+  const catIds = record.categoryIds ?? (record.categoryId ? [record.categoryId] : []);
+  for (const catId of catIds) {
+    await tx.insert(questionCategories).values({
+      workspaceSubdomain: subdomain,
+      questionId: record.id,
+      categoryId: catId,
+    });
+  }
+
+  if (record.options && record.options.length > 0) {
+    for (let i = 0; i < record.options.length; i++) {
+      const opt = record.options[i]!;
+      await tx.insert(questionOptions).values({
+        id: `${record.id}_opt_${i}`,
+        workspaceSubdomain: subdomain,
+        questionId: record.id,
+        optionIndex: i,
+        optionText: opt,
+      });
+    }
+  }
+
+  if (record.tags && record.tags.length > 0) {
+    for (const tag of record.tags) {
+      await tx.insert(questionTags).values({
+        workspaceSubdomain: subdomain,
+        questionId: record.id,
+        tag,
+      });
+    }
+  }
+
+  if (record.sourceCitations && record.sourceCitations.length > 0) {
+    for (let i = 0; i < record.sourceCitations.length; i++) {
+      const cit = record.sourceCitations[i]!;
+      await tx.insert(questionCitations).values({
+        id: `${record.id}_cit_${i}`,
+        workspaceSubdomain: subdomain,
+        questionId: record.id,
+        bookId: cit.bookId,
+        citation: JSON.stringify(cit.citation ?? {}),
+      });
+    }
+  }
+}

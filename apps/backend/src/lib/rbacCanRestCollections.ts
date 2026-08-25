@@ -1,0 +1,30 @@
+/**
+ * Typed entity tables are REST-only (not document-store allowlisted).
+ * Their permission mappings live in `COLLECTION_*_PERMISSION` maps.
+ */
+export const REST_ONLY_TYPED_COLLECTIONS = new Set([
+  'attendance',
+  'attendance_records',
+  'finance_invoices',
+  'finance_payments',
+  'obligation_collections',
+  'obligation_types',
+  'mujtahids',
+  'mujtahid_reps',
+  'wakala_types',
+  'obligation_distributions',
+  'accounting_entries',
+  'accounting_accounts',
+  'accounts',
+  'accounting_fiscal_years',
+  'fiscal_years',
+  'hasanat_distributions',
+  'hasanat_batches',
+  'hasanat_denoms',
+  'hasanat_redemptions',
+  'exams',
+  'exam_results',
+  'questions',
+  'tests',
+  'assessment_results',
+]);

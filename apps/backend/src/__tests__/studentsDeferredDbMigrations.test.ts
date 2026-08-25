@@ -44,7 +44,7 @@ describe('students sync integrity (source)', () => {
 
   it('list status/GR expressions use typed columns only', () => {
     const src = readFileSync(
-      join(process.cwd(), 'src/db/repositories/studentRepositoryList.ts'),
+      join(process.cwd(), 'src/db/repositories/studentRepositoryListQuery.ts'),
       'utf8',
     );
     expect(src).toContain("COALESCE(${students.status}, 'active')");

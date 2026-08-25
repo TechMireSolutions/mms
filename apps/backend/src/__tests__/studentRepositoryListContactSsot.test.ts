@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const listSrc = readFileSync(
-  join(process.cwd(), 'src/db/repositories/studentRepositoryList.ts'),
+  join(process.cwd(), 'src/db/repositories/studentRepositoryListQuery.ts'),
   'utf8',
 );
 
