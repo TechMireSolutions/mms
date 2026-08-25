@@ -32,6 +32,7 @@ const CONTACT_ENTITY_ARRAY_KEYS = new Set([
   "activities",
   "attachments",
   "emergencyContacts",
+  "tags",
 ]);
 
 function valueHasContent(value: unknown): boolean {

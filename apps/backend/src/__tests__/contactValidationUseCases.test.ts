@@ -135,7 +135,8 @@ describe('contactValidationUseCases', () => {
       const prepared = await prepareContactRecord(contact, 'c1');
       expect(prepared.persona).toBeUndefined();
       expect(prepared.lifecycleStage).toBeUndefined();
-      expect(prepared.tag).toBe('Vip');
+      expect((prepared as any).tag).toBeUndefined();
+      expect(prepared.tags).toEqual(['VIP']);
     });
 
     it('uses the explicit id and falls back to a temp id otherwise', async () => {
