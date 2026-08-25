@@ -170,6 +170,9 @@ export function useTeachersPageController() {
   );
   const shownCount = workPageQuery.data?.body?.total ?? workTeachers.length;
 
+  const isWorkError = workPageQuery.isError || (workPageQuery.data != null && workPageQuery.data.status !== 200);
+  const workPageData = workPageQuery.data?.status === 200 ? workPageQuery.data.body : undefined;
+
   const tabPanelProps = useTeachersPageTabPanelProps(effectiveTab, {
     search,
     filterStatus,
@@ -195,9 +198,9 @@ export function useTeachersPageController() {
     customizerLabels: columnLayout.customizerLabels,
     teachers: workTeachers,
     workPageQuery: {
-      data: workPageQuery.data,
+      data: workPageData,
       isLoading: workPageQuery.isLoading,
-      isError: workPageQuery.isError,
+      isError: isWorkError,
       isFetching: workPageQuery.isFetching,
       refetch: () => {
         void workPageQuery.refetch();

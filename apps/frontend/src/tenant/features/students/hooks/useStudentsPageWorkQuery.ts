@@ -56,9 +56,18 @@ export function useStudentsPageWorkQuery({
     [workPageQuery.data],
   );
   const shownCount = workPageQuery.data?.body?.total ?? 0;
+  
+  const isWorkError = workPageQuery.isError || (workPageQuery.data != null && workPageQuery.data.status !== 200);
+
+  // Return a modified query object that patches .data to be the body and incorporates status checking into .isError
+  const workPageQueryPatched = {
+    ...workPageQuery,
+    isError: isWorkError,
+    data: workPageQuery.data?.status === 200 ? workPageQuery.data.body : undefined,
+  };
 
   return {
-    workPageQuery,
+    workPageQuery: workPageQueryPatched,
     workStudents,
     shownCount,
   };

@@ -27,8 +27,10 @@ export function useUsersPaginated(params: UsersPaginatedParams) {
       return sameUsersListFilters(previousParams, keyParams) ? previousData : undefined;
     },
   });
+  const isError = query.isError || (query.data != null && query.data.status !== 200);
+  const data = query.data?.status === 200 ? (query.data.body as UsersListPageResult) : undefined;
   
-  return { ...query, data: query.data?.body as UsersListPageResult | undefined };
+  return { ...query, data, isError };
 }
 
 /** Fetches all pages matching Work filters (non-Work consumers / export). */

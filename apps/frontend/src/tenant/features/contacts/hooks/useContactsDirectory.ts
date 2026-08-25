@@ -29,9 +29,9 @@ export function useContactsDirectory({
   const workLimit = CONTACTS_MODULE_MANIFEST.defaultPageSize;
 
   const {
-    data: workPageData,
+    data: workPageDataResponse,
     isLoading: isWorkLoading,
-    isError: isWorkError,
+    isError: isWorkErrorTsr,
     refetch: refetchWork,
     isFetching: isWorkFetching,
   } = useContactsContractList({
@@ -45,8 +45,10 @@ export function useContactsDirectory({
     quickFilter: filters.quickFilter,
   }, useServerWork);
 
-  const workContacts = (workPageData?.body?.contacts ?? []) as Contact[];
-  const shownCount = workPageData?.body?.total ?? 0;
+  const workContacts = (workPageDataResponse?.body?.contacts ?? []) as Contact[];
+  const shownCount = workPageDataResponse?.body?.total ?? 0;
+  const isWorkError = isWorkErrorTsr || (workPageDataResponse != null && workPageDataResponse.status !== 200);
+  const workPageData = workPageDataResponse?.status === 200 ? workPageDataResponse.body : undefined;
 
   const allContactsForLinks = useContactsDirectoryLinks({
     workContacts,

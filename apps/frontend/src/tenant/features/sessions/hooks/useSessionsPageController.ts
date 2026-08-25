@@ -77,7 +77,7 @@ export function useSessionsPageController() {
   const [activeTab, setActiveTab] = usePersistedTabState<string>('sessions_active_tab', 'work');
 
   const useServerWork = activeTab === 'work';
-  const { data: workPageData, isLoading: isWorkLoading, isFetching: isWorkFetching, isError, refetch } =
+  const { data: workPageData, isLoading: isWorkLoading, isFetching: isWorkFetching, isError: isErrorTsr, refetch } =
     useSessionsPaginated({
       page: listPage,
       limit: SESSIONS_MODULE_MANIFEST.defaultPageSize,
@@ -90,7 +90,8 @@ export function useSessionsPageController() {
       enabled: useServerWork,
     });
 
-  const pageData = (workPageData?.body ?? workPageData) as SessionsListPageResult | undefined;
+  const isError = isErrorTsr || (workPageData != null && workPageData.status !== 200);
+  const pageData = workPageData?.status === 200 ? (workPageData.body as SessionsListPageResult) : undefined;
 
   const sessions = useMemo(
     () => (pageData?.sessions ?? []) as Session[],

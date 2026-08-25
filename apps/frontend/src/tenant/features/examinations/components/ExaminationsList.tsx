@@ -164,6 +164,7 @@ export default function ExaminationsList({
 
   const canBulkTrash = canDelete && Boolean(showDeleted ? onBulkRestore : onBulkDelete);
   const isInitialLoading = examsPageQuery.isPending && !examsPageQuery.data;
+  const isError = examsPageQuery.isError || (examsPageQuery.data != null && examsPageQuery.data.status !== 200);
 
   return (
     <section className="space-y-4" aria-label={t("examinations.exams")} aria-busy={examsPageQuery.isFetching}>
@@ -193,7 +194,7 @@ export default function ExaminationsList({
         />
       )}
 
-      {examsPageQuery.isError ? (
+      {isError ? (
         <ErrorState
           title={t("examinations.loadFailed")}
           description={t("examinations.loadFailedHint")}
