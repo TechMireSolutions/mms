@@ -1,12 +1,15 @@
-import { useMemo } from "react";
+import React from "react";
 import {
   applyRelationshipOptionOrder,
   deriveRelationshipOptionsFromPairs,
   resolveRelationshipPairs,
+  DEFAULT_COLUMN_REGISTRY,
+  DEFAULT_FORM_TABS,
+  normalizeContactPreferences,
+  type ColumnRegistryEntry,
 } from "@mms/shared";
 import type { ContactConfigContextType } from "@/lib/contacts/contactConfigContextTypes";
 import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
-import type { ContactsConfigResult } from "@/lib/contacts/useContactStandardConfig";
 
 /**
  * Builds ContactConfig context value.
@@ -15,85 +18,117 @@ import type { ContactsConfigResult } from "@/lib/contacts/useContactStandardConf
  * Lookups kind `relationships` remains a write mirror only.
  */
 export function useContactConfigProviderValue(
-  config: ContactsConfigResult,
+  config: any,
 ): ContactConfigContextType {
   const {
-    settings: fieldConfig,
-    formTabsReady,
-    prefs,
-    updateConfig,
-    updateConfigAsync,
-    updatePrefs,
-    updatePrefsAsync,
-    enabledTabIds,
-    requiredTabIds,
-    fields,
-    isTabFieldEnabled,
-    isTabFieldRequired,
-    genders,
-    socialPlatforms,
-    phoneLabels,
-    emailLabels,
-    addressLabels,
-    countryCodes,
-    countryCodesMap,
-    educationDegrees,
-    employmentTypes,
-    skillCategories,
-    skillProficiencies,
-    tags,
-    lookupsLoading,
-    lookupsError,
-    columnRegistry,
-    availableColumns,
-    visibleColumns,
-    updateGenders,
-    updateSocialPlatforms,
-    updateRelationships,
-    updatePhoneLabels,
-    updateEmailLabels,
-    updateAddressLabels,
-    updateEducationDegrees,
-    updateEmploymentTypes,
-    updateSkillCategories,
-    updateSkillProficiencies,
-    updateTags,
-    updateCountryCodes,
-    updateColumnRegistry,
-    updateUserColumnLayout,
-    isColumnVisible,
-    getColumnWidth,
-    setColumnWidth,
-    systemSortOptions,
-  } = config;
+    prefs: rawPrefs,
+    updateConfig = () => {},
+    updateConfigAsync = async () => {},
+    updatePrefs = () => {},
+    updatePrefsAsync = async () => {},
+    genders = [],
+    socialPlatforms = [],
+    phoneLabels = [],
+    emailLabels = [],
+    addressLabels = [],
+    countryCodes = [],
+    countryCodesMap = {},
+    educationDegrees = [],
+    employmentTypes = [],
+    skillCategories = [],
+    skillProficiencies = [],
+    tags = [],
+    lookupsLoading = false,
+    lookupsError = null,
+    updateGenders = () => {},
+    updateSocialPlatforms = () => {},
+    updateRelationships = () => {},
+    updatePhoneLabels = () => {},
+    updateEmailLabels = () => {},
+    updateAddressLabels = () => {},
+    updateEducationDegrees = () => {},
+    updateEmploymentTypes = () => {},
+    updateSkillCategories = () => {},
+    updateSkillProficiencies = () => {},
+    updateTags = () => {},
+    updateCountryCodes = () => {},
+    systemSortOptions = [],
+  } = config || {};
 
-  const defaultPhoneCountryCode = useMemo(
+  const prefs = React.useMemo(() => normalizeContactPreferences(rawPrefs), [rawPrefs]);
+
+  const [columnRegistry, setColumnRegistry] = React.useState<ColumnRegistryEntry[]>(
+    config?.columnRegistry?.length ? config.columnRegistry : DEFAULT_COLUMN_REGISTRY
+  );
+
+  const updateUserColumnLayout = React.useCallback((layout: ColumnRegistryEntry[]) => {
+    setColumnRegistry(layout);
+  }, []);
+
+  const updateColumnRegistry = React.useCallback((layout: ColumnRegistryEntry[]) => {
+    setColumnRegistry(layout);
+  }, []);
+
+  const getColumnWidth = React.useCallback((key: string) => {
+    return columnRegistry.find((c) => c.key === key)?.width;
+  }, [columnRegistry]);
+
+  const setColumnWidth = React.useCallback((key: string, width: number) => {
+    setColumnRegistry((prev) =>
+      prev.map((c) => (c.key === key ? { ...c, width } : c)),
+    );
+  }, []);
+
+  const isColumnVisible = React.useCallback((key: string) => {
+    return columnRegistry.find((c) => c.key === key)?.enabled ?? false;
+  }, [columnRegistry]);
+
+  const availableColumns = React.useMemo(() => {
+    return columnRegistry.map((entry) => ({
+      id: entry.key,
+      label: entry.label,
+      sortField: entry.sortField,
+      width: entry.width,
+    }));
+  }, [columnRegistry]);
+
+  const visibleColumns = React.useMemo(() => {
+    return columnRegistry
+      .filter((entry) => entry.enabled)
+      .map((entry) => ({
+        id: entry.key,
+        label: entry.label,
+        sortField: entry.sortField,
+        width: entry.width,
+      }));
+  }, [columnRegistry]);
+
+  const defaultPhoneCountryCode = React.useMemo(
     () => getFallbackCountryCode(prefs, countryCodesMap, countryCodes),
     [countryCodes, countryCodesMap, prefs],
   );
 
   /** Form Relationship-type dropdown — fixed system catalog (Parent/Child, …). */
-  const resolvedRelationships = useMemo(() => {
+  const resolvedRelationships = React.useMemo(() => {
     const derived = deriveRelationshipOptionsFromPairs(
-      resolveRelationshipPairs(prefs.relationshipPairs),
+      resolveRelationshipPairs(prefs?.relationshipPairs),
     );
-    return applyRelationshipOptionOrder(derived, prefs.relationshipOptionOrder);
-  }, [prefs.relationshipPairs, prefs.relationshipOptionOrder]);
+    return applyRelationshipOptionOrder(derived, prefs?.relationshipOptionOrder);
+  }, [prefs?.relationshipPairs, prefs?.relationshipOptionOrder]);
 
-  return useMemo(
+  return React.useMemo(
     () => ({
-      fieldConfig,
-      formTabsReady,
+      formTabsReady: true,
+      enabledTabIds: new Set(DEFAULT_FORM_TABS.filter((t) => t.enabled).map((t) => t.key)),
+      requiredTabIds: new Set(["basic"]),
+      fields: {},
+      isTabFieldEnabled: () => true,
+      isTabFieldRequired: () => false,
       prefs,
       updateConfig,
       updateConfigAsync,
       updatePrefs,
       updatePrefsAsync,
-      enabledTabIds,
-      requiredTabIds,
-      fields,
-      isTabFieldEnabled,
-      isTabFieldRequired,
       genders,
       socialPlatforms,
       relationships: resolvedRelationships,
@@ -133,18 +168,11 @@ export function useContactConfigProviderValue(
       systemSortOptions,
     }),
     [
-      fieldConfig,
-      formTabsReady,
       prefs,
       updateConfig,
       updateConfigAsync,
       updatePrefs,
       updatePrefsAsync,
-      enabledTabIds,
-      requiredTabIds,
-      fields,
-      isTabFieldEnabled,
-      isTabFieldRequired,
       genders,
       socialPlatforms,
       resolvedRelationships,

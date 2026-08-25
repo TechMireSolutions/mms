@@ -4,7 +4,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { EditableMultiSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { useTranslation } from "@/hooks/useTranslation";
-import { DEFAULT_TAG_LABELS, type Contact, formatCnic, todayISO, getContactTags } from "@mms/shared";
+import { type Contact, formatCnic, todayISO, getContactTags } from "@mms/shared";
 import { cn } from "@/lib/utils";
 
 export interface ContactBasicMetaFieldsProps {
@@ -98,7 +98,7 @@ export function ContactBasicMetaFields({
         >
           <EditableMultiSelect
             id={`cf-${formInstanceId}-tag`}
-            options={tags && tags.length > 0 ? tags : DEFAULT_TAG_LABELS}
+            options={tags ?? []}
             values={currentTags}
             onChange={(selected) =>
               updateDraft({

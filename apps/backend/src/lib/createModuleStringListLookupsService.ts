@@ -36,7 +36,7 @@ export function createModuleStringListLookupsService<
       id: string;
       kind: TKind;
       label: string;
-      meta: null;
+      meta: Record<string, unknown> | null;
       sortOrder: number;
     }>,
   ) => Promise<void>;
@@ -78,17 +78,31 @@ export function createModuleStringListLookupsService<
     if (!tenant) throw new Error('Tenant context required');
 
     const labels = items.map((label) => label.trim()).filter(Boolean);
-    await replaceForKind(
-      tenant,
+    const rowsToSave: Array<{
+      id: string;
+      kind: TKind;
+      label: string;
+      meta: Record<string, unknown> | null;
+      sortOrder: number;
+    }> = labels.map((label, index) => ({
+      id: `${tenant}:${kind}:${slugifyLookupLabel(label, index)}`,
       kind,
-      labels.map((label, index) => ({
-        id: `${tenant}:${kind}:${slugifyLookupLabel(label, index)}`,
+      label,
+      meta: null,
+      sortOrder: index,
+    }));
+
+    if (rowsToSave.length === 0) {
+      rowsToSave.push({
+        id: `${tenant}:${kind}:__empty__`,
         kind,
-        label,
-        meta: null,
-        sortOrder: index,
-      })),
-    );
+        label: '',
+        meta: { empty: true },
+        sortOrder: 0,
+      });
+    }
+
+    await replaceForKind(tenant, kind, rowsToSave);
     await broadcastCollection(broadcastKey);
     return labels;
   }

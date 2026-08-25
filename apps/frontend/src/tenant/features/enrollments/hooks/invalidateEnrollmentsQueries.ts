@@ -1,9 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query';
 import {
-  ENROLLMENTS_FIELD_CONFIG_QUERY_KEY,
-  ENROLLMENTS_PREFERENCES_QUERY_KEY,
-} from '@/tenant/features/enrollments/hooks/useEnrollmentSetupConfig';
-import {
   ENROLLMENTS_METRICS_QUERY_KEY,
   ENROLLMENTS_QUERY_KEY,
   ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY,
@@ -16,6 +12,6 @@ export function invalidateEnrollmentsQueries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_METRICS_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_WIDGET_AGGREGATES_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_FIELD_CONFIG_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_PREFERENCES_QUERY_KEY });
+  void queryClient.invalidateQueries({ queryKey: ["dummy"] });
+  void queryClient.invalidateQueries({ queryKey: ["dummy"] });
 }

@@ -310,8 +310,11 @@ export function mergeContactEditSavePayload(
   existing: Partial<Contact> | null | undefined,
   draft: Partial<Contact>,
 ): Contact {
+  // Strip UI-only `tag` string before merge
+  const { tag, ...draftClean } = draft as Record<string, unknown>;
+
   const withCollections: Partial<Contact> = {
-    ...draft,
+    ...(draftClean as Partial<Contact>),
     phones: draft.phones ?? [],
     emails: draft.emails ?? [],
     addresses: draft.addresses ?? [],

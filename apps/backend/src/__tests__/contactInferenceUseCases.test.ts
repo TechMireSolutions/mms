@@ -7,7 +7,7 @@ vi.mock('../lib/contactPreferencesService.js', () => ({
   loadContactPreferences: () => mockLoadContactPreferences(),
 }));
 
-import { applyContactRelationshipInference } from '../contacts/use-cases/contactRelationshipInferenceUseCases.js';
+import { applyContactRelationshipInference } from '../contacts/use-cases/contactInferenceUseCases.js';
 
 function fakeContact(id: string, overrides: Partial<Contact> = {}): Contact {
   return {

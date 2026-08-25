@@ -6,7 +6,7 @@ import { broadcastCollection } from '../../lib/livePush.js';
 import {
   assertContactUniqueFields,
   ContactUniqueFieldError,
-} from './contactUniqueFieldUseCases.js';
+} from './contactValidationUseCases.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 

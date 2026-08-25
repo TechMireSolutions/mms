@@ -16,7 +16,7 @@ import {
   mergeContactPatch,
   prepareContactRecord,
   stripClientSoftDeleteFields,
-} from '../contacts/use-cases/contactNormalizeUseCases.js';
+} from '../contacts/use-cases/contactValidationUseCases.js';
 
 function fakeContact(id: string, overrides: Partial<Contact> = {}): Contact {
   return {
@@ -30,7 +30,7 @@ function fakeContact(id: string, overrides: Partial<Contact> = {}): Contact {
   };
 }
 
-describe('contactNormalizeUseCases', () => {
+describe('contactValidationUseCases', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockLoadContactRuntimeDefaults.mockResolvedValue({

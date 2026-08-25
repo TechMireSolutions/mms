@@ -1,6 +1,6 @@
 import type { TabDefinition, FieldDefinition } from "./contactTypes.js";
 import { INITIAL_QUESTION_BANK_FIELD_SEED } from "./moduleFieldSetupDefaults.js";
-import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import type { ModuleFieldDef } from "./moduleFieldSchema.js";
 import {
   DEFAULT_QUESTION_CATEGORIES,
   DEFAULT_QUESTION_SOURCE_BOOKS,
@@ -20,7 +20,7 @@ export interface QuestionBankSettings {
   difficultyLevels?: import('./questionBankTypes.js').QuestionDifficultyRegistryEntry[];
   defaultViewLayout?: string;
   fields?: Record<string, unknown>;
-  customFields?: ModuleCustomField[];
+  customFields?: [];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
   enabledTabs?: string[];
@@ -51,7 +51,6 @@ export const DEFAULT_QUESTION_BANK_SETTINGS: QuestionBankSettings = {
     basic: INITIAL_QUESTION_BANK_FIELD_SEED.basic.map((f) => ({ ...f })),
     options: INITIAL_QUESTION_BANK_FIELD_SEED.options.map((f) => ({ ...f })),
   },
-  customFields: [],
   fieldOrder: [
     'text',
     'categoryId',

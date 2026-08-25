@@ -23,7 +23,7 @@ export function useContactsPageOverlayProps({
 }: {
   canWrite: boolean;
   canDelete: boolean;
-  prefs: {
+  prefs?: {
     defaultCountry?: string;
     defaultCity?: string;
     defaultProvince?: string;
@@ -45,9 +45,9 @@ export function useContactsPageOverlayProps({
   allContactsForLinks: Contact[];
   selectedCount: number;
 }): ContactsPageOverlaysProps {
-  const defaultCountry = prefs.defaultCountry || "";
-  const defaultCity = prefs.defaultCity || "";
-  const defaultProvince = prefs.defaultProvince || "";
+  const defaultCountry = prefs?.defaultCountry || "";
+  const defaultCity = prefs?.defaultCity || "";
+  const defaultProvince = prefs?.defaultProvince || "";
 
   const currentViewContact = useMemo(() => {
     if (!overlay.viewContact) return null;

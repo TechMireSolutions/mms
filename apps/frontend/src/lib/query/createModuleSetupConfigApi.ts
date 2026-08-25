@@ -1,66 +1,22 @@
-
-export interface CreateModuleSetupConfigApiOptions<
-  TFieldConfig extends { formTabs?: unknown[] },
-  TPreferences,
-> {
-  fetchFieldConfigFn: (signal?: AbortSignal) => Promise<TFieldConfig | null>;
-  saveFieldConfigFn: (config: unknown) => Promise<TFieldConfig>;
+export interface CreateModuleSetupConfigApiOptions<TPreferences> {
   fetchPreferencesFn: (signal?: AbortSignal) => Promise<TPreferences | null>;
   savePreferencesFn: (prefs: unknown) => Promise<TPreferences>;
-  normalizeFieldConfig: (config: unknown) => TFieldConfig;
-  composeSettings: (
-    fieldConfig: unknown,
-    preferences: unknown,
-    formTabs?: unknown[],
-  ) => TFieldConfig;
   normalizePrefs: (prefs: unknown) => TPreferences;
-  stripFieldConfig: (config: TFieldConfig) => Record<string, unknown>;
 }
 
 /**
- * Shared Setup field-config + preferences REST + memory-cache module.
- * Teachers/Students adapters pass module compose/normalize/strip functions.
+ * Shared Setup preferences REST + memory-cache module.
+ * Adapters pass module normalize functions.
  */
-export function createModuleSetupConfigApi<
-  TFieldConfig extends { formTabs?: unknown[] },
-  TPreferences,
->({
-  fetchFieldConfigFn,
-  saveFieldConfigFn,
+export function createModuleSetupConfigApi<TPreferences>({
   fetchPreferencesFn,
   savePreferencesFn,
-  normalizeFieldConfig,
-  composeSettings,
   normalizePrefs,
-  stripFieldConfig,
-}: CreateModuleSetupConfigApiOptions<TFieldConfig, TPreferences>) {
-  let memoryFieldConfig: TFieldConfig | null = null;
+}: CreateModuleSetupConfigApiOptions<TPreferences>) {
   let memoryPreferences: TPreferences | null = null;
-
-  function setFieldConfigMemory(config: TFieldConfig): void {
-    memoryFieldConfig = normalizeFieldConfig(config);
-  }
 
   function setPreferencesMemory(preferences: TPreferences): void {
     memoryPreferences = normalizePrefs(preferences);
-  }
-
-  async function fetchFieldConfig(signal?: AbortSignal): Promise<TFieldConfig> {
-    const response = await fetchFieldConfigFn(signal);
-    const merged = normalizeFieldConfig(response);
-    memoryFieldConfig = merged;
-    return merged;
-  }
-
-  async function saveFieldConfigAsync(config: TFieldConfig): Promise<TFieldConfig> {
-    const body = stripFieldConfig(config);
-    const response = await saveFieldConfigFn(body);
-    const saved = normalizeFieldConfig({
-      ...(response ?? body),
-      formTabs: (response as any)?.formTabs ?? config.formTabs,
-    });
-    memoryFieldConfig = saved;
-    return saved;
   }
 
   async function fetchPreferences(signal?: AbortSignal): Promise<TPreferences> {
@@ -71,7 +27,7 @@ export function createModuleSetupConfigApi<
   }
 
   async function savePreferencesAsync(
-    preferences: TPreferences | TFieldConfig,
+    preferences: TPreferences,
   ): Promise<TPreferences> {
     const normalized = normalizePrefs(preferences);
     const response = await savePreferencesFn(normalized);
@@ -80,19 +36,12 @@ export function createModuleSetupConfigApi<
     return saved;
   }
 
-  function getSettingsMemoryFallback(): TFieldConfig {
-    return composeSettings(
-      memoryFieldConfig,
-      memoryPreferences ?? normalizePrefs(null),
-      memoryFieldConfig?.formTabs,
-    );
+  function getSettingsMemoryFallback(): TPreferences {
+    return memoryPreferences ?? normalizePrefs(null);
   }
 
   return {
-    setFieldConfigMemory,
     setPreferencesMemory,
-    fetchFieldConfig,
-    saveFieldConfigAsync,
     fetchPreferences,
     savePreferencesAsync,
     getSettingsMemoryFallback,

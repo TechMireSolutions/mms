@@ -10,7 +10,6 @@ import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   ICON_MAP,
-  DETAIL_SYSTEM_TAB_KEYS,
   DEFAULT_DETAIL_TAB_BY_KEY,
 } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
 import { useContactDetailActions } from "@/tenant/features/contacts/hooks/useContactDetailActions";
@@ -29,7 +28,7 @@ export function useContactDetailViewModel({
   onUpdateContact?: (contact: Contact) => Promise<void>;
   canWrite: boolean;
 }) {
-  const { enabledTabIds, isTabFieldEnabled, fieldConfig, fields } = useContactConfig();
+  const { enabledTabIds, isTabFieldEnabled, fields } = useContactConfig();
   const { role } = usePermissions();
   const viewerRole = role ?? "";
   const { t } = useTranslation();
@@ -40,26 +39,12 @@ export function useContactDetailViewModel({
   const canPersistContact = canWrite && Boolean(onUpdateContact) && !isArchived;
 
   const detailTabs = useMemo(() => {
-    const tabsFromConfig = fieldConfig.detailTabs || [];
-    const sorted = [...tabsFromConfig]
-      .sort((a, b) => a.order - b.order)
-      .filter(
-        (tab) =>
-          tab.key !== "network" &&
-          tab.enabled &&
-          (DETAIL_SYSTEM_TAB_KEYS.has(tab.key) || enabledTabIds.has(tab.key)),
-      );
-
-    return sorted.map((tab) => {
-      const defaultTab = DEFAULT_DETAIL_TAB_BY_KEY.get(tab.key);
-      const labelKey = tab.labelKey ?? defaultTab?.labelKey;
-      return {
-        key: tab.key,
-        label: labelKey ? t(labelKey) : tab.label,
-        icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
-      };
-    });
-  }, [fieldConfig.detailTabs, enabledTabIds, t]);
+    return Array.from(DEFAULT_DETAIL_TAB_BY_KEY.values()).map((tab) => ({
+      key: tab.key,
+      label: tab.labelKey ? t(tab.labelKey) : tab.label,
+      icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
+    }));
+  }, [t]);
 
   const [activeTab, setActiveTab] = useState<string>(() => detailTabs[0]?.key || "");
 

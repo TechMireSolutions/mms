@@ -1,5 +1,4 @@
 import { createContext } from "react";
-import type { FieldConfig } from "@mms/shared";
 import type { ContactConfigExtras } from "./useContactConfigTypes";
 
 /** Column descriptor for Contacts tables and grid views. */
@@ -13,7 +12,6 @@ export interface ContactsColumnConfig {
 /** Complete Contact Configuration Context shape consumed by tenant views and forms. */
 export interface ContactConfigContextType
   extends Omit<ContactConfigExtras, "lookupsReady" | "reloadCollections"> {
-  fieldConfig: FieldConfig;
   defaultPhoneCountryCode: string;
 }
 

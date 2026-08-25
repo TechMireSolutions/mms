@@ -33,11 +33,6 @@ export function useContactFormDraft({
   onValidationTab: (tabId: string, fieldId?: string, index?: number) => void;
 }) {
   const {
-    isTabFieldEnabled,
-    isTabFieldRequired,
-    enabledTabIds,
-    fieldConfig,
-    fields,
     phoneLabels,
     emailLabels,
     addressLabels,
@@ -101,8 +96,7 @@ export function useContactFormDraft({
       defaultProvince,
       defaultCountry,
       optionDefaults,
-      fields,
-      socialPlatforms,
+        socialPlatforms,
       relationshipOptions,
     }),
   );
@@ -140,8 +134,6 @@ export function useContactFormDraft({
   } = useContactFormDraftHelpers({
     formInstanceId,
     defaultCountryCode,
-    isTabFieldEnabled,
-    isTabFieldRequired,
     validationErrors,
     contactDraft,
     setContactDraft,
@@ -158,8 +150,7 @@ export function useContactFormDraft({
       defaultProvince,
       defaultCountry,
       optionDefaults,
-      fields,
-      socialPlatforms,
+        socialPlatforms,
       relationshipOptions,
     });
     setContactDraft(nextDraft);
@@ -188,8 +179,10 @@ export function useContactFormDraft({
 
     const timer = setTimeout(async () => {
       try {
+        // The tag property is a computed frontend-only UI state added by normalization
+        const { tag, ...cleanDraft } = contactDraft as any;
         const res = await apiContract.contacts.duplicateCheck({
-          body: { contact: contactDraft },
+          body: { contact: cleanDraft },
         });
         if (res.status === 200) {
           setDuplicateCount((res.body as any)?.matchCount ?? 0);
@@ -262,9 +255,6 @@ export function useContactFormDraft({
     removeSubListItem,
     handleSave,
     validationErrors,
-    enabledTabIds,
-    fieldConfig,
-    fields,
   };
 }
 

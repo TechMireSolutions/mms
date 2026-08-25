@@ -5,7 +5,7 @@ import { useContactsToolbarModel, type ContactsToolbarModel } from './useContact
 import { DEFAULT_COLUMN_REGISTRY, type AppTranslationKey } from '@mms/shared';
 
 declare global {
-  // eslint-disable-next-line no-var
+   
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;

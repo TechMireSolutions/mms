@@ -13,6 +13,7 @@ import {
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import {
   useActivityLogs,
+  useActivityLogsCollection,
   useUsersMutations,
 } from '@/tenant/features/users/hooks/useUsersApi';
 import { useUsersPaginated } from '@/tenant/features/users/hooks/useUsersListQueries';
@@ -84,7 +85,7 @@ export function useUsersPageController() {
   } = useUsersDirectoryFilters();
 
   const logsResult = useActivityLogs({ enabled: activeTab === 'work' && activeSubTab === 'activity' });
-  const logs = logsResult.data ?? [];
+  const logs = useActivityLogsCollection({ enabled: activeTab === 'work' && activeSubTab === 'activity' });
   const logsLoadFailed = logsResult.isError;
 
   const useServerWork = activeTab === 'work' && activeSubTab === 'users';

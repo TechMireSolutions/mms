@@ -34,7 +34,7 @@ function subListBaseProps(draft: ContactFormDraftState): ContactSubListTabBasePr
     getListItemError: draft.getListItemError,
     isFieldEnabled: draft.isFieldEnabled,
     isFieldRequired: draft.isFieldRequired,
-    fields: draft.fields,
+    fields: ({} as any),
     formInstanceId: draft.formInstanceId,
     addSubListItem: draft.addSubListItem,
     ensureSubListItem: draft.ensureSubListItem,
@@ -63,7 +63,7 @@ export function ContactFormTabContent({
     draft.getListItemError,
     draft.isFieldEnabled,
     draft.isFieldRequired,
-    draft.fields,
+    ({} as any),
     draft.formInstanceId,
     draft.addSubListItem,
     draft.ensureSubListItem,
@@ -89,7 +89,7 @@ export function ContactFormTabContent({
           onUpdateTags={draft.updateTags}
           lockGender={lockGender}
           handleAvatarChange={draft.handleAvatarChange}
-          fields={draft.fields}
+          fields={({} as any)}
         />
       );
     }

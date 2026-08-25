@@ -20,10 +20,12 @@ export function EnrollmentsReportsTier(): React.JSX.Element {
     );
   }
 
+  const aggregates = data?.status === 200 ? (data.body as any) : EMPTY_ENROLLMENTS_REPORT_AGGREGATES;
+
   return (
     <div className="space-y-4">
       <KPISummary category="enrollments" />
-      <EnrollmentReports aggregates={data ?? EMPTY_ENROLLMENTS_REPORT_AGGREGATES} />
+      <EnrollmentReports aggregates={aggregates} />
     </div>
   );
 }

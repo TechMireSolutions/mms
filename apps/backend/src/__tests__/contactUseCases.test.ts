@@ -45,8 +45,8 @@ vi.mock('../lib/rbacCanHelpers.js', () => ({
 }));
 
 import { createContactsUseCases } from '../contacts/use-cases/contactUseCases.js';
-import { ContactUniqueFieldError } from '../contacts/use-cases/contactUniqueFieldUseCases.js';
-import { ContactPermissionError } from '../contacts/use-cases/contactNormalizeUseCases.js';
+import { ContactUniqueFieldError } from '../contacts/use-cases/contactValidationUseCases.js';
+import { ContactPermissionError } from '../contacts/use-cases/contactValidationUseCases.js';
 import type { ContactDuplicateCandidateKeys } from '../contacts/repository/contactsRepository.js';
 import { loadContactLookupKind } from '../lib/contactLookupsService.js';
 import { loadContactPreferences } from '../lib/contactPreferencesService.js';

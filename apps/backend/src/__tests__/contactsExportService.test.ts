@@ -5,12 +5,12 @@ const mockLoadContactsPage = vi.fn();
 const mockLoadContactsByIds = vi.fn();
 const mockLoadContactFieldConfig = vi.fn();
 
-vi.mock('../services/contactService.js', () => ({
+vi.mock('../contacts/use-cases/contactLoadUseCases.js', () => ({
   loadContactsPage: (...args: unknown[]) => mockLoadContactsPage(...args),
   loadContactsByIds: (...args: unknown[]) => mockLoadContactsByIds(...args),
 }));
 
-vi.mock('../services/contactConfigService.js', () => ({
+vi.mock('../lib/contactConfigService.js', () => ({
   loadContactFieldConfig: () => mockLoadContactFieldConfig(),
 }));
 

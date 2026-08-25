@@ -11,7 +11,7 @@ export function useWorkspaceRoles(): WorkspaceRole[] {
 
   const roles = useMemo(() => {
     if (settings.workspaceRoles?.length) {
-      return settings.workspaceRoles.map((r) => ({
+      return settings.workspaceRoles.map((r: any) => ({
         ...r,
         permissions: structuredClone(r.permissions),
       }));

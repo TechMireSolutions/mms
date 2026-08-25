@@ -1,26 +1,9 @@
-/**
- * Setup field-config + preferences via typed REST.
- */
-import {
-  composeHasanatSettings,
-  normalizeHasanatModulePreferences,
-  normalizeHasanatSettings,
-  stripHasanatFieldConfigForPersist,
-  type HasanatModulePreferences,
-  type HasanatSettings,
-} from "@mms/shared";
 import { apiContract } from "@/lib/api";
 import { createModuleSetupConfigApi } from "@/lib/query/createModuleSetupConfigApi";
+import type { HasanatModulePreferences } from "@mms/shared";
+import { normalizeHasanatModulePreferences } from "@mms/shared";
 
-const api = createModuleSetupConfigApi<HasanatSettings, HasanatModulePreferences>({
-  fetchFieldConfigFn: async (signal) => {
-    const res = await apiContract.hasanat.getFieldConfig({ query: undefined, extraHeaders: {} });
-    return (res.body as any).config;
-  },
-  saveFieldConfigFn: async (config) => {
-    const res = await apiContract.hasanat.updateFieldConfig({ body: config as any });
-    return (res.body as any).config;
-  },
+const api = createModuleSetupConfigApi<HasanatModulePreferences>({
   fetchPreferencesFn: async (signal) => {
     const res = await apiContract.hasanat.getPreferences({ query: undefined, extraHeaders: {} });
     return (res.body as any).preferences;
@@ -29,16 +12,10 @@ const api = createModuleSetupConfigApi<HasanatSettings, HasanatModulePreferences
     const res = await apiContract.hasanat.updatePreferences({ body: prefs as any });
     return (res.body as any).preferences;
   },
-  normalizeFieldConfig: normalizeHasanatSettings,
-  composeSettings: composeHasanatSettings as any,
-  normalizePrefs: normalizeHasanatModulePreferences as any,
-  stripFieldConfig: stripHasanatFieldConfigForPersist as any,
+  normalizePrefs: normalizeHasanatModulePreferences as (prefs: unknown) => HasanatModulePreferences,
 });
 
-export const setHasanatFieldConfigMemory = api.setFieldConfigMemory;
 export const setHasanatPreferencesMemory = api.setPreferencesMemory;
-export const fetchHasanatFieldConfig = api.fetchFieldConfig;
-export const saveHasanatFieldConfigAsync = api.saveFieldConfigAsync;
 export const fetchHasanatPreferences = api.fetchPreferences;
 export const saveHasanatPreferencesAsync = api.savePreferencesAsync;
 export const getHasanatSettingsMemoryFallback = api.getSettingsMemoryFallback;

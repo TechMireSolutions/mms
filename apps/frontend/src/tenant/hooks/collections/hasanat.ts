@@ -23,8 +23,8 @@ export {
 } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 export { invalidateHasanatQueries } from '@/tenant/features/hasanat/hooks/invalidateHasanatQueries';
 export {
-  useHasanatFieldConfigQuery,
-  useHasanatFieldConfigMutation,
+  
+  
   useHasanatPreferencesQuery,
   useHasanatPreferencesMutation,
 } from '@/tenant/features/hasanat/hooks/useHasanatSetupConfig';

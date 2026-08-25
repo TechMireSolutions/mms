@@ -1,5 +1,5 @@
 import type { TabDefinition } from "./contactTypes.js";
-import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import type { ModuleFieldDef } from "./moduleFieldSchema.js";
 import { INITIAL_EXAMINATIONS_FIELD_SEED } from "./moduleFieldSetupAcademic.js";
 
 // ─── Examinations Module Settings ─────────────────────────────────────────────
@@ -33,7 +33,7 @@ export interface ExaminationsSettings {
   examReminders: boolean;
   defaultViewLayout?: string;
   fields?: Record<string, unknown>;
-  customFields?: ModuleCustomField[];
+  customFields?: [];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
   enabledTabs?: string[];
@@ -57,7 +57,6 @@ export const DEFAULT_EXAMINATIONS_SETTINGS: ExaminationsSettings = {
   fields: {
     basic: INITIAL_EXAMINATIONS_FIELD_SEED.basic.map((f) => ({ ...f })),
   },
-  customFields: [],
   fieldOrder: ["name", "subject", "status", "totalMarks", "passingMarks", "duration", "date", "classIds", "description"],
 };
 

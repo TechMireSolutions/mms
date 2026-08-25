@@ -3,7 +3,6 @@ import {
   normalizeContactForEdit,
   type Contact,
   type ContactItemNormalizeDefaults,
-  type FieldDefinition,
 } from "@mms/shared";
 
 export function contactDraftSnapshot(draft: Partial<Contact>): string {
@@ -84,7 +83,6 @@ export function buildInitialContactDraft({
   defaultProvince: string;
   defaultCountry: string;
   optionDefaults: ContactItemNormalizeDefaults;
-  fields: Record<string, FieldDefinition[]>;
   socialPlatforms: string[];
   relationshipOptions: string[];
 }): Partial<Contact> {

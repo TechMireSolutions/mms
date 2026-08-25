@@ -8,7 +8,6 @@ import { useHasanatDistributionsCollection } from '@/tenant/hooks/collections/ha
 import { useExaminationsResultsCollection } from '@/tenant/hooks/collections/examinations';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import {
   CONTACTS_MODULE_MANIFEST,
@@ -29,8 +28,7 @@ import { buildCustomReportPreviewRows } from './customReportBuilderPreview';
 export function useCustomReportBuilderState(initialSource?: string) {
   const { t } = useTranslation();
   const { role: viewerRole } = usePermissions();
-  const { fieldConfig } = useContactConfig();
-  const { activeCurrency } = useFinanceCurrency();
+    const { activeCurrency } = useFinanceCurrency();
 
   const [source, setSource] = useState<DataSource>(() => getInitialDataSource(initialSource));
   const [selectedFields, setSelectedFields] = useState<string[]>(() => getInitialSelectedFields(initialSource));
@@ -57,25 +55,35 @@ export function useCustomReportBuilderState(initialSource?: string) {
     () => (studentsPreviewPage?.body?.students ?? []) as unknown as Record<string, unknown>[],
     [studentsPreviewPage?.body?.students],
   );
-  const sessionsColl = useSessionsCollection() as unknown as Record<string, unknown>[];
-  const financialColl = (useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? []) as unknown as Record<string, unknown>[];
-  const attendanceColl = useAttendanceRecordsCollection() as unknown as Record<string, unknown>[];
-  const hasanatColl = useHasanatDistributionsCollection() as unknown as Record<string, unknown>[];
-  const academicColl = useExaminationsResultsCollection() as unknown as Record<string, unknown>[];
+  const sessionsData = useSessionsCollection();
+  const sessionsColl = useMemo(() => (sessionsData ?? []) as unknown as Record<string, unknown>[], [sessionsData]);
+
+  const financialResult = useFinanceInvoicesPaginated({ page: 1, limit: 500 });
+  const financialData = financialResult.data?.invoices;
+  const financialColl = useMemo(() => (financialData ?? []) as unknown as Record<string, unknown>[], [financialData]);
+
+  const attendanceData = useAttendanceRecordsCollection();
+  const attendanceColl = useMemo(() => (attendanceData ?? []) as unknown as Record<string, unknown>[], [attendanceData]);
+
+  const hasanatData = useHasanatDistributionsCollection();
+  const hasanatColl = useMemo(() => (hasanatData ?? []) as unknown as Record<string, unknown>[], [hasanatData]);
+
+  const academicData = useExaminationsResultsCollection();
+  const academicColl = useMemo(() => (academicData ?? []) as unknown as Record<string, unknown>[], [academicData]);
 
   const resolveFieldLabel = useCallback(
-    (field: string): string => resolveCustomReportFieldLabel(source, field, fieldConfig.fields, (key) => t(key)),
-    [source, fieldConfig.fields, t],
+    (field: string): string => resolveCustomReportFieldLabel(source, field, {}, (key) => t(key)),
+    [source, t],
   );
 
   const contactsFieldCatalog = useMemo(() => {
     if (source !== 'contacts') return [];
     return buildContactsCustomReportFieldCatalog(
-      fieldConfig.fields,
-      fieldConfig.formTabs ?? [],
+      {},
+      [],
       viewerRole,
     );
-  }, [source, fieldConfig.fields, fieldConfig.formTabs, viewerRole]);
+  }, [source, viewerRole]);
 
   const available = useMemo(
     () => buildCustomReportFieldCatalog(source, selectedFields, contactsFieldCatalog),

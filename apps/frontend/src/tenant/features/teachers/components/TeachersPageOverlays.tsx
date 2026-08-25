@@ -4,7 +4,6 @@ import {
   ModuleDrawerLoadingSkeleton,
   ModuleOverlayLoadingFallback,
 } from "@/components/ui/ModuleOverlayLoadingChrome";
-import { useTeacherFieldConfigQuery } from "@/tenant/features/teachers/hooks/useTeacherSetupConfig";
 import { useSessions } from "@/tenant/hooks/collections/sessions";
 import { TeachersPageConfirmDialogs } from "@/tenant/features/teachers/components/TeachersPageConfirmDialogs";
 import type { TeachersPageOverlaysProps } from "@/tenant/features/teachers/hooks/teachersPageOverlaysTypes";
@@ -56,11 +55,11 @@ export const TeachersPageOverlays = React.memo(function TeachersPageOverlays({
   onCloseIdCards,
   onPrintIdCard,
 }: TeachersPageOverlaysProps): React.JSX.Element {
-  const { isPending: configPending } = useTeacherFieldConfigQuery();
+  const configPending = false;
   const sessionsQuery = useSessions();
   const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data]);
   const formNeedsTabs = showForm || Boolean(viewTeacher);
-  const tabsPending = formNeedsTabs && configPending;
+  const tabsPending = false;
 
   const idCardItems = useMemo(() => {
     return idCardTeachers.map((teacher) => {

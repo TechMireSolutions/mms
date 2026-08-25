@@ -11,4 +11,4 @@ export const { assertContactUniqueFields } = contactUseCases;
 
 export {
   ContactUniqueFieldError,
-} from '../contacts/use-cases/contactUniqueFieldUseCases.js';
+} from '../contacts/use-cases/contactValidationUseCases.js';

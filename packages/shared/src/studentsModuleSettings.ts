@@ -49,7 +49,6 @@ export const DEFAULT_STUDENTS_SETTINGS: StudentsSettings = {
     contactRelationships: { enabled: true, required: false },
     registeredDate: { enabled: true, required: true },
   },
-  customFields: [],
   fieldOrder: ["gender", "dob", "contactRelationships", "registeredDate"],
 };
 

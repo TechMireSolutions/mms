@@ -1,11 +1,8 @@
 import { useCallback, useMemo } from "react";
 import {
-  FieldConfig,
-  FieldDefinition,
   translateApp,
   ColumnRegistryEntry,
   DEFAULT_COLUMN_REGISTRY,
-  COLUMN_FIELD_MAPPING,
   canViewContactColumn,
   CONTACTS_MODULE_MANIFEST,
   migrateContactColumnPreferenceKeys,
@@ -38,16 +35,8 @@ function toContactsColumnConfig(
  * {@link useModuleColumnLayout} overlay/persist path.
  */
 export function useContactColumnLayout({
-  fieldConfig,
-  fields,
-  enabledTabIds,
-  isTabFieldEnabled,
   viewerRole,
 }: {
-  fieldConfig: FieldConfig;
-  fields: Record<string, FieldDefinition[]>;
-  enabledTabIds: Set<string>;
-  isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
   viewerRole: string;
 }) {
   const settings = useGlobalSettings();
@@ -60,53 +49,13 @@ export function useContactColumnLayout({
   const { mutate: saveColumnPrefs } = useContactColumnPrefsMutation();
 
   const tenantRegistry = useMemo((): ColumnRegistryEntry[] => {
-    const baseRegistryMap = new Map<string, ColumnRegistryEntry>();
-    DEFAULT_COLUMN_REGISTRY.forEach((defaultCol) => {
-      const stored = (fieldConfig.columnRegistry || []).find((c) => c.key === defaultCol.key);
-      baseRegistryMap.set(defaultCol.key, {
-        ...defaultCol,
-        order: stored?.order ?? defaultCol.order,
-        sortField: stored?.sortField || defaultCol.sortField,
-        enabled: defaultCol.enabled,
-      });
-    });
-
-    (fieldConfig.columnRegistry || []).forEach((storedCol) => {
-      if (!baseRegistryMap.has(storedCol.key)) {
-        baseRegistryMap.set(storedCol.key, { ...storedCol });
-      }
-    });
-
-    const registry = Array.from(baseRegistryMap.values()).sort((a, b) => a.order - b.order);
-
-    const activeFieldKeys = new Set<string>();
-    for (const [tabId, tabFields] of Object.entries(fields)) {
-      if (tabId === "basic" || enabledTabIds.has(tabId)) {
-        tabFields?.forEach((field) => {
-          if (field.enabled) activeFieldKeys.add(field.key);
-        });
-      }
-    }
-
-    const filteredRegistry = registry.filter((column) => {
-      const mapping = COLUMN_FIELD_MAPPING[column.key];
-      if (mapping) {
-        const tabActive = mapping.tabId === "basic" || enabledTabIds.has(mapping.tabId);
-        return tabActive && isTabFieldEnabled(mapping.tabId, mapping.fieldId);
-      }
-      return activeFieldKeys.has(column.key);
-    });
-
-    const columnCtx = { fields, enabledTabIds, isTabFieldEnabled };
-    const seenKeys = new Set<string>();
-    return filteredRegistry
-      .filter((column) => canViewContactColumn(viewerRole, column.key, columnCtx))
-      .filter((column) => {
-        if (seenKeys.has(column.key)) return false;
-        seenKeys.add(column.key);
-        return true;
-      });
-  }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, viewerRole]);
+    // Simply filter DEFAULT_COLUMN_REGISTRY based on role
+    return DEFAULT_COLUMN_REGISTRY.filter((column) => 
+      canViewContactColumn(viewerRole, column.key, { 
+        fields: {}, enabledTabIds: new Set(), isTabFieldEnabled: () => true 
+      })
+    );
+  }, [viewerRole]);
 
   const {
     columnRegistry: layoutRegistry,

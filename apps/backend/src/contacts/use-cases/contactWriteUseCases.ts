@@ -6,18 +6,16 @@ import {
 } from '@mms/shared';
 import { invalidateDuplicateScanCache } from './contactDuplicateScanUseCases.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { applyContactRelationshipInference } from './contactRelationshipInferenceUseCases.js';
+import { applyContactRelationshipInference } from './contactInferenceUseCases.js';
 import { runInTransaction } from '../../db/database.js';
 import { canDeleteContacts } from '../../lib/rbacCanHelpers.js';
 import {
   assertContactUniqueFields,
-} from './contactUniqueFieldUseCases.js';
-import {
   ContactPermissionError,
   mergeContactPatch,
   prepareContactRecord,
   stripClientSoftDeleteFields,
-} from './contactNormalizeUseCases.js';
+} from './contactValidationUseCases.js';
 import { broadcastCollection } from '../../lib/livePush.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';

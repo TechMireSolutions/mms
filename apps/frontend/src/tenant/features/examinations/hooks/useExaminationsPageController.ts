@@ -59,8 +59,8 @@ export function useExaminationsPageController() {
 
   const examsResult = useExaminationsExams({ includeDeleted: showDeleted });
   const resultsResult = useExaminationsResults();
-  const exams = examsResult.data ?? [];
-  const examResults = resultsResult.data ?? [];
+  const exams = Array.isArray(examsResult.data?.body) ? examsResult.data.body : (examsResult.data?.body as any)?.exams ?? [];
+  const examResults = Array.isArray(resultsResult.data?.body) ? resultsResult.data.body : (resultsResult.data?.body as any)?.results ?? [];
   const {
     replaceExams,
     replaceExamResults,

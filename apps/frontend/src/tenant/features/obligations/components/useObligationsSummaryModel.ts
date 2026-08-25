@@ -19,15 +19,22 @@ export interface ObligationsSummaryFilterState {
 }
 
 export function useObligationsSummaryModel(
-  collections: ObligationCollection[],
-  obligationTypes: ObligationType[],
-  reps: MujtahidRep[],
-  mujtahids: Mujtahid[],
-  wakalaTypes: WakalaType[],
-  distributions: ObligationDistribution[],
+  collections: ObligationCollection[] | null = [],
+  obligationTypes: ObligationType[] | null = [],
+  reps: MujtahidRep[] | null = [],
+  mujtahids: Mujtahid[] | null = [],
+  wakalaTypes: WakalaType[] | null = [],
+  distributions: ObligationDistribution[] | null = [],
 ) {
+  collections = Array.isArray(collections) ? collections : [];
+  obligationTypes = Array.isArray(obligationTypes) ? obligationTypes : [];
+  reps = Array.isArray(reps) ? reps : [];
+  mujtahids = Array.isArray(mujtahids) ? mujtahids : [];
+  wakalaTypes = Array.isArray(wakalaTypes) ? wakalaTypes : [];
+  distributions = Array.isArray(distributions) ? distributions : [];
   const { t } = useTranslation();
-  const users = useMergedObligationUsers();
+  const usersRaw = useMergedObligationUsers();
+  const users = Array.isArray(usersRaw) ? usersRaw : [];
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = useMemo(() => [primary, charts[3], secondary, charts[4], charts[0], charts[2]], [primary, secondary, charts]);
 

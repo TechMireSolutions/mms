@@ -21,8 +21,8 @@ vi.mock('../db/repositories/contactRepository.js', () => ({
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
 }));
 
-vi.mock('../contacts/use-cases/contactUniqueFieldUseCases.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../contacts/use-cases/contactUniqueFieldUseCases.js')>();
+vi.mock('../contacts/use-cases/contactValidationUseCases.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../contacts/use-cases/contactValidationUseCases.js')>();
   return {
     ...actual,
     assertContactUniqueFields: (...args: unknown[]) => mockAssertContactUniqueFields(...args),
@@ -66,7 +66,7 @@ import {
   bulkRestoreContacts,
   bulkSoftDeleteContacts,
 } from '../contacts/use-cases/contactSoftDeleteUseCases.js';
-import { applyContactRelationshipInference } from '../contacts/use-cases/contactRelationshipInferenceUseCases.js';
+import { applyContactRelationshipInference } from '../contacts/use-cases/contactInferenceUseCases.js';
 
 
 function contact(overrides: Partial<Contact>): Contact {

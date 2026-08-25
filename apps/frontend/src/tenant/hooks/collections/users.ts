@@ -13,13 +13,6 @@ export {
 } from '@/tenant/features/users/hooks/useUsersApi';
 export { useUsersPaginated, fetchAllUsersForQuery } from '@/tenant/features/users/hooks/useUsersListQueries';
 export {
-  USERS_FIELD_CONFIG_QUERY_KEY,
-  USERS_PREFERENCES_QUERY_KEY,
-  useUserFieldConfigMutation,
-  useUserPreferencesMutation,
-  useComposedUsersSettings,
-} from '@/tenant/features/users/hooks/useUserSetupConfig';
-export {
   setUserFieldConfigMemory,
   setUserPreferencesMemory,
 } from '@/tenant/features/users/hooks/userSetupConfigApi';

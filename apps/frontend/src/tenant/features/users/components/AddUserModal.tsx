@@ -119,7 +119,7 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
       activeSessions: 0,
       avatarInitials: getInitials(form.name),
       ...Object.fromEntries(
-        customFields.map((customField) => [customField.id, form[customField.id] ?? customField.defaultValue ?? ""])
+        customFields.map((customField: any) => [customField.id, form[customField.id] ?? customField.defaultValue ?? ""])
       ),
     };
     try {

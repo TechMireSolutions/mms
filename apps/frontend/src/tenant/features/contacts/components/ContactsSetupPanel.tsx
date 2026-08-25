@@ -1,22 +1,15 @@
 import React, { useEffect } from "react";
-import { FieldConfig } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { ContactsPreferencesSection } from "@/tenant/features/contacts/components/ContactsPreferencesSection";
 import { useContactsSetupPanelState } from "@/tenant/features/contacts/hooks/useContactsSetupPanelState";
 
 interface ContactsSetupPanelProps {
-  config: FieldConfig;
-  onConfigChange: (config: FieldConfig) => void;
-  onConfigChangeAsync?: (config: FieldConfig) => Promise<void>;
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function ContactsSetupPanel({
-  config,
-  onConfigChange,
-  onConfigChangeAsync,
   onPrefsDirtyChange,
 }: ContactsSetupPanelProps): React.JSX.Element {
   const { t } = useTranslation();

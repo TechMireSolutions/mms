@@ -11,7 +11,7 @@ import {
 } from '../../lib/crudRouter.js';
 import { contactGoogleSyncRoutes } from './contacts/googleSyncRoutes.js';
 import { contactOperationRoutes } from './contacts/contactOperationRoutes.js';
-import { contactContractRouter } from './contacts/contactContractRouter.js';
+import { contactCrudRoutes } from './contacts/contactCrudRoutes.js';
 import { contactSavedReportRoutes } from './contacts/savedReportRoutes.js';
 import { contactLookupRoutes } from './contacts/contactLookupRoutes.js';
 import { contactSetupConfigRoutes } from './contacts/contactSetupConfigRoutes.js';
@@ -70,5 +70,5 @@ export const contactRoutes: FastifyPluginAsync = async (
     { prefix: '/api/contacts' },
   );
 
-  await fastify.register(contactContractRouter);
+  await fastify.register(contactCrudRoutes);
 }

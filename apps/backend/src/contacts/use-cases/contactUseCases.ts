@@ -3,18 +3,19 @@ import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 import * as loadUseCases from './contactLoadUseCases.js';
 import * as writeUseCases from './contactWriteUseCases.js';
 import * as softDeleteUseCases from './contactSoftDeleteUseCases.js';
-import * as identityUseCases from './contactIdentityMatchUseCases.js';
-import * as uniqueFieldUseCases from './contactUniqueFieldUseCases.js';
+import * as validationUseCases from './contactValidationUseCases.js';
+import * as inferenceUseCases from './contactInferenceUseCases.js';
 
 // Barrel — raw functions keep the repository interface as a trailing DI param.
 export * from './contactLoadUseCases.js';
 export * from './contactWriteUseCases.js';
 export * from './contactSoftDeleteUseCases.js';
-export * from './contactNormalizeUseCases.js';
-export * from './contactUniqueFieldUseCases.js';
-export * from './contactRelationshipInferenceUseCases.js';
-export * from './contactIdentityMatchUseCases.js';
+export * from './contactValidationUseCases.js';
+export * from './contactInferenceUseCases.js';
 export * from './contactDuplicateScanUseCases.js';
+export * from './contactExportUseCases.js';
+export * from './contactGoogleSyncUseCases.js';
+export * from './contactSavedReportUseCases.js';
 
 /**
  * Composition root — binds a `ContactsRepository` to every use case.
@@ -65,10 +66,10 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
       softDeleteUseCases.softDeleteContactById(id, deletedBy, deletionReason, repo),
     bulkSoftDeleteContacts: (ids: string[], deletedBy: string, deletionReason?: string) =>
       softDeleteUseCases.bulkSoftDeleteContacts(ids, deletedBy, deletionReason, repo),
-    matchContactIdentityIndex: (candidates: Parameters<typeof identityUseCases.matchContactIdentityIndex>[0]) =>
-      identityUseCases.matchContactIdentityIndex(candidates, repo),
-    assertContactUniqueFields: (tenant: string, contact: Parameters<typeof uniqueFieldUseCases.assertContactUniqueFields>[1], languageOrOptions?: Parameters<typeof uniqueFieldUseCases.assertContactUniqueFields>[2], excludeContactIdsArg?: Parameters<typeof uniqueFieldUseCases.assertContactUniqueFields>[3]) =>
-      uniqueFieldUseCases.assertContactUniqueFields(tenant, contact, languageOrOptions, excludeContactIdsArg, repo),
+    matchContactIdentityIndex: (candidates: Parameters<typeof inferenceUseCases.matchContactIdentityIndex>[0]) =>
+      inferenceUseCases.matchContactIdentityIndex(candidates, repo),
+    assertContactUniqueFields: (tenant: string, contact: Parameters<typeof validationUseCases.assertContactUniqueFields>[1], languageOrOptions?: Parameters<typeof validationUseCases.assertContactUniqueFields>[2], excludeContactIdsArg?: Parameters<typeof validationUseCases.assertContactUniqueFields>[3]) =>
+      validationUseCases.assertContactUniqueFields(tenant, contact, languageOrOptions, excludeContactIdsArg, repo),
   };
 }
 

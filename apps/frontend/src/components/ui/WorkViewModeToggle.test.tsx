@@ -6,7 +6,7 @@ import { WorkViewModeToggle } from './WorkViewModeToggle';
 import type { AppTranslationKey } from '@mms/shared';
 
 declare global {
-  // eslint-disable-next-line no-var
+   
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;

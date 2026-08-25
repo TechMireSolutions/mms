@@ -5,7 +5,6 @@ export interface ModuleQueryInvalidatorKeys {
   count: readonly unknown[];
   metrics: readonly unknown[];
   widgetAggregates: readonly unknown[];
-  fieldConfig: readonly unknown[];
   preferences: readonly unknown[];
   lookups: readonly unknown[];
 }
@@ -20,7 +19,6 @@ export function createModuleQueryInvalidator(keys: ModuleQueryInvalidatorKeys) {
     void queryClient.invalidateQueries({ queryKey: keys.count });
     void queryClient.invalidateQueries({ queryKey: keys.metrics });
     void queryClient.invalidateQueries({ queryKey: keys.widgetAggregates });
-    void queryClient.invalidateQueries({ queryKey: keys.fieldConfig });
     void queryClient.invalidateQueries({ queryKey: keys.preferences });
     void queryClient.invalidateQueries({ queryKey: keys.lookups });
   };

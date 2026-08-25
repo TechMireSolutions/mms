@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Contact, FieldDefinition } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import {
   buildInitialContactDraft,
   buildOptionDefaults,
@@ -80,12 +80,6 @@ describe("buildInitialContactDraft", () => {
     defaultPhoneCountryCode: "+92",
   });
 
-  const fields: Record<string, FieldDefinition[]> = {
-    basic: [
-      { key: "nickname", label: "Nickname", type: "text", enabled: true, order: 0, defaultValue: "Ali" },
-    ],
-  };
-
   it("normalizes a fresh draft with empty rows", () => {
     const draft = buildInitialContactDraft({
       contact: undefined,
@@ -94,7 +88,6 @@ describe("buildInitialContactDraft", () => {
       defaultProvince: "Punjab",
       defaultCountry: "PK",
       optionDefaults,
-      fields,
       socialPlatforms: ["Facebook"],
       relationshipOptions: ["Parent"],
     });
@@ -116,7 +109,6 @@ describe("buildInitialContactDraft", () => {
       defaultProvince: "",
       defaultCountry: "",
       optionDefaults,
-      fields,
       socialPlatforms: ["Facebook"],
       relationshipOptions: ["Parent"],
     });
@@ -132,7 +124,6 @@ describe("buildInitialContactDraft", () => {
       defaultProvince: "",
       defaultCountry: "",
       optionDefaults,
-      fields,
       socialPlatforms: ["Facebook"],
       relationshipOptions: ["Parent"],
     });

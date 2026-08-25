@@ -3,8 +3,9 @@ import type { Contact } from '@mms/shared';
 
 const mockLoadContactsPage = vi.fn();
 
-vi.mock('../services/contactService.js', () => ({
+vi.mock('../contacts/use-cases/contactLoadUseCases.js', () => ({
   loadContactsPage: (...args: unknown[]) => mockLoadContactsPage(...args),
+  loadContactsByIds: vi.fn(),
 }));
 
 import { buildContactsVcfExport } from '../services/contactsVcfExportService.js';

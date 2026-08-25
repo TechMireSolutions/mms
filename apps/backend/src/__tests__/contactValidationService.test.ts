@@ -4,7 +4,7 @@ import type { FieldConfig } from '@mms/shared';
 const mockLoadContactFieldConfig = vi.fn();
 const mockValidateOrThrow = vi.fn();
 
-vi.mock('../services/contactConfigService.js', () => ({
+vi.mock('../lib/contactConfigService.js', () => ({
   loadContactFieldConfig: () => mockLoadContactFieldConfig(),
 }));
 

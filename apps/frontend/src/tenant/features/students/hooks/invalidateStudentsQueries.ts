@@ -1,6 +1,5 @@
 import { createModuleQueryInvalidator } from '@/lib/query/createModuleQueryInvalidator';
 import {
-  STUDENTS_FIELD_CONFIG_QUERY_KEY,
   STUDENTS_PREFERENCES_QUERY_KEY,
 } from '@/tenant/features/students/hooks/useStudentSetupConfig';
 import {
@@ -16,7 +15,6 @@ export const invalidateStudentsQueries = createModuleQueryInvalidator({
   count: STUDENTS_QUERY_KEY,
   metrics: STUDENTS_METRICS_QUERY_KEY,
   widgetAggregates: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
-  fieldConfig: STUDENTS_FIELD_CONFIG_QUERY_KEY,
   preferences: STUDENTS_PREFERENCES_QUERY_KEY,
   lookups: STUDENTS_LOOKUPS_QUERY_KEY,
 });

@@ -1,5 +1,5 @@
 import type { TabDefinition } from "./contactTypes.js";
-import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import type { ModuleFieldDef } from "./moduleFieldSchema.js";
 import { INITIAL_SESSIONS_FIELD_SEED } from "./moduleFieldSetupAcademic.js";
 
 // ─── Sessions Module Settings ─────────────────────────────────────────────────
@@ -29,7 +29,7 @@ export interface SessionsSettings {
   sessionStart: string;
   defaultViewLayout?: string;
   fields?: Record<string, unknown>;
-  customFields?: ModuleCustomField[];
+  customFields?: [];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
   enabledTabs?: string[];
@@ -52,7 +52,6 @@ export const DEFAULT_SESSIONS_SETTINGS: SessionsSettings = {
     basic: INITIAL_SESSIONS_FIELD_SEED.basic.map((f) => ({ ...f })),
     financial: INITIAL_SESSIONS_FIELD_SEED.financial.map((f) => ({ ...f })),
   },
-  customFields: [],
   fieldOrder: ["name", "type", "status", "startDate", "endDate", "baseFee", "currency", "description"],
 };
 

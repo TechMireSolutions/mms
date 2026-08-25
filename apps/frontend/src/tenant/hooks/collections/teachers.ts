@@ -18,14 +18,14 @@ export {
   useTeacherLookupsQuery,
 } from '@/tenant/features/teachers/hooks/useTeacherLookups';
 export {
-  TEACHERS_FIELD_CONFIG_QUERY_KEY,
+  
   TEACHERS_PREFERENCES_QUERY_KEY,
-  useTeacherFieldConfigMutation,
+  
   useTeacherPreferencesMutation,
   useComposedTeachersSettings,
 } from '@/tenant/features/teachers/hooks/useTeacherSetupConfig';
 export {
-  setTeacherFieldConfigMemory,
+  
   setTeacherPreferencesMemory,
 } from '@/tenant/features/teachers/hooks/teacherSetupConfigApi';
 export { applyTeachersWorkDrillDown } from '@/tenant/features/teachers/hooks/teachersWorkDrillDown';

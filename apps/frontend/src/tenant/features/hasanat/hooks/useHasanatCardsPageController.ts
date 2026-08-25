@@ -59,9 +59,9 @@ export function useHasanatCardsPageController() {
   const denomsResult = useHasanatDenoms();
   const batchesResult = useHasanatBatches();
   const distributionsResult = useHasanatDistributions({ includeDeleted: showDeleted });
-  const denoms = denomsResult.data ?? [];
-  const batches = batchesResult.data ?? [];
-  const distributions = distributionsResult.data ?? [];
+  const denoms = Array.isArray(denomsResult.data?.body) ? denomsResult.data.body : (denomsResult.data?.body as any)?.denoms ?? [];
+  const batches = Array.isArray(batchesResult.data?.body) ? batchesResult.data.body : (batchesResult.data?.body as any)?.batches ?? [];
+  const distributions = Array.isArray(distributionsResult.data?.body) ? distributionsResult.data.body : (distributionsResult.data?.body as any)?.distributions ?? [];
 
   const {
     replaceDenoms,

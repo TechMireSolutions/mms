@@ -26,11 +26,9 @@ export const {
 // Non-instance exports kept on the stable path (routes + cross-module services).
 export {
   ContactUniqueFieldError,
-} from '../contacts/use-cases/contactUniqueFieldUseCases.js';
-export {
   ContactPermissionError,
   prepareContactRecord,
-} from '../contacts/use-cases/contactNormalizeUseCases.js';
+} from '../contacts/use-cases/contactValidationUseCases.js';
 export type {
   ContactRuntimeDefaults,
 } from '../contacts/use-cases/contactUseCases.js';

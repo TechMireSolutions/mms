@@ -58,7 +58,7 @@ export const tsrClient = initTsrReactQuery(rootContract, {
   api: tsrApiFetcher,
 });
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
+ 
 export const apiContract = initClient(rootContract, {
   baseUrl: typeof window !== 'undefined' ? window.location.origin : '',
   api: tsrApiFetcher,

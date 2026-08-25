@@ -10,16 +10,21 @@ describe('DEFAULT_STUDENT_EXPORT_COLUMNS', () => {
       'name',
       'grNumber',
       'gender',
-      'status',
+      'phone',
+      'email',
+      'dob',
       'parents',
+      'status',
+      'registeredDate',
+      'notes',
     ]);
   });
 
   it('carries English fallback labels', () => {
-    expect(DEFAULT_STUDENT_EXPORT_COLUMNS[0]?.label).toBe('Student');
+    expect(DEFAULT_STUDENT_EXPORT_COLUMNS[0]?.label).toBe('Name');
     expect(
       DEFAULT_STUDENT_EXPORT_COLUMNS.find((column) => column.id === 'parents')?.label,
-    ).toBe('Parent / Guardian');
+    ).toBe('Parents');
   });
 });
 

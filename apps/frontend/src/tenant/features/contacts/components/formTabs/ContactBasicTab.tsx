@@ -3,7 +3,6 @@ import type { ChangeEvent } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 
 import { useTranslation } from "@/hooks/useTranslation";
-import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { listEnabledCustomContactFormFields, type Contact, type FieldDefinition } from "@mms/shared";
 import { ContactBasicAvatarSection } from "@/tenant/features/contacts/components/formTabs/ContactBasicAvatarSection";
 import { ContactBasicIdentityFields } from "@/tenant/features/contacts/components/formTabs/ContactBasicIdentityFields";

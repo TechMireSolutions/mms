@@ -16,15 +16,14 @@ import { withTenant } from '../tenant-context.js';
  * paid → finalAmt; partial → paidAmt or round(finalAmt/2); else 0.
  */
 function collectedAmountSql(alias = 'fi'): ReturnType<typeof sql> {
-  const data = sql.raw(`${alias}.custom_data`);
   return sql`
     CASE
-      WHEN lower(trim(COALESCE(${data}->>'status', ''))) = 'paid'
-        THEN COALESCE(NULLIF(trim(${data}->>'finalAmt'), '')::numeric, 0)
-      WHEN lower(trim(COALESCE(${data}->>'status', ''))) = 'partial'
+      WHEN lower(trim(COALESCE(${sql.raw(`${alias}.status`)}, ''))) = 'paid'
+        THEN COALESCE(${sql.raw(`${alias}.final_amt`)}, 0)
+      WHEN lower(trim(COALESCE(${sql.raw(`${alias}.status`)}, ''))) = 'partial'
         THEN COALESCE(
-          NULLIF(trim(${data}->>'paidAmt'), '')::numeric,
-          ROUND(COALESCE(NULLIF(trim(${data}->>'finalAmt'), '')::numeric, 0) / 2)
+          ${sql.raw(`${alias}.paid_amt`)},
+          ROUND(COALESCE(${sql.raw(`${alias}.final_amt`)}, 0) / 2)
         )
       ELSE 0
     END
@@ -32,10 +31,9 @@ function collectedAmountSql(alias = 'fi'): ReturnType<typeof sql> {
 }
 
 function activeInvoiceWhere(subdomain: string, alias = 'fi'): ReturnType<typeof sql> {
-  const data = sql.raw(`${alias}.custom_data`);
   return sql`
     ${sql.raw(`${alias}.workspace_subdomain`)} = ${subdomain}
-    AND NULLIF(trim(COALESCE(${data}->>'deletedAt', '')), '') IS NULL
+    AND ${sql.raw(`${alias}.deleted_at`)} IS NULL
   `;
 }
 
@@ -65,7 +63,7 @@ export async function loadFinanceReportAggregatesSql(
         WITH selected AS (
           SELECT
             s.id AS "sessionId",
-            NULLIF(trim(COALESCE(s.custom_data->>'name', '')), '') AS "sessionName"
+            NULLIF(trim(COALESCE(s.name, '')), '') AS "sessionName"
           FROM sessions s
           WHERE s.workspace_subdomain = ${subdomain}
             AND s.deleted_at IS NULL
@@ -81,10 +79,10 @@ export async function loadFinanceReportAggregatesSql(
         LEFT JOIN finance_invoices fi
           ON ${activeInvoiceWhere(subdomain, 'fi')}
           AND (
-            trim(COALESCE(fi.custom_data->>'session', '')) = sel."sessionId"
+            trim(COALESCE(fi.session, '')) = sel."sessionId"
             OR (
               sel."sessionName" IS NOT NULL
-              AND trim(COALESCE(fi.custom_data->>'session', '')) = sel."sessionName"
+              AND trim(COALESCE(fi.session, '')) = sel."sessionName"
             )
           )
         GROUP BY sel."sessionId"
@@ -110,14 +108,14 @@ export async function loadFinanceReportAggregatesSql(
       const collected = collectedAmountSql('fi');
       const monthResult = await tx.execute(sql`
         SELECT
-          to_char(left(NULLIF(trim(fi.custom_data->>'dueDate'), ''), 10)::date, 'YYYY-MM') AS "monthKey",
+          to_char(left(NULLIF(trim(fi.due_date), ''), 10)::date, 'YYYY-MM') AS "monthKey",
           COALESCE(SUM(${collected}), 0)::float8 AS collected
         FROM finance_invoices fi
         WHERE ${activeInvoiceWhere(subdomain, 'fi')}
-          AND NULLIF(trim(fi.custom_data->>'dueDate'), '') IS NOT NULL
-          AND NULLIF(trim(fi.custom_data->>'dueDate'), '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND left(NULLIF(trim(fi.custom_data->>'dueDate'), ''), 10) >= ${from}
-          AND left(NULLIF(trim(fi.custom_data->>'dueDate'), ''), 10) <= ${to}
+          AND NULLIF(trim(fi.due_date), '') IS NOT NULL
+          AND NULLIF(trim(fi.due_date), '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+          AND left(NULLIF(trim(fi.due_date), ''), 10) >= ${from}
+          AND left(NULLIF(trim(fi.due_date), ''), 10) <= ${to}
         GROUP BY 1
         ORDER BY 1 ASC
       `);

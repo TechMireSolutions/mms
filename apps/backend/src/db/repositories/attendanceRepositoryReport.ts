@@ -58,15 +58,11 @@ export async function loadAttendanceReportAggregatesSql(
         session_classes AS (
           SELECT
             sel."sessionId",
-            NULLIF(trim(COALESCE(cls.value->>'id', '')), '') AS "classId"
+            sc.id AS "classId"
           FROM selected sel
-          INNER JOIN sessions s
-            ON s.workspace_subdomain = ${subdomain}
-            AND s.id = sel."sessionId"
-            AND s.deleted_at IS NULL
-          CROSS JOIN LATERAL jsonb_array_elements(
-            COALESCE(s.custom_data->'classes', '[]'::jsonb)
-          ) AS cls(value)
+          INNER JOIN session_classes sc
+            ON sc.workspace_subdomain = ${subdomain}
+            AND sc.session_id = sel."sessionId"
         )
         SELECT
           sc."sessionId" AS "sessionId",

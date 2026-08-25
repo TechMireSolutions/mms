@@ -1,5 +1,5 @@
 import type { TabDefinition } from "./contactTypes.js";
-import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import type { ModuleFieldDef } from "./moduleFieldSchema.js";
 import { INITIAL_ATTENDANCE_FIELD_SEED } from "./moduleFieldSetupAcademic.js";
 
 // ─── Attendance Module Settings ───────────────────────────────────────────────
@@ -22,7 +22,7 @@ export interface AttendanceSettings {
   geoTagging: boolean;
   defaultViewLayout?: string;
   fields?: Record<string, unknown>;
-  customFields?: ModuleCustomField[];
+  customFields?: [];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
   enabledTabs?: string[];
@@ -49,7 +49,6 @@ export const DEFAULT_ATTENDANCE_SETTINGS: AttendanceSettings = {
   fields: {
     basic: INITIAL_ATTENDANCE_FIELD_SEED.basic.map((f) => ({ ...f })),
   },
-  customFields: [],
   fieldOrder: ["status", "timeIn", "timeOut", "notes"],
 };
 

@@ -62,11 +62,20 @@ export function useObligationsPageController() {
   const collectionsResult = useObligationsCollections({ includeDeleted: showDeleted });
   const collections = useObligationsCollectionsCollection({ includeDeleted: showDeleted });
 
-  const obligationTypes = (typesResult.data?.status === 200 ? (typesResult.data.body as any) : null) ?? [];
-  const mujtahids = (mujtahidsResult.data?.status === 200 ? (mujtahidsResult.data.body as any) : null) ?? [];
-  const reps = (repsResult.data?.status === 200 ? (repsResult.data.body as any) : null) ?? [];
-  const wakalaTypes = (wakalaResult.data?.status === 200 ? (wakalaResult.data.body as any) : null) ?? [];
-  const distributions = (distributionsResult.data?.status === 200 ? (distributionsResult.data.body as any) : null) ?? [];
+  const rawTypes = typesResult.data?.status === 200 ? typesResult.data.body : null;
+  const obligationTypes = Array.isArray(rawTypes) ? rawTypes : [];
+  
+  const rawMujtahids = mujtahidsResult.data?.status === 200 ? mujtahidsResult.data.body : null;
+  const mujtahids = Array.isArray(rawMujtahids) ? rawMujtahids : [];
+  
+  const rawReps = repsResult.data?.status === 200 ? repsResult.data.body : null;
+  const reps = Array.isArray(rawReps) ? rawReps : [];
+  
+  const rawWakala = wakalaResult.data?.status === 200 ? wakalaResult.data.body : null;
+  const wakalaTypes = Array.isArray(rawWakala) ? rawWakala : [];
+  
+  const rawDist = distributionsResult.data?.status === 200 ? distributionsResult.data.body : null;
+  const distributions = Array.isArray(rawDist) ? rawDist : [];
 
   const {
     replaceTypes,

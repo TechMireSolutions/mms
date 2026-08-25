@@ -37,6 +37,7 @@ export function createFormCustomFieldHelpers(
       tabId != null ? [fields[tabId] ?? []] : Object.values(fields);
 
     for (const tabFields of sourceTabs) {
+      if (!tabFields || !Array.isArray(tabFields)) continue;
       for (const field of tabFields) {
         if (!field.enabled || systemKeys.has(field.key)) continue;
         if (!byKey.has(field.key)) {

@@ -8,22 +8,19 @@ import {
   CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
 } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
-import {
-  CONTACTS_FIELD_CONFIG_QUERY_KEY,
-  CONTACTS_PREFERENCES_QUERY_KEY,
-} from '@/tenant/features/contacts/hooks/useContactSetupConfig';
 import { CONTACTS_LOOKUPS_QUERY_KEY } from '@/tenant/features/contacts/hooks/useContactLookups';
 import {
   MESSAGING_CONTACTS_RESOLVE_QUERY_KEY,
   MESSAGING_RECIPIENTS_QUERY_KEY,
 } from '@/tenant/hooks/collections/messaging';
 
+import { CONTACTS_PREFERENCES_QUERY_KEY } from '@/tenant/features/contacts/hooks/useContactSetupConfig';
+
 const invalidateModuleQueries = createModuleQueryInvalidator({
   list: CONTACTS_QUERY_KEY,
   count: CONTACTS_QUERY_KEY,
   metrics: CONTACTS_METRICS_QUERY_KEY,
   widgetAggregates: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
-  fieldConfig: CONTACTS_FIELD_CONFIG_QUERY_KEY,
   preferences: CONTACTS_PREFERENCES_QUERY_KEY,
   lookups: CONTACTS_LOOKUPS_QUERY_KEY,
 });

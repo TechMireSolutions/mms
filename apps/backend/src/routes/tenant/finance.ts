@@ -51,6 +51,7 @@ export default async function financeRoutes(
     async (sub) => {
       // --- Invoices Extended Routes (Column Preferences, etc) ---
       registerStandardExtendedRoutes(sub, {
+        prefix: '/invoices',
         collection: FINANCE_COLLECTION,
         errorMessagePrefix: 'invoices',
         nameSingular: 'invoice',

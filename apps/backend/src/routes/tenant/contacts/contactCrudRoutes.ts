@@ -10,6 +10,7 @@ import {
   getUserColumnPreferencesForModule,
   setUserColumnPreferencesForModule,
 } from '../../../services/userColumnPreferencesService.js';
+import { parseRequest } from '../../../lib/zodRequest.js';
 
 import {
   auditContact,
@@ -34,10 +35,10 @@ const RESERVED_CONTACT_ROUTE_IDS = new Set([
   'google-sync',
 ]);
 
-export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
+export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
   const router = s.router(rootContract.contacts, {
     list: async ({ query, request }: any) => {
-      const user = request.user as User;
+      const user = (request as any).user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
@@ -68,7 +69,7 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
-      const user = request.user as User;
+      const user = (request as any).user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
@@ -81,17 +82,16 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
     create: async ({ body, request }: any) => {
-      const user = request.user as User;
+      const user = (request as any).user as User;
       if (!canWriteContacts(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      let parsedBody: unknown;
-      try {
-        parsedBody = contactWriteSchema.parse(body);
-      } catch (err) {
-        return { status: 400 as const, body: { type: 'validation_error', message: err instanceof Error ? err.message : String(err) } };
+      const parsed = parseRequest(contactWriteSchema, body);
+      if (!parsed.ok) {
+        return { status: 400 as const, body: { type: 'validation_error', message: parsed.message } };
       }
-      const lang = (request.headers['accept-language'] as string) || 'en';
+      const parsedBody = parsed.data;
+      const lang = ((request as any).headers['accept-language'] as string) || 'en';
       
       try {
         const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(parsedBody as Contact, { user, language: lang });
@@ -117,19 +117,18 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
-      const user = request.user as User;
+      const user = (request as any).user as User;
       const linkedContactId = await getLinkedContactId(user.id);
       const isOwnContact = linkedContactId != null && String(linkedContactId) === id;
       if (!isOwnContact && !canWriteContacts(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      let parsedBody: unknown;
-      try {
-        parsedBody = contactWriteSchema.parse(body);
-      } catch (err) {
-        return { status: 400 as const, body: { type: 'validation_error', message: err instanceof Error ? err.message : String(err) } };
+      const parsed = parseRequest(contactWriteSchema, body);
+      if (!parsed.ok) {
+        return { status: 400 as const, body: { type: 'validation_error', message: parsed.message } };
       }
-      const lang = (request.headers['accept-language'] as string) || 'en';
+      const parsedBody = parsed.data;
+      const lang = ((request as any).headers['accept-language'] as string) || 'en';
       
       try {
         const updatePayload = { ...(parsedBody && typeof parsedBody === 'object' ? parsedBody : {}), id } as Contact;
@@ -153,7 +152,7 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
-      const user = request.user as User;
+      const user = (request as any).user as User;
       if (!canDeleteCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
@@ -167,7 +166,7 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
     reportAnalytics: async ({ query, request }: any) => {
-      const user = request.user as User;
+      const user = (request as any).user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
@@ -182,7 +181,7 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
     getColumnPreferences: async ({ request }: any) => {
-      const user = request.user as User;
+      const user = (request as any).user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
@@ -197,7 +196,7 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
     updateColumnPreferences: async ({ body, request }: any) => {
-      const user = request.user as User;
+      const user = (request as any).user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }

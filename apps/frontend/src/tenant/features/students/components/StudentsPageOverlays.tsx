@@ -5,7 +5,6 @@ import {
   ModuleDrawerLoadingSkeleton,
   ModuleOverlayLoadingFallback,
 } from "@/components/ui/ModuleOverlayLoadingChrome";
-import { useStudentFieldConfigQuery } from "@/tenant/features/students/hooks/useStudentSetupConfig";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { StudentsPageConfirmDialogs } from "@/tenant/features/students/components/StudentsPageConfirmDialogs";
 import type { StudentsPageOverlaysProps } from "@/tenant/features/students/hooks/studentsPageOverlaysTypes";
@@ -54,10 +53,10 @@ export const StudentsPageOverlays = React.memo(function StudentsPageOverlays({
   onPrintIdCard,
   onViewStudent,
 }: StudentsPageOverlaysProps): React.JSX.Element {
-  const { isPending: configPending } = useStudentFieldConfigQuery();
+  const configPending = false;
   const sessions = useSessionsCollection();
   const formNeedsTabs = showStudentForm || Boolean(viewStudent);
-  const tabsPending = formNeedsTabs && configPending;
+  const tabsPending = false;
 
   const idCardItems = useMemo(() => {
     return idCardStudents.map((student) => {

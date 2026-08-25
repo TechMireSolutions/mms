@@ -47,17 +47,17 @@ export async function createTestContactJaneDoe(page: Page): Promise<void> {
   await janeDialog.locator('input[name="firstName"]').fill('Jane');
   await janeDialog.locator('input[name="lastName"]').fill('Doe');
 
-  await janeDialog.locator('#cf-new-gender').click();
+  await janeDialog.locator('[id$="-gender"]').click();
   await page.locator('[role="option"]').filter({ hasText: /^Female$/i }).click();
 
-  const dobInput = janeDialog.locator('#cf-new-dob, input[name="dob"]').first();
+  const dobInput = janeDialog.locator('[id$="-dob"], input[name="dob"]').first();
   await expect(dobInput).toBeVisible({ timeout: 5000 });
   await dobInput.fill('2015-05-15');
   await dobInput.blur();
   await page.waitForTimeout(200);
 
   await janeDialog.getByRole('tab', { name: 'Phones' }).click();
-  const phoneInput = janeDialog.locator('#phone-number-0');
+  const phoneInput = janeDialog.locator('[id$="-phone-number-0"]');
   const phoneInputVisible = await phoneInput.isVisible({ timeout: 2000 }).catch(() => false);
   if (!phoneInputVisible) {
     const addPhoneBtn = janeDialog.getByRole('button', { name: /Add phone number|Add/i });
@@ -95,10 +95,10 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
   const johnDialog = page.getByRole('dialog', { name: /(Add New Contact|Edit John Doe|Edit Contact)/i });
   await johnDialog.locator('input[name="firstName"]').fill('John');
   await johnDialog.locator('input[name="lastName"]').fill('Doe');
-  await johnDialog.locator('#cf-new-gender').click();
+  await johnDialog.locator('[id$="-gender"]').click();
   await page.locator('[role="option"]').filter({ hasText: /^Male$/i }).click();
   await johnDialog.getByRole('tab', { name: 'Phones' }).click();
-  const phoneInput = johnDialog.locator('#phone-number-0');
+  const phoneInput = johnDialog.locator('[id$="-phone-number-0"]');
   if (!(await phoneInput.isVisible({ timeout: 1500 }).catch(() => false))) {
     const addPhoneBtn = johnDialog.getByRole('button', { name: /Add phone number|Add/i });
     if (await addPhoneBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
@@ -114,7 +114,7 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
   if (await addEmailBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
     await addEmailBtn.click();
   }
-  const emailInput = johnDialog.locator('#email-address-0');
+  const emailInput = johnDialog.locator('[id$="-email-address-0"]');
   await expect(emailInput).toBeVisible({ timeout: 5000 });
   await emailInput.fill('john.doe.e2e@example.com');
   await emailInput.dispatchEvent('change');

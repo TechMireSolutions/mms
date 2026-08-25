@@ -4,8 +4,9 @@ import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import { type Contact, DEFAULT_FORM_TABS, isContactLockedEnabledTab } from "@mms/shared";
+import { type Contact, DEFAULT_FORM_TABS } from "@mms/shared";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { ContactFormTabContent } from "@/tenant/features/contacts/components/ContactFormTabContent";
 import { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
 
@@ -56,6 +57,7 @@ export function ContactForm({
 }: ContactFormProps) {
   const { t, dir } = useTranslation();
   const { language } = useGlobalSettings();
+  const { enabledTabIds } = useContactConfig();
   const [tab, setTab] = useState("basic");
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
@@ -100,12 +102,10 @@ export function ContactForm({
     };
 
     // System tabs from shared SSOT (DEFAULT_FORM_TABS) filtered by enabledTabIds (with basic locked on)
-    const baseTabs = draft.fieldConfig?.formTabs && draft.fieldConfig.formTabs.length > 0
-      ? draft.fieldConfig.formTabs
-      : DEFAULT_FORM_TABS;
+    const baseTabs = DEFAULT_FORM_TABS;
 
     return baseTabs
-      .filter((sys) => isContactLockedEnabledTab(sys.key) || draft.enabledTabIds.has(sys.key.toLowerCase()))
+      .filter((sys) => enabledTabIds.has(sys.key))
       .map((sys) => {
         const count = countMap[sys.key];
         const label = sys.labelKey ? t(sys.labelKey) : (sys.label || sys.key);
@@ -116,7 +116,7 @@ export function ContactForm({
           badge: count && count > 0 ? count : undefined,
         };
       });
-  }, [draft.collectionCounts, draft.enabledTabIds, draft.fieldConfig?.formTabs, t]);
+  }, [draft.collectionCounts, t, enabledTabIds]);
 
   useEffect(() => {
     if (!visibleTabs.some((tabItem) => tabItem.key === tab)) {

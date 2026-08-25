@@ -2,7 +2,6 @@ import { useMemo, useRef, useState, type ChangeEvent } from 'react';
 import { calculateProfileCompleteness } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTenantProfile } from '@/tenant/hooks/useTenantProfile';
-import { useContactConfig } from '@/lib/contexts/ContactConfigContext';
 import { genderAvatarGradient } from '@/lib/semanticTone';
 import { getPasswordStrength } from '@/tenant/features/profile/passwordStrength';
 import { useAccountProfileContactActions } from '@/tenant/features/profile/hooks/useAccountProfileContactActions';
@@ -11,8 +10,7 @@ import { useAccountProfileSecurityActions } from '@/tenant/features/profile/hook
 export function useAccountProfilePageController() {
   const { t } = useTranslation();
   const { data: profile, isLoading, isError, refetch } = useTenantProfile();
-  const { fieldConfig } = useContactConfig();
-  const contact = useAccountProfileContactActions();
+    const contact = useAccountProfileContactActions();
   const security = useAccountProfileSecurityActions();
 
   const [showCropper, setShowCropper] = useState<string | null>(null);
@@ -24,9 +22,9 @@ export function useAccountProfilePageController() {
   );
 
   const completeness = useMemo(() => {
-    if (!profile?.contact || !fieldConfig) return 0;
-    return calculateProfileCompleteness(profile.contact, fieldConfig);
-  }, [profile?.contact, fieldConfig]);
+    if (!profile?.contact) return 0;
+    return calculateProfileCompleteness(profile.contact, { fields: {}, version: 1, enabledTabs: [], requiredTabs: [] } as any);
+  }, [profile?.contact]);
 
   const avatarGradient = useMemo(() => {
     return genderAvatarGradient(profile?.contact?.gender ?? '');

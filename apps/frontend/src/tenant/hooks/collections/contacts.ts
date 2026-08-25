@@ -22,14 +22,6 @@ export {
   useContactLookupsQuery,
   useContactLookupMutation,
 } from '@/tenant/features/contacts/hooks/useContactLookups';
-export {
-  CONTACTS_FIELD_CONFIG_QUERY_KEY,
-  CONTACTS_PREFERENCES_QUERY_KEY,
-  useContactFieldConfigQuery,
-  useContactFieldConfigMutation,
-  useContactPreferencesQuery,
-  useContactPreferencesMutation,
-} from '@/tenant/features/contacts/hooks/useContactSetupConfig';
 export { invalidateContactsQueries } from '@/tenant/features/contacts/hooks/invalidateContactsQueries';
 // Phase 7: contract-driven tsrClient hooks
 export {

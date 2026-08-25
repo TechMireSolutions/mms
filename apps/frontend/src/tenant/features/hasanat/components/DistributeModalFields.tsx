@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Denomination, Distribution } from "@/lib/data/hasanatData";
-import { DEFAULT_HASANAT_FIELD_DEFS } from "@mms/shared";
 
 
 interface DistributeModalFieldsProps {

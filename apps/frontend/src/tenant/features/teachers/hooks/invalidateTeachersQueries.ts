@@ -5,7 +5,6 @@ import {
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
 } from '@/tenant/features/teachers/hooks/teachersQueryKeys';
 import {
-  TEACHERS_FIELD_CONFIG_QUERY_KEY,
   TEACHERS_PREFERENCES_QUERY_KEY,
 } from '@/tenant/features/teachers/hooks/useTeacherSetupConfig';
 import { TEACHERS_LOOKUPS_QUERY_KEY } from '@/tenant/features/teachers/hooks/useTeacherLookups';
@@ -16,7 +15,6 @@ export const invalidateTeachersQueries = createModuleQueryInvalidator({
   count: TEACHERS_QUERY_KEY,
   metrics: TEACHERS_METRICS_QUERY_KEY,
   widgetAggregates: TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-  fieldConfig: TEACHERS_FIELD_CONFIG_QUERY_KEY,
   preferences: TEACHERS_PREFERENCES_QUERY_KEY,
   lookups: TEACHERS_LOOKUPS_QUERY_KEY,
 });

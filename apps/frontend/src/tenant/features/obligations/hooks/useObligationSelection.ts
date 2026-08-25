@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { useState, useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { ObligationCollection } from '@/lib/data/obligationsData';
 
 /** Work directory row selection SSOT for obligation collections (Hasanat-shaped). */
@@ -9,20 +9,20 @@ export function useObligationSelection(collections: ObligationCollection[]) {
     && collections.every((collection) => selectedIds.includes(collection.id));
   const someVisibleSelected = collections.some((collection) => selectedIds.includes(collection.id));
 
-  const toggleSelectAll = (checked: boolean) => {
+  const toggleSelectAll = useCallback((checked: boolean) => {
     const visibleIds = collections.map((collection) => collection.id);
     setSelectedIds((currentIds) => checked
       ? [...new Set([...currentIds, ...visibleIds])]
       : currentIds.filter((id) => !visibleIds.includes(id)));
-  };
+  }, [collections]);
 
-  const toggleSelectedCollection = (id: string, checked: boolean) => {
+  const toggleSelectedCollection = useCallback((id: string, checked: boolean) => {
     setSelectedIds((currentIds) => checked
       ? [...currentIds, id]
       : currentIds.filter((selectedId) => selectedId !== id));
-  };
+  }, []);
 
-  const clearSelection = () => setSelectedIds([]);
+  const clearSelection = useCallback(() => setSelectedIds([]), []);
 
   return {
     selectedIds,

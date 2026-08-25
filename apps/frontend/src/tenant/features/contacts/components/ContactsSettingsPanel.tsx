@@ -1,7 +1,6 @@
 import { useMemo, useRef, lazy, Suspense } from "react";
 import { CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
@@ -27,30 +26,27 @@ export function ContactsSettingsPanel({
   canEditSetup,
 }: ContactsSettingsPanelProps): JSX.Element {
   const { t } = useTranslation();
-  const { fieldConfig, updateConfig, updateConfigAsync } = useContactConfig();
   const dirtyRef = useRef({ prefs: false });
 
   const settingsSubTabs = useMemo(() => {
-    const tabsFromConfig = fieldConfig.settingsSubTabs || [];
     const defaultByKey = new Map(DEFAULT_SETTINGS_SUB_TABS.map((tab) => [tab.key, tab]));
     return CONTACTS_MODULE_MANIFEST.setupSubTabs
       .map((key, index) => {
-        const setupTabConfig = tabsFromConfig.find((tab) => tab.key === key);
         const seedTab = defaultByKey.get(key);
         const labelSource = {
-          label: setupTabConfig?.label ?? seedTab?.label ?? key,
-          labelKey: setupTabConfig?.labelKey ?? seedTab?.labelKey,
+          label: seedTab?.label ?? key,
+          labelKey: seedTab?.labelKey,
         };
         return {
           key,
           label: resolveRegistryLabel(labelSource, t),
-          order: setupTabConfig?.order ?? seedTab?.order ?? index,
-          enabled: setupTabConfig?.enabled ?? seedTab?.enabled ?? true,
+          order: seedTab?.order ?? index,
+          enabled: seedTab?.enabled ?? true,
         };
       })
       .filter((tab) => tab.enabled)
       .sort((a, b) => a.order - b.order);
-  }, [fieldConfig.settingsSubTabs, t]);
+  }, [t]);
 
   const subTabs = useModuleSetupSubTabs({
     initialKey: shouldOpenContactsSyncSetup()
@@ -80,9 +76,6 @@ export function ContactsSettingsPanel({
         {subTabs.showPrefs &&
           (canEditSetup ? (
             <ContactsSetupPanel
-              config={fieldConfig}
-              onConfigChange={updateConfig}
-              onConfigChangeAsync={updateConfigAsync}
               onPrefsDirtyChange={setPrefsDirty}
             />
           ) : (

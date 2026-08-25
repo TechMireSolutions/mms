@@ -18,14 +18,25 @@ vi.mock('../db/repositories/contactGoogleSyncRepository.js', () => ({
   upsertContactGoogleSyncCredentials: (...args: unknown[]) => mockUpsertCredentials(...args),
 }));
 
-vi.mock('../services/contactService.js', () => ({
+vi.mock('../contacts/use-cases/contactLoadUseCases.js', () => ({
   loadContactRuntimeDefaults: (...args: unknown[]) => mockLoadContactRuntimeDefaults(...args),
   loadExistingNormalizedContactNames: (...args: unknown[]) =>
     mockFindExistingNormalizedContactNames(...args),
   findContactsMatchingUniqueValues: (...args: unknown[]) =>
     mockFindContactsMatchingUniqueValues(...args),
+}));
+
+vi.mock('../contacts/use-cases/contactWriteUseCases.js', () => ({
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
+}));
+
+vi.mock('../contacts/use-cases/contactValidationUseCases.js', () => ({
   prepareContactRecord: async (contact: unknown) => contact,
+  assertContactUniqueFields: vi.fn().mockResolvedValue(undefined),
+  ContactUniqueFieldError: class ContactUniqueFieldError extends Error {
+    code = 'unique_conflict';
+    errors: unknown[] = [];
+  },
 }));
 
 vi.mock('../db/repositories/contactRepository.js', () => ({
@@ -40,15 +51,9 @@ vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
 }));
 
-vi.mock('../services/contactUniqueValidationService.js', () => ({
-  assertContactUniqueFields: vi.fn().mockResolvedValue(undefined),
-  ContactUniqueFieldError: class ContactUniqueFieldError extends Error {
-    code = 'unique_conflict';
-    errors: unknown[] = [];
-  },
-}));
 
-vi.mock('../services/contactDuplicateScanService.js', () => ({
+
+vi.mock('../contacts/use-cases/contactDuplicateScanUseCases.js', () => ({
   invalidateDuplicateScanCache: (...args: unknown[]) => mockInvalidateDuplicateScanCache(...args),
 }));
 

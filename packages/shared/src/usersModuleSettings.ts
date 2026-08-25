@@ -1,5 +1,5 @@
 import type { TabDefinition } from "./contactTypes.js";
-import type { ModuleCustomField, ModuleFieldDef } from "./moduleFieldSchema.js";
+import type { ModuleFieldDef } from "./moduleFieldSchema.js";
 import { INITIAL_USERS_FIELD_SEED } from "./moduleFieldSetupPersons.js";
 
 // ─── Users Module Settings ───────────────────────────────────────────────────
@@ -9,7 +9,7 @@ export interface UsersSettings {
   requireEmailVerification: boolean;
   defaultViewLayout?: string;
   fields?: Record<string, unknown>;
-  customFields?: ModuleCustomField[];
+  customFields?: [];
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
   enabledTabs?: string[];
@@ -26,7 +26,6 @@ export const DEFAULT_USERS_SETTINGS: UsersSettings = {
     basic: INITIAL_USERS_FIELD_SEED.basic.map((f) => ({ ...f })),
     security: INITIAL_USERS_FIELD_SEED.security.map((f) => ({ ...f })),
   },
-  customFields: [],
   fieldOrder: ["name", "email", "roles"],
 };
 

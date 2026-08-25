@@ -18,14 +18,14 @@ export {
   useStudentLookupsQuery,
 } from '@/tenant/features/students/hooks/useStudentLookups';
 export {
-  STUDENTS_FIELD_CONFIG_QUERY_KEY,
+  
   STUDENTS_PREFERENCES_QUERY_KEY,
-  useStudentFieldConfigMutation,
+  
   useStudentPreferencesMutation,
   useComposedStudentsSettings,
 } from '@/tenant/features/students/hooks/useStudentSetupConfig';
 export {
-  setStudentFieldConfigMemory,
+  
   setStudentPreferencesMemory,
 } from '@/tenant/features/students/hooks/studentSetupConfigApi';
 export { applyStudentsWorkDrillDown } from '@/tenant/features/students/hooks/studentsWorkDrillDown';

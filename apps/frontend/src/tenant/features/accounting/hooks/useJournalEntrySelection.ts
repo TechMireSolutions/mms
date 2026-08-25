@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { useState, useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { JournalEntry } from '@/lib/data/accountingData';
 
 /** Work directory row selection SSOT for journal entries (Obligations-shaped). */
@@ -9,20 +9,20 @@ export function useJournalEntrySelection(entries: JournalEntry[]) {
     && entries.every((entry) => selectedIds.includes(entry.id));
   const someVisibleSelected = entries.some((entry) => selectedIds.includes(entry.id));
 
-  const toggleSelectAll = (checked: boolean) => {
+  const toggleSelectAll = useCallback((checked: boolean) => {
     const visibleIds = entries.map((entry) => entry.id);
     setSelectedIds((currentIds) => checked
       ? [...new Set([...currentIds, ...visibleIds])]
       : currentIds.filter((id) => !visibleIds.includes(id)));
-  };
+  }, [entries]);
 
-  const toggleSelectedEntry = (id: string, checked: boolean) => {
+  const toggleSelectedEntry = useCallback((id: string, checked: boolean) => {
     setSelectedIds((currentIds) => checked
       ? [...currentIds, id]
       : currentIds.filter((selectedId) => selectedId !== id));
-  };
+  }, []);
 
-  const clearSelection = () => setSelectedIds([]);
+  const clearSelection = useCallback(() => setSelectedIds([]), []);
 
   return {
     selectedIds,

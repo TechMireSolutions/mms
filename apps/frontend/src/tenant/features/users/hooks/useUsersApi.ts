@@ -56,6 +56,14 @@ export function useActivityLogs(options?: { enabled?: boolean }) {
   });
 }
 
+export function useActivityLogsCollection(options?: { enabled?: boolean }): ActivityLog[] {
+  const query = useActivityLogs(options);
+  if (!query.data || query.data.status !== 200) return [];
+  const body = query.data.body as any;
+  if (Array.isArray(body)) return body;
+  return Array.isArray(body?.logs) ? body.logs : [];
+}
+
 export function useUsersMutations() {
   const queryClient = useQueryClient();
 
