@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
