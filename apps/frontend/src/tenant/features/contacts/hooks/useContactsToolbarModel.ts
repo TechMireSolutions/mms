@@ -1,18 +1,35 @@
 import { useMemo, useCallback } from "react";
-import { DEFAULT_COLUMN_REGISTRY } from "@mms/shared";
+import { DEFAULT_COLUMN_REGISTRY, type ColumnRegistryEntry } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { ModuleColumnCustomizerLabels } from "@/components/ui/moduleColumnCustomizerTypes";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
-export function useContactsToolbarModel() {
+export interface ContactsToolbarSortOption {
+  field: string;
+  label: string;
+}
+
+export interface ContactsToolbarModel {
+  t: TranslationFunction;
+  genders: string[];
+  sortOptions: ContactsToolbarSortOption[];
+  columnRegistry: ColumnRegistryEntry[];
+  updateUserColumnLayout: (columns: ColumnRegistryEntry[]) => void;
+  handleResetColumnLayout: () => void;
+  columnCustomizerLabels: ModuleColumnCustomizerLabels;
+}
+
+export function useContactsToolbarModel(): ContactsToolbarModel {
   const { availableColumns, genders, systemSortOptions, columnRegistry, updateUserColumnLayout } =
     useContactConfig();
   const { t } = useTranslation();
 
-  const sortOptions = useMemo(() => {
-    const dynamicSorts = availableColumns
-      .filter((column) => column.sortField)
+  const sortOptions = useMemo<ContactsToolbarSortOption[]>(() => {
+    const dynamicSorts: ContactsToolbarSortOption[] = availableColumns
+      .filter((column): column is typeof column & { sortField: string } => Boolean(column.sortField))
       .map((column) => ({
-        field: column.sortField!,
+        field: column.sortField,
         label: column.label,
       }));
 
@@ -30,7 +47,7 @@ export function useContactsToolbarModel() {
     updateUserColumnLayout(DEFAULT_COLUMN_REGISTRY);
   }, [updateUserColumnLayout]);
 
-  const columnCustomizerLabels = useMemo(
+  const columnCustomizerLabels = useMemo<ModuleColumnCustomizerLabels>(
     () => ({
       trigger: t("contacts.columns"),
       title: t("contacts.columns"),

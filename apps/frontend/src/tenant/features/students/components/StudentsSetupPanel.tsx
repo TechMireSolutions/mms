@@ -20,7 +20,7 @@ const StudentsSetupPanel = React.memo(function StudentsSetupPanel({
         isDirty,
         isPrefsDirty,
         handleSave,
-      } = useStudentsSetupPanelState({ mode: "preferences" });
+      } = useStudentsSetupPanelState();
 
       React.useEffect(() => {
         onPrefsDirtyChange?.(isPrefsDirty);

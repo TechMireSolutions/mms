@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  Calendar, Filter, CheckCircle2, Clock, XCircle, Users,
+  Calendar, Filter, CheckCircle2, Clock,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSessionsMetrics } from '@/tenant/features/sessions/hooks/useSessions';
@@ -33,9 +33,6 @@ export const SessionsCommandMetrics = React.memo(function SessionsCommandMetrics
     { icon: Filter, label: t('sessions.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: CheckCircle2, label: t('sessions.metrics.active'), value: metrics.active, accent: 'success' as const },
     { icon: Clock, label: t('sessions.metrics.upcoming'), value: metrics.upcoming, accent: 'warning' as const },
-    { icon: Users, label: t('sessions.metrics.enrolled'), value: metrics.totalEnrolled, accent: 'indigo' as const },
-    { icon: CheckCircle2, label: t('sessions.metrics.completed'), value: metrics.completed, accent: 'success' as const },
-    { icon: XCircle, label: t('sessions.metrics.cancelled'), value: metrics.cancelled, accent: 'destructive' as const },
   ], [t, shown, metrics]);
 
   return <ModuleCommandMetricsGrid items={items} />;

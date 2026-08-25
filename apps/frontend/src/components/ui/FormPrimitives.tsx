@@ -12,7 +12,7 @@ export { EditableSelect } from "@/components/ui/EditableSelect";
 export { EditableMultiSelect, type EditableMultiSelectProps } from "@/components/ui/EditableMultiSelect";
 export { Field, FieldErrorMessage, RequiredMark } from "@/components/ui/FormField";
 export { RequiredBanner } from "@/components/ui/RequiredBanner";
-export { CustomFieldInput, type CustomFieldConfig } from "@/components/ui/FormCustomFieldInput";
+
 export { FormSelect, type FormSelectOption } from "@/components/ui/FormSelect";
 export { FormCheckboxCard, type FormCheckboxCardProps } from "@/components/ui/FormCheckboxCard";
 

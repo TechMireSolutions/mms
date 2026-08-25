@@ -2,7 +2,6 @@ import { type SessionsSettings as SessionsSettingsType } from "@mms/shared";
 import React from "react";
 import { Calendar } from "lucide-react";
 import {
-  SESSIONS_TAB_REGISTRY,
   SESSIONS_MODULE_MANIFEST,
 } from "@mms/shared";
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
@@ -24,31 +23,27 @@ export const SessionsSettings = React.memo(function SessionsSettings(): React.JS
       const {
         settings,
         settingsDraft,
-        fieldsEditor,
         saved,
         setSaved,
         upd,
         saveSettingsAsync,
       } = useModuleSettingsEditor<SessionsSettingsType>({
         config,
-        tabRegistry: SESSIONS_TAB_REGISTRY,
       });
       const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
 
       const {
         saving,
-        isDirty,
+        isPrefsDirty,
         handleSave,
       } = useSessionsSetupSaveActions({
         settings,
         settingsDraft,
-        fieldsEditor,
-        mode: "preferences",
         setSaved,
         saveSettingsAsync,
       });
 
-      const unsavedWarning = isDirty
+      const unsavedWarning = isPrefsDirty
         ? t("sessions.setup.unsavedPreferencesWarning")
         : undefined;
 
@@ -72,7 +67,7 @@ export const SessionsSettings = React.memo(function SessionsSettings(): React.JS
               />
 
               <ModuleSetupSaveFooter
-                dirty={isDirty}
+                dirty={isPrefsDirty}
                 saving={saving}
                 saved={saved}
                 unsavedWarning={unsavedWarning}

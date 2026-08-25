@@ -80,29 +80,45 @@ export function EditableMultiSelect({
     }
   };
 
-  const handleAdd = (): void => {
-    const rawText = newTagValue.trim();
+  const handleAdd = (valueToAdd?: string): void => {
+    const rawText = (valueToAdd ?? newTagValue).trim();
     if (!rawText) return;
 
-    // Normalize: Capitalize first letter of each word
-    const text = rawText
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+    const parts = rawText
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
 
-    const existingInOptions = options.find(
-      (opt) => opt.trim().toLowerCase() === text.toLowerCase(),
-    );
-    const existingInValues = values.some(
-      (val) => val.trim().toLowerCase() === text.toLowerCase(),
-    );
+    let nextValues = [...values];
+    let nextOptions = [...options];
+    let optionsChanged = false;
 
-    if (!existingInOptions && onUpdateOptions) {
-      onUpdateOptions([...options, text]);
+    for (const part of parts) {
+      const text = part
+        .split(" ")
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(" ");
+
+      const existingInOptions = nextOptions.find(
+        (opt) => opt.trim().toLowerCase() === text.toLowerCase(),
+      );
+      const existingInValues = nextValues.some(
+        (val) => val.trim().toLowerCase() === text.toLowerCase(),
+      );
+
+      if (!existingInOptions && onUpdateOptions) {
+        nextOptions = [...nextOptions, text];
+        optionsChanged = true;
+      }
+      if (!existingInValues) {
+        nextValues = [...nextValues, existingInOptions || text];
+      }
     }
-    if (!existingInValues) {
-      onChange([...values, existingInOptions || text]);
+
+    if (optionsChanged && onUpdateOptions) {
+      onUpdateOptions(nextOptions);
     }
+    onChange(nextValues);
     setNewTagValue("");
   };
 
@@ -114,6 +130,9 @@ export function EditableMultiSelect({
     <Popover
       open={open}
       onOpenChange={(isOpen) => {
+        if (!isOpen && newTagValue.trim()) {
+          handleAdd(newTagValue);
+        }
         setOpen(isOpen);
         if (!isOpen) {
           setSearchQuery("");
@@ -143,9 +162,8 @@ export function EditableMultiSelect({
             values.map((val) => (
               <Badge
                 key={val}
-                pill
                 tone="primary"
-                className="gap-1 px-2.5 py-0.5 text-xs font-medium"
+                className="gap-1 px-2 py-0.5 text-xs font-medium"
               >
                 <span>{formatContactOptionLabel(val, t) || val}</span>
                 <span
@@ -286,7 +304,7 @@ export function EditableMultiSelect({
             <Button
               type="button"
               size="sm"
-              onClick={handleAdd}
+              onClick={() => handleAdd()}
               disabled={!newTagValue.trim()}
               className="px-2.5 min-h-11 text-xs font-semibold rounded-lg flex-shrink-0 gap-1"
             >

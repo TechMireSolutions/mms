@@ -10,6 +10,7 @@ const SORT_FIELD_TO_API: Record<StudentListSortField, string> = {
   grNumber: "grNumber",
   gender: "gender",
   registeredDate: "registeredDate",
+  updatedAt: "updatedAt",
 };
 
 type StudentsPageWorkQueryInput = {

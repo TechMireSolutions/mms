@@ -34,6 +34,7 @@ export function ContactSkillsTab({
   proficiencyOptions,
   onUpdateProficiencyOptions,
   defaultProficiency,
+  formInstanceId,
   getListItemError,
   isFieldEnabled,
   isFieldRequired,
@@ -119,8 +120,8 @@ export function ContactSkillsTab({
                     onChange={(val) => updateSkill(idx, { category: val })}
                     onUpdateOptions={onUpdateCategoryOptions}
                     className="w-40 @sm:w-52 min-w-0"
-                    id={`skill-category-${idx}`}
-                    name={`skill-category-${idx}`}
+                    id={`cf-${formInstanceId}-skill-category-${idx}`}
+                    name={`cf-${formInstanceId}-skill-category-${idx}`}
                     placeholder={t("contacts.form.skillCategoryPlaceholder")}
                   />
                 ) : undefined
@@ -136,12 +137,15 @@ export function ContactSkillsTab({
                       label={t("contacts.fields.skillName")}
                       required={isFieldRequired("skills", "name")}
                       error={nameError}
-                      id={`skill-name-${idx}`}
+                      id={`cf-${formInstanceId}-skill-name-${idx}`}
                     >
                       <LeadingIconInput
                         icon={Tag}
-                        id={`skill-name-${idx}`}
-                        name={`skill-name-${idx}`}
+                        id={`cf-${formInstanceId}-skill-name-${idx}`}
+                        name={`cf-${formInstanceId}-skill-name-${idx}`}
+                        autoCapitalize="words"
+                        enterKeyHint="next"
+                        aria-invalid={Boolean(nameError)}
                         value={skill.name || ""}
                         required={isFieldRequired("skills", "name")}
                         onChange={(e) => updateSkill(idx, { name: e.target.value })}
@@ -156,7 +160,7 @@ export function ContactSkillsTab({
                       label={t("contacts.fields.skillProficiency")}
                       required={isFieldRequired("skills", "proficiency")}
                       error={proficiencyError}
-                      id={`skill-proficiency-${idx}`}
+                      id={`cf-${formInstanceId}-skill-proficiency-${idx}`}
                     >
                       <EditableSelect
                         options={proficiencyOptions}
@@ -164,8 +168,8 @@ export function ContactSkillsTab({
                         onChange={(val) => updateSkill(idx, { proficiency: val })}
                         onUpdateOptions={onUpdateProficiencyOptions}
                         className="w-full"
-                        id={`skill-proficiency-${idx}`}
-                        name={`skill-proficiency-${idx}`}
+                        id={`cf-${formInstanceId}-skill-proficiency-${idx}`}
+                        name={`cf-${formInstanceId}-skill-proficiency-${idx}`}
                         placeholder={t("contacts.form.skillProficiencyPlaceholder")}
                       />
                     </Field>
@@ -179,12 +183,16 @@ export function ContactSkillsTab({
                       label={t("contacts.fields.skillYears")}
                       required={isFieldRequired("skills", "yearsOfExperience")}
                       error={yearsError}
-                      id={`skill-years-${idx}`}
+                      id={`cf-${formInstanceId}-skill-years-${idx}`}
                     >
                       <LeadingIconInput
                         icon={Clock}
-                        id={`skill-years-${idx}`}
-                        name={`skill-years-${idx}`}
+                        id={`cf-${formInstanceId}-skill-years-${idx}`}
+                        name={`cf-${formInstanceId}-skill-years-${idx}`}
+                        inputMode="numeric"
+                        spellCheck={false}
+                        enterKeyHint="next"
+                        aria-invalid={Boolean(yearsError)}
                         value={skill.yearsOfExperience || ""}
                         required={isFieldRequired("skills", "yearsOfExperience")}
                         onChange={(e) => updateSkill(idx, { yearsOfExperience: e.target.value })}
@@ -199,12 +207,15 @@ export function ContactSkillsTab({
                       label={t("contacts.fields.skillIssuer")}
                       required={isFieldRequired("skills", "issuer")}
                       error={issuerError}
-                      id={`skill-issuer-${idx}`}
+                      id={`cf-${formInstanceId}-skill-issuer-${idx}`}
                     >
                       <LeadingIconInput
                         icon={Building2}
-                        id={`skill-issuer-${idx}`}
-                        name={`skill-issuer-${idx}`}
+                        id={`cf-${formInstanceId}-skill-issuer-${idx}`}
+                        name={`cf-${formInstanceId}-skill-issuer-${idx}`}
+                        autoCapitalize="words"
+                        enterKeyHint="next"
+                        aria-invalid={Boolean(issuerError)}
                         value={skill.issuer || ""}
                         required={isFieldRequired("skills", "issuer")}
                         onChange={(e) => updateSkill(idx, { issuer: e.target.value })}
@@ -218,8 +229,8 @@ export function ContactSkillsTab({
                 {/* Inline Checkbox: Certified / Ijazah Holder */}
                 {showIsCertified ? (
                   <FormCheckboxCard
-                    id={`skill-certified-${idx}`}
-                    name={`skill-certified-${idx}`}
+                    id={`cf-${formInstanceId}-skill-certified-${idx}`}
+                    name={`cf-${formInstanceId}-skill-certified-${idx}`}
                     checked={Boolean(skill.isCertified)}
                     onCheckedChange={(checked) =>
                       updateSkill(idx, {
@@ -237,11 +248,11 @@ export function ContactSkillsTab({
                     label={t("contacts.fields.skillDescription")}
                     required={isFieldRequired("skills", "description")}
                     error={descriptionError}
-                    id={`skill-desc-${idx}`}
+                    id={`cf-${formInstanceId}-skill-desc-${idx}`}
                   >
                     <Textarea
-                      id={`skill-desc-${idx}`}
-                      name={`skill-desc-${idx}`}
+                      id={`cf-${formInstanceId}-skill-desc-${idx}`}
+                      name={`cf-${formInstanceId}-skill-desc-${idx}`}
                       rows={2}
                       value={skill.description || ""}
                       required={isFieldRequired("skills", "description")}

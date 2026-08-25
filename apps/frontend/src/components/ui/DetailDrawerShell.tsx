@@ -8,6 +8,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
+import { OVERLAY_BACKDROP } from "@/components/ui/formStyles";
 
 export type DetailDrawerSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
 
@@ -126,7 +127,7 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: reducedMotion ? 0 : 0.2 }}
-            className="absolute inset-0 bg-black/30 backdrop-blur-subtle"
+            className={cn("absolute inset-0", OVERLAY_BACKDROP)}
             onClick={onClose}
           />
 

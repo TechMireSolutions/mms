@@ -38,12 +38,17 @@ export function OutstandingFeesTableMobileList({
           key={outstandingFee.id}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: index * 0.04, duration: 0.25 }}
+          transition={{ delay: Math.min(index * 0.02, 0.25), duration: 0.2 }}
           className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
         >
           <div className="flex min-w-0 items-start justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <UserAvatar id={outstandingFee.studentId} name={outstandingFee.student} className="w-7 h-7 rounded-full text-xs font-bold shrink-0" />
+              <UserAvatar
+                id={outstandingFee.studentId}
+                name={outstandingFee.student}
+                size="sm"
+                className="shrink-0"
+              />
               <div className="min-w-0">
                 <h4 className="truncate text-sm font-semibold text-foreground m-0">{outstandingFee.student}</h4>
                 {outstandingFee.class ? (

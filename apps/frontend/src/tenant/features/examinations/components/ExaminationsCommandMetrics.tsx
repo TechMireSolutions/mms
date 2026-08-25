@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  BookOpen, Filter, Clock, PlayCircle, CheckCircle2, FileText, ClipboardList,
+  BookOpen, Filter, Clock, PlayCircle,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useExaminationsMetrics } from '@/tenant/features/examinations/hooks/useExaminationsApi';
@@ -32,9 +32,6 @@ export const ExaminationsCommandMetrics = React.memo(function ExaminationsComman
     { icon: Filter, label: t('examinations.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: Clock, label: t('examinations.metrics.upcoming'), value: metrics.upcoming, accent: 'warning' as const },
     { icon: PlayCircle, label: t('examinations.metrics.ongoing'), value: metrics.ongoing, accent: 'indigo' as const },
-    { icon: CheckCircle2, label: t('examinations.metrics.completed'), value: metrics.completed, accent: 'success' as const },
-    { icon: FileText, label: t('examinations.metrics.totalResults'), value: metrics.totalResults, accent: 'teal' as const },
-    { icon: ClipboardList, label: t('examinations.metrics.examsWithResults'), value: metrics.examsWithResults, accent: 'purple' as const },
   ], [t, shown, metrics]);
 
   return <ModuleCommandMetricsGrid items={items} />;

@@ -27,12 +27,17 @@ export function useContactColumnPrefs(options?: { enabled?: boolean }) {
   const enabled = options?.enabled ?? true;
   
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.contacts.getColumnPreferences.useQuery({
+  const query = tsrClient.contacts.getColumnPreferences.useQuery({
     queryKey: CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
     queryData: {},
     enabled: isAuthenticated && enabled,
     staleTime: 60_000,
   });
+
+  return {
+    ...query,
+    data: query.data?.body ? ((query.data.body as any)?.preferences ?? []) : (Array.isArray(query.data) ? query.data : undefined),
+  };
 }
 
 export function useContactColumnPrefsMutation() {
@@ -42,33 +47,44 @@ export function useContactColumnPrefsMutation() {
     onSuccess: (response: any) => {
       queryClient.setQueryData(
         CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
-        response.body?.preferences ?? [],
+        response?.body?.preferences ?? [],
       );
     },
   });
 
+  const sanitizePrefs = (rawPreferences: ContactColumnPreference[]) => {
+    return rawPreferences
+      .filter((columnPreference) => columnPreference && typeof columnPreference.key === 'string' && columnPreference.key.trim().length > 0)
+      .map((columnPreference, index) => {
+        const floored = Math.floor(
+          typeof columnPreference.order === 'number' ? columnPreference.order : Number(columnPreference.order),
+        );
+        const preference: ContactColumnPreference = {
+          key: columnPreference.key.trim(),
+          enabled: Boolean(columnPreference.enabled),
+          order: Number.isSafeInteger(floored) && floored >= 0 ? floored : index,
+        };
+        if (typeof columnPreference.width === 'number') {
+          preference.width = clampModuleColumnWidth(columnPreference.width);
+        }
+        return preference;
+      });
+  };
+
   return {
     ...mutation,
-    mutateAsync: async (rawPreferences: ContactColumnPreference[]) => {
-      const preferences: ContactColumnPreference[] = rawPreferences
-        .filter((columnPreference) => columnPreference && typeof columnPreference.key === 'string' && columnPreference.key.trim().length > 0)
-        .map((columnPreference, index) => {
-          const floored = Math.floor(
-            typeof columnPreference.order === 'number' ? columnPreference.order : Number(columnPreference.order),
-          );
-          const preference: ContactColumnPreference = {
-            key: columnPreference.key.trim(),
-            enabled: Boolean(columnPreference.enabled),
-            order: Number.isSafeInteger(floored) && floored >= 0 ? floored : index,
-          };
-          if (typeof columnPreference.width === 'number') {
-            preference.width = clampModuleColumnWidth(columnPreference.width);
-          }
-          return preference;
-        });
-      
-      return mutation.mutateAsync({ body: { preferences } });
-    }
+    mutate: (rawPreferences: any, mutateOptions?: any) => {
+      const prefs = Array.isArray(rawPreferences)
+        ? rawPreferences
+        : (Array.isArray(rawPreferences?.body?.preferences) ? rawPreferences.body.preferences : []);
+      return mutation.mutate({ body: { preferences: sanitizePrefs(prefs) } }, mutateOptions);
+    },
+    mutateAsync: async (rawPreferences: any, mutateOptions?: any) => {
+      const prefs = Array.isArray(rawPreferences)
+        ? rawPreferences
+        : (Array.isArray(rawPreferences?.body?.preferences) ? rawPreferences.body.preferences : []);
+      return mutation.mutateAsync({ body: { preferences: sanitizePrefs(prefs) } }, mutateOptions);
+    },
   };
 }
 

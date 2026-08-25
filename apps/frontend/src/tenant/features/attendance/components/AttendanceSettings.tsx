@@ -1,6 +1,5 @@
 import { type AttendanceSettings as AttendanceSettingsType } from "@mms/shared";
 import {
-  ATTENDANCE_TAB_REGISTRY,
   ATTENDANCE_MODULE_MANIFEST,
 } from "@mms/shared";
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
@@ -24,7 +23,6 @@ export const AttendanceSettings = React.memo(function AttendanceSettings() {
         saveSettingsAsync,
       } = useModuleSettingsEditor<AttendanceSettingsType>({
         config,
-        tabRegistry: ATTENDANCE_TAB_REGISTRY,
       });
 
       const isDirty = !saved;

@@ -47,6 +47,9 @@ export const WORK_SURFACE =
 export const WORK_SURFACE_INNER =
   'rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm';
 
+/** Standardized overlay backdrop for all modals, dialogs, and drawers. */
+export const OVERLAY_BACKDROP = 'bg-sidebar/90 backdrop-blur-sm';
+
 /** Sticky Work directory table header cells (checkbox / frozen name cols). */
 export const WORK_STICKY_HEAD = 'bg-muted/95 backdrop-blur-md';
 

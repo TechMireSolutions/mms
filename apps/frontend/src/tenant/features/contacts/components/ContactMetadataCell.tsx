@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import {
   formatCnic,
+  getContactTags,
   isRelationshipWorkColumnKey,
   type Contact,
   type ContactPreferences,
@@ -120,15 +121,14 @@ export function ContactMetadataCell({
         if (!contact.cnic) return renderDash();
         return <span className="font-mono">{formatCnic(contact.cnic) || contact.cnic}</span>;
       }
-      case "tag": {
-        const contactTags = Array.isArray(contact.tags) && contact.tags.length > 0
-          ? contact.tags
-          : (contact.tag ? contact.tag.split(",").map((s) => s.trim()).filter(Boolean) : []);
+      case "tag":
+      case "tags": {
+        const contactTags = getContactTags(contact);
         if (contactTags.length === 0) return renderDash();
         return (
           <div className="flex flex-wrap gap-1">
             {contactTags.map((tag) => (
-              <Badge key={tag} pill variant="outline" className="px-2 font-medium border-primary/30 text-primary bg-primary/5">
+              <Badge key={tag} tone="primary" className="px-2 py-0.5 text-xs font-medium">
                 {tag}
               </Badge>
             ))}
@@ -154,7 +154,7 @@ export function ContactMetadataCell({
       case "doNotContact": {
         if (contact.doNotContact) {
           return (
-            <Badge pill variant="outline" className="px-2 font-medium border-destructive/40 text-destructive bg-destructive/10">
+            <Badge tone="destructive" className="px-2 py-0.5 text-xs font-medium">
               {t("contacts.columns.doNotContact")}
             </Badge>
           );
@@ -245,7 +245,7 @@ export function ContactMetadataCell({
       case "skillsIsCertified": {
         const certified = (contact.skills || []).some((s) => s.isCertified);
         return certified ? (
-          <Badge pill tone="success" className="px-2 font-medium">
+          <Badge tone="success" className="px-2 py-0.5 text-xs font-medium">
             {t("contacts.columns.skillsIsCertified")}
           </Badge>
         ) : (

@@ -58,9 +58,6 @@ export function StudentListDesktopTableRow({
   const studentIdStr = String(studentRow.id);
   const isSelected = selectedIds.includes(studentIdStr);
   const displayName = studentRow.name || "";
-  const sessionNames = sessions
-    .filter((session) => studentRow.enrolledSessions?.includes(session.id))
-    .map((session) => session.name);
 
   return (
     <motion.tr
@@ -98,7 +95,6 @@ export function StudentListDesktopTableRow({
             col,
             studentIdStr,
             displayName,
-            sessionNames,
             emptyDash,
             statusBadgeConfig,
             isColumnVisible,

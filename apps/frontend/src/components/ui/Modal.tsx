@@ -6,6 +6,7 @@ import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { OVERLAY_BACKDROP } from "@/components/ui/formStyles";
 
 export interface ModalProps {
   open: boolean;
@@ -13,7 +14,7 @@ export interface ModalProps {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   /** Extra block below the title row (e.g. progress bar). */
   headerExtra?: React.ReactNode;
   /** Custom action elements rendered in the header (e.g. builder switch). */
@@ -31,6 +32,8 @@ const SIZE = {
   md: "max-w-lg",
   lg: "max-w-2xl",
   xl: "max-w-4xl",
+  "2xl": "max-w-6xl",
+  "3xl": "max-w-[90vw]",
 };
 
 /**
@@ -65,7 +68,7 @@ export function Modal({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+            className={cn("absolute inset-0", OVERLAY_BACKDROP)}
             onClick={onClose}
           />
           <motion.div

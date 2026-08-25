@@ -7,7 +7,7 @@ import { CalculatedFee } from '@/lib/data/enrollmentData';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Step6ConfirmationRow, Step6ConfirmationSection } from '@/tenant/features/enrollments/components/wizard/step6ConfirmationLayout';
-import { Step6ConfirmationCustomFields } from '@/tenant/features/enrollments/components/wizard/Step6ConfirmationCustomFields';
+
 
 interface Step6ConfirmationProps {
   student: Student | null | undefined;
@@ -74,12 +74,18 @@ export function Step6Confirmation({
         </Step6ConfirmationSection>
       </div>
 
-      <Step6ConfirmationCustomFields
-        notes={notes}
-        onNotesChange={onNotesChange}
-        customFieldValues={customFieldValues}
-        onCustomFieldChange={onCustomFieldChange}
-      />
+      <div className="space-y-1.5">
+        <label htmlFor="enrollment-notes" className="text-xs font-semibold text-foreground">
+          {t('enrollments.detail.notes')}
+        </label>
+        <textarea
+          id="enrollment-notes"
+          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+          value={notes}
+          onChange={(e) => onNotesChange(e.target.value)}
+          placeholder={t('enrollments.detail.notesPlaceholder')}
+        />
+      </div>
 
       <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 space-y-1.5" role="note" aria-label={t('enrollments.wizard.step6NextAria')}>
         <p className="text-xs font-bold text-foreground">{t('enrollments.wizard.step6NextTitle')}</p>

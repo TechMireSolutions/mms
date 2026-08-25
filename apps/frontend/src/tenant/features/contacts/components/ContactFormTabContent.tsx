@@ -11,7 +11,7 @@ import { ContactEducationTab } from "@/tenant/features/contacts/components/formT
 import { ContactExperienceTab } from "@/tenant/features/contacts/components/formTabs/ContactExperienceTab";
 import { ContactSkillsTab } from "@/tenant/features/contacts/components/formTabs/ContactSkillsTab";
 import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
-import { ContactCustomTab } from "@/tenant/features/contacts/components/formTabs/ContactCustomTab";
+
 import type { ContactSubListTabBaseProps } from "@/tenant/features/contacts/components/formTabs/types";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import { normalizeContactFormTabId } from "@mms/shared";
@@ -171,31 +171,7 @@ export function ContactFormTabContent({
           />
         );
       default: {
-        const tabDef = (draft.fieldConfig?.formTabs ?? []).find(
-          (tDef) =>
-            tDef.key.toLowerCase() === tab.toLowerCase() ||
-            tDef.key.toLowerCase() === normalizedTab.toLowerCase(),
-        );
-        const tabLabel = tabDef?.labelKey ? t(tabDef.labelKey) : (tabDef?.label || tab);
-        return (
-          <ContactCustomTab
-            tabKey={tab}
-            tabLabel={tabLabel}
-            contactDraft={draft.contactDraft}
-            fields={draft.fields}
-            formInstanceId={draft.formInstanceId}
-            isFieldEnabled={draft.isFieldEnabled}
-            isFieldRequired={draft.isFieldRequired}
-            getFieldError={draft.getFieldError}
-            getListItemError={draft.getListItemError}
-            updateDraft={draft.updateDraft}
-            addSubListItem={draft.addSubListItem}
-            ensureSubListItem={draft.ensureSubListItem}
-            updateSubListItem={draft.updateSubListItem}
-            removeSubListItem={draft.removeSubListItem}
-            getLocalId={draft.getLocalId}
-          />
-        );
+        return null;
       }
     }
   };

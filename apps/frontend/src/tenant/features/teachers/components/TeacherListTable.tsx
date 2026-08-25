@@ -158,7 +158,8 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
                             id={teacher.id}
                             name={displayName}
                             avatar={teacher.avatar}
-                            className="w-8 h-8 rounded-full text-xs font-bold"
+                            size="md"
+                            className="shrink-0"
                           />
                           <div className="min-w-0">
                             <Button
@@ -171,7 +172,7 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
                               <span className="block truncate">{displayName}</span>
                             </Button>
                             {teacher.employeeId ? (
-                              <p className="text-xs text-muted-foreground">{teacher.employeeId}</p>
+                              <p className="text-xs text-muted-foreground truncate">{teacher.employeeId}</p>
                             ) : null}
                             {showDeleted && teacher.deletionReason ? (
                               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">

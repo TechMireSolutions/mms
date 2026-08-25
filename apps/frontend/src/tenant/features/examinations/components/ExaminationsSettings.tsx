@@ -2,7 +2,6 @@ import { type ExaminationsSettings as ExaminationsSettingsType } from "@mms/shar
 import React from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Save, FileText } from "lucide-react";
-import { EXAMINATIONS_TAB_REGISTRY } from "@mms/shared";
 import { useExaminationConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -23,7 +22,6 @@ export const ExaminationsSettings = React.memo(function ExaminationsSettings(): 
         saveSettingsAsync,
       } = useModuleSettingsEditor<ExaminationsSettingsType>({
         config,
-        tabRegistry: EXAMINATIONS_TAB_REGISTRY,
       });
 
       const handleSave = async () => {

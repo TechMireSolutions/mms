@@ -98,9 +98,14 @@ export function useContactColumnLayout({
     });
 
     const columnCtx = { fields, enabledTabIds, isTabFieldEnabled };
-    return filteredRegistry.filter((column) =>
-      canViewContactColumn(viewerRole, column.key, columnCtx),
-    );
+    const seenKeys = new Set<string>();
+    return filteredRegistry
+      .filter((column) => canViewContactColumn(viewerRole, column.key, columnCtx))
+      .filter((column) => {
+        if (seenKeys.has(column.key)) return false;
+        seenKeys.add(column.key);
+        return true;
+      });
   }, [fieldConfig.columnRegistry, fields, enabledTabIds, isTabFieldEnabled, viewerRole]);
 
   const {
@@ -131,15 +136,28 @@ export function useContactColumnLayout({
   const availableColumns = useMemo((): ContactsColumnConfig[] => {
     const translate = (key: Parameters<typeof translateApp>[0]) =>
       translateApp(key, settings.language);
-    return columnRegistry.map((col) => toContactsColumnConfig(col, translate));
+    const seen = new Set<string>();
+    return columnRegistry
+      .filter((col) => {
+        if (seen.has(col.key)) return false;
+        seen.add(col.key);
+        return true;
+      })
+      .map((col) => toContactsColumnConfig(col, translate));
   }, [columnRegistry, settings.language]);
 
   const visibleColumns = useMemo((): ContactsColumnConfig[] => {
     const translate = (key: Parameters<typeof translateApp>[0]) =>
       translateApp(key, settings.language);
+    const seen = new Set<string>();
     return columnRegistry
       .filter((column) => column.enabled)
       .sort((a, b) => a.order - b.order)
+      .filter((column) => {
+        if (seen.has(column.key)) return false;
+        seen.add(column.key);
+        return true;
+      })
       .map((col) => toContactsColumnConfig(col, translate));
   }, [columnRegistry, settings.language]);
 

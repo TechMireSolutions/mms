@@ -14,6 +14,8 @@ import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { isNavPathActive } from "@/lib/config/routes";
 import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
 import { MobileSidebarNavItems } from "@/tenant/components/layout/MobileSidebarNavItems";
+import { cn } from "@/lib/utils";
+import { OVERLAY_BACKDROP } from "@/components/ui/formStyles";
 
 export interface MobileSidebarProps {
   /** Boolean indicating if the mobile sidebar drawer is currently visible. */
@@ -85,7 +87,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
   return (
     <>
       <div
-        className="fixed inset-0 z-modal bg-black/40 backdrop-blur-sm lg:hidden"
+        className={cn("fixed inset-0 z-modal lg:hidden", OVERLAY_BACKDROP)}
         onClick={() => {
           if (Date.now() - openedAt > 150) {
             onClose();

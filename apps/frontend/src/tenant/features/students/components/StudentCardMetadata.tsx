@@ -38,7 +38,6 @@ export function StudentCardMetadata({
         renderStudentWorkColumnValue(student, col.key, {
           t,
           statusBadgeConfig,
-          sessionNames,
           emptyFallback: null,
         })
       }

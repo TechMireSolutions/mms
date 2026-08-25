@@ -33,10 +33,10 @@ export function useContactsCrudWriteActions({
       try {
         if (isNew) {
           const res = await upsertContact.mutateAsync(contact);
-          return res.contact;
+          return (res as any)?.body?.contact ?? (res as any)?.contact ?? (res as unknown as Contact);
         } else {
           const res = await updateContact.mutateAsync({ id: String(contact.id), contact });
-          return res.contact;
+          return (res as any)?.body?.contact ?? (res as any)?.contact ?? (res as unknown as Contact);
         }
       } catch (err) {
         handleError(err, "contacts.save_contact");

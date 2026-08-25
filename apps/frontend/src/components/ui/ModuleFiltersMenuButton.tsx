@@ -62,7 +62,7 @@ export const ModuleFiltersMenuTrigger = React.memo(
           <Icon className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{label}</span>
           {isActive ? (
-            <Badge pill className="w-4 h-4 px-0 font-bold">
+            <Badge className="w-4 h-4 px-0 font-bold">
               {activeCount}
             </Badge>
           ) : null}

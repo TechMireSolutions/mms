@@ -1,11 +1,15 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { contactWriteSchema, type Contact, type User } from '@mms/shared';
+import { contactWriteSchema, type Contact, type User, CONTACTS_MODULE_MANIFEST } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { getLinkedContactId } from '../../../services/auth/userService.js';
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
 import { canWriteContacts, canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { ContactUniqueFieldError } from '../../../services/contactService.js';
+import {
+  getUserColumnPreferencesForModule,
+  setUserColumnPreferencesForModule,
+} from '../../../services/userColumnPreferencesService.js';
 
 import {
   auditContact,
@@ -14,6 +18,21 @@ import {
 } from './contactRouteHelpers.js';
 
 const s = initServer();
+
+const RESERVED_CONTACT_ROUTE_IDS = new Set([
+  'column-preferences',
+  'column-prefs',
+  'count',
+  'metrics',
+  'widget-aggregates',
+  'resolve',
+  'saved-reports',
+  'lookups',
+  'setup-config',
+  'preferences',
+  'field-configs',
+  'google-sync',
+]);
 
 export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
   const router = s.router(rootContract.contacts, {
@@ -46,6 +65,9 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
     get: async ({ params: { id }, request }: any) => {
+      if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
+        return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
+      }
       const user = request.user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -92,6 +114,9 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
     update: async ({ params: { id }, body, request }: any) => {
+      if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
+        return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
+      }
       const user = request.user as User;
       const linkedContactId = await getLinkedContactId(user.id);
       const isOwnContact = linkedContactId != null && String(linkedContactId) === id;
@@ -125,6 +150,9 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
     delete: async ({ params: { id }, body, request }: any) => {
+      if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
+        return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
+      }
       const user = request.user as User;
       if (!canDeleteCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -151,6 +179,38 @@ export const contactContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load contact report analytics' } };
+      }
+    },
+    getColumnPreferences: async ({ request }: any) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, 'contacts')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const preferences = await getUserColumnPreferencesForModule(
+          CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
+          String(user.id),
+        );
+        return { status: 200 as const, body: { preferences } };
+      } catch {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load column preferences' } };
+      }
+    },
+    updateColumnPreferences: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, 'contacts')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const rawPrefs = (body as any)?.preferences ?? (body as any)?.prefs ?? [];
+        await setUserColumnPreferencesForModule(
+          CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
+          String(user.id),
+          rawPrefs,
+        );
+        return { status: 200 as const, body: { success: true, preferences: rawPrefs } };
+      } catch {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save column preferences' } };
       }
     },
   } as any);

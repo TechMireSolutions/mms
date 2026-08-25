@@ -28,12 +28,8 @@ export function ContactsSetupPanel({
     countryOptions,
     updatePreference,
     handleSave,
-  } = useContactsSetupPanelState({
-    config,
-    onConfigChange,
-    onConfigChangeAsync,
-    mode: "preferences",
-  });
+  } = useContactsSetupPanelState();
+
 
   useEffect(() => {
     onPrefsDirtyChange?.(isPrefsDirty);

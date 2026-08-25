@@ -1,16 +1,15 @@
 import { useEffect, useRef } from "react";
-import { USERS_TAB_REGISTRY , type UsersSettings } from "@mms/shared";
+import { type UsersSettings } from "@mms/shared";
 import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useUsersSetupSaveActions } from "@/tenant/features/users/hooks/useUsersSetupSaveActions";
 
-/** Shared Users Setup editor + dirty/save for Fields/Preferences (survives tab switches). */
+/** Shared Users Setup editor + dirty/save for Preferences (survives tab switches). */
 export function useUsersSetupPanelState() {
   const config = useUsersConfig();
   const {
     settings,
     settingsDraft,
-    fieldsEditor,
     saved,
     setSaved,
     upd,
@@ -18,43 +17,37 @@ export function useUsersSetupPanelState() {
     discardDrafts,
   } = useModuleSettingsEditor<UsersSettings>({
     config,
-    tabRegistry: USERS_TAB_REGISTRY,
   });
 
   const {
     saving,
-    isFieldsDirty,
     isPrefsDirty,
     handleSave,
   } = useUsersSetupSaveActions({
     settings,
     settingsDraft,
-    fieldsEditor,
     setSaved,
     saveSettingsAsync,
   });
 
-  const dirtyRef = useRef({ fields: false, prefs: false });
+  const dirtyRef = useRef({ prefs: false });
 
   useEffect(() => {
-    dirtyRef.current.fields = isFieldsDirty;
     dirtyRef.current.prefs = isPrefsDirty;
-  }, [isFieldsDirty, isPrefsDirty]);
+  }, [isPrefsDirty]);
 
   const discardSetupDrafts = () => {
     discardDrafts();
-    dirtyRef.current = { fields: false, prefs: false };
+    dirtyRef.current = { prefs: false };
     setSaved(true);
   };
 
   return {
     settingsDraft,
-    fieldsEditor,
     saved,
     setSaved,
     upd,
     saving,
-    isFieldsDirty,
     isPrefsDirty,
     dirtyRef,
     handleSave,

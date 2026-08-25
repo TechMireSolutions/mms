@@ -18,6 +18,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { OVERLAY_BACKDROP } from '@/components/ui/formStyles';
 
 export interface PlatformCommandPaletteProps {
   open: boolean;
@@ -168,7 +169,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
   return (
     <AnimatePresence>
       <div
-        className="fixed inset-0 z-modal flex items-start justify-center pt-16 px-4 bg-background/80 backdrop-blur-sm"
+        className={cn("fixed inset-0 z-modal flex items-start justify-center pt-16 px-4", OVERLAY_BACKDROP)}
         onClick={onClose}
         role="dialog"
         aria-modal="true"

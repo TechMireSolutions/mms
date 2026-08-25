@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Scale } from "lucide-react";
 import { formatMoney, formatDate } from "@mms/shared";
@@ -32,6 +32,11 @@ export function OverdueObligationsWidgetMobileList({
   onRemind,
   t,
 }: OverdueObligationsWidgetMobileListProps): React.ReactElement {
+  const studentsById = useMemo(
+    () => new Map(students.map((entry) => [String(entry.id), entry])),
+    [students],
+  );
+
   if (paginatedStudents.length === 0) {
     return (
       <EmptyState title={t("finance.report.noInvoicesMatch")} compact icon={null} className="select-none" />
@@ -42,19 +47,24 @@ export function OverdueObligationsWidgetMobileList({
     <>
       {paginatedStudents.map((overdueStudent, index) => {
         const reminded = remindedIds.has(overdueStudent.id);
-        const student = students.find((entry) => String(entry.id) === String(overdueStudent.id));
+        const student = studentsById.get(String(overdueStudent.id));
         const hasPhone = Boolean(student?.phone);
         return (
           <motion.article
             key={`${overdueStudent.id}-${overdueStudent.dueDate}-${overdueStudent.amount}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: index * 0.04, duration: 0.25 }}
+            transition={{ delay: Math.min(index * 0.02, 0.25), duration: 0.2 }}
             className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
           >
             <div className="flex min-w-0 items-start justify-between gap-3">
               <div className="flex min-w-0 items-center gap-2">
-                <UserAvatar id={overdueStudent.id} name={overdueStudent.name} className="w-7 h-7 rounded-full text-xs font-bold shrink-0" />
+                <UserAvatar
+                  id={overdueStudent.id}
+                  name={overdueStudent.name}
+                  size="sm"
+                  className="shrink-0"
+                />
                 <div className="min-w-0">
                   <h4 className="truncate text-sm font-semibold text-foreground m-0">{overdueStudent.name}</h4>
                   <div className="flex items-center gap-1.5 mt-0.5">

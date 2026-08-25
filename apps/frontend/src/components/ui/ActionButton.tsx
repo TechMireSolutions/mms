@@ -26,37 +26,44 @@ const SIZES = {
 /**
  * ActionButton — consistent CTA button used across all pages, composing the base Button primitive.
  */
-export function ActionButton({
-  variant = "secondary",
-  size = "md",
-  icon: Icon = null,
-  loading = false,
-  disabled = false,
-  onClick = undefined,
-  children = null,
-  className = "",
-  ...props
-}: ActionButtonProps): React.ReactElement {
-  return (
-    <Button
-      variant={VARIANT_MAP[variant] ?? "outline"}
-      onClick={onClick}
-      disabled={disabled || loading}
-      className={cn(
-        "font-semibold rounded-lg shadow-sm",
-        variant === "secondary" && "bg-card text-foreground border-border hover:bg-muted",
-        variant === "danger" && "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 shadow-none",
-        SIZES[size],
-        className
-      )}
-      {...props}
-    >
-      {loading ? (
-        <div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" aria-hidden="true" />
-      ) : (
-        Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-      )}
-      {children}
-    </Button>
-  );
-}
+export const ActionButton = React.forwardRef<HTMLButtonElement, ActionButtonProps>(
+  function ActionButton(
+    {
+      variant = "secondary",
+      size = "md",
+      icon: Icon = null,
+      loading = false,
+      disabled = false,
+      onClick = undefined,
+      children = null,
+      className = "",
+      ...props
+    },
+    ref
+  ) {
+    return (
+      <Button
+        ref={ref}
+        variant={VARIANT_MAP[variant] ?? "outline"}
+        onClick={onClick}
+        disabled={disabled || loading}
+        className={cn(
+          "font-semibold rounded-lg shadow-sm",
+          variant === "secondary" && "bg-card text-foreground border-border hover:bg-muted",
+          variant === "danger" && "bg-destructive/10 text-destructive border border-destructive/20 hover:bg-destructive/20 shadow-none",
+          SIZES[size],
+          className
+        )}
+        {...props}
+      >
+        {loading ? (
+          <div className="w-3.5 h-3.5 border-2 border-current/30 border-t-current rounded-full animate-spin" aria-hidden="true" />
+        ) : (
+          Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+        )}
+        {children}
+      </Button>
+    );
+  }
+);
+ActionButton.displayName = "ActionButton";

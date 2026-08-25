@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  Receipt, Filter, Banknote, Wallet, Globe, CalendarPlus, ClipboardList,
+  Receipt, Filter, Banknote, Wallet,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useObligationsMetrics } from '@/tenant/features/obligations/hooks/useObligationsApi';
@@ -34,9 +34,6 @@ export const ObligationsCommandMetrics = React.memo(function ObligationsCommandM
     { icon: Filter, label: t('obligations.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: Banknote, label: t('obligations.metrics.totalAmount'), value: formatCurrency(metrics.totalAmount), accent: 'indigo' as const },
     { icon: Wallet, label: t('obligations.metrics.cash'), value: metrics.cash, accent: 'success' as const },
-    { icon: Globe, label: t('obligations.metrics.online'), value: metrics.online, accent: 'teal' as const },
-    { icon: CalendarPlus, label: t('obligations.metrics.newThisPeriod'), value: metrics.newThisPeriod, accent: 'warning' as const },
-    { icon: ClipboardList, label: t('obligations.metrics.obligationTypes'), value: metrics.obligationTypes, accent: 'purple' as const },
   ], [t, shown, metrics, formatCurrency]);
 
   return <ModuleCommandMetricsGrid items={items} />;

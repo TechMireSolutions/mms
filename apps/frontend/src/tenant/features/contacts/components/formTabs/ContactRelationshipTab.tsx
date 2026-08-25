@@ -18,6 +18,7 @@ interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
 
 export function ContactRelationshipTab({
   contactDraft,
+  formInstanceId,
   getLocalId,
   isFieldEnabled,
   isFieldRequired,
@@ -85,8 +86,8 @@ export function ContactRelationshipTab({
                       }
                       placeholder={t("common.selectPlaceholder")}
                       className="w-40 @sm:w-52 min-w-0"
-                      id={`relationship-type-${idx}`}
-                      name={`relationship-type-${idx}`}
+                      id={`cf-${formInstanceId}-relationship-type-${idx}`}
+                      name={`cf-${formInstanceId}-relationship-type-${idx}`}
                     />
                   ) : undefined
                 }
@@ -108,8 +109,8 @@ export function ContactRelationshipTab({
                         excludeIds={excludeIds(idx)}
                         searchPlaceholder={t("contacts.form.searchByName")}
                         emptyTitle={t("contacts.form.noContactsFound")}
-                        id={`relationship-contact-${idx}`}
-                        name={`relationship-contact-${idx}`}
+                        id={`cf-${formInstanceId}-relationship-contact-${idx}`}
+                        name={`cf-${formInstanceId}-relationship-contact-${idx}`}
                         error={Boolean(pickerError)}
                       />
                       <FieldErrorMessage message={pickerError} />

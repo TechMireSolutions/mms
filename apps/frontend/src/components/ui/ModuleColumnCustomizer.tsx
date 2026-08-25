@@ -22,6 +22,8 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
   updateUserColumnLayout,
   onResetLayout,
   labels,
+  className,
+  disabled = false,
 }: ModuleColumnCustomizerProps): React.JSX.Element {
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
@@ -101,12 +103,16 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
 
   return (
     <Popover>
-      <PopoverTrigger
-        type="button"
-        className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE)}
-      >
-        <Settings2 className="w-3.5 h-3.5" />
-        <span>{labels.trigger}</span>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={disabled}
+          className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, className)}
+        >
+          <Settings2 className="w-3.5 h-3.5" aria-hidden="true" />
+          <span>{labels.trigger}</span>
+        </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 p-3 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">

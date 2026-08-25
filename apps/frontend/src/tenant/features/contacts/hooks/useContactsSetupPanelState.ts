@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  type FieldConfig,
   type ContactPreferences,
   normalizeContactDialCode,
 } from "@mms/shared";
@@ -9,14 +8,7 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useContactsPreferencesSave } from "@/tenant/features/contacts/hooks/useContactsPreferencesSave";
 import { buildCountrySelectOptions } from "@/tenant/features/contacts/hooks/contactsSetupPanelEditor";
 
-export function useContactsSetupPanelState({
-  mode = "preferences",
-}: {
-  config?: FieldConfig;
-  onConfigChange?: (config: FieldConfig) => void;
-  onConfigChangeAsync?: (config: FieldConfig) => Promise<void>;
-  mode?: "fields" | "preferences";
-} = {}) {
+export function useContactsSetupPanelState() {
   const {
     updatePrefsAsync,
     prefs: contextPrefs,
@@ -90,14 +82,10 @@ export function useContactsSetupPanelState({
     setSaved,
     isSaving,
     isPrefsDirty: isPreferencesDirty,
-    isFieldsDirty: false,
     countryOptions,
     countryCodes: countryCodesDraft,
     updateCountryCodes: updateCountryCodesDraft,
     updatePreference,
     handleSave,
-    showFields: mode === "fields",
-    showPrefs: mode === "preferences",
   };
 }
-

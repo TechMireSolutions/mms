@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import React, { type JSX } from "react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
@@ -12,7 +12,7 @@ import { ContactsFilterMenuButton } from "@/tenant/features/contacts/components/
 import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
 import { CONTACTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/contacts/hooks/useContactsKeyboardShortcuts";
 
-interface ContactsToolbarProps {
+export interface ContactsToolbarProps {
   search: string;
   onSearchChange: (searchValue: string) => void;
   filterGender: string;
@@ -32,7 +32,7 @@ interface ContactsToolbarProps {
   shownCount?: number;
 }
 
-export default function ContactsToolbar({
+export const ContactsToolbar = React.memo(function ContactsToolbar({
   search,
   onSearchChange,
   filterGender,
@@ -67,7 +67,11 @@ export default function ContactsToolbar({
         {shownCount != null ? t("contacts.shownCount", { count: shownCount }) : ""}
       </div>
 
-      <div className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}>
+      <div
+        role="region"
+        aria-label={t("contacts.filters")}
+        className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}
+      >
         <div className="relative min-w-0 flex-1">
           <SearchBar
             id={CONTACTS_WORK_SEARCH_INPUT_ID}
@@ -128,4 +132,6 @@ export default function ContactsToolbar({
       </div>
     </>
   );
-}
+});
+
+export default ContactsToolbar;

@@ -28,6 +28,7 @@ export function ContactEducationTab({
   degreeOptions,
   onUpdateDegreeOptions,
   defaultDegree,
+  formInstanceId,
   getListItemError,
   isFieldEnabled,
   isFieldRequired,
@@ -99,8 +100,8 @@ export function ContactEducationTab({
                     onChange={(val) => updateEducation(idx, { degree: val })}
                     onUpdateOptions={onUpdateDegreeOptions}
                     className="w-40 @sm:w-52 min-w-0"
-                    id={`education-degree-${idx}`}
-                    name={`education-degree-${idx}`}
+                    id={`cf-${formInstanceId}-education-degree-${idx}`}
+                    name={`cf-${formInstanceId}-education-degree-${idx}`}
                     placeholder={t("contacts.form.educationLevelPlaceholder")}
                   />
                 ) : undefined
@@ -115,12 +116,15 @@ export function ContactEducationTab({
                     label={t("contacts.fields.educationInstitution")}
                     required={isFieldRequired("education", "institution")}
                     error={institutionError}
-                    id={`education-institution-${idx}`}
+                    id={`cf-${formInstanceId}-education-institution-${idx}`}
                   >
                     <LeadingIconInput
                       icon={Building2}
-                      id={`education-institution-${idx}`}
-                      name={`education-institution-${idx}`}
+                      id={`cf-${formInstanceId}-education-institution-${idx}`}
+                      name={`cf-${formInstanceId}-education-institution-${idx}`}
+                      autoCapitalize="words"
+                      enterKeyHint="next"
+                      aria-invalid={Boolean(institutionError)}
                       value={edu.institution || ""}
                       required={isFieldRequired("education", "institution")}
                       onChange={(e) => updateEducation(idx, { institution: e.target.value })}
@@ -136,12 +140,15 @@ export function ContactEducationTab({
                     label={t("contacts.fields.educationFieldOfStudy")}
                     required={isFieldRequired("education", "fieldOfStudy")}
                     error={fieldOfStudyError}
-                    id={`education-field-${idx}`}
+                    id={`cf-${formInstanceId}-education-field-${idx}`}
                   >
                     <LeadingIconInput
                       icon={BookOpen}
-                      id={`education-field-${idx}`}
-                      name={`education-field-${idx}`}
+                      id={`cf-${formInstanceId}-education-field-${idx}`}
+                      name={`cf-${formInstanceId}-education-field-${idx}`}
+                      autoCapitalize="words"
+                      enterKeyHint="next"
+                      aria-invalid={Boolean(fieldOfStudyError)}
                       value={edu.fieldOfStudy || ""}
                       required={isFieldRequired("education", "fieldOfStudy")}
                       onChange={(e) => updateEducation(idx, { fieldOfStudy: e.target.value })}
@@ -159,12 +166,16 @@ export function ContactEducationTab({
                         label={t("contacts.fields.educationYear")}
                         required={!edu.isCurrentlyEnrolled && isFieldRequired("education", "year")}
                         error={yearError}
-                        id={`education-year-${idx}`}
+                        id={`cf-${formInstanceId}-education-year-${idx}`}
                       >
                         <LeadingIconInput
                           icon={Calendar}
-                          id={`education-year-${idx}`}
-                          name={`education-year-${idx}`}
+                          id={`cf-${formInstanceId}-education-year-${idx}`}
+                          name={`cf-${formInstanceId}-education-year-${idx}`}
+                          inputMode="numeric"
+                          spellCheck={false}
+                          enterKeyHint="next"
+                          aria-invalid={Boolean(yearError)}
                           value={
                             edu.isCurrentlyEnrolled
                               ? t("contacts.form.currentlyStudying")
@@ -184,12 +195,15 @@ export function ContactEducationTab({
                         label={t("contacts.fields.educationGrade")}
                         required={isFieldRequired("education", "grade")}
                         error={gradeError}
-                        id={`education-grade-${idx}`}
+                        id={`cf-${formInstanceId}-education-grade-${idx}`}
                       >
                         <LeadingIconInput
                           icon={Award}
-                          id={`education-grade-${idx}`}
-                          name={`education-grade-${idx}`}
+                          id={`cf-${formInstanceId}-education-grade-${idx}`}
+                          name={`cf-${formInstanceId}-education-grade-${idx}`}
+                          autoCapitalize="characters"
+                          enterKeyHint="next"
+                          aria-invalid={Boolean(gradeError)}
                           value={edu.grade || ""}
                           required={isFieldRequired("education", "grade")}
                           onChange={(e) => updateEducation(idx, { grade: e.target.value })}
@@ -203,8 +217,8 @@ export function ContactEducationTab({
 
                 {/* 5. Currently Enrolled Checkbox Toggle */}
                 <FormCheckboxCard
-                  id={`education-enrolled-${idx}`}
-                  name={`education-enrolled-${idx}`}
+                  id={`cf-${formInstanceId}-education-enrolled-${idx}`}
+                  name={`cf-${formInstanceId}-education-enrolled-${idx}`}
                   checked={Boolean(edu.isCurrentlyEnrolled)}
                   onCheckedChange={(checked) =>
                     updateEducation(idx, {

@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useMemo, useState, useCallback } from "react";
 import type { StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
 import { validateRecipientAddress } from "@mms/shared";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
@@ -13,11 +13,27 @@ export interface MessagingTarget {
   templateId?: string;
 }
 
+type Channel = "sms" | "whatsapp" | "email";
+
+interface OpenComposerOptions {
+  initialMessage?: string;
+  initialSubject?: string;
+  templateId?: string;
+}
+
+export interface UseMessageComposerStateResult {
+  messagingTarget: MessagingTarget | null;
+  setMessagingTarget: React.Dispatch<React.SetStateAction<MessagingTarget | null>>;
+  openComposer: (channel: Channel, recipients?: MessagingRecipient[], options?: OpenComposerOptions) => void;
+  closeComposer: () => void;
+  canWriteMessaging: boolean;
+}
+
 /**
  * Custom hook to manage the state of the MessageComposer dialog.
  * Gates on messaging.write and drops recipients without a valid channel address.
  */
-export function useMessageComposerState() {
+export function useMessageComposerState(): UseMessageComposerStateResult {
   const [messagingTarget, setMessagingTarget] = useState<MessagingTarget | null>(null);
   const { can } = usePermissions();
   const { t } = useTranslation();
@@ -25,41 +41,64 @@ export function useMessageComposerState() {
 
   const openComposer = useCallback(
     (
-      channel: "sms" | "whatsapp" | "email",
-      recipients: MessagingRecipient[],
-      options?: { initialMessage?: string; initialSubject?: string; templateId?: string }
+      channel: Channel,
+      recipients: MessagingRecipient[] = [],
+      options?: OpenComposerOptions,
     ) => {
       if (!canWriteMessaging) {
         notify.error(t("messaging.writeDenied"));
         return;
       }
 
-      const eligible = recipients.filter((recipient) => validateRecipientAddress(recipient, channel).isValid);
-      if (eligible.length === 0) {
-        notify.error(t("messaging.noEligibleRecipients"));
-        return;
-      }
+      if (recipients.length > 0) {
+        const eligible = recipients.filter(
+          (recipient) => validateRecipientAddress(recipient, channel).isValid,
+        );
 
-      setMessagingTarget({
-        channel,
-        recipients: eligible,
-        initialMessage: options?.initialMessage,
-        initialSubject: options?.initialSubject,
-        templateId: options?.templateId,
-      });
+        if (eligible.length === 0) {
+          notify.error(t("messaging.noEligibleRecipients"));
+          return;
+        }
+
+        const skipped = recipients.length - eligible.length;
+        if (skipped > 0) {
+          notify.warning(
+            t("messaging.someRecipientsSkipped", { skipped, channel }),
+          );
+        }
+
+        setMessagingTarget({
+          channel,
+          recipients: eligible,
+          initialMessage: options?.initialMessage,
+          initialSubject: options?.initialSubject,
+          templateId: options?.templateId,
+        });
+      } else {
+        setMessagingTarget({
+          channel,
+          recipients: [],
+          initialMessage: options?.initialMessage,
+          initialSubject: options?.initialSubject,
+          templateId: options?.templateId,
+        });
+      }
     },
-    [canWriteMessaging, t]
+    [canWriteMessaging, t],
   );
 
   const closeComposer = useCallback(() => {
     setMessagingTarget(null);
   }, []);
 
-  return {
-    messagingTarget,
-    setMessagingTarget,
-    openComposer,
-    closeComposer,
-    canWriteMessaging,
-  };
+  return useMemo(
+    () => ({
+      messagingTarget,
+      setMessagingTarget,
+      openComposer,
+      closeComposer,
+      canWriteMessaging,
+    }),
+    [messagingTarget, openComposer, closeComposer, canWriteMessaging],
+  );
 }

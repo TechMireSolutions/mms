@@ -23,6 +23,8 @@ import {
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
+import { SEMANTIC_TEXT, SEMANTIC_BG } from "@/lib/semanticTone";
 
 type MessagingLogColumn = "recipient" | "channel" | "body" | "dateSent";
 
@@ -85,8 +87,8 @@ export function MessagingReportsLogTable({
   };
 
   return (
-    <div aria-busy={isFetching ? true : undefined}>
-      <div className={WORK_SURFACE}>
+    <div aria-busy={isFetching ? true : undefined} className="space-y-4">
+      <div className={cn(WORK_SURFACE, "overflow-hidden")}>
         <div className="space-y-3 p-3 md:hidden">
           {logs.map((log) => {
             const name = getRecipientName(log.contactId);
@@ -94,7 +96,7 @@ export function MessagingReportsLogTable({
               <article key={log.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="flex min-w-0 items-center gap-2">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
+                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${SEMANTIC_BG.primary} text-xs font-black ${SEMANTIC_TEXT.primary}`}>
                       {getInitials(name)}
                     </span>
                     <span className="min-w-0 truncate text-sm font-semibold text-foreground">{name}</span>
@@ -121,7 +123,7 @@ export function MessagingReportsLogTable({
                     variant="ghost"
                     size="sm"
                     onClick={() => onResendLog(log)}
-                    className="w-full text-xs font-semibold text-primary hover:bg-primary/10"
+                    className={`w-full text-xs font-semibold ${SEMANTIC_TEXT.primary} hover:bg-primary/10`}
                   >
                     <RotateCcw className="me-1 h-3.5 w-3.5" />
                     {t("messaging.resend")}
@@ -157,7 +159,7 @@ export function MessagingReportsLogTable({
                 return (
                   <TableRow key={log.id} className="transition-colors hover:bg-muted/20">
                     <TableCell className="flex items-center gap-2 px-3 py-2.5 font-semibold text-foreground">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary">
+                      <span className={`flex h-6 w-6 items-center justify-center rounded-full ${SEMANTIC_BG.primary} text-xs font-black ${SEMANTIC_TEXT.primary}`}>
                         {getInitials(name)}
                       </span>
                       {name}
@@ -176,7 +178,7 @@ export function MessagingReportsLogTable({
                           variant="ghost"
                           size="sm"
                           onClick={() => onResendLog(log)}
-                          className="text-xs font-semibold text-primary hover:bg-primary/10"
+                          className={`text-xs font-semibold ${SEMANTIC_TEXT.primary} hover:bg-primary/10`}
                         >
                           <RotateCcw className="me-1 h-3.5 w-3.5" />
                           {t("messaging.resend")}

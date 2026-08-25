@@ -2,18 +2,28 @@ import React, { type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { GenderIcon } from "@/components/ui/GenderIcon";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface PersonIdentityMetaProps {
   gender?: string | null;
-  /** When true, shows the Syed chip (Contacts). Requires `syedLabel`. */
+  /** When true, shows the Syed badge. Uses `syedLabel` or defaults to localized "Syed". */
   isSyed?: boolean | null;
   syedLabel?: string;
   className?: string;
   /** Compact chip used in table/card name columns; md slightly larger for drawer hero. */
   size?: "sm" | "md";
+  /** Whether to use pill (capsule) curvature or theme radius. Default: false. */
+  pill?: boolean;
+  /** Additional custom badges to flow inline (e.g. GR badge, blood group, tags). */
+  extraBadges?: ReactNode;
+  /** Children to append to the badge list. */
+  children?: ReactNode;
+  /** Optional click handler to filter by gender. */
+  onGenderClick?: () => void;
+  /** Optional click handler to filter by Syed status. */
+  onSyedClick?: () => void;
 }
 
 /** Gender (+ optional Syed) identity row for person directory cards/tables/detail. */
@@ -23,43 +33,73 @@ export const PersonIdentityMeta = React.memo(function PersonIdentityMeta({
   syedLabel,
   className,
   size = "sm",
+  pill = false,
+  extraBadges,
+  children,
+  onGenderClick,
+  onSyedClick,
 }: PersonIdentityMetaProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const hasGender = Boolean(gender?.trim());
-  const showSyed = Boolean(isSyed) && Boolean(syedLabel);
-  if (!hasGender && !showSyed) return null;
+  const normalizedGender = gender?.trim().toLowerCase();
+  const hasGender = Boolean(normalizedGender) && normalizedGender !== "unspecified" && normalizedGender !== "none";
+  const showSyed = Boolean(isSyed);
+  const effectiveSyedLabel = syedLabel || t("contacts.table.yesSyed");
 
-  const textSize = "text-xs";
-  const syedSize = size === "md" ? "text-xs px-2 py-0.5" : "text-xs px-1.5 py-0.5";
-  const iconSize = size === "md" ? "w-4 h-4" : "w-3.5 h-3.5";
+  if (!hasGender && !showSyed && !extraBadges && !children) return null;
+
+  const iconSize = size === "md" ? "w-3.5 h-3.5" : "w-3 h-3";
+  const badgePadding = size === "md" ? "px-2.5 py-0.5" : "px-2 py-0.5";
 
   return (
-    <p
+    <div
       className={cn(
-        textSize,
-        "text-muted-foreground flex items-center gap-1.5 flex-wrap leading-normal",
+        "flex items-center gap-1.5 flex-wrap leading-normal",
         className,
       )}
     >
       {hasGender ? (
-        <span className="flex items-center gap-1 capitalize">
-          <GenderIcon gender={gender} className={cn(iconSize, "inline shrink-0")} />
-          <span>{formatContactGenderLabel(gender!, t)}</span>
-        </span>
-      ) : null}
-      {showSyed ? (
-        <span
+        <Badge
+          as={onGenderClick ? "button" : "span"}
+          pill={pill}
+          onClick={onGenderClick}
+          tone={
+            normalizedGender === "male"
+              ? "info"
+              : normalizedGender === "female"
+              ? "secondary"
+              : "primary"
+          }
           className={cn(
-            "inline-flex items-center gap-1 font-black uppercase rounded border",
-            SEMANTIC_BADGE.success,
-            syedSize,
+            "gap-1 text-xs font-semibold capitalize",
+            badgePadding,
+            onGenderClick && "cursor-pointer hover:opacity-80 transition-opacity",
           )}
         >
-          <CheckCircle2 className="w-3 h-3 text-success" aria-hidden />
-          {syedLabel}
-        </span>
+          <GenderIcon gender={gender} className={cn(iconSize, "inline shrink-0")} />
+          <span>{formatContactGenderLabel(gender!, t)}</span>
+        </Badge>
       ) : null}
-    </p>
+
+      {showSyed ? (
+        <Badge
+          as={onSyedClick ? "button" : "span"}
+          pill={pill}
+          onClick={onSyedClick}
+          tone="success"
+          className={cn(
+            "gap-1 text-xs font-semibold",
+            badgePadding,
+            onSyedClick && "cursor-pointer hover:opacity-80 transition-opacity",
+          )}
+        >
+          <CheckCircle2 className={cn(iconSize, "text-success inline shrink-0")} aria-hidden />
+          <span>{effectiveSyedLabel}</span>
+        </Badge>
+      ) : null}
+
+      {extraBadges}
+      {children}
+    </div>
   );
 });
 

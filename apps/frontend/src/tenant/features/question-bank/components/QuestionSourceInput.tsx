@@ -1,6 +1,6 @@
 import type React from "react";
-import { Field } from "@/components/ui/FormPrimitives";
-import { CustomFieldInput } from "@/components/ui/FormCustomFieldInput";
+import { Field, Input, Select, Textarea } from "@/components/ui/FormPrimitives";
+
 import type { ModuleFieldDef } from "@mms/shared";
 
 interface QuestionSourceInputProps {
@@ -20,24 +20,38 @@ export function QuestionSourceInput({
   inputId,
   required,
 }: QuestionSourceInputProps): React.ReactNode {
-  const adaptedField = {
-    key: field.id,
-    label,
-    type: (field.type || "text") as any,
-    required,
-    options: field.options,
-    placeholder: field.placeholder,
-    defaultValue: field.defaultValue,
-  };
-
   return (
     <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
       <Field id={inputId} label={`${label}${required ? " *" : ""}`} required={required}>
-        <CustomFieldInput
-          field={adaptedField as any}
-          value={value}
-          onChange={(val) => onChange(String(val ?? ""))}
-        />
+        {field.type === "textarea" ? (
+          <Textarea
+            id={inputId}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={field.placeholder}
+          />
+        ) : field.type === "select" ? (
+          <Select
+            id={inputId}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+          >
+            <option value="">Select...</option>
+            {field.options?.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </Select>
+        ) : (
+          <Input
+            id={inputId}
+            type="text"
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            placeholder={field.placeholder}
+          />
+        )}
       </Field>
     </div>
   );

@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  ClipboardList, Filter, CheckCircle2, Clock, XCircle, CalendarPlus, Banknote,
+  ClipboardList, Filter, CheckCircle2, Clock,
 } from 'lucide-react';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -34,9 +34,6 @@ export const EnrollmentsCommandMetrics = React.memo(function EnrollmentsCommandM
     { icon: Filter, label: t('enrollments.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: CheckCircle2, label: t('enrollments.metrics.confirmed'), value: metrics.confirmed, accent: 'success' as const },
     { icon: Clock, label: t('enrollments.metrics.pending'), value: metrics.pending, accent: 'warning' as const },
-    { icon: Banknote, label: t('enrollments.metrics.revenue', { currency: activeCurrency.code }), value: formatCurrency(metrics.revenue), accent: 'indigo' as const },
-    { icon: XCircle, label: t('enrollments.metrics.cancelled'), value: metrics.cancelled, accent: 'destructive' as const },
-    { icon: CalendarPlus, label: t('enrollments.metrics.newThisPeriod'), value: metrics.newThisPeriod, accent: 'success' as const },
   ], [t, shown, metrics, activeCurrency.code, formatCurrency]);
 
   return <ModuleCommandMetricsGrid items={items} />;

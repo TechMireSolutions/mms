@@ -46,7 +46,8 @@ export function renderContactNameCell({
           id={contact.id}
           name={displayName}
           avatar={contact.avatar}
-          className="w-8 h-8 shrink-0 rounded-full text-xs"
+          size="md"
+          className="shrink-0"
         />
         <div className="min-w-0">
           <Button
@@ -60,7 +61,7 @@ export function renderContactNameCell({
           </Button>
           <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} className="mt-0.5" />
           {showArchived && contact.deletionReason && (
-            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2 break-words">
               {t("contacts.deletionReasonLabel")}: {contact.deletionReason}
             </p>
           )}

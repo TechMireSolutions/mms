@@ -1,3 +1,4 @@
+import React from "react";
 import { CheckCircle2, MapPin } from "lucide-react";
 import {
   type Contact,
@@ -6,9 +7,11 @@ import {
   type AppTranslationKey,
 } from "@mms/shared";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { GenderIcon } from "@/components/ui/GenderIcon";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { getGenderIconClass } from "@/lib/genderUi";
+import { cn } from "@/lib/utils";
 
 type Translate = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 
@@ -24,9 +27,9 @@ export function renderGenderMetadata({
   const genderValue = contact.gender;
   if (!genderValue) return emptyNode;
   return (
-    <span className="flex items-center gap-1 capitalize">
-      <GenderIcon gender={genderValue} className="w-3.5 h-3.5 shrink-0" />
-      {formatContactGenderLabel(genderValue, t)}
+    <span className="flex items-center gap-1.5 capitalize">
+      <GenderIcon gender={genderValue} className={cn("w-3.5 h-3.5 shrink-0", getGenderIconClass(genderValue))} />
+      <span>{formatContactGenderLabel(genderValue, t)}</span>
     </span>
   );
 }
@@ -41,10 +44,14 @@ export function renderSyedMetadata({
   t: Translate;
 }): React.ReactNode {
   return contact.isSyed ? (
-    <span className={`inline-flex items-center gap-1 text-xs font-black uppercase px-2 py-0.5 rounded border ${SEMANTIC_BADGE.success}`}>
-      <CheckCircle2 className="w-3 h-3 text-success" />
-      {t("contacts.table.yesSyed")}
-    </span>
+    <Badge
+      size="sm"
+      tone="success"
+      className="gap-1 font-semibold"
+    >
+      <CheckCircle2 className="w-3 h-3 text-success inline shrink-0" aria-hidden />
+      <span>{t("contacts.table.yesSyed")}</span>
+    </Badge>
   ) : (
     emptyNode
   );

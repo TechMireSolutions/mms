@@ -1,19 +1,13 @@
 import {
   getVisibleWorkColumns,
   STUDENT_CARD_FACE_COLUMN_IDS,
+  STUDENT_SORT_FIELDS,
   type ModuleColumnRegistryEntry,
 } from "@mms/shared";
 import type { StudentListSortField } from "@/tenant/features/students/components/StudentListContentTypes";
 
 /** Sortable Work columns that map to the Students list API allowlist. */
-const STUDENT_LIST_SORTABLE_FIELDS = new Set<StudentListSortField>([
-  "name",
-  "grNumber",
-  "status",
-  "gender",
-  "registeredDate",
-  "dob",
-]);
+const STUDENT_LIST_SORTABLE_FIELDS = new Set<StudentListSortField>(STUDENT_SORT_FIELDS as unknown as StudentListSortField[]);
 
 /** Visible Work columns in registry order (checkbox / actions stay outside). */
 export function getStudentVisibleWorkColumns(

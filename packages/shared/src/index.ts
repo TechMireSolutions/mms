@@ -139,6 +139,7 @@ export * from './socialPlatformUtils.js';
 // 6. Students Feature Module
 // ---------------------------------------------------------------------------
 export * from './studentColumnRegistrySync.js';
+export * from './studentDirectoryColumns.js';
 export * from './studentFieldDependencies.js';
 export * from './studentFormCustomFields.js';
 export * from './studentGuardianFromContacts.js';

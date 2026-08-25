@@ -1,8 +1,8 @@
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import type { MessagingResolveResponseDto, StandardMessagingRecipient } from '@mms/shared';
+import type { StandardMessagingRecipient } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { tsrClient } from '@/lib/api';
+import { apiJson } from '@/lib/apiClient';
 
 /** Kept stable so contact mutations keep invalidating Reports hydrate. */
 export const MESSAGING_CONTACTS_RESOLVE_QUERY_KEY = ['messaging', 'contacts', 'resolve'] as const;
@@ -26,22 +26,53 @@ export function useMessagingRecipientsByIds(ids: (string | number | null | undef
   );
   const signature = normalized.join(',');
 
-  return useQuery({
+  const query = useQuery({
     queryKey: [...MESSAGING_CONTACTS_RESOLVE_QUERY_KEY, signature] as const,
-    queryFn: async () => {
-      const recipients: StandardMessagingRecipient[] = [];
+    queryFn: async ({ signal }) => {
+      const chunks: string[][] = [];
       for (let index = 0; index < normalized.length; index += RESOLVE_BATCH_SIZE) {
-        const chunk = normalized.slice(index, index + RESOLVE_BATCH_SIZE);
-        // @ts-expect-error - TS union discrimination limit with ts-rest
-        const response = await tsrClient.messaging.resolveContacts.query({
-          body: { ids: chunk },
-        });
-        recipients.push(...((response.body as MessagingResolveResponseDto).recipients ?? []));
+        chunks.push(normalized.slice(index, index + RESOLVE_BATCH_SIZE));
       }
-      return recipients;
+
+      const results = await Promise.all(
+        chunks.map(async (chunk) => {
+          const response = await apiJson<{ recipients?: StandardMessagingRecipient[] }>(
+            '/api/messaging/contacts/resolve',
+            {
+              method: 'POST',
+              body: JSON.stringify({ ids: chunk }),
+              signal,
+            },
+          );
+          return response.recipients ?? [];
+        }),
+      );
+
+      return results.flat();
     },
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,
   });
-}
 
+  const recipients = query.data ?? [];
+
+  const recipientMap = useMemo(
+    () => new Map(recipients.flatMap((recipient) => [[recipient.id, recipient], [String(recipient.id), recipient]])),
+    [recipients],
+  );
+
+  const getRecipient = useCallback(
+    (id: string | number | null | undefined): StandardMessagingRecipient | null => {
+      if (id === null || id === undefined) return null;
+      return recipientMap.get(id) ?? recipientMap.get(String(id)) ?? null;
+    },
+    [recipientMap],
+  );
+
+  return {
+    ...query,
+    recipients,
+    recipientMap,
+    getRecipient,
+  };
+}

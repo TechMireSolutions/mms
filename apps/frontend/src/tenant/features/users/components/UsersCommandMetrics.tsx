@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Users as UsersIcon, ShieldAlert, ShieldCheck, UserCheck, KeyRound, Radio } from "lucide-react";
+import { Users as UsersIcon, ShieldAlert, UserCheck } from "lucide-react";
 import type { UsersCommandMetricsSnapshot } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
@@ -53,24 +53,6 @@ export const UsersCommandMetrics = React.memo(function UsersCommandMetrics({
         label: t("users.status.suspended"),
         value: snapshot.suspended,
         accent: "destructive" as const,
-      },
-      {
-        icon: ShieldCheck,
-        label: t("users.stats.admin"),
-        value: snapshot.admins,
-        accent: "info" as const,
-      },
-      {
-        icon: KeyRound,
-        label: t("users.stats.twoFa"),
-        value: snapshot.twoFaEnabled,
-        accent: "secondary" as const,
-      },
-      {
-        icon: Radio,
-        label: t("users.stats.sessions"),
-        value: snapshot.activeSessions,
-        accent: "info" as const,
       },
     ],
     [t, shown, snapshot],

@@ -2,7 +2,6 @@ import { type EnrollmentsSettings as EnrollmentsSettingsType } from "@mms/shared
 import React from "react";
 import { ClipboardList } from "lucide-react";
 import {
-  ENROLLMENTS_TAB_REGISTRY,
   ENROLLMENTS_MODULE_MANIFEST,
 } from "@mms/shared";
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
@@ -27,7 +26,6 @@ export const EnrollmentsSettings = React.memo(function EnrollmentsSettings(): Re
         saveSettings,
       } = useModuleSettingsEditor<EnrollmentsSettingsType>({
         config,
-        tabRegistry: ENROLLMENTS_TAB_REGISTRY,
       });
 
       const isDirty = !saved;

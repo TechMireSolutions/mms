@@ -43,10 +43,17 @@ export function useFocusTrap<T extends HTMLElement = HTMLElement>(
     const previouslyFocusedElement = document.activeElement as HTMLElement | null;
     let frameId: number | null = null;
 
+    if (previouslyFocusedElement && !container.contains(previouslyFocusedElement)) {
+      previouslyFocusedElement.blur();
+    }
+
     const elements = getFocusableElements(container);
     if (elements.length > 0) {
+      elements[0]?.focus();
       frameId = requestAnimationFrame(() => {
-        elements[0]?.focus();
+        if (!container.contains(document.activeElement)) {
+          elements[0]?.focus();
+        }
       });
     }
 

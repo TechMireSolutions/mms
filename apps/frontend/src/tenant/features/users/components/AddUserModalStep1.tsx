@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import { Phone } from "lucide-react";
+import { Phone, Mail, X } from "lucide-react";
 import {
   getDisplayName,
   getPrimaryEmail,
@@ -12,19 +12,24 @@ import {
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { UserAvatar } from "@/components/ui/UserAvatar";
+import { PersonIdentityMeta } from "@/components/ui/PersonIdentityMeta";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FieldError, Label } from "./AddUserModalFieldHelpers";
 import type { AddUserStepProps } from "./addUserModalTypes";
 
 export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element {
   const { t } = useTranslation();
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
 
   const handleContactChange = (contactId: string | number | null, contact?: Contact | null): void => {
     if (!contactId || !contact) {
+      setSelectedContact(null);
       setForm((previousForm) => ({ ...previousForm, contactId: null, name: "", email: "", phone: "" }));
       return;
     }
+    setSelectedContact(contact);
     const primaryEmail = getPrimaryEmail(contact) || "";
     const primaryPhone = getPrimaryPhone(contact) || "";
     setForm((previousForm) => ({
@@ -58,33 +63,70 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
         <motion.div
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2"
+          className="relative rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2.5"
         >
-          <div className="flex items-center gap-3">
-            <UserAvatar id={form.contactId} name={form.name} className="w-10 h-10 rounded-full text-xs font-semibold" />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-foreground">{form.name}</p>
-              {form.email ? (
-                <p className="text-xs text-muted-foreground">{form.email}</p>
-              ) : (
-                <div className="mt-1.5 space-y-1">
-                  <Input
-                    type="email"
-                    placeholder={t("auth.emailAddress") || "Email address"}
-                    value={form.email}
-                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                    className="h-8 text-xs bg-background"
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <UserAvatar
+                id={form.contactId}
+                name={form.name}
+                avatar={selectedContact?.avatar}
+                size="lg"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground truncate">{form.name}</p>
+                {selectedContact ? (
+                  <PersonIdentityMeta
+                    gender={selectedContact.gender}
+                    isSyed={selectedContact.isSyed}
+                    syedLabel={t("contacts.fields.isSyed")}
+                    size="sm"
+                    className="mt-0.5"
                   />
-                  <p className="text-[11px] text-muted-foreground">{t("users.addErrorContactEmail")}</p>
-                </div>
-              )}
+                ) : null}
+              </div>
             </div>
+
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => handleContactChange(null, null)}
+              className="h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground shrink-0"
+              aria-label={t("common.clearSearch")}
+              title={t("common.clearSearch")}
+            >
+              <X className="w-4 h-4" aria-hidden="true" />
+            </Button>
           </div>
-          {form.phone ? (
-            <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5" /> {form.phone}
-            </p>
-          ) : null}
+
+          <div className="space-y-1.5 pt-1 border-t border-primary/15 text-xs text-muted-foreground">
+            {form.email ? (
+              <p className="flex items-center gap-1.5 truncate">
+                <Mail className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden="true" />
+                <span>{form.email}</span>
+              </p>
+            ) : (
+              <div className="space-y-1 py-1">
+                <Input
+                  type="email"
+                  placeholder={t("auth.emailAddress")}
+                  value={form.email}
+                  onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                  className="h-8 text-xs bg-background"
+                />
+                <p className="text-[11px] text-muted-foreground">{t("users.addErrorContactEmail")}</p>
+                <FieldError msg={errors.email} />
+              </div>
+            )}
+
+            {form.phone ? (
+              <p className="flex items-center gap-1.5 truncate">
+                <Phone className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden="true" />
+                <span>{form.phone}</span>
+              </p>
+            ) : null}
+          </div>
         </motion.div>
       ) : null}
 

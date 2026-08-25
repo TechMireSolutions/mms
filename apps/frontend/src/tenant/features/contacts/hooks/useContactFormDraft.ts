@@ -67,7 +67,8 @@ export function useContactFormDraft({
     updateCountryCodes,
   } = useContactConfig();
 
-  const formInstanceId = String(contact?.id ?? "new");
+  const [instanceSuffix] = useState(() => Math.random().toString(36).substring(2, 8));
+  const formInstanceId = `${contact?.id ?? "new"}-${instanceSuffix}`;
   const defaultCountryCode = defaultPhoneCountryCode;
 
   const {

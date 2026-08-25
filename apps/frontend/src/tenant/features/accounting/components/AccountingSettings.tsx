@@ -2,7 +2,6 @@ import { type AccountingSettings as AccountingSettingsType } from "@mms/shared";
 import { useState, useMemo } from "react";
 import {
   DEFAULT_CURRENCIES,
-  ACCOUNTING_TAB_REGISTRY,
   ACCOUNTING_MODULE_MANIFEST,
 } from "@mms/shared";
 import {
@@ -53,7 +52,6 @@ export const AccountingSettings = React.memo(function AccountingSettings({
         saveSettingsAsync,
       } = useModuleSettingsEditor<AccountingSettingsType>({
         config,
-        tabRegistry: ACCOUNTING_TAB_REGISTRY,
       });
 
       const [fyModal, setFyModal] = useState<Partial<FiscalYear> | null>(null);

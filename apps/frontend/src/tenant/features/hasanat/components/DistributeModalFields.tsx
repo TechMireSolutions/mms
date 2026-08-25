@@ -13,7 +13,7 @@ import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Denomination, Distribution } from "@/lib/data/hasanatData";
 import { DEFAULT_HASANAT_FIELD_DEFS } from "@mms/shared";
-import { DistributeModalCustomField } from "@/tenant/features/hasanat/components/DistributeModalCustomField";
+
 
 interface DistributeModalFieldsProps {
   denoms: Denomination[];
@@ -187,19 +187,7 @@ export function DistributeModalFields({
           );
         }
 
-        const isCustom = !DEFAULT_HASANAT_FIELD_DEFS.some((defaultField) => defaultField.id === field.id);
-        if (!isCustom) return null;
-
-        const fieldValue = (data as Record<string, unknown>)[field.id] ?? "";
-        return (
-          <DistributeModalCustomField
-            key={field.id}
-            field={field}
-            fieldValue={fieldValue}
-            updateField={updateField}
-            getCustomFieldPlaceholder={getCustomFieldPlaceholder}
-          />
-        );
+        return null;
       })}
     </div>
   );

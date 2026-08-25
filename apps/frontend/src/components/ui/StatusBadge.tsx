@@ -85,7 +85,7 @@ export const StatusBadge = React.memo(function StatusBadge({
   const sizeClass = size === "sm" ? "text-xs px-1.5 py-0.5" : "text-xs px-2 py-0.5";
 
   return (
-    <span className={cn("inline-flex items-center gap-1 font-bold rounded-full border", sizeClass, badgeConfig.cls)}>
+    <span className={cn("inline-flex items-center gap-1 font-bold rounded-md border", sizeClass, badgeConfig.cls)}>
       {badgeConfig.dot && (
         <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", badgeConfig.dot)} />
       )}

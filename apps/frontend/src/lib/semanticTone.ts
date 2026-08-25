@@ -37,14 +37,18 @@ export const SEMANTIC_BADGE = {
 } as const;
 
 export const SEMANTIC_TEXT = {
+  primary: 'text-primary',
   success: 'text-success',
   destructive: 'text-destructive',
   warning: 'text-warning',
   info: 'text-info',
   secondary: 'text-secondary',
+  muted: 'text-muted-foreground',
 } as const;
 
 export const SEMANTIC_BG = {
+  primary: 'bg-primary/10',
+  primarySolid: 'bg-primary',
   success: 'bg-success/10',
   successSolid: 'bg-success',
   destructive: 'bg-destructive/10',
@@ -53,6 +57,23 @@ export const SEMANTIC_BG = {
   warningSolid: 'bg-warning',
   info: 'bg-info/10',
   infoSolid: 'bg-info',
+  muted: 'bg-muted/10',
+  mutedSolid: 'bg-muted',
+} as const;
+
+export function getSolidBgClass(tone: string): string {
+  const key = `${tone}Solid` as keyof typeof SEMANTIC_BG;
+  return SEMANTIC_BG[key] ?? SEMANTIC_BG.primarySolid;
+}
+
+export const HOVER_BORDER_TONE = {
+  primary: 'hover:border-primary/50',
+  success: 'hover:border-success/50',
+  warning: 'hover:border-warning/50',
+  destructive: 'hover:border-destructive/50',
+  info: 'hover:border-info/50',
+  secondary: 'hover:border-secondary/50',
+  muted: 'hover:border-border',
 } as const;
 
 export const AVATAR_GRADIENTS = {

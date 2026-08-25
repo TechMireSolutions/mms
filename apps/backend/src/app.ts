@@ -8,6 +8,7 @@ import { initDb } from './db/database.js';
 import { registerFrontendSpa } from './plugins/frontendSpa.js';
 import { registerPlugins } from './plugins/index.js';
 import { registerRoutes } from './routes/index.js';
+import { registerDefaultBackgroundJobRunners } from './services/backgroundJobRunnerService.js';
 
 loadBackendEnv();
 
@@ -30,6 +31,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   app.setSerializerCompiler(serializerCompiler);
 
   await initDb();
+  registerDefaultBackgroundJobRunners();
   await registerPlugins(app, config);
 
   if (config.isProd) {

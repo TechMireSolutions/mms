@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { School, Filter, UserCheck, UserX, CalendarClock, CalendarPlus, Users } from "lucide-react";
+import { School, Filter, UserCheck, UserX } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTeachersMetrics } from "@/tenant/features/teachers/hooks/useTeachers";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
@@ -36,11 +36,6 @@ export const TeachersCommandMetrics = React.memo(function TeachersCommandMetrics
     { icon: Filter, label: t("teachers.metrics.filtered"), value: shown, accent: "info" as const },
     { icon: UserCheck, label: t("teachers.metrics.active"), value: metrics.active, accent: teacherStatusMetricAccent(activeStatus) },
     { icon: UserX, label: t("teachers.metrics.inactive"), value: metrics.inactive, accent: teacherStatusMetricAccent(inactiveStatus) },
-    { icon: CalendarClock, label: t("teachers.metrics.onLeave"), value: metrics.onLeave, accent: teacherStatusMetricAccent(onLeaveStatus) },
-    ...(metrics.other > 0
-      ? [{ icon: Users, label: t("teachers.metrics.other"), value: metrics.other, accent: "muted" as const }]
-      : []),
-    { icon: CalendarPlus, label: t("teachers.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "info" as const },
   ], [t, shown, metrics, activeStatus, inactiveStatus, onLeaveStatus]);
 
   return <ModuleCommandMetricsGrid items={items} />;

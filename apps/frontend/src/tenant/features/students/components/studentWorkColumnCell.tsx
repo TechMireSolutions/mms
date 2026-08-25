@@ -8,7 +8,6 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import {
   renderStudentDobCell,
-  renderStudentSessionsCell,
   renderStudentStatusCell,
 } from "@/tenant/features/students/components/studentListDesktopTableSimpleCells";
 import {
@@ -23,12 +22,11 @@ export function renderStudentWorkColumnValue(
   options: {
     t: TranslationFunction;
     statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
-    sessionNames: string[];
     /** Replacement shown for empty values (Contacts/Teachers `emptyDash` parity). */
     emptyFallback?: ReactNode;
   },
 ): ReactNode {
-  const { t, statusBadgeConfig, sessionNames, emptyFallback } = options;
+  const { t, statusBadgeConfig, emptyFallback } = options;
 
   if (columnKey.startsWith("custom:")) {
     const fieldKey = studentCustomFieldKeyFromColumn(columnKey);
@@ -45,8 +43,7 @@ export function renderStudentWorkColumnValue(
       const parentName = primaryResponsibleAdultDisplayName(student);
       return parentName || emptyFallback;
     }
-    case "sessions":
-      return renderStudentSessionsCell({ sessionNames, t });
+
     case "status":
       return renderStudentStatusCell({ studentRow: student, statusBadgeConfig });
     case "registeredDate":

@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useDomFormProgress } from '@/components/ui/useDomFormProgress';
 
-type FormModalSize = 'sm' | 'md' | 'lg' | 'xl';
+type FormModalSize = 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
 
 interface UseFormModalLayoutOptions<K extends string> {
   open: boolean;

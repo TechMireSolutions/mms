@@ -29,9 +29,8 @@ export function ContactDetailOverviewHero({
             {contactTags.map((tag) => (
               <Badge
                 key={tag}
-                pill
-                variant="outline"
-                className="px-2 py-0.5 text-xs font-medium border-primary/30 text-primary bg-primary/5"
+                tone="primary"
+                className="px-2 py-0.5 text-xs font-medium"
               >
                 {tag}
               </Badge>

@@ -69,10 +69,14 @@ export function sanitizeColumnPreferencesBody(path: string, init: RequestInit): 
           : parseFloat(String(columnPreference.order));
         const floored = Math.floor(rawOrder);
         const order = Number.isSafeInteger(floored) && floored >= 0 ? floored : index;
+        const width = typeof columnPreference.width === 'number' && columnPreference.width > 0
+          ? Math.round(columnPreference.width)
+          : undefined;
         return {
           key: (columnPreference.key as string).trim(),
           enabled,
           order,
+          ...(width !== undefined ? { width } : {}),
         };
       });
 

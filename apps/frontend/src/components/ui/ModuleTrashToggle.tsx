@@ -14,6 +14,8 @@ export interface ModuleTrashToggleProps {
   showActiveLabel: string;
   showDeletedLabel: string;
   className?: string;
+  disabled?: boolean;
+  title?: string;
 }
 
 /**
@@ -25,12 +27,16 @@ export const ModuleTrashToggle = React.memo(function ModuleTrashToggle({
   showActiveLabel,
   showDeletedLabel,
   className,
+  disabled = false,
+  title,
 }: ModuleTrashToggleProps): React.JSX.Element {
   return (
     <Button
       type="button"
       variant={showDeleted ? 'default' : 'outline'}
       onClick={onToggle}
+      disabled={disabled}
+      title={title}
       aria-pressed={showDeleted}
       className={cn(
         WORK_TOOLBAR_TRIGGER,
@@ -43,4 +49,3 @@ export const ModuleTrashToggle = React.memo(function ModuleTrashToggle({
     </Button>
   );
 });
-

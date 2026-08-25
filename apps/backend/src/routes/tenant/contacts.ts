@@ -1,8 +1,7 @@
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { CONTACTS_MODULE_MANIFEST, type User } from '@mms/shared';
+import type { FastifyPluginAsync } from 'fastify';
+import type { User } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { registerDefaultBackgroundJobRunners } from '../../services/backgroundJobRunnerService.js';
 import { contactUseCases } from '../../contacts/use-cases/contactUseCases.js';
 import {
   registerMetricsRoute,
@@ -10,7 +9,6 @@ import {
   registerResolveRoute,
   registerWidgetAggregatesRoute,
 } from '../../lib/crudRouter.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
 import { contactGoogleSyncRoutes } from './contacts/googleSyncRoutes.js';
 import { contactOperationRoutes } from './contacts/contactOperationRoutes.js';
 import { contactContractRouter } from './contacts/contactContractRouter.js';
@@ -19,22 +17,15 @@ import { contactLookupRoutes } from './contacts/contactLookupRoutes.js';
 import { contactSetupConfigRoutes } from './contacts/contactSetupConfigRoutes.js';
 import { sanitizeForUser } from './contacts/contactRouteHelpers.js';
 
-let backgroundJobRunnersReady = false;
 
-function ensureBackgroundJobRunners(): void {
-  if (backgroundJobRunnersReady) return;
-  registerDefaultBackgroundJobRunners();
-  backgroundJobRunnersReady = true;
-}
 
 /**
  * Server-first contact resource routes (TanStack Query on FE).
  */
-export async function contactRoutes(
-  fastify: FastifyInstance,
-  _options: FastifyPluginOptions,
-): Promise<void> {
-  ensureBackgroundJobRunners();
+export const contactRoutes: FastifyPluginAsync = async (
+  fastify,
+  _options,
+) => {
   fastify.addHook('preHandler', authenticateTenant);
   fastify.addHook('preHandler', requireTenantModule('contacts'));
 
@@ -49,13 +40,13 @@ export async function contactRoutes(
       registerMetricsRoute(sub, {
         collection: 'contacts',
         loadMetricsFn: () => contactUseCases.loadContactsCommandMetrics(),
-        errorMessagePrefix: 'contact',
+        errorMessagePrefix: 'contacts',
       });
 
       registerWidgetAggregatesRoute(sub, {
         collection: 'contacts',
         loadAggregatesFn: (queries) => contactUseCases.loadContactsWidgetAggregates(queries),
-        errorMessagePrefix: 'contact',
+        errorMessagePrefix: 'contacts',
       });
 
       registerResolveRoute(sub, {
@@ -72,11 +63,6 @@ export async function contactRoutes(
       await sub.register(contactOperationRoutes);
       await sub.register(contactLookupRoutes);
       await sub.register(contactSetupConfigRoutes);
-
-      registerColumnPreferencesRoutes(sub, {
-        collection: 'contacts',
-        objectKey: CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
-      });
 
       await sub.register(contactSavedReportRoutes);
       await sub.register(contactGoogleSyncRoutes);

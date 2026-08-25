@@ -15,13 +15,23 @@ import type {
 } from '../../db/repositories/contactRepository.js';
 
 /** Duplicate-scan key shape — re-exported from the module interface so use cases never import the db layer. */
-export type { ContactDuplicateCandidateKeys };
+export type { ContactDuplicateCandidateKeys, ContactUniqueLookupValues };
 
 /** Soft-delete visibility filter shared by list/count repository reads. */
-type ContactDeletedFilter = 'active' | 'deleted' | 'all';
+export type ContactDeletedFilter = 'active' | 'deleted' | 'all';
 
-interface ListContactsOptions {
+export interface ListContactsOptions {
   deleted?: ContactDeletedFilter;
+}
+
+export interface ContactsCommandMetricsOptions {
+  periodDays?: number;
+  duplicatePairCount?: number;
+}
+
+export interface ContactsReportAnalyticsOptions {
+  periodDays?: number;
+  referenceDate?: Date;
 }
 
 /**
@@ -59,11 +69,11 @@ export interface ContactsRepository {
   aggregateCommandMetrics(
     tenant: string,
     fieldConfig: FieldConfig,
-    options?: { periodDays?: number; duplicatePairCount?: number },
+    options?: ContactsCommandMetricsOptions,
   ): Promise<ContactsCommandMetricsSnapshot>;
   aggregateReportAnalytics(
     tenant: string,
-    options?: { periodDays?: number; referenceDate?: Date },
+    options?: ContactsReportAnalyticsOptions,
   ): Promise<ContactsReportAnalyticsSnapshot>;
   aggregateMonthlyCreatedCounts(
     tenant: string,

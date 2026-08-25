@@ -37,6 +37,11 @@ interface ContactLabeledValueSubListTabProps extends ContactSubListTabBaseProps 
   valueInputType?: React.HTMLInputTypeAttribute;
   valueInputIdPrefix: string;
   labelSelectIdPrefix: string;
+  autoComplete?: string;
+  inputMode?: "search" | "text" | "email" | "tel" | "url" | "numeric" | "none" | "decimal";
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  spellCheck?: boolean;
+  enterKeyHint?: "enter" | "done" | "go" | "next" | "previous" | "search" | "send";
   /** Optional leading control beside the value input (e.g. dial-code select). */
   valueLeadingAddon?: (ctx: ContactLabeledValueFieldContext) => ReactNode;
   /** Override default string patch when the value input changes (e.g. phone parse). */
@@ -70,6 +75,11 @@ export function ContactLabeledValueSubListTab({
   valueInputType = "text",
   valueInputIdPrefix,
   labelSelectIdPrefix,
+  autoComplete,
+  inputMode,
+  autoCapitalize,
+  spellCheck,
+  enterKeyHint,
   valueLeadingAddon,
   onValueChange,
   onValueBlur,
@@ -129,6 +139,12 @@ export function ContactLabeledValueSubListTab({
               name={`${valueInputIdPrefix}-${idx}`}
               value={stringValue}
               required={isFieldRequired(listKey, valueFieldKey)}
+              autoComplete={autoComplete}
+              inputMode={inputMode}
+              autoCapitalize={autoCapitalize}
+              spellCheck={spellCheck}
+              enterKeyHint={enterKeyHint}
+              aria-invalid={Boolean(valueError)}
               onChange={(e) => {
                 const value = e.target.value;
                 if (onValueChange) {

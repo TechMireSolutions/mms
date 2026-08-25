@@ -20,7 +20,6 @@ type RenderStudentListDesktopTableCellOptions = {
   col: ModuleColumnRegistryEntry;
   studentIdStr: string;
   displayName: string;
-  sessionNames: string[];
   emptyDash: string;
   statusBadgeConfig: StudentListTableProps["statusBadgeConfig"];
   isColumnVisible: StudentListTableProps["isColumnVisible"];
@@ -40,7 +39,6 @@ export function renderStudentListDesktopTableCell({
   col,
   studentIdStr,
   displayName,
-  sessionNames,
   emptyDash,
   statusBadgeConfig,
   isColumnVisible,
@@ -61,14 +59,16 @@ export function renderStudentListDesktopTableCell({
         : "";
       const subtitleParts = [genderLabel, phoneLine].filter(Boolean);
       return (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 min-w-0">
           <UserAvatar
             id={studentIdStr}
             name={displayName}
-            className="w-8 h-8 rounded-full text-xs font-bold"
+            avatar={studentRow.avatar}
+            size="md"
+            className="shrink-0"
           />
-          <div className="min-w-0">
-            <div className="flex items-center gap-1.5">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 min-w-0">
               <Button
                 type="button"
                 variant="ghost"
@@ -81,7 +81,7 @@ export function renderStudentListDesktopTableCell({
               {isColumnVisible("grNumber") ? <GrBadge grNumber={studentRow.grNumber} /> : null}
             </div>
             {subtitleParts.length > 0 ? (
-              <p className="text-xs text-muted-foreground">{subtitleParts.join(" · ")}</p>
+              <p className="text-xs text-muted-foreground truncate">{subtitleParts.join(" · ")}</p>
             ) : null}
             {viewingDeleted && studentRow.deletionReason ? (
               <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
@@ -155,7 +155,6 @@ export function renderStudentListDesktopTableCell({
     }
     case "dob":
     case "parents":
-    case "sessions":
     case "status":
     case "registeredDate":
     case "notes":
@@ -163,7 +162,6 @@ export function renderStudentListDesktopTableCell({
       return renderStudentWorkColumnValue(studentRow, col.key, {
         t,
         statusBadgeConfig,
-        sessionNames,
         emptyFallback: <span className="text-sm text-muted-foreground/40">{emptyDash}</span>,
       });
   }

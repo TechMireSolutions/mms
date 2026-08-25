@@ -56,15 +56,14 @@ export function TagsInput({ selected = [], predefined = [], onChange, id, name }
           {selected.map((tag) => (
             <Badge
               key={tag}
-              pill
               tone="primary"
-              className="gap-1.5 px-3 py-1"
+              className="gap-1.5 px-2.5 py-1 text-xs rounded-md font-medium"
             >
               <span>{tag}</span>
               <button
                 type="button"
                 onClick={() => remove(tag)}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center -me-1 rounded-full hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center -me-1 rounded-md hover:text-destructive focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring transition-colors cursor-pointer"
                 aria-label={t("contacts.form.removeTag", { tag })}
               >
                 <X className="w-3 h-3" aria-hidden="true" />
@@ -82,7 +81,7 @@ export function TagsInput({ selected = [], predefined = [], onChange, id, name }
               type="button"
               variant="outline"
               onClick={() => toggle(tag)}
-              className="inline-flex items-center justify-center min-h-11 min-w-11 px-3 rounded-full text-xs font-medium border border-border bg-muted/50 text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all"
+              className="inline-flex items-center justify-center min-h-11 min-w-11 px-3 rounded-md text-xs font-medium border border-border bg-muted/50 text-muted-foreground hover:border-primary/40 hover:bg-primary/5 hover:text-primary transition-all"
             >
               + {tag}
             </Button>

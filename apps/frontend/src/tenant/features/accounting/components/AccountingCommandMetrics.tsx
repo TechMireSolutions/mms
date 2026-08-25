@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  BookOpen, Filter, CheckCircle2, FileEdit, Layers, EyeOff, TrendingUp,
+  BookOpen, Filter, CheckCircle2, FileEdit,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAccountingMetrics } from '@/tenant/features/accounting/hooks/useAccountingApi';
@@ -33,9 +33,6 @@ export const AccountingCommandMetrics = React.memo(function AccountingCommandMet
     { icon: Filter, label: t('accounting.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: CheckCircle2, label: t('accounting.metrics.posted'), value: metrics.posted, accent: 'success' as const },
     { icon: FileEdit, label: t('accounting.metrics.draft'), value: metrics.draft, accent: 'warning' as const },
-    { icon: Layers, label: t('accounting.metrics.activeAccounts'), value: metrics.activeAccounts, accent: 'indigo' as const },
-    { icon: EyeOff, label: t('accounting.metrics.inactiveAccounts'), value: metrics.inactiveAccounts, accent: undefined },
-    { icon: TrendingUp, label: t('accounting.metrics.postedVolume'), value: metrics.postedVolume, accent: 'success' as const },
   ], [t, metrics, shown]);
 
   return <ModuleCommandMetricsGrid items={items} />;

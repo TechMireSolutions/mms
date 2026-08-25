@@ -5,12 +5,12 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { useTranslation } from "@/hooks/useTranslation";
-
-const CHART_COLORS = ["var(--color-info)", "var(--color-success)", "var(--color-warning)"];
+import { SEMANTIC_TEXT } from "@/lib/semanticTone";
 
 interface MessagingChartDatum {
   name: string;
   value: number;
+  fillColor?: string;
 }
 
 interface MessagingReportsVolumeChartProps {
@@ -26,7 +26,7 @@ export function MessagingReportsVolumeChart({
     <div className={`${WORK_SURFACE} flex flex-col justify-between p-4`}>
       <div className="space-y-1">
         <h4 className="flex items-center gap-1.5 text-sm font-bold text-foreground">
-          <BarChart2 className="h-4 w-4 text-primary" />
+          <BarChart2 className={`h-4 w-4 ${SEMANTIC_TEXT.primary}`} />
           {t("messaging.volumeBreakdown")}
         </h4>
         <p className="text-xs text-muted-foreground">{t("messaging.volumeBreakdownDesc")}</p>
@@ -36,8 +36,8 @@ export function MessagingReportsVolumeChart({
           <SafeResponsiveContainer height={240}>
             <PieChart>
               <Pie data={chartData} cx="50%" cy="50%" innerRadius={60} outerRadius={80} paddingAngle={5} dataKey="value">
-                {chartData.map((entry, index) => (
-                  <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
+                {chartData.map((entry) => (
+                  <Cell key={entry.name} fill={entry.fillColor || "var(--color-primary)"} />
                 ))}
               </Pie>
               <Tooltip />

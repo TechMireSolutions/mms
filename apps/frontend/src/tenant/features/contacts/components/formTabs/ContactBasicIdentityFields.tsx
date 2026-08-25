@@ -50,6 +50,10 @@ export function ContactBasicIdentityFields({
             icon={User}
             id={`cf-${formInstanceId}-firstName`}
             name="firstName"
+            autoComplete="given-name"
+            autoCapitalize="words"
+            enterKeyHint="next"
+            aria-invalid={Boolean(getFieldError("firstName"))}
             value={contactDraft.firstName || ""}
             onChange={(e) => updateDraft({ firstName: e.target.value })}
             placeholder={t("contacts.fields.firstName")}
@@ -68,6 +72,10 @@ export function ContactBasicIdentityFields({
             icon={User}
             id={`cf-${formInstanceId}-lastName`}
             name="lastName"
+            autoComplete="family-name"
+            autoCapitalize="words"
+            enterKeyHint="next"
+            aria-invalid={Boolean(getFieldError("lastName"))}
             value={contactDraft.lastName || ""}
             onChange={(e) => updateDraft({ lastName: e.target.value })}
             placeholder={t("contacts.fields.lastName")}

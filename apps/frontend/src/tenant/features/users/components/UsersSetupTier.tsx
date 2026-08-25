@@ -103,7 +103,7 @@ export const UsersSetupTier = React.memo(function UsersSetupTier({
                   saving={panelState.saving}
                   isDirty={panelState.isPrefsDirty}
                   upd={panelState.upd}
-                  onSave={() => panelState.handleSave('preferences')}
+                  onSave={() => panelState.handleSave()}
                 />
               ) : null}
             </>

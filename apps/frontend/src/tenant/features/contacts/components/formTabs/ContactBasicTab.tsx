@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import type { ChangeEvent } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { Field, CustomFieldInput } from "@/components/ui/FormPrimitives";
+
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { listEnabledCustomContactFormFields, type Contact, type FieldDefinition } from "@mms/shared";
@@ -82,37 +82,7 @@ export function ContactBasicTab({
           lockGender={lockGender}
         />
 
-        {customBasicFields.length > 0 && (
-          <div className="pt-4 border-t border-border/60">
-            <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">
-              {t("contacts.form.additionalInfo")}
-            </h4>
-            <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
-              {customBasicFields.map((field) => {
-                const error = getFieldError(field.key);
-                const required = isFieldRequired("basic", field.key);
-                const label = resolveRegistryLabel(field, t);
-                const value = (contactDraft as Record<string, unknown>)[field.key];
-                return (
-                  <Field
-                    key={field.key}
-                    label={label}
-                    required={required}
-                    error={error}
-                    id={`cf-${formInstanceId}-${field.key}`}
-                  >
-                    <CustomFieldInput
-                      field={field}
-                      value={value}
-                      onChange={(val) => updateDraft({ [field.key]: val })}
-                      error={Boolean(error)}
-                    />
-                  </Field>
-                );
-              })}
-            </div>
-          </div>
-        )}
+
       </div>
     </SectionCard>
   );

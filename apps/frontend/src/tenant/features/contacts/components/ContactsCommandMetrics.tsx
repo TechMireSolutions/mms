@@ -1,5 +1,5 @@
 import React, { useMemo } from "react";
-import { Users, Filter, MessageCircle, AlertCircle, GitMerge, Clock, CalendarPlus, AlertTriangle } from "lucide-react";
+import { Users, Filter, Clock, AlertTriangle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsMetrics } from "@/tenant/features/contacts/hooks/useContacts";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
@@ -38,7 +38,6 @@ export function ContactsCommandMetrics({
   const items = useMemo(() => [
     { icon: Users, label: t("contacts.metrics.total"), value: metrics.total, accent: "primary" as const },
     { icon: Filter, label: t("contacts.metrics.filtered"), value: shown, accent: "info" as const },
-    { icon: CalendarPlus, label: t("contacts.metrics.newThisPeriod"), value: metrics.newThisPeriod, accent: "success" as const },
     {
       icon: Clock,
       label: t("contacts.metrics.pendingSync"),
@@ -52,15 +51,6 @@ export function ContactsCommandMetrics({
       value: conflictCount,
       accent: "destructive" as const,
       onClick: conflictCount > 0 ? onReviewConflicts : undefined,
-    },
-    { icon: MessageCircle, label: t("contacts.metrics.whatsapp"), value: metrics.whatsappCount, accent: "info" as const },
-    { icon: AlertCircle, label: t("contacts.metrics.incomplete"), value: metrics.incompleteCount, accent: "destructive" as const },
-    {
-      icon: GitMerge,
-      label: t("contacts.metrics.duplicates"),
-      value: metrics.duplicatePairCount,
-      accent: "warning" as const,
-      onClick: metrics.duplicatePairCount > 0 ? onOpenDuplicates : undefined,
     },
   ], [
     t,

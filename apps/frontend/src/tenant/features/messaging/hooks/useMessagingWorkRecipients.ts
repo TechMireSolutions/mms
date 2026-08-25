@@ -1,3 +1,5 @@
+import { useMemo } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type {
   Contact,
   MessagingRoleFilter,
@@ -7,7 +9,7 @@ import type {
   StandardMessagingRecipient,
 } from '@mms/shared';
 import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
-import { tsrClient } from '@/lib/api';
+import { apiJson } from '@/lib/apiClient';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
 export const MESSAGING_RECIPIENTS_QUERY_KEY = ['messaging', 'recipients'] as const;
@@ -33,53 +35,28 @@ export interface MessagingWorkRecipientsResult {
   refetch: () => void;
 }
 
-function buildRecipientsQuery(params: {
-  role: MessagingRoleFilter;
-  gender: MessagingGenderFilter;
-  search: string;
-  page: number;
-  pageSize: number;
-  hasPhone?: boolean;
-  hasEmail?: boolean;
-}): string {
-  const queryParams = new URLSearchParams();
-  queryParams.set('role', params.role);
-  queryParams.set('page', String(params.page));
-  queryParams.set('pageSize', String(params.pageSize));
-  if (params.gender !== 'all') queryParams.set('gender', params.gender);
-  if (params.search) queryParams.set('search', params.search);
-  if (params.hasPhone) queryParams.set('hasPhone', 'true');
-  if (params.hasEmail) queryParams.set('hasEmail', 'true');
-  return queryParams.toString();
-}
-
 /**
  * Loads matching lean recipients for “Select All With Phone/Email” via one server call.
  */
 export async function loadMatchingRecipients(params: {
-  roleFilter: MessagingRoleFilter;
-  genderFilter: MessagingGenderFilter;
-  search: string;
+  roleFilter?: MessagingRoleFilter;
+  genderFilter?: MessagingGenderFilter;
+  search?: string;
   kind: 'phone' | 'email';
   signal?: AbortSignal;
 }): Promise<{ recipients: StandardMessagingRecipient[]; truncated: boolean }> {
-  const queryParams = new URLSearchParams();
-  queryParams.set('role', params.roleFilter);
-  queryParams.set('kind', params.kind);
-  if (params.genderFilter !== 'all') queryParams.set('gender', params.genderFilter);
-  const search = params.search.trim();
-  if (search) queryParams.set('search', search);
+  const search = (params.search || '').trim();
+  const searchParams = new URLSearchParams();
+  searchParams.set('kind', params.kind);
+  if (params.roleFilter && params.roleFilter !== 'all') searchParams.set('role', params.roleFilter);
+  if (params.genderFilter && params.genderFilter !== 'all') searchParams.set('gender', params.genderFilter);
+  if (search) searchParams.set('search', search);
 
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const response = await tsrClient.messaging.matchRecipients.query({
-    query: {
-      role: params.roleFilter,
-      kind: params.kind,
-      gender: params.genderFilter !== 'all' ? params.genderFilter : undefined,
-      search: search || undefined,
-    },
-  });
-  const data = response.body as MessagingRecipientsMatchResponseDto;
+  const data = await apiJson<MessagingRecipientsMatchResponseDto>(
+    `/api/messaging/recipients/match?${searchParams.toString()}`,
+    { signal: params.signal },
+  );
+
   return {
     recipients: data.recipients ?? [],
     truncated: Boolean(data.truncated),
@@ -100,58 +77,42 @@ export function useMessagingWorkRecipients(
   const search = params.search.trim();
   const page = params.page;
 
-  const queryString = buildRecipientsQuery({
-    role,
-    gender,
-    search,
-    page,
-    pageSize,
-  });
-
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-
-  const query = tsrClient.messaging.listRecipients.useQuery({
+  const query = useQuery({
     queryKey: [...MESSAGING_RECIPIENTS_QUERY_KEY, role, gender, search, page, pageSize] as const,
-    queryData: {
-      query: {
-        role,
-        page,
-        pageSize,
-        gender: gender !== 'all' ? gender : undefined,
-        search: search || undefined,
-      } as any,
+    queryFn: async ({ signal }) => {
+      const searchParams = new URLSearchParams();
+      searchParams.set('page', String(page));
+      searchParams.set('pageSize', String(pageSize));
+      if (role !== 'all') searchParams.set('role', role);
+      if (gender !== 'all') searchParams.set('gender', gender);
+      if (search) searchParams.set('search', search);
+
+      return apiJson<ContactsListPageResult>(
+        `/api/messaging/recipients?${searchParams.toString()}`,
+        { signal },
+      );
     },
     enabled,
     staleTime: 15_000,
-    placeholderData: (previousData: any, previousQuery: any) => {
-      const previousKey = previousQuery?.queryKey;
-      if (!previousKey || previousKey.length < 6) return undefined;
-      const [, , prevRole, prevGender, prevSearch, , prevPageSize] = previousKey;
-      if (
-        prevRole === role
-        && prevGender === gender
-        && prevSearch === search
-        && prevPageSize === pageSize
-      ) {
-        return previousData;
-      }
-      return undefined;
-    },
+    placeholderData: keepPreviousData,
   });
-  
-  const data = query.data?.body as ContactsListPageResult | undefined;
 
-  return {
-    contacts: data?.contacts ?? [],
-    page: data?.page ?? page,
-    total: data?.total ?? 0,
-    limit: data?.limit ?? pageSize,
-    hasMore: Boolean(data?.hasMore),
-    isError: query.isError,
-    isPending: query.isPending,
-    isFetching: query.isFetching,
-    refetch: () => {
-      void query.refetch();
-    },
-  };
+  const data = query.data;
+
+  return useMemo(
+    () => ({
+      contacts: data?.contacts ?? [],
+      page: data?.page ?? page,
+      total: data?.total ?? 0,
+      limit: data?.limit ?? pageSize,
+      hasMore: Boolean(data?.hasMore),
+      isError: query.isError,
+      isPending: query.isPending,
+      isFetching: query.isFetching,
+      refetch: () => {
+        void query.refetch();
+      },
+    }),
+    [data, page, pageSize, query.isError, query.isPending, query.isFetching, query.refetch],
+  );
 }

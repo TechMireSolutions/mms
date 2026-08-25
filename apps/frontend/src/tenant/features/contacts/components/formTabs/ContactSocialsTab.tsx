@@ -38,8 +38,11 @@ export function ContactSocialsTab({
       addLabel={t("contacts.form.addSocialLink")}
       removeLabel={(index) => t("contacts.form.removeSocialLink", { index })}
       valuePlaceholder={t("contacts.form.socialHandlePlaceholder")}
-      valueInputIdPrefix="social-url"
-      labelSelectIdPrefix="social-platform"
+      valueInputIdPrefix={`cf-${base.formInstanceId}-social-url`}
+      labelSelectIdPrefix={`cf-${base.formInstanceId}-social-platform`}
+      autoCapitalize="none"
+      spellCheck={false}
+      enterKeyHint="next"
       onValueBlur={(index) => {
         const item = (base.contactDraft.socials || [])[index];
         if (item?.url && item?.platform) {

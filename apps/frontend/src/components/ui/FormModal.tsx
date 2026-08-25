@@ -15,7 +15,7 @@ export interface FormModalProps<K extends string = string> {
   title: React.ReactNode;
   subtitle?: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
   panelClassName?: string;
   tall?: boolean;
   progress?: number;

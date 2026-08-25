@@ -8,7 +8,7 @@ import { accountRecordSchema, type AppTranslationKey } from '@mms/shared';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Field } from '@/components/ui/FormPrimitives';
-import { AccountModalCustomField } from '@/tenant/features/accounting/components/AccountModalCustomField';
+
 import { mapZodFormErrors } from '@/lib/forms/mapZodFormErrors';
 
 interface AccountModalProps {

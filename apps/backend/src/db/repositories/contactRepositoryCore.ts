@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import {
+  getContactTags,
   hydrateContactRelationshipFields,
   type Contact,
   type PhoneNumber,
@@ -160,6 +161,7 @@ export function contactRowToRecord(
     cnic: row.cnic ?? undefined,
     isSyed: row.isSyed,
     tags: tagsRows.map((t) => t.name),
+    tag: tagsRows.map((t) => t.name).join(', '),
     avatar: row.avatar ?? undefined,
     notes: row.notes ?? undefined,
     whatsappStatus: (row.whatsappStatus as Contact['whatsappStatus']) ?? 'unknown',
@@ -586,8 +588,9 @@ export async function persistContactTx(
   await tx
     .delete(contactTags)
     .where(and(eq(contactTags.workspaceSubdomain, subdomain), eq(contactTags.contactId, contactId)));
-  if (contact.tags && contact.tags.length > 0) {
-    const validTags = Array.from(new Set(contact.tags.map((t) => String(t).trim()).filter(Boolean)));
+  const tagsToSave = getContactTags(contact);
+  if (tagsToSave.length > 0) {
+    const validTags = Array.from(new Set(tagsToSave.map((t) => String(t).trim()).filter(Boolean)));
     if (validTags.length > 0) {
       await tx.insert(contactTags).values(
         validTags.map((t, idx) => ({

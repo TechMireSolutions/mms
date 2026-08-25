@@ -98,8 +98,8 @@ export function ContactAddressesTab({
                     onChange={(val) => updateAddress(idx, { label: val })}
                     onUpdateOptions={onUpdateAddressLabels}
                     className="w-36 @sm:w-48 min-w-0"
-                    id={`address-label-${idx}`}
-                    name={`address-label-${idx}`}
+                    id={`cf-${formInstanceId}-address-label-${idx}`}
+                    name={`cf-${formInstanceId}-address-label-${idx}`}
                   />
                 ) : undefined
               }
@@ -112,12 +112,16 @@ export function ContactAddressesTab({
                     label={t("contacts.fields.streetAddress")}
                     required={isFieldRequired("addresses", "line1")}
                     error={line1Error}
-                    id={`address-line1-${idx}`}
+                    id={`cf-${formInstanceId}-address-line1-${idx}`}
                   >
                     <LeadingIconInput
                       icon={MapPin}
-                      id={`address-line1-${idx}`}
-                      name={`address-line1-${idx}`}
+                      id={`cf-${formInstanceId}-address-line1-${idx}`}
+                      name={`cf-${formInstanceId}-address-line1-${idx}`}
+                      autoComplete="street-address"
+                      autoCapitalize="words"
+                      enterKeyHint="next"
+                      aria-invalid={Boolean(line1Error)}
                       value={addr.line1 || ""}
                       required={isFieldRequired("addresses", "line1")}
                       onChange={(e) => updateAddress(idx, { line1: e.target.value })}
@@ -133,12 +137,16 @@ export function ContactAddressesTab({
                         label={t("contacts.fields.city")}
                         required={isFieldRequired("addresses", "city")}
                         error={cityError}
-                        id={`address-city-${idx}`}
+                        id={`cf-${formInstanceId}-address-city-${idx}`}
                       >
                         <LeadingIconInput
                           icon={Building}
-                          id={`address-city-${idx}`}
-                          name={`address-city-${idx}`}
+                          id={`cf-${formInstanceId}-address-city-${idx}`}
+                          name={`cf-${formInstanceId}-address-city-${idx}`}
+                          autoComplete="address-level2"
+                          autoCapitalize="words"
+                          enterKeyHint="next"
+                          aria-invalid={Boolean(cityError)}
                           value={addr.city || ""}
                           required={isFieldRequired("addresses", "city")}
                           onChange={(e) => updateAddress(idx, { city: e.target.value })}
@@ -154,12 +162,16 @@ export function ContactAddressesTab({
                         label={t("contacts.fields.state")}
                         required={isFieldRequired("addresses", "state")}
                         error={stateError}
-                        id={`address-state-${idx}`}
+                        id={`cf-${formInstanceId}-address-state-${idx}`}
                       >
                         <LeadingIconInput
                           icon={Landmark}
-                          id={`address-state-${idx}`}
-                          name={`address-state-${idx}`}
+                          id={`cf-${formInstanceId}-address-state-${idx}`}
+                          name={`cf-${formInstanceId}-address-state-${idx}`}
+                          autoComplete="address-level1"
+                          autoCapitalize="words"
+                          enterKeyHint="next"
+                          aria-invalid={Boolean(stateError)}
                           value={addr.state || ""}
                           required={isFieldRequired("addresses", "state")}
                           onChange={(e) => updateAddress(idx, { state: e.target.value })}
@@ -175,7 +187,7 @@ export function ContactAddressesTab({
                         label={t("contacts.fields.country")}
                         required={isFieldRequired("addresses", "country")}
                         error={countryError}
-                        id={`address-country-${idx}`}
+                        id={`cf-${formInstanceId}-address-country-${idx}`}
                       >
                         <EditableSelect
                           options={countryOptions}
@@ -183,8 +195,8 @@ export function ContactAddressesTab({
                           onChange={(val) => updateAddress(idx, { country: val })}
                           onUpdateOptions={onUpdateCountryOptions}
                           className="w-full min-w-0"
-                          id={`address-country-${idx}`}
-                          name={`address-country-${idx}`}
+                          id={`cf-${formInstanceId}-address-country-${idx}`}
+                          name={`cf-${formInstanceId}-address-country-${idx}`}
                           placeholder={t("contacts.fields.country")}
                         />
                       </Field>

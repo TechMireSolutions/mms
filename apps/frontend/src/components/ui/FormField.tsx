@@ -89,20 +89,26 @@ export function Field({ label, required = false, hint = undefined, error = undef
   const hintId = `${resolvedId}-hint`;
   const describedBy = error ? errorId : (hint ? hintId : undefined);
 
+  let injectedCount = 0;
   const injectIdAndName = (node: React.ReactNode): React.ReactNode => {
     if (!React.isValidElement(node)) return node;
 
     const props = node.props as { id?: string; name?: string; children?: React.ReactNode; "aria-invalid"?: boolean; "aria-describedby"?: string };
+    const isNativeInput =
+      typeof node.type === "string" && ["input", "textarea", "select"].includes(node.type);
     const isInputLike =
-      (typeof node.type === "string" && ["input", "textarea", "select"].includes(node.type)) ||
+      isNativeInput ||
       ("onChange" in props || "onCheckedChange" in props);
 
     const element = node as React.ReactElement<{ id?: string; name?: string; children?: React.ReactNode; "aria-invalid"?: boolean; "aria-describedby"?: string }>;
 
     if (isInputLike) {
+      const assignedId = props.id || (injectedCount === 0 ? resolvedId : `${resolvedId}-${injectedCount}`);
+      const assignedName = props.name || (injectedCount === 0 ? resolvedName : `${resolvedName}-${injectedCount}`);
+      injectedCount++;
       return React.cloneElement(element, {
-        id: props.id || resolvedId,
-        name: props.name || resolvedName,
+        id: assignedId,
+        name: assignedName,
         "aria-invalid": props["aria-invalid"] ?? Boolean(error),
         "aria-describedby": props["aria-describedby"] || describedBy,
       });

@@ -2,9 +2,7 @@ import { type TeachersSettings as TeachersSettingsType } from "@mms/shared";
 import React from "react";
 import { School } from "lucide-react";
 import {
-  TEACHERS_TAB_REGISTRY,
   TEACHERS_MODULE_MANIFEST,
-  TEACHER_LOCKED_ENABLED_TABS,
 } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { useTeacherLookupOptions } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
@@ -25,29 +23,24 @@ export const TeachersSettings = React.memo(function TeachersSettings(): React.JS
       const {
         settings,
         settingsDraft,
-        fieldsEditor,
         saved,
         setSaved,
         upd,
       } = useModuleSettingsEditor<TeachersSettingsType>({
         config,
-        tabRegistry: TEACHERS_TAB_REGISTRY,
-        lockedEnabledTabs: TEACHER_LOCKED_ENABLED_TABS,
       });
 
       const {
         saving,
-        isDirty,
+        isPrefsDirty,
         handleSave,
       } = useTeachersSetupSaveActions({
         settings,
         settingsDraft,
-        fieldsEditor,
-        mode: "preferences",
         setSaved,
       });
 
-      const unsavedWarning = isDirty
+      const unsavedWarning = isPrefsDirty
         ? t("teachers.setup.unsavedPreferencesWarning")
         : undefined;
 
@@ -65,7 +58,7 @@ export const TeachersSettings = React.memo(function TeachersSettings(): React.JS
                 />
 
                 <ModuleSetupSaveFooter
-                  dirty={isDirty}
+                  dirty={isPrefsDirty}
                   saving={saving}
                   saved={saved}
                   unsavedWarning={unsavedWarning}

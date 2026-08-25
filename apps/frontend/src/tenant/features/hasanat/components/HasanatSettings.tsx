@@ -2,7 +2,6 @@ import { type HasanatSettings as HasanatSettingsType } from "@mms/shared";
 import React from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Save, Star } from "lucide-react";
-import { HASANAT_TAB_REGISTRY } from "@mms/shared";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -22,7 +21,6 @@ export const HasanatSettings = React.memo(function HasanatSettings(): React.Reac
         saveSettingsAsync,
       } = useModuleSettingsEditor<HasanatSettingsType>({
         config,
-        tabRegistry: HASANAT_TAB_REGISTRY,
       });
 
       const handleSave = async () => {

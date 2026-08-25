@@ -18,6 +18,7 @@ export interface DatePickerProps {
   id?: string
   name?: string
   required?: boolean
+  autoComplete?: string
   "aria-label"?: string
   "aria-invalid"?: boolean
   "aria-describedby"?: string
@@ -34,6 +35,7 @@ export function DatePicker({
   id,
   name,
   required,
+  autoComplete,
   "aria-label": ariaLabel,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
@@ -138,6 +140,7 @@ export function DatePicker({
         value={inputValue}
         onChange={handleInputChange}
         onBlur={handleBlur}
+        autoComplete={autoComplete}
         onKeyDown={(event) => {
           if (event.key === "Enter") {
             event.preventDefault()

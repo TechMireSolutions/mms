@@ -49,6 +49,7 @@ export function ContactBasicMetaFields({
           <DatePicker
             id={`cf-${formInstanceId}-dob`}
             name="dob"
+            autoComplete="bday"
             value={contactDraft.dob || undefined}
             onChange={(dateStr) => updateDraft({ dob: dateStr })}
             required={isFieldRequired("basic", "dob")}
@@ -73,6 +74,11 @@ export function ContactBasicMetaFields({
             icon={IdCard}
             id={`cf-${formInstanceId}-cnic`}
             name="cnic"
+            inputMode="numeric"
+            autoComplete="off"
+            spellCheck={false}
+            enterKeyHint="next"
+            aria-invalid={Boolean(getFieldError("cnic"))}
             value={contactDraft.cnic || ""}
             onChange={(e) => {
               const formatted = formatCnic(e.target.value);

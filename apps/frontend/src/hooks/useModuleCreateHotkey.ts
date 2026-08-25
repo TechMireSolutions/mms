@@ -23,7 +23,7 @@ export function useModuleCreateHotkey({ enabled, onCreate }: UseModuleCreateHotk
       ) {
         return;
       }
-      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'n') {
+      if ((event.metaKey || event.ctrlKey) && event.key?.toLowerCase() === 'n') {
         event.preventDefault();
         onCreate();
       }

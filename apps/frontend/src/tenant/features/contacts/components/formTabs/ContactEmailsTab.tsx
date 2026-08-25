@@ -36,8 +36,13 @@ export function ContactEmailsTab({
       removeLabel={(index) => t("contacts.form.removeEmailAddress", { index })}
       valuePlaceholder={t("auth.emailAddress")}
       valueInputType="email"
-      valueInputIdPrefix="email-address"
-      labelSelectIdPrefix="email-label"
+      valueInputIdPrefix={`cf-${base.formInstanceId}-email-address`}
+      labelSelectIdPrefix={`cf-${base.formInstanceId}-email-label`}
+      autoComplete="email"
+      inputMode="email"
+      autoCapitalize="none"
+      spellCheck={false}
+      enterKeyHint="next"
     />
   );
 }

@@ -90,7 +90,7 @@ export function ContactPickerSelected({
           <div className="flex flex-wrap items-center gap-1.5 mb-1">
             <p className="min-w-0 truncate text-sm font-bold text-foreground">{selectedName}</p>
             {selected.gender && (
-              <Badge as="span" pill variant="outline" className={`gap-1 px-2 capitalize ${genderBadgeColor}`}>
+              <Badge as="span" variant="outline" className={`gap-1 px-2 capitalize rounded-md ${genderBadgeColor}`}>
                 <GenderIcon gender={selected.gender} className="w-3 h-3" />
                 {formatContactGenderLabel(selected.gender, t)}
               </Badge>

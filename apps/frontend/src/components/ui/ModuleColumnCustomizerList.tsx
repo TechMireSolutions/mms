@@ -1,20 +1,9 @@
 import React from 'react';
 import { GripVertical, Eye, EyeOff } from 'lucide-react';
-import type { ModuleColumnRegistryEntry } from '@mms/shared';
-import type { ModuleColumnCustomizerLabels } from '@/components/ui/moduleColumnCustomizerTypes';
+import type { ModuleColumnCustomizerListProps } from '@/components/ui/moduleColumnCustomizerTypes';
+import { cn } from '@/lib/utils';
 
-export interface ModuleColumnCustomizerListProps {
-  visibleColumns: ModuleColumnRegistryEntry[];
-  hiddenColumns: ModuleColumnRegistryEntry[];
-  dragging: string | null;
-  dragOver: string | null;
-  labels: ModuleColumnCustomizerLabels;
-  toggle: (columnKey: string) => void;
-  handleDragStart: (event: React.DragEvent<HTMLDivElement>, columnKey: string) => void;
-  handleDragOver: (event: React.DragEvent<HTMLDivElement>, columnKey: string) => void;
-  handleDrop: (event: React.DragEvent<HTMLDivElement>, targetColumnKey: string) => void;
-  clearDrag: () => void;
-}
+export type { ModuleColumnCustomizerListProps };
 
 export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustomizerList({
   visibleColumns,
@@ -42,16 +31,17 @@ export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustom
             onDragOver={(event) => handleDragOver(event, col.key)}
             onDrop={(event) => handleDrop(event, col.key)}
             onDragEnd={clearDrag}
-            className={`flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all select-none ${
-              dragging === col.key
-                ? 'opacity-40'
-                : dragOver === col.key
-                  ? 'border-primary bg-primary/5'
-                  : 'border-transparent hover:bg-muted'
-            }`}
+            className={cn(
+              'flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all select-none border-transparent hover:bg-muted',
+              dragging === col.key && 'opacity-40',
+              dragOver === col.key && 'border-primary bg-primary/5',
+            )}
           >
             <GripVertical
-              className={`w-3.5 h-3.5 flex-shrink-0 ${col.fixed ? 'opacity-20' : 'text-muted-foreground cursor-grab'}`}
+              className={cn(
+                'w-3.5 h-3.5 flex-shrink-0',
+                col.fixed ? 'opacity-20' : 'text-muted-foreground cursor-grab',
+              )}
             />
             <span className="flex-1 text-sm text-foreground text-start">{col.label}</span>
             {col.fixed ? (
@@ -86,6 +76,7 @@ export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustom
                 e.stopPropagation();
                 toggle(col.key);
               }}
+              aria-label={labels.showColumn ? labels.showColumn(col.label) : undefined}
               className="flex items-center justify-between w-full px-2.5 min-h-11 rounded-lg border border-transparent hover:bg-muted transition-colors text-start group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
               <div className="flex items-center gap-2">
@@ -100,4 +91,3 @@ export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustom
     </div>
   );
 });
-

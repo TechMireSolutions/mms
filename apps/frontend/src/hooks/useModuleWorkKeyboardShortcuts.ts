@@ -47,7 +47,7 @@ export function useModuleWorkKeyboardShortcuts({
 
       if (
         (event.key === "/" ||
-          (event.key.toLowerCase() === "k" && (event.metaKey || event.ctrlKey))) &&
+          (event.key?.toLowerCase() === "k" && (event.metaKey || event.ctrlKey))) &&
         !isInputActive
       ) {
         event.preventDefault();

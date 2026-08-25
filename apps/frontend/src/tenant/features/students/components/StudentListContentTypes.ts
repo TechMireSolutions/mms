@@ -1,14 +1,9 @@
-import type { ModuleColumnRegistryEntry, Student, toMessagingRecipient } from "@mms/shared";
+import type { Student, StudentSortField } from "@mms/shared";
+import { type toMessagingRecipient, type ModuleColumnRegistryEntry } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
-export type StudentListSortField =
-  | "name"
-  | "grNumber"
-  | "status"
-  | "gender"
-  | "registeredDate"
-  | "dob";
+export type StudentListSortField = StudentSortField;
 
 interface StudentListSession {
   id: string;

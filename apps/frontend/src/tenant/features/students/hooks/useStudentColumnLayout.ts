@@ -20,7 +20,6 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
         email: t('students.columns.email'),
         dob: t('students.columns.dob'),
         parents: t('students.columns.parents'),
-        sessions: t('students.columns.sessions'),
         status: t('students.columns.status'),
         registeredDate: t('students.columns.registeredDate'),
         notes: t('students.columns.notes'),

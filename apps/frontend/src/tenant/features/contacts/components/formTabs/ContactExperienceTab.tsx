@@ -29,6 +29,7 @@ export function ContactExperienceTab({
   employmentTypeOptions,
   onUpdateEmploymentTypeOptions,
   defaultEmploymentType,
+  formInstanceId,
   getListItemError,
   isFieldEnabled,
   isFieldRequired,
@@ -118,8 +119,8 @@ export function ContactExperienceTab({
                     onChange={(val) => updateExperience(idx, { employmentType: val })}
                     onUpdateOptions={onUpdateEmploymentTypeOptions}
                     className="w-40 @sm:w-52 min-w-0"
-                    id={`experience-type-${idx}`}
-                    name={`experience-type-${idx}`}
+                    id={`cf-${formInstanceId}-experience-type-${idx}`}
+                    name={`cf-${formInstanceId}-experience-type-${idx}`}
                     placeholder={t("contacts.form.employmentTypePlaceholder")}
                   />
                 ) : undefined
@@ -135,12 +136,16 @@ export function ContactExperienceTab({
                       label={t("contacts.fields.experienceTitle")}
                       required={isFieldRequired("experience", "title")}
                       error={titleError}
-                      id={`experience-title-${idx}`}
+                      id={`cf-${formInstanceId}-experience-title-${idx}`}
                     >
                       <LeadingIconInput
                         icon={Briefcase}
-                        id={`experience-title-${idx}`}
-                        name={`experience-title-${idx}`}
+                        id={`cf-${formInstanceId}-experience-title-${idx}`}
+                        name={`cf-${formInstanceId}-experience-title-${idx}`}
+                        autoComplete="organization-title"
+                        autoCapitalize="words"
+                        enterKeyHint="next"
+                        aria-invalid={Boolean(titleError)}
                         value={exp.title || ""}
                         required={isFieldRequired("experience", "title")}
                         onChange={(e) => updateExperience(idx, { title: e.target.value })}
@@ -155,12 +160,16 @@ export function ContactExperienceTab({
                       label={t("contacts.fields.experienceOrganization")}
                       required={isFieldRequired("experience", "organization")}
                       error={orgError}
-                      id={`experience-org-${idx}`}
+                      id={`cf-${formInstanceId}-experience-org-${idx}`}
                     >
                       <LeadingIconInput
                         icon={Building2}
-                        id={`experience-org-${idx}`}
-                        name={`experience-org-${idx}`}
+                        id={`cf-${formInstanceId}-experience-org-${idx}`}
+                        name={`cf-${formInstanceId}-experience-org-${idx}`}
+                        autoComplete="organization"
+                        autoCapitalize="words"
+                        enterKeyHint="next"
+                        aria-invalid={Boolean(orgError)}
                         value={exp.organization || ""}
                         required={isFieldRequired("experience", "organization")}
                         onChange={(e) => updateExperience(idx, { organization: e.target.value })}
@@ -177,12 +186,15 @@ export function ContactExperienceTab({
                     label={t("contacts.fields.experienceLocation")}
                     required={isFieldRequired("experience", "location")}
                     error={locationError}
-                    id={`experience-location-${idx}`}
+                    id={`cf-${formInstanceId}-experience-location-${idx}`}
                   >
                     <LeadingIconInput
                       icon={MapPin}
-                      id={`experience-location-${idx}`}
-                      name={`experience-location-${idx}`}
+                      id={`cf-${formInstanceId}-experience-location-${idx}`}
+                      name={`cf-${formInstanceId}-experience-location-${idx}`}
+                      autoCapitalize="words"
+                      enterKeyHint="next"
+                      aria-invalid={Boolean(locationError)}
                       value={exp.location || ""}
                       required={isFieldRequired("experience", "location")}
                       onChange={(e) => updateExperience(idx, { location: e.target.value })}
@@ -199,11 +211,11 @@ export function ContactExperienceTab({
                       label={t("contacts.fields.experienceStartDate")}
                       required={isFieldRequired("experience", "startDate")}
                       error={startDateError}
-                      id={`experience-start-${idx}`}
+                      id={`cf-${formInstanceId}-experience-start-${idx}`}
                     >
                       <DatePicker
-                        id={`experience-start-${idx}`}
-                        name={`experience-start-${idx}`}
+                        id={`cf-${formInstanceId}-experience-start-${idx}`}
+                        name={`cf-${formInstanceId}-experience-start-${idx}`}
                         value={exp.startDate || undefined}
                         required={isFieldRequired("experience", "startDate")}
                         onChange={(dateStr) => updateExperience(idx, { startDate: dateStr })}
@@ -223,11 +235,11 @@ export function ContactExperienceTab({
                       label={t("contacts.fields.experienceEndDate")}
                       required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
                       error={endDateError}
-                      id={`experience-end-${idx}`}
+                      id={`cf-${formInstanceId}-experience-end-${idx}`}
                     >
                       <DatePicker
-                        id={`experience-end-${idx}`}
-                        name={`experience-end-${idx}`}
+                        id={`cf-${formInstanceId}-experience-end-${idx}`}
+                        name={`cf-${formInstanceId}-experience-end-${idx}`}
                         value={exp.isCurrent ? undefined : exp.endDate || undefined}
                         disabled={Boolean(exp.isCurrent)}
                         required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
@@ -251,8 +263,8 @@ export function ContactExperienceTab({
                 {/* Inline Checkbox: Currently Working Here */}
                 {showIsCurrent ? (
                   <FormCheckboxCard
-                    id={`experience-current-${idx}`}
-                    name={`experience-current-${idx}`}
+                    id={`cf-${formInstanceId}-experience-current-${idx}`}
+                    name={`cf-${formInstanceId}-experience-current-${idx}`}
                     checked={Boolean(exp.isCurrent)}
                     onCheckedChange={(checked) =>
                       updateExperience(idx, {
@@ -272,11 +284,11 @@ export function ContactExperienceTab({
                     label={t("contacts.fields.experienceDescription")}
                     required={isFieldRequired("experience", "description")}
                     error={descriptionError}
-                    id={`experience-desc-${idx}`}
+                    id={`cf-${formInstanceId}-experience-desc-${idx}`}
                   >
                     <Textarea
-                      id={`experience-desc-${idx}`}
-                      name={`experience-desc-${idx}`}
+                      id={`cf-${formInstanceId}-experience-desc-${idx}`}
+                      name={`cf-${formInstanceId}-experience-desc-${idx}`}
                       rows={2}
                       value={exp.description || ""}
                       required={isFieldRequired("experience", "description")}

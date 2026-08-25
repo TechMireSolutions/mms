@@ -1,28 +1,35 @@
-import * as React from "react"
+import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
+import { X } from "lucide-react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-md border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+  "inline-flex items-center rounded-md border font-semibold transition-all focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-primary text-primary-foreground shadow hover:bg-primary/80",
+          "border-transparent bg-primary text-primary-foreground shadow-xs hover:bg-primary/80",
         secondary:
           "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
         destructive:
-          "border-transparent bg-destructive text-destructive-foreground shadow hover:bg-destructive/80",
+          "border-transparent bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/80",
         outline: "text-foreground",
+      },
+      size: {
+        sm: "px-2 py-0.5 text-3xs gap-1",
+        md: "px-2.5 py-0.5 text-xs gap-1.5",
+        lg: "px-3 py-1 text-sm gap-2",
       },
     },
     defaultVariants: {
       variant: "default",
+      size: "md",
     },
-  }
-)
+  },
+);
 
 export type BadgeTone =
   | "primary"
@@ -44,39 +51,84 @@ const BADGE_TONES: Record<BadgeTone, string> = {
 };
 
 export interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends React.HTMLAttributes<HTMLElement>,
     VariantProps<typeof badgeVariants> {
   /** Soft semantic tone — wins over `variant` when set. */
   tone?: BadgeTone;
   /** Rounded-full pill shape. */
   pill?: boolean;
-  /** Render element — `span` for inline/table-cell pills. */
-  as?: "div" | "span";
+  /** Render element — `span` for inline/table-cell pills, `button` for clickable chips. */
+  as?: "div" | "span" | "button";
+  /** Optional status indicator dot. */
+  dot?: boolean;
+  /** Whether the indicator dot pulses. */
+  pulse?: boolean;
+  /** Optional remove/dismiss callback rendering an X button. */
+  onRemove?: () => void;
 }
 
 /**
  * Badge — SSOT for status/tag pills. Solid `variant` for filled chrome,
  * `tone` for soft semantic pills, `pill` for the rounded-full shape.
  */
-function Badge({
-  className,
-  variant,
-  tone,
-  pill = false,
-  as: Comp = "div",
-  ...props
-}: BadgeProps) {
+const Badge = React.forwardRef<HTMLElement, BadgeProps>(function Badge(
+  {
+    className,
+    variant,
+    size,
+    tone,
+    pill = false,
+    dot = false,
+    pulse = false,
+    onRemove,
+    as: Comp = "div",
+    children,
+    onClick,
+    ...props
+  },
+  ref,
+) {
+  const isInteractive = Comp === "button" || Boolean(onClick);
+
   return (
     <Comp
+      ref={ref as never}
+      onClick={onClick}
       className={cn(
-        badgeVariants({ variant }),
+        badgeVariants({ variant, size }),
         tone && BADGE_TONES[tone],
         pill && "rounded-full",
+        isInteractive && "cursor-pointer select-none active:scale-95 hover:opacity-90 transition-transform",
         className,
       )}
       {...props}
-    />
+    >
+      {dot && (
+        <span
+          className={cn(
+            "h-1.5 w-1.5 rounded-full bg-current shrink-0",
+            pulse && "animate-pulse",
+          )}
+          aria-hidden="true"
+        />
+      )}
+      {children}
+      {onRemove && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          className="ms-0.5 -me-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-foreground/15 transition-colors"
+          aria-label="Remove"
+        >
+          <X className="h-2.5 w-2.5" aria-hidden="true" />
+        </button>
+      )}
+    </Comp>
   );
-}
+});
+Badge.displayName = "Badge";
 
-export { Badge, badgeVariants }
+export { Badge, badgeVariants };

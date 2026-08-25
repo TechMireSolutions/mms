@@ -1,6 +1,6 @@
-import type { ReactElement } from 'react';
-import { CheckSquare, XSquare } from 'lucide-react';
-import type { MessagingGenderFilter, MessagingRoleFilter } from '@mms/shared';
+import React, { type JSX } from 'react';
+import { CheckSquare } from 'lucide-react';
+import type { MessagingGenderFilter, MessagingRoleFilter, ModuleColumnRegistryEntry } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import {
   ModuleFilterDivider,
@@ -8,6 +8,7 @@ import {
   ModuleFilterRadioGroup,
 } from '@/components/ui/ModuleFiltersMenuButton';
 import { ModuleClearFiltersButton } from '@/components/ui/ModuleClearFiltersButton';
+import { ModuleColumnCustomizer, type ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
@@ -19,10 +20,11 @@ import {
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
+import { SEMANTIC_TEXT } from '@/lib/semanticTone';
 
 export const MESSAGING_RECIPIENTS_SEARCH_INPUT_ID = 'messaging-recipients-search';
 
-interface MessagingWorkRecipientsToolbarProps {
+export interface MessagingWorkRecipientsToolbarProps {
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   searchContact: string;
@@ -31,15 +33,17 @@ interface MessagingWorkRecipientsToolbarProps {
   roleOptions: Array<{ value: string; label: string }>;
   genderOptions: Array<{ value: string; label: string }>;
   selectingReachable: boolean;
-  selectedCount: number;
   onSearchChange: (value: string) => void;
   onGenderFilterChange: (value: MessagingGenderFilter) => void;
   onRoleFilterChange: (value: MessagingRoleFilter) => void;
   onSelectReachable: (kind: 'phone' | 'email') => void;
-  onClearSelection: () => void;
+  columnRegistry?: ModuleColumnRegistryEntry[];
+  updateUserColumnLayout?: (columns: ModuleColumnRegistryEntry[]) => void;
+  onResetColumnLayout?: () => void;
+  columnCustomizerLabels?: ModuleColumnCustomizerLabels;
 }
 
-export function MessagingWorkRecipientsToolbar({
+export const MessagingWorkRecipientsToolbar = React.memo(function MessagingWorkRecipientsToolbar({
   viewMode,
   onViewModeChange,
   searchContact,
@@ -48,13 +52,15 @@ export function MessagingWorkRecipientsToolbar({
   roleOptions,
   genderOptions,
   selectingReachable,
-  selectedCount,
   onSearchChange,
   onGenderFilterChange,
   onRoleFilterChange,
   onSelectReachable,
-  onClearSelection,
-}: MessagingWorkRecipientsToolbarProps): ReactElement {
+  columnRegistry,
+  updateUserColumnLayout,
+  onResetColumnLayout,
+  columnCustomizerLabels,
+}: MessagingWorkRecipientsToolbarProps): JSX.Element {
   const { t } = useTranslation();
   const defaultRole = roleOptions[0]?.value ?? 'all';
   const defaultGender = genderOptions[0]?.value ?? 'all';
@@ -82,7 +88,11 @@ export function MessagingWorkRecipientsToolbar({
 
   return (
     <>
-      <div className={cn(WORK_SURFACE, 'flex flex-col gap-3 p-3 sm:flex-row')}>
+      <div
+        role="region"
+        aria-label={t('messaging.stepSelectRecipients')}
+        className={cn(WORK_SURFACE, 'flex flex-col gap-3 p-3 sm:flex-row')}
+      >
         <div className="relative min-w-0 flex-1">
           <SearchBar
             id={MESSAGING_RECIPIENTS_SEARCH_INPUT_ID}
@@ -131,8 +141,6 @@ export function MessagingWorkRecipientsToolbar({
             <ModuleClearFiltersButton onClearFilters={clearFilters} label={t('common.clearFilters')} />
           ) : null}
 
-          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-
           <Button
             type="button"
             variant="outline"
@@ -140,8 +148,9 @@ export function MessagingWorkRecipientsToolbar({
             onClick={() => onSelectReachable('phone')}
             className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
           >
-            <CheckSquare className="me-1 h-3.5 w-3.5 text-info" /> {t('messaging.selectAllValidPhone')}
+            <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.info}`} /> {t('messaging.selectAllValidPhone')}
           </Button>
+
           <Button
             type="button"
             variant="outline"
@@ -149,17 +158,18 @@ export function MessagingWorkRecipientsToolbar({
             onClick={() => onSelectReachable('email')}
             className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
           >
-            <CheckSquare className="me-1 h-3.5 w-3.5 text-warning" /> {t('messaging.selectAllValidEmail')}
+            <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.warning}`} /> {t('messaging.selectAllValidEmail')}
           </Button>
-          {selectedCount > 0 ? (
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={onClearSelection}
-              className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold text-destructive hover:bg-destructive/10 hover:text-destructive')}
-            >
-              <XSquare className="me-1 h-3.5 w-3.5" /> {t('messaging.clearSelection')}
-            </Button>
+
+          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
+
+          {columnRegistry && updateUserColumnLayout && columnCustomizerLabels ? (
+            <ModuleColumnCustomizer
+              columnRegistry={columnRegistry}
+              updateUserColumnLayout={updateUserColumnLayout}
+              onResetLayout={onResetColumnLayout}
+              labels={columnCustomizerLabels}
+            />
           ) : null}
         </div>
       </div>
@@ -167,4 +177,4 @@ export function MessagingWorkRecipientsToolbar({
       <FilterChips chips={chips} onClearAll={clearFilters} />
     </>
   );
-}
+});

@@ -33,11 +33,7 @@ export function StudentsPageView({
       seoDescription={t("page.students.subtitle")}
       headerIcon={GraduationCap}
       headerTitle={t("nav.students")}
-      headerSubtitle={
-        metricsTotal != null
-          ? `${t("page.students.subtitle")} · ${metricsTotal} ${t("nav.students").toLowerCase()}`
-          : t("page.students.subtitle")
-      }
+      headerSubtitle={t("page.students.subtitle")}
       headerActions={
         <StudentsPageHeaderActions
           canExport={canExport}

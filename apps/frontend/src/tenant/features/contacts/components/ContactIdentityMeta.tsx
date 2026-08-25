@@ -1,32 +1,38 @@
-import { PersonIdentityMeta } from "@/components/ui/PersonIdentityMeta";
-import { useTranslation } from "@/hooks/useTranslation";
+import React from "react";
+import {
+  PersonIdentityMeta,
+  type PersonIdentityMetaProps,
+} from "@/components/ui/PersonIdentityMeta";
 
-interface ContactIdentityMetaProps {
-  gender?: string | null;
-  isSyed?: boolean | null;
-  className?: string;
-  /** Compact chip used in table/card name columns; md slightly larger for drawer hero. */
-  size?: "sm" | "md";
-}
+export type ContactIdentityMetaProps = Omit<PersonIdentityMetaProps, "syedLabel">;
 
 /**
  * Shared gender + Syed meta row for contact table, cards, and detail header.
- * Thin Contacts wrapper over PersonIdentityMeta (Syed label SSOT here).
+ * Thin Contacts wrapper over PersonIdentityMeta.
  */
-export function ContactIdentityMeta({
+export const ContactIdentityMeta = React.memo(function ContactIdentityMeta({
   gender,
   isSyed,
   className,
   size = "sm",
+  pill = false,
+  extraBadges,
+  children,
+  onGenderClick,
+  onSyedClick,
 }: ContactIdentityMetaProps): React.JSX.Element | null {
-  const { t } = useTranslation();
   return (
     <PersonIdentityMeta
       gender={gender}
       isSyed={isSyed}
-      syedLabel={t("contacts.table.yesSyed")}
       className={className}
       size={size}
-    />
+      pill={pill}
+      extraBadges={extraBadges}
+      onGenderClick={onGenderClick}
+      onSyedClick={onSyedClick}
+    >
+      {children}
+    </PersonIdentityMeta>
   );
-}
+});

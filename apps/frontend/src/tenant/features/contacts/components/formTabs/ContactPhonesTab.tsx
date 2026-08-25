@@ -57,8 +57,12 @@ export function ContactPhonesTab({
       removeLabel={(index) => t("contacts.form.removePhoneNumber", { index })}
       valuePlaceholder={t("contacts.form.phoneNumberPlaceholder")}
       valueInputType="tel"
-      valueInputIdPrefix="phone-number"
-      labelSelectIdPrefix="phone-label"
+      valueInputIdPrefix={`cf-${base.formInstanceId}-phone-number`}
+      labelSelectIdPrefix={`cf-${base.formInstanceId}-phone-label`}
+      autoComplete="tel-national"
+      inputMode="tel"
+      enterKeyHint="next"
+      spellCheck={false}
       onValueBlur={handlePhoneBlur}
       valueLeadingAddon={({ item, index, updateItem }) => (
         <EditableSelect
@@ -67,8 +71,8 @@ export function ContactPhonesTab({
           onChange={(val) => updateItem(index, { countryCode: val })}
           onUpdateOptions={onUpdateDialCodeOptions}
           className="w-phone-prefix shrink-0"
-          id={`phone-country-${index}`}
-          name={`phone-country-${index}`}
+          id={`cf-${base.formInstanceId}-phone-country-${index}`}
+          name={`cf-${base.formInstanceId}-phone-country-${index}`}
           aria-label={t("contacts.form.dialCode")}
         />
       )}

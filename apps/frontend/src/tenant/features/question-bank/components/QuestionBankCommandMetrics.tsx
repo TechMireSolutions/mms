@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import {
-  HelpCircle, Filter, Sparkles, FileCheck, BarChart3, Layers, ClipboardList,
+  HelpCircle, Filter, Sparkles, BarChart3,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useQuestionBankMetrics } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
@@ -33,9 +33,6 @@ export const QuestionBankCommandMetrics = React.memo(function QuestionBankComman
     { icon: Filter, label: t('questionBank.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: Sparkles, label: t('questionBank.metrics.easy'), value: metrics.easy, accent: 'success' as const },
     { icon: BarChart3, label: t('questionBank.metrics.medium'), value: metrics.medium, accent: 'warning' as const },
-    { icon: Layers, label: t('questionBank.metrics.hard'), value: metrics.hard, accent: 'destructive' as const },
-    { icon: ClipboardList, label: t('questionBank.metrics.tests'), value: metrics.totalTests, accent: 'indigo' as const },
-    { icon: FileCheck, label: t('questionBank.metrics.categories'), value: metrics.categories, accent: 'purple' as const },
   ], [t, shown, metrics]);
 
   return <ModuleCommandMetricsGrid items={items} />;

@@ -4,7 +4,6 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { DollarSign } from "lucide-react";
 import { useFinanceConfig } from "@/hooks/useStandardModuleConfig";
 import {
-  FINANCE_TAB_REGISTRY,
   DEFAULT_CURRENCIES,
   FINANCE_MODULE_MANIFEST,
   type AppTranslationKey,
@@ -32,7 +31,6 @@ export const FinanceSettings = React.memo(function FinanceSettings(): React.Reac
     saveSettingsAsync,
   } = useModuleSettingsEditor<FinanceSettingsType>({
     config,
-    tabRegistry: FINANCE_TAB_REGISTRY,
   });
 
   const isDirty = !saved;
