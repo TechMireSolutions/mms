@@ -53,7 +53,7 @@ export default async function accountingRoutes(
         saveFn: upsertAccounts,
         responseKey: 'accounts',
         errorMessagePrefix: 'accounts',
-        columnPreferencesObjectKey: ACCOUNTING_MODULE_MANIFEST.accountColumnPreferencesObjectKey,
+
         customGetRoute: true,
       });
 
@@ -70,8 +70,8 @@ export default async function accountingRoutes(
         responseKey: 'entries',
         errorMessagePrefix: 'entries',
         nameSingular: 'Journal entry',
-        columnPreferencesObjectKey: ACCOUNTING_MODULE_MANIFEST.journalColumnPreferencesObjectKey,
-        columnPreferencesPath: '/journal/column-preferences',
+
+
         customGetRoute: true,
         mapDeleteError: (error) => {
           if (error instanceof Error && error.message.includes('Posted')) {

@@ -974,47 +974,7 @@ describe('contacts REST routes', () => {
     await app.close();
   });
 
-  it('GET /api/contacts/column-preferences returns user layout', async () => {
-    mockGetUserColumnPreferencesForModule.mockResolvedValue([{ key: 'name', enabled: true, order: 0 }]);
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/contacts/column-preferences',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ preferences: [{ key: 'name', enabled: true, order: 0 }] });
-    expect(mockGetUserColumnPreferencesForModule).toHaveBeenCalledWith(
-      CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
-      'u-teacher',
-    );
-    await app.close();
-  });
 
-  it('PUT /api/contacts/column-preferences persists layout', async () => {
-    const preferences = [{ key: 'email', enabled: false, order: 2 }];
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'PUT',
-      url: '/api/contacts/column-preferences',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
-      },
-      payload: { preferences },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ success: true, preferences });
-    expect(mockSetUserColumnPreferencesForModule).toHaveBeenCalledWith(
-      CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
-      'u-teacher',
-      preferences,
-    );
-    await app.close();
-  });
 
 
   it('POST /api/contacts/saved-reports creates preset', async () => {

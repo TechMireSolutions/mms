@@ -4,7 +4,7 @@ import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection } from '../../services/rbacService.js';
 import { ENROLLMENTS_MODULE_MANIFEST, type User } from '@mms/shared';
 import { registerCountRoute, registerMetricsRoute, registerWidgetAggregatesRoute } from '../../lib/crudRouter.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+
 
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
@@ -63,11 +63,6 @@ export default async function enrollmentsRoutes(
           queries: unknown[],
         ) => Promise<unknown>,
         errorMessagePrefix: 'enrollment',
-      });
-
-      registerColumnPreferencesRoutes(sub, {
-        collection: ENROLLMENTS_COLLECTION,
-        objectKey: ENROLLMENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
       });
 
       sub.post<{ Params: { id: string } }>('/:id/restore', async (request, reply) => {

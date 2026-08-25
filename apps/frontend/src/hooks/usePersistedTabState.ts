@@ -1,34 +1,22 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { normalizeModuleTierTabId } from "@mms/shared";
+import { useUiPreference } from "@/lib/uiStateStore";
 
 /**
- * Tab state synced to sessionStorage so module navigation does not reset the active tier.
+ * Tab state synced to backend UI state so module navigation does not reset the active tier across devices.
  */
 export function usePersistedTabState<T extends string>(
   key: string,
   defaultValue: T,
 ): [T, (value: T) => void] {
-  const [value, setValue] = useState<T>(() => {
-    try {
-      const saved = sessionStorage.getItem(key);
-      if (!saved) return defaultValue;
-      return normalizeModuleTierTabId(saved) as T;
-    } catch {
-      return defaultValue;
-    }
-  });
+  const [value, setUiPref] = useUiPreference<T>(key, defaultValue);
 
   const setPersisted = useCallback(
     (tabValue: T) => {
-      setValue(tabValue);
-      try {
-        sessionStorage.setItem(key, tabValue);
-      } catch {
-        /* sessionStorage unavailable */
-      }
+      setUiPref(normalizeModuleTierTabId(tabValue) as T);
     },
-    [key],
+    [setUiPref],
   );
 
-  return [value, setPersisted];
+  return [normalizeModuleTierTabId(value as string) as T || defaultValue, setPersisted];
 }

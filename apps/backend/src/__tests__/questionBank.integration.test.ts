@@ -380,21 +380,6 @@ describe('question bank REST routes', () => {
     await app.close();
   });
 
-  it('GET /api/question-bank/column-prefs loads column preferences', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/question-bank/column-prefs',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ preferences: [] });
-    expect(mockGetUserColumnPreferencesForModule).toHaveBeenCalled();
-    await app.close();
-  });
 });
 
 describe('question bank questions pagination', () => {

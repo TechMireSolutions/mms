@@ -46,6 +46,7 @@ export * from './platformSettingsTypes.js';
 export * from './platformSetupValidation.js';
 export * from './platformTypes.js';
 export * from './serverPorts.js';
+export * from './schemas/uiState.dto.js';
 
 // ---------------------------------------------------------------------------
 // 3. Global Settings, Theme & Branding

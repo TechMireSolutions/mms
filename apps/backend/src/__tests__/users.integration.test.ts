@@ -302,19 +302,4 @@ describe('users REST routes', () => {
     await app.close();
   });
 
-  it('GET /api/users/column-prefs loads column preferences', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/users/column-prefs',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${adminToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ preferences: [] });
-    expect(mockGetUserColumnPreferencesForModule).toHaveBeenCalled();
-    await app.close();
-  });
 });

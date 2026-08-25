@@ -61,7 +61,7 @@ export default async function examinationsRoutes(
         responseKey: 'exams',
         errorMessagePrefix: 'exams',
         nameSingular: 'Exam',
-        columnPreferencesObjectKey: EXAMINATIONS_MODULE_MANIFEST.examColumnPreferencesObjectKey,
+
         customGetRoute: true,
         customBulkTrashRoutes: true,
       });
@@ -73,7 +73,7 @@ export default async function examinationsRoutes(
         saveFn: upsertExamResults,
         responseKey: 'results',
         errorMessagePrefix: 'exam results',
-        columnPreferencesObjectKey: EXAMINATIONS_MODULE_MANIFEST.resultsColumnPreferencesObjectKey,
+
         customGetRoute: true,
       });
     },

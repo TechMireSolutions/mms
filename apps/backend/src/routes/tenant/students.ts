@@ -19,7 +19,7 @@ import {
   registerWidgetAggregatesRoute,
   registerLinkedContactIdsRoute,
 } from '../../lib/crudRouter.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+
 import { studentSetupConfigRoutes } from './students/studentSetupConfigRoutes.js';
 import { studentLookupRoutes } from './students/studentLookupRoutes.js';
 import { studentExportRoutes } from './students/studentExportRoutes.js';
@@ -87,11 +87,6 @@ export default async function studentsRoutes(
         collection: 'students',
         loadLinkedContactIdsFn: (excludeId) => studentUseCases.loadStudentLinkedContactIds(excludeId),
         errorMessagePrefix: 'students',
-      });
-
-      registerColumnPreferencesRoutes(sub, {
-        collection: 'students',
-        objectKey: STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
       });
 
       await sub.register(studentSoftDeleteRoutes);

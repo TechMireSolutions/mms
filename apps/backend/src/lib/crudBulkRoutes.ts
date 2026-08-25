@@ -9,7 +9,6 @@ import {
   includeDeletedQuerySchema,
   bulkIdsBodySchema,
 } from '../validation/commonSchemas.js';
-import { registerColumnPreferencesRoutes } from './columnPreferencesRouter.js';
 
 export interface BulkRoutesOptions<T> {
   path: string;
@@ -24,8 +23,6 @@ export interface BulkRoutesOptions<T> {
   saveFn: (data: T) => Promise<unknown>;
   responseKey: string;
   errorMessagePrefix: string;
-  columnPreferencesObjectKey?: string;
-  columnPreferencesPath?: string;
   /** When true, omits registering the GET endpoint (e.g. handled by @ts-rest contract router). */
   customGetRoute?: boolean;
 }
@@ -48,8 +45,6 @@ export function registerBulkRoutes<T>(
     saveFn,
     responseKey,
     errorMessagePrefix,
-    columnPreferencesObjectKey,
-    columnPreferencesPath,
     customGetRoute,
   } = options;
 
@@ -110,14 +105,6 @@ export function registerBulkRoutes<T>(
       return sendDatabaseError(reply, `Failed to update ${errorMessagePrefix}`);
     }
   });
-
-  if (columnPreferencesObjectKey) {
-    registerColumnPreferencesRoutes(fastify, {
-      path: columnPreferencesPath ?? (path === '/' ? '/column-preferences' : `${path}/column-preferences`),
-      collection,
-      objectKey: columnPreferencesObjectKey,
-    });
-  }
 }
 
 export type SoftDeleteRouteErrorMapper = (
@@ -146,8 +133,6 @@ export interface SoftDeletableBulkRoutesOptions<T> {
   responseKey: string;
   errorMessagePrefix: string;
   nameSingular: string;
-  columnPreferencesObjectKey?: string;
-  columnPreferencesPath?: string;
   /** Defaults to {@link bulkIdsBodySchema}; use string-only schemas when needed. */
   bulkBodySchema?: ZodType<{ ids: Array<string | number>; deletionReason?: string }>;
   /** Map domain delete failures (e.g. posted entries, self-delete) to stable HTTP responses. */
@@ -173,8 +158,6 @@ export function registerIncludableBulkRoutes<T>(
     saveFn: (data: T) => Promise<unknown>;
     responseKey: string;
     errorMessagePrefix: string;
-    columnPreferencesObjectKey?: string;
-    columnPreferencesPath?: string;
     customGetRoute?: boolean;
   },
 ): void {
@@ -189,8 +172,6 @@ export function registerIncludableBulkRoutes<T>(
     saveFn,
     responseKey,
     errorMessagePrefix,
-    columnPreferencesObjectKey,
-    columnPreferencesPath,
     customGetRoute,
   } = options;
 
@@ -267,14 +248,6 @@ export function registerIncludableBulkRoutes<T>(
       return sendDatabaseError(reply, `Failed to update ${errorMessagePrefix}`, error);
     }
   });
-
-  if (columnPreferencesObjectKey) {
-    registerColumnPreferencesRoutes(fastify, {
-      path: columnPreferencesPath ?? `${path}/column-preferences`,
-      collection,
-      objectKey: columnPreferencesObjectKey,
-    });
-  }
 }
 
 /**
@@ -383,8 +356,6 @@ export function registerSoftDeletableBulkRoutes<T>(
     responseKey,
     errorMessagePrefix,
     nameSingular,
-    columnPreferencesObjectKey,
-    columnPreferencesPath,
     bulkBodySchema = bulkIdsBodySchema,
     mapDeleteError,
     customGetRoute,
@@ -445,12 +416,4 @@ export function registerSoftDeletableBulkRoutes<T>(
       return sendDatabaseError(reply, `Failed to restore ${nameSingular.toLowerCase()}`, error);
     }
   });
-
-  if (columnPreferencesObjectKey) {
-    registerColumnPreferencesRoutes(fastify, {
-      path: columnPreferencesPath ?? (path === '/' ? '/column-preferences' : `${path}/column-preferences`),
-      collection,
-      objectKey: columnPreferencesObjectKey,
-    });
-  }
 }

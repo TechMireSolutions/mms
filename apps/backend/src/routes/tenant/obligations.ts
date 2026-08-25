@@ -14,7 +14,7 @@ import {
   registerMetricsRoute,
   registerSoftDeletableBulkRoutes,
 } from '../../lib/crudRouter.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+
 
 import { obligationContractRouter } from './obligations/obligationContractRouter.js';
 import {
@@ -111,12 +111,6 @@ export default async function obligationsRoutes(
         errorMessagePrefix: 'obligation collections',
         nameSingular: 'Obligation collection',
         customGetRoute: true,
-      });
-
-      registerColumnPreferencesRoutes(sub, {
-        path: '/column-preferences',
-        collection: OBLIGATIONS_COLLECTION,
-        objectKey: OBLIGATIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
       });
 
       registerMetricsRoute(sub, {

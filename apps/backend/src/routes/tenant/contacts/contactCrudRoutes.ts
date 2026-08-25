@@ -6,10 +6,7 @@ import { getLinkedContactId } from '../../../services/auth/userService.js';
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
 import { canWriteContacts, canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { ContactUniqueFieldError } from '../../../services/contactService.js';
-import {
-  getUserColumnPreferencesForModule,
-  setUserColumnPreferencesForModule,
-} from '../../../services/userColumnPreferencesService.js';
+
 import { parseRequest } from '../../../lib/zodRequest.js';
 
 import {
@@ -180,38 +177,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load contact report analytics' } };
       }
     },
-    getColumnPreferences: async ({ request }: any) => {
-      const user = (request as any).user as User;
-      if (!canReadCollection(user, 'contacts')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const preferences = await getUserColumnPreferencesForModule(
-          CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
-          String(user.id),
-        );
-        return { status: 200 as const, body: { preferences } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load column preferences' } };
-      }
-    },
-    updateColumnPreferences: async ({ body, request }: any) => {
-      const user = (request as any).user as User;
-      if (!canReadCollection(user, 'contacts')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const rawPrefs = (body as any)?.preferences ?? (body as any)?.prefs ?? [];
-        await setUserColumnPreferencesForModule(
-          CONTACTS_MODULE_MANIFEST.columnPreferencesObjectKey,
-          String(user.id),
-          rawPrefs,
-        );
-        return { status: 200 as const, body: { success: true, preferences: rawPrefs } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save column preferences' } };
-      }
-    },
+
   } as any);
 
   await fastify.register(s.plugin(router));

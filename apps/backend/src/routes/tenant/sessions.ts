@@ -61,7 +61,7 @@ export default async function sessionsRoutes(
         updateFn: updateSessionById,
         deleteFn: deleteSessionById,
         restoreFn: restoreSessionById,
-        columnPreferencesObjectKey: SESSIONS_MODULE_MANIFEST.columnPreferencesObjectKey,
+
         customPostRoute: true,
       });
     },

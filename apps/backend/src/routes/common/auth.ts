@@ -16,7 +16,9 @@ import {
   ownContactPatchBodySchema,
   requestLoginEmailChangeBodySchema,
   verifyPasswordBodySchema,
+  patchUserUiStateBodySchema,
 } from '@mms/shared';
+import { getUserUiState, patchUserUiState } from '../../services/auth/userUiStateService.js';
 import { resendTwoFactorChallenge } from '../../services/auth/twoFactorService.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
@@ -304,6 +306,25 @@ export default async function authRoutes(
       user: request.user as User,
       isAuthenticated: true
     });
+  });
+
+  fastify.get('/me/ui-state', { preHandler: authenticateTenant }, async (request, reply) => {
+    const user = request.user as User;
+    const state = await runWithTenant(user.workspaceSubdomain, () =>
+      getUserUiState(user.workspaceSubdomain, user.id)
+    );
+    return reply.send({ state });
+  });
+
+  fastify.patch('/me/ui-state', { preHandler: authenticateTenant }, async (request, reply) => {
+    const parsed = parseRequest(patchUserUiStateBodySchema, request.body ?? {});
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    
+    const user = request.user as User;
+    const newState = await runWithTenant(user.workspaceSubdomain, () =>
+      patchUserUiState(user.workspaceSubdomain, user.id, parsed.data)
+    );
+    return reply.send({ state: newState });
   });
 
   fastify.post('/refresh', async (request, reply) => {

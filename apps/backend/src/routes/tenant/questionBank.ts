@@ -12,7 +12,7 @@ import {
   registerMetricsRoute,
   registerSoftDeletableBulkRoutes,
 } from '../../lib/crudRouter.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+
 
 import { loadQuestionBankCommandMetrics } from '../../services/questionBankMetricsService.js';
 import {
@@ -51,12 +51,6 @@ export default async function questionBankRoutes(
         collection: QUESTIONS_COLLECTION,
         loadMetricsFn: loadQuestionBankCommandMetrics,
         errorMessagePrefix: 'question bank',
-      });
-
-      registerColumnPreferencesRoutes(sub, {
-        path: '/column-preferences',
-        collection: QUESTIONS_COLLECTION,
-        objectKey: QUESTION_BANK_MODULE_MANIFEST.columnPreferencesObjectKey,
       });
 
       registerSoftDeletableBulkRoutes(sub, {

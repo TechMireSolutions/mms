@@ -10,7 +10,7 @@ import {
   registerCountRoute,
   registerMetricsRoute,
 } from '../../lib/crudRouter.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+
 import {
   loadLogs,
   upsertLogs,
@@ -50,12 +50,6 @@ export default async function usersRoutes(
         collection: USERS_COLLECTION,
         loadCountFn: countUsers,
         errorMessagePrefix: 'workspace users',
-      });
-
-      registerColumnPreferencesRoutes(sub, {
-        path: '/column-preferences',
-        collection: USERS_COLLECTION,
-        objectKey: USERS_MODULE_MANIFEST.columnPreferencesObjectKey,
       });
 
       registerBulkRoutes(sub, {

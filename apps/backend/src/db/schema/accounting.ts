@@ -135,25 +135,7 @@ export const accountingModulePreferences = pgTable('accounting_module_preference
 ]);
 
 /** Per-user Accounting accounts Work column layout (was document-store `accounting_account_user_column_preferences`). */
-export const accountingAccountUserColumnPrefs = pgTable('accounting_account_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /** Per-user Accounting journal Work column layout (was document-store `accounting_journal_user_column_preferences`). */
-export const accountingJournalUserColumnPrefs = pgTable('accounting_journal_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -174,7 +156,3 @@ export type AccountingFieldConfigsRow = typeof accountingFieldConfigs.$inferSele
 export type InsertAccountingFieldConfigsRow = typeof accountingFieldConfigs.$inferInsert;
 export type AccountingModulePreferencesRow = typeof accountingModulePreferences.$inferSelect;
 export type InsertAccountingModulePreferencesRow = typeof accountingModulePreferences.$inferInsert;
-export type AccountingAccountUserColumnPrefsRow = typeof accountingAccountUserColumnPrefs.$inferSelect;
-export type InsertAccountingAccountUserColumnPrefsRow = typeof accountingAccountUserColumnPrefs.$inferInsert;
-export type AccountingJournalUserColumnPrefsRow = typeof accountingJournalUserColumnPrefs.$inferSelect;
-export type InsertAccountingJournalUserColumnPrefsRow = typeof accountingJournalUserColumnPrefs.$inferInsert;

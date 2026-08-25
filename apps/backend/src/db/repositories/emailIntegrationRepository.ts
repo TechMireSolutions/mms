@@ -12,7 +12,6 @@ export async function getEmailIntegrationRow(workspaceSubdomain: string): Promis
       const rows = await tx
       .select()
       .from(schema.emailIntegrations)
-      .where(eq(schema.emailIntegrations.workspaceSubdomain, workspaceSubdomain))
       .limit(1);
       return rows[0] ?? null;
     });

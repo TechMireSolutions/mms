@@ -81,15 +81,6 @@ export const enrollmentModulePreferences = pgTable('enrollment_module_preference
 ]);
 
 /** Per-user Enrollments Work column layout (was document-store `enrollment_user_column_preferences`). */
-export const enrollmentUserColumnPrefs = pgTable('enrollment_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -102,5 +93,3 @@ export type EnrollmentFieldConfigsRow = typeof enrollmentFieldConfigs.$inferSele
 export type InsertEnrollmentFieldConfigsRow = typeof enrollmentFieldConfigs.$inferInsert;
 export type EnrollmentModulePreferencesRow = typeof enrollmentModulePreferences.$inferSelect;
 export type InsertEnrollmentModulePreferencesRow = typeof enrollmentModulePreferences.$inferInsert;
-export type EnrollmentUserColumnPrefsRow = typeof enrollmentUserColumnPrefs.$inferSelect;
-export type InsertEnrollmentUserColumnPrefsRow = typeof enrollmentUserColumnPrefs.$inferInsert;

@@ -13,6 +13,7 @@ import { useSessionTimeout } from "@/tenant/hooks/useSessionTimeout";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
+import { useInitializeUiState } from "@/tenant/hooks/useInitializeUiState";
 
 /**
  * Main authenticated application shell layout. Orchestrates the primary sidebar,
@@ -25,6 +26,7 @@ export default function AppLayout(): React.JSX.Element {
   const branding = useBranding();
   const { t } = useTranslation();
   useSessionTimeout();
+  useInitializeUiState();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {

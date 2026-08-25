@@ -38,7 +38,7 @@ export default async function attendanceRoutes(
         loadCountFn: countAttendanceRecords,
         loadMetricsFn: loadAttendanceCommandMetrics,
         nameSingular: 'record',
-        columnPreferencesObjectKey: ATTENDANCE_MODULE_MANIFEST.columnPreferencesObjectKey,
+
       });
     },
     { prefix: '/api/attendance' },

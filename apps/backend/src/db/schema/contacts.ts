@@ -354,15 +354,6 @@ export const contactModulePreferences = pgTable('contact_module_preferences', {
 ]);
 
 /** Per-user Contacts Work column layout (was document-store `contact_user_column_preferences`). */
-export const contactUserColumnPrefs = pgTable('contact_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -402,5 +393,3 @@ export type ContactFieldConfigsRow = typeof contactFieldConfigs.$inferSelect;
 export type InsertContactFieldConfigsRow = typeof contactFieldConfigs.$inferInsert;
 export type ContactModulePreferencesRow = typeof contactModulePreferences.$inferSelect;
 export type InsertContactModulePreferencesRow = typeof contactModulePreferences.$inferInsert;
-export type ContactUserColumnPrefsRow = typeof contactUserColumnPrefs.$inferSelect;
-export type InsertContactUserColumnPrefsRow = typeof contactUserColumnPrefs.$inferInsert;

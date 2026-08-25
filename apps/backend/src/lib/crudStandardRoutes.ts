@@ -3,7 +3,6 @@ import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
 import type { SoftDeleteRouteErrorMapper } from './crudBulkRoutes.js';
-import { registerColumnPreferencesRoutes } from './columnPreferencesRouter.js';
 import type { ResourceRecord } from './crudRouterTypes.js';
 import {
   registerCountRoute,
@@ -33,7 +32,6 @@ export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
   loadWidgetAggregatesFn?: (queries: unknown[]) => Promise<unknown>;
   loadByIdsFn?: (ids: string[], request: FastifyRequest) => Promise<TRecord[]>;
   loadLinkedContactIdsFn?: (excludeId?: string) => Promise<(string | number)[]>;
-  columnPreferencesObjectKey?: string;
   canWriteDeletedCheck?: (user: User) => boolean;
   /** Post-load transform for paginated/`loadAllFn` reads (e.g. viewer-role sanitization). */
   responseTransform?: (result: unknown, user: User) => Promise<unknown> | unknown;
@@ -63,7 +61,6 @@ export function registerStandardExtendedRoutes<
     loadMetricsFn,
     loadWidgetAggregatesFn,
     loadByIdsFn,
-    columnPreferencesObjectKey,
     loadLinkedContactIdsFn,
     canWriteDeletedCheck,
     responseTransform,
@@ -138,14 +135,6 @@ export function registerStandardExtendedRoutes<
       errorMessagePrefix,
     });
   }
-
-  if (columnPreferencesObjectKey) {
-    registerColumnPreferencesRoutes(fastify, {
-      path: prefix ? `${prefix}/column-preferences` : '/column-preferences',
-      collection,
-      objectKey: columnPreferencesObjectKey,
-    });
-  }
 }
 
 export interface StandardTenantRoutesOptions<TQuery, TRecord extends ResourceRecord>
@@ -203,7 +192,6 @@ export function registerStandardTenantRoutes<
     loadMetricsFn,
     loadWidgetAggregatesFn,
     loadByIdsFn,
-    columnPreferencesObjectKey,
     loadLinkedContactIdsFn,
     responseTransform,
     schema,
@@ -240,7 +228,6 @@ export function registerStandardTenantRoutes<
     loadMetricsFn,
     loadWidgetAggregatesFn,
     loadByIdsFn,
-    columnPreferencesObjectKey,
     loadLinkedContactIdsFn,
     canWriteDeletedCheck,
     responseTransform,

@@ -98,15 +98,6 @@ export const attendanceModulePreferences = pgTable('attendance_module_preference
 ]);
 
 /** Per-user Attendance Work column layout (was document-store `attendance_user_column_preferences`). */
-export const attendanceUserColumnPrefs = pgTable('attendance_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -121,5 +112,3 @@ export type AttendanceFieldConfigsRow = typeof attendanceFieldConfigs.$inferSele
 export type InsertAttendanceFieldConfigsRow = typeof attendanceFieldConfigs.$inferInsert;
 export type AttendanceModulePreferencesRow = typeof attendanceModulePreferences.$inferSelect;
 export type InsertAttendanceModulePreferencesRow = typeof attendanceModulePreferences.$inferInsert;
-export type AttendanceUserColumnPrefsRow = typeof attendanceUserColumnPrefs.$inferSelect;
-export type InsertAttendanceUserColumnPrefsRow = typeof attendanceUserColumnPrefs.$inferInsert;

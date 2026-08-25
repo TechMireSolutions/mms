@@ -87,15 +87,6 @@ export const teacherModulePreferences = pgTable('teacher_module_preferences', {
 ]);
 
 /** Per-user Teachers Work column layout (was document-store `teacher_user_column_preferences`). */
-export const teacherUserColumnPrefs = pgTable('teacher_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -108,5 +99,3 @@ export type TeacherFieldConfigsRow = typeof teacherFieldConfigs.$inferSelect;
 export type InsertTeacherFieldConfigsRow = typeof teacherFieldConfigs.$inferInsert;
 export type TeacherModulePreferencesRow = typeof teacherModulePreferences.$inferSelect;
 export type InsertTeacherModulePreferencesRow = typeof teacherModulePreferences.$inferInsert;
-export type TeacherUserColumnPrefsRow = typeof teacherUserColumnPrefs.$inferSelect;
-export type InsertTeacherUserColumnPrefsRow = typeof teacherUserColumnPrefs.$inferInsert;

@@ -340,39 +340,7 @@ describe('accounting REST routes', () => {
     await app.close();
   });
 
-  it('GET /api/accounting/journal/column-prefs loads column preferences', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/accounting/journal/column-prefs',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${accountantToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ preferences: [] });
-    expect(mockGetUserColumnPreferencesForModule).toHaveBeenCalled();
-    await app.close();
-  });
 
-  it('PUT /api/accounting/journal/column-prefs saves column preferences', async () => {
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'PUT',
-      url: '/api/accounting/journal/column-prefs',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${accountantToken(app)}`,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({ preferences: [{ key: 'ref', enabled: true, order: 0 }] }),
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ success: true, preferences: [{ key: 'ref', enabled: true, order: 0 }] });
-    expect(mockSetUserColumnPreferencesForModule).toHaveBeenCalled();
-    await app.close();
-  });
 
   it('DELETE /api/accounting/entries/:id soft-deletes journal entry', async () => {
     const app = await buildApp();

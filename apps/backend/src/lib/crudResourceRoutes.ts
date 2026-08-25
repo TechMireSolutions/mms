@@ -9,7 +9,6 @@ import {
   resourceIdParamsSchema,
   softDeleteBodySchema,
 } from '../validation/commonSchemas.js';
-import { registerColumnPreferencesRoutes } from './columnPreferencesRouter.js';
 import type { ResourceRecord } from './crudRouterTypes.js';
 import type { SoftDeleteRouteErrorMapper } from './crudBulkRoutes.js';
 
@@ -32,7 +31,6 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   customGetSingleRoute?: boolean;
   customPostRoute?: boolean;
   customPutRoute?: boolean;
-  columnPreferencesObjectKey?: string;
   validateDynamicFn?: (tenant: string, data: T, lang: string, user: User) => Promise<void>;
   /** Override collection delete capability (defaults to canDeleteCollection). */
   canDelete?: (user: User) => boolean;
@@ -83,7 +81,6 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     customGetSingleRoute = false,
     customPostRoute = false,
     customPutRoute = false,
-    columnPreferencesObjectKey,
     validateDynamicFn,
     canDelete = (user) => canDeleteCollection(user, collection),
     onAfterCreate,
@@ -270,14 +267,6 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         }
         return sendDatabaseError(reply, `Failed to restore ${nameSingular}`);
       }
-    });
-  }
-
-  if (columnPreferencesObjectKey) {
-    registerColumnPreferencesRoutes(fastify, {
-      path: prefix ? `${prefix}/column-preferences` : '/column-preferences',
-      collection,
-      objectKey: columnPreferencesObjectKey,
     });
   }
 }

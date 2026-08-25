@@ -104,15 +104,6 @@ export const obligationCollections = pgTable('obligation_collections', {
 ]);
 
 /** Per-user Obligations Work column layout (was document-store `obligations_user_column_preferences`). */
-export const obligationsUserColumnPrefs = pgTable('obligations_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -129,5 +120,3 @@ export type ObligationDistributionRow = typeof obligationDistributions.$inferSel
 export type InsertObligationDistributionRow = typeof obligationDistributions.$inferInsert;
 export type ObligationCollectionRow = typeof obligationCollections.$inferSelect;
 export type InsertObligationCollectionRow = typeof obligationCollections.$inferInsert;
-export type ObligationsUserColumnPrefsRow = typeof obligationsUserColumnPrefs.$inferSelect;
-export type InsertObligationsUserColumnPrefsRow = typeof obligationsUserColumnPrefs.$inferInsert;

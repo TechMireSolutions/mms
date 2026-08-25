@@ -51,35 +51,7 @@ export const messageLogs = pgTable('message_logs', {
     .where(sql`${table.deletedAt} is null`),
 ]);
 
-/** Per-user Messaging recipients Work column layout (was document-store `messaging_recipients_user_column_preferences`). */
-export const messagingRecipientsUserColumnPrefs = pgTable('messaging_recipients_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
 
-/** Per-user Messaging history Work column layout (was document-store `messaging_history_user_column_preferences`). */
-export const messagingHistoryUserColumnPrefs = pgTable('messaging_history_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
-/** Per-user Messaging templates Work column layout (was document-store `messaging_templates_user_column_preferences`). */
-export const messagingTemplatesUserColumnPrefs = pgTable('messaging_templates_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
 
 /** Tenant-scoped email integration config & credentials — replaces objects KV (email_integration / email_integration_secrets). */
 export const emailIntegrations = pgTable('email_integrations', {
@@ -108,11 +80,6 @@ export type MessageTemplateRow = typeof messageTemplates.$inferSelect;
 export type InsertMessageTemplateRow = typeof messageTemplates.$inferInsert;
 export type MessageLogRow = typeof messageLogs.$inferSelect;
 export type InsertMessageLogRow = typeof messageLogs.$inferInsert;
-export type MessagingRecipientsUserColumnPrefsRow = typeof messagingRecipientsUserColumnPrefs.$inferSelect;
-export type InsertMessagingRecipientsUserColumnPrefsRow = typeof messagingRecipientsUserColumnPrefs.$inferInsert;
-export type MessagingHistoryUserColumnPrefsRow = typeof messagingHistoryUserColumnPrefs.$inferSelect;
-export type InsertMessagingHistoryUserColumnPrefsRow = typeof messagingHistoryUserColumnPrefs.$inferInsert;
-export type MessagingTemplatesUserColumnPrefsRow = typeof messagingTemplatesUserColumnPrefs.$inferSelect;
-export type InsertMessagingTemplatesUserColumnPrefsRow = typeof messagingTemplatesUserColumnPrefs.$inferInsert;
+
 export type EmailIntegrationRow = typeof emailIntegrations.$inferSelect;
 export type InsertEmailIntegrationRow = typeof emailIntegrations.$inferInsert;

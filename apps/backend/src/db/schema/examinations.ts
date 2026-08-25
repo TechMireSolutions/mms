@@ -293,25 +293,7 @@ export const examinationsModulePreferences = pgTable('examinations_module_prefer
 ]);
 
 /** Per-user Examinations exams Work column layout (was document-store `examination_exam_user_column_preferences`). */
-export const examinationExamUserColumnPrefs = pgTable('examination_exam_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /** Per-user Examinations results Work column layout (was document-store `examination_results_user_column_preferences`). */
-export const examinationResultsUserColumnPrefs = pgTable('examination_results_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 export const questionBankFieldConfigs = pgTable('question_bank_field_configs', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   config: jsonb('config').$type<Record<string, unknown>>().notNull().default({}),
@@ -329,15 +311,6 @@ export const questionBankModulePreferences = pgTable('question_bank_module_prefe
 ]);
 
 /** Per-user Question Bank Work column layout (was document-store `question_bank_user_column_preferences`). */
-export const questionBankUserColumnPrefs = pgTable('question_bank_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -374,13 +347,7 @@ export type ExaminationsFieldConfigsRow = typeof examinationsFieldConfigs.$infer
 export type InsertExaminationsFieldConfigsRow = typeof examinationsFieldConfigs.$inferInsert;
 export type ExaminationsModulePreferencesRow = typeof examinationsModulePreferences.$inferSelect;
 export type InsertExaminationsModulePreferencesRow = typeof examinationsModulePreferences.$inferInsert;
-export type ExaminationExamUserColumnPrefsRow = typeof examinationExamUserColumnPrefs.$inferSelect;
-export type InsertExaminationExamUserColumnPrefsRow = typeof examinationExamUserColumnPrefs.$inferInsert;
-export type ExaminationResultsUserColumnPrefsRow = typeof examinationResultsUserColumnPrefs.$inferSelect;
-export type InsertExaminationResultsUserColumnPrefsRow = typeof examinationResultsUserColumnPrefs.$inferInsert;
 export type QuestionBankFieldConfigsRow = typeof questionBankFieldConfigs.$inferSelect;
 export type InsertQuestionBankFieldConfigsRow = typeof questionBankFieldConfigs.$inferInsert;
 export type QuestionBankModulePreferencesRow = typeof questionBankModulePreferences.$inferSelect;
 export type InsertQuestionBankModulePreferencesRow = typeof questionBankModulePreferences.$inferInsert;
-export type QuestionBankUserColumnPrefsRow = typeof questionBankUserColumnPrefs.$inferSelect;
-export type InsertQuestionBankUserColumnPrefsRow = typeof questionBankUserColumnPrefs.$inferInsert;

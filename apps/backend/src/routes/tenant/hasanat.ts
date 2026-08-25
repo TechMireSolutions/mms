@@ -88,7 +88,7 @@ export default async function hasanatRoutes(
         responseKey: 'distributions',
         errorMessagePrefix: 'distributions',
         nameSingular: 'Distribution',
-        columnPreferencesObjectKey: HASANAT_MODULE_MANIFEST.distributionColumnPreferencesObjectKey,
+
         customGetRoute: true,
         customBulkTrashRoutes: true,
       });
@@ -100,7 +100,7 @@ export default async function hasanatRoutes(
         saveFn: upsertRedemptions,
         responseKey: 'redemptions',
         errorMessagePrefix: 'redemptions',
-        columnPreferencesObjectKey: HASANAT_MODULE_MANIFEST.redemptionColumnPreferencesObjectKey,
+
         customGetRoute: true,
       });
     },

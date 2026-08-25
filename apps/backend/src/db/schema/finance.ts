@@ -83,25 +83,7 @@ export const financeModulePreferences = pgTable('finance_module_preferences', {
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
 
-export const financeUserColumnPrefs = pgTable('finance_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /** Per-user Finance payments Work column layout (was document-store `finance_payment_user_column_preferences`). */
-export const financePaymentUserColumnPrefs = pgTable('finance_payment_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -114,7 +96,3 @@ export type FinanceFieldConfigsRow = typeof financeFieldConfigs.$inferSelect;
 export type InsertFinanceFieldConfigsRow = typeof financeFieldConfigs.$inferInsert;
 export type FinanceModulePreferencesRow = typeof financeModulePreferences.$inferSelect;
 export type InsertFinanceModulePreferencesRow = typeof financeModulePreferences.$inferInsert;
-export type FinanceUserColumnPrefsRow = typeof financeUserColumnPrefs.$inferSelect;
-export type InsertFinanceUserColumnPrefsRow = typeof financeUserColumnPrefs.$inferInsert;
-export type FinancePaymentUserColumnPrefsRow = typeof financePaymentUserColumnPrefs.$inferSelect;
-export type InsertFinancePaymentUserColumnPrefsRow = typeof financePaymentUserColumnPrefs.$inferInsert;

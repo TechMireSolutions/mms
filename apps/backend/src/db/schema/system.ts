@@ -139,6 +139,20 @@ export const userActivityLogs = pgTable('user_activity_logs', {
   index('user_activity_logs_workspace_ts_idx').on(table.workspaceSubdomain, table.ts),
 ]);
 
+export const userUiPreferences = pgTable('user_ui_preferences', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull(),
+  state: jsonb('state').$type<Record<string, unknown>>().notNull().default({}),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.userId],
+    foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],
+  }).onDelete('cascade'),
+]);
+
+
 export const dataMigrations = pgTable('data_migrations', {
   id: text('id').primaryKey(),
   appliedAt: timestamp('applied_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -166,3 +180,5 @@ export type UserActivityLogRow = typeof userActivityLogs.$inferSelect;
 export type InsertUserActivityLogRow = typeof userActivityLogs.$inferInsert;
 export type DataMigrationRow = typeof dataMigrations.$inferSelect;
 export type InsertDataMigrationRow = typeof dataMigrations.$inferInsert;
+export type UserUiPreferencesRow = typeof userUiPreferences.$inferSelect;
+export type InsertUserUiPreferencesRow = typeof userUiPreferences.$inferInsert;

@@ -20,15 +20,6 @@ export const userModulePreferences = pgTable('user_module_preferences', {
 ]);
 
 /** Per-user Users Work column layout (was document-store `users_user_column_preferences`). */
-export const userUserColumnPrefs = pgTable('user_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull(),
-  preferences: jsonb('preferences').$type<unknown[]>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -37,5 +28,3 @@ export type UserFieldConfigsRow = typeof userFieldConfigs.$inferSelect;
 export type InsertUserFieldConfigsRow = typeof userFieldConfigs.$inferInsert;
 export type UserModulePreferencesRow = typeof userModulePreferences.$inferSelect;
 export type InsertUserModulePreferencesRow = typeof userModulePreferences.$inferInsert;
-export type UserUserColumnPrefsRow = typeof userUserColumnPrefs.$inferSelect;
-export type InsertUserUserColumnPrefsRow = typeof userUserColumnPrefs.$inferInsert;

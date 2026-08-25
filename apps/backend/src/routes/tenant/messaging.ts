@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { MESSAGING_MODULE_MANIFEST } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+
 import { messagingExportRoutes } from './messaging/messagingExportRoutes.js';
 import { messagingLogRoutes } from './messaging/messagingLogRoutes.js';
 import { messagingRecipientRoutes } from './messaging/messagingRecipientRoutes.js';
@@ -20,21 +20,6 @@ const messagingRoutes: FastifyPluginAsync = async (
 
   await fastify.register(
     async (sub) => {
-      registerColumnPreferencesRoutes(sub, {
-        path: '/recipients/column-preferences',
-        collection: 'message_logs',
-        objectKey: MESSAGING_MODULE_MANIFEST.recipientsColumnPreferencesObjectKey,
-      });
-      registerColumnPreferencesRoutes(sub, {
-        path: '/history/column-preferences',
-        collection: 'message_logs',
-        objectKey: MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey,
-      });
-      registerColumnPreferencesRoutes(sub, {
-        path: '/templates/column-preferences',
-        collection: 'message_logs',
-        objectKey: MESSAGING_MODULE_MANIFEST.templatesColumnPreferencesObjectKey,
-      });
 
       await sub.register(messagingRecipientRoutes);
       await sub.register(messagingTemplateRoutes);

@@ -133,24 +133,6 @@ export const hasanatModulePreferences = pgTable('hasanat_module_preferences', {
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
 
-export const hasanatDistributionUserColumnPrefs = pgTable('hasanat_distribution_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull().references(() => tenantUsers.id, { onDelete: 'cascade' }),
-  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
-export const hasanatRedemptionUserColumnPrefs = pgTable('hasanat_redemption_user_column_prefs', {
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  userId: text('user_id').notNull().references(() => tenantUsers.id, { onDelete: 'cascade' }),
-  preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.userId] }),
-]);
-
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -167,7 +149,3 @@ export type HasanatFieldConfigsRow = typeof hasanatFieldConfigs.$inferSelect;
 export type InsertHasanatFieldConfigsRow = typeof hasanatFieldConfigs.$inferInsert;
 export type HasanatModulePreferencesRow = typeof hasanatModulePreferences.$inferSelect;
 export type InsertHasanatModulePreferencesRow = typeof hasanatModulePreferences.$inferInsert;
-export type HasanatDistributionUserColumnPrefsRow = typeof hasanatDistributionUserColumnPrefs.$inferSelect;
-export type InsertHasanatDistributionUserColumnPrefsRow = typeof hasanatDistributionUserColumnPrefs.$inferInsert;
-export type HasanatRedemptionUserColumnPrefsRow = typeof hasanatRedemptionUserColumnPrefs.$inferSelect;
-export type InsertHasanatRedemptionUserColumnPrefsRow = typeof hasanatRedemptionUserColumnPrefs.$inferInsert;

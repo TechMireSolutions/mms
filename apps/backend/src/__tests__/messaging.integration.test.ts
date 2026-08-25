@@ -948,47 +948,7 @@ describe('messaging REST routes', () => {
     await app.close();
   });
 
-  it('GET /api/messaging/history/column-preferences returns layout for messaging.read', async () => {
-    mockGetUserColumnPreferencesForModule.mockResolvedValue([{ key: 'recipient', enabled: true, order: 0 }]);
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/messaging/history/column-preferences',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${signTenantToken(app, { role: 'teacher', name: 'teacher' })}`,
-      },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ preferences: [{ key: 'recipient', enabled: true, order: 0 }] });
-    expect(mockGetUserColumnPreferencesForModule).toHaveBeenCalledWith(
-      MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey,
-      'u-teacher',
-    );
-    await app.close();
-  });
 
-  it('PUT /api/messaging/history/column-preferences persists layout', async () => {
-    const preferences = [{ key: 'channel', enabled: false, order: 1 }];
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'PUT',
-      url: '/api/messaging/history/column-preferences',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${signTenantToken(app, { role: 'teacher', name: 'teacher' })}`,
-      },
-      payload: { preferences },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ success: true, preferences });
-    expect(mockSetUserColumnPreferencesForModule).toHaveBeenCalledWith(
-      MESSAGING_MODULE_MANIFEST.historyColumnPreferencesObjectKey,
-      'u-teacher',
-      preferences,
-    );
-    await app.close();
-  });
 
   it('document-store disallowlists typed messaging collections', () => {
     expect(isAllowedCollectionName('message_logs')).toBe(false);

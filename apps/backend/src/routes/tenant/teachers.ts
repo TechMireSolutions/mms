@@ -31,7 +31,7 @@ import {
   registerResolveRoute,
   registerLinkedContactIdsRoute,
 } from '../../lib/crudRouter.js';
-import { registerColumnPreferencesRoutes } from '../../lib/columnPreferencesRouter.js';
+
 
 const s = initServer();
 
@@ -86,11 +86,6 @@ export default async function teachersRoutes(
         collection: 'teachers',
         loadLinkedContactIdsFn: (excludeId) => teacherUseCases.loadTeacherLinkedContactIds(excludeId),
         errorMessagePrefix: 'teachers',
-      });
-
-      registerColumnPreferencesRoutes(sub, {
-        collection: 'teachers',
-        objectKey: TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey,
       });
 
       sub.post<{ Params: { id: string } }>('/:id/restore', async (request, reply) => {

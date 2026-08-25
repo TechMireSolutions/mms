@@ -199,48 +199,5 @@ describe('students trash / bulk / column-preferences routes', () => {
     await app.close();
   });
 
-  it('GET /api/students/column-preferences returns user layout', async () => {
-    mockGetUserColumnPreferencesForModule.mockResolvedValue([
-      { key: 'name', enabled: true, order: 0 },
-    ]);
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'GET',
-      url: '/api/students/column-preferences',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
-      },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ preferences: [{ key: 'name', enabled: true, order: 0 }] });
-    expect(mockGetUserColumnPreferencesForModule).toHaveBeenCalledWith(
-      STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
-      'u-teacher',
-    );
-    await app.close();
-  });
 
-  it('PUT /api/students/column-preferences persists layout for session user', async () => {
-    const preferences = [{ key: 'grNumber', enabled: false, order: 2 }];
-    mockSetUserColumnPreferencesForModule.mockResolvedValue(undefined);
-    const app = await buildApp();
-    const res = await app.inject({
-      method: 'PUT',
-      url: '/api/students/column-preferences',
-      headers: {
-        host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
-        'content-type': 'application/json',
-      },
-      payload: { preferences },
-    });
-    expect(res.statusCode).toBe(200);
-    expect(mockSetUserColumnPreferencesForModule).toHaveBeenCalledWith(
-      STUDENTS_MODULE_MANIFEST.columnPreferencesObjectKey,
-      'u-teacher',
-      preferences,
-    );
-    await app.close();
-  });
 });

@@ -55,7 +55,7 @@ export default async function financeRoutes(
         collection: FINANCE_COLLECTION,
         errorMessagePrefix: 'invoices',
         nameSingular: 'invoice',
-        columnPreferencesObjectKey: FINANCE_MODULE_MANIFEST.invoiceColumnPreferencesObjectKey,
+
       });
 
       sub.post<{ Params: { id: string } }>('/invoices/:id/restore', async (request, reply) => {
@@ -81,7 +81,7 @@ export default async function financeRoutes(
         collection: PAYMENT_COLLECTION,
         errorMessagePrefix: 'payments',
         nameSingular: 'payment',
-        columnPreferencesObjectKey: FINANCE_MODULE_MANIFEST.paymentColumnPreferencesObjectKey,
+
       });
 
       sub.post<{ Params: { id: string } }>('/payments/:id/restore', async (request, reply) => {
