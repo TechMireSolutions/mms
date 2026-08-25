@@ -1,4 +1,3 @@
-import { eq } from 'drizzle-orm';
 import { withTenant } from '../tenant-context.js';
 import * as schema from '../schema.js';
 import { type EmailIntegrationRow } from '../schema/messaging.js';

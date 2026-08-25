@@ -159,7 +159,6 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
 });
 
 import { buildApp } from '../app.js';
-import { CONTACTS_MODULE_MANIFEST } from '@mms/shared';
 import { ContactUniqueFieldError } from '../services/contactUniqueValidationService.js';
 import { accountantToken, adminToken, teacherToken, viewerToken } from './helpers/tokens.js';
 

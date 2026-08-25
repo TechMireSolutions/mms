@@ -1,5 +1,4 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MESSAGING_MODULE_MANIFEST } from '@mms/shared';
 import { buildApp } from '../app.js';
 import { signTenantToken } from './helpers/tokens.js';
 import { isAllowedCollectionName } from '../services/rbacService.js';

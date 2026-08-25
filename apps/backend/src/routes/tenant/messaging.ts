@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { MESSAGING_MODULE_MANIFEST } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 

@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { contactWriteSchema, type Contact, type User, CONTACTS_MODULE_MANIFEST } from '@mms/shared';
+import { contactWriteSchema, type Contact, type User } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { getLinkedContactId } from '../../../services/auth/userService.js';

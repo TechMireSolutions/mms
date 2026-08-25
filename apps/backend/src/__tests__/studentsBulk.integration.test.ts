@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
 import { adminToken, teacherToken, viewerToken } from './helpers/tokens.js';
-import { STUDENTS_MODULE_MANIFEST } from '@mms/shared';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),

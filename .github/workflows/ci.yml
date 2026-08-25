@@ -197,7 +197,12 @@ jobs:
           merge-multiple: true
 
       - name: Merge Playwright Reports
-        run: pnpm --filter e2e-tests run merge-reports ../all-blob-reports --reporter html
+        run: |
+          if [ -d "all-blob-reports" ] && [ "$(ls -A all-blob-reports)" ]; then
+            pnpm --filter e2e-tests run merge-reports ../all-blob-reports --reporter html
+          else
+            echo "No blob reports found to merge. Skipping..."
+          fi
 
       - name: Upload HTML Report Artifact
         uses: actions/upload-artifact@v4

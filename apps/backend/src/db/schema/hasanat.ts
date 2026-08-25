@@ -1,7 +1,6 @@
 import { pgTable, text, timestamp, index, integer, boolean, jsonb, primaryKey, varchar, foreignKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
-import { tenantUsers } from "./contacts.js";
 import { students } from "./students.js";
 import { teachers } from "./teachers.js";
 

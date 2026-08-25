@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar, boolean, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index, primaryKey, varchar, boolean, integer } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 
