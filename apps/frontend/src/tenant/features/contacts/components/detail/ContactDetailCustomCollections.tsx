@@ -13,10 +13,10 @@ import { isEmptyValue } from "./contactDetailStyles";
 import { readContactCustomCollectionRows } from "../contactCustomCollectionRows";
 import React from "react";
 
-function formatCellValue(value: unknown): string | null {
+function formatCellValue(value: unknown, t: any): string | null {
   if (isEmptyValue(value)) return null;
   if (Array.isArray(value)) return value.join(", ");
-  if (typeof value === "boolean") return value ? "true" : "false";
+  if (typeof value === "boolean") return value ? t("common.yes") : t("common.no");
   return String(value);
 }
 
@@ -24,10 +24,11 @@ function formatRowSummary(
   row: Record<string, unknown>,
   rowFields: readonly FieldDefinition[],
   resolveLabel: (field: FieldDefinition) => string,
+  t: any,
 ): string {
   return rowFields
     .map((field) => {
-      const cell = formatCellValue(row[field.key]);
+      const cell = formatCellValue(row[field.key], t);
       if (!cell) return null;
       return `${resolveLabel(field)}: ${cell}`;
     })
@@ -108,6 +109,7 @@ export function ContactDetailCustomCollections({
               rows.map((row, rowIndex) => {
                 const summary = formatRowSummary(row, rowFields, (field) =>
                   resolveRegistryLabel(field, t),
+                  t
                 );
                 if (!summary) return null;
                 return (

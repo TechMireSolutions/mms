@@ -3,6 +3,7 @@ import type {
   ContactPreferences,
   FieldConfig,
   FieldDefinition,
+  TabDefinition,
 } from "@mms/shared";
 import type { ContactsColumnConfig } from "./contactConfigContextTypes";
 
@@ -21,6 +22,7 @@ export type ContactConfigExtras = {
   enabledTabIds: Set<string>;
   requiredTabIds: Set<string>;
   fields: Record<string, FieldDefinition[]>;
+  formTabs?: TabDefinition[];
   isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
   isTabFieldRequired: (tabId: string, fieldId: string) => boolean;
 
@@ -70,6 +72,5 @@ export type ContactConfigExtras = {
   // ── Configuration Mutations ─────────────────────────────────────────────────
   updateConfig: (nextConfig: FieldConfig) => void;
   updateConfigAsync: (nextConfig: FieldConfig) => Promise<void>;
-  updateColumnRegistry: (columnRegistry: ColumnRegistryEntry[]) => void;
 };
 

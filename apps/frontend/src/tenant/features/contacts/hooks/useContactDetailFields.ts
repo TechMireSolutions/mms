@@ -105,6 +105,9 @@ export function useContactDetailFields({
       if (field.key === "gender") {
         return formatContactGenderLabel(fieldValue as string, t);
       }
+      if (typeof fieldValue === "boolean") {
+        return fieldValue ? t("common.yes") : t("common.no");
+      }
       return String(fieldValue);
     },
     [contactState, t],

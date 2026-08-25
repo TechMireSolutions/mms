@@ -39,7 +39,7 @@ export const DETAIL_STYLES = {
 export const COLLECTION_CONTAINER_CLASS = "divide-y divide-border/50";
 
 export function isEmptyValue(val: unknown): boolean {
-  if (val === undefined || val === null || val === "" || val === false) return true;
+  if (val === undefined || val === null || val === "") return true;
   if (Array.isArray(val) && val.length === 0) return true;
   return false;
 }

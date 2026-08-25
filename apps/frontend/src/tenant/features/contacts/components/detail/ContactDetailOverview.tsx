@@ -64,7 +64,7 @@ export function ContactDetailOverview({
   const basicGroups = Object.entries(grouped)
     .map(([groupName, fieldsList]) => ({
       groupName,
-      fields: fieldsList.filter((field) => field.tab === "basic"),
+      fields: fieldsList,
     }))
     .filter((entry) => entry.fields.length > 0);
 

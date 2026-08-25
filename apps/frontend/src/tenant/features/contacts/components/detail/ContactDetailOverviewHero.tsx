@@ -52,6 +52,17 @@ export function ContactDetailOverviewHero({
           </div>
         </div>
       ) : null}
+
+      {contact.notes ? (
+        <div className="space-y-2">
+          <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            {t("contacts.columns.notes")}
+          </div>
+          <div className="text-sm text-foreground whitespace-pre-wrap">
+            {contact.notes}
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

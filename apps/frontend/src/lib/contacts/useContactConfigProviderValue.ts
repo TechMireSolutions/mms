@@ -6,6 +6,7 @@ import {
   DEFAULT_COLUMN_REGISTRY,
   DEFAULT_FORM_TABS,
   normalizeContactPreferences,
+  INITIAL_FIELD_SEED,
   type ColumnRegistryEntry,
 } from "@mms/shared";
 import type { ContactConfigContextType } from "@/lib/contacts/contactConfigContextTypes";
@@ -53,7 +54,18 @@ export function useContactConfigProviderValue(
     updateTags = () => {},
     updateCountryCodes = () => {},
     systemSortOptions = [],
+    fields = {},
+    formTabs = [],
+    enabledTabs = [],
+    requiredTabs = ["basic"],
   } = config || {};
+
+  const resolvedFields = React.useMemo(() => {
+    if (!fields || Object.keys(fields).length === 0) {
+      return INITIAL_FIELD_SEED;
+    }
+    return fields;
+  }, [fields]);
 
   const prefs = React.useMemo(() => normalizeContactPreferences(rawPrefs), [rawPrefs]);
 
@@ -65,9 +77,7 @@ export function useContactConfigProviderValue(
     setColumnRegistry(layout);
   }, []);
 
-  const updateColumnRegistry = React.useCallback((layout: ColumnRegistryEntry[]) => {
-    setColumnRegistry(layout);
-  }, []);
+
 
   const getColumnWidth = React.useCallback((key: string) => {
     return columnRegistry.find((c) => c.key === key)?.width;
@@ -119,11 +129,24 @@ export function useContactConfigProviderValue(
   return React.useMemo(
     () => ({
       formTabsReady: true,
-      enabledTabIds: new Set(DEFAULT_FORM_TABS.filter((t) => t.enabled).map((t) => t.key)),
-      requiredTabIds: new Set(["basic"]),
-      fields: {},
-      isTabFieldEnabled: () => true,
-      isTabFieldRequired: () => false,
+      enabledTabIds: enabledTabs.length > 0 
+        ? new Set(enabledTabs) 
+        : new Set(DEFAULT_FORM_TABS.filter((t) => t.enabled).map((t) => t.key)),
+      requiredTabIds: new Set(requiredTabs),
+      fields: resolvedFields,
+      formTabs,
+      isTabFieldEnabled: (tabId: string, fieldId: string) => {
+        const tabFields = resolvedFields?.[tabId];
+        if (!tabFields) return true;
+        const field = tabFields.find((f: any) => f.key === fieldId);
+        return field?.enabled ?? true;
+      },
+      isTabFieldRequired: (tabId: string, fieldId: string) => {
+        const tabFields = resolvedFields?.[tabId];
+        if (!tabFields) return false;
+        const field = tabFields.find((f: any) => f.key === fieldId);
+        return field?.required ?? false;
+      },
       prefs,
       updateConfig,
       updateConfigAsync,
@@ -160,7 +183,6 @@ export function useContactConfigProviderValue(
       updateSkillProficiencies,
       updateTags,
       updateCountryCodes,
-      updateColumnRegistry,
       updateUserColumnLayout,
       isColumnVisible,
       getColumnWidth,
@@ -169,6 +191,10 @@ export function useContactConfigProviderValue(
     }),
     [
       prefs,
+      resolvedFields,
+      formTabs,
+      enabledTabs,
+      requiredTabs,
       updateConfig,
       updateConfigAsync,
       updatePrefs,
@@ -204,7 +230,6 @@ export function useContactConfigProviderValue(
       updateSkillProficiencies,
       updateTags,
       updateCountryCodes,
-      updateColumnRegistry,
       updateUserColumnLayout,
       isColumnVisible,
       getColumnWidth,

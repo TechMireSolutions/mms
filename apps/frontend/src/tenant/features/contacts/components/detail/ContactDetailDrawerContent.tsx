@@ -5,11 +5,11 @@ import type { Contact } from "@mms/shared";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DETAIL_SYSTEM_TAB_KEYS } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
-import { FieldGroupCard } from "@/tenant/features/contacts/components/detail/ContactDetailShared";
 import { ContactDetailOverview } from "@/tenant/features/contacts/components/detail/ContactDetailOverview";
 import { ContactDetailTimeline } from "@/tenant/features/contacts/components/detail/ContactDetailTimeline";
 import { ContactDetailFiles } from "@/tenant/features/contacts/components/detail/ContactDetailFiles";
-import { EmptyState } from "@/components/ui/EmptyState";
+import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
+import { ContactDetailCustomCollections } from "@/tenant/features/contacts/components/detail/ContactDetailCustomCollections";
 import type { DetailFieldView } from "@/tenant/features/contacts/hooks/useContactDetailViewModel";
 
 interface ContactDetailDrawerContentProps {
@@ -80,14 +80,8 @@ export function ContactDetailDrawerContent({
   const { t } = useTranslation();
 
   const isSystemTab = DETAIL_SYSTEM_TAB_KEYS.has(activeTab);
-  const customTabFields = isSystemTab
-    ? []
-    : Object.entries(grouped)
-        .map(([groupName, fieldsList]) => ({
-          groupName,
-          fields: fieldsList.filter((field) => field.tab === activeTab),
-        }))
-        .filter((entry) => entry.fields.length > 0);
+
+  const { fields, enabledTabIds, formTabs } = useContactConfig();
 
   return (
     <AnimatePresence mode="wait">
@@ -145,30 +139,13 @@ export function ContactDetailDrawerContent({
 
         {!isSystemTab && (
           <div className="space-y-4">
-            {customTabFields.length === 0 ? (
-              <EmptyState
-                title={t("contacts.detail.emptyCustomTab")}
-                compact
-                icon={null}
-                className="uppercase tracking-widest"
-              />
-            ) : (
-              customTabFields.map(({ groupName, fields: groupFields }, index) => {
-                const ACCENT_COLORS = ["info", "warning", "success", "primary", "secondary", "purple", "amber", "rose", "teal", "indigo", "pink"] as const;
-                return (
-                  <FieldGroupCard
-                    key={groupName}
-                    group={groupName}
-                    fields={groupFields}
-                    formatValue={formatFieldValue}
-                    getRawValue={(key) =>
-                      (contactState as Record<string, unknown>)[key]
-                    }
-                    accentColor={ACCENT_COLORS[index % ACCENT_COLORS.length]}
-                  />
-                );
-              })
-            )}
+            <ContactDetailCustomCollections
+              contact={contactState}
+              fields={fields}
+              enabledTabIds={enabledTabIds}
+              formTabs={formTabs}
+              onlyTabId={activeTab}
+            />
           </div>
         )}
       </motion.div>
