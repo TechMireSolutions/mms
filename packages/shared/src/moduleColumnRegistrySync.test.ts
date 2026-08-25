@@ -59,7 +59,7 @@ describe('syncModuleColumnRegistryWithFields (Contacts config)', () => {
     expect(next.find((col) => col.key === 'name')?.enabled).toBe(true);
   });
 
-  it('restores default enabled when field/tab become active again', () => {
+  it('preserves user preference for column visibility when field is active', () => {
     const disabledPhone = DEFAULT_COLUMN_REGISTRY.map((col) =>
       col.key === 'phone' ? { ...col, enabled: false } : col,
     );
@@ -71,7 +71,7 @@ describe('syncModuleColumnRegistryWithFields (Contacts config)', () => {
       },
       enabledTabIds: ['phones', 'custom'],
     });
-    expect(next.find((col) => col.key === 'phone')?.enabled).toBe(true);
+    expect(next.find((col) => col.key === 'phone')?.enabled).toBe(false);
   });
 
   it('soft-merges unknown system keys by default', () => {

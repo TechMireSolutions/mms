@@ -8,7 +8,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DistributeModal } from "./DistributeModal";
 import { DistributionManagerList } from "./DistributionManagerList";
-import { DistributionManagerToolbar } from "./DistributionManagerToolbar";
+import { DistributionManagerListFilters } from "./DistributionManagerListFilters";
 import { HasanatBulkActionBar } from "./HasanatBulkActionBar";
 import { useDistributionSelection } from "@/tenant/features/hasanat/hooks/useDistributionSelection";
 import { useDistributionManagerState } from "./useDistributionManagerState";
@@ -131,7 +131,7 @@ export function DistributionManager({
 
   return (
     <section aria-label={t("hasanat.distribution.aria")} className="space-y-4">
-      <DistributionManagerToolbar
+      <DistributionManagerListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={search}

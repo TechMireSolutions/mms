@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { JournalEntriesListCards } from "@/tenant/features/accounting/components/JournalEntriesListCards";
-import { JournalEntriesListTable } from "@/tenant/features/accounting/components/JournalEntriesListTable";
+import { JournalEntriesListDesktopTable } from "@/tenant/features/accounting/components/JournalEntriesListDesktopTable";
 import type { JournalEntriesListProps } from "@/tenant/features/accounting/components/journalEntriesListShared";
 
 export function JournalEntriesList(props: JournalEntriesListProps): React.JSX.Element {
@@ -26,7 +26,7 @@ export function JournalEntriesList(props: JournalEntriesListProps): React.JSX.El
     <JournalEntriesListCards {...props} />
   ) : (
     <div className={WORK_SURFACE}>
-      <JournalEntriesListTable {...props} />
+      <JournalEntriesListDesktopTable {...props} />
     </div>
   );
 }

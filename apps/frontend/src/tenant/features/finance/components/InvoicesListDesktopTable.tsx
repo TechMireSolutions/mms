@@ -6,18 +6,17 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { InvoiceListRowActions } from "@/tenant/features/finance/components/InvoiceListRowActions";
 import { renderInvoiceWorkColumnValue } from "@/tenant/features/finance/components/invoiceWorkColumnCell";
 import type { InvoiceListContentProps } from "@/tenant/features/finance/components/invoiceListContentShared";
 
-type InvoiceListTableProps = InvoiceListContentProps;
+type InvoicesListDesktopTableProps = InvoiceListContentProps;
 
-export function InvoiceListTable(props: InvoiceListTableProps): React.JSX.Element {
+export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): React.JSX.Element {
   const {
     invoices,
     selectedIds,
@@ -46,62 +45,27 @@ export function InvoiceListTable(props: InvoiceListTableProps): React.JSX.Elemen
   return (
     <Table className="table-fixed">
       <caption className="sr-only">{t("finance.invoices")}</caption>
-      <TableHeader>
-        <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-          {canSelectInvoices && (
-            <TableHead className="w-10 px-3 py-2.5 h-auto">
-              <Checkbox
-                checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
-                onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
-                aria-label={t("finance.table.selectAll")}
-              />
-            </TableHead>
-          )}
-          {isColumnVisible("invoice") && (
-            <ModuleTableHeaderCell columnKey="invoice" width={getColumnWidth?.("invoice")} onResize={onColumnResize} className="px-4 py-2.5 whitespace-nowrap">
-              {t("finance.columns.invoice")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("student") && (
-            <ModuleTableHeaderCell columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-4 py-2.5 whitespace-nowrap">
-              {t("finance.columns.student")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("sessionClass") && (
-            <ModuleTableHeaderCell columnKey="sessionClass" width={getColumnWidth?.("sessionClass")} onResize={onColumnResize} className="px-4 py-2.5 whitespace-nowrap">
-              {t("finance.columns.sessionClass")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("baseFee") && (
-            <ModuleTableHeaderCell columnKey="baseFee" width={getColumnWidth?.("baseFee")} onResize={onColumnResize} className="px-4 py-2.5 whitespace-nowrap">
-              {t("finance.columns.baseFee")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("discount") && (
-            <ModuleTableHeaderCell columnKey="discount" width={getColumnWidth?.("discount")} onResize={onColumnResize} className="px-4 py-2.5 whitespace-nowrap">
-              {t("finance.columns.discount")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("final") && (
-            <ModuleTableHeaderCell columnKey="final" width={getColumnWidth?.("final")} onResize={onColumnResize} className="px-4 py-2.5 whitespace-nowrap">
-              {t("finance.columns.final")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("status") && (
-            <ModuleTableHeaderCell columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-4 py-2.5 whitespace-nowrap">
-              {t("finance.columns.status")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("dueDate") && (
-            <ModuleTableHeaderCell columnKey="dueDate" width={getColumnWidth?.("dueDate")} onResize={onColumnResize} className="px-4 py-2.5 whitespace-nowrap">
-              {t("finance.columns.dueDate")}
-            </ModuleTableHeaderCell>
-          )}
-          <TableHead className="px-4 py-2.5 w-10 h-auto">
-            <span className="sr-only">{t("common.actions")}</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
+      <ModuleWorkTableHeader
+        columns={[
+          isColumnVisible("invoice") ? { id: "invoice", label: t("finance.columns.invoice") } : null,
+          isColumnVisible("student") ? { id: "student", label: t("finance.columns.student") } : null,
+          isColumnVisible("sessionClass") ? { id: "sessionClass", label: t("finance.columns.sessionClass") } : null,
+          isColumnVisible("baseFee") ? { id: "baseFee", label: t("finance.columns.baseFee") } : null,
+          isColumnVisible("discount") ? { id: "discount", label: t("finance.columns.discount") } : null,
+          isColumnVisible("final") ? { id: "final", label: t("finance.columns.final") } : null,
+          isColumnVisible("status") ? { id: "status", label: t("finance.columns.status") } : null,
+          isColumnVisible("dueDate") ? { id: "dueDate", label: t("finance.columns.dueDate") } : null,
+        ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
+        getColumnWidth={(key) => getColumnWidth?.(key)}
+        setColumnWidth={onColumnResize ?? (() => {})}
+        selection={canSelectInvoices ? {
+          allSelected: allVisibleSelected,
+          someSelected: someVisibleSelected,
+          onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+          ariaLabel: t("finance.table.selectAll")
+        } : undefined}
+        actionsLabel={t("common.actions")}
+      />
       <TableBody className="divide-y divide-border/50">
         {invoices.map((invoice) => {
             const isSelected = selectedIds.includes(invoice.id);

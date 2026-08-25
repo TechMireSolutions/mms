@@ -8,10 +8,9 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
@@ -21,7 +20,7 @@ import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
 import { useListRowMotion } from '@/hooks/useListRowMotion';
 
-interface AttendanceRecordsTableProps {
+interface AttendanceListDesktopTableProps {
   paginatedRecords: AttendanceRecord[];
   isColumnVisible: (key: string) => boolean;
   visibleColCount: number;
@@ -41,7 +40,7 @@ interface AttendanceRecordsTableProps {
   t: TranslationFunction;
 }
 
-export function AttendanceRecordsTable({
+export function AttendanceListDesktopTable({
   paginatedRecords,
   isColumnVisible,
   visibleColCount,
@@ -59,7 +58,7 @@ export function AttendanceRecordsTable({
   getColumnWidth,
   onColumnResize,
   t,
-}: AttendanceRecordsTableProps): React.JSX.Element {
+}: AttendanceListDesktopTableProps): React.JSX.Element {
   const rowMotion = useListRowMotion({ layout: true });
   const recordsCountLabel = formatDirectoryPageCountLabel(paginatedRecords.length, t, {
     singular: 'attendance.item.record',
@@ -69,57 +68,26 @@ export function AttendanceRecordsTable({
   return (
     <article className={WORK_SURFACE}>
       <Table className="table-fixed">
-        <TableHeader>
-          <TableRow className="border-b border-border bg-muted/60 hover:bg-muted/60">
-            {canDelete && (
-              <TableHead className="px-3 py-2.5 w-10 h-auto">
-                <Checkbox
-                  checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
-                  onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
-                  aria-label={t('attendance.trash.selectAll')}
-                />
-              </TableHead>
-            )}
-            {isColumnVisible("date") && (
-              <ModuleTableHeaderCell columnKey="date" width={getColumnWidth?.('date')} onResize={onColumnResize} className="px-3 py-2.5">
-                {t('attendance.columns.date')}
-              </ModuleTableHeaderCell>
-            )}
-            {isColumnVisible("class") && (
-              <ModuleTableHeaderCell columnKey="class" width={getColumnWidth?.('class')} onResize={onColumnResize} className="px-3 py-2.5">
-                {t('attendance.columns.class')}
-              </ModuleTableHeaderCell>
-            )}
-            {isColumnVisible("student") && (
-              <ModuleTableHeaderCell columnKey="student" width={getColumnWidth?.('student')} onResize={onColumnResize} className="px-3 py-2.5">
-                {t('attendance.columns.student')}
-              </ModuleTableHeaderCell>
-            )}
-            {isColumnVisible("status") && (
-              <ModuleTableHeaderCell columnKey="status" width={getColumnWidth?.('status')} onResize={onColumnResize} className="px-3 py-2.5">
-                {t('attendance.columns.status')}
-              </ModuleTableHeaderCell>
-            )}
-            {isColumnVisible("timeIn") && (
-              <ModuleTableHeaderCell columnKey="timeIn" width={getColumnWidth?.('timeIn')} onResize={onColumnResize} className="px-3 py-2.5">
-                {t('attendance.columns.timeIn')}
-              </ModuleTableHeaderCell>
-            )}
-            {isColumnVisible("timeOut") && (
-              <ModuleTableHeaderCell columnKey="timeOut" width={getColumnWidth?.('timeOut')} onResize={onColumnResize} className="px-3 py-2.5">
-                {t('attendance.columns.timeOut')}
-              </ModuleTableHeaderCell>
-            )}
-            {isColumnVisible("notes") && (
-              <ModuleTableHeaderCell columnKey="notes" width={getColumnWidth?.('notes')} onResize={onColumnResize} className="px-3 py-2.5">
-                {t('attendance.columns.notes')}
-              </ModuleTableHeaderCell>
-            )}
-            <TableHead className="px-3 py-2.5 text-end h-auto">
-              <span className="sr-only">{t('attendance.table.actions')}</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
+        <ModuleWorkTableHeader
+          columns={[
+            isColumnVisible("date") ? { id: "date", label: t('attendance.columns.date') } : null,
+            isColumnVisible("class") ? { id: "class", label: t('attendance.columns.class') } : null,
+            isColumnVisible("student") ? { id: "student", label: t('attendance.columns.student') } : null,
+            isColumnVisible("status") ? { id: "status", label: t('attendance.columns.status') } : null,
+            isColumnVisible("timeIn") ? { id: "timeIn", label: t('attendance.columns.timeIn') } : null,
+            isColumnVisible("timeOut") ? { id: "timeOut", label: t('attendance.columns.timeOut') } : null,
+            isColumnVisible("notes") ? { id: "notes", label: t('attendance.columns.notes') } : null,
+          ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
+          getColumnWidth={(key) => getColumnWidth?.(key)}
+          setColumnWidth={onColumnResize ?? (() => {})}
+          selection={canDelete ? {
+            allSelected: allVisibleSelected,
+            someSelected: someVisibleSelected,
+            onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+            ariaLabel: t('attendance.trash.selectAll')
+          } : undefined}
+          actionsLabel={t('attendance.table.actions')}
+        />
         <TableBody className="divide-y divide-border">
           {paginatedRecords.length === 0 ? (
             <TableRow><TableCell colSpan={visibleColCount} className="py-4"><EmptyState title={t('attendance.empty.records')} description={t('attendance.empty.recordsHint')} compact /></TableCell></TableRow>

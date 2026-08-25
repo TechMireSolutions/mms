@@ -1,7 +1,7 @@
 import { useMemo, type ComponentProps } from "react";
 import type { ContactsPageTabPanelProps } from "@/tenant/features/contacts/components/ContactsPageTabPanel";
 import type ContactCards from "@/tenant/features/contacts/components/ContactCards";
-import type ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
+import type ContactsListDesktopTable from "@/tenant/features/contacts/components/ContactsListDesktopTable";
 import type { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
 import type { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
 import type { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
@@ -51,7 +51,7 @@ export function useContactsPageTabPanelProps({
   canEditSetup: boolean;
   tableColumns: ContactsColumnConfig[];
   commonDirectoryProps: ComponentProps<typeof ContactCards>;
-  tableProps: ComponentProps<typeof ContactsTable>;
+  tableProps: ComponentProps<typeof ContactsListDesktopTable>;
   handleBulkExport: () => void | Promise<void>;
 }): ContactsPageTabPanelProps {
   return useMemo(

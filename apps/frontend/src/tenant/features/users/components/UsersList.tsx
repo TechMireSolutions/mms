@@ -1,4 +1,6 @@
 import React, { useMemo } from 'react';
+import { UserPlus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { ModuleColumnRegistryEntry, SystemUser, UsersListPageResult } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
@@ -37,6 +39,7 @@ export interface UsersListProps {
   onBulkRestore: (ids: string[]) => void;
   onResetPassword: (user: SystemUser) => void;
   onAddUser: () => void;
+  onInviteUser?: () => void;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', users: SystemUser[]) => void;
   canWrite?: boolean;
   canDelete?: boolean;
@@ -75,6 +78,7 @@ export function UsersList({
   onBulkRestore,
   onResetPassword,
   onAddUser,
+  onInviteUser,
   onMessage,
   canWrite = true,
   canDelete = true,
@@ -142,6 +146,20 @@ export function UsersList({
         columnRegistry={columnRegistry}
         updateUserColumnLayout={updateUserColumnLayout}
         customizerLabels={customizerLabels}
+        primaryAction={
+          canWrite && !showDeleted ? (
+            <div className="flex items-center gap-2">
+              <Button type="button" variant="outline" size="sm" onClick={onInviteUser}>
+                <UserPlus className="h-3.5 w-3.5" />
+                {t('users.invite')}
+              </Button>
+              <Button type="button" size="sm" onClick={onAddUser}>
+                <UserPlus className="h-3.5 w-3.5" />
+                {t('users.add')}
+              </Button>
+            </div>
+          ) : undefined
+        }
       />
 
       <UsersBulkActionBar

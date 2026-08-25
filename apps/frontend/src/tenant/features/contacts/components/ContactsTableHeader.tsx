@@ -1,9 +1,5 @@
 import React from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
-import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { WORK_STICKY_HEAD } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 import type { useTranslation } from "@/hooks/useTranslation";
 
@@ -33,49 +29,21 @@ export function ContactsTableHeader({
   t: Translate;
 }): React.JSX.Element {
   return (
-    <TableHeader>
-      <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-        <TableHead
-          className={cn(
-            "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 border-e border-border/30 h-auto",
-            WORK_STICKY_HEAD,
-          )}
-        >
-          <Checkbox
-            checked={someSelected ? "indeterminate" : allSelected}
-            onCheckedChange={() => onSelectAll()}
-            aria-label={allSelected ? t("common.deselect") : t("contacts.table.selectAll")}
-            className="cursor-pointer"
-          />
-        </TableHead>
-        {columns.map((col) => {
-          const sortKey = col.sortField || col.id;
-          const stickyClass =
-            col.id === "name"
-              ? cn("sticky start-12 z-20 border-e border-border/30", WORK_STICKY_HEAD)
-              : "";
-          const width = getColumnWidth(col.id) ?? col.width;
-
-          return (
-            <ModuleTableHeaderCell
-              key={col.id}
-              columnKey={col.id}
-              sortKey={sortKey}
-              activeSortField={sortField}
-              sortDir={sortDir}
-              onSort={onSort}
-              width={width}
-              onResize={setColumnWidth}
-              className={stickyClass}
-            >
-              {col.label}
-            </ModuleTableHeaderCell>
-          );
-        })}
-        <TableHead className="px-4 py-3 w-16 h-auto">
-          <span className="sr-only">{t("contacts.table.actions")}</span>
-        </TableHead>
-      </TableRow>
-    </TableHeader>
+    <ModuleWorkTableHeader
+      columns={columns}
+      sortField={sortField}
+      sortDir={sortDir}
+      onSort={onSort}
+      getColumnWidth={getColumnWidth}
+      setColumnWidth={setColumnWidth}
+      selection={{
+        allSelected,
+        someSelected,
+        onSelectAll,
+        ariaLabel: allSelected ? t("common.deselect") : t("contacts.table.selectAll"),
+      }}
+      actionsLabel={t("contacts.table.actions")}
+      stickyColumnId="name"
+    />
   );
 }

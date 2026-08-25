@@ -1,7 +1,7 @@
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { useTranslation } from "@/hooks/useTranslation";
-import ContactsToolbar from "@/tenant/features/contacts/components/ContactsToolbar";
+import ContactsListFilters from "@/tenant/features/contacts/components/ContactsListFilters";
 import { ContactsBulkActionBar } from "@/tenant/features/contacts/components/ContactsBulkActionBar";
 import { ContactsWorkListBody } from "@/tenant/features/contacts/components/ContactsWorkListBody";
 import { buildContactsWorkFilterChips } from "@/tenant/features/contacts/components/buildContactsWorkFilterChips";
@@ -64,7 +64,7 @@ export function ContactsWorkTier({
   return (
     <div className="space-y-4">
       <ErrorBoundary fallback={<div className="p-4 text-sm text-destructive">Failed to load toolbar</div>}>
-        <ContactsToolbar
+        <ContactsListFilters
           search={search}
           onSearchChange={onSearchChange}
           filterGender={filterGender}

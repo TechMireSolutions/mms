@@ -1,7 +1,6 @@
 import React from "react";
 import { formatDate } from "@mms/shared";
-import { Checkbox } from "@/components/ui/checkbox";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
@@ -9,8 +8,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -21,12 +18,12 @@ import {
   type ObligationCollectionListContentProps,
 } from "@/tenant/features/obligations/components/obligationCollectionListContentShared";
 
-type ObligationCollectionListTableProps = Omit<
+type ObligationsListDesktopTableProps = Omit<
   ObligationCollectionListContentProps,
   "search" | "typeFilter" | "onAddNew"
 >;
 
-export function ObligationCollectionListTable(props: ObligationCollectionListTableProps): React.JSX.Element {
+export function ObligationsListDesktopTable(props: ObligationsListDesktopTableProps): React.JSX.Element {
   const {
     collections,
     selectedIds,
@@ -56,57 +53,26 @@ export function ObligationCollectionListTable(props: ObligationCollectionListTab
   return (
     <Table className="table-fixed">
       <caption className="sr-only">{t("obligations.collectionsList")}</caption>
-      <TableHeader>
-        <TableRow className="border-b border-border bg-muted/60 hover:bg-muted/60">
-          {canDelete && (
-            <TableHead className="px-3 py-2.5 w-10 h-auto">
-              <Checkbox
-                checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
-                onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
-                aria-label={t("obligations.trash.selectAll")}
-              />
-            </TableHead>
-          )}
-          {isColumnVisible("receiptNo") && (
-            <ModuleTableHeaderCell columnKey="receiptNo" width={getColumnWidth?.("receiptNo")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("obligations.columns.receiptNo")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("receivedDate") && (
-            <ModuleTableHeaderCell columnKey="receivedDate" width={getColumnWidth?.("receivedDate")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("obligations.columns.receivedDate")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("sender") && (
-            <ModuleTableHeaderCell columnKey="sender" width={getColumnWidth?.("sender")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("obligations.columns.sender")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("obligationType") && (
-            <ModuleTableHeaderCell columnKey="obligationType" width={getColumnWidth?.("obligationType")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("obligations.columns.obligationType")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("repMujtahid") && (
-            <ModuleTableHeaderCell columnKey="repMujtahid" width={getColumnWidth?.("repMujtahid")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("obligations.columns.repMujtahid")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("amount") && (
-            <ModuleTableHeaderCell columnKey="amount" width={getColumnWidth?.("amount")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("obligations.columns.amount")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("paymentMode") && (
-            <ModuleTableHeaderCell columnKey="paymentMode" width={getColumnWidth?.("paymentMode")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("obligations.columns.paymentMode")}
-            </ModuleTableHeaderCell>
-          )}
-          <TableHead className="px-3 py-2.5 text-end h-auto">
-            <span className="sr-only">{t("obligations.table.actions")}</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
+      <ModuleWorkTableHeader
+        columns={[
+          isColumnVisible("receiptNo") ? { id: "receiptNo", label: t("obligations.columns.receiptNo") } : null,
+          isColumnVisible("receivedDate") ? { id: "receivedDate", label: t("obligations.columns.receivedDate") } : null,
+          isColumnVisible("sender") ? { id: "sender", label: t("obligations.columns.sender") } : null,
+          isColumnVisible("obligationType") ? { id: "obligationType", label: t("obligations.columns.obligationType") } : null,
+          isColumnVisible("repMujtahid") ? { id: "repMujtahid", label: t("obligations.columns.repMujtahid") } : null,
+          isColumnVisible("amount") ? { id: "amount", label: t("obligations.columns.amount") } : null,
+          isColumnVisible("paymentMode") ? { id: "paymentMode", label: t("obligations.columns.paymentMode") } : null,
+        ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
+        getColumnWidth={(key) => getColumnWidth?.(key)}
+        setColumnWidth={onColumnResize ?? (() => {})}
+        selection={canDelete ? {
+          allSelected: allVisibleSelected,
+          someSelected: someVisibleSelected,
+          onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+          ariaLabel: t("obligations.trash.selectAll")
+        } : undefined}
+        actionsLabel={t("obligations.table.actions")}
+      />
       <TableBody className="divide-y divide-border">
         {collections.map((collection) => {
           const { sender, obligationType, rep, mujtahid } = getObligationCollectionResolvedFields(collection, helpers);
@@ -114,12 +80,16 @@ export function ObligationCollectionListTable(props: ObligationCollectionListTab
           return (
             <TableRow key={collection.id} className="group hover:bg-muted/20 transition-colors">
               {canDelete && (
-                <TableCell className="px-3 py-2.5">
-                  <Checkbox
-                    checked={selectedIds.includes(collection.id)}
-                    onCheckedChange={(checked) => onToggleSelectedCollection(collection.id, checked === true)}
-                    aria-label={t("obligations.trash.selectCollection", { receipt: collection.receipt_no })}
-                  />
+                <TableCell className="px-3 py-2.5 w-10">
+                  <div className="flex justify-center">
+                    <input 
+                      type="checkbox"
+                      checked={selectedIds.includes(collection.id)}
+                      onChange={(e) => onToggleSelectedCollection(collection.id, e.target.checked)}
+                      aria-label={t("obligations.trash.selectCollection", { receipt: collection.receipt_no })}
+                      className="cursor-pointer"
+                    />
+                  </div>
                 </TableCell>
               )}
               {isColumnVisible("receiptNo") && (

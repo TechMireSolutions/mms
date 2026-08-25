@@ -15,7 +15,7 @@ import type {
   StudentListTableProps,
 } from "@/tenant/features/students/components/StudentListContentTypes";
 
-type RenderStudentListDesktopTableCellOptions = {
+type RenderStudentsListDesktopTableCellOptions = {
   studentRow: Student;
   col: ModuleColumnRegistryEntry;
   studentIdStr: string;
@@ -34,7 +34,7 @@ type RenderStudentListDesktopTableCellOptions = {
 };
 
 /** Cell content for one Students Work desktop table column. */
-export function renderStudentListDesktopTableCell({
+export function renderStudentsListDesktopTableCell({
   studentRow,
   col,
   studentIdStr,
@@ -47,7 +47,7 @@ export function renderStudentListDesktopTableCell({
   canWriteMessaging,
   onOpenComposer,
   t,
-}: RenderStudentListDesktopTableCellOptions): React.ReactNode {
+}: RenderStudentsListDesktopTableCellOptions): React.ReactNode {
   switch (col.key) {
     case "name": {
       const genderLabel =

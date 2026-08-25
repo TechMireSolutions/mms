@@ -3,7 +3,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { ExaminationsListCards } from "@/tenant/features/examinations/components/ExaminationsListCards";
-import { ExaminationsListTable } from "@/tenant/features/examinations/components/ExaminationsListTable";
+import { ExaminationsListDesktopTable } from "@/tenant/features/examinations/components/ExaminationsListDesktopTable";
 import type { ExaminationsListContentProps } from "@/tenant/features/examinations/components/examinationsListContentShared";
 import { BookOpen } from "lucide-react";
 
@@ -27,7 +27,7 @@ export function ExaminationsListContent(props: ExaminationsListContentProps): Re
     <ExaminationsListCards {...props} />
   ) : (
     <div className={WORK_SURFACE}>
-      <ExaminationsListTable {...props} />
+      <ExaminationsListDesktopTable {...props} />
     </div>
   );
 }

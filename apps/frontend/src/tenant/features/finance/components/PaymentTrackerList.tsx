@@ -1,11 +1,11 @@
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
-import { PaymentLogHeader } from '@/tenant/features/finance/components/PaymentTrackerToolbar';
+import { PaymentLogHeader } from '@/tenant/features/finance/components/PaymentsListFilters';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import type { Payment } from '@/lib/data/financeData';
 import { PaymentTrackerListMobile } from '@/tenant/features/finance/components/PaymentTrackerListMobile';
-import { PaymentTrackerListTable } from '@/tenant/features/finance/components/PaymentTrackerListTable';
+import { PaymentsListDesktopTable } from '@/tenant/features/finance/components/PaymentsListDesktopTable';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 
 export const PAYMENT_TRACKER_COLUMN_KEYS = [
@@ -83,7 +83,7 @@ export function PaymentTrackerList({
         </div>
       ) : (
         <div>
-          <PaymentTrackerListTable
+          <PaymentsListDesktopTable
             {...listProps}
             visibleColCount={visibleColCount}
             allSelected={allSelected}

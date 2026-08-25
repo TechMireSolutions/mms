@@ -9,6 +9,7 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
 import { ModuleWorkDirectoryEmpty } from '@/components/ui/ModuleWorkDirectoryEmpty';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
+import { FilterChips } from '@/components/ui/FilterChips';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
@@ -21,8 +22,9 @@ import { useMessagingPageOptions } from '../hooks/useMessagingPageOptions';
 import { MessagingDetailDrawer } from './MessagingDetailDrawer';
 import { MessagingWorkBulkActionBar } from './MessagingWorkBulkActionBar';
 import { MessagingWorkCards } from './MessagingWorkCards';
-import { MessagingWorkTable } from './MessagingWorkTable';
-import { MessagingWorkToolbar } from './MessagingWorkToolbar';
+import { MessagingListDesktopTable } from './MessagingListDesktopTable';
+import { MessagingListFilters } from './MessagingListFilters';
+import { buildMessagingWorkFilterChips } from './buildMessagingWorkFilterChips';
 import {
   exportMessagingLogsFiltered,
   messagingExportEndDateBound,
@@ -342,6 +344,28 @@ export function MessagingWorkPanel({
     setLogsPage(1);
   }, []);
 
+  const filterChips = useMemo(() => buildMessagingWorkFilterChips({
+    search: debouncedSearch,
+    onSearchChange: setSearch,
+    channel,
+    onChannelChange: setChannel,
+    channelOptions: channelSelectOptions,
+    status,
+    onStatusChange: setStatus,
+    statusOptions,
+    category,
+    onCategoryChange: setCategory,
+    categoryOptions: categorySelectOptions,
+    startDate: queryStartDate || '',
+    onStartDateChange: setStartDate,
+    endDate,
+    onEndDateChange: setEndDate,
+    t,
+  }), [
+    debouncedSearch, channel, status, category, queryStartDate, endDate,
+    channelSelectOptions, statusOptions, categorySelectOptions, t
+  ]);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -350,7 +374,7 @@ export function MessagingWorkPanel({
       className="space-y-4"
     >
       <ErrorBoundary fallback={<div className={`p-4 text-sm ${SEMANTIC_TEXT.destructive}`}>Failed to load toolbar</div>}>
-        <MessagingWorkToolbar
+        <MessagingListFilters
           viewMode={viewMode}
           onViewModeChange={setViewMode}
           search={search}
@@ -374,8 +398,11 @@ export function MessagingWorkPanel({
           columnRegistry={columnRegistry}
           updateUserColumnLayout={updateUserColumnLayout}
           columnCustomizerLabels={customizerLabels}
+          shownCount={logsQuery.logs.length}
         />
       </ErrorBoundary>
+
+      <FilterChips chips={filterChips} onClearAll={clearFilters} />
 
       {/* Quick Callout when filtering by failed messages */}
       {status === 'failed' && failedLogs.length > 0 && (
@@ -463,7 +490,7 @@ export function MessagingWorkPanel({
           />
         ) : (
           <div className="space-y-2">
-            <MessagingWorkTable
+            <MessagingListDesktopTable
               logs={logsQuery.logs}
               selectedIds={selectedById}
               allVisibleSelected={allVisibleSelected}

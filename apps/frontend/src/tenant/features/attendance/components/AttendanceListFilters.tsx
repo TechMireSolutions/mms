@@ -3,23 +3,18 @@ import {
   DateRangeFilterBar,
 } from "@/components/ui/DateRangeFilterBar";
 import {
-  ModuleColumnCustomizer,
   type ModuleColumnCustomizerProps,
 } from "@/components/ui/ModuleColumnCustomizer";
-import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
+import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import { FilterChips } from "@/components/ui/FilterChips";
-import { SearchBar } from "@/components/ui/SearchBar";
-import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
-import { cn } from "@/lib/utils";
 import type { AttendanceStatus } from "@/lib/data/attendanceData";
 import { AttendanceFiltersMenuButton } from "@/tenant/features/attendance/components/AttendanceFiltersMenuButton";
 
 export const ATTENDANCE_WORK_SEARCH_INPUT_ID = "attendance-work-search";
 
-interface AttendanceRecordsToolbarProps {
+interface AttendanceListFiltersProps {
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
@@ -36,7 +31,7 @@ interface AttendanceRecordsToolbarProps {
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
-export function AttendanceRecordsToolbar({
+export function AttendanceListFilters({
   viewMode,
   onViewModeChange,
   search,
@@ -51,7 +46,7 @@ export function AttendanceRecordsToolbar({
   setDateTo,
   setPage,
   columnCustomizer,
-}: AttendanceRecordsToolbarProps): React.JSX.Element {
+}: AttendanceListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
   const activeFilterCount =
     (statusFilter !== "all" ? 1 : 0) + (dateFrom ? 1 : 0) + (dateTo ? 1 : 0);
@@ -98,23 +93,16 @@ export function AttendanceRecordsToolbar({
 
   return (
     <>
-      <div className={cn(WORK_SURFACE, "flex flex-col gap-3 p-3 sm:flex-row")}>
-        <div className="relative min-w-0 flex-1">
-          <SearchBar
-            id={ATTENDANCE_WORK_SEARCH_INPUT_ID}
-            value={search}
-            onChange={handleSearchChange}
-            placeholder={t("attendance.searchStudent")}
-            className="w-full min-w-0"
-          />
-          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
-            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
-              /
-            </kbd>
-          </div>
-        </div>
-
-        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+      <ModuleWorkToolbar
+        regionLabel={t("attendance.tabs.records")}
+        search={search}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder={t("attendance.searchStudent")}
+        searchId={ATTENDANCE_WORK_SEARCH_INPUT_ID}
+        hasActiveFilters={activeFilterCount > 0}
+        onClearFilters={clearFilters}
+        clearFiltersLabel={t("attendance.clearFilters")}
+        filterButton={
           <AttendanceFiltersMenuButton
             statusFilter={statusFilter}
             activeFilterCount={activeFilterCount}
@@ -126,40 +114,33 @@ export function AttendanceRecordsToolbar({
             }}
             onClearFilters={clearFilters}
           />
-
-          {activeFilterCount > 0 ? (
-            <ModuleClearFiltersButton
-              onClearFilters={clearFilters}
-              label={t("attendance.clearFilters")}
-            />
-          ) : null}
-
-          <DateRangeFilterBar
-            idPrefix="attendance-records"
-            dateFrom={dateFrom}
-            dateTo={dateTo}
-            onDateFromChange={(value) => {
-              setDateFrom(value);
-              setPage(1);
-            }}
-            onDateToChange={(value) => {
-              setDateTo(value);
-              setPage(1);
-            }}
-            pickerClassName="w-full min-w-0 max-w-full text-sm sm:max-w-filter-sm"
-          />
-
-          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-
-          {columnCustomizer && (
-            <ModuleColumnCustomizer
-              columnRegistry={columnCustomizer.columnRegistry}
-              updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-              labels={columnCustomizer.labels}
-            />
-          )}
-        </div>
-      </div>
+        }
+        viewModeToggle={{
+          viewMode,
+          onViewModeChange,
+        }}
+        columnCustomizer={columnCustomizer ? {
+          registry: columnCustomizer.columnRegistry,
+          onUpdate: columnCustomizer.updateUserColumnLayout,
+          onReset: columnCustomizer.onResetLayout,
+          labels: columnCustomizer.labels,
+        } : undefined}
+      >
+        <DateRangeFilterBar
+          idPrefix="attendance-records"
+          dateFrom={dateFrom}
+          dateTo={dateTo}
+          onDateFromChange={(value) => {
+            setDateFrom(value);
+            setPage(1);
+          }}
+          onDateToChange={(value) => {
+            setDateTo(value);
+            setPage(1);
+          }}
+          pickerClassName="w-full min-w-0 max-w-full text-sm sm:max-w-filter-sm"
+        />
+      </ModuleWorkToolbar>
 
       <FilterChips chips={chips} onClearAll={clearFilters} />
     </>

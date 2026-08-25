@@ -8,12 +8,12 @@ import {
 } from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
-import { QuestionBankTableHeader } from '@/tenant/features/question-bank/components/QuestionBankTableHeader';
-import { QuestionBankTableRow } from '@/tenant/features/question-bank/components/QuestionBankTableRow';
+import { QuestionBankTableHeader } from "@/tenant/features/question-bank/components/QuestionBankTableHeader";
+import { QuestionBankTableRow } from "@/tenant/features/question-bank/components/QuestionBankTableRow";
 
 type QuestionBankConfig = ReturnType<typeof useQuestionBankConfig>;
 
-interface QuestionBankTableProps {
+interface QuestionBankListDesktopTableProps {
   questions: Question[];
   config: QuestionBankConfig;
   difficultyConfig: Record<string, StatusBadgeConfigItem>;
@@ -34,7 +34,7 @@ interface QuestionBankTableProps {
   onToggleSelectAll: (checked: boolean) => void;
 }
 
-export function QuestionBankTable({
+export function QuestionBankListDesktopTable({
   questions,
   config,
   difficultyConfig,
@@ -53,7 +53,7 @@ export function QuestionBankTable({
   onTrashAction,
   onToggleSelectedQuestion,
   onToggleSelectAll,
-}: QuestionBankTableProps): JSX.Element {
+}: QuestionBankListDesktopTableProps): JSX.Element {
   const { t } = useTranslation();
 
   return (

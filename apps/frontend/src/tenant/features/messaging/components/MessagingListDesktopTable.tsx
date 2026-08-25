@@ -21,10 +21,9 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
 import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
@@ -34,7 +33,7 @@ import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import { type MessagingSelectedLogsMap } from './MessagingWorkPanel';
 
-export interface MessagingWorkTableProps {
+export interface MessagingListDesktopTableProps {
   logs: Message[];
   selectedIds: MessagingSelectedLogsMap;
   allVisibleSelected: boolean;
@@ -52,7 +51,7 @@ export interface MessagingWorkTableProps {
   onFilterContact?: (name: string) => void;
 }
 
-export const MessagingWorkTable = React.memo(function MessagingWorkTable({
+export const MessagingListDesktopTable = React.memo(function MessagingListDesktopTable({
   logs,
   selectedIds,
   allVisibleSelected,
@@ -67,7 +66,8 @@ export const MessagingWorkTable = React.memo(function MessagingWorkTable({
   onResendLog,
   onViewLog,
   onFilterContact,
-}: MessagingWorkTableProps): React.JSX.Element {
+  setColumnWidth,
+}: MessagingListDesktopTableProps): React.JSX.Element {
   const { t } = useTranslation();
   const [copiedLogId, setCopiedLogId] = useState<string | null>(null);
 
@@ -101,40 +101,24 @@ export const MessagingWorkTable = React.memo(function MessagingWorkTable({
     <div className={cn(WORK_SURFACE, 'shadow-xs overflow-hidden')}>
       <div className="w-full overflow-x-auto">
         <Table>
-          <TableHeader className="bg-muted/40">
-            <TableRow>
-              <TableHead className="w-10 px-3 py-2">
-                <Checkbox
-                  checked={allVisibleSelected ? true : someVisibleSelected ? 'indeterminate' : false}
-                  onCheckedChange={(checked) => onToggleAllVisible(Boolean(checked))}
-                  aria-label={t('messaging.selectAllVisible')}
-                />
-              </TableHead>
-              {showRecipient && (
-                <TableHead style={{ width: getColumnWidth('recipient') }} className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  {t('messaging.recipient')}
-                </TableHead>
-              )}
-              {showChannel && (
-                <TableHead style={{ width: getColumnWidth('channel') }} className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  {t('messaging.channel')}
-                </TableHead>
-              )}
-              {showBody && (
-                <TableHead style={{ width: getColumnWidth('body') }} className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  {t('messaging.messageBody')}
-                </TableHead>
-              )}
-              {showDateSent && (
-                <TableHead style={{ width: getColumnWidth('dateSent') }} className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  {t('messaging.dateSent')}
-                </TableHead>
-              )}
-              <TableHead className="w-28 px-3 py-2 text-end text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {t('common.actions')}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
+          <ModuleWorkTableHeader
+            columns={[
+              showRecipient ? { id: 'recipient', label: t('messaging.recipient') } : null,
+              showChannel ? { id: 'channel', label: t('messaging.channel') } : null,
+              showBody ? { id: 'body', label: t('messaging.messageBody') } : null,
+              showDateSent ? { id: 'dateSent', label: t('messaging.dateSent') } : null,
+            ].filter((c): c is { id: string; label: string } => c !== null)}
+            getColumnWidth={getColumnWidth}
+            setColumnWidth={setColumnWidth}
+            selection={{
+              allSelected: allVisibleSelected,
+              someSelected: someVisibleSelected,
+              onSelectAll: () => onToggleAllVisible(!allVisibleSelected),
+              ariaLabel: t('messaging.selectAllVisible'),
+            }}
+            actionsLabel={t('common.actions')}
+            stickyColumnId="recipient"
+          />
           <TableBody className="divide-y divide-border/50">
             {logs.map((log) => {
               const isSelected = Boolean(selectedIds[String(log.id)]);

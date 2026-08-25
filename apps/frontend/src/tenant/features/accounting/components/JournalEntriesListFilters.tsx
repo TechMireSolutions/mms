@@ -3,11 +3,9 @@ import type { AppTranslationKey } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
 import { FilterChips } from "@/components/ui/FilterChips";
-import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { SearchBar } from "@/components/ui/SearchBar";
-import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -19,7 +17,7 @@ export const ACCOUNTING_WORK_SEARCH_INPUT_ID = "accounting-work-search";
 
 type JournalMode = "simple" | "advanced";
 
-interface JournalEntriesAdvancedToolbarProps {
+interface JournalEntriesListFiltersProps {
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   mode: JournalMode;
@@ -40,7 +38,7 @@ interface JournalEntriesAdvancedToolbarProps {
   onExportCsv: () => void;
 }
 
-export function JournalEntriesAdvancedToolbar({
+export function JournalEntriesListFilters({
   viewMode,
   onViewModeChange,
   mode,
@@ -59,7 +57,7 @@ export function JournalEntriesAdvancedToolbar({
   onShowFiltersChange,
   onOpenNew,
   onExportCsv,
-}: JournalEntriesAdvancedToolbarProps) {
+}: JournalEntriesListFiltersProps) {
   const { t } = useTranslation();
   const activeFilterCount = (statusFilter !== "all" ? 1 : 0) + (tagFilter !== "all" ? 1 : 0);
   const chips = [
@@ -81,82 +79,73 @@ export function JournalEntriesAdvancedToolbar({
 
   return (
     <>
-      <div className={cn(WORK_SURFACE, "flex flex-col gap-3 p-3")}>
-        <SubTabBar tabs={modeTabs} value={mode} onChange={onModeChange} panelIdPrefix="journal-mode-advanced" />
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative min-w-0 flex-1">
-            <SearchBar
-              id={ACCOUNTING_WORK_SEARCH_INPUT_ID}
-              value={search}
-              onChange={onSearchChange}
-              placeholder={t("accounting.journal.dashboard.searchPlaceholder")}
-              className="w-full min-w-0"
-            />
-            <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
-              <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
-                /
-              </kbd>
-            </div>
-          </div>
-          <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
-            <AccountingFiltersMenuButton
-              statusFilter={statusFilter}
-              tagFilter={tagFilter}
-              activeFilterCount={activeFilterCount}
-              onChangeStatus={onStatusFilterChange}
-              onChangeTag={onTagFilterChange}
-              onClearFilters={() => {
-                onStatusFilterChange("all");
-                onTagFilterChange("all");
-              }}
-            />
-            {activeFilterCount > 0 ? (
-              <ModuleClearFiltersButton
-                onClearFilters={() => {
-                  onStatusFilterChange("all");
-                  onTagFilterChange("all");
-                }}
-                label={t("accounting.clearFilters")}
-              />
-            ) : null}
+      <SubTabBar tabs={modeTabs} value={mode} onChange={onModeChange} panelIdPrefix="journal-mode-advanced" />
+      <ModuleWorkToolbar
+        regionLabel={t("nav.accounting")}
+        search={search}
+        onSearchChange={onSearchChange}
+        searchPlaceholder={t("accounting.journal.dashboard.searchPlaceholder")}
+        searchId={ACCOUNTING_WORK_SEARCH_INPUT_ID}
+        hasActiveFilters={activeFilterCount > 0}
+        onClearFilters={() => {
+          onStatusFilterChange("all");
+          onTagFilterChange("all");
+        }}
+        clearFiltersLabel={t("accounting.clearFilters")}
+        filterButton={
+          <AccountingFiltersMenuButton
+            statusFilter={statusFilter}
+            tagFilter={tagFilter}
+            activeFilterCount={activeFilterCount}
+            onChangeStatus={onStatusFilterChange}
+            onChangeTag={onTagFilterChange}
+            onClearFilters={() => {
+              onStatusFilterChange("all");
+              onTagFilterChange("all");
+            }}
+          />
+        }
+        primaryAction={
+          canWrite && !showDeleted ? (
             <Button
               type="button"
-              variant={showFilters ? "secondary" : "outline"}
-              aria-pressed={showFilters}
-              onClick={() => onShowFiltersChange(!showFilters)}
-              className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold"
+              variant="default"
+              onClick={onOpenNew}
+              className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
             >
-              {t("accounting.journal.dashboard.filters")}
+              <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.newEntry")}
             </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onExportCsv}
-              className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold text-muted-foreground"
-            >
-              <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
-            </Button>
-            <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-            {columnCustomizer && (
-              <ModuleColumnCustomizer
-                columnRegistry={columnCustomizer.columnRegistry}
-                updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-                labels={columnCustomizer.labels}
-              />
-            )}
-            {canWrite && !showDeleted && (
-              <Button
-                type="button"
-                variant="default"
-                onClick={onOpenNew}
-                className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold"
-              >
-                <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.newEntry")}
-              </Button>
-            )}
-          </div>
-        </div>
-      </div>
+          ) : undefined
+        }
+        viewModeToggle={{
+          viewMode,
+          onViewModeChange,
+        }}
+        columnCustomizer={columnCustomizer ? {
+          registry: columnCustomizer.columnRegistry,
+          onUpdate: columnCustomizer.updateUserColumnLayout,
+          onReset: columnCustomizer.onResetLayout,
+          labels: columnCustomizer.labels,
+        } : undefined}
+      >
+        <Button
+          type="button"
+          variant={showFilters ? "secondary" : "outline"}
+          aria-pressed={showFilters}
+          onClick={() => onShowFiltersChange(!showFilters)}
+          className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold"
+        >
+          {t("accounting.journal.dashboard.filters")}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onExportCsv}
+          className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold text-muted-foreground"
+        >
+          <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
+        </Button>
+      </ModuleWorkToolbar>
       <FilterChips chips={chips} onClearAll={() => {
         onStatusFilterChange("all");
         onTagFilterChange("all");

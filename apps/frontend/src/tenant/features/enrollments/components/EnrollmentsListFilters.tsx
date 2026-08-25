@@ -1,20 +1,15 @@
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { FilterChips } from "@/components/ui/FilterChips";
-import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
-import { SearchBar } from "@/components/ui/SearchBar";
-import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
-import { cn } from "@/lib/utils";
 import type { Session } from "@mms/shared";
 import { EnrollmentsFilterMenuButton } from "@/tenant/features/enrollments/components/EnrollmentsFilterMenuButton";
 
 export const ENROLLMENTS_WORK_SEARCH_INPUT_ID = "enrollments-work-search";
 
-interface EnrollmentListToolbarProps {
+interface EnrollmentsListFiltersProps {
   search: string;
   statusFilter: string;
   sessionFilter: string;
@@ -32,7 +27,7 @@ interface EnrollmentListToolbarProps {
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
 }
 
-export function EnrollmentListToolbar({
+export function EnrollmentsListFilters({
   search,
   statusFilter,
   sessionFilter,
@@ -48,7 +43,7 @@ export function EnrollmentListToolbar({
   onShowDeletedChange,
   viewMode,
   onViewModeChange,
-}: EnrollmentListToolbarProps): React.JSX.Element {
+}: EnrollmentsListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
   const activeFilterCount =
     (statusFilter !== "all" ? 1 : 0) + (sessionFilter !== "all" ? 1 : 0);
@@ -64,23 +59,16 @@ export function EnrollmentListToolbar({
 
   return (
     <>
-      <div className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}>
-        <div className="relative min-w-0 flex-1">
-          <SearchBar
-            id={ENROLLMENTS_WORK_SEARCH_INPUT_ID}
-            value={search}
-            onChange={onSearchChange}
-            placeholder={t("enrollments.searchPlaceholder")}
-            className="w-full min-w-0"
-          />
-          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
-            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
-              /
-            </kbd>
-          </div>
-        </div>
-
-        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+      <ModuleWorkToolbar
+        regionLabel={t("enrollments.filters")}
+        search={search}
+        onSearchChange={onSearchChange}
+        searchPlaceholder={t("enrollments.searchPlaceholder")}
+        searchId={ENROLLMENTS_WORK_SEARCH_INPUT_ID}
+        hasActiveFilters={activeFilterCount > 0}
+        onClearFilters={onClearFilters}
+        clearFiltersLabel={t("enrollments.clearFilters")}
+        filterButton={
           <EnrollmentsFilterMenuButton
             statusFilter={statusFilter}
             sessionFilter={sessionFilter}
@@ -91,32 +79,25 @@ export function EnrollmentListToolbar({
             onSessionFilterChange={onSessionChange}
             onClearFilters={onClearFilters}
           />
-
-          {activeFilterCount > 0 ? (
-            <ModuleClearFiltersButton
-              onClearFilters={onClearFilters}
-              label={t("enrollments.clearFilters")}
-            />
-          ) : null}
-
-          {canDelete && onShowDeletedChange && (
-            <ModuleTrashToggle
-              showDeleted={showDeleted}
-              onToggle={() => onShowDeletedChange(!showDeleted)}
-              showActiveLabel={t("enrollments.showActive")}
-              showDeletedLabel={t("enrollments.showDeleted")}
-            />
-          )}
-
-          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-
-          <ModuleColumnCustomizer
-            columnRegistry={columnCustomizer.columnRegistry}
-            updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-            labels={columnCustomizer.labels}
-          />
-        </div>
-      </div>
+        }
+        trashToggle={canDelete && onShowDeletedChange ? {
+          canViewDeleted: canDelete,
+          viewingDeleted: showDeleted,
+          onToggle: () => onShowDeletedChange(!showDeleted),
+          activeLabel: t("enrollments.showActive"),
+          deletedLabel: t("enrollments.showDeleted"),
+        } : undefined}
+        viewModeToggle={{
+          viewMode,
+          onViewModeChange,
+        }}
+        columnCustomizer={{
+          registry: columnCustomizer.columnRegistry,
+          onUpdate: columnCustomizer.updateUserColumnLayout,
+          onReset: columnCustomizer.onResetLayout,
+          labels: columnCustomizer.labels,
+        }}
+      />
 
       <FilterChips
         chips={[

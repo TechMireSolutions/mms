@@ -14,7 +14,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import { MESSAGING_WORK_SEARCH_INPUT_ID } from './components/MessagingWorkToolbar';
+import { MESSAGING_WORK_SEARCH_INPUT_ID } from './components/MessagingListFilters';
 import {
   MESSAGING_LOGS_QUERY_KEY,
   MESSAGING_METRICS_QUERY_KEY,

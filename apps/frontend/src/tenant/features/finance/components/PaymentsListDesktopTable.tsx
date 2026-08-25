@@ -11,13 +11,12 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import type { Payment } from '@/lib/data/financeData';
 
-interface PaymentTrackerListTableProps {
+interface PaymentsListDesktopTableProps {
   payments: Payment[];
   selectedIds: string[];
   isColumnVisible: (key: string) => boolean;
@@ -35,7 +34,7 @@ interface PaymentTrackerListTableProps {
   onRestore?: (paymentId: string) => void;
 }
 
-export function PaymentTrackerListTable({
+export function PaymentsListDesktopTable({
   payments,
   selectedIds,
   isColumnVisible,
@@ -51,7 +50,7 @@ export function PaymentTrackerListTable({
   onToggleAll,
   onRequestDelete,
   onRestore,
-}: PaymentTrackerListTableProps) {
+}: PaymentsListDesktopTableProps) {
   const { t } = useTranslation();
 
   const renderRowAction = (paymentId: string) => (
@@ -69,55 +68,26 @@ export function PaymentTrackerListTable({
   return (
     <Table className="table-fixed">
       <caption className="sr-only">{t('finance.paymentLog')}</caption>
-      <TableHeader>
-        <TableRow className="border-b border-border/60 hover:bg-muted/30">
-          {canDelete && (
-            <TableHead className="w-10 px-3 py-2.5 h-auto">
-              <Checkbox
-                checked={allSelected}
-                onCheckedChange={(checked) => onToggleAll(checked === true)}
-                aria-label={t('finance.trash.selectAll')}
-              />
-            </TableHead>
-          )}
-          {isColumnVisible("date") && (
-            <ModuleTableHeaderCell columnKey="date" width={getColumnWidth?.('date')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('finance.columns.paymentDate')}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("student") && (
-            <ModuleTableHeaderCell columnKey="student" width={getColumnWidth?.('student')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('finance.columns.student')}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("invoice") && (
-            <ModuleTableHeaderCell columnKey="invoice" width={getColumnWidth?.('invoice')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('finance.columns.invoice')}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("amount") && (
-            <ModuleTableHeaderCell columnKey="amount" width={getColumnWidth?.('amount')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('finance.columns.amount')}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("method") && (
-            <ModuleTableHeaderCell columnKey="method" width={getColumnWidth?.('method')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('finance.columns.method')}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("receivedBy") && (
-            <ModuleTableHeaderCell columnKey="receivedBy" width={getColumnWidth?.('receivedBy')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('finance.columns.receivedBy')}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("note") && (
-            <ModuleTableHeaderCell columnKey="note" width={getColumnWidth?.('note')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('finance.columns.note')}
-            </ModuleTableHeaderCell>
-          )}
-          {canDelete && <TableHead className="w-12 px-3 py-2.5 h-auto"><span className="sr-only">{t('common.actions')}</span></TableHead>}
-        </TableRow>
-      </TableHeader>
+      <ModuleWorkTableHeader
+        columns={[
+          isColumnVisible("date") ? { id: "date", label: t('finance.columns.paymentDate') } : null,
+          isColumnVisible("student") ? { id: "student", label: t('finance.columns.student') } : null,
+          isColumnVisible("invoice") ? { id: "invoice", label: t('finance.columns.invoice') } : null,
+          isColumnVisible("amount") ? { id: "amount", label: t('finance.columns.amount') } : null,
+          isColumnVisible("method") ? { id: "method", label: t('finance.columns.method') } : null,
+          isColumnVisible("receivedBy") ? { id: "receivedBy", label: t('finance.columns.receivedBy') } : null,
+          isColumnVisible("note") ? { id: "note", label: t('finance.columns.note') } : null,
+        ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
+        getColumnWidth={(key) => getColumnWidth?.(key)}
+        setColumnWidth={onColumnResize ?? (() => {})}
+        selection={canDelete ? {
+          allSelected: allSelected,
+          someSelected: selectedIds.length > 0 && !allSelected,
+          onSelectAll: () => onToggleAll(!allSelected),
+          ariaLabel: t('finance.trash.selectAll')
+        } : undefined}
+        actionsLabel={canDelete ? t('common.actions') : undefined}
+      />
       <TableBody className="divide-y divide-border/50">
         {payments.length === 0 ? (
           <TableRow className="hover:bg-transparent"><TableCell colSpan={visibleColCount || 1} className="py-4"><EmptyState title={t('finance.empty.payments')} compact /></TableCell></TableRow>

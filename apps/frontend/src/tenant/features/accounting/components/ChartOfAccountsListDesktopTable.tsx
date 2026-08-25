@@ -5,10 +5,9 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import {
   Table,
   TableBody,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { Badge } from "@/components/ui/badge";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -16,7 +15,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, type Account, type AccountType } from "@/lib/data/accountingData";
 import { AccountMobileCard, AccountTableRow } from "@/tenant/features/accounting/components/ChartOfAccountsTreeRows";
 
-interface ChartOfAccountsTreeTableProps {
+interface ChartOfAccountsListDesktopTableProps {
   accounts: Account[];
   filteredAccounts: Account[];
   balanceConfig: Record<string, StatusBadgeConfigItem>;
@@ -29,7 +28,7 @@ interface ChartOfAccountsTreeTableProps {
   onReactivate: (id: string) => void;
 }
 
-export function ChartOfAccountsTreeTable({
+export function ChartOfAccountsListDesktopTable({
   accounts,
   filteredAccounts,
   balanceConfig,
@@ -40,7 +39,7 @@ export function ChartOfAccountsTreeTable({
   onEdit,
   onDelete,
   onReactivate,
-}: ChartOfAccountsTreeTableProps): React.JSX.Element {
+}: ChartOfAccountsListDesktopTableProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -80,7 +79,7 @@ export function ChartOfAccountsTreeTable({
   );
 }
 
-interface AccountTypeGroupProps extends Omit<ChartOfAccountsTreeTableProps, "accounts" | "filteredAccounts"> {
+interface AccountTypeGroupProps extends Omit<ChartOfAccountsListDesktopTableProps, "accounts" | "filteredAccounts"> {
   type: AccountType;
   accountTypeRows: Account[];
 }
@@ -129,38 +128,18 @@ function AccountTypeGroup({
       <div className="hidden md:block">
         <Table className="table-fixed">
           <caption className="sr-only">{t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
-          <TableHeader>
-            <TableRow className="border-b border-border bg-muted/40 hover:bg-muted/40">
-              {isColumnVisible("code") && (
-                <ModuleTableHeaderCell columnKey="code" width={getColumnWidth?.("code")} onResize={onColumnResize} className="px-4 py-2">
-                  {t("accounting.columns.account.code")}
-                </ModuleTableHeaderCell>
-              )}
-              {isColumnVisible("name") && (
-                <ModuleTableHeaderCell columnKey="name" width={getColumnWidth?.("name")} onResize={onColumnResize} className="px-4 py-2">
-                  {t("accounting.columns.account.name")}
-                </ModuleTableHeaderCell>
-              )}
-              {isColumnVisible("subtype") && (
-                <ModuleTableHeaderCell columnKey="subtype" width={getColumnWidth?.("subtype")} onResize={onColumnResize} className="px-4 py-2 hidden md:table-cell">
-                  {t("accounting.columns.account.subtype")}
-                </ModuleTableHeaderCell>
-              )}
-              {isColumnVisible("description") && (
-                <ModuleTableHeaderCell columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-4 py-2 hidden lg:table-cell">
-                  {t("accounting.columns.account.description")}
-                </ModuleTableHeaderCell>
-              )}
-              {isColumnVisible("normalBalance") && (
-                <ModuleTableHeaderCell columnKey="normalBalance" width={getColumnWidth?.("normalBalance")} onResize={onColumnResize} className="px-4 py-2">
-                  {t("accounting.columns.account.normalBalance")}
-                </ModuleTableHeaderCell>
-              )}
-              <TableHead className="px-4 py-2 text-end text-xs font-semibold text-muted-foreground uppercase h-auto">
-                {t("accounting.columns.actions")}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
+          <ModuleWorkTableHeader
+            columns={[
+              isColumnVisible("code") ? { id: "code", label: t("accounting.columns.account.code"), headerClassName: "px-4 py-2" } : null,
+              isColumnVisible("name") ? { id: "name", label: t("accounting.columns.account.name"), headerClassName: "px-4 py-2" } : null,
+              isColumnVisible("subtype") ? { id: "subtype", label: t("accounting.columns.account.subtype"), headerClassName: "px-4 py-2 hidden md:table-cell" } : null,
+              isColumnVisible("description") ? { id: "description", label: t("accounting.columns.account.description"), headerClassName: "px-4 py-2 hidden lg:table-cell" } : null,
+              isColumnVisible("normalBalance") ? { id: "normalBalance", label: t("accounting.columns.account.normalBalance"), headerClassName: "px-4 py-2" } : null,
+            ].filter((c): c is Exclude<typeof c, null> => c !== null)}
+            getColumnWidth={(key) => getColumnWidth?.(key)}
+            setColumnWidth={onColumnResize ?? (() => {})}
+            actionsLabel={t("accounting.columns.actions")}
+          />
           <TableBody className="divide-y divide-border">
             {accountTypeRows.map((account) => (
               <AccountTableRow

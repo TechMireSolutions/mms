@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DistributionManagerListCards } from "@/tenant/features/hasanat/components/DistributionManagerListCards";
-import { DistributionManagerListTable } from "@/tenant/features/hasanat/components/DistributionManagerListTable";
+import { DistributionManagerListDesktopTable } from "@/tenant/features/hasanat/components/DistributionManagerListDesktopTable";
 import type { DistributionManagerListProps } from "@/tenant/features/hasanat/components/distributionManagerListShared";
 
 export function DistributionManagerList(props: DistributionManagerListProps): React.JSX.Element {
@@ -25,7 +25,7 @@ export function DistributionManagerList(props: DistributionManagerListProps): Re
     <DistributionManagerListCards {...props} />
   ) : (
     <div className={WORK_SURFACE}>
-      <DistributionManagerListTable {...props} />
+      <DistributionManagerListDesktopTable {...props} />
     </div>
   );
 }

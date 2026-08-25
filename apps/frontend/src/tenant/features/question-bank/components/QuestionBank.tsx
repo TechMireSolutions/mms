@@ -10,7 +10,7 @@ import { ListPagination } from '@/components/ui/ListPagination';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { QuestionBankEmptyState } from '@/tenant/features/question-bank/components/QuestionBankEmptyState';
 import { QuestionBankList } from '@/tenant/features/question-bank/components/QuestionBankList';
-import { QuestionBankToolbar } from '@/tenant/features/question-bank/components/QuestionBankToolbar';
+import { QuestionBankListFilters } from '@/tenant/features/question-bank/components/QuestionBankListFilters';
 import { QuestionBankBulkActionBar } from '@/tenant/features/question-bank/components/QuestionBankBulkActionBar';
 import {
   buildQuestionBankListMetaFields,
@@ -153,7 +153,7 @@ export function QuestionBank({
 
   return (
     <div className="space-y-4">
-      <QuestionBankToolbar
+      <QuestionBankListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         config={config}

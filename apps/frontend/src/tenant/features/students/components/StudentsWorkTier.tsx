@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { buildStudentsWorkFilterChips } from "@/tenant/features/students/components/buildStudentsWorkFilterChips";
 import { StudentsBulkActionBar } from "@/tenant/features/students/components/StudentsBulkActionBar";
 import { StudentsWorkListBody } from "@/tenant/features/students/components/StudentsWorkListBody";
-import { StudentsWorkTierToolbar } from "@/tenant/features/students/components/StudentsWorkTierToolbar";
+import { StudentsListFilters } from "@/tenant/features/students/components/StudentsListFilters";
 import type { StudentsWorkTierProps } from "@/tenant/features/students/components/StudentsWorkTierTypes";
 
 export function StudentsWorkTier({
@@ -82,7 +82,7 @@ export function StudentsWorkTier({
         className="space-y-5"
         aria-busy={useServerWork && isWorkPageFetching ? true : undefined}
       >
-        <StudentsWorkTierToolbar
+        <StudentsListFilters
           studentSearch={studentSearch}
           studentFilterStatus={studentFilterStatus}
           studentFilterGender={studentFilterGender}

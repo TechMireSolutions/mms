@@ -6,7 +6,7 @@ import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EnrollmentListCards } from "@/tenant/features/enrollments/components/EnrollmentListCards";
-import { EnrollmentListTable } from "@/tenant/features/enrollments/components/EnrollmentListTable";
+import { EnrollmentsListDesktopTable } from "@/tenant/features/enrollments/components/EnrollmentsListDesktopTable";
 import type { EnrollmentListContentProps } from "@/tenant/features/enrollments/components/enrollmentListContentShared";
 import { Search } from "lucide-react";
 
@@ -30,7 +30,7 @@ export function EnrollmentListContent(props: EnrollmentListContentProps): React.
             <EnrollmentListCards {...props} />
           ) : (
             <div className={cn(WORK_SURFACE, "overflow-hidden")}>
-              <EnrollmentListTable {...props} />
+              <EnrollmentsListDesktopTable {...props} />
             </div>
           )}
         </Card>

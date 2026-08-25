@@ -7,10 +7,9 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useListRowMotion } from '@/hooks/useListRowMotion';
 import { UsersListAvatar } from '@/tenant/features/users/components/UsersListAvatar';
@@ -64,50 +63,29 @@ export function UsersListDesktopTable({
 
   return (
     <Table className="table-fixed">
-      <TableHeader>
-        <TableRow className="border-b border-border bg-muted/60 hover:bg-muted/60">
-          {canDelete && (
-            <TableHead className="w-8 px-3 py-2.5 h-auto">
-              <Checkbox
-                checked={someSelected ? 'indeterminate' : allSelected}
-                onCheckedChange={onToggleAll}
-                aria-label={allSelected ? t('common.deselect') : t('users.selectAll')}
-              />
-            </TableHead>
-          )}
-          <ModuleTableHeaderCell columnKey="user" width={getColumnWidth?.('user')} onResize={onColumnResize} className="px-3 py-2.5">
-            {t('users.colUser')}
-          </ModuleTableHeaderCell>
-          {visible('role') && (
-            <ModuleTableHeaderCell columnKey="role" width={getColumnWidth?.('role')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('users.colRole')}
-            </ModuleTableHeaderCell>
-          )}
-          {visible('status') && (
-            <ModuleTableHeaderCell columnKey="status" width={getColumnWidth?.('status')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('users.colStatus')}
-            </ModuleTableHeaderCell>
-          )}
-          {visible('lastLogin') && (
-            <ModuleTableHeaderCell columnKey="lastLogin" width={getColumnWidth?.('lastLogin')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('users.colLastLogin')}
-            </ModuleTableHeaderCell>
-          )}
-          {visible('created') && (
-            <ModuleTableHeaderCell columnKey="created" width={getColumnWidth?.('created')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('users.colCreated')}
-            </ModuleTableHeaderCell>
-          )}
-          {visible('twoFactor') && (
-            <ModuleTableHeaderCell columnKey="twoFactor" width={getColumnWidth?.('twoFactor')} onResize={onColumnResize} className="px-3 py-2.5">
-              {t('users.col2fa')}
-            </ModuleTableHeaderCell>
-          )}
-          <TableHead className="px-3 py-2.5 text-end text-xs font-semibold uppercase text-muted-foreground h-auto">
-            {t('users.colActions')}
-          </TableHead>
-        </TableRow>
-      </TableHeader>
+      <ModuleWorkTableHeader
+        columns={[
+          { id: 'user', label: t('users.colUser'), headerClassName: 'px-3 py-2.5' },
+          visible('role') ? { id: 'role', label: t('users.colRole'), headerClassName: 'px-3 py-2.5' } : null,
+          visible('status') ? { id: 'status', label: t('users.colStatus'), headerClassName: 'px-3 py-2.5' } : null,
+          visible('lastLogin') ? { id: 'lastLogin', label: t('users.colLastLogin'), headerClassName: 'px-3 py-2.5' } : null,
+          visible('created') ? { id: 'created', label: t('users.colCreated'), headerClassName: 'px-3 py-2.5' } : null,
+          visible('twoFactor') ? { id: 'twoFactor', label: t('users.col2fa'), headerClassName: 'px-3 py-2.5' } : null,
+        ].filter((c): c is Exclude<typeof c, null> => c !== null)}
+        getColumnWidth={(key) => getColumnWidth?.(key)}
+        setColumnWidth={onColumnResize ?? (() => {})}
+        actionsLabel={t('users.colActions')}
+        selection={
+          canDelete
+            ? {
+                allSelected,
+                someSelected,
+                onSelectAll: onToggleAll,
+                ariaLabel: t('users.selectAll'),
+              }
+            : undefined
+        }
+      />
       <TableBody className="divide-y divide-border">
         {users.map((user) => (
           <motion.tr key={user.id} {...rowMotion()} className="transition-colors hover:bg-muted/20">

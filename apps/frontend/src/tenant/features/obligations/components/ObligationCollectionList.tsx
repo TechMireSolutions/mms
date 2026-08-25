@@ -11,7 +11,7 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ObligationCollectionListContent } from "@/tenant/features/obligations/components/ObligationCollectionListContent";
-import { ObligationCollectionListToolbar } from "@/tenant/features/obligations/components/ObligationCollectionListToolbar";
+import { ObligationsListFilters } from "@/tenant/features/obligations/components/ObligationsListFilters";
 import { ObligationsBulkActionBar } from "@/tenant/features/obligations/components/ObligationsBulkActionBar";
 import { useObligationSelection } from "@/tenant/features/obligations/hooks/useObligationSelection";
 
@@ -135,7 +135,7 @@ export function ObligationCollectionList({
 
   return (
     <div className="space-y-4">
-      <ObligationCollectionListToolbar
+      <ObligationsListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={search}

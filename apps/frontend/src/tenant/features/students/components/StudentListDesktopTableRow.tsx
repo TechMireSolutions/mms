@@ -7,7 +7,7 @@ import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
-import { renderStudentListDesktopTableCell } from "@/tenant/features/students/components/StudentListDesktopTableCells";
+import { renderStudentsListDesktopTableCell } from "@/tenant/features/students/components/StudentListDesktopTableCells";
 import { StudentListActionsMenu } from "@/tenant/features/students/components/StudentListActionsMenu";
 import type { StudentListTableProps } from "@/tenant/features/students/components/StudentListContentTypes";
 
@@ -90,7 +90,7 @@ export function StudentListDesktopTableRow({
             col.key === "name" && workTableStickyCellBg(isSelected),
           )}
         >
-          {renderStudentListDesktopTableCell({
+          {renderStudentsListDesktopTableCell({
             studentRow,
             col,
             studentIdStr,

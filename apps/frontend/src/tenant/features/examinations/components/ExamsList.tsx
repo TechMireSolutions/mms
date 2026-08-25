@@ -14,7 +14,7 @@ import { EXAMINATIONS_MODULE_MANIFEST } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ExaminationsListContent } from "@/tenant/features/examinations/components/ExaminationsListContent";
-import { ExaminationsListToolbar } from "@/tenant/features/examinations/components/ExaminationsListToolbar";
+import { ExaminationsListFilters } from "@/tenant/features/examinations/components/ExaminationsListFilters";
 import { ExaminationsBulkActionBar } from "@/tenant/features/examinations/components/ExaminationsBulkActionBar";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
@@ -165,7 +165,7 @@ export default function ExamsList({
 
   return (
     <section className="space-y-4" aria-label={t("examinations.exams")} aria-busy={examsPageQuery.isFetching}>
-      <ExaminationsListToolbar
+      <ExaminationsListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={search}

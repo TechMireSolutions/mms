@@ -7,10 +7,9 @@ import {
   TableBody,
   TableCell,
   TableFooter,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -24,9 +23,9 @@ import {
   type JournalEntriesListProps,
 } from "@/tenant/features/accounting/components/journalEntriesListShared";
 
-type JournalEntriesListTableProps = JournalEntriesListProps;
+type JournalEntriesListDesktopTableProps = JournalEntriesListProps;
 
-export function JournalEntriesListTable(props: JournalEntriesListTableProps): React.JSX.Element {
+export function JournalEntriesListDesktopTable(props: JournalEntriesListDesktopTableProps): React.JSX.Element {
   const {
     entries,
     selectedIds,
@@ -55,57 +54,26 @@ export function JournalEntriesListTable(props: JournalEntriesListTableProps): Re
   return (
     <Table className="table-fixed">
       <caption className="sr-only">{t("accounting.journal.dashboard.tableCaption")}</caption>
-      <TableHeader>
-        <TableRow className="border-b border-border bg-muted/60 hover:bg-muted/60">
-          {canDelete && (
-            <TableHead className="px-3 py-2.5 w-10 h-auto">
-              <Checkbox
-                checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
-                onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
-                aria-label={t("accounting.trash.selectAll")}
-              />
-            </TableHead>
-          )}
-          {isColumnVisible("ref") && (
-            <ModuleTableHeaderCell columnKey="ref" width={getColumnWidth?.("ref")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("accounting.columns.journal.ref")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("date") && (
-            <ModuleTableHeaderCell columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("accounting.columns.journal.date")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("description") && (
-            <ModuleTableHeaderCell columnKey="description" width={getColumnWidth?.("description")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("accounting.columns.journal.description")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("tags") && (
-            <ModuleTableHeaderCell columnKey="tags" width={getColumnWidth?.("tags")} onResize={onColumnResize} className="px-3 py-2.5 hidden lg:table-cell">
-              {t("accounting.columns.journal.tags")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("debit") && (
-            <ModuleTableHeaderCell columnKey="debit" width={getColumnWidth?.("debit")} onResize={onColumnResize} className="px-3 py-2.5 text-end">
-              {t("accounting.columns.journal.debit")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("credit") && (
-            <ModuleTableHeaderCell columnKey="credit" width={getColumnWidth?.("credit")} onResize={onColumnResize} className="px-3 py-2.5 text-end">
-              {t("accounting.columns.journal.credit")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("status") && (
-            <ModuleTableHeaderCell columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("accounting.columns.journal.status")}
-            </ModuleTableHeaderCell>
-          )}
-          <TableHead className="px-3 py-2.5 text-end h-auto">
-            <span className="sr-only">{t("accounting.table.actions")}</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
+      <ModuleWorkTableHeader
+        columns={[
+          isColumnVisible("ref") ? { id: "ref", label: t("accounting.columns.journal.ref") } : null,
+          isColumnVisible("date") ? { id: "date", label: t("accounting.columns.journal.date") } : null,
+          isColumnVisible("description") ? { id: "description", label: t("accounting.columns.journal.description") } : null,
+          isColumnVisible("tags") ? { id: "tags", label: t("accounting.columns.journal.tags"), headerClassName: "hidden lg:table-cell" } : null,
+          isColumnVisible("debit") ? { id: "debit", label: t("accounting.columns.journal.debit"), headerClassName: "text-end" } : null,
+          isColumnVisible("credit") ? { id: "credit", label: t("accounting.columns.journal.credit"), headerClassName: "text-end" } : null,
+          isColumnVisible("status") ? { id: "status", label: t("accounting.columns.journal.status") } : null,
+        ].filter((c): c is Exclude<typeof c, null> => c !== null)}
+        getColumnWidth={(key) => getColumnWidth?.(key)}
+        setColumnWidth={onColumnResize ?? (() => {})}
+        selection={canDelete ? {
+          allSelected: allVisibleSelected,
+          someSelected: someVisibleSelected,
+          onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+          ariaLabel: t("accounting.trash.selectAll"),
+        } : undefined}
+        actionsLabel={renderEntryActions !== undefined ? t("accounting.table.actions") : undefined}
+      />
       <TableBody className="divide-y divide-border">
         {entries.map((entry) => {
           const { totalDebit, totalCredit } = getJournalEntryLineTotals(entry);

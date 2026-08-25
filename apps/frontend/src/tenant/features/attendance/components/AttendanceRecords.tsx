@@ -12,9 +12,9 @@ import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCu
 import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { notify } from "@/lib/notify";
 import { AttendanceRecordRowActions } from "./AttendanceRecordRowActions";
-import { AttendanceRecordsTable } from "./AttendanceRecordsTable";
+import { AttendanceListDesktopTable } from "./AttendanceListDesktopTable";
 import { AttendanceRecordsMobileList } from "./AttendanceRecordsMobileList";
-import { AttendanceRecordsToolbar } from "./AttendanceRecordsToolbar";
+import { AttendanceListFilters } from "./AttendanceListFilters";
 import { AttendanceBulkActionBar } from "./AttendanceBulkActionBar";
 import { AttendanceRecordsConfirmDialogs } from "./AttendanceRecordsConfirmDialogs";
 import { useAttendanceSelection } from "@/tenant/features/attendance/hooks/useAttendanceSelection";
@@ -191,7 +191,7 @@ export function AttendanceRecords({
 
   return (
     <section className="space-y-4" aria-busy={attendancePageQuery.isFetching}>
-      <AttendanceRecordsToolbar
+      <AttendanceListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={searchInput}
@@ -243,7 +243,7 @@ export function AttendanceRecords({
           t={t}
         />
       ) : (
-        <AttendanceRecordsTable
+        <AttendanceListDesktopTable
           paginatedRecords={pageRecords}
           isColumnVisible={columnVisible}
           visibleColCount={visibleColCount}

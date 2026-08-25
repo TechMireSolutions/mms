@@ -15,7 +15,7 @@ import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { TeacherList } from "@/tenant/features/teachers/components/TeacherList";
 import { buildTeachersWorkFilterChips } from "@/tenant/features/teachers/components/buildTeachersWorkFilterChips";
 import { TeachersBulkActionBar } from "@/tenant/features/teachers/components/TeachersBulkActionBar";
-import { TeachersWorkTierToolbar } from "@/tenant/features/teachers/components/TeachersWorkTierToolbar";
+import { TeachersListFilters } from "@/tenant/features/teachers/components/TeachersListFilters";
 import { computeTeachersSelectionTargets } from "@/tenant/features/teachers/hooks/teachersSelectionTargets";
 import { useTeacherStatusConfig } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
 import type { TeachersWorkOverlayInteractions } from "@/tenant/features/teachers/hooks/teachersPageOverlaysTypes";
@@ -132,7 +132,7 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
         className="space-y-5"
         aria-busy={props.useServerWork && props.isWorkPageFetching ? true : undefined}
       >
-        <TeachersWorkTierToolbar
+        <TeachersListFilters
           search={props.search}
           filterStatus={props.filterStatus}
           filterSpecialization={props.filterSpecialization}

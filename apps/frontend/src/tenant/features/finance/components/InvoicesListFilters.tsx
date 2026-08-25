@@ -1,0 +1,77 @@
+import type React from "react";
+import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import { FilterChips } from "@/components/ui/FilterChips";
+import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { AppTranslationKey } from "@mms/shared";
+import { InvoicesFilterMenuButton } from "@/tenant/features/finance/components/InvoicesFilterMenuButton";
+
+export const FINANCE_INVOICES_WORK_SEARCH_INPUT_ID = "finance-invoices-work-search";
+
+interface InvoicesListFiltersProps {
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
+  search: string;
+  filterStatus: string[];
+  columnCustomizer?: ModuleColumnCustomizerProps;
+  onSearchChange: (value: string) => void;
+  onToggleStatus: (status: string) => void;
+  onClearStatuses: () => void;
+}
+
+export function InvoicesListFilters({
+  viewMode,
+  onViewModeChange,
+  search,
+  filterStatus,
+  columnCustomizer,
+  onSearchChange,
+  onToggleStatus,
+  onClearStatuses,
+}: InvoicesListFiltersProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const statusLabel = (status: string) => t(`finance.invoiceStatus.${status}` as AppTranslationKey);
+
+  return (
+    <>
+      <ModuleWorkToolbar
+        regionLabel={t("finance.invoices")}
+        search={search}
+        onSearchChange={onSearchChange}
+        searchPlaceholder={t("finance.searchInvoices")}
+        searchId={FINANCE_INVOICES_WORK_SEARCH_INPUT_ID}
+        hasActiveFilters={filterStatus.length > 0}
+        onClearFilters={onClearStatuses}
+        clearFiltersLabel={t("finance.clearFilters")}
+        filterButton={
+          <InvoicesFilterMenuButton
+            filterStatus={filterStatus}
+            activeFilterCount={filterStatus.length}
+            onToggleStatus={onToggleStatus}
+            onClearFilters={onClearStatuses}
+          />
+        }
+        viewModeToggle={{
+          viewMode,
+          onViewModeChange,
+        }}
+        columnCustomizer={columnCustomizer ? {
+          registry: columnCustomizer.columnRegistry,
+          onUpdate: columnCustomizer.updateUserColumnLayout,
+          onReset: columnCustomizer.onResetLayout,
+          labels: columnCustomizer.labels,
+        } : undefined}
+      />
+
+      <FilterChips
+        chips={filterStatus.map((status) => ({
+          key: `status:${status}`,
+          label: statusLabel(status),
+          onRemove: () => onToggleStatus(status),
+        }))}
+        onClearAll={onClearStatuses}
+      />
+    </>
+  );
+}

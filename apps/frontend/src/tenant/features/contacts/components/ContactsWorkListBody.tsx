@@ -3,7 +3,7 @@ import { UserX } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { ModuleWorkDirectoryEmpty } from "@/components/ui/ModuleWorkDirectoryEmpty";
 import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
-import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
+import ContactsListDesktopTable from "@/tenant/features/contacts/components/ContactsListDesktopTable";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
 import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
@@ -23,7 +23,7 @@ interface ContactsWorkListBodyProps {
   onShowDeletedChange?: (show: boolean) => void;
   viewMode: ContactsWorkViewMode;
   commonDirectoryProps: React.ComponentProps<typeof ContactCards>;
-  tableProps: React.ComponentProps<typeof ContactsTable>;
+  tableProps: React.ComponentProps<typeof ContactsListDesktopTable>;
   useServerWork: boolean;
   workPageData?: { page: number; total: number; limit: number; hasMore: boolean } | null;
   onPageChange: (page: number) => void;
@@ -99,7 +99,7 @@ export function ContactsWorkListBody({
         <ContactCards {...commonDirectoryProps} />
       ) : (
         <div className="space-y-2">
-          <ContactsTable {...tableProps} />
+          <ContactsListDesktopTable {...tableProps} />
         </div>
       )}
     </ModuleWorkListStateShell>

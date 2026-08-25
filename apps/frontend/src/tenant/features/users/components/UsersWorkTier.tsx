@@ -55,6 +55,7 @@ interface UsersWorkTierProps {
   onBulkRestoreUsers: (ids: string[]) => void;
   onResetPassword: (user: SystemUser) => void;
   onAddUser: () => void;
+  onInviteUser: () => void;
   onMessageUsers: (channel: 'sms' | 'whatsapp' | 'email', users: SystemUser[]) => void;
   onToggleDeleted: (next: boolean) => void;
 }
@@ -101,6 +102,7 @@ export function UsersWorkTier({
   onBulkRestoreUsers,
   onResetPassword,
   onAddUser,
+  onInviteUser,
   onMessageUsers,
   onToggleDeleted,
 }: UsersWorkTierProps): React.JSX.Element {
@@ -148,6 +150,7 @@ export function UsersWorkTier({
             onBulkRestore={onBulkRestoreUsers}
             onResetPassword={onResetPassword}
             onAddUser={onAddUser}
+            onInviteUser={onInviteUser}
             onMessage={onMessageUsers}
             canWrite={canWrite}
             canDelete={canDelete}

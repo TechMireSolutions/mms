@@ -1,7 +1,7 @@
 import { useMemo, type ComponentProps } from "react";
 import type { Contact } from "@mms/shared";
 import ContactCards from "@/tenant/features/contacts/components/ContactCards";
-import ContactsTable from "@/tenant/features/contacts/components/ContactsTable";
+import ContactsListDesktopTable from "@/tenant/features/contacts/components/ContactsListDesktopTable";
 import { getDirectoryPageSelection } from "@/lib/directorySelection";
 import type { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
 import type { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
@@ -14,7 +14,7 @@ type Overlay = ReturnType<typeof useContactsPageOverlayState>;
 type Messaging = ReturnType<typeof useContactsMessagingActions>;
 type Actions = ReturnType<typeof useContactsPageActions>;
 
-/** Builds ContactCards / ContactsTable props from page directory slices. */
+/** Builds ContactCards / ContactsListDesktopTable props from page directory slices. */
 export function useContactsPageDirectoryProps({
   directory,
   overlay,
@@ -110,7 +110,7 @@ export function useContactsPageDirectoryProps({
   );
 
   const tableProps = useMemo(
-    (): ComponentProps<typeof ContactsTable> => ({
+    (): ComponentProps<typeof ContactsListDesktopTable> => ({
       contacts: workContacts,
       selected,
       onSelect: handleSelect,

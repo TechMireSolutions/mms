@@ -7,10 +7,9 @@ import { cn } from "@/lib/utils";
 import {
   Table,
   TableBody,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { StudentListDesktopTableRow } from "@/tenant/features/students/components/StudentListDesktopTableRow";
@@ -23,7 +22,7 @@ import {
   toStudentListSortField,
 } from "@/tenant/features/students/components/studentListVisibleColumns";
 
-type StudentListDesktopTableProps = Pick<
+type StudentsListDesktopTableProps = Pick<
   StudentListTableProps,
   | "paginatedStudents"
   | "sessions"
@@ -51,7 +50,7 @@ type StudentListDesktopTableProps = Pick<
   | "onColumnResize"
 >;
 
-export function StudentListDesktopTable({
+export function StudentsListDesktopTable({
   paginatedStudents,
   sessions,
   selectedIds,
@@ -76,7 +75,7 @@ export function StudentListDesktopTable({
   onOpenComposer,
   getColumnWidth,
   onColumnResize,
-}: StudentListDesktopTableProps) {
+}: StudentsListDesktopTableProps) {
   const { t } = useTranslation();
   const visibleColumns = getStudentVisibleWorkColumns(columnRegistry, isColumnVisible);
   const handleSort = (field: string) => onSort(field as StudentListSortField);
@@ -89,45 +88,22 @@ export function StudentListDesktopTable({
   return (
     <>
       <Table className="table-fixed">
-      <TableHeader>
-        <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-          <TableHead
-            className={cn(
-              "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 border-e border-border/30 h-auto",
-              WORK_STICKY_HEAD,
-            )}
-          >
-            <Checkbox
-              checked={someSelected ? "indeterminate" : allSelected}
-              onCheckedChange={onSelectAll}
-              aria-label={allSelected ? t("common.deselect") : t("students.table.selectAll")}
-              className="cursor-pointer"
-            />
-          </TableHead>
-          {visibleColumns.map((col) => (
-            <ModuleTableHeaderCell
-              key={col.key}
-              columnKey={col.key}
-              sortKey={toStudentListSortField(col.key)}
-              activeSortField={sortField}
-              sortDir={sortDir}
-              onSort={handleSort}
-              width={getColumnWidth?.(col.key) ?? col.width}
-              onResize={onColumnResize}
-              className={cn(
-                col.key === "name" &&
-                  "sticky start-12 z-20 border-e border-border/30",
-                col.key === "name" && WORK_STICKY_HEAD,
-              )}
-            >
-              {col.label}
-            </ModuleTableHeaderCell>
-          ))}
-          <TableHead className="px-4 py-3 w-16 h-auto">
-            <span className="sr-only">{t("students.table.actions")}</span>
-          </TableHead>
-        </TableRow>
-      </TableHeader>
+      <ModuleWorkTableHeader
+        columns={visibleColumns.map(col => ({ id: col.key, label: col.label }))}
+        sortField={sortField ?? undefined}
+        sortDir={sortDir}
+        onSort={handleSort}
+        getColumnWidth={(key) => getColumnWidth?.(key) ?? visibleColumns.find(c => c.key === key)?.width}
+        setColumnWidth={onColumnResize ?? (() => {})}
+        selection={{
+          allSelected,
+          someSelected,
+          onSelectAll,
+          ariaLabel: allSelected ? t("common.deselect") : t("students.table.selectAll")
+        }}
+        actionsLabel={t("students.table.actions")}
+        stickyColumnId="name"
+      />
       <TableBody className="divide-y divide-border/50">
         <AnimatePresence>
           {paginatedStudents.map((studentRow, rowIndex) => (

@@ -1,21 +1,17 @@
 import type { JSX } from 'react';
 import { Button } from '@/components/ui/button';
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
-import { ModuleClearFiltersButton } from '@/components/ui/ModuleClearFiltersButton';
+import { type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { FilterChips } from '@/components/ui/FilterChips';
-import { SearchBar } from '@/components/ui/SearchBar';
-import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
-import { WORK_SURFACE } from '@/components/ui/formStyles';
+import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
-import { cn } from '@/lib/utils';
 import { ExaminationsFiltersMenuButton } from '@/tenant/features/examinations/components/ExaminationsFiltersMenuButton';
 
 const EXAM_STATUSES = ['upcoming', 'ongoing', 'completed', 'scheduled', 'cancelled'] as const;
 
 export const EXAMINATIONS_WORK_SEARCH_INPUT_ID = 'examinations-work-search';
 
-interface ExaminationsListToolbarProps {
+interface ExaminationsListFiltersProps {
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
@@ -30,7 +26,7 @@ interface ExaminationsListToolbarProps {
   onNew: () => void;
 }
 
-export function ExaminationsListToolbar({
+export function ExaminationsListFilters({
   viewMode,
   onViewModeChange,
   search,
@@ -43,7 +39,7 @@ export function ExaminationsListToolbar({
   onToggleStatus,
   onClearStatuses,
   onNew,
-}: ExaminationsListToolbarProps): JSX.Element {
+}: ExaminationsListFiltersProps): JSX.Element {
   const { t } = useTranslation();
 
   const clearFilters = (): void => {
@@ -52,23 +48,16 @@ export function ExaminationsListToolbar({
 
   return (
     <>
-      <div className={cn(WORK_SURFACE, 'flex flex-col gap-3 p-3 sm:flex-row')}>
-        <div className="relative min-w-0 flex-1">
-          <SearchBar
-            id={EXAMINATIONS_WORK_SEARCH_INPUT_ID}
-            value={search}
-            onChange={onSearchChange}
-            placeholder={t('examinations.searchExams')}
-            className="w-full min-w-0"
-          />
-          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
-            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
-              /
-            </kbd>
-          </div>
-        </div>
-
-        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+      <ModuleWorkToolbar
+        regionLabel={t('nav.examinations')}
+        search={search}
+        onSearchChange={onSearchChange}
+        searchPlaceholder={t('examinations.searchExams')}
+        searchId={EXAMINATIONS_WORK_SEARCH_INPUT_ID}
+        hasActiveFilters={filterStatus.length > 0}
+        onClearFilters={clearFilters}
+        clearFiltersLabel={t('examinations.clearFilters')}
+        filterButton={
           <ExaminationsFiltersMenuButton
             filterStatus={filterStatus}
             activeFilterCount={filterStatus.length}
@@ -76,15 +65,9 @@ export function ExaminationsListToolbar({
             onToggleStatus={onToggleStatus}
             onClearFilters={clearFilters}
           />
-
-          {filterStatus.length > 0 ? (
-            <ModuleClearFiltersButton
-              onClearFilters={clearFilters}
-              label={t('examinations.clearFilters')}
-            />
-          ) : null}
-
-          {canWrite && !showDeleted && (
+        }
+        primaryAction={
+          canWrite && !showDeleted ? (
             <Button
               type="button"
               onClick={onNew}
@@ -92,19 +75,19 @@ export function ExaminationsListToolbar({
             >
               {t('examinations.newExam')}
             </Button>
-          )}
-
-          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-
-          {columnCustomizer && (
-            <ModuleColumnCustomizer
-              columnRegistry={columnCustomizer.columnRegistry}
-              updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-              labels={columnCustomizer.labels}
-            />
-          )}
-        </div>
-      </div>
+          ) : undefined
+        }
+        viewModeToggle={{
+          viewMode,
+          onViewModeChange,
+        }}
+        columnCustomizer={columnCustomizer ? {
+          registry: columnCustomizer.columnRegistry,
+          onUpdate: columnCustomizer.updateUserColumnLayout,
+          onReset: columnCustomizer.onResetLayout,
+          labels: columnCustomizer.labels,
+        } : undefined}
+      />
 
       <FilterChips
         chips={filterStatus.map((status) => ({

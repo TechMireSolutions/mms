@@ -10,7 +10,7 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { EnrollmentListContent } from "@/tenant/features/enrollments/components/EnrollmentListContent";
-import { EnrollmentListToolbar } from "@/tenant/features/enrollments/components/EnrollmentListToolbar";
+import { EnrollmentsListFilters } from "@/tenant/features/enrollments/components/EnrollmentsListFilters";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -107,7 +107,7 @@ export function EnrollmentList({
 
   return (
     <section className="space-y-4" aria-label={t("enrollments.list")}>
-      <EnrollmentListToolbar
+      <EnrollmentsListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={search}

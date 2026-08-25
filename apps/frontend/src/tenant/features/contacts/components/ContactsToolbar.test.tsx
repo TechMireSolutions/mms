@@ -2,7 +2,7 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { AppTranslationKey } from '@mms/shared';
-import { ContactsToolbar } from './ContactsToolbar';
+import { ContactsListFilters } from './ContactsListFilters';
 import { CONTACTS_WORK_SEARCH_INPUT_ID } from '@/tenant/features/contacts/hooks/useContactsKeyboardShortcuts';
 
 vi.mock('@/hooks/useTranslation', () => ({
@@ -20,8 +20,8 @@ vi.mock('@/hooks/useTranslation', () => ({
   }),
 }));
 
-vi.mock('@/tenant/features/contacts/hooks/useContactsToolbarModel', () => ({
-  useContactsToolbarModel: () => ({
+vi.mock('@/tenant/features/contacts/hooks/useContactsListFiltersModel', () => ({
+  useContactsListFiltersModel: () => ({
     t: (key: AppTranslationKey, params?: Record<string, string | number>) => {
       const map: Partial<Record<AppTranslationKey, string>> = {
         'contacts.shownCount': `Showing ${params?.count ?? 0} contacts`,
@@ -53,7 +53,7 @@ vi.mock('@/tenant/features/contacts/hooks/useContactsToolbarModel', () => ({
   }),
 }));
 
-describe('ContactsToolbar Component', () => {
+describe('ContactsListFilters Component', () => {
   const defaultProps = {
     search: '',
     onSearchChange: vi.fn(),
@@ -71,7 +71,7 @@ describe('ContactsToolbar Component', () => {
   };
 
   it('renders search input with placeholder, shortcut badge, canonical ID, and accessibility region', () => {
-    const html = renderToStaticMarkup(<ContactsToolbar {...defaultProps} />);
+    const html = renderToStaticMarkup(<ContactsListFilters {...defaultProps} />);
     expect(html).toContain('Search contacts by name, phone, email...');
     expect(html).toContain('/');
     expect(html).toContain(`id="${CONTACTS_WORK_SEARCH_INPUT_ID}"`);
@@ -80,33 +80,33 @@ describe('ContactsToolbar Component', () => {
   });
 
   it('renders clear search button when search query is non-empty', () => {
-    const emptyHtml = renderToStaticMarkup(<ContactsToolbar {...defaultProps} search="" />);
+    const emptyHtml = renderToStaticMarkup(<ContactsListFilters {...defaultProps} search="" />);
     expect(emptyHtml).not.toContain('Clear search');
 
-    const filledHtml = renderToStaticMarkup(<ContactsToolbar {...defaultProps} search="Ahmad" />);
+    const filledHtml = renderToStaticMarkup(<ContactsListFilters {...defaultProps} search="Ahmad" />);
     expect(filledHtml).toContain('Clear search');
   });
 
   it('renders live polite count announcer when shownCount is supplied', () => {
-    const html = renderToStaticMarkup(<ContactsToolbar {...defaultProps} shownCount={42} />);
+    const html = renderToStaticMarkup(<ContactsListFilters {...defaultProps} shownCount={42} />);
     expect(html).toContain('Showing 42 contacts');
   });
 
   it('conditionally renders clear filters button when hasActiveFilters is true', () => {
-    const withoutFilterHtml = renderToStaticMarkup(<ContactsToolbar {...defaultProps} hasActiveFilters={false} />);
+    const withoutFilterHtml = renderToStaticMarkup(<ContactsListFilters {...defaultProps} hasActiveFilters={false} />);
     expect(withoutFilterHtml).not.toContain('Clear filters');
 
-    const withFilterHtml = renderToStaticMarkup(<ContactsToolbar {...defaultProps} hasActiveFilters={true} activeFilterCount={2} />);
+    const withFilterHtml = renderToStaticMarkup(<ContactsListFilters {...defaultProps} hasActiveFilters={true} activeFilterCount={2} />);
     expect(withFilterHtml).toContain('Clear filters');
   });
 
   it('conditionally renders trash toggle when canViewDeleted and onShowDeletedChange are provided', () => {
     const onShowDeletedChange = vi.fn();
-    const withoutTrashHtml = renderToStaticMarkup(<ContactsToolbar {...defaultProps} canViewDeleted={false} />);
+    const withoutTrashHtml = renderToStaticMarkup(<ContactsListFilters {...defaultProps} canViewDeleted={false} />);
     expect(withoutTrashHtml).not.toContain('Show Deleted');
 
     const withTrashHtml = renderToStaticMarkup(
-      <ContactsToolbar
+      <ContactsListFilters
         {...defaultProps}
         canViewDeleted={true}
         viewingDeleted={false}
@@ -117,10 +117,10 @@ describe('ContactsToolbar Component', () => {
   });
 
   it('renders active view mode selection in WorkViewModeToggle', () => {
-    const tableHtml = renderToStaticMarkup(<ContactsToolbar {...defaultProps} viewMode="table" />);
+    const tableHtml = renderToStaticMarkup(<ContactsListFilters {...defaultProps} viewMode="table" />);
     expect(tableHtml).toContain('aria-pressed="true"');
 
-    const cardsHtml = renderToStaticMarkup(<ContactsToolbar {...defaultProps} viewMode="cards" />);
+    const cardsHtml = renderToStaticMarkup(<ContactsListFilters {...defaultProps} viewMode="cards" />);
     expect(cardsHtml).toContain('aria-pressed="true"');
   });
 });

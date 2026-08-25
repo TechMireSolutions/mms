@@ -1,15 +1,10 @@
 import type { JSX } from 'react';
 import { workspaceRoleLabel, type ModuleColumnRegistryEntry, type WorkspaceRole } from '@mms/shared';
 import { FormSelect } from '@/components/ui/FormSelect';
-import {
-  ModuleColumnCustomizer,
-  type ModuleColumnCustomizerLabels,
-} from '@/components/ui/ModuleColumnCustomizer';
-import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
-import { SearchBar } from '@/components/ui/SearchBar';
+import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import { useTranslation } from '@/hooks/useTranslation';
-import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
+import type { ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
 import { USERS_WORK_SEARCH_INPUT_ID } from '@/tenant/features/users/hooks/useUsersKeyboardShortcuts';
 
 interface UsersListFiltersProps {
@@ -29,6 +24,7 @@ interface UsersListFiltersProps {
   columnRegistry?: ModuleColumnRegistryEntry[];
   updateUserColumnLayout?: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   customizerLabels?: ModuleColumnCustomizerLabels;
+  primaryAction?: React.ReactNode;
 }
 
 export function UsersListFilters({
@@ -48,18 +44,46 @@ export function UsersListFilters({
   columnRegistry,
   updateUserColumnLayout,
   customizerLabels,
+  primaryAction,
 }: UsersListFiltersProps): JSX.Element {
   const { t } = useTranslation();
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <SearchBar
-        id={USERS_WORK_SEARCH_INPUT_ID}
-        value={search}
-        onChange={onSearchChange}
-        placeholder={t('users.searchPlaceholder')}
-        className="min-w-cell-md flex-1"
-      />
+    <ModuleWorkToolbar
+      regionLabel={t('page.users.title')}
+      searchId={USERS_WORK_SEARCH_INPUT_ID}
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder={t('users.searchPlaceholder')}
+      viewModeToggle={{
+        viewMode,
+        onViewModeChange,
+      }}
+      columnCustomizer={
+        columnRegistry && updateUserColumnLayout
+          ? {
+              registry: columnRegistry,
+              onUpdate: updateUserColumnLayout,
+              labels: customizerLabels,
+            }
+          : undefined
+      }
+      trashToggle={
+        canDelete
+          ? {
+              canViewDeleted: true,
+              viewingDeleted: showDeleted,
+              onToggle: (v) => {
+                onClearSelection();
+                onToggleDeleted?.(v);
+              },
+              activeLabel: t('users.trash.showActive'),
+              deletedLabel: t('users.trash.showDeleted'),
+            }
+          : undefined
+      }
+      primaryAction={primaryAction}
+    >
       <FormSelect
         id="role-filter"
         name="role-filter"
@@ -73,7 +97,7 @@ export function UsersListFilters({
           })),
         ]}
         aria-label={t('users.filterRole')}
-        className="w-auto"
+        className="w-auto shrink-0"
       />
       {!showDeleted ? (
         <FormSelect
@@ -88,31 +112,9 @@ export function UsersListFilters({
             { value: 'suspended', label: t('users.status.suspended') },
           ]}
           aria-label={t('users.filterStatus')}
-          className="w-auto"
+          className="w-auto shrink-0"
         />
       ) : null}
-
-      <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-
-      {columnRegistry && updateUserColumnLayout && customizerLabels ? (
-        <ModuleColumnCustomizer
-          columnRegistry={columnRegistry}
-          updateUserColumnLayout={updateUserColumnLayout}
-          labels={customizerLabels}
-        />
-      ) : null}
-
-      {canDelete ? (
-        <ModuleTrashToggle
-          showDeleted={showDeleted}
-          onToggle={() => {
-            onClearSelection();
-            onToggleDeleted?.(!showDeleted);
-          }}
-          showActiveLabel={t('users.trash.showActive')}
-          showDeletedLabel={t('users.trash.showDeleted')}
-        />
-      ) : null}
-    </div>
+    </ModuleWorkToolbar>
   );
 }

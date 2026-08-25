@@ -16,7 +16,7 @@ import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
 import { cn } from "@/lib/utils";
 
-interface ContactsTableProps {
+interface ContactsListDesktopTableProps {
   contacts: Contact[];
   selected: (number | string)[];
   onSelect: (contactId: number | string) => void;
@@ -40,7 +40,7 @@ interface ContactsTableProps {
   someSelected?: boolean;
 }
 
-export default function ContactsTable({
+export default function ContactsListDesktopTable({
   contacts,
   selected,
   onSelect,
@@ -62,7 +62,7 @@ export default function ContactsTable({
   canDelete = false,
   allSelected = false,
   someSelected = false,
-}: ContactsTableProps): React.JSX.Element {
+}: ContactsListDesktopTableProps): React.JSX.Element {
   const { prefs, countryCodesMap, countryCodes, getColumnWidth, setColumnWidth } = useContactConfig();
   const { t } = useTranslation();
   const parentRef = useRef<HTMLDivElement>(null);

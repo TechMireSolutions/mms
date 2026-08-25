@@ -11,10 +11,9 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
@@ -32,9 +31,9 @@ import {
 import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import { renderTeacherWorkColumnValue } from "@/tenant/features/teachers/components/teacherWorkColumnCell";
 
-type TeacherListTableProps = Omit<TeacherListContentProps, never>;
+type TeachersListDesktopTableProps = Omit<TeacherListContentProps, never>;
 
-export function TeacherListTable(props: TeacherListTableProps): React.JSX.Element {
+export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): React.JSX.Element {
   const {
     teachers,
     selectedIds,
@@ -78,46 +77,26 @@ export function TeacherListTable(props: TeacherListTableProps): React.JSX.Elemen
   return (
     <>
       <Table className="table-fixed">
-        <TableHeader>
-          <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-            <TableHead
-              className={cn(
-                "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 border-e border-border/30 h-auto",
-                WORK_STICKY_HEAD,
-              )}
-            >
-              <Checkbox
-                checked={someSelected ? "indeterminate" : allSelected}
-                onCheckedChange={onSelectAll}
-                aria-label={allSelected ? t("common.deselect") : t("teachers.table.selectAll")}
-                className="cursor-pointer"
-              />
-            </TableHead>
-            {visibleColumns.map((col) => (
-              <ModuleTableHeaderCell
-                key={col.key}
-                columnKey={col.key}
-                sortKey={toTeacherListSortField(col.key)}
-                activeSortField={sortField}
-                sortDir={sortDir}
-                onSort={handleSort}
-                width={getColumnWidth?.(col.key) ?? col.width}
-                onResize={onColumnResize}
-                className={cn(
-                  col.key === "name" &&
-                    "sticky start-12 z-20 border-e border-border/30",
-                  col.key === "name" && WORK_STICKY_HEAD,
-                  col.key !== "name" && teacherWorkColumnHeadClass(col.key),
-                )}
-              >
-                {col.label}
-              </ModuleTableHeaderCell>
-            ))}
-            <TableHead className="px-4 py-3 w-16 h-auto">
-              <span className="sr-only">{t("teachers.table.actions")}</span>
-            </TableHead>
-          </TableRow>
-        </TableHeader>
+        <ModuleWorkTableHeader
+          columns={visibleColumns.map(col => ({
+            id: col.key,
+            label: col.label,
+            headerClassName: col.key !== "name" ? teacherWorkColumnHeadClass(col.key) : undefined
+          }))}
+          sortField={sortField ?? undefined}
+          sortDir={sortDir}
+          onSort={handleSort}
+          getColumnWidth={(key) => getColumnWidth?.(key) ?? visibleColumns.find(c => c.key === key)?.width}
+          setColumnWidth={onColumnResize ?? (() => {})}
+          selection={{
+            allSelected,
+            someSelected,
+            onSelectAll,
+            ariaLabel: allSelected ? t("common.deselect") : t("teachers.table.selectAll")
+          }}
+          actionsLabel={t("teachers.table.actions")}
+          stickyColumnId="name"
+        />
         <TableBody className="divide-y divide-border/50">
           <AnimatePresence>
             {teachers.map((teacher, rowIndex) => {

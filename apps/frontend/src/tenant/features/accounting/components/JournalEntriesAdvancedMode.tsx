@@ -6,7 +6,7 @@ import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/acc
 import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
 import { JournalEntryForm } from "@/tenant/features/accounting/components/JournalEntryForm";
 import { JournalEntriesList } from "@/tenant/features/accounting/components/JournalEntriesList";
-import { JournalEntriesAdvancedToolbar, JournalEntriesAdvancedFilters } from "@/tenant/features/accounting/components/JournalEntriesAdvancedToolbar";
+import { JournalEntriesListFilters, JournalEntriesAdvancedFilters } from "@/tenant/features/accounting/components/JournalEntriesListFilters";
 import { AccountingBulkActionBar } from "@/tenant/features/accounting/components/AccountingBulkActionBar";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -81,7 +81,7 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
 
   return (
     <section aria-label={t("accounting.journal.advancedAria")} className="space-y-4">
-      <JournalEntriesAdvancedToolbar
+      <JournalEntriesListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         mode={props.mode}

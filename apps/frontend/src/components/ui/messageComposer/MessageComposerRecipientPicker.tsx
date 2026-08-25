@@ -5,7 +5,7 @@ import { toMessagingRecipient } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useMessagingWorkRecipients } from '@/tenant/features/messaging/hooks/useMessagingWorkRecipients';
 import { useContactColumns } from '@/lib/contexts/ContactConfigContext';
-import ContactsTable from '@/tenant/features/contacts/components/ContactsTable';
+import ContactsListDesktopTable from '@/tenant/features/contacts/components/ContactsListDesktopTable';
 import { SearchBar } from '@/components/ui/SearchBar';
 
 interface MessageComposerRecipientPickerProps {
@@ -122,7 +122,7 @@ export function MessageComposerRecipientPicker({
             {t('messaging.noRecipientsFound')}
           </div>
         ) : (
-          <ContactsTable
+          <ContactsListDesktopTable
             contacts={contacts}
             selected={Array.from(existingIds)}
             onSelect={disabled ? noop : handleSelect}

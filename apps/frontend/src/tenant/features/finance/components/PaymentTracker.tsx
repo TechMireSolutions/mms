@@ -8,7 +8,7 @@ import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { PaymentTrackerList, PAYMENT_TRACKER_COLUMN_KEYS } from "@/tenant/features/finance/components/PaymentTrackerList";
-import { PaymentMethodSummary, PaymentSelectionBar } from "@/tenant/features/finance/components/PaymentTrackerToolbar";
+import { PaymentMethodSummary, PaymentSelectionBar } from "@/tenant/features/finance/components/PaymentsListFilters";
 
 const METHOD_LABEL_KEYS: Record<string, AppTranslationKey> = {
   Cash: "finance.paymentMethod.cash",

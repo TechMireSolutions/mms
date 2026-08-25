@@ -1,6 +1,6 @@
 import type { JSX } from "react";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { QuestionBankTable } from "@/tenant/features/question-bank/components/QuestionBankTable";
+import { QuestionBankListDesktopTable } from "@/tenant/features/question-bank/components/QuestionBankListDesktopTable";
 import { QuestionBankListCards } from "@/tenant/features/question-bank/components/QuestionBankListCards";
 import type { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 import type { QuestionBankQuestion as Question } from "@mms/shared";
@@ -60,7 +60,7 @@ export function QuestionBankList(props: QuestionBankListProps): JSX.Element {
   }
 
   return (
-    <QuestionBankTable
+    <QuestionBankListDesktopTable
       questions={props.questions}
       config={props.config}
       difficultyConfig={props.difficultyConfig}

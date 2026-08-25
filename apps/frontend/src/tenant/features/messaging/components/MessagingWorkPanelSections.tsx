@@ -1,13 +1,13 @@
 export {
-  MessagingWorkToolbar,
+  MessagingListFilters,
   MESSAGING_WORK_SEARCH_INPUT_ID,
-  type MessagingWorkToolbarProps,
-} from './MessagingWorkToolbar';
+  type MessagingListFiltersProps,
+} from './MessagingListFilters';
 
 export {
-  MessagingWorkTable,
-  type MessagingWorkTableProps,
-} from './MessagingWorkTable';
+  MessagingListDesktopTable,
+  type MessagingListDesktopTableProps,
+} from './MessagingListDesktopTable';
 
 export {
   MessagingWorkCards,

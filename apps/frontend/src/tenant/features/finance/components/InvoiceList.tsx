@@ -11,7 +11,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useInvoiceSelection } from "@/tenant/features/finance/hooks/useInvoiceSelection";
 import { FinanceBulkActionBar } from "@/tenant/features/finance/components/FinanceBulkActionBar";
 import { InvoiceListContent } from "@/tenant/features/finance/components/InvoiceListContent";
-import { InvoiceListToolbar } from "@/tenant/features/finance/components/InvoiceListToolbar";
+import { InvoicesListFilters } from "@/tenant/features/finance/components/InvoicesListFilters";
 import { getInvoiceVisibleWorkColumns } from "@/tenant/features/finance/components/invoiceListVisibleColumns";
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
@@ -122,7 +122,7 @@ export function InvoiceList({
 
   return (
     <section aria-label={t("finance.invoices")} className="space-y-4">
-      <InvoiceListToolbar
+      <InvoicesListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         search={search}

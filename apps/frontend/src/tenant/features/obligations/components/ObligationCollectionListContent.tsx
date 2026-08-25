@@ -4,7 +4,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ObligationCollectionListCards } from "@/tenant/features/obligations/components/ObligationCollectionListCards";
-import { ObligationCollectionListTable } from "@/tenant/features/obligations/components/ObligationCollectionListTable";
+import { ObligationsListDesktopTable } from "@/tenant/features/obligations/components/ObligationsListDesktopTable";
 import type { ObligationCollectionListContentProps } from "@/tenant/features/obligations/components/obligationCollectionListContentShared";
 import { Plus, Receipt } from "lucide-react";
 
@@ -42,7 +42,7 @@ export function ObligationCollectionListContent(props: ObligationCollectionListC
     <ObligationCollectionListCards {...props} />
   ) : (
     <div className={WORK_SURFACE}>
-      <ObligationCollectionListTable {...props} />
+      <ObligationsListDesktopTable {...props} />
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { TeacherListCards } from "@/tenant/features/teachers/components/TeacherListCards";
-import { TeacherListTable } from "@/tenant/features/teachers/components/TeacherListTable";
+import { TeachersListDesktopTable } from "@/tenant/features/teachers/components/TeachersListDesktopTable";
 import { buildTeacherCustomFieldsById } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
 
@@ -58,7 +58,7 @@ export function TeacherListContent(props: TeacherListContentInput): React.JSX.El
 
   return (
     <div className={cn(WORK_SURFACE, "overflow-hidden")}>
-      <TeacherListTable {...contentProps} />
+      <TeachersListDesktopTable {...contentProps} />
     </div>
   );
 }

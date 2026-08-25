@@ -37,18 +37,6 @@ export default function Users(): React.JSX.Element {
                 {controller.t('users.exportCsv')}
               </ActionButton>
             ) : null}
-            {controller.canWrite && !controller.showDeleted ? (
-              <>
-                <Button type="button" variant="outline" size="sm" onClick={() => controller.setShowInvite(true)}>
-                  <UserPlus className="h-3.5 w-3.5" />
-                  {controller.t('users.invite')}
-                </Button>
-                <Button type="button" size="sm" onClick={() => controller.setShowAddUser(true)}>
-                  <UserPlus className="h-3.5 w-3.5" />
-                  {controller.t('users.add')}
-                </Button>
-              </>
-            ) : null}
           </div>
         ) : undefined
       }
@@ -116,6 +104,7 @@ export default function Users(): React.JSX.Element {
               onBulkRestoreUsers={(ids) => { void controller.handleBulkRestore(ids); }}
               onResetPassword={controller.handleResetPassword}
               onAddUser={() => controller.setShowAddUser(true)}
+              onInviteUser={() => controller.setShowInvite(true)}
               onMessageUsers={controller.handleMessageUsers}
               onToggleDeleted={controller.setShowDeleted}
             />

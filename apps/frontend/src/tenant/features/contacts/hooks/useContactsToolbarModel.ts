@@ -5,28 +5,28 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { ModuleColumnCustomizerLabels } from "@/components/ui/moduleColumnCustomizerTypes";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
-export interface ContactsToolbarSortOption {
+export interface ContactsListFiltersSortOption {
   field: string;
   label: string;
 }
 
-export interface ContactsToolbarModel {
+export interface ContactsListFiltersModel {
   t: TranslationFunction;
   genders: string[];
-  sortOptions: ContactsToolbarSortOption[];
+  sortOptions: ContactsListFiltersSortOption[];
   columnRegistry: ColumnRegistryEntry[];
   updateUserColumnLayout: (columns: ColumnRegistryEntry[]) => void;
   handleResetColumnLayout: () => void;
   columnCustomizerLabels: ModuleColumnCustomizerLabels;
 }
 
-export function useContactsToolbarModel(): ContactsToolbarModel {
+export function useContactsToolbarModel(): ContactsListFiltersModel {
   const { availableColumns, genders, systemSortOptions, columnRegistry, updateUserColumnLayout } =
     useContactConfig();
   const { t } = useTranslation();
 
-  const sortOptions = useMemo<ContactsToolbarSortOption[]>(() => {
-    const dynamicSorts: ContactsToolbarSortOption[] = availableColumns
+  const sortOptions = useMemo<ContactsListFiltersSortOption[]>(() => {
+    const dynamicSorts: ContactsListFiltersSortOption[] = availableColumns
       .filter((column): column is typeof column & { sortField: string } => Boolean(column.sortField))
       .map((column) => ({
         field: column.sortField,

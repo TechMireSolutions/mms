@@ -126,10 +126,6 @@ export function syncModuleColumnRegistryWithFields(
         return { ...col, enabled: false };
       }
 
-      const defaultCol = defaultRegistry.find((entry) => entry.key === col.key);
-      if (defaultCol) {
-        return { ...col, enabled: defaultCol.enabled };
-      }
       return col;
     })
     .sort((a, b) => a.order - b.order);

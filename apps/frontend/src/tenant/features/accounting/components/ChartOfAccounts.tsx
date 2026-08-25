@@ -2,8 +2,8 @@ import React, { useState, useMemo, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
 import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
-import { ChartOfAccountsToolbar } from "@/tenant/features/accounting/components/ChartOfAccountsToolbar";
-import { ChartOfAccountsTreeTable } from "@/tenant/features/accounting/components/ChartOfAccountsTreeTable";
+import { ChartOfAccountsListFilters } from "@/tenant/features/accounting/components/ChartOfAccountsListFilters";
+import { ChartOfAccountsListDesktopTable } from "@/tenant/features/accounting/components/ChartOfAccountsListDesktopTable";
 import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
@@ -114,7 +114,7 @@ export function ChartOfAccounts({
 
   return (
     <section aria-label={t("accounting.coa.aria")} className="space-y-4">
-      <ChartOfAccountsToolbar
+      <ChartOfAccountsListFilters
         search={search}
         setSearch={setSearch}
         typeFilter={typeFilter}
@@ -127,7 +127,7 @@ export function ChartOfAccounts({
         columnCustomizer={columnCustomizer}
       />
 
-      <ChartOfAccountsTreeTable
+      <ChartOfAccountsListDesktopTable
         accounts={accounts}
         filteredAccounts={filtered}
         balanceConfig={balanceConfig}

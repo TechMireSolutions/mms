@@ -6,10 +6,9 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EnrollmentRowActions } from "@/tenant/features/enrollments/components/EnrollmentRowActions";
 import { renderEnrollmentWorkColumnValue } from "@/tenant/features/enrollments/components/enrollmentWorkColumnCell";
@@ -18,12 +17,12 @@ import {
   type EnrollmentListContentProps,
 } from "@/tenant/features/enrollments/components/enrollmentListContentShared";
 
-type EnrollmentListTableProps = Omit<
+type EnrollmentsListDesktopTableProps = Omit<
   EnrollmentListContentProps,
   "filteredCount" | "page" | "pageSize" | "onPageChange"
 >;
 
-export function EnrollmentListTable(props: EnrollmentListTableProps): React.JSX.Element {
+export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTableProps): React.JSX.Element {
   const {
     enrollments,
     students,
@@ -52,57 +51,27 @@ export function EnrollmentListTable(props: EnrollmentListTableProps): React.JSX.
 
   return (
     <Table className="table-fixed">
-      <TableHeader>
-        <TableRow className="border-b border-border/50 bg-muted/20 hover:bg-muted/20">
-          {canSelectEnrollments && (
-            <TableHead className="w-12 px-3 py-2.5 h-auto">
-              <Checkbox
-                checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
-                onCheckedChange={(checked) => onToggleSelectAll(checked === true)}
-                aria-label={t("enrollments.table.selectAll")}
-              />
-            </TableHead>
-          )}
-          {isColumnVisible("student") && (
-            <ModuleTableHeaderCell columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("enrollments.columns.student")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("session") && (
-            <ModuleTableHeaderCell columnKey="session" width={getColumnWidth?.("session")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("enrollments.columns.session")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("class") && (
-            <ModuleTableHeaderCell columnKey="class" width={getColumnWidth?.("class")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("enrollments.columns.class")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("enrolledDate") && (
-            <ModuleTableHeaderCell columnKey="enrolledDate" width={getColumnWidth?.("enrolledDate")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("enrollments.columns.enrolledDate")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("finalFee") && (
-            <ModuleTableHeaderCell columnKey="finalFee" width={getColumnWidth?.("finalFee")} onResize={onColumnResize} className="px-3 py-2.5 text-end">
-              {t("enrollments.columns.finalFee")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("status") && (
-            <ModuleTableHeaderCell columnKey="status" width={getColumnWidth?.("status")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("enrollments.columns.status")}
-            </ModuleTableHeaderCell>
-          )}
-          {isColumnVisible("payment") && (
-            <ModuleTableHeaderCell columnKey="payment" width={getColumnWidth?.("payment")} onResize={onColumnResize} className="px-3 py-2.5">
-              {t("enrollments.columns.payment")}
-            </ModuleTableHeaderCell>
-          )}
-          <TableHead className="px-3 py-2.5 text-end text-xs font-semibold text-muted-foreground uppercase h-auto">
-            {t("enrollments.columns.actions")}
-          </TableHead>
-        </TableRow>
-      </TableHeader>
+      <ModuleWorkTableHeader
+        columns={[
+          isColumnVisible("student") ? { id: "student", label: t("enrollments.columns.student") } : null,
+          isColumnVisible("session") ? { id: "session", label: t("enrollments.columns.session") } : null,
+          isColumnVisible("class") ? { id: "class", label: t("enrollments.columns.class") } : null,
+          isColumnVisible("enrolledDate") ? { id: "enrolledDate", label: t("enrollments.columns.enrolledDate") } : null,
+          isColumnVisible("finalFee") ? { id: "finalFee", label: t("enrollments.columns.finalFee"), headerClassName: "text-end" } : null,
+          isColumnVisible("status") ? { id: "status", label: t("enrollments.columns.status") } : null,
+          isColumnVisible("payment") ? { id: "payment", label: t("enrollments.columns.payment") } : null,
+        ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
+        getColumnWidth={(key) => getColumnWidth?.(key)}
+        setColumnWidth={onColumnResize ?? (() => {})}
+        selection={canSelectEnrollments ? {
+          allSelected: allVisibleSelected,
+          someSelected: someVisibleSelected,
+          onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+          ariaLabel: t("enrollments.table.selectAll")
+        } : undefined}
+        actionsLabel={t("enrollments.columns.actions")}
+        stickyColumnId={canSelectEnrollments ? "student" : undefined}
+      />
       <TableBody className="divide-y divide-border">
         {enrollments.map((enrollment) => {
           const student = findEnrollmentStudent(enrollment, students);

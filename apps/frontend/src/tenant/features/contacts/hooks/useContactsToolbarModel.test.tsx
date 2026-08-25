@@ -1,7 +1,7 @@
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { useContactsToolbarModel, type ContactsToolbarModel } from './useContactsToolbarModel';
+import { useContactsToolbarModel, type ContactsListFiltersModel } from './useContactsToolbarModel';
 import { DEFAULT_COLUMN_REGISTRY, type AppTranslationKey } from '@mms/shared';
 
 declare global {
@@ -46,7 +46,7 @@ vi.mock('@/hooks/useTranslation', () => ({
   }),
 }));
 
-let hookResult: ContactsToolbarModel | null = null;
+let hookResult: ContactsListFiltersModel | null = null;
 
 function TestComponent(): React.JSX.Element {
   const model = useContactsToolbarModel();
