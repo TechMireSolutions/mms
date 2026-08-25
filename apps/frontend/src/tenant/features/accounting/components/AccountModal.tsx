@@ -152,17 +152,6 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             );
           }
 
-          if (!['code', 'type', 'name', 'subtype', 'description'].includes(field.id)) {
-            return (
-              <AccountModalCustomField
-                key={field.id}
-                field={field}
-                form={form}
-                setForm={setForm}
-              />
-            );
-          }
-
           return null;
         })}
       </div>

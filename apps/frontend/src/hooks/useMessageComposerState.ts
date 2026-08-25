@@ -63,7 +63,7 @@ export function useMessageComposerState(): UseMessageComposerStateResult {
         const skipped = recipients.length - eligible.length;
         if (skipped > 0) {
           notify.warning(
-            t("messaging.someRecipientsSkipped", { skipped, channel }),
+            t("messaging.someRecipientsSkipped"),
           );
         }
 

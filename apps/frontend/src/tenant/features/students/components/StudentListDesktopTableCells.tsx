@@ -63,7 +63,7 @@ export function renderStudentListDesktopTableCell({
           <UserAvatar
             id={studentIdStr}
             name={displayName}
-            avatar={studentRow.avatar}
+            avatar={studentRow.avatar as string | undefined}
             size="md"
             className="shrink-0"
           />

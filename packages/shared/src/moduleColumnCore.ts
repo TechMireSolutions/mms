@@ -130,7 +130,6 @@ export interface StudentWorkColumnLabels {
   email: string;
   dob: string;
   parents: string;
-  sessions: string;
   status: string;
   registeredDate: string;
   notes: string;
@@ -157,7 +156,6 @@ export function buildStudentWorkColumnRegistry(
     email: labels.email,
     dob: labels.dob,
     parents: labels.parents,
-    sessions: labels.sessions,
     status: labels.status,
     registeredDate: labels.registeredDate,
     notes: labels.notes,

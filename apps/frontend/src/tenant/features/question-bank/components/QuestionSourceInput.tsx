@@ -1,5 +1,8 @@
 import type React from "react";
-import { Field, Input, Select, Textarea } from "@/components/ui/FormPrimitives";
+import { Field } from "@/components/ui/FormPrimitives";
+import { Input } from "@/components/ui/input";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { Textarea } from "@/components/ui/textarea";
 
 import type { ModuleFieldDef } from "@mms/shared";
 
@@ -27,28 +30,24 @@ export function QuestionSourceInput({
           <Textarea
             id={inputId}
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
             placeholder={field.placeholder}
           />
         ) : field.type === "select" ? (
-          <Select
+          <FormSelect
             id={inputId}
+            name={inputId}
             value={value}
-            onChange={(e) => onChange(e.target.value)}
-          >
-            <option value="">Select...</option>
-            {field.options?.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </Select>
+            onChange={onChange}
+            options={field.options?.map((opt) => ({ value: opt, label: opt })) || []}
+            placeholder="Select..."
+          />
         ) : (
           <Input
             id={inputId}
             type="text"
             value={value}
-            onChange={(e) => onChange(e.target.value)}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}
             placeholder={field.placeholder}
           />
         )}
