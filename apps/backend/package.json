@@ -7,13 +7,13 @@
     "node": ">=24.14.0"
   },
   "scripts": {
-    "dev": "node --strip-types --watch src/index.ts",
-    "worker": "node --strip-types --watch src/worker/index.ts",
+    "dev": "tsx watch src/index.ts",
+    "worker": "tsx watch src/worker/index.ts",
     "build": "tsc && cp -r src/db/migrations_drizzle dist/db/migrations_drizzle && cp src/db/seeds.json.gz dist/db/seeds.json.gz && (cp src/db/seeds.json dist/db/seeds.json || true) && mkdir -p dist/worker/templates && cp -r src/worker/templates/. dist/worker/templates/",
     "start": "node dist/index.js",
     "worker:start": "node dist/worker/index.js",
-    "db:reset": "node --strip-types src/scripts/resetDb.ts",
-    "db:migrate": "node --strip-types src/scripts/migrateDb.ts",
+    "db:reset": "tsx src/scripts/resetDb.ts",
+    "db:migrate": "tsx src/scripts/migrateDb.ts",
     "typecheck": "tsc --noEmit",
     "lint": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint src --quiet",
     "test": "vitest run"
@@ -51,6 +51,7 @@
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.8.1",
     "globals": "^17.11.0",
+    "tsx": "^4.23.12",
     "typescript": "~7.0.2",
     "typescript-eslint": "^8.67.0",
     "vitest": "^4.1.10"

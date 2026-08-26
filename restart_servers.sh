@@ -170,27 +170,27 @@ kill_repo_dev_processes() {
   while IFS= read -r pid; do
     [ -z "$pid" ] && continue
     cmd="$(ps -p "$pid" -o args= 2>/dev/null || true)"
-    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-"* || "$cmd" == *"node"* || "$cmd" == *"pnpm"* || "$cmd" == *"vite"* ]] || continue
+    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-"* || "$cmd" == *"tsx"* || "$cmd" == *"pnpm"* || "$cmd" == *"vite"* ]] || continue
     case "$cmd" in
       *"turbo"*"run dev"*|*"pnpm"*"dev"*|*"pnpm"*"worker"*|\
-      *"/apps/frontend"*"vite"*|*"/apps/backend"*"node"*)
+      *"/apps/frontend"*"vite"*|*"/apps/backend"*"tsx"*)
         log "Stopping orphan dev process (pid $pid)..."
         kill -TERM "$pid" 2>/dev/null || true
         ;;
     esac
-  done < <(pgrep -f "pnpm|turbo|vite|node" 2>/dev/null || true)
+  done < <(pgrep -f "pnpm|turbo|vite|tsx" 2>/dev/null || true)
   sleep 0.4
   while IFS= read -r pid; do
     [ -z "$pid" ] && continue
     cmd="$(ps -p "$pid" -o args= 2>/dev/null || true)"
-    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-"* || "$cmd" == *"node"* || "$cmd" == *"pnpm"* || "$cmd" == *"vite"* ]] || continue
+    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-"* || "$cmd" == *"tsx"* || "$cmd" == *"pnpm"* || "$cmd" == *"vite"* ]] || continue
     case "$cmd" in
       *"turbo"*"run dev"*|*"pnpm"*"dev"*|*"pnpm"*"worker"*|\
-      *"/apps/frontend"*"vite"*|*"/apps/backend"*"node"*)
+      *"/apps/frontend"*"vite"*|*"/apps/backend"*"tsx"*)
         kill -0 "$pid" 2>/dev/null && kill -9 "$pid" 2>/dev/null || true
         ;;
     esac
-  done < <(pgrep -f "pnpm|turbo|vite|node" 2>/dev/null || true)
+  done < <(pgrep -f "pnpm|turbo|vite|tsx" 2>/dev/null || true)
 }
 
 stop_servers() {
@@ -290,9 +290,9 @@ run_dev_foreground() {
   echo "  Backend   http://localhost:$BACKEND_PORT/health"
   echo ""
   trap 'kill 0 2>/dev/null; exit 0' INT TERM
-  (cd apps/backend && node --strip-types --watch src/index.ts) &
+  (cd apps/backend && npx tsx watch src/index.ts) &
   sleep 2
-  (cd apps/backend && node --strip-types --watch src/worker/index.ts) &
+  (cd apps/backend && npx tsx watch src/worker/index.ts) &
   sleep 2
   (cd apps/frontend && npx vite) &
   wait
