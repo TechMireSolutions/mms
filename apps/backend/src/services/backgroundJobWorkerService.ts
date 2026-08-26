@@ -31,11 +31,11 @@ export function registerBackgroundJobRunner(key: string, runner: BackgroundJobRu
 }
 
 async function patchJob(
+  tenantId: string,
   userId: string,
   jobId: string,
   patch: Partial<BackgroundJobRecord>,
 ): Promise<BackgroundJobRecord> {
-  const tenantId = getRequestTenant();
   if (!tenantId) throw new Error('Tenant context is required to patch background job');
 
   const updateValues: {
@@ -97,7 +97,7 @@ export async function executeJob(
     userId,
     jobId,
     updateProgress: async (current, total) => {
-      await patchJob(userId, jobId, { progress: { current, total } });
+      await patchJob(tenant, userId, jobId, { progress: { current, total } });
       const percent = total > 0 ? Math.round((current / total) * 100) : 0;
       await publishJobEvent({
         event: 'job-progress',
@@ -110,7 +110,7 @@ export async function executeJob(
       });
     },
     complete: async (patch) => {
-      await patchJob(userId, jobId, {
+      await patchJob(tenant, userId, jobId, {
         status: 'completed',
         completedAt: new Date().toISOString(),
         ...patch,
@@ -128,7 +128,7 @@ export async function executeJob(
       });
     },
     fail: async (error) => {
-      await patchJob(userId, jobId, {
+      await patchJob(tenant, userId, jobId, {
         status: 'failed',
         error,
         completedAt: new Date().toISOString(),
@@ -159,6 +159,36 @@ export async function executeJob(
   }
 }
 
+/** 
+ * Forcefully fails a job in the database and broadcasts the event. 
+ * Useful for Dead-Letter Queue (DLQ) handlers when a job exhausts retries.
+ */
+export async function markJobPermanentlyFailed(
+  tenantId: string,
+  userId: string,
+  jobId: string,
+  moduleId: string,
+  kind: string,
+  error: string,
+): Promise<void> {
+  await patchJob(tenantId, userId, jobId, {
+    status: 'failed',
+    error,
+    completedAt: new Date().toISOString(),
+  });
+  
+  await publishJobEvent({
+    event: 'job-failed',
+    tenantId,
+    userId,
+    jobId,
+    moduleId,
+    kind,
+    error,
+    completedAt: new Date().toISOString(),
+  });
+}
+
 /** Persists a running job and delegates execution to the out-of-process worker queue. */
 export async function enqueueBackgroundJob(
   tenant: string,
@@ -174,7 +204,15 @@ export async function enqueueBackgroundJob(
   await runWithTenant(tenant, () => createDatabaseBackgroundJob(tenant, userId, pendingJob, payload));
 
   // Dispatch to BullMQ Queue
-  await dispatchJobToQueue(tenant, userId, pendingJob, payload);
+  const enqueued = await dispatchJobToQueue(tenant, userId, pendingJob, payload);
+  
+  if (!enqueued) {
+    await patchJob(tenant, userId, job.id, { 
+      status: 'failed', 
+      error: 'Failed to enqueue background job. The task queue service may be unavailable.' 
+    });
+    throw new Error('Failed to enqueue background job. The task queue service may be unavailable.');
+  }
 
   return job;
 }
@@ -182,8 +220,9 @@ export async function enqueueBackgroundJob(
 export async function getUserBackgroundJob(
   userId: string,
   jobId: string,
+  explicitTenantId?: string,
 ): Promise<BackgroundJobRecord | null> {
-  const tenantId = getRequestTenant();
+  const tenantId = explicitTenantId ?? getRequestTenant();
   if (!tenantId) return null;
 
   return withTenant(tenantId, async (tx) => {
@@ -205,8 +244,9 @@ export async function getUserBackgroundJob(
 export async function getUserBackgroundJobPayload(
   userId: string,
   jobId: string,
+  explicitTenantId?: string,
 ): Promise<Record<string, unknown> | null> {
-  const tenantId = getRequestTenant();
+  const tenantId = explicitTenantId ?? getRequestTenant();
   if (!tenantId) return null;
 
   return withTenant(tenantId, async (tx) => {

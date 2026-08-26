@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useState } from "react";
 import type { BackgroundJobRecord } from "@mms/shared";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { notify } from "@/lib/notify";
@@ -33,6 +33,7 @@ export interface UseModuleServerCsvExportActionsOptions<
     filename: string;
     label: string;
     ids?: Array<string | number>;
+    idempotencyKey?: string;
   }) => Promise<BackgroundJobRecord>;
   logExportAudit: {
     mutateAsync: (payload: {
@@ -42,6 +43,9 @@ export interface UseModuleServerCsvExportActionsOptions<
   };
   onError: (err: unknown, scope: string) => void;
 }
+
+const sanitizeColumns = (cols: ModuleServerCsvExportColumn[]) =>
+  cols.map((c) => ({ id: c.id, label: c.label }));
 
 /** Shared filtered + selection server CSV export flow (Contacts / Students). */
 export function useModuleServerCsvExportActions<
@@ -63,15 +67,19 @@ export function useModuleServerCsvExportActions<
   logExportAudit,
   onError,
 }: UseModuleServerCsvExportActionsOptions<TColumn, TQuery>) {
-  const handleExportCSV = useCallback(async () => {
-    if (!canExport || trashMode) return;
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExportCSV = async () => {
+    if (!canExport || trashMode || isExporting) return;
+    setIsExporting(true);
 
     try {
       const job = await startExport({
         query: buildFilteredQuery(),
-        columns: columns.map((c) => ({ id: c.id, label: c.label })),
+        columns: sanitizeColumns(columns),
         filename,
         label,
+        idempotencyKey: crypto.randomUUID(),
       });
       if (job.hasDownload && job.status === "completed") {
         await downloadBackgroundJobArtifact(job.id, filename);
@@ -86,33 +94,24 @@ export function useModuleServerCsvExportActions<
       );
     } catch (err) {
       onError(err, filteredErrorScope);
+    } finally {
+      setIsExporting(false);
     }
-  }, [
-    canExport,
-    trashMode,
-    buildFilteredQuery,
-    columns,
-    filename,
-    label,
-    successMessage,
-    startExport,
-    logExportAudit,
-    auditScope,
-    filteredErrorScope,
-    onError,
-  ]);
+  };
 
-  const handleBulkExport = useCallback(async () => {
-    if (!canExport || trashMode) return;
+  const handleBulkExport = async () => {
+    if (!canExport || trashMode || isExporting) return;
     if (selectedIds.length === 0) return;
+    setIsExporting(true);
 
     try {
       const job = await startExport({
         query: {} as TQuery,
-        columns: columns.map((c) => ({ id: c.id, label: c.label })),
+        columns: sanitizeColumns(columns),
         filename,
         label,
         ids: selectedIds,
+        idempotencyKey: crypto.randomUUID(),
       });
       if (job.hasDownload && job.status === "completed") {
         await downloadBackgroundJobArtifact(job.id, filename);
@@ -127,24 +126,14 @@ export function useModuleServerCsvExportActions<
       );
     } catch (err) {
       onError(err, selectionErrorScope);
+    } finally {
+      setIsExporting(false);
     }
-  }, [
-    canExport,
-    trashMode,
-    selectedIds,
-    columns,
-    filename,
-    label,
-    successMessage,
-    startExport,
-    logExportAudit,
-    auditScope,
-    selectionErrorScope,
-    onError,
-  ]);
+  };
 
   return {
     handleExportCSV,
     handleBulkExport,
+    isExporting,
   };
 }

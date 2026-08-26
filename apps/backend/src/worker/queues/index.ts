@@ -8,6 +8,7 @@ import {
   DEFAULT_JOB_OPTIONS,
   getBullMQConnectionOptions,
 } from './queueConfig.js';
+import { markJobPermanentlyFailed } from '../../services/backgroundJobWorkerService.js';
 
 export interface EnqueuedJobData {
   jobId: string;
@@ -78,11 +79,23 @@ export async function dispatchJobToQueue(
   };
 
   try {
-    await queue.add(`${job.moduleId}:${job.kind}`, jobData, {
+    const addPromise = queue.add(`${job.moduleId}:${job.kind}`, jobData, {
       jobId: job.id,
       priority: QUEUE_SETTINGS[queueName]?.priority ?? 2,
     });
-    return true;
+    
+    // Fail fast if Redis is unreachable to prevent API request hanging
+    let timeoutId: NodeJS.Timeout;
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('BullMQ queue.add timeout (Redis unreachable)')), 3000);
+    });
+    
+    try {
+      await Promise.race([addPromise, timeoutPromise]);
+      return true;
+    } finally {
+      clearTimeout(timeoutId!);
+    }
   } catch (error) {
     console.warn(`[BullMQ] Failed to enqueue job ${job.id} to ${queueName}:`, error);
     return false;
@@ -100,6 +113,17 @@ export async function handleDeadLetterJob(
   console.error(
     `[BullMQ DLQ] Job ${jobData.jobId} (${jobData.moduleId}:${jobData.kind}) in queue "${queueName}" permanently failed: ${failedReason}`,
   );
+  
+  await markJobPermanentlyFailed(
+    jobData.tenantId,
+    jobData.userId,
+    jobData.jobId,
+    jobData.moduleId,
+    jobData.kind,
+    `Job failed permanently in queue: ${failedReason}`
+  ).catch(err => {
+    console.error(`[BullMQ DLQ] Failed to record dead-letter job in DB for ${jobData.jobId}:`, err);
+  });
 }
 
 /**
