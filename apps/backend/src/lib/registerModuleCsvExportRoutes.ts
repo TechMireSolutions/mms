@@ -3,10 +3,11 @@ import type { ZodTypeAny } from 'zod';
 import type { User } from '@mms/shared';
 import { getRequestTenant } from './tenantContext.js';
 import { enqueueCsvExportJob, normalizeExportQuery } from './csvExportEnqueue.js';
-import { sendForbidden } from './httpErrors.js';
+import { sendForbidden, sendServiceUnavailable } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import { moduleExportAuditBodySchema } from '../validation/csvExportBodySchema.js';
 import { recordAudit } from '../services/auditService.js';
+import { QueueUnavailableError } from '../services/backgroundJobWorkerService.js';
 
 export type RegisterModuleCsvExportRoutesOptions = {
   canRead: (user: User) => boolean;
@@ -55,18 +56,27 @@ export function registerModuleCsvExportRoutes(
     }
 
     const label = data.label?.trim() || options.defaultLabel;
-    const job = await enqueueCsvExportJob({
-      tenant: getRequestTenant()!,
-      userId: String(user.id),
-      moduleId: options.moduleId,
-      label,
-      query,
-      columns: data.columns,
-      filename: data.filename,
-      viewerRole: user.role,
-      allowDeleted,
-      idempotencyKey: data.idempotencyKey,
-    });
+    let job;
+    try {
+      job = await enqueueCsvExportJob({
+        tenant: getRequestTenant()!,
+        userId: String(user.id),
+        moduleId: options.moduleId,
+        label,
+        query,
+        columns: data.columns,
+        filename: data.filename,
+        viewerRole: user.role,
+        allowDeleted,
+        idempotencyKey: data.idempotencyKey,
+      });
+    } catch (err) {
+      if (err instanceof QueueUnavailableError) {
+        return sendServiceUnavailable(reply, err.message);
+      }
+      throw err;
+    }
+
     await recordAudit({
       userId: user.id,
       userEmail: user.email,

@@ -1,14 +1,17 @@
 import { useEffect } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { connectTenantDatabaseSocket } from '@/lib/tenantWebSocket';
-import type { TenantJobEventMessage } from '@/lib/tenantWebSocket';
-import { upsertLocalBackgroundJob } from '@/lib/backgroundJobs/backgroundJobStore';
+import type { BackgroundJobEventMessage } from '@mms/shared';
+import {
+  patchLocalBackgroundJobOnly,
+  upsertLocalBackgroundJob,
+} from '@/lib/backgroundJobs/backgroundJobStore';
 import { fetchBackgroundJob } from '@/lib/backgroundJobs/pollBackgroundJob';
 import { invalidateContactsQueries } from '@/tenant/hooks/collections/contacts';
-import { invalidateEnrollmentsQueries } from '@/tenant/features/enrollments/hooks/invalidateEnrollmentsQueries';
-import { invalidateMessagingQueries } from '@/tenant/features/messaging/hooks/invalidateMessagingQueries';
-import { invalidateSessionsQueries } from '@/tenant/features/sessions/hooks/invalidateSessionsQueries';
+import { invalidateEnrollmentsQueries } from '@/tenant/hooks/collections/enrollments';
+import { invalidateMessagingQueries } from '@/tenant/hooks/collections/messaging';
+import { invalidateSessionsQueries } from '@/tenant/hooks/collections/sessions';
 import { invalidateStudentsQueries } from '@/tenant/hooks/collections/students';
 import { invalidateTeachersQueries } from '@/tenant/hooks/collections/teachers';
 import { invalidateUsersQueries } from '@/tenant/hooks/collections/users';
@@ -20,6 +23,50 @@ import { invalidateQuestionBankQueries } from '@/tenant/hooks/collections/questi
 import { invalidateAccountingQueries } from '@/tenant/hooks/collections/accounting';
 import { invalidateObligationsQueries } from '@/tenant/hooks/collections/obligations';
 import { invalidateDashboardQueries } from '@/tenant/hooks/collections/dashboard';
+
+function invalidateModuleQueries(queryClient: QueryClient, key: string) {
+  switch (key) {
+    case 'contacts': return invalidateContactsQueries(queryClient);
+    case 'students': return invalidateStudentsQueries(queryClient);
+    case 'teachers': return invalidateTeachersQueries(queryClient);
+    case 'sessions': return invalidateSessionsQueries(queryClient);
+    case 'enrollments': return invalidateEnrollmentsQueries(queryClient);
+    case 'users':
+    case 'user_activity_logs': return invalidateUsersQueries(queryClient);
+    case 'attendance':
+    case 'attendance_records': return invalidateAttendanceQueries(queryClient);
+    case 'finance':
+    case 'finance_invoices':
+    case 'finance_payments': return invalidateFinanceQueries(queryClient);
+    case 'hasanat':
+    case 'hasanat_distributions':
+    case 'hasanat_denoms':
+    case 'hasanat_batches':
+    case 'hasanat_redemptions': return invalidateHasanatQueries(queryClient);
+    case 'examinations':
+    case 'exams':
+    case 'exam_results': return invalidateExaminationsQueries(queryClient);
+    case 'questionBank':
+    case 'questions':
+    case 'tests':
+    case 'assessment_results': return invalidateQuestionBankQueries(queryClient);
+    case 'accounting':
+    case 'accounting_entries':
+    case 'accounting_accounts':
+    case 'accounting_fiscal_years': return invalidateAccountingQueries(queryClient);
+    case 'obligations':
+    case 'obligation_collections':
+    case 'obligation_types':
+    case 'mujtahids':
+    case 'mujtahid_reps':
+    case 'wakala_types':
+    case 'obligation_distributions': return invalidateObligationsQueries(queryClient);
+    case 'dashboard': return invalidateDashboardQueries(queryClient);
+    case 'messaging':
+    case 'message_logs':
+    case 'message_templates': return invalidateMessagingQueries(queryClient);
+  }
+}
 
 /**
  * Subscribes to tenant `/api/ws` and invalidates Query keys for live collection updates.
@@ -37,108 +84,30 @@ export function useTenantDatabaseUpdates(): void {
     return connectTenantDatabaseSocket({
       onDatabaseUpdate: (message) => {
         if (message.type !== 'collection') return;
-        if (message.key === 'contacts') {
-          invalidateContactsQueries(queryClient);
-          return;
-        }
-        if (message.key === 'students') {
-          invalidateStudentsQueries(queryClient);
-          return;
-        }
-        if (message.key === 'teachers') {
-          invalidateTeachersQueries(queryClient);
-          return;
-        }
-        if (message.key === 'sessions') {
-          invalidateSessionsQueries(queryClient);
-          return;
-        }
-        if (message.key === 'enrollments') {
-          invalidateEnrollmentsQueries(queryClient);
-          return;
-        }
-        if (message.key === 'users' || message.key === 'user_activity_logs') {
-          invalidateUsersQueries(queryClient);
-          return;
-        }
-        if (message.key === 'attendance_records') {
-          invalidateAttendanceQueries(queryClient);
-          return;
-        }
-        if (message.key === 'finance_invoices' || message.key === 'finance_payments') {
-          invalidateFinanceQueries(queryClient);
-          return;
-        }
-        if (
-          message.key === 'hasanat_distributions' ||
-          message.key === 'hasanat_denoms' ||
-          message.key === 'hasanat_batches' ||
-          message.key === 'hasanat_redemptions'
-        ) {
-          invalidateHasanatQueries(queryClient);
-          return;
-        }
-        if (message.key === 'exams' || message.key === 'exam_results') {
-          invalidateExaminationsQueries(queryClient);
-          return;
-        }
-        if (message.key === 'questions' || message.key === 'tests' || message.key === 'assessment_results') {
-          invalidateQuestionBankQueries(queryClient);
-          return;
-        }
-        if (
-          message.key === 'accounting_entries' ||
-          message.key === 'accounting_accounts' ||
-          message.key === 'accounting_fiscal_years'
-        ) {
-          invalidateAccountingQueries(queryClient);
-          return;
-        }
-        if (
-          message.key === 'obligation_collections' ||
-          message.key === 'obligation_types' ||
-          message.key === 'mujtahids' ||
-          message.key === 'mujtahid_reps' ||
-          message.key === 'wakala_types' ||
-          message.key === 'obligation_distributions'
-        ) {
-          invalidateObligationsQueries(queryClient);
-          return;
-        }
-        if (message.key === 'dashboard') {
-          invalidateDashboardQueries(queryClient);
-          return;
-        }
-        if (message.key === 'message_logs' || message.key === 'message_templates') {
-          invalidateMessagingQueries(queryClient);
-        }
+        invalidateModuleQueries(queryClient, message.key);
       },
 
-      onJobEvent: (message: TenantJobEventMessage) => {
-        // Fetch fresh record from server and merge into local job store
-        void fetchBackgroundJob(message.jobId).then((job) => {
-          if (job) upsertLocalBackgroundJob(job);
+      onJobEvent: (message: BackgroundJobEventMessage) => {
+        // Optimistically patch local job state to avoid hammering the backend on rapid progress events
+        const patched = patchLocalBackgroundJobOnly(message.jobId, {
+          status: message.event === 'job-progress' ? 'running' : message.event === 'job-failed' ? 'failed' : 'completed',
+          progress: message.progress,
+          hasDownload: message.hasDownload,
+          error: message.error,
+          completedAt: message.completedAt,
         });
+
+        // Only fetch if missing locally or if it's the final event (to ensure we don't miss final DB state)
+        if (!patched || message.event !== 'job-progress') {
+          void fetchBackgroundJob(message.jobId).then((job) => {
+            if (job) upsertLocalBackgroundJob(job);
+          });
+        }
 
         // On completion, invalidate the relevant module collection so directory
         // refreshes automatically (e.g. after a CSV import or bulk operation).
         if (message.event === 'job-completed' && message.moduleId) {
-          const key = message.moduleId;
-          if (key === 'students') invalidateStudentsQueries(queryClient);
-          else if (key === 'teachers') invalidateTeachersQueries(queryClient);
-          else if (key === 'contacts') invalidateContactsQueries(queryClient);
-          else if (key === 'attendance') invalidateAttendanceQueries(queryClient);
-          else if (key === 'finance') invalidateFinanceQueries(queryClient);
-          else if (key === 'accounting') invalidateAccountingQueries(queryClient);
-          else if (key === 'messaging') invalidateMessagingQueries(queryClient);
-          else if (key === 'enrollments') invalidateEnrollmentsQueries(queryClient);
-          else if (key === 'sessions') invalidateSessionsQueries(queryClient);
-          else if (key === 'users') invalidateUsersQueries(queryClient);
-          else if (key === 'hasanat') invalidateHasanatQueries(queryClient);
-          else if (key === 'examinations') invalidateExaminationsQueries(queryClient);
-          else if (key === 'questionBank') invalidateQuestionBankQueries(queryClient);
-          else if (key === 'obligations') invalidateObligationsQueries(queryClient);
-          else if (key === 'dashboard') invalidateDashboardQueries(queryClient);
+          invalidateModuleQueries(queryClient, message.moduleId);
         }
       },
     });

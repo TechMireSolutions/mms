@@ -1,4 +1,11 @@
 import { and, eq } from 'drizzle-orm';
+
+export class QueueUnavailableError extends Error {
+  constructor(message = 'Failed to enqueue background job. The task queue service may be unavailable.') {
+    super(message);
+    this.name = 'QueueUnavailableError';
+  }
+}
 import type { BackgroundJobRecord } from '@mms/shared';
 import { runWithTenant, getRequestTenant } from '../lib/tenantContext.js';
 import { withTenant } from '../db/tenant-context.js';
@@ -8,7 +15,7 @@ import {
   createDatabaseBackgroundJob,
 } from './backgroundJobService.js';
 import { dispatchJobToQueue } from '../worker/queues/index.js';
-import { publishJobEvent } from '../worker/processors/jobProcessor.js';
+import { publishJobEvent } from '../worker/pubsub/jobPubSub.js';
 
 export interface BackgroundJobRunContext {
   tenant: string;
@@ -152,7 +159,9 @@ export async function executeJob(
   }
 
   try {
-    await runner(payload, runContext);
+    await runWithTenant(tenant, async () => {
+      await runner(payload, runContext);
+    });
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Background job failed';
     await runContext.fail(message);
@@ -207,11 +216,12 @@ export async function enqueueBackgroundJob(
   const enqueued = await dispatchJobToQueue(tenant, userId, pendingJob, payload);
   
   if (!enqueued) {
+    const errorMsg = 'Failed to enqueue background job. The task queue service may be unavailable.';
     await patchJob(tenant, userId, job.id, { 
       status: 'failed', 
-      error: 'Failed to enqueue background job. The task queue service may be unavailable.' 
+      error: errorMsg 
     });
-    throw new Error('Failed to enqueue background job. The task queue service may be unavailable.');
+    throw new QueueUnavailableError(errorMsg);
   }
 
   return job;

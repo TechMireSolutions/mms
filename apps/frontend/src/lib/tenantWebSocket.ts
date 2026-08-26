@@ -1,5 +1,5 @@
 import { resolveApiUrl } from '@/lib/apiClientHelpers';
-import { queryClientInstance } from '@/lib/queryClient';
+import type { BackgroundJobEventMessage } from '@mms/shared';
 
 export type TenantDatabaseUpdateMessage = {
   event: 'database-update';
@@ -7,21 +7,7 @@ export type TenantDatabaseUpdateMessage = {
   key: string;
 };
 
-export type TenantJobEventMessage = {
-  event: 'job-progress' | 'job-completed' | 'job-failed';
-  tenantId: string;
-  userId?: string;
-  jobId: string;
-  moduleId?: string;
-  kind?: string;
-  label?: string;
-  progress?: { current: number; total: number; percent: number };
-  hasDownload?: boolean;
-  error?: string;
-  completedAt?: string;
-};
-
-export type TenantWebSocketMessage = TenantDatabaseUpdateMessage | TenantJobEventMessage;
+export type TenantWebSocketMessage = TenantDatabaseUpdateMessage | BackgroundJobEventMessage;
 
 export function resolveTenantWebSocketUrl(): string {
   const httpUrl = resolveApiUrl('/api/ws');
@@ -33,9 +19,9 @@ export function resolveTenantWebSocketUrl(): string {
   return `${protocol}//${window.location.host}/api/ws`;
 }
 
-export function parseTenantDatabaseUpdate(raw: string): TenantDatabaseUpdateMessage | null {
+export function parseTenantDatabaseUpdate(raw: string | unknown): TenantDatabaseUpdateMessage | null {
   try {
-    const parsed: unknown = JSON.parse(raw);
+    const parsed: unknown = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const record = parsed as Record<string, unknown>;
     if (record.event !== 'database-update') return null;
@@ -51,9 +37,9 @@ export function parseTenantDatabaseUpdate(raw: string): TenantDatabaseUpdateMess
   }
 }
 
-export function parseTenantJobEvent(raw: string): TenantJobEventMessage | null {
+export function parseTenantJobEvent(raw: string | unknown): BackgroundJobEventMessage | null {
   try {
-    const parsed: unknown = JSON.parse(raw);
+    const parsed: unknown = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
     const record = parsed as Record<string, unknown>;
     if (
@@ -63,7 +49,7 @@ export function parseTenantJobEvent(raw: string): TenantJobEventMessage | null {
     ) return null;
     if (typeof record.jobId !== 'string') return null;
     if (typeof record.tenantId !== 'string') return null;
-    return record as unknown as TenantJobEventMessage;
+    return record as unknown as BackgroundJobEventMessage;
   } catch {
     return null;
   }
@@ -71,7 +57,7 @@ export function parseTenantJobEvent(raw: string): TenantJobEventMessage | null {
 
 type TenantWebSocketHandlers = {
   onDatabaseUpdate: (message: TenantDatabaseUpdateMessage) => void;
-  onJobEvent?: (message: TenantJobEventMessage) => void;
+  onJobEvent?: (message: BackgroundJobEventMessage) => void;
   onError?: (error: unknown) => void;
 };
 
@@ -117,14 +103,16 @@ export function connectTenantDatabaseSocket(handlers: TenantWebSocketHandlers): 
 
     socket.addEventListener('message', (event) => {
       if (typeof event.data !== 'string') return;
-      const dbUpdate = parseTenantDatabaseUpdate(event.data);
-      if (dbUpdate) { handlers.onDatabaseUpdate(dbUpdate); return; }
-      const jobEvent = parseTenantJobEvent(event.data);
-      if (jobEvent) {
-        handlers.onJobEvent?.(jobEvent);
-        if (jobEvent.event === 'job-completed') {
-          queryClientInstance.invalidateQueries();
+      try {
+        const parsed = JSON.parse(event.data) as unknown;
+        const dbUpdate = parseTenantDatabaseUpdate(parsed);
+        if (dbUpdate) { handlers.onDatabaseUpdate(dbUpdate); return; }
+        const jobEvent = parseTenantJobEvent(parsed);
+        if (jobEvent) {
+          handlers.onJobEvent?.(jobEvent);
         }
+      } catch {
+        /* ignore invalid JSON */
       }
     });
 

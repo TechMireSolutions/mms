@@ -6,7 +6,6 @@ import {
 } from '@/lib/backgroundJobs/backgroundJobApi';
 
 const STORAGE_KEY = 'mms_background_jobs_v2';
-const LEGACY_CONTACTS_KEY = 'mms_contacts_background_jobs';
 const MAX_JOBS_PER_MODULE = 20;
 export const BACKGROUND_JOBS_EVENT = 'mms-background-jobs-changed';
 
@@ -22,7 +21,7 @@ function readStore(): JobStore {
   } catch {
     /* ignore */
   }
-  return migrateLegacyContactsJobs();
+  return {};
 }
 
 function writeStore(store: JobStore): void {
@@ -30,22 +29,7 @@ function writeStore(store: JobStore): void {
   window.dispatchEvent(new CustomEvent(BACKGROUND_JOBS_EVENT));
 }
 
-function migrateLegacyContactsJobs(): JobStore {
-  const store: JobStore = {};
-  try {
-    const raw = localStorage.getItem(LEGACY_CONTACTS_KEY);
-    if (!raw) return store;
-    const legacy = JSON.parse(raw) as Array<Omit<BackgroundJob, 'moduleId'>>;
-    if (legacy.length > 0) {
-      store.contacts = legacy.map((j) => ({ ...j, moduleId: 'contacts' }));
-      localStorage.removeItem(LEGACY_CONTACTS_KEY);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
-    }
-  } catch {
-    /* ignore */
-  }
-  return store;
-}
+
 
 function syncRemote(job: BackgroundJob): void {
   void upsertBackgroundJobRemote(job).catch(() => {});
@@ -57,7 +41,7 @@ export function mergeServerBackgroundJobs(serverJobs: BackgroundJob[]): Backgrou
   for (const job of serverJobs) byId.set(job.id, job);
   for (const job of local) {
     const existing = byId.get(job.id);
-    if (!existing || job.status === 'running') {
+    if (!existing || (job.status === 'running' && existing.status === 'running')) {
       byId.set(job.id, job);
     }
   }
@@ -127,6 +111,18 @@ function patchJob(id: string, patch: Partial<BackgroundJob>): void {
     syncRemote(job);
     return;
   }
+}
+
+export function patchLocalBackgroundJobOnly(id: string, patch: Partial<BackgroundJob>): boolean {
+  const store = readStore();
+  for (const moduleId of Object.keys(store)) {
+    const jobIndex = store[moduleId].findIndex((storedJob) => storedJob.id === id);
+    if (jobIndex < 0) continue;
+    store[moduleId][jobIndex] = { ...store[moduleId][jobIndex], ...patch };
+    writeStore(store);
+    return true;
+  }
+  return false;
 }
 
 export function dismissBackgroundJob(id: string): void {
