@@ -23,7 +23,7 @@ vi.mock('../db/database.js', () => ({
   saveObject: (...args: unknown[]) => mockPersistObject(...args),
 }));
 
-vi.mock('../lib/contactPreferencesService.js', () => ({
+vi.mock('../contacts/use-cases/contactPreferencesService.js', () => ({
   loadContactPreferences: (...args: unknown[]) => mockLoadContactPreferences(...args),
 }));
 

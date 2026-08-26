@@ -4,7 +4,7 @@ import {
   type Contact,
   type Student,
 } from '@mms/shared';
-import { contactUseCases } from '../../contacts/use-cases/contactUseCases.js';
+import { loadContactsByIdsForTenant } from '../../services/contactService.js';
 
 type ContactWithRelationships = Contact & {
   relationshipContacts?: Array<{ contactId?: string | number; relationship?: string; name?: string }>;
@@ -34,7 +34,7 @@ export async function hydrateStudentsFromContacts(
   }
 
   let contacts = (
-    firstPassIds.size === 0 ? [] : await contactUseCases.loadContactsByIdsForTenant(tenant, [...firstPassIds])
+    firstPassIds.size === 0 ? [] : await loadContactsByIdsForTenant(tenant, [...firstPassIds])
   ) as ContactWithRelationships[];
   const contactById = new Map(contacts.map((contact) => [String(contact.id), contact]));
 
@@ -64,7 +64,7 @@ export async function hydrateStudentsFromContacts(
     }
   }
   if (secondPassIds.size > 0) {
-    const more = (await contactUseCases.loadContactsByIdsForTenant(tenant, [...secondPassIds])) as ContactWithRelationships[];
+    const more = (await loadContactsByIdsForTenant(tenant, [...secondPassIds])) as ContactWithRelationships[];
     contacts = [...contacts, ...more];
   }
 

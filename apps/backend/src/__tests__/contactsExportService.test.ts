@@ -10,7 +10,7 @@ vi.mock('../contacts/use-cases/contactLoadUseCases.js', () => ({
   loadContactsByIds: (...args: unknown[]) => mockLoadContactsByIds(...args),
 }));
 
-vi.mock('../lib/contactConfigService.js', () => ({
+vi.mock('../contacts/use-cases/contactConfigService.js', () => ({
   loadContactFieldConfig: () => mockLoadContactFieldConfig(),
 }));
 

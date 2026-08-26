@@ -10,7 +10,7 @@ import {
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { deleteObject, getObject, saveObject } from '../../db/database.js';
-import { loadContactPreferences } from '../../lib/contactPreferencesService.js';
+import { loadContactPreferences } from './contactPreferencesService.js';
 import type {
   ContactDuplicateCandidateKeys,
   ContactsRepository,

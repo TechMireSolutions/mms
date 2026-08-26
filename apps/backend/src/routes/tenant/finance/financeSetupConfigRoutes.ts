@@ -11,11 +11,11 @@ import { canReadCollection } from '../../../services/rbacService.js';
 import {
   loadFinanceFieldConfig,
   saveFinanceFieldConfig,
-} from '../../../lib/financeConfigService.js';
+} from '../../../services/financeConfigService.js';
 import {
   loadFinanceModulePreferences,
   saveFinanceModulePreferences,
-} from '../../../lib/financePreferencesService.js';
+} from '../../../services/financePreferencesService.js';
 import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
 
 const auditFinance = createCollectionAuditHelper('finance');

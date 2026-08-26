@@ -9,7 +9,7 @@ import { canReadCollection } from '../../../services/rbacService.js';
 import {
   loadSessionLookupsMap,
   replaceSessionLookupKind,
-} from '../../../lib/sessionLookupsService.js';
+} from '../../../services/sessionLookupsService.js';
 import { auditSession } from './sessionRouteHelpers.js';
 
 export const sessionLookupRoutes: FastifyPluginAsync = async (fastify) => {

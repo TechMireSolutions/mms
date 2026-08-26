@@ -45,7 +45,7 @@ vi.mock('../services/contactService.js', () => ({
   loadContactsByIds: vi.fn().mockResolvedValue([]),
 }));
 
-vi.mock('../lib/studentPreferencesService.js', () => ({
+vi.mock('../students/use-cases/studentPreferencesService.js', () => ({
   loadStudentModulePreferences: vi.fn().mockResolvedValue({}),
 }));
 

@@ -5,8 +5,8 @@ import {
 import {
   getTeacherModulePreferencesByWorkspace,
   upsertTeacherModulePreferences,
-} from '../db/repositories/teacherModulePreferencesRepository.js';
-import { createModulePreferencesService } from './createModulePreferencesService.js';
+} from '../../db/repositories/teacherModulePreferencesRepository.js';
+import { createModulePreferencesService } from '../../lib/createModulePreferencesService.js';
 
 const service = createModulePreferencesService<TeacherModulePreferences>({
   broadcastKey: 'teachers',

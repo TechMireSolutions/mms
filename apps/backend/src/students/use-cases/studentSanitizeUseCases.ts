@@ -4,7 +4,7 @@ import {
   type Student,
   type StudentsSettings,
 } from '@mms/shared';
-import { loadStudentFieldConfig } from '../../lib/studentConfigService.js';
+import { loadStudentFieldConfig } from './studentConfigService.js';
 
 function settingsSnapshot(settings: StudentsSettings | null) {
   if (!settings) return null;

@@ -6,7 +6,7 @@ import {
   getDashboardPreferencesByWorkspace,
   upsertDashboardPreferences,
 } from '../db/repositories/dashboardPreferencesRepository.js';
-import { createModulePreferencesService } from './createModulePreferencesService.js';
+import { createModulePreferencesService } from '../lib/createModulePreferencesService.js';
 
 const service = createModulePreferencesService<DashboardPreferences>({
   broadcastKey: 'dashboard',

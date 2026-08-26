@@ -6,12 +6,12 @@ const mockReplaceContactLookupKind = vi.fn();
 const mockLoadContactFieldConfig = vi.fn();
 const mockSaveContactFieldConfig = vi.fn();
 
-vi.mock('../lib/contactLookupsService.js', () => ({
+vi.mock('../contacts/use-cases/contactLookupsService.js', () => ({
   loadContactLookupKind: (...args: unknown[]) => mockLoadContactLookupKind(...args),
   replaceContactLookupKind: (...args: unknown[]) => mockReplaceContactLookupKind(...args),
 }));
 
-vi.mock('../lib/contactConfigService.js', () => ({
+vi.mock('../contacts/use-cases/contactConfigService.js', () => ({
   loadContactFieldConfig: () => mockLoadContactFieldConfig(),
   saveContactFieldConfig: (...args: unknown[]) => mockSaveContactFieldConfig(...args),
 }));

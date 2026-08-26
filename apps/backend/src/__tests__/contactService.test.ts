@@ -37,16 +37,16 @@ vi.mock('../contacts/use-cases/contactDuplicateScanUseCases.js', () => ({
   invalidateDuplicateScanCache: (...args: unknown[]) => mockInvalidateDuplicateScanCache(...args),
 }));
 
-vi.mock('../lib/contactConfigService.js', () => ({
+vi.mock('../contacts/use-cases/contactConfigService.js', () => ({
   loadContactFieldConfig: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock('../lib/contactLookupsService.js', () => ({
+vi.mock('../contacts/use-cases/contactLookupsService.js', () => ({
   loadContactLookupKind: vi.fn().mockResolvedValue([]),
 }));
 
 const mockLoadContactPreferences = vi.fn();
-vi.mock('../lib/contactPreferencesService.js', () => ({
+vi.mock('../contacts/use-cases/contactPreferencesService.js', () => ({
   loadContactPreferences: (...args: unknown[]) => mockLoadContactPreferences(...args),
 }));
 

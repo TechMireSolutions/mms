@@ -17,8 +17,8 @@ import {
 } from '@mms/shared';
 import { createHash } from 'node:crypto';
 import type { z } from 'zod';
-import { loadContactLookupKind } from '../../lib/contactLookupsService.js';
-import { loadContactFieldConfig } from '../../lib/contactConfigService.js';
+import { loadContactLookupKind } from './contactLookupsService.js';
+import { loadContactFieldConfig } from './contactConfigService.js';
 import { loadContactRuntimeDefaults } from './contactLoadUseCases.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';

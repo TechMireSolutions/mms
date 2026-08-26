@@ -3,11 +3,11 @@ import {
   type FieldConfig,
   type TabDefinition,
 } from '@mms/shared';
-import { createModuleFieldConfigService } from './createModuleFieldConfigService.js';
+import { createModuleFieldConfigService } from '../../lib/createModuleFieldConfigService.js';
 import {
   getContactFieldConfigByWorkspace,
   upsertContactFieldConfig,
-} from '../db/repositories/contactFieldConfigRepository.js';
+} from '../../db/repositories/contactFieldConfigRepository.js';
 
 function stripFormTabs(config: FieldConfig): Record<string, unknown> {
   const { formTabs: _formTabs, ...rest } = config;

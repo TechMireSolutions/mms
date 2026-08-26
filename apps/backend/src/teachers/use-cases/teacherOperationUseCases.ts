@@ -6,7 +6,7 @@ import {
   type TeacherDuplicateReason,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { loadTeacherModulePreferences } from '../../lib/teacherPreferencesService.js';
+import { loadTeacherModulePreferences } from './teacherPreferencesService.js';
 import { broadcastCollection } from '../../lib/livePush.js';
 import type { TeachersRepository } from '../repository/teachersRepository.js';
 import { teachersRepository } from '../repository/teachersRepositoryAdapter.js';

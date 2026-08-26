@@ -24,7 +24,7 @@ import {
   loadContactLookupKind,
   loadContactLookupsMap,
   replaceContactLookupKind,
-} from '../lib/contactLookupsService.js';
+} from '../contacts/use-cases/contactLookupsService.js';
 
 describe('contactLookupsService', () => {
   beforeEach(() => {

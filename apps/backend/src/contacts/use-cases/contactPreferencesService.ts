@@ -4,13 +4,13 @@ import {
   type ContactPreferences,
   type RelationshipPair,
 } from '@mms/shared';
-import { getRequestTenant } from './tenantContext.js';
+import { getRequestTenant } from '../../lib/tenantContext.js';
 import {
   getContactModulePreferencesByWorkspace,
   upsertContactModulePreferences,
-} from '../db/repositories/contactModulePreferencesRepository.js';
-import { createModulePreferencesService } from './createModulePreferencesService.js';
-import { syncRelationshipMirrorsFromPairs } from './contactRelationshipMirrorService.js';
+} from '../../db/repositories/contactModulePreferencesRepository.js';
+import { createModulePreferencesService } from '../../lib/createModulePreferencesService.js';
+import { syncRelationshipMirrorsFromPairs } from '../../lib/contactRelationshipMirrorService.js';
 
 function requireTenant(): string {
   const tenant = getRequestTenant();

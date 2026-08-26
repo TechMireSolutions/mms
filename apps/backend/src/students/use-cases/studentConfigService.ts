@@ -8,12 +8,12 @@ import {
 import {
   createModuleFieldConfigService,
   requireFieldConfigTenant,
-} from './createModuleFieldConfigService.js';
+} from '../../lib/createModuleFieldConfigService.js';
 import {
   getStudentFieldConfigByWorkspace,
   upsertStudentFieldConfig,
-} from '../db/repositories/studentFieldConfigRepository.js';
-import { getStudentModulePreferencesByWorkspace } from '../db/repositories/studentModulePreferencesRepository.js';
+} from '../../db/repositories/studentFieldConfigRepository.js';
+import { getStudentModulePreferencesByWorkspace } from '../../db/repositories/studentModulePreferencesRepository.js';
 
 const studentFieldConfig = createModuleFieldConfigService<
   Record<string, unknown>,

@@ -6,7 +6,7 @@ import {
   type StudentGrNumberSettings,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { loadStudentModulePreferences } from '../../lib/studentPreferencesService.js';
+import { loadStudentModulePreferences } from './studentPreferencesService.js';
 import { broadcastCollection } from '../../lib/livePush.js';
 import type { StudentsRepository } from '../repository/studentsRepository.js';
 import { studentsRepository } from '../repository/studentsRepositoryAdapter.js';

@@ -1,5 +1,5 @@
 import { hydrateTeacherFromContact, type Contact, type Teacher } from '@mms/shared';
-import { contactUseCases } from '../../contacts/use-cases/contactUseCases.js';
+import { loadContactsByIdsForTenant } from '../../services/contactService.js';
 
 /**
  * Single-pass hydrate: loads the linked contacts through the contacts composition
@@ -19,6 +19,6 @@ export async function hydrateTeachersFromContacts(
   }
   if (ids.size === 0) return rows;
 
-  const contacts = (await contactUseCases.loadContactsByIdsForTenant(tenant, [...ids])) as Contact[];
+  const contacts = (await loadContactsByIdsForTenant(tenant, [...ids])) as Contact[];
   return rows.map((row) => hydrateTeacherFromContact(row, contacts as never));
 }

@@ -23,7 +23,7 @@ import {
   loadStudentLookupKind,
   loadStudentLookupsMap,
   replaceStudentLookupKind,
-} from '../lib/studentLookupsService.js';
+} from '../students/use-cases/studentLookupsService.js';
 
 describe('studentLookupsService', () => {
   beforeEach(() => {

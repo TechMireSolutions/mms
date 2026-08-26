@@ -6,7 +6,7 @@ import {
   getFinanceModulePreferencesByWorkspace,
   upsertFinanceModulePreferences,
 } from '../db/repositories/financeModulePreferencesRepository.js';
-import { createModulePreferencesService } from './createModulePreferencesService.js';
+import { createModulePreferencesService } from '../lib/createModulePreferencesService.js';
 
 const service = createModulePreferencesService<FinanceModulePreferences>({
   broadcastKey: 'finance',

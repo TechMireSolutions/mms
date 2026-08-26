@@ -13,7 +13,7 @@ import {
 import { createModuleCsvExportService } from '../../lib/createModuleCsvExportService.js';
 import { normalizeIncludeDeletedFlag } from '../../lib/csvExportStreamFactory.js';
 import { loadContactsByIds, loadContactsPage } from './contactLoadUseCases.js';
-import { loadContactFieldConfig } from '../../lib/contactConfigService.js';
+import { loadContactFieldConfig } from './contactConfigService.js';
 
 const DEFAULT_EXPORT_COLUMNS: ContactExportColumn[] = [
   { id: 'name', label: 'Name' },

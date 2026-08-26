@@ -28,15 +28,15 @@ vi.mock('../contacts/use-cases/contactDuplicateScanUseCases.js', () => ({
   loadDuplicatePairsPage: (...args: unknown[]) => mockLoadDuplicatePairsPage(...args),
 }));
 
-vi.mock('../lib/contactConfigService.js', () => ({
+vi.mock('../contacts/use-cases/contactConfigService.js', () => ({
   loadContactFieldConfig: (...args: unknown[]) => mockLoadContactFieldConfig(...args),
 }));
 
-vi.mock('../lib/contactPreferencesService.js', () => ({
+vi.mock('../contacts/use-cases/contactPreferencesService.js', () => ({
   loadContactPreferences: vi.fn().mockResolvedValue(null),
 }));
 
-vi.mock('../lib/contactLookupsService.js', () => ({
+vi.mock('../contacts/use-cases/contactLookupsService.js', () => ({
   loadContactLookupKind: vi.fn().mockResolvedValue([]),
 }));
 
@@ -48,8 +48,8 @@ import { createContactsUseCases } from '../contacts/use-cases/contactUseCases.js
 import { ContactUniqueFieldError } from '../contacts/use-cases/contactValidationUseCases.js';
 import { ContactPermissionError } from '../contacts/use-cases/contactValidationUseCases.js';
 import type { ContactDuplicateCandidateKeys } from '../contacts/repository/contactsRepository.js';
-import { loadContactLookupKind } from '../lib/contactLookupsService.js';
-import { loadContactPreferences } from '../lib/contactPreferencesService.js';
+import { loadContactLookupKind } from '../contacts/use-cases/contactLookupsService.js';
+import { loadContactPreferences } from '../contacts/use-cases/contactPreferencesService.js';
 
 function fakeContact(id: string, overrides: Partial<Contact> = {}): Contact {
   return {

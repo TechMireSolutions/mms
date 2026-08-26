@@ -14,9 +14,9 @@ import {
   type FieldConfig,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { loadContactFieldConfig } from '../../lib/contactConfigService.js';
-import { loadContactLookupKind } from '../../lib/contactLookupsService.js';
-import { loadContactPreferences } from '../../lib/contactPreferencesService.js';
+import { loadContactFieldConfig } from './contactConfigService.js';
+import { loadContactLookupKind } from './contactLookupsService.js';
+import { loadContactPreferences } from './contactPreferencesService.js';
 import { loadDuplicatePairsPage, getDuplicateScanCache } from './contactDuplicateScanUseCases.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';

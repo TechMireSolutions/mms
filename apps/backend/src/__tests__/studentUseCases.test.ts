@@ -23,11 +23,11 @@ vi.mock('../students/use-cases/studentHydrateUseCases.js', () => ({
   hydrateStudentsFromContacts: async (_tenant: unknown, rows: unknown) => rows,
 }));
 
-vi.mock('../lib/studentConfigService.js', () => ({
+vi.mock('../students/use-cases/studentConfigService.js', () => ({
   loadStudentFieldConfig: (...args: unknown[]) => mockLoadStudentFieldConfig(...args),
 }));
 
-vi.mock('../lib/studentPreferencesService.js', () => ({
+vi.mock('../students/use-cases/studentPreferencesService.js', () => ({
   loadStudentModulePreferences: (...args: unknown[]) => mockLoadStudentModulePreferences(...args),
 }));
 

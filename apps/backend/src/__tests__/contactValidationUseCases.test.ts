@@ -8,7 +8,7 @@ vi.mock('../contacts/use-cases/contactLoadUseCases.js', () => ({
   loadContactRuntimeDefaults: () => mockLoadContactRuntimeDefaults(),
 }));
 
-vi.mock('../lib/contactLookupsService.js', () => ({
+vi.mock('../contacts/use-cases/contactLookupsService.js', () => ({
   loadContactLookupKind: (...args: unknown[]) => mockLoadContactLookupKind(...args),
 }));
 

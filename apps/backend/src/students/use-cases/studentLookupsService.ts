@@ -5,12 +5,12 @@ import {
   type StudentLookupKind,
   type StudentLookupsMap,
 } from '@mms/shared';
-import { createModuleStringListLookupsService } from './createModuleStringListLookupsService.js';
+import { createModuleStringListLookupsService } from '../../lib/createModuleStringListLookupsService.js';
 import {
   listStudentLookupsByKind,
   listStudentLookupsByWorkspace,
   replaceStudentLookupsForKind,
-} from '../db/repositories/studentLookupsRepository.js';
+} from '../../db/repositories/studentLookupsRepository.js';
 
 const stringListLookups = createModuleStringListLookupsService<
   StudentLookupKind,

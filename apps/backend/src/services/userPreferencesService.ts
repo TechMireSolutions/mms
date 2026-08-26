@@ -1,2 +1,19 @@
-/** Users preferences gateway moved to `lib/userPreferencesService.ts`; kept as a stable public path. */
-export * from '../lib/userPreferencesService.js';
+import {
+  normalizeUserModulePreferences,
+  type UserModulePreferences,
+} from '@mms/shared';
+import {
+  getUserModulePreferencesByWorkspace,
+  upsertUserModulePreferences,
+} from '../db/repositories/userModulePreferencesRepository.js';
+import { createModulePreferencesService } from '../lib/createModulePreferencesService.js';
+
+const service = createModulePreferencesService<UserModulePreferences>({
+  broadcastKey: 'users',
+  getByWorkspace: getUserModulePreferencesByWorkspace,
+  upsert: upsertUserModulePreferences,
+  normalize: normalizeUserModulePreferences,
+});
+
+export const loadUserModulePreferences = service.load;
+export const saveUserModulePreferences = service.save;

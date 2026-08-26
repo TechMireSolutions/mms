@@ -8,7 +8,7 @@ import {
 import {
   createModuleFieldConfigService,
   requireFieldConfigTenant,
-} from './createModuleFieldConfigService.js';
+} from '../lib/createModuleFieldConfigService.js';
 import {
   getFinanceFieldConfigByWorkspace,
   upsertFinanceFieldConfig,

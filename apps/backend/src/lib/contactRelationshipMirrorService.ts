@@ -5,8 +5,8 @@ import {
   type FieldDefinition,
   type RelationshipPair,
 } from '@mms/shared';
-import { loadContactFieldConfig, saveContactFieldConfig } from './contactConfigService.js';
-import { loadContactLookupKind, replaceContactLookupKind } from './contactLookupsService.js';
+import { loadContactFieldConfig, saveContactFieldConfig } from '../contacts/use-cases/contactConfigService.js';
+import { loadContactLookupKind, replaceContactLookupKind } from '../contacts/use-cases/contactLookupsService.js';
 
 function relationshipLabelListsMatch(
   left: readonly string[],

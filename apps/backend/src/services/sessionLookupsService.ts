@@ -5,7 +5,7 @@ import {
   type SessionLookupKind,
   type SessionLookupsMap,
 } from '@mms/shared';
-import { createModuleStringListLookupsService } from './createModuleStringListLookupsService.js';
+import { createModuleStringListLookupsService } from '../lib/createModuleStringListLookupsService.js';
 import {
   listSessionLookupsByKind,
   listSessionLookupsByWorkspace,

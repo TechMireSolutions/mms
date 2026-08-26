@@ -8,12 +8,12 @@ import {
 import {
   createModuleFieldConfigService,
   requireFieldConfigTenant,
-} from './createModuleFieldConfigService.js';
+} from '../../lib/createModuleFieldConfigService.js';
 import {
   getTeacherFieldConfigByWorkspace,
   upsertTeacherFieldConfig,
-} from '../db/repositories/teacherFieldConfigRepository.js';
-import { getTeacherModulePreferencesByWorkspace } from '../db/repositories/teacherModulePreferencesRepository.js';
+} from '../../db/repositories/teacherFieldConfigRepository.js';
+import { getTeacherModulePreferencesByWorkspace } from '../../db/repositories/teacherModulePreferencesRepository.js';
 
 const teacherFieldConfig = createModuleFieldConfigService<
   Record<string, unknown>,

@@ -1,2 +1,1 @@
-/** Students lookup gateway moved to `lib/studentLookupsService.ts`; kept as a stable public path. */
-export * from '../lib/studentLookupsService.js';
+export * from '../students/use-cases/studentLookupsService.js';

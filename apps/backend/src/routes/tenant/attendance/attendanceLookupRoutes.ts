@@ -9,7 +9,7 @@ import { canReadCollection } from '../../../services/rbacService.js';
 import {
   loadAttendanceLookupsMap,
   replaceAttendanceLookupKind,
-} from '../../../lib/attendanceLookupsService.js';
+} from '../../../services/attendanceLookupsService.js';
 import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
 
 const auditAttendance = createCollectionAuditHelper('attendance_records');

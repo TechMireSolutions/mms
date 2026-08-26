@@ -13,7 +13,7 @@ import {
   type RelationshipLink,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { loadContactPreferences } from '../../lib/contactPreferencesService.js';
+import { loadContactPreferences } from './contactPreferencesService.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 

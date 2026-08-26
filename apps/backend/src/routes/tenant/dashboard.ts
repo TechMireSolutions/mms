@@ -15,7 +15,7 @@ import { createCollectionAuditHelper } from '../../lib/createCollectionAuditHelp
 import {
   loadDashboardPreferences,
   saveDashboardPreferences,
-} from '../../lib/dashboardPreferencesService.js';
+} from '../../services/dashboardPreferencesService.js';
 import {
   loadDashboardWidgets,
   upsertDashboardWidgets,

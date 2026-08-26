@@ -6,8 +6,8 @@ import {
   type AttendanceLookupsMap,
   type AttendanceStatus,
 } from '@mms/shared';
-import { getRequestTenant } from './tenantContext.js';
-import { broadcastCollection } from './livePush.js';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import { broadcastCollection } from '../lib/livePush.js';
 import {
   listAttendanceLookupsByWorkspace,
   replaceAttendanceLookupsForKind,

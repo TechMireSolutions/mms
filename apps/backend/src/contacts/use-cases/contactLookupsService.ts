@@ -19,15 +19,15 @@ import {
   type ContactLookupKind,
   type ContactLookupsMap,
 } from '@mms/shared';
-import { createModuleStringListLookupsService } from './createModuleStringListLookupsService.js';
-import { getRequestTenant } from './tenantContext.js';
-import { slugifyLookupLabel } from './slugifyLookupLabel.js';
+import { createModuleStringListLookupsService } from '../../lib/createModuleStringListLookupsService.js';
+import { getRequestTenant } from '../../lib/tenantContext.js';
+import { slugifyLookupLabel } from '../../lib/slugifyLookupLabel.js';
 import {
   listContactLookupsByKind,
   listContactLookupsByWorkspace,
   replaceContactLookupsForKind,
-} from '../db/repositories/contactLookupsRepository.js';
-import { broadcastCollection } from './livePush.js';
+} from '../../db/repositories/contactLookupsRepository.js';
+import { broadcastCollection } from '../../lib/livePush.js';
 
 type ContactStringLookupKind = Exclude<ContactLookupKind, 'countryCodes'>;
 

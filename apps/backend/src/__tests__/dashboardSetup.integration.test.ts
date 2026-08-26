@@ -36,7 +36,7 @@ const mockLoadDashboardWidgets = vi.fn();
 const mockUpsertDashboardWidgets = vi.fn();
 const mockDeleteDashboardWidget = vi.fn();
 
-vi.mock('../lib/dashboardPreferencesService.js', () => ({
+vi.mock('../services/dashboardPreferencesService.js', () => ({
   loadDashboardPreferences: (...args: unknown[]) => mockLoadDashboardPreferences(...args),
   saveDashboardPreferences: (...args: unknown[]) => mockSaveDashboardPreferences(...args),
 }));
