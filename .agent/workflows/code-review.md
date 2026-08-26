@@ -10,7 +10,7 @@ This workflow guides the systematic review of codebase changes (e.g., Pull Reque
 
 - [ ] **Load review skill**: Invoke the `mms-code-review` skill to prepare for the review process.
 - [ ] **Load always-on rules**: Review the core guidelines by reading `rules/antigravity-global.md`, `rules/mms-core.md`, `rules/mms-migration-status.md`, and `rules/mms-completion-review.md`.
-- [ ] **Load scoped rules**: Identify the domain of the changes and load relevant scoped rules (e.g., `rules/mms-dry.md`, `rules/mms-dependencies.md`).
+- [ ] **Load scoped rules**: Identify the domain of the changes and load relevant scoped rules (e.g., `rules/mms-dry.md`, `rules/mms-dependencies.md`, `rules/mms-auth-security.md`, `rules/mms-data-layer.md`, `rules/mms-ui-ux-design.md`).
 
 ## Phase 2: Automated Checks
 
@@ -20,13 +20,30 @@ This workflow guides the systematic review of codebase changes (e.g., Pull Reque
   cd apps/frontend && pnpm lint
   cd apps/backend && pnpm lint
   ```
-- [ ] **Run tests**: If applicable, run `pnpm test` for the affected packages or apps.
+- [ ] **Run tests**: If applicable, run `pnpm test` for the affected packages or apps. Verify backend tests include `inject()` allow+deny authorization checks.
 
-## Phase 3: Diff Analysis
+## Phase 3: Diff Analysis & Project Alignment
 
-- [ ] **Check against rules**: Review the diff against the checklists found in `skills/mms-code-review/SKILL.md` (paying special attention to soft-delete mechanisms and Gold Standard §7 layout rules).
-- [ ] **Audit debt regressions**: Cross-reference changes with `rules/mms-migration-status.md`. Ensure no "Recently Resolved" technical debt items are being reintroduced.
-- [ ] **Evaluate DRY violations**: Check if any duplicated logic should be extracted to `@mms/shared` or local UI primitives.
+Audit the diff against the core MMS invariants:
+
+- [ ] **Backend / Data Layer (`mms-backend-api`, `mms-schema-migrate`)**:
+  - DDL is forward-only with `FORCE RLS` on new tenant tables.
+  - Endpoints enforce `authenticateTenant` / `authenticatePlatform`.
+  - Transaction RLS (`SET LOCAL app.current_tenant`) is used appropriately for tenant writes.
+  - Zero-trust DTOs validated via `@mms/shared` Zod strict schemas before persistence.
+- [ ] **Frontend Architecture (`mms-frontend`, `mms-query-factories`)**:
+  - TanStack Query v5 is used for data fetching (no new `useLiveCollection` for REST entities).
+  - Cross-feature imports are banned (e.g. importing `@/tenant/features/A` from `B`). Shared logic must reside in `@mms/shared` or `@/tenant/hooks/collections/*` facades.
+  - Code splits properly at the ~300-line soft ceiling via stable barrels (`mms-structure-naming.md`).
+- [ ] **UI & i18n Parity (`mms-ui-ux-design.md`, `mms-settings-i18n.md`)**:
+  - Semantic HTML (`<main>`, `<nav>`, `<section>`), minimum 44x44px touch targets.
+  - No hardcoded English strings. All text uses `t()` with keys in `appTranslationsEn.ts` (and ar/ur/fa packs).
+  - `ErrorState` implementations include descriptive hints (e.g., `loadFailedHint`), not just titles.
+- [ ] **Data Standards & DRY (`mms-dry.md`)**:
+  - Money is handled as decimal strings (no IEEE 754 floats).
+  - Phone numbers use E.164 via `parsePhoneNumber`.
+  - No premature `useMemo`/`useCallback` (prepare for React Compiler).
+- [ ] **Debt Regressions**: Check against `rules/mms-migration-status.md` to ensure "Recently Resolved" items (like raw `role ===` checks) are not reintroduced.
 
 ## Phase 4: Report Generation
 
@@ -34,8 +51,8 @@ Format your review output clearly, categorizing findings by severity. Do not out
 
 ### Finding Classifications
 
-- **Critical** — Blockers that must be fixed before merge (e.g., build failures, severe security flaws, type errors).
-- **Major** — Significant rule violations that spread debt or architectural flaws (e.g., missing RLS checks, incorrect query invalidation).
+- **Critical** — Blockers that must be fixed before merge (e.g., build failures, bypassed RLS, type errors).
+- **Major** — Significant rule violations that spread debt or architectural flaws (e.g., missing translation keys, cross-feature imports, missing Zod validation).
 - **Minor** — Style nits, optional DRY extractions, or minor optimizations.
 
 ---

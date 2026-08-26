@@ -13,15 +13,13 @@ This workflow provides a comprehensive, systematic procedure for executing test 
 
 | Scope | Command | Description |
 |---|---|---|
-| **Monorepo Typecheck** | `pnpm typecheck` | Strict TypeScript check across `@mms/shared`, `mms-backend`, `mms-frontend`, `e2e-tests` |
-| **Full Unit & Integration Suite** | `pnpm test` | Vitest execution for shared helpers, backend services, and frontend components |
-| **Frontend Lint** | `pnpm --filter mms-frontend lint` | ESLint + React 19 rules + cross-feature import boundary checks |
+| **Monorepo Typecheck** | `pnpm typecheck` | Strict TS check across `@mms/shared`, `mms-backend`, `mms-frontend`, `e2e-tests` (enforces `noUncheckedIndexedAccess`) |
+| **Full Unit/Integration** | `pnpm test` | Vitest execution for shared helpers, backend services, and frontend components |
+| **Frontend Lint** | `pnpm --filter mms-frontend lint` | ESLint + React 19 rules + cross-feature import boundary checks (`mms-dry.md`) |
 | **Backend Lint** | `pnpm --filter mms-backend lint` | ESLint + Fastify 5 / Node rules |
-| **Targeted Frontend Test** | `pnpm --filter mms-frontend test <file>` | Rapid isolated test run on specific frontend file |
-| **Targeted Backend Test** | `pnpm --filter mms-backend test <file>` | Rapid isolated test run on specific backend service/route file |
-| **Targeted Shared Test** | `pnpm --filter @mms/shared test <file>` | Rapid test run for shared schemas and helpers |
-| **E2E Playwright Suite** | `pnpm --filter e2e-tests test` | Full browser integration and user journey tests |
-| **All-in-One Verification** | `pnpm typecheck && pnpm test && pnpm --filter mms-frontend lint && pnpm --filter mms-backend lint` | Complete single-command monorepo validation pass |
+| **Isolated Test** | `pnpm --filter <app> test <file>` | Rapid Vitest run on a specific file |
+| **E2E Playwright** | `pnpm --filter e2e-tests test` | Full browser integration via Playwright + axe-core a11y checks |
+| **All-in-One** | `pnpm typecheck && pnpm test && pnpm --filter mms-frontend lint && pnpm --filter mms-backend lint` | Complete single-command monorepo validation pass |
 
 ## Phase 2: Ordered Test Suite Execution
 
@@ -29,7 +27,7 @@ This workflow provides a comprehensive, systematic procedure for executing test 
   ```bash
   pnpm typecheck
   ```
-- [ ] **Run Unit & Integration Tests**: Verify logic across the monorepo.
+- [ ] **Run Unit & Integration Tests**: Verify logic across the monorepo (Vitest).
   ```bash
   pnpm test
   ```
@@ -38,20 +36,24 @@ This workflow provides a comprehensive, systematic procedure for executing test 
   pnpm --filter mms-frontend lint
   pnpm --filter mms-backend lint
   ```
+- [ ] **Run E2E & A11y (Optional but Recommended)**: Run MSW-backed Playwright tests.
+  ```bash
+  pnpm --filter e2e-tests test
+  ```
 
 > [!IMPORTANT]
 > If any command fails, inspect the complete error stack trace immediately before making any code modifications.
 
-## Phase 3: Root Cause Diagnosis
+## Phase 3: Root Cause Diagnosis & Project Alignment
 
 For any failed test or diagnostic error, follow these steps sequentially:
 
 - [ ] **Read log output in full**: Inspect exact failure traces, file paths, line numbers, and expected vs. actual values. Do not guess without log evidence.
-- [ ] **Categorize failures**:
-  - **Type Errors (`TSxxxx`)**: Schema mismatches, missing properties, un-narrowed `unknown`.
-  - **Assertion Failures**: Broken logic, invalid normalization, missing fields.
-  - **Mock/Fixture Errors**: Outdated fixtures, missing RBAC context, unhandled async promises.
-  - **Lint & Boundaries**: Direct cross-feature imports, unused variables, missing translation keys.
+- [ ] **Categorize failures against Project Rules**:
+  - **Type Errors (`TSxxxx`)**: Schema mismatches, missing properties, un-narrowed `unknown`. Check `@mms/shared` Zod exports.
+  - **Assertion Failures**: Broken logic, invalid normalization. Verify backend tests include `inject()` allow/deny checks.
+  - **Mock/Fixture Errors**: Outdated MSW fixtures missing schema fields, missing RBAC context, unhandled async promises.
+  - **Lint & Boundaries**: Direct cross-feature imports (banned by `mms-dry.md`), missing `t()` keys, unused variables.
 - [ ] **Enforce strict invariants**: Address the root cause in the source logic or update test fixtures to match current `@mms/shared` Zod schemas.
 
 > [!CAUTION]
@@ -62,7 +64,7 @@ For any failed test or diagnostic error, follow these steps sequentially:
 
 ## Phase 4: Targeted Iterative Fix & Re-test
 
-- [ ] **Isolate & Patch**: Apply targeted fixes to the source file or test definition.
+- [ ] **Isolate & Patch**: Apply targeted fixes to the source file or test definition (e.g. updating a Vitest spec or an MSW handler).
 - [ ] **Run fast isolated tests**: Provide rapid feedback loop on the specific file:
   ```bash
   pnpm --filter mms-frontend test <filename>.test.ts
