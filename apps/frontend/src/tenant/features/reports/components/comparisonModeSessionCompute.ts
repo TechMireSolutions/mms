@@ -1,9 +1,9 @@
-import type { Exam, ExamResult } from "@/lib/data/examinationData";
 import type { Session } from "@/lib/data/sessionsData";
 import type {
   AppTranslationKey,
   AttendanceReportComparisonSession,
   EnrollmentsReportComparisonSession,
+  ExaminationsReportComparisonSession,
   FinanceReportComparisonSession,
   HasanatReportComparisonSession,
 } from "@mms/shared";
@@ -16,8 +16,7 @@ export function computeDynamicSessionComparison(
   attendanceSessions: AttendanceReportComparisonSession[],
   financeSessions: FinanceReportComparisonSession[],
   hasanatSessions: HasanatReportComparisonSession[],
-  examResults: ExamResult[],
-  exams: Exam[],
+  examinationsSessions: ExaminationsReportComparisonSession[],
   targetA: string,
   targetB: string,
   t: (key: AppTranslationKey) => string,
@@ -36,6 +35,9 @@ export function computeDynamicSessionComparison(
   const hasanatBySessionId = new Map(
     hasanatSessions.map((row) => [row.sessionId, row] as const),
   );
+  const examinationsBySessionId = new Map(
+    examinationsSessions.map((row) => [row.sessionId, row] as const),
+  );
 
   const getMetrics = (session: Session | undefined) => {
     if (!session) {
@@ -46,25 +48,9 @@ export function computeDynamicSessionComparison(
     const enrollmentRow = enrollmentBySessionId.get(sessionId);
     const enrollment = enrollmentRow?.enrollmentCount ?? 0;
 
-    const classIds = new Set(session.classes?.map((sessionClass) => sessionClass.id) || []);
     const attendancePct = attendanceBySessionId.get(sessionId)?.attendancePct ?? 0;
-
     const feeCollected = financeBySessionId.get(sessionId)?.feeCollected ?? 0;
-
-    const sessionExams = exams.filter((exam) => exam.classIds && exam.classIds.some((classId: string) => classIds.has(classId)));
-    const sessionExamIds = new Set(sessionExams.map((exam) => exam.id));
-    const sessionResults = examResults.filter((examResult) => sessionExamIds.has(examResult.examId));
-    let passCount = 0;
-    sessionResults.forEach((examResult) => {
-      const exam = sessionExams.find((examOption) => examOption.id === examResult.examId);
-      if (exam && examResult.marksObtained >= exam.passingMarks) {
-        passCount++;
-      }
-    });
-    const passRatePct = sessionResults.length > 0
-      ? Math.round((passCount / sessionResults.length) * 100)
-      : 0;
-
+    const passRatePct = examinationsBySessionId.get(sessionId)?.passRatePct ?? 0;
     const hasanat = hasanatBySessionId.get(sessionId)?.hasanat ?? 0;
 
     return { enrollment, attendancePct, feeCollected, passRatePct, hasanat };

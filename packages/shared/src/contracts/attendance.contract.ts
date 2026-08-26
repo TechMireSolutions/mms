@@ -99,6 +99,13 @@ export const attendanceContract = c.router({
     },
     summary: 'Restore a soft-deleted attendance record by ID',
   },
+  widgetAggregates: {
+    method: 'POST',
+    path: '/api/attendance/widget-aggregates',
+    body: z.object({ widgets: z.array(z.unknown()) }),
+    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    summary: 'Get widget aggregates',
+  },
 
   getFieldConfig: {
     method: 'GET',

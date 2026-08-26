@@ -11,13 +11,13 @@ description: Known gaps between rules (target) and codebase (current) — do not
 | Area | Scope & Current Status | Target Standard |
 |---|---|---|
 | **Copy & a11y** | Residual hardcoded strings; niche a11y/RTL checks. | Full `t()` en/ar/ur/fa; WCAG 2.1 AA (`mms-settings-i18n.md`, `mms-ui-ux-design.md`). |
-| **RBAC** | Residual `role ===` write gates on non-migrated tenant modules. | Contract `can()` via `useModulePermissions(manifest)` (`mms-auth-security.md`). |
-| **Setup & Prefs** | Contacts, Students, Teachers, Users, Sessions, Enrollments closed on typed REST. Residual modules' `*_field_config` on `objects`. | Migrate remaining module prefs/lookups to typed tables (`mms-fields.md`, `mms-data-layer.md`). |
+| **RBAC** | Closed: `role ===` write gates replaced by `useModulePermissions`. | Contract `can()` via `useModulePermissions(manifest)` (`mms-auth-security.md`). |
+| **Setup & Prefs** | Closed: All module prefs/lookups migrated to typed tables. | Migrate remaining module prefs/lookups to typed tables (`mms-fields.md`, `mms-data-layer.md`). |
 | **Live Push & Aggregates** | Closed: Contacts/Students/Teachers/Sessions/Enrollments WS invalidate + SQL aggregates. Residual: other module emit/subscribe, comparison mode dumps. | WS `/api/ws` invalidate + SQL `GROUP BY` aggregates (`mms-core.md`, `mms-reports.md`). |
-| **PG Statement Budgets** | Tenant budgets shipped on `withTenantTransaction` + `runInTransaction`. | Route-level tighter budgets for hot paths (`mms-data-layer.md`). |
+| **PG Statement Budgets** | Closed: Route-level budgets on hot paths via `statementTimeoutMs`. | Route-level tighter budgets for hot paths (`mms-data-layer.md`). |
 | **Contacts Full Loads** | Closed: SQL metrics, candidate match, blocked duplicate scans. Residual: niche chart dumps. | SQL aggregates across all visualizers (`mms-data-layer.md`, `mms-reports.md`). |
 | **CSRF / Origin Gate** | Closed: `registerCsrfOriginGuard` enforces `Sec-Fetch-Site: same-origin|same-site|none`, origin validation, and `application/json` mutation media types. | Strict Origin / `Sec-Fetch-Site` header checks on all cookie writes (`mms-auth-security.md`). |
-| **SQL Pagination** | Closed: Teachers, Users, Sessions, Enrollments, Finance, Accounting SQL-page. Residual: remaining in-memory paged lists. | Server SQL `LIMIT`/`OFFSET` via `contactsListQuerySchema` (`mms-data-layer.md`). |
+| **SQL Pagination** | Closed: All paged lists migrated to server SQL `LIMIT`/`OFFSET`. | Server SQL `LIMIT`/`OFFSET` via `contactsListQuerySchema` (`mms-data-layer.md`). |
 
 ## Regressions: Do Not Reintroduce
 

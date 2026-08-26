@@ -77,6 +77,13 @@ export const questionBankContract = c.router({
     responses: { 200: ok, 403: ok, 500: ok },
     summary: 'Restore question',
   },
+  widgetAggregates: {
+    method: 'POST',
+    path: '/api/question-bank/widget-aggregates',
+    body: z.object({ widgets: z.array(z.unknown()) }),
+    responses: { 200: z.unknown(), 403: z.unknown(), 500: z.unknown() },
+    summary: 'Get widget aggregates',
+  },
   getFieldConfig: {
     method: 'GET',
     path: '/api/question-bank/config/fields',

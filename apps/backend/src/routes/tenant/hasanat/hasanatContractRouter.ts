@@ -11,6 +11,7 @@ import {
   loadRedemptions,
   bulkSoftDeleteDistributions,
   bulkRestoreDistributions,
+  loadHasanatWidgetAggregates,
 } from '../../../services/hasanatService.js';
 
 const s = initServer();
@@ -97,6 +98,18 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list redemptions' } };
+      }
+    },
+    widgetAggregates: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, 'hasanat_distributions')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const result = await withTenant(String(request.tenant?.id), () => loadHasanatWidgetAggregates(body.widgets as any), { readOnly: true });
+        return { status: 200 as const, body: result };
+      } catch (error) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
   } as any);

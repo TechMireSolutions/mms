@@ -118,7 +118,7 @@ export function scheduleMigrateAndRestart(meta: MigrateRestartAuditMeta): boolea
 /**
  * Reload via hardcoded `pm2 reload <ecosystem> --only mmsv2-backend --update-env`.
  * Falls back to `process.exit(0)` only when production or already under PM2 so a
- * supervising unit can restart us. Skips exit in local/dev to avoid killing tsx.
+ * supervising unit can restart us. Skips exit in local/dev to avoid killing node --strip-types.
  */
 export async function reloadBackendProcess(): Promise<ReloadBackendResult> {
   const repoRoot = resolve(resolveBackendRoot(), '..', '..');

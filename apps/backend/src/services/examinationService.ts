@@ -6,6 +6,11 @@ import {
   examListSchema,
   examResultListSchema,
   examRecordSchema,
+  type WidgetQuery,
+  type WidgetAggregateResult,
+  type ExaminationsReportComparisonQuery,
+  type ExaminationsReportAggregates,
+  EMPTY_EXAMINATIONS_REPORT_AGGREGATES,
 } from '@mms/shared';
 import {
   listExamsByWorkspace,
@@ -21,13 +26,15 @@ import {
   aggregateExaminationsCommandMetrics,
   listExamsPage,
 } from '../db/repositories/examinationRepositoryList.js';
+import { loadExaminationsReportAggregatesSql } from '../db/repositories/examinationRepositoryReport.js';
+import { aggregateExaminationsWidgetQueries } from '../db/repositories/examinationsRepositoryWidgets.js';
 import {
   defineTenantBulkCollectionService,
   scopeDeleted,
   upsertWithBroadcast,
 } from './tenantBulkService.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
-import { getRequestTenant } from '../lib/tenantContext.js';
+import * as tenantContext from '../lib/tenantContext.js';
 
 const examBulkService = defineTenantBulkCollectionService<Exam>(
   { listByWorkspace: listExamsByWorkspace, replaceForWorkspace: replaceExamsForWorkspace },
@@ -69,7 +76,7 @@ export async function loadExamsPage(
   limit: number;
   hasMore: boolean;
 }> {
-  const tenant = getRequestTenant();
+  const tenant = tenantContext.getRequestTenant();
   if (!tenant) {
     return {
       exams: [],
@@ -110,7 +117,23 @@ const EMPTY_EXAMINATIONS_METRICS: ExaminationsCommandMetricsSnapshot = {
 };
 
 export async function loadExaminationsCommandMetrics(): Promise<ExaminationsCommandMetricsSnapshot> {
-  const tenant = getRequestTenant();
+  const tenant = tenantContext.getRequestTenant();
   if (!tenant) return EMPTY_EXAMINATIONS_METRICS;
   return aggregateExaminationsCommandMetrics(tenant);
+}
+
+export async function loadExaminationsWidgetAggregates(
+  queries: WidgetQuery[],
+): Promise<Record<string, WidgetAggregateResult>> {
+  const tenant = tenantContext.getRequestTenant();
+  if (!tenant) return {};
+  return aggregateExaminationsWidgetQueries(tenant, queries);
+}
+
+export async function loadExaminationsReportAggregates(
+  comparisonQuery: ExaminationsReportComparisonQuery | undefined,
+): Promise<ExaminationsReportAggregates> {
+  const tenant = tenantContext.getRequestTenant();
+  if (!tenant) return EMPTY_EXAMINATIONS_REPORT_AGGREGATES;
+  return loadExaminationsReportAggregatesSql(tenant, comparisonQuery);
 }

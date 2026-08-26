@@ -38,7 +38,7 @@ function canWriteDashboard(user: User): boolean {
 const dashboardRouter = s.router(rootContract.dashboard, {
   getPreferences: async ({ request }: any) => {
     try {
-      const preferences = await withTenant(String((request as any).tenant?.id), () => loadDashboardPreferences(), { readOnly: true });
+      const preferences = await withTenant(String((request as any).tenant?.id), () => loadDashboardPreferences(), { readOnly: true, statementTimeoutMs: 5000 });
       return {
         status: 200 as const,
         body: { preferences: preferences ?? normalizeDashboardPreferences(null) },
@@ -69,7 +69,7 @@ const dashboardRouter = s.router(rootContract.dashboard, {
   },
   getWidgets: async ({ request }: any) => {
     try {
-      const widgets = await withTenant(String((request as any).tenant?.id), () => loadDashboardWidgets(), { readOnly: true });
+      const widgets = await withTenant(String((request as any).tenant?.id), () => loadDashboardWidgets(), { readOnly: true, statementTimeoutMs: 5000 });
       return { status: 200 as const, body: { widgets } };
     } catch {
       return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load dashboard widgets' } as any };

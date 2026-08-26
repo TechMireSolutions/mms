@@ -23,6 +23,7 @@ import {
   replaceResultsForWorkspace,
 } from '../db/repositories/questionBankRepository.js';
 import { listQuestionsPage } from '../db/repositories/questionBankRepositoryList.js';
+import { aggregateQuestionBankWidgetQueries } from '../db/repositories/questionBankRepositoryWidgets.js';
 import {
   defineTenantBulkCollectionService,
   scopeDeleted,
@@ -114,3 +115,11 @@ export const deleteQuestionById = questionCrud.deleteById;
 export const restoreQuestionById = questionCrud.restoreById;
 export const bulkSoftDeleteQuestions = questionCrud.bulkDeleteByIds;
 export const bulkRestoreQuestions = questionCrud.bulkRestoreByIds;
+
+export async function loadQuestionBankWidgetAggregates(
+  queries: import('@mms/shared').WidgetQuery[],
+): Promise<Record<string, import('@mms/shared').WidgetAggregateResult>> {
+  const tenant = getRequestTenant();
+  if (!tenant) return {};
+  return aggregateQuestionBankWidgetQueries(tenant, queries);
+}

@@ -1,24 +1,22 @@
 import { and, eq, isNull, sql, type SQL } from 'drizzle-orm';
 import type { WidgetAggregateResult, WidgetQuery } from '@mms/shared';
-import { contacts } from '../schema.js';
+import { questions } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
 function activeWorkspaceWhere(subdomain: string): SQL {
-  return and(eq(contacts.workspaceSubdomain, subdomain), isNull(contacts.deletedAt))!;
+  return and(eq(questions.workspaceSubdomain, subdomain), isNull(questions.deletedAt))!;
 }
 
 const FIELD_TO_SQL_COLUMN: Record<string, string> = {
-  gender: 'gender',
-  isSyed: 'is_syed',
-  whatsappStatus: 'whatsapp_status',
-  preferredLanguage: 'preferred_language',
-  preferredContactMethod: 'preferred_contact_method',
-  doNotContact: 'do_not_contact',
+  type: 'type',
+  difficulty: 'difficulty',
+  questionLanguage: 'question_language',
+  marks: 'marks',
 };
 
 function resolveSqlColumn(field: string): SQL {
-  const col = FIELD_TO_SQL_COLUMN[field] ?? 'gender';
-  return sql.raw(`"contacts"."${col}"`);
+  const col = FIELD_TO_SQL_COLUMN[field] ?? 'type';
+  return sql.raw(`"questions"."${col}"`);
 }
 
 function singleFilterSql(
@@ -31,9 +29,6 @@ function singleFilterSql(
   const colSql = resolveSqlColumn(trimmedField);
   const op = operator ?? 'equals';
   if (op === 'equals') {
-    if (value === 'true' || value === 'false') {
-      return sql`${colSql}::boolean = ${value === 'true'}`;
-    }
     return sql`lower(trim(${colSql}::text)) = ${value.trim().toLowerCase()}`;
   }
   if (op === 'contains') {
@@ -52,7 +47,7 @@ function widgetFilterSql(query: WidgetQuery): SQL | null {
   return singleFilterSql(query.filterField, query.filterOperator, query.filterValue);
 }
 
-export async function aggregateContactsWidgetQueries(
+export async function aggregateQuestionBankWidgetQueries(
   tenant: string,
   queries: WidgetQuery[],
 ): Promise<Record<string, WidgetAggregateResult>> {
@@ -63,7 +58,7 @@ export async function aggregateContactsWidgetQueries(
   return withTenant(subdomain, async (tx) => {
     const totalRows = await tx
       .select({ count: sql<number>`count(*)::int` })
-      .from(contacts)
+      .from(questions)
       .where(activeWorkspaceWhere(subdomain));
     const totalCount = Number(totalRows[0]?.count ?? 0);
 
@@ -78,7 +73,7 @@ export async function aggregateContactsWidgetQueries(
       if (query.operation === 'count' || query.operation === 'percentage') {
         const countRows = await tx
           .select({ count: sql<number>`count(*)::int` })
-          .from(contacts)
+          .from(questions)
           .where(whereClause);
         const filteredCount = Number(countRows[0]?.count ?? 0);
         value =
@@ -96,7 +91,7 @@ export async function aggregateContactsWidgetQueries(
               sum: sql<number>`coalesce(sum(${targetColSql}::numeric), 0)`,
               count: sql<number>`count(*) FILTER (WHERE ${targetColSql} IS NOT NULL)::int`,
             })
-            .from(contacts)
+            .from(questions)
             .where(whereClause);
           const sum = Number(aggRows[0]?.sum ?? 0);
           const count = Number(aggRows[0]?.count ?? 0);
@@ -104,7 +99,7 @@ export async function aggregateContactsWidgetQueries(
         }
       }
 
-      const xAxis = query.xAxisField?.trim() || 'gender';
+      const xAxis = query.xAxisField?.trim() || 'type';
       const xAxisColSql = resolveSqlColumn(xAxis);
       const groupExpr = sql<string>`COALESCE(NULLIF(trim(${xAxisColSql}::text), ''), 'Unknown')`;
 
@@ -113,7 +108,7 @@ export async function aggregateContactsWidgetQueries(
           name: groupExpr,
           value: sql<number>`count(*)::int`,
         })
-        .from(contacts)
+        .from(questions)
         .where(whereClause)
         .groupBy(groupExpr)
         .orderBy(sql`count(*) desc`)
@@ -137,13 +132,12 @@ export async function aggregateContactsWidgetQueries(
               sum: sql<number>`coalesce(sum(${targetColSql}::numeric), 0)`,
               count: sql<number>`count(*) FILTER (WHERE ${targetColSql} IS NOT NULL)::int`,
             })
-            .from(contacts)
+            .from(questions)
             .where(whereClause)
             .groupBy(groupExpr)
             .orderBy(sortExpr)
             .limit(chartLimit);
-          chartData = numericChart
-            .map((row) => {
+          chartData = numericChart.map((row) => {
               const sum = Number(row.sum ?? 0);
               const count = Number(row.count ?? 0);
               return {

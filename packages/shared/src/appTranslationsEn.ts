@@ -3368,6 +3368,8 @@ export const APP_TRANSLATIONS_EN = {
   "messaging.openWhatsapp": "Open WhatsApp",
   "messaging.pagination.next": "Next",
   "messaging.pagination.pageOf": "Page {page} of {totalPages}",
+  "messaging.pagination.page": "Page {page}",
+  "messaging.pagination.showingRecords": "Showing {count} of {total} records",
   "messaging.pagination.previous": "Previous",
   "messaging.pagination.range": "{from}–{to} of {total}",
   "messaging.pause": "Pause",

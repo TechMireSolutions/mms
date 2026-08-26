@@ -134,6 +134,13 @@ export const financeContract = c.router({
     responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
     summary: 'Get finance command metrics',
   },
+  widgetAggregates: {
+    method: 'POST',
+    path: '/api/finance/widget-aggregates',
+    body: z.object({ widgets: z.array(z.unknown()) }),
+    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    summary: 'Get widget aggregates',
+  },
   getFieldConfig: {
     method: 'GET',
     path: '/api/finance/field-config',

@@ -13,6 +13,7 @@ type AppDb = NodePgDatabase<typeof schema>;
 export async function applyTenantTransactionGuards(
   tx: AppDb,
   workspaceSubdomain: string | null | undefined,
+  options?: { statementTimeoutMs?: number },
 ): Promise<void> {
   if (workspaceSubdomain && workspaceSubdomain.trim()) {
     const tenant = workspaceSubdomain.trim().toLowerCase();
@@ -20,8 +21,9 @@ export async function applyTenantTransactionGuards(
     await tx.execute(sql`SELECT set_config('app.rls_bypass', 'off', true)`);
 
     const config = loadServerConfig();
+    const statementTimeout = options?.statementTimeoutMs ?? config.pgStatementTimeoutMs;
     await tx.execute(
-      sql`SELECT set_config('statement_timeout', ${String(config.pgStatementTimeoutMs)}, true)`,
+      sql`SELECT set_config('statement_timeout', ${String(statementTimeout)}, true)`,
     );
     await tx.execute(
       sql`SELECT set_config('idle_in_transaction_session_timeout', ${String(config.pgIdleInTxTimeoutMs)}, true)`,

@@ -12,7 +12,7 @@ export type AppDb = TenantTransaction;
 export async function withTenant<T>(
   tenantId: string | null | undefined,
   callback: (tx: TenantTransaction) => Promise<T>,
-  options: { readOnly?: boolean } = {}
+  options: { readOnly?: boolean; statementTimeoutMs?: number } = {}
 ): Promise<T> {
   const resolvedTenantId = tenantId || '';
   
@@ -44,8 +44,9 @@ export async function withTenant<T>(
         );
 
         const config = loadServerConfig();
+        const statementTimeout = options.statementTimeoutMs ?? config.pgStatementTimeoutMs;
         await tx.execute(
-          sql`SELECT set_config('statement_timeout', ${String(config.pgStatementTimeoutMs)}, true)`
+          sql`SELECT set_config('statement_timeout', ${String(statementTimeout)}, true)`
         );
         await tx.execute(
           sql`SELECT set_config('idle_in_transaction_session_timeout', ${String(config.pgIdleInTxTimeoutMs)}, true)`

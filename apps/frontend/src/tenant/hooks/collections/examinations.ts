@@ -22,3 +22,4 @@ export {
   useExaminationsContractDeleteExam,
   useExaminationsContractRestoreExam,
 } from '@/tenant/features/examinations/hooks/useExaminationsTsrHooks';
+export { useExaminationsReportAggregates } from '@/tenant/features/examinations/hooks/useExaminationsReportAggregates';

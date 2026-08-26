@@ -3360,6 +3360,8 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "messaging.openWhatsapp": "فتح واتساب",
   "messaging.pagination.next": "التالي",
   "messaging.pagination.pageOf": "صفحة {page} من {totalPages}",
+  "messaging.pagination.page": "Page {page}",
+  "messaging.pagination.showingRecords": "Showing {count} of {total} records",
   "messaging.pagination.previous": "السابق",
   "messaging.pagination.range": "{from}–{to} من {total}",
   "messaging.pause": "إيقاف مؤقت",

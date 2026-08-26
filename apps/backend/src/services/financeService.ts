@@ -25,6 +25,7 @@ import {
   savePayment,
 } from '../db/repositories/financeRepository.js';
 import { loadFinanceReportAggregatesSql } from '../db/repositories/financeRepositoryReport.js';
+import { aggregateFinanceWidgetQueries } from '../db/repositories/financeRepositoryWidgets.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
 import { runInTransaction } from '../db/database.js';
 
@@ -195,4 +196,12 @@ export async function loadFinanceCommandMetrics(): Promise<FinanceCommandMetrics
   const tenant = getRequestTenant();
   if (!tenant) return EMPTY_FINANCE_METRICS;
   return aggregateFinanceCommandMetrics(tenant);
+}
+
+export async function loadFinanceWidgetAggregates(
+  queries: import('@mms/shared').WidgetQuery[],
+): Promise<Record<string, import('@mms/shared').WidgetAggregateResult>> {
+  const tenant = getRequestTenant();
+  if (!tenant) return {};
+  return aggregateFinanceWidgetQueries(tenant, queries);
 }

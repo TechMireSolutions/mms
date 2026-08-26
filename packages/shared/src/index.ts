@@ -312,3 +312,5 @@ export * from './vcardUtils.js';
 export * from './widgetFilterUtils.js';
 
 
+export * from './examinationsReportAggregates.js';
+export * from './widgetAggregateTypes.js';

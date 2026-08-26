@@ -6,10 +6,7 @@ import { useEnrollmentsReportAggregates } from '@/tenant/hooks/collections/enrol
 import { useAttendanceReportAggregates } from '@/tenant/hooks/collections/attendance';
 import { useFinanceReportAggregates } from '@/tenant/hooks/collections/finance';
 import { useHasanatReportAggregates } from '@/tenant/hooks/collections/hasanat';
-import {
-  useExaminationsExamsCollection,
-  useExaminationsResultsCollection,
-} from '@/tenant/hooks/collections/examinations';
+import { useExaminationsReportAggregates } from '@/tenant/hooks/collections/examinations';
 import {
   buildContactsDateRangeComparison,
   computeDynamicDateRangeComparison,
@@ -110,6 +107,21 @@ export function useComparisonModeData({
     return undefined;
   }, [needsAttendanceSessionCompare, needsAttendanceDateRange, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to]);
 
+  const examinationsComparison = useMemo(() => {
+    if (nonContactsEnabled && mode === 'sessions') {
+      return { sessionIds: [valA, valB].filter(Boolean) };
+    }
+    if (nonContactsEnabled && mode === 'daterange' && categoryKey === 'examinations') {
+      return {
+        rangeAFrom: rangeA.from,
+        rangeATo: rangeA.to,
+        rangeBFrom: rangeB.from,
+        rangeBTo: rangeB.to,
+      };
+    }
+    return undefined;
+  }, [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to]);
+
   const hasanatComparison = useMemo(() => {
     if (needsHasanatSessionCompare) {
       return { sessionIds: [valA, valB].filter(Boolean) };
@@ -145,6 +157,11 @@ export function useComparisonModeData({
     comparison: hasanatComparison,
   });
 
+  const { data: examinationsReport } = useExaminationsReportAggregates({
+    enabled: Boolean(examinationsComparison),
+    comparison: examinationsComparison,
+  });
+
   const sessions = useSessionsCollection({ enabled: nonContactsEnabled });
   const sessionsOptions = useMemo<{ id: string; name: string }[]>(
     () =>
@@ -153,9 +170,6 @@ export function useComparisonModeData({
         .map((session) => ({ id: session.id, name: session.name })),
     [sessions],
   );
-
-  const examResults = useExaminationsResultsCollection({ enabled: nonContactsEnabled });
-  const exams = useExaminationsExamsCollection({ enabled: nonContactsEnabled });
 
   const comparisonData = useMemo<ComparisonDataItem[] | DateRangeDataItem[]>(() => {
     if (mode === 'sessions') {
@@ -168,8 +182,7 @@ export function useComparisonModeData({
         attendanceReport?.comparison?.sessions ?? [],
         financeReport?.comparison?.sessions ?? [],
         hasanatReport?.comparison?.sessions ?? [],
-        examResults,
-        exams,
+        examinationsReport?.comparison?.sessions ?? [],
         valA,
         valB,
         t,
@@ -184,8 +197,7 @@ export function useComparisonModeData({
       attendanceReport?.comparison?.monthly,
       financeReport?.comparison?.monthly,
       hasanatReport?.comparison?.monthly,
-      examResults,
-      exams,
+      examinationsReport?.comparison?.monthly,
       rangeA,
       rangeB,
     );
@@ -202,8 +214,7 @@ export function useComparisonModeData({
     attendanceReport,
     financeReport,
     hasanatReport,
-    examResults,
-    exams,
+    examinationsReport,
     category,
     t,
   ]);
@@ -223,9 +234,8 @@ export function useComparisonModeData({
     financeReport,
     attendanceReport,
     hasanatReport,
+    examinationsReport,
     sessions,
-    exams,
-    examResults,
     sessionsOptions,
     comparisonData,
     labelA,

@@ -117,21 +117,31 @@ export async function closeDatabase(): Promise<void> {
  * so they participate in the same transaction rather than the root connection.
  * Nested calls are no-ops (they reuse the active tx).
  */
-export async function runInTransaction<T>(cb: () => Promise<T>): Promise<T> {
-  return await runTransaction(cb, false);
+export async function runInTransaction<T>(
+  cb: () => Promise<T>,
+  options?: { statementTimeoutMs?: number },
+): Promise<T> {
+  return await runTransaction(cb, false, options);
 }
 
 /**
  * Read-only variant of `runInTransaction` using REPEATABLE READ, so every statement
  * observes one consistent snapshot (backup exports must not tear across tables).
  */
-export async function runInReadSnapshotTransaction<T>(cb: () => Promise<T>): Promise<T> {
-  return await runTransaction(cb, true);
+export async function runInReadSnapshotTransaction<T>(
+  cb: () => Promise<T>,
+  options?: { statementTimeoutMs?: number },
+): Promise<T> {
+  return await runTransaction(cb, true, options);
 }
 
 const SLOW_QUERY_THRESHOLD_MS = 200;
 
-async function runTransaction<T>(cb: () => Promise<T>, readSnapshot: boolean): Promise<T> {
+async function runTransaction<T>(
+  cb: () => Promise<T>,
+  readSnapshot: boolean,
+  options?: { statementTimeoutMs?: number },
+): Promise<T> {
   const existing = txStorage.getStore();
   if (existing) return cb();
 
@@ -139,7 +149,7 @@ async function runTransaction<T>(cb: () => Promise<T>, readSnapshot: boolean): P
   const startTime = Date.now();
   try {
     return await getDb().transaction(async (tx) => {
-      await applyTenantTransactionGuards(tx, tenant);
+      await applyTenantTransactionGuards(tx, tenant, options);
       return await txStorage.run(tx, cb);
     }, readSnapshot ? { isolationLevel: 'repeatable read' } : undefined);
   } finally {

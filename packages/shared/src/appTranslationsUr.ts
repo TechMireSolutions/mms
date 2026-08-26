@@ -3359,6 +3359,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "messaging.openWhatsapp": "واٹس ایپ کھولیں",
   "messaging.pagination.next": "اگلا",
   "messaging.pagination.pageOf": "صفحہ {page} از {totalPages}",
+  "messaging.pagination.page": "Page {page}",
+  "messaging.pagination.showingRecords": "Showing {count} of {total} records",
   "messaging.pagination.previous": "پچھلا",
   "messaging.pagination.range": "{from}–{to} از {total}",
   "messaging.pause": "روکیں",

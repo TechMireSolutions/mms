@@ -3306,6 +3306,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "messaging.openingTabs": "در حال باز کردن تب‌ها…",
   "messaging.pagination.next": "بعدی",
   "messaging.pagination.pageOf": "صفحه {page} از {totalPages}",
+  "messaging.pagination.page": "Page {page}",
+  "messaging.pagination.showingRecords": "Showing {count} of {total} records",
   "messaging.pagination.previous": "قبلی",
   "messaging.pagination.range": "{from}–{to} از {total}",
   "messaging.pause": "مکث",

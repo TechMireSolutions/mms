@@ -11,6 +11,7 @@ import {
   loadResults,
   bulkSoftDeleteQuestions,
   bulkRestoreQuestions,
+  loadQuestionBankWidgetAggregates,
 } from '../../../services/questionBankService.js';
 
 const s = initServer();
@@ -89,6 +90,18 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
         return { status: 200 as const, body: { results } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list assessment results' } };
+      }
+    },
+    widgetAggregates: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, 'questions')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const result = await withTenant(String(request.tenant?.id), () => loadQuestionBankWidgetAggregates(body.widgets as any), { readOnly: true });
+        return { status: 200 as const, body: result };
+      } catch (error) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
   } as any);

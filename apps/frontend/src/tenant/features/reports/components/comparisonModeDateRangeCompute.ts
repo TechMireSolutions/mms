@@ -1,7 +1,7 @@
-import type { Exam, ExamResult } from "@/lib/data/examinationData";
 import type {
   AttendanceReportComparison,
   EnrollmentsReportComparison,
+  ExaminationsReportComparison,
   FinanceReportComparison,
   HasanatReportComparison,
 } from "@mms/shared";
@@ -9,7 +9,6 @@ import type {
 import {
   COMPARISON_MONTH_NAMES,
   getComparisonMonthIndex,
-  isInComparisonDateRange,
 } from "./comparisonModeDateHelpers";
 import type { DateRange, DateRangeDataItem } from "./comparisonModeTypes";
 
@@ -19,8 +18,7 @@ export function computeDynamicDateRangeComparison(
   attendanceMonthly: AttendanceReportComparison["monthly"] | undefined,
   financeMonthly: FinanceReportComparison["monthly"] | undefined,
   hasanatMonthly: HasanatReportComparison["monthly"] | undefined,
-  examResults: ExamResult[],
-  exams: Exam[],
+  examinationsMonthly: ExaminationsReportComparison["monthly"] | undefined,
   rangeA: DateRange,
   rangeB: DateRange,
 ): DateRangeDataItem[] {
@@ -74,29 +72,20 @@ export function computeDynamicDateRangeComparison(
       if (monthIndex >= 0) bucketB[monthIndex] += monthBucket.count;
     }
   } else if (lowerCat === "examinations" || lowerCat === "academic") {
-    const examMap = new Map<string, Exam>();
-    exams.forEach((exam) => examMap.set(exam.id, exam));
-
-    examResults.forEach((examResult) => {
-      const exam = examMap.get(examResult.examId);
-      if (!exam) return;
-      const isPass = examResult.marksObtained >= exam.passingMarks;
-      const passValue = isPass ? 1 : 0;
-      if (isInComparisonDateRange(exam.date, rangeA.from, rangeA.to)) {
-        const monthIndex = getComparisonMonthIndex(exam.date);
-        if (monthIndex >= 0) {
-          bucketA[monthIndex] += passValue;
-          countA[monthIndex] += 1;
-        }
+    for (const monthBucket of examinationsMonthly?.a ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) {
+        bucketA[monthIndex] += monthBucket.passCount;
+        countA[monthIndex] += monthBucket.totalCount;
       }
-      if (isInComparisonDateRange(exam.date, rangeB.from, rangeB.to)) {
-        const monthIndex = getComparisonMonthIndex(exam.date);
-        if (monthIndex >= 0) {
-          bucketB[monthIndex] += passValue;
-          countB[monthIndex] += 1;
-        }
+    }
+    for (const monthBucket of examinationsMonthly?.b ?? []) {
+      const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
+      if (monthIndex >= 0) {
+        bucketB[monthIndex] += monthBucket.passCount;
+        countB[monthIndex] += monthBucket.totalCount;
       }
-    });
+    }
   } else {
     return [];
   }

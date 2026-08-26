@@ -86,7 +86,7 @@ const dataMigrationsToRun = [
   { id: '083', load: async () => (await import('./migrations/083_clear_legacy_email_integration_objects.js')).runMigration083 },
 ];
 
-/** Resolve Drizzle SQL migrations folder (src in tsx, dist in production). */
+/** Resolve Drizzle SQL migrations folder (src in node --strip-types, dist in production). */
 export function resolveMigrationsFolder(): string {
   const backendRoot = resolveBackendRoot();
   const srcMigrations = join(backendRoot, 'src/db/migrations_drizzle');

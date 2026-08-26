@@ -98,6 +98,13 @@ export const hasanatContract = c.router({
     responses: { 200: ok, 403: ok, 404: ok, 500: ok },
     summary: 'Restore distribution',
   },
+  widgetAggregates: {
+    method: 'POST',
+    path: '/api/hasanat/widget-aggregates',
+    body: z.object({ widgets: z.array(z.unknown()) }),
+    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    summary: 'Get widget aggregates',
+  },
 
   getFieldConfig: {
     method: 'GET',

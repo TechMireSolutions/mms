@@ -13,6 +13,7 @@ import {
   updateAttendanceRecordById,
   deleteAttendanceRecordById,
   restoreAttendanceRecordById,
+  loadAttendanceWidgetAggregates,
 } from '../../../services/attendanceService.js';
 
 const s = initServer();
@@ -127,6 +128,18 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 200 as const, body: { success: true } };
       } catch (e: any) {
         return { status: 500 as const, body: { type: 'database_error', message: e.message || 'Failed to restore attendance' } };
+      }
+    },
+    widgetAggregates: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, 'attendance')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const result = await withTenant(String(request.tenant?.id), () => loadAttendanceWidgetAggregates(body.widgets as any), { readOnly: true });
+        return { status: 200 as const, body: result };
+      } catch (error) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
   } as any);

@@ -23,6 +23,7 @@ import {
 } from '../../services/examinationService.js';
 
 import { examinationSetupConfigRoutes } from './examinationSetupConfigRoutes.js';
+import { examinationsReportRoutes } from './examinations/examinationsReportRoutes.js';
 import { examinationContractRouter } from './examinations/examinationContractRouter.js';
 
 const EXAMS_COLLECTION = EXAMINATIONS_MODULE_MANIFEST.collectionKey;
@@ -41,6 +42,7 @@ export default async function examinationsRoutes(
   await fastify.register(
     async (sub) => {
       await sub.register(examinationSetupConfigRoutes);
+      await sub.register(examinationsReportRoutes);
 
       registerMetricsRoute(sub, {
         collection: EXAMS_COLLECTION,

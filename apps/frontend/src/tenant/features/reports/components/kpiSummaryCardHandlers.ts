@@ -10,27 +10,9 @@ import {
 } from './kpiSummaryConfig';
 import {
   buildAggregateCustomCard,
-  computeLocalCustomCard,
   getDefaultCardConfig,
 } from './kpiSummaryFormatters';
 import type { AggregateCardValue, CategorizedKPIItem, KPIItem } from './kpiSummaryTypes';
-import type { AttendanceRecord } from '@/lib/data/attendanceData';
-import type { Invoice } from '@/lib/data/financeData';
-import type { Denomination, Distribution } from '@/lib/data/hasanatData';
-import type { QuestionBankQuestion, QuestionBankResult, QuestionBankTest, Enrollment } from '@mms/shared';
-import type { Session } from '@/lib/data/sessionsData';
-
-export interface CustomCardLocalCollections {
-  sessions: Session[];
-  enrollments: Enrollment[];
-  finance_invoices: Invoice[];
-  attendance_records: AttendanceRecord[];
-  hasanat_distributions: Distribution[];
-  hasanat_denoms: Denomination[];
-  questions: QuestionBankQuestion[];
-  tests: QuestionBankTest[];
-  assessment_results: QuestionBankResult[];
-}
 
 export function filterStandardPossibleCards(
   standardCards: CategorizedKPIItem[],
@@ -65,25 +47,11 @@ export function computeCustomCardItems(
   category: string,
   t: TranslationFunction,
   serverAggregates: Record<string, AggregateCardValue | undefined>,
-  localCollections: CustomCardLocalCollections,
 ): CategorizedKPIItem[] {
   return customCards.map((card) => {
     const serverAggregate = serverAggregates[card.id];
     if (serverAggregate) return buildAggregateCustomCard(card, serverAggregate, category, t);
-    return computeLocalCustomCard(card, {
-      students: [],
-      teachers: [],
-      sessions: localCollections.sessions,
-      enrollments: localCollections.enrollments,
-      finance_invoices: localCollections.finance_invoices,
-      attendance_records: localCollections.attendance_records,
-      hasanat_distributions: localCollections.hasanat_distributions,
-      hasanat_denoms: localCollections.hasanat_denoms,
-      contacts: [],
-      questions: localCollections.questions,
-      tests: localCollections.tests,
-      assessment_results: localCollections.assessment_results,
-    }, t);
+    return buildAggregateCustomCard(card, { value: 0, totalCount: 0 }, category, t);
   });
 }
 

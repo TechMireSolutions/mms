@@ -23,6 +23,7 @@ import {
   bulkRestorePayments,
   getPaymentById,
   loadFinanceCommandMetrics,
+  loadFinanceWidgetAggregates,
 } from '../../services/financeService.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../services/rbacService.js';
 import { financeReportRoutes } from './finance/financeReportRoutes.js';
@@ -283,6 +284,16 @@ export default async function financeRoutes(
         return { status: 200 as const, body: { metrics: await loadFinanceCommandMetrics() } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load finance metrics' } };
+      }
+    },
+    widgetAggregates: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        const result = await withTenant(String(request.tenant?.id), () => loadFinanceWidgetAggregates(body.widgets as any), { readOnly: true });
+        return { status: 200 as const, body: result };
+      } catch (error) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
   } as any);

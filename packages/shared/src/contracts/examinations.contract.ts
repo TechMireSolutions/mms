@@ -64,6 +64,19 @@ export const examinationContract = c.router({
     responses: { 200: ok, 403: ok, 500: ok },
     summary: 'Restore a soft deleted exam',
   },
+  widgetAggregates: {
+    method: 'POST',
+    path: '/api/examinations/widget-aggregates',
+    body: z.object({ widgets: z.array(z.unknown()) }),
+    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    summary: 'Get widget aggregates',
+  },
+  reportAggregates: {
+    method: 'GET',
+    path: '/api/examinations/reports/aggregates',
+    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    summary: 'Get report aggregates',
+  },
 
   getFieldConfig: {
     method: 'GET',

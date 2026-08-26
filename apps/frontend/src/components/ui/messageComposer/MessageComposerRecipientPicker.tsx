@@ -143,7 +143,10 @@ export function MessageComposerRecipientPicker({
 
       <div className="flex items-center justify-between px-1">
         <div className="text-xs text-muted-foreground">
-          Showing {contacts.length} of {total || contacts.length} records
+          {t('messaging.pagination.showingRecords', {
+            count: contacts.length,
+            total: total || contacts.length,
+          })}
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -155,7 +158,7 @@ export function MessageComposerRecipientPicker({
             {t('common.previous')}
           </button>
           <span className="text-xs text-muted-foreground">
-            Page {page}
+            {t('messaging.pagination.page', { page })}
           </span>
           <button
             type="button"

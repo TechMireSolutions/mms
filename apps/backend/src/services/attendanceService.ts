@@ -19,6 +19,7 @@ import {
   countAttendanceActiveByWorkspace,
   aggregateAttendanceCommandMetrics,
 } from '../db/repositories/attendanceRepositoryList.js';
+import { aggregateAttendanceWidgetQueries } from '../db/repositories/attendanceRepositoryWidgets.js';
 import { createGenericRelationalService } from './genericRelationalService.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
@@ -122,4 +123,12 @@ export async function loadAttendanceCommandMetrics(
       ? dateParam
       : undefined;
   return aggregateAttendanceCommandMetrics(tenant, { selectedDate });
+}
+
+export async function loadAttendanceWidgetAggregates(
+  queries: import('@mms/shared').WidgetQuery[],
+): Promise<Record<string, import('@mms/shared').WidgetAggregateResult>> {
+  const tenant = getRequestTenant();
+  if (!tenant) return {};
+  return aggregateAttendanceWidgetQueries(tenant, queries);
 }

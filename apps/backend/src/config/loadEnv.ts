@@ -3,7 +3,7 @@ import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import dotenv from 'dotenv';
 
-/** `apps/backend` root — works from `src/` (tsx) and `dist/` (node). */
+/** `apps/backend` root — works from `src/` (node --strip-types) and `dist/` (node). */
 export function resolveBackendRoot(): string {
   return resolve(dirname(fileURLToPath(import.meta.url)), '..', '..');
 }

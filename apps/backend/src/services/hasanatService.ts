@@ -31,6 +31,7 @@ import {
   replaceRedemptionsForWorkspace,
 } from '../db/repositories/hasanatRepository.js';
 import { loadHasanatReportAggregatesSql } from '../db/repositories/hasanatRepositoryReport.js';
+import { aggregateHasanatWidgetQueries } from '../db/repositories/hasanatRepositoryWidgets.js';
 import {
   defineTenantBulkCollectionService,
   scopeDeleted,
@@ -163,4 +164,12 @@ export async function loadHasanatCommandMetrics(): Promise<HasanatCommandMetrics
   const tenant = getRequestTenant();
   if (!tenant) return EMPTY_HASANAT_METRICS;
   return aggregateHasanatCommandMetrics(tenant);
+}
+
+export async function loadHasanatWidgetAggregates(
+  queries: import('@mms/shared').WidgetQuery[],
+): Promise<Record<string, import('@mms/shared').WidgetAggregateResult>> {
+  const tenant = getRequestTenant();
+  if (!tenant) return {};
+  return aggregateHasanatWidgetQueries(tenant, queries);
 }
