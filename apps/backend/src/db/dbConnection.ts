@@ -147,17 +147,20 @@ async function runTransaction<T>(
 
   const tenant = getRequestTenant();
   const startTime = Date.now();
-  try {
-    return await getDb().transaction(async (tx) => {
-      await applyTenantTransactionGuards(tx, tenant, options);
-      return await txStorage.run(tx, cb);
-    }, readSnapshot ? { isolationLevel: 'repeatable read' } : undefined);
-  } finally {
-    const duration = Date.now() - startTime;
-    if (duration > SLOW_QUERY_THRESHOLD_MS) {
-      console.warn(
-        `[SLOW DB TX] Transaction for tenant "${tenant || 'none'}" took ${duration}ms (threshold: ${SLOW_QUERY_THRESHOLD_MS}ms)`,
-      );
-    }
-  }
+
+  await using _timerDisposer = {
+    [Symbol.asyncDispose]: async () => {
+      const duration = Date.now() - startTime;
+      if (duration > SLOW_QUERY_THRESHOLD_MS) {
+        console.warn(
+          `[SLOW DB TX] Transaction for tenant "${tenant || 'none'}" took ${duration}ms (threshold: ${SLOW_QUERY_THRESHOLD_MS}ms)`,
+        );
+      }
+    },
+  };
+
+  return await getDb().transaction(async (tx) => {
+    await applyTenantTransactionGuards(tx, tenant, options);
+    return await txStorage.run(tx, cb);
+  }, readSnapshot ? { isolationLevel: 'repeatable read' } : undefined);
 }

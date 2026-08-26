@@ -108,13 +108,17 @@ export async function applyDrizzleMigrations(): Promise<{ migrationsFolder: stri
   const { databaseUrl } = loadServerConfig();
   const migrateClient = new pg.Client({ connectionString: databaseUrl });
   await migrateClient.connect();
-  try {
-    await migrateClient.query(`SELECT set_config('app.rls_bypass', 'on', false)`);
-    const migrateDb = drizzle(migrateClient, { schema });
-    await migrate(migrateDb, { migrationsFolder });
-  } finally {
-    await migrateClient.end().catch(() => undefined);
-  }
+
+  await using _clientDisposer = {
+    [Symbol.asyncDispose]: async () => {
+      await migrateClient.end().catch(() => undefined);
+    },
+  };
+
+  await migrateClient.query(`SELECT set_config('app.rls_bypass', 'on', false)`);
+  const migrateDb = drizzle(migrateClient, { schema });
+  await migrate(migrateDb, { migrationsFolder });
+
   return { migrationsFolder };
 }
 
@@ -141,24 +145,27 @@ export async function initDb(): Promise<void> {
 
 async function runDataMigrations(): Promise<void> {
   const migrationLockClient = await getPool().connect();
-  try {
-    await migrationLockClient.query('select pg_advisory_lock($1::integer)', [DATA_MIGRATION_LOCK_KEY]);
-    await migrationLockClient.query('CREATE TABLE IF NOT EXISTS data_migrations (id text PRIMARY KEY, applied_at timestamp default now() NOT NULL);');
 
-    const applied = await getRootDb().select().from(schema.dataMigrations);
-    const appliedSet = new Set(applied.map((migration) => migration.id));
-    for (const migration of dataMigrationsToRun) {
-      if (!appliedSet.has(migration.id)) {
-        console.log(`[Data Migration] Running pending data migration ${migration.id}...`);
-        const run = await migration.load();
-        await run();
-        await getRootDb().insert(schema.dataMigrations).values({ id: migration.id }).onConflictDoNothing();
-        appliedSet.add(migration.id);
-      }
+  await using _lockDisposer = {
+    [Symbol.asyncDispose]: async () => {
+      await migrationLockClient.query('select pg_advisory_unlock($1::integer)', [DATA_MIGRATION_LOCK_KEY]).catch(() => undefined);
+      migrationLockClient.release();
+    },
+  };
+
+  await migrationLockClient.query('select pg_advisory_lock($1::integer)', [DATA_MIGRATION_LOCK_KEY]);
+  await migrationLockClient.query('CREATE TABLE IF NOT EXISTS data_migrations (id text PRIMARY KEY, applied_at timestamp default now() NOT NULL);');
+
+  const applied = await getRootDb().select().from(schema.dataMigrations);
+  const appliedSet = new Set(applied.map((migration) => migration.id));
+  for (const migration of dataMigrationsToRun) {
+    if (!appliedSet.has(migration.id)) {
+      console.log(`[Data Migration] Running pending data migration ${migration.id}...`);
+      const run = await migration.load();
+      await run();
+      await getRootDb().insert(schema.dataMigrations).values({ id: migration.id }).onConflictDoNothing();
+      appliedSet.add(migration.id);
     }
-  } finally {
-    await migrationLockClient.query('select pg_advisory_unlock($1::integer)', [DATA_MIGRATION_LOCK_KEY]).catch(() => undefined);
-    migrationLockClient.release();
   }
 }
 

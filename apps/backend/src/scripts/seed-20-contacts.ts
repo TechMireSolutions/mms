@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env' });
+process.loadEnvFile('.env');
 import { initDb } from '../db/database.js';
 import { getDb } from '../db/dbClient.js';
 import { workspaces } from '../db/schema.js';

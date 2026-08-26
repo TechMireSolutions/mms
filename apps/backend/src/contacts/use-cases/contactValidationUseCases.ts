@@ -15,7 +15,7 @@ import {
   type Contact,
   type ValidationError,
 } from '@mms/shared';
-import { createHash } from 'node:crypto';
+import crypto from 'node:crypto';
 import type { z } from 'zod';
 import { loadContactLookupKind } from './contactLookupsService.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
@@ -239,9 +239,7 @@ export async function assertContactUniqueFields(
 const schemaCache = new Map<string, z.ZodTypeAny>();
 
 function getBlueprintCacheKey(tenant: string, fieldConfig: unknown, viewerRole?: string): string {
-  const fingerprint = createHash('sha256')
-    .update(JSON.stringify(fieldConfig))
-    .digest('hex');
+  const fingerprint = crypto.hash('sha256', JSON.stringify(fieldConfig), 'hex');
   return `${tenant}:${fingerprint}:${viewerRole || ''}`;
 }
 

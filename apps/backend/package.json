@@ -33,7 +33,6 @@
     "@ts-rest/fastify": "^3.52.1",
     "@ts-rest/open-api": "^3.52.1",
     "bullmq": "^6.2.0",
-    "dotenv": "^17.4.2",
     "drizzle-orm": "catalog:",
     "exceljs": "^4.4.0",
     "fastify": "catalog:",

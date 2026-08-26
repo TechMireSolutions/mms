@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import crypto from 'node:crypto';
 import rateLimit from '@fastify/rate-limit';
 import type { FastifyPluginAsync } from 'fastify';
 import type { BackgroundJobRecord, User } from '@mms/shared';
@@ -20,13 +20,11 @@ function messagingExportBodyDigest(input: {
   filename?: string;
   label?: string;
 }): string {
-  return createHash('sha256')
-    .update(JSON.stringify({
-      query: input.query ?? {},
-      filename: input.filename ?? null,
-      label: input.label ?? null,
-    }))
-    .digest('hex');
+  return crypto.hash('sha256', JSON.stringify({
+    query: input.query ?? {},
+    filename: input.filename ?? null,
+    label: input.label ?? null,
+  }), 'hex');
 }
 
 /** Queues messaging logs CSV export as a background job. */

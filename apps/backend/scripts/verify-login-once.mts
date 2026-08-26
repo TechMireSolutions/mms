@@ -1,4 +1,4 @@
-import 'dotenv/config';
+try { process.loadEnvFile(); } catch {}
 import pg from 'pg';
 import { verifyPassword } from '../src/services/auth/passwordService.js';
 

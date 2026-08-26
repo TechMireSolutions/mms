@@ -43,41 +43,32 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
 
     // 2. Create Base Contact & Student (Admissions) in LTR
     await page.goto(`${credentials.tenantOrigin}/contacts`);
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1').first()).toBeVisible();
     await createTestContactJaneDoe(page);
     await createTestContactJohnDoe(page);
 
     await page.goto(`${credentials.tenantOrigin}/students`);
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1').first()).toBeVisible();
     await registerStudentJaneDoe(page);
 
     await page.goto(`${credentials.tenantOrigin}/teachers`);
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1').first()).toBeVisible();
     await createTeacherFromContact(page);
 
     // 3. Create Session & Class
     await page.goto(`${credentials.tenantOrigin}/sessions`);
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1').first()).toBeVisible();
     await createSessionAndClass(page);
 
     // 4. Enroll Student in Class
     await page.goto(`${credentials.tenantOrigin}/enrollments`);
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1').first()).toBeVisible();
     await createStudentEnrollment(page);
 
     // 5. Verify BiDi RTL Direction Switch
-    await page.evaluate(() => {
-      document.documentElement.setAttribute('dir', 'rtl');
-      document.documentElement.setAttribute('lang', 'ar');
-    });
+    await forceRtl(page, 'ar');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ar');
-
-    // Revert to LTR for subsequent flows
-    await page.evaluate(() => {
-      document.documentElement.setAttribute('dir', 'ltr');
-      document.documentElement.setAttribute('lang', 'en');
-    });
   });
 
   test('Critical Path 2: Fee Invoice -> Payment Settlement -> Double-entry Ledger Verification', async ({ page }) => {
@@ -88,7 +79,7 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
 
     // 1. Navigate to Finance & create Invoice
     await page.goto(`${credentials.tenantOrigin}/finance`);
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1').first()).toBeVisible();
     await createFinanceInvoice(page);
 
     // 2. Record Payment Settlement against Invoice
@@ -96,21 +87,13 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
 
     // 3. Create Chart of Accounts & verify balanced Double-Entry Journal
     await page.goto(`${credentials.tenantOrigin}/accounting`);
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1').first()).toBeVisible();
     await createAccountsAndJournalEntry(page);
 
     // 4. Validate BiDi RTL mirroring on Accounting tables & balances
-    await page.evaluate(() => {
-      document.documentElement.setAttribute('dir', 'rtl');
-      document.documentElement.setAttribute('lang', 'ur');
-    });
+    await forceRtl(page, 'ur');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.locator('html')).toHaveAttribute('lang', 'ur');
-
-    await page.evaluate(() => {
-      document.documentElement.setAttribute('dir', 'ltr');
-      document.documentElement.setAttribute('lang', 'en');
-    });
   });
 
   test('Critical Path 3: Report Card Generation -> Background Processing & Artifact Download', async ({ page }) => {
@@ -121,7 +104,7 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
 
     // Navigate to Students Reports tier
     await page.goto(`${credentials.tenantOrigin}/students`);
-    await page.waitForLoadState('domcontentloaded');
+    await expect(page.locator('h1').first()).toBeVisible();
     await waitForToastOverlayToClear(page, 'Students navigation');
 
     // Switch to Reports tier tab
@@ -133,25 +116,8 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
     await expect(page.getByText(/Total Students|Active Students|Gender Distribution|Reports/i).first()).toBeVisible({ timeout: 20_000 });
 
     // Validate RTL render
-    await page.evaluate(() => {
-      document.documentElement.setAttribute('dir', 'rtl');
-      document.documentElement.setAttribute('lang', 'ar');
-      // Lock it against background theme syncs
-      (window as any).__rtlObserver = new MutationObserver(() => {
-        if (document.documentElement.getAttribute('dir') !== 'rtl') {
-          document.documentElement.setAttribute('dir', 'rtl');
-          document.documentElement.setAttribute('lang', 'ar');
-        }
-      });
-      (window as any).__rtlObserver.observe(document.documentElement, { attributes: true });
-    });
+    await forceRtl(page, 'ar');
     
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-
-    await page.evaluate(() => {
-      if ((window as any).__rtlObserver) (window as any).__rtlObserver.disconnect();
-      document.documentElement.setAttribute('dir', 'ltr');
-      document.documentElement.setAttribute('lang', 'en');
-    });
   });
 });

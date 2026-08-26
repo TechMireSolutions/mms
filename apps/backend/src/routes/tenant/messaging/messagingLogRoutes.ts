@@ -1,4 +1,4 @@
-import { createHash, randomUUID } from 'node:crypto';
+import crypto, { randomUUID } from 'node:crypto';
 import type { FastifyPluginAsync } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import type { Message, MessageLogCreateDto, User } from '@mms/shared';
@@ -77,15 +77,13 @@ function messagingIdempotencyLookupKey(
   userId: string,
   clientKey: string,
 ): string {
-  const digest = createHash('sha256')
-    .update(`${workspaceSubdomain}\0${userId}\0${clientKey}`)
-    .digest('hex');
+  const digest = crypto.hash('sha256', `${workspaceSubdomain}\0${userId}\0${clientKey}`, 'hex');
   return `messaging_idem:${digest}`;
 }
 
 /** Digest of the dispatch logs body — bound to the idempotency key (`mms-api-interface` §6). */
 function messagingDispatchBodyDigest(logs: MessageLogCreateDto[]): string {
-  return createHash('sha256').update(JSON.stringify(logs)).digest('hex');
+  return crypto.hash('sha256', JSON.stringify(logs), 'hex');
 }
 
 function completedRecorded(payload: MessagingIdempotencyPayload): number | undefined {

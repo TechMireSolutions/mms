@@ -58,26 +58,32 @@ export async function assertNoHorizontalOverflow(page: Page): Promise<void> {
   }
 }
 
-export async function forceRtl(page: Page): Promise<void> {
-  try {
-    await page.evaluate(() => {
-      document.documentElement.setAttribute('dir', 'rtl');
-      document.documentElement.setAttribute('lang', 'ar');
-      document.body.setAttribute('dir', 'rtl');
-      document.querySelectorAll('[dir]').forEach((element) => {
-        element.setAttribute('dir', 'rtl');
-      });
+export async function forceRtl(page: Page, lang = 'ar'): Promise<void> {
+  const forceDir = (l: string) => {
+    document.documentElement.setAttribute('dir', 'rtl');
+    document.documentElement.setAttribute('lang', l);
+    document.body.setAttribute('dir', 'rtl');
+    document.querySelectorAll('[dir]').forEach((element) => {
+      element.setAttribute('dir', 'rtl');
     });
+    
+    // Prevent theme syncs or client re-renders from breaking the dir attribute
+    if (!(window as any).__rtlObserver) {
+      (window as any).__rtlObserver = new MutationObserver(() => {
+        if (document.documentElement.getAttribute('dir') !== 'rtl') {
+          document.documentElement.setAttribute('dir', 'rtl');
+          document.documentElement.setAttribute('lang', l);
+        }
+      });
+      (window as any).__rtlObserver.observe(document.documentElement, { attributes: true });
+    }
+  };
+
+  try {
+    await page.evaluate(forceDir, lang);
   } catch {
     await page.waitForLoadState('domcontentloaded');
-    await page.evaluate(() => {
-      document.documentElement.setAttribute('dir', 'rtl');
-      document.documentElement.setAttribute('lang', 'ar');
-      document.body.setAttribute('dir', 'rtl');
-      document.querySelectorAll('[dir]').forEach((element) => {
-        element.setAttribute('dir', 'rtl');
-      });
-    });
+    await page.evaluate(forceDir, lang);
   }
   await page.evaluate(
     () =>

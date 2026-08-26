@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env' });
+process.loadEnvFile('.env');
 import { getDb } from '../db/dbClient.js';
 import { sql } from 'drizzle-orm';
 import { initDb } from '../db/database.js';

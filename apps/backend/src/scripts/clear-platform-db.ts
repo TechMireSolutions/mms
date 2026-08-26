@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config({ path: '.env' });
+process.loadEnvFile('.env');
 import pg from 'pg';
 import { initDb } from '../db/database.js';
 

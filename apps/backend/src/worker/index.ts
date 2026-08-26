@@ -78,8 +78,11 @@ export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData>
 export async function startWorkerDaemon(): Promise<void> {
   console.log('[BullMQ Worker] Initializing Worker Daemon...');
   if (process.env.NODE_ENV !== 'production') {
-    const dotenv = await import('dotenv');
-    dotenv.config();
+    try {
+      process.loadEnvFile();
+    } catch {
+      // ignore missing .env file
+    }
   }
 
   await initDb();

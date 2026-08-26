@@ -1,7 +1,7 @@
-import { existsSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import dotenv from 'dotenv';
+import { parseEnv } from 'node:util';
 
 /** `apps/backend` root — works from `src/` (node --strip-types) and `dist/` (node). */
 export function resolveBackendRoot(): string {
@@ -28,6 +28,16 @@ export function loadBackendEnv(): void {
     const normalized = resolve(path);
     if (loaded.has(normalized) || !existsSync(normalized)) continue;
     loaded.add(normalized);
-    dotenv.config({ path: normalized, override });
+    
+    if (override) {
+      const content = readFileSync(normalized, 'utf-8');
+      Object.assign(process.env, parseEnv(content));
+    } else {
+      try {
+        process.loadEnvFile(normalized);
+      } catch {
+        // Ignore parsing errors
+      }
+    }
   }
 }
