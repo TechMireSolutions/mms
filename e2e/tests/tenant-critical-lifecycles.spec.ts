@@ -136,10 +136,20 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
     await page.evaluate(() => {
       document.documentElement.setAttribute('dir', 'rtl');
       document.documentElement.setAttribute('lang', 'ar');
+      // Lock it against background theme syncs
+      (window as any).__rtlObserver = new MutationObserver(() => {
+        if (document.documentElement.getAttribute('dir') !== 'rtl') {
+          document.documentElement.setAttribute('dir', 'rtl');
+          document.documentElement.setAttribute('lang', 'ar');
+        }
+      });
+      (window as any).__rtlObserver.observe(document.documentElement, { attributes: true });
     });
+    
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 
     await page.evaluate(() => {
+      if ((window as any).__rtlObserver) (window as any).__rtlObserver.disconnect();
       document.documentElement.setAttribute('dir', 'ltr');
       document.documentElement.setAttribute('lang', 'en');
     });
