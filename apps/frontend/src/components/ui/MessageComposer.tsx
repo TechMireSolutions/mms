@@ -221,6 +221,23 @@ export default function MessageComposer({
       onSave={handleSave}
       saveDisabled={saveDisabled}
     >
+      <div 
+        id="debug-saveDisabled" 
+        data-debug={JSON.stringify({ 
+          step, 
+          localRecipientsCount: localRecipients.length, 
+          pendingAudit: !!dispatch.pendingAudit, 
+          isBusy, 
+          opening: dispatch.opening,
+          saving: dispatch.saving,
+          eligibleRecipientsCount: dispatch.eligibleRecipients.length, 
+          messageEmpty: !message.trim(),
+          messageValue: message,
+          isEmail,
+          subjectEmpty: !subject.trim(),
+          saveDisabled
+        })} 
+      />
       <div className="space-y-4">
         {step === 'compose' && (
           <>

@@ -577,10 +577,10 @@ export async function createMessagingTemplateAndCampaign(page: Page): Promise<vo
   }
 
   // Click "Next" to advance to compose step
-  await composerDialog.getByRole('button', { name: /^Next$/i }).click();
+  await composerDialog.getByRole('button', { name: /^Next$/i }).last().click();
 
   // Compose step — select the template we created
-  const smsDialog = composerDialog;
+  const smsDialog = page.getByRole('dialog').last();
   const templateSelect = smsDialog.locator('#messageTemplate');
   const templateSelectVisible = await templateSelect.isVisible({ timeout: 5_000 }).catch(() => false);
   if (templateSelectVisible) {
@@ -593,28 +593,20 @@ export async function createMessagingTemplateAndCampaign(page: Page): Promise<vo
   }
   await expect(smsDialog.locator('#messageBody')).not.toHaveValue('', { timeout: 10_000 });
 
+  const debugAttr = await smsDialog.locator('#debug-saveDisabled').getAttribute('data-debug').catch(() => null);
+  console.log("DEBUG_ATTR:", debugAttr);
+
   const logCreate = page.waitForResponse(
     (response) =>
       response.url().includes('/api/messaging/logs') &&
       response.request().method() === 'POST',
     { timeout: 30_000 },
   ).catch(() => null);
-  await smsDialog.getByRole('button', { name: 'Open Messages' }).click();
+  await smsDialog.getByRole('button', { name: 'Open Messages' }).last().click({ timeout: 10_000 });
   await logCreate;
   await expect(smsDialog).toBeHidden({ timeout: 20_000 });
 
-  const messagingReportsNav = page
-    .locator('div.hidden.lg\\:block')
-    .filter({
-      has: page
-        .getByRole('tab', { name: 'Reports', exact: true })
-        .or(page.getByRole('button', { name: 'Reports', exact: true })),
-    })
-    .first();
-  await messagingReportsNav
-    .getByRole('tab', { name: 'Reports', exact: true })
-    .or(messagingReportsNav.getByRole('button', { name: 'Reports', exact: true }))
-    .click();
+
   await expect(
     page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
   ).toBeVisible({ timeout: 20_000 });

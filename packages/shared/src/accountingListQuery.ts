@@ -4,6 +4,10 @@ export interface AccountingListQuery {
   page?: number;
   limit?: number;
   search?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  accountType?: string;
   sortField?: string;
   sortDir?: 'asc' | 'desc';
   includeDeleted?: boolean;

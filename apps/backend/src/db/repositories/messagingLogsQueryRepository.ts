@@ -90,7 +90,7 @@ export async function queryFilteredMessageLogs(
       .select()
       .from(messageLogs)
       .where(whereClause)
-      .orderBy(desc(messageLogs.sentAt))
+      .orderBy(desc(messageLogs.sentAt), desc(messageLogs.id))
       .limit(pageSize)
       .offset(offset);
 

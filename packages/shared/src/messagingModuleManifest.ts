@@ -121,7 +121,16 @@ export type MessagingResolveResponseDto = z.infer<typeof messagingResolveRespons
 /**
  * Converts a contact or entity object into a standardized StandardMessagingRecipient payload.
  */
-export function toMessagingRecipient<T extends { id: string | number; name?: string; phone?: string; email?: string }>(
+export function toMessagingRecipient<
+  T extends {
+    id: string | number;
+    name?: string;
+    phone?: string;
+    email?: string;
+    phones?: { number: string; isPrimary?: boolean }[];
+    emails?: { address: string; isPrimary?: boolean }[];
+  }
+>(
   contact: T,
   getters?: {
     getDisplayName?: (item: T) => string;
@@ -130,14 +139,22 @@ export function toMessagingRecipient<T extends { id: string | number; name?: str
   }
 ): StandardMessagingRecipient {
   const name = getters?.getDisplayName ? getters.getDisplayName(contact) : contact.name || String(contact.id);
-  const phone = (getters?.getPrimaryPhone ? getters.getPrimaryPhone(contact) : contact.phone) || '';
-  const email = (getters?.getPrimaryEmail ? getters.getPrimaryEmail(contact) : contact.email) || '';
+  
+  let phone = getters?.getPrimaryPhone ? getters.getPrimaryPhone(contact) : contact.phone;
+  if (!phone && Array.isArray(contact.phones) && contact.phones.length > 0) {
+    phone = contact.phones.find(p => p.isPrimary)?.number || contact.phones[0]?.number;
+  }
+  
+  let email = getters?.getPrimaryEmail ? getters.getPrimaryEmail(contact) : contact.email;
+  if (!email && Array.isArray(contact.emails) && contact.emails.length > 0) {
+    email = contact.emails.find(e => e.isPrimary)?.address || contact.emails[0]?.address;
+  }
 
   return {
     id: contact.id,
     name,
-    phone,
-    email,
+    phone: phone || '',
+    email: email || '',
   };
 }
 
