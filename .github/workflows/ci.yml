@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   typecheck-lint:
@@ -190,7 +190,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Download Blob Reports
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: all-blob-reports
           pattern: blob-report-*
@@ -212,8 +212,7 @@ jobs:
           retention-days: 7
 
   build-dist:
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [typecheck-lint, unit, e2e]
+    needs: [typecheck-lint]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code

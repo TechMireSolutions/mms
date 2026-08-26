@@ -22,6 +22,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
+    environment: production
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
       DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
@@ -60,7 +61,7 @@ jobs:
 
       - name: Download CI dist artifact
         if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: mms-dist
           path: .
