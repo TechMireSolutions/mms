@@ -11,13 +11,13 @@ describe('Teachers contact / employee-id SQL SSOT', () => {
       join(here, '../db/repositories/teacherRepositoryList.ts'),
       'utf8',
     );
-    const listQuerySrc = readFileSync(
-      join(here, '../db/repositories/teacherRepositoryListQuery.ts'),
+    const listQuerySqlSrc = readFileSync(
+      join(here, '../db/repositories/teacherRepositoryListQuerySql.ts'),
       'utf8',
     );
     expect(listBarrelSrc).toContain('listTeacherLinkedContactIdsSql');
     expect(listBarrelSrc).toContain('countTeachersForNextEmployeeId');
-    expect(listQuerySrc).toContain('teachers.contactId');
+    expect(listQuerySqlSrc).toContain('teachers.contactId');
   });
 
   it('contacts list teacher link filter uses typed contact_id', () => {
