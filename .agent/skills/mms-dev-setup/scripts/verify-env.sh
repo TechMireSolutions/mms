@@ -28,6 +28,16 @@ else
   echo "INFO: docker not available — ensure PostgreSQL is reachable via DATABASE_URL"
 fi
 
+if grep -qE '^REDIS_URL=redis(s)?://' apps/backend/.env 2>/dev/null; then
+  echo "OK: Redis configured via REDIS_URL"
+elif command -v docker >/dev/null && docker ps --format '{{.Names}}' 2>/dev/null | grep -q '^mms-redis$'; then
+  echo "OK: mms-redis container running"
+elif command -v docker >/dev/null; then
+  echo "INFO: mms-redis not running (use local Redis or docker start mms-redis)"
+else
+  echo "INFO: docker not available — ensure Redis is reachable (default 127.0.0.1:6379)"
+fi
+
 if [ -d "node_modules" ]; then
   echo "OK: node_modules present — run pnpm install if packages are stale"
 else
