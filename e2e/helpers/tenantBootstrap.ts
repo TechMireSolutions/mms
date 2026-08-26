@@ -27,7 +27,7 @@ export function resetPlatformUsers(): void {
     console.warn('[E2E SAFEGUARD] Skipping platform users reset on production environment.');
     return;
   }
-  execSync('pnpm exec node --strip-types src/scripts/reset-platform-users.ts', {
+  execSync('pnpm exec tsx src/scripts/reset-platform-users.ts', {
     cwd: backendDir,
     encoding: 'utf8',
     env: {

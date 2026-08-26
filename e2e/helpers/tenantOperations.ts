@@ -256,7 +256,7 @@ export function seedTestClassAndEnrollment(subdomain: string): void {
     return;
   }
   try {
-    const output = execSync(`pnpm exec node --strip-types src/scripts/seed-test-class.ts ${subdomain}`, {
+    const output = execSync(`pnpm exec tsx src/scripts/seed-test-class.ts ${subdomain}`, {
       cwd: backendDir,
       encoding: 'utf8',
       env: {

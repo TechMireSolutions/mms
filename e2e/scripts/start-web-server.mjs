@@ -72,7 +72,7 @@ async function waitForBackend(url, timeoutMs = 60000) {
   throw new Error(`Backend at ${url} failed to become ready within ${timeoutMs}ms`);
 }
 
-start('backend', 'apps/backend', process.execPath, ['--strip-types', 'src/index.ts']);
+start('backend', 'apps/backend', bin('apps/backend', 'tsx'), ['src/index.ts']);
 await waitForBackend('http://127.0.0.1:3000/ready');
 start('frontend', 'apps/frontend', bin('apps/frontend', 'vite'), ['--host', '127.0.0.1']);
 
