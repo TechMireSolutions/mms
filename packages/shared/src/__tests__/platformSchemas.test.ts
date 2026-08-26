@@ -48,7 +48,13 @@ describe('platformSchemas', () => {
     });
     expect(valid.success).toBe(true);
     if (valid.success) {
-      expect(valid.data.permissions).toEqual({ workspaces: false, onboard: false });
+      expect(valid.data.permissions).toEqual({
+        workspaces: false,
+        onboard: false,
+        settings: false,
+        admins: false,
+        system: false,
+      });
     }
     expect(PLATFORM_MIN_PASSWORD_LENGTH).toBeGreaterThanOrEqual(10);
   });
