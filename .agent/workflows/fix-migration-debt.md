@@ -4,20 +4,39 @@ description: Fix documented MMS technical debt from migration-status
 
 # Workflow: Fix Migration Debt
 
-## Steps
+This workflow guides the structured resolution of technical debt items documented in the MMS project.
 
-1. Load skills: `mms-migration-fixes` + task-specific skill (`mms-backend-security`, `mms-frontend`, `mms-module-page`, etc.)
-2. Read `rules/mms-migration-status.md` — confirm item is in the open gaps table (not Recently Resolved)
-3. Implement minimal fix for chosen item only
-4. Run `pnpm typecheck` (+ lint / tests as scoped)
-5. Move item to Recently Resolved (and update `mms-migration-fixes` open priorities) when fully done
-6. `bash .agent/scripts/sync-all.sh` if standards files changed
+## Phase 1: Discovery & Context Gathering
 
-## Current P1 focus
+- [ ] **Load core skills**: Load `mms-migration-fixes` along with the specific domain skill (e.g., `mms-backend-security`, `mms-frontend`, `mms-module-page`).
+- [ ] **Read the debt registry**: Check `rules/mms-migration-status.md` and confirm the target item is currently in the "open gaps" section (and not "Recently Resolved").
+- [ ] **Assess the blast radius**: Search the workspace using `grep_search` for occurrences of the debt pattern before modifying code to understand the full scope of the required change.
 
-| Debt | Skill |
-|------|-------|
-| Messaging clear / QB papers-results variants (intentional — do not regress) | `mms-module-work`, `mms-messaging` |
-| Residual `role ===` / setup matrix special cases | `mms-backend-security`, `mms-frontend` |
-| Report drill-down & saved reports beyond Contacts | `mms-reports-export` |
-| Custom tabs relational schema | `mms-fields-registry` |
+## Phase 2: Planning & Approval
+
+- [ ] **Formulate a plan**: Output a concise structural `<plan>`. If the refactor touches multiple domain boundaries or heavily alters database schema, pause for user approval.
+- [ ] **Scope strictly**: Ensure the plan *only* addresses the specific migration debt item. Avoid scope creep.
+
+## Phase 3: Execution
+
+- [ ] **Implement the fix**: Refactor the code following `mms-dry.md` and `mms-core.md` standards. Keep changes minimal and isolated.
+- [ ] **Preserve intentional debt**: Some items (like Messaging clear / QB variants) are marked as intentional debt. **Do not regress** or "fix" these unless specifically requested.
+
+## Phase 4: Verification & Completion Review
+
+- [ ] **Verify changes**: Run applicable checks based on the scope:
+  - Backend changes: `cd apps/backend && pnpm lint`, backend tests.
+  - Frontend changes: `cd apps/frontend && pnpm lint`, frontend tests.
+  - Always run `pnpm typecheck` at the monorepo root.
+- [ ] **Follow Completion Review**: Ensure all steps in `mms-completion-review.md` are satisfied.
+- [ ] **Update the registry**: Move the fixed item from the open gaps table to the "Recently Resolved" table in `rules/mms-migration-status.md` (and update the `mms-migration-fixes` SKILL.md if needed).
+- [ ] **Sync Standards**: If any standards, rules, or agent files were modified, run `bash .agent/scripts/sync-all.sh`.
+
+---
+
+> [!NOTE]
+> **Current P1 Focus Areas**
+> - **Messaging**: Clear / QB papers-results variants (intentional — do not regress). Skills: `mms-module-work`, `mms-messaging`.
+> - **Security/Frontend**: Residual `role ===` / setup matrix special cases. Skills: `mms-backend-security`, `mms-frontend`.
+> - **Reports**: Report drill-down & saved reports beyond Contacts. Skill: `mms-reports-export`.
+> - **Data Layer**: Custom tabs relational schema. Skill: `mms-fields-registry`.
