@@ -63,7 +63,7 @@ export function ContactsWorkTier({
 
   return (
     <div className="space-y-4">
-      <ErrorBoundary fallback={<div className="p-4 text-sm text-destructive">Failed to load toolbar</div>}>
+      <ErrorBoundary fallback={<div className="p-4 text-sm text-destructive">{t('errors.toolbar.loadFailed')}</div>}>
         <ContactsListFilters
           search={search}
           onSearchChange={onSearchChange}

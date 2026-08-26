@@ -14,7 +14,7 @@ This workflow provides a comprehensive, systematic procedure for executing test 
 | Scope | Command | Description |
 |---|---|---|
 | **Monorepo Typecheck** | `pnpm typecheck` | Strict TS check across `@mms/shared`, `mms-backend`, `mms-frontend`, `e2e-tests` (enforces `noUncheckedIndexedAccess`) |
-| **Full Unit/Integration** | `pnpm test` | Vitest execution for shared helpers, backend services, and frontend components |
+| **Full Unit/Integration** | `pnpm test` | Test execution for shared helpers and backend services (`node:test`), and frontend components (Vitest) |
 | **Frontend Lint** | `pnpm --filter mms-frontend lint` | ESLint + React 19 rules + cross-feature import boundary checks (`mms-dry.md`) |
 | **Backend Lint** | `pnpm --filter mms-backend lint` | ESLint + Fastify 5 / Node rules |
 | **Isolated Test** | `pnpm --filter <app> test <file>` | Rapid Vitest run on a specific file |
@@ -27,7 +27,7 @@ This workflow provides a comprehensive, systematic procedure for executing test 
   ```bash
   pnpm typecheck
   ```
-- [ ] **Run Unit & Integration Tests**: Verify logic across the monorepo (Vitest).
+- [ ] **Run Unit & Integration Tests**: Verify logic across the monorepo (`node:test` and Vitest).
   ```bash
   pnpm test
   ```

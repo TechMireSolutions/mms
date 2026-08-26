@@ -55,6 +55,7 @@ packages/shared/src/
 | `formatDate` / `formatMoney` / `parsePhoneNumber` / `normalizeToE164` | Ad-hoc `toLocale*` / currency prefixes |
 | `applyTitleCaseRecursive` for Latin/display names | Title-casing ar/ur/fa / non-Latin / free-form RTL prose — `mms-structure-naming.md` |
 | Soft-delete strip helpers (`stripContactClientSoftDeleteFields`) | Accepting client `deletedAt` on write DTOs |
+| Native Node built-ins first (`crypto.hash`, `URLPattern`, `node:fs/promises` `glob`) | Adding 3rd-party dependencies for built-in functionality |
 | Pure functions only | React, Fastify, DB, `localStorage`, DOM |
 
 ## Move logic from app

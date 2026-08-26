@@ -12,7 +12,7 @@ Madrasa Management System monorepo — applies on every task across both **tenan
 
 ```
 apps/frontend/     React 19 + Vite 8 · Tailwind v4 · Radix/shadcn · TanStack Query v5 · Framer Motion · Lucide · Recharts
-apps/backend/      Fastify 5 + tsx · PostgreSQL + Drizzle ORM (strictly normalized 3NF/BCNF, RLS, parameterized SQL only)
+apps/backend/      Fastify 5 + Node.js 24 (--experimental-strip-types, native built-ins, AsyncLocalStorage on AsyncContextFrame) · PostgreSQL + Drizzle ORM (strictly normalized 3NF/BCNF, RLS, parameterized SQL only)
 packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, constants, pure utils)
 ```
 
@@ -46,6 +46,12 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
 - **Platform Writes:** `authenticatePlatform` + `platformUserCan` / `requirePlatformPermission` + password re-auth on destructive ops.
 - **Contacts Canonical:** Persons link by `contactId`; profile fields live on contacts. Hydrate on read, strip on write (`mms-fields.md`, `mms-form-architecture.md`).
 - **Data Standards:** Phone numbers E.164 via `parsePhoneNumber`; WhatsApp number ID via `PuppeteerWhatsAppProvider.getNumberId`; Money as decimal strings (`/^\d+(\.\d{1,2})?$/`).
+- **Node.js 24 Standards:**
+  - **Native Built-Ins Over Packages:** Native `--env-file=.env` / `process.loadEnvFile()` (no `dotenv`), native global `fetch()`, `FormData`, and global `WebSocket` (no `axios`, `node-fetch`, or `ws` for standard client communication), `import { glob } from 'node:fs/promises'` (no `glob`/`fast-glob`), `crypto.hash()` from `node:crypto` (no verbose `createHash().update().digest()`), and globally available `URLPattern` API (no `path-to-regexp`).
+  - **Modern ECMAScript & Protocol Imports:** Mandatory `node:` protocol imports (`node:fs`, `node:crypto`, `node:async_hooks`, etc.); WHATWG `new URL()` (never `url.parse()`); Explicit Resource Management (`using` / `await using`) for automatic cleanup of database connections and scopes without `finally` boilerplate.
+  - **Async Context & Tracing:** `AsyncLocalStorage` backed by Node 24 `AsyncContextFrame` for zero-overhead request ID / trace ID propagation; structured stdout logging (Pino) without writing directly to process files.
+  - **Testing & Scripts:** `node:test` + `node:assert/strict` (auto-awaiting subtests); `--experimental-strip-types` for running `.ts` scripts and CLI tools directly.
+  - **Security & Lifecycle:** `--permission` model security flags; graceful termination lifecycle (`SIGTERM`/`SIGINT` with unref fallback timeout).
 - **Module Pages:** Three tiers only (Work, Reports, Setup) via `PageHeader` + `useFilteredModuleTierTabs`.
 - **Write Mechanism:** Cookie SPA + `apiClient` only (No React Server Actions).
 
@@ -64,7 +70,7 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
 | Background Jobs & Queue Processing | `mms-module-architecture.md` §5 | `mms-background-jobs` |
 | React Hook Recipes & Facades | `mms-hooks.md` | `mms-query-factories` · `mms-frontend` |
 | FormModal Architecture & Write Schemas | `mms-form-architecture.md` | `mms-form-architecture` |
-| UI Design System, Tokens, a11y & §7 Layout | `mms-ui-ux-design.md` | `mms-frontend` · `mms-a11y-smoke` |
+| UI Design System, Tokens, a11y & §7 Layout | `mms-ui-ux-design.md` | `mms-ui-ux-design` · `mms-frontend` · `mms-a11y-smoke` |
 | Module Work/Reports/Setup & Gold Standard §7 | `mms-module-architecture.md` | `mms-module-page` · `mms-module-work` · `mms-module-setup` |
 | Field & Tab Registries | `mms-fields.md` | `mms-fields-registry` · `mms-module-setup` |
 | Settings, i18n (en/ar/ur/fa) & Backup UI | `mms-settings-i18n.md` | `mms-settings-i18n` · `mms-backup-restore` |

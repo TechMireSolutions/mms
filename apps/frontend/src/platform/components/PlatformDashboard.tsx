@@ -16,7 +16,7 @@ import { PlatformDashboardQuickActions } from "./dashboard/PlatformDashboardQuic
 export function PlatformDashboard(): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const { platformUser, isSuperUser, canWorkspaces, canOnboard } = usePlatformPermissions();
+  const { platformUser, isSuperUser, canWorkspaces, canOnboard, canSystem, canAdmins } = usePlatformPermissions();
   const {
     data: workspaces,
     isLoading: workspacesLoading,
@@ -86,7 +86,8 @@ export function PlatformDashboard(): React.JSX.Element {
 
         <PlatformDashboardQuickActions
           canWorkspaces={canWorkspaces}
-          isSuperUser={isSuperUser}
+          canSystem={canSystem}
+          canAdmins={canAdmins}
         />
       </motion.div>
     </motion.div>

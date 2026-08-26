@@ -72,9 +72,6 @@ export function canReadCollection(user: User, collectionName: string): boolean {
   if (!isAllowedCollectionName(collectionName)) {
     return false;
   }
-  if (collectionName === 'backups') {
-    return user.role === 'admin';
-  }
   const mapped = COLLECTION_READ_PERMISSION[collectionName];
   if (mapped) {
     return roleHasPermission(user.role, mapped);
@@ -137,9 +134,6 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
   }
   if (!isAllowedCollectionName(collectionName)) {
     return false;
-  }
-  if (collectionName === 'backups') {
-    return user.role === 'admin';
   }
   const mapped = COLLECTION_WRITE_PERMISSION[collectionName];
   if (mapped) {

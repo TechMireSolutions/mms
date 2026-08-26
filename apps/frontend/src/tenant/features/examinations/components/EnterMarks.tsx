@@ -183,7 +183,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search students..."
+                  placeholder={t("examinations.marks.searchPlaceholder")}
                   className={cn(FORM_INPUT_COMPACT, "ps-8 text-xs")}
                 />
               </div>

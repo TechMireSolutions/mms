@@ -40,7 +40,7 @@ export default function PlatformConsole(): React.JSX.Element {
   const reducedMotion = useReducedMotion();
   const location = useLocation();
   const [searchParams] = useSearchParams();
-  const { platformUser, isSuperUser, canWorkspaces, canOnboard } = usePlatformPermissions();
+  const { platformUser, isSuperUser, canWorkspaces, canOnboard, canSystem } = usePlatformPermissions();
 
   const pathname = location.pathname;
   const rawTab = searchParams.get("tab");
@@ -49,9 +49,9 @@ export default function PlatformConsole(): React.JSX.Element {
       ? "work"
       : pathname === ROUTES.platformReports || rawTab === "reports"
         ? "reports"
-        : (pathname === ROUTES.platformActivityLogs || rawTab === "logs") && isSuperUser
+        : (pathname === ROUTES.platformActivityLogs || rawTab === "logs") && canSystem
           ? "logs"
-          : (pathname === ROUTES.platformSystem || rawTab === "system") && isSuperUser
+          : (pathname === ROUTES.platformSystem || rawTab === "system") && canSystem
             ? "system"
             : rawTab === "setup"
               ? "setup"
@@ -145,9 +145,9 @@ export default function PlatformConsole(): React.JSX.Element {
 
                 {activeTab === "reports" && <PlatformReports />}
 
-                {activeTab === "logs" && isSuperUser && <PlatformActivityLogsContent />}
+                {activeTab === "logs" && canSystem && <PlatformActivityLogsContent />}
 
-                {activeTab === "system" && isSuperUser && <PlatformSystemMaintenance />}
+                {activeTab === "system" && canSystem && <PlatformSystemMaintenance />}
 
                 {activeTab === "setup" && <PlatformAdminsContent />}
               </Suspense>

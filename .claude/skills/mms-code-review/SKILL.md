@@ -62,6 +62,12 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] `rbacService` on writes; admin-only on sync download/upload
 - [ ] Drizzle migration + journal via **`mms-schema-migrate`** (no `drizzle-kit push` on shared/prod)
 - [ ] Stable error `type` codes; no stack traces in responses
+- [ ] No banned Node 24 dependencies (`dotenv`, `axios`, `node-fetch`, `ws` for client, `glob`, `fast-glob`, `path-to-regexp`)
+- [ ] Core module imports use `node:` prefix (`node:fs`, `node:crypto`, `node:path`, `node:async_hooks`, `node:test`)
+- [ ] WHATWG `new URL()` used exclusively (no legacy `url.parse()`)
+- [ ] Explicit Resource Management (`using` / `await using`) for database connections / transactions
+- [ ] Single-shot hashing uses `crypto.hash()` from `node:crypto`
+- [ ] Context propagation via `AsyncLocalStorage` (`AsyncContextFrame`)
 
 ### Frontend API
 - [ ] Internal MMS calls use `apiFetch` / `apiJson` — no raw `fetch('/api/...')`

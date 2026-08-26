@@ -4,7 +4,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 
 **Antigravity:** start with [antigravity-workspace](antigravity-workspace/SKILL.md). Manifest: [.agent/skills-manifest.json](../skills-manifest.json)
 
-## Skills index (27)
+## Skills index (28)
 
 | Skill | Use when |
 |-------|----------|
@@ -35,6 +35,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-ops-deploy](mms-ops-deploy/SKILL.md) | Hetzner deploy, Apache isolation, PORT 5002 |
 | [mms-linux-compatibility](mms-linux-compatibility/SKILL.md) | Linux/Ubuntu VPS casing, line endings, PM2 |
 | [mms-settings-i18n](mms-settings-i18n/SKILL.md) | `/settings`, nav registries, i18n (en/ar/ur/fa) |
+| [mms-ui-ux-design](mms-ui-ux-design/SKILL.md) | Design tokens, BiDi / RTL layout, Master Module Scaffold |
 
 ## Rules vs skills
 

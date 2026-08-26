@@ -11,7 +11,7 @@ description: Adds or modifies Fastify routes, middleware (authenticateTenant), s
 
 - New/changed route in `apps/backend/src/routes/`
 - Service / Zod validation / WhatsApp-email backend
-- Backend tests with Fastify `inject()`
+- Backend tests with Node 24 `node:test` and Fastify `inject()`
 
 DDL / `schema.ts` / journal → skill **`mms-schema-migrate`**. CSRF / Origin / cookies / rate limits → **`mms-backend-security`**. Health/ready probes → `mms-ops-infrastructure.mdc`.
 
@@ -87,14 +87,18 @@ Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.t
 - [ ] rbacService / canWrite on mutations
 - [ ] Errors: { type, message } + correct status
 - [ ] Registered prefix; inject() with tenant host + cookie
-- [ ] Tenant writes: withTenantTransaction + SET LOCAL (+ app.current_user_id for audit)
+- [ ] Tenant writes: withTenantTransaction + SET LOCAL (+ app.current_user_id for audit) utilizing Node 24 explicit resource management (`await using` db handles for auto-cleanup)
 - [ ] Prefer SET LOCAL statement_timeout / idle_in_transaction_session_timeout on tenant write txs — mms-data-layer
 - [ ] Parameterized sql only — ban user/tenant input → sql.raw
 - [ ] Large/hot list APIs: prefer keyset/cursor; OFFSET OK for small Work pages — mms-data-layer
 - [ ] Contested PUT: updated_at/version → 409 conflict, or document LWW — mms-api-interface §6
 - [ ] bodyLimit / requestTimeout from serverConfig (or explicit raise for sync/upload)
-- [ ] Retryable POSTs: idempotency key bound to body digest (409 on mismatch) — mms-api-interface §6
-- [ ] Outbound provider fetch uses AbortSignal.timeout
+- [ ] Outbound provider fetch uses native `fetch()` + `AbortSignal.timeout` (no `axios`/`node-fetch`/`ws` for client comms)
+- [ ] Use `node:crypto` `crypto.hash()` instead of `createHash().update().digest()` chains
+- [ ] Use `URLPattern` for matching instead of `path-to-regexp`
+- [ ] Replace legacy `url.parse()` with WHATWG `new URL()`
+- [ ] Core module imports prefixed with `node:` (`node:fs/promises`, `node:crypto`, `node:path`, `node:async_hooks`)
+- [ ] Request / tenant tracking via `AsyncLocalStorage` (`AsyncContextFrame`)
 ```
 
 ## Auth / workspace routes

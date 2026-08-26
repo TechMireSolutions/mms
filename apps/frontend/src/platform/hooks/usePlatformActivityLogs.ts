@@ -21,13 +21,13 @@ export const PLATFORM_ACTIVITY_LOGS_QUERY_KEY = ['platform', 'activity-logs'] as
 
 /** Super-user activity logs query hook. */
 export function usePlatformActivityLogs(): { data: PlatformActivityLogItem[] | undefined; isLoading: boolean; isError: boolean; refetch: () => Promise<unknown> } {
-  const { isPlatformAuthenticated, isSuperUser } = usePlatformPermissions();
+  const { isPlatformAuthenticated, canSystem } = usePlatformPermissions();
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const { data: rawData, ...rest } = tsrClient.platform.getActivityLogs.useQuery({
     queryKey: PLATFORM_ACTIVITY_LOGS_QUERY_KEY,
     queryData: {},
-    enabled: isPlatformAuthenticated && isSuperUser,
+    enabled: isPlatformAuthenticated && canSystem,
     staleTime: 30_000,
   });
 

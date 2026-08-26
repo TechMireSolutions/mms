@@ -42,7 +42,13 @@ Audit the diff against the core MMS invariants:
 - [ ] **Data Standards & DRY (`mms-dry.md`)**:
   - Money is handled as decimal strings (no IEEE 754 floats).
   - Phone numbers use E.164 via `parsePhoneNumber`.
-  - No premature `useMemo`/`useCallback` (prepare for React Compiler).
+- [ ] **Node.js 24 Runtime & Modern Practices (`mms-dependencies.md`, `mms-structure-naming.md`, `mms-ops-infrastructure.md`)**:
+  - Core module imports use mandatory `node:` protocol prefix (`node:fs/promises`, `node:crypto`, `node:path`, `node:async_hooks`, `node:test`).
+  - No banned dependencies introduced (`dotenv`, `axios`, `node-fetch`, `ws` for client communication, `glob`, `fast-glob`, `path-to-regexp`).
+  - Native built-ins used: `--env-file`/`process.loadEnvFile()`, global `fetch()`, `FormData`, `WebSocket`, `crypto.hash()`, `URLPattern`, and WHATWG `new URL()` (never `url.parse()`).
+  - Scoped resource disposal leverages `using` / `await using` (Explicit Resource Management).
+  - Context & trace propagation uses `AsyncLocalStorage` (`AsyncContextFrame`); logs emit structured JSON to stdout (Pino).
+  - Test suites use `node:test` + `node:assert/strict` (auto-awaiting subtests); CLI/scripts leverage `--experimental-strip-types`.
 - [ ] **Debt Regressions**: Check against `rules/mms-migration-status.md` to ensure "Recently Resolved" items (like raw `role ===` checks) are not reintroduced.
 
 ## Phase 4: Report Generation

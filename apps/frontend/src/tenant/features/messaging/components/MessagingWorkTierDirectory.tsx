@@ -34,7 +34,7 @@ export function MessagingWorkTierDirectory({
       transition={{ duration: 0.2 }}
       className="space-y-4"
     >
-      <ErrorBoundary fallback={<div className={`p-4 text-sm ${SEMANTIC_TEXT.destructive}`}>Failed to load toolbar</div>}>
+      <ErrorBoundary fallback={<div className={`p-4 text-sm ${SEMANTIC_TEXT.destructive}`}>{c.t('errors.toolbar.loadFailed')}</div>}>
         <MessagingListFilters
           viewMode={c.viewMode}
           onViewModeChange={c.setViewMode}

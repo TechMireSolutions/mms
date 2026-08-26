@@ -46,6 +46,7 @@ Do not echo file contents already in context.
 
 ## Standards
 
+- **Node.js 24 Runtime:** Mandatory `node:` protocol imports (`node:fs/promises`, `node:crypto`, `node:path`, `node:async_hooks`, `node:test`, `node:assert/strict`). WHATWG `new URL()` exclusively (never `url.parse()`). Leverage native built-ins (`fetch()`, `FormData`, `WebSocket`, `glob`, `crypto.hash()`, `URLPattern`, `process.loadEnvFile()`) — ban `dotenv`, `axios`, `node-fetch`, `ws` (client), `glob`, `fast-glob`, `path-to-regexp`. Prefer `using` / `await using` for explicit resource management and `AsyncLocalStorage` (`AsyncContextFrame`) for context/trace propagation.
 - **TypeScript:** Strict mode. Use `unknown` + narrowing — never `any`. Prefer `import type` and `satisfies` operator for literal/config safety without widening. Dedicated-PR targets (`noUncheckedIndexedAccess`, `verbatimModuleSyntax`, `erasableSyntaxOnly` on TS 5.8+) → `mms-dependencies.md`.
 - **Errors:** Handle explicitly; zero silent empty `catch` blocks; map to localized translation keys via `t()`.
 - **A11y / HTML:** Accessible interactive controls + semantic landmarks (`<main>`, `<nav>`, `<header>`, `<section>`), minimum 44x44px touch targets — `mms-ui-ux-design.md`.

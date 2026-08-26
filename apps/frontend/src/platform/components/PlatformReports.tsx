@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 export function PlatformReports(): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const { platformUser, isSuperUser, canWorkspaces, canOnboard } = usePlatformPermissions();
+  const { platformUser, isSuperUser, canWorkspaces, canOnboard, canSettings, canAdmins, canSystem } = usePlatformPermissions();
   const { data: workspaces, isLoading: workspacesLoading, isError: workspacesError } = usePlatformWorkspaces();
 
   const totalWorkspaces = workspaces?.length ?? 0;
@@ -178,6 +178,21 @@ export function PlatformReports(): React.JSX.Element {
                   {canOnboard && (
                     <span className={cn(SEMANTIC_BADGE.success, "px-2.5 py-0.5 rounded-full text-3xs font-bold")}>
                       {t("platform.onboardCapability")}
+                    </span>
+                  )}
+                  {canSettings && (
+                    <span className={cn(SEMANTIC_BADGE.info, "px-2.5 py-0.5 rounded-full text-3xs font-bold")}>
+                      {t("platform.permSettings")}
+                    </span>
+                  )}
+                  {canAdmins && (
+                    <span className={cn(SEMANTIC_BADGE.primary, "px-2.5 py-0.5 rounded-full text-3xs font-bold")}>
+                      {t("platform.permAdmins")}
+                    </span>
+                  )}
+                  {canSystem && (
+                    <span className={cn(SEMANTIC_BADGE.warning, "px-2.5 py-0.5 rounded-full text-3xs font-bold")}>
+                      {t("platform.permSystem")}
                     </span>
                   )}
                   {isSuperUser && (

@@ -57,7 +57,7 @@ bash scripts/check-workspace.sh <subdomain> apps/backend/.env
 **PM2 boot persistence:** `bash scripts/production/setup-pm2-startup.sh`  
 **DB backups:** `bash scripts/production/backup-postgres.sh` (cron daily)
 
-Process manager: `ecosystem.config.cjs` — single `mmsv2-backend` (SPA served by Fastify; no separate frontend PM2).  
+Process manager: `ecosystem.config.cjs` — single `mmsv2-backend` (SPA served by Fastify; no separate frontend PM2). Ensure PM2 process passes `--permission` flags (`--allow-fs-read`, etc.) if enabling the Node 24 permission model. Fastify must listen for `SIGTERM`/`SIGINT` to gracefully shutdown before PM2 forceful exit.  
 `scripts/deploy-recover-frontend.sh` is **legacy** (vite preview) — do not use in normal deploys.
 
 **Schema migrations:** run on backend startup (`initDb` / Drizzle) — not a separate deploy step.

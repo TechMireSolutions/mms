@@ -15,17 +15,18 @@ Comprehensive testing standard across unit, integration, network mocking, and Pl
 
 | Layer | Framework & Tools | Scope & Target Files | Command |
 |---|---|---|---|
-| **Unit & Pure Helpers** | Vitest | `@mms/shared` utils, formatters, validation schemas (`packages/shared/**/*.test.ts`). | `pnpm test` |
-| **Backend Integration** | Vitest + Fastify `inject()` | Route schemas, `authenticateTenant`, RLS isolation, RBAC allow/deny tests (`apps/backend/**/*.test.ts`). | `cd apps/backend && pnpm test` |
+| **Unit & Pure Helpers** | `node:test` + `node:assert/strict` | `@mms/shared` utils, formatters, validation schemas (`packages/shared/**/*.test.ts`). The runner automatically awaits subtests. Do not use `jest` or `mocha`. | `pnpm test` |
+| **Backend Integration** | `node:test` + Fastify `inject()` | Route schemas, `authenticateTenant`, RLS isolation, RBAC allow/deny tests (`apps/backend/**/*.test.ts`). The runner automatically awaits subtests. Do not use `jest` or `mocha`. | `cd apps/backend && pnpm test` |
 | **Frontend Component & Hooks** | Vitest + React Testing Library + MSW | TanStack Query hooks, complex modals, state facades, form validation errors (`apps/frontend/**/*.test.tsx`). | `cd apps/frontend && pnpm test` |
+| **Lightweight Scripts / CLIs** | `node --experimental-strip-types` | Standalone test/utility scripts without upfront compilation. | `node --experimental-strip-types script.ts` |
 | **End-to-End (E2E)** | Playwright | Full browser flows: auth, responsive shell (375/768/1440), RTL mirroring, navigation, directory CRUD. | `pnpm test:e2e` |
 | **Accessibility Smoke** | axe-core via Playwright / Vitest | Serious and critical WCAG 2.1 AA violations on shells, dialogs, and tables. | `pnpm test:e2e tests/responsive-shell.spec.ts` |
 
 ---
 
-## 2. Unit & Integration Testing (Vitest)
+## 2. Unit & Integration Testing (node:test & Vitest)
 
-### Pure Utilities (`@mms/shared`)
+### Pure Utilities (`@mms/shared`) (node:test)
 - Every exported helper (`formatDate`, `formatMoney`, `parsePhoneNumber`, `buildWorkspaceBackupEnvelope`) must have exhaustive unit tests covering happy paths, null/undefined inputs, and boundary values.
 
 ### Backend Route Testing (Fastify `inject`)
@@ -44,7 +45,8 @@ test('POST /api/contacts rejects unauthenticated tenant', async () => {
 When adding tenant tables, ensure the shared connection pool prevents cross-tenant data leakage:
 ```typescript
 // apps/backend/test/integration/rls-isolation.test.ts
-import { describe, it, expect } from 'vitest';
+import { describe, it } from 'node:test';
+import assert from 'node:assert/strict';
 import { withTenant } from '../../src/db/tenant-context';
 import { students } from '../../src/db/schema';
 
@@ -67,10 +69,10 @@ describe('Row Level Security Concurrency Test', () => {
       withTenant(tenantB, async (tx) => tx.select().from(students)),
     ]);
 
-    expect(resultA.every((s) => s.tenantId === tenantA)).toBe(true);
-    expect(resultB.every((s) => s.tenantId === tenantB)).toBe(true);
-    expect(resultA.find((s) => s.name === 'Tenant B Student')).toBeUndefined();
-    expect(resultB.find((s) => s.name === 'Tenant A Student')).toBeUndefined();
+    assert.equal(resultA.every((s) => s.tenantId === tenantA), true);
+    assert.equal(resultB.every((s) => s.tenantId === tenantB), true);
+    assert.equal(resultA.find((s) => s.name === 'Tenant B Student'), undefined);
+    assert.equal(resultB.find((s) => s.name === 'Tenant A Student'), undefined);
   });
 });
 ```
@@ -122,7 +124,7 @@ test('verifies bidirectional layout and Nastaliq rendering parity', async ({ pag
 
 ## 4. Verification Checklist Before Done
 
-- [ ] All new pure utility functions in `@mms/shared` have corresponding Vitest tests.
+- [ ] All new pure utility functions in `@mms/shared` have corresponding `node:test` unit tests.
 - [ ] Backend route changes include `inject()` test cases for authentication (`401`), authorization (`403`), and validation failure (`422`/`400`).
 - [ ] Form submission error states and touch targets are verified at 375px, 768px, and 1440px.
 - [ ] `pnpm test` runs with 100% pass rate.

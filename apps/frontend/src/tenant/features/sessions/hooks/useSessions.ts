@@ -85,7 +85,7 @@ export function useSessions(options?: { enabled?: boolean }) {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.sessions.list.useQuery({
     queryKey: SESSIONS_QUERY_KEY,
-    queryData: { query: { page: 1, limit: SESSIONS_MODULE_MANIFEST.maxPageSize } as any },
+    queryData: { query: { page: 1, limit: 100, sortField: 'createdAt', sortDir: 'desc' } as any },
     staleTime: 15_000,
   });
 }

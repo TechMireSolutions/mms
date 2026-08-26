@@ -45,13 +45,13 @@ export async function waitForBackendReadyAfterMigrate(delayMs: number): Promise<
 
 /** Hook for platform super-users to read global platform settings. */
 export function usePlatformSettingsQuery() {
-  const { isPlatformAuthenticated, isSuperUser } = usePlatformPermissions();
+  const { isPlatformAuthenticated, canSettings } = usePlatformPermissions();
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const { data: rawData, ...rest } = tsrClient.platform.getSettings.useQuery({
     queryKey: PLATFORM_SETTINGS_QUERY_KEY,
     queryData: {},
-    enabled: isPlatformAuthenticated && isSuperUser,
+    enabled: isPlatformAuthenticated && canSettings,
     staleTime: 60_000,
   });
 

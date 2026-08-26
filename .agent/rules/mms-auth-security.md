@@ -91,8 +91,11 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 - **Platform `AUTH_RATE_LIMIT`**: Auth-sensitive + destructive platform routes (login/setup/password flows; admin disable/delete; workspace delete; database reset; migrate-and-restart) — do not ship those mutations without the limit + password confirm where already required.
 - **Cookie CSRF / Origin**: Cookie-auth state-changing requests (`POST`/`PUT`/`PATCH`/`DELETE`) must enforce same-origin (`Origin` / `Sec-Fetch-Site` header checks against allowed origin) or an equivalent CSRF defense. Do not rely on `SameSite=Lax` alone for mutations.
 - **Content-Type**: JSON mutation routes reject bodies without `application/json` (multipart only on upload routes). Ban empty/`text/plain` bodies on JSON write paths.
-- **Password Security**: Keep `scrypt` + `crypto.timingSafeEqual` (constant-time check) to prevent timing side-channel attacks. Enforce onboarding / platform password policy. Do not switch to argon2 (or dual algorithms) without an explicit dual-verify migration plan.
-- **OTP Generation & Verification**: `crypto.randomInt()` only — `Math.random()` strictly forbidden. Verify OTP hashes using constant-time comparison (`timingSafeEqual`).
+- **Password Security**: Keep `scrypt` + `crypto.timingSafeEqual` (constant-time check from `node:crypto`) to prevent timing side-channel attacks. Enforce onboarding / platform password policy. Do not switch to argon2 (or dual algorithms) without an explicit dual-verify migration plan.
+- **OTP Generation & Verification**: `crypto.randomInt()` from `node:crypto` only — `Math.random()` strictly forbidden. Verify OTP hashes using constant-time comparison (`timingSafeEqual`).
+- **One-Shot Hashing**: Use `crypto.hash()` from `node:crypto` instead of verbose `createHash().update().digest()` chains.
+- **URL Resolution**: Use WHATWG `new URL()` and `URLPattern` API — legacy `url.parse()` is strictly forbidden.
+- **Node Permission Controls**: Enforce the Node 24 `--permission` model (e.g. `--permission --allow-fs-read=/var/www/mmsv2/data`) in high-risk / production environments.
 - **CORS**: Explicit origins (`ALLOWED_ORIGIN`) when using credentials; wildcard `*` strictly forbidden with credentials.
 - **Cookies (prod)**: Set `Secure` under HTTPS / `NODE_ENV=production`. Prefer `__Host-` cookie names when `Path=/` and no `Domain` is required; never `SameSite=None` without `Secure` and an explicit cross-site need (tenant/platform stay `SameSite=Lax`).
 - **Security Headers**: `@fastify/helmet` is registered with frame denial (`X-Frame-Options: DENY`), MIME sniffing prevention (`X-Content-Type-Options: nosniff`), and HSTS in production. CSP remains SPA-compatible (hash/nonce-based).
@@ -102,5 +105,5 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 - **Workspace backup / restore**: Admin + `canBulkSync` on `/api/db/backup` and `/api/db/sync`. Envelope/KDF/credential-strip mechanics → **`mms-data-layer.md`**. Settings two-step UI + password step-up → **`mms-settings-i18n.md`**.
 - **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables.
 - **XSS & Output Encoding**: No unsanitized HTML (`dangerouslySetInnerHTML` forbidden without strict DOMPurify sanitization); encode user content in PDF/CSV/Excel cells to prevent CSV formula injection.
-- **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, bulk PII, or OAuth client secrets / refresh tokens.
+- **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, bulk PII, or OAuth client secrets / refresh tokens. Structured logging emits to `stdout` (Pino).
 - **Auditing**: `auditService` append-only entry on collection writes, merges, soft-deletes. PG row triggers read `app.current_user_id` + `app.current_tenant` (SET LOCAL in `withTenantTransaction` / `runInTransaction`).

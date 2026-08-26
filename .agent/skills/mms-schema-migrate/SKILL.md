@@ -21,7 +21,8 @@ Use when designing and implementing PostgreSQL database schemas, Drizzle ORM mod
   tenantId: uuid("tenant_id").notNull().references(() => tenants.id, { onDelete: "cascade" }),
   ```
   *(or `workspaceSubdomain: text("workspace_subdomain").notNull()` where workspace scope applies)*.
-- **Row-Level Security (RLS):** Every query must execute within a database transaction scoped with `SET LOCAL app.current_tenant = :tenant_id` (via the `withTenant` wrapper).
+- **Row-Level Security (RLS) & Explicit Resource Management:** Every query must execute within a database transaction scoped with `SET LOCAL app.current_tenant = :tenant_id` (via the `withTenant` wrapper).
+  Leverage Explicit Resource Management (`using` / `await using`) for database client checkouts and scopes to ensure connections are automatically disposed and returned to the pool upon scope exit without `finally` boilerplate.
   To prevent RLS context pollution across pooled connections (`pg`), tenant execution context must be encapsulated within transaction scopes using `set_config('app.current_tenant', :tenant_id, true)`.
   Tables must enforce `FORCE ROW LEVEL SECURITY`.
   Use the standard dynamic tenant isolation policy:

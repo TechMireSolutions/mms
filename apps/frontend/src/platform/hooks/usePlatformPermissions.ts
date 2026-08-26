@@ -14,6 +14,9 @@ export function usePlatformPermissions() {
     isSuperUser: platformUser?.role === 'super_user',
     canWorkspaces: can('workspaces'),
     canOnboard: can('onboard'),
+    canSettings: can('settings'),
+    canAdmins: can('admins'),
+    canSystem: can('system'),
     can,
   };
 }

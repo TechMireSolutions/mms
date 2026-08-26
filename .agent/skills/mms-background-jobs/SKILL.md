@@ -24,7 +24,7 @@ Use this skill when adding or changing background processing, export/download ar
 1. Decide whether the work is inline or queued. Queue it when it is large, slow, retryable, or needs progress.
 2. Add an authenticated tenant route to enqueue the job. Check RBAC before creating the job.
 3. Register a runner with a stable `{moduleId}:{kind}` key.
-4. Run the job in tenant context and re-apply permission/visibility/soft-delete rules while generating results. Bind tenant + user; prefer an idempotency key when retries are likely (`mms-api-interface.md` §6).
+4. Run the job in tenant context and re-apply permission/visibility/soft-delete rules while generating results. Bind tenant + user; propagate trace context via `AsyncLocalStorage` (`AsyncContextFrame`); use explicit resource management (`using` / `await using`) for stream/file handlers; prefer an idempotency key when retries are likely (`mms-api-interface.md` §6).
 5. Enqueue the job to **BullMQ** (via Redis 7+) for background execution. Wait for completion via WebSocket or polling.
    - **Headless BiDi Document Engine**: For BiDi documents (Urdu Nastaliq, Arabic, Farsi), use the headless **Typst** compiler with native HarfBuzz text shaping. The pipeline: Fastify API -> BullMQ Queue -> Typst Worker (`.typ` templates) -> Redis PubSub -> S3/MinIO.
    - **Heavy Exports**: Use ExcelJS stream pipes.
@@ -32,7 +32,7 @@ Use this skill when adding or changing background processing, export/download ar
 6. Store job state and artifacts scoped by tenant and user (e.g., S3 URLs).
 7. Update progress, complete with a clear label, or fail with an actionable reason.
 8. Surface status in `BackgroundJobsTray` and provide download/result links only for owned artifacts.
-9. Audit sensitive queued work such as export, bulk delete/restore, import, merge, messaging, and sync recovery.
+9. Audit sensitive queued work such as export, bulk delete/restore, import, merge, messaging, and sync recovery. Emitting structured logs to `stdout` (via Pino).
 
 ## Job Checklist
 

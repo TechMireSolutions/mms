@@ -12,7 +12,6 @@ import {
 } from '@mms/shared';
 import {
   insertPlatformUser,
-  updatePlatformUserPermissions,
   updatePlatformUserRow,
   deletePlatformUserRow,
 } from '../../db/repositories/platformUserRepository.js';
@@ -87,10 +86,10 @@ export async function setPlatformAdminPermissions(
     throw new PlatformError('forbidden', 'Cannot change permissions for a platform super-user');
   }
 
-  const updated = await updatePlatformUserPermissions(
-    userId,
-    normalizePlatformAdminPermissions(permissions),
-  );
+  const updated = await updatePlatformUserRow(userId, {
+    permissions: normalizePlatformAdminPermissions(permissions),
+    sessionVersion: stored.sessionVersion + 1,
+  });
   if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
   return toPlatformUserProfile(updated);
 }

@@ -124,7 +124,47 @@ export function PlatformAdminTable({
                           size="sm"
                         />
                       ) : null}
-                      {!admin.permissions?.workspaces && !admin.permissions?.onboard ? (
+                      {admin.permissions?.settings ? (
+                        <StatusBadge
+                          status="settings"
+                          config={{
+                            settings: {
+                              label: t('platform.permSettings'),
+                              cls: 'bg-primary/10 text-primary border-primary/20',
+                            },
+                          }}
+                          size="sm"
+                        />
+                      ) : null}
+                      {admin.permissions?.admins ? (
+                        <StatusBadge
+                          status="admins"
+                          config={{
+                            admins: {
+                              label: t('platform.permAdmins'),
+                              cls: 'bg-primary/10 text-primary border-primary/20',
+                            },
+                          }}
+                          size="sm"
+                        />
+                      ) : null}
+                      {admin.permissions?.system ? (
+                        <StatusBadge
+                          status="system"
+                          config={{
+                            system: {
+                              label: t('platform.permSystem'),
+                              cls: 'bg-primary/10 text-primary border-primary/20',
+                            },
+                          }}
+                          size="sm"
+                        />
+                      ) : null}
+                      {!admin.permissions?.workspaces &&
+                      !admin.permissions?.onboard &&
+                      !admin.permissions?.settings &&
+                      !admin.permissions?.admins &&
+                      !admin.permissions?.system ? (
                         <span className="text-xs text-muted-foreground">{t('platform.adminNoCapabilities')}</span>
                       ) : null}
                     </div>

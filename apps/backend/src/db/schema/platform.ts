@@ -49,6 +49,7 @@ export const workspaces = pgTable('workspaces', {
 }, (table) => [
   uniqueIndex('workspaces_subdomain_idx').on(table.subdomain),
   index('workspaces_enabled_idx').on(table.enabled),
+  index('workspaces_madrasa_name_idx').on(table.madrasaName),
 ]);
 
 /** Apex platform super-users — not tenant-scoped. */

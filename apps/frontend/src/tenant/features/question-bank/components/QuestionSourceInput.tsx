@@ -3,7 +3,7 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Textarea } from "@/components/ui/textarea";
-
+import { useTranslation } from "@/hooks/useTranslation";
 import type { ModuleFieldDef } from "@mms/shared";
 
 interface QuestionSourceInputProps {
@@ -23,6 +23,7 @@ export function QuestionSourceInput({
   inputId,
   required,
 }: QuestionSourceInputProps): React.ReactNode {
+  const { t } = useTranslation();
   return (
     <div key={field.id} className={field.type === "textarea" ? "sm:col-span-2" : ""}>
       <Field id={inputId} label={`${label}${required ? " *" : ""}`} required={required}>
@@ -40,7 +41,7 @@ export function QuestionSourceInput({
             value={value}
             onChange={onChange}
             options={field.options?.map((opt) => ({ value: opt, label: opt })) || []}
-            placeholder="Select..."
+            placeholder={t("questionBank.source.placeholder")}
           />
         ) : (
           <Input

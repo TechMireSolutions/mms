@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformAdminPermissions, PlatformCreateAdminInput, PlatformUserProfile } from '@mms/shared';
 import { tsrClient, apiContract } from '@/lib/api';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
+import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 
@@ -9,14 +10,13 @@ export const PLATFORM_ADMINS_QUERY_KEY = ['platform', 'admins'] as const;
 
 /** Hook for super-users to retrieve the list of platform operators. */
 export function usePlatformAdmins(): { data: PlatformUserProfile[] | undefined; isLoading: boolean; isError: boolean; refetch: () => Promise<unknown> } {
-  const { platformUser } = usePlatformAuth();
-  const isSuperUser = platformUser?.role === 'super_user';
+  const { canAdmins } = usePlatformPermissions();
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const { data: rawData, ...rest } = tsrClient.platform.listAdmins.useQuery({
     queryKey: PLATFORM_ADMINS_QUERY_KEY,
     queryData: {},
-    enabled: isSuperUser,
+    enabled: canAdmins,
     staleTime: 60_000,
   });
 

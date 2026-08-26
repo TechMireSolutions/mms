@@ -9,7 +9,9 @@ trigger: model_decision
 Canonical operational and deployment standards for the Madrasa Management System (MMS) monorepo.
 
 ## 1. Prerequisites & Environment Setup
-- **Node.js**: Match root `package.json` `engines.node` exactly in CI/Docker — do not restate pin numbers here; bumps → **`mms-dependencies.md`** / skill `mms-dependency-upgrade`.
+- **Node.js**: Match root `package.json` `engines.node` exactly in CI/Docker (Node >= 24) — do not restate pin numbers here; bumps → **`mms-dependencies.md`** / skill `mms-dependency-upgrade`.
+  - **Native Configuration**: Use `--env-file=.env` flag or `process.loadEnvFile()` natively. The `dotenv` package is banned.
+  - **TypeScript Script Execution**: Use `--experimental-strip-types` for development scripts and lightweight CLI tools to execute `.ts` files directly without an upfront compile step.
 - **pnpm**: Match root `packageManager` via Corepack (`corepack enable`). Docker/CI must use that exact pnpm version.
 
 ### Workspace Commands (from repo root)
@@ -18,7 +20,7 @@ pnpm install          # Install all dependencies across workspaces
 pnpm dev              # Start frontend + backend concurrently via Turbo
 pnpm build            # Build shared package and applications
 pnpm typecheck        # Run typechecking across the entire monorepo
-pnpm test             # Run Vitest suites for all workspaces
+pnpm test             # Run Vitest / node:test suites for all workspaces
 ```
 
 ### Local Dev Helper Scripts
@@ -43,7 +45,7 @@ pnpm test             # Run Vitest suites for all workspaces
 
 ### Local Subdomain Resolution
 - Local tenant subdomains (e.g. `dar-ul-quran.localhost:5173`) are proxied through Vite's dev server configuration.
-- The dev server configuration maps requests to the backend (`127.0.0.1:3000`) while preserving host headers via proxy rules (forwarding through the `X-Forwarded-Host` header). AsyncLocalStorage parses this header to resolve tenant contexts in dev mode.
+- The dev server configuration maps requests to the backend (`127.0.0.1:3000`) while preserving host headers via proxy rules (forwarding through the `X-Forwarded-Host` header). `AsyncLocalStorage` (backed by Node 24 `AsyncContextFrame`) parses this header to resolve tenant contexts in dev mode.
 
 ### Environment Schema
 | Variable | App | Purpose / Requirements |
@@ -61,6 +63,17 @@ pnpm test             # Run Vitest suites for all workspaces
 
 **Client bundle hygiene:** Only `VITE_*` (and Vite-injected `import.meta.env`) may ship in the frontend bundle. **Ban** leaking `JWT_SECRET`, `DATABASE_URL`, or other server secrets into FE code / Vite `define` — bumps/env layout → `mms-dependencies.md` when touching tooling.
 
+### Graceful Process Lifecycle
+Catch termination signals and drain connections cleanly:
+```ts
+const shutdown = async () => {
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(1), 10000).unref();
+};
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
+```
+
 ### Data wipe / purge (do not invent new wipe APIs)
 - **Tenant workspace delete**: `deleteWorkspace` → `purgeTenantDataBySubdomain` then remove workspace row (platform workspaces API).
 - **Platform full reset**: `POST /api/platform/settings/reset-database` — apex + `authenticatePlatform` + `requireSuperUser` + password confirm → `resetAndReseedDatabase()`; clears platform session cookie. Not a tenant-scoped op.
@@ -73,9 +86,11 @@ pnpm test             # Run Vitest suites for all workspaces
 To ensure seamless deployments on Ubuntu systems:
 - **Case-Sensitive Imports**: Every import path must match the exact directory and file casing on disk. Verify using `pnpm typecheck`.
 - **Line Endings (LF)**: Shell scripts (`.sh` files) must use Unix-style LF (`\n`). Enforce via `.gitattributes` / editor settings — **do not** change the user's global `git config` from agents.
-- **Path Formatting**: Always use forward slashes `/` or `node:path` utilities (`join`, `resolve`). Never hardcode backslashes `\`.
+- **Path & Core Imports Formatting**: Always use forward slashes `/` or `node:path` utilities (`join`, `resolve`). Never hardcode backslashes `\`. Always prefix core module imports with `node:` (`node:fs/promises`, `node:crypto`, `node:path`).
 - **Non-Root Execution**: PM2 and Node processes must run under a non-privileged system user (`node`, `www-data`, or the deploy user).
-- **Write Limits**: Limit write access exclusively to `/var/www/mmsv2/data` and `/var/www/mmsv2/.logs`. Keep all application source files read-only.
+- **Permission Model Hardening**: Take advantage of the Node 24 `--permission` model to restrict unauthorized filesystem or process operations in high-risk environments (e.g., `--permission --allow-fs-read=/var/www/mmsv2/data`).
+- **Structured Logging to stdout**: Use high-throughput loggers (Pino) to emit JSON logs directly to `stdout`. Let PM2 / systemd / container orchestrators handle log rotation and shipping instead of writing directly to log files within the application process.
+- **Write Limits**: Limit write access exclusively to `/var/www/mmsv2/data`. Keep all application source files read-only.
 
 ---
 

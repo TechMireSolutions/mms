@@ -84,7 +84,7 @@ export function ContactsBulkTagModal({
             id="bulk-tag-input"
             value={tagInput}
             onChange={(e) => setTagInput(e.target.value)}
-            placeholder="VIP, Donor, Sponsor..."
+            placeholder={t("contacts.bulkTags.placeholder")}
             autoFocus
             disabled={isPending}
             className="min-h-11"

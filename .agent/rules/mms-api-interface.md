@@ -12,15 +12,17 @@ Governs the communications contract between the React SPA frontend and the Fasti
 
 ## 1. Client-Server Communication Flow
 All frontend requests to backend resources (tenant or platform) must use `apiFetch` or `apiJson` from the `apiClient.ts` wrapper.
+- **Native Networking**: Use native global `fetch()`, `FormData`, and global `WebSocket`. Banned third-party packages: `axios`, `node-fetch`, and `ws` for standard client communication.
 - **Credentials**: Always `credentials: 'include'`. Cookie names, refresh rules, JWT trust → **`mms-auth-security.md`**.
 - **AbortSignal**: Pass Query/`fetch` `signal` into `apiFetch` / `apiJson` — required for cancellation (`mms-data-layer.md`). Support composite signals via `AbortSignal.any([userSignal, AbortSignal.timeout(ms)])` for bounded client fetches.
+- **URL Pattern Matching**: Leverage the globally available `URLPattern` API and WHATWG `new URL()` for pattern matching and URL parsing rather than custom regex or `path-to-regexp` / `url.parse()`.
 - **REST Trajectory**: New features must implement resource-specific endpoints (e.g. `GET /api/students`) instead of the generic collections sync API.
 - **Data Types**: DTOs via `@mms/shared` only. Zod `parseRequest` / form schemas are the write boundary — do **not** enable parallel Fastify Ajv/JSON-Schema body validation for the same DTO.
 - **Write DTOs / write-vs-read**: Prefer shared write schemas — norms → **`mms-form-architecture.md`** (`.strict()`, soft-delete strip).
 - **Response shapes**: Derive serializers / type guards from the same `@mms/shared` Zod — still ban hand-forked Fastify JSON Schema DTOs.
 - **Destructive merges**: Atomic server transaction (`POST …/merge`) — ban FE-only dual delete+upsert.
 - **429 handling**: Honor `Retry-After` header — `mms-auth-security.md`.
-- **Request Tracing**: Propagate `X-Request-Id` (or Fastify `req.id`) through API responses for structured error tracing without exposing internal state.
+- **Request Tracing & Context**: Propagate `X-Request-Id` (or Fastify `req.id`) through API responses. Track tenant and request context via `AsyncLocalStorage` (backed by Node 24 `AsyncContextFrame`) across asynchronous call stacks.
 
 ---
 
@@ -83,6 +85,6 @@ Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload
 ## 6. Pagination, idempotency & concurrency
 - **HTTP contract**: clients **should send** `page` and `limit` (shared `baseListQuerySchema`); omit may default safely. SQL page rules, cards/table parity, and `loadAllFn` ban → **`mms-data-layer.md`**.
 - **Target**: tighten schemas to required `page` (+ `limit`) when clients are all migrated — do not claim Zod already requires them.
-- **Idempotency**: POSTs that enqueue jobs or send campaigns must accept an idempotency key (header `Idempotency-Key` or body `idempotencyKey`) when retries are likely. **Bind** the key to a cryptographic body digest (e.g. SHA-256 hash of normalized payload) and reject mismatched replays with `409` / `conflict` — do not accept the same key for a different payload.
+- **Idempotency**: POSTs that enqueue jobs or send campaigns must accept an idempotency key (header `Idempotency-Key` or body `idempotencyKey`) when retries are likely. **Bind** the key to a cryptographic body digest (computed via `crypto.hash('sha256', normalizedPayload)` from `node:crypto`) and reject mismatched replays with `409` / `conflict` — do not accept the same key for a different payload.
 - **Optimistic concurrency**: Contested single-row PUTs should prefer `updated_at` / version checks → `409 conflict`, or document intentional last-write-wins. Write DTO fields → `mms-form-architecture.md`.
 - Production error `message` fields must stay non-sensitive; keep verbose debug messages for development only.

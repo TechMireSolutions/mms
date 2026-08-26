@@ -39,6 +39,26 @@ Full checklist → skill **`mms-dependency-upgrade`**. Run only on **dedicated u
 
 Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution for native/binary deps when present (CI may still set `PUPPETEER_SKIP_DOWNLOAD`; WhatsApp helper is not a Puppeteer workspace package).
 
+## Node 24 Native Built-Ins & Banned Dependencies
+
+Developing with Node.js 24 leverages native runtime capabilities to eliminate third-party dependencies, streamline async workflows, and improve runtime security:
+
+| Area | Native Standard (Enforced) | Banned / Deprecated Package / Pattern |
+|---|---|---|
+| **Configuration** | `--env-file=.env` flag or `process.loadEnvFile()` | `dotenv` |
+| **Networking** | Native global `fetch()`, `FormData`, global `WebSocket` | `axios`, `node-fetch`, `ws` (for standard client communication) |
+| **Filesystem Globbing** | `import { glob } from 'node:fs/promises'` | `glob`, `fast-glob` |
+| **Hashing** | `crypto.hash()` from `node:crypto` | Verbose `createHash().update().digest()` chains |
+| **URL Matching** | Globally available `URLPattern` API and WHATWG `new URL()` | `path-to-regexp`, legacy `url.parse()` |
+| **Core Imports** | `node:` protocol prefix (`node:fs`, `node:crypto`, `node:path`) | Unprefixed core imports (`fs`, `crypto`, `path`) |
+| **Resource Cleanup** | `using` / `await using` (Explicit Resource Management) | Manual `try/finally` connection cleanup boilerplate |
+| **Request Tracking** | `AsyncLocalStorage` via `AsyncContextFrame` | Manual trace parameter drilling |
+| **Structured Logging** | Pino / stdout JSON logging for container/orchestrator shipping | In-process direct-to-file log writers |
+| **Native Testing** | `node:test` + `node:assert/strict` (auto-awaits subtests) | `jest`, `mocha` |
+| **TS Execution** | `--experimental-strip-types` for scripts/CLIs | Unnecessary upfront build steps for simple TS scripts |
+| **Security Controls** | `--permission` model (`--allow-fs-read`, etc.) | Unrestricted process execution in hardened environments |
+| **Process Lifecycle** | Catch `SIGTERM`/`SIGINT`, clean drain, unref fallback timeout | Ungraced process kills or hanging connection pools |
+
 ## Pinning rules
 
 | Do | Don't |
@@ -48,7 +68,8 @@ Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution f
 | pnpm `catalog:` / `catalogs` for React, Vite, Fastify, Drizzle, Zod, TanStack Query (apps cannot drift majors) | Divergent majors across apps/packages |
 | Read upstream migration guides for majors | Silence type errors with `any` or `@ts-ignore` |
 | Patch/minor bumps freely within semver | Leave known CVEs unpatched |
-| Align CI/Docker Node with `engines.node` | Mismatched CI images |
+| Align CI/Docker Node with `engines.node` (Node >= 24) | Mismatched CI images |
+| Leverage Node 24 native built-ins (`fetch`, `glob`, `crypto.hash`, etc.) | Reintroduce banned packages (`dotenv`, `axios`, `glob`, `ws`, etc.) |
 | `pnpm.onlyBuiltDependencies` (or equivalent) allowlist for native/postinstall scripts | Running arbitrary package `postinstall` / build scripts unreviewed |
 
 ## Scope

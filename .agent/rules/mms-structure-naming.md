@@ -53,6 +53,11 @@ MMS uses a strict `pnpm` workspace monorepo layout:
 | URL route paths | `kebab-case` | `/api/students`, `/api/contacts/lookups`, `/api/saved-reports` |
 | Translation & permission keys | `dot.notation` | `students.actions.add`, `students.write` |
 | Script files | `kebab-case.sh` | `sync-skills.sh`, `deploy-on-server.sh` |
+| Core module imports | `node:` prefix | `node:fs/promises`, `node:crypto`, `node:path`, `node:async_hooks` |
+
+### Core Protocol Imports & WHATWG URLs
+- **Node Protocol Imports**: Always prefix core module imports with `node:` (`node:fs`, `node:path`, `node:crypto`, `node:async_hooks`, `node:test`, `node:assert/strict`). Unprefixed imports (`import fs from 'fs'`) are forbidden to prevent namespace collisions and optimize resolution.
+- **URL Resolution**: Use WHATWG `new URL()` and `URLPattern` API. Legacy `url.parse()` is forbidden.
 
 ### Casing Alignment across Layers (Strict UI-DB Casing)
 All internal naming (variables, parameters, types) and database naming (tables, columns, index fields) must strictly align with the UI representation, regardless of position (prefix/suffix).

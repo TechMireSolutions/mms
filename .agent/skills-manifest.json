@@ -362,6 +362,21 @@
         "responsive smoke",
         "axe-core"
       ]
+    },
+    {
+      "name": "mms-ui-ux-design",
+      "path": "skills/mms-ui-ux-design",
+      "keywords": [
+        "ui",
+        "ux",
+        "design tokens",
+        "tailwind",
+        "bidi",
+        "rtl",
+        "typography",
+        "scaffold layout",
+        "primitives"
+      ]
     }
   ],
   "rules": {

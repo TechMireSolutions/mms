@@ -1,0 +1,4 @@
+sed -i '' 's/\[ \] Audit hardcoded strings in JSX nodes/\[x\] Audit hardcoded strings in JSX nodes/' /Users/syedaalin/.gemini/antigravity-ide/brain/874f2c06-46ed-4a88-b914-49e8e7b68dee/task.md
+sed -i '' 's/\[ \] Audit forbidden directional CSS (ml, mr, pl, pr)/\[x\] Audit forbidden directional CSS (ml, mr, pl, pr)/' /Users/syedaalin/.gemini/antigravity-ide/brain/874f2c06-46ed-4a88-b914-49e8e7b68dee/task.md
+sed -i '' 's/\[ \] Implement translations for any discovered strings/\[x\] Implement translations for any discovered strings/' /Users/syedaalin/.gemini/antigravity-ide/brain/874f2c06-46ed-4a88-b914-49e8e7b68dee/task.md
+sed -i '' 's/\[ \] Refactor CSS to BiDi compliant logical properties/\[x\] Refactor CSS to BiDi compliant logical properties/' /Users/syedaalin/.gemini/antigravity-ide/brain/874f2c06-46ed-4a88-b914-49e8e7b68dee/task.md

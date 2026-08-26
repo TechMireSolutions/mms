@@ -81,7 +81,9 @@ Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker
 | `mms-testing-e2e` | Vitest, MSW, Playwright E2E & smoke |
 | `mms-code-review` | PR review |
 | `mms-a11y-smoke` | axe + shell a11y verify |
+| `mms-ops-deploy` | Hetzner deploy, Apache isolation, PORT 5002 |
 | `mms-settings-i18n` | Settings + i18n (en/ar/ur/fa) |
+| `mms-ui-ux-design` | Design tokens, BiDi / RTL layout, Master Module Scaffold |
 
 Index: [.agent/skills/README.md](.agent/skills/README.md)
 
@@ -125,6 +127,6 @@ Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cur
 
 ```
 apps/frontend/     React 19 + Vite
-apps/backend/      Fastify + PostgreSQL
+apps/backend/      Fastify 5 + Node.js 24 + PostgreSQL
 packages/shared/   @mms/shared
 ```

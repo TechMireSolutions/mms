@@ -95,4 +95,80 @@ describe('platformUsers REST API integration routes', () => {
     const body = res.json();
     expect(body.message).toContain('Cannot delete your own platform account');
   });
+
+  it('persists and updates all 5 granular permission keys for a platform admin', async () => {
+    if (!isDbAvailable || !superUserId) return;
+    const token = signPlatformToken(superUserId, superSessionVersion);
+
+    // 1. Create a platform admin with settings, admins, and system permissions enabled
+    const email = `test-admin-${Date.now()}@platform.com`;
+    const createRes = await app.inject({
+      method: 'POST',
+      url: '/api/platform/users',
+      cookies: { mms_platform_access: token },
+      payload: {
+        name: 'Perm Test Admin',
+        email,
+        password: 'Password123!',
+        permissions: {
+          workspaces: true,
+          onboard: false,
+          settings: true,
+          admins: true,
+          system: true,
+        },
+      },
+    });
+    expect(createRes.statusCode).toBe(200);
+    const createdUser = createRes.json().user;
+    expect(createdUser.permissions).toEqual({
+      workspaces: true,
+      onboard: false,
+      settings: true,
+      admins: true,
+      system: true,
+    });
+
+    // 2. Fetch all users and verify permissions are loaded correctly from child table
+    const listRes = await app.inject({
+      method: 'GET',
+      url: '/api/platform/users',
+      cookies: { mms_platform_access: token },
+    });
+    expect(listRes.statusCode).toBe(200);
+    const foundUser = listRes.json().users.find((u: { id: string }) => u.id === createdUser.id);
+    expect(foundUser).toBeDefined();
+    expect(foundUser.permissions).toEqual({
+      workspaces: true,
+      onboard: false,
+      settings: true,
+      admins: true,
+      system: true,
+    });
+
+    // 3. Update permissions and verify the changes persist
+    const updateRes = await app.inject({
+      method: 'PATCH',
+      url: `/api/platform/users/${createdUser.id}/permissions`,
+      cookies: { mms_platform_access: token },
+      payload: {
+        permissions: {
+          workspaces: false,
+          onboard: true,
+          settings: false,
+          admins: false,
+          system: false,
+        },
+      },
+    });
+    expect(updateRes.statusCode).toBe(200);
+    expect(updateRes.json().user.permissions).toEqual({
+      workspaces: false,
+      onboard: true,
+      settings: false,
+      admins: false,
+      system: false,
+    });
+  });
 });
+

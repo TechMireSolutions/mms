@@ -56,7 +56,7 @@ export function PlatformDashboardBanner({
             {t("platform.statusOperational")}
           </span>
           <span className="text-xs font-mono text-muted-foreground ms-auto hidden sm:inline-flex items-center gap-1 bg-muted/60 px-2 py-0.5 rounded-md border border-border/60">
-            <Radio className="w-3 h-3 text-success animate-ping" /> Realtime Pulse
+            <Radio className="w-3 h-3 text-success animate-ping" /> {t('platform.banner.realtimePulse')}
           </span>
         </div>
 

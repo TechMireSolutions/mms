@@ -31,6 +31,7 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 - [ ] onlyBuiltDependencies / install-script allowlist reviewed when adding native deps
 - [ ] typecheck + test + lint green
 - [ ] Compiler not half-enabled (plugin + eslint + memo cleanup together)
+- [ ] Banned Node 24 dependencies (dotenv, axios, node-fetch, ws, glob, fast-glob, path-to-regexp) are not reintroduced
 ```
 
 ## Done

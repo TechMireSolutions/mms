@@ -11,12 +11,14 @@ import { cn } from "@/lib/utils";
 
 export interface PlatformDashboardQuickActionsProps {
   canWorkspaces: boolean;
-  isSuperUser: boolean;
+  canSystem: boolean;
+  canAdmins: boolean;
 }
 
 export function PlatformDashboardQuickActions({
   canWorkspaces,
-  isSuperUser,
+  canSystem,
+  canAdmins,
 }: PlatformDashboardQuickActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -56,7 +58,7 @@ export function PlatformDashboardQuickActions({
             </Button>
           )}
 
-          {isSuperUser && (
+          {canSystem && (
             <Button
               asChild
               variant="outline"
@@ -69,7 +71,7 @@ export function PlatformDashboardQuickActions({
             </Button>
           )}
 
-          {isSuperUser && (
+          {canSystem && (
             <Button
               asChild
               variant="outline"
@@ -82,7 +84,7 @@ export function PlatformDashboardQuickActions({
             </Button>
           )}
 
-          {isSuperUser && (
+          {canAdmins && (
             <Button
               asChild
               variant="outline"
@@ -119,15 +121,15 @@ export function PlatformDashboardQuickActions({
         <div className="space-y-2 text-xs font-semibold">
           <div className="flex items-center justify-between py-1 border-b border-border/40">
             <span className="text-muted-foreground">{t("platform.stackDatabase")}</span>
-            <span className="text-foreground font-bold">PostgreSQL 16 (RLS)</span>
+            <span className="text-foreground font-bold">{t('platform.quickActions.pg16')}</span>
           </div>
           <div className="flex items-center justify-between py-1 border-b border-border/40">
             <span className="text-muted-foreground">{t("platform.stackWebsocket")}</span>
-            <span className="text-success font-bold">Fastify WebSocket</span>
+            <span className="text-success font-bold">{t('platform.quickActions.fastifyWs')}</span>
           </div>
           <div className="flex items-center justify-between py-1">
             <span className="text-muted-foreground">{t("platform.stackIsolation")}</span>
-            <span className="text-primary font-bold">AsyncLocalStorage</span>
+            <span className="text-primary font-bold">{t('platform.quickActions.asyncLocal')}</span>
           </div>
         </div>
       </div>

@@ -54,6 +54,7 @@ export const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
   user_activity_logs: 'analytics.view',
   message_templates: MESSAGING_MODULE_MANIFEST.permissions.read,
   message_logs: MESSAGING_MODULE_MANIFEST.permissions.read,
+  backups: 'settings.global.write',
 };
 
 export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
@@ -90,6 +91,7 @@ export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   user_activity_logs: 'analytics.view',
   message_templates: MESSAGING_MODULE_MANIFEST.permissions.write,
   message_logs: MESSAGING_MODULE_MANIFEST.permissions.write,
+  backups: 'settings.global.write',
 };
 
 /** Distinct delete permission when the module manifest defines one; else write. */

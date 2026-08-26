@@ -57,8 +57,10 @@ export default function ApexRoutes(): React.JSX.Element {
       <Route element={<PlatformBootGate requireAuth requirePermission="onboard" />}>
         <Route path={ROUTES.onboarding} element={<OnboardingWizard />} />
       </Route>
-      <Route element={<PlatformBootGate requireAuth requireSuperUser />}>
+      <Route element={<PlatformBootGate requireAuth requirePermission="admins" />}>
         <Route path={ROUTES.platformAdmins} element={<PlatformAdmins />} />
+      </Route>
+      <Route element={<PlatformBootGate requireAuth requirePermission="system" />}>
         <Route path={ROUTES.platformActivityLogs} element={<PlatformConsole />} />
         <Route path={ROUTES.platformSystem} element={<PlatformConsole />} />
       </Route>

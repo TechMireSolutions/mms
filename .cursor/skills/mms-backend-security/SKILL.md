@@ -89,7 +89,9 @@ Security Invariants:
 - **Instant Termination**: Redis `jti` Revocation Registry. Session revoked immediately across WebSocket and REST gateways on suspension.
 - **Cross-Site Request Forgery**: Double-Submit Token. Read CSRF cookie -> inject `X-CSRF-Token` header on mutating requests (`POST`/`PUT`/`DELETE`).
 - **Privilege Escalation**: Tenant-Scoped RBAC Bitmasks. Permissions calculated and asserted in-memory per request; cannot cross tenant boundaries.
-- Constant-time string/hash comparisons (`crypto.timingSafeEqual`) for passwords, tokens, and OTP codes to eliminate side-channel timing attacks.
+- **Node 24 Permission Model**: Hardened deployments enforce `--permission` flags (e.g. `--allow-fs-read=/var/www/mmsv2/data`).
+- Constant-time string/hash comparisons (`crypto.timingSafeEqual` from `node:crypto`) for passwords, tokens, and OTP codes to eliminate side-channel timing attacks.
+- One-shot hashing with `crypto.hash()` from `node:crypto` (no verbose `createHash().update().digest()` chains).
 - Rate limiting: on `429`, emit `Retry-After` header — `mms-auth-security.mdc`.
 
 ## Tenant isolation checklist

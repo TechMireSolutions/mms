@@ -11,6 +11,7 @@ import {
   RefreshCw,
   Settings,
   Key,
+  Download,
 } from 'lucide-react';
 import { formatDate } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,7 +21,9 @@ import { WidgetCardHeader } from '@/components/ui/WidgetCardHeader';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { triggerFileDownload } from '@/lib/download';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { cn } from '@/lib/utils';
 
@@ -63,6 +66,27 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
     );
   }, [logs, filterQuery]);
 
+  const handleExportCsv = () => {
+    if (items.length === 0) return;
+    const headers = ['ID', 'Date', 'Action', 'User Email', 'Target Resource', 'Target ID', 'IP Address', 'Metadata'];
+    const rows = items.map((log) => [
+      log.id,
+      log.createdAt,
+      log.action,
+      log.userEmail,
+      log.targetResource ?? '',
+      log.targetId ?? '',
+      log.ipAddress ?? '',
+      (log.metadataMessage ?? '').replace(/"/g, '""'),
+    ]);
+    const csvContent = [
+      headers.join(','),
+      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
+    ].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    triggerFileDownload(blob, `platform-activity-logs-${new Date().toISOString().slice(0, 10)}.csv`);
+  };
+
   if (isLoading) {
     return <CardSkeleton count={3} className="grid-cols-1" />;
   }
@@ -87,17 +111,31 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
             subtitle={t('platform.activityLogsSubtitle')}
           />
 
-          {/* Search Filter Input using Design System Input */}
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden />
-            <Input
-              type="text"
-              value={filterQuery}
-              onChange={(e) => setFilterQuery(e.target.value)}
-              placeholder={t('platform.filterLogsPlaceholder')}
-              className="w-full h-9 ps-9 pe-3 text-xs rounded-xl"
-              aria-label={t('platform.filterLogsPlaceholder')}
-            />
+          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* Search Filter Input */}
+            <div className="relative w-full sm:w-64">
+              <Search className="w-4 h-4 text-muted-foreground absolute start-3 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden />
+              <Input
+                type="text"
+                value={filterQuery}
+                onChange={(e) => setFilterQuery(e.target.value)}
+                placeholder={t('platform.filterLogsPlaceholder')}
+                className="w-full h-9 ps-9 pe-3 text-xs rounded-xl"
+                aria-label={t('platform.filterLogsPlaceholder')}
+              />
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              disabled={items.length === 0}
+              className="h-9 px-3 text-xs font-semibold rounded-xl shrink-0"
+              title={t('platform.exportCsv')}
+            >
+              <Download className="w-3.5 h-3.5 me-1.5" aria-hidden />
+              {t('platform.exportCsv')}
+            </Button>
           </div>
         </div>
 

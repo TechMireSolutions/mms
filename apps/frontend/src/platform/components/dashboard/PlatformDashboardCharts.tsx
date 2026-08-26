@@ -59,7 +59,7 @@ export function PlatformDashboardCharts({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
         <div className="h-60 w-full">
           <p className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-primary" /> Active vs Inactive
+            <Layers className="w-3.5 h-3.5 text-primary" /> {t('platform.charts.activeVsInactive')}
           </p>
           <SafeResponsiveContainer width="100%" height="100%">
             <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
@@ -93,7 +93,7 @@ export function PlatformDashboardCharts({
 
         <div className="h-60 w-full">
           <p className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-success" /> 5-Month Activity Trend
+            <Activity className="w-3.5 h-3.5 text-success" /> {t('platform.charts.activityTrend')}
           </p>
           <SafeResponsiveContainer width="100%" height="100%">
             <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>

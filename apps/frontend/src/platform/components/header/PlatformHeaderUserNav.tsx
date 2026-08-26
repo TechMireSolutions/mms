@@ -37,7 +37,7 @@ export function PlatformHeaderUserNav({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { platformUser, platformLogout } = usePlatformAuth();
-  const { isSuperUser } = usePlatformPermissions();
+  const { isSuperUser, canAdmins } = usePlatformPermissions();
   const { data: workspaces } = usePlatformWorkspaces();
 
   const [popoverOpen, setPopoverOpen] = useState(false);
@@ -205,7 +205,7 @@ export function PlatformHeaderUserNav({
               {t('platform.myAccount')}
             </Link>
           </DropdownMenuItem>
-          {isSuperUser && (
+          {canAdmins && (
             <DropdownMenuItem asChild className="rounded-xl font-bold text-xs gap-2 min-h-10 cursor-pointer">
               <Link to={ROUTES.platformAdmins}>
                 <Users className="h-4 w-4 text-success" aria-hidden />

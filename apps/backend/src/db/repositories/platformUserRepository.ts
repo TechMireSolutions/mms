@@ -15,7 +15,13 @@ import { platformUsers, platformUserPermissions } from '../schema.js';
 // Internal: Hydrate permissions from child table rows
 // ---------------------------------------------------------------------------
 
-const PERMISSION_KEYS: PlatformAdminPermissionKey[] = ['workspaces', 'onboard'];
+const PERMISSION_KEYS: PlatformAdminPermissionKey[] = [
+  'workspaces',
+  'onboard',
+  'settings',
+  'admins',
+  'system',
+];
 
 async function loadPermissions(userId: string): Promise<PlatformAdminPermissions> {
   const rows = await activeDb()
