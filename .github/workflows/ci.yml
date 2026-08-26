@@ -163,7 +163,7 @@ jobs:
 
       - name: Upload Blob Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: blob-report-${{ matrix.shardIndex }}
           path: e2e/blob-report
@@ -205,7 +205,7 @@ jobs:
           fi
 
       - name: Upload HTML Report Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: playwright-html-report
           path: e2e/playwright-report
@@ -244,7 +244,7 @@ jobs:
           cat mms-dist.tar.gz.sha256
 
       - name: Upload mms-dist artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mms-dist
           path: |
