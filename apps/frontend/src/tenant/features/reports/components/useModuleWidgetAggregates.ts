@@ -77,7 +77,7 @@ export function useModuleWidgetAggregates(
 
   const query = useQuery({
     queryKey: ['dynamic_widget_aggregates', querySignature] as const,
-    queryFn: async () => {
+    queryFn: async ({ signal }) => {
       const results: Record<string, WidgetAggregateResult> = {};
       
       const responses = await Promise.all(
@@ -86,6 +86,7 @@ export function useModuleWidgetAggregates(
             const data = await apiJson<Record<string, WidgetAggregateResult>>(path, {
               method: 'POST',
               body: JSON.stringify({ widgets: reqWidgets }),
+              signal,
             });
             return data || {};
           } catch (e) {
