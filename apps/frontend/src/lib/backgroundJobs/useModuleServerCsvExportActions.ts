@@ -29,7 +29,7 @@ export interface UseModuleServerCsvExportActionsOptions<
   buildFilteredQuery: () => TQuery;
   startExport: (options: {
     query: TQuery;
-    columns: TColumn[];
+    columns: ModuleServerCsvExportColumn[];
     filename: string;
     label: string;
     ids?: Array<string | number>;
@@ -69,7 +69,7 @@ export function useModuleServerCsvExportActions<
     try {
       const job = await startExport({
         query: buildFilteredQuery(),
-        columns,
+        columns: columns.map((c) => ({ id: c.id, label: c.label })),
         filename,
         label,
       });
@@ -109,7 +109,7 @@ export function useModuleServerCsvExportActions<
     try {
       const job = await startExport({
         query: {} as TQuery,
-        columns,
+        columns: columns.map((c) => ({ id: c.id, label: c.label })),
         filename,
         label,
         ids: selectedIds,
