@@ -133,7 +133,10 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
     await expect(page.getByText(/Total Students|Active Students|Gender Distribution|Reports/i).first()).toBeVisible({ timeout: 20_000 });
 
     // Validate RTL render
-    await forceRtl(page);
+    await page.evaluate(() => {
+      document.documentElement.setAttribute('dir', 'rtl');
+      document.documentElement.setAttribute('lang', 'ar');
+    });
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
 
     await page.evaluate(() => {
