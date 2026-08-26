@@ -115,14 +115,6 @@ export async function findContactDuplicateBlockedIds(
           AND c.deleted_at IS NULL
           AND ${phoneComparisonKeySql(sql`p.number`)} <> ''
         UNION ALL
-        SELECT c.id AS id,
-               ${phoneComparisonKeySql(sql`c.phone`)} AS k
-        FROM ${contacts} c
-        WHERE c.workspace_subdomain = ${subdomain}
-          AND c.deleted_at IS NULL
-          AND NULLIF(trim(c.phone), '') IS NOT NULL
-          AND ${phoneComparisonKeySql(sql`c.phone`)} <> ''
-        UNION ALL
         SELECT e.contact_id AS id,
                ${emailKeySql(sql`e.address`)} AS k
         FROM ${contactEmails} e
@@ -130,14 +122,6 @@ export async function findContactDuplicateBlockedIds(
         WHERE e.workspace_subdomain = ${subdomain}
           AND c.deleted_at IS NULL
           AND ${emailKeySql(sql`e.address`)} <> ''
-        UNION ALL
-        SELECT c.id AS id,
-               ${emailKeySql(sql`c.email`)} AS k
-        FROM ${contacts} c
-        WHERE c.workspace_subdomain = ${subdomain}
-          AND c.deleted_at IS NULL
-          AND NULLIF(trim(c.email), '') IS NOT NULL
-          AND ${emailKeySql(sql`c.email`)} <> ''
         UNION ALL
         SELECT c.id AS id,
                ${cnicComparisonKeySql(sql`c.cnic`)} AS k
