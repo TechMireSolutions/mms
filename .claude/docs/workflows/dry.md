@@ -26,18 +26,18 @@ This workflow enforces the Single Source of Truth (SSOT) policy, eliminates dupl
 ## Phase 3: Extraction & Refactoring
 
 - [ ] **Enforce layer boundaries**:
-  - **`@mms/shared`**: Pure Zod schemas, types, constants, DEFAULT_* configs, and I/O-free formatters. No React components, no direct DB queries, no browser APIs (`localStorage`, DOM).
+  - **`@mms/shared`**: Pure Zod schemas (`.strict()`), types, constants, DEFAULT_* configs, and I/O-free formatters. No React components, no direct DB queries, no browser APIs (`localStorage`, DOM).
   - **Imports**: Always use named exports from `@mms/shared` (e.g., `import { Contact } from '@mms/shared'`). Subpath imports are forbidden.
-  - **Module Isolation**: Direct imports between frontend feature modules are banned. Route shared data via `apiClient` or extract shared UI to `components/ui`.
+  - **Module Isolation**: Direct imports between frontend feature modules are strictly banned (e.g., importing `@/tenant/features/A` from `B`). Route shared data queries via `@/tenant/hooks/collections/*` facades or extract shared UI chrome to `components/ui` / `lib/`.
 - [ ] **Utilize authoritative primitives**: Refactor code to use standard primitives rather than custom implementations:
 
 | Category | Forbidden Anti-Pattern | Mandatory Authoritative Primitive / Helper |
 | :--- | :--- | :--- |
 | **Date Formatting** | `.toLocaleDateString()`, custom format strings | `formatDate` / `formatDateTime` (`@mms/shared`, `@/lib/utils`) |
-| **Money / Currency** | `.toLocaleString()`, `PKR `, `₨ ` prefixes | `formatMoney` (`@mms/shared`), `useFinanceCurrency`, `useAccountingCurrency` |
+| **Money / Currency** | `.toLocaleString()`, IEEE 754 floats, `PKR ` prefixes | Decimal strings + `formatMoney` (`@mms/shared`), `useFinanceCurrency` |
 | **App Copy** | Hardcoded UI strings or labels | `t('key')` via `appTranslations` (`mms-settings-i18n.md`) |
 | **Status Badges** | Inline status colors / raw maps | `StatusBadge` + semantic tokens (`mms-ui-ux-design.md`) |
-| **Phones** | Split inputs / manual manipulation | Single phone input + `parsePhoneNumber` (`@mms/shared`) |
+| **Phones** | Split inputs / manual manipulation | Single phone input + `parsePhoneNumber` (`@mms/shared`, E.164) |
 | **Initials** | Manual string split/slice | `getInitials` (`@mms/shared`) |
 | **Form Controls** | Raw HTML `<select>`, `<textarea>`, `<input>`, checkbox | Primitives: `FormSelect`, `Textarea`, `Input`, `SearchBar`, `Checkbox` |
 | **Detail Drawers** | Custom slide-over wrappers | `<DetailDrawerShell>` central primitive component |
@@ -45,11 +45,11 @@ This workflow enforces the Single Source of Truth (SSOT) policy, eliminates dupl
 | **Toolbars & Export**| Duplicated export UI | `ExportToolbar` primitive |
 | **Charts** | Bare Recharts container wrappers | `SafeResponsiveContainer` primitive |
 
-- [ ] **Enforce strict validation**: Validate client payloads with strict Zod schemas and Fastify requests with Fastify JSON schemas.
+- [ ] **Enforce strict validation**: Validate client payloads with zero-trust strict Zod schemas and Fastify requests with typed JSON schemas.
 
 ## Phase 4: Verification & Cleanup
 
-- [ ] **Remove dead code**: Delete unused imports, variables, unreferenced code, and legacy shims within the change boundary.
+- [ ] **Remove dead code**: Delete unused imports, variables, unreferenced code, and debug logs within the change boundary.
 - [ ] **Run static analysis**:
   ```bash
   pnpm typecheck

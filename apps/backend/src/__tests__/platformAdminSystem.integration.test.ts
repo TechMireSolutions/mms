@@ -69,7 +69,7 @@ describe('platform admin system migrate-and-restart', () => {
           name: 'Migrate Super',
           passwordHash,
           role: 'super_user',
-          permissions: { workspaces: true, onboard: true },
+          permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
           sessionVersion: 0,
           createdAt: new Date().toISOString(),
         });
@@ -91,7 +91,7 @@ describe('platform admin system migrate-and-restart', () => {
           name: 'Migrate Admin',
           passwordHash,
           role: 'admin',
-          permissions: { workspaces: false, onboard: false },
+          permissions: { workspaces: false, onboard: false, settings: false, admins: false, system: false },
           sessionVersion: 0,
           createdAt: new Date().toISOString(),
         });
@@ -264,7 +264,7 @@ describe('platform admin system migrate-and-restart', () => {
 
   it('returns 409 when a migrate-and-restart is already in flight', async () => {
     if (!isDbAvailable) return;
-    isMigrateRestartInFlight.mockReturnValue(true);
+    scheduleMigrateAndRestart.mockReturnValue(false);
 
     await updatePlatformUserRow(superUserId, {
       passwordHash: await hashPassword(superPassword),
@@ -286,6 +286,6 @@ describe('platform admin system migrate-and-restart', () => {
     });
     expect(res.statusCode).toBe(409);
     expect(res.json()).toMatchObject({ type: 'migrate_restart_in_progress' });
-    expect(scheduleMigrateAndRestart).not.toHaveBeenCalled();
+    expect(scheduleMigrateAndRestart).toHaveBeenCalledTimes(1);
   });
 });

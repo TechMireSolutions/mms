@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import {
   authenticatePlatform,
-  requireSuperUser,
+  requirePlatformPermission,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import { listPlatformUsers } from '../../db/repositories/platformUserRepository.js';
@@ -32,7 +32,7 @@ export default async function platformUsersRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticatePlatform);
-  fastify.addHook('preHandler', requireSuperUser);
+  fastify.addHook('preHandler', requirePlatformPermission('admins'));
 
   fastify.get('/', async (request, reply) => {
     const storedUsers = await listPlatformUsers();

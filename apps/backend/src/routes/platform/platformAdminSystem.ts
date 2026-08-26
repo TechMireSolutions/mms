@@ -7,8 +7,7 @@ import {
 } from '../../validation/platformSchemas.js';
 import {
   authenticatePlatform,
-  requireMainDomain,
-  requireSuperUser,
+  requirePlatformPermission,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
@@ -20,7 +19,6 @@ import {
 } from '../../db/repositories/platformActivityLogsRepository.js';
 import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
 import {
-  isMigrateRestartInFlight,
   isRemoteMigrateRestartEnabled,
   MIGRATE_RESTART_DELAY_MS,
   scheduleMigrateAndRestart,
@@ -34,14 +32,13 @@ export default async function platformAdminSystemRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  fastify.addHook('preHandler', requireMainDomain);
 
   await fastify.register(async function platformMigrateRestartRateLimited(inner) {
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
     inner.post(
       '/migrate-and-restart',
-      { preHandler: [authenticatePlatform, requireSuperUser] },
+      { preHandler: [authenticatePlatform, requirePlatformPermission('system')] },
       async (request, reply) => {
         if (!isRemoteMigrateRestartEnabled()) {
           return reply.status(403).send({
@@ -60,17 +57,8 @@ export default async function platformAdminSystemRoutes(
           return sendInvalidCurrentPassword(reply);
         }
 
-        if (isMigrateRestartInFlight()) {
-          return reply.status(409).send({
-            type: 'migrate_restart_in_progress',
-            message: 'A migrate-and-restart is already in progress.',
-          });
-        }
-
         const scheduled = scheduleMigrateAndRestart({
           userId: platformUser.id,
-          userEmail: platformUser.email,
-          ipAddress: request.ip,
         });
 
         if (!scheduled) {
@@ -103,7 +91,7 @@ export default async function platformAdminSystemRoutes(
 
     inner.get(
       '/activity-logs',
-      { preHandler: [authenticatePlatform, requireSuperUser] },
+      { preHandler: [authenticatePlatform, requirePlatformPermission('system')] },
       async (request, reply) => {
         const parsed = parseRequest(platformActivityLogsQuerySchema, request.query ?? {});
         if (!parsed.ok) return replyValidationError(reply, parsed.message);

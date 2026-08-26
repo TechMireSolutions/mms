@@ -808,7 +808,7 @@ describe('platform auth routes', () => {
       email: 'admin@test.com',
       name: 'Target Admin',
       role: 'admin',
-      permissions: { workspaces: true, onboard: false },
+      permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false },
       createdAt: '2026-01-01T00:00:00.000Z',
     });
     const app = await buildApp();
@@ -824,17 +824,20 @@ describe('platform auth routes', () => {
       url: '/api/platform/users/p-target/permissions',
       headers: { host: 'localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
-      payload: { permissions: { workspaces: true, onboard: false } },
+      payload: { permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false } },
     });
     expect(res.statusCode).toBe(200);
     expect(mockSetPlatformAdminPermissions).toHaveBeenCalledWith('p-target', {
       workspaces: true,
       onboard: false,
+      settings: false,
+      admins: false,
+      system: false,
     });
     expect(res.json()).toMatchObject({
       user: {
         id: 'p-target',
-        permissions: { workspaces: true, onboard: false },
+        permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false },
       },
     });
     await app.close();

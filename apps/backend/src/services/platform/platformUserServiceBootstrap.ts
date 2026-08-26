@@ -39,7 +39,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
         passwordHash: newHash,
         name: name || existing.name,
       });
-      console.log(`[MMS] Updated platform super-user password from env for ${existing.email}`);
+      console.log('[MMS] Updated platform super-user password from env');
     }
     return;
   }
@@ -52,7 +52,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
       passwordHash: newHash,
       name,
     });
-    console.log(`[MMS] Updated existing super-user email to ${normalizedEmail} from env`);
+    console.log('[MMS] Updated existing super-user email from env');
     return;
   }
 
@@ -68,5 +68,5 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     emailVerifiedAt: new Date().toISOString(),
   };
   await insertPlatformUser(user);
-  console.log(`[MMS] Platform super-user seeded from env for ${user.email}`);
+  console.log('[MMS] Platform super-user seeded from env');
 }

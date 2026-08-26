@@ -10,6 +10,9 @@ import { deepSanitizeStrings } from './sanitize.js';
 export const platformAdminPermissionsSchema = z.object({
   workspaces: z.boolean(),
   onboard: z.boolean(),
+  settings: z.boolean(),
+  admins: z.boolean(),
+  system: z.boolean(),
 }).strict();
 
 export type PlatformAdminPermissionsInput = z.infer<typeof platformAdminPermissionsSchema>;

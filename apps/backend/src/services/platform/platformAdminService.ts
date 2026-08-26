@@ -33,8 +33,6 @@ export function resetMigrateRestartLatchForTests(): void {
 
 export interface MigrateRestartAuditMeta {
   userId: string;
-  userEmail: string;
-  ipAddress: string;
 }
 
 export interface ReloadBackendResult {
@@ -74,8 +72,6 @@ export function scheduleMigrateAndRestart(meta: MigrateRestartAuditMeta): boolea
       level: 'audit',
       action: 'migrate_and_restart_scheduled',
       userId: meta.userId,
-      userEmail: meta.userEmail,
-      ipAddress: meta.ipAddress,
       delayMs: MIGRATE_RESTART_DELAY_MS,
       at: new Date().toISOString(),
     }),
@@ -90,8 +86,6 @@ export function scheduleMigrateAndRestart(meta: MigrateRestartAuditMeta): boolea
             level: 'audit',
             action: 'migrate_and_restart_completed',
             userId: meta.userId,
-            userEmail: meta.userEmail,
-            ipAddress: meta.ipAddress,
             at: new Date().toISOString(),
           }),
         );
@@ -102,8 +96,6 @@ export function scheduleMigrateAndRestart(meta: MigrateRestartAuditMeta): boolea
             level: 'audit',
             action: 'migrate_and_restart_failed',
             userId: meta.userId,
-            userEmail: meta.userEmail,
-            ipAddress: meta.ipAddress,
             at: new Date().toISOString(),
           }),
         );

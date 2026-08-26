@@ -111,9 +111,7 @@ describe('platformAdminService', () => {
     vi.useFakeTimers();
     expect(
       scheduleMigrateAndRestart({
-        userId: 'u1',
-        userEmail: 'a@b.com',
-        ipAddress: '127.0.0.1',
+        userId: 'u_platform_000000000000001',
       }),
     ).toBe(true);
     expect(isMigrateRestartInFlight()).toBe(true);

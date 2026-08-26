@@ -24,7 +24,7 @@ describe('platformUserCan', () => {
   it('uses admin permission flags', () => {
     const user = {
       role: 'admin' as const,
-      permissions: { workspaces: true, onboard: false },
+      permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false },
     };
     expect(platformUserCan(user, 'workspaces')).toBe(true);
     expect(platformUserCan(user, 'onboard')).toBe(false);
@@ -42,6 +42,9 @@ describe('normalizePlatformAdminPermissions', () => {
     expect(normalizePlatformAdminPermissions({ workspaces: true })).toEqual({
       workspaces: true,
       onboard: false,
+      settings: false,
+      admins: false,
+      system: false,
     });
   });
 });
@@ -70,7 +73,7 @@ describe('platform admin permission schemas', () => {
     expect(create.success).toBe(true);
 
     const update = platformUpdateAdminPermissionsBodySchema.safeParse({
-      permissions: { workspaces: false, onboard: true },
+      permissions: { workspaces: false, onboard: true, settings: false, admins: false, system: false },
     });
     expect(update.success).toBe(true);
   });

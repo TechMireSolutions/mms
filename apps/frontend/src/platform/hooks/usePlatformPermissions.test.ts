@@ -15,7 +15,7 @@ describe('usePlatformPermissions', () => {
       email: 'super@apex.test',
       name: 'Super Operator',
       role: 'super_user',
-      permissions: { workspaces: true, onboard: true },
+      permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
     };
 
     expect(platformUserCan(mockSuperUser, 'workspaces')).toBe(true);
@@ -28,7 +28,7 @@ describe('usePlatformPermissions', () => {
       email: 'admin@apex.test',
       name: 'Standard Admin',
       role: 'admin',
-      permissions: { workspaces: true, onboard: false },
+      permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false },
     };
 
     expect(platformUserCan(mockAdmin, 'workspaces')).toBe(true);

@@ -28,7 +28,6 @@ const s = initServer();
 function canWriteDashboard(user: User): boolean {
   if (!user || !user.role) return false;
   const role = String(user.role).toLowerCase();
-  if (role === 'admin' || role === 'owner') return true;
   return (
     roleHasPermission(role, DASHBOARD_MODULE_MANIFEST.permissions.setupWrite) ||
     roleHasPermission(role, DASHBOARD_MODULE_MANIFEST.permissions.customize)

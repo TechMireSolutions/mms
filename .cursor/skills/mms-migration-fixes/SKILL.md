@@ -23,10 +23,13 @@ When the user asks to fix migration debt, work from the open priorities here and
 | Tenant JWT binding | `authenticateTenant` middleware |
 | Bulk sync open download | Admin-only `canDownloadBulkSync` |
 | Global DB reset via API | Tenant-scoped `resetTenantData` |
+| Nested contact item schemas | Locked down to `.strict()` in `contactNestedSchemas.ts` (P3b) |
+| Residual document-store module prefs | Finance, Attendance, Enrollments, etc. moved to typed tables (P3) |
 | Massive mock auto-seed | `minimalSeeds` + empty frontend defaults |
 | In-memory auth handoff | `auth_artifacts` table |
 | Client-side 2FA only | Server `twoFactorService` |
 | Orphan route guards | Canonical `ProtectedRoute` in `HostRoutes` |
+| FE live push (residual modules) | Modules migrated to `createGenericRelationalService` / `upsertWithBroadcast` (P6) |
 | Contacts REST + write RBAC | Full `/api/contacts` CRUD + `canWriteCollection` on mutations |
 | Settings monolithic panels | Split into hooks + section components; `useBackupRestore`, `ModuleSettingsNavGrid`, `settingsSectionComponents` |
 | Accessible branding theme | `logoBrandColors.ts` + `brandingTheme.ts` WCAG AA tokens |
@@ -53,7 +56,7 @@ When the user asks to fix migration debt, work from the open priorities here and
 | Google Contacts OAuth secrets table | `contact_google_sync_credentials` FORCE RLS; not `objects` |
 | Contacts saved reports → typed table | `saved_reports` category `contacts`; object key deprecated from ALLOWED_OBJECTS |
 | Audit trigger tenant + user GUCs | `log_row_change` fills `workspace_subdomain`; `app.current_user_id` SET LOCAL |
-| Contact write schema soft-delete strip + top-level strict | `contactWriteSchema` / `buildContactWriteSchema` + `stripContactClientSoftDeleteFields` (nested item `.passthrough()` remains open — P3b) |
+| Contact write schema soft-delete strip + top-level strict | `contactWriteSchema` / `buildContactWriteSchema` + `stripContactClientSoftDeleteFields` |
 | Atomic contact merge | `POST /api/contacts/merge`; FE invalidates after Google sync (no dual upsert) |
 | Contacts Setup lookups typed | `contact_lookups` + `/api/contacts/lookups`; removed from `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` |
 | Contacts Setup field-config / prefs / column prefs typed | `contact_field_configs`, `contact_module_preferences`, `contact_user_column_prefs` + REST; removed from `ALLOWED_OBJECTS` |
@@ -89,17 +92,6 @@ Residual Work SQL-page debt for **other** modules (not Teachers/Users/Sessions) 
 
 **Fix:** Prefer `can()` / contract permissions when touching those UIs; do not add new tenant-module `role ===` write gates (`mms-auth-security.mdc`).
 
-### P3 — Remaining document-store debt (other modules’ prefs / field config)
-
-**Problem:** Other modules’ prefs, field config, and column prefs may still live in `objects`. Contacts + Students + Teachers + Users + Sessions Setup (tabs/lookups where applicable, field-config, preferences, column prefs) is typed REST. Residual: Finance / Attendance / Enrollments / other modules still on document-store.
-
-**Fix:** Prefer typed tables + FORCE RLS when migrating shareable module config; do not reintroduce Contacts/Students/Teachers/Users/Sessions Setup keys into `ALLOWED_OBJECTS` / `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` (`mms-fields.mdc`, `mms-data-layer.mdc`).
-
-### P3b — Nested contact item Zod `.passthrough()`
-
-**Problem:** Top-level `contactWriteSchema` / `buildContactWriteSchema` is strict (closed). Nested phone/email/address item schemas in `contactNestedSchemas.ts` still `.passthrough()` for item flags.
-
-**Fix:** When touching those shapes, prefer `.strict()` / explicit allowlists — `mms-form-architecture.mdc`. Do not loosen top-level write Zod.
 
 ### P4 — Report drill-down & saved reports
 
@@ -112,12 +104,6 @@ Residual Work SQL-page debt for **other** modules (not Teachers/Users/Sessions) 
 **Problem:** Shells + Work-route smoke are green (`responsive-shell` / `responsive-authenticated`). Platform `md` bottom nav and deep Reports/Setup builders are not asserted.
 
 **Fix:** Extend those specs when touching those surfaces — `mms-ui-ux-design.mdc` §7, `mms-testing-observability.mdc`. Do not treat missing depth as license to regress shell overflow/touch floors.
-
-### P6 — FE live push (residual modules)
-
-**Problem:** Contacts / Students / Teachers / Sessions / Enrollments: BE `broadcastCollection` + FE `/api/ws` → Query invalidate is closed. Residual: other modules may still lack emit and/or FE subscribe.
-
-**Fix:** Extend the same channel per `mms-data-layer.mdc` (cookie auth, reconnect/backoff, invalidate tuple keys only) — ban new polling loops / parallel WS (`mms-core.mdc`).
 
 ### P7 — PG statement timeout budgets (residual)
 

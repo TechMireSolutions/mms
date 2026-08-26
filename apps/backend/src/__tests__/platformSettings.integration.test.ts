@@ -56,7 +56,7 @@ describe('platformSettings REST API routes', () => {
           name: 'Super Admin',
           passwordHash,
           role: 'super_user',
-          permissions: { workspaces: true, onboard: true },
+          permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
           sessionVersion: 0,
           createdAt: new Date().toISOString(),
         });
@@ -78,7 +78,7 @@ describe('platformSettings REST API routes', () => {
           name: 'Normal Admin',
           passwordHash,
           role: 'admin',
-          permissions: { workspaces: false, onboard: false },
+          permissions: { workspaces: false, onboard: false, settings: false, admins: false, system: false },
           sessionVersion: 0,
           createdAt: new Date().toISOString(),
         });

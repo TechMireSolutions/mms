@@ -7,7 +7,12 @@ export const PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES = 30;
 export type PlatformRole = 'super_user' | 'admin';
 
 /** Grantable platform admin capabilities (super_user ignores and has all). */
-export type PlatformAdminPermissionKey = 'workspaces' | 'onboard';
+export type PlatformAdminPermissionKey =
+  | 'workspaces'
+  | 'onboard'
+  | 'settings'
+  | 'admins'
+  | 'system';
 
 /**
  * Per-admin capability flags assigned by a platform super-user.
@@ -17,18 +22,27 @@ export type PlatformAdminPermissionKey = 'workspaces' | 'onboard';
 export interface PlatformAdminPermissions {
   workspaces: boolean;
   onboard: boolean;
+  settings: boolean;
+  admins: boolean;
+  system: boolean;
 }
 
 /** Default for new admins — account self-service only until a super-user grants access. */
 export const DEFAULT_PLATFORM_ADMIN_PERMISSIONS: PlatformAdminPermissions = {
   workspaces: false,
   onboard: false,
+  settings: false,
+  admins: false,
+  system: false,
 };
 
 /** Full grants used for super_user rows / JWT hydration convenience. */
 export const FULL_PLATFORM_ADMIN_PERMISSIONS: PlatformAdminPermissions = {
   workspaces: true,
   onboard: true,
+  settings: true,
+  admins: true,
+  system: true,
 };
 
 /** Public platform operator — separate from tenant `User`. */
@@ -82,6 +96,9 @@ export function normalizePlatformAdminPermissions(
   return {
     workspaces: record.workspaces === true,
     onboard: record.onboard === true,
+    settings: record.settings === true,
+    admins: record.admins === true,
+    system: record.system === true,
   };
 }
 

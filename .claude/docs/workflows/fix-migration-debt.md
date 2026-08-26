@@ -17,9 +17,14 @@ This workflow guides the structured resolution of technical debt items documente
 - [ ] **Formulate a plan**: Output a concise structural `<plan>`. If the refactor touches multiple domain boundaries or heavily alters database schema, pause for user approval.
 - [ ] **Scope strictly**: Ensure the plan *only* addresses the specific migration debt item. Avoid scope creep.
 
-## Phase 3: Execution
+## Phase 3: Execution & Project Alignment
 
-- [ ] **Implement the fix**: Refactor the code following `mms-dry.md` and `mms-core.md` standards. Keep changes minimal and isolated.
+Refactor the code following the strict MMS invariants (`rules/mms-core.md`):
+
+- [ ] **Data Hooks Refactor**: If migrating frontend data fetching, replace legacy `useLiveCollection` (unless for local drafts) with TanStack Query v5 `queryOptions`/`mutationOptions` factories (`mms-query-factories`).
+- [ ] **Security Refactor**: If removing `role ===` hardcoded checks, replace them with authoritative RBAC permission wrappers (`can()`, `platformUserCan()`) and zero-trust `@mms/shared` Zod validation.
+- [ ] **Schema Debt (`mms-schema-migrate`)**: If normalizing database tables, enforce 3NF/BCNF, ensure bidirectional relations are typed, and write forward-only migrations (no `drizzle-kit push`).
+- [ ] **UI/UX Modernization**: Ensure any touched UI is modernized to 44x44px touch targets, BiDi tokens (`mms-ui-ux-design.md`), and semantic HTML.
 - [ ] **Preserve intentional debt**: Some items (like Messaging clear / QB variants) are marked as intentional debt. **Do not regress** or "fix" these unless specifically requested.
 
 ## Phase 4: Verification & Completion Review

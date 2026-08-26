@@ -6,8 +6,7 @@ import {
 } from '../../validation/platformSchemas.js';
 import {
   authenticatePlatform,
-  requireMainDomain,
-  requireSuperUser,
+  requirePlatformPermission,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import {
@@ -26,11 +25,10 @@ export default async function platformSettingsRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  fastify.addHook('preHandler', requireMainDomain);
 
   fastify.get(
     '/',
-    { preHandler: [authenticatePlatform, requireSuperUser] },
+    { preHandler: [authenticatePlatform, requirePlatformPermission('settings')] },
     async (_request, reply) => {
       const settings = getPlatformSettings();
       return reply.send({ settings });
@@ -39,7 +37,7 @@ export default async function platformSettingsRoutes(
 
   fastify.put(
     '/',
-    { preHandler: [authenticatePlatform, requireSuperUser] },
+    { preHandler: [authenticatePlatform, requirePlatformPermission('settings')] },
     async (request, reply) => {
       const parsed = parseRequest(platformSettingsUpdateSchema, request.body ?? {});
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
@@ -63,7 +61,7 @@ export default async function platformSettingsRoutes(
 
     inner.post(
       '/reset-database',
-      { preHandler: [authenticatePlatform, requireSuperUser] },
+      { preHandler: [authenticatePlatform, requirePlatformPermission('settings')] },
       async (request, reply) => {
         const parsed = parseRequest(resetDatabaseSchema, request.body ?? {});
         if (!parsed.ok) return replyValidationError(reply, parsed.message);
@@ -81,8 +79,6 @@ export default async function platformSettingsRoutes(
               level: 'audit',
               action: 'reset_database',
               userId: platformUser.id,
-              userEmail: platformUser.email,
-              ipAddress: request.ip,
               at: new Date().toISOString(),
             }),
           );
