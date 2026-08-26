@@ -1,5 +1,5 @@
 import type React from "react";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
+import KPISummary from "@/components/ui/reports/KPISummary";
 import { FinancialReports } from "@/tenant/features/accounting/components/FinancialReports";
 import type { Account, FiscalYear, JournalEntry } from "@mms/shared";
 

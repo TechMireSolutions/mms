@@ -1,5 +1,5 @@
 import type React from "react";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
+import KPISummary from "@/components/ui/reports/KPISummary";
 import { EnrollmentReports } from "@/tenant/features/enrollments/components/EnrollmentReports";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";

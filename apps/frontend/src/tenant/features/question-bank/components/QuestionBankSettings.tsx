@@ -8,7 +8,7 @@ import {
   type AppTranslationKey,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useSettingsDraft } from '@/tenant/features/settings/hooks/useSettingsDraft';
+import { useSettingsDraft } from '@/hooks/useSettingsDraft';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { notify } from '@/lib/notify';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';

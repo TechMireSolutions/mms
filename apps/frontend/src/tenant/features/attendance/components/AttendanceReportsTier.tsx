@@ -1,8 +1,8 @@
 import type React from "react";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { AttendanceAnalytics } from "@/tenant/features/attendance/components/AttendanceAnalytics";
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
+import ModuleReports from "@/components/ui/reports/ModuleReports";
+import KPISummary from "@/components/ui/reports/KPISummary";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 
 type AttendanceReportTab = {

@@ -1,8 +1,8 @@
 import type React from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
-import KPISummary from "@/tenant/features/reports/components/KPISummary";
-import ModuleReports from "@/tenant/features/reports/components/ModuleReports";
+import KPISummary from "@/components/ui/reports/KPISummary";
+import ModuleReports from "@/components/ui/reports/ModuleReports";
 
 export function TeachersReportsTier(): React.JSX.Element {
   return (

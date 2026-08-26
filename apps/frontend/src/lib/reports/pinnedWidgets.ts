@@ -5,4 +5,4 @@ export {
   getWidgetCollections,
   getFilteredRecords,
   computeWidgetSingleValue,
-} from '@/tenant/features/reports/components/PinnedWidgets';
+} from '@/components/ui/reports/PinnedWidgets';

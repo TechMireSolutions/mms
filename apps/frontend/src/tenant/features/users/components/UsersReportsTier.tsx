@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import KPISummary from '@/tenant/features/reports/components/KPISummary';
-import ModuleReports from '@/tenant/features/reports/components/ModuleReports';
+import KPISummary from '@/components/ui/reports/KPISummary';
+import ModuleReports from '@/components/ui/reports/ModuleReports';
 
 export function UsersReportsTier(): React.JSX.Element {
   return (

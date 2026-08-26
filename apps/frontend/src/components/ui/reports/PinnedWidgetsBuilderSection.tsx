@@ -1,0 +1,36 @@
+import type React from "react";
+import { AnimatePresence } from "framer-motion";
+import { WidgetBuilder } from "@/components/ui/reports/pinnedWidgets/WidgetBuilder";
+import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+
+interface PinnedWidgetsBuilderSectionProps {
+  isBuilderOpen: boolean;
+  defaultCollection: CustomWidget["collection"];
+  editWidgetConfig: CustomWidget | null;
+  category: string;
+  onCancelEdit: () => void;
+  onSaveWidget: (savedWidget: CustomWidget) => void;
+}
+
+export function PinnedWidgetsBuilderSection({
+  isBuilderOpen,
+  defaultCollection,
+  editWidgetConfig,
+  category,
+  onCancelEdit,
+  onSaveWidget,
+}: PinnedWidgetsBuilderSectionProps): React.JSX.Element {
+  return (
+    <AnimatePresence>
+      {isBuilderOpen && (
+        <WidgetBuilder
+          initialCollection={defaultCollection}
+          editWidgetConfig={editWidgetConfig}
+          onCancelEdit={onCancelEdit}
+          onSaveWidget={onSaveWidget}
+          category={category}
+        />
+      )}
+    </AnimatePresence>
+  );
+}

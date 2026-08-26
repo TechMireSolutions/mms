@@ -2,5 +2,5 @@
  * Cross-module public surface for shared Reports tier shells.
  * Feature modules must import from here — not `@/tenant/features/reports/*`.
  */
-export { default as KPISummary } from "@/tenant/features/reports/components/KPISummary";
-export { default as ModuleReports } from "@/tenant/features/reports/components/ModuleReports";
+export { default as KPISummary } from "@/components/ui/reports/KPISummary";
+export { default as ModuleReports } from "@/components/ui/reports/ModuleReports";
