@@ -1,7 +1,9 @@
 import React from 'react';
 import { StatCard, type StatCardProps } from '@/components/ui/StatCard';
+import { cn } from '@/lib/utils';
 
-interface MetricItem {
+export interface MetricItem {
+  key?: string;
   icon?: StatCardProps['icon'];
   label: string;
   value: string | number;
@@ -11,8 +13,9 @@ interface MetricItem {
   isActive?: StatCardProps['isActive'];
 }
 
-interface ModuleCommandMetricsGridProps {
+export interface ModuleCommandMetricsGridProps {
   items: MetricItem[];
+  className?: string;
 }
 
 const GRID_COLS_BY_COUNT: Record<number, string> = {
@@ -28,15 +31,16 @@ const GRID_COLS_BY_COUNT: Record<number, string> = {
 
 export const ModuleCommandMetricsGrid = React.memo(function ModuleCommandMetricsGrid({
   items,
+  className,
 }: ModuleCommandMetricsGridProps): React.JSX.Element {
   const count = items.length;
   const gridColsClass = GRID_COLS_BY_COUNT[count] ?? GRID_COLS_BY_COUNT[4];
 
   return (
-    <div className={`grid ${gridColsClass} gap-2`}>
+    <div className={cn("grid gap-2", gridColsClass, className)}>
       {items.map((item, index) => (
         <StatCard
-          key={item.label}
+          key={item.key ?? item.label}
           icon={item.icon}
           label={item.label}
           value={item.value}

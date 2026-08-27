@@ -27,7 +27,9 @@ interface JournalEntriesListFiltersProps {
   tagFilter: string;
   showFilters: boolean;
   canWrite: boolean;
+  canDelete?: boolean;
   showDeleted: boolean;
+  onToggleDeleted?: () => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onModeChange: (mode: JournalMode) => void;
   onSearchChange: (value: string) => void;
@@ -48,7 +50,9 @@ export function JournalEntriesListFilters({
   tagFilter,
   showFilters,
   canWrite,
+  canDelete = false,
   showDeleted,
+  onToggleDeleted,
   columnCustomizer,
   onModeChange,
   onSearchChange,
@@ -116,6 +120,17 @@ export function JournalEntriesListFilters({
               <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.newEntry")}
             </Button>
           ) : undefined
+        }
+        trashToggle={
+          canDelete && onToggleDeleted
+            ? {
+                canViewDeleted: canDelete,
+                viewingDeleted: showDeleted,
+                onToggle: onToggleDeleted,
+                activeLabel: t("accounting.trash.showActive"),
+                deletedLabel: t("accounting.trash.showDeleted"),
+              }
+            : undefined
         }
         viewModeToggle={{
           viewMode,

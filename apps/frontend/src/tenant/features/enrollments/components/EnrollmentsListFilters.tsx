@@ -5,7 +5,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Session } from "@mms/shared";
-import { EnrollmentsFilterMenuButton } from "@/tenant/features/enrollments/components/EnrollmentsFilterMenuButton";
+import { EnrollmentsFiltersMenuButton } from "@/tenant/features/enrollments/components/EnrollmentsFiltersMenuButton";
 
 export const ENROLLMENTS_WORK_SEARCH_INPUT_ID = "enrollments-work-search";
 
@@ -69,7 +69,7 @@ export function EnrollmentsListFilters({
         onClearFilters={onClearFilters}
         clearFiltersLabel={t("enrollments.clearFilters")}
         filterButton={
-          <EnrollmentsFilterMenuButton
+          <EnrollmentsFiltersMenuButton
             statusFilter={statusFilter}
             sessionFilter={sessionFilter}
             statusOptions={statusOptions}

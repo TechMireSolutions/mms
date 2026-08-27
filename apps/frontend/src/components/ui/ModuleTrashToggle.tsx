@@ -33,7 +33,7 @@ export const ModuleTrashToggle = React.memo(function ModuleTrashToggle({
   return (
     <Button
       type="button"
-      variant={showDeleted ? 'default' : 'outline'}
+      variant="outline"
       onClick={onToggle}
       disabled={disabled}
       title={title}

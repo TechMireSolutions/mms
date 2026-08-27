@@ -133,6 +133,28 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
     setDragOver(null);
   };
 
+  const moveColumn = (columnKey: string, direction: 'up' | 'down'): void => {
+    const allVisible = [...columnRegistry].filter((col) => col.enabled).sort((a, b) => a.order - b.order);
+    const visibleIds = allVisible.map((column) => column.key);
+    const fromIdx = visibleIds.indexOf(columnKey);
+    if (fromIdx === -1) return;
+    const toIdx = direction === 'up' ? fromIdx - 1 : fromIdx + 1;
+    if (toIdx < 0 || toIdx >= visibleIds.length) return;
+
+    const newVisibleIds = [...visibleIds];
+    const [moved] = newVisibleIds.splice(fromIdx, 1);
+    if (!moved) return;
+    newVisibleIds.splice(toIdx, 0, moved);
+    const updated = columnRegistry.map((column) => {
+      const orderIdx = newVisibleIds.indexOf(column.key);
+      if (orderIdx !== -1) {
+        return { ...column, order: orderIdx };
+      }
+      return column;
+    });
+    updateUserColumnLayout(updated);
+  };
+
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -211,6 +233,7 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
           handleDragOver={handleDragOver}
           handleDrop={handleDrop}
           clearDrag={clearDrag}
+          onMoveColumn={moveColumn}
           showAll={showAll}
           hideAll={hideAll}
           hasNonFixedHidden={hasNonFixedHidden}

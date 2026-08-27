@@ -13,7 +13,7 @@ import {
   ModuleFilterRadioGroup,
 } from "@/components/ui/ModuleFiltersMenuButton";
 
-interface ContactsFilterMenuButtonProps {
+export interface ContactsFiltersMenuButtonProps {
   activeFilterCount: number;
   quickFilter: ContactsQuickFilter;
   onQuickFilterChange: (preset: ContactsQuickFilter) => void;
@@ -26,7 +26,7 @@ interface ContactsFilterMenuButtonProps {
   t: TranslationFunction;
 }
 
-export function ContactsFilterMenuButton({
+export function ContactsFiltersMenuButton({
   activeFilterCount,
   quickFilter,
   onQuickFilterChange,
@@ -37,7 +37,7 @@ export function ContactsFilterMenuButton({
   sortOptions,
   onSort,
   t,
-}: ContactsFilterMenuButtonProps): JSX.Element {
+}: ContactsFiltersMenuButtonProps): JSX.Element {
   return (
     <ModuleFilterDropdown
       label={t("contacts.filters")}
@@ -58,19 +58,16 @@ export function ContactsFilterMenuButton({
       <ModuleFilterDivider />
       <ModuleFilterRadioGroup
         label={t("contacts.genderFilter")}
-        value={filterGender}
-        onValueChange={onGenderChange}
-        options={["", ...genders].map((genderOption) => ({
-          value: genderOption,
-          label: genderOption ? (
-            <span className="inline-flex items-center gap-1.5">
-              <GenderIcon gender={genderOption} className="w-3.5 h-3.5" />
-              {formatContactGenderLabel(genderOption, t)}
-            </span>
-          ) : (
-            t("contacts.allGenders")
-          ),
-        }))}
+        value={filterGender || "all"}
+        onValueChange={(value) => onGenderChange(value === "all" ? "" : value)}
+        options={[
+          { value: "all", label: t("contacts.allGenders") },
+          ...genders.map((gender) => ({
+            value: gender,
+            label: formatContactGenderLabel(gender, t),
+            icon: <GenderIcon gender={gender} className="w-3.5 h-3.5" aria-hidden="true" />,
+          })),
+        ]}
       />
 
       <ModuleFilterDivider />
@@ -78,9 +75,9 @@ export function ContactsFilterMenuButton({
         label={t("contacts.sortBy")}
         value={sortField}
         onValueChange={onSort}
-        options={sortOptions.map((sortOption) => ({
-          value: sortOption.field,
-          label: sortOption.label,
+        options={sortOptions.map((opt) => ({
+          value: opt.field,
+          label: opt.label,
         }))}
       />
     </ModuleFilterDropdown>

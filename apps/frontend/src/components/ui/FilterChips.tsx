@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export interface FilterChip {
   key: string;
@@ -13,6 +14,7 @@ export interface FilterChip {
 interface FilterChipsProps {
   chips?: FilterChip[];
   onClearAll?: () => void;
+  className?: string;
 }
 
 /**
@@ -24,6 +26,7 @@ interface FilterChipsProps {
 export function FilterChips({
   chips = [],
   onClearAll,
+  className,
 }: FilterChipsProps): React.ReactElement | null {
   const { t } = useTranslation();
   if (chips.length === 0) return null;
@@ -34,7 +37,7 @@ export function FilterChips({
         initial={{ opacity: 0, height: 0 }}
         animate={{ opacity: 1, height: "auto" }}
         exit={{ opacity: 0, height: 0 }}
-        className="flex items-center gap-2 flex-wrap"
+        className={cn("flex items-center gap-2 flex-wrap", className)}
       >
         {chips.map((chip) => (
           <button
@@ -42,6 +45,7 @@ export function FilterChips({
             type="button"
             onClick={chip.onRemove}
             aria-label={chip.label}
+            title={chip.label}
             className="flex min-h-11 items-center gap-1.5 text-xs font-semibold px-2.5 py-2 rounded-full bg-primary/10 text-primary hover:bg-primary/20 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
           >
             {chip.label}

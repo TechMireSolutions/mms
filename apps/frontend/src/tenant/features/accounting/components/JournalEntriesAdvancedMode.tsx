@@ -40,6 +40,7 @@ interface JournalEntriesAdvancedModeProps {
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
+  onToggleDeleted?: () => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   renderEntryActions: (entry: JournalEntry) => ReactNode;
   renderEntryActionsCards: (entry: JournalEntry) => ReactNode;
@@ -91,7 +92,9 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         tagFilter={props.tagFilter}
         showFilters={props.showFilters}
         canWrite={props.canWrite}
+        canDelete={props.canDelete}
         showDeleted={props.showDeleted}
+        onToggleDeleted={props.onToggleDeleted}
         columnCustomizer={props.columnCustomizer}
         onModeChange={props.onModeChange}
         onSearchChange={props.onSearchChange}

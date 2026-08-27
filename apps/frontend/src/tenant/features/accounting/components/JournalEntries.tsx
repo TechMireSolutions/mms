@@ -79,6 +79,7 @@ export function JournalEntries(props: JournalEntriesProps) {
       canWrite={controller.canWrite}
       canDelete={controller.canDelete}
       showDeleted={controller.showDeleted}
+      onToggleDeleted={props.onToggleDeleted}
       columnCustomizer={columnCustomizer}
       renderEntryActions={controller.renderEntryActions}
       renderEntryActionsCards={controller.renderEntryActionsCards}

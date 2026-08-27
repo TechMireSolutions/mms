@@ -17,7 +17,9 @@ interface ExaminationsListFiltersProps {
   search: string;
   filterStatus: string[];
   canWrite: boolean;
+  canDelete?: boolean;
   showDeleted: boolean;
+  onToggleDeleted?: () => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   statusLabels: Record<(typeof EXAM_STATUSES)[number], string>;
   onSearchChange: (value: string) => void;
@@ -32,7 +34,9 @@ export function ExaminationsListFilters({
   search,
   filterStatus,
   canWrite,
+  canDelete = false,
   showDeleted,
+  onToggleDeleted,
   columnCustomizer,
   statusLabels,
   onSearchChange,
@@ -76,6 +80,17 @@ export function ExaminationsListFilters({
               {t('examinations.newExam')}
             </Button>
           ) : undefined
+        }
+        trashToggle={
+          canDelete && onToggleDeleted
+            ? {
+                canViewDeleted: canDelete,
+                viewingDeleted: showDeleted,
+                onToggle: onToggleDeleted,
+                activeLabel: t('examinations.trash.showActive'),
+                deletedLabel: t('examinations.trash.showDeleted'),
+              }
+            : undefined
         }
         viewModeToggle={{
           viewMode,

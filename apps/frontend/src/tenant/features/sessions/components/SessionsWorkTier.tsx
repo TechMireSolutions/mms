@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import type { SessionsListPageResult } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Session } from "@/lib/data/sessionsData";
-import { SessionsWorkFilters } from "@/tenant/features/sessions/components/SessionsWorkFilters";
+import { SessionsListFilters } from "@/tenant/features/sessions/components/SessionsListFilters";
 import { SessionsList } from "@/tenant/features/sessions/components/SessionsList";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { SessionSortField, SessionStatus, SessionType } from "@/tenant/features/sessions/components/sessionPageTypes";
@@ -11,9 +11,9 @@ interface SessionsColumnLayout {
   isColumnVisible: (key: string) => boolean;
   getColumnWidth: (key: string) => number | undefined;
   setColumnWidth: (key: string, width: number) => void;
-  columnRegistry: Parameters<typeof SessionsWorkFilters>[0]["columnLayout"]["columnRegistry"];
-  updateUserColumnLayout: Parameters<typeof SessionsWorkFilters>[0]["columnLayout"]["updateUserColumnLayout"];
-  customizerLabels: Parameters<typeof SessionsWorkFilters>[0]["columnLayout"]["customizerLabels"];
+  columnRegistry: Parameters<typeof SessionsListFilters>[0]["columnLayout"]["columnRegistry"];
+  updateUserColumnLayout: Parameters<typeof SessionsListFilters>[0]["columnLayout"]["updateUserColumnLayout"];
+  customizerLabels: Parameters<typeof SessionsListFilters>[0]["columnLayout"]["customizerLabels"];
 }
 
 interface SessionsWorkTierProps {
@@ -134,7 +134,7 @@ export function SessionsWorkTier({
       className="space-y-5"
       aria-busy={useServerWork && isWorkFetching ? true : undefined}
     >
-      <SessionsWorkFilters
+      <SessionsListFilters
         search={search}
         onSearchChange={onSearchChange}
         filterStatus={filterStatus}

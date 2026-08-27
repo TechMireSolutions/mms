@@ -93,4 +93,74 @@ describe('SearchBar Component', () => {
       root.unmount();
     });
   });
+
+  it('triggers onChange with empty string when Escape key is pressed', async () => {
+    const onChange = vi.fn();
+    const container = document.createElement('div');
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(<SearchBar value="Existing query" onChange={onChange} />);
+    });
+
+    const input = container.querySelector('input');
+    expect(input).not.toBeNull();
+
+    await act(async () => {
+      input?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    });
+
+    expect(onChange).toHaveBeenCalledWith('');
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it('renders modern virtual keyboard attributes and search role', () => {
+    const html = renderToStaticMarkup(<SearchBar value="" onChange={vi.fn()} />);
+    expect(html).toContain('type="search"');
+    expect(html).toContain('inputMode="search"');
+    expect(html).toContain('enterKeyHint="search"');
+    expect(html).toContain('autoCapitalize="none"');
+    expect(html).toContain('aria-keyshortcuts="/"');
+  });
+
+  it('renders spinning loader when isSearching is true', () => {
+    const searchingHtml = renderToStaticMarkup(
+      <SearchBar value="query" onChange={vi.fn()} isSearching={true} />,
+    );
+    expect(searchingHtml).toContain('animate-spin');
+
+    const idleHtml = renderToStaticMarkup(
+      <SearchBar value="query" onChange={vi.fn()} isSearching={false} />,
+    );
+    expect(idleHtml).not.toContain('animate-spin');
+  });
+
+  it('forwards ref correctly to the underlying HTMLInputElement', async () => {
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    let capturedRef: HTMLInputElement | null = null;
+
+    const TestComponent = () => {
+      const ref = React.useRef<HTMLInputElement>(null);
+      React.useEffect(() => {
+        capturedRef = ref.current;
+      }, []);
+      return <SearchBar ref={ref} value="" onChange={vi.fn()} />;
+    };
+
+    await act(async () => {
+      root.render(<TestComponent />);
+    });
+
+    expect(capturedRef).not.toBeNull();
+    const element = capturedRef as unknown as HTMLInputElement;
+    expect(element.tagName).toBe('INPUT');
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
 });

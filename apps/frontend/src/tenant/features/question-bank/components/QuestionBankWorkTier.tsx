@@ -2,7 +2,6 @@ import { FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -70,25 +69,14 @@ export function QuestionBankWorkTier({
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SubTabBar
-          tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-          value={activeSubTab}
-          onChange={(next) => {
-            onSubTabChange(next);
-            if (next !== "questions" && showDeleted) onToggleDeleted();
-          }}
-        />
-        {activeSubTab === "questions" && canDelete && (
-          <ModuleTrashToggle
-            showDeleted={showDeleted}
-            onToggle={onToggleDeleted}
-            showActiveLabel={t("questionBank.trash.showActive")}
-            showDeletedLabel={t("questionBank.trash.showDeleted")}
-            className="gap-1.5 shrink-0"
-          />
-        )}
-      </div>
+      <SubTabBar
+        tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
+        value={activeSubTab}
+        onChange={(next) => {
+          onSubTabChange(next);
+          if (next !== "questions" && showDeleted) onToggleDeleted();
+        }}
+      />
 
       {activeSubTab === "questions" && listLoadFailed && (
         <ErrorState
@@ -110,6 +98,7 @@ export function QuestionBankWorkTier({
           canWrite={canWrite}
           canDelete={canDelete}
           showDeleted={showDeleted}
+          onToggleDeleted={onToggleDeleted}
           onDelete={onDelete}
           onRestore={onRestore}
           onBulkDelete={onBulkDelete}

@@ -1,7 +1,7 @@
 import React, { type JSX } from "react";
 import type { ContactsQuickFilter } from "@mms/shared";
 import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
-import { ContactsFilterMenuButton } from "@/tenant/features/contacts/components/ContactsFilterMenuButton";
+import { ContactsFiltersMenuButton } from "@/tenant/features/contacts/components/ContactsFiltersMenuButton";
 import { useContactsToolbarModel } from "@/tenant/features/contacts/hooks/useContactsToolbarModel";
 import { CONTACTS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/contacts/hooks/useContactsKeyboardShortcuts";
 import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
@@ -67,7 +67,7 @@ export const ContactsListFilters = React.memo(function ContactsListFilters({
       onClearFilters={onClearFilters}
       clearFiltersLabel={t("contacts.clearFilters")}
       filterButton={
-        <ContactsFilterMenuButton
+        <ContactsFiltersMenuButton
           activeFilterCount={activeFilterCount}
           quickFilter={quickFilter}
           onQuickFilterChange={onQuickFilterChange}

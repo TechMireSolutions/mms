@@ -2,7 +2,7 @@ import React, { type JSX } from 'react';
 import type { ModuleColumnRegistryEntry } from '@mms/shared';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { MessagingFilterMenuButton } from './MessagingFilterMenuButton';
+import { MessagingFiltersMenuButton } from './MessagingFiltersMenuButton';
 import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -101,7 +101,7 @@ export function MessagingListFilters({
       onClearFilters={onClearFilters}
       clearFiltersLabel={t('common.clearFilters')}
       filterButton={
-        <MessagingFilterMenuButton
+        <MessagingFiltersMenuButton
           activeFilterCount={activeFilterCount}
           onClearFilters={onClearFilters}
           channel={channel}

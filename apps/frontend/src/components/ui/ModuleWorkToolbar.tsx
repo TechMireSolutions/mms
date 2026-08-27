@@ -1,4 +1,5 @@
 import React, { type JSX } from "react";
+import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
@@ -18,12 +19,14 @@ export interface ModuleWorkToolbarProps {
   onSearchChange: (val: string) => void;
   searchPlaceholder: string;
   searchId?: string;
+  isSearching?: boolean;
 
   // 3. Middle Area (Filters)
   filterButton?: React.ReactNode; 
   hasActiveFilters?: boolean;
   onClearFilters?: () => void;
   clearFiltersLabel?: string;
+  filterChips?: React.ReactNode;
   
   primaryAction?: React.ReactNode;
 
@@ -42,35 +45,44 @@ export interface ModuleWorkToolbarProps {
   };
   
   columnCustomizer?: {
-    registry: any[];
-    onUpdate: (layout: any[]) => void;
+    registry: ModuleColumnRegistryEntry[];
+    onUpdate: (layout: ModuleColumnRegistryEntry[]) => void;
     onReset?: () => void;
     labels?: Partial<ModuleColumnCustomizerLabels>;
     disabled?: boolean;
     className?: string;
   };
 
-  // 5. Additional custom buttons
+  // 5. Additional custom slot
   children?: React.ReactNode; 
 }
 
-export function ModuleWorkToolbar({
+export const ModuleWorkToolbar = React.memo(function ModuleWorkToolbar({
   shownCountLabel,
   regionLabel,
   search,
   onSearchChange,
   searchPlaceholder,
   searchId,
+  isSearching,
   filterButton,
   hasActiveFilters,
   onClearFilters,
   clearFiltersLabel,
+  filterChips,
   primaryAction,
   trashToggle,
   viewModeToggle,
   columnCustomizer,
   children,
 }: ModuleWorkToolbarProps): JSX.Element {
+  const hasFilterControls = Boolean(
+    children || filterButton || (hasActiveFilters && onClearFilters) || primaryAction || trashToggle?.canViewDeleted,
+  );
+  const hasLayoutControls = Boolean(
+    viewModeToggle || (columnCustomizer && columnCustomizer.registry?.length),
+  );
+
   return (
     <>
       {shownCountLabel ? (
@@ -82,24 +94,39 @@ export function ModuleWorkToolbar({
       <div
         role="region"
         aria-label={regionLabel}
-        className={cn(WORK_SURFACE, "flex flex-col sm:flex-row gap-3 p-3")}
+        className={cn(
+          WORK_SURFACE,
+          "flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 p-2.5 sm:p-3",
+        )}
       >
-        <div className="relative min-w-0 flex-1">
+        <div className="relative min-w-0 flex-1 w-full lg:max-w-md xl:max-w-lg">
           <SearchBar
             id={searchId}
             value={search}
             onChange={onSearchChange}
             placeholder={searchPlaceholder}
+            isSearching={isSearching}
             className="w-full min-w-0"
           />
-          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
-            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
-              /
-            </kbd>
-          </div>
+          {!search && (
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => {
+                const el = searchId ? document.getElementById(searchId) : null;
+                el?.focus();
+              }}
+              aria-hidden="true"
+              className="absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex cursor-pointer select-none"
+            >
+              <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-[11px] font-medium text-muted-foreground shadow-2xs">
+                /
+              </kbd>
+            </button>
+          )}
         </div>
 
-        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+        <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2 shrink-0">
           {children}
 
           {filterButton}
@@ -122,25 +149,35 @@ export function ModuleWorkToolbar({
             />
           )}
 
-          {viewModeToggle && (
-            <WorkViewModeToggle
-              viewMode={viewModeToggle.viewMode}
-              onViewModeChange={viewModeToggle.onViewModeChange}
-            />
+          {hasFilterControls && hasLayoutControls && (
+            <div className="h-6 w-px bg-border/60 mx-0.5 hidden sm:block" aria-hidden="true" />
           )}
 
-          {columnCustomizer && columnCustomizer.registry && (
-            <ModuleColumnCustomizer
-              columnRegistry={columnCustomizer.registry}
-              updateUserColumnLayout={columnCustomizer.onUpdate}
-              onResetLayout={columnCustomizer.onReset}
-              labels={columnCustomizer.labels}
-              disabled={columnCustomizer.disabled}
-              className={columnCustomizer.className}
-            />
+          {hasLayoutControls && (
+            <div className="inline-flex items-center gap-2">
+              {viewModeToggle && (
+                <WorkViewModeToggle
+                  viewMode={viewModeToggle.viewMode}
+                  onViewModeChange={viewModeToggle.onViewModeChange}
+                />
+              )}
+
+              {columnCustomizer && columnCustomizer.registry && (
+                <ModuleColumnCustomizer
+                  columnRegistry={columnCustomizer.registry}
+                  updateUserColumnLayout={columnCustomizer.onUpdate}
+                  onResetLayout={columnCustomizer.onReset}
+                  labels={columnCustomizer.labels}
+                  disabled={columnCustomizer.disabled}
+                  className={columnCustomizer.className}
+                />
+              )}
+            </div>
           )}
         </div>
       </div>
+
+      {filterChips}
     </>
   );
-}
+});

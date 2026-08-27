@@ -4,7 +4,7 @@ import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
-import { StudentsFilterMenuButton } from "@/tenant/features/students/components/StudentsFilterMenuButton";
+import { StudentsFiltersMenuButton } from "@/tenant/features/students/components/StudentsFiltersMenuButton";
 import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 import {
   getStudentVisibleWorkColumns,
@@ -90,7 +90,7 @@ export function StudentsListFilters({
       onClearFilters={onClearFilters}
       clearFiltersLabel={t("students.clearFilters")}
       filterButton={
-        <StudentsFilterMenuButton
+        <StudentsFiltersMenuButton
           studentFilterStatus={studentFilterStatus}
           studentFilterGender={studentFilterGender}
           quickFilter={quickFilter}

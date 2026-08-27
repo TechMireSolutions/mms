@@ -47,6 +47,11 @@ export function UsersListFilters({
   primaryAction,
 }: UsersListFiltersProps): JSX.Element {
   const { t } = useTranslation();
+  const hasActiveFilters = roleFilter !== 'all' || (!showDeleted && statusFilter !== 'all');
+  const handleClearFilters = (): void => {
+    onRoleFilterChange('all');
+    onStatusFilterChange('all');
+  };
 
   return (
     <ModuleWorkToolbar
@@ -55,6 +60,9 @@ export function UsersListFilters({
       search={search}
       onSearchChange={onSearchChange}
       searchPlaceholder={t('users.searchPlaceholder')}
+      hasActiveFilters={hasActiveFilters}
+      onClearFilters={handleClearFilters}
+      clearFiltersLabel={t('common.clearFilters')}
       viewModeToggle={{
         viewMode,
         onViewModeChange,

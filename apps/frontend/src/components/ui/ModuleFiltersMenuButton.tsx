@@ -62,7 +62,7 @@ export const ModuleFiltersMenuTrigger = React.memo(
           <Icon className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{label}</span>
           {isActive ? (
-            <Badge className="w-4 h-4 px-0 font-bold">
+            <Badge className="min-w-4 h-4 px-1 text-[10px] font-bold inline-flex items-center justify-center">
               {activeCount}
             </Badge>
           ) : null}
@@ -108,7 +108,7 @@ export const ModuleFilterDropdown = React.memo(function ModuleFilterDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent
         align="end"
-        className={cn("w-56 bg-card border border-border", contentClassName)}
+        className={cn("w-56 max-h-[60vh] overflow-y-auto bg-card border border-border", contentClassName)}
       >
         {activeCount > 0 && clearLabel && onClear ? (
           <>

@@ -1,6 +1,5 @@
 import type React from "react";
 import { ShieldCheck } from "lucide-react";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { AttendanceFilters } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { AttendanceRecords } from "@/tenant/features/attendance/components/AttendanceRecords";
@@ -20,50 +19,50 @@ type AttendanceColumnProps = Pick<
 >;
 
 interface AttendanceWorkTierProps {
-  filters: React.ComponentProps<typeof AttendanceFilters>["filters"];
+  showRoleBanner: boolean;
   role: string;
-  activeRecords: AttendanceRecord[];
+  roleLabel: string;
+  teacherRoleText: string | false | null;
+  accountantRoleText: string | false | null;
+  filters: React.ComponentProps<typeof AttendanceFilters>["filters"];
+  onFiltersChange: React.ComponentProps<typeof AttendanceFilters>["onChange"];
   activeOpsTab: string;
   operationsTabs: AttendanceWorkTab[];
-  showDeleted: boolean;
   canDeleteAttendance: boolean;
-  showRoleBanner: boolean;
-  roleLabel: string;
-  teacherRoleText: string | false;
-  accountantRoleText: string | false;
+  showDeleted: boolean;
+  onShowDeletedToggle: () => void;
   showActiveLabel: string;
   showDeletedLabel: string;
-  onFiltersChange: React.ComponentProps<typeof AttendanceFilters>["onChange"];
-  onOpsTabChange: (next: string) => void;
-  onShowDeletedToggle: () => void;
-  onPersistRecords: (recordsForClassDate: AttendanceRecord[]) => Promise<void>;
+  onOpsTabChange: (tab: string) => void;
+  activeRecords: AttendanceRecord[];
+  onPersistRecords: (batch: AttendanceRecord[]) => Promise<void>;
   onUpdateRecord: (record: AttendanceRecord) => Promise<void>;
   onDeleteRecord: (id: string) => Promise<void>;
   onRestoreRecord: (id: string) => Promise<void>;
   onBulkDeleteRecords: (ids: string[]) => Promise<void>;
   onBulkRestoreRecords: (ids: string[]) => Promise<void>;
-  onMessage: React.ComponentProps<typeof AttendanceRecords>["onMessage"];
+  onMessage: (channel: 'sms' | 'whatsapp' | 'email', records: AttendanceRecord[]) => void;
   onTotalChange?: (total: number) => void;
-  columnProps: AttendanceColumnProps;
+  columnProps?: AttendanceColumnProps;
 }
 
 export function AttendanceWorkTier({
-  filters,
-  role,
-  activeRecords,
-  activeOpsTab,
-  operationsTabs,
-  showDeleted,
-  canDeleteAttendance,
   showRoleBanner,
+  role,
   roleLabel,
   teacherRoleText,
   accountantRoleText,
-  showActiveLabel,
-  showDeletedLabel,
+  filters,
   onFiltersChange,
-  onOpsTabChange,
+  activeOpsTab,
+  operationsTabs,
+  canDeleteAttendance,
+  showDeleted,
   onShowDeletedToggle,
+  showActiveLabel: _showActiveLabel,
+  showDeletedLabel: _showDeletedLabel,
+  onOpsTabChange,
+  activeRecords,
   onPersistRecords,
   onUpdateRecord,
   onDeleteRecord,
@@ -86,16 +85,6 @@ export function AttendanceWorkTier({
       )}
 
       <AttendanceFilters filters={filters} onChange={onFiltersChange} />
-
-      {activeOpsTab === "records" && canDeleteAttendance && (
-        <ModuleTrashToggle
-          showDeleted={showDeleted}
-          onToggle={onShowDeletedToggle}
-          showActiveLabel={showActiveLabel}
-          showDeletedLabel={showDeletedLabel}
-          className="min-h-11 border border-border"
-        />
-      )}
 
       {operationsTabs.length > 1 && (
         <SubTabBar
@@ -123,6 +112,7 @@ export function AttendanceWorkTier({
           onBulkDeleteRecords={onBulkDeleteRecords}
           onBulkRestoreRecords={onBulkRestoreRecords}
           showDeleted={showDeleted}
+          onToggleDeleted={onShowDeletedToggle}
           onMessage={onMessage}
           onTotalChange={onTotalChange}
           {...columnProps}

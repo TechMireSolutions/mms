@@ -1,5 +1,6 @@
 import React from "react";
 import { LayoutGrid, Table } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -12,6 +13,15 @@ export interface WorkViewModeToggleProps {
   disabled?: boolean;
 }
 
+const VIEW_MODE_OPTIONS: ReadonlyArray<{
+  mode: WorkDirectoryViewMode;
+  labelKey: "common.viewMode.table" | "common.viewMode.cards";
+  icon: typeof Table;
+}> = [
+  { mode: "table", labelKey: "common.viewMode.table", icon: Table },
+  { mode: "cards", labelKey: "common.viewMode.cards", icon: LayoutGrid },
+];
+
 export const WorkViewModeToggle = React.memo(function WorkViewModeToggle({
   viewMode,
   onViewModeChange,
@@ -23,44 +33,44 @@ export const WorkViewModeToggle = React.memo(function WorkViewModeToggle({
   return (
     <div
       className={cn(
-        "flex items-center p-0.5 rounded-xl border border-border/50 bg-card/60 backdrop-blur-md shadow-xs",
+        "inline-flex items-center h-11 p-1 rounded-xl border border-border/80 bg-card shadow-xs",
         className,
       )}
       role="group"
       aria-label={t("common.viewMode.group")}
     >
-      <Button
-        type="button"
-        variant="ghost"
-        disabled={disabled}
-        onClick={() => onViewModeChange("table")}
-        className={cn(
-          "min-h-11 min-w-11 h-11 px-2.5 rounded-lg text-xs font-semibold transition-all",
-          viewMode === "table"
-            ? "bg-primary text-primary-foreground shadow-xs"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-        aria-label={t("common.viewMode.table")}
-        aria-pressed={viewMode === "table"}
-      >
-        <Table className="w-3.5 h-3.5" aria-hidden="true" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        disabled={disabled}
-        onClick={() => onViewModeChange("cards")}
-        className={cn(
-          "min-h-11 min-w-11 h-11 px-2.5 rounded-lg text-xs font-semibold transition-all",
-          viewMode === "cards"
-            ? "bg-primary text-primary-foreground shadow-xs"
-            : "text-muted-foreground hover:text-foreground",
-        )}
-        aria-label={t("common.viewMode.cards")}
-        aria-pressed={viewMode === "cards"}
-      >
-        <LayoutGrid className="w-3.5 h-3.5" aria-hidden="true" />
-      </Button>
+      {VIEW_MODE_OPTIONS.map(({ mode, labelKey, icon: Icon }) => {
+        const isSelected = viewMode === mode;
+        const label = t(labelKey);
+
+        return (
+          <Button
+            key={mode}
+            type="button"
+            variant="ghost"
+            disabled={disabled}
+            onClick={() => onViewModeChange(mode)}
+            title={label}
+            aria-label={label}
+            aria-pressed={isSelected}
+            className={cn(
+              "relative h-9 px-2.5 rounded-lg text-xs font-semibold transition-colors touch-manipulation z-10",
+              isSelected
+                ? "text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
+            )}
+          >
+            {isSelected && (
+              <motion.div
+                layoutId="workViewModeActivePill"
+                className="absolute inset-0 rounded-lg bg-primary shadow-xs -z-10"
+                transition={{ type: "spring", stiffness: 500, damping: 35 }}
+              />
+            )}
+            <Icon className="w-4 h-4" aria-hidden="true" />
+          </Button>
+        );
+      })}
     </div>
   );
 });

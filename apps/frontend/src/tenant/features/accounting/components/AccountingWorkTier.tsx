@@ -1,6 +1,5 @@
 import type React from "react";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { AccountingDashboard } from "@/tenant/features/accounting/components/AccountingDashboard";
@@ -8,7 +7,7 @@ import { ChartOfAccounts } from "@/tenant/features/accounting/components/ChartOf
 import { GeneralLedger } from "@/tenant/features/accounting/components/GeneralLedger";
 import { JournalEntries } from "@/tenant/features/accounting/components/JournalEntries";
 import { TrialBalance } from "@/tenant/features/accounting/components/TrialBalance";
-import type { Account, FiscalYear, JournalEntry } from "@mms/shared";
+import type { Account, AccountingSettings, FiscalYear, JournalEntry } from "@mms/shared";
 
 type AccountingSubTab = {
   id: string;
@@ -26,18 +25,19 @@ type AccountColumnProps = Pick<
 >;
 
 interface AccountingWorkTierProps {
-  accounts: Account[];
-  entries: JournalEntry[];
-  fiscalYears: FiscalYear[];
-  settings: React.ComponentProps<typeof AccountingDashboard>["settings"];
-  activeSubTab: string;
   subTabs: AccountingSubTab[];
-  showDeleted: boolean;
+  activeSubTab: string;
   canWrite: boolean;
   canDelete: boolean;
+  showDeleted: boolean;
   listLoadFailed: boolean;
-  createJournalRequestKey: number;
-  onSubTabChange: (next: string) => void;
+  createJournalRequestKey?: number;
+  createAccountRequestKey?: number;
+  accounts: Account[];
+  entries: JournalEntry[];
+  settings: AccountingSettings;
+  fiscalYears: FiscalYear[];
+  onSubTabChange: (tab: string) => void;
   onShowDeletedChange: () => void;
   onRetry: () => void;
   onAccountsChange: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void>;
@@ -47,25 +47,26 @@ interface AccountingWorkTierProps {
   onRestoreEntry: (id: string) => Promise<void>;
   onBulkDeleteEntries: (ids: string[]) => Promise<void>;
   onBulkRestoreEntries: (ids: string[]) => Promise<void>;
-  journalColumnProps: JournalColumnProps;
-  accountColumnProps: AccountColumnProps;
-  showActiveLabel: string;
-  showDeletedLabel: string;
-  loadFailedTitle: string;
+  journalColumnProps?: JournalColumnProps;
+  accountColumnProps?: AccountColumnProps;
+  showActiveLabel?: string;
+  showDeletedLabel?: string;
+  loadFailedTitle?: string;
 }
 
 export function AccountingWorkTier({
-  accounts,
-  entries,
-  fiscalYears,
-  settings,
-  activeSubTab,
   subTabs,
-  showDeleted,
+  activeSubTab,
   canWrite,
   canDelete,
+  showDeleted,
   listLoadFailed,
   createJournalRequestKey,
+  createAccountRequestKey,
+  accounts,
+  entries,
+  settings,
+  fiscalYears,
   onSubTabChange,
   onShowDeletedChange,
   onRetry,
@@ -86,22 +87,11 @@ export function AccountingWorkTier({
 
   return (
     <>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SubTabBar
-          tabs={subTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-          value={activeSubTab}
-          onChange={onSubTabChange}
-        />
-        {activeSubTab === "journal" && canDelete && (
-          <ModuleTrashToggle
-            showDeleted={showDeleted}
-            onToggle={onShowDeletedChange}
-            showActiveLabel={showActiveLabel}
-            showDeletedLabel={showDeletedLabel}
-            className="gap-1.5 shrink-0"
-          />
-        )}
-      </div>
+      <SubTabBar
+        tabs={subTabs.map((tab) => ({ key: tab.id, label: tab.label }))}
+        value={activeSubTab}
+        onChange={onSubTabChange}
+      />
 
       {listLoadFailed && (
         <ErrorState
@@ -126,6 +116,7 @@ export function AccountingWorkTier({
           canWrite={canWrite}
           canDelete={canDelete}
           showDeleted={showDeleted}
+          onToggleDeleted={onShowDeletedChange}
           createRequestKey={createJournalRequestKey}
           onDelete={onDeleteEntry}
           onRestore={onRestoreEntry}

@@ -16,6 +16,7 @@ export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustom
   handleDragOver,
   handleDrop,
   clearDrag,
+  onMoveColumn,
   showAll,
   hideAll,
   hasNonFixedHidden = false,
@@ -67,13 +68,24 @@ export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustom
           {visibleColumns.map((col) => (
             <div
               key={col.key}
+              tabIndex={col.fixed ? undefined : 0}
               draggable={!col.fixed}
               onDragStart={(event) => !col.fixed && handleDragStart(event, col.key)}
               onDragOver={(event) => handleDragOver(event, col.key)}
               onDrop={(event) => handleDrop(event, col.key)}
               onDragEnd={clearDrag}
+              onKeyDown={(event) => {
+                if (col.fixed) return;
+                if ((event.key === 'ArrowUp' || event.key === 'Up') && (event.altKey || event.metaKey)) {
+                  event.preventDefault();
+                  onMoveColumn?.(col.key, 'up');
+                } else if ((event.key === 'ArrowDown' || event.key === 'Down') && (event.altKey || event.metaKey)) {
+                  event.preventDefault();
+                  onMoveColumn?.(col.key, 'down');
+                }
+              }}
               className={cn(
-                'flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all select-none border-transparent hover:bg-muted/60',
+                'flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all select-none border-transparent hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary',
                 dragging === col.key && 'opacity-40',
                 dragOver === col.key && 'border-primary bg-primary/5',
               )}

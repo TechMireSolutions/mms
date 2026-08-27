@@ -6,7 +6,6 @@ import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { InvoicesList } from "@/tenant/features/finance/components/InvoicesList";
 import { InvoiceDetail } from "@/tenant/features/finance/components/InvoiceDetail";
@@ -59,21 +58,11 @@ export default function Finance() {
         panelIdPrefix="finance-tab"
       >
         {c.activeTab === "work" && (
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <SubTabBar
-              tabs={c.SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
-              value={c.activeSubTab}
-              onChange={c.setActiveSubTab}
-            />
-            {c.canDelete && (
-              <ModuleTrashToggle
-                showDeleted={c.showDeleted}
-                onToggle={() => c.setShowDeleted((value) => !value)}
-                showActiveLabel={c.t("finance.trash.showActive")}
-                showDeletedLabel={c.t("finance.trash.showDeleted")}
-              />
-            )}
-          </div>
+          <SubTabBar
+            tabs={c.SUB_TABS.map((tab) => ({ key: tab.id, label: tab.label }))}
+            value={c.activeSubTab}
+            onChange={c.setActiveSubTab}
+          />
         )}
 
         <AnimatePresence mode="wait">
@@ -102,6 +91,7 @@ export default function Finance() {
                   canDelete={c.canDelete}
                   canWriteMessaging={c.canWriteMessaging}
                   showDeleted={c.showDeleted}
+                  onToggleDeleted={() => c.setShowDeleted((value) => !value)}
                   onDelete={(id) => c.deleteInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.deleted")), onError: c.mutationError })}
                   onRestore={(id) => c.restoreInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
                   onBulkDelete={(ids) => c.bulkDeleteInvoices.mutate(ids, { onSuccess: (result: any) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}

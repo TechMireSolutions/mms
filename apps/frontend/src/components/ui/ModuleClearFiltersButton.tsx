@@ -22,11 +22,11 @@ export const ModuleClearFiltersButton = React.memo(function ModuleClearFiltersBu
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="outline"
       onClick={onClearFilters}
-      className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, className)}
+      className={cn("group", WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, className)}
     >
-      <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+      <RefreshCw className="w-3.5 h-3.5 transition-transform duration-200 group-hover:rotate-45" aria-hidden="true" />
       <span>{label}</span>
     </Button>
   );

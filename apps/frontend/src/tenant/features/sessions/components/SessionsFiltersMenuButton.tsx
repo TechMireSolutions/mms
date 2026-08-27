@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/ModuleFiltersMenuButton";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export interface SessionsFilterMenuButtonProps {
+export interface SessionsFiltersMenuButtonProps {
   filterStatus: string[];
   filterType: string[];
   statusOptions: string[];
@@ -20,7 +20,7 @@ export interface SessionsFilterMenuButtonProps {
 }
 
 /** Sessions Work single Filters menu — Contacts/Students/Teachers-shaped status + type. */
-export function SessionsFilterMenuButton({
+export function SessionsFiltersMenuButton({
   filterStatus,
   filterType,
   statusOptions,
@@ -31,7 +31,7 @@ export function SessionsFilterMenuButton({
   onStatusFilterToggle,
   onTypeFilterToggle,
   onClearFilters,
-}: SessionsFilterMenuButtonProps): React.JSX.Element {
+}: SessionsFiltersMenuButtonProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

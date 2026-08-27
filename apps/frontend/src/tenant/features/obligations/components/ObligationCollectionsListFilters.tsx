@@ -14,6 +14,9 @@ interface ObligationCollectionsListFiltersProps {
   search: string;
   typeFilter: string;
   obligationTypes: ObligationType[];
+  canDelete?: boolean;
+  showDeleted?: boolean;
+  onToggleDeleted?: () => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onSearchChange: (value: string) => void;
   onTypeFilterChange: (value: string) => void;
@@ -25,6 +28,9 @@ export function ObligationCollectionsListFilters({
   search,
   typeFilter,
   obligationTypes,
+  canDelete = false,
+  showDeleted = false,
+  onToggleDeleted,
   columnCustomizer,
   onSearchChange,
   onTypeFilterChange,
@@ -52,6 +58,17 @@ export function ObligationCollectionsListFilters({
             onChangeType={onTypeFilterChange}
             onClearFilters={() => onTypeFilterChange("all")}
           />
+        }
+        trashToggle={
+          canDelete && onToggleDeleted
+            ? {
+                canViewDeleted: canDelete,
+                viewingDeleted: showDeleted,
+                onToggle: onToggleDeleted,
+                activeLabel: t("obligations.trash.showActive"),
+                deletedLabel: t("obligations.trash.showDeleted"),
+              }
+            : undefined
         }
         viewModeToggle={{
           viewMode,

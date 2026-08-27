@@ -18,7 +18,9 @@ interface DistributionsListFiltersProps {
   filterStatus: DistributionStatus[];
   statusLabels: Record<DistributionStatus, string>;
   canWrite: boolean;
+  canDelete?: boolean;
   showDeleted: boolean;
+  onToggleDeleted?: () => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: DistributionStatus) => void;
@@ -33,7 +35,9 @@ export function DistributionsListFilters({
   filterStatus,
   statusLabels,
   canWrite,
+  canDelete = false,
   showDeleted,
+  onToggleDeleted,
   columnCustomizer,
   onSearchChange,
   onToggleStatus,
@@ -72,6 +76,17 @@ export function DistributionsListFilters({
               {t('hasanat.distributeCards')}
             </Button>
           ) : undefined
+        }
+        trashToggle={
+          canDelete && onToggleDeleted
+            ? {
+                canViewDeleted: canDelete,
+                viewingDeleted: showDeleted,
+                onToggle: onToggleDeleted,
+                activeLabel: t('hasanat.trash.showActive'),
+                deletedLabel: t('hasanat.trash.showDeleted'),
+              }
+            : undefined
         }
         viewModeToggle={{
           viewMode,

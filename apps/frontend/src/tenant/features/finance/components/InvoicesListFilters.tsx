@@ -5,7 +5,7 @@ import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { AppTranslationKey } from "@mms/shared";
-import { InvoicesFilterMenuButton } from "@/tenant/features/finance/components/InvoicesFilterMenuButton";
+import { InvoicesFiltersMenuButton } from "@/tenant/features/finance/components/InvoicesFiltersMenuButton";
 
 export const FINANCE_INVOICES_WORK_SEARCH_INPUT_ID = "finance-invoices-work-search";
 
@@ -14,6 +14,9 @@ interface InvoicesListFiltersProps {
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
   filterStatus: string[];
+  canDelete?: boolean;
+  showDeleted?: boolean;
+  onToggleDeleted?: () => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;
@@ -25,6 +28,9 @@ export function InvoicesListFilters({
   onViewModeChange,
   search,
   filterStatus,
+  canDelete = false,
+  showDeleted = false,
+  onToggleDeleted,
   columnCustomizer,
   onSearchChange,
   onToggleStatus,
@@ -45,12 +51,23 @@ export function InvoicesListFilters({
         onClearFilters={onClearStatuses}
         clearFiltersLabel={t("finance.clearFilters")}
         filterButton={
-          <InvoicesFilterMenuButton
+          <InvoicesFiltersMenuButton
             filterStatus={filterStatus}
             activeFilterCount={filterStatus.length}
             onToggleStatus={onToggleStatus}
             onClearFilters={onClearStatuses}
           />
+        }
+        trashToggle={
+          canDelete && onToggleDeleted
+            ? {
+                canViewDeleted: canDelete,
+                viewingDeleted: showDeleted,
+                onToggle: onToggleDeleted,
+                activeLabel: t("finance.trash.showActive"),
+                deletedLabel: t("finance.trash.showDeleted"),
+              }
+            : undefined
         }
         viewModeToggle={{
           viewMode,

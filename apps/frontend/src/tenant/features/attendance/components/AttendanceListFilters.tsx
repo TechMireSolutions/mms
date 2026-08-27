@@ -28,6 +28,9 @@ interface AttendanceListFiltersProps {
   dateTo: string;
   setDateTo: React.Dispatch<React.SetStateAction<string>>;
   setPage: (page: number) => void;
+  canDelete?: boolean;
+  showDeleted?: boolean;
+  onToggleDeleted?: () => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
 }
 
@@ -45,6 +48,9 @@ export function AttendanceListFilters({
   dateTo,
   setDateTo,
   setPage,
+  canDelete = false,
+  showDeleted = false,
+  onToggleDeleted,
   columnCustomizer,
 }: AttendanceListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -114,6 +120,17 @@ export function AttendanceListFilters({
             }}
             onClearFilters={clearFilters}
           />
+        }
+        trashToggle={
+          canDelete && onToggleDeleted
+            ? {
+                canViewDeleted: canDelete,
+                viewingDeleted: showDeleted,
+                onToggle: onToggleDeleted,
+                activeLabel: t("attendance.showActive"),
+                deletedLabel: t("attendance.showDeleted"),
+              }
+            : undefined
         }
         viewModeToggle={{
           viewMode,

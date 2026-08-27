@@ -14,9 +14,9 @@ import {
 import { GenderIcon } from "@/components/ui/GenderIcon";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { useTranslation } from "@/hooks/useTranslation";
-import { teacherStatusOptions } from "@/lib/teachers/teacherStatusUi";
+import { teacherStatusLabel } from "@/lib/teachers/teacherStatusUi";
 
-export interface TeachersFilterMenuButtonProps {
+export interface TeachersFiltersMenuButtonProps {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
@@ -36,7 +36,7 @@ export interface TeachersFilterMenuButtonProps {
 }
 
 /** Teachers Work single Filters menu — Contacts/Students-shaped quick filter + status + specialization + gender + sort. */
-export function TeachersFilterMenuButton({
+export function TeachersFiltersMenuButton({
   filterStatus,
   filterSpecialization,
   filterGender,
@@ -53,7 +53,7 @@ export function TeachersFilterMenuButton({
   onGenderChange,
   onSortChange,
   onClearFilters,
-}: TeachersFilterMenuButtonProps): React.JSX.Element {
+}: TeachersFiltersMenuButtonProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -67,20 +67,23 @@ export function TeachersFilterMenuButton({
       <ModuleFilterRadioGroup
         label={t("teachers.filters")}
         value={quickFilter}
+        options={TEACHERS_QUICK_FILTER_OPTIONS.map((option) => ({
+          value: option.id,
+          label: t(option.labelKey),
+        }))}
         onValueChange={(value) => {
           if (isTeachersQuickFilter(value)) onQuickFilterChange(value);
         }}
-        options={TEACHERS_QUICK_FILTER_OPTIONS.map((preset) => ({
-          value: preset.id,
-          label: t(preset.labelKey),
-        }))}
       />
 
       <ModuleFilterDivider />
 
       <ModuleFilterCheckboxGroup
         label={t("teachers.filter.status")}
-        options={teacherStatusOptions(t, statusOptions)}
+        options={statusOptions.map((status) => ({
+          value: status,
+          label: teacherStatusLabel(t, status),
+        }))}
         selected={filterStatus}
         onToggle={onToggleStatus}
       />
@@ -88,51 +91,51 @@ export function TeachersFilterMenuButton({
       <ModuleFilterDivider />
 
       <ModuleFilterRadioGroup
-        label={t("teachers.filter.specialization")}
-        value={filterSpecialization}
-        onValueChange={onSpecializationChange}
-        options={[
-          { value: "", label: t("teachers.filter.allSpecializations") },
-          ...specializationOptions.map((specialization) => ({
-            value: specialization,
-            label: specialization,
-          })),
-        ]}
-      />
-
-      <ModuleFilterDivider />
-
-      <ModuleFilterRadioGroup
         label={t("teachers.filter.gender")}
         value={filterGender}
+        options={[
+          { value: "all", label: t("teachers.filter.allGenders") },
+          ...genderFilters.map((gender) => ({
+            value: gender,
+            label: formatContactGenderLabel(gender, t),
+            icon: <GenderIcon gender={gender} className="w-3.5 h-3.5" aria-hidden="true" />,
+          })),
+        ]}
         onValueChange={onGenderChange}
-        options={["", ...genderFilters].map((genderFilter) => ({
-          value: genderFilter,
-          label: genderFilter ? (
-            <span className="inline-flex items-center gap-1.5">
-              <GenderIcon gender={genderFilter} className="w-3.5 h-3.5" />
-              {formatContactGenderLabel(genderFilter, t)}
-            </span>
-          ) : (
-            t("teachers.filter.allGenders")
-          ),
-        }))}
       />
 
-      <ModuleFilterDivider />
+      {specializationOptions.length > 0 && (
+        <>
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t("teachers.filter.specialization")}
+            value={filterSpecialization}
+            options={[
+              { value: "all", label: t("teachers.filter.allSpecializations") },
+              ...specializationOptions.map((specialization) => ({
+                value: specialization,
+                label: specialization,
+              })),
+            ]}
+            onValueChange={onSpecializationChange}
+          />
+        </>
+      )}
 
-      <ModuleFilterRadioGroup
-        label={t("teachers.sortBy")}
-        value={sortField}
-        onValueChange={(value) => {
-          const match = sortOptions.find((option) => option.field === value);
-          if (match) onSortChange(match.field);
-        }}
-        options={sortOptions.map((option) => ({
-          value: option.field,
-          label: option.label,
-        }))}
-      />
+      {sortOptions.length > 0 && (
+        <>
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t("teachers.sortBy")}
+            value={sortField}
+            options={sortOptions.map((option) => ({
+              value: option.field,
+              label: option.label,
+            }))}
+            onValueChange={(field) => onSortChange(field as TeacherSortField)}
+          />
+        </>
+      )}
     </ModuleFilterDropdown>
   );
 }

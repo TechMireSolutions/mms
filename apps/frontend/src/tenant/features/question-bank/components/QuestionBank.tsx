@@ -32,6 +32,7 @@ interface QuestionBankProps {
   canWrite?: boolean;
   canDelete?: boolean;
   showDeleted?: boolean;
+  onToggleDeleted?: () => void;
   onDelete?: (id: string) => void | Promise<void>;
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
@@ -55,6 +56,7 @@ export function QuestionBank({
   canWrite = true,
   canDelete = false,
   showDeleted = false,
+  onToggleDeleted,
   onDelete,
   onRestore,
   onBulkDelete,
@@ -164,7 +166,9 @@ export function QuestionBank({
         filterDiff={filterDiff}
         hideToolbarAdd={hideToolbarAdd}
         canWrite={canWrite}
+        canDelete={canDelete}
         showDeleted={showDeleted}
+        onToggleDeleted={onToggleDeleted}
         columnCustomizer={columnCustomizer}
         onSearchChange={setSearch}
         onFilterCatsChange={setFilterCats}

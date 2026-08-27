@@ -7,13 +7,10 @@ import {
   ModuleFilterDropdown,
   ModuleFilterRadioGroup,
 } from '@/components/ui/ModuleFiltersMenuButton';
-import { ModuleClearFiltersButton } from '@/components/ui/ModuleClearFiltersButton';
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
+import { type ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
+import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import { FilterChips } from '@/components/ui/FilterChips';
-import { SearchBar } from '@/components/ui/SearchBar';
-import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
 import {
-  WORK_SURFACE,
   WORK_TOOLBAR_TRIGGER,
   WORK_TOOLBAR_TRIGGER_IDLE,
 } from '@/components/ui/formStyles';
@@ -88,27 +85,16 @@ export const MessagingWorkRecipientsToolbar = React.memo(function MessagingWorkR
 
   return (
     <>
-      <div
-        role="region"
-        aria-label={t('messaging.stepSelectRecipients')}
-        className={cn(WORK_SURFACE, 'flex flex-col gap-3 p-3 sm:flex-row')}
-      >
-        <div className="relative min-w-0 flex-1">
-          <SearchBar
-            id={MESSAGING_RECIPIENTS_SEARCH_INPUT_ID}
-            value={searchContact}
-            onChange={onSearchChange}
-            placeholder={t('messaging.search.placeholder')}
-            className="w-full min-w-0"
-          />
-          <div className="pointer-events-none absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex">
-            <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-xs font-medium text-muted-foreground">
-              /
-            </kbd>
-          </div>
-        </div>
-
-        <div className="flex max-w-full flex-wrap items-center gap-2 sm:flex-nowrap sm:overflow-x-auto">
+      <ModuleWorkToolbar
+        regionLabel={t('messaging.stepSelectRecipients')}
+        search={searchContact}
+        onSearchChange={onSearchChange}
+        searchPlaceholder={t('messaging.search.placeholder')}
+        searchId={MESSAGING_RECIPIENTS_SEARCH_INPUT_ID}
+        hasActiveFilters={activeFilterCount > 0}
+        onClearFilters={clearFilters}
+        clearFiltersLabel={t('common.clearFilters')}
+        filterButton={
           <ModuleFilterDropdown
             label={t('common.filters')}
             activeCount={activeFilterCount}
@@ -136,43 +122,42 @@ export const MessagingWorkRecipientsToolbar = React.memo(function MessagingWorkR
               }))}
             />
           </ModuleFilterDropdown>
+        }
+        viewModeToggle={{
+          viewMode,
+          onViewModeChange,
+        }}
+        columnCustomizer={
+          columnRegistry && updateUserColumnLayout
+            ? {
+                registry: columnRegistry,
+                onUpdate: updateUserColumnLayout,
+                onReset: onResetColumnLayout,
+                labels: columnCustomizerLabels,
+              }
+            : undefined
+        }
+      >
+        <Button
+          type="button"
+          variant="outline"
+          disabled={selectingReachable}
+          onClick={() => onSelectReachable('phone')}
+          className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
+        >
+          <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.info}`} /> {t('messaging.selectAllValidPhone')}
+        </Button>
 
-          {activeFilterCount > 0 ? (
-            <ModuleClearFiltersButton onClearFilters={clearFilters} label={t('common.clearFilters')} />
-          ) : null}
-
-          <Button
-            type="button"
-            variant="outline"
-            disabled={selectingReachable}
-            onClick={() => onSelectReachable('phone')}
-            className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
-          >
-            <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.info}`} /> {t('messaging.selectAllValidPhone')}
-          </Button>
-
-          <Button
-            type="button"
-            variant="outline"
-            disabled={selectingReachable}
-            onClick={() => onSelectReachable('email')}
-            className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
-          >
-            <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.warning}`} /> {t('messaging.selectAllValidEmail')}
-          </Button>
-
-          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={onViewModeChange} />
-
-          {columnRegistry && updateUserColumnLayout && columnCustomizerLabels ? (
-            <ModuleColumnCustomizer
-              columnRegistry={columnRegistry}
-              updateUserColumnLayout={updateUserColumnLayout}
-              onResetLayout={onResetColumnLayout}
-              labels={columnCustomizerLabels}
-            />
-          ) : null}
-        </div>
-      </div>
+        <Button
+          type="button"
+          variant="outline"
+          disabled={selectingReachable}
+          onClick={() => onSelectReachable('email')}
+          className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
+        >
+          <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.warning}`} /> {t('messaging.selectAllValidEmail')}
+        </Button>
+      </ModuleWorkToolbar>
 
       <FilterChips chips={chips} onClearAll={clearFilters} />
     </>

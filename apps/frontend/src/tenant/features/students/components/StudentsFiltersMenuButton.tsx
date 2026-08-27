@@ -16,7 +16,7 @@ import { studentStatusLabel } from "@/lib/students/studentStatusUi";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 
-interface StudentsFilterMenuButtonProps {
+export interface StudentsFiltersMenuButtonProps {
   studentFilterStatus: string[];
   studentFilterGender: string;
   quickFilter: StudentsQuickFilter;
@@ -34,7 +34,7 @@ interface StudentsFilterMenuButtonProps {
   onClearFilters: () => void;
 }
 
-export function StudentsFilterMenuButton({
+export function StudentsFiltersMenuButton({
   studentFilterStatus,
   studentFilterGender,
   quickFilter,
@@ -50,7 +50,7 @@ export function StudentsFilterMenuButton({
   onGenderChange,
   onSortChange,
   onClearFilters,
-}: StudentsFilterMenuButtonProps) {
+}: StudentsFiltersMenuButtonProps) {
   const { t } = useTranslation();
 
   return (
@@ -58,19 +58,19 @@ export function StudentsFilterMenuButton({
       label={t("students.filters")}
       activeCount={activeFilterCount}
       icon={SlidersHorizontal}
-      clearLabel={t("students.clearAllFilters")}
+      clearLabel={t("students.clearFilters")}
       onClear={onClearFilters}
     >
       <ModuleFilterRadioGroup
         label={t("students.filters")}
         value={quickFilter}
+        options={STUDENTS_QUICK_FILTER_OPTIONS.map((option) => ({
+          value: option.id,
+          label: t(option.labelKey),
+        }))}
         onValueChange={(value) => {
           if (isStudentsQuickFilter(value)) onQuickFilterChange(value);
         }}
-        options={STUDENTS_QUICK_FILTER_OPTIONS.map((preset) => ({
-          value: preset.id,
-          label: t(preset.labelKey),
-        }))}
       />
 
       {isStatusEnabled && (
@@ -94,35 +94,42 @@ export function StudentsFilterMenuButton({
           <ModuleFilterRadioGroup
             label={t("students.gender")}
             value={studentFilterGender}
+            options={[
+              { value: "all", label: t("students.allGenders") },
+              ...genderFilters.map((gender) => ({
+                value: gender,
+                label: formatContactGenderLabel(gender, t),
+                icon: <GenderIcon gender={gender} className="w-3.5 h-3.5" aria-hidden="true" />,
+              })),
+            ]}
             onValueChange={onGenderChange}
-            options={["", ...genderFilters].map((genderFilter) => ({
-              value: genderFilter,
-              label: genderFilter ? (
-                <span className="inline-flex items-center gap-1.5">
-                  <GenderIcon gender={genderFilter} className="w-3.5 h-3.5" />
-                  {formatContactGenderLabel(genderFilter, t)}
-                </span>
-              ) : (
-                t("students.allGenders")
-              ),
-            }))}
           />
         </>
       )}
 
-      <ModuleFilterDivider />
-      <ModuleFilterRadioGroup
-        label={t("students.sortBy")}
-        value={sortField ?? ""}
-        onValueChange={(value) => {
-          const match = sortOptions.find((option) => option.field === value);
-          if (match) onSortChange(match.field);
-        }}
-        options={sortOptions.map((option) => ({
-          value: option.field,
-          label: option.label,
-        }))}
-      />
+      {sortOptions.length > 0 && (
+        <>
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t("students.sortBy")}
+            value={sortField ?? "none"}
+            options={[
+              { value: "none", label: t("common.none") },
+              ...sortOptions.map((sortOption) => ({
+                value: sortOption.field,
+                label: sortOption.label,
+              })),
+            ]}
+            onValueChange={(val: string) => {
+              if (val === "none") {
+                onSortChange("name");
+              } else {
+                onSortChange(val as StudentsListContentSortField);
+              }
+            }}
+          />
+        </>
+      )}
     </ModuleFilterDropdown>
   );
 }

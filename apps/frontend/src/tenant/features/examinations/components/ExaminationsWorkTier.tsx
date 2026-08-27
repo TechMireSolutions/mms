@@ -1,6 +1,5 @@
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import ExaminationsList from "@/tenant/features/examinations/components/ExaminationsList";
@@ -67,25 +66,14 @@ export function ExaminationsWorkTier({
 
   return (
     <ErrorBoundary>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <SubTabBar
-          tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-          value={activeSubTab}
-          onChange={(next) => {
-            onSubTabChange(next);
-            if (next !== "exams" && showDeleted) onToggleDeleted();
-          }}
-        />
-        {activeSubTab === "exams" && canDelete && (
-          <ModuleTrashToggle
-            showDeleted={showDeleted}
-            onToggle={onToggleDeleted}
-            showActiveLabel={t("examinations.trash.showActive")}
-            showDeletedLabel={t("examinations.trash.showDeleted")}
-            className="gap-1.5 shrink-0"
-          />
-        )}
-      </div>
+      <SubTabBar
+        tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
+        value={activeSubTab}
+        onChange={(next) => {
+          onSubTabChange(next);
+          if (next !== "exams" && showDeleted) onToggleDeleted();
+        }}
+      />
 
       {listLoadFailed ? (
         <ErrorState
@@ -100,6 +88,7 @@ export function ExaminationsWorkTier({
               canWrite={canWrite}
               canDelete={canDelete}
               showDeleted={showDeleted}
+              onToggleDeleted={onToggleDeleted}
               createRequestKey={createExamKey}
               onDelete={onDelete}
               onRestore={onRestore}

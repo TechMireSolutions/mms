@@ -37,6 +37,7 @@ export interface ModuleColumnCustomizerListProps {
   handleDragOver: (event: React.DragEvent<HTMLDivElement>, columnKey: string) => void;
   handleDrop: (event: React.DragEvent<HTMLDivElement>, targetColumnKey: string) => void;
   clearDrag: () => void;
+  onMoveColumn?: (columnKey: string, direction: 'up' | 'down') => void;
   showAll?: () => void;
   hideAll?: () => void;
   hasNonFixedHidden?: boolean;

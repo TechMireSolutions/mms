@@ -34,6 +34,11 @@ export function ChartOfAccountsListFilters({
   columnCustomizer,
 }: ChartOfAccountsListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
+  const hasActiveFilters = typeFilter !== "all" || showInactive;
+  const handleClearFilters = (): void => {
+    setTypeFilter("all");
+    setShowInactive(false);
+  };
 
   return (
     <ModuleWorkToolbar
@@ -42,6 +47,9 @@ export function ChartOfAccountsListFilters({
       onSearchChange={setSearch}
       searchPlaceholder={t("accounting.coa.searchAccounts")}
       searchId="coa-search"
+      hasActiveFilters={hasActiveFilters}
+      onClearFilters={handleClearFilters}
+      clearFiltersLabel={t("accounting.clearFilters")}
       primaryAction={
         canWrite ? (
           <Button

@@ -26,6 +26,7 @@ interface InvoicesListProps {
   canDelete?: boolean;
   canWriteMessaging?: boolean;
   showDeleted?: boolean;
+  onToggleDeleted?: () => void;
   onDelete?: (id: string) => void;
   onRestore?: (id: string) => void;
   onBulkDelete?: (ids: string[]) => void;
@@ -48,6 +49,7 @@ export function InvoicesList({
   canDelete = false,
   canWriteMessaging = false,
   showDeleted = false,
+  onToggleDeleted,
   onDelete,
   onRestore,
   onBulkDelete,
@@ -127,6 +129,9 @@ export function InvoicesList({
         onViewModeChange={setViewMode}
         search={search}
         filterStatus={filterStatus}
+        canDelete={canDelete}
+        showDeleted={showDeleted}
+        onToggleDeleted={onToggleDeleted}
         columnCustomizer={columnCustomizer}
         onSearchChange={setSearch}
         onToggleStatus={toggleStatus}

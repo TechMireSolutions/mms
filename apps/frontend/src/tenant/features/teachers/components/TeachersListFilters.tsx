@@ -5,7 +5,7 @@ import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import { TEACHERS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts";
-import { TeachersFilterMenuButton } from "@/tenant/features/teachers/components/TeachersFilterMenuButton";
+import { TeachersFiltersMenuButton } from "@/tenant/features/teachers/components/TeachersFiltersMenuButton";
 import {
   getTeacherVisibleWorkColumns,
   toTeacherListSortField,
@@ -99,7 +99,7 @@ export function TeachersListFilters({
       onClearFilters={onClearFilters}
       clearFiltersLabel={t("teachers.clearFilters")}
       filterButton={
-        <TeachersFilterMenuButton
+        <TeachersFiltersMenuButton
           filterStatus={filterStatus}
           filterSpecialization={filterSpecialization}
           filterGender={filterGender}

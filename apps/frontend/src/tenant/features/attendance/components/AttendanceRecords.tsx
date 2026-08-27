@@ -36,6 +36,7 @@ interface AttendanceRecordsProps {
   onBulkDeleteRecords: (ids: string[]) => Promise<void>;
   onBulkRestoreRecords: (ids: string[]) => Promise<void>;
   showDeleted?: boolean;
+  onToggleDeleted?: () => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -53,6 +54,7 @@ export function AttendanceRecords({
   onBulkDeleteRecords,
   onBulkRestoreRecords,
   showDeleted = false,
+  onToggleDeleted,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -205,6 +207,9 @@ export function AttendanceRecords({
         dateTo={dateTo}
         setDateTo={setDateTo}
         setPage={setListPage}
+        canDelete={canDeleteAttendance}
+        showDeleted={showDeleted}
+        onToggleDeleted={onToggleDeleted}
         columnCustomizer={columnCustomizer}
       />
 

@@ -30,6 +30,7 @@ export interface ObligationCollectionListProps {
   canWrite?: boolean;
   canDelete?: boolean;
   showDeleted?: boolean;
+  onToggleShowDeleted?: () => void;
   onDelete?: (id: string) => void | Promise<void>;
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
@@ -52,6 +53,7 @@ export function ObligationCollectionsList({
   canWrite = true,
   canDelete = true,
   showDeleted = false,
+  onToggleShowDeleted,
   onDelete,
   onRestore,
   onBulkDelete,
@@ -141,6 +143,9 @@ export function ObligationCollectionsList({
         search={search}
         typeFilter={typeFilter}
         obligationTypes={obligationTypes}
+        canDelete={canDelete}
+        showDeleted={showDeleted}
+        onToggleDeleted={onToggleShowDeleted}
         columnCustomizer={columnCustomizer}
         onSearchChange={setSearch}
         onTypeFilterChange={setTypeFilter}

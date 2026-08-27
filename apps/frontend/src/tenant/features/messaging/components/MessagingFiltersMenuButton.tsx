@@ -9,7 +9,7 @@ import {
   ModuleFilterRadioGroup,
 } from '@/components/ui/ModuleFiltersMenuButton';
 
-interface MessagingFilterMenuButtonProps {
+export interface MessagingFiltersMenuButtonProps {
   activeFilterCount: number;
   onClearFilters: () => void;
   channel: string;
@@ -30,7 +30,7 @@ interface MessagingFilterMenuButtonProps {
   t: TranslationFunction;
 }
 
-export function MessagingFilterMenuButton({
+export function MessagingFiltersMenuButton({
   activeFilterCount,
   onClearFilters,
   channel,
@@ -49,7 +49,7 @@ export function MessagingFilterMenuButton({
   handlePresetDate,
   clearDates,
   t,
-}: MessagingFilterMenuButtonProps): JSX.Element {
+}: MessagingFiltersMenuButtonProps): JSX.Element {
   return (
     <ModuleFilterDropdown
       label={t('common.filters')}

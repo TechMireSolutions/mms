@@ -7,7 +7,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { INVOICE_STATUSES } from "@/lib/data/financeData";
 import type { AppTranslationKey } from "@mms/shared";
 
-export interface InvoicesFilterMenuButtonProps {
+export interface InvoicesFiltersMenuButtonProps {
   filterStatus: string[];
   activeFilterCount: number;
   onToggleStatus: (status: string) => void;
@@ -15,12 +15,12 @@ export interface InvoicesFilterMenuButtonProps {
 }
 
 /** Finance invoices Work single Filters menu — status checkbox group on shared chrome. */
-export function InvoicesFilterMenuButton({
+export function InvoicesFiltersMenuButton({
   filterStatus,
   activeFilterCount,
   onToggleStatus,
   onClearFilters,
-}: InvoicesFilterMenuButtonProps): React.JSX.Element {
+}: InvoicesFiltersMenuButtonProps): React.JSX.Element {
   const { t } = useTranslation();
   const statusLabel = (status: string) => t(`finance.invoiceStatus.${status}` as AppTranslationKey);
 

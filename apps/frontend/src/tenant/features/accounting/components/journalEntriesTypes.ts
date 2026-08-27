@@ -11,6 +11,7 @@ export interface JournalEntriesProps {
   canWrite?: boolean;
   canDelete?: boolean;
   showDeleted?: boolean;
+  onToggleDeleted?: () => void;
   createRequestKey?: number;
   onDelete?: (id: string) => void | Promise<void>;
   onRestore?: (id: string) => void | Promise<void>;

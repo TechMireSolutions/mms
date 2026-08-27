@@ -22,7 +22,9 @@ interface QuestionsListFiltersProps {
   filterDiff: string[];
   hideToolbarAdd: boolean;
   canWrite: boolean;
+  canDelete?: boolean;
   showDeleted: boolean;
+  onToggleDeleted?: () => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onSearchChange: (value: string) => void;
   onFilterCatsChange: Dispatch<SetStateAction<string[]>>;
@@ -39,7 +41,9 @@ export function QuestionsListFilters({
   filterDiff,
   hideToolbarAdd,
   canWrite,
+  canDelete = false,
   showDeleted,
+  onToggleDeleted,
   columnCustomizer,
   onSearchChange,
   onFilterCatsChange,
@@ -113,6 +117,17 @@ export function QuestionsListFilters({
               {t('questionBank.addQuestion')}
             </Button>
           ) : undefined
+        }
+        trashToggle={
+          canDelete && onToggleDeleted
+            ? {
+                canViewDeleted: canDelete,
+                viewingDeleted: showDeleted,
+                onToggle: onToggleDeleted,
+                activeLabel: t('questionBank.trash.showActive'),
+                deletedLabel: t('questionBank.trash.showDeleted'),
+              }
+            : undefined
         }
         viewModeToggle={{
           viewMode,

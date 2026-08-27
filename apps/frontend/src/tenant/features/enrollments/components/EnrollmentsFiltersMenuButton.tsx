@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/ModuleFiltersMenuButton";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export interface EnrollmentsFilterMenuButtonProps {
+export interface EnrollmentsFiltersMenuButtonProps {
   statusFilter: string;
   sessionFilter: string;
   statusOptions: { value: string; label: string }[];
@@ -18,7 +18,7 @@ export interface EnrollmentsFilterMenuButtonProps {
 }
 
 /** Enrollments Work single Filters menu — status + session radio groups on shared chrome. */
-export function EnrollmentsFilterMenuButton({
+export function EnrollmentsFiltersMenuButton({
   statusFilter,
   sessionFilter,
   statusOptions,
@@ -27,7 +27,7 @@ export function EnrollmentsFilterMenuButton({
   onStatusFilterChange,
   onSessionFilterChange,
   onClearFilters,
-}: EnrollmentsFilterMenuButtonProps): React.JSX.Element {
+}: EnrollmentsFiltersMenuButtonProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

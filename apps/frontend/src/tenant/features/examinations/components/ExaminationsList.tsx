@@ -27,6 +27,7 @@ interface ExaminationsListProps {
   canWrite?: boolean;
   canDelete?: boolean;
   showDeleted?: boolean;
+  onToggleDeleted?: () => void;
   createRequestKey?: number;
   onDelete?: (id: string) => void | Promise<void>;
   onRestore?: (id: string) => void | Promise<void>;
@@ -49,6 +50,7 @@ export default function ExaminationsList({
   canWrite = true,
   canDelete = false,
   showDeleted = false,
+  onToggleDeleted,
   createRequestKey = 0,
   onDelete,
   onRestore,
@@ -174,7 +176,9 @@ export default function ExaminationsList({
         search={search}
         filterStatus={filterStatus}
         canWrite={canWrite}
+        canDelete={canDelete}
         showDeleted={showDeleted}
+        onToggleDeleted={onToggleDeleted}
         columnCustomizer={columnCustomizer}
         statusLabels={statusLabels}
         onSearchChange={setSearch}
