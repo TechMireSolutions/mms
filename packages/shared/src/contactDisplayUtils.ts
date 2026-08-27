@@ -54,7 +54,8 @@ export function getInitials(name: string | null | undefined, length = 2): string
  * @param contact - Contact object
  * @returns Primary email address or null.
  */
-export function getPrimaryEmail(contact: Partial<Contact>): string | null {
+export function getPrimaryEmail(contact?: Partial<Contact> | null): string | null {
+  if (!contact) return null;
   const emails = contact.emails || [];
   const emailObj = emails.find((e) => e.isPrimary && (e.address || "").trim().length > 0)
     || emails.find((e) => (e.address || "").trim().length > 0)
@@ -71,7 +72,8 @@ export function getPrimaryEmail(contact: Partial<Contact>): string | null {
  * @param contact - Contact object
  * @returns Primary address object or null.
  */
-export function getPrimaryAddress(contact: Partial<Contact>): ContactAddress | null {
+export function getPrimaryAddress(contact?: Partial<Contact> | null): ContactAddress | null {
+  if (!contact) return null;
   const addresses = contact.addresses || [];
   const addr = addresses.find((a) => a.isPrimary) || addresses[0];
   return addr || null;

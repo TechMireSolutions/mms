@@ -7,10 +7,12 @@ import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { Button } from "@/components/ui/button";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
+import { StudentDetailContactSection } from "@/tenant/features/students/components/StudentDetailContactSection";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
 import { StudentDetailHero } from "@/tenant/features/students/components/StudentDetailHero";
 import { StudentDetailNotesSection } from "@/tenant/features/students/components/StudentDetailNotesSection";
 import { StudentDetailQuickActions } from "@/tenant/features/students/components/StudentDetailQuickActions";
+import { StudentDetailRelationsSection } from "@/tenant/features/students/components/StudentDetailRelationsSection";
 import { StudentDetailSessionsSection } from "@/tenant/features/students/components/StudentDetailSessionsSection";
 import { StudentDetailSiblingsSection } from "@/tenant/features/students/components/StudentDetailSiblingsSection";
 import { useStudentDetailModel } from "@/tenant/features/students/components/useStudentDetailModel";
@@ -26,6 +28,7 @@ interface StudentDetailProps {
   canWriteMessaging: boolean;
   onPrintIdCard?: (student: Student) => void;
   onViewStudent?: (student: Student) => void;
+  onViewContact?: (contactId: string | number) => void;
 }
 
 export const StudentDetail = React.memo(function StudentDetail({
@@ -38,12 +41,15 @@ export const StudentDetail = React.memo(function StudentDetail({
   canWriteMessaging,
   onPrintIdCard,
   onViewStudent,
+  onViewContact,
 }: StudentDetailProps): React.JSX.Element {
   const {
     t,
     statusBadgeConfig,
     sortedEnabledFields,
     relationshipLinks,
+    hydratedRelationships,
+    studentContactProfile,
     age,
     enrolledSessionDetails,
     sessionsLoading,
@@ -58,6 +64,14 @@ export const StudentDetail = React.memo(function StudentDetail({
   } = useStudentDetailModel(student);
 
   const isArchived = Boolean(student.deletedAt);
+
+  const handleNavigateToContact = (contactId: string | number) => {
+    if (onViewContact) {
+      onViewContact(contactId);
+    } else {
+      window.location.assign("/contacts");
+    }
+  };
 
   const headerActionsNode = useMemo(
     () => (
@@ -135,14 +149,27 @@ export const StudentDetail = React.memo(function StudentDetail({
         />
       )}
 
+      {/* Linked Contact Details & Communication Channels */}
+      <StudentDetailContactSection
+        contactProfile={studentContactProfile}
+        canMessage={!isArchived && canWriteMessaging}
+        openComposer={openComposer}
+        onNavigateToContact={handleNavigateToContact}
+      />
+
+      {/* All Family & Contact Network Relationships */}
+      <StudentDetailRelationsSection
+        relationships={hydratedRelationships}
+        canMessage={!isArchived && canWriteMessaging}
+        openComposer={openComposer}
+        onNavigateToContact={handleNavigateToContact}
+      />
+
       {hasVisibleDetailFields && (
         <StudentDetailFieldsSection
           student={student}
           sortedEnabledFields={sortedEnabledFields}
           age={age}
-          relationshipLinks={relationshipLinks}
-          openComposer={openComposer}
-          messagingEnabled={!isArchived && canWriteMessaging}
         />
       )}
 

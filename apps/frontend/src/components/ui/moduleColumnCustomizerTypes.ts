@@ -11,13 +11,17 @@ export interface ModuleColumnCustomizerLabels {
   showColumn?: (label: string) => string;
   reset?: string;
   searchPlaceholder?: string;
+  showAll?: string;
+  hideAll?: string;
+  visibleCount?: (visible: number, total: number) => string;
+  noMatches?: string;
 }
 
 export interface ModuleColumnCustomizerProps {
   columnRegistry: ModuleColumnRegistryEntry[];
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   onResetLayout?: () => void;
-  labels: ModuleColumnCustomizerLabels;
+  labels?: Partial<ModuleColumnCustomizerLabels>;
   className?: string;
   disabled?: boolean;
 }
@@ -33,4 +37,9 @@ export interface ModuleColumnCustomizerListProps {
   handleDragOver: (event: React.DragEvent<HTMLDivElement>, columnKey: string) => void;
   handleDrop: (event: React.DragEvent<HTMLDivElement>, targetColumnKey: string) => void;
   clearDrag: () => void;
+  showAll?: () => void;
+  hideAll?: () => void;
+  hasNonFixedHidden?: boolean;
+  hasNonFixedVisible?: boolean;
+  isSearching?: boolean;
 }

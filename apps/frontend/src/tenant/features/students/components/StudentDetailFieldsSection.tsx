@@ -3,25 +3,18 @@ import { Calendar, Clock, FileText } from "lucide-react";
 import {
   type AppTranslationKey,
   type Student,
-  type StudentContactRelationshipLink,
   OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS,
   STUDENT_DETAIL_HERO_FIELD_KEYS,
   formatDate,
   formatDateTime,
-  toMessagingRecipient,
 } from "@mms/shared";
 import { Card } from "@/components/ui/card";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel, resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import { formatLocalizedRelationshipParts } from "@/lib/contacts/formatLocalizedRelationshipLabel";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { GuardianContactCard } from "@/tenant/features/students/components/GuardianContactCard";
-import { relationshipBadgeCode } from "@/tenant/features/students/components/guardianRelationshipBadge";
 import { formatStudentsListContentCustomValue } from "@/tenant/features/students/components/studentsListCustomColumns";
-import type { StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
 
 interface SortedField {
   key: string;
@@ -39,21 +32,14 @@ interface StudentDetailFieldsSectionProps {
   student: Student;
   sortedEnabledFields: SortedField[];
   age: number | null;
-  relationshipLinks: StudentContactRelationshipLink[];
-  openComposer: (channel: "sms" | "whatsapp" | "email", recipients: MessagingRecipient[]) => void;
-  messagingEnabled?: boolean;
 }
 
 export function StudentDetailFieldsSection({
   student,
   sortedEnabledFields,
   age,
-  relationshipLinks,
-  openComposer,
-  messagingEnabled = true,
 }: StudentDetailFieldsSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const canMessage = messagingEnabled;
   const emptyDash = t("students.table.emptyDash");
 
   const renderField = (field: SortedField): React.ReactNode => {
@@ -104,46 +90,8 @@ export function StudentDetailFieldsSection({
     }
 
     if (field.key === "contactRelationships") {
-      return relationshipLinks.map((link, index) => {
-        const name = link.name?.trim() || t("students.detail.unknownContact");
-        const contactId = link.contactId || `rel-${index}`;
-        const phone = link.phone;
-        const email = link.email;
-        const { display, label } = formatLocalizedRelationshipParts(
-          link.relationship,
-          link.gender,
-          t,
-        );
-        return (
-          <GuardianContactCard
-            key={`${link.relationship}-${contactId}-${index}`}
-            label={label}
-            badgeCode={relationshipBadgeCode(display, emptyDash)}
-            badgeTone={SEMANTIC_BADGE.info}
-            name={name}
-            phone={phone}
-            email={email}
-            onWhatsApp={
-              canMessage && phone
-                ? () => openComposer("whatsapp", [toMessagingRecipient({ id: contactId, name, phone })])
-                : undefined
-            }
-            onSms={
-              canMessage && phone
-                ? () => openComposer("sms", [toMessagingRecipient({ id: contactId, name, phone })])
-                : undefined
-            }
-            onEmail={
-              canMessage && email
-                ? () =>
-                    openComposer("email", [
-                      toMessagingRecipient({ id: contactId, name, email }),
-                    ])
-                : undefined
-            }
-          />
-        );
-      });
+      // Delegated to dedicated rich StudentDetailRelationsSection
+      return null;
     }
 
     const rawValue = (student as Record<string, unknown>)[field.key];

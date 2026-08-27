@@ -117,7 +117,8 @@ export function formatPhoneWithCountryCode(
  * @param defaultCountryCode - Optional fallback country code if missing (defaults to "+92")
  * @returns The formatted primary phone number with country code or null.
  */
-export function getPrimaryPhone(contact: Partial<Contact>, defaultCountryCode: string = "+92"): string | null {
+export function getPrimaryPhone(contact?: Partial<Contact> | null, defaultCountryCode: string = "+92"): string | null {
+  if (!contact) return null;
   const phones = contact.phones || [];
   const phoneObj = phones.find((p) => p.isPrimary && (p.number || "").trim().length > 0)
     || phones.find((p) => (p.number || "").trim().length > 0)

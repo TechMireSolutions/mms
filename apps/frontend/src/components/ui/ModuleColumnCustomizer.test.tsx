@@ -184,4 +184,26 @@ describe('ModuleColumnCustomizer Component', () => {
 
     expect(document.body.innerHTML).toContain('City');
   });
+
+  it('automatically resolves default localized labels when labels prop is omitted', () => {
+    const html = renderToStaticMarkup(
+      <ModuleColumnCustomizer
+        columnRegistry={mockColumns}
+        updateUserColumnLayout={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('common.columns.trigger');
+  });
+
+  it('renders customized columns count badge when columns are hidden', () => {
+    const html = renderToStaticMarkup(
+      <ModuleColumnCustomizer
+        columnRegistry={mockColumns} // has 1 disabled email column
+        updateUserColumnLayout={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('2/3');
+  });
 });

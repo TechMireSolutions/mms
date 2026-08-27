@@ -45,7 +45,9 @@ export interface ModuleWorkToolbarProps {
     registry: any[];
     onUpdate: (layout: any[]) => void;
     onReset?: () => void;
-    labels?: ModuleColumnCustomizerLabels;
+    labels?: Partial<ModuleColumnCustomizerLabels>;
+    disabled?: boolean;
+    className?: string;
   };
 
   // 5. Additional custom buttons
@@ -132,7 +134,9 @@ export function ModuleWorkToolbar({
               columnRegistry={columnCustomizer.registry}
               updateUserColumnLayout={columnCustomizer.onUpdate}
               onResetLayout={columnCustomizer.onReset}
-              labels={columnCustomizer.labels as ModuleColumnCustomizerLabels}
+              labels={columnCustomizer.labels}
+              disabled={columnCustomizer.disabled}
+              className={columnCustomizer.className}
             />
           )}
         </div>

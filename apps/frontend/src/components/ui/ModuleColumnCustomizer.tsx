@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Settings2, Search, RotateCcw } from 'lucide-react';
+import { Columns3, Search, RotateCcw, X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import {
   WORK_TOOLBAR_TRIGGER,
   WORK_TOOLBAR_TRIGGER_IDLE,
 } from '@/components/ui/formStyles';
+import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import type {
   ModuleColumnCustomizerLabels,
@@ -25,9 +26,26 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
   className,
   disabled = false,
 }: ModuleColumnCustomizerProps): React.JSX.Element {
+  const { t } = useTranslation();
   const [dragging, setDragging] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const resolvedLabels = useMemo<ModuleColumnCustomizerLabels>(() => ({
+    trigger: labels?.trigger ?? t('common.columns.trigger'),
+    title: labels?.title ?? t('common.columns.title'),
+    visibleAndOrder: labels?.visibleAndOrder ?? t('common.columns.visibleAndOrder'),
+    hidden: labels?.hidden ?? t('common.columns.hidden'),
+    fixed: labels?.fixed ?? t('common.columns.fixed'),
+    hideColumn: labels?.hideColumn ?? ((label: string) => t('common.columns.hideColumn', { label })),
+    showColumn: labels?.showColumn ?? ((label: string) => t('common.columns.showColumn', { label })),
+    reset: labels?.reset ?? t('common.columns.reset'),
+    searchPlaceholder: labels?.searchPlaceholder ?? t('common.columns.searchPlaceholder'),
+    showAll: labels?.showAll ?? t('common.columns.showAll'),
+    hideAll: labels?.hideAll ?? t('common.columns.hideAll'),
+    visibleCount: labels?.visibleCount ?? ((visible: number, total: number) => t('common.columns.visibleCount', { visible, total })),
+    noMatches: labels?.noMatches ?? t('common.columns.noMatches'),
+  }), [labels, t]);
 
   const visibleColumns = useMemo(
     () =>
@@ -56,6 +74,20 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
     });
     updateUserColumnLayout(updated);
   };
+
+  const showAll = (): void => {
+    const updated = columnRegistry.map((column) => ({ ...column, enabled: true }));
+    updateUserColumnLayout(updated);
+  };
+
+  const hideAll = (): void => {
+    const updated = columnRegistry.map((column) => (column.fixed ? column : { ...column, enabled: false }));
+    updateUserColumnLayout(updated);
+  };
+
+  const hasNonFixedHidden = columnRegistry.some((c) => !c.enabled && !c.fixed);
+  const hasNonFixedVisible = columnRegistry.some((c) => c.enabled && !c.fixed);
+  const hiddenCount = columnRegistry.filter((c) => !c.enabled && !c.fixed).length;
 
   const handleDragStart = (event: React.DragEvent<HTMLDivElement>, columnKey: string): void => {
     setDragging(columnKey);
@@ -109,38 +141,62 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
           variant="outline"
           disabled={disabled}
           className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, className)}
+          aria-label={resolvedLabels.trigger}
         >
-          <Settings2 className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>{labels.trigger}</span>
+          <Columns3 className="w-3.5 h-3.5" aria-hidden="true" />
+          <span>{resolvedLabels.trigger}</span>
+          {hiddenCount > 0 && (
+            <span className="ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+              {columnRegistry.length - hiddenCount}/{columnRegistry.length}
+            </span>
+          )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-72 p-3 space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <h4 className="min-w-0 text-xs font-bold text-foreground uppercase tracking-wide">{labels.title}</h4>
+      <PopoverContent align="end" className="w-76 p-3 space-y-3 rounded-xl shadow-lg border border-border/80">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/50 pb-2">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <h4 className="min-w-0 text-xs font-bold text-foreground uppercase tracking-wide">
+              {resolvedLabels.title}
+            </h4>
+            <span className="text-[11px] text-muted-foreground font-medium">
+              ({resolvedLabels.visibleCount ? resolvedLabels.visibleCount(columnRegistry.length - hiddenCount, columnRegistry.length) : `${columnRegistry.length - hiddenCount}/${columnRegistry.length}`})
+            </span>
+          </div>
           {onResetLayout && (
             <Button
               type="button"
               variant="ghost"
+              size="sm"
               onClick={onResetLayout}
-              className="min-h-11 shrink-0 px-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1"
-              title={labels.reset || 'Reset to defaults'}
+              className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1"
+              title={resolvedLabels.reset}
             >
               <RotateCcw className="w-3 h-3" />
-              <span>{labels.reset || 'Reset'}</span>
+              <span>{resolvedLabels.reset}</span>
             </Button>
           )}
         </div>
 
-        {columnRegistry.length > 6 && (
+        {columnRegistry.length > 5 && (
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" />
+            <Search className="w-3.5 h-3.5 absolute start-2.5 top-1/2 -translate-y-1/2 text-muted-foreground" aria-hidden="true" />
             <Input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={labels.searchPlaceholder || 'Filter columns...'}
-              className="min-h-11 ps-8 text-xs bg-muted/30 border-border/60"
+              placeholder={resolvedLabels.searchPlaceholder}
+              className="h-8 ps-8 pe-7 text-xs bg-muted/30 border-border/60"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5"
+                aria-label="Clear search"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
         )}
 
@@ -149,12 +205,17 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
           hiddenColumns={hiddenColumns}
           dragging={dragging}
           dragOver={dragOver}
-          labels={labels}
+          labels={resolvedLabels}
           toggle={toggle}
           handleDragStart={handleDragStart}
           handleDragOver={handleDragOver}
           handleDrop={handleDrop}
           clearDrag={clearDrag}
+          showAll={showAll}
+          hideAll={hideAll}
+          hasNonFixedHidden={hasNonFixedHidden}
+          hasNonFixedVisible={hasNonFixedVisible}
+          isSearching={Boolean(searchQuery)}
         />
       </PopoverContent>
     </Popover>

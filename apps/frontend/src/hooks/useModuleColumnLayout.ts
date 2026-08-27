@@ -24,7 +24,7 @@ export interface UseModuleColumnLayoutOptions {
   saveColumnPrefs?: (prefs: ModuleColumnPref[]) => void;
   /** Optional normalize (e.g. Contacts emergency key migration) applied on load. */
   normalizePreferences?: (prefs: ModuleColumnPref[]) => ModuleColumnPref[];
-  translationPrefix: string;
+  translationPrefix?: string;
 }
 
 function toStoredPreferences(registry: ModuleColumnRegistryEntry[]): ModuleColumnPref[] {
@@ -88,12 +88,19 @@ export function useModuleColumnLayout({
 
   const customizerLabels = useMemo(
     () => ({
-      trigger: t(`${translationPrefix}.trigger` as AppTranslationKey),
-      title: t(`${translationPrefix}.title` as AppTranslationKey),
-      visibleAndOrder: t(`${translationPrefix}.visibleAndOrder` as AppTranslationKey),
-      hidden: t(`${translationPrefix}.hidden` as AppTranslationKey),
-      fixed: t(`${translationPrefix}.fixed` as AppTranslationKey),
-      hideColumn: (label: string) => t(`${translationPrefix}.hideColumn` as AppTranslationKey, { label }),
+      trigger: translationPrefix ? t(`${translationPrefix}.trigger` as AppTranslationKey) : t('common.columns.trigger'),
+      title: translationPrefix ? t(`${translationPrefix}.title` as AppTranslationKey) : t('common.columns.title'),
+      visibleAndOrder: translationPrefix ? t(`${translationPrefix}.visibleAndOrder` as AppTranslationKey) : t('common.columns.visibleAndOrder'),
+      hidden: translationPrefix ? t(`${translationPrefix}.hidden` as AppTranslationKey) : t('common.columns.hidden'),
+      fixed: translationPrefix ? t(`${translationPrefix}.fixed` as AppTranslationKey) : t('common.columns.fixed'),
+      hideColumn: (label: string) =>
+        translationPrefix
+          ? t(`${translationPrefix}.hideColumn` as AppTranslationKey, { label })
+          : t('common.columns.hideColumn', { label }),
+      reset: t('common.columns.reset'),
+      searchPlaceholder: t('common.columns.searchPlaceholder'),
+      showAll: t('common.columns.showAll'),
+      hideAll: t('common.columns.hideAll'),
     }),
     [t, translationPrefix],
   );

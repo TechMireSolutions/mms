@@ -16,56 +16,100 @@ export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustom
   handleDragOver,
   handleDrop,
   clearDrag,
+  showAll,
+  hideAll,
+  hasNonFixedHidden = false,
+  hasNonFixedVisible = false,
+  isSearching = false,
 }: ModuleColumnCustomizerListProps): React.JSX.Element {
+  const totalCount = visibleColumns.length + hiddenColumns.length;
+
+  if (isSearching && totalCount === 0) {
+    return (
+      <div className="py-6 text-center text-xs text-muted-foreground">
+        {labels.noMatches || 'No columns match'}
+      </div>
+    );
+  }
+
   return (
     <div className="max-h-72 overflow-y-auto pe-1 space-y-3">
-      <div className="space-y-1">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
-          {labels.visibleAndOrder}
-        </span>
-        {visibleColumns.map((col) => (
-          <div
-            key={col.key}
-            draggable={!col.fixed}
-            onDragStart={(event) => !col.fixed && handleDragStart(event, col.key)}
-            onDragOver={(event) => handleDragOver(event, col.key)}
-            onDrop={(event) => handleDrop(event, col.key)}
-            onDragEnd={clearDrag}
-            className={cn(
-              'flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all select-none border-transparent hover:bg-muted',
-              dragging === col.key && 'opacity-40',
-              dragOver === col.key && 'border-primary bg-primary/5',
-            )}
-          >
-            <GripVertical
+      {!isSearching && (showAll || hideAll) && (hasNonFixedHidden || hasNonFixedVisible) && (
+        <div className="flex items-center justify-between gap-1 pb-1 border-b border-border/40 text-[11px]">
+          {showAll && hasNonFixedHidden ? (
+            <button
+              type="button"
+              onClick={showAll}
+              className="text-[11px] font-medium text-primary hover:underline transition-colors cursor-pointer"
+            >
+              {labels.showAll || 'Show all'}
+            </button>
+          ) : (
+            <span />
+          )}
+          {hideAll && hasNonFixedVisible && (
+            <button
+              type="button"
+              onClick={hideAll}
+              className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+            >
+              {labels.hideAll || 'Hide all'}
+            </button>
+          )}
+        </div>
+      )}
+
+      {visibleColumns.length > 0 && (
+        <div className="space-y-1">
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+            {labels.visibleAndOrder}
+          </span>
+          {visibleColumns.map((col) => (
+            <div
+              key={col.key}
+              draggable={!col.fixed}
+              onDragStart={(event) => !col.fixed && handleDragStart(event, col.key)}
+              onDragOver={(event) => handleDragOver(event, col.key)}
+              onDrop={(event) => handleDrop(event, col.key)}
+              onDragEnd={clearDrag}
               className={cn(
-                'w-3.5 h-3.5 flex-shrink-0',
-                col.fixed ? 'opacity-20' : 'text-muted-foreground cursor-grab',
+                'flex items-center gap-2 px-2.5 py-1.5 rounded-lg border transition-all select-none border-transparent hover:bg-muted/60',
+                dragging === col.key && 'opacity-40',
+                dragOver === col.key && 'border-primary bg-primary/5',
               )}
-            />
-            <span className="flex-1 text-sm text-foreground text-start">{col.label}</span>
-            {col.fixed ? (
-              <span className="text-xs text-muted-foreground">{labels.fixed}</span>
-            ) : (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggle(col.key);
-                }}
-                className="min-w-11 min-h-11 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg cursor-pointer"
-                aria-label={labels.hideColumn(col.label)}
-              >
-                <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-              </button>
-            )}
-          </div>
-        ))}
-      </div>
+            >
+              <GripVertical
+                className={cn(
+                  'w-3.5 h-3.5 flex-shrink-0',
+                  col.fixed ? 'opacity-20' : 'text-muted-foreground cursor-grab active:cursor-grabbing',
+                )}
+                aria-hidden="true"
+              />
+              <span className="flex-1 text-xs font-medium text-foreground text-start truncate">{col.label}</span>
+              {col.fixed ? (
+                <span className="text-[10px] uppercase font-bold text-muted-foreground bg-muted/80 px-1.5 py-0.5 rounded tracking-wider">{labels.fixed}</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle(col.key);
+                  }}
+                  className="min-w-8 min-h-8 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-md cursor-pointer"
+                  aria-label={labels.hideColumn(col.label)}
+                  title={labels.hideColumn(col.label)}
+                >
+                  <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {hiddenColumns.length > 0 && (
-        <div className="space-y-1 pt-1 border-t border-border">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">
+        <div className="space-y-1 pt-1 border-t border-border/50">
+          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
             {labels.hidden}
           </span>
           {hiddenColumns.map((col) => (
@@ -77,11 +121,12 @@ export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustom
                 toggle(col.key);
               }}
               aria-label={labels.showColumn ? labels.showColumn(col.label) : undefined}
-              className="flex items-center justify-between w-full px-2.5 min-h-11 rounded-lg border border-transparent hover:bg-muted transition-colors text-start group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+              title={labels.showColumn ? labels.showColumn(col.label) : undefined}
+              className="flex items-center justify-between w-full px-2.5 min-h-8 rounded-lg border border-transparent hover:bg-muted/60 transition-colors text-start group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <EyeOff className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" aria-hidden="true" />
-                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">{col.label}</span>
+                <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors truncate">{col.label}</span>
               </div>
               <Eye className="w-3.5 h-3.5 text-muted-foreground/40 group-hover:text-primary transition-colors flex-shrink-0" aria-hidden="true" />
             </button>

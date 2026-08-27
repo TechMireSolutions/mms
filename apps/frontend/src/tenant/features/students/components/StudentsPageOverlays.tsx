@@ -52,6 +52,7 @@ export const StudentsPageOverlays = React.memo(function StudentsPageOverlays({
   onCloseIdCards,
   onPrintIdCard,
   onViewStudent,
+  onViewContact,
 }: StudentsPageOverlaysProps): React.JSX.Element {
   const configPending = false;
   const sessions = useSessionsCollection();
@@ -108,6 +109,7 @@ export const StudentsPageOverlays = React.memo(function StudentsPageOverlays({
               canWriteMessaging={canWriteMessaging}
               onPrintIdCard={onPrintIdCard}
               onViewStudent={onViewStudent}
+              onViewContact={onViewContact}
             />
           ) : null}
         </AnimatePresence>
