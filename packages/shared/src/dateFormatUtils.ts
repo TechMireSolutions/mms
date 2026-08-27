@@ -42,10 +42,19 @@ const LOCALE_PROBE_DATE = new Date(Date.UTC(2000, 0, 2));
 /**
  * Coerces a stored value to a supported date format id.
  */
-export function normalizeDateFormat(value: string | undefined, fallback: DateFormatId = 'DD/MM/YYYY'): DateFormatId {
+export function normalizeDateFormat(value: string | null | undefined, fallback: DateFormatId = 'DD/MM/YYYY'): DateFormatId {
   const trimmed = value?.trim();
   if (trimmed && PRESET_SET.has(trimmed)) return trimmed as DateFormatId;
   return fallback;
+}
+
+/**
+ * Normalizes 2-digit years using a sliding pivot:
+ * > 50 -> 1900s, <= 50 -> 2000s.
+ */
+function normalizeTwoDigitYear(year: number): number {
+  if (year >= 100) return year;
+  return year > 50 ? 1900 + year : 2000 + year;
 }
 
 /**
@@ -105,9 +114,11 @@ export function formatDatePartsWithMonthName(
 /**
  * Converts an ISO storage date (`YYYY-MM-DD`) to the active display pattern.
  */
-export function formatIsoDateToDisplay(iso: string, formatId: string): string {
+export function formatIsoDateToDisplay(iso: string | null | undefined, formatId: string): string {
   if (!iso) return '';
-  const parts = iso.split('-');
+  const dateOnly = iso.trim().split(/[T\s]/)[0];
+  if (!dateOnly) return '';
+  const parts = dateOnly.split('-');
   if (parts.length !== 3) return iso;
   const year = Number(parts[0]);
   const month = Number(parts[1]);
@@ -117,12 +128,79 @@ export function formatIsoDateToDisplay(iso: string, formatId: string): string {
 }
 
 /**
- * Parses a display-pattern date string into ISO storage form (`YYYY-MM-DD`).
+ * Converts an ISO storage date (`YYYY-MM-DD`) to a human-readable display string
+ * using the provided month label.
  */
-export function parseDisplayDateToIso(display: string, formatId: string): string {
+export function formatIsoDateToDisplayWithMonthName(
+  iso: string | null | undefined,
+  formatId: string,
+  monthLabel: string,
+): string {
+  if (!iso) return '';
+  const dateOnly = iso.trim().split(/[T\s]/)[0];
+  if (!dateOnly) return '';
+  const parts = dateOnly.split('-');
+  if (parts.length !== 3) return iso;
+  const year = Number(parts[0]);
+  const month = Number(parts[1]);
+  const day = Number(parts[2]);
+  if (!year || !month || !day) return iso;
+  return formatDatePartsWithMonthName(day, monthLabel, month, year, formatId);
+}
+
+/**
+ * Parses a display-pattern date string into ISO storage form (`YYYY-MM-DD`).
+ * Also supports compact 8-digit strings without separators (e.g. `21072026` or `20260721`).
+ */
+export function parseDisplayDateToIso(display: string | null | undefined, formatId: string): string {
   if (!display || typeof display !== 'string' || !display.trim()) return '';
   const id = normalizeDateFormat(formatId);
-  const cleaned = display.trim().replace(/\//g, '-').replace(/\./g, '-');
+  const trimmed = display.trim();
+
+  // Handle compact 6- or 8-digit strings without separators (e.g. "21072026", "210795", "20260721")
+  if (/^\d{6}$|^\d{8}$/.test(trimmed)) {
+    let year = 0;
+    let month = 0;
+    let day = 0;
+    if (trimmed.length === 8) {
+      if (id.startsWith('YYYY')) {
+        year = Number(trimmed.slice(0, 4));
+        month = Number(trimmed.slice(4, 6));
+        day = Number(trimmed.slice(6, 8));
+      } else if (id === 'MM/DD/YYYY') {
+        month = Number(trimmed.slice(0, 2));
+        day = Number(trimmed.slice(2, 4));
+        year = Number(trimmed.slice(4, 8));
+      } else {
+        day = Number(trimmed.slice(0, 2));
+        month = Number(trimmed.slice(2, 4));
+        year = Number(trimmed.slice(4, 8));
+      }
+    } else {
+      if (id.startsWith('YYYY')) {
+        year = Number(trimmed.slice(0, 2));
+        month = Number(trimmed.slice(2, 4));
+        day = Number(trimmed.slice(4, 6));
+      } else if (id === 'MM/DD/YYYY') {
+        month = Number(trimmed.slice(0, 2));
+        day = Number(trimmed.slice(2, 4));
+        year = Number(trimmed.slice(4, 6));
+      } else {
+        day = Number(trimmed.slice(0, 2));
+        month = Number(trimmed.slice(2, 4));
+        year = Number(trimmed.slice(4, 6));
+      }
+    }
+    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+      const normalizedYear = normalizeTwoDigitYear(year);
+      const probe = new Date(normalizedYear, month - 1, day);
+      if (probe.getFullYear() === normalizedYear && probe.getMonth() === month - 1 && probe.getDate() === day) {
+        return `${String(normalizedYear).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      }
+    }
+  }
+
+  const cleaned = trimmed.replace(/\//g, '-').replace(/\./g, '-');
   const segments = cleaned.split('-').map((s) => s.trim());
   if (segments.length !== 3) return '';
 
@@ -152,7 +230,7 @@ export function parseDisplayDateToIso(display: string, formatId: string): string
     return '';
   }
 
-  const normalizedYear = year < 100 ? 2000 + year : year;
+  const normalizedYear = normalizeTwoDigitYear(year);
   const probe = new Date(normalizedYear, month - 1, day);
   if (probe.getFullYear() !== normalizedYear || probe.getMonth() !== month - 1 || probe.getDate() !== day) {
     return '';
@@ -162,11 +240,133 @@ export function parseDisplayDateToIso(display: string, formatId: string): string
 }
 
 /**
+ * Auto-formats a date input string as the user types, automatically inserting
+ * separators ('/' or preset separator) between numbers.
+ *
+ * @param input - The raw text from the input field
+ * @param formatId - The target DateFormatId (e.g. 'DD/MM/YYYY', 'YYYY-MM-DD', etc.)
+ * @param previousValue - The previous input string (used to detect backspacing)
+ */
+export function formatDateInputAsYouType(
+  input: string | null | undefined,
+  formatId: string,
+  previousValue = '',
+): string {
+  if (!input || !input.trim()) return '';
+
+  const id = normalizeDateFormat(formatId);
+  const sep = id.includes('/') ? '/' : id.includes('.') ? '.' : '-';
+  const isYearFirst = id.startsWith('YYYY');
+  const maxLens = isYearFirst ? [4, 2, 2] : [2, 2, 4];
+  const maxDigits = maxLens[0] + maxLens[1] + maxLens[2];
+
+  const isDeleting = previousValue.length > input.length;
+
+  // Normalize all separators to the target preset separator
+  const normalized = input.replace(/[/\-.]/g, sep);
+
+  // If user is deleting and the deleted character was a trailing separator,
+  // do not re-add the separator.
+  if (isDeleting && previousValue.endsWith(sep) && normalized === previousValue.slice(0, -1)) {
+    return normalized;
+  }
+
+  // If the input already contains separators
+  if (normalized.includes(sep)) {
+    const rawSegments = normalized.split(sep);
+    const cleanedSegments: string[] = [];
+
+    for (let i = 0; i < Math.min(rawSegments.length, 3); i++) {
+      const maxLen = maxLens[i]!;
+      const digits = (rawSegments[i] || '').replace(/\D/g, '').slice(0, maxLen);
+      cleanedSegments.push(digits);
+    }
+
+    if (cleanedSegments.length === 1) {
+      const seg0 = cleanedSegments[0]!;
+      if (!isDeleting && seg0.length === maxLens[0]) {
+        return `${seg0}${sep}`;
+      }
+      return seg0;
+    }
+
+    if (cleanedSegments.length === 2) {
+      const [seg0, seg1] = cleanedSegments as [string, string];
+      if (!isDeleting && seg1.length === maxLens[1]) {
+        return `${seg0}${sep}${seg1}${sep}`;
+      }
+      if (normalized.endsWith(sep) && !seg1) {
+        return `${seg0}${sep}`;
+      }
+      return `${seg0}${sep}${seg1}`;
+    }
+
+    if (cleanedSegments.length >= 3) {
+      const [seg0, seg1, seg2] = cleanedSegments as [string, string, string];
+      if (normalized.endsWith(sep) && !seg2) {
+        return `${seg0}${sep}${seg1}${sep}`;
+      }
+      return `${seg0}${sep}${seg1}${sep}${seg2}`;
+    }
+  }
+
+  // Input does NOT contain separators: format purely by digits
+  const digits = input.replace(/\D/g, '').slice(0, maxDigits);
+  if (!digits) return '';
+
+  if (isYearFirst) {
+    if (digits.length < 4) {
+      return digits;
+    }
+    if (digits.length === 4) {
+      return isDeleting ? digits : `${digits}${sep}`;
+    }
+    if (digits.length < 6) {
+      return `${digits.slice(0, 4)}${sep}${digits.slice(4)}`;
+    }
+    if (digits.length === 6) {
+      return isDeleting
+        ? `${digits.slice(0, 4)}${sep}${digits.slice(4)}`
+        : `${digits.slice(0, 4)}${sep}${digits.slice(4)}${sep}`;
+    }
+    return `${digits.slice(0, 4)}${sep}${digits.slice(4, 6)}${sep}${digits.slice(6, 8)}`;
+  }
+
+  if (digits.length < 2) {
+    return digits;
+  }
+  if (digits.length === 2) {
+    return isDeleting ? digits : `${digits}${sep}`;
+  }
+  if (digits.length < 4) {
+    return `${digits.slice(0, 2)}${sep}${digits.slice(2)}`;
+  }
+  if (digits.length === 4) {
+    return isDeleting
+      ? `${digits.slice(0, 2)}${sep}${digits.slice(2)}`
+      : `${digits.slice(0, 2)}${sep}${digits.slice(2)}${sep}`;
+  }
+  return `${digits.slice(0, 2)}${sep}${digits.slice(2, 4)}${sep}${digits.slice(4, 8)}`;
+}
+
+const INTL_FORMATTER_CACHE = new Map<string, Intl.DateTimeFormat>();
+
+function getCachedIntlFormatter(locale: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${locale}:${JSON.stringify(options)}`;
+  let formatter = INTL_FORMATTER_CACHE.get(key);
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat(locale, options);
+    INTL_FORMATTER_CACHE.set(key, formatter);
+  }
+  return formatter;
+}
+
+/**
  * Infers the closest preset for a UI language using `Intl` regional conventions.
  */
 export function detectLocaleDateFormat(language: string): DateFormatId {
   const locale = getIntlLocaleForLanguage(language);
-  const parts = new Intl.DateTimeFormat(locale, {
+  const parts = getCachedIntlFormatter(locale, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -198,7 +398,7 @@ export function getDateFormatOptions(
   sample: Date = new Date(),
 ): readonly DateFormatOption[] {
   const locale = getIntlLocaleForLanguage(language);
-  const intlParts = new Intl.DateTimeFormat(locale, {
+  const intlParts = getCachedIntlFormatter(locale, {
     day: 'numeric',
     month: 'numeric',
     year: 'numeric',
@@ -235,22 +435,30 @@ export function todayISO(): string {
 }
 
 /**
- * Parses a `YYYY-MM-DD` storage string into a local Date at midnight.
+ * Parses a `YYYY-MM-DD` (or ISO datetime) storage string into a local Date at midnight.
  * Returns `undefined` when the string is missing or not a valid calendar day.
  */
-export function parseIsoDate(isoStr?: string): Date | undefined {
-  if (!isoStr) return undefined;
-  const [year, month, day] = isoStr.split('-').map(Number);
+export function parseIsoDate(isoStr?: string | null): Date | undefined {
+  if (!isoStr || typeof isoStr !== 'string') return undefined;
+  const dateOnly = isoStr.trim().split(/[T\s]/)[0];
+  if (!dateOnly) return undefined;
+  const [year, month, day] = dateOnly.split('-').map(Number);
   if (year == null || month == null || day == null || isNaN(year) || isNaN(month) || isNaN(day)) {
     return undefined;
   }
-  return new Date(year, month - 1, day);
+  const date = new Date(year, month - 1, day);
+  if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+    return undefined;
+  }
+  return date;
 }
 
-/** Returns the year portion of a `YYYY-MM-DD` string, or `undefined` if invalid. */
-export function parseIsoYear(isoStr?: string): number | undefined {
-  if (!isoStr) return undefined;
-  const [year] = isoStr.split('-').map(Number);
+/** Returns the year portion of a `YYYY-MM-DD` (or ISO datetime) string, or `undefined` if invalid. */
+export function parseIsoYear(isoStr?: string | null): number | undefined {
+  if (!isoStr || typeof isoStr !== 'string') return undefined;
+  const dateOnly = isoStr.trim().split(/[T\s]/)[0];
+  if (!dateOnly) return undefined;
+  const [year] = dateOnly.split('-').map(Number);
   return year == null || isNaN(year) ? undefined : year;
 }
 
@@ -260,13 +468,14 @@ export const DATE_PICKER_YEAR_FUTURE = 10;
 
 /**
  * True when `date` is on/after optional ISO `min` and on/before optional ISO `max`
- * (local-calendar midnight comparisons via {@link parseIsoDate}).
+ * (normalized local-calendar day comparisons via {@link parseIsoDate}).
  */
-export function isDateWithinIsoBounds(date: Date, minIso?: string, maxIso?: string): boolean {
+export function isDateWithinIsoBounds(date: Date, minIso?: string | null, maxIso?: string | null): boolean {
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
   const minDate = parseIsoDate(minIso);
-  if (minDate && date < minDate) return false;
+  if (minDate && target < minDate) return false;
   const maxDate = parseIsoDate(maxIso);
-  if (maxDate && date > maxDate) return false;
+  if (maxDate && target > maxDate) return false;
   return true;
 }
 
@@ -274,8 +483,8 @@ export function isDateWithinIsoBounds(date: Date, minIso?: string, maxIso?: stri
  * Start/end months for DayPicker `captionLayout="dropdown"` from optional ISO bounds.
  */
 export function resolveDatePickerMonthBounds(
-  minIso?: string,
-  maxIso?: string,
+  minIso?: string | null,
+  maxIso?: string | null,
 ): { startMonth: Date; endMonth: Date } {
   const nowYear = new Date().getFullYear();
   const minYear = parseIsoYear(minIso);
@@ -292,13 +501,14 @@ export interface TimeHHmmParts {
 }
 
 /**
- * Parses `HH:mm` or `HH:mm:ss` into hours/minutes.
+ * Parses `HH:mm` or `HH:mm:ss` (including single-digit minutes) into hours/minutes.
  * Returns `null` when the string is missing or not a valid clock time.
  */
-export function parseTimeHHmm(value: string): TimeHHmmParts | null {
+export function parseTimeHHmm(value?: string | null): TimeHHmmParts | null {
+  if (!value || typeof value !== 'string') return null;
   const trimmed = value.trim();
   if (!trimmed) return null;
-  const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(trimmed);
+  const match = /^(\d{1,2}):(\d{1,2})(?::\d{1,2})?$/.exec(trimmed);
   if (!match) return null;
   const hours = Number(match[1]);
   const minutes = Number(match[2]);
@@ -322,9 +532,9 @@ export function formatTimeHHmm(hours: number, minutes: number): string {
 
 /**
  * Normalizes a browser time value to `HH:mm`, or `""` when empty/invalid.
- * Accepts `HH:mm` and `HH:mm:ss`.
+ * Accepts `HH:mm`, `H:m`, and `HH:mm:ss`.
  */
-export function normalizeTimeHHmm(value: string): string {
+export function normalizeTimeHHmm(value?: string | null): string {
   const parsed = parseTimeHHmm(value);
   if (!parsed) return '';
   return formatTimeHHmm(parsed.hours, parsed.minutes);
@@ -339,7 +549,8 @@ export interface IsoDateTimeParts {
  * Splits an ISO datetime into local-calendar `YYYY-MM-DD` + `HH:mm` for picker UI.
  * Returns `null` when the value cannot be parsed as a valid Date.
  */
-export function splitIsoDateTime(iso: string): IsoDateTimeParts | null {
+export function splitIsoDateTime(iso?: string | null): IsoDateTimeParts | null {
+  if (!iso || typeof iso !== 'string') return null;
   const trimmed = iso.trim();
   if (!trimmed) return null;
   const parsed = new Date(trimmed);
@@ -354,12 +565,14 @@ export function splitIsoDateTime(iso: string): IsoDateTimeParts | null {
  * Combines local-calendar `YYYY-MM-DD` + `HH:mm` into an ISO-8601 string.
  * Empty date returns `null`. Missing/invalid time defaults to `00:00`.
  */
-export function combineIsoDateAndTime(date: string, time: string): string | null {
+export function combineIsoDateAndTime(date?: string | null, time?: string | null): string | null {
+  if (!date || typeof date !== 'string') return null;
   const datePart = date.trim();
   if (!datePart) return null;
   const localDate = parseIsoDate(datePart);
   if (!localDate) return null;
-  const timeParts = parseTimeHHmm(time.trim() || '00:00') ?? { hours: 0, minutes: 0 };
+  const timeStr = typeof time === 'string' && time.trim() ? time.trim() : '00:00';
+  const timeParts = parseTimeHHmm(timeStr) ?? { hours: 0, minutes: 0 };
   localDate.setHours(timeParts.hours, timeParts.minutes, 0, 0);
   return localDate.toISOString();
 }

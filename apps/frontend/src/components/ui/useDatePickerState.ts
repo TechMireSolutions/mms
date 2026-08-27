@@ -2,6 +2,7 @@ import * as React from "react"
 import type { Matcher } from "react-day-picker"
 import {
   DEFAULT_GLOBAL_SETTINGS,
+  formatDateInputAsYouType,
   formatDateToIso,
   formatIsoDateToDisplay,
   isDateWithinIsoBounds,
@@ -14,10 +15,24 @@ import {
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings"
 
 export interface UseDatePickerStateOptions {
-  value?: string
+  value?: string | null
   onChange?: (value: string) => void
-  min?: string
-  max?: string
+  min?: string | null
+  max?: string | null
+}
+
+function resolveInitialDisplayMonth(
+  targetDate?: Date,
+  minIso?: string | null,
+  maxIso?: string | null,
+): Date {
+  if (targetDate) return targetDate
+  const today = new Date()
+  const minDate = parseIsoDate(minIso)
+  if (minDate && today < minDate) return minDate
+  const maxDate = parseIsoDate(maxIso)
+  if (maxDate && today > maxDate) return maxDate
+  return today
 }
 
 export function useDatePickerState({ value, onChange, min, max }: UseDatePickerStateOptions) {
@@ -44,15 +59,15 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
 
   const dateValue = React.useMemo(() => parseIsoDate(value), [value])
 
-  /** Month shown in the calendar — jump to the filled value when opening. */
-  const [displayMonth, setDisplayMonth] = React.useState<Date>(
-    () => dateValue ?? new Date(),
+  /** Month shown in the calendar — jump to the filled value (or clamped valid month) when opening. */
+  const [displayMonth, setDisplayMonth] = React.useState<Date>(() =>
+    resolveInitialDisplayMonth(dateValue, min, max),
   )
 
   React.useEffect(() => {
     if (!open) return
-    setDisplayMonth(dateValue ?? new Date())
-  }, [open, dateValue])
+    setDisplayMonth(resolveInitialDisplayMonth(dateValue, min, max))
+  }, [open, dateValue, min, max])
 
   const disabledDays = React.useMemo(() => {
     const rules: Matcher[] = []
@@ -95,15 +110,16 @@ export function useDatePickerState({ value, onChange, min, max }: UseDatePickerS
   }
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const nextInputValue = event.target.value
-    setInputValue(nextInputValue)
-
-    if (nextInputValue === "") {
+    const rawValue = event.target.value
+    if (rawValue === "") {
       clearValue()
       return
     }
 
-    const parsed = parseDisplayDateToIso(nextInputValue, dateFormat)
+    const formatted = formatDateInputAsYouType(rawValue, dateFormat, inputValue)
+    setInputValue(formatted)
+
+    const parsed = parseDisplayDateToIso(formatted, dateFormat)
     if (!parsed) return
     const parsedDate = parseIsoDate(parsed)
     if (!parsedDate || !isDateWithinIsoBounds(parsedDate, min, max)) return

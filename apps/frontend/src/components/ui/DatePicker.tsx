@@ -8,13 +8,13 @@ import { useTranslation } from "@/hooks/useTranslation"
 import { useDatePickerState } from "@/components/ui/useDatePickerState"
 
 export interface DatePickerProps {
-  value?: string
+  value?: string | null
   onChange?: (value: string) => void
   placeholder?: string
   className?: string
   disabled?: boolean
-  min?: string
-  max?: string
+  min?: string | null
+  max?: string | null
   id?: string
   name?: string
   required?: boolean
@@ -89,7 +89,7 @@ export function DatePicker({
         <PopoverTrigger
           type="button"
           disabled={disabled}
-          className="me-2 min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground group-focus-within:text-primary hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0"
+          className="me-2 min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground group-focus-within:text-primary hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           aria-label={t("datePicker.openAria")}
         >
           <CalendarIcon className="h-4 w-4 transition-colors opacity-80" />
@@ -135,6 +135,7 @@ export function DatePicker({
 
       <input
         type="text"
+        inputMode="numeric"
         id={resolvedId}
         name={resolvedName}
         value={inputValue}
@@ -148,6 +149,9 @@ export function DatePicker({
             setOpen(false)
           } else if (event.key === "Escape") {
             setOpen(false)
+          } else if (event.key === "ArrowDown" && (event.altKey || !open)) {
+            event.preventDefault()
+            setOpen(true)
           }
         }}
         placeholder={resolvedPlaceholder}
