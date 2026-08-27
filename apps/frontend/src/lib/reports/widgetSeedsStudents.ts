@@ -73,8 +73,9 @@ export const studentsWidgetSeeds: CustomWidget[] = [
     filterOperator: "equals",
     filterValue: "active",
     color: "emerald",
-    isPinnedToDashboard: true,
+    isPinnedToDashboard: false,
     thresholdEnabled: true,
+
     thresholdCondition: "lt",
     thresholdValue: 10,
     thresholdColor: "amber",

@@ -58,6 +58,14 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
             merged[widgetIndex] = { ...merged[widgetIndex], fixedSubTextKey: defaultWidget.fixedSubTextKey };
             hasChanges = true;
           }
+          if (
+            defaultWidget.widgetType === "card" &&
+            merged[widgetIndex].isPinnedToDashboard
+          ) {
+            merged[widgetIndex] = { ...merged[widgetIndex], isPinnedToDashboard: false };
+            hasChanges = true;
+          }
+
         }
       }
     }

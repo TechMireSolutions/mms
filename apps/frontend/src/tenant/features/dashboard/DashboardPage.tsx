@@ -159,13 +159,14 @@ export function DashboardPage() {
 
       <ErrorBoundary>
         <DashboardWidgets
-          widgets={customWidgets.filter((widget) => widget.isPinnedToDashboard)}
+          widgets={customWidgets.filter((widget) => widget.isPinnedToDashboard && widget.widgetType !== 'card')}
           onUnpin={handleUnpinWidget}
           isEditMode={isEditMode}
           onEditWidget={handleEditWidget}
           onDeleteWidget={handleDeleteWidget}
         />
       </ErrorBoundary>
+
 
       <AnimatePresence mode="wait">
         <motion.div

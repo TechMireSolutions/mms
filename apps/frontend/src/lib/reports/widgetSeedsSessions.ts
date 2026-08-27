@@ -88,8 +88,9 @@ export const sessionsWidgetSeeds: CustomWidget[] = [
     filterOperator: "equals",
     filterValue: "active",
     color: "blue",
-    isPinnedToDashboard: true,
+    isPinnedToDashboard: false,
   },
+
   {
     id: "def-sessions-toggle-grid",
     title: "",

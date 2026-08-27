@@ -107,7 +107,7 @@ export function DashboardCustomizePanel({
         </CustomizeSectionCard>
 
         <DashboardCustomizeWidgetsSection
-          customWidgets={customWidgets}
+          customWidgets={customWidgets.filter((widget) => widget.widgetType !== 'card')}
           pinnedDashboardWidgetCount={pinnedDashboardWidgetCount}
           onEditWidget={onEditWidget}
           onDeleteWidget={onDeleteWidget}
@@ -115,6 +115,7 @@ export function DashboardCustomizePanel({
           onOpenWidgetBuilder={onOpenWidgetBuilder}
           onReorderWidgets={onReorderWidgets}
         />
+
 
         {onUpdateGridMode && (
           <CustomizeSectionCard

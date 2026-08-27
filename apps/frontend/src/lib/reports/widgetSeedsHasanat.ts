@@ -49,8 +49,9 @@ export const hasanatWidgetSeeds: CustomWidget[] = [
     operation: "sum",
     targetField: "points",
     color: "amber",
-    isPinnedToDashboard: true,
+    isPinnedToDashboard: false,
   },
+
   {
     id: "def-hasanat-distribution",
     title: "",

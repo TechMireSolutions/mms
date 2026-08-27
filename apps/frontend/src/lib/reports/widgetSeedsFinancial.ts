@@ -143,8 +143,9 @@ export const financialWidgetSeeds: CustomWidget[] = [
     filterOperator: "equals",
     filterValue: "unpaid",
     color: "red",
-    isPinnedToDashboard: true,
+    isPinnedToDashboard: false,
     thresholdEnabled: true,
+
     thresholdCondition: "gt",
     thresholdValue: 10000,
     thresholdColor: "red",

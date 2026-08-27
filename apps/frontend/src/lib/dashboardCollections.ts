@@ -171,5 +171,6 @@ export function getActiveCustomCardIds(
 
 /** Count of widgets pinned to the dashboard layout. */
 export function getPinnedDashboardWidgetCount(widgets: CustomWidget[]): number {
-  return widgets.filter((widget) => widget.isPinnedToDashboard).length;
+  return widgets.filter((widget) => widget.isPinnedToDashboard && widget.widgetType !== 'card').length;
 }
+

@@ -11,7 +11,7 @@ export const contactsWidgetSeeds: CustomWidget[] = [
         widgetType: "kpi",
         operation: "count",
         color: "blue",
-        isPinnedToDashboard: true
+        isPinnedToDashboard: false
       },
       {
         id: "def-card-admin-contacts",
@@ -27,7 +27,7 @@ export const contactsWidgetSeeds: CustomWidget[] = [
         trend: 0,
         trendType: "manual",
         role: "admin",
-        isPinnedToDashboard: true
+        isPinnedToDashboard: false
       },
       {
         id: "def-card-accountant-contacts",
@@ -43,8 +43,9 @@ export const contactsWidgetSeeds: CustomWidget[] = [
         trend: 0,
         trendType: "manual",
         role: "accountant",
-        isPinnedToDashboard: true
+        isPinnedToDashboard: false
       },
+
       {
         id: "def-contacts-whatsapp",
         title: "",
