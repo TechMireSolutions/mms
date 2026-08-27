@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { X, LogOut } from "lucide-react";
 import { useBranding } from "@/tenant/hooks/useBranding";
 import { getInitials } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useTranslation } from "@/hooks/useTranslation";
-import { NAV_ITEMS } from "@/lib/config/navConfig";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
-import { isNavPathActive } from "@/lib/config/routes";
+import { ROUTES } from "@/lib/config/routes";
 import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
 import { MobileSidebarNavItems } from "@/tenant/components/layout/MobileSidebarNavItems";
+import { useSidebarNav } from "@/tenant/components/layout/useSidebarNav";
 import { cn } from "@/lib/utils";
 import { OVERLAY_BACKDROP } from "@/components/ui/formStyles";
 
@@ -25,42 +23,17 @@ export interface MobileSidebarProps {
 }
 
 export default function MobileSidebar({ open, onClose }: MobileSidebarProps): React.JSX.Element | null {
-  const location = useLocation();
   const branding = useBranding();
   const { user, logout } = useAuth();
-  const [openedAt, setOpenedAt] = useState<number>(0);
-  const drawerRef = useOverlayBehavior<HTMLDivElement>({ open, onClose });
-
-  const settings = useGlobalSettings();
   const { t } = useTranslation();
-  const enabledModules = settings.enabledModules || {};
+  const [openedAt, setOpenedAt] = useState<number>(0);
   const [logoError, setLogoError] = useState<boolean>(false);
+  const drawerRef = useOverlayBehavior<HTMLDivElement>({ open, onClose });
+  const { openMenus, toggleMenu, visibleMenuItems } = useSidebarNav(false, () => {});
 
   useEffect(() => {
     setLogoError(false);
   }, [branding.logoUrl]);
-
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
-    const initial: Record<string, boolean> = {};
-    NAV_ITEMS.forEach(item => {
-      if (item.subItems && item.subItems.some(sub => isNavPathActive(location.pathname, sub.path))) {
-        initial[item.labelKey] = true;
-      }
-    });
-    return initial;
-  });
-
-  const toggleMenu = (labelKey: string) => {
-    setOpenMenus(prev => ({ ...prev, [labelKey]: !prev[labelKey] }));
-  };
-
-  useEffect(() => {
-    NAV_ITEMS.forEach(item => {
-      if (item.subItems && item.subItems.some(sub => isNavPathActive(location.pathname, sub.path))) {
-        setOpenMenus(prev => ({ ...prev, [item.labelKey]: true }));
-      }
-    });
-  }, [location.pathname]);
 
   useEffect(() => {
     if (open) {
@@ -69,23 +42,6 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
   }, [open]);
 
   const initials = getInitials(user?.name, 2) || "AK";
-
-  const visibleMenuItems = NAV_ITEMS.map(item => {
-    if (item.subItems) {
-      const visibleSubItems = item.subItems.filter(sub => {
-        if (!sub.moduleId) return true;
-        return enabledModules[sub.moduleId] !== false;
-      });
-      return { ...item, subItems: visibleSubItems };
-    }
-    return item;
-  }).filter(item => {
-    if (item.subItems) {
-      return item.subItems.length > 0;
-    }
-    if (!item.moduleId) return true;
-    return enabledModules[item.moduleId] !== false;
-  });
 
   if (!open) return null;
 
@@ -100,6 +56,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
     >
       <div
         className={cn(
+          "fixed inset-0",
           OVERLAY_BACKDROP,
           "transition-opacity duration-300",
           open ? "opacity-100" : "opacity-0",
@@ -117,10 +74,14 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
         role="dialog"
         aria-modal="true"
         aria-label={t("nav.openMenu")}
-        className="fixed start-0 top-0 z-modal flex h-full w-sidebar-mobile max-w-sheet flex-col bg-sidebar shadow-2xl lg:hidden"
+        className="fixed start-0 top-0 z-sidebar-mobile flex h-full w-sidebar-mobile max-w-sheet flex-col bg-sidebar shadow-2xl border-e border-sidebar-border lg:hidden"
       >
         <div className="flex h-16 flex-shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-5">
-          <div className="flex min-w-0 flex-1 items-center gap-3">
+          <Link
+            to={ROUTES.home}
+            onClick={onClose}
+            className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden hover:opacity-90 transition-opacity"
+          >
             {branding.logoUrl && !logoError ? (
               <img
                 src={branding.logoUrl}
@@ -140,20 +101,20 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
             <span className="min-w-0 truncate text-sm font-semibold text-sidebar-foreground">
               {branding.madrasaName || t("entry.productName")}
             </span>
-          </div>
+          </Link>
           <Button
             type="button"
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="min-h-11 min-w-11 h-11 w-11 p-0 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            className="min-h-11 min-w-11 h-11 w-11 p-0 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50 shrink-0"
           >
             <span className="sr-only">{t("nav.closeSidebar")}</span>
             <X className="w-5 h-5" />
           </Button>
         </div>
 
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto overscroll-contain">
           <MobileSidebarNavItems
             items={visibleMenuItems}
             openMenus={openMenus}

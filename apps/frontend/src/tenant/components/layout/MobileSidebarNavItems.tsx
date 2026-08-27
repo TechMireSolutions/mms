@@ -31,14 +31,17 @@ export function MobileSidebarNavItems({
           const isMenuOpen = !!openMenus[item.labelKey];
           const hasActiveSub = item.subItems.some((sub) => isNavPathActive(location.pathname, sub.path));
           const Icon = item.icon;
+          const subMenuId = `mobile-subnav-${item.labelKey.replace(/[^a-zA-Z0-9]/g, "-")}`;
 
           return (
             <div key={item.labelKey} className="space-y-1">
               <Button
                 type="button"
                 variant="ghost"
+                aria-expanded={isMenuOpen}
+                aria-controls={subMenuId}
                 onClick={() => onToggleMenu(item.labelKey)}
-                className={`group flex min-h-11 w-full items-center justify-between rounded-lg px-3 py-2.5 transition-all duration-200 hover:bg-sidebar-accent/50 ${
+                className={`group flex min-h-11 w-full items-center justify-between rounded-lg px-3 py-2.5 transition-all duration-200 hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70 touch-manipulation active:scale-[0.99] select-none ${
                   hasActiveSub
                     ? "bg-sidebar-accent/30 text-sidebar-foreground"
                     : "text-sidebar-muted-foreground hover:text-sidebar-foreground"
@@ -50,7 +53,9 @@ export function MobileSidebarNavItems({
                 </div>
                 <ChevronRight
                   className={`w-3.5 h-3.5 transition-transform duration-200 rtl:rotate-180 ${
-                    isMenuOpen ? "rotate-90 rtl:-rotate-90 text-sidebar-foreground" : "text-sidebar-muted-foreground"
+                    isMenuOpen
+                      ? "rotate-90 rtl:-rotate-90 text-sidebar-foreground"
+                      : "text-sidebar-muted-foreground group-hover:text-sidebar-foreground group-active:text-sidebar-foreground"
                   }`}
                 />
               </Button>
@@ -58,6 +63,7 @@ export function MobileSidebarNavItems({
               <AnimatePresence initial={false}>
                 {isMenuOpen && (
                   <motion.div
+                    id={subMenuId}
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
@@ -73,14 +79,22 @@ export function MobileSidebarNavItems({
                           key={sub.path}
                           to={sub.path}
                           onClick={onClose}
+                          aria-current={isSubActive ? "page" : undefined}
                           onMouseEnter={() => prefetchRoute(sub.path)}
                           onFocus={() => prefetchRoute(sub.path)}
-                          className={`group flex min-h-11 items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 relative ${
+                          className={`group flex min-h-11 items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 touch-manipulation active:scale-[0.99] select-none relative ${
                             isSubActive
                               ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                              : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                              : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70"
                           }`}
                         >
+                          {isSubActive && (
+                            <motion.div
+                              layoutId="mobile-sidebar-indicator-sub"
+                              className="absolute start-0 top-1/2 h-3 w-0.75 -translate-x-full -translate-y-1/2 rounded-e-full bg-sidebar-primary rtl:translate-x-full"
+                              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            />
+                          )}
                           <SubIcon className={`w-4 h-4 flex-shrink-0 ${isSubActive ? "text-sidebar-primary" : ""}`} />
                           <span className="text-sm font-medium">
                             {t(sub.labelKey)}
@@ -102,15 +116,23 @@ export function MobileSidebarNavItems({
             key={item.path}
             to={item.path!}
             onClick={onClose}
+            aria-current={isActive ? "page" : undefined}
             onMouseEnter={() => prefetchRoute(item.path!)}
             onFocus={() => prefetchRoute(item.path!)}
-            className={`flex min-h-11 items-center gap-3 px-3 py-2.5 rounded-lg transition-all ${
+            className={`group flex min-h-11 items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 touch-manipulation active:scale-[0.99] relative select-none ${
               isActive
-                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs"
+                : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70"
             }`}
           >
-            <Icon className={`h-4.5 w-4.5 ${isActive ? "text-sidebar-primary" : ""}`} />
+            {isActive && (
+              <motion.div
+                layoutId="mobile-sidebar-indicator"
+                className="absolute start-0 top-1/2 -translate-y-1/2 w-0.75 h-5 bg-sidebar-primary rounded-e-full"
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              />
+            )}
+            <Icon className={`h-4.5 w-4.5 flex-shrink-0 ${isActive ? "text-sidebar-primary" : ""}`} />
             <span className="text-sm font-medium">{t(item.labelKey)}</span>
           </Link>
         );

@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
 @import "tailwindcss";
 @import "tw-animate-css";
 
@@ -188,9 +186,11 @@
   --z-index-sidebar: 40;
   --z-index-header: 40;
   --z-index-modal: 50;
-  --z-index-dropdown: 60;
   --z-index-modal-priority: 60;
+  --z-index-dropdown: 70;
   --z-index-popover: 70;
+  --z-index-tooltip: 80;
+  --z-index-sidebar-mobile: 90;
   --z-index-toast: 100;
 
   --scale-102: 1.02;
@@ -519,6 +519,12 @@
   background-position: 0 0, 14px 14px;
 }
 
+.dark .islamic-pattern {
+  background-image:
+    radial-gradient(hsl(var(--primary) / 0.12) 1.25px, transparent 1.25px),
+    radial-gradient(hsl(var(--accent-foreground) / 0.04) 1.25px, transparent 1.25px);
+}
+
 @media print {
   aside,
   header,
@@ -531,10 +537,11 @@
   .print\:hidden,
   .border-b.border-border,
   [role="tablist"],
+  [role="toolbar"],
+  [role="search"],
   [role="group"],
   .shadow-sm,
-  .shadow-xl,
-  .flex.items-center.justify-between.gap-3.flex-wrap.py-2.text-start {
+  .shadow-xl {
     display: none !important;
   }
 

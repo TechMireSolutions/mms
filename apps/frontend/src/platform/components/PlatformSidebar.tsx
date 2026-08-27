@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, LogOut, ShieldAlert, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +14,7 @@ import { SectionLabel } from '@/components/ui/SectionLabel';
 import { cn } from '@/lib/utils';
 import { isNavPathActive, ROUTES } from '@/lib/config/routes';
 import { prefetchRoute } from '@/lib/routing/routePrefetch';
+import { OVERLAY_BACKDROP } from '@/components/ui/formStyles';
 import { getInitials } from '@mms/shared';
 
 export function PlatformSidebar(): React.JSX.Element | null {
@@ -24,6 +25,14 @@ export function PlatformSidebar(): React.JSX.Element | null {
   const { mobileOpen, closeMobileSidebar } = usePlatformSidebar();
   const location = useLocation();
   const [collapsed, setCollapsed] = useState(false);
+  const [openedAt, setOpenedAt] = useState<number>(0);
+  const [logoError, setLogoError] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      setOpenedAt(Date.now());
+    }
+  }, [mobileOpen]);
 
   const drawerRef = useOverlayBehavior<HTMLDivElement>({
     open: mobileOpen,
@@ -93,7 +102,16 @@ export function PlatformSidebar(): React.JSX.Element | null {
           className="flex min-h-11 items-center gap-3 overflow-hidden hover:opacity-90 transition-opacity"
         >
           <div className="w-9 h-9 rounded-xl bg-card border border-sidebar-primary/40 flex items-center justify-center shrink-0 shadow-xs p-1 overflow-hidden">
-            <img src="/platform-logo.webp" alt="Platform Logo" className="h-full w-full object-contain" />
+            {!logoError ? (
+              <img
+                src="/platform-logo.webp"
+                alt="Platform Logo"
+                className="h-full w-full object-contain"
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <ShieldAlert className="w-5 h-5 text-sidebar-primary" />
+            )}
           </div>
           <AnimatePresence>
             {(isMobile || !collapsed) && (
@@ -201,10 +219,18 @@ export function PlatformSidebar(): React.JSX.Element | null {
     <>
       {/* Mobile Overlay & Drawer */}
       {mobileOpen && (
-        <div className="md:hidden fixed inset-0 z-modal flex">
+        <div
+          role="region"
+          aria-label={t('nav.openMenu')}
+          className="md:hidden fixed inset-0 z-sidebar-mobile flex"
+        >
           <div
-            className="fixed inset-0 bg-black/40 backdrop-blur-xs"
-            onClick={() => closeMobileSidebar()}
+            className={cn("fixed inset-0", OVERLAY_BACKDROP, "transition-opacity duration-300")}
+            onClick={() => {
+              if (Date.now() - openedAt > 300) {
+                closeMobileSidebar();
+              }
+            }}
             aria-hidden
           />
           <div
