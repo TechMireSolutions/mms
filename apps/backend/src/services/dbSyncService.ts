@@ -76,7 +76,7 @@ export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
     const globalSettings = await getWorkspaceGlobalSettings(tenant);
     const emailIntegration = await loadEmailIntegrationConfig();
 
-    return {
+    const snapshotPayload: TenantDatabaseSnapshot = {
       ...snapshot,
       collections: { ...(snapshot.collections ?? {}), ...relational },
       objects: {
@@ -85,6 +85,14 @@ export async function fetchBackupSnapshot(): Promise<TenantDatabaseSnapshot> {
         ...(globalSettings ? { global_settings: globalSettings } : {}),
         ...(emailIntegration ? { email_integration: emailIntegration } : {}),
       },
+    };
+
+    const { exportBackupAssetsForSnapshot } = await import('./backupAssetService.js');
+    const assets = await exportBackupAssetsForSnapshot(snapshotPayload);
+
+    return {
+      ...snapshotPayload,
+      ...(Object.keys(assets).length > 0 ? { assets } : {}),
     };
   });
 }
@@ -215,6 +223,11 @@ export async function synchronizeData(
       if (tenant) {
         await verifyPostRestoreIntegrity(tenant);
       }
+    }
+
+    if (payload.assets && typeof payload.assets === 'object' && Object.keys(payload.assets).length > 0) {
+      const { restoreTenantAssets } = await import('./backupAssetService.js');
+      await restoreTenantAssets(payload.assets);
     }
   });
 }

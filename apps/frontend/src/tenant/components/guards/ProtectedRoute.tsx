@@ -1,18 +1,22 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { requiresTwoFactor } from "@mms/shared";
+import { isInstitutionSetupComplete, requiresTwoFactor } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from "@/lib/config/routes";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
+import { useBranding } from "@/tenant/hooks/useBranding";
 import { is2FAPending, is2FAVerified } from "@/lib/twoFactor";
 
 /**
  * Requires an authenticated session. Redirects guests to login with return path.
  * When global 2FA is required, blocks access until verification completes.
+ * When temporary password is active, forces password change.
+ * When institution profile is incomplete, forces initial institution setup.
  */
 export default function ProtectedRoute(): React.JSX.Element {
   const { isAuthenticated, user } = useAuth();
   const settings = useGlobalSettings();
+  const branding = useBranding();
   const location = useLocation();
 
   if (!isAuthenticated) {
@@ -40,6 +44,10 @@ export default function ProtectedRoute(): React.JSX.Element {
 
   if (user?.mustChangePassword && location.pathname !== ROUTES.forcePasswordChange) {
     return <Navigate to={ROUTES.forcePasswordChange} replace />;
+  }
+
+  if (!isInstitutionSetupComplete(branding) && location.pathname !== ROUTES.institutionSetup) {
+    return <Navigate to={ROUTES.institutionSetup} replace />;
   }
 
   return <Outlet />;

@@ -1,24 +1,15 @@
 import type React from "react";
 import CreateMadrasa from "@/platform/pages/onboarding/steps/CreateMadrasa";
 import AdminSetup from "@/platform/pages/onboarding/steps/AdminSetup";
-import { DEFAULT_BRANDING_SETTINGS, SYSTEM_MODULES } from "@mms/shared";
+import { SYSTEM_MODULES } from "@mms/shared";
 
 export interface OnboardingData {
   name: string;
-  tagline: string;
   subdomain: string;
   subdomainTouched: boolean;
-  logoUrl: string;
-  country: string;
-  province: string;
-  city: string;
-  primaryColor: string;
-  secondaryColor: string;
-  footerText: string;
   firstName: string;
   lastName: string;
   email: string;
-  phone: string;
   password: string;
   confirmPassword: string;
   agreedTerms: boolean;
@@ -55,20 +46,11 @@ export const ONBOARDING_STEP_DEFS: OnboardingStep[] = [
 
 export const ONBOARDING_INITIAL_DATA: OnboardingData = {
   name: "",
-  tagline: DEFAULT_BRANDING_SETTINGS.tagline,
   subdomain: "",
   subdomainTouched: false,
-  logoUrl: "",
-  country: "",
-  province: "",
-  city: "",
-  primaryColor: DEFAULT_BRANDING_SETTINGS.primaryColor,
-  secondaryColor: DEFAULT_BRANDING_SETTINGS.secondaryColor,
-  footerText: "",
   firstName: "",
   lastName: "",
   email: "",
-  phone: "",
   password: "",
   confirmPassword: "",
   agreedTerms: false,

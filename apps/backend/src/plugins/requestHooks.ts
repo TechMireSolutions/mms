@@ -1,5 +1,5 @@
 import type { FastifyInstance } from 'fastify';
-import { resolveSubdomainFromRequest, tenantStorage } from '../lib/tenantContext.js';
+import { bindRequestTenant, resolveSubdomainFromRequest } from '../lib/tenantContext.js';
 import { attachAccessTokenFromCookie } from '../services/auth/authCookieService.js';
 import { attachPlatformTokenFromCookie } from '../services/platform/platformCookieService.js';
 import { requestHostname } from '../lib/requestHost.js';
@@ -9,14 +9,13 @@ export function registerRequestHooks(app: FastifyInstance): void {
     reply.header('x-request-id', request.id);
     const hostname = requestHostname(request);
     const subdomain = resolveSubdomainFromRequest(hostname);
-    tenantStorage.run(subdomain, () => {
-      if (subdomain) {
-        attachAccessTokenFromCookie(request);
-      } else {
-        attachPlatformTokenFromCookie(request);
-      }
-      done();
-    });
+    bindRequestTenant(subdomain);
+    if (subdomain) {
+      attachAccessTokenFromCookie(request);
+    } else {
+      attachPlatformTokenFromCookie(request);
+    }
+    done();
   });
 
   app.addHook('onResponse', (request, reply, done) => {

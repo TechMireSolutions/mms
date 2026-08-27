@@ -1,6 +1,5 @@
 import React from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { normalizePhoneInput } from "@mms/shared";
 import type { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
@@ -14,7 +13,6 @@ export interface AdminSetupData {
   firstName?: string;
   lastName?: string;
   email?: string;
-  phone?: string;
   password?: string;
   confirmPassword?: string;
   agreedTerms?: boolean;
@@ -93,20 +91,6 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
         placeholder={t("onboarding.admin.emailPlaceholder")}
         onChange={(value) => update("email", value)}
       />
-
-      <FieldRow id="phone" label={t("onboarding.admin.phone")}>
-        <Input
-          id="phone"
-          name="phone"
-          type="tel"
-          autoComplete="tel"
-          value={data.phone || ""}
-          onChange={(event) => update("phone", event.target.value)}
-          onBlur={(event) => update("phone", normalizePhoneInput(event.target.value))}
-          placeholder={t("onboarding.admin.phonePlaceholder")}
-          className="h-11"
-        />
-      </FieldRow>
 
       <AdminSetupPasswordFields
         password={data.password || ""}

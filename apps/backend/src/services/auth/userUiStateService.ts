@@ -32,21 +32,30 @@ export async function patchUserUiState(
     ...patch.state,
   };
 
-  const [updatedRecord] = await getDb()
-    .insert(userUiPreferences)
-    .values({
-      workspaceSubdomain: subdomain,
-      userId,
-      state: newState,
-    })
-    .onConflictDoUpdate({
-      target: [userUiPreferences.workspaceSubdomain, userUiPreferences.userId],
-      set: {
+  try {
+    const [updatedRecord] = await getDb()
+      .insert(userUiPreferences)
+      .values({
+        workspaceSubdomain: subdomain,
+        userId,
         state: newState,
-        updatedAt: new Date(),
-      },
-    })
-    .returning({ state: userUiPreferences.state });
+      })
+      .onConflictDoUpdate({
+        target: [userUiPreferences.workspaceSubdomain, userUiPreferences.userId],
+        set: {
+          state: newState,
+          updatedAt: new Date(),
+        },
+      })
+      .returning({ state: userUiPreferences.state });
 
-  return updatedRecord.state as UserUiState;
+    return (updatedRecord?.state ?? newState) as UserUiState;
+  } catch (err: unknown) {
+    const pgError = err as { code?: string };
+    // 23503: foreign_key_violation (e.g. user replaced by backup restore)
+    if (pgError?.code === '23503') {
+      return newState as UserUiState;
+    }
+    throw err;
+  }
 }

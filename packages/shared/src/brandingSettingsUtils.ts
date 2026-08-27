@@ -39,11 +39,11 @@ export function buildBrandingFromOnboarding(input: OnboardingBrandingInput): Bra
   return mergeBrandingSettings({
     madrasaName: name,
     tagline: input.tagline?.trim() || DEFAULT_BRANDING_SETTINGS.tagline,
-    primaryColor: DEFAULT_BRANDING_SETTINGS.primaryColor,
-    secondaryColor: DEFAULT_BRANDING_SETTINGS.secondaryColor,
+    primaryColor: input.primaryColor || DEFAULT_BRANDING_SETTINGS.primaryColor,
+    secondaryColor: input.secondaryColor || DEFAULT_BRANDING_SETTINGS.secondaryColor,
     logoUrl: logo,
     faviconUrl: logo,
-    footerText: DEFAULT_BRANDING_SETTINGS.footerText,
+    footerText: input.footerText?.trim() || DEFAULT_BRANDING_SETTINGS.footerText,
     legalName: name,
     country: input.country?.trim() ?? '',
     email: input.adminEmail?.trim() ?? '',
@@ -177,4 +177,33 @@ export function formatBrandingAddress(
   return [branding.addressLine1, branding.addressLine2, locality, branding.postalCode, branding.country]
     .filter(Boolean)
     .join(', ');
+}
+
+/**
+ * Validates whether the minimum required institution details (identity, contact, address)
+ * have been filled by the administrator. Used to enforce first-login setup gating.
+ */
+export function isInstitutionSetupComplete(
+  branding: Partial<BrandingSettings> | null | undefined,
+): boolean {
+  if (!branding) return false;
+  const name = branding.madrasaName?.trim();
+  const tagline = branding.tagline?.trim();
+  const email = branding.email?.trim();
+  const phone = branding.phone?.trim();
+  const addressLine1 = branding.addressLine1?.trim();
+  const city = branding.city?.trim();
+  const country = branding.country?.trim();
+  const postalCode = branding.postalCode?.trim();
+
+  return Boolean(
+    name &&
+    tagline &&
+    email &&
+    phone &&
+    addressLine1 &&
+    city &&
+    country &&
+    postalCode,
+  );
 }

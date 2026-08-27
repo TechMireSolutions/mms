@@ -10,6 +10,7 @@ export const BACKUP_FORMAT_VERSION = 1;
 const tenantDatabaseSnapshotBaseSchema = z.object({
   collections: z.record(z.string(), z.array(z.unknown())).optional(),
   objects: z.record(z.string(), z.unknown()).optional(),
+  assets: z.record(z.string(), z.string()).optional(),
 }).strict();
 
 export const tenantDatabaseSnapshotSchema = z.preprocess((raw) => {
@@ -52,6 +53,7 @@ export type WorkspaceBackupDataSource = 'server' | 'local';
 export interface TenantDatabaseSnapshot {
   collections?: Record<string, unknown[]>;
   objects?: Record<string, unknown>;
+  assets?: Record<string, string>;
 }
 
 export interface WorkspaceBackupEnvelope {

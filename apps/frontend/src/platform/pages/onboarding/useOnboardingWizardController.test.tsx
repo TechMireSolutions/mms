@@ -9,7 +9,6 @@ describe('useOnboardingWizardController Definition & Types', () => {
     expect(ONBOARDING_INITIAL_DATA.name).toBe('');
     expect(ONBOARDING_INITIAL_DATA.subdomain).toBe('');
     expect(ONBOARDING_INITIAL_DATA.email).toBe('');
-    expect(ONBOARDING_INITIAL_DATA.country).toBe('');
     expect(ONBOARDING_INITIAL_DATA.agreedTerms).toBe(false);
   });
 

@@ -54,7 +54,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(true);
     setAuthChecked(true);
     persistAuthUser(authUser);
-    void import('@/lib/db').then(({ syncDatabase }) => syncDatabase());
+    if (!authUser.mustChangePassword) {
+      void import('@/lib/db').then(({ syncDatabase }) => syncDatabase());
+    }
   }, []);
 
   const checkUserAuth = useCallback(async (): Promise<void> => {
@@ -84,7 +86,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (error) {
       setUser(null);
       setIsAuthenticated(false);
-      if (isApiError(error) && error.status === 401) {
+      if (isApiError(error) && (error.status === 401 || error.status === 403)) {
         clearPersistedAuthUser();
       }
     } finally {

@@ -46,6 +46,7 @@ vi.mock('../db/dbConnection.js', () => {
   return {
     getRootDb: () => mockDb,
     activeDb: () => mockDb,
+    hasActiveTransaction: () => false,
   };
 });
 

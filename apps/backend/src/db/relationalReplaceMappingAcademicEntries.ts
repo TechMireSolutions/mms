@@ -20,12 +20,6 @@ export const RELATIONAL_REPLACE_MAPPING_ACADEMIC: Record<string, RelationalColle
     fnName: 'replaceAttendanceModulePreferencesForWorkspace',
     snapshotFnName: 'listAllAttendanceModulePreferencesByWorkspace',
   },
-  attendance_user_column_prefs: {
-    priority: 909,
-    importPath: './repositories/attendanceUserColumnPrefsRepository.js',
-    fnName: 'replaceAttendanceUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllAttendanceUserColumnPrefsByWorkspace',
-  },
   attendance_records: {
     importPath: './repositories/attendanceRepository.js',
     fnName: 'replaceAttendanceRecordsForWorkspace',
@@ -47,12 +41,6 @@ export const RELATIONAL_REPLACE_MAPPING_ACADEMIC: Record<string, RelationalColle
     importPath: './repositories/enrollmentModulePreferencesRepository.js',
     fnName: 'replaceEnrollmentModulePreferencesForWorkspace',
     snapshotFnName: 'listAllEnrollmentModulePreferencesByWorkspace',
-  },
-  enrollment_user_column_prefs: {
-    priority: 910,
-    importPath: './repositories/enrollmentUserColumnPrefsRepository.js',
-    fnName: 'replaceEnrollmentUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllEnrollmentUserColumnPrefsByWorkspace',
   },
   obligation_types: {
     importPath: './repositories/obligationRepository.js',
@@ -84,12 +72,6 @@ export const RELATIONAL_REPLACE_MAPPING_ACADEMIC: Record<string, RelationalColle
     fnName: 'replaceObligationCollectionsForWorkspace',
     snapshotFnName: 'listObligationCollectionsByWorkspace',
   },
-  obligations_user_column_prefs: {
-    priority: 921,
-    importPath: './repositories/obligationsUserColumnPrefsRepository.js',
-    fnName: 'replaceObligationsUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllObligationsUserColumnPrefsByWorkspace',
-  },
   exams: {
     importPath: './repositories/examinationRepository.js',
     fnName: 'replaceExamsForWorkspace',
@@ -111,18 +93,6 @@ export const RELATIONAL_REPLACE_MAPPING_ACADEMIC: Record<string, RelationalColle
     importPath: './repositories/examinationModulePreferencesRepository.js',
     fnName: 'replaceExaminationModulePreferencesForWorkspace',
     snapshotFnName: 'listAllExaminationModulePreferencesByWorkspace',
-  },
-  examination_exam_user_column_prefs: {
-    priority: 918,
-    importPath: './repositories/examinationExamUserColumnPrefsRepository.js',
-    fnName: 'replaceExaminationExamUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllExaminationExamUserColumnPrefsByWorkspace',
-  },
-  examination_results_user_column_prefs: {
-    priority: 919,
-    importPath: './repositories/examinationResultsUserColumnPrefsRepository.js',
-    fnName: 'replaceExaminationResultsUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllExaminationResultsUserColumnPrefsByWorkspace',
   },
   hasanat_denoms: {
     importPath: './repositories/hasanatRepository.js',
@@ -156,18 +126,6 @@ export const RELATIONAL_REPLACE_MAPPING_ACADEMIC: Record<string, RelationalColle
     fnName: 'replaceHasanatModulePreferencesForWorkspace',
     snapshotFnName: 'listAllHasanatModulePreferencesByWorkspace',
   },
-  hasanat_distribution_user_column_prefs: {
-    priority: 912,
-    importPath: './repositories/hasanatDistributionUserColumnPrefsRepository.js',
-    fnName: 'replaceHasanatDistributionUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllHasanatDistributionUserColumnPrefsByWorkspace',
-  },
-  hasanat_redemption_user_column_prefs: {
-    priority: 913,
-    importPath: './repositories/hasanatRedemptionUserColumnPrefsRepository.js',
-    fnName: 'replaceHasanatRedemptionUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllHasanatRedemptionUserColumnPrefsByWorkspace',
-  },
   questions: {
     importPath: './repositories/questionBankRepository.js',
     fnName: 'replaceQuestionsForWorkspace',
@@ -194,11 +152,5 @@ export const RELATIONAL_REPLACE_MAPPING_ACADEMIC: Record<string, RelationalColle
     importPath: './repositories/questionBankModulePreferencesRepository.js',
     fnName: 'replaceQuestionBankModulePreferencesForWorkspace',
     snapshotFnName: 'listAllQuestionBankModulePreferencesByWorkspace',
-  },
-  question_bank_user_column_prefs: {
-    priority: 920,
-    importPath: './repositories/questionBankUserColumnPrefsRepository.js',
-    fnName: 'replaceQuestionBankUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllQuestionBankUserColumnPrefsByWorkspace',
   },
 };

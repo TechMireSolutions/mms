@@ -13,6 +13,7 @@ import { seedTenantDefaults } from '../tenantSeedService.js';
 import { createTwoFactorChallenge, issueRefreshToken } from './twoFactorService.js';
 import { setAuthCookies } from './authCookieService.js';
 import { clearPlatformAccessCookie } from '../platform/platformCookieService.js';
+import { unblockTenant } from '../session.service.js';
 
 /** Public user shape re-exported for route usage. */
 export type { PublicUser as User };
@@ -140,6 +141,8 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
     country: input.country,
   });
 
+  await unblockTenant(workspace.subdomain);
+
   await runWithTenant(workspace.subdomain, async () => {
     await seedTenantDefaults();
 
@@ -166,7 +169,6 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
       madrasaName: input.madrasaName,
       tagline: input.tagline,
       subdomain: workspace.subdomain,
-      country: input.country,
       primaryColor: input.primaryColor,
       secondaryColor: input.secondaryColor,
       logoUrl: input.logoUrl,
@@ -175,32 +177,16 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
       website: input.website,
       footerText: input.footerText,
     });
-    
-    // Save standard and extended fields specifically
-    const fullBranding = {
-      ...branding,
-      faviconUrl: input.faviconUrl ?? branding.faviconUrl,
-      legalName: input.legalName ?? branding.legalName,
-      registrationNumber: input.registrationNumber ?? branding.registrationNumber,
-      addressLine1: input.addressLine1 ?? branding.addressLine1,
-      addressLine2: input.addressLine2 ?? branding.addressLine2,
-      city: input.city ?? branding.city,
-      region: input.region ?? branding.region,
-      postalCode: input.postalCode ?? branding.postalCode,
-      socialLinks: input.socialLinks ?? branding.socialLinks,
-      subdomain: workspace.subdomain,
-    };
-    await upsertWorkspaceBranding(workspace.subdomain, fullBranding);
+    await upsertWorkspaceBranding(workspace.subdomain, branding);
 
-    const contactPreferences = {
-      defaultCountry: input.country || '',
-      defaultProvince: input.region || '',
-      defaultCity: input.city || '',
+    await upsertContactModulePreferences(workspace.subdomain, {
+      defaultCountry: '',
+      defaultProvince: '',
+      defaultCity: '',
       showDetailedSolarAge: false,
       showLunarDob: false,
       showDetailedLunarAge: false,
-    };
-    await upsertContactModulePreferences(workspace.subdomain, contactPreferences);
+    });
 
     await assertPasswordMeetsPolicy(input.password);
     await createUser(input.email, input.adminName, input.password, 'admin', workspace.subdomain, {

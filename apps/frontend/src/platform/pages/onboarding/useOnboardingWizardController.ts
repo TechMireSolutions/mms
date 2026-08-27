@@ -8,8 +8,6 @@ import {
   isValidEmail,
 } from "@mms/shared";
 import { ROUTES } from "@/lib/config/routes";
-import { getAppDomain } from "@/lib/config/tenantConfig";
-import { defaultFooterForMadrasa } from "@/components/branding/BrandingShared";
 import { applyBrandingTheme } from "@/lib/brandingTheme";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -83,23 +81,13 @@ export function useOnboardingWizardController() {
     setLoading(true);
 
     try {
-      const appDomain = getAppDomain();
       await onboard({
         madrasaName: data.name.trim(),
-        tagline: data.tagline.trim() || DEFAULT_BRANDING_SETTINGS.tagline,
+        tagline: DEFAULT_BRANDING_SETTINGS.tagline,
         adminName: `${data.firstName} ${data.lastName}`.trim(),
         email: data.email,
         password: data.password,
         subdomain: data.subdomain,
-        country: data.country,
-        region: data.province,
-        city: data.city,
-        primaryColor: data.primaryColor,
-        secondaryColor: data.secondaryColor,
-        logoUrl: data.logoUrl || undefined,
-        adminPhone: data.phone || undefined,
-        website: data.subdomain ? `https://${data.subdomain}.${appDomain}` : undefined,
-        footerText: data.footerText.trim() || defaultFooterForMadrasa(data.name),
         modules: data.modules,
       });
 

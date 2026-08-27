@@ -39,6 +39,12 @@ export default function AppLayout(): React.JSX.Element {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  const [logoError, setLogoError] = useState<boolean>(false);
+
+  useEffect(() => {
+    setLogoError(false);
+  }, [branding.logoUrl]);
+
   return (
     <div className="box-border min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern">
       {/* Desktop Sidebar */}
@@ -60,8 +66,8 @@ export default function AppLayout(): React.JSX.Element {
         />
       </div>
 
-      {/* Mobile Top Bar */}
-      <div className="lg:hidden surface-glass fixed top-0 inset-x-0 z-40 flex h-14 items-center gap-2 px-3 sm:px-4">
+      {/* Mobile Header */}
+      <div className="sticky top-0 z-sticky flex h-14 w-full items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md lg:hidden">
         <Button
           type="button"
           variant="ghost"
@@ -76,13 +82,14 @@ export default function AppLayout(): React.JSX.Element {
           <Menu className="h-5 w-5 text-foreground" />
         </Button>
         <div className="flex min-w-0 flex-1 items-center gap-2">
-          {branding.logoUrl ? (
+          {branding.logoUrl && !logoError ? (
             <img
               src={branding.logoUrl}
               alt="Logo"
               className={`h-7 w-7 max-w-full shrink-0 rounded-md ${LOGO_IMAGE}`}
               width={28}
               height={28}
+              onError={() => setLogoError(true)}
             />
           ) : (
             <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">

@@ -34,6 +34,11 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
   const settings = useGlobalSettings();
   const { t } = useTranslation();
   const enabledModules = settings.enabledModules || {};
+  const [logoError, setLogoError] = useState<boolean>(false);
+
+  useEffect(() => {
+    setLogoError(false);
+  }, [branding.logoUrl]);
 
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
     const initial: Record<string, boolean> = {};
@@ -85,11 +90,23 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
   if (!open) return null;
 
   return (
-    <>
+    <div
+      role="region"
+      aria-label={t("nav.openMenu")}
+      className={cn(
+        "fixed inset-0 z-sidebar-mobile lg:hidden",
+        open ? "pointer-events-auto" : "pointer-events-none",
+      )}
+    >
       <div
-        className={cn("fixed inset-0 z-modal lg:hidden", OVERLAY_BACKDROP)}
+        className={cn(
+          OVERLAY_BACKDROP,
+          "transition-opacity duration-300",
+          open ? "opacity-100" : "opacity-0",
+        )}
         onClick={() => {
-          if (Date.now() - openedAt > 150) {
+          // Ignore clicks within 300ms of opening (prevents touch-through / double-tap immediately closing)
+          if (Date.now() - openedAt > 300) {
             onClose();
           }
         }}
@@ -104,13 +121,14 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
       >
         <div className="flex h-16 flex-shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-5">
           <div className="flex min-w-0 flex-1 items-center gap-3">
-            {branding.logoUrl ? (
+            {branding.logoUrl && !logoError ? (
               <img
                 src={branding.logoUrl}
                 alt="Logo"
                 className={`h-8 w-8 shrink-0 rounded-lg ${LOGO_IMAGE} border-sidebar-border`}
                 width={32}
                 height={32}
+                onError={() => setLogoError(true)}
               />
             ) : (
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary">
@@ -171,6 +189,6 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
           </Button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

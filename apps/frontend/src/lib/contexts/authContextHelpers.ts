@@ -1,5 +1,6 @@
 import type { AuthError } from '@/lib/authErrors';
 import type { User, Workspace } from '@mms/shared';
+import { getCurrentSubdomain, isCurrentHostApex } from '@/lib/config/tenantConfig';
 
 export class AuthFailureError extends Error {
   constructor(readonly authError: AuthError) {
@@ -72,7 +73,21 @@ export function buildConnectionAuthError(error: unknown): AuthError {
 export function getPersistedAuthUser(): User | null {
   try {
     const raw = typeof window !== 'undefined' ? localStorage.getItem('mms_user') : null;
-    return raw ? (JSON.parse(raw) as User) : null;
+    if (!raw) return null;
+    const user = JSON.parse(raw) as User;
+    if (!user || typeof user !== 'object') return null;
+
+    if (isCurrentHostApex()) {
+      return null;
+    }
+
+    const currentSubdomain = getCurrentSubdomain();
+    if (currentSubdomain && user.workspaceSubdomain?.toLowerCase() !== currentSubdomain.toLowerCase()) {
+      clearPersistedAuthUser();
+      return null;
+    }
+
+    return user;
   } catch {
     return null;
   }

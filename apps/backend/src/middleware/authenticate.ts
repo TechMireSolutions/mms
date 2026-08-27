@@ -1,7 +1,7 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { User } from '@mms/shared';
 import { isWorkspaceEnabled } from '@mms/shared';
-import { bindRequestUserId, getRequestTenant } from '../lib/tenantContext.js';
+import { bindRequestTenant, bindRequestUserId, getRequestTenant, resolveSubdomainFromRequest } from '../lib/tenantContext.js';
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
 import { isTenantBlocked, isTokenRevoked, isUserSessionRevoked } from '../services/session.service.js';
@@ -25,7 +25,13 @@ export async function authenticateTenant(
   }
 
   const user = request.user as User & { twoFactorVerified?: boolean; tokenType?: string; jti?: string; iat?: number };
-  const tenant = getRequestTenant();
+  let tenant = getRequestTenant();
+  if (!tenant) {
+    tenant = resolveSubdomainFromRequest(request.headers.host, request.headers['x-forwarded-host'] as string | string[] | undefined);
+    if (tenant) {
+      bindRequestTenant(tenant);
+    }
+  }
 
   if (!tenant) {
     await sendForbidden(reply, 'This endpoint requires a tenant subdomain');

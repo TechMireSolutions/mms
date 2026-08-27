@@ -146,6 +146,10 @@ export function buildStorageKeysFromSnapshot(
     }
   }
 
+  if (snapshot.assets && typeof snapshot.assets === 'object') {
+    keys[`${prefix}__assets__`] = JSON.stringify(snapshot.assets);
+  }
+
   return keys;
 }
 
@@ -193,10 +197,22 @@ export function parseStorageKeysToSnapshot(
 ): TenantDatabaseSnapshot {
   const collections: Record<string, unknown[]> = Object.create(null);
   const objects: Record<string, unknown> = Object.create(null);
+  let assets: Record<string, string> | undefined;
 
   for (const [key, value] of Object.entries(keys)) {
     if (!key.startsWith(prefix)) continue;
     const logicalKey = key.slice(prefix.length);
+    if (logicalKey === '__assets__') {
+      try {
+        const parsedAssets = JSON.parse(value) as unknown;
+        if (parsedAssets && typeof parsedAssets === 'object' && !Array.isArray(parsedAssets)) {
+          assets = parsedAssets as Record<string, string>;
+        }
+      } catch {
+        // ignore malformed assets
+      }
+      continue;
+    }
     try {
       const parsedVal = JSON.parse(value) as unknown;
       if (Array.isArray(parsedVal)) {
@@ -209,5 +225,9 @@ export function parseStorageKeysToSnapshot(
     }
   }
 
-  return { collections, objects };
+  return {
+    collections,
+    objects,
+    ...(assets && Object.keys(assets).length > 0 ? { assets } : {}),
+  };
 }

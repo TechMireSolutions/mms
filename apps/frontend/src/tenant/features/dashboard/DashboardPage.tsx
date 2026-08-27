@@ -5,11 +5,13 @@ import StatsGrid from '@/tenant/features/dashboard/components/StatisticsGrid';
 import DashboardRolePanel from '@/tenant/features/dashboard/components/DashboardRolePanel';
 import DashboardCustomizePanel from '@/tenant/features/dashboard/components/DashboardCustomizePanel';
 import WelcomeBanner from '@/tenant/features/dashboard/components/WelcomeBanner';
+import { SetupIncompleteCallout } from '@/tenant/features/dashboard/components/SetupIncompleteCallout';
 import { DashboardWidgets } from '@/lib/reports/pinnedWidgets';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { Button } from '@/components/ui/button';
 import { useDashboardPageController } from '@/tenant/features/dashboard/hooks/useDashboardPageController';
+import { useBranding } from '@/tenant/hooks/useBranding';
 
 export default function Dashboard() {
   const {
@@ -49,6 +51,9 @@ export default function Dashboard() {
     studentMetricsActive,
   } = useDashboardPageController();
 
+  const branding = useBranding();
+  const isAdmin = can('settings.branding.write');
+
   return (
     <ModulePageShell
       seoTitle={`MMS - ${t('dashboard.title')}`}
@@ -59,6 +64,8 @@ export default function Dashboard() {
         activeSessionsCount={activeSessionsCount}
         activeStudentCount={studentMetricsActive}
       />
+
+      <SetupIncompleteCallout branding={branding} isAdmin={isAdmin} />
 
       <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-center gap-2 select-none print:hidden">
         <Button

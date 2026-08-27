@@ -132,5 +132,27 @@ export function validateAndNormalizeSnapshot(
     }
   }
 
-  return { ok: true, data: { collections, objects } };
+  const assets: Record<string, string> = {};
+  if (snapshot.assets && typeof snapshot.assets === 'object' && !Array.isArray(snapshot.assets)) {
+    for (const [pathKey, data] of Object.entries(snapshot.assets)) {
+      if (
+        typeof pathKey === 'string' &&
+        typeof data === 'string' &&
+        pathKey.startsWith('/uploads/') &&
+        !pathKey.includes('..') &&
+        !pathKey.includes('\\')
+      ) {
+        assets[pathKey] = data;
+      }
+    }
+  }
+
+  return {
+    ok: true,
+    data: {
+      collections,
+      objects,
+      ...(Object.keys(assets).length > 0 ? { assets } : {}),
+    },
+  };
 }

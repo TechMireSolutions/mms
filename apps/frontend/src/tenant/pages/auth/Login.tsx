@@ -13,10 +13,11 @@ import {
   type SignInFieldErrors,
 } from '@/components/entry/authValidation';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useBranding } from '@/tenant/hooks/useBranding';
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { apexUrl } from '@/lib/config/tenantConfig';
 import { clear2FAState, is2FAVerified, mark2FAVerified } from '@/lib/twoFactor';
-import { requiresTwoFactor } from '@mms/shared';
+import { isInstitutionSetupComplete, requiresTwoFactor } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -37,6 +38,7 @@ export default function Login(): React.ReactElement {
 
   const redirectTo = (location.state as { from?: string } | null)?.from ?? DEFAULT_AUTH_REDIRECT;
 
+  const branding = useBranding();
   const [email, setEmail] = useState<string>(readRememberedLoginEmail);
   const [password, setPassword] = useState<string>('');
   const [rememberMe, setRememberMe] = useState<boolean>(readRememberMeEnabled);
@@ -51,10 +53,15 @@ export default function Login(): React.ReactElement {
       const settings = getGlobalSettings();
       const needs2FA = requiresTwoFactor(settings, user) && !is2FAVerified();
       if (!needs2FA) {
-        navigate(user?.mustChangePassword ? ROUTES.forcePasswordChange : redirectTo, { replace: true });
+        const dest = user?.mustChangePassword
+          ? ROUTES.forcePasswordChange
+          : !isInstitutionSetupComplete(branding)
+            ? ROUTES.institutionSetup
+            : redirectTo;
+        navigate(dest, { replace: true });
       }
     });
-  }, [isAuthenticated, user, navigate, redirectTo]);
+  }, [isAuthenticated, user, branding, navigate, redirectTo]);
 
   React.useEffect(() => {
     const handoff = new URLSearchParams(location.search).get('handoff');
@@ -92,7 +99,12 @@ export default function Login(): React.ReactElement {
       }
       clear2FAState();
       mark2FAVerified();
-      navigate(loggedInUser.mustChangePassword ? ROUTES.forcePasswordChange : redirectTo, { replace: true });
+      const dest = loggedInUser.mustChangePassword
+        ? ROUTES.forcePasswordChange
+        : !isInstitutionSetupComplete(branding)
+          ? ROUTES.institutionSetup
+          : redirectTo;
+      navigate(dest, { replace: true });
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : t('auth.invalidCredentials'));
     } finally {
@@ -124,6 +136,8 @@ export default function Login(): React.ReactElement {
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4" noValidate aria-busy={isBusy}>
           {handoffProcessing ? (
             <AuthStatusBanner variant="loading" message={t('auth.handoffProcessing')} />
+          ) : (location.state as { passwordChanged?: boolean } | null)?.passwordChanged ? (
+            <AuthStatusBanner variant="info" message={t('account.passwordChanged')} />
           ) : formError ? (
             <AuthStatusBanner message={formError} />
           ) : null}

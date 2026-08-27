@@ -28,6 +28,14 @@ export function runWithTenant<T>(subdomain: string | null, fn: () => T): T {
   return tenantStorage.run(subdomain, fn);
 }
 
+/**
+ * Binds the active tenant subdomain for the remainder of the request.
+ * Uses `enterWith` so AsyncLocalStorage context persists across all Fastify lifecycle hooks.
+ */
+export function bindRequestTenant(subdomain: string | null): void {
+  tenantStorage.enterWith(subdomain);
+}
+
 /** Extracts tenant subdomain from Host / X-Forwarded-Host (Vite dev proxy). */
 export function resolveSubdomainFromRequest(
   hostHeader: string | undefined,

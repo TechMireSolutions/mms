@@ -173,6 +173,7 @@ export async function upsertWorkspaceBranding(
       city:               b.city                       || null,
       region:             b.region                     || null,
       postalCode:         b.postalCode                 || null,
+      country:            b.country                    || null,
       socialLinks:        b.socialLinks?.length ? b.socialLinks : null,
     })
     .where(eq(workspacesTable.subdomain, subdomain));

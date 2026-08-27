@@ -19,6 +19,7 @@ export const ROUTES = {
   users: "/users",
   profile: "/profile",
   forcePasswordChange: "/force-password-change",
+  institutionSetup: "/institution-setup",
   settings: "/settings",
   messaging: "/messaging",
   login: "/login",

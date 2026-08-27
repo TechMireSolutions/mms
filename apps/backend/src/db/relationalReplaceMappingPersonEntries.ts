@@ -54,12 +54,6 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     fnName: 'replaceContactModulePreferencesForWorkspace',
     snapshotFnName: 'listAllContactModulePreferencesByWorkspace',
   },
-  contact_user_column_prefs: {
-    priority: 905,
-    importPath: './repositories/contactUserColumnPrefsRepository.js',
-    fnName: 'replaceContactUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllContactUserColumnPrefsByWorkspace',
-  },
   student_field_configs: {
     priority: 29,
     importPath: './repositories/studentFieldConfigRepository.js',
@@ -71,12 +65,6 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     importPath: './repositories/studentModulePreferencesRepository.js',
     fnName: 'replaceStudentModulePreferencesForWorkspace',
     snapshotFnName: 'listAllStudentModulePreferencesByWorkspace',
-  },
-  student_user_column_prefs: {
-    priority: 906,
-    importPath: './repositories/studentUserColumnPrefsRepository.js',
-    fnName: 'replaceStudentUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllStudentUserColumnPrefsByWorkspace',
   },
   teacher_lookups: {
     priority: 32,
@@ -96,12 +84,6 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     fnName: 'replaceTeacherModulePreferencesForWorkspace',
     snapshotFnName: 'listAllTeacherModulePreferencesByWorkspace',
   },
-  teacher_user_column_prefs: {
-    priority: 907,
-    importPath: './repositories/teacherUserColumnPrefsRepository.js',
-    fnName: 'replaceTeacherUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllTeacherUserColumnPrefsByWorkspace',
-  },
   session_lookups: {
     priority: 35,
     importPath: './repositories/sessionLookupsRepository.js',
@@ -120,12 +102,6 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     fnName: 'replaceSessionModulePreferencesForWorkspace',
     snapshotFnName: 'listAllSessionModulePreferencesByWorkspace',
   },
-  session_user_column_prefs: {
-    priority: 908,
-    importPath: './repositories/sessionUserColumnPrefsRepository.js',
-    fnName: 'replaceSessionUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllSessionUserColumnPrefsByWorkspace',
-  },
   user_field_configs: {
     priority: 47,
     importPath: './repositories/userFieldConfigRepository.js',
@@ -138,10 +114,10 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     fnName: 'replaceUserModulePreferencesForWorkspace',
     snapshotFnName: 'listAllUserModulePreferencesByWorkspace',
   },
-  user_user_column_prefs: {
-    priority: 911,
-    importPath: './repositories/userUserColumnPrefsRepository.js',
-    fnName: 'replaceUserUserColumnPrefsForWorkspace',
-    snapshotFnName: 'listAllUserUserColumnPrefsByWorkspace',
+  user_ui_preferences: {
+    priority: 910,
+    importPath: './repositories/userUiPreferencesRepository.js',
+    fnName: 'replaceUserUiPreferencesForWorkspace',
+    snapshotFnName: 'listAllUserUiPreferencesByWorkspace',
   },
 };

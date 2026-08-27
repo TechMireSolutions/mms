@@ -16,14 +16,20 @@ export async function withTenant<T>(
 ): Promise<T> {
   const resolvedTenantId = tenantId || '';
   
-  let pool: DbClient;
+  if (typeof hasActiveTransaction === 'function' && hasActiveTransaction()) {
+    const active = activeDb();
+    return callback(active as unknown as TenantTransaction);
+  }
+
+  let pool: DbClient | undefined;
   try {
-    pool = (options.readOnly && !hasActiveTransaction()) ? getReadReplicaDb() : activeDb();
-    if (!pool || typeof pool.transaction !== 'function') {
-      return callback({} as TenantTransaction);
-    }
+    pool = options.readOnly ? getReadReplicaDb() : activeDb();
   } catch {
     return callback({} as TenantTransaction);
+  }
+
+  if (!pool || typeof pool.transaction !== 'function') {
+    return callback((pool ?? {}) as unknown as TenantTransaction);
   }
 
   return tracer.withSpan(
