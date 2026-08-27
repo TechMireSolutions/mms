@@ -106,7 +106,7 @@ jobs:
       # Public URL / deploy health checks use MMS_APP_DOMAIN only (do not set MMS_API_URL)
       # Server backend listens on PORT=5002 (scripts/lib/deploy-ports.sh)
       - name: Copy build tarball to server
-        uses: appleboy/scp-action@v0.1.7
+        uses: appleboy/scp-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USER }}
