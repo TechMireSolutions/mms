@@ -9,6 +9,7 @@ import {
   useDashboardWidgetsQuery,
   useDashboardWidgetsMutation,
   useDashboardWidgetDeleteMutation,
+  useDashboardWidgetsReorderMutation,
 } from '@/tenant/hooks/collections/dashboard';
 
 /**
@@ -29,6 +30,7 @@ export function useDashboardConfig() {
   const prefsMutation = useDashboardPreferencesMutation();
   const widgetsMutation = useDashboardWidgetsMutation();
   const widgetDeleteMutation = useDashboardWidgetDeleteMutation();
+  const widgetsReorderMutation = useDashboardWidgetsReorderMutation();
   const { can } = usePermissions();
   const canWriteDashboard =
     can(DASHBOARD_MODULE_MANIFEST.permissions.setupWrite) ||
@@ -59,6 +61,14 @@ export function useDashboardConfig() {
       widgetsMutation.mutate(customWidgetsDraft);
     },
     [widgetsMutation],
+  );
+
+  /** Atomic widget reordering with optimistic cache update. */
+  const reorderCustomWidgets = useCallback(
+    (order: Array<{ id: string; sortOrder: number }>) => {
+      widgetsReorderMutation.mutate({ body: { order } });
+    },
+    [widgetsReorderMutation],
   );
 
   const updatePref = useCallback(
@@ -106,10 +116,11 @@ export function useDashboardConfig() {
   /** Hard delete via `DELETE /:id` (never bulk-wipe PUT). */
   const deleteWidget = useCallback(
     (widgetId: string) => {
-      widgetDeleteMutation.mutate(widgetId);
+      widgetDeleteMutation.mutate({ params: { id: widgetId }, body: {} });
     },
     [widgetDeleteMutation],
   );
+
 
   return {
     disabledCardIds: prefs.disabledCardIds,
@@ -127,6 +138,7 @@ export function useDashboardConfig() {
     hasanatChartType: prefs.hasanatChartType,
     hasanatChartColor: prefs.hasanatChartColor,
     updateCustomWidgets,
+    reorderCustomWidgets,
     toggleCardVisibility,
     toggleWidgetPin,
     unpinWidget,

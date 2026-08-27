@@ -35,6 +35,8 @@ const mockSaveDashboardPreferences = vi.fn();
 const mockLoadDashboardWidgets = vi.fn();
 const mockUpsertDashboardWidgets = vi.fn();
 const mockDeleteDashboardWidget = vi.fn();
+const mockReorderDashboardWidgets = vi.fn();
+const mockLoadDashboardSummary = vi.fn();
 
 vi.mock('../services/dashboardPreferencesService.js', () => ({
   loadDashboardPreferences: (...args: unknown[]) => mockLoadDashboardPreferences(...args),
@@ -45,7 +47,13 @@ vi.mock('../lib/dashboardWidgetsService.js', () => ({
   loadDashboardWidgets: (...args: unknown[]) => mockLoadDashboardWidgets(...args),
   upsertDashboardWidgets: (...args: unknown[]) => mockUpsertDashboardWidgets(...args),
   deleteDashboardWidget: (...args: unknown[]) => mockDeleteDashboardWidget(...args),
+  reorderDashboardWidgets: (...args: unknown[]) => mockReorderDashboardWidgets(...args),
 }));
+
+vi.mock('../services/dashboardSummaryService.js', () => ({
+  loadDashboardSummary: (...args: unknown[]) => mockLoadDashboardSummary(...args),
+}));
+
 
 vi.mock('../services/auditService.js', () => ({
   recordAudit: vi.fn().mockResolvedValue(undefined),
@@ -161,6 +169,51 @@ describe('dashboard config routes', () => {
       payload: [{ id: 'x', operation: 'median', color: 'emerald', isPinnedToDashboard: true, title: 't', category: 'c', collection: 'c' }],
     });
     expect(invalid.statusCode).toBe(400);
+    await app.close();
+  });
+
+  it('PUT /api/dashboard/widgets/reorder is gated on write permissions and updates order', async () => {
+    const app = await buildApp();
+    mockReorderDashboardWidgets.mockResolvedValue([sampleWidget]);
+
+    const denied = await app.inject({
+      method: 'PUT',
+      url: '/api/dashboard/widgets/reorder',
+      headers: { host: 'demo.localhost', authorization: `Bearer ${teacherToken(app)}` },
+      payload: { order: [{ id: 'custom-1', sortOrder: 0 }] },
+    });
+    expect(denied.statusCode).toBe(403);
+
+    const allowed = await app.inject({
+      method: 'PUT',
+      url: '/api/dashboard/widgets/reorder',
+      headers: { host: 'demo.localhost', authorization: `Bearer ${adminToken(app)}` },
+      payload: { order: [{ id: 'custom-1', sortOrder: 0 }] },
+    });
+    expect(allowed.statusCode).toBe(200);
+    expect(mockReorderDashboardWidgets).toHaveBeenCalledWith([{ id: 'custom-1', sortOrder: 0 }]);
+
+    await app.close();
+  });
+
+  it('GET /api/dashboard/summary returns composite summary for authenticated tenant', async () => {
+    const app = await buildApp();
+    mockLoadDashboardSummary.mockResolvedValue({
+      students: { total: 10, active: 8, inactive: 2, suspended: 0, newThisPeriod: 1 },
+    });
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/dashboard/summary',
+      headers: { host: 'demo.localhost', authorization: `Bearer ${teacherToken(app)}` },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({
+      summary: {
+        students: { total: 10, active: 8, inactive: 2, suspended: 0, newThisPeriod: 1 },
+      },
+    });
+
     await app.close();
   });
 });

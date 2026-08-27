@@ -14,6 +14,8 @@ import { exams, examClasses, examResults, questions, questionCategories, questio
 import { obligationTypes, mujtahids, mujtahidReps, wakalaTypes, obligationDistributions, obligationCollections } from "./obligations.js";
 import { hasanatDenoms, hasanatBatches, hasanatDistributions, hasanatRedemptions } from "./hasanat.js";
 import { messageTemplates, messageLogs } from "./messaging.js";
+import { dashboardPreferences, dashboardWidgets } from "./dashboard.js";
+
 
 /* ========================================================================= */
 /*                      DRIZZLE RELATIONS DEFINITIONS                        */
@@ -744,3 +746,18 @@ export const sessionTabarrukRelations = relations(sessionTabarruk, ({ one }) => 
     references: [sessions.workspaceSubdomain, sessions.id],
   }),
 }));
+
+export const dashboardPreferencesRelations = relations(dashboardPreferences, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [dashboardPreferences.workspaceSubdomain],
+    references: [workspaces.subdomain],
+  }),
+}));
+
+export const dashboardWidgetsRelations = relations(dashboardWidgets, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [dashboardWidgets.workspaceSubdomain],
+    references: [workspaces.subdomain],
+  }),
+}));
+

@@ -55,7 +55,9 @@ export interface CustomWidget {
   filterValue?: string;
   color: string;
   isPinnedToDashboard: boolean;
+  sortOrder?: number;
 }
+
 
 const ALERT_COLOR_MAP: Record<string, { bg: string; text: string; border: string; glow: string }> = {
   red: {

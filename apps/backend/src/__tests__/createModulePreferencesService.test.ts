@@ -5,7 +5,13 @@ const mockBroadcastCollection = vi.fn();
 
 vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
+  requireTenant: () => {
+    const t = mockGetRequestTenant();
+    if (!t) throw new Error('Tenant context required');
+    return t.trim().toLowerCase();
+  },
 }));
+
 
 vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: (...args: unknown[]) => mockBroadcastCollection(...args),

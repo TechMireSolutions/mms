@@ -8,30 +8,83 @@ import { resolveCardVisuals } from "@/lib/dashboardWidgetColors";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import type { StatItem } from "@/lib/dashboardWidgets";
 
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LayoutGrid } from "lucide-react";
+
 const MotionWidgetCard = motion.create(WidgetCard);
 
-interface StatsGridProps {
+export interface StatisticsGridProps {
   statItems: StatItem[];
   customCardIds?: string[];
   onDeleteCustomCard?: (id: string) => void;
   onEditCustomCard?: (id: string) => void;
   isEditMode?: boolean;
   onAddCardClick?: () => void;
+  isLoading?: boolean;
+  onResetCards?: () => void;
 }
 
-export default function StatsGrid({
+export type StatsGridProps = StatisticsGridProps;
+
+export function StatisticsGrid({
   statItems,
   customCardIds = [],
   onDeleteCustomCard,
   onEditCustomCard,
   isEditMode = false,
-  onAddCardClick
-}: StatsGridProps): React.JSX.Element {
+  onAddCardClick,
+  isLoading = false,
+  onResetCards,
+}: StatisticsGridProps): React.JSX.Element {
   const { t } = useTranslation();
   const customCardSet = useMemo(() => new Set(customCardIds), [customCardIds]);
 
+  if (isLoading && statItems.length === 0) {
+
+    return (
+      <section aria-label={t("dashboard.statsSectionLabel")} className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 font-sans">
+        {Array.from({ length: 4 }).map((_, idx) => (
+          <div
+            key={`stat-skeleton-${idx}`}
+            className="rounded-2xl border border-border/40 bg-card/20 p-5 min-h-[130px] flex flex-col justify-between animate-pulse select-none"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-8 h-8 rounded-lg bg-muted/60" />
+              <div className="w-12 h-5 rounded-md bg-muted/40" />
+            </div>
+            <div className="space-y-2 mt-4">
+              <div className="w-20 h-6 rounded bg-muted/60" />
+              <div className="w-32 h-3 rounded bg-muted/40" />
+            </div>
+          </div>
+        ))}
+      </section>
+    );
+  }
+
+  if (!isLoading && statItems.length === 0 && !isEditMode) {
+    return (
+      <div className="py-2">
+        <EmptyState
+          icon={LayoutGrid}
+          title={t("dashboard.noCardsVisibleTitle")}
+          description={t("dashboard.noCardsVisibleDesc")}
+          action={
+            onResetCards ? (
+              <Button variant="outline" size="sm" onClick={onResetCards} className="mt-2 text-xs">
+                {t("dashboard.resetCards")}
+              </Button>
+            ) : undefined
+          }
+          compact
+        />
+      </div>
+    );
+  }
+
   return (
     <section aria-label={t("dashboard.statsSectionLabel")} className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 font-sans">
+
       {statItems.map((statItem, statIndex) => {
         const { IconComponent: Icon, colorTheme, accent } = resolveCardVisuals(statItem);
         const hasPositiveTrend = statItem.trend >= 0;
@@ -119,3 +172,6 @@ export default function StatsGrid({
     </section>
   );
 }
+
+export default StatisticsGrid;
+

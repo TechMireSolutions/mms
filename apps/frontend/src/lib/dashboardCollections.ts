@@ -56,7 +56,6 @@ export const TREND_METRIC_KEY_MAP: Record<DashboardTrendMetric, keyof DashboardM
   teachers: 'teacherTrend',
 };
 
-
 /** Filters custom widgets to active card-type widgets matching the dashboard role. */
 export function filterDashboardCardWidgets(
   widgets: CustomWidget[],
@@ -66,7 +65,6 @@ export function filterDashboardCardWidgets(
     (widget) => widget.widgetType === 'card' && widgetMatchesDashboardRole(widget.role, dashboardRole),
   );
 }
-
 
 /**
  * Whether a dashboard card/widget should show given enabledModules.
@@ -175,5 +173,3 @@ export function getActiveCustomCardIds(
 export function getPinnedDashboardWidgetCount(widgets: CustomWidget[]): number {
   return widgets.filter((widget) => widget.isPinnedToDashboard).length;
 }
-
-

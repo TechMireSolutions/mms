@@ -10,7 +10,7 @@ interface DashboardRolePanelProps {
 }
 
 /** Quick actions + notifications strip for the active dashboard layout role. */
-export default function DashboardRolePanel({
+export function DashboardRolePanel({
   dashboardRole,
   notifications,
 }: DashboardRolePanelProps): React.JSX.Element {
@@ -25,3 +25,6 @@ export default function DashboardRolePanel({
     </div>
   );
 }
+
+export default DashboardRolePanel;
+

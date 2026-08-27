@@ -33,7 +33,13 @@ export const dashboardWidgets = pgTable('dashboard_widgets', {
     table.workspaceSubdomain,
     table.isPinnedToDashboard,
   ),
+  index('dashboard_widgets_workspace_sort_idx').on(
+    table.workspaceSubdomain,
+    table.sortOrder,
+    table.id,
+  ),
 ]);
+
 
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */

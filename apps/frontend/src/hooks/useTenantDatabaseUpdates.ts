@@ -25,6 +25,11 @@ import { invalidateObligationsQueries } from '@/tenant/hooks/collections/obligat
 import { invalidateDashboardQueries } from '@/tenant/hooks/collections/dashboard';
 
 function invalidateModuleQueries(queryClient: QueryClient, key: string) {
+  // Invalidate composite dashboard summary metrics when domain collections change
+  if (key !== 'dashboard' && key !== 'user_activity_logs' && key !== 'message_logs' && key !== 'message_templates') {
+    queryClient.invalidateQueries({ queryKey: ['dashboard', 'summary'] });
+  }
+
   switch (key) {
     case 'contacts': return invalidateContactsQueries(queryClient);
     case 'students': return invalidateStudentsQueries(queryClient);
@@ -67,6 +72,7 @@ function invalidateModuleQueries(queryClient: QueryClient, key: string) {
     case 'message_templates': return invalidateMessagingQueries(queryClient);
   }
 }
+
 
 /**
  * Subscribes to tenant `/api/ws` and invalidates Query keys for live collection updates.

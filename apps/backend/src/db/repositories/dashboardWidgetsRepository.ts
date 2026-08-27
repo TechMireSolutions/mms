@@ -1,24 +1,9 @@
 import { and, asc, eq, sql } from 'drizzle-orm';
-import type { DashboardWidgetDto } from '@mms/shared';
+import { DASHBOARD_WIDGET_INDEXED_KEYS, type DashboardWidgetDto } from '@mms/shared';
 import { dashboardWidgets } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
 type DashboardWidgetRow = typeof dashboardWidgets.$inferSelect;
-
-/** Fields projected onto typed `dashboard_widgets` columns (the rest go in jsonb `config`). */
-const COLUMN_FIELDS = [
-  'id',
-  'widgetType',
-  'category',
-  'collection',
-  'role',
-  'isPinnedToDashboard',
-  'title',
-  'icon',
-  'color',
-  'operation',
-  'sortOrder',
-] as const;
 
 /** Split a widget DTO into typed columns + the jsonb `config` remainder. */
 function toRow(
@@ -43,10 +28,11 @@ function toRow(
 } {
   const config: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(widget)) {
-    if (!COLUMN_FIELDS.includes(key as (typeof COLUMN_FIELDS)[number])) {
+    if (!DASHBOARD_WIDGET_INDEXED_KEYS.includes(key as (typeof DASHBOARD_WIDGET_INDEXED_KEYS)[number])) {
       config[key] = value;
     }
   }
+
   return {
     id: widget.id,
     workspaceSubdomain,
@@ -147,6 +133,31 @@ export async function deleteDashboardWidgetById(
       );
   });
 }
+
+/** Atomically update sort_order for a list of widget ids. */
+export async function reorderDashboardWidgetsForWorkspace(
+  workspaceSubdomain: string,
+  order: Array<{ id: string; sortOrder: number }>,
+): Promise<void> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  if (order.length === 0) return;
+  await withTenant(subdomain, async (tx) => {
+    await Promise.all(
+      order.map((item) =>
+        tx
+          .update(dashboardWidgets)
+          .set({ sortOrder: item.sortOrder, updatedAt: new Date() })
+          .where(
+            and(
+              eq(dashboardWidgets.workspaceSubdomain, subdomain),
+              eq(dashboardWidgets.id, item.id),
+            ),
+          ),
+      ),
+    );
+  });
+}
+
 
 /** Backup/restore parity — full workspace widget rows. */
 export async function listAllDashboardWidgetsByWorkspace(

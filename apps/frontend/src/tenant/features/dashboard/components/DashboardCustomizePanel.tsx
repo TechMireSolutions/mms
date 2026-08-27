@@ -40,7 +40,7 @@ export interface DashboardCustomizePanelProps {
 /**
  * Dashboard customize mode: metric card visibility + pinned widget management + alert thresholds + layout density.
  */
-export default function DashboardCustomizePanel({
+export function DashboardCustomizePanel({
   can,
   customWidgets,
   disabledCardIds,
@@ -197,3 +197,6 @@ export default function DashboardCustomizePanel({
     </div>
   );
 }
+
+export default DashboardCustomizePanel;
+

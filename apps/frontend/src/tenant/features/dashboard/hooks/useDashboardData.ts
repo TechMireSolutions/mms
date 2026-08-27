@@ -21,6 +21,8 @@ import { useFinanceMetrics } from '@/tenant/hooks/collections/finance';
 import { useHasanatMetrics } from '@/tenant/hooks/collections/hasanat';
 import { useQuestionBankMetrics } from '@/tenant/hooks/collections/questionBank';
 import { useAccountingMetrics } from '@/tenant/hooks/collections/accounting';
+import { useDashboardSummaryQuery } from '@/tenant/hooks/collections/dashboard';
+
 import {
   todayISO,
   ACCOUNTING_MODULE_MANIFEST,
@@ -54,7 +56,9 @@ export interface DashboardCollectionData {
   hasanatMetrics?: HasanatCommandMetricsSnapshot;
   questionBankMetrics?: QuestionBankCommandMetricsSnapshot;
   accountingMetrics?: AccountingCommandMetricsSnapshot;
+  isLoading?: boolean;
 }
+
 
 /** Loads server metrics for dashboard cards — no full collection dumps for KPI values. */
 export function useDashboardData(
@@ -109,15 +113,27 @@ export function useDashboardData(
   useTeachersWidgetAggregates(collectionWidgets.teachers, { enabled: shouldLoadTeachers });
   useSessionsWidgetAggregates(collectionWidgets.sessions, { enabled: shouldLoadSessions });
 
-  const { data: studentMetrics } = useStudentsMetrics({ enabled: shouldLoadStudents });
-  const { data: teacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers });
-  const { data: contactMetrics } = useContactsMetrics({ enabled: shouldLoadContacts });
-  const { data: sessionsMetrics } = useSessionsMetrics({ enabled: shouldLoadSessions });
-  const { data: attendanceMetrics } = useAttendanceMetrics(todayISO(), { enabled: shouldLoadAttendance });
-  const { data: financeMetrics } = useFinanceMetrics({ enabled: shouldLoadFinance });
-  const { data: hasanatMetrics } = useHasanatMetrics({ enabled: shouldLoadHasanat });
-  const { data: questionBankMetrics } = useQuestionBankMetrics({ enabled: shouldLoadQuestionBank });
-  const { data: accountingMetrics } = useAccountingMetrics({ enabled: shouldLoadAccounting });
+  const { summary, isLoading, isPending } = useDashboardSummaryQuery(todayISO(), dashboardRole);
+
+  const { data: individualStudentMetrics } = useStudentsMetrics({ enabled: shouldLoadStudents && !summary?.students });
+  const { data: individualTeacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers && !summary?.teachers });
+  const { data: individualContactMetrics } = useContactsMetrics({ enabled: shouldLoadContacts && !summary?.contacts });
+  const { data: individualSessionsMetrics } = useSessionsMetrics({ enabled: shouldLoadSessions && !summary?.sessions });
+  const { data: individualAttendanceMetrics } = useAttendanceMetrics(todayISO(), { enabled: shouldLoadAttendance && !summary?.attendance });
+  const { data: individualFinanceMetrics } = useFinanceMetrics({ enabled: shouldLoadFinance && !summary?.finance });
+  const { data: individualHasanatMetrics } = useHasanatMetrics({ enabled: shouldLoadHasanat && !summary?.hasanat });
+  const { data: individualQuestionBankMetrics } = useQuestionBankMetrics({ enabled: shouldLoadQuestionBank && !summary?.questionBank });
+  const { data: individualAccountingMetrics } = useAccountingMetrics({ enabled: shouldLoadAccounting && !summary?.accounting });
+
+  const studentMetrics = (summary?.students as StudentsCommandMetricsSnapshot | undefined) ?? individualStudentMetrics;
+  const teacherMetrics = (summary?.teachers as TeachersCommandMetricsSnapshot | undefined) ?? individualTeacherMetrics;
+  const contactMetrics = (summary?.contacts as ContactsCommandMetricsSnapshot | undefined) ?? individualContactMetrics;
+  const sessionsMetrics = (summary?.sessions as SessionsCommandMetricsSnapshot | undefined) ?? individualSessionsMetrics;
+  const attendanceMetrics = (summary?.attendance as AttendanceCommandMetricsSnapshot | undefined) ?? individualAttendanceMetrics;
+  const financeMetrics = (summary?.finance as FinanceCommandMetricsSnapshot | undefined) ?? individualFinanceMetrics;
+  const hasanatMetrics = (summary?.hasanat as HasanatCommandMetricsSnapshot | undefined) ?? individualHasanatMetrics;
+  const questionBankMetrics = (summary?.questionBank as QuestionBankCommandMetricsSnapshot | undefined) ?? individualQuestionBankMetrics;
+  const accountingMetrics = (summary?.accounting as AccountingCommandMetricsSnapshot | undefined) ?? individualAccountingMetrics;
 
   const studentsTotal = studentMetrics?.total ?? 0;
   const teachersTotal = teacherMetrics?.total ?? 0;
@@ -143,5 +159,7 @@ export function useDashboardData(
     hasanatMetrics,
     questionBankMetrics,
     accountingMetrics,
+    isLoading: isLoading || isPending,
   };
 }
+

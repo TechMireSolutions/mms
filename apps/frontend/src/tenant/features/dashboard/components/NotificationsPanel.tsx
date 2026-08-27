@@ -45,7 +45,7 @@ function saveDismissedToSession(ids: Array<string | number>): void {
   }
 }
 
-export default function NotificationsPanel({ items }: NotificationsPanelProps): React.JSX.Element {
+export function NotificationsPanel({ items }: NotificationsPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const [dismissed, setDismissed] = useState<Array<string | number>>(getInitialDismissed);
 
@@ -103,8 +103,13 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
         }
       />
 
-      <div className="divide-y divide-border/40 max-h-notifications overflow-y-auto">
+      <div
+        className="divide-y divide-border/40 max-h-notifications overflow-y-auto"
+        aria-live="polite"
+        aria-atomic="false"
+      >
         <AnimatePresence initial={false}>
+
           {visible.length === 0 ? (
             <EmptyState
               title={t('notifications.empty')}
@@ -166,3 +171,6 @@ export default function NotificationsPanel({ items }: NotificationsPanelProps): 
     </WidgetCard>
   );
 }
+
+export default NotificationsPanel;
+

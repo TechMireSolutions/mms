@@ -13,6 +13,8 @@ import { tsrClient } from '@/lib/api';
 
 export const DASHBOARD_PREFERENCES_QUERY_KEY = ['dashboard', 'preferences'] as const;
 export const DASHBOARD_WIDGETS_QUERY_KEY = ['dashboard', 'widgets'] as const;
+export const DASHBOARD_SUMMARY_QUERY_KEY = (date?: string, role?: string) =>
+  ['dashboard', 'summary', { date, role }] as const;
 
 /** Pure seeded default widgets, computed once — placeholder while the server query loads. */
 const DEFAULT_WIDGETS_PLACEHOLDER: CustomWidget[] = buildDefaultCustomWidgets();
@@ -20,7 +22,31 @@ const DEFAULT_WIDGETS_PLACEHOLDER: CustomWidget[] = buildDefaultCustomWidgets();
 export function invalidateDashboardQueries(queryClient: QueryClient): void {
   queryClient.invalidateQueries({ queryKey: DASHBOARD_PREFERENCES_QUERY_KEY });
   queryClient.invalidateQueries({ queryKey: DASHBOARD_WIDGETS_QUERY_KEY });
+  queryClient.invalidateQueries({ queryKey: ['dashboard', 'summary'] });
 }
+
+export function useDashboardSummaryQuery(
+  date?: string,
+  role?: string,
+  options?: { enabled?: boolean; refetchInterval?: number },
+) {
+  const { isAuthenticated } = useAuth();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const query = tsrClient.dashboard.getSummary.useQuery({
+    queryKey: DASHBOARD_SUMMARY_QUERY_KEY(date, role),
+    query: { date, role },
+    enabled: isAuthenticated && (options?.enabled ?? true),
+    staleTime: 30_000,
+    refetchOnWindowFocus: true,
+    refetchInterval: options?.refetchInterval ?? 60_000,
+  });
+
+  return {
+    ...query,
+    summary: query.data?.status === 200 ? (query.data.body.summary as Record<string, unknown>) : undefined,
+  };
+}
+
 
 export function useDashboardPreferencesQuery() {
   const { isAuthenticated } = useAuth();
@@ -30,11 +56,11 @@ export function useDashboardPreferencesQuery() {
     enabled: isAuthenticated,
     staleTime: 60_000,
   });
-  
-  const preferences = query.data?.body?.preferences 
+
+  const preferences = query.data?.body?.preferences
     ? normalizeDashboardPreferences(query.data.body.preferences)
     : DEFAULT_DASHBOARD_PREFERENCES;
-    
+
   return { ...query, data: preferences };
 }
 
@@ -43,9 +69,9 @@ export function useDashboardPreferencesMutation() {
   const { t } = useTranslation();
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.dashboard.putPreferences.useMutation({
-    onSuccess: (res: any) => {
-      if (res.status === 200) {
-        queryClient.setQueryData(DASHBOARD_PREFERENCES_QUERY_KEY, normalizeDashboardPreferences(res.body.preferences));
+    onSuccess: (res: { status: number; body?: { preferences?: unknown } }) => {
+      if (res.status === 200 && res.body?.preferences) {
+        queryClient.setQueryData(DASHBOARD_PREFERENCES_QUERY_KEY, normalizeDashboardPreferences(res.body.preferences as any));
         invalidateDashboardQueries(queryClient);
       }
     },
@@ -65,7 +91,7 @@ export function useDashboardWidgetsQuery() {
   const widgets = query.data?.body?.widgets
     ? (query.data.body.widgets as CustomWidget[])
     : DEFAULT_WIDGETS_PLACEHOLDER;
-    
+
   return { ...query, data: widgets };
 }
 
@@ -74,8 +100,8 @@ export function useDashboardWidgetsMutation() {
   const { t } = useTranslation();
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.dashboard.putWidgets.useMutation({
-    onSuccess: (res: any) => {
-      if (res.status === 200) {
+    onSuccess: (res: { status: number; body?: { widgets?: unknown } }) => {
+      if (res.status === 200 && res.body?.widgets) {
         queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, res.body.widgets as CustomWidget[]);
         invalidateDashboardQueries(queryClient);
       }
@@ -89,12 +115,57 @@ export function useDashboardWidgetDeleteMutation() {
   const { t } = useTranslation();
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.dashboard.deleteWidget.useMutation({
-    onSuccess: (_data: any, variables: any) => {
-      queryClient.setQueryData<CustomWidget[]>(DASHBOARD_WIDGETS_QUERY_KEY, (old) =>
-        old ? old.filter((widget) => widget.id !== variables.params.id) : [],
-      );
+    onSuccess: (_data: unknown, variables: unknown) => {
+      const widgetId =
+        typeof variables === 'string'
+          ? variables
+          : (variables as { params?: { id?: string } })?.params?.id;
+      if (widgetId) {
+        queryClient.setQueryData<CustomWidget[]>(DASHBOARD_WIDGETS_QUERY_KEY, (old) =>
+          old ? old.filter((widget) => widget.id !== widgetId) : [],
+        );
+      }
       invalidateDashboardQueries(queryClient);
     },
     onError: () => notify.error(t('dashboard.toast.deleteFailed')),
+  });
+}
+
+export function useDashboardWidgetsReorderMutation() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.dashboard.reorderWidgets.useMutation({
+    onMutate: async ({ body }: { body: { order: Array<{ id: string; sortOrder: number }> } }) => {
+      await queryClient.cancelQueries({ queryKey: DASHBOARD_WIDGETS_QUERY_KEY });
+      const previousWidgets = queryClient.getQueryData<CustomWidget[]>(DASHBOARD_WIDGETS_QUERY_KEY);
+
+      if (previousWidgets) {
+        const orderMap = new Map(body.order.map((item) => [item.id, item.sortOrder]));
+        const updated = [...previousWidgets]
+          .map((widget) => {
+            const sortOrder = orderMap.get(widget.id);
+            return sortOrder !== undefined ? { ...widget, sortOrder } : widget;
+          })
+          .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
+
+        queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, updated);
+      }
+
+      return { previousWidgets };
+    },
+    onError: (
+      _err: unknown,
+      _newOrder: unknown,
+      context: { previousWidgets?: CustomWidget[] } | undefined,
+    ) => {
+      if (context?.previousWidgets) {
+        queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, context.previousWidgets);
+      }
+      notify.error(t('dashboard.toast.saveFailed'));
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: DASHBOARD_WIDGETS_QUERY_KEY });
+    },
   });
 }

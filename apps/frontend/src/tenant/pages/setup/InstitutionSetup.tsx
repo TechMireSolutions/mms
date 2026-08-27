@@ -4,8 +4,8 @@ import { Building2, Mail, MapPin, Sparkles, CheckCircle2, ArrowRight } from 'luc
 import {
   type BrandingSettings,
   mergeBrandingSettings,
-  isInstitutionSetupComplete,
 } from '@mms/shared';
+
 import { useTranslation } from '@/hooks/useTranslation';
 import { useBranding } from '@/tenant/hooks/useBranding';
 import { saveBrandingSettings } from '@/lib/db';

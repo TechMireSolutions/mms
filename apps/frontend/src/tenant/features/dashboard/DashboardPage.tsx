@@ -1,10 +1,10 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Printer } from 'lucide-react';
-import StatsGrid from '@/tenant/features/dashboard/components/StatisticsGrid';
-import DashboardRolePanel from '@/tenant/features/dashboard/components/DashboardRolePanel';
-import DashboardCustomizePanel from '@/tenant/features/dashboard/components/DashboardCustomizePanel';
-import WelcomeBanner from '@/tenant/features/dashboard/components/WelcomeBanner';
+import { StatisticsGrid } from '@/tenant/features/dashboard/components/StatisticsGrid';
+import { DashboardRolePanel } from '@/tenant/features/dashboard/components/DashboardRolePanel';
+import { DashboardCustomizePanel } from '@/tenant/features/dashboard/components/DashboardCustomizePanel';
+import { WelcomeBanner } from '@/tenant/features/dashboard/components/WelcomeBanner';
 import { SetupIncompleteCallout } from '@/tenant/features/dashboard/components/SetupIncompleteCallout';
 import { DashboardWidgets } from '@/lib/reports/pinnedWidgets';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { useDashboardPageController } from '@/tenant/features/dashboard/hooks/useDashboardPageController';
 import { useBranding } from '@/tenant/hooks/useBranding';
 
-export default function Dashboard() {
+export function DashboardPage() {
+
   const {
     t,
     can,
@@ -30,6 +31,8 @@ export default function Dashboard() {
     handleUpdateGridMode,
     handleReorderWidgets,
     toggleCardVisibility,
+    handleResetCards,
+    isLoading,
     isWidgetBuilderOpen,
     editingWidget,
     widgetBuilderType,
@@ -139,15 +142,18 @@ export default function Dashboard() {
           transition={{ duration: 0.25 }}
         >
           <ErrorBoundary>
-            <StatsGrid
+            <StatisticsGrid
               statItems={visibleDashboardMetricCards}
               customCardIds={activeCustomCardIds}
               onDeleteCustomCard={handleDeleteWidget}
               onEditCustomCard={handleEditCustomCard}
               isEditMode={isEditMode}
               onAddCardClick={isEditMode ? () => openWidgetBuilder('card', null) : undefined}
+              isLoading={isLoading}
+              onResetCards={handleResetCards}
             />
           </ErrorBoundary>
+
         </motion.div>
       </AnimatePresence>
 
@@ -177,3 +183,6 @@ export default function Dashboard() {
     </ModulePageShell>
   );
 }
+
+export default DashboardPage;
+

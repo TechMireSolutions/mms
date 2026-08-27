@@ -60,3 +60,29 @@ export async function deleteDashboardWidgetAsync(id: string, signal?: AbortSigna
     body: {},
   });
 }
+
+export async function reorderDashboardWidgetsAsync(
+  order: Array<{ id: string; sortOrder: number }>,
+  signal?: AbortSignal,
+): Promise<void> {
+  const res = await apiContract.dashboard.reorderWidgets({
+    body: { order },
+  });
+  if (res.status !== 200) {
+    throw new Error('Failed to reorder dashboard widgets');
+  }
+}
+
+export async function fetchDashboardSummaryAsync(
+  date?: string,
+  role?: string,
+  signal?: AbortSignal,
+): Promise<Record<string, unknown> | null> {
+  const res = await apiContract.dashboard.getSummary({
+    query: { date, role },
+  });
+  if (res.status === 200) {
+    return (res.body as any).summary;
+  }
+  return null;
+}

@@ -34,6 +34,7 @@ export function useDashboardPageController() {
     saveWidget,
     updatePref,
     updateCustomWidgets,
+    reorderCustomWidgets,
   } = useDashboardConfig();
 
   const [isEditMode, setIsEditMode] = useState(false);
@@ -90,9 +91,10 @@ export function useDashboardPageController() {
 
   const handleReorderWidgets = useCallback(
     (reorderedWidgets: CustomWidget[]) => {
-      updateCustomWidgets(reorderedWidgets);
+      const order = reorderedWidgets.map((w, idx) => ({ id: w.id, sortOrder: idx }));
+      reorderCustomWidgets(order);
     },
-    [updateCustomWidgets],
+    [reorderCustomWidgets],
   );
 
   const handleUpdateThreshold = useCallback(
@@ -173,6 +175,10 @@ export function useDashboardPageController() {
     ],
   );
 
+  const handleResetCards = useCallback(() => {
+    updatePref('disabledCardIds', []);
+  }, [updatePref]);
+
   return {
     t,
     can,
@@ -189,6 +195,8 @@ export function useDashboardPageController() {
     handleUpdateGridMode,
     handleReorderWidgets,
     toggleCardVisibility,
+    handleResetCards,
+    isLoading: dashboardData.isLoading,
     isWidgetBuilderOpen,
     editingWidget,
     widgetBuilderType,
@@ -210,3 +218,4 @@ export function useDashboardPageController() {
     studentMetricsActive,
   };
 }
+

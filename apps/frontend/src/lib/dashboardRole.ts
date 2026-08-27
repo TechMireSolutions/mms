@@ -45,7 +45,6 @@ export function resolveDashboardWelcomeSubtitle(
   return t('dashboard.overview');
 }
 
-
 /** Resolve dashboard layout role from RBAC without inline `role ===` checks. */
 export function resolveDashboardRole(can: (permission: Permission) => boolean): DashboardRole {
   if (

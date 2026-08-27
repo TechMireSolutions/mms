@@ -21,7 +21,8 @@ interface QuickActionsPanelProps {
 /**
  * Role-specific quick actions filtered by enabled modules and write permissions.
  */
-export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): React.JSX.Element | null {
+export function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): React.JSX.Element | null {
+
   const settings = useGlobalSettings();
   const { t } = useTranslation();
   const { can } = usePermissions();
@@ -90,3 +91,6 @@ export default function QuickActionsPanel({ dashboardRole }: QuickActionsPanelPr
     </WidgetCard>
   );
 }
+
+export default QuickActionsPanel;
+

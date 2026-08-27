@@ -24,7 +24,9 @@ vi.mock('../contacts/use-cases/contactLookupsService.js', () => ({
 
 vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => 'demo',
+  requireTenant: () => 'demo',
 }));
+
 
 import {
   loadContactFieldConfig,

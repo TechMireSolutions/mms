@@ -69,7 +69,7 @@ export function SetupIncompleteCallout({ branding, isAdmin }: SetupIncompleteCal
             onClick={() => navigate('/settings', { state: { section: 'branding' } })}
           >
             {t('dashboard.setupCallout.cta')}
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden />
+            <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180 transition-transform" aria-hidden />
           </Button>
         </div>
 

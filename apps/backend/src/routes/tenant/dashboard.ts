@@ -11,6 +11,7 @@ import {
 import { initServer } from '@ts-rest/fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { withTenant } from '../../db/tenant-context.js';
+import { requireTenant } from '../../lib/tenantContext.js';
 import { createCollectionAuditHelper } from '../../lib/createCollectionAuditHelper.js';
 import {
   loadDashboardPreferences,
@@ -20,7 +21,9 @@ import {
   loadDashboardWidgets,
   upsertDashboardWidgets,
   deleteDashboardWidget,
+  reorderDashboardWidgets,
 } from '../../lib/dashboardWidgetsService.js';
+import { loadDashboardSummary } from '../../services/dashboardSummaryService.js';
 
 const auditDashboard = createCollectionAuditHelper('dashboard');
 const s = initServer();
@@ -34,84 +37,155 @@ function canWriteDashboard(user: User): boolean {
   );
 }
 
+async function handleDashboardRead<T>(
+  action: (tenant: string) => Promise<T>,
+  errorMessage: string,
+) {
+  try {
+    const tenant = requireTenant();
+    const result = await withTenant(
+      tenant,
+      () => action(tenant),
+      { readOnly: true, statementTimeoutMs: 5000 },
+    );
+    return { status: 200 as const, body: result };
+  } catch {
+    return {
+      status: 500 as const,
+      body: { type: 'database_error', message: errorMessage },
+    };
+  }
+}
+
+type DashboardWriteResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; error: { status: 403; body: { type: 'forbidden'; message: string } } };
+
+async function handleDashboardWrite<T>(
+  request: { user?: User },
+  action: (user: User, tenant: string) => Promise<T>,
+): Promise<DashboardWriteResult<T>> {
+  const user = request.user as User;
+  if (!canWriteDashboard(user)) {
+    return {
+      ok: false,
+      error: {
+        status: 403 as const,
+        body: { type: 'forbidden', message: 'Insufficient permissions' },
+      },
+    };
+  }
+  const tenant = requireTenant();
+  const data = await withTenant(tenant, () => action(user, tenant), { readOnly: false });
+  return { ok: true, data };
+}
+
 const dashboardRouter = s.router(rootContract.dashboard, {
-  getPreferences: async ({ request }: any) => {
-    try {
-      const preferences = await withTenant(String((request as any).tenant?.id), () => loadDashboardPreferences(), { readOnly: true, statementTimeoutMs: 5000 });
-      return {
-        status: 200 as const,
-        body: { preferences: preferences ?? normalizeDashboardPreferences(null) },
-      };
-    } catch {
-      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load dashboard preferences' } as any };
-    }
-  },
+  getPreferences: async () =>
+    handleDashboardRead(
+      async () => {
+        const preferences = await loadDashboardPreferences();
+        return { preferences: preferences ?? normalizeDashboardPreferences(null) };
+      },
+      'Failed to load dashboard preferences',
+    ),
+
   putPreferences: async ({ body, request }: any) => {
-    const user = (request as any).user as User;
-    if (!canWriteDashboard(user)) {
-      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
-    }
     try {
-      const saved = await withTenant(String((request as any).tenant?.id), async () => {
-        const result = await saveDashboardPreferences(
-          normalizeDashboardPreferences(body as DashboardPreferences) as DashboardPreferences,
+      const result = await handleDashboardWrite(request, async (user) => {
+        const saved = await saveDashboardPreferences(
+          normalizeDashboardPreferences(body as DashboardPreferences),
         );
         try {
           await auditDashboard(user, 'dashboard.preferences', 'Updated dashboard preferences', 'preferences');
         } catch { /* non-critical */ }
-        return result;
-      }, { readOnly: false });
-      return { status: 200 as const, body: { success: true, preferences: saved } };
+        return saved;
+      });
+      if (!result.ok) return result.error;
+      return { status: 200 as const, body: { success: true, preferences: result.data } };
     } catch {
-      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save dashboard preferences' } as any };
+      return {
+        status: 500 as const,
+        body: { type: 'database_error', message: 'Failed to save dashboard preferences' },
+      };
     }
   },
-  getWidgets: async ({ request }: any) => {
-    try {
-      const widgets = await withTenant(String((request as any).tenant?.id), () => loadDashboardWidgets(), { readOnly: true, statementTimeoutMs: 5000 });
-      return { status: 200 as const, body: { widgets } };
-    } catch {
-      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load dashboard widgets' } as any };
-    }
-  },
+
+  getWidgets: async () =>
+    handleDashboardRead(
+      async () => {
+        const widgets = await loadDashboardWidgets();
+        return { widgets };
+      },
+      'Failed to load dashboard widgets',
+    ),
+
   putWidgets: async ({ body, request }: any) => {
-    const user = (request as any).user as User;
-    if (!canWriteDashboard(user)) {
-      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
-    }
     try {
-      const widgets = await withTenant(String((request as any).tenant?.id), async () => {
-        const result = await upsertDashboardWidgets(body as DashboardWidgetDto[]);
+      const result = await handleDashboardWrite(request, async (user) => {
+        const widgets = await upsertDashboardWidgets(body as DashboardWidgetDto[]);
         try {
           await auditDashboard(user, 'dashboard.widgets', 'Updated dashboard widgets', 'widgets');
         } catch { /* non-critical */ }
-        return result;
-      }, { readOnly: false });
-      return { status: 200 as const, body: { success: true, widgets } };
+        return widgets;
+      });
+      if (!result.ok) return result.error;
+      return { status: 200 as const, body: { success: true, widgets: result.data } };
     } catch {
-      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save dashboard widgets' } as any };
+      return {
+        status: 500 as const,
+        body: { type: 'database_error', message: 'Failed to save dashboard widgets' },
+      };
     }
   },
+
   deleteWidget: async ({ params: { id }, request }: any) => {
-    const user = (request as any).user as User;
-    if (!canWriteDashboard(user)) {
-      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
-    }
     if (!id?.trim()) {
-      return { status: 400 as const, body: { type: 'validation_error', message: 'Widget id is required' } as any };
+      return {
+        status: 400 as const,
+        body: { type: 'validation_error', message: 'Widget id is required' },
+      };
     }
     try {
-      await withTenant(String((request as any).tenant?.id), async () => {
+      const result = await handleDashboardWrite(request, async (user) => {
         await deleteDashboardWidget(id);
         try {
           await auditDashboard(user, 'dashboard.widget.delete', `Deleted dashboard widget ${id}`, id);
         } catch { /* non-critical */ }
-      }, { readOnly: false });
+      });
+      if (!result.ok) return result.error;
       return { status: 200 as const, body: { success: true } };
     } catch {
-      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete dashboard widget' } as any };
+      return {
+        status: 500 as const,
+        body: { type: 'database_error', message: 'Failed to delete dashboard widget' },
+      };
     }
   },
+
+  reorderWidgets: async ({ body, request }: any) => {
+    try {
+      const result = await handleDashboardWrite(request, async () => {
+        await reorderDashboardWidgets(body.order);
+      });
+      if (!result.ok) return result.error;
+      return { status: 200 as const, body: { success: true } };
+    } catch {
+      return {
+        status: 500 as const,
+        body: { type: 'database_error', message: 'Failed to reorder dashboard widgets' },
+      };
+    }
+  },
+
+  getSummary: async ({ query }: any) =>
+    handleDashboardRead(
+      async () => {
+        const summary = await loadDashboardSummary(query?.date, query?.role);
+        return { summary: summary as Record<string, unknown> };
+      },
+      'Failed to load dashboard summary',
+    ),
 } as any);
 
 /**

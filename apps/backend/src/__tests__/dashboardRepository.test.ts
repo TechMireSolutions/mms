@@ -4,6 +4,7 @@ import {
   listDashboardWidgetsByWorkspace,
   upsertDashboardWidgetsForWorkspace,
   deleteDashboardWidgetById,
+  reorderDashboardWidgetsForWorkspace,
   listAllDashboardWidgetsByWorkspace,
   replaceDashboardWidgetsForWorkspace,
 } from '../db/repositories/dashboardWidgetsRepository.js';
@@ -17,8 +18,10 @@ import {
 const mockTx = {
   select: vi.fn(),
   insert: vi.fn(),
+  update: vi.fn(),
   delete: vi.fn(),
 };
+
 
 vi.mock('../db/tenant-context.js', () => ({
   withTenant: vi.fn((_subdomain: string, cb: (tx: typeof mockTx) => Promise<unknown>) =>
@@ -110,6 +113,21 @@ describe('dashboard repositories', () => {
       expect(mockTx.delete).toHaveBeenCalled();
       expect(mockWhere).toHaveBeenCalled();
     });
+
+    it('reorderDashboardWidgetsForWorkspace updates sortOrder per widget in a transaction', async () => {
+      const mockWhere = vi.fn().mockResolvedValue([]);
+      const mockSet = vi.fn().mockReturnValue({ where: mockWhere });
+      mockTx.update.mockReturnValue({ set: mockSet });
+
+      await reorderDashboardWidgetsForWorkspace('demo', [
+        { id: 'custom-1', sortOrder: 5 },
+        { id: 'custom-2', sortOrder: 6 },
+      ]);
+
+      expect(mockTx.update).toHaveBeenCalledTimes(2);
+      expect(mockSet).toHaveBeenCalledTimes(2);
+    });
+
 
     it('replaceDashboardWidgetsForWorkspace deletes old rows and inserts new rows during restore', async () => {
       const mockDeleteWhere = vi.fn().mockResolvedValue([]);

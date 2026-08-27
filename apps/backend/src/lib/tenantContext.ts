@@ -10,6 +10,14 @@ export function getRequestTenant(): string | null {
   return tenantStorage.getStore() ?? null;
 }
 
+/** Returns the active tenant subdomain or throws if missing (strict context requirement). */
+export function requireTenant(): string {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
+  return tenant.trim().toLowerCase();
+}
+
+
 /** Authenticated user id for the current request (audit GUCs), if any. */
 export function getRequestUserId(): string | null {
   return requestUserIdStorage.getStore() ?? null;

@@ -5,6 +5,8 @@ import {
   fetchDashboardWidgets,
   saveDashboardWidgetsAsync,
   deleteDashboardWidgetAsync,
+  reorderDashboardWidgetsAsync,
+  fetchDashboardSummaryAsync,
 } from './dashboardApi';
 
 const mockApiContract = vi.hoisted(() => ({
@@ -14,6 +16,8 @@ const mockApiContract = vi.hoisted(() => ({
     getWidgets: vi.fn(),
     putWidgets: vi.fn(),
     deleteWidget: vi.fn(),
+    reorderWidgets: vi.fn(),
+    getSummary: vi.fn(),
   },
 }));
 
@@ -94,5 +98,31 @@ describe('dashboardApi', () => {
       params: { id: 'w1' },
       body: {},
     });
+  });
+
+  it('reorderDashboardWidgetsAsync calls PUT /api/dashboard/widgets/reorder', async () => {
+    mockApiContract.dashboard.reorderWidgets.mockResolvedValueOnce({
+      status: 200,
+      body: { success: true },
+    });
+
+    const order = [{ id: 'w1', sortOrder: 0 }, { id: 'w2', sortOrder: 1 }];
+    await reorderDashboardWidgetsAsync(order);
+    expect(mockApiContract.dashboard.reorderWidgets).toHaveBeenCalledWith({
+      body: { order },
+    });
+  });
+
+  it('fetchDashboardSummaryAsync calls GET /api/dashboard/summary', async () => {
+    mockApiContract.dashboard.getSummary.mockResolvedValueOnce({
+      status: 200,
+      body: { summary: { students: { total: 100 } } },
+    });
+
+    const res = await fetchDashboardSummaryAsync('2026-08-27', 'admin');
+    expect(mockApiContract.dashboard.getSummary).toHaveBeenCalledWith({
+      query: { date: '2026-08-27', role: 'admin' },
+    });
+    expect(res).toEqual({ students: { total: 100 } });
   });
 });

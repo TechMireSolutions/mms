@@ -3,7 +3,7 @@ import { join, normalize, relative, dirname } from 'node:path';
 import { resolveUploadsRoot } from '../config/uploadConfig.js';
 import type { TenantDatabaseSnapshot } from '@mms/shared';
 
-const UPLOADS_PATH_REGEX = /^\/uploads\/([a-zA-Z0-9_\-\/.]+)$/;
+const UPLOADS_PATH_REGEX = /^\/uploads\/([a-zA-Z0-9_\-/.]+)$/;
 
 /**
  * Recursively scans all collections and objects in a snapshot for `/uploads/...` URLs.

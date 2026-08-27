@@ -88,6 +88,7 @@ export function DashboardWidgetsGrid({
                     }}
                     className="rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-primary hover:text-primary-foreground text-muted-foreground shadow-none"
                     title={t('reports.widgets.editWidget')}
+                    aria-label={t('reports.widgets.editWidget')}
                   >
                     <Pencil className="w-3 h-3" />
                   </Button>
@@ -103,6 +104,7 @@ export function DashboardWidgetsGrid({
                     }}
                     className="rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive hover:text-destructive-foreground text-muted-foreground shadow-none"
                     title={t('reports.widgets.deleteWidget')}
+                    aria-label={t('reports.widgets.deleteWidget')}
                   >
                     <Trash2 className="w-3 h-3" />
                   </Button>
@@ -114,10 +116,12 @@ export function DashboardWidgetsGrid({
                   onClick={() => onUnpin(widget.id)}
                   className="rounded bg-card/85 backdrop-blur border border-border/60 hover:bg-destructive/10 text-muted-foreground hover:text-destructive shadow-none"
                   title={t('reports.widgets.unpinWidget')}
+                  aria-label={t('reports.widgets.unpinWidget')}
                 >
                   <PinOff className="w-3 h-3" />
                 </Button>
               </div>
+
             </motion.div>
           );
         })}

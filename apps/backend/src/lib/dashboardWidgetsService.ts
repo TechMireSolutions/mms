@@ -1,17 +1,12 @@
 import type { DashboardWidgetDto } from '@mms/shared';
-import { getRequestTenant } from './tenantContext.js';
+import { requireTenant } from './tenantContext.js';
 import { broadcastCollection } from './livePush.js';
 import {
   listDashboardWidgetsByWorkspace,
   upsertDashboardWidgetsForWorkspace,
   deleteDashboardWidgetById,
+  reorderDashboardWidgetsForWorkspace,
 } from '../db/repositories/dashboardWidgetsRepository.js';
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant.trim().toLowerCase();
-}
 
 /** Load all dashboard widgets for the current workspace. */
 export async function loadDashboardWidgets(): Promise<DashboardWidgetDto[]> {
@@ -24,6 +19,16 @@ export async function upsertDashboardWidgets(
 ): Promise<DashboardWidgetDto[]> {
   const tenant = requireTenant();
   await upsertDashboardWidgetsForWorkspace(tenant, widgets);
+  await broadcastCollection('dashboard');
+  return listDashboardWidgetsByWorkspace(tenant);
+}
+
+/** Atomically reorder widgets and broadcast the change. */
+export async function reorderDashboardWidgets(
+  order: Array<{ id: string; sortOrder: number }>,
+): Promise<DashboardWidgetDto[]> {
+  const tenant = requireTenant();
+  await reorderDashboardWidgetsForWorkspace(tenant, order);
   await broadcastCollection('dashboard');
   return listDashboardWidgetsByWorkspace(tenant);
 }

@@ -5,12 +5,15 @@
 export {
   DASHBOARD_PREFERENCES_QUERY_KEY,
   DASHBOARD_WIDGETS_QUERY_KEY,
+  DASHBOARD_SUMMARY_QUERY_KEY,
   invalidateDashboardQueries,
   useDashboardPreferencesQuery,
   useDashboardPreferencesMutation,
   useDashboardWidgetsQuery,
   useDashboardWidgetsMutation,
   useDashboardWidgetDeleteMutation,
+  useDashboardWidgetsReorderMutation,
+  useDashboardSummaryQuery,
 } from '@/tenant/features/dashboard/hooks/useDashboardSetupConfig';
 // Phase 7: contract-driven tsrClient hooks
 export {
@@ -19,5 +22,8 @@ export {
   useDashboardWidgetsQuery as useDashboardContractWidgetsQuery,
   useDashboardWidgetsMutation as useDashboardContractWidgetsMutation,
   useDashboardWidgetDeleteMutation as useDashboardContractWidgetDeleteMutation,
+  useDashboardWidgetsReorderMutation as useDashboardContractWidgetsReorderMutation,
+  useDashboardSummaryQuery as useDashboardContractSummaryQuery,
 } from '@/tenant/features/dashboard/hooks/useDashboardSetupConfig';
+
 
