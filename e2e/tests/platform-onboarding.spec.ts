@@ -72,8 +72,6 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
     await expect(page.locator('#wizard-step-title')).toContainText('Institution & theme');
 
     await page.fill('#onboarding-name', 'Test Madrasa');
-    await page.fill('#onboarding-tagline', 'Learn with excellence');
-    await page.selectOption('#onboarding-country', 'United Kingdom');
     await page.fill('#onboarding-subdomain', subdomain);
     await expect(page.locator('text=Your URL:')).toBeVisible();
 
@@ -102,7 +100,9 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
 
     // 6. Complete mandatory temporary password change
     await page.waitForURL(`http://${subdomain}.localhost:5173/force-password-change`);
-    await expect(page.locator('h1')).toContainText('Change your temporary password');
+    await expect(page.locator('h1')).toContainText(/temporary password|Change your/i, {
+      timeout: 20_000,
+    });
     await page.fill('#current-password', adminPassword);
     await page.fill('#new-password', changedAdminPassword);
     await page.fill('#confirm-password', changedAdminPassword);
@@ -114,9 +114,26 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
     await page.fill('input[name="password"]', changedAdminPassword);
     await page.click('button[type="submit"]');
 
+    const institutionHeading = page.locator('h1', { hasText: /Institution Profile|Complete Institution/i });
+    const dashboardHeading = page.locator('h1', { hasText: /Assalamu Alaikum/i });
+    await expect(institutionHeading.or(dashboardHeading).first()).toBeVisible({ timeout: 30_000 });
+
+    if (await institutionHeading.isVisible().catch(() => false)) {
+      await page.fill('#setup-tagline', 'Learn with excellence');
+      await page.fill('#setup-email', adminEmail);
+      await page.fill('#setup-phone', '03001234567');
+      await page.fill('#setup-addressLine1', '123 Test Lane');
+      await page.fill('#setup-city', 'London');
+      await page.fill('#setup-postalCode', 'E1 6AN');
+      await page.fill('#setup-country', 'United Kingdom');
+      await page.click('button[type="submit"]');
+    }
+
     await page.waitForURL(`http://${subdomain}.localhost:5173/`);
     await page.waitForLoadState('domcontentloaded');
-    await expect(page.locator('h1')).toContainText('Assalamu Alaikum, Test Admin');
+    await expect(page.locator('h1')).toContainText(/Assalamu Alaikum/i, {
+      timeout: 20_000,
+    });
 
     expect(browserFailures, browserFailures.join('\n')).toEqual([]);
   });

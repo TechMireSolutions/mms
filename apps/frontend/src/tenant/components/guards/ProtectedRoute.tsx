@@ -42,12 +42,18 @@ export default function ProtectedRoute(): React.JSX.Element {
     );
   }
 
-  if (user?.mustChangePassword && location.pathname !== ROUTES.forcePasswordChange) {
-    return <Navigate to={ROUTES.forcePasswordChange} replace />;
+  if (user?.mustChangePassword) {
+    if (location.pathname !== ROUTES.forcePasswordChange) {
+      return <Navigate to={ROUTES.forcePasswordChange} replace />;
+    }
+    return <Outlet />;
   }
 
-  if (!isInstitutionSetupComplete(branding) && location.pathname !== ROUTES.institutionSetup) {
-    return <Navigate to={ROUTES.institutionSetup} replace />;
+  if (!isInstitutionSetupComplete(branding)) {
+    if (location.pathname !== ROUTES.institutionSetup) {
+      return <Navigate to={ROUTES.institutionSetup} replace />;
+    }
+    return <Outlet />;
   }
 
   return <Outlet />;

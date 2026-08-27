@@ -101,8 +101,6 @@ export async function bootstrapAuthenticatedTenant(
   await page.waitForSelector('#wizard-step-title');
 
   await page.fill('#onboarding-name', 'Responsive Shell Madrasa');
-  await page.fill('#onboarding-tagline', 'Responsive coverage');
-  await page.selectOption('#onboarding-country', 'United Kingdom');
   await page.fill('#onboarding-subdomain', subdomain);
   await expect(page.locator('text=Your URL:')).toBeVisible();
   await page.click('button:has-text("Continue")');

@@ -39,6 +39,55 @@ export async function assertModuleTierSmoke(
     .click();
 }
 
+export async function completeInstitutionSetupIfPresent(page: Page): Promise<void> {
+  const institutionHeading = page.locator('h1', { hasText: /Institution Profile|Complete Institution/i });
+  const dashboardHeading = page.locator('h1', { hasText: 'Assalamu Alaikum' });
+
+  // Wait for either the dashboard or the setup page to appear after login
+  const isSetup = await institutionHeading
+    .or(dashboardHeading)
+    .first()
+    .waitFor({ state: 'visible', timeout: 30_000 })
+    .then(async () => await institutionHeading.isVisible())
+    .catch(() => false);
+
+  if (isSetup) {
+    const taglineInput = page.locator('#setup-tagline');
+    await taglineInput.waitFor({ state: 'visible', timeout: 10_000 });
+
+    if (!(await taglineInput.inputValue())) {
+      await taglineInput.fill('Excellence in Islamic Education');
+    }
+    const emailInput = page.locator('#setup-email');
+    if (!(await emailInput.inputValue())) {
+      await emailInput.fill('admin@madrasa.org');
+    }
+    const phoneInput = page.locator('#setup-phone');
+    if (!(await phoneInput.inputValue())) {
+      await phoneInput.fill('03001234567');
+    }
+    const addressInput = page.locator('#setup-addressLine1');
+    if (!(await addressInput.inputValue())) {
+      await addressInput.fill('123 Madrasa Street');
+    }
+    const cityInput = page.locator('#setup-city');
+    if (!(await cityInput.inputValue())) {
+      await cityInput.fill('London');
+    }
+    const postalCodeInput = page.locator('#setup-postalCode');
+    if (!(await postalCodeInput.inputValue())) {
+      await postalCodeInput.fill('E1 6AN');
+    }
+    const countryInput = page.locator('#setup-country');
+    if (!(await countryInput.inputValue())) {
+      await countryInput.fill('United Kingdom');
+    }
+    await page.click('button[type="submit"]');
+    await expect(dashboardHeading).toBeVisible({ timeout: 30_000 });
+    await page.waitForLoadState('domcontentloaded');
+  }
+}
+
 /**
  * Signs into an existing tenant workspace with email/password.
  * If a shared storageState already lands on the dashboard, skips the form.
@@ -63,6 +112,7 @@ export async function loginTenant(
     .catch(() => false);
 
   if (!isLoginForm) {
+    await completeInstitutionSetupIfPresent(page);
     await expect(dashboardHeading).toBeVisible({ timeout: 10_000 });
     return;
   }
@@ -70,6 +120,9 @@ export async function loginTenant(
   await emailInput.fill(email);
   await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
+
+  await completeInstitutionSetupIfPresent(page);
+
   await expect(dashboardHeading).toBeVisible({ timeout: 30_000 });
   await page.waitForLoadState('domcontentloaded');
 }
