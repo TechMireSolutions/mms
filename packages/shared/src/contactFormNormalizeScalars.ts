@@ -49,10 +49,12 @@ export function mergeContactEditSavePayload(
   draft: Partial<Contact>,
 ): Contact {
   // Strip UI-only `tag` string before merge
-  const { tag, ...draftClean } = draft as Record<string, unknown>;
+  const { tag: _draftTag, ...draftClean } = draft as Record<string, unknown>;
+  const { tag: _existingTag, ...existingClean } = (existing || {}) as Record<string, unknown>;
 
   const withCollections: Partial<Contact> = {
     ...(draftClean as Partial<Contact>),
+    tags: draft.tags ?? existing?.tags ?? [],
     phones: draft.phones ?? [],
     emails: draft.emails ?? [],
     addresses: draft.addresses ?? [],
@@ -68,7 +70,7 @@ export function mergeContactEditSavePayload(
     && withCollections.relationshipContacts.length === 0;
 
   return {
-    ...(existing || {}),
+    ...existingClean,
     ...synced,
     ...(clearLegacyRelationships ? { relationships: [] } : {}),
   } as Contact;

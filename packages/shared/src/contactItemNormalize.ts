@@ -97,7 +97,7 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
   if (result.tags !== undefined || result.tag !== undefined) {
     const normalizedTags = getContactTags(result);
     result.tags = normalizedTags;
-    // `tag` is a UI-only string mirror — strip it so the strict backend schema never sees it.
+    // `tag` is a UI/input string mirror — normalized into `tags` array on persistence
     delete (result as Record<string, unknown>).tag;
   }
 

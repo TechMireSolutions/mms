@@ -172,7 +172,7 @@ export function useContactFormSave({
         return true;
       } catch (err: unknown) {
         const apiErrors = getApiValidationErrors(err);
-        if (apiErrors) {
+        if (apiErrors && apiErrors.length > 0) {
           setValidationErrors(apiErrors);
           const firstError = apiErrors[0];
           if (firstError?.tabId) {
@@ -183,8 +183,11 @@ export function useContactFormSave({
           });
           return false;
         }
+        const description =
+          getApiValidationMessage(err) ||
+          (err instanceof Error ? err.message : undefined);
         notify.error(t("settings.serverSaveFailed"), {
-          description: err instanceof Error ? err.message : String(err),
+          description,
         });
         return false;
       } finally {

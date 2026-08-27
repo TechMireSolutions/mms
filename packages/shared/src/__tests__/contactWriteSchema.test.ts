@@ -44,13 +44,15 @@ describe('contactWriteSchema allowlist', () => {
     }
   });
 
-  it('accepts notes, line1, and address scalar mirrors on the system schema', () => {
+  it('accepts notes, line1, address, and tag/tags scalar mirrors on the system schema', () => {
     const parsed = contactWriteSchema.safeParse({
       firstName: 'Ali',
       notes: 'Some notes',
       line1: '123 Main St',
       address: '123 Main St',
       city: 'Karachi',
+      tag: 'VIP, Donor',
+      tags: ['VIP', 'Donor'],
     });
     expect(parsed.success).toBe(true);
     if (parsed.success) {
@@ -58,6 +60,8 @@ describe('contactWriteSchema allowlist', () => {
       expect(data.notes).toBe('Some notes');
       expect(data.line1).toBe('123 Main St');
       expect(data.address).toBe('123 Main St');
+      expect(data.tag).toBe('VIP, Donor');
+      expect(data.tags).toEqual(['VIP', 'Donor']);
     }
   });
 

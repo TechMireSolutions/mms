@@ -909,6 +909,25 @@ describe("mergeContactEditSavePayload", () => {
     expect(payload.relationshipContacts).toEqual([]);
     expect(payload.relationships).toEqual([]);
   });
+
+  it("updates tags and strips stale existing tag scalar string", () => {
+    const existing = {
+      id: "c1",
+      firstName: "Fatima",
+      tag: "OldTag",
+      tags: ["OldTag"],
+    } as Partial<Contact>;
+
+    const payload = mergeContactEditSavePayload(existing, {
+      id: "c1",
+      firstName: "Fatima",
+      tags: ["NewTag", "VIP"],
+      tag: "NewTag, VIP",
+    });
+
+    expect(payload.tags).toEqual(["NewTag", "VIP"]);
+    expect((payload as Record<string, unknown>).tag).toBeUndefined();
+  });
 });
 
 describe("cleanContactDraft", () => {
