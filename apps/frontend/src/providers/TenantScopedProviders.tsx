@@ -19,10 +19,10 @@ export default function TenantScopedProviders({
   children: React.ReactNode;
 }): React.JSX.Element {
   const isTenantHost = useIsTenantHost();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, authChecked } = useAuth();
   const branding = useBranding();
 
-  if (!isTenantHost || !isAuthenticated || user?.mustChangePassword || !isInstitutionSetupComplete(branding)) {
+  if (!isTenantHost || !authChecked || !isAuthenticated || !user || user.mustChangePassword || !isInstitutionSetupComplete(branding)) {
     return <>{children}</>;
   }
 

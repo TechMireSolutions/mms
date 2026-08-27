@@ -11,9 +11,6 @@ const FIELD_TO_SQL_COLUMN: Record<string, string> = {
   gender: 'gender',
   isSyed: 'is_syed',
   whatsappStatus: 'whatsapp_status',
-  preferredLanguage: 'preferred_language',
-  preferredContactMethod: 'preferred_contact_method',
-  doNotContact: 'do_not_contact',
 };
 
 function resolveSqlColumn(field: string): SQL {

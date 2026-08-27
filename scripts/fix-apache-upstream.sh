@@ -72,7 +72,7 @@ patch_proxy_in_file() {
     "s#(ProxyPass(Reverse)?[[:space:]]+/[[:space:]]+)http://(127\\.0\\.0\\.1|localhost):[0-9]+/?#\1${UPSTREAM}#g" \
     "$conf"
   run_priv sed -i -E \
-    "s#(RewriteRule[[:space:]]+\\^/\\?\\(\\.\\*\\)[[:space:]]+\"ws://)(127\\.0\\.0\\.1|localhost):[0-9]+(/\\\$1\"[[:space:]]+\\[P,L\\])#\1127.0.0.1:${BACKEND_PORT}\3#g" \
+    "s#(RewriteRule[[:space:]]+\\^/?\\(\\.\\*\\)[[:space:]]+\"?ws://)(127\\.0\\.0\\.1|localhost):[0-9]+(/\\\$1\"?[[:space:]]+\\[P,L\\])#\1127.0.0.1:${BACKEND_PORT}\3#g" \
     "$conf"
   return 0
 }

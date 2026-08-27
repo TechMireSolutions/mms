@@ -81,11 +81,11 @@ function invalidateModuleQueries(queryClient: QueryClient, key: string) {
  * Mount once under TenantScopedProviders when authenticated.
  */
 export function useTenantDatabaseUpdates(): void {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, authChecked } = useAuth();
   const queryClient = useQueryClient();
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !authChecked) return;
 
     return connectTenantDatabaseSocket({
       onDatabaseUpdate: (message) => {

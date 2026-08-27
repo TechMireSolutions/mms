@@ -568,6 +568,13 @@
       "when": 1786748400000,
       "tag": "0080_dashboard_widgets_sort_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 81,
+      "version": "7",
+      "when": 1786752000000,
+      "tag": "0081_drop_retired_contact_columns",
+      "breakpoints": true
     }
   ]
 }

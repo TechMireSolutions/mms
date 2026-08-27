@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowUpRight, Globe, IdCard, Mail, MapPin, MessageSquare, Phone, ShieldCheck, Tag } from "lucide-react";
+import { ArrowUpRight, IdCard, Mail, MapPin, Phone, ShieldCheck, Tag } from "lucide-react";
 import type { Address, EmailAddress, PhoneNumber, StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
 import { toMessagingRecipient } from "@mms/shared";
 import { Card } from "@/components/ui/card";
@@ -18,8 +18,6 @@ export interface StudentContactProfileData {
   addresses: Address[];
   cnic?: string;
   isSyed?: boolean;
-  preferredLanguage?: string;
-  preferredContactMethod?: string;
   tags?: string[];
 }
 
@@ -45,8 +43,6 @@ export function StudentDetailContactSection({
     addresses,
     cnic,
     isSyed,
-    preferredLanguage,
-    preferredContactMethod,
     tags = [],
   } = contactProfile;
 
@@ -56,8 +52,6 @@ export function StudentDetailContactSection({
     addresses.length > 0 ||
     Boolean(cnic) ||
     Boolean(isSyed) ||
-    Boolean(preferredLanguage) ||
-    Boolean(preferredContactMethod) ||
     tags.length > 0;
 
   if (!hasAnyContactData && !contactId) return null;
@@ -230,7 +224,7 @@ export function StudentDetailContactSection({
           </div>
         )}
 
-        {(cnic || isSyed || preferredLanguage || preferredContactMethod || tags.length > 0) && (
+        {(cnic || isSyed || tags.length > 0) && (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border/50 text-xs">
             {cnic && (
               <div className="flex items-center gap-1.5 text-muted-foreground">
@@ -242,18 +236,6 @@ export function StudentDetailContactSection({
               <div className="flex items-center gap-1.5 text-muted-foreground">
                 <ShieldCheck className="w-3.5 h-3.5 text-success shrink-0" aria-hidden />
                 <span className="font-medium text-success">{t("contacts.fields.isSyed")}</span>
-              </div>
-            )}
-            {preferredLanguage && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Globe className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-                <span className="truncate">{t("contacts.form.preferredLanguage")}: <strong className="text-foreground">{preferredLanguage.toUpperCase()}</strong></span>
-              </div>
-            )}
-            {preferredContactMethod && (
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <MessageSquare className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-                <span className="truncate">{t("contacts.form.preferredContactMethod")}: <strong className="text-foreground">{preferredContactMethod}</strong></span>
               </div>
             )}
             {tags.length > 0 && (

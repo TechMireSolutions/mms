@@ -19,8 +19,6 @@ export const REMOVED_FORM_FIELD_KEYS: readonly string[] = [
   "notes",
   "occupation",
   "communicationPreference",
-  "preferredLanguage",
-  "preferredContactMethod",
   "phone",
   "email",
 ];
@@ -153,9 +151,6 @@ export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "relationship_contact",   label: "Relationship Contact",   labelKey: "contacts.columns.relationshipContact",   enabled: false, order: 32, sortable: false, width: 150 },
   { key: "relationship_type",      label: "Relationship Type",      labelKey: "contacts.columns.relationshipType",      enabled: false, order: 33, sortable: false, width: 140 },
   { key: "notes",                  label: "Notes",                  labelKey: "contacts.columns.notes",                  enabled: false, order: 34, sortable: false, width: 180 },
-  { key: "preferredLanguage",      label: "Preferred Language",     labelKey: "contacts.columns.preferredLanguage",      enabled: false, order: 35, sortable: true,  width: 140 },
-  { key: "preferredContactMethod", label: "Preferred Contact Method", labelKey: "contacts.columns.preferredContactMethod", enabled: false, order: 36, sortable: true,  width: 160 },
-  { key: "doNotContact",           label: "Do Not Contact",         labelKey: "contacts.columns.doNotContact",           enabled: false, order: 37, sortable: true,  width: 120 },
 ];
 
 export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: string }> = {
@@ -168,9 +163,6 @@ export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: stri
   tag: { tabId: "basic", fieldId: "tag" },
   cnic: { tabId: "basic", fieldId: "cnic" },
   notes: { tabId: "basic", fieldId: "notes" },
-  preferredLanguage: { tabId: "basic", fieldId: "preferredLanguage" },
-  preferredContactMethod: { tabId: "basic", fieldId: "preferredContactMethod" },
-  doNotContact: { tabId: "basic", fieldId: "doNotContact" },
   phone: { tabId: "phones", fieldId: "number" },
   whatsapp: { tabId: "phones", fieldId: "whatsapp" },
   email: { tabId: "emails", fieldId: "address" },

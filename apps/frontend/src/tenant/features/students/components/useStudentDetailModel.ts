@@ -205,8 +205,6 @@ export function useStudentDetailModel(student: Student) {
       addresses: studentAddresses,
       cnic: studentContact?.cnic || student.cnic,
       isSyed: studentContact?.isSyed ?? student.isSyed,
-      preferredLanguage: studentContact?.preferredLanguage,
-      preferredContactMethod: studentContact?.preferredContactMethod,
       tags: rawTags,
     };
   }, [studentContact, student, studentPhones, studentEmails, studentAddresses]);

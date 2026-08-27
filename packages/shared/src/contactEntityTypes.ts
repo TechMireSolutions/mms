@@ -150,10 +150,7 @@ export interface Contact {
   deletedBy?: string;
   deletionReason?: string;
 
-  // Communication & Preference Extensions
-  preferredLanguage?: 'en' | 'ur' | 'ar' | 'fa';
-  preferredContactMethod?: 'whatsapp' | 'sms' | 'email' | 'phone_call';
-  doNotContact?: boolean;
+  // Status & Scalar Extensions
   whatsappStatus?: WhatsAppStatus | 'unknown';
   lastCheckedAt?: string | null;
   phone?: string;

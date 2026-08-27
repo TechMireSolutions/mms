@@ -72,9 +72,6 @@ const CONTACT_WRITE_SYSTEM_KEYS = [
   'city',
   'state',
   'country',
-  'preferredLanguage',
-  'preferredContactMethod',
-  'doNotContact',
   'aiSummary',
 ] as const;
 
@@ -139,9 +136,6 @@ const contactWriteBaseObjectSchema = z
     relationships: z.array(relationshipSchema).optional(),
     activities: z.array(activitySchema).optional(),
     attachments: z.array(attachmentSchema).optional(),
-    preferredLanguage: z.string().optional(),
-    preferredContactMethod: z.string().optional(),
-    doNotContact: z.boolean().optional(),
     aiSummary: z.string().optional(),
     // Scalar mirrors (legacy compat + write payloads derived from collections)
     phone: z.string().optional(),

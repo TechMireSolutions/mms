@@ -30,12 +30,6 @@ export function hasContactCardColumnData(contact: Contact, colId: string): boole
       return Boolean((contact.tags && contact.tags.length > 0) || (contact.tag && contact.tag.trim().length > 0));
     case "notes":
       return Boolean(contact.notes && contact.notes.trim().length > 0);
-    case "preferredLanguage":
-      return Boolean(contact.preferredLanguage && contact.preferredLanguage.trim().length > 0);
-    case "preferredContactMethod":
-      return Boolean(contact.preferredContactMethod && contact.preferredContactMethod.trim().length > 0);
-    case "doNotContact":
-      return Boolean(contact.doNotContact);
     case "education":
       return Boolean(contact.education && contact.education.some((e) => e.institution?.trim() || e.degree?.trim()));
     case "education_degree":

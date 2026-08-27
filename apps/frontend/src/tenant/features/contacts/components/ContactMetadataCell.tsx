@@ -143,24 +143,6 @@ export function ContactMetadataCell({
           </span>
         );
       }
-      case "preferredLanguage": {
-        if (!contact.preferredLanguage) return renderDash();
-        return <span>{contact.preferredLanguage}</span>;
-      }
-      case "preferredContactMethod": {
-        if (!contact.preferredContactMethod) return renderDash();
-        return <span>{contact.preferredContactMethod}</span>;
-      }
-      case "doNotContact": {
-        if (contact.doNotContact) {
-          return (
-            <Badge tone="destructive" className="px-2 py-0.5 text-xs font-medium">
-              {t("contacts.columns.doNotContact")}
-            </Badge>
-          );
-        }
-        return renderDash();
-      }
       case "education":
         return renderEducationMetadata({
           contact,
