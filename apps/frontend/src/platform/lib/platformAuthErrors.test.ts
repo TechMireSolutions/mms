@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { ApiError } from '@/lib/apiClient';
 import {
   getPlatformErrorMessage,
+  isPlatformApiErrorType,
   mapPlatformAuthError,
 } from '@/platform/lib/platformAuthErrors';
 import type { AppTranslationKey } from '@mms/shared';
@@ -18,18 +19,34 @@ const EN: Record<string, string> = {
   'platform.databaseError': 'Database error',
   'platform.resourceNotFound': 'Not found',
   'platform.rateLimited': 'Rate limited',
+  'platform.actionForbidden': 'You do not have permission to perform this action.',
   'platform.profileMigrateRestartDisabled': 'Remote migrate disabled',
   'platform.profileMigrateRestartInProgress': 'Migrate already in progress',
   'platform.setupSessionExpired': 'Setup expired',
   'platform.adminAlreadyExists': 'Admin exists',
+  'platform.setupPasswordTooShort': 'Password must be at least {min} characters',
   'errors.boundary.description': 'Something went wrong. Reload the page or try again later.',
 };
 
-function t(key: AppTranslationKey): string {
-  return EN[key] ?? key;
+function t(key: AppTranslationKey, params?: Record<string, string>): string {
+  let str = EN[key] ?? key;
+  if (params) {
+    for (const [k, v] of Object.entries(params)) {
+      str = str.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+    }
+  }
+  return str;
 }
 
 describe('platformAuthErrors', () => {
+  it('identifies recognized PlatformApiErrorType strings with type guard', () => {
+    expect(isPlatformApiErrorType('invalid_email')).toBe(true);
+    expect(isPlatformApiErrorType('forbidden')).toBe(true);
+    expect(isPlatformApiErrorType('unknown_code')).toBe(false);
+    expect(isPlatformApiErrorType(null)).toBe(false);
+    expect(isPlatformApiErrorType(123)).toBe(false);
+  });
+
   it('maps known ApiError types to translation keys', () => {
     expect(mapPlatformAuthError(new ApiError(400, 'bad', 'invalid_email'), t)).toBe(
       'Enter a valid email address',
@@ -65,9 +82,21 @@ describe('platformAuthErrors', () => {
     );
     expect(mapPlatformAuthError(new ApiError(500, 'db', 'database_error'), t)).toBe('Database error');
     expect(mapPlatformAuthError(new ApiError(404, 'missing', 'not_found'), t)).toBe('Not found');
+    expect(mapPlatformAuthError(new ApiError(400, 'short', 'password_too_short'), t)).toBe(
+      'Password must be at least 10 characters',
+    );
   });
 
-  it('does not surface raw API messages for unknown types', () => {
+  it('falls back to HTTP status code when error type is unmapped or omitted', () => {
+    expect(mapPlatformAuthError(new ApiError(401, 'unauthorized', undefined), t)).toBe('Auth required');
+    expect(mapPlatformAuthError(new ApiError(403, 'denied', undefined), t)).toBe(
+      'You do not have permission to perform this action.',
+    );
+    expect(mapPlatformAuthError(new ApiError(404, 'missing', undefined), t)).toBe('Not found');
+    expect(mapPlatformAuthError(new ApiError(429, 'slow down', undefined), t)).toBe('Rate limited');
+  });
+
+  it('does not surface raw API messages for unknown types and unmapped statuses', () => {
     expect(
       mapPlatformAuthError(new ApiError(500, 'SQL boom detail', 'server_error'), t),
     ).toBe('Something went wrong. Reload the page or try again later.');
