@@ -110,4 +110,25 @@ describe('platformAuthErrors', () => {
       'Something went wrong. Reload the page or try again later.',
     );
   });
+
+  it('uses fallback translation key when error cannot be specifically mapped', () => {
+    expect(
+      getPlatformErrorMessage(
+        new ApiError(500, 'boom', 'unknown_type'),
+        t,
+        undefined,
+        'platform.accountDisabled',
+      ),
+    ).toBe('Account disabled');
+
+    expect(
+      getPlatformErrorMessage(
+        new Error('generic failure'),
+        t,
+        undefined,
+        'platform.accountDisabled',
+      ),
+    ).toBe('Account disabled');
+  });
 });
+

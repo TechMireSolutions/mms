@@ -72,9 +72,17 @@ export function getPlatformErrorMessage(
   error: unknown,
   t: TranslateFn,
   params?: Record<string, string>,
+  fallbackKey?: AppTranslationKey,
 ): string {
   if (error instanceof ApiError) {
-    return mapPlatformAuthError(error, t, params);
+    const mapped = mapPlatformAuthError(error, t, params);
+    if (mapped !== t('errors.boundary.description')) {
+      return mapped;
+    }
+  }
+  if (fallbackKey) {
+    return t(fallbackKey, params);
   }
   return t('errors.boundary.description');
 }
+

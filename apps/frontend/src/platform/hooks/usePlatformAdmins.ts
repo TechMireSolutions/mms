@@ -6,8 +6,31 @@ import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
+import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 
 export const PLATFORM_ADMINS_QUERY_KEY = ['platform', 'admins'] as const;
+
+function updateAdminsCache(
+  old: unknown,
+  adminId: string,
+  patch: Partial<PlatformUserProfile>,
+): unknown {
+  if (!old || typeof old !== 'object') return old;
+  const asTsr = old as { body?: { users?: PlatformUserProfile[] } };
+  if (asTsr.body && Array.isArray(asTsr.body.users)) {
+    return {
+      ...asTsr,
+      body: {
+        ...asTsr.body,
+        users: asTsr.body.users.map((u) => (u.id === adminId ? { ...u, ...patch } : u)),
+      },
+    };
+  }
+  if (Array.isArray(old)) {
+    return (old as PlatformUserProfile[]).map((u) => (u.id === adminId ? { ...u, ...patch } : u));
+  }
+  return old;
+}
 
 /** Hook for super-users to retrieve the list of platform operators. */
 export function usePlatformAdmins(): { data: PlatformUserProfile[] | undefined; isLoading: boolean; isError: boolean; refetch: () => Promise<unknown> } {
@@ -40,6 +63,9 @@ export function useAddPlatformAdmin() {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       notify.success(t('platform.addAdminSuccess'));
     },
+    onError: (err) => {
+      notify.error(getPlatformErrorMessage(err, t));
+    },
   });
 }
 
@@ -53,7 +79,7 @@ export function useUpdatePlatformAdminPermissions() {
     { user: PlatformUserProfile },
     Error,
     { adminId: string; permissions: PlatformAdminPermissions },
-    { previousUsers: PlatformUserProfile[] | undefined }
+    { previousUsers: unknown }
   >({
     mutationFn: async ({
       adminId,
@@ -67,10 +93,10 @@ export function useUpdatePlatformAdminPermissions() {
     },
     onMutate: async ({ adminId, permissions }) => {
       await queryClient.cancelQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
-      const previousUsers = queryClient.getQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY);
+      const previousUsers = queryClient.getQueryData(PLATFORM_ADMINS_QUERY_KEY);
 
-      queryClient.setQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY, (old = []) =>
-        old.map((u) => (u.id === adminId ? { ...u, permissions } : u)),
+      queryClient.setQueryData(PLATFORM_ADMINS_QUERY_KEY, (old) =>
+        updateAdminsCache(old, adminId, { permissions }),
       );
 
       return { previousUsers };
@@ -81,10 +107,11 @@ export function useUpdatePlatformAdminPermissions() {
         await checkPlatformAuth();
       }
     },
-    onError: (_err, _variables, context) => {
+    onError: (err, _variables, context) => {
       if (context?.previousUsers) {
         queryClient.setQueryData(PLATFORM_ADMINS_QUERY_KEY, context.previousUsers);
       }
+      notify.error(getPlatformErrorMessage(err, t));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
@@ -101,7 +128,7 @@ export function useSetPlatformAdminDisabled() {
     { user: PlatformUserProfile },
     Error,
     { adminId: string; disabled: boolean; password: string },
-    { previousUsers: PlatformUserProfile[] | undefined }
+    { previousUsers: unknown }
   >({
     mutationFn: async ({
       adminId,
@@ -116,10 +143,10 @@ export function useSetPlatformAdminDisabled() {
     },
     onMutate: async ({ adminId, disabled }) => {
       await queryClient.cancelQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
-      const previousUsers = queryClient.getQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY);
+      const previousUsers = queryClient.getQueryData(PLATFORM_ADMINS_QUERY_KEY);
 
-      queryClient.setQueryData<PlatformUserProfile[]>(PLATFORM_ADMINS_QUERY_KEY, (old = []) =>
-        old.map((u) => (u.id === adminId ? { ...u, disabled } : u)),
+      queryClient.setQueryData(PLATFORM_ADMINS_QUERY_KEY, (old) =>
+        updateAdminsCache(old, adminId, { disabledAt: disabled ? new Date().toISOString() : null }),
       );
 
       return { previousUsers };
@@ -129,10 +156,11 @@ export function useSetPlatformAdminDisabled() {
         t(variables.disabled ? 'platform.disableAdminSuccess' : 'platform.enableAdminSuccess'),
       );
     },
-    onError: (_err, _variables, context) => {
+    onError: (err, _variables, context) => {
       if (context?.previousUsers) {
         queryClient.setQueryData(PLATFORM_ADMINS_QUERY_KEY, context.previousUsers);
       }
+      notify.error(getPlatformErrorMessage(err, t));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
@@ -163,6 +191,9 @@ export function useDeletePlatformAdmin() {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       notify.success(t('platform.deleteAdminSuccess'));
     },
+    onError: (err) => {
+      notify.error(getPlatformErrorMessage(err, t));
+    },
   });
 }
 
@@ -182,6 +213,10 @@ export function useVerifyPlatformAdminEmail() {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
       notify.success(t('users.emailVerifiedSuccess'));
     },
+    onError: (err) => {
+      notify.error(getPlatformErrorMessage(err, t));
+    },
   });
 }
+
 

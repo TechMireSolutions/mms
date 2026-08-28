@@ -27,6 +27,32 @@ export function usePlatformWorkspaces(): { data: PlatformWorkspaceRow[] | undefi
   return { ...rest, data };
 }
 
+function updateWorkspacesCache(
+  old: unknown,
+  subdomain: string,
+  patch: Partial<PlatformWorkspaceRow>,
+): unknown {
+  if (!old || typeof old !== 'object') return old;
+  const asTsr = old as { body?: { workspaces?: PlatformWorkspaceRow[] } };
+  if (asTsr.body && Array.isArray(asTsr.body.workspaces)) {
+    return {
+      ...asTsr,
+      body: {
+        ...asTsr.body,
+        workspaces: asTsr.body.workspaces.map((w) =>
+          w.subdomain === subdomain ? { ...w, ...patch } : w,
+        ),
+      },
+    };
+  }
+  if (Array.isArray(old)) {
+    return (old as PlatformWorkspaceRow[]).map((w) =>
+      w.subdomain === subdomain ? { ...w, ...patch } : w,
+    );
+  }
+  return old;
+}
+
 export function useSetWorkspaceEnabled() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
@@ -35,7 +61,7 @@ export function useSetWorkspaceEnabled() {
     { workspace: PlatformWorkspaceRow },
     Error,
     { subdomain: string; enabled: boolean },
-    { previousWorkspaces: PlatformWorkspaceRow[] | undefined }
+    { previousData: unknown }
   >({
     mutationFn: async ({ subdomain, enabled }) => {
       const res = await apiContract.platform.patchWorkspace({
@@ -54,15 +80,13 @@ export function useSetWorkspaceEnabled() {
     },
     onMutate: async ({ subdomain, enabled }) => {
       await queryClient.cancelQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
-      const previousWorkspaces = queryClient.getQueryData<PlatformWorkspaceRow[]>(
-        PLATFORM_WORKSPACES_QUERY_KEY,
+      const previousData = queryClient.getQueryData(PLATFORM_WORKSPACES_QUERY_KEY);
+
+      queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, (old) =>
+        updateWorkspacesCache(old, subdomain, { enabled }),
       );
 
-      queryClient.setQueryData<PlatformWorkspaceRow[]>(PLATFORM_WORKSPACES_QUERY_KEY, (old = []) =>
-        old.map((w) => (w.subdomain === subdomain ? { ...w, enabled } : w)),
-      );
-
-      return { previousWorkspaces };
+      return { previousData };
     },
     onSuccess: (_res, variables) => {
       notify.success(
@@ -71,10 +95,10 @@ export function useSetWorkspaceEnabled() {
       );
     },
     onError: (error, _variables, context) => {
-      if (context?.previousWorkspaces) {
-        queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, context.previousWorkspaces);
+      if (context?.previousData) {
+        queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, context.previousData);
       }
-      notify.error(getPlatformErrorMessage(error, t));
+      notify.error(getPlatformErrorMessage(error, t, undefined, 'platform.workspaceToggleFailed'));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
@@ -124,7 +148,7 @@ export function useDeleteWorkspace() {
       if (isApiError(error) && error.type === 'invalid_current_password') {
         return;
       }
-      notify.error(getPlatformErrorMessage(error, t));
+      notify.error(getPlatformErrorMessage(error, t, undefined, 'platform.loadFailed'));
     },
   });
 }
@@ -174,7 +198,7 @@ export function useUpdateWorkspaceModules() {
       notify.success(t('platform.modulesTitle'));
     },
     onError: (error) => {
-      notify.error(getPlatformErrorMessage(error, t));
+      notify.error(getPlatformErrorMessage(error, t, undefined, 'platform.loadFailed'));
     },
   });
 }
@@ -187,7 +211,7 @@ export function useSetWorkspaceEmailVerification() {
     { success: true; subdomain: string; requireEmailVerification: boolean },
     Error,
     { subdomain: string; requireEmailVerification: boolean },
-    { previousWorkspaces: PlatformWorkspaceRow[] | undefined }
+    { previousData: unknown }
   >({
     mutationFn: async ({ subdomain, requireEmailVerification }) => {
       const res = await apiContract.platform.patchWorkspaceEmailVerification({
@@ -206,15 +230,13 @@ export function useSetWorkspaceEmailVerification() {
     },
     onMutate: async ({ subdomain, requireEmailVerification }) => {
       await queryClient.cancelQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
-      const previousWorkspaces = queryClient.getQueryData<PlatformWorkspaceRow[]>(
-        PLATFORM_WORKSPACES_QUERY_KEY,
+      const previousData = queryClient.getQueryData(PLATFORM_WORKSPACES_QUERY_KEY);
+
+      queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, (old) =>
+        updateWorkspacesCache(old, subdomain, { requireEmailVerification }),
       );
 
-      queryClient.setQueryData<PlatformWorkspaceRow[]>(PLATFORM_WORKSPACES_QUERY_KEY, (old = []) =>
-        old.map((w) => (w.subdomain === subdomain ? { ...w, requireEmailVerification } : w)),
-      );
-
-      return { previousWorkspaces };
+      return { previousData };
     },
     onSuccess: (_res, variables) => {
       notify.success(
@@ -225,10 +247,10 @@ export function useSetWorkspaceEmailVerification() {
       );
     },
     onError: (error, _variables, context) => {
-      if (context?.previousWorkspaces) {
-        queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, context.previousWorkspaces);
+      if (context?.previousData) {
+        queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, context.previousData);
       }
-      notify.error(getPlatformErrorMessage(error, t));
+      notify.error(getPlatformErrorMessage(error, t, undefined, 'platform.emailVerificationToggleFailed'));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });

@@ -5,6 +5,7 @@ import { tsrClient, apiContract } from '@/lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
+import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 
 /** Default delay before migrate starts when the response omits delayMs. */
 const DEFAULT_MIGRATE_RESTART_DELAY_MS = 1_500;
@@ -21,6 +22,21 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {
     setTimeout(resolve, ms);
   });
+}
+
+function updateSettingsCache(old: unknown, newSettings: PlatformSettings): unknown {
+  if (!old || typeof old !== 'object') return old;
+  const asTsr = old as { body?: { settings?: PlatformSettings } };
+  if (asTsr.body && typeof asTsr.body === 'object') {
+    return {
+      ...asTsr,
+      body: {
+        ...asTsr.body,
+        settings: newSettings,
+      },
+    };
+  }
+  return newSettings;
 }
 
 /**
@@ -63,6 +79,7 @@ export function usePlatformSettingsQuery() {
 /** Hook for platform super-users to update global platform settings. */
 export function useUpdatePlatformSettings() {
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   return useMutation({
     mutationFn: async (patch: Partial<PlatformSettings>) => {
@@ -70,8 +87,13 @@ export function useUpdatePlatformSettings() {
       return res.body as { settings: PlatformSettings; success: boolean };
     },
     onSuccess: (data) => {
-      queryClient.setQueryData(PLATFORM_SETTINGS_QUERY_KEY, data.settings);
+      queryClient.setQueryData(PLATFORM_SETTINGS_QUERY_KEY, (old) =>
+        updateSettingsCache(old, data.settings),
+      );
       void queryClient.invalidateQueries({ queryKey: PLATFORM_SETTINGS_QUERY_KEY });
+    },
+    onError: (err) => {
+      notify.error(getPlatformErrorMessage(err, t));
     },
   });
 }
@@ -88,6 +110,9 @@ export function useResetPlatformDatabase() {
     onSuccess: () => {
       notify.success(t('platform.profileDestroyDatabaseSuccess'));
     },
+    onError: (err) => {
+      notify.error(getPlatformErrorMessage(err, t));
+    },
   });
 }
 
@@ -103,5 +128,9 @@ export function useMigrateAndRestartPlatform() {
     onSuccess: () => {
       notify.success(t('platform.profileMigrateRestartSuccess'));
     },
+    onError: (err) => {
+      notify.error(getPlatformErrorMessage(err, t));
+    },
   });
 }
+
