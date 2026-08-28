@@ -6,11 +6,16 @@ export interface RegistryDateFieldProps {
   name: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
   required?: boolean;
   disabled?: boolean;
   className?: string;
-  min?: string;
-  max?: string;
+  min?: string | number;
+  max?: string | number;
+  mode?: "date" | "year";
+  yearOnly?: boolean;
+  minYear?: number | null;
+  maxYear?: number | null;
   placeholder?: string;
   error?: boolean;
   "aria-label"?: string;
@@ -24,11 +29,16 @@ export function RegistryDateField({
   name,
   value,
   onChange,
+  onBlur,
   required,
   disabled,
   className,
   min,
   max,
+  mode,
+  yearOnly,
+  minYear,
+  maxYear,
   placeholder,
   error,
   "aria-label": ariaLabel,
@@ -41,11 +51,16 @@ export function RegistryDateField({
       name={name}
       value={value}
       onChange={onChange}
+      onBlur={onBlur}
       required={required}
       disabled={disabled}
       className={className}
       min={min}
       max={max}
+      mode={mode}
+      yearOnly={yearOnly}
+      minYear={minYear}
+      maxYear={maxYear}
       placeholder={placeholder}
       aria-label={ariaLabel}
       aria-invalid={ariaInvalid ?? error}

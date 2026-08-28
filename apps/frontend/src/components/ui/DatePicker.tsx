@@ -3,43 +3,57 @@ import { Calendar as CalendarIcon, X } from "lucide-react"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { isRadixSelectPortalTarget } from "@/components/ui/select"
+import { YearPickerGrid } from "@/components/ui/YearPickerGrid"
 import { cn } from "@/lib/utils"
 import { useTranslation } from "@/hooks/useTranslation"
 import { useDatePickerState } from "@/components/ui/useDatePickerState"
 
 export interface DatePickerProps {
-  value?: string | null
+  value?: string | number | Date | null
   onChange?: (value: string) => void
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
   placeholder?: string
   className?: string
   disabled?: boolean
-  min?: string | null
-  max?: string | null
+  min?: string | number | null
+  max?: string | number | null
   id?: string
   name?: string
   required?: boolean
   autoComplete?: string
+  mode?: "date" | "year"
+  yearOnly?: boolean
+  minYear?: number | null
+  maxYear?: number | null
   "aria-label"?: string
   "aria-invalid"?: boolean
   "aria-describedby"?: string
 }
 
-export function DatePicker({
-  value,
-  onChange,
-  placeholder,
-  className,
-  disabled,
-  min,
-  max,
-  id,
-  name,
-  required,
-  autoComplete,
-  "aria-label": ariaLabel,
-  "aria-invalid": ariaInvalid,
-  "aria-describedby": ariaDescribedBy,
-}: DatePickerProps) {
+export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(function DatePicker(
+  {
+    value,
+    onChange,
+    onBlur,
+    placeholder,
+    className,
+    disabled,
+    min,
+    max,
+    id,
+    name,
+    required,
+    autoComplete,
+    mode = "date",
+    yearOnly,
+    minYear,
+    maxYear,
+    "aria-label": ariaLabel,
+    "aria-invalid": ariaInvalid,
+    "aria-describedby": ariaDescribedBy,
+  },
+  ref,
+) {
   const { t } = useTranslation()
   const rootRef = React.useRef<HTMLDivElement>(null)
   const {
@@ -60,11 +74,32 @@ export function DatePicker({
     handleInputChange,
     handleBlur,
     handleClear,
-  } = useDatePickerState({ value, onChange, min, max })
+    // Year Mode
+    isYearMode,
+    selectedYear,
+    resolvedMinYear,
+    resolvedMaxYear,
+    yearPageStart,
+    goToPreviousYearPage,
+    goToNextYearPage,
+    handleSelectYear,
+    handleSelectThisYear,
+    isThisYearAllowed,
+  } = useDatePickerState({
+    value,
+    onChange,
+    onBlur,
+    min,
+    max,
+    mode,
+    yearOnly,
+    minYear,
+    maxYear,
+  })
 
   const resolvedId = id || fallbackId
   const resolvedName = name || fallbackId
-  const resolvedPlaceholder = placeholder || dateFormat
+  const resolvedPlaceholder = placeholder || (isYearMode ? "YYYY" : dateFormat)
 
   const keepOpenForChrome = (event: { target: EventTarget | null; preventDefault: () => void }) => {
     const target = event.target
@@ -76,6 +111,17 @@ export function DatePicker({
       event.preventDefault()
     }
   }
+
+  const hiddenValue =
+    typeof value === "string"
+      ? value
+      : typeof value === "number"
+        ? String(value)
+        : value instanceof Date
+          ? isYearMode
+            ? String(value.getFullYear())
+            : value.toISOString().split("T")[0]
+          : ""
 
   return (
     <div
@@ -90,7 +136,7 @@ export function DatePicker({
           type="button"
           disabled={disabled}
           className="me-2 min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground group-focus-within:text-primary hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-          aria-label={t("datePicker.openAria")}
+          aria-label={isYearMode ? t("datePicker.openYearAria") : t("datePicker.openAria")}
         >
           <CalendarIcon className="h-4 w-4 transition-colors opacity-80" />
         </PopoverTrigger>
@@ -100,42 +146,63 @@ export function DatePicker({
           onInteractOutside={keepOpenForChrome}
           onFocusOutside={keepOpenForChrome}
         >
-          <Calendar
-            mode="single"
-            selected={dateValue}
-            onSelect={handleSelect}
-            month={displayMonth}
-            onMonthChange={setDisplayMonth}
-            disabled={disabledDays}
-            captionLayout="dropdown"
-            startMonth={startMonth}
-            endMonth={endMonth}
-            autoFocus
-          />
-          <div className="flex items-center justify-between border-t border-border/60 px-3.5 py-2 bg-muted/20">
-            <button
-              type="button"
-              onClick={() => handleClear()}
-              disabled={!value || disabled}
-              className="text-xs font-medium text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors cursor-pointer disabled:cursor-not-allowed px-2 py-1 rounded-md hover:bg-destructive/10"
-            >
-              {t("datePicker.clear")}
-            </button>
-            <button
-              type="button"
-              onClick={handleSelectToday}
-              disabled={!isTodayAllowed || disabled}
-              className="text-xs font-semibold text-primary hover:text-primary/80 disabled:opacity-30 disabled:hover:text-primary transition-colors cursor-pointer disabled:cursor-not-allowed px-2.5 py-1 rounded-md hover:bg-primary/10"
-            >
-              {t("datePicker.today")}
-            </button>
-          </div>
+          {isYearMode ? (
+            <YearPickerGrid
+              selectedYear={selectedYear}
+              yearPageStart={yearPageStart}
+              minYear={resolvedMinYear}
+              maxYear={resolvedMaxYear}
+              onSelectYear={handleSelectYear}
+              onPreviousPage={goToPreviousYearPage}
+              onNextPage={goToNextYearPage}
+              onClear={handleClear}
+              onSelectThisYear={handleSelectThisYear}
+              isThisYearAllowed={isThisYearAllowed}
+              hasValue={Boolean(value)}
+              disabled={disabled}
+            />
+          ) : (
+            <>
+              <Calendar
+                mode="single"
+                selected={dateValue}
+                onSelect={handleSelect}
+                month={displayMonth}
+                onMonthChange={setDisplayMonth}
+                disabled={disabledDays}
+                captionLayout="dropdown"
+                startMonth={startMonth}
+                endMonth={endMonth}
+                autoFocus
+              />
+              <div className="flex items-center justify-between border-t border-border/60 px-3.5 py-2 bg-muted/20">
+                <button
+                  type="button"
+                  onClick={() => handleClear()}
+                  disabled={!value || disabled}
+                  className="text-xs font-medium text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors cursor-pointer disabled:cursor-not-allowed px-2 py-1 rounded-md hover:bg-destructive/10"
+                >
+                  {t("datePicker.clear")}
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSelectToday}
+                  disabled={!isTodayAllowed || disabled}
+                  className="text-xs font-semibold text-primary hover:text-primary/80 disabled:opacity-30 disabled:hover:text-primary transition-colors cursor-pointer disabled:cursor-not-allowed px-2.5 py-1 rounded-md hover:bg-primary/10"
+                >
+                  {t("datePicker.today")}
+                </button>
+              </div>
+            </>
+          )}
         </PopoverContent>
       </Popover>
 
       <input
+        ref={ref}
         type="text"
         inputMode="numeric"
+        maxLength={isYearMode ? 4 : undefined}
         id={resolvedId}
         name={resolvedName}
         value={inputValue}
@@ -159,7 +226,7 @@ export function DatePicker({
         className="min-h-11 min-w-0 flex-1 border-0 bg-transparent p-0 text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
         aria-haspopup="dialog"
         aria-expanded={open}
-        aria-label={ariaLabel || t("datePicker.enterFormatAria", { format: dateFormat })}
+        aria-label={ariaLabel || (isYearMode ? t("datePicker.enterYearAria") : t("datePicker.enterFormatAria", { format: dateFormat }))}
         aria-invalid={ariaInvalid}
         aria-describedby={ariaDescribedBy}
       />
@@ -190,8 +257,9 @@ export function DatePicker({
       <input
         type="hidden"
         name={`${resolvedName}_hidden`}
-        value={value || ""}
+        value={hiddenValue || ""}
       />
     </div>
   )
-}
+})
+DatePicker.displayName = "DatePicker"

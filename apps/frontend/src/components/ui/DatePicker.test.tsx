@@ -14,10 +14,16 @@ vi.mock('@/hooks/useTranslation', () => ({
     t: (key: AppTranslationKey, params?: Record<string, string | number>) => {
       const map: Partial<Record<AppTranslationKey, string>> = {
         'datePicker.openAria': 'Open calendar',
+        'datePicker.openYearAria': 'Open year selector',
         'datePicker.clearAria': 'Clear date',
         'datePicker.clear': 'Clear',
         'datePicker.today': 'Today',
+        'datePicker.thisYear': 'This Year',
+        'datePicker.previousYears': 'Previous years',
+        'datePicker.nextYears': 'Next years',
+        'datePicker.selectYearAria': `Select year ${params?.year ?? ''}`,
         'datePicker.enterFormatAria': `Enter date in format ${params?.format ?? 'DD/MM/YYYY'}`,
+        'datePicker.enterYearAria': 'Enter year in YYYY format',
       };
       return map[key] ?? key;
     },
@@ -361,5 +367,232 @@ describe('DatePicker Component', () => {
     });
 
     expect(input.getAttribute('aria-expanded')).toBe('true');
+  });
+
+  describe('Year-Only (mode="year" and yearOnly) Mode', () => {
+    it('renders year value from 4-digit string, number, or ISO date', async () => {
+      const onChange = vi.fn();
+      const { input } = await renderDatePicker({
+        mode: 'year',
+        value: '2026',
+        onChange,
+        id: 'academic-year',
+        name: 'academicYear',
+      });
+
+      expect(input.value).toBe('2026');
+      expect(input.placeholder).toBe('YYYY');
+      expect(input.maxLength).toBe(4);
+
+      const hiddenInput = container.querySelector('input[name="academicYear_hidden"]') as HTMLInputElement;
+      expect(hiddenInput).toBeTruthy();
+      expect(hiddenInput.value).toBe('2026');
+
+      // Test with yearOnly boolean alias
+      await act(async () => {
+        root.render(<DatePicker yearOnly value={2028} onChange={onChange} />);
+      });
+      expect(input.value).toBe('2028');
+
+      // Test with ISO date string value
+      await act(async () => {
+        root.render(<DatePicker mode="year" value="2025-05-12" onChange={onChange} />);
+      });
+      expect(input.value).toBe('2025');
+    });
+
+    it('allows direct YYYY numeric input and restricts to 4 digits', async () => {
+      const onChange = vi.fn();
+      const { input } = await renderDatePicker({ mode: 'year', value: '', onChange });
+
+      // Typing non-digit characters is stripped
+      await act(async () => {
+        changeInput(input, 'abc20');
+      });
+      expect(input.value).toBe('20');
+      expect(onChange).not.toHaveBeenCalled();
+
+      // Complete 4 digits
+      await act(async () => {
+        changeInput(input, '2026');
+      });
+      expect(input.value).toBe('2026');
+      expect(onChange).toHaveBeenCalledWith('2026');
+    });
+
+    it('enforces minYear and maxYear bounds during typing and blur', async () => {
+      const onChange = vi.fn();
+      const onBlur = vi.fn();
+      const { input } = await renderDatePicker({
+        mode: 'year',
+        value: '2024',
+        minYear: 2020,
+        maxYear: 2030,
+        onChange,
+        onBlur,
+      });
+
+      // Typing out-of-bounds year: 2018 (below minYear 2020)
+      await act(async () => {
+        changeInput(input, '2018');
+      });
+      expect(onChange).not.toHaveBeenCalled();
+
+      // Blur should revert to previous valid value
+      await act(async () => {
+        input.focus();
+        input.blur();
+      });
+      expect(input.value).toBe('2024');
+      expect(onBlur).toHaveBeenCalled();
+
+      // Typing in-bounds year: 2027
+      await act(async () => {
+        changeInput(input, '2027');
+      });
+      expect(onChange).toHaveBeenCalledWith('2027');
+    });
+
+    it('opens popover displaying 3x4 year grid and selects year on click', async () => {
+      const onChange = vi.fn();
+      await renderDatePicker({ mode: 'year', value: '2026', onChange });
+
+      const triggerButton = container.querySelector('button[aria-label="Open year selector"]') as HTMLButtonElement;
+      expect(triggerButton).toBeTruthy();
+
+      await act(async () => {
+        triggerButton.click();
+      });
+
+      // Year grid is visible
+      const yearGrid = document.body.querySelector('[role="grid"]');
+      expect(yearGrid).toBeTruthy();
+
+      // Decade range header
+      expect(document.body.textContent).toContain('2020 – 2031');
+
+      // Click year 2028 in the grid
+      const year2028Button = Array.from(document.body.querySelectorAll('[role="gridcell"]')).find(
+        (el) => el.textContent?.trim() === '2028',
+      ) as HTMLButtonElement;
+      expect(year2028Button).toBeTruthy();
+
+      await act(async () => {
+        year2028Button.click();
+      });
+
+      expect(onChange).toHaveBeenCalledWith('2028');
+      const input = container.querySelector('input[type="text"]') as HTMLInputElement;
+      expect(input.getAttribute('aria-expanded')).toBe('false');
+    });
+
+    it('navigates previous and next year pages in popover grid', async () => {
+      const onChange = vi.fn();
+      await renderDatePicker({ mode: 'year', value: '2026', onChange });
+
+      const triggerButton = container.querySelector('button[aria-label="Open year selector"]') as HTMLButtonElement;
+      await act(async () => {
+        triggerButton.click();
+      });
+
+      expect(document.body.textContent).toContain('2020 – 2031');
+
+      // Click Next decade
+      const nextButton = document.body.querySelector('button[aria-label="Next years"]') as HTMLButtonElement;
+      expect(nextButton).toBeTruthy();
+
+      await act(async () => {
+        nextButton.click();
+      });
+      expect(document.body.textContent).toContain('2032 – 2043');
+
+      // Click Previous decade
+      const prevButton = document.body.querySelector('button[aria-label="Previous years"]') as HTMLButtonElement;
+      expect(prevButton).toBeTruthy();
+
+      await act(async () => {
+        prevButton.click();
+      });
+      expect(document.body.textContent).toContain('2020 – 2031');
+    });
+
+    it('disables out-of-bounds year buttons in the grid', async () => {
+      const onChange = vi.fn();
+      await renderDatePicker({
+        mode: 'year',
+        value: '2026',
+        minYear: 2024,
+        maxYear: 2028,
+        onChange,
+      });
+
+      const triggerButton = container.querySelector('button[aria-label="Open year selector"]') as HTMLButtonElement;
+      await act(async () => {
+        triggerButton.click();
+      });
+
+      const year2022Button = Array.from(document.body.querySelectorAll('[role="gridcell"]')).find(
+        (el) => el.textContent?.trim() === '2022',
+      ) as HTMLButtonElement;
+      expect(year2022Button).toBeTruthy();
+      expect(year2022Button.disabled).toBe(true);
+
+      const year2026Button = Array.from(document.body.querySelectorAll('[role="gridcell"]')).find(
+        (el) => el.textContent?.trim() === '2026',
+      ) as HTMLButtonElement;
+      expect(year2026Button.disabled).toBe(false);
+    });
+
+    it('selects this year and clears value via popover footer buttons', async () => {
+      const onChange = vi.fn();
+      await renderDatePicker({ mode: 'year', value: '', onChange });
+
+      const triggerButton = container.querySelector('button[aria-label="Open year selector"]') as HTMLButtonElement;
+      await act(async () => {
+        triggerButton.click();
+      });
+
+      const thisYearButton = Array.from(document.body.querySelectorAll('button')).find(
+        (btn) => btn.textContent === 'This Year',
+      );
+      expect(thisYearButton).toBeTruthy();
+
+      await act(async () => {
+        thisYearButton?.click();
+      });
+
+      const currentYear = String(new Date().getFullYear());
+      expect(onChange).toHaveBeenCalledWith(currentYear);
+
+      // Re-render with value and clear via footer button
+      await act(async () => {
+        root.render(<DatePicker mode="year" value={currentYear} onChange={onChange} />);
+      });
+
+      await act(async () => {
+        triggerButton.click();
+      });
+
+      const clearButton = Array.from(document.body.querySelectorAll('button')).find(
+        (btn) => btn.textContent === 'Clear',
+      );
+      expect(clearButton).toBeTruthy();
+
+      await act(async () => {
+        clearButton?.click();
+      });
+
+      expect(onChange).toHaveBeenCalledWith('');
+    });
+
+    it('forwards ref to the underlying HTMLInputElement for React Hook Form compatibility', async () => {
+      const ref = React.createRef<HTMLInputElement>();
+      await act(async () => {
+        root.render(<DatePicker ref={ref} mode="year" value="2026" onChange={vi.fn()} />);
+      });
+
+      expect(ref.current).toBeInstanceOf(HTMLInputElement);
+      expect(ref.current?.value).toBe('2026');
+    });
   });
 });

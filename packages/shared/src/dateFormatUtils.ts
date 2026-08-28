@@ -462,9 +462,74 @@ export function parseIsoYear(isoStr?: string | null): number | undefined {
   return year == null || isNaN(year) ? undefined : year;
 }
 
+/**
+ * Parses a year representation (string "2026", "2026-07-21", number 2026, or Date)
+ * into a 4-digit number. Returns `undefined` when missing or invalid.
+ */
+export function parseYearValue(value?: string | number | Date | null): number | undefined {
+  if (value == null || value === '') return undefined;
+  if (typeof value === 'number') {
+    return Number.isInteger(value) && value >= 1000 && value <= 9999 ? value : undefined;
+  }
+  if (value instanceof Date) {
+    if (Number.isNaN(value.getTime())) return undefined;
+    const y = value.getFullYear();
+    return Number.isInteger(y) && y >= 1000 && y <= 9999 ? y : undefined;
+  }
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return undefined;
+    if (/^\d{4}$/.test(trimmed)) {
+      const parsed = Number(trimmed);
+      return parsed >= 1000 && parsed <= 9999 ? parsed : undefined;
+    }
+    const isoYear = parseIsoYear(trimmed);
+    if (isoYear != null && isoYear >= 1000 && isoYear <= 9999) {
+      return isoYear;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * True when `year` is within optional `minYear` and `maxYear` bounds.
+ */
+export function isYearWithinBounds(
+  year: number,
+  minYear?: number | null,
+  maxYear?: number | null,
+): boolean {
+  if (!Number.isFinite(year)) return false;
+  if (minYear != null && Number.isFinite(minYear) && year < minYear) return false;
+  if (maxYear != null && Number.isFinite(maxYear) && year > maxYear) return false;
+  return true;
+}
+
 /** Default DayPicker caption year window when `min` / `max` are unset. */
 export const DATE_PICKER_YEAR_PAST = 100;
 export const DATE_PICKER_YEAR_FUTURE = 10;
+
+/**
+ * Resolves normalized minYear and maxYear bounds from mixed inputs (numbers, ISO strings, or explicit year bounds).
+ */
+export function resolveYearPickerBounds(
+  min?: string | number | null,
+  max?: string | number | null,
+  minYear?: number | null,
+  maxYear?: number | null,
+): { minYear: number; maxYear: number } {
+  const currentYear = new Date().getFullYear();
+  const parsedMin = minYear ?? (min != null ? parseYearValue(min) : undefined);
+  const parsedMax = maxYear ?? (max != null ? parseYearValue(max) : undefined);
+
+  const resolvedMin = parsedMin ?? currentYear - DATE_PICKER_YEAR_PAST;
+  const resolvedMax = parsedMax ?? currentYear + DATE_PICKER_YEAR_FUTURE;
+
+  return {
+    minYear: resolvedMin,
+    maxYear: resolvedMax,
+  };
+}
 
 /**
  * True when `date` is on/after optional ISO `min` and on/before optional ISO `max`

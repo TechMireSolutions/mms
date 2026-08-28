@@ -14,6 +14,9 @@ import {
   todayISO,
   parseIsoDate,
   parseIsoYear,
+  parseYearValue,
+  isYearWithinBounds,
+  resolveYearPickerBounds,
   isDateWithinIsoBounds,
   resolveDatePickerMonthBounds,
   parseTimeHHmm,
@@ -222,6 +225,55 @@ describe('dateFormatUtils', () => {
       expect(parseIsoYear('2026-07-21T14:30:00.000Z')).toBe(2026);
       expect(parseIsoYear(null)).toBeUndefined();
       expect(parseIsoYear('invalid')).toBeUndefined();
+    });
+
+    it('parses year representations via parseYearValue', () => {
+      expect(parseYearValue(2026)).toBe(2026);
+      expect(parseYearValue('2026')).toBe(2026);
+      expect(parseYearValue(' 2026 ')).toBe(2026);
+      expect(parseYearValue('2026-07-21')).toBe(2026);
+      expect(parseYearValue('2026-07-21T14:30:00.000Z')).toBe(2026);
+      expect(parseYearValue(new Date(2026, 0, 1))).toBe(2026);
+
+      expect(parseYearValue(null)).toBeUndefined();
+      expect(parseYearValue(undefined)).toBeUndefined();
+      expect(parseYearValue('')).toBeUndefined();
+      expect(parseYearValue('   ')).toBeUndefined();
+      expect(parseYearValue(999)).toBeUndefined();
+      expect(parseYearValue(10000)).toBeUndefined();
+      expect(parseYearValue('invalid')).toBeUndefined();
+    });
+
+    it('evaluates year bounds with isYearWithinBounds', () => {
+      expect(isYearWithinBounds(2026, 2020, 2030)).toBe(true);
+      expect(isYearWithinBounds(2020, 2020, 2030)).toBe(true);
+      expect(isYearWithinBounds(2030, 2020, 2030)).toBe(true);
+      expect(isYearWithinBounds(2019, 2020, 2030)).toBe(false);
+      expect(isYearWithinBounds(2031, 2020, 2030)).toBe(false);
+
+      // Unbounded or null bounds
+      expect(isYearWithinBounds(2026, null, null)).toBe(true);
+      expect(isYearWithinBounds(2026, 2020, null)).toBe(true);
+      expect(isYearWithinBounds(2026, null, 2030)).toBe(true);
+    });
+
+    it('resolves year bounds defaults and custom inputs with resolveYearPickerBounds', () => {
+      const currentYear = new Date().getFullYear();
+      const defaults = resolveYearPickerBounds(null, null);
+      expect(defaults.minYear).toBe(currentYear - DATE_PICKER_YEAR_PAST);
+      expect(defaults.maxYear).toBe(currentYear + DATE_PICKER_YEAR_FUTURE);
+
+      const customNumbers = resolveYearPickerBounds(null, null, 2015, 2035);
+      expect(customNumbers.minYear).toBe(2015);
+      expect(customNumbers.maxYear).toBe(2035);
+
+      const customIsoStrings = resolveYearPickerBounds('2010-01-01', '2040-12-31');
+      expect(customIsoStrings.minYear).toBe(2010);
+      expect(customIsoStrings.maxYear).toBe(2040);
+
+      const customYearStrings = resolveYearPickerBounds('2012', '2028');
+      expect(customYearStrings.minYear).toBe(2012);
+      expect(customYearStrings.maxYear).toBe(2028);
     });
   });
 
