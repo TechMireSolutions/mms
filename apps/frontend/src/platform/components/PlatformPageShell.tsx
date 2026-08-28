@@ -1,11 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
-import { PlatformSidebarProvider } from '@/platform/lib/PlatformSidebarContext';
+import { PlatformSidebarProvider, usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
 import { PlatformSidebar } from '@/platform/components/PlatformSidebar';
 import { PlatformCommandPalette } from '@/platform/components/PlatformCommandPalette';
+
+const CURRENT_YEAR = new Date().getFullYear();
+
+const MAX_W: Record<NonNullable<PlatformPageShellProps['width']>, string> = {
+  md: 'max-w-md',
+  lg: 'max-w-lg',
+  xl: 'max-w-xl',
+  '7xl': 'max-w-7xl',
+};
 
 interface PlatformPageShellProps {
   children: React.ReactNode;
@@ -13,86 +22,167 @@ interface PlatformPageShellProps {
   width?: 'md' | 'lg' | 'xl' | '7xl';
 }
 
-/** Shared apex platform page layout — English/LTR only, matching Tenant AppLayout standards. */
-export function PlatformPageShell({
+/** Shared skip-link + footer wrapper, used by both auth and app branches. */
+function PlatformShellFrame({
+  dir,
+  lang,
   children,
-  width = 'lg',
-}: PlatformPageShellProps): React.JSX.Element {
+  footer,
+}: {
+  dir: string;
+  lang: string;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}): React.JSX.Element {
   const { t } = useTranslation();
-  const { isPlatformAuthenticated } = usePlatformAuth();
-  const [searchOpen, setSearchOpen] = useState(false);
+  return (
+    <div
+      dir={dir}
+      lang={lang}
+      className="box-border flex min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern selection:bg-primary/10 selection:text-primary"
+    >
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-toast focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-xl focus:shadow-xl focus:outline-none text-xs font-bold"
+      >
+        {t('common.skipToContent')}
+      </a>
+      {children}
+      {footer}
+    </div>
+  );
+}
+
+/** Inner component that reads command palette state from sidebar context. */
+function PlatformAuthenticatedShell({
+  children,
+  maxClass,
+  footer,
+}: {
+  children: React.ReactNode;
+  maxClass: string;
+  footer: React.ReactNode;
+}): React.JSX.Element {
+  const { t, dir, language } = useTranslation();
+  const { commandPaletteOpen, setCommandPaletteOpen } = usePlatformSidebar();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === 'k') {
         e.preventDefault();
-        setSearchOpen((prev) => !prev);
+        setCommandPaletteOpen((prev) => !prev);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  }, [setCommandPaletteOpen]);
 
-  const maxClass =
-    width === '7xl'
-      ? 'max-w-7xl'
-      : width === 'md'
-        ? 'max-w-md'
-        : width === 'lg'
-          ? 'max-w-lg'
-          : width === 'xl'
-            ? 'max-w-xl'
-            : 'max-w-7xl';
+  return (
+    <PlatformShellFrame dir={dir} lang={language} footer={footer}>
+      <PlatformSidebar />
+      <div className="flex flex-1 flex-col min-w-0 min-h-screen">
+        <PlatformPageShellHeader
+          onOpenSearch={() => setCommandPaletteOpen(true)}
+          searchOpen={commandPaletteOpen}
+        />
+        <main id="main-content" className="flex-1 p-4 md:p-6 lg:p-8">
+          <div className={cn('box-border mx-auto w-full min-w-0', maxClass)}>
+            {children}
+          </div>
+        </main>
+      </div>
+      <PlatformCommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
+    </PlatformShellFrame>
+  );
+}
+
+/** Shared apex platform page layout — English/LTR only, matching Tenant AppLayout standards. */
+export function PlatformPageShell({
+  children,
+  width = 'lg',
+}: PlatformPageShellProps): React.JSX.Element {
+  const { t, dir, language } = useTranslation();
+  const { isPlatformAuthenticated } = usePlatformAuth();
+  const maxClass = MAX_W[width] ?? 'max-w-7xl';
+
+  const footer = (
+    <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6 mt-auto">
+      {t('theme.footerDefault', {
+        year: String(CURRENT_YEAR),
+        name: t('entry.productName'),
+      })}
+    </footer>
+  );
 
   if (isPlatformAuthenticated) {
     return (
       <PlatformSidebarProvider>
-        <div
-          dir="ltr"
-          lang="en"
-          className="box-border flex min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern selection:bg-primary/10 selection:text-primary"
-        >
-          <PlatformSidebar />
-          <div className="flex flex-1 flex-col min-w-0 min-h-screen">
-            <PlatformPageShellHeader onOpenSearch={() => setSearchOpen(true)} />
-            <main id="main-content" className="flex-1 p-4 md:p-6 lg:p-8">
-              <div className={cn('box-border mx-auto w-full min-w-0', maxClass)}>
-                {children}
-              </div>
-            </main>
-            <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6 mt-auto">
-              {t('theme.footerDefault', {
-                year: String(new Date().getFullYear()),
-                name: t('entry.productName'),
-              })}
-            </footer>
-          </div>
-        </div>
-        <PlatformCommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
+        <PlatformAuthenticatedShell maxClass={maxClass} footer={footer}>
+          {children}
+        </PlatformAuthenticatedShell>
       </PlatformSidebarProvider>
     );
   }
 
+  // Unauthenticated: centered layout (login, setup, forgot-password)
+  return (
+    <PlatformSidebarProvider>
+      <UnauthenticatedShell dir={dir} lang={language} maxClass={maxClass} footer={footer}>
+        {children}
+      </UnauthenticatedShell>
+    </PlatformSidebarProvider>
+  );
+}
+
+function UnauthenticatedShell({
+  dir,
+  lang,
+  maxClass,
+  children,
+  footer,
+}: {
+  dir: string;
+  lang: string;
+  maxClass: string;
+  children: React.ReactNode;
+  footer: React.ReactNode;
+}): React.JSX.Element {
+  const { commandPaletteOpen, setCommandPaletteOpen } = usePlatformSidebar();
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === 'k') {
+        e.preventDefault();
+        setCommandPaletteOpen((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [setCommandPaletteOpen]);
+
   return (
     <div
-      dir="ltr"
-      lang="en"
+      dir={dir}
+      lang={lang}
       className="box-border flex min-h-screen w-full max-w-full overflow-x-hidden flex-col bg-background islamic-pattern selection:bg-primary/10 selection:text-primary"
     >
-      <PlatformPageShellHeader onOpenSearch={() => setSearchOpen(true)} />
-
+      <PlatformPageShellHeader
+        onOpenSearch={() => setCommandPaletteOpen(true)}
+        searchOpen={commandPaletteOpen}
+      />
       <main id="main-content" className="flex w-full flex-1 flex-col justify-center pt-20 pb-8 md:py-8">
         <div className={cn('box-border mx-auto w-full min-w-0 px-4 sm:px-6', maxClass)}>
           {children}
         </div>
       </main>
-      <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6 mt-auto">
-        {t('theme.footerDefault', {
-          year: String(new Date().getFullYear()),
-          name: t('entry.productName'),
-        })}
-      </footer>
-      <PlatformCommandPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
+      {footer}
+      <PlatformCommandPalette
+        open={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+      />
     </div>
   );
 }
@@ -102,6 +192,7 @@ export function PlatformLogoMark({
 }: {
   size?: 'sm' | 'lg';
 } = {}): React.JSX.Element {
+  const { t } = useTranslation();
   const isSm = size === 'sm';
   return (
     <div
@@ -114,7 +205,7 @@ export function PlatformLogoMark({
     >
       <img
         src="/platform-logo.webp"
-        alt="Platform Logo"
+        alt={t('entry.productName')}
         className="h-full w-full object-contain"
       />
     </div>

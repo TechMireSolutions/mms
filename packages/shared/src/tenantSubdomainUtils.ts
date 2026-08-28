@@ -44,7 +44,12 @@ export function isValidSubdomain(subdomain: string): boolean {
 export function parseTenantFromHost(hostname: string, appDomain: string): string | null {
   const host = hostname.toLowerCase().split(":")[0];
 
-  if (host === appDomain || host === `www.${appDomain}`) {
+  if (
+    host === appDomain ||
+    host === `www.${appDomain}` ||
+    (appDomain === "localhost" && (host === "127.0.0.1" || /^127\.\d+\.\d+\.\d+$/.test(host))) ||
+    /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)
+  ) {
     return null;
   }
 

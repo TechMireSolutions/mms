@@ -23,7 +23,6 @@ function updateProfileCache(old: unknown, user: PlatformUserProfile): unknown {
   return user;
 }
 
-/** Full platform super-user profile (extends session user with timestamps). */
 export function usePlatformProfile(options?: { enabled?: boolean }) {
   const { isPlatformAuthenticated } = usePlatformAuth();
 
@@ -35,7 +34,11 @@ export function usePlatformProfile(options?: { enabled?: boolean }) {
     staleTime: 60_000,
   });
 
-  const data: PlatformUserProfile | undefined = (rawData?.body as any)?.user;
+  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'user' in rawData.body
+    ? (rawData.body as { user?: PlatformUserProfile })
+    : undefined;
+
+  const data: PlatformUserProfile | undefined = responseBody?.user;
 
   return { ...rest, data };
 }
@@ -48,7 +51,13 @@ export function useUpdatePlatformProfileName() {
   return useMutation({
     mutationFn: async (name: string) => {
       const res = await apiContract.platform.patchMe({ body: { name: name.trim() } });
-      return (res.body as any)?.user as PlatformUserProfile;
+      const resBody = res.body && typeof res.body === 'object' && 'user' in res.body
+        ? (res.body as { user: PlatformUserProfile })
+        : null;
+      if (!resBody?.user) {
+        throw new Error('Failed to update name');
+      }
+      return resBody.user;
     },
     onSuccess: async (user) => {
       queryClient.setQueryData(PLATFORM_PROFILE_QUERY_KEY, (old) =>

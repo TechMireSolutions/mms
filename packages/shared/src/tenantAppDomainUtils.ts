@@ -20,8 +20,13 @@ const APEX_3PART_LABELS = new Set([
 
 export function inferAppDomainFromHostname(hostname: string): string | null {
   const host = hostname.toLowerCase().split(":")[0];
-  if (!host || host === "localhost" || host.endsWith(".localhost")) {
+  if (!host || host === "localhost" || host.endsWith(".localhost") || host === "127.0.0.1" || /^127\.\d+\.\d+\.\d+$/.test(host)) {
     return "localhost";
+  }
+
+  // IPv4 addresses are apex hosts, not domain hierarchies with subdomains
+  if (/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(host)) {
+    return host;
   }
 
   if (host.startsWith("www.")) {

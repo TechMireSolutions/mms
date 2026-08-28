@@ -19,6 +19,13 @@ async function deleteTenantRowsByColumn(columnName: 'workspace_subdomain' | 'ten
       FROM information_schema.columns
       WHERE table_schema = 'public'
         AND column_name = ${columnName}
+      ORDER BY
+        CASE
+          WHEN table_name = 'contacts' THEN 2
+          WHEN table_name IN ('sessions', 'questions', 'tests', 'accounting_accounts', 'accounting_fiscal_years') THEN 1
+          ELSE 0
+        END ASC,
+        table_name ASC
     `);
     const rows = getQueryRows<{ table_name: string }>(result);
 

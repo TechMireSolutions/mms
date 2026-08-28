@@ -59,7 +59,6 @@ export async function waitForBackendReadyAfterMigrate(delayMs: number): Promise<
   }
 }
 
-/** Hook for platform super-users to read global platform settings. */
 export function usePlatformSettingsQuery() {
   const { isPlatformAuthenticated, canSettings } = usePlatformPermissions();
 
@@ -71,7 +70,11 @@ export function usePlatformSettingsQuery() {
     staleTime: 60_000,
   });
 
-  const data: PlatformSettings | undefined = (rawData?.body as any)?.settings;
+  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'settings' in rawData.body
+    ? (rawData.body as { settings?: PlatformSettings })
+    : undefined;
+
+  const data: PlatformSettings | undefined = responseBody?.settings;
 
   return { ...rest, data };
 }

@@ -24,8 +24,14 @@ export function usePlatformSetupStatus(): {
     retryDelay: (attempt: number) => Math.min(attempt * 1000, 5000),
   });
 
+  const rawData = query.data;
+  const setupStatus: PlatformSetupStatus | undefined =
+    rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object'
+      ? (rawData.body as PlatformSetupStatus)
+      : undefined;
+
   return {
-    setupStatus: (query.data?.body as any) as PlatformSetupStatus | undefined,
+    setupStatus,
     isLoadingSetup: isApex && query.isLoading,
     isError: query.isError,
     refetch: query.refetch,

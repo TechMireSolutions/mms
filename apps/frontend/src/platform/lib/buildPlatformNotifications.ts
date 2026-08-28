@@ -1,5 +1,6 @@
 import type { PlatformWorkspaceRow } from '@mms/shared';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
+import { ROUTES } from '@/lib/config/routes';
 
 export interface PlatformNotificationItem {
   id: string;
@@ -8,6 +9,7 @@ export interface PlatformNotificationItem {
   desc: string;
   time: string;
   urgent?: boolean;
+  href?: string;
 }
 
 /** Builds real-time operational notifications for the Platform Operator Console. */
@@ -34,6 +36,7 @@ export function buildPlatformNotifications(
       desc: t('platform.notificationDisabledDesc', { disabled: disabledCount, total }),
       time: t('platform.notificationTimeNow'),
       urgent: true,
+      href: ROUTES.platformWorkspaces,
     });
   }
 
@@ -45,6 +48,7 @@ export function buildPlatformNotifications(
       desc: t('platform.notificationActiveDesc', { active: activeCount }),
       time: t('platform.notificationTimeToday'),
       urgent: false,
+      href: ROUTES.platformWorkspaces,
     });
   }
 
@@ -56,6 +60,7 @@ export function buildPlatformNotifications(
       desc: t('platform.notificationSuperUserDesc'),
       time: t('platform.notificationTimeActive'),
       urgent: false,
+      href: ROUTES.platformAdmins,
     });
   }
 
@@ -66,6 +71,7 @@ export function buildPlatformNotifications(
     desc: t('platform.notificationSystemHealthDesc'),
     time: t('platform.notificationTimeToday'),
     urgent: false,
+    href: ROUTES.platformSystem,
   });
 
   return notifications;

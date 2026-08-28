@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { isEntryPath } from '@/lib/config/routes';
 import { shouldForcePlatformEnglish } from '@/platform/lib/themeScope';
+import { readStoredPlatformLanguage } from '@/platform/hooks/usePlatformLanguage';
 import {
   translateAppParams,
   registerLanguagePack,
@@ -38,6 +39,7 @@ function resolveUiLanguage(options: {
   workspaceLookupFailed: boolean;
   pathname: string;
   settingsLanguage: string;
+  platformLanguage: string;
 }): string {
   if (
     shouldForcePlatformEnglish({
@@ -47,7 +49,8 @@ function resolveUiLanguage(options: {
       workspaceLookupFailed: options.workspaceLookupFailed,
     })
   ) {
-    return 'en';
+    // Platform apex: respect the operator's chosen platform language
+    return options.platformLanguage;
   }
   // Tenant auth entry (login / 2FA / forgot) stays English before workspace language applies.
   if (isEntryPath(options.pathname, { isApex: false })) {
@@ -61,6 +64,18 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   const { pathname } = useLocation();
   const { isApex, workspace, workspaceLoading, workspaceLookupFailed } = useTenant();
 
+  const [platformLanguage, setPlatformLanguage] = useState<string>(readStoredPlatformLanguage);
+
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'mms_platform_language') {
+        setPlatformLanguage(e.newValue ?? 'en');
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   const language = resolveUiLanguage({
     isApex,
     workspaceLoading,
@@ -68,6 +83,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     workspaceLookupFailed,
     pathname,
     settingsLanguage: settings.language,
+    platformLanguage,
   });
   const [loadedLanguages, setLoadedLanguages] = useState<Record<string, boolean>>({ en: true });
   const [activeLanguage, setActiveLanguage] = useState<AppLanguageCode>('en');

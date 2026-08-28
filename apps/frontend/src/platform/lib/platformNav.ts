@@ -4,11 +4,14 @@ import { ROUTES } from "@/lib/config/routes";
 import type { AppTranslationKey } from "@mms/shared";
 import type { PlatformPermissionsState } from "@/platform/hooks/usePlatformPermissions";
 
+export type PlatformNavSection = 'core' | 'admin' | 'ops' | 'account';
+
 export interface PlatformNavItem {
   id: string;
   path: string;
   labelKey: AppTranslationKey;
   icon: React.ComponentType<{ className?: string }>;
+  section: PlatformNavSection;
   isVisible: (perms: PlatformPermissionsState) => boolean;
 }
 
@@ -22,6 +25,7 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformDashboard,
     labelKey: "dashboard.title",
     icon: LayoutDashboard,
+    section: "core",
     isVisible: () => true,
   },
   {
@@ -29,6 +33,7 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformWorkspaces,
     labelKey: "platform.manageMadrasas",
     icon: Building2,
+    section: "core",
     isVisible: (perms) => perms.canWorkspaces,
   },
   {
@@ -36,13 +41,23 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformReports,
     labelKey: "module.reports",
     icon: BarChart3,
+    section: "core",
     isVisible: (perms) => perms.canWorkspaces,
+  },
+  {
+    id: "admins",
+    path: ROUTES.platformAdmins,
+    labelKey: "platform.adminsTitle",
+    icon: Users,
+    section: "admin",
+    isVisible: (perms) => perms.canAdmins,
   },
   {
     id: "activityLogs",
     path: ROUTES.platformActivityLogs,
     labelKey: "platform.activityLogsTitle",
     icon: Activity,
+    section: "admin",
     isVisible: (perms) => perms.canSystem,
   },
   {
@@ -50,20 +65,15 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformSystem,
     labelKey: "platform.systemMaintenance",
     icon: Server,
+    section: "ops",
     isVisible: (perms) => perms.canSystem,
-  },
-  {
-    id: "admins",
-    path: ROUTES.platformAdmins,
-    labelKey: "platform.adminsTitle",
-    icon: Users,
-    isVisible: (perms) => perms.canAdmins,
   },
   {
     id: "account",
     path: ROUTES.platformAccount,
     labelKey: "platform.myAccount",
     icon: User,
+    section: "account",
     isVisible: () => true,
   },
 ] as const;
@@ -76,3 +86,4 @@ export function getVisiblePlatformNavItems(
 ): PlatformNavItem[] {
   return PLATFORM_NAV_ITEMS.filter((item) => item.isVisible(perms));
 }
+

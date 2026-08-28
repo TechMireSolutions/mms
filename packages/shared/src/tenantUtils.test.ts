@@ -16,6 +16,7 @@ describe('inferAppDomainFromHostname', () => {
   it('returns localhost for dev hosts', () => {
     expect(inferAppDomainFromHostname('localhost')).toBe('localhost');
     expect(inferAppDomainFromHostname('dar-ul-quran.localhost')).toBe('localhost');
+    expect(inferAppDomainFromHostname('127.0.0.1')).toBe('localhost');
   });
 
   it('returns apex for platform host', () => {

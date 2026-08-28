@@ -87,7 +87,7 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
           />
-          <PasswordStrengthMeter password={newPassword} />
+          <PasswordStrengthMeter password={newPassword} className="md:col-span-2" showChecks />
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
           <Button type="submit" className={PLATFORM_PROFILE_SUBMIT_CLASS} disabled={updatePassword.isPending}>

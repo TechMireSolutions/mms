@@ -1,13 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Activity, Building2, BarChart3, Server, UserPlus, Settings, Database } from "lucide-react";
+import { Activity, Building2, BarChart3, Server, UserPlus, Settings } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
-import { DETAIL_SECTION_TITLE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { ROUTES } from "@/lib/config/routes";
-import { cn } from "@/lib/utils";
 
 export interface PlatformDashboardQuickActionsProps {
   canWorkspaces: boolean;
@@ -23,116 +21,90 @@ export function PlatformDashboardQuickActions({
   const { t } = useTranslation();
 
   return (
-    <div className="space-y-6">
-      <WidgetCard className="p-6 space-y-4">
-        <WidgetCardHeader
-          icon={<Activity className="w-4 h-4 text-primary" />}
-          title={t("platform.quickActionsTitle")}
-          subtitle={t("platform.quickActionsSubtitle")}
-        />
+    <WidgetCard className="p-6 space-y-4 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm shadow-xs">
+      <WidgetCardHeader
+        icon={<Activity className="w-4 h-4 text-primary" />}
+        title={t("platform.quickActionsTitle")}
+        subtitle={t("platform.quickActionsSubtitle")}
+      />
 
-        <div className="space-y-2.5">
-          {canWorkspaces && (
-            <Button
-              asChild
-              variant="outline"
-              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
-            >
-              <Link to={ROUTES.platformWorkspaces}>
-                <Building2 className="w-4 h-4 text-primary shrink-0" aria-hidden />
-                {t("platform.manageMadrasas")}
-              </Link>
-            </Button>
-          )}
-
-          {canWorkspaces && (
-            <Button
-              asChild
-              variant="outline"
-              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
-            >
-              <Link to={ROUTES.platformReports}>
-                <BarChart3 className="w-4 h-4 text-primary shrink-0" aria-hidden />
-                {t("module.reports")}
-              </Link>
-            </Button>
-          )}
-
-          {canSystem && (
-            <Button
-              asChild
-              variant="outline"
-              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
-            >
-              <Link to={ROUTES.platformActivityLogs}>
-                <Activity className="w-4 h-4 text-secondary shrink-0" aria-hidden />
-                {t("platform.activityLogsTitle")}
-              </Link>
-            </Button>
-          )}
-
-          {canSystem && (
-            <Button
-              asChild
-              variant="outline"
-              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
-            >
-              <Link to={ROUTES.platformSystem}>
-                <Server className="w-4 h-4 text-destructive shrink-0" aria-hidden />
-                {t("platform.systemMaintenance")}
-              </Link>
-            </Button>
-          )}
-
-          {canAdmins && (
-            <Button
-              asChild
-              variant="outline"
-              className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
-            >
-              <Link to={ROUTES.platformAdmins}>
-                <UserPlus className="w-4 h-4 text-success shrink-0" aria-hidden />
-                {t("platform.adminsTitle")}
-              </Link>
-            </Button>
-          )}
-
+      <div className="space-y-2.5 pt-1">
+        {canWorkspaces && (
           <Button
             asChild
             variant="outline"
-            className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary transition-all"
+            className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary hover:border-primary/40 transition-all shadow-2xs cursor-pointer"
           >
-            <Link to={ROUTES.platformAccount}>
-              <Settings className="w-4 h-4 text-warning shrink-0" aria-hidden />
-              {t("platform.myAccount")}
+            <Link to={ROUTES.platformWorkspaces}>
+              <Building2 className="w-4 h-4 text-primary shrink-0" aria-hidden />
+              {t("platform.manageMadrasas")}
             </Link>
           </Button>
-        </div>
-      </WidgetCard>
+        )}
 
-      <div className={cn(WORK_SURFACE_INNER, "p-5 space-y-3")}>
-        <div className="flex items-center gap-2">
-          <Database className="w-4 h-4 text-primary" aria-hidden />
-          <span className={DETAIL_SECTION_TITLE}>
-            {t("platform.stackTitle")}
-          </span>
-        </div>
+        {canWorkspaces && (
+          <Button
+            asChild
+            variant="outline"
+            className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-primary/10 hover:text-primary hover:border-primary/40 transition-all shadow-2xs cursor-pointer"
+          >
+            <Link to={ROUTES.platformReports}>
+              <BarChart3 className="w-4 h-4 text-primary shrink-0" aria-hidden />
+              {t("module.reports")}
+            </Link>
+          </Button>
+        )}
 
-        <div className="space-y-2 text-xs font-semibold">
-          <div className="flex items-center justify-between py-1 border-b border-border/40">
-            <span className="text-muted-foreground">{t("platform.stackDatabase")}</span>
-            <span className="text-foreground font-bold">{t('platform.quickActions.pg16')}</span>
-          </div>
-          <div className="flex items-center justify-between py-1 border-b border-border/40">
-            <span className="text-muted-foreground">{t("platform.stackWebsocket")}</span>
-            <span className="text-success font-bold">{t('platform.quickActions.fastifyWs')}</span>
-          </div>
-          <div className="flex items-center justify-between py-1">
-            <span className="text-muted-foreground">{t("platform.stackIsolation")}</span>
-            <span className="text-primary font-bold">{t('platform.quickActions.asyncLocal')}</span>
-          </div>
-        </div>
+        {canSystem && (
+          <Button
+            asChild
+            variant="outline"
+            className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-secondary/20 hover:text-secondary-foreground hover:border-secondary/40 transition-all shadow-2xs cursor-pointer"
+          >
+            <Link to={ROUTES.platformActivityLogs}>
+              <Activity className="w-4 h-4 text-secondary shrink-0" aria-hidden />
+              {t("platform.activityLogsTitle")}
+            </Link>
+          </Button>
+        )}
+
+        {canSystem && (
+          <Button
+            asChild
+            variant="outline"
+            className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/40 transition-all shadow-2xs cursor-pointer"
+          >
+            <Link to={ROUTES.platformSystem}>
+              <Server className="w-4 h-4 text-destructive shrink-0" aria-hidden />
+              {t("platform.systemMaintenance")}
+            </Link>
+          </Button>
+        )}
+
+        {canAdmins && (
+          <Button
+            asChild
+            variant="outline"
+            className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-success/10 hover:text-success hover:border-success/40 transition-all shadow-2xs cursor-pointer"
+          >
+            <Link to={ROUTES.platformAdmins}>
+              <UserPlus className="w-4 h-4 text-success shrink-0" aria-hidden />
+              {t("platform.adminsTitle")}
+            </Link>
+          </Button>
+        )}
+
+        <Button
+          asChild
+          variant="outline"
+          className="w-full justify-start min-h-11 rounded-xl font-bold text-xs gap-2.5 hover:bg-warning/10 hover:text-warning hover:border-warning/40 transition-all shadow-2xs cursor-pointer"
+        >
+          <Link to={ROUTES.platformAccount}>
+            <Settings className="w-4 h-4 text-warning shrink-0" aria-hidden />
+            {t("platform.myAccount")}
+          </Link>
+        </Button>
       </div>
-    </div>
+    </WidgetCard>
   );
 }

@@ -19,8 +19,12 @@ export interface PlatformActivityLogsResponse {
 
 export const PLATFORM_ACTIVITY_LOGS_QUERY_KEY = ['platform', 'activity-logs'] as const;
 
-/** Super-user activity logs query hook. */
-export function usePlatformActivityLogs(): { data: PlatformActivityLogItem[] | undefined; isLoading: boolean; isError: boolean; refetch: () => Promise<unknown> } {
+export function usePlatformActivityLogs(): {
+  data: PlatformActivityLogItem[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => Promise<unknown>;
+} {
   const { isPlatformAuthenticated, canSystem } = usePlatformPermissions();
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
@@ -31,7 +35,11 @@ export function usePlatformActivityLogs(): { data: PlatformActivityLogItem[] | u
     staleTime: 30_000,
   });
 
-  const data: PlatformActivityLogItem[] | undefined = (rawData?.body as any)?.logs;
+  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'logs' in rawData.body
+    ? (rawData.body as { logs?: PlatformActivityLogItem[] })
+    : undefined;
+
+  const data: PlatformActivityLogItem[] | undefined = responseBody?.logs;
 
   return { ...rest, data };
 }

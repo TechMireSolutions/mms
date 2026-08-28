@@ -11,7 +11,13 @@ import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 export const PLATFORM_WORKSPACES_QUERY_KEY = ['platform', 'workspaces'] as const;
 
 /** Platform workspace list — super-user or admin with `workspaces` permission. */
-export function usePlatformWorkspaces(): { data: PlatformWorkspaceRow[] | undefined; isLoading: boolean; isError: boolean; isFetching: boolean; refetch: () => Promise<unknown> } {
+export function usePlatformWorkspaces(): {
+  data: PlatformWorkspaceRow[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  isFetching: boolean;
+  refetch: () => Promise<unknown>;
+} {
   const { isPlatformAuthenticated, canWorkspaces } = usePlatformPermissions();
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
@@ -22,7 +28,11 @@ export function usePlatformWorkspaces(): { data: PlatformWorkspaceRow[] | undefi
     staleTime: 60_000,
   });
 
-  const data: PlatformWorkspaceRow[] | undefined = (rawData?.body as any)?.workspaces;
+  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'workspaces' in rawData.body
+    ? (rawData.body as { workspaces?: PlatformWorkspaceRow[] })
+    : undefined;
+
+  const data: PlatformWorkspaceRow[] | undefined = responseBody?.workspaces;
 
   return { ...rest, data };
 }
@@ -164,7 +174,11 @@ export function useWorkspaceModules(subdomain: string, open: boolean): { data: s
     staleTime: 0,
   });
 
-  const data: string[] | undefined = (rawData?.body as any)?.modules;
+  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'modules' in rawData.body
+    ? (rawData.body as { modules?: string[] })
+    : undefined;
+
+  const data: string[] | undefined = responseBody?.modules;
 
   return { ...rest, data };
 }

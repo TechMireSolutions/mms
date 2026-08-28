@@ -49,85 +49,98 @@ export function PlatformDashboardCharts({
   ];
 
   return (
-    <WidgetCard className="p-6 space-y-4">
+    <WidgetCard className="p-6 space-y-4 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm shadow-xs">
       <WidgetCardHeader
         icon={<TrendingUp className="w-4 h-4 text-primary" />}
         title={t("platform.manageMadrasas")}
         subtitle={t("platform.visualizerSubtitle")}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-        <div className="h-60 w-full">
-          <p className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+        <div className="h-64 w-full flex flex-col justify-between p-3 rounded-xl bg-muted/20 border border-border/40">
+          <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-primary" /> {t('platform.charts.activeVsInactive')}
           </p>
-          <SafeResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-              <XAxis
-                dataKey="name"
-                stroke="currentColor"
-                className="text-xs font-semibold text-muted-foreground"
-              />
-              <YAxis
-                stroke="currentColor"
-                className="text-xs font-semibold text-muted-foreground"
-                allowDecimals={false}
-              />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  borderColor: "hsl(var(--border))",
-                  borderRadius: "0.75rem",
-                  boxShadow: "var(--shadow-surface)",
-                }}
-              />
-              <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                {chartData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </SafeResponsiveContainer>
+          <div className="h-52 w-full">
+            <SafeResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
+                <XAxis
+                  dataKey="name"
+                  stroke="currentColor"
+                  className="text-xs font-semibold text-muted-foreground"
+                  tickLine={false}
+                />
+                <YAxis
+                  stroke="currentColor"
+                  className="text-xs font-semibold text-muted-foreground"
+                  allowDecimals={false}
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    borderColor: "hsl(var(--border))",
+                    borderRadius: "0.75rem",
+                    boxShadow: "var(--shadow-surface)",
+                  }}
+                />
+                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </SafeResponsiveContainer>
+          </div>
         </div>
 
-        <div className="h-60 w-full">
-          <p className="text-xs font-bold text-muted-foreground mb-2 flex items-center gap-1.5">
+        <div className="h-64 w-full flex flex-col justify-between p-3 rounded-xl bg-muted/20 border border-border/40">
+          <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
             <Activity className="w-3.5 h-3.5 text-success" /> {t('platform.charts.activityTrend')}
           </p>
-          <SafeResponsiveContainer width="100%" height="100%">
-            <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <defs>
-                <linearGradient id="colorOps" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.15} />
-              <XAxis
-                dataKey="month"
-                stroke="currentColor"
-                className="text-xs font-semibold text-muted-foreground"
-              />
-              <YAxis stroke="currentColor" className="text-xs font-semibold text-muted-foreground" />
-              <Tooltip
-                contentStyle={{
-                  backgroundColor: "hsl(var(--card))",
-                  borderColor: "hsl(var(--border))",
-                  borderRadius: "0.75rem",
-                  boxShadow: "var(--shadow-surface)",
-                }}
-              />
-              <Area
-                type="monotone"
-                dataKey="ops"
-                stroke="hsl(var(--primary))"
-                strokeWidth={2}
-                fillOpacity={1}
-                fill="url(#colorOps)"
-              />
-            </AreaChart>
-          </SafeResponsiveContainer>
+          <div className="h-52 w-full">
+            <SafeResponsiveContainer width="100%" height="100%">
+              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorOps" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
+                <XAxis
+                  dataKey="month"
+                  stroke="currentColor"
+                  className="text-xs font-semibold text-muted-foreground"
+                  tickLine={false}
+                />
+                <YAxis
+                  stroke="currentColor"
+                  className="text-xs font-semibold text-muted-foreground"
+                  tickLine={false}
+                  axisLine={false}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "hsl(var(--card))",
+                    borderColor: "hsl(var(--border))",
+                    borderRadius: "0.75rem",
+                    boxShadow: "var(--shadow-surface)",
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="ops"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#colorOps)"
+                />
+              </AreaChart>
+            </SafeResponsiveContainer>
+          </div>
         </div>
       </div>
     </WidgetCard>

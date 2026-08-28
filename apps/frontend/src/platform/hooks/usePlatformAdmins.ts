@@ -33,7 +33,12 @@ function updateAdminsCache(
 }
 
 /** Hook for super-users to retrieve the list of platform operators. */
-export function usePlatformAdmins(): { data: PlatformUserProfile[] | undefined; isLoading: boolean; isError: boolean; refetch: () => Promise<unknown> } {
+export function usePlatformAdmins(): {
+  data: PlatformUserProfile[] | undefined;
+  isLoading: boolean;
+  isError: boolean;
+  refetch: () => Promise<unknown>;
+} {
   const { canAdmins } = usePlatformPermissions();
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
@@ -44,7 +49,11 @@ export function usePlatformAdmins(): { data: PlatformUserProfile[] | undefined; 
     staleTime: 60_000,
   });
 
-  const data: PlatformUserProfile[] | undefined = (rawData?.body as any)?.users;
+  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'users' in rawData.body
+    ? (rawData.body as { users?: PlatformUserProfile[] })
+    : undefined;
+
+  const data: PlatformUserProfile[] | undefined = responseBody?.users;
 
   return { ...rest, data };
 }

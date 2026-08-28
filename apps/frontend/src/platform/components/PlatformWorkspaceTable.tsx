@@ -75,6 +75,7 @@ export function PlatformWorkspaceTable({
                   busy={togglePending || deletePending}
                   deletePending={deletePending && targetDeleteSubdomain === workspace.subdomain}
                   tenantLink={tenantUrl(workspace.subdomain, "/")}
+                  variant="table"
                   onToggle={(enabled) => onToggle(workspace.subdomain, enabled)}
                   onToggleEmailVerification={(req) => onToggleEmailVerification(workspace.subdomain, req)}
                   onOpenModules={() => onOpenModules(workspace)}

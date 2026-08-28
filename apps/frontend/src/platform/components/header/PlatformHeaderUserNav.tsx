@@ -10,6 +10,8 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BackgroundJobsTray } from '@/components/ui/BackgroundJobsTray';
+import { PlatformLanguagePicker } from '@/platform/components/header/PlatformLanguagePicker';
+import { usePlatformNotificationAck } from '@/platform/hooks/usePlatformNotificationAck';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -26,12 +28,14 @@ import { cn } from '@/lib/utils';
 export interface PlatformHeaderUserNavProps {
   compact?: boolean;
   onOpenSearch?: () => void;
+  searchOpen?: boolean;
   className?: string;
 }
 
 export function PlatformHeaderUserNav({
   compact = false,
   onOpenSearch,
+  searchOpen = false,
   className,
 }: PlatformHeaderUserNavProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -41,12 +45,13 @@ export function PlatformHeaderUserNav({
   const { data: workspaces } = usePlatformWorkspaces();
 
   const [popoverOpen, setPopoverOpen] = useState(false);
+  const { ackedIds, ackAll } = usePlatformNotificationAck();
 
   const notifications = useMemo(() => {
     return buildPlatformNotifications(workspaces, isSuperUser, t);
   }, [workspaces, isSuperUser, t]);
 
-  const unreadCount = notifications.length;
+  const unreadCount = notifications.filter((n) => !ackedIds.has(n.id)).length;
   const initials = getInitials(platformUser?.name, 2) || 'OP';
 
   return (
@@ -57,9 +62,12 @@ export function PlatformHeaderUserNav({
           variant="outline"
           onClick={onOpenSearch}
           aria-label={t('platform.openSearchAria')}
+          aria-keyshortcuts="Control+K Meta+K"
+          aria-pressed={searchOpen}
           className={cn(
-            'relative flex items-center gap-2 rounded-lg text-xs text-muted-foreground border-border/80 hover:bg-muted/80 transition-colors cursor-pointer',
+            'relative flex items-center gap-2 rounded-xl text-xs text-muted-foreground border-border/80 hover:bg-muted/80 transition-colors cursor-pointer',
             compact ? 'h-11 w-11 p-0 justify-center min-h-11 min-w-11' : 'h-11 px-3 py-1.5 min-h-11',
+            searchOpen && 'ring-2 ring-primary/30 bg-muted/60',
           )}
         >
           <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
@@ -75,14 +83,17 @@ export function PlatformHeaderUserNav({
       )}
 
       {/* Notifications Centre Popover */}
-      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
+        <Popover open={popoverOpen} onOpenChange={(open) => {
+        setPopoverOpen(open);
+        if (!open) ackAll(notifications.map((n) => n.id));
+      }}>
         <PopoverTrigger asChild>
           <Button
             type="button"
             variant="ghost"
             size="icon"
             aria-label={t('platform.notificationsAria')}
-            className="relative min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted transition-colors"
+            className="relative min-h-11 min-w-11 h-11 w-11 rounded-xl hover:bg-muted transition-colors cursor-pointer"
           >
             <Bell className="h-4.5 w-4.5 text-muted-foreground" aria-hidden />
             {unreadCount > 0 && (
@@ -110,9 +121,18 @@ export function PlatformHeaderUserNav({
                   </div>
                 ) : (
                   notifications.map((notification) => (
-                    <div
+                    <button
                       key={notification.id}
-                      className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors bg-primary/5"
+                      type="button"
+                      onClick={() => {
+                        setPopoverOpen(false);
+                        if (notification.href) {
+                          navigate(notification.href);
+                        } else {
+                          navigate(ROUTES.platformReports);
+                        }
+                      }}
+                      className="w-full text-start border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/60 transition-colors bg-primary/5 cursor-pointer focus:outline-none focus:bg-muted/80 block"
                     >
                       <div className="flex items-start gap-3">
                         <div
@@ -121,13 +141,13 @@ export function PlatformHeaderUserNav({
                             notification.urgent ? 'bg-destructive animate-pulse' : 'bg-primary',
                           )}
                         />
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold text-foreground truncate">{notification.title}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{notification.desc}</p>
                           <p className="mt-1 text-2xs font-mono text-muted-foreground/70">{notification.time}</p>
                         </div>
                       </div>
-                    </div>
+                    </button>
                   ))
                 )}
               </div>
@@ -139,7 +159,7 @@ export function PlatformHeaderUserNav({
                     setPopoverOpen(false);
                     navigate(ROUTES.platformReports);
                   }}
-                  className="text-xs font-bold text-primary hover:underline min-h-10 p-0"
+                  className="text-xs font-bold text-primary hover:underline min-h-10 p-0 cursor-pointer"
                 >
                   {t('platform.notificationsViewAllReports')}
                 </Button>
@@ -150,6 +170,8 @@ export function PlatformHeaderUserNav({
       </Popover>
 
       <BackgroundJobsTray compact={compact} />
+
+      <PlatformLanguagePicker compact={compact} />
 
       {!compact ? <div className="mx-1 hidden h-6 w-px bg-border sm:block" /> : null}
 

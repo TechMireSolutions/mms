@@ -3,7 +3,7 @@ import { Mail, User, UserPlus, ShieldPlus } from 'lucide-react';
 import { DEFAULT_PLATFORM_ADMIN_PERMISSIONS, type PlatformAdminPermissions } from '@mms/shared';
 import PasswordInput from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { FormModal } from '@/components/ui/FormModal';
 import { SectionCard } from '@/components/ui/SectionCard';
@@ -98,23 +98,21 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
             <label htmlFor="admin-name" className={FORM_LABEL}>
               {t('platform.adminName')}
             </label>
-            <div className="relative">
-              <User className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-              <Input
-                id="admin-name"
-                name="adminName"
-                type="text"
-                required
-                value={name}
-                onChange={(event) => {
-                  setName(event.target.value);
-                  if (submitError) setSubmitError(null);
-                }}
-                className="ps-9 min-h-11 rounded-xl"
-                disabled={addAdmin.isPending}
-                placeholder="Full Operator Name"
-              />
-            </div>
+            <LeadingIconInput
+              id="admin-name"
+              name="adminName"
+              type="text"
+              icon={User}
+              required
+              value={name}
+              onChange={(event) => {
+                setName(event.target.value);
+                if (submitError) setSubmitError(null);
+              }}
+              className="min-h-11 rounded-xl"
+              disabled={addAdmin.isPending}
+              placeholder={t('platform.setupFullName')}
+            />
           </div>
 
           {/* Email Address Field */}
@@ -122,23 +120,21 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
             <label htmlFor="admin-email" className={FORM_LABEL}>
               {t('platform.adminEmail')}
             </label>
-            <div className="relative">
-              <Mail className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden />
-              <Input
-                id="admin-email"
-                name="adminEmail"
-                type="email"
-                required
-                value={email}
-                onChange={(event) => {
-                  setEmail(event.target.value);
-                  if (submitError) setSubmitError(null);
-                }}
-                className="ps-9 min-h-11 rounded-xl"
-                disabled={addAdmin.isPending}
-                placeholder="operator@platform.com"
-              />
-            </div>
+            <LeadingIconInput
+              id="admin-email"
+              name="adminEmail"
+              type="email"
+              icon={Mail}
+              required
+              value={email}
+              onChange={(event) => {
+                setEmail(event.target.value);
+                if (submitError) setSubmitError(null);
+              }}
+              className="min-h-11 rounded-xl"
+              disabled={addAdmin.isPending}
+              placeholder={t('auth.emailPlaceholder')}
+            />
           </div>
 
           {/* Password Field & Real-time Strength Bar */}

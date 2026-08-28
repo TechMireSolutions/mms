@@ -74,7 +74,7 @@ export default function PlatformSignIn(): React.JSX.Element {
               id={emailFieldId}
               label={t("auth.emailAddress")}
               value={email}
-              autoFocus={false}
+              autoFocus
               autoComplete="email"
               placeholder=""
               error={fieldErrors.email}

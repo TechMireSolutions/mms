@@ -8,7 +8,12 @@ import { parseTenantFromHost } from './tenantSubdomainUtils.js';
 export function isTrustedWorkspaceOrigin(origin: string): boolean {
   try {
     const host = new URL(origin).hostname.toLowerCase();
-    return host === LOCAL_DEV_APP_DOMAIN || host.endsWith(".localhost");
+    return (
+      host === LOCAL_DEV_APP_DOMAIN ||
+      host.endsWith(".localhost") ||
+      host === "127.0.0.1" ||
+      /^127\.\d+\.\d+\.\d+$/.test(host)
+    );
   } catch {
     return false;
   }

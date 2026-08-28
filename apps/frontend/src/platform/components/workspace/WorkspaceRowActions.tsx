@@ -12,6 +12,7 @@ interface WorkspaceRowActionsProps {
   busy: boolean;
   deletePending: boolean;
   tenantLink: string;
+  variant?: 'table' | 'card';
   onToggle: (enabled: boolean) => void;
   onToggleEmailVerification?: (requireEmailVerification: boolean) => void;
   onOpenModules: () => void;
@@ -23,7 +24,9 @@ export function WorkspaceRowActions({
   enabled,
   requireEmailVerification,
   busy,
+  deletePending,
   tenantLink,
+  variant = 'card',
   onToggle,
   onToggleEmailVerification,
   onOpenModules,
@@ -31,9 +34,58 @@ export function WorkspaceRowActions({
 }: WorkspaceRowActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
+  const actionButtons = (
+    <div className="flex items-center gap-2 justify-end">
+      <Button
+        asChild
+        variant="outline"
+        size="sm"
+        className="min-h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl shadow-2xs hover:bg-primary/10 hover:text-primary hover:border-primary/40 transition-all cursor-pointer"
+      >
+        <a
+          href={tenantLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${t('platform.openWorkspace')} ${subdomain}`}
+        >
+          <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+          {t('platform.openWorkspace')}
+        </a>
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        disabled={busy}
+        onClick={onOpenModules}
+        className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all cursor-pointer"
+        title={`${t('platform.modulesTitle')} (${subdomain})`}
+        aria-label={`${t('platform.modulesTitle')} (${subdomain})`}
+      >
+        <Blocks className="w-4 h-4" aria-hidden />
+      </Button>
+
+      <Button
+        variant="ghost"
+        size="icon"
+        disabled={busy || deletePending}
+        onClick={onOpenDelete}
+        className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all cursor-pointer"
+        title={`${t('platform.deleteWorkspace')} (${subdomain})`}
+        aria-label={`${t('platform.deleteWorkspace')} (${subdomain})`}
+      >
+        <Trash2 className="w-4 h-4" aria-hidden />
+      </Button>
+    </div>
+  );
+
+  if (variant === 'table') {
+    return actionButtons;
+  }
+
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/40">
-      <div className="flex flex-wrap items-center gap-5 min-h-11">
+      <div className="flex flex-wrap items-center gap-4 sm:gap-6 min-h-11">
         <div className="flex items-center gap-2.5">
           <Switch
             id={`toggle-${subdomain}`}
@@ -41,7 +93,7 @@ export function WorkspaceRowActions({
             disabled={busy}
             onCheckedChange={onToggle}
             aria-label={t('platform.workspaceActive')}
-            className="scale-105"
+            className="scale-100"
           />
           <Label
             htmlFor={`toggle-${subdomain}`}
@@ -59,7 +111,7 @@ export function WorkspaceRowActions({
               disabled={busy}
               onCheckedChange={onToggleEmailVerification}
               aria-label={t('platform.emailVerification')}
-              className="scale-105"
+              className="scale-100"
             />
             <Label
               htmlFor={`toggle-verify-${subdomain}`}
@@ -73,43 +125,10 @@ export function WorkspaceRowActions({
         )}
       </div>
 
-      <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-        <Button
-          asChild
-          variant="outline"
-          size="sm"
-          className="min-h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl flex-1 sm:flex-initial justify-center shadow-xs"
-        >
-          <a href={tenantLink} target="_blank" rel="noopener noreferrer">
-            <ExternalLink className="w-3.5 h-3.5" aria-hidden />
-            {t('platform.openWorkspace')}
-          </a>
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={busy}
-          onClick={onOpenModules}
-          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all"
-          title={t('platform.modulesTitle')}
-          aria-label={t('platform.modulesTitle')}
-        >
-          <Blocks className="w-4 h-4" aria-hidden />
-        </Button>
-
-        <Button
-          variant="ghost"
-          size="icon"
-          disabled={busy}
-          onClick={onOpenDelete}
-          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all"
-          title={t('platform.deleteWorkspace')}
-          aria-label={t('platform.deleteWorkspace')}
-        >
-          <Trash2 className="w-4 h-4" aria-hidden />
-        </Button>
+      <div className="w-full sm:w-auto">
+        {actionButtons}
       </div>
     </div>
   );
 }
+

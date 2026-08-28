@@ -28,7 +28,7 @@ export interface PlatformCommandPaletteProps {
 interface PlatformCommandItem {
   id: string;
   labelKey: AppTranslationKey;
-  category: 'Navigation' | 'Actions';
+  category: 'platform.commandCategory.navigation' | 'platform.commandCategory.actions';
   path: string;
   icon: React.ElementType;
   keywords: string[];
@@ -38,7 +38,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'dashboard',
     labelKey: 'dashboard.title',
-    category: 'Navigation',
+    category: 'platform.commandCategory.navigation',
     path: ROUTES.platformDashboard,
     icon: LayoutDashboard,
     keywords: ['home', 'overview', 'metrics', 'stats', 'kpi', 'dashboard'],
@@ -46,7 +46,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'workspaces',
     labelKey: 'platform.manageMadrasas',
-    category: 'Navigation',
+    category: 'platform.commandCategory.navigation',
     path: ROUTES.platformWorkspaces,
     icon: Building2,
     keywords: ['madrasas', 'workspaces', 'tenants', 'subdomains', 'instances'],
@@ -54,7 +54,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'reports',
     labelKey: 'module.reports',
-    category: 'Navigation',
+    category: 'platform.commandCategory.navigation',
     path: ROUTES.platformReports,
     icon: BarChart3,
     keywords: ['analytics', 'reports', 'charts', 'distribution', 'graphs'],
@@ -62,7 +62,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'activity-logs',
     labelKey: 'platform.activityLogsTitle',
-    category: 'Navigation',
+    category: 'platform.commandCategory.navigation',
     path: ROUTES.platformActivityLogs,
     icon: Activity,
     keywords: ['logs', 'audit', 'events', 'history', 'activity'],
@@ -70,7 +70,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'system',
     labelKey: 'platform.systemMaintenance',
-    category: 'Navigation',
+    category: 'platform.commandCategory.navigation',
     path: ROUTES.platformSystem,
     icon: Server,
     keywords: ['system', 'health', 'database', 'postgres', 'rls', 'maintenance'],
@@ -78,7 +78,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'admins',
     labelKey: 'platform.adminsTitle',
-    category: 'Navigation',
+    category: 'platform.commandCategory.navigation',
     path: ROUTES.platformAdmins,
     icon: ShieldCheck,
     keywords: ['admins', 'super_user', 'operators', 'users', 'access', 'rbac', 'permissions'],
@@ -86,7 +86,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'account',
     labelKey: 'platform.myAccount',
-    category: 'Navigation',
+    category: 'platform.commandCategory.navigation',
     path: ROUTES.platformAccount,
     icon: User,
     keywords: ['account', 'profile', 'session', 'email', 'me', 'password', 'security'],
@@ -94,15 +94,15 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
   {
     id: 'migrations',
     labelKey: 'platform.profileMigrateRestart',
-    category: 'Actions',
-    path: `${ROUTES.platformSystem}?tab=system`,
+    category: 'platform.commandCategory.actions',
+    path: ROUTES.platformSystem,
     icon: Server,
     keywords: ['migrations', 'drizzle', 'database', 'schema', 'reset', 'maintenance'],
   },
   {
     id: 'onboard-madrasa',
     labelKey: 'auth.createMadrasa',
-    category: 'Actions',
+    category: 'platform.commandCategory.actions',
     path: ROUTES.onboarding,
     icon: PlusCircle,
     keywords: ['create', 'add', 'onboard', 'provision', 'new madrasa', 'tenant'],
@@ -207,6 +207,13 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
             </kbd>
           </div>
 
+          {/* Screen reader live announcement */}
+          <div className="sr-only" aria-live="polite" aria-atomic="true">
+            {filteredItems.length === 0
+              ? t('platform.noMatchingConsolePages', { query })
+              : `${filteredItems.length} results available.`}
+          </div>
+
           {/* Search Results List */}
           <div className="max-h-80 overflow-y-auto p-2" role="listbox" id="platform-command-listbox">
             {filteredItems.length === 0 ? (
@@ -214,35 +221,47 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
                 {t('platform.noMatchingConsolePages', { query })}
               </div>
             ) : (
-              filteredItems.map((item, index) => {
-                const Icon = item.icon;
-                const isSelected = index === selectedIndex;
-                const translatedLabel = t(item.labelKey);
-
-                return (
-                  <button
-                    key={item.id}
-                    id={`platform-cmd-item-${item.id}`}
-                    type="button"
-                    role="option"
-                    aria-selected={isSelected}
-                    onClick={() => handleSelect(item.path)}
-                    onMouseEnter={() => setSelectedIndex(index)}
-                    className={cn(
-                      'flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-start text-sm transition-all cursor-pointer min-h-11',
-                      isSelected
-                        ? 'bg-primary text-primary-foreground font-bold shadow-sm'
-                        : 'text-foreground hover:bg-muted/70 font-semibold',
-                    )}
-                  >
-                    <Icon className={cn('h-4.5 w-4.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')} aria-hidden="true" />
-                    <span className="flex-1 truncate">{translatedLabel}</span>
-                    <span className={cn('text-xs opacity-80 font-mono', isSelected ? 'text-primary-foreground' : 'text-muted-foreground')}>
-                      {item.path}
-                    </span>
-                  </button>
-                );
-              })
+              Object.entries(
+                filteredItems.reduce<Record<string, PlatformCommandItem[]>>((acc, item) => {
+                  (acc[item.category] ??= []).push(item);
+                  return acc;
+                }, {}),
+              ).map(([categoryKey, items]) => (
+                <div key={categoryKey} className="mb-1">
+                  <div className="px-3.5 pt-3 pb-1 text-3xs font-black uppercase tracking-widest text-muted-foreground select-none">
+                    {t(categoryKey as AppTranslationKey)}
+                  </div>
+                  {items.map((item) => {
+                    const index = filteredItems.indexOf(item);
+                    const Icon = item.icon;
+                    const isSelected = index === selectedIndex;
+                    const translatedLabel = t(item.labelKey);
+                    return (
+                      <button
+                        key={item.id}
+                        id={`platform-cmd-item-${item.id}`}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => handleSelect(item.path)}
+                        onMouseEnter={() => setSelectedIndex(index)}
+                        className={cn(
+                          'flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-start text-sm transition-all cursor-pointer min-h-11',
+                          isSelected
+                            ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                            : 'text-foreground hover:bg-muted/70 font-semibold',
+                        )}
+                      >
+                        <Icon className={cn('h-4.5 w-4.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')} aria-hidden="true" />
+                        <span className="flex-1 truncate">{translatedLabel}</span>
+                        <span className={cn('text-xs opacity-80 font-mono', isSelected ? 'text-primary-foreground' : 'text-muted-foreground')}>
+                          {item.path}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ))
             )}
           </div>
 

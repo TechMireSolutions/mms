@@ -1,7 +1,8 @@
-import React from 'react';
-import { Shield, Building2, UserPlus, Settings, ShieldCheck, Server } from 'lucide-react';
+import React, { useId } from 'react';
+import { Shield, Building2, UserPlus, Settings, ShieldCheck, Server, Sparkles, CheckCheck, XCircle } from 'lucide-react';
 import type { PlatformAdminPermissions } from '@mms/shared';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { cn } from '@/lib/utils';
@@ -12,25 +13,83 @@ interface PlatformAdminPermissionsFieldsProps {
   disabled?: boolean;
 }
 
-/** Modern grantable-permission checkboxes with capability badges and accessibility helpers. */
+/** Modern grantable-permission checkboxes with capability badges, archetype presets, and accessibility helpers. */
 export function PlatformAdminPermissionsFields({
   value,
   onChange,
   disabled = false,
 }: PlatformAdminPermissionsFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const workspacesId = React.useId();
-  const onboardId = React.useId();
-  const settingsId = React.useId();
-  const adminsId = React.useId();
-  const systemId = React.useId();
+  const workspacesId = useId();
+  const onboardId = useId();
+  const settingsId = useId();
+  const adminsId = useId();
+  const systemId = useId();
+
+  const setAll = (enabled: boolean) => {
+    onChange({
+      workspaces: enabled,
+      onboard: enabled,
+      settings: enabled,
+      admins: enabled,
+      system: enabled,
+    });
+  };
+
+  const setOperations = () => {
+    onChange({
+      workspaces: true,
+      onboard: true,
+      settings: false,
+      admins: false,
+      system: false,
+    });
+  };
 
   return (
-    <fieldset className="space-y-3 rounded-2xl border border-border/50 bg-card/40 p-4 transition-all">
-      <legend className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-        <Shield className="w-3.5 h-3.5 text-primary" aria-hidden />
-        {t('platform.adminPermissionsLabel')}
-      </legend>
+    <fieldset className="space-y-4 rounded-2xl border border-border/50 bg-card/40 p-4 transition-all">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
+        <legend className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+          <Shield className="w-3.5 h-3.5 text-primary" aria-hidden />
+          {t('platform.adminPermissionsLabel')}
+        </legend>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            onClick={() => setAll(true)}
+            className="min-h-8 h-8 px-2 text-3xs font-bold rounded-lg border-border/60 hover:bg-primary/10 hover:text-primary gap-1"
+          >
+            <CheckCheck className="w-3 h-3 text-primary" aria-hidden />
+            {t('contacts.table.selectAll')}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            onClick={setOperations}
+            className="min-h-8 h-8 px-2 text-3xs font-bold rounded-lg border-border/60 hover:bg-primary/10 hover:text-primary gap-1"
+          >
+            <Sparkles className="w-3 h-3 text-primary" aria-hidden />
+            {t('platform.permWorkspaces')}
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            disabled={disabled}
+            onClick={() => setAll(false)}
+            className="min-h-8 h-8 px-2 text-3xs font-semibold rounded-lg text-muted-foreground hover:text-foreground gap-1"
+          >
+            <XCircle className="w-3 h-3" aria-hidden />
+            {t('common.deselect')}
+          </Button>
+        </div>
+      </div>
 
       {/* 1. Workspaces Capability */}
       <label

@@ -17,6 +17,8 @@ export interface PlatformDashboardBannerProps {
   isSuperUser: boolean;
   canWorkspaces: boolean;
   canOnboard: boolean;
+  totalWorkspaces?: number;
+  activeWorkspaces?: number;
 }
 
 export function PlatformDashboardBanner({
@@ -24,6 +26,8 @@ export function PlatformDashboardBanner({
   isSuperUser,
   canWorkspaces,
   canOnboard,
+  totalWorkspaces = 0,
+  activeWorkspaces = 0,
 }: PlatformDashboardBannerProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -31,16 +35,17 @@ export function PlatformDashboardBanner({
   return (
     <motion.div
       variants={reducedMotion ? undefined : itemVariants}
-      className={cn(WORK_SURFACE, "p-6 sm:p-8 relative overflow-hidden group/banner")}
+      className={cn(WORK_SURFACE, "p-6 sm:p-8 relative overflow-hidden group/banner rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card/90 to-card/70 backdrop-blur-md shadow-sm")}
     >
-      <div className="absolute -top-12 -end-12 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none group-hover/banner:bg-primary/15 transition-all duration-500" />
+      <div className="absolute -top-16 -end-16 w-56 h-56 bg-primary/10 rounded-full blur-3xl pointer-events-none group-hover/banner:bg-primary/20 transition-all duration-700" />
+      <div className="absolute -bottom-16 -start-16 w-56 h-56 bg-secondary/10 rounded-full blur-3xl pointer-events-none group-hover/banner:bg-secondary/15 transition-all duration-700" />
 
       <div className="relative z-10 space-y-4">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           <span
             className={cn(
               SEMANTIC_BADGE.primary,
-              "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-xs",
+              "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-2xs border border-primary/20",
             )}
           >
             <Sparkles className="w-3.5 h-3.5 text-primary" aria-hidden />
@@ -49,18 +54,18 @@ export function PlatformDashboardBanner({
           <span
             className={cn(
               SEMANTIC_BADGE.success,
-              "px-2.5 py-0.5 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-xs",
+              "px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-2xs border border-success/20",
             )}
           >
             <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
             {t("platform.statusOperational")}
           </span>
-          <span className="text-xs font-mono text-muted-foreground ms-auto hidden sm:inline-flex items-center gap-1 bg-muted/60 px-2 py-0.5 rounded-md border border-border/60">
+          <span className="text-xs font-mono text-muted-foreground ms-auto hidden sm:inline-flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/60">
             <Radio className="w-3 h-3 text-success animate-ping" /> {t('platform.banner.realtimePulse')}
           </span>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
           <div>
             <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground tracking-tight">
               {t("platform.welcomeBack", {
@@ -72,14 +77,26 @@ export function PlatformDashboardBanner({
                 ? t("platform.superConsoleDesc")
                 : t("platform.operatorConsoleDesc")}
             </p>
+            {totalWorkspaces > 0 ? (
+              <p className="text-xs font-semibold text-primary mt-2">
+                {t("platform.banner.managingActive", {
+                  count: String(activeWorkspaces),
+                  plural: t("platform.manageMadrasas").toLowerCase(),
+                })}
+              </p>
+            ) : (
+              <p className="text-xs font-semibold text-muted-foreground mt-2">
+                {t("platform.banner.noWorkspacesYet")}
+              </p>
+            )}
           </div>
 
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             {canOnboard && (
               <Button
                 asChild
                 size="sm"
-                className="rounded-xl font-bold gap-1.5 shadow-xs interactive-scale min-h-11"
+                className="rounded-xl font-bold gap-1.5 shadow-sm shadow-primary/20 interactive-scale min-h-11 px-4 cursor-pointer"
               >
                 <Link to={ROUTES.onboarding}>
                   <Building2 className="w-4 h-4" aria-hidden />
@@ -93,7 +110,7 @@ export function PlatformDashboardBanner({
                 asChild
                 variant="outline"
                 size="sm"
-                className="rounded-xl font-bold gap-1.5 hover:bg-muted transition-all min-h-11"
+                className="rounded-xl font-bold gap-1.5 hover:bg-muted transition-all min-h-11 px-4 cursor-pointer"
               >
                 <Link to={ROUTES.platformWorkspaces}>
                   <Globe className="w-4 h-4 text-primary" aria-hidden />

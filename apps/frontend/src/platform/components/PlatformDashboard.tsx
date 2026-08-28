@@ -7,6 +7,7 @@ import { usePlatformPermissions } from "@/platform/hooks/usePlatformPermissions"
 import { usePlatformWorkspaces } from "@/platform/hooks/usePlatformWorkspaces";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { StatsSkeleton } from "@/components/ui/LoadingState";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { containerVariantsConsole, itemVariants } from "@/platform/lib/animations";
 import { PlatformDashboardBanner } from "./dashboard/PlatformDashboardBanner";
 import { PlatformDashboardTelemetry } from "./dashboard/PlatformDashboardTelemetry";
@@ -21,6 +22,7 @@ export function PlatformDashboard(): React.JSX.Element {
     data: workspaces,
     isLoading: workspacesLoading,
     isError: workspacesError,
+    refetch,
   } = usePlatformWorkspaces();
 
   const totalWorkspaces = workspaces?.length ?? 0;
@@ -40,10 +42,18 @@ export function PlatformDashboard(): React.JSX.Element {
         isSuperUser={isSuperUser}
         canWorkspaces={canWorkspaces}
         canOnboard={canOnboard}
+        totalWorkspaces={totalWorkspaces}
+        activeWorkspaces={activeWorkspaces}
       />
 
       <motion.div variants={reducedMotion ? undefined : itemVariants}>
-        {workspacesError ? null : metricsReady ? (
+        {workspacesError ? (
+          <ErrorState
+            title={t("platform.loadFailed")}
+            description={t("platform.loadFailedHint")}
+            onRetry={() => void refetch()}
+          />
+        ) : metricsReady ? (
           <ModuleCommandMetricsGrid
             items={[
               {
