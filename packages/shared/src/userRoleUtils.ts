@@ -61,6 +61,12 @@ export function normalizeWorkspaceUser(
     avatarInitials: initials,
     deletedAt: raw.deletedAt ?? null,
     deletedBy: raw.deletedBy ?? null,
+    emailVerifiedAt:
+      typeof raw.emailVerifiedAt === 'string'
+        ? raw.emailVerifiedAt
+        : raw.emailVerifiedAt
+          ? String(raw.emailVerifiedAt)
+          : null,
   };
 }
 

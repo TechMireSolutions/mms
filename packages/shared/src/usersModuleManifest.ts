@@ -50,6 +50,7 @@ export const workspaceUserRecordSchema = z
     avatarInitials: z.string().optional().default(''),
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
+    emailVerifiedAt: z.string().nullable().optional(),
   })
   .passthrough();
 

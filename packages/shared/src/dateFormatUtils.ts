@@ -112,23 +112,71 @@ export function formatDatePartsWithMonthName(
 }
 
 /**
- * Converts an ISO storage date (`YYYY-MM-DD`) to the active display pattern.
+ * Formats numeric month/year parts using a preset pattern.
+ */
+export function formatMonthYearParts(
+  month: number,
+  year: number,
+  formatId: string,
+): string {
+  const id = normalizeDateFormat(formatId);
+  const paddedMonth = String(month).padStart(2, '0');
+  const fullYear = String(year);
+
+  switch (id) {
+    case 'YYYY-MM-DD':
+      return `${fullYear}-${paddedMonth}`;
+    case 'YYYY/MM/DD':
+      return `${fullYear}/${paddedMonth}`;
+    case 'DD.MM.YYYY':
+      return `${paddedMonth}.${fullYear}`;
+    case 'DD-MM-YYYY':
+      return `${paddedMonth}-${fullYear}`;
+    case 'MM/DD/YYYY':
+    case 'DD/MM/YYYY':
+    default:
+      return `${paddedMonth}/${fullYear}`;
+  }
+}
+
+/**
+ * Converts an ISO storage date (`YYYY`, `YYYY-MM`, or `YYYY-MM-DD`) to the active display pattern.
  */
 export function formatIsoDateToDisplay(iso: string | null | undefined, formatId: string): string {
   if (!iso) return '';
   const dateOnly = iso.trim().split(/[T\s]/)[0];
   if (!dateOnly) return '';
   const parts = dateOnly.split('-');
-  if (parts.length !== 3) return iso;
-  const year = Number(parts[0]);
-  const month = Number(parts[1]);
-  const day = Number(parts[2]);
-  if (!year || !month || !day) return iso;
-  return formatDateParts(day, month, year, formatId);
+
+  // Year only: "2024"
+  if (parts.length === 1 && /^\d{4}$/.test(parts[0]!)) {
+    return parts[0]!;
+  }
+
+  // Month and Year: "2024-05"
+  if (parts.length === 2 && /^\d{4}$/.test(parts[0]!) && /^\d{1,2}$/.test(parts[1]!)) {
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    if (year >= 1000 && year <= 9999 && month >= 1 && month <= 12) {
+      return formatMonthYearParts(month, year, formatId);
+    }
+  }
+
+  // Complete Date: "2024-05-21"
+  if (parts.length === 3) {
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    const day = Number(parts[2]);
+    if (year && month && day) {
+      return formatDateParts(day, month, year, formatId);
+    }
+  }
+
+  return iso;
 }
 
 /**
- * Converts an ISO storage date (`YYYY-MM-DD`) to a human-readable display string
+ * Converts an ISO storage date (`YYYY`, `YYYY-MM`, or `YYYY-MM-DD`) to a human-readable display string
  * using the provided month label.
  */
 export function formatIsoDateToDisplayWithMonthName(
@@ -140,43 +188,79 @@ export function formatIsoDateToDisplayWithMonthName(
   const dateOnly = iso.trim().split(/[T\s]/)[0];
   if (!dateOnly) return '';
   const parts = dateOnly.split('-');
-  if (parts.length !== 3) return iso;
-  const year = Number(parts[0]);
-  const month = Number(parts[1]);
-  const day = Number(parts[2]);
-  if (!year || !month || !day) return iso;
-  return formatDatePartsWithMonthName(day, monthLabel, month, year, formatId);
+
+  if (parts.length === 1 && /^\d{4}$/.test(parts[0]!)) {
+    return parts[0]!;
+  }
+
+  if (parts.length === 2 && /^\d{4}$/.test(parts[0]!) && /^\d{1,2}$/.test(parts[1]!)) {
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    if (year >= 1000 && year <= 9999 && month >= 1 && month <= 12) {
+      const id = normalizeDateFormat(formatId);
+      if (id.startsWith('YYYY')) {
+        return `${year} ${monthLabel}`;
+      }
+      return `${monthLabel} ${year}`;
+    }
+  }
+
+  if (parts.length === 3) {
+    const year = Number(parts[0]);
+    const month = Number(parts[1]);
+    const day = Number(parts[2]);
+    if (year && month && day) {
+      return formatDatePartsWithMonthName(day, monthLabel, month, year, formatId);
+    }
+  }
+
+  return iso;
 }
 
 /**
- * Parses a display-pattern date string into ISO storage form (`YYYY-MM-DD`).
- * Also supports compact 8-digit strings without separators (e.g. `21072026` or `20260721`).
+ * Parses a display-pattern date string into ISO storage form (`YYYY`, `YYYY-MM`, or `YYYY-MM-DD`).
+ * Supports:
+ * - Year only: "2024" -> "2024"
+ * - Month and Year: "05/2024", "05-2024", "2024-05" -> "2024-05"
+ * - Complete Date: "21/05/2024", "2024-05-21" -> "2024-05-21"
+ * Also supports compact strings without separators (e.g. `2024`, `052024`, `202405`, `21072026`).
  */
 export function parseDisplayDateToIso(display: string | null | undefined, formatId: string): string {
   if (!display || typeof display !== 'string' || !display.trim()) return '';
   const id = normalizeDateFormat(formatId);
   const trimmed = display.trim();
 
-  // Handle compact 6- or 8-digit strings without separators (e.g. "21072026", "210795", "20260721")
+  // 1. Year only: 4 digits (e.g. "2024")
+  if (/^\d{4}$/.test(trimmed)) {
+    const y = Number(trimmed);
+    if (y >= 1000 && y <= 9999) {
+      return String(y);
+    }
+    return '';
+  }
+
+  // 2. Handle compact 6- or 8-digit strings without separators
   if (/^\d{6}$|^\d{8}$/.test(trimmed)) {
-    let year = 0;
-    let month = 0;
-    let day = 0;
-    if (trimmed.length === 8) {
-      if (id.startsWith('YYYY')) {
-        year = Number(trimmed.slice(0, 4));
-        month = Number(trimmed.slice(4, 6));
-        day = Number(trimmed.slice(6, 8));
-      } else if (id === 'MM/DD/YYYY') {
-        month = Number(trimmed.slice(0, 2));
-        day = Number(trimmed.slice(2, 4));
-        year = Number(trimmed.slice(4, 8));
-      } else {
-        day = Number(trimmed.slice(0, 2));
-        month = Number(trimmed.slice(2, 4));
-        year = Number(trimmed.slice(4, 8));
+    if (trimmed.length === 6) {
+      // Check for YYYYMM (e.g. "202405")
+      if (id.startsWith('YYYY') && Number(trimmed.slice(0, 4)) >= 1000) {
+        const year = Number(trimmed.slice(0, 4));
+        const month = Number(trimmed.slice(4, 6));
+        if (month >= 1 && month <= 12) {
+          return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}`;
+        }
       }
-    } else {
+      // Check for MMYYYY (e.g. "052024")
+      const monthCandidate = Number(trimmed.slice(0, 2));
+      const yearCandidate = Number(trimmed.slice(2, 6));
+      if (yearCandidate >= 1000 && yearCandidate <= 9999 && monthCandidate >= 1 && monthCandidate <= 12) {
+        return `${String(yearCandidate).padStart(4, '0')}-${String(monthCandidate).padStart(2, '0')}`;
+      }
+
+      // Compact 6-digit with 2-digit year (e.g. "210795")
+      let year = 0;
+      let month = 0;
+      let day = 0;
       if (id.startsWith('YYYY')) {
         year = Number(trimmed.slice(0, 2));
         month = Number(trimmed.slice(2, 4));
@@ -190,53 +274,115 @@ export function parseDisplayDateToIso(display: string | null | undefined, format
         month = Number(trimmed.slice(2, 4));
         year = Number(trimmed.slice(4, 6));
       }
-    }
-    if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
-      const normalizedYear = normalizeTwoDigitYear(year);
-      const probe = new Date(normalizedYear, month - 1, day);
-      if (probe.getFullYear() === normalizedYear && probe.getMonth() === month - 1 && probe.getDate() === day) {
-        return `${String(normalizedYear).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        const normalizedYear = normalizeTwoDigitYear(year);
+        const probe = new Date(normalizedYear, month - 1, day);
+        if (probe.getFullYear() === normalizedYear && probe.getMonth() === month - 1 && probe.getDate() === day) {
+          return `${String(normalizedYear).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
+      }
+    } else if (trimmed.length === 8) {
+      let year = 0;
+      let month = 0;
+      let day = 0;
+      if (id.startsWith('YYYY')) {
+        year = Number(trimmed.slice(0, 4));
+        month = Number(trimmed.slice(4, 6));
+        day = Number(trimmed.slice(6, 8));
+      } else if (id === 'MM/DD/YYYY') {
+        month = Number(trimmed.slice(0, 2));
+        day = Number(trimmed.slice(2, 4));
+        year = Number(trimmed.slice(4, 8));
+      } else {
+        day = Number(trimmed.slice(0, 2));
+        month = Number(trimmed.slice(2, 4));
+        year = Number(trimmed.slice(4, 8));
+      }
+      if (month >= 1 && month <= 12 && day >= 1 && day <= 31) {
+        const normalizedYear = normalizeTwoDigitYear(year);
+        const probe = new Date(normalizedYear, month - 1, day);
+        if (probe.getFullYear() === normalizedYear && probe.getMonth() === month - 1 && probe.getDate() === day) {
+          return `${String(normalizedYear).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        }
       }
     }
   }
 
+  // 3. Separated strings
   const cleaned = trimmed.replace(/\//g, '-').replace(/\./g, '-');
-  const segments = cleaned.split('-').map((s) => s.trim());
-  if (segments.length !== 3) return '';
+  const segments = cleaned.split('-').map((s) => s.trim()).filter(Boolean);
 
-  let year = 0;
-  let month = 0;
-  let day = 0;
-
-  if (segments[0].length === 4) {
-    year = Number(segments[0]);
-    month = Number(segments[1]);
-    day = Number(segments[2]);
-  } else if (id === 'MM/DD/YYYY') {
-    month = Number(segments[0]);
-    day = Number(segments[1]);
-    year = Number(segments[2]);
-  } else if (id === 'YYYY-MM-DD' || id === 'YYYY/MM/DD') {
-    year = Number(segments[0]);
-    month = Number(segments[1]);
-    day = Number(segments[2]);
-  } else {
-    day = Number(segments[0]);
-    month = Number(segments[1]);
-    year = Number(segments[2]);
-  }
-
-  if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day) || month < 1 || month > 12 || day < 1 || day > 31) {
+  if (segments.length === 1) {
+    if (/^\d{4}$/.test(segments[0]!)) {
+      const y = Number(segments[0]);
+      if (y >= 1000 && y <= 9999) return String(y);
+    }
     return '';
   }
 
-  const normalizedYear = normalizeTwoDigitYear(year);
-  const probe = new Date(normalizedYear, month - 1, day);
-  if (probe.getFullYear() !== normalizedYear || probe.getMonth() !== month - 1 || probe.getDate() !== day) {
+  // 2 segments: Month and Year (e.g. "05/2024", "2024-05")
+  if (segments.length === 2) {
+    let year = 0;
+    let month = 0;
+
+    if (segments[0]!.length === 4) {
+      year = Number(segments[0]);
+      month = Number(segments[1]);
+    } else if (segments[1]!.length === 4) {
+      month = Number(segments[0]);
+      year = Number(segments[1]);
+    } else if (id.startsWith('YYYY')) {
+      year = normalizeTwoDigitYear(Number(segments[0]));
+      month = Number(segments[1]);
+    } else {
+      month = Number(segments[0]);
+      year = normalizeTwoDigitYear(Number(segments[1]));
+    }
+
+    if (Number.isFinite(year) && Number.isFinite(month) && year >= 1000 && year <= 9999 && month >= 1 && month <= 12) {
+      return `${String(year).padStart(4, '0')}-${String(month).padStart(2, '0')}`;
+    }
     return '';
   }
 
-  return `${String(normalizedYear).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  // 3 segments: Complete Date (Day, Month, Year)
+  if (segments.length === 3) {
+    let year = 0;
+    let month = 0;
+    let day = 0;
+
+    if (segments[0]!.length === 4) {
+      year = Number(segments[0]);
+      month = Number(segments[1]);
+      day = Number(segments[2]);
+    } else if (id === 'MM/DD/YYYY') {
+      month = Number(segments[0]);
+      day = Number(segments[1]);
+      year = Number(segments[2]);
+    } else if (id === 'YYYY-MM-DD' || id === 'YYYY/MM/DD') {
+      year = Number(segments[0]);
+      month = Number(segments[1]);
+      day = Number(segments[2]);
+    } else {
+      day = Number(segments[0]);
+      month = Number(segments[1]);
+      year = Number(segments[2]);
+    }
+
+    if (!Number.isFinite(year) || !Number.isFinite(month) || !Number.isFinite(day) || month < 1 || month > 12 || day < 1 || day > 31) {
+      return '';
+    }
+
+    const normalizedYear = normalizeTwoDigitYear(year);
+    const probe = new Date(normalizedYear, month - 1, day);
+    if (probe.getFullYear() !== normalizedYear || probe.getMonth() !== month - 1 || probe.getDate() !== day) {
+      return '';
+    }
+
+    return `${String(normalizedYear).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  }
+
+  return '';
 }
 
 /**
@@ -276,8 +422,10 @@ export function formatDateInputAsYouType(
     const rawSegments = normalized.split(sep);
     const cleanedSegments: string[] = [];
 
+    const effectiveMaxLens = rawSegments.length === 2 && !isYearFirst ? [2, 4] : maxLens;
+
     for (let i = 0; i < Math.min(rawSegments.length, 3); i++) {
-      const maxLen = maxLens[i]!;
+      const maxLen = effectiveMaxLens[i]!;
       const digits = (rawSegments[i] || '').replace(/\D/g, '').slice(0, maxLen);
       cleanedSegments.push(digits);
     }
@@ -342,6 +490,11 @@ export function formatDateInputAsYouType(
     return `${digits.slice(0, 2)}${sep}${digits.slice(2)}`;
   }
   if (digits.length === 4) {
+    // If the 4 digits form a 4-digit year (1900-2099), keep as 4 digits
+    const num = Number(digits);
+    if (num >= 1900 && num <= 2099) {
+      return digits;
+    }
     return isDeleting
       ? `${digits.slice(0, 2)}${sep}${digits.slice(2)}`
       : `${digits.slice(0, 2)}${sep}${digits.slice(2)}${sep}`;
@@ -453,6 +606,31 @@ export function parseIsoDate(isoStr?: string | null): Date | undefined {
   return date;
 }
 
+/**
+ * Parses a flexible ISO string (`YYYY`, `YYYY-MM`, or `YYYY-MM-DD`) into a local Date object.
+ * Returns `undefined` when missing or not a valid date/month/year.
+ */
+export function parseFlexibleIsoDate(isoStr?: string | null): Date | undefined {
+  if (!isoStr || typeof isoStr !== 'string') return undefined;
+  const dateOnly = isoStr.trim().split(/[T\s]/)[0];
+  if (!dateOnly) return undefined;
+  const parts = dateOnly.split('-').map(Number);
+  if (parts.length === 1) {
+    const year = parts[0];
+    if (year != null && !isNaN(year) && year >= 1000 && year <= 9999) {
+      return new Date(year, 0, 1);
+    }
+  } else if (parts.length === 2) {
+    const [year, month] = parts;
+    if (year != null && month != null && !isNaN(year) && !isNaN(month) && year >= 1000 && year <= 9999 && month >= 1 && month <= 12) {
+      return new Date(year, month - 1, 1);
+    }
+  } else if (parts.length === 3) {
+    return parseIsoDate(isoStr);
+  }
+  return undefined;
+}
+
 /** Returns the year portion of a `YYYY-MM-DD` (or ISO datetime) string, or `undefined` if invalid. */
 export function parseIsoYear(isoStr?: string | null): number | undefined {
   if (!isoStr || typeof isoStr !== 'string') return undefined;
@@ -533,13 +711,13 @@ export function resolveYearPickerBounds(
 
 /**
  * True when `date` is on/after optional ISO `min` and on/before optional ISO `max`
- * (normalized local-calendar day comparisons via {@link parseIsoDate}).
+ * (normalized local-calendar day comparisons via {@link parseFlexibleIsoDate}).
  */
 export function isDateWithinIsoBounds(date: Date, minIso?: string | null, maxIso?: string | null): boolean {
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const minDate = parseIsoDate(minIso);
+  const minDate = parseFlexibleIsoDate(minIso);
   if (minDate && target < minDate) return false;
-  const maxDate = parseIsoDate(maxIso);
+  const maxDate = parseFlexibleIsoDate(maxIso);
   if (maxDate && target > maxDate) return false;
   return true;
 }
@@ -552,8 +730,8 @@ export function resolveDatePickerMonthBounds(
   maxIso?: string | null,
 ): { startMonth: Date; endMonth: Date } {
   const nowYear = new Date().getFullYear();
-  const minYear = parseIsoYear(minIso);
-  const maxYear = parseIsoYear(maxIso);
+  const minYear = parseYearValue(minIso);
+  const maxYear = parseYearValue(maxIso);
   return {
     startMonth: new Date(minYear ?? nowYear - DATE_PICKER_YEAR_PAST, 0),
     endMonth: new Date(maxYear ?? nowYear + DATE_PICKER_YEAR_FUTURE, 11),

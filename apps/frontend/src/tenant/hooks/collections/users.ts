@@ -25,4 +25,5 @@ export {
   useUsersContractBulkRestore,
   useUsersContractDelete,
   useUsersContractRestore,
+  useUsersContractVerifyEmail,
 } from '@/tenant/features/users/hooks/useUsersTsrHooks';

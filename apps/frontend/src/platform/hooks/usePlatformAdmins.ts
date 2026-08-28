@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformAdminPermissions, PlatformCreateAdminInput, PlatformUserProfile } from '@mms/shared';
 import { tsrClient, apiContract } from '@/lib/api';
+import { apiJson } from '@/lib/apiClient';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -164,3 +165,23 @@ export function useDeletePlatformAdmin() {
     },
   });
 }
+
+/** Super-user manually verifies an admin's email. */
+export function useVerifyPlatformAdminEmail() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation({
+    mutationFn: async (adminId: string) => {
+      return apiJson<{ user: PlatformUserProfile; success: boolean }>(
+        `/api/platform/users/${adminId}/verify-email`,
+        { method: 'POST' },
+      );
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });
+      notify.success(t('users.emailVerifiedSuccess'));
+    },
+  });
+}
+

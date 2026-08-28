@@ -9,7 +9,7 @@ import {
   isYearWithinBounds,
   normalizeDateFormat,
   parseDisplayDateToIso,
-  parseIsoDate,
+  parseFlexibleIsoDate,
   parseYearValue,
   resolveDatePickerMonthBounds,
   resolveYearPickerBounds,
@@ -23,7 +23,7 @@ export interface UseDatePickerStateOptions {
   onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
   min?: string | number | null
   max?: string | number | null
-  mode?: "date" | "year"
+  mode?: "date" | "year" | "flexible"
   yearOnly?: boolean
   minYear?: number | null
   maxYear?: number | null
@@ -36,9 +36,9 @@ function resolveInitialDisplayMonth(
 ): Date {
   if (targetDate) return targetDate
   const today = new Date()
-  const minDate = typeof minIso === "string" ? parseIsoDate(minIso) : undefined
+  const minDate = typeof minIso === "string" ? parseFlexibleIsoDate(minIso) : undefined
   if (minDate && today < minDate) return minDate
-  const maxDate = typeof maxIso === "string" ? parseIsoDate(maxIso) : undefined
+  const maxDate = typeof maxIso === "string" ? parseFlexibleIsoDate(maxIso) : undefined
   if (maxDate && today > maxDate) return maxDate
   return today
 }
@@ -101,7 +101,7 @@ export function useDatePickerState({
   }, [value, rawIsoString, dateFormat, isYearMode])
 
   const dateValue = React.useMemo(
-    () => (typeof value === "string" ? parseIsoDate(value) : value instanceof Date ? value : undefined),
+    () => (typeof value === "string" ? parseFlexibleIsoDate(value) : value instanceof Date ? value : undefined),
     [value],
   )
 
@@ -125,9 +125,9 @@ export function useDatePickerState({
   const disabledDays = React.useMemo(() => {
     if (isYearMode) return undefined
     const rules: Matcher[] = []
-    const minDate = parseIsoDate(minIsoStr)
+    const minDate = parseFlexibleIsoDate(minIsoStr)
     if (minDate) rules.push({ before: minDate })
-    const maxDate = parseIsoDate(maxIsoStr)
+    const maxDate = parseFlexibleIsoDate(maxIsoStr)
     if (maxDate) rules.push({ after: maxDate })
     return rules.length > 0 ? rules : undefined
   }, [minIsoStr, maxIsoStr, isYearMode])
@@ -219,7 +219,7 @@ export function useDatePickerState({
 
     const parsed = parseDisplayDateToIso(formatted, dateFormat)
     if (!parsed) return
-    const parsedDate = parseIsoDate(parsed)
+    const parsedDate = parseFlexibleIsoDate(parsed)
     if (!parsedDate || !isDateWithinIsoBounds(parsedDate, minIsoStr, maxIsoStr)) return
     commitIso(parsed, parsedDate, false)
   }
@@ -252,7 +252,7 @@ export function useDatePickerState({
     }
 
     const parsed = parseDisplayDateToIso(inputValue, dateFormat)
-    const parsedDate = parsed ? parseIsoDate(parsed) : undefined
+    const parsedDate = parsed ? parseFlexibleIsoDate(parsed) : undefined
     if (parsed && parsedDate && isDateWithinIsoBounds(parsedDate, minIsoStr, maxIsoStr)) {
       commitIso(parsed, parsedDate)
       if (event) onBlur?.(event)

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   normalizeDateFormat,
   formatDateParts,
+  formatMonthYearParts,
   formatDatePartsWithMonthName,
   formatDateInputAsYouType,
   formatIsoDateToDisplay,
@@ -13,6 +14,7 @@ import {
   formatDateToIso,
   todayISO,
   parseIsoDate,
+  parseFlexibleIsoDate,
   parseIsoYear,
   parseYearValue,
   isYearWithinBounds,
@@ -67,8 +69,19 @@ describe('dateFormatUtils', () => {
     });
   });
 
+  describe('formatMonthYearParts', () => {
+    it('formats month and year correctly per preset', () => {
+      expect(formatMonthYearParts(5, 2024, 'DD/MM/YYYY')).toBe('05/2024');
+      expect(formatMonthYearParts(5, 2024, 'MM/DD/YYYY')).toBe('05/2024');
+      expect(formatMonthYearParts(5, 2024, 'YYYY-MM-DD')).toBe('2024-05');
+      expect(formatMonthYearParts(5, 2024, 'YYYY/MM/DD')).toBe('2024/05');
+      expect(formatMonthYearParts(5, 2024, 'DD-MM-YYYY')).toBe('05-2024');
+      expect(formatMonthYearParts(5, 2024, 'DD.MM.YYYY')).toBe('05.2024');
+    });
+  });
+
   describe('formatIsoDateToDisplay and parseDisplayDateToIso', () => {
-    it('converts ISO dates to display format and parses back accurately', () => {
+    it('converts full ISO dates to display format and parses back accurately', () => {
       const iso = '2026-07-21';
 
       const displayUK = formatIsoDateToDisplay(iso, 'DD/MM/YYYY');
@@ -78,6 +91,47 @@ describe('dateFormatUtils', () => {
       const displayUS = formatIsoDateToDisplay(iso, 'MM/DD/YYYY');
       expect(displayUS).toBe('07/21/2026');
       expect(parseDisplayDateToIso(displayUS, 'MM/DD/YYYY')).toBe('2026-07-21');
+    });
+
+    it('formats and parses Year-only dates (YYYY)', () => {
+      expect(formatIsoDateToDisplay('2024', 'DD/MM/YYYY')).toBe('2024');
+      expect(formatIsoDateToDisplay('2024', 'YYYY-MM-DD')).toBe('2024');
+      expect(parseDisplayDateToIso('2024', 'DD/MM/YYYY')).toBe('2024');
+      expect(parseDisplayDateToIso('  1998  ', 'DD/MM/YYYY')).toBe('1998');
+      expect(parseDisplayDateToIso('2024', 'YYYY-MM-DD')).toBe('2024');
+    });
+
+    it('formats and parses Month-and-Year dates (YYYY-MM)', () => {
+      expect(formatIsoDateToDisplay('2024-05', 'DD/MM/YYYY')).toBe('05/2024');
+      expect(formatIsoDateToDisplay('2024-05', 'YYYY-MM-DD')).toBe('2024-05');
+      expect(formatIsoDateToDisplay('2024-05', 'DD-MM-YYYY')).toBe('05-2024');
+
+      expect(parseDisplayDateToIso('05/2024', 'DD/MM/YYYY')).toBe('2024-05');
+      expect(parseDisplayDateToIso('5/2024', 'DD/MM/YYYY')).toBe('2024-05');
+      expect(parseDisplayDateToIso('05-2024', 'DD/MM/YYYY')).toBe('2024-05');
+      expect(parseDisplayDateToIso('05.2024', 'DD.MM.YYYY')).toBe('2024-05');
+      expect(parseDisplayDateToIso('2024-05', 'YYYY-MM-DD')).toBe('2024-05');
+      expect(parseDisplayDateToIso('2024/05', 'YYYY-MM-DD')).toBe('2024-05');
+      expect(parseDisplayDateToIso('052024', 'DD/MM/YYYY')).toBe('2024-05');
+      expect(parseDisplayDateToIso('202405', 'YYYY-MM-DD')).toBe('2024-05');
+    });
+
+    it('parses flexible ISO dates via parseFlexibleIsoDate', () => {
+      const yearOnly = parseFlexibleIsoDate('2024');
+      expect(yearOnly?.getFullYear()).toBe(2024);
+      expect(yearOnly?.getMonth()).toBe(0);
+
+      const monthYear = parseFlexibleIsoDate('2024-05');
+      expect(monthYear?.getFullYear()).toBe(2024);
+      expect(monthYear?.getMonth()).toBe(4);
+
+      const fullDate = parseFlexibleIsoDate('2024-05-21');
+      expect(fullDate?.getFullYear()).toBe(2024);
+      expect(fullDate?.getMonth()).toBe(4);
+      expect(fullDate?.getDate()).toBe(21);
+
+      expect(parseFlexibleIsoDate(null)).toBeUndefined();
+      expect(parseFlexibleIsoDate('')).toBeUndefined();
     });
 
     it('formats ISO dates with custom month names accurately', () => {

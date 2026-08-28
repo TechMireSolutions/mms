@@ -12,7 +12,7 @@ export interface RegistryDateFieldProps {
   className?: string;
   min?: string | number;
   max?: string | number;
-  mode?: "date" | "year";
+  mode?: "date" | "year" | "flexible";
   yearOnly?: boolean;
   minYear?: number | null;
   maxYear?: number | null;

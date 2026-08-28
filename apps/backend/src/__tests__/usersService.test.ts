@@ -23,6 +23,7 @@ vi.mock('../services/auth/userService.js', () => ({
 vi.mock('../db/repositories/tenantUserRepository.js', () => ({
   softDeleteTenantUserRow: vi.fn(),
   restoreTenantUserRow: vi.fn(),
+  verifyTenantUserEmailRow: vi.fn().mockResolvedValue(true),
   findTenantUserRowById: vi.fn(),
 }));
 
@@ -54,4 +55,17 @@ describe('usersService activity log upsert', () => {
     expect(bulkSaveActivityLogs).toHaveBeenCalledWith('demo', [log]);
     expect(replaceActivityLogsForWorkspace).not.toHaveBeenCalled();
   });
+
+  it('verifies user email and broadcasts collection update', async () => {
+    const { verifyUserEmailById } = await import('../services/usersService.js');
+    const { verifyTenantUserEmailRow } = await import('../db/repositories/tenantUserRepository.js');
+    const { broadcastCollection } = await import('../services/websocketService.js');
+
+    const result = await verifyUserEmailById('u-123');
+
+    expect(result).toBe(true);
+    expect(verifyTenantUserEmailRow).toHaveBeenCalledWith('u-123');
+    expect(broadcastCollection).toHaveBeenCalledWith('users');
+  });
 });
+

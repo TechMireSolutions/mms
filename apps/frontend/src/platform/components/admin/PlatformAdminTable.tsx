@@ -13,6 +13,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
+import { useVerifyPlatformAdminEmail } from '@/platform/hooks/usePlatformAdmins';
 
 interface PlatformAdminTableProps {
   admins: PlatformUserProfile[];
@@ -28,6 +29,7 @@ export function PlatformAdminTable({
   onDelete,
 }: PlatformAdminTableProps): React.JSX.Element {
   const { t } = useTranslation();
+  const verifyEmailMutation = useVerifyPlatformAdminEmail();
 
   return (
     <div className="rounded-xl border border-border/40 overflow-hidden bg-card shadow-sm">
@@ -175,6 +177,18 @@ export function PlatformAdminTable({
                 <TableCell className="px-4 py-3 align-top text-end">
                   {admin.role === 'admin' ? (
                     <div className="flex items-center justify-end gap-2">
+                      {!admin.emailVerifiedAt ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={verifyEmailMutation.isPending}
+                          className="min-h-11 rounded-lg font-bold border-success/40 bg-success/10 text-success hover:bg-success/20 hover:border-success/60"
+                          onClick={() => verifyEmailMutation.mutate(admin.id)}
+                        >
+                          {t('users.actionVerifyEmail')}
+                        </Button>
+                      ) : null}
                       <Button
                         type="button"
                         variant="outline"

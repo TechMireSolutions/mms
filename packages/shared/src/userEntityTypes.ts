@@ -63,6 +63,7 @@ export interface WorkspaceUser {
   avatarInitials: string;
   deletedAt?: string | null;
   deletedBy?: string | null;
+  emailVerifiedAt?: string | null;
 }
 
 export type SystemUser = WorkspaceUser;

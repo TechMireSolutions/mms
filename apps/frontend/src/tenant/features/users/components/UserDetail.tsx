@@ -2,6 +2,7 @@ import React, { lazy, Suspense, useMemo } from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Lock, Phone, Mail, Send } from 'lucide-react';
 import {
   filterRbacModulesForSettings,
+  formatDate,
   resolveWorkspaceRole,
   workspaceRoleDescription,
   type PermissionAction,
@@ -10,7 +11,6 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
-import { formatDate } from '@mms/shared';
 import { DetailDrawerShell } from '@/components/ui/DetailDrawerShell';
 import {
   DetailDrawerArchivedBanner,
@@ -22,6 +22,8 @@ import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 import { Card } from '@/components/ui/card';
 import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
+import { useToast } from '@/components/ui/use-toast';
+import { useUsersContractVerifyEmail } from '@/tenant/hooks/collections/users';
 
 const MessageComposer = lazy(() => import('@/components/ui/MessageComposer'));
 
@@ -41,8 +43,28 @@ export const UserDetail = React.memo(function UserDetail({
   onRestore,
 }: UserDetailProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { toast } = useToast();
   const globalSettings = useGlobalSettings();
   const workspaceRoles = useWorkspaceRoles();
+  const verifyEmailMutation = useUsersContractVerifyEmail();
+
+  const handleVerifyEmail = async () => {
+    try {
+      await verifyEmailMutation.mutateAsync({
+        params: { id: String(user.id) },
+        body: {},
+      });
+      toast({
+        title: t('users.emailVerifiedSuccess'),
+      });
+    } catch {
+      toast({
+        title: t('errors.state.generic'),
+        variant: 'destructive',
+      });
+    }
+  };
+
   const visibleModules = filterRbacModulesForSettings(globalSettings.enabledModules);
   const [messagingTarget, setMessagingTarget] = React.useState<{
     channel: 'sms' | 'whatsapp' | 'email';
@@ -147,6 +169,39 @@ export const UserDetail = React.memo(function UserDetail({
                       <p className="mt-1 text-xs text-muted-foreground">{t('users.loginEmailNote')}</p>
                     ) : null}
                   </div>
+                }
+              />
+              <DetailAttributeRow
+                variant="inset"
+                icon={Shield}
+                label={t('users.fieldEmailStatus')}
+                value={
+                  user.emailVerifiedAt ? (
+                    <span className="inline-flex items-center gap-1.5 text-xs text-success font-medium">
+                      <CheckCircle2 className="h-3.5 w-3.5" />
+                      {t('users.emailVerified')} ({fmtDate(user.emailVerifiedAt)})
+                    </span>
+                  ) : (
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="inline-flex items-center gap-1 text-xs text-amber-500 font-medium">
+                        <AlertTriangle className="h-3.5 w-3.5" />
+                        {t('users.emailUnverified')}
+                      </span>
+                      {canMutate && (
+                        <Button
+                          variant="outline"
+                          type="button"
+                          size="sm"
+                          disabled={verifyEmailMutation.isPending}
+                          className="h-7 text-xs px-2.5 rounded-lg border-success/40 bg-success/10 text-success hover:bg-success/20 hover:border-success/60 transition-colors shadow-none font-medium"
+                          onClick={() => handleVerifyEmail()}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5 me-1" />
+                          {t('users.actionVerifyEmail')}
+                        </Button>
+                      )}
+                    </div>
+                  )
                 }
               />
               <DetailAttributeRow

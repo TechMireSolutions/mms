@@ -8,6 +8,7 @@ import {
   upsertWorkspaceUsers,
   deleteUserById,
   restoreUserById,
+  verifyUserEmailById,
   bulkSoftDeleteUsers,
   bulkRestoreUsers,
 } from '../../../services/usersService.js';
@@ -110,6 +111,20 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
       } catch (err) {
         request.log.error(err, 'Failed to restore user');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to restore user' } };
+      }
+    },
+    verifyEmail: async ({ params: { id }, request }: any) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, 'users')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const ok = await verifyUserEmailById(id);
+        if (!ok) return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
+        return { status: 200 as const, body: { success: true } };
+      } catch (err) {
+        request.log.error(err, 'Failed to verify user email');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to verify user email' } };
       }
     },
   } as any);

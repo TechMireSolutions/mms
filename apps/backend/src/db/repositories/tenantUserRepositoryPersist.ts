@@ -222,3 +222,21 @@ export async function restoreTenantUserRow(id: string): Promise<boolean> {
   });
   return true;
 }
+
+export async function verifyTenantUserEmailRow(id: string): Promise<boolean> {
+  const existing = await findTenantUserRowById(id);
+  if (!existing || existing.deletedAt) return false;
+  const workspaceSubdomain =
+    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
+  await withTenant(workspaceSubdomain, async (tx) => {
+    await tx
+      .update(tenantUsers)
+      .set({
+        emailVerifiedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(tenantUserIdWhere(id, workspaceSubdomain));
+  });
+  return true;
+}
+

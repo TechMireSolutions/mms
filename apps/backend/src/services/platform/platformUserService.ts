@@ -21,5 +21,6 @@ export {
   setPlatformAdminPermissions,
   setPlatformAdminDisabled,
   deletePlatformAdmin,
+  verifyPlatformUserEmail,
 } from './platformUserServiceAdmin.js';
 export { ensurePlatformSuperUserFromEnv } from './platformUserServiceBootstrap.js';

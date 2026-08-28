@@ -124,3 +124,15 @@ export async function deletePlatformAdmin(userId: string): Promise<void> {
   const removed = await deletePlatformUserRow(userId);
   if (!removed) throw new PlatformError('user_not_found', 'Platform user not found');
 }
+
+export async function verifyPlatformUserEmail(userId: string): Promise<PlatformUserProfile> {
+  const stored = await getStoredPlatformUserById(userId);
+  if (!stored) throw new PlatformError('user_not_found', 'Platform user not found');
+
+  const updated = await updatePlatformUserRow(userId, {
+    emailVerifiedAt: new Date().toISOString(),
+  });
+  if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
+  return toPlatformUserProfile(updated);
+}
+

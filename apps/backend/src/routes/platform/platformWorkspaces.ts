@@ -101,6 +101,28 @@ export default async function platformWorkspaceRoutes(
     return reply.send({ success: true, modules: result.modules });
   });
 
+  fastify.post('/:subdomain/users/:userId/verify-email', async (request, reply) => {
+    const { platformUser } = request as PlatformAuthenticatedRequest;
+    const { subdomain, userId } = request.params as { subdomain: string; userId: string };
+    if (!subdomain || !userId) return replyValidationError(reply, 'Invalid parameters');
+
+    const { verifyTenantUserEmailRow } = await import('../../db/repositories/tenantUserRepository.js');
+    const ok = await verifyTenantUserEmailRow(userId);
+    if (!ok) return sendNotFound(reply, 'User not found in workspace');
+
+    await insertPlatformActivityLog({
+      userId: platformUser.id,
+      userEmail: platformUser.email,
+      action: 'verify_tenant_user_email',
+      targetResource: 'workspace_user',
+      targetId: `${subdomain}:${userId}`,
+      metadataMessage: `Verified tenant user ${userId} in ${subdomain}`,
+      ipAddress: request.ip,
+    });
+
+    return reply.send({ success: true });
+  });
+
   await fastify.register(async function platformWorkspaceDeleteRateLimited(inner) {
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 

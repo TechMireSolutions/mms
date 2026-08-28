@@ -16,6 +16,7 @@ import {
 import {
   softDeleteTenantUserRow,
   restoreTenantUserRow,
+  verifyTenantUserEmailRow,
   findTenantUserRowById,
   listTenantUsersByIds,
 } from '../db/repositories/tenantUserRepository.js';
@@ -153,6 +154,12 @@ export async function deleteUserById(id: string, deletedBy: string): Promise<boo
 
 export async function restoreUserById(id: string): Promise<boolean> {
   const ok = await restoreTenantUserRow(id);
+  if (ok) await broadcastCollection('users');
+  return ok;
+}
+
+export async function verifyUserEmailById(id: string): Promise<boolean> {
+  const ok = await verifyTenantUserEmailRow(id);
   if (ok) await broadcastCollection('users');
   return ok;
 }

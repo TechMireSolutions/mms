@@ -21,7 +21,7 @@ export interface DatePickerProps {
   name?: string
   required?: boolean
   autoComplete?: string
-  mode?: "date" | "year"
+  mode?: "date" | "year" | "flexible"
   yearOnly?: boolean
   minYear?: number | null
   maxYear?: number | null

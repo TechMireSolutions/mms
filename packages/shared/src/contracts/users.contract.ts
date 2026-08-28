@@ -68,6 +68,13 @@ export const userContract = c.router({
     responses: { 200: z.unknown(), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Restore a soft-deleted user',
   },
+  verifyEmail: {
+    method: 'POST',
+    path: '/api/users/:id/verify-email',
+    body: z.any().optional(),
+    responses: { 200: z.object({ success: z.boolean() }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    summary: 'Manually verify a user email address',
+  },
   getFieldConfig: {
     method: 'GET',
     path: '/api/users/config/fields',

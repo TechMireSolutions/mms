@@ -13,6 +13,7 @@ import {
   setPlatformAdminPermissions,
   toPlatformUserProfile,
   verifyPlatformUserPassword,
+  verifyPlatformUserEmail,
 } from '../../services/platform/platformUserService.js';
 import { hashPassword } from '../../services/auth/passwordService.js';
 import {
@@ -88,6 +89,26 @@ export default async function platformUsersRoutes(
     });
 
     return reply.send({ user });
+  });
+
+  fastify.post('/:id/verify-email', async (request, reply) => {
+    const { platformUser } = request as PlatformAuthenticatedRequest;
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+
+    const user = await verifyPlatformUserEmail(params.data.id);
+
+    await insertPlatformActivityLog({
+      userId: platformUser.id,
+      userEmail: platformUser.email,
+      action: 'verify_admin_email',
+      targetResource: 'admin',
+      targetId: params.data.id,
+      metadataMessage: `Verified email for ${user.email}`,
+      ipAddress: request.ip,
+    });
+
+    return reply.send({ user, success: true });
   });
 
   await fastify.register(async function platformAdminDestructiveRateLimited(inner) {

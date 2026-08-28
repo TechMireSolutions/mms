@@ -595,4 +595,68 @@ describe('DatePicker Component', () => {
       expect(ref.current?.value).toBe('2026');
     });
   });
+
+  describe('Tri-Format Flexible Date Support (Year, Month-Year, Complete Date)', () => {
+    it('accepts and renders Year-only values (YYYY) in standard datepicker', async () => {
+      const onChange = vi.fn();
+      const { input } = await renderDatePicker({ value: '2024', onChange });
+
+      expect(input.value).toBe('2024');
+
+      // Typing a 4-digit year commits the year
+      await act(async () => {
+        changeInput(input, '1998');
+      });
+      expect(onChange).toHaveBeenCalledWith('1998');
+    });
+
+    it('accepts and renders Month-and-Year values (MM/YYYY -> YYYY-MM) in standard datepicker', async () => {
+      const onChange = vi.fn();
+      const { input } = await renderDatePicker({ value: '2024-05', onChange });
+
+      expect(input.value).toBe('05/2024');
+
+      // Typing month/year commits YYYY-MM
+      await act(async () => {
+        changeInput(input, '07/2025');
+      });
+      expect(onChange).toHaveBeenCalledWith('2025-07');
+    });
+
+    it('accepts and renders Complete Date values (DD/MM/YYYY -> YYYY-MM-DD)', async () => {
+      const onChange = vi.fn();
+      const { input } = await renderDatePicker({ value: '2024-05-21', onChange });
+
+      expect(input.value).toBe('21/05/2024');
+
+      await act(async () => {
+        changeInput(input, '15/08/2026');
+      });
+      expect(onChange).toHaveBeenCalledWith('2026-08-15');
+    });
+
+    it('preserves partial date entries on blur without resetting to empty or full date', async () => {
+      const onChange = vi.fn();
+      const onBlur = vi.fn();
+      const { input } = await renderDatePicker({ value: '', onChange, onBlur });
+
+      // Enter Year-only and blur
+      await act(async () => {
+        changeInput(input, '2024');
+        input.focus();
+        input.blur();
+      });
+      expect(input.value).toBe('2024');
+      expect(onChange).toHaveBeenCalledWith('2024');
+
+      // Enter Month-and-Year and blur
+      await act(async () => {
+        changeInput(input, '09/2025');
+        input.focus();
+        input.blur();
+      });
+      expect(input.value).toBe('09/2025');
+      expect(onChange).toHaveBeenCalledWith('2025-09');
+    });
+  });
 });

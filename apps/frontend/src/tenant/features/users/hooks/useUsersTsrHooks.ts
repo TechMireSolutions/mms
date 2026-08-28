@@ -45,3 +45,10 @@ export function useUsersContractRestore() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.users.restore.useMutation({ onSuccess: () => invalidateUsersQueries(queryClient) });
 }
+
+export function useUsersContractVerifyEmail() {
+  const queryClient = useQueryClient();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.users.verifyEmail.useMutation({ onSuccess: () => invalidateUsersQueries(queryClient) });
+}
+

@@ -7,6 +7,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { useVerifyPlatformAdminEmail } from '@/platform/hooks/usePlatformAdmins';
 
 interface PlatformAdminCardsProps {
   admins: PlatformUserProfile[];
@@ -22,6 +23,7 @@ export function PlatformAdminCards({
   onDelete,
 }: PlatformAdminCardsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const verifyEmailMutation = useVerifyPlatformAdminEmail();
 
   return (
     <ModuleDirectoryCards
@@ -151,6 +153,18 @@ export function PlatformAdminCards({
               )}
               {admin.role === 'admin' ? (
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto mt-2">
+                  {!admin.emailVerifiedAt ? (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={verifyEmailMutation.isPending}
+                      className="min-h-11 rounded-xl font-bold flex-1 sm:flex-initial border-success/40 bg-success/10 text-success hover:bg-success/20 hover:border-success/60"
+                      onClick={() => verifyEmailMutation.mutate(admin.id)}
+                    >
+                      {t('users.actionVerifyEmail')}
+                    </Button>
+                  ) : null}
                   <Button
                     type="button"
                     variant="outline"
