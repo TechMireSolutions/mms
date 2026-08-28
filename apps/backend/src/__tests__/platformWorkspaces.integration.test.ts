@@ -96,4 +96,42 @@ describe('platformWorkspaces REST API integration routes', () => {
     expect(body.success).toBe(true);
     expect(body.requireEmailVerification).toBe(false);
   });
+
+  it('toggles workspace enabled status for authenticated super-user session', async () => {
+    if (!isDbAvailable || !superUserId) return;
+    const token = signPlatformToken();
+    const listRes = await app.inject({
+      method: 'GET',
+      url: '/api/platform/workspaces',
+      cookies: { mms_platform_access: token },
+    });
+    const workspaces = listRes.json().workspaces;
+    if (!workspaces || workspaces.length === 0) return;
+    const target = workspaces[0].subdomain;
+    const currentEnabled = workspaces[0].enabled;
+
+    // Toggle off
+    const resOff = await app.inject({
+      method: 'PATCH',
+      url: `/api/platform/workspaces/${target}`,
+      payload: { enabled: !currentEnabled },
+      cookies: { mms_platform_access: token },
+    });
+    expect(resOff.statusCode).toBe(200);
+    const bodyOff = resOff.json();
+    expect(bodyOff.workspace).toBeDefined();
+    expect(bodyOff.workspace.enabled).toBe(!currentEnabled);
+
+    // Revert back
+    const resOn = await app.inject({
+      method: 'PATCH',
+      url: `/api/platform/workspaces/${target}`,
+      payload: { enabled: currentEnabled },
+      cookies: { mms_platform_access: token },
+    });
+    expect(resOn.statusCode).toBe(200);
+    const bodyOn = resOn.json();
+    expect(bodyOn.workspace).toBeDefined();
+    expect(bodyOn.workspace.enabled).toBe(currentEnabled);
+  });
 });

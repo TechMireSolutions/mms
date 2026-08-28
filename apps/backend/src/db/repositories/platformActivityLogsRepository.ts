@@ -13,15 +13,31 @@ export interface InsertPlatformActivityLog {
 }
 
 export async function insertPlatformActivityLog(log: InsertPlatformActivityLog): Promise<void> {
-  await activeDb().insert(platformActivityLogs).values({
-    userId: log.userId ?? null,
-    userEmail: log.userEmail,
-    action: log.action,
-    targetResource: log.targetResource || null,
-    targetId: log.targetId || null,
-    ipAddress: log.ipAddress || null,
-    metadataMessage: log.metadataMessage || null,
-  });
+  try {
+    await activeDb().insert(platformActivityLogs).values({
+      userId: log.userId ?? null,
+      userEmail: log.userEmail,
+      action: log.action,
+      targetResource: log.targetResource || null,
+      targetId: log.targetId || null,
+      ipAddress: log.ipAddress || null,
+      metadataMessage: log.metadataMessage || null,
+    });
+  } catch (error) {
+    try {
+      await activeDb().insert(platformActivityLogs).values({
+        userId: null,
+        userEmail: log.userEmail,
+        action: log.action,
+        targetResource: log.targetResource || null,
+        targetId: log.targetId || null,
+        ipAddress: log.ipAddress || null,
+        metadataMessage: log.metadataMessage || null,
+      });
+    } catch (innerError) {
+      console.warn('[PlatformActivityLogs] Failed to insert activity log:', innerError);
+    }
+  }
 }
 
 export async function listPlatformActivityLogs(limit = 50, offset = 0) {

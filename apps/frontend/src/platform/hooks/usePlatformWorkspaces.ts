@@ -1,7 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformWorkspaceRow } from '@mms/shared';
 import { tsrClient, apiContract } from '@/lib/api';
-import { isApiError } from '@/lib/apiClient';
+import { ApiError, isApiError } from '@/lib/apiClient';
 import { WORKSPACE_REGISTRY_QUERY_KEY } from '@/platform/hooks/useWorkspaceRegistry';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -39,9 +39,17 @@ export function useSetWorkspaceEnabled() {
   >({
     mutationFn: async ({ subdomain, enabled }) => {
       const res = await apiContract.platform.patchWorkspace({
-        params: { subdomain: encodeURIComponent(subdomain) },
+        params: { subdomain },
         body: { enabled },
       });
+      if (res.status >= 400) {
+        const errorBody = res.body as { message?: string; type?: string } | undefined;
+        throw new ApiError(
+          res.status,
+          errorBody?.message || t('platform.workspaceToggleFailed'),
+          errorBody?.type,
+        );
+      }
       return res.body as { workspace: PlatformWorkspaceRow };
     },
     onMutate: async ({ subdomain, enabled }) => {
@@ -62,11 +70,11 @@ export function useSetWorkspaceEnabled() {
         { description: variables.subdomain },
       );
     },
-    onError: (_error, _variables, context) => {
+    onError: (error, _variables, context) => {
       if (context?.previousWorkspaces) {
         queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, context.previousWorkspaces);
       }
-      notify.error(t('platform.workspaceToggleFailed'));
+      notify.error(getPlatformErrorMessage(error, t));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
@@ -94,9 +102,17 @@ export function useDeleteWorkspace() {
       confirmSubdomain: string;
     }) => {
       const res = await apiContract.platform.deleteWorkspace({
-        params: { subdomain: encodeURIComponent(subdomain) },
+        params: { subdomain },
         body: { password, confirmSubdomain },
       });
+      if (res.status >= 400) {
+        const errorBody = res.body as { message?: string; type?: string } | undefined;
+        throw new ApiError(
+          res.status,
+          errorBody?.message || t('platform.loadFailed'),
+          errorBody?.type,
+        );
+      }
       return res.body as { deleted: true; subdomain: string };
     },
     onSuccess: (_res, variables) => {
@@ -119,7 +135,7 @@ export function useWorkspaceModules(subdomain: string, open: boolean): { data: s
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const { data: rawData, ...rest } = tsrClient.platform.getWorkspaceModules.useQuery({
     queryKey: ['platform', 'workspace-modules', subdomain],
-    queryData: { params: { subdomain: encodeURIComponent(subdomain) } },
+    queryData: { params: { subdomain } },
     enabled: isPlatformAuthenticated && canWorkspaces && open && !!subdomain,
     staleTime: 0,
   });
@@ -140,9 +156,17 @@ export function useUpdateWorkspaceModules() {
   >({
     mutationFn: async ({ subdomain, modules }) => {
       const res = await apiContract.platform.updateWorkspaceModules({
-        params: { subdomain: encodeURIComponent(subdomain) },
+        params: { subdomain },
         body: { modules },
       });
+      if (res.status >= 400) {
+        const errorBody = res.body as { message?: string; type?: string } | undefined;
+        throw new ApiError(
+          res.status,
+          errorBody?.message || t('platform.loadFailed'),
+          errorBody?.type,
+        );
+      }
       return res.body as { success: true; modules: string[] };
     },
     onSuccess: (response, variables) => {
@@ -167,11 +191,16 @@ export function useSetWorkspaceEmailVerification() {
   >({
     mutationFn: async ({ subdomain, requireEmailVerification }) => {
       const res = await apiContract.platform.patchWorkspaceEmailVerification({
-        params: { subdomain: encodeURIComponent(subdomain) },
+        params: { subdomain },
         body: { requireEmailVerification },
       });
       if (res.status >= 400) {
-        throw new Error((res.body as any)?.message || 'Failed to update email verification');
+        const errorBody = res.body as { message?: string; type?: string } | undefined;
+        throw new ApiError(
+          res.status,
+          errorBody?.message || t('platform.emailVerificationToggleFailed'),
+          errorBody?.type,
+        );
       }
       return res.body as { success: true; subdomain: string; requireEmailVerification: boolean };
     },
@@ -199,7 +228,7 @@ export function useSetWorkspaceEmailVerification() {
       if (context?.previousWorkspaces) {
         queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, context.previousWorkspaces);
       }
-      notify.error(getPlatformErrorMessage(error, t) || t('platform.emailVerificationToggleFailed'));
+      notify.error(getPlatformErrorMessage(error, t));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
