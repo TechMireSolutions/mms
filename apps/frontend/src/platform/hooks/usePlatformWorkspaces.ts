@@ -170,6 +170,9 @@ export function useSetWorkspaceEmailVerification() {
         params: { subdomain: encodeURIComponent(subdomain) },
         body: { requireEmailVerification },
       });
+      if (res.status >= 400) {
+        throw new Error((res.body as any)?.message || 'Failed to update email verification');
+      }
       return res.body as { success: true; subdomain: string; requireEmailVerification: boolean };
     },
     onMutate: async ({ subdomain, requireEmailVerification }) => {
@@ -192,11 +195,11 @@ export function useSetWorkspaceEmailVerification() {
         { description: variables.subdomain },
       );
     },
-    onError: (_error, _variables, context) => {
+    onError: (error, _variables, context) => {
       if (context?.previousWorkspaces) {
         queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, context.previousWorkspaces);
       }
-      notify.error(t('platform.emailVerificationToggleFailed'));
+      notify.error(getPlatformErrorMessage(error, t) || t('platform.emailVerificationToggleFailed'));
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });

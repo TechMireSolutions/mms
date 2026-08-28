@@ -72,4 +72,28 @@ describe('platformWorkspaces REST API integration routes', () => {
     const body = res.json();
     expect(Array.isArray(body.workspaces)).toBe(true);
   });
+
+  it('updates email verification for authenticated super-user session', async () => {
+    if (!isDbAvailable || !superUserId) return;
+    const token = signPlatformToken();
+    const listRes = await app.inject({
+      method: 'GET',
+      url: '/api/platform/workspaces',
+      cookies: { mms_platform_access: token },
+    });
+    const workspaces = listRes.json().workspaces;
+    if (!workspaces || workspaces.length === 0) return;
+    const target = workspaces[0].subdomain;
+
+    const res = await app.inject({
+      method: 'PATCH',
+      url: `/api/platform/workspaces/${target}/email-verification`,
+      payload: { requireEmailVerification: false },
+      cookies: { mms_platform_access: token },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(body.success).toBe(true);
+    expect(body.requireEmailVerification).toBe(false);
+  });
 });
