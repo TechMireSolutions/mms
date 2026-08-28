@@ -50,6 +50,16 @@ describe('platformWorkspaces REST API integration routes', () => {
     expect(res.statusCode).toBe(401);
   });
 
+  it('rejects unauthenticated PATCH /api/platform/workspaces/:subdomain/email-verification with 401', async () => {
+    if (!isDbAvailable || !superUserId) return;
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/platform/workspaces/test-workspace/email-verification',
+      payload: { requireEmailVerification: false },
+    });
+    expect(res.statusCode).toBe(401);
+  });
+
   it('returns workspace array for authenticated super-user session', async () => {
     if (!isDbAvailable || !superUserId) return;
     const token = signPlatformToken();

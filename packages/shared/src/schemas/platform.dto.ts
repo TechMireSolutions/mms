@@ -154,6 +154,17 @@ export const platformWorkspaceModulesPatchBodySchema = z.preprocess((raw) => {
 
 export type PlatformWorkspaceModulesPatchInput = z.infer<typeof platformWorkspaceModulesPatchBodyBaseSchema>;
 
+const workspaceEmailVerificationPatchBodyBaseSchema = z.object({
+  requireEmailVerification: z.boolean(),
+}).strict();
+
+export const workspaceEmailVerificationPatchBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  return deepSanitizeStrings(raw);
+}, workspaceEmailVerificationPatchBodyBaseSchema);
+
+export type WorkspaceEmailVerificationPatchInput = z.infer<typeof workspaceEmailVerificationPatchBodyBaseSchema>;
+
 const workspaceDeleteBodyBaseSchema = z.object({
   password: z.string().min(1),
   confirmSubdomain: z.string().min(1),

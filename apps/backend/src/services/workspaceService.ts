@@ -4,8 +4,10 @@ import {
   type PublicWorkspaceSummary,
   type PlatformWorkspaceRow,
   type BrandingSettings,
+  DEFAULT_USERS_SETTINGS,
   SYSTEM_MODULES,
   mergeBrandingSettings,
+  normalizeUserModulePreferences,
   slugifySubdomain,
   isValidSubdomain,
   isWorkspaceEnabled,
@@ -29,6 +31,10 @@ import {
   updateWorkspaceGrantedAndEnabledModulesRepo,
   upsertWorkspaceBranding as upsertWorkspaceBrandingRepo,
 } from '../db/repositories/workspaceRepository.js';
+import {
+  getUserModulePreferencesByWorkspace,
+  upsertUserModulePreferences,
+} from '../db/repositories/userModulePreferencesRepository.js';
 
 async function listWorkspaces(): Promise<Workspace[]> {
   return listWorkspaceRows();
@@ -68,7 +74,11 @@ export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> 
   const workspaces = await listWorkspaces();
   const summaries = await Promise.all(
     workspaces.map(async (ws) => {
-      const branding = await fetchPublicBrandingForSubdomain(ws.subdomain);
+      const [branding, rawPrefs] = await Promise.all([
+        fetchPublicBrandingForSubdomain(ws.subdomain),
+        getUserModulePreferencesByWorkspace(ws.subdomain),
+      ]);
+      const prefs = normalizeUserModulePreferences(rawPrefs);
       const logoUrl = branding.logoUrl?.trim();
       return {
         subdomain: ws.subdomain,
@@ -77,6 +87,7 @@ export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> 
         logoUrl: logoUrl || undefined,
         enabled: isWorkspaceEnabled(ws),
         createdAt: ws.createdAt,
+        requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
       };
     }),
   );
@@ -106,6 +117,24 @@ export async function setWorkspaceEnabled(
     await updateWorkspaceEnabledRow(normalized, enabled);
     return { ...ws, enabled };
   });
+}
+
+export async function setWorkspaceEmailVerification(
+  subdomain: string,
+  requireEmailVerification: boolean,
+): Promise<{ subdomain: string; requireEmailVerification: boolean } | null> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  const ws = await getWorkspaceBySubdomain(normalized);
+  if (!ws) return null;
+
+  const rawPrefs = await getUserModulePreferencesByWorkspace(normalized);
+  const prefs = normalizeUserModulePreferences(rawPrefs);
+  const updatedPrefs = {
+    ...prefs,
+    requireEmailVerification,
+  };
+  await upsertUserModulePreferences(normalized, updatedPrefs as Record<string, unknown>);
+  return { subdomain: normalized, requireEmailVerification };
 }
 
 export async function assertWorkspaceActive(subdomain: string): Promise<Workspace> {

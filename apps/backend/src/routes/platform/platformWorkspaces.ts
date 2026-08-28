@@ -9,6 +9,7 @@ import {
   deleteWorkspace,
   getWorkspaceGrantedModules,
   listPlatformWorkspaces,
+  setWorkspaceEmailVerification,
   setWorkspaceEnabled,
   updateWorkspaceModules,
 } from '../../services/workspaceService.js';
@@ -18,6 +19,7 @@ import {
   workspaceDeleteBodySchema,
   workspaceEnabledPatchBodySchema,
   platformWorkspaceModulesPatchBodySchema,
+  workspaceEmailVerificationPatchBodySchema,
 } from '../../validation/platformSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendInvalidCurrentPassword, sendNotFound } from '../../lib/httpErrors.js';
@@ -99,6 +101,37 @@ export default async function platformWorkspaceRoutes(
     });
 
     return reply.send({ success: true, modules: result.modules });
+  });
+
+  fastify.patch('/:subdomain/email-verification', async (request, reply) => {
+    const { platformUser } = request as PlatformAuthenticatedRequest;
+    const params = parseRequest(subdomainParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+
+    const body = parseRequest(workspaceEmailVerificationPatchBodySchema, request.body);
+    if (!body.ok) return replyValidationError(reply, body.message);
+
+    const result = await setWorkspaceEmailVerification(
+      params.data.subdomain,
+      body.data.requireEmailVerification,
+    );
+    if (!result) return sendNotFound(reply, 'Workspace not found');
+
+    await insertPlatformActivityLog({
+      userId: platformUser.id,
+      userEmail: platformUser.email,
+      action: 'update_workspace_email_verification',
+      targetResource: 'workspace',
+      targetId: params.data.subdomain,
+      metadataMessage: `requireEmailVerification=${body.data.requireEmailVerification}`,
+      ipAddress: request.ip,
+    });
+
+    return reply.send({
+      success: true,
+      subdomain: result.subdomain,
+      requireEmailVerification: result.requireEmailVerification,
+    });
   });
 
   fastify.post('/:subdomain/users/:userId/verify-email', async (request, reply) => {

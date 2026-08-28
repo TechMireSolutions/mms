@@ -6,6 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import {
   useDeleteWorkspace,
   usePlatformWorkspaces,
+  useSetWorkspaceEmailVerification,
   useSetWorkspaceEnabled,
 } from '@/platform/hooks/usePlatformWorkspaces';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
@@ -29,6 +30,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const appDomain = getAppDomain();
   const { data: workspaces, isLoading, isError, refetch, isFetching } = usePlatformWorkspaces();
   const setEnabled = useSetWorkspaceEnabled();
+  const setEmailVerification = useSetWorkspaceEmailVerification();
   const deleteWorkspace = useDeleteWorkspace();
 
   const [search, setSearch] = useState('');
@@ -162,10 +164,13 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
           <PlatformWorkspaceTable
             workspaces={filteredItems}
             appDomain={appDomain}
-            togglePending={setEnabled.isPending}
+            togglePending={setEnabled.isPending || setEmailVerification.isPending}
             deletePending={deleteWorkspace.isPending}
             targetDeleteSubdomain={targetWorkspace?.subdomain}
             onToggle={(subdomain, enabled) => setEnabled.mutate({ subdomain, enabled })}
+            onToggleEmailVerification={(subdomain, requireEmailVerification) =>
+              setEmailVerification.mutate({ subdomain, requireEmailVerification })
+            }
             onOpenModules={handleOpenModules}
             onOpenDelete={handleOpenDelete}
           />
@@ -173,10 +178,13 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
           <PlatformWorkspaceCards
             workspaces={filteredItems}
             appDomain={appDomain}
-            togglePending={setEnabled.isPending}
+            togglePending={setEnabled.isPending || setEmailVerification.isPending}
             deletePending={deleteWorkspace.isPending}
             targetDeleteSubdomain={targetWorkspace?.subdomain}
             onToggle={(subdomain, enabled) => setEnabled.mutate({ subdomain, enabled })}
+            onToggleEmailVerification={(subdomain, requireEmailVerification) =>
+              setEmailVerification.mutate({ subdomain, requireEmailVerification })
+            }
             onOpenModules={handleOpenModules}
             onOpenDelete={handleOpenDelete}
           />

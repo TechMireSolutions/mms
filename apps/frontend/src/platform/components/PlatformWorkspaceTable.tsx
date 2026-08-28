@@ -21,6 +21,7 @@ export interface PlatformWorkspaceTableProps {
   deletePending: boolean;
   targetDeleteSubdomain?: string | null;
   onToggle: (subdomain: string, enabled: boolean) => void;
+  onToggleEmailVerification: (subdomain: string, requireEmailVerification: boolean) => void;
   onOpenModules: (workspace: PlatformWorkspaceRowData) => void;
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
 }
@@ -32,6 +33,7 @@ export function PlatformWorkspaceTable({
   deletePending,
   targetDeleteSubdomain,
   onToggle,
+  onToggleEmailVerification,
   onOpenModules,
   onOpenDelete,
 }: PlatformWorkspaceTableProps): React.JSX.Element {
@@ -69,10 +71,12 @@ export function PlatformWorkspaceTable({
                 <WorkspaceRowActions
                   subdomain={workspace.subdomain}
                   enabled={workspace.enabled}
+                  requireEmailVerification={workspace.requireEmailVerification}
                   busy={togglePending || deletePending}
                   deletePending={deletePending && targetDeleteSubdomain === workspace.subdomain}
                   tenantLink={tenantUrl(workspace.subdomain, "/")}
                   onToggle={(enabled) => onToggle(workspace.subdomain, enabled)}
+                  onToggleEmailVerification={(req) => onToggleEmailVerification(workspace.subdomain, req)}
                   onOpenModules={() => onOpenModules(workspace)}
                   onOpenDelete={() => onOpenDelete(workspace)}
                 />

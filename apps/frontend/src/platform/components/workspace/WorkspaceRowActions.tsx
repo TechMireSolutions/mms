@@ -8,10 +8,12 @@ import { useTranslation } from '@/hooks/useTranslation';
 interface WorkspaceRowActionsProps {
   subdomain: string;
   enabled: boolean;
+  requireEmailVerification?: boolean;
   busy: boolean;
   deletePending: boolean;
   tenantLink: string;
   onToggle: (enabled: boolean) => void;
+  onToggleEmailVerification?: (requireEmailVerification: boolean) => void;
   onOpenModules: () => void;
   onOpenDelete: () => void;
 }
@@ -19,9 +21,11 @@ interface WorkspaceRowActionsProps {
 export function WorkspaceRowActions({
   subdomain,
   enabled,
+  requireEmailVerification,
   busy,
   tenantLink,
   onToggle,
+  onToggleEmailVerification,
   onOpenModules,
   onOpenDelete,
 }: WorkspaceRowActionsProps): React.JSX.Element {
@@ -29,21 +33,44 @@ export function WorkspaceRowActions({
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/40">
-      <div className="flex items-center gap-2.5 min-h-11">
-        <Switch
-          id={`toggle-${subdomain}`}
-          checked={enabled}
-          disabled={busy}
-          onCheckedChange={onToggle}
-          aria-label={t('platform.workspaceActive')}
-          className="scale-105"
-        />
-        <Label
-          htmlFor={`toggle-${subdomain}`}
-          className="text-xs font-bold text-muted-foreground cursor-pointer select-none"
-        >
-          {enabled ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
-        </Label>
+      <div className="flex flex-wrap items-center gap-5 min-h-11">
+        <div className="flex items-center gap-2.5">
+          <Switch
+            id={`toggle-${subdomain}`}
+            checked={enabled}
+            disabled={busy}
+            onCheckedChange={onToggle}
+            aria-label={t('platform.workspaceActive')}
+            className="scale-105"
+          />
+          <Label
+            htmlFor={`toggle-${subdomain}`}
+            className="text-xs font-bold text-muted-foreground cursor-pointer select-none"
+          >
+            {enabled ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
+          </Label>
+        </div>
+
+        {onToggleEmailVerification && (
+          <div className="flex items-center gap-2.5">
+            <Switch
+              id={`toggle-verify-${subdomain}`}
+              checked={Boolean(requireEmailVerification)}
+              disabled={busy}
+              onCheckedChange={onToggleEmailVerification}
+              aria-label={t('platform.emailVerification')}
+              className="scale-105"
+            />
+            <Label
+              htmlFor={`toggle-verify-${subdomain}`}
+              className="text-xs font-bold text-muted-foreground cursor-pointer select-none"
+            >
+              {requireEmailVerification
+                ? t('platform.emailVerificationRequired')
+                : t('platform.emailVerificationOptional')}
+            </Label>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2 w-full sm:w-auto justify-end">

@@ -14,6 +14,7 @@ export interface PlatformWorkspaceCardsProps {
   deletePending: boolean;
   targetDeleteSubdomain?: string | null;
   onToggle: (subdomain: string, enabled: boolean) => void;
+  onToggleEmailVerification: (subdomain: string, requireEmailVerification: boolean) => void;
   onOpenModules: (workspace: PlatformWorkspaceRowData) => void;
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
 }
@@ -25,6 +26,7 @@ export function PlatformWorkspaceCards({
   deletePending,
   targetDeleteSubdomain,
   onToggle,
+  onToggleEmailVerification,
   onOpenModules,
   onOpenDelete,
 }: PlatformWorkspaceCardsProps): React.JSX.Element {
@@ -49,10 +51,12 @@ export function PlatformWorkspaceCards({
               <WorkspaceRowActions
                 subdomain={workspace.subdomain}
                 enabled={workspace.enabled}
+                requireEmailVerification={workspace.requireEmailVerification}
                 busy={togglePending || deletePending}
                 deletePending={isTargetDelete}
                 tenantLink={tenantUrl(workspace.subdomain, "/")}
                 onToggle={(enabled) => onToggle(workspace.subdomain, enabled)}
+                onToggleEmailVerification={(req) => onToggleEmailVerification(workspace.subdomain, req)}
                 onOpenModules={() => onOpenModules(workspace)}
                 onOpenDelete={() => onOpenDelete(workspace)}
               />

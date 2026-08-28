@@ -154,3 +154,52 @@ export function useUpdateWorkspaceModules() {
     },
   });
 }
+
+export function useSetWorkspaceEmailVerification() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation<
+    { success: true; subdomain: string; requireEmailVerification: boolean },
+    Error,
+    { subdomain: string; requireEmailVerification: boolean },
+    { previousWorkspaces: PlatformWorkspaceRow[] | undefined }
+  >({
+    mutationFn: async ({ subdomain, requireEmailVerification }) => {
+      const res = await apiContract.platform.patchWorkspaceEmailVerification({
+        params: { subdomain: encodeURIComponent(subdomain) },
+        body: { requireEmailVerification },
+      });
+      return res.body as { success: true; subdomain: string; requireEmailVerification: boolean };
+    },
+    onMutate: async ({ subdomain, requireEmailVerification }) => {
+      await queryClient.cancelQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
+      const previousWorkspaces = queryClient.getQueryData<PlatformWorkspaceRow[]>(
+        PLATFORM_WORKSPACES_QUERY_KEY,
+      );
+
+      queryClient.setQueryData<PlatformWorkspaceRow[]>(PLATFORM_WORKSPACES_QUERY_KEY, (old = []) =>
+        old.map((w) => (w.subdomain === subdomain ? { ...w, requireEmailVerification } : w)),
+      );
+
+      return { previousWorkspaces };
+    },
+    onSuccess: (_res, variables) => {
+      notify.success(
+        variables.requireEmailVerification
+          ? t('platform.emailVerificationRequiredToast')
+          : t('platform.emailVerificationOptionalToast'),
+        { description: variables.subdomain },
+      );
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.previousWorkspaces) {
+        queryClient.setQueryData(PLATFORM_WORKSPACES_QUERY_KEY, context.previousWorkspaces);
+      }
+      notify.error(t('platform.emailVerificationToggleFailed'));
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
+    },
+  });
+}

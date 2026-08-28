@@ -134,6 +134,14 @@ export const platformContract = c.router({
     responses: { 200: anyResponse, 400: anyResponse, 403: anyResponse },
     summary: 'Update enabled modules for workspace',
   },
+  patchWorkspaceEmailVerification: {
+    method: 'PATCH',
+    path: '/api/platform/workspaces/:subdomain/email-verification',
+    pathParams: z.object({ subdomain: z.string() }),
+    body: z.any(),
+    responses: { 200: anyResponse, 400: anyResponse, 403: anyResponse, 404: anyResponse },
+    summary: 'Toggle email verification requirement for a workspace',
+  },
   // Admins (users)
   listAdmins: {
     method: 'GET',
