@@ -1,9 +1,10 @@
-import { type Contact, getPrimaryEmail, getPrimaryPhone, hasWhatsApp } from '@mms/shared';
-import { useTranslation } from '@/hooks/useTranslation';
-import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
-import { PersonMessagingRowActionsExtras } from '@/components/ui/PersonMessagingRowActionsExtras';
+import type React from "react";
+import { type Contact, getPrimaryEmail, getPrimaryPhone, hasWhatsApp } from "@mms/shared";
+import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleRowActionsMenu } from "@/components/ui/ModuleRowActionsMenu";
+import { PersonMessagingRowActionsExtras } from "@/components/ui/PersonMessagingRowActionsExtras";
 
-interface ContactsRowActionsProps {
+export interface ContactsRowActionsProps {
   contact: Contact;
   onView?: (contact: Contact) => void;
   onEdit: (contact: Contact) => void;
@@ -50,11 +51,11 @@ export function ContactsRowActions({
 
   return (
     <ModuleRowActionsMenu
-      triggerLabel={t('contacts.table.actions')}
-      viewLabel={t('contacts.table.viewProfile')}
-      editLabel={t('contacts.table.edit')}
-      deleteLabel={t('contacts.table.deleteContact')}
-      restoreLabel={t('contacts.restoreContact')}
+      triggerLabel={t("contacts.table.actions")}
+      viewLabel={t("contacts.table.viewProfile")}
+      editLabel={t("contacts.table.edit")}
+      deleteLabel={t("contacts.table.deleteContact")}
+      restoreLabel={t("contacts.restoreContact")}
       archived={showArchived}
       canWrite={canWrite}
       canDelete={canDelete}
@@ -74,9 +75,9 @@ export function ContactsRowActions({
           onSms={() => onSms?.([contact])}
           onEmail={() => onEmail?.([contact])}
           labels={{
-            whatsapp: t('contacts.whatsapp'),
-            sms: t('contacts.sms'),
-            email: t('contacts.detail.emailAction'),
+            whatsapp: t("contacts.whatsapp"),
+            sms: t("contacts.sms"),
+            email: t("contacts.detail.emailAction"),
           }}
         />
       }

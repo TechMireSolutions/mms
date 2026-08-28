@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DETAIL_STYLES } from "./contactDetailStyles";
 
-interface ContactNetworkLinkCardProps {
+export interface ContactNetworkLinkCardProps {
   displayName: string;
   relationshipLabel: string;
   avatarId: string | number;
@@ -53,18 +53,22 @@ export function ContactNetworkLinkCard({
   const { t } = useTranslation();
   const resolvedName = displayName || t("contacts.detail.unknownContact");
   const hasActions = showTargetMessaging || showLegacyCall || canNavigate;
+  const navigateLabel = displayName
+    ? t("contacts.detail.viewContact", { name: displayName })
+    : t("contacts.fields.linkedContact");
 
   return (
-    <div className={`flex flex-col gap-2.5 p-4 transition-colors hover:bg-muted/30 ${DETAIL_STYLES.networkItemCard}`}>
+    <div className={cn("flex flex-col gap-2.5 p-4 transition-colors hover:bg-muted/30", DETAIL_STYLES.networkItemCard)}>
       <div className="flex min-w-0 items-start gap-3">
         <UserAvatar
           id={avatarId}
           name={resolvedName}
           avatar={avatar}
+          gender={target?.gender}
           className="w-10 h-10 rounded-xl text-xs flex-shrink-0"
         />
         <div className="min-w-0 flex-1 space-y-1">
-          <h5 className="text-sm font-bold text-foreground leading-snug break-words">
+          <h5 className="text-sm font-bold text-foreground leading-snug break-words" title={resolvedName}>
             {resolvedName}
           </h5>
           <SectionLabel as="p" weight="semibold" toneClassName={DETAIL_STYLES.networkRelType}>
@@ -100,11 +104,8 @@ export function ContactNetworkLinkCard({
             <Button
               variant="outline"
               size="icon"
-              aria-label={
-                displayName
-                  ? t("contacts.detail.viewContact", { name: displayName })
-                  : t("contacts.fields.linkedContact")
-              }
+              aria-label={navigateLabel}
+              title={navigateLabel}
               onClick={() => onNavigateToContact(linkedId)}
               className={cn(
                 MESSAGING_ICON_BTN,
@@ -114,7 +115,7 @@ export function ContactNetworkLinkCard({
               )}
               type="button"
             >
-              <ArrowUpRight className="w-4 h-4" />
+              <ArrowUpRight className="w-4 h-4" aria-hidden />
             </Button>
           ) : null}
         </div>

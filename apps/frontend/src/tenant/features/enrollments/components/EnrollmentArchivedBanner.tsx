@@ -2,12 +2,14 @@ import type { Enrollment } from '@mms/shared';
 import { EntityArchivedBanner } from '@/components/ui/DetailDrawerArchiveChrome';
 import { useTranslation } from '@/hooks/useTranslation';
 
+export interface EnrollmentArchivedBannerProps {
+  enrollment: Enrollment;
+}
+
 /** Soft-delete archive banner for enrollment drawer. */
 export function EnrollmentArchivedBanner({
   enrollment,
-}: {
-  enrollment: Enrollment;
-}): React.JSX.Element | null {
+}: EnrollmentArchivedBannerProps): React.JSX.Element | null {
   const { t } = useTranslation();
   return (
     <EntityArchivedBanner

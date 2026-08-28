@@ -1,3 +1,4 @@
+import type React from "react";
 import { toMessagingRecipient } from "@mms/shared";
 import { DirectoryCardInfoPills } from "@/components/ui/DirectoryCardInfoPills";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
@@ -11,6 +12,8 @@ import { StudentCardActions } from "@/tenant/features/students/components/Studen
 import { StudentCardHeader } from "@/tenant/features/students/components/StudentCardHeader";
 import { StudentCardMetadata } from "@/tenant/features/students/components/StudentCardMetadata";
 import type { StudentsListCardsProps } from "@/tenant/features/students/components/studentsListTypes";
+
+export type { StudentsListCardsProps };
 
 export function StudentsListCards({
   paginatedStudents,
@@ -32,7 +35,7 @@ export function StudentsListCards({
   onDelete,
   onRestore,
   onOpenComposer,
-}: StudentsListCardsProps) {
+}: StudentsListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const pageCountLabel = formatDirectoryPageCountLabel(paginatedStudents.length, t, {
@@ -64,17 +67,20 @@ export function StudentsListCards({
             key={studentIdStr}
             isSelected={isSelected}
             reducedMotion={reducedMotion}
-            accentClassName={getGenderAccentBarClass(isSelected, studentCard.gender)}
+            accentClassName={
+              isColumnVisible("gender")
+                ? getGenderAccentBarClass(isSelected, studentCard.gender)
+                : undefined
+            }
           >
             <StudentCardHeader
               student={studentCard}
               studentId={studentIdStr}
               isSelected={isSelected}
               displayName={displayName}
-              showGrNumber={isColumnVisible("grNumber")}
-              showGender={isColumnVisible("gender")}
               onSelectOne={onSelectOne}
               onViewStudent={onViewStudent}
+              isColumnVisible={isColumnVisible}
               reducedMotion={reducedMotion}
             />
 
@@ -105,7 +111,6 @@ export function StudentsListCards({
 
             <StudentCardMetadata
               student={studentCard}
-              sessions={sessions}
               statusBadgeConfig={statusBadgeConfig}
               isColumnVisible={isColumnVisible}
               columnRegistry={columnRegistry}

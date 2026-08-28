@@ -51,7 +51,7 @@ export function ContactsWorkTier({
   useServerWork,
   workPageData,
   onPageChange,
-}: ContactsWorkTierProps) {
+}: ContactsWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
   const filterChips = buildContactsWorkFilterChips({
     filterGender,

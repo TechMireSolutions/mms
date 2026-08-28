@@ -1,4 +1,5 @@
 /** Contact domain entity types (person model + related value objects). */
+import { z } from 'zod';
 
 /** Status of WhatsApp registration checks for phone numbers. */
 export const WHATSAPP_STATUS_VALUES = ['PENDING', 'REGISTERED', 'NOT_REGISTERED', 'FAILED'] as const;
@@ -86,6 +87,8 @@ export interface RelationshipContact {
   name?: string;
   relationship?: string;
   phone?: string;
+  email?: string;
+  gender?: string;
   contactId?: string | number;
   inferred?: boolean;
   inferredFromContactId?: string;
@@ -108,10 +111,24 @@ export interface RelationshipPair {
   inverseFemale?: string;
 }
 
+/** Supported activity types recorded on a contact timeline. */
+export const CONTACT_ACTIVITY_TYPES = [
+  'note',
+  'stage_change',
+  'whatsapp',
+  'email',
+  'system',
+  'task',
+  'call',
+] as const;
+
+/** Type representing an activity log category on a contact timeline. */
+export type ContactActivityType = (typeof CONTACT_ACTIVITY_TYPES)[number];
+
 /** Audit log activity item recorded on a contact timeline. */
 export interface ContactActivity {
   id: string;
-  type: "note" | "stage_change" | "whatsapp" | "email" | "system" | "task" | "call";
+  type: ContactActivityType;
   content: string;
   date: string;
   by?: string;
@@ -176,15 +193,16 @@ export interface Contact {
   [key: string]: unknown;
 }
 
-import { z } from 'zod';
-
-/** Resolves normalized array of tag strings from a Contact (supporting tags array or comma-delimited tag string). */
-export function getContactTags(contact: { tag?: string | null; tags?: string[] | null }): string[] {
+/** Resolves normalized unique array of tag strings from a Contact (supporting tags array or comma-delimited tag string). */
+export function getContactTags(
+  contact?: { tag?: string | null; tags?: string[] | null } | null,
+): string[] {
+  if (!contact) return [];
   if (Array.isArray(contact.tags) && contact.tags.length > 0) {
-    return contact.tags.map((t) => String(t).trim()).filter(Boolean);
+    return Array.from(new Set(contact.tags.map((t) => String(t).trim()).filter(Boolean)));
   }
   if (typeof contact.tag === 'string' && contact.tag.trim()) {
-    return contact.tag.split(',').map((t) => t.trim()).filter(Boolean);
+    return Array.from(new Set(contact.tag.split(',').map((t) => t.trim()).filter(Boolean)));
   }
   return [];
 }

@@ -16,7 +16,7 @@ import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
 import { cn } from "@/lib/utils";
 
-interface ContactsListDesktopTableProps {
+export interface ContactsListDesktopTableProps {
   contacts: Contact[];
   selected: (number | string)[];
   onSelect: (contactId: number | string) => void;
@@ -40,7 +40,7 @@ interface ContactsListDesktopTableProps {
   someSelected?: boolean;
 }
 
-export default function ContactsListDesktopTable({
+export function ContactsListDesktopTable({
   contacts,
   selected,
   onSelect,
@@ -195,3 +195,5 @@ export default function ContactsListDesktopTable({
     </div>
   );
 }
+
+export default ContactsListDesktopTable;

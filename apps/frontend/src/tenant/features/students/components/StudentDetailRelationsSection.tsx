@@ -8,7 +8,7 @@ import {
   type StudentRelationshipCardData,
 } from "@/tenant/features/students/components/StudentRelationshipCard";
 
-interface StudentDetailRelationsSectionProps {
+export interface StudentDetailRelationsSectionProps {
   relationships: StudentRelationshipCardData[];
   canMessage?: boolean;
   openComposer?: (channel: "sms" | "whatsapp" | "email", recipients: MessagingRecipient[]) => void;

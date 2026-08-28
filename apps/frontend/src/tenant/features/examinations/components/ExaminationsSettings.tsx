@@ -12,7 +12,11 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { notify } from "@/lib/notify";
 
-export const ExaminationsSettings = React.memo(function ExaminationsSettings(): React.ReactElement {
+export type ExaminationsSettingsProps = Record<string, never>;
+
+export const ExaminationsSettings = React.memo(function ExaminationsSettings(
+  _props: ExaminationsSettingsProps = {},
+): React.JSX.Element {
       const { t } = useTranslation();
       const config = useExaminationConfig();
       const {

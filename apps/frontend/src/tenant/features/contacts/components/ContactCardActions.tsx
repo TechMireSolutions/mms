@@ -5,7 +5,7 @@ import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton
 import { ContactsRowActions } from "@/tenant/features/contacts/components/ContactsRowActions";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface ContactCardActionsProps {
+export interface ContactCardActionsProps {
   contact: Contact;
   displayName: string;
   phone: string | null;

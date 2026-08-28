@@ -26,6 +26,10 @@ export function TeacherCardMetadata({
     excludeFace: true,
   });
 
+  if (metaColumns.length === 0) {
+    return null;
+  }
+
   return (
     <DirectoryCardMetadata
       columns={metaColumns}

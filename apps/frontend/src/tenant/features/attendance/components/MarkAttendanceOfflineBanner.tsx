@@ -6,13 +6,13 @@ import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { OfflinePayload } from "@/tenant/features/attendance/components/markAttendanceTypes";
 
-interface MarkAttendanceOfflineBannerProps {
+export interface MarkAttendanceOfflineBannerProps {
   offline: boolean;
   queue: OfflinePayload[];
   onSync: () => void;
 }
 
-export function MarkAttendanceOfflineBanner({ offline, queue, onSync }: MarkAttendanceOfflineBannerProps) {
+export function MarkAttendanceOfflineBanner({ offline, queue, onSync }: MarkAttendanceOfflineBannerProps): React.JSX.Element {
   const { t } = useTranslation();
   return (
     <AnimatePresence>

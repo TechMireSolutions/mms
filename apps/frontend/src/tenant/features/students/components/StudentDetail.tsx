@@ -17,7 +17,7 @@ import { StudentDetailSessionsSection } from "@/tenant/features/students/compone
 import { StudentDetailSiblingsSection } from "@/tenant/features/students/components/StudentDetailSiblingsSection";
 import { useStudentDetailModel } from "@/tenant/features/students/components/useStudentDetailModel";
 
-interface StudentDetailProps {
+export interface StudentDetailProps {
   student: Student;
   onClose: () => void;
   onEdit?: (student: Student) => void;

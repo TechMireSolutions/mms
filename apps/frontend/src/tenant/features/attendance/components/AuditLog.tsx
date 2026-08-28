@@ -36,11 +36,9 @@ export interface AuditEntry {
   by?: string;
 }
 
-interface AuditLogProps {
+export interface AuditLogProps {
   filters: Partial<AttendanceFilterState>;
 }
-
-
 
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
@@ -70,10 +68,10 @@ function describeEntry(entry: AuditEntry, studentNameFor: (id?: string) => strin
  * Displays a log of actions taken regarding attendance (e.g., editing, bulk marking).
  * Allows filtering by class and date.
  * 
- * @param {AuditLogProps} props - The component props.
- * @returns {React.ReactElement} The rendered audit log component.
+ * @param props - The component props.
+ * @returns The rendered audit log component.
  */
-export function AuditLog({ filters }: AuditLogProps) {
+export function AuditLog({ filters }: AuditLogProps): React.JSX.Element {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const [log, setLog] = useState<AuditEntry[]>([]);

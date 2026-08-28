@@ -1,4 +1,4 @@
-import { useState, type JSX } from "react";
+import React, { useState } from "react";
 import { Users, Tag } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar";
@@ -7,7 +7,7 @@ import type { BulkSelectionMessageChannel } from "@/components/ui/BulkSelectionA
 import { useTranslation } from "@/hooks/useTranslation";
 import { ContactsBulkTagModal } from "@/tenant/features/contacts/components/ContactsBulkTagModal";
 
-interface ContactsBulkActionBarProps {
+export interface ContactsBulkActionBarProps {
   selectedCount: number;
   viewingDeleted: boolean;
   bulkActions: readonly string[];
@@ -49,7 +49,7 @@ export function ContactsBulkActionBar({
   onClearSelection,
   onBulkTag,
   isTagPending,
-}: ContactsBulkActionBarProps): JSX.Element {
+}: ContactsBulkActionBarProps): React.JSX.Element {
   const { t } = useTranslation();
   const [tagModalOpen, setTagModalOpen] = useState(false);
 

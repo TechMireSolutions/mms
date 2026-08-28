@@ -14,7 +14,7 @@ import { AttendanceFiltersMenuButton } from "@/tenant/features/attendance/compon
 
 export const ATTENDANCE_WORK_SEARCH_INPUT_ID = "attendance-work-search";
 
-interface AttendanceListFiltersProps {
+export interface AttendanceListFiltersProps {
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;

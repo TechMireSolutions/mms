@@ -1,5 +1,10 @@
+import type { CSSProperties } from "react";
 import { Button } from "@/components/ui/button";
-import type { Contact, ContactPreferences } from "@mms/shared";
+import {
+  type Contact,
+  type ContactPreferences,
+  getDisplayName,
+} from "@mms/shared";
 import {
   resolveAllContactPhones,
   resolveAllContactEmails,
@@ -10,10 +15,19 @@ import { ContactPhoneAction, ContactEmailAction } from "@/components/ui/ContactA
 import { TableCell } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import type { useTranslation } from "@/hooks/useTranslation";
-import type { CSSProperties } from "react";
 import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 
-type Translate = ReturnType<typeof useTranslation>["t"];
+export type ContactCellTranslate = ReturnType<typeof useTranslation>["t"];
+
+export interface RenderContactNameCellParams {
+  contact: Contact;
+  displayName: string;
+  widthStyle: CSSProperties | undefined;
+  showArchived: boolean;
+  isSelected: boolean;
+  t: ContactCellTranslate;
+  onView?: (contact: Contact) => void;
+}
 
 export function renderContactNameCell({
   contact,
@@ -23,15 +37,7 @@ export function renderContactNameCell({
   isSelected,
   t,
   onView,
-}: {
-  contact: Contact;
-  displayName: string;
-  widthStyle: CSSProperties | undefined;
-  showArchived: boolean;
-  isSelected: boolean;
-  t: Translate;
-  onView?: (contact: Contact) => void;
-}): React.JSX.Element {
+}: RenderContactNameCellParams): React.JSX.Element {
   return (
     <TableCell
       key="name"
@@ -46,6 +52,7 @@ export function renderContactNameCell({
           id={contact.id}
           name={displayName}
           avatar={contact.avatar}
+          gender={contact.gender}
           size="md"
           className="shrink-0"
         />
@@ -71,6 +78,16 @@ export function renderContactNameCell({
   );
 }
 
+export interface RenderContactPhoneCellParams {
+  contact: Contact;
+  prefs: ContactPreferences;
+  countryCodesMap: Record<string, string>;
+  countryCodes: Array<{ country: string; code: string }>;
+  widthStyle: CSSProperties | undefined;
+  t: ContactCellTranslate;
+  onWhatsApp?: (contacts: Contact[]) => void;
+}
+
 export function renderContactPhoneCell({
   contact,
   prefs,
@@ -79,17 +96,9 @@ export function renderContactPhoneCell({
   widthStyle,
   t,
   onWhatsApp,
-}: {
-  contact: Contact;
-  prefs: ContactPreferences;
-  countryCodesMap: Record<string, string>;
-  countryCodes: Array<{ country: string; code: string }>;
-  widthStyle: CSSProperties | undefined;
-  t: Translate;
-  onWhatsApp?: (contacts: Contact[]) => void;
-}): React.JSX.Element {
+}: RenderContactPhoneCellParams): React.JSX.Element {
   const allPhones = resolveAllContactPhones(contact, prefs, countryCodesMap, countryCodes);
-  const displayName = contact.name || "";
+  const displayName = getDisplayName(contact) || "";
   const emptyDash = <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>;
 
   if (allPhones.length === 0) {
@@ -127,17 +136,19 @@ export function renderContactPhoneCell({
   );
 }
 
+export interface RenderContactEmailCellParams {
+  contact: Contact;
+  widthStyle: CSSProperties | undefined;
+  t: ContactCellTranslate;
+}
+
 export function renderContactEmailCell({
   contact,
   widthStyle,
   t,
-}: {
-  contact: Contact;
-  widthStyle: CSSProperties | undefined;
-  t: Translate;
-}): React.JSX.Element {
+}: RenderContactEmailCellParams): React.JSX.Element {
   const allEmails = resolveAllContactEmails(contact);
-  const displayName = contact.name || "";
+  const displayName = getDisplayName(contact) || "";
   const emptyDash = <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>;
 
   if (allEmails.length === 0) {

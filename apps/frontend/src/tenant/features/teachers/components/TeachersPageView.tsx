@@ -11,7 +11,7 @@ import { TeachersSetupTier } from "@/tenant/features/teachers/components/Teacher
 import { TeachersWorkTier } from "@/tenant/features/teachers/components/TeachersWorkTier";
 import type { useTeachersPageController } from "@/tenant/features/teachers/hooks/useTeachersPageController";
 
-type TeachersPageViewProps = ReturnType<typeof useTeachersPageController>;
+export type TeachersPageViewProps = ReturnType<typeof useTeachersPageController>;
 
 /** Presentational Teachers page shell — Work / Reports / Setup + create form. */
 export function TeachersPageView({

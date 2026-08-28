@@ -3,12 +3,12 @@ import { Card } from "@/components/ui/card";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { ResultsViewStatsData } from "@/tenant/features/examinations/components/resultsViewTypes";
 
-interface ResultsViewStatsProps {
+export interface ResultsViewStatsProps {
   stats: ResultsViewStatsData;
   t: TranslationFunction;
 }
 
-export function ResultsViewStats({ stats, t }: ResultsViewStatsProps): React.ReactElement {
+export function ResultsViewStats({ stats, t }: ResultsViewStatsProps): React.JSX.Element {
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" role="status" aria-label={t("examinations.resultsStats")}>
       {[

@@ -1,3 +1,4 @@
+import type React from "react";
 import { Briefcase } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
@@ -12,7 +13,7 @@ import type { ContactExperience } from "@mms/shared";
  */
 export type ExperienceEntry = ContactExperience;
 
-interface ContactExperienceTabProps extends ContactSubListTabBaseProps {
+export interface ContactExperienceTabProps extends ContactSubListTabBaseProps {
   employmentTypeOptions: string[];
   onUpdateEmploymentTypeOptions?: (options: string[]) => void;
   defaultEmploymentType?: string;
@@ -32,7 +33,7 @@ export function ContactExperienceTab({
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
-}: ContactExperienceTabProps): JSX.Element {
+}: ContactExperienceTabProps): React.JSX.Element {
   const { t } = useTranslation();
   const showTitle = isFieldEnabled("experience", "title");
   const showOrganization = isFieldEnabled("experience", "organization");

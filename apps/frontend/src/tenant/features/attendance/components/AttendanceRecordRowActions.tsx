@@ -9,7 +9,7 @@ import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directory
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
-interface AttendanceRecordRowActionsProps {
+export interface AttendanceRecordRowActionsProps {
   attendanceRecord: AttendanceRecord;
   editingRecord: AttendanceRecord | null;
   canWriteAttendance: boolean;

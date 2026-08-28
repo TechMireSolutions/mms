@@ -4,7 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsMetrics } from "@/tenant/features/students/hooks/useStudents";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 
-interface StudentsCommandMetricsProps {
+export interface StudentsCommandMetricsProps {
   total: number;
   shown: number;
 }

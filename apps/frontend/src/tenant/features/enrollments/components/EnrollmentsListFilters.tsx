@@ -9,7 +9,7 @@ import { EnrollmentsFiltersMenuButton } from "@/tenant/features/enrollments/comp
 
 export const ENROLLMENTS_WORK_SEARCH_INPUT_ID = "enrollments-work-search";
 
-interface EnrollmentsListFiltersProps {
+export interface EnrollmentsListFiltersProps {
   search: string;
   statusFilter: string;
   sessionFilter: string;

@@ -1,7 +1,8 @@
 import * as React from "react";
 import { User } from "lucide-react";
-import { getInitials, getAvatarColor } from "@mms/shared";
+import { getInitials } from "@mms/shared";
 import { Avatar, AvatarImage, AvatarFallback, type AvatarProps } from "@/components/ui/avatar";
+import { getGenderAvatarFallbackClass } from "@/lib/genderUi";
 import { cn } from "@/lib/utils";
 
 const STATUS_COLORS = {
@@ -15,8 +16,10 @@ export interface UserAvatarProps {
   id?: string | number;
   name?: string | null;
   avatar?: string | null;
+  gender?: string | null;
   size?: AvatarProps["size"];
   status?: keyof typeof STATUS_COLORS;
+  statusAriaLabel?: string;
   badgeNode?: React.ReactNode;
   showTooltip?: boolean;
   isLoading?: boolean;
@@ -28,8 +31,10 @@ export const UserAvatar = React.memo(function UserAvatar({
   id,
   name,
   avatar,
+  gender,
   size,
   status,
+  statusAriaLabel,
   badgeNode,
   showTooltip = false,
   isLoading = false,
@@ -54,7 +59,7 @@ export const UserAvatar = React.memo(function UserAvatar({
   }
 
   const initials = getInitials(name, 2);
-  const colorClass = id ? getAvatarColor(id) : "bg-primary/15 text-primary";
+  const colorClass = getGenderAvatarFallbackClass(gender, id);
   const tooltipText = showTooltip && name ? name : undefined;
 
   return (
@@ -76,14 +81,17 @@ export const UserAvatar = React.memo(function UserAvatar({
       </Avatar>
 
       {status ? (
-        <span
-          className={cn(
-            "absolute -bottom-0.5 -end-0.5 rounded-full ring-2 ring-card shrink-0",
-            STATUS_COLORS[status],
-            size === "sm" ? "h-2 w-2" : "h-2.5 w-2.5"
-          )}
-          aria-hidden="true"
-        />
+        <>
+          <span
+            className={cn(
+              "absolute -bottom-0.5 -end-0.5 rounded-full ring-2 ring-card shrink-0",
+              STATUS_COLORS[status],
+              size === "sm" ? "h-2 w-2" : "h-2.5 w-2.5"
+            )}
+            aria-hidden="true"
+          />
+          <span className="sr-only">{statusAriaLabel || status}</span>
+        </>
       ) : badgeNode ? (
         <div className="absolute -bottom-1 -end-1 shrink-0">{badgeNode}</div>
       ) : null}

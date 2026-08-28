@@ -8,13 +8,15 @@ import type { useExaminationExamColumnLayout } from "@/tenant/features/examinati
 import type { useExaminationResultsColumnLayout } from "@/tenant/features/examinations/hooks/useExaminationResultsColumnLayout";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
 
-interface WorkTab {
+export interface ExaminationsWorkTab {
   id: string;
   label: string;
 }
 
-interface ExaminationsWorkTierProps {
-  tabs: WorkTab[];
+export type WorkTab = ExaminationsWorkTab;
+
+export interface ExaminationsWorkTierProps {
+  tabs: ExaminationsWorkTab[];
   activeSubTab: string;
   showDeleted: boolean;
   listLoadFailed: boolean;
@@ -61,7 +63,7 @@ export function ExaminationsWorkTier({
   onEdit,
   onFilteredCountChange,
   onRowClick,
-}: ExaminationsWorkTierProps) {
+}: ExaminationsWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

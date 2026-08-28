@@ -1,4 +1,5 @@
-import { ChangeEvent, FormEvent } from "react";
+import type React from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { motion } from "framer-motion";
 import { History, Send } from "lucide-react";
 import { type ContactActivity, formatDate } from "@mms/shared";
@@ -11,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { DETAIL_SECTION_TITLE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { ICON_MAP } from "./contactDetailStyles";
 
-interface ContactDetailTimelineProps {
+export interface ContactDetailTimelineProps {
   activities: ContactActivity[];
   noteText: string;
   noteInputId: string;
@@ -27,7 +28,7 @@ export function ContactDetailTimeline({
   canPersistContact,
   onNoteTextChange,
   onAddNote,
-}: ContactDetailTimelineProps): JSX.Element {
+}: ContactDetailTimelineProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
 

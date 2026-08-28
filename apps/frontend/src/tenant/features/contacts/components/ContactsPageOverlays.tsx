@@ -60,103 +60,103 @@ export function ContactsPageOverlays({
   defaultCountry,
   defaultCity,
   defaultProvince,
-      onCloseForm,
-      onSave,
-      showDuplicates,
-      onCloseDuplicates,
-      onMerge,
-      messagingTarget,
-      onCloseComposer,
-      viewContact,
-      onCloseView,
-      onEditFromDrawer,
-      onRestoreFromDrawer,
-      onWhatsApp,
-      onSms,
-      onEmail,
-      allContactsForLinks,
-      onUpdateContact,
-      bulkDeleteOpen,
-      onBulkDeleteOpenChange,
-      selectedCount,
-      onConfirmBulkDelete,
-      deleteTarget,
-      onDeleteTargetOpenChange,
-      onConfirmSingleDelete,
-      bulkRestoreOpen,
-      onBulkRestoreOpenChange,
-      onConfirmBulkRestore,
-    }: ContactsPageOverlaysProps): React.JSX.Element {
-      const { formTabsReady } = useContactConfig();
-      const formNeedsTabs = showForm || Boolean(viewContact);
-      const tabsPending = formNeedsTabs && !formTabsReady;
+  onCloseForm,
+  onSave,
+  showDuplicates,
+  onCloseDuplicates,
+  onMerge,
+  messagingTarget,
+  onCloseComposer,
+  viewContact,
+  onCloseView,
+  onEditFromDrawer,
+  onRestoreFromDrawer,
+  onWhatsApp,
+  onSms,
+  onEmail,
+  allContactsForLinks,
+  onUpdateContact,
+  bulkDeleteOpen,
+  onBulkDeleteOpenChange,
+  selectedCount,
+  onConfirmBulkDelete,
+  deleteTarget,
+  onDeleteTargetOpenChange,
+  onConfirmSingleDelete,
+  bulkRestoreOpen,
+  onBulkRestoreOpenChange,
+  onConfirmBulkRestore,
+}: ContactsPageOverlaysProps): React.JSX.Element {
+  const { formTabsReady } = useContactConfig();
+  const formNeedsTabs = showForm || Boolean(viewContact);
+  const tabsPending = formNeedsTabs && !formTabsReady;
 
-      return (
-        <>
-          {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
+  return (
+    <>
+      {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
 
-          <Suspense fallback={<ModuleOverlayLoadingFallback />}>
-            <AnimatePresence>
-              {formTabsReady ? (
-                <ContactForm
-                  open={showForm}
-                  contact={editContact ?? undefined}
-                  defaultCountry={defaultCountry}
-                  defaultCity={defaultCity}
-                  defaultProvince={defaultProvince}
-                  onClose={onCloseForm}
-                  onSave={onSave}
-                />
-              ) : null}
-              {showDuplicates && (
-                <DuplicateDetection
-                  onClose={onCloseDuplicates}
-                  onMerge={onMerge}
-                  canWrite={canWrite}
-                />
-              )}
-              {messagingTarget && (
-                <MessageComposer
-                  channel={messagingTarget.channel}
-                  recipients={messagingTarget.recipients}
-                  onClose={onCloseComposer}
-                />
-              )}
-            </AnimatePresence>
-          </Suspense>
+      <Suspense fallback={<ModuleOverlayLoadingFallback />}>
+        <AnimatePresence>
+          {formTabsReady ? (
+            <ContactForm
+              open={showForm}
+              contact={editContact ?? undefined}
+              defaultCountry={defaultCountry}
+              defaultCity={defaultCity}
+              defaultProvince={defaultProvince}
+              onClose={onCloseForm}
+              onSave={onSave}
+            />
+          ) : null}
+          {showDuplicates && (
+            <DuplicateDetection
+              onClose={onCloseDuplicates}
+              onMerge={onMerge}
+              canWrite={canWrite}
+            />
+          )}
+          {messagingTarget && (
+            <MessageComposer
+              channel={messagingTarget.channel}
+              recipients={messagingTarget.recipients}
+              onClose={onCloseComposer}
+            />
+          )}
+        </AnimatePresence>
+      </Suspense>
 
-          <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
-            <AnimatePresence>
-              {viewContact && formTabsReady ? (
-                <ContactDetail
-                  contact={viewContact}
-                  onClose={onCloseView}
-                  onEdit={onEditFromDrawer}
-                  onWhatsApp={onWhatsApp}
-                  onSms={onSms}
-                  onEmail={onEmail}
-                  allContacts={allContactsForLinks}
-                  onUpdateContact={onUpdateContact}
-                  canWrite={canWrite}
-                  canDelete={canDelete}
-                  onRestore={onRestoreFromDrawer}
-                />
-              ) : null}
-            </AnimatePresence>
-          </Suspense>
+      <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
+        <AnimatePresence>
+          {viewContact && formTabsReady ? (
+            <ContactDetail
+              contact={viewContact}
+              onClose={onCloseView}
+              onEdit={onEditFromDrawer}
+              onWhatsApp={onWhatsApp}
+              onSms={onSms}
+              onEmail={onEmail}
+              allContacts={allContactsForLinks}
+              onUpdateContact={onUpdateContact}
+              canWrite={canWrite}
+              canDelete={canDelete}
+              onRestore={onRestoreFromDrawer}
+            />
+          ) : null}
+        </AnimatePresence>
+      </Suspense>
 
-        <ContactsPageConfirmDialogs
-          bulkDeleteOpen={bulkDeleteOpen}
-          onBulkDeleteOpenChange={onBulkDeleteOpenChange}
-          selectedCount={selectedCount}
-          onConfirmBulkDelete={onConfirmBulkDelete}
-          deleteTarget={deleteTarget}
-          onDeleteTargetOpenChange={onDeleteTargetOpenChange}
-          onConfirmSingleDelete={onConfirmSingleDelete}
-          bulkRestoreOpen={bulkRestoreOpen}
-          onBulkRestoreOpenChange={onBulkRestoreOpenChange}
-          onConfirmBulkRestore={onConfirmBulkRestore}
-        />
-      </>
-    );
-  }
+      <ContactsPageConfirmDialogs
+        bulkDeleteOpen={bulkDeleteOpen}
+        onBulkDeleteOpenChange={onBulkDeleteOpenChange}
+        selectedCount={selectedCount}
+        onConfirmBulkDelete={onConfirmBulkDelete}
+        deleteTarget={deleteTarget}
+        onDeleteTargetOpenChange={onDeleteTargetOpenChange}
+        onConfirmSingleDelete={onConfirmSingleDelete}
+        bulkRestoreOpen={bulkRestoreOpen}
+        onBulkRestoreOpenChange={onBulkRestoreOpenChange}
+        onConfirmBulkRestore={onConfirmBulkRestore}
+      />
+    </>
+  );
+}

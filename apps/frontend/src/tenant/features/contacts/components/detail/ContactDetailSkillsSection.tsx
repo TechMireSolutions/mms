@@ -10,11 +10,13 @@ import {
 } from "@/components/ui/messagingActionStyles";
 import { cn } from "@/lib/utils";
 
+export interface ContactDetailSkillsSectionProps {
+  contact: Contact;
+}
+
 export function ContactDetailSkillsSection({
   contact,
-}: {
-  contact: Contact;
-}): React.JSX.Element {
+}: ContactDetailSkillsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const skillsList = contact.skills ?? [];
 

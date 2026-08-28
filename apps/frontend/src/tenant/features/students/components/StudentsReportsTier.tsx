@@ -1,23 +1,17 @@
-import { motion } from "framer-motion";
+import type React from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { KPISummary, ModuleReports } from "@/tenant/components/moduleReports";
 
-export function StudentsReportsTier() {
+export function StudentsReportsTier(): React.JSX.Element {
   return (
-    <motion.div
-      key="reports"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
-      className="space-y-4"
-    >
+    <ModuleTierMotion tier="reports">
       <ErrorBoundary>
         <div className="space-y-4">
           <KPISummary category="students" />
           <ModuleReports category="students" />
         </div>
       </ErrorBoundary>
-    </motion.div>
+    </ModuleTierMotion>
   );
 }

@@ -5,7 +5,7 @@ import ExamForm from "@/tenant/features/examinations/components/ExamForm";
 import { EnterMarks } from "@/tenant/features/examinations/components/EnterMarks";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
 
-interface ExaminationsModalLayerProps {
+export interface ExaminationsModalLayerProps {
   canWrite: boolean;
   showDeleted: boolean;
   showExamForm: boolean;
@@ -31,7 +31,7 @@ export function ExaminationsModalLayer({
   onSaveExam,
   onCloseMarks,
   onSaveResults,
-}: ExaminationsModalLayerProps) {
+}: ExaminationsModalLayerProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

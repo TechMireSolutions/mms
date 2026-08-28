@@ -1,3 +1,4 @@
+import type React from "react";
 import { GraduationCap, Building2, BookOpen, Calendar, Award } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { EditableSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
@@ -7,8 +8,6 @@ import type { ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactEducation } from "@mms/shared";
-
-
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 
 /**
@@ -16,7 +15,7 @@ import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
  */
 export type EducationEntry = ContactEducation;
 
-interface ContactEducationTabProps extends ContactSubListTabBaseProps {
+export interface ContactEducationTabProps extends ContactSubListTabBaseProps {
   degreeOptions: string[];
   onUpdateDegreeOptions?: (options: string[]) => void;
   defaultDegree?: string;
@@ -36,7 +35,7 @@ export function ContactEducationTab({
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
-}: ContactEducationTabProps): JSX.Element {
+}: ContactEducationTabProps): React.JSX.Element {
   const { t } = useTranslation();
   const showDegree = isFieldEnabled("education", "degree");
   const showInstitution = isFieldEnabled("education", "institution");

@@ -6,7 +6,7 @@ import { buildStudentsWorkFilterChips } from "@/tenant/features/students/compone
 import { StudentsBulkActionBar } from "@/tenant/features/students/components/StudentsBulkActionBar";
 import { StudentsList } from "@/tenant/features/students/components/StudentsList";
 import { StudentsListFilters } from "@/tenant/features/students/components/StudentsListFilters";
-import type { StudentsWorkTierProps } from "@/tenant/features/students/components/StudentsWorkTierTypes";
+import type { StudentsWorkTierProps } from "@/tenant/features/students/components/studentsWorkTierTypes";
 
 export function StudentsWorkTier({
   studentSearch,
@@ -60,7 +60,7 @@ export function StudentsWorkTier({
   sortDir,
   onServerSort,
   workOverlays,
-}: StudentsWorkTierProps) {
+}: StudentsWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const studentFilterChips = buildStudentsWorkFilterChips({

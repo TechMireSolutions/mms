@@ -5,7 +5,7 @@ import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChan
 import { teacherMessagingLabels } from "@/lib/teachers/teacherMessagingLabels";
 import { hasWhatsApp, type Teacher } from '@mms/shared';
 
-interface TeacherListRowActionsProps {
+export interface TeachersListRowActionsProps {
   teacher: Teacher;
   teacherId: string;
   showDeleted: boolean;
@@ -46,7 +46,7 @@ export function TeachersListRowActions({
   onSms,
   onWhatsApp,
   onEmail,
-}: TeacherListRowActionsProps): React.JSX.Element {
+}: TeachersListRowActionsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { phone, email } = resolveTeacherPrimaryChannels(teacher);
 

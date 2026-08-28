@@ -1,6 +1,17 @@
+import type React from "react";
 import { type Contact, hasWhatsApp } from "@mms/shared";
 import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { useTranslation } from "@/hooks/useTranslation";
+
+export interface HasContactCardFaceChannelsParams {
+  contact: Contact;
+  phone: string | null;
+  email: string | null;
+  showArchived?: boolean;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
+}
 
 /** True when the card face shows Call / WA / SMS / Email controls. */
 export function hasContactCardFaceChannels({
@@ -11,15 +22,7 @@ export function hasContactCardFaceChannels({
   onWhatsApp,
   onSms,
   onEmail,
-}: {
-  contact: Contact;
-  phone: string | null;
-  email: string | null;
-  showArchived?: boolean;
-  onWhatsApp?: (contacts: Contact[]) => void;
-  onSms?: (contacts: Contact[]) => void;
-  onEmail?: (contacts: Contact[]) => void;
-}): boolean {
+}: HasContactCardFaceChannelsParams): boolean {
   if (showArchived) return false;
   return (
     Boolean(phone) ||
@@ -27,6 +30,17 @@ export function hasContactCardFaceChannels({
     Boolean(onSms && phone) ||
     Boolean(onEmail && email)
   );
+}
+
+export interface ContactCardMessagingButtonsProps {
+  contact: Contact;
+  displayName: string;
+  phone: string | null;
+  email: string | null;
+  showArchived?: boolean;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
 }
 
 export function ContactCardMessagingButtons({
@@ -38,16 +52,7 @@ export function ContactCardMessagingButtons({
   onWhatsApp,
   onSms,
   onEmail,
-}: {
-  contact: Contact;
-  displayName: string;
-  phone: string | null;
-  email: string | null;
-  showArchived?: boolean;
-  onWhatsApp?: (contacts: Contact[]) => void;
-  onSms?: (contacts: Contact[]) => void;
-  onEmail?: (contacts: Contact[]) => void;
-}): React.JSX.Element | null {
+}: ContactCardMessagingButtonsProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
   return (

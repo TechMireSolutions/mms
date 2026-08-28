@@ -1,3 +1,4 @@
+import type React from "react";
 import { getDisplayName, type AppTranslationKey, type Contact } from "@mms/shared";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import {
@@ -8,15 +9,17 @@ import {
 
 type FormDraft = ReturnType<typeof useContactFormDraft>;
 
+export interface ContactFormFooterStartProps {
+  contactDraft: Partial<Contact>;
+  collectionCounts: FormDraft["collectionCounts"];
+  t: (key: AppTranslationKey, params?: Record<string, string | number>) => string;
+}
+
 export function ContactFormFooterStart({
   contactDraft,
   collectionCounts,
   t,
-}: {
-  contactDraft: Partial<Contact>;
-  collectionCounts: FormDraft["collectionCounts"];
-  t: (key: AppTranslationKey, params?: Record<string, string | number>) => string;
-}): JSX.Element {
+}: ContactFormFooterStartProps): React.JSX.Element {
   if (!contactDraft.firstName) {
     return (
       <FormFooterErrorChip>

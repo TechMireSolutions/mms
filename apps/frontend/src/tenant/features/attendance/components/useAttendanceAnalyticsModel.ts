@@ -14,7 +14,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { attendanceStatusLabel } from "@/lib/attendanceStatusUi";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 
-interface AnalyticsFilters {
+export interface AnalyticsFilters {
   classId?: string;
 }
 

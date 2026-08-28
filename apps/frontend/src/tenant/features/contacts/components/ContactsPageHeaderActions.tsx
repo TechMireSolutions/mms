@@ -1,8 +1,9 @@
+import type React from "react";
 import { UserPlus, AlertTriangle, Download, Loader2 } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface ContactsPageHeaderActionsProps {
+export interface ContactsPageHeaderActionsProps {
   canExport: boolean;
   canRead: boolean;
   canWrite: boolean;
@@ -22,7 +23,7 @@ export function ContactsPageHeaderActions({
   onOpenDuplicates,
   onExport,
   onAddContact,
-}: ContactsPageHeaderActionsProps): JSX.Element {
+}: ContactsPageHeaderActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

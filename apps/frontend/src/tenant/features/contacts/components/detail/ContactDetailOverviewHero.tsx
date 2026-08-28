@@ -6,13 +6,16 @@ import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
 import { Badge } from "@/components/ui/badge";
 import { getGenderCardAccent } from "@/lib/genderUi";
 
+export interface ContactDetailOverviewHeroProps {
+  contact: Contact;
+}
+
 export function ContactDetailOverviewHero({
   contact,
-}: {
-  contact: Contact;
-}): React.JSX.Element {
+}: ContactDetailOverviewHeroProps): React.JSX.Element {
   const { t } = useTranslation();
   const aiSummary = typeof contact.aiSummary === "string" ? contact.aiSummary.trim() : "";
+  const notes = typeof contact.notes === "string" ? contact.notes.trim() : "";
   const contactTags = getContactTags(contact);
 
   return (
@@ -21,6 +24,7 @@ export function ContactDetailOverviewHero({
         id={contact.id}
         displayName={getDisplayName(contact)}
         avatar={contact.avatar}
+        gender={contact.gender}
         accentColor={getGenderCardAccent(contact.gender)}
       >
         <ContactIdentityMeta gender={contact.gender} isSyed={contact.isSyed} size="md" />
@@ -47,19 +51,19 @@ export function ContactDetailOverviewHero({
               {t("contacts.detail.aiIntelligence")}
             </span>
           </div>
-          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 text-sm text-foreground leading-relaxed italic relative">
+          <div className="p-4 rounded-2xl bg-primary/5 border border-primary/20 text-sm text-foreground leading-relaxed italic relative break-words">
             {aiSummary}
           </div>
         </div>
       ) : null}
 
-      {contact.notes ? (
+      {notes ? (
         <div className="space-y-2">
           <div className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
             {t("contacts.columns.notes")}
           </div>
-          <div className="text-sm text-foreground whitespace-pre-wrap">
-            {contact.notes}
+          <div className="text-sm text-foreground whitespace-pre-wrap leading-relaxed break-words">
+            {notes}
           </div>
         </div>
       ) : null}

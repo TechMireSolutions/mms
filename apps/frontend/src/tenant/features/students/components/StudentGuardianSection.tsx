@@ -20,7 +20,7 @@ import { relationshipBadgeCode } from "@/tenant/features/students/components/gua
 import { useContactsByIds } from "@/tenant/hooks/collections/contacts";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 
-interface StudentGuardianSectionProps {
+export interface StudentGuardianSectionProps {
   formInstanceId: string;
   studentDraft: Partial<Student>;
   linkedContact?: Contact | null;

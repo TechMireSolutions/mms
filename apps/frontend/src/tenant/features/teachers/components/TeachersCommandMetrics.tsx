@@ -6,7 +6,7 @@ import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGr
 import { resolveTeacherStatusRoles } from "@mms/shared";
 import { teacherStatusMetricAccent } from "@/lib/teachers/teacherStatusUi";
 
-interface TeachersCommandMetricsProps {
+export interface TeachersCommandMetricsProps {
   total: number;
   shown: number;
 }

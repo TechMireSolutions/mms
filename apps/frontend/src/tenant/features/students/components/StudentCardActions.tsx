@@ -6,14 +6,14 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { StudentsRowActions } from "@/tenant/features/students/components/StudentsRowActions";
 import type { StudentsListContentMessagingRecipient } from "@/tenant/features/students/components/studentsListTypes";
 
-interface StudentCardActionsProps {
+export interface StudentCardActionsProps {
   student: Student;
   studentId: string;
   displayName: string;
   viewingDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
-  canWriteMessaging: boolean;
+  canWriteMessaging?: boolean;
   onViewStudent: (student: Student) => void;
   onEdit: (student: Student) => void;
   onDelete: (id: string, deletionReason?: string) => void;
@@ -32,6 +32,7 @@ export function StudentCardActions({
   viewingDeleted,
   canWrite,
   canDelete,
+  canWriteMessaging = false,
   onViewStudent,
   onEdit,
   onDelete,
@@ -55,7 +56,7 @@ export function StudentCardActions({
             viewingDeleted={viewingDeleted}
             canWrite={canWrite}
             canDelete={canDelete}
-            includeMessaging={Boolean(onOpenComposer) && !viewingDeleted}
+            includeMessaging={Boolean(onOpenComposer) && canWriteMessaging && !viewingDeleted}
             hideViewItem
             triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
             contentClassName="w-40"

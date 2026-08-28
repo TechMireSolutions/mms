@@ -1,10 +1,40 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeStoredStudent, hydrateStudentFromContacts } from '../studentUtils.js';
+import {
+  normalizeStoredStudent,
+  stripStudentClientSoftDeleteFields,
+  hydrateStudentFromContacts,
+  formatStudentNameWithParents,
+} from '../studentUtils.js';
 import { studentRecordSchema } from '../studentsModuleManifest.js';
 import type { Student } from '../studentTypes.js';
 import type { Contact } from '../contactTypes.js';
 
 describe('studentUtils', () => {
+  describe('stripStudentClientSoftDeleteFields', () => {
+    it('strips client soft-delete fields while preserving core student fields', () => {
+      const input = {
+        id: 'student-1',
+        contactId: 'contact-100',
+        grNumber: 'GR-001',
+        status: 'active',
+        deleted: true,
+        deletedAt: '2026-01-01T00:00:00.000Z',
+        deletedBy: 'u-admin',
+        deletionReason: 'Archived',
+      };
+
+      const stripped = stripStudentClientSoftDeleteFields(input);
+      expect(stripped.id).toBe('student-1');
+      expect(stripped.contactId).toBe('contact-100');
+      expect(stripped.grNumber).toBe('GR-001');
+      expect(stripped.status).toBe('active');
+      expect('deleted' in stripped).toBe(false);
+      expect('deletedAt' in stripped).toBe(false);
+      expect('deletedBy' in stripped).toBe(false);
+      expect('deletionReason' in stripped).toBe(false);
+    });
+  });
+
   describe('normalizeStoredStudent', () => {
     it('strips contact-owned display fields and guardian link fields from student record', () => {
       const input = {
@@ -28,15 +58,15 @@ describe('studentUtils', () => {
       expect(normalized.contactId).toBe('contact-100');
       expect(normalized.grNumber).toBe('GR-001');
       expect(normalized.status).toBe('active');
-      expect((normalized as { name?: string }).name).toBeUndefined();
-      expect((normalized as { email?: string }).email).toBeUndefined();
-      expect((normalized as { phone?: string }).phone).toBeUndefined();
-      expect((normalized as { fatherName?: string }).fatherName).toBeUndefined();
-      expect((normalized as { fatherContactId?: string }).fatherContactId).toBeUndefined();
-      expect((normalized as { motherContactId?: string }).motherContactId).toBeUndefined();
-      expect((normalized as { guardianContactId?: string }).guardianContactId).toBeUndefined();
-      expect((normalized as { motherName?: string }).motherName).toBeUndefined();
-      expect((normalized as { guardianName?: string }).guardianName).toBeUndefined();
+      expect('name' in normalized).toBe(false);
+      expect('email' in normalized).toBe(false);
+      expect('phone' in normalized).toBe(false);
+      expect('fatherName' in normalized).toBe(false);
+      expect('fatherContactId' in normalized).toBe(false);
+      expect('motherContactId' in normalized).toBe(false);
+      expect('guardianContactId' in normalized).toBe(false);
+      expect('motherName' in normalized).toBe(false);
+      expect('guardianName' in normalized).toBe(false);
     });
 
     it('strips client soft-delete metadata from student record', () => {
@@ -53,10 +83,10 @@ describe('studentUtils', () => {
 
       const normalized = normalizeStoredStudent(input);
       expect(normalized.id).toBe('student-2');
-      expect((normalized as { deletedAt?: string }).deletedAt).toBeUndefined();
-      expect((normalized as { deleted?: boolean }).deleted).toBeUndefined();
-      expect((normalized as { deletedBy?: string }).deletedBy).toBeUndefined();
-      expect((normalized as { deletionReason?: string }).deletionReason).toBeUndefined();
+      expect('deletedAt' in normalized).toBe(false);
+      expect('deleted' in normalized).toBe(false);
+      expect('deletedBy' in normalized).toBe(false);
+      expect('deletionReason' in normalized).toBe(false);
     });
   });
 
@@ -95,6 +125,7 @@ describe('studentUtils', () => {
         phones: [{ label: 'Mobile', number: '3001112233', countryCode: '+92' }],
         relationshipContacts: [
           { contactId: 'c-father', relationship: 'Parent', name: 'Tariq Ahmed' },
+          { contactId: 'c-mother', relationship: 'Parent', name: 'Zainab Bibi' },
         ],
       },
       {
@@ -102,11 +133,19 @@ describe('studentUtils', () => {
         firstName: 'Tariq',
         lastName: 'Ahmed',
         name: 'Tariq Ahmed',
+        gender: 'male',
         phones: [{ label: 'Mobile', number: '3009998877', countryCode: '+92' }],
+      },
+      {
+        id: 'c-mother',
+        firstName: 'Zainab',
+        lastName: 'Bibi',
+        name: 'Zainab Bibi',
+        gender: 'female',
       },
     ];
 
-    it('hydrates student profile and father from contact relationships', () => {
+    it('hydrates student profile and both parents from contact relationships', () => {
       const rawStudent: Student = {
         id: 'st-1',
         contactId: 'c-1',
@@ -120,24 +159,33 @@ describe('studentUtils', () => {
       expect(hydrated.phone).toBe('3001112233');
       expect(hydrated.fatherContactId).toBe('c-father');
       expect(hydrated.fatherName).toBe('Tariq Ahmed');
+      expect(hydrated.motherContactId).toBe('c-mother');
+      expect(hydrated.motherName).toBe('Zainab Bibi');
     });
 
-    it('falls back to legacy student fatherContactId when relationships omit father', () => {
+    it('falls back to legacy student parent contact ids when relationships omit them', () => {
       const rawStudent: Student = {
         id: 'st-1b',
         contactId: 'c-1',
         fatherContactId: 'c-father',
+        motherContactId: 'c-mother',
         grNumber: 'GR-101b',
         status: 'active',
       };
-      const primaryWithoutFather: Contact = {
+      const primaryWithoutParents: Contact = {
         ...contacts[0]!,
         relationshipContacts: [],
       };
 
-      const hydrated = hydrateStudentFromContacts(rawStudent, [primaryWithoutFather, contacts[1]!]);
+      const hydrated = hydrateStudentFromContacts(rawStudent, [
+        primaryWithoutParents,
+        contacts[1]!,
+        contacts[2]!,
+      ]);
       expect(hydrated.fatherContactId).toBe('c-father');
       expect(hydrated.fatherName).toBe('Tariq Ahmed');
+      expect(hydrated.motherContactId).toBe('c-mother');
+      expect(hydrated.motherName).toBe('Zainab Bibi');
     });
 
     it('handles student without linked parent contacts gracefully', () => {
@@ -159,6 +207,80 @@ describe('studentUtils', () => {
       const hydrated = hydrateStudentFromContacts(rawStudent, [primaryAlone]);
       expect(hydrated.name).toBe('Fatima Ahmed');
       expect(hydrated.fatherName).toBeUndefined();
+      expect(hydrated.motherName).toBeUndefined();
+    });
+  });
+
+  describe('formatStudentNameWithParents', () => {
+    it('formats student name with both father and mother', () => {
+      const formatted = formatStudentNameWithParents({
+        name: 'M Hussain',
+        fatherName: 'Ali',
+        motherName: 'Kaneez Fatima',
+      });
+      expect(formatted).toBe('M Hussain (Father: Ali, Mother: Kaneez Fatima)');
+    });
+
+    it('formats student name with father only', () => {
+      const formatted = formatStudentNameWithParents({
+        name: 'M Hussain',
+        fatherName: 'Ali',
+      });
+      expect(formatted).toBe('M Hussain (Father: Ali)');
+    });
+
+    it('formats student name with mother only', () => {
+      const formatted = formatStudentNameWithParents({
+        name: 'M Hussain',
+        motherName: 'Kaneez Fatima',
+      });
+      expect(formatted).toBe('M Hussain (Mother: Kaneez Fatima)');
+    });
+
+    it('formats student name with guardian when neither father nor mother is set', () => {
+      const formatted = formatStudentNameWithParents({
+        name: 'M Hussain',
+        guardianName: 'Uncle Sam',
+      });
+      expect(formatted).toBe('M Hussain (Guardian: Uncle Sam)');
+    });
+
+    it('trims whitespace around names properly', () => {
+      const formatted = formatStudentNameWithParents({
+        name: '  M Hussain  ',
+        fatherName: '  Ali  ',
+        motherName: '  Kaneez Fatima  ',
+      });
+      expect(formatted).toBe('M Hussain (Father: Ali, Mother: Kaneez Fatima)');
+    });
+
+    it('returns student name alone when no parentage or guardian is present', () => {
+      const formatted = formatStudentNameWithParents({
+        name: 'M Hussain',
+      });
+      expect(formatted).toBe('M Hussain');
+    });
+
+    it('uses custom localized labels and separator when provided', () => {
+      const formatted = formatStudentNameWithParents(
+        {
+          name: 'M Hussain',
+          fatherName: 'Ali',
+          motherName: 'Kaneez Fatima',
+        },
+        {
+          father: 'والد',
+          mother: 'والدہ',
+          separator: '، ',
+        },
+      );
+      expect(formatted).toBe('M Hussain (والد: Ali، والدہ: Kaneez Fatima)');
+    });
+
+    it('handles null and undefined input gracefully without throwing', () => {
+      expect(formatStudentNameWithParents(null)).toBe('');
+      expect(formatStudentNameWithParents(undefined)).toBe('');
+      expect(formatStudentNameWithParents({})).toBe('');
     });
   });
 });

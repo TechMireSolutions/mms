@@ -4,7 +4,7 @@ import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { ContactsPreferencesSection } from "@/tenant/features/contacts/components/ContactsPreferencesSection";
 import { useContactsSetupPanelState } from "@/tenant/features/contacts/hooks/useContactsSetupPanelState";
 
-interface ContactsSetupPanelProps {
+export interface ContactsSetupPanelProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }

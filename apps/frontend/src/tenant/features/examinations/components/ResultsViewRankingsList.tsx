@@ -12,7 +12,7 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { Exam } from '@/lib/data/examinationData';
 import { RANK_ICONS, type RankedResult } from "@/tenant/features/examinations/components/resultsViewTypes";
 
-interface ResultsViewRankingsListProps {
+export interface ResultsViewRankingsListProps {
   exam: Exam;
   rankedResults: RankedResult[];
   passFailConfig: Record<string, StatusBadgeConfigItem>;
@@ -30,7 +30,7 @@ export function ResultsViewRankingsList({
   onSelectResult,
   onCertificate,
   t,
-}: ResultsViewRankingsListProps): React.ReactElement {
+}: ResultsViewRankingsListProps): React.JSX.Element {
   const showStudent = isColumnVisible("student");
   const showClassRoll = isColumnVisible("classRoll");
   const showMarks = isColumnVisible("marks");

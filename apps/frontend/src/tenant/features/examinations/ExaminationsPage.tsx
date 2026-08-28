@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Layers } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
@@ -15,7 +15,7 @@ import { useExaminationsPageController } from '@/tenant/features/examinations/ho
 /**
  * Examinations — formal exams, marking, and results. Work | Reports | Setup.
  */
-export default function Examinations(): JSX.Element {
+export default function Examinations(): React.JSX.Element {
   const c = useExaminationsPageController();
 
   return (

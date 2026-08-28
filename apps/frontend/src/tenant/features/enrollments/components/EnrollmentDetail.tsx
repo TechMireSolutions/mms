@@ -16,7 +16,7 @@ import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { Card } from "@/components/ui/card";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
 
-interface EnrollmentDetailProps {
+export interface EnrollmentDetailProps {
   enrollment: Enrollment | null | undefined;
   onClose: () => void;
   onStatusChange: (id: string, newStatus: Enrollment["status"]) => void;
@@ -28,7 +28,7 @@ export const EnrollmentDetail = React.memo(function EnrollmentDetail({
   onClose,
   onStatusChange,
   canWrite,
-}: EnrollmentDetailProps): React.ReactElement | null {
+}: EnrollmentDetailProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const { data: resolvedStudents = [] } = useStudentsByIds(enrollment ? [enrollment.studentId] : []);
   const { formatCurrency } = useFinanceCurrency();

@@ -3,12 +3,12 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { GeoData } from "@/tenant/features/attendance/components/markAttendanceTypes";
 
-interface MarkAttendanceGeoTagProps {
+export interface MarkAttendanceGeoTagProps {
   geo: GeoData | "loading" | null;
   onRequest: () => void;
 }
 
-export function MarkAttendanceGeoTag({ geo, onRequest }: MarkAttendanceGeoTagProps) {
+export function MarkAttendanceGeoTag({ geo, onRequest }: MarkAttendanceGeoTagProps): React.JSX.Element {
   const { t } = useTranslation();
   if (geo === "loading") return (
     <span className="flex items-center gap-1 text-xs text-muted-foreground font-medium px-2 py-1 rounded-lg bg-muted animate-pulse">

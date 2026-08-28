@@ -4,7 +4,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
 import type { StudentsListContentMessagingRecipient } from '@/tenant/features/students/components/studentsListTypes';
 
-interface StudentsRowActionsProps {
+export interface StudentsRowActionsProps {
   student: Student;
   studentId: string;
   viewingDeleted: boolean;

@@ -9,7 +9,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { Step6ConfirmationRow, Step6ConfirmationSection } from '@/tenant/features/enrollments/components/wizard/step6ConfirmationLayout';
 
 
-interface Step6ConfirmationProps {
+export interface Step6ConfirmationProps {
   student: Student | null | undefined;
   session: Session | null | undefined;
   classInfo: Class | null | undefined;
@@ -30,7 +30,7 @@ export function Step6Confirmation({
   onNotesChange,
   customFieldValues,
   onCustomFieldChange,
-}: Step6ConfirmationProps): React.ReactElement {
+}: Step6ConfirmationProps): React.JSX.Element {
   const { t } = useTranslation();
   const age = student ? calcAge(student.dob) : null;
   const { formatCurrency } = useFinanceCurrency();

@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 export type { ContactsColumnConfig };
 
-interface ContactTableRowProps {
+export interface ContactTableRowProps {
   contact: Contact;
   isSelected: boolean;
   columns: ContactsColumnConfig[];

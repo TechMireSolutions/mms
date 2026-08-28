@@ -9,16 +9,16 @@ import type { ContactSubListKey, ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 
-type ListItem = Record<string, unknown>;
-type TranslateFn = (key: AppTranslationKey) => string;
+export type ListItem = Record<string, unknown>;
+export type TranslateFn = (key: AppTranslationKey) => string;
 
-interface ContactLabeledValueFieldContext {
+export interface ContactLabeledValueFieldContext {
   item: ListItem;
   index: number;
   updateItem: (idx: number, patch: ListItem) => void;
 }
 
-interface ContactLabeledValueSubListTabProps extends ContactSubListTabBaseProps {
+export interface ContactLabeledValueSubListTabProps extends ContactSubListTabBaseProps {
   listKey: Extract<ContactSubListKey, "emails" | "socials" | "phones">;
   labelFieldKey: string;
   valueFieldKey: string;
@@ -92,7 +92,7 @@ export function ContactLabeledValueSubListTab({
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
-}: ContactLabeledValueSubListTabProps): JSX.Element {
+}: ContactLabeledValueSubListTabProps): React.JSX.Element {
   const { t } = useTranslation();
   const showLabel = isFieldEnabled(listKey, labelFieldKey);
   const showValue = isFieldEnabled(listKey, valueFieldKey);

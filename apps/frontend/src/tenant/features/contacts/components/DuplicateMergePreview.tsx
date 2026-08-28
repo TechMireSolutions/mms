@@ -1,3 +1,4 @@
+import type React from "react";
 import { useMemo, useState } from "react";
 import { AlertTriangle, Check, GitMerge, Loader2 } from "lucide-react";
 import { mergeContacts, getDisplayName, type Contact } from "@mms/shared";
@@ -16,19 +17,21 @@ import {
   type DuplicatePair,
 } from "@/tenant/features/contacts/components/duplicateDetectionTypes";
 
+export interface MergePreviewProps {
+  pair: DuplicatePair;
+  keepIndex: number;
+  onClose: () => void;
+  onConfirm: (mergedCustom?: Contact) => void;
+  confirming?: boolean;
+}
+
 export function MergePreview({
   pair,
   keepIndex,
   onClose,
   onConfirm,
   confirming,
-}: {
-  pair: DuplicatePair;
-  keepIndex: number;
-  onClose: () => void;
-  onConfirm: (mergedCustom?: Contact) => void;
-  confirming?: boolean;
-}): JSX.Element {
+}: MergePreviewProps): React.JSX.Element {
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
   const colors = useMemo(() => getDuplicateThemeColors(prefs), [prefs]);

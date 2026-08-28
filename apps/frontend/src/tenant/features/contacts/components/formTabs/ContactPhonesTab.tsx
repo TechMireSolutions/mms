@@ -1,3 +1,4 @@
+import type React from "react";
 import { Phone } from "lucide-react";
 import { EditableSelect } from "@/components/ui/FormPrimitives";
 import type { ContactSubListTabBaseProps } from "./types";
@@ -7,7 +8,7 @@ import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { parsePhoneNumber } from "@mms/shared";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 
-interface ContactPhonesTabProps extends ContactSubListTabBaseProps {
+export interface ContactPhonesTabProps extends ContactSubListTabBaseProps {
   phoneLabels: string[];
   onUpdatePhoneLabels: (labels: string[]) => void;
   defaultCountryCode: string;
@@ -24,7 +25,7 @@ export function ContactPhonesTab({
   onUpdateDialCodeOptions,
   handlePhoneBlur,
   ...base
-}: ContactPhonesTabProps): JSX.Element {
+}: ContactPhonesTabProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const resolveDialCode = (item: Record<string, unknown>): string =>

@@ -1,3 +1,4 @@
+import type React from "react";
 import {
   CheckCircle2,
   Download,
@@ -9,7 +10,11 @@ import type { ChangeEvent, RefObject } from "react";
 
 export { AppleContactsPreviewList } from "@/tenant/features/contacts/components/sync/AppleContactsPreviewList";
 
-export function AppleContactsExportGuide({ t }: { t: TranslationFunction }) {
+export interface AppleContactsExportGuideProps {
+  t: TranslationFunction;
+}
+
+export function AppleContactsExportGuide({ t }: AppleContactsExportGuideProps): React.JSX.Element {
   return (
     <div className="rounded-lg bg-muted/30 border border-border p-3 text-xs text-muted-foreground space-y-1">
       <p className="font-semibold text-foreground">{t("contacts.sync.appleExportTitle")}</p>
@@ -23,13 +28,15 @@ export function AppleContactsExportGuide({ t }: { t: TranslationFunction }) {
   );
 }
 
+export interface AppleContactsImportResultProps {
+  result: { imported: number; skipped: number };
+  t: TranslationFunction;
+}
+
 export function AppleContactsImportResult({
   result,
   t,
-}: {
-  result: { imported: number; skipped: number };
-  t: TranslationFunction;
-}) {
+}: AppleContactsImportResultProps): React.JSX.Element {
   return (
     <WarningCallout
       icon={CheckCircle2}
@@ -46,17 +53,19 @@ export function AppleContactsImportResult({
   );
 }
 
+export interface AppleContactsExportBarProps {
+  contactCount: number;
+  exporting?: boolean;
+  onExport: () => void;
+  t: TranslationFunction;
+}
+
 export function AppleContactsExportBar({
   contactCount,
   exporting,
   onExport,
   t,
-}: {
-  contactCount: number;
-  exporting?: boolean;
-  onExport: () => void;
-  t: TranslationFunction;
-}) {
+}: AppleContactsExportBarProps): React.JSX.Element {
   return (
     <div className="border-t border-border pt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
       <span className="min-w-0 text-xs text-muted-foreground">{t("contacts.sync.exportAppleHint")}</span>
@@ -75,15 +84,17 @@ export function AppleContactsExportBar({
   );
 }
 
+export interface AppleContactsFileInputProps {
+  fileRef: RefObject<HTMLInputElement | null>;
+  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
+  t: TranslationFunction;
+}
+
 export function AppleContactsFileInput({
   fileRef,
   onChange,
   t,
-}: {
-  fileRef: RefObject<HTMLInputElement | null>;
-  onChange: (event: ChangeEvent<HTMLInputElement>) => void;
-  t: TranslationFunction;
-}) {
+}: AppleContactsFileInputProps): React.JSX.Element {
   return (
     <input
       id="contacts-vcf-import-file-input"

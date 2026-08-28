@@ -5,7 +5,7 @@ import { toMessagingRecipient, type Teacher } from "@mms/shared";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
 
-interface TeacherDetailQuickActionsProps {
+export interface TeacherDetailQuickActionsProps {
   teacher: Teacher;
   displayName: string;
   primaryPhone: string | null | undefined;

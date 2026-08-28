@@ -1,0 +1,62 @@
+import React from "react";
+import { describe, expect, it, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { EnrollmentsSettings } from "./EnrollmentsSettings";
+
+vi.mock("@/hooks/useTranslation", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+  }),
+}));
+
+vi.mock("@/tenant/hooks/usePermissions", () => ({
+  useModulePermissions: () => ({
+    canEditSetup: true,
+  }),
+}));
+
+vi.mock("@/hooks/useStandardModuleConfig", () => ({
+  useEnrollmentConfig: () => ({}),
+}));
+
+vi.mock("@/tenant/hooks/useModuleSettingsEditor", () => ({
+  useModuleSettingsEditor: () => ({
+    settingsDraft: {
+      maxStudentsPerClass: "30",
+      dropDeadlineDays: "14",
+      waitlistEnabled: true,
+      requireEligibilityCheck: true,
+      autoAssignClass: false,
+      enrollmentApproval: true,
+      allowTransfers: true,
+      reenrollmentReminder: true,
+    },
+    saved: true,
+    upd: vi.fn(),
+    saveSettings: vi.fn(),
+  }),
+}));
+
+vi.mock("@/components/ui/ToggleRow", () => ({
+  ToggleRow: ({ label, value }: { label: string; value?: boolean }) => (
+    <div data-testid="toggle-row">
+      <span>{label}</span>
+      <span>{value ? "enabled" : "disabled"}</span>
+    </div>
+  ),
+}));
+
+vi.mock("@/components/ui/ModuleSetupSaveFooter", () => ({
+  ModuleSetupSaveFooter: () => <div data-testid="save-footer">Save Footer</div>,
+}));
+
+describe("EnrollmentsSettings Component", () => {
+  it("renders settings fields and toggle rows", () => {
+    const html = renderToStaticMarkup(<EnrollmentsSettings />);
+    expect(html).toContain("enrollments.settings.title");
+    expect(html).toContain("enrollments.settings.maxStudentsPerClass");
+    expect(html).toContain("30");
+    expect(html).toContain("enrollments.settings.waitlistEnabled");
+    expect(html).toContain("Save Footer");
+  });
+});

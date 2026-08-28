@@ -15,7 +15,7 @@ import { useMarkAttendanceController } from "@/tenant/features/attendance/compon
 export type { AuditEntry, AttendanceRow, GeoData, OfflinePayload } from "@/tenant/features/attendance/components/markAttendanceTypes";
 export { getAuditLog };
 
-export function MarkAttendance(props: MarkAttendanceProps) {
+export function MarkAttendance(props: MarkAttendanceProps): React.JSX.Element {
   const controller = useMarkAttendanceController(props);
 
   if (!controller.filters.classId) {

@@ -9,7 +9,7 @@ import type { ContactsColumnConfig } from "@/tenant/features/contacts/components
 import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface ContactsListProps {
+export interface ContactsListProps {
   isWorkError: boolean;
   isWorkLoading: boolean;
   isWorkFetching: boolean;
@@ -47,7 +47,7 @@ export function ContactsList({
   useServerWork,
   workPageData,
   onPageChange,
-}: ContactsListProps): JSX.Element {
+}: ContactsListProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const emptyDescription = hasActiveFilters

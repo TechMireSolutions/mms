@@ -1,3 +1,4 @@
+import type React from "react";
 import { GitMerge, X } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,17 @@ import {
   DuplicateContactCard,
 } from "@/tenant/features/contacts/components/DuplicateDetectionParts";
 
+export interface DuplicatePairCardProps {
+  pair: DuplicatePair;
+  prefs: Partial<ContactPreferences>;
+  selectedKeepIndex: number;
+  canWrite: boolean;
+  onMerge: () => void;
+  onDismiss: () => void;
+  onSelectKeep: (contactIndex: number) => void;
+  t: TranslationFunction;
+}
+
 export function DuplicatePairCard({
   pair,
   prefs,
@@ -17,16 +29,7 @@ export function DuplicatePairCard({
   onDismiss,
   onSelectKeep,
   t,
-}: {
-  pair: DuplicatePair;
-  prefs: Partial<ContactPreferences>;
-  selectedKeepIndex: number;
-  canWrite: boolean;
-  onMerge: () => void;
-  onDismiss: () => void;
-  onSelectKeep: (contactIndex: number) => void;
-  t: TranslationFunction;
-}) {
+}: DuplicatePairCardProps): React.JSX.Element {
   return (
     <div className="rounded-xl border border-border bg-muted/10 overflow-hidden">
       <div className="flex flex-col gap-2 border-b border-border bg-muted/30 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">

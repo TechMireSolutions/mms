@@ -18,7 +18,7 @@ import {
   type EnrollmentListContentProps,
 } from "@/tenant/features/enrollments/components/enrollmentListContentShared";
 
-type EnrollmentListCardsProps = Omit<
+export type EnrollmentListCardsProps = Omit<
   EnrollmentListContentProps,
   "filteredCount" | "page" | "pageSize" | "getColumnWidth" | "onColumnResize" | "onPageChange"
 >;

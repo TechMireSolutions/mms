@@ -56,8 +56,6 @@ export const StudentsPageOverlays = React.memo(function StudentsPageOverlays({
 }: StudentsPageOverlaysProps): React.JSX.Element {
   const configPending = false;
   const sessions = useSessionsCollection();
-  const formNeedsTabs = showStudentForm || Boolean(viewStudent);
-  const tabsPending = false;
 
   const idCardItems = useMemo(() => {
     return idCardStudents.map((student) => {
@@ -75,8 +73,6 @@ export const StudentsPageOverlays = React.memo(function StudentsPageOverlays({
 
   return (
     <>
-      {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
-
       <Suspense fallback={<ModuleOverlayLoadingFallback />}>
         <AnimatePresence>
           {showStudentForm && !configPending ? (

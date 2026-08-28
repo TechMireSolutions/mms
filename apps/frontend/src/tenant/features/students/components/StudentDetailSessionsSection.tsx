@@ -9,7 +9,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { BookOpen } from "lucide-react";
 import { formatMoney, sessionTypeI18nKey, type Session } from "@mms/shared";
 
-interface StudentDetailSessionsSectionProps {
+export interface StudentDetailSessionsSectionProps {
   sessions: Session[];
   loading?: boolean;
   error?: boolean;

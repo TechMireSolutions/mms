@@ -4,7 +4,7 @@ import type { Step } from "@/tenant/features/enrollments/components/wizard/StepI
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { Button } from "@/components/ui/button";
 
-interface EnrollmentWizardFooterProps {
+export interface EnrollmentWizardFooterProps {
   t: TranslationFunction;
   step: number;
   steps: Step[];
@@ -28,7 +28,7 @@ export function EnrollmentWizardFooter({
   onPrevious,
   onNext,
   onSubmit,
-}: EnrollmentWizardFooterProps): React.ReactElement {
+}: EnrollmentWizardFooterProps): React.JSX.Element {
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border">
       <div>

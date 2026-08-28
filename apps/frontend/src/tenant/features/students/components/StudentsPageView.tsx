@@ -1,3 +1,4 @@
+import type React from "react";
 import { GraduationCap } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -11,7 +12,7 @@ import { StudentsWorkTier } from "@/tenant/features/students/components/Students
 import { useTranslation } from "@/hooks/useTranslation";
 import type { useStudentsPageController } from "@/tenant/features/students/hooks/useStudentsPageController";
 
-type StudentsPageViewProps = ReturnType<typeof useStudentsPageController>;
+export type StudentsPageViewProps = ReturnType<typeof useStudentsPageController>;
 
 /** Presentational Students page shell — Work / Reports / Setup + create form. */
 export function StudentsPageView({

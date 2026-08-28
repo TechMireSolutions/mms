@@ -14,7 +14,7 @@ import { attendanceStatusLabel } from "@/lib/attendanceStatusUi";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { ClassStatEntry, StudentRateEntry } from "@/tenant/features/attendance/components/useAttendanceAnalyticsModel";
 
-interface AttendanceAnalyticsChartPanelsProps {
+export interface AttendanceAnalyticsChartPanelsProps {
   t: TranslationFunction;
   colors: string[];
   classStats: ClassStatEntry[];
@@ -34,7 +34,7 @@ export function AttendanceAnalyticsChartPanels({
   pieData,
   statuses,
   totalStats,
-}: AttendanceAnalyticsChartPanelsProps) {
+}: AttendanceAnalyticsChartPanelsProps): React.JSX.Element {
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
       <motion.div

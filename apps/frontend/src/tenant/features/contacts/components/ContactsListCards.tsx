@@ -1,4 +1,5 @@
-import { useMemo, type JSX } from "react";
+import type React from "react";
+import { useMemo } from "react";
 import {
   CONTACT_CARD_FACE_COLUMN_IDS,
   getVisibleWorkColumns,
@@ -12,7 +13,7 @@ import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { ContactCardItem } from "@/tenant/features/contacts/components/ContactCardItem";
 
-interface ContactsListCardsProps {
+export interface ContactsListCardsProps {
   contacts: Contact[];
   selected: (string | number)[];
   onSelect: (id: string | number) => void;
@@ -34,7 +35,7 @@ interface ContactsListCardsProps {
 }
 
 /** Mobile-first card directory with dynamic, config-driven preferences. */
-export default function ContactsListCards({
+export function ContactsListCards({
   contacts,
   selected,
   onSelect,
@@ -135,4 +136,6 @@ export default function ContactsListCards({
     />
   );
 }
+
+export default ContactsListCards;
 

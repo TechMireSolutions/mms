@@ -1,3 +1,4 @@
+import type React from "react";
 import { useState, useMemo, useEffect, type ComponentType } from "react";
 import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart, Sparkles, FolderKanban } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
@@ -10,7 +11,7 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { ContactFormTabContent } from "@/tenant/features/contacts/components/ContactFormTabContent";
 import { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
 
-interface ContactFormProps {
+export interface ContactFormProps {
   open?: boolean;
   contact?: Contact;
   onClose: () => void;
@@ -54,7 +55,7 @@ export function ContactForm({
   initialDraft,
   lockGender = false,
   priority = false,
-}: ContactFormProps) {
+}: ContactFormProps): React.JSX.Element {
   const { t, dir } = useTranslation();
   const { language } = useGlobalSettings();
   const { enabledTabIds } = useContactConfig();

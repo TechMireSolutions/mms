@@ -1,3 +1,4 @@
+import type React from "react";
 import { Share2 } from "lucide-react";
 import { formatSocialPlatformUrl } from "@mms/shared";
 import type { ContactSubListTabBaseProps } from "./types";
@@ -6,7 +7,7 @@ import { resolveSocialPlatformLabel } from "@/lib/contacts/contactI18n";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 
-interface ContactSocialsTabProps extends ContactSubListTabBaseProps {
+export interface ContactSocialsTabProps extends ContactSubListTabBaseProps {
   socialPlatforms: string[];
   onUpdateSocialPlatforms: (platforms: string[]) => void;
 }
@@ -15,7 +16,7 @@ export function ContactSocialsTab({
   socialPlatforms,
   onUpdateSocialPlatforms,
   ...base
-}: ContactSocialsTabProps): JSX.Element {
+}: ContactSocialsTabProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

@@ -6,7 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { AppTranslationKey } from "@mms/shared";
 import { attendanceStatusLabel } from "@/lib/attendanceStatusUi";
 
-interface StatusToggleProps {
+export interface StatusToggleProps {
   value: string;
   onChange: (status: string) => void;
 }
@@ -16,10 +16,10 @@ interface StatusToggleProps {
  * 
  * Provides a button group to toggle between different attendance statuses.
  * 
- * @param {StatusToggleProps} props - The component props.
- * @returns {React.ReactElement} The rendered toggle component.
+ * @param props - The component props.
+ * @returns The rendered toggle component.
  */
-export function StatusToggle({ value, onChange }: StatusToggleProps) {
+export function StatusToggle({ value, onChange }: StatusToggleProps): React.JSX.Element {
   const { statuses } = useAttendanceConfig();
   const { t } = useTranslation();
   

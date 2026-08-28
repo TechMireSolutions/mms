@@ -1,3 +1,4 @@
+import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import type { ContactsSyncConflict } from "@/lib/contacts/contactsSyncOutbox";
@@ -14,16 +15,16 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { notify } from "@/lib/notify";
 import { ContactsSyncConflictRow } from "@/tenant/features/contacts/components/ContactsSyncConflictRow";
 
-interface ContactsSyncConflictPanelProps {
+export interface ContactsSyncConflictPanelProps {
   open: boolean;
   onClose: () => void;
 }
 
 /** Review panel for offline sync conflicts. */
-export default function ContactsSyncConflictPanel({
+export function ContactsSyncConflictPanel({
   open,
   onClose,
-}: ContactsSyncConflictPanelProps): JSX.Element {
+}: ContactsSyncConflictPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const { flush, refreshCounts } = useContactsSyncOutbox();
   const [conflicts, setConflicts] = useState<ContactsSyncConflict[]>(() => getContactsSyncConflicts());
@@ -127,3 +128,5 @@ export default function ContactsSyncConflictPanel({
     </>
   );
 }
+
+export default ContactsSyncConflictPanel;

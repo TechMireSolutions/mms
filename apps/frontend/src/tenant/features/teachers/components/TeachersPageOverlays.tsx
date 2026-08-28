@@ -60,8 +60,6 @@ export const TeachersPageOverlays = React.memo(function TeachersPageOverlays({
   const configPending = false;
   const sessionsQuery = useSessions();
   const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data]);
-  const formNeedsTabs = showForm || Boolean(viewTeacher);
-  const tabsPending = false;
 
   const idCardItems = useMemo(() => {
     return idCardTeachers.map((teacher) => {
@@ -78,11 +76,9 @@ export const TeachersPageOverlays = React.memo(function TeachersPageOverlays({
     });
   }, [idCardTeachers, sessions]);
 
-      return (
-        <>
-          {tabsPending ? <ModuleOverlayLoadingFallback /> : null}
-
-          <Suspense fallback={<ModuleOverlayLoadingFallback />}>
+  return (
+    <>
+      <Suspense fallback={<ModuleOverlayLoadingFallback />}>
             <AnimatePresence>
               {showForm && canWrite && !configPending ? (
                 <TeacherForm

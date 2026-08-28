@@ -3,7 +3,7 @@ import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FileText } from "lucide-react";
 
-interface StudentDetailNotesSectionProps {
+export interface StudentDetailNotesSectionProps {
   notes: string;
 }
 

@@ -1,3 +1,4 @@
+import type React from "react";
 import { Mail } from "lucide-react";
 import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -5,7 +6,7 @@ import { resolveEmailLabel } from "@/lib/contacts/contactI18n";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 
-interface ContactEmailsTabProps extends ContactSubListTabBaseProps {
+export interface ContactEmailsTabProps extends ContactSubListTabBaseProps {
   emailLabels: string[];
   onUpdateEmailLabels: (labels: string[]) => void;
 }
@@ -14,7 +15,7 @@ export function ContactEmailsTab({
   emailLabels,
   onUpdateEmailLabels,
   ...base
-}: ContactEmailsTabProps): JSX.Element {
+}: ContactEmailsTabProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

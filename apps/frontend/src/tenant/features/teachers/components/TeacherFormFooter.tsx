@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/FormFooterChip";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
-interface TeacherFormFooterProps {
+export interface TeacherFormFooterProps {
   linkedContact?: Contact | null;
   teacherDraft: Partial<Teacher>;
   requireContactLink: boolean;

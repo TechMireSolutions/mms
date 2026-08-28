@@ -28,7 +28,7 @@ const ATTENDANCE_SEARCH_DEBOUNCE_MS = 300;
 
 
 
-interface AttendanceRecordsProps {
+export interface AttendanceRecordsProps {
   filters: AttendanceFilterState;
   onUpdateRecord: (record: AttendanceRecord) => Promise<void>;
   onDeleteRecord: (id: string) => Promise<void>;
@@ -61,7 +61,7 @@ export function AttendanceRecords({
   columnCustomizer,
   onMessage,
   onTotalChange,
-}: AttendanceRecordsProps) {
+}: AttendanceRecordsProps): React.JSX.Element {
   const { statuses } = useAttendanceConfig();
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();

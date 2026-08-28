@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import React from 'react';
 import { Filter } from 'lucide-react';
 import {
   ModuleFilterCheckboxGroup,
@@ -6,9 +6,9 @@ import {
 } from '@/components/ui/ModuleFiltersMenuButton';
 import { useTranslation } from '@/hooks/useTranslation';
 
-const EXAM_STATUSES = ['upcoming', 'ongoing', 'completed', 'scheduled', 'cancelled'] as const;
+export const EXAM_STATUSES = ['upcoming', 'ongoing', 'completed', 'scheduled', 'cancelled'] as const;
 
-interface ExaminationsFiltersMenuButtonProps {
+export interface ExaminationsFiltersMenuButtonProps {
   filterStatus: string[];
   activeFilterCount: number;
   statusLabels: Record<(typeof EXAM_STATUSES)[number], string>;
@@ -23,7 +23,7 @@ export function ExaminationsFiltersMenuButton({
   statusLabels,
   onToggleStatus,
   onClearFilters,
-}: ExaminationsFiltersMenuButtonProps): JSX.Element {
+}: ExaminationsFiltersMenuButtonProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

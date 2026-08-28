@@ -16,7 +16,7 @@ import { MarkAttendanceFieldControl } from "@/tenant/features/attendance/compone
 import type { ModuleFieldDef } from "@mms/shared";
 import type { AttendanceRow } from "@/tenant/features/attendance/components/markAttendanceTypes";
 
-interface MarkAttendanceGridProps {
+export interface MarkAttendanceGridProps {
   rows: AttendanceRow[];
   orderedFields: ModuleFieldDef[];
   statuses: AttendanceStatus[];
@@ -30,7 +30,7 @@ export function MarkAttendanceGrid({
   statuses,
   isFieldEnabled,
   onFieldChange,
-}: MarkAttendanceGridProps) {
+}: MarkAttendanceGridProps): React.JSX.Element {
   const { t } = useTranslation();
   const rowMotion = useListRowMotion({ layout: true });
   const enabledFields = orderedFields.filter((field) => isFieldEnabled(field.id));

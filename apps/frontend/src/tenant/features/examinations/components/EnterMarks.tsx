@@ -18,7 +18,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
-interface EnterMarksProps {
+export interface EnterMarksProps {
   exams: Exam[];
   results: ExamResult[];
   onSaveResults: (examId: string, results: ExamResult[]) => void | Promise<void>;
@@ -33,7 +33,7 @@ interface EnterMarksProps {
  * @param props.onSaveResults - Callback to save scoring entries.
  * @returns The EnterMarks component.
  */
-export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): React.ReactElement {
+export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): React.JSX.Element {
   const { t } = useTranslation();
   const [selectedExam, setSelectedExam] = useState<string>(exams[0]?.id || "");
   const [marks, setMarks] = useState<Record<string, number | string>>({});

@@ -38,7 +38,7 @@ export function ContactPickerMenu({
   onSelect,
 }: ContactPickerMenuProps): React.ReactPortal | null {
   const { t } = useTranslation();
-  if (!open) return null;
+  if (!open || typeof document === "undefined") return null;
 
   return createPortal(
     <div
@@ -75,6 +75,7 @@ export function ContactPickerMenu({
             type="button"
             variant="ghost"
             role="option"
+            aria-selected={false}
             onClick={() => {
               onSelect(contact);
             }}
@@ -84,10 +85,13 @@ export function ContactPickerMenu({
               id={contact.id}
               name={contactName}
               avatar={contact.avatar}
+              gender={contact.gender}
               className="w-8 h-8 text-xs flex-shrink-0"
             />
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground truncate">{contactName}</p>
+              <p className="text-sm font-semibold text-foreground truncate" title={contactName}>
+                {contactName}
+              </p>
               <p className="text-xs text-muted-foreground flex items-center gap-1.5 truncate mt-0.5">
                 {contactPhone || t("contacts.table.emptyDash")}
                 {contactCity && <span>· {contactCity}</span>}

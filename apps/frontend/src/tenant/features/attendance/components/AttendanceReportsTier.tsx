@@ -5,12 +5,12 @@ import ModuleReports from "@/components/ui/reports/ModuleReports";
 import KPISummary from "@/components/ui/reports/KPISummary";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 
-type AttendanceReportTab = {
+export type AttendanceReportTab = {
   id: string;
   label: string;
 };
 
-interface AttendanceReportsTierProps {
+export interface AttendanceReportsTierProps {
   role: string;
   filters: React.ComponentProps<typeof AttendanceAnalytics>["filters"];
   records: AttendanceRecord[];

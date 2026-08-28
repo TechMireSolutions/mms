@@ -26,7 +26,7 @@ export interface StudentResultItem {
   };
 }
 
-interface StudentResultCardProps {
+export interface StudentResultCardProps {
   result: StudentResultItem;
   exam: Exam;
   allResults: StudentResultItem[]; // accepts array of results context
@@ -45,7 +45,13 @@ interface StudentResultCardProps {
  * @param props.onCertificate - Trigger graduation certificate view.
  * @returns The StudentResultCard component.
  */
-export function StudentResultCard({ result, exam, allResults, onClose, onCertificate }: StudentResultCardProps): React.ReactElement {
+export function StudentResultCard({
+  result,
+  exam,
+  allResults,
+  onClose,
+  onCertificate,
+}: StudentResultCardProps): React.JSX.Element {
   const { t } = useTranslation();
   const percentage = result.pct;
   const grade = result.grade;

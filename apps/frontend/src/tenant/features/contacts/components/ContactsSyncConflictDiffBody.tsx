@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import type React from "react";
 import { Loader2 } from "lucide-react";
 import type { Contact, SyncFieldPick } from "@mms/shared";
 import { resolveSyncFieldLabel } from "@/lib/contacts/contactI18n";
@@ -15,11 +15,11 @@ import {
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 
-type SyncDiff = {
+export interface SyncDiff {
   field: string;
   local: string;
   server: string;
-};
+}
 
 function conflictPickButtonClass(selected: boolean, dense: boolean): string {
   return cn(
@@ -27,6 +27,20 @@ function conflictPickButtonClass(selected: boolean, dense: boolean): string {
     dense ? "px-1" : "px-2 py-1.5 min-h-11",
     selected ? "bg-primary/15 ring-1 ring-primary/40" : "hover:bg-muted/50",
   );
+}
+
+export interface ContactsSyncConflictDiffBodyProps {
+  local: Contact | undefined;
+  serverContact: Contact | undefined;
+  serverLoading: boolean;
+  diffs: SyncDiff[];
+  fieldPicks: Record<string, SyncFieldPick>;
+  applying: boolean;
+  onTogglePick: (field: string, pick: SyncFieldPick) => void;
+  onApplyMerge: () => void;
+  onKeepMine: () => void;
+  onUseServer: () => void;
+  t: TranslationFunction;
 }
 
 export function ContactsSyncConflictDiffBody({
@@ -41,19 +55,7 @@ export function ContactsSyncConflictDiffBody({
   onKeepMine,
   onUseServer,
   t,
-}: {
-  local: Contact | undefined;
-  serverContact: Contact | undefined;
-  serverLoading: boolean;
-  diffs: SyncDiff[];
-  fieldPicks: Record<string, SyncFieldPick>;
-  applying: boolean;
-  onTogglePick: (field: string, pick: SyncFieldPick) => void;
-  onApplyMerge: () => void;
-  onKeepMine: () => void;
-  onUseServer: () => void;
-  t: TranslationFunction;
-}): JSX.Element {
+}: ContactsSyncConflictDiffBodyProps): React.JSX.Element {
   return (
     <div className="border-t border-warning/20 px-3 py-2.5 bg-background/40 space-y-3">
       {serverLoading && (

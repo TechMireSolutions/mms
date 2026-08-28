@@ -8,7 +8,7 @@ import StudentsListContent from "@/tenant/features/students/components/StudentsL
 import type { StudentsListContentProps } from "@/tenant/features/students/components/StudentsListContent";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 
-interface StudentsListProps
+export interface StudentsListProps
   extends Omit<
     StudentsListContentProps,
     | "students"
@@ -54,7 +54,7 @@ export function StudentsList({
   viewingDeleted = false,
   canWrite = true,
   ...listProps
-}: StudentsListProps) {
+}: StudentsListProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const emptyDescription = hasActiveFilters

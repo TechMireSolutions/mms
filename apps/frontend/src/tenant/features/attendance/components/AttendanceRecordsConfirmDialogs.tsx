@@ -2,7 +2,7 @@ import React from "react";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
-interface AttendanceRecordsConfirmDialogsProps {
+export interface AttendanceRecordsConfirmDialogsProps {
   pendingDeleteId: string | null;
   onPendingDeleteChange: (id: string | null) => void;
   onConfirmDelete: (id: string) => void;

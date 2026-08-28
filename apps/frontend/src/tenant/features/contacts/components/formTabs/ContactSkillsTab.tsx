@@ -1,3 +1,4 @@
+import type React from "react";
 import { Award, Tag, Clock, Building2 } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { Textarea } from "@/components/ui/textarea";
@@ -10,13 +11,12 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactSkill } from "@mms/shared";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 
-
 /**
  * TypeScript type representing an individual skill/qualification entry.
  */
 export type SkillEntry = ContactSkill;
 
-interface ContactSkillsTabProps extends ContactSubListTabBaseProps {
+export interface ContactSkillsTabProps extends ContactSubListTabBaseProps {
   categoryOptions: string[];
   onUpdateCategoryOptions?: (options: string[]) => void;
   defaultCategory?: string;
@@ -42,7 +42,7 @@ export function ContactSkillsTab({
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
-}: ContactSkillsTabProps): JSX.Element {
+}: ContactSkillsTabProps): React.JSX.Element {
   const { t } = useTranslation();
   const showName = isFieldEnabled("skills", "name");
   const showCategory = isFieldEnabled("skills", "category");

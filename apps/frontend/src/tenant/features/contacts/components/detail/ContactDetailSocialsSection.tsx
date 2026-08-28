@@ -4,13 +4,15 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { resolveSocialPlatformLabel } from "@/lib/contacts/contactI18n";
 import { ContactDetailExternalLinkSection } from "./ContactDetailExternalLinkSection";
 
+export interface ContactDetailSocialsSectionProps {
+  contact: Contact;
+  socialPlatforms: string[];
+}
+
 export function ContactDetailSocialsSection({
   contact,
   socialPlatforms,
-}: {
-  contact: Contact;
-  socialPlatforms: string[];
-}): React.JSX.Element {
+}: ContactDetailSocialsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const socials = contact.socials ?? [];
 

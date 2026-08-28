@@ -1,3 +1,4 @@
+import type React from "react";
 import { Users as UsersIcon } from "lucide-react";
 import {
   getDisplayName,
@@ -14,7 +15,7 @@ import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 import { ContactNetworkLinkCard } from "./ContactNetworkLinkCard";
 import { DETAIL_STYLES } from "./contactDetailStyles";
 
-interface ContactDetailNetworkProps {
+export interface ContactDetailNetworkProps {
   contact: Contact;
   allContacts: Contact[];
   onNavigateToContact: (targetId: string | number) => void;
@@ -42,7 +43,7 @@ export function ContactDetailNetwork({
   onWhatsApp,
   onSms,
   onEmail,
-}: ContactDetailNetworkProps): JSX.Element {
+}: ContactDetailNetworkProps): React.JSX.Element {
   const { t } = useTranslation();
   const links = mergeStoredAndDerivedSiblingLinks(contact, allContacts);
   const parentAllowsOutbound = !contact.deletedAt;

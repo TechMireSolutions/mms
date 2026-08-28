@@ -2,7 +2,7 @@ import { Save, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface MarkAttendanceActionsProps {
+export interface MarkAttendanceActionsProps {
   totalRows: number;
   visibleRows: number;
   isOffline: boolean;
@@ -20,7 +20,7 @@ export function MarkAttendanceActions({
   canWriteAttendance,
   onSaveDraft,
   onSubmit,
-}: MarkAttendanceActionsProps) {
+}: MarkAttendanceActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

@@ -10,7 +10,7 @@ import {
 import { normalizeStudentFormModalTab } from "@/tenant/features/students/components/studentFormTabs";
 import React from "react";
 
-interface StudentFormTabContentProps {
+export interface StudentFormTabContentProps {
   tab: string;
   formInstanceId: string;
   studentDraft: Partial<Student>;
@@ -35,28 +35,28 @@ interface StudentFormTabContentProps {
 }
 
 export const StudentFormTabContent = React.memo(function StudentFormTabContent({
-      tab,
-      formInstanceId,
-      studentDraft,
-      linkedContact,
-      linkedGenderRaw,
-      linkedGenderLabel,
-      linkedDob,
-      excludeIds,
-      isGrAutoAssigned,
-      grInputDisabled,
-      statusSelectOptions,
-      statuses,
-      onUpdateStatuses,
-      fields,
-      isFieldEnabled,
-      isFieldRequired,
-      getFieldError,
-      onContactSelect,
-      onStudentAvatarChange,
-      onGrNumberChange,
-      onDraftChange,
-    }: StudentFormTabContentProps): React.JSX.Element {
+  tab,
+  formInstanceId,
+  studentDraft,
+  linkedContact,
+  linkedGenderRaw,
+  linkedGenderLabel,
+  linkedDob,
+  excludeIds,
+  isGrAutoAssigned,
+  grInputDisabled,
+  statusSelectOptions,
+  statuses,
+  onUpdateStatuses,
+  fields,
+  isFieldEnabled,
+  isFieldRequired,
+  getFieldError,
+  onContactSelect,
+  onStudentAvatarChange,
+  onGrNumberChange,
+  onDraftChange,
+}: StudentFormTabContentProps): React.JSX.Element {
       const normalizedTab = normalizeStudentFormModalTab(tab);
       if (normalizedTab === "registration") {
         return (

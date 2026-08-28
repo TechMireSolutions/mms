@@ -4,7 +4,7 @@ import { toMessagingRecipient, type Student } from "@mms/shared";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
 
-interface StudentDetailQuickActionsProps {
+export interface StudentDetailQuickActionsProps {
   student: Student;
   primaryPhone?: string | null;
   primaryEmail?: string | null;

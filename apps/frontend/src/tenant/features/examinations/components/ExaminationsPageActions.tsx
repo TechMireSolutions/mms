@@ -2,7 +2,7 @@ import { PenTool, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface ExaminationsPageActionsProps {
+export interface ExaminationsPageActionsProps {
   canWrite: boolean;
   showDeleted: boolean;
   onEnterMarks: () => void;
@@ -14,7 +14,7 @@ export function ExaminationsPageActions({
   showDeleted,
   onEnterMarks,
   onCreateExam,
-}: ExaminationsPageActionsProps) {
+}: ExaminationsPageActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
   if (!canWrite || showDeleted) return <div className="flex items-center gap-2" />;

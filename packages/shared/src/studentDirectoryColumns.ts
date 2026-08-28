@@ -39,7 +39,7 @@ export const STUDENT_DIRECTORY_COLUMN_SURFACES = [
     work: true,
     sort: true,
     export: true,
-    fixed: true,
+    fixed: false,
     workOrder: 2,
     sortOrder: 3,
     exportOrder: 2,
@@ -55,7 +55,7 @@ export const STUDENT_DIRECTORY_COLUMN_SURFACES = [
     work: true,
     sort: false,
     export: true,
-    fixed: true,
+    fixed: false,
     workOrder: 3,
     sortOrder: -1,
     exportOrder: 3,
@@ -70,7 +70,7 @@ export const STUDENT_DIRECTORY_COLUMN_SURFACES = [
     work: true,
     sort: false,
     export: true,
-    fixed: true,
+    fixed: false,
     workOrder: 4,
     sortOrder: -1,
     exportOrder: 4,
@@ -147,7 +147,7 @@ export const STUDENT_DIRECTORY_COLUMN_SURFACES = [
   },
   {
     key: 'notes',
-    work: true, // It was enabled: false in the original registry, but we usually set it as work=true and in the registry it will just default to false maybe? Actually in teacher they are all enabled: true in the DEFAULT_TEACHER_COLUMN_REGISTRY except if we add an enabled prop. Let's add defaultEnabled: false
+    work: true,
     sort: false,
     export: true,
     fixed: false,
@@ -220,27 +220,22 @@ export const DEFAULT_STUDENT_COLUMN_REGISTRY: ColumnRegistryEntry[] =
       key: surface.key,
       label: surface.label,
       ...(surface.labelKey ? { labelKey: surface.labelKey } : {}),
-      enabled: surface.key === 'notes' ? false : true,
+      enabled: 'defaultEnabled' in surface && typeof surface.defaultEnabled === 'boolean'
+        ? surface.defaultEnabled
+        : true,
       order: surface.workOrder,
       sortable: surface.sortable,
       width: surface.width,
-      fixed: surface.fixed || undefined,
+      ...(surface.fixed ? { fixed: true } : {}),
     }));
 
-export const STUDENT_CARD_FACE_COLUMN_IDS = new Set(
-  STUDENT_DIRECTORY_COLUMN_SURFACES.filter((surface) => surface.fixed && surface.work).map(
-    (surface) => surface.key,
-  ),
-);
-
-// We manually add grNumber, gender, phone, email because in the original they were hardcoded 
-// Set(["name", "grNumber", "gender", "phone", "email"])
-export const STUDENT_CARD_FACE_COLUMN_IDS_LEGACY = new Set([
-  "name",
-  "grNumber",
-  "gender",
-  "phone",
-  "email",
+/** Face chrome on Students Work cards — excluded from the metadata tile grid. */
+export const STUDENT_CARD_FACE_COLUMN_IDS = new Set([
+  'name',
+  'grNumber',
+  'gender',
+  'phone',
+  'email',
 ]);
 
 export const STUDENT_COLUMN_FIELD_MAPPING: Record<
@@ -274,6 +269,10 @@ export const STUDENT_SORT_FIELDS = STUDENT_DIRECTORY_COLUMN_SURFACES
 
 export type StudentSortField = (typeof STUDENT_SORT_FIELDS)[number];
 export const STUDENT_SORT_FIELD_SET: ReadonlySet<string> = new Set(STUDENT_SORT_FIELDS);
+
+export function isStudentSortField(field: string): field is StudentSortField {
+  return STUDENT_SORT_FIELD_SET.has(field);
+}
 
 export const DEFAULT_STUDENT_EXPORT_COLUMNS = STUDENT_DIRECTORY_COLUMN_SURFACES
   .filter((surface) => surface.export)

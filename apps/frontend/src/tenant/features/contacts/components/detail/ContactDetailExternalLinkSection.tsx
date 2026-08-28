@@ -11,11 +11,20 @@ import {
 } from "@/components/ui/messagingActionStyles";
 import { cn } from "@/lib/utils";
 
-interface ContactDetailExternalLinkRow {
+export interface ContactDetailExternalLinkRow {
   key: string;
   label: string;
   value: string;
   href?: string;
+}
+
+export interface ContactDetailExternalLinkSectionProps {
+  title: string;
+  emptyMessage: string;
+  emptyDash: string;
+  rows: ContactDetailExternalLinkRow[];
+  actionIcon: LucideIcon;
+  actionTitle: string;
 }
 
 /** Shared Addresses / Socials detail section: empty hint + external-link collection rows with outlined action buttons. */
@@ -26,14 +35,7 @@ export function ContactDetailExternalLinkSection({
   rows,
   actionIcon,
   actionTitle,
-}: {
-  title: string;
-  emptyMessage: string;
-  emptyDash: string;
-  rows: ContactDetailExternalLinkRow[];
-  actionIcon: LucideIcon;
-  actionTitle: string;
-}): React.JSX.Element {
+}: ContactDetailExternalLinkSectionProps): React.JSX.Element {
   return (
     <DetailSection title={title}>
       {rows.length === 0 ? (

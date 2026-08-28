@@ -20,14 +20,10 @@ export interface AttendanceFilterState {
   date: string;
 }
 
-interface AttendanceFiltersProps {
+export interface AttendanceFiltersProps {
   filters: AttendanceFilterState;
   onChange: (newFilters: AttendanceFilterState) => void;
 }
-
-
-
-
 
 /**
  * AttendanceFilters
@@ -35,10 +31,10 @@ interface AttendanceFiltersProps {
  * A collapsible filter component for the attendance records view.
  * Allows filtering by session, class, teacher, and date.
  * 
- * @param {AttendanceFiltersProps} props - The component props.
- * @returns {React.ReactElement} The rendered filters component.
+ * @param props - The component props.
+ * @returns The rendered filters component.
  */
-export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps) {
+export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const sessions = useSessionsCollection();

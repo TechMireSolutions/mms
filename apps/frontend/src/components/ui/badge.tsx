@@ -59,12 +59,16 @@ export interface BadgeProps
   pill?: boolean;
   /** Render element — `span` for inline/table-cell pills, `button` for clickable chips. */
   as?: "div" | "span" | "button";
+  /** HTML button type when `as="button"`. Defaults to "button". */
+  type?: "button" | "submit" | "reset";
   /** Optional status indicator dot. */
   dot?: boolean;
   /** Whether the indicator dot pulses. */
   pulse?: boolean;
   /** Optional remove/dismiss callback rendering an X button. */
   onRemove?: () => void;
+  /** Accessible label for the remove button. Defaults to "Remove". */
+  removeAriaLabel?: string;
 }
 
 /**
@@ -81,18 +85,22 @@ const Badge = React.forwardRef<HTMLElement, BadgeProps>(function Badge(
     dot = false,
     pulse = false,
     onRemove,
+    removeAriaLabel = "Remove",
     as: Comp = "div",
     children,
     onClick,
+    type,
     ...props
   },
   ref,
 ) {
   const isInteractive = Comp === "button" || Boolean(onClick);
+  const buttonType = Comp === "button" ? (type ?? "button") : undefined;
 
   return (
     <Comp
       ref={ref as never}
+      type={buttonType}
       onClick={onClick}
       className={cn(
         badgeVariants({ variant, size }),
@@ -121,7 +129,7 @@ const Badge = React.forwardRef<HTMLElement, BadgeProps>(function Badge(
             onRemove();
           }}
           className="ms-0.5 -me-1 inline-flex h-3.5 w-3.5 items-center justify-center rounded-full hover:bg-foreground/15 transition-colors"
-          aria-label="Remove"
+          aria-label={removeAriaLabel}
         >
           <X className="h-2.5 w-2.5" aria-hidden="true" />
         </button>

@@ -1,9 +1,9 @@
-import type { JSX } from 'react';
+import React from 'react';
 import { ModuleRowActionsMenu } from '@/components/ui/ModuleRowActionsMenu';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Exam } from '@mms/shared';
 
-interface ExaminationsRowActionsProps {
+export interface ExaminationsRowActionsProps {
   exam: Exam;
   canWrite: boolean;
   canDelete: boolean;
@@ -26,7 +26,7 @@ export function ExaminationsRowActions({
   triggerClassName,
   onEdit,
   onTrashAction,
-}: ExaminationsRowActionsProps): JSX.Element {
+}: ExaminationsRowActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

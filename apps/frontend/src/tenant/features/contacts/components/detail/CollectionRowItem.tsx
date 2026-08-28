@@ -1,3 +1,4 @@
+import type React from "react";
 import type { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CopyBtn } from "@/components/ui/CopyBtn";
@@ -17,14 +18,14 @@ export interface CollectionRowAction {
   external?: boolean;
 }
 
-interface CollectionRowItemProps {
+export interface CollectionRowItemProps {
   label: string;
   value: string;
   copyable?: boolean;
   actions?: CollectionRowAction[];
 }
 
-function RowActionButton({ action }: { action: CollectionRowAction }): JSX.Element {
+function RowActionButton({ action }: { action: CollectionRowAction }): React.JSX.Element {
   const Icon = action.icon;
   const className = action.className
     ? cn("inline-flex items-center justify-center", action.className)

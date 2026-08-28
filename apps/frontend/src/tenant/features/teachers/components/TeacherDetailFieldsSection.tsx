@@ -28,7 +28,7 @@ import {
   SYSTEM_FIELD_ICONS,
 } from "@/tenant/features/teachers/components/teacherDetailShared";
 
-interface TeacherDetailFieldsSectionProps {
+export interface TeacherDetailFieldsSectionProps {
   teacher: Teacher;
   detailFields: TeacherDetailFieldRow[];
   displayName: string;

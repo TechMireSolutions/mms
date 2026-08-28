@@ -24,7 +24,7 @@ export const ExaminationDetail = React.memo(function ExaminationDetail({
   onEdit,
   canDelete = false,
   onRestore,
-}: ExaminationDetailProps) {
+}: ExaminationDetailProps): React.JSX.Element {
   const { t } = useTranslation();
   const isArchived = !!exam.deletedAt;
   

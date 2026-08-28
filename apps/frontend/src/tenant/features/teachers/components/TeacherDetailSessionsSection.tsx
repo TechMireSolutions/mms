@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { TeacherAssignedClassItem } from "@/lib/teachers/teacherAssignment";
 
-interface TeacherDetailSessionsSectionProps {
+export interface TeacherDetailSessionsSectionProps {
   assignedClasses: TeacherAssignedClassItem[];
   loading?: boolean;
   error?: boolean;

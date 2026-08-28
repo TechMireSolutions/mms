@@ -4,13 +4,15 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
 import { ContactDetailExternalLinkSection } from "./ContactDetailExternalLinkSection";
 
+export interface ContactDetailAddressesSectionProps {
+  contact: Contact;
+  addressLabels: string[];
+}
+
 export function ContactDetailAddressesSection({
   contact,
   addressLabels,
-}: {
-  contact: Contact;
-  addressLabels: string[];
-}): React.JSX.Element {
+}: ContactDetailAddressesSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const addresses = contact.addresses ?? [];
 

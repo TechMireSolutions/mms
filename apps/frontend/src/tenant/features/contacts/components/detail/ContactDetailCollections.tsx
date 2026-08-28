@@ -1,3 +1,4 @@
+import type React from "react";
 import type { Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import {
@@ -11,7 +12,7 @@ import {
 } from "./ContactDetailChannelSections";
 import { ContactDetailCustomCollections } from "./ContactDetailCustomCollections";
 
-interface ContactDetailCollectionsProps {
+export interface ContactDetailCollectionsProps {
   contact: Contact;
   visibleCollectionFields: {
     phones: { enabled?: boolean }[];
@@ -33,7 +34,7 @@ export function ContactDetailCollections({
   onWhatsApp,
   onSms,
   onEmail,
-}: ContactDetailCollectionsProps): JSX.Element {
+}: ContactDetailCollectionsProps): React.JSX.Element {
   const {
     enabledTabIds,
     fields,

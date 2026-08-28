@@ -1,3 +1,4 @@
+import type React from "react";
 import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { formatDateTime } from "@mms/shared";
 import type { ContactsSyncConflict } from "@/lib/contacts/contactsSyncOutbox";
@@ -8,7 +9,7 @@ import { WarningCallout } from "@/components/ui/WarningCallout";
 import { ContactsSyncConflictDiffBody } from "@/tenant/features/contacts/components/ContactsSyncConflictDiffBody";
 import { useContactsSyncConflictRow } from "@/tenant/features/contacts/hooks/useContactsSyncConflictRow";
 
-interface ContactsSyncConflictRowProps {
+export interface ContactsSyncConflictRowProps {
   entry: ContactsSyncConflict;
   title: string;
   onRequestDismiss: (id: string) => void;
@@ -20,7 +21,7 @@ export function ContactsSyncConflictRow({
   title,
   onRequestDismiss,
   onResolved,
-}: ContactsSyncConflictRowProps): JSX.Element {
+}: ContactsSyncConflictRowProps): React.JSX.Element {
   const { t } = useTranslation();
   const {
     expanded,

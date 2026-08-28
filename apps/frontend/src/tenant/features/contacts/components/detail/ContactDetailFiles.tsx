@@ -1,3 +1,4 @@
+import type React from "react";
 import type { ChangeEvent, RefObject } from "react";
 import { ExternalLink, FileText, Trash2 } from "lucide-react";
 import { formatDate, type Contact } from "@mms/shared";
@@ -12,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 
-interface ContactDetailFilesProps {
+export interface ContactDetailFilesProps {
   contact: Contact;
   canPersistContact: boolean;
   isDragging: boolean;
@@ -34,7 +35,7 @@ export function ContactDetailFiles({
   onFiles,
   onFileChange,
   onRequestDelete,
-}: ContactDetailFilesProps): JSX.Element {
+}: ContactDetailFilesProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

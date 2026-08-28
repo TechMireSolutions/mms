@@ -1,10 +1,11 @@
+import type React from "react";
 import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { ContactsPreferencesGeneralSection } from "@/tenant/features/contacts/components/ContactsPreferencesGeneralSection";
 import { ContactsPreferencesDuplicateSection } from "@/tenant/features/contacts/components/ContactsPreferencesDuplicateSection";
 
-interface ContactsPreferencesSectionProps {
+export interface ContactsPreferencesSectionProps {
   prefs: ContactPreferences;
   isPrefsDirty: boolean;
   countryOptions: Array<{ value: string; label: string }>;
@@ -20,7 +21,7 @@ export function ContactsPreferencesSection({
   isPrefsDirty,
   countryOptions,
   onUpdatePreference,
-}: ContactsPreferencesSectionProps): JSX.Element {
+}: ContactsPreferencesSectionProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

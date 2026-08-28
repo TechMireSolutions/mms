@@ -3,11 +3,13 @@ import type { ReactNode } from "react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 export interface DirectoryCardHeaderProps {
   id: string | number;
   displayName: string;
   avatar?: string | null;
+  gender?: string | null;
   isSelected: boolean;
   onSelect: () => void;
   selectAriaLabel: string;
@@ -17,6 +19,7 @@ export interface DirectoryCardHeaderProps {
   subtitle?: ReactNode;
   showSelect?: boolean;
   reducedMotion?: boolean;
+  className?: string;
 }
 
 /** Shared Work directory card header: checkbox | avatar + title + subtitle. */
@@ -24,6 +27,7 @@ export const DirectoryCardHeader = React.memo(function DirectoryCardHeader({
   id,
   displayName,
   avatar,
+  gender,
   isSelected,
   onSelect,
   selectAriaLabel,
@@ -32,6 +36,7 @@ export const DirectoryCardHeader = React.memo(function DirectoryCardHeader({
   subtitle,
   showSelect = true,
   reducedMotion = false,
+  className,
 }: DirectoryCardHeaderProps): React.JSX.Element {
   const face = (
     <>
@@ -39,12 +44,17 @@ export const DirectoryCardHeader = React.memo(function DirectoryCardHeader({
         id={id}
         name={displayName}
         avatar={avatar ?? undefined}
-        className={`w-11 h-11 rounded-2xl text-sm shadow-inner${
-          reducedMotion ? "" : " group-hover:scale-105 transition-transform duration-200"
-        }`}
+        gender={gender}
+        className={cn(
+          "w-11 h-11 rounded-2xl text-sm shadow-inner shrink-0",
+          !reducedMotion && "group-hover:scale-105 transition-transform duration-200",
+        )}
       />
       <div className="min-w-0 flex-1">
-        <h4 className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
+        <h4
+          className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors"
+          title={displayName}
+        >
           {displayName}
         </h4>
         {subtitle}
@@ -53,7 +63,7 @@ export const DirectoryCardHeader = React.memo(function DirectoryCardHeader({
   );
 
   return (
-    <div className="flex gap-3 items-start ms-1">
+    <div className={cn("flex gap-3 items-start ms-1", className)}>
       {showSelect ? (
         <div className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center">
           <Checkbox

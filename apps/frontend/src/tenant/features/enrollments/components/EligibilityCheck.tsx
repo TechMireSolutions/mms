@@ -29,7 +29,7 @@ const LABEL_COL: Record<string, string> = {
   warn: "text-warning",
 };
 
-export function EligibilityCheck(): React.ReactElement {
+export function EligibilityCheck(): React.JSX.Element {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const [studentId, setStudentId] = useState<string>("");

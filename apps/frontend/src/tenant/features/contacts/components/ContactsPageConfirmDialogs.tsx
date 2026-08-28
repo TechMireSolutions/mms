@@ -1,7 +1,8 @@
+import type React from "react";
 import { ModuleSoftDeleteConfirmDialogs } from "@/components/ui/ModuleSoftDeleteConfirmDialogs";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface ContactsPageConfirmDialogsProps {
+export interface ContactsPageConfirmDialogsProps {
   bulkDeleteOpen: boolean;
   onBulkDeleteOpenChange: (open: boolean) => void;
   selectedCount: number;

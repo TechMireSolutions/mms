@@ -1,3 +1,4 @@
+import type React from "react";
 import { useMemo, useRef, lazy, Suspense } from "react";
 import { CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -9,12 +10,12 @@ import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import type { Contact } from "@mms/shared";
 import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
-import React from "react";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 
 const ContactsSetupPanel = lazy(() => import("@/tenant/features/contacts/components/ContactsSetupPanel"));
 const ContactSyncPanel = lazy(() => import("@/tenant/features/contacts/components/ContactSyncPanel"));
 
-interface ContactsSetupTierProps {
+export interface ContactsSetupTierProps {
   onImport: (list: Contact[]) => void | Promise<void>;
   canWrite: boolean;
   canEditSetup: boolean;
@@ -24,7 +25,7 @@ export function ContactsSetupTier({
   onImport,
   canWrite,
   canEditSetup,
-}: ContactsSetupTierProps): JSX.Element {
+}: ContactsSetupTierProps): React.JSX.Element {
   const { t } = useTranslation();
   const dirtyRef = useRef({ prefs: false });
 
@@ -66,41 +67,43 @@ export function ContactsSetupTier({
   };
 
   return (
-    <div className="space-y-4">
-      <SubTabBar
-        tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
-        value={subTabs.sub}
-        onChange={subTabs.handleSubTabChange}
-      />
-      <Suspense fallback={<ModulePanelSuspenseFallback />}>
-        {subTabs.showPrefs &&
-          (canEditSetup ? (
-            <ContactsSetupPanel
-              onPrefsDirtyChange={setPrefsDirty}
-            />
-          ) : (
-            <SetupReadOnlyMessage title={t("contacts.setupReadOnly")} />
-          ))}
-        {subTabs.showSync && (
-          // Sync mutates contacts + OAuth secrets — gate on contacts.write (canWrite),
-          // never OR with canEditSetup (mms-auth-security). Fields/Prefs stay canEditSetup.
-          <ContactSyncPanel onImport={onImport} canWrite={canWrite} />
-        )}
-      </Suspense>
+    <ModuleTierMotion tier="setup">
+      <div className="space-y-4">
+        <SubTabBar
+          tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
+          value={subTabs.sub}
+          onChange={subTabs.handleSubTabChange}
+        />
+        <Suspense fallback={<ModulePanelSuspenseFallback />}>
+          {subTabs.showPrefs &&
+            (canEditSetup ? (
+              <ContactsSetupPanel
+                onPrefsDirtyChange={setPrefsDirty}
+              />
+            ) : (
+              <SetupReadOnlyMessage title={t("contacts.setupReadOnly")} />
+            ))}
+          {subTabs.showSync && (
+            // Sync mutates contacts + OAuth secrets — gate on contacts.write (canWrite),
+            // never OR with canEditSetup (mms-auth-security). Fields/Prefs stay canEditSetup.
+            <ContactSyncPanel onImport={onImport} canWrite={canWrite} />
+          )}
+        </Suspense>
 
-      <ConfirmAlertDialog
-        open={subTabs.discardConfirmOpen}
-        onOpenChange={(open) => {
-          if (!open) subTabs.clearPendingSubTab();
-        }}
-        title={t("settings.unsavedChanges")}
-        description={t("contacts.setup.discardUnsavedPreferencesConfirm")}
-        confirmLabel={t("common.yes")}
-        cancelLabel={t("common.cancel")}
-        destructive
-        onConfirm={subTabs.handleConfirmDiscard}
-      />
-    </div>
+        <ConfirmAlertDialog
+          open={subTabs.discardConfirmOpen}
+          onOpenChange={(open) => {
+            if (!open) subTabs.clearPendingSubTab();
+          }}
+          title={t("settings.unsavedChanges")}
+          description={t("contacts.setup.discardUnsavedPreferencesConfirm")}
+          confirmLabel={t("common.yes")}
+          cancelLabel={t("common.cancel")}
+          destructive
+          onConfirm={subTabs.handleConfirmDiscard}
+        />
+      </div>
+    </ModuleTierMotion>
   );
 }
 

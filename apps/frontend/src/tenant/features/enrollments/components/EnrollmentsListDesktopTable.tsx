@@ -16,7 +16,7 @@ import {
   type EnrollmentListContentProps,
 } from "@/tenant/features/enrollments/components/enrollmentListContentShared";
 
-type EnrollmentsListDesktopTableProps = Omit<
+export type EnrollmentsListDesktopTableProps = Omit<
   EnrollmentListContentProps,
   "filteredCount" | "page" | "pageSize" | "onPageChange"
 >;

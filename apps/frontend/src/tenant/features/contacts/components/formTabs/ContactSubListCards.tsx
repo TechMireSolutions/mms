@@ -8,7 +8,7 @@ import { FORM_CARD } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
-interface ListFieldCardProps {
+export interface ListFieldCardProps {
   id: string;
   index: number;
   icon?: ElementType;
@@ -32,7 +32,7 @@ export function ListFieldCard({
   onRemove,
   removeLabel,
   children,
-}: ListFieldCardProps): JSX.Element {
+}: ListFieldCardProps): React.JSX.Element {
   const hasHeaderContent = Boolean(Icon || label || typeSelect);
 
   return (
@@ -81,7 +81,7 @@ export function resolveSubListAllowAdd(
   return enabledFieldFlags.some(Boolean) || customFieldsLength > 0;
 }
 
-interface ContactSubListShellProps {
+export interface ContactSubListShellProps {
   isEmpty: boolean;
   emptyIcon: React.ComponentType<{ className?: string }>;
   emptyMessage: string;
@@ -104,7 +104,7 @@ export function ContactSubListShell({
   onEnsureRow,
   allowAdd = true,
   children,
-}: ContactSubListShellProps): JSX.Element {
+}: ContactSubListShellProps): React.JSX.Element {
   useEffect(() => {
     if (!allowAdd || !isEmpty) return;
     onEnsureRow();

@@ -18,7 +18,7 @@ import {
   GoogleContactsSetupHint,
 } from "@/tenant/features/contacts/components/sync/GoogleContactsPanelSections";
 
-interface GoogleContactsPanelProps {
+export interface GoogleContactsPanelProps {
   canWrite?: boolean;
 }
 

@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import type React from "react";
 import {
   isRelationshipContactColumnKey,
   isRelationshipTypeColumnKey,
@@ -13,6 +13,16 @@ import { ContactMetadataCell } from "@/tenant/features/contacts/components/Conta
 import { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 
+export interface ContactCardMetadataGridProps {
+  contact: Contact;
+  prefs: ContactPreferences;
+  allContacts: Contact[];
+  contactsMap: Map<string, Contact> | null;
+  otherColumns: ContactsColumnConfig[];
+  isColumnVisible: (key: string) => boolean;
+  t: TranslationFunction;
+}
+
 export function ContactCardMetadataGrid({
   contact,
   prefs,
@@ -21,15 +31,7 @@ export function ContactCardMetadataGrid({
   otherColumns,
   isColumnVisible,
   t,
-}: {
-  contact: Contact;
-  prefs: ContactPreferences;
-  allContacts: Contact[];
-  contactsMap: Map<string, Contact> | null;
-  otherColumns: ContactsColumnConfig[];
-  isColumnVisible: (key: string) => boolean;
-  t: TranslationFunction;
-}): JSX.Element | null {
+}: ContactCardMetadataGridProps): React.JSX.Element | null {
   if (otherColumns.length === 0) {
     return null;
   }
@@ -73,10 +75,12 @@ export function ContactCardMetadataGrid({
   );
 }
 
+export interface ContactCardDeletedBannerProps {
+  contact: Contact;
+}
+
 export function ContactCardDeletedBanner({
   contact,
-}: {
-  contact: Contact;
-}): JSX.Element | null {
+}: ContactCardDeletedBannerProps): React.JSX.Element | null {
   return <ContactArchivedBanner contact={contact} />;
 }

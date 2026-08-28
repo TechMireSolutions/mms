@@ -1,4 +1,4 @@
-import { useState, type ReactElement } from "react";
+import { useState } from "react";
 import { GraduationCap, BookOpen, IdCard } from "lucide-react";
 import { STUDENTS_MODULE_MANIFEST, type Student, type StudentsBulkEnrollBody } from "@mms/shared";
 import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar";
@@ -12,7 +12,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { StudentsBulkEnrollModal } from "@/tenant/features/students/components/StudentsBulkEnrollModal";
 import type { StudentsSelectionTargets } from "@/tenant/features/students/hooks/studentsSelectionTargets";
 
-interface StudentsBulkActionBarProps {
+export interface StudentsBulkActionBarProps {
   selectedCount: number;
   viewingDeleted: boolean;
   canWrite: boolean;
@@ -62,7 +62,7 @@ export function StudentsBulkActionBar({
   onRequestBulkRestore,
   onClearSelection,
   statusPending = false,
-}: StudentsBulkActionBarProps): ReactElement {
+}: StudentsBulkActionBarProps): React.JSX.Element {
   const { t } = useTranslation();
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
 

@@ -7,7 +7,7 @@ import { motion } from "framer-motion";
 import type { StudentRateEntry } from "@/tenant/features/attendance/components/useAttendanceAnalyticsModel";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
-interface AttendanceAnalyticsInsightsProps {
+export interface AttendanceAnalyticsInsightsProps {
   t: TranslationFunction;
   lowAttendance: StudentRateEntry[];
   topStudents: StudentRateEntry[];
@@ -17,7 +17,7 @@ export function AttendanceAnalyticsInsights({
   t,
   lowAttendance,
   topStudents,
-}: AttendanceAnalyticsInsightsProps) {
+}: AttendanceAnalyticsInsightsProps): React.JSX.Element {
   return (
     <>
       {lowAttendance.length > 0 && (

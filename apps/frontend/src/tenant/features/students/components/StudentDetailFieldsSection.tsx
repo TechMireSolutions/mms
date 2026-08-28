@@ -16,7 +16,7 @@ import { formatContactGenderLabel, resolveRegistryLabel } from "@/lib/contacts/c
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
 import { formatStudentsListContentCustomValue } from "@/tenant/features/students/components/studentsListCustomColumns";
 
-interface SortedField {
+export interface SortedField {
   key: string;
   label: string;
   labelKey?: AppTranslationKey;
@@ -28,7 +28,7 @@ interface SortedField {
   group: string;
 }
 
-interface StudentDetailFieldsSectionProps {
+export interface StudentDetailFieldsSectionProps {
   student: Student;
   sortedEnabledFields: SortedField[];
   age: number | null;

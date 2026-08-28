@@ -14,9 +14,17 @@ import { resolveTeacherCardFaceVisibility } from "@/tenant/features/teachers/com
 import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
 
-type TeacherListCardsProps = Omit<
+export type TeacherListCardsProps = Omit<
   TeacherListContentProps,
-  "sortField" | "sortDir" | "getColumnWidth" | "onColumnResize" | "onSort" | "viewMode"
+  | "sortField"
+  | "sortDir"
+  | "getColumnWidth"
+  | "onColumnResize"
+  | "onSort"
+  | "viewMode"
+  | "hasActiveFilters"
+  | "onClearFilters"
+  | "onShowActive"
 >;
 
 export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Element {
@@ -61,7 +69,7 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
       deselectAllLabel={t("common.deselect")}
       selectedCountLabel={t("teachers.selectedCount", { count: selectedIds.length })}
       pageCountLabel={pageCountLabel}
-      checkboxIdPrefix="teachers"
+      checkboxIdPrefix="teachers-cards"
       renderItem={(teacher) => {
         const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedIds, t);
         const { phone, email } = resolveTeacherPrimaryChannels(teacher);
@@ -71,7 +79,11 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
             key={teacherIdStr}
             isSelected={isSelected}
             reducedMotion={reducedMotion}
-            accentClassName={getGenderAccentBarClass(isSelected, teacher.gender)}
+            accentClassName={
+              isColumnVisible("gender")
+                ? getGenderAccentBarClass(isSelected, teacher.gender)
+                : undefined
+            }
           >
             <TeacherCardHeader
               teacher={teacher}

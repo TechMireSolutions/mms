@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import type React from "react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,7 +7,11 @@ import { FORM_ERROR_BOX, FORM_LABEL } from "@/components/ui/formStyles";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
-export function GoogleContactsSetupHint({ t }: { t: TranslationFunction }): JSX.Element {
+export interface GoogleContactsSetupHintProps {
+  t: TranslationFunction;
+}
+
+export function GoogleContactsSetupHint({ t }: GoogleContactsSetupHintProps): React.JSX.Element {
   return (
     <WarningCallout
       icon={AlertCircle}
@@ -20,6 +24,17 @@ export function GoogleContactsSetupHint({ t }: { t: TranslationFunction }): JSX.
   );
 }
 
+export interface GoogleContactsSetupFormProps {
+  clientId: string;
+  clientSecret: string;
+  error: string;
+  onClientIdChange: (value: string) => void;
+  onClientSecretChange: (value: string) => void;
+  onSave: () => void;
+  onCancel: () => void;
+  t: TranslationFunction;
+}
+
 export function GoogleContactsSetupForm({
   clientId,
   clientSecret,
@@ -29,16 +44,7 @@ export function GoogleContactsSetupForm({
   onSave,
   onCancel,
   t,
-}: {
-  clientId: string;
-  clientSecret: string;
-  error: string;
-  onClientIdChange: (value: string) => void;
-  onClientSecretChange: (value: string) => void;
-  onSave: () => void;
-  onCancel: () => void;
-  t: TranslationFunction;
-}): JSX.Element {
+}: GoogleContactsSetupFormProps): React.JSX.Element {
   return (
     <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border">
       <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">

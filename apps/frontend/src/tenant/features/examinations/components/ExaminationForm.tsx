@@ -5,14 +5,21 @@ import { Exam } from '@/lib/data/examinationData';
 import { useExaminationForm } from "./useExaminationForm";
 import { ExaminationFormFields } from "./ExaminationFormFields";
 
-interface ExamFormProps {
+export interface ExamFormProps {
   open?: boolean;
   exam: Exam | null;
   onClose: () => void;
   onSave: (exam: Exam) => void | Promise<void>;
 }
 
-const ExamForm = React.memo(function ExamForm({ open = true, exam, onClose, onSave }: ExamFormProps): React.JSX.Element {
+export type ExaminationFormProps = ExamFormProps;
+
+const ExamForm = React.memo(function ExamForm({
+  open = true,
+  exam,
+  onClose,
+  onSave,
+}: ExamFormProps): React.JSX.Element {
       const form = useExaminationForm({ open, exam, onClose, onSave });
 
       return (

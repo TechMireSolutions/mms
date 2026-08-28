@@ -1,3 +1,4 @@
+import type React from "react";
 import { useEffect, useState } from "react";
 import { Copy } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
@@ -11,18 +12,20 @@ import { getDuplicateFieldLabel } from "@/lib/contacts/contactI18n";
 /** Toggleable duplicate-detection fields (subset of the canonical field-id set). */
 const DUPLICATE_DETECTION_FIELD_IDS = ["name", "phone", "email", "cnic"] as const;
 
-export function ContactsPreferencesDuplicateSection({
-  prefs,
-  isPrefsDirty,
-  onUpdatePreference,
-}: {
+export interface ContactsPreferencesDuplicateSectionProps {
   prefs: ContactPreferences;
   isPrefsDirty?: boolean;
   onUpdatePreference: <K extends keyof ContactPreferences>(
     key: K,
     value: ContactPreferences[K],
   ) => void;
-}): JSX.Element {
+}
+
+export function ContactsPreferencesDuplicateSection({
+  prefs,
+  isPrefsDirty,
+  onUpdatePreference,
+}: ContactsPreferencesDuplicateSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const detectionFields = prefs.duplicateDetectionFields ?? ["name", "phone", "email", "cnic"];
 

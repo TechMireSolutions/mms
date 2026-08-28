@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import React from 'react';
 import { SlidersHorizontal } from 'lucide-react';
 import {
   ModuleFilterDropdown,
@@ -7,7 +7,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AttendanceStatus } from '@/lib/data/attendanceData';
 
-interface AttendanceFiltersMenuButtonProps {
+export interface AttendanceFiltersMenuButtonProps {
   statusFilter: string;
   activeFilterCount: number;
   statuses: AttendanceStatus[];
@@ -24,7 +24,7 @@ export function AttendanceFiltersMenuButton({
   statusLabel,
   onChangeStatus,
   onClearFilters,
-}: AttendanceFiltersMenuButtonProps): JSX.Element {
+}: AttendanceFiltersMenuButtonProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

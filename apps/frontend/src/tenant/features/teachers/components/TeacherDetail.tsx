@@ -19,7 +19,7 @@ import {
 } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import { useTeacherDetailModel } from "@/tenant/features/teachers/components/useTeacherDetailModel";
 
-interface TeacherDetailProps {
+export interface TeacherDetailProps {
   teacher: Teacher;
   onClose: () => void;
   onEdit?: (teacher: Teacher) => void;

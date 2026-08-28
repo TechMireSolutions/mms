@@ -1,16 +1,19 @@
-import type { Student } from "@mms/shared";
+import type { ModuleColumnRegistryEntry, Student } from "@mms/shared";
 import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
+import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getStudentVisibleWorkColumns } from "@/tenant/features/students/components/studentsListVisibleColumns";
 import { renderStudentWorkColumnValue } from "@/tenant/features/students/components/studentWorkColumnCell";
-import type { StudentsListCardsProps } from "@/tenant/features/students/components/studentsListTypes";
 
-type StudentCardMetadataProps = Pick<
-  StudentsListCardsProps,
-  "statusBadgeConfig" | "isColumnVisible" | "columnRegistry" | "sessions"
-> & {
+export interface StudentCardMetadataProps {
   student: Student;
-};
+  statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
+  isColumnVisible: (key: string) => boolean;
+  columnRegistry: ModuleColumnRegistryEntry[];
+}
+
+const getColumnKey = (col: { key: string }) => col.key;
+const getColumnLabel = (col: { label: string }) => col.label;
 
 /** Students domain metadata tiles — face columns excluded (Contacts/Teachers parity). */
 export function StudentCardMetadata({
@@ -18,22 +21,22 @@ export function StudentCardMetadata({
   statusBadgeConfig,
   isColumnVisible,
   columnRegistry,
-  sessions,
 }: StudentCardMetadataProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const sessionNames = sessions
-    .filter((session) => student.enrolledSessions?.includes(session.id))
-    .map((session) => session.name);
 
   const metaColumns = getStudentVisibleWorkColumns(columnRegistry, isColumnVisible, {
     excludeFace: true,
   });
 
+  if (metaColumns.length === 0) {
+    return null;
+  }
+
   return (
     <DirectoryCardMetadata
       columns={metaColumns}
-      keyFor={(col) => col.key}
-      labelFor={(col) => col.label}
+      keyFor={getColumnKey}
+      labelFor={getColumnLabel}
       renderValue={(col) =>
         renderStudentWorkColumnValue(student, col.key, {
           t,

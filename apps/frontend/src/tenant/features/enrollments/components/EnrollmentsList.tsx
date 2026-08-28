@@ -16,7 +16,7 @@ const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
-interface EnrollmentListProps {
+export interface EnrollmentListProps {
   enrollments: Enrollment[];
   total: number;
   page: number;
@@ -83,7 +83,7 @@ export function EnrollmentsList({
   getColumnWidth,
   onColumnResize,
   columnCustomizer,
-}: EnrollmentListProps): React.ReactElement {
+}: EnrollmentListProps): React.JSX.Element {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const { formatCurrency } = useFinanceCurrency();

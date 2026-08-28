@@ -13,6 +13,23 @@ import {
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
+export interface RenderContactTableCellParams {
+  col: ContactsColumnConfig;
+  contact: Contact;
+  displayName: string;
+  getColumnWidth: (key: string) => number | undefined;
+  prefs: ContactPreferences;
+  countryCodesMap: Record<string, string>;
+  countryCodes: Array<{ country: string; code: string }>;
+  contactsMap: Map<string, Contact> | null;
+  allContacts: Contact[];
+  showArchived: boolean;
+  isSelected: boolean;
+  t: Translate;
+  onView?: (contact: Contact) => void;
+  onWhatsApp?: (contacts: Contact[]) => void;
+}
+
 export function renderContactTableCell({
   col,
   contact,
@@ -28,22 +45,7 @@ export function renderContactTableCell({
   t,
   onView,
   onWhatsApp,
-}: {
-  col: ContactsColumnConfig;
-  contact: Contact;
-  displayName: string;
-  getColumnWidth: (key: string) => number | undefined;
-  prefs: ContactPreferences;
-  countryCodesMap: Record<string, string>;
-  countryCodes: Array<{ country: string; code: string }>;
-  contactsMap: Map<string, Contact> | null;
-  allContacts: Contact[];
-  showArchived: boolean;
-  isSelected: boolean;
-  t: Translate;
-  onView?: (contact: Contact) => void;
-  onWhatsApp?: (contacts: Contact[]) => void;
-}): React.JSX.Element {
+}: RenderContactTableCellParams): React.JSX.Element {
   const width = getColumnWidth(col.id) ?? col.width;
   const widthStyle = columnWidthStyle(width);
 

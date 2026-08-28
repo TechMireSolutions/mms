@@ -1,3 +1,4 @@
+import type React from "react";
 import { MapPin, Building, Landmark } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
@@ -10,7 +11,7 @@ import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import type { Address } from "@mms/shared";
 
-interface ContactAddressesTabProps extends ContactSubListTabBaseProps {
+export interface ContactAddressesTabProps extends ContactSubListTabBaseProps {
   addressLabels: string[];
   onUpdateAddressLabels: (labels: string[]) => void;
   countryOptions: string[];
@@ -39,7 +40,7 @@ export function ContactAddressesTab({
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
-}: ContactAddressesTabProps): JSX.Element {
+}: ContactAddressesTabProps): React.JSX.Element {
   const { t } = useTranslation();
   const showLabel = isFieldEnabled("addresses", "label");
   const showLine1 = isFieldEnabled("addresses", "line1");

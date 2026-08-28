@@ -21,7 +21,7 @@ import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 const EXAM_SEARCH_DEBOUNCE_MS = 300;
 
-interface ExaminationsListProps {
+export interface ExaminationsListProps {
   onNew: () => void;
   onEdit: (exam: Exam) => void;
   canWrite?: boolean;
@@ -62,7 +62,7 @@ export default function ExaminationsList({
   onColumnResize,
   columnCustomizer,
   onRowClick,
-}: ExaminationsListProps): React.ReactElement {
+}: ExaminationsListProps): React.JSX.Element {
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const [search, setSearch] = useState("");

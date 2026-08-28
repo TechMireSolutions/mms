@@ -9,7 +9,7 @@ import { UserCardActions } from "@/tenant/features/users/components/UserCardActi
 import { UserCardHeader } from "@/tenant/features/users/components/UserCardHeader";
 import { UserCardMetadata } from "@/tenant/features/users/components/UserCardMetadata";
 
-interface UsersListCardsProps {
+export interface UsersListCardsProps {
   users: SystemUser[];
   selectedIds: string[];
   allSelected: boolean;
@@ -65,7 +65,7 @@ export function UsersListCards({
       deselectAllLabel={t("common.deselect")}
       selectedCountLabel={t("users.selectedCount", { count: selectedIds.length })}
       pageCountLabel={pageCountLabel}
-      checkboxIdPrefix="users"
+      checkboxIdPrefix="users-cards"
       renderItem={(user) => {
         const isSelected = selectedIds.includes(user.id);
         return (
@@ -80,6 +80,7 @@ export function UsersListCards({
               showSelect={canDelete}
               onToggleSelect={onToggleSelect}
               onView={onView}
+              isColumnVisible={isColumnVisible}
               reducedMotion={reducedMotion}
             />
             <UserArchivedBanner user={user} />

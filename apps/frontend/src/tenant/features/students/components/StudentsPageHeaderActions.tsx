@@ -2,7 +2,7 @@ import { UserPlus, Download } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface StudentsPageHeaderActionsProps {
+export interface StudentsPageHeaderActionsProps {
   canExport: boolean;
   canWrite: boolean;
   viewingDeleted: boolean;

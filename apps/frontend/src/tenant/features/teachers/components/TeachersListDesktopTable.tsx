@@ -17,7 +17,7 @@ import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLab
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { cn } from "@/lib/utils";
 import { TeachersListRowActions } from "@/tenant/features/teachers/components/TeachersListRowActions";
-import type { TeacherSortField } from "@/tenant/features/teachers/components/TeachersListTypes";
+import type { TeacherSortField } from "@/tenant/features/teachers/components/teachersListTypes";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
 import {
   getTeacherVisibleWorkColumns,
@@ -27,7 +27,7 @@ import {
 import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
 import { renderTeacherWorkColumnValue } from "@/tenant/features/teachers/components/teacherWorkColumnCell";
 
-type TeachersListDesktopTableProps = Omit<TeacherListContentProps, never>;
+export type TeachersListDesktopTableProps = TeacherListContentProps;
 
 export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): React.JSX.Element {
   const {
@@ -74,21 +74,21 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
     <>
       <Table className="table-fixed">
         <ModuleWorkTableHeader
-          columns={visibleColumns.map(col => ({
+          columns={visibleColumns.map((col) => ({
             id: col.key,
             label: col.label,
-            headerClassName: col.key !== "name" ? teacherWorkColumnHeadClass(col.key) : undefined
+            headerClassName: col.key !== "name" ? teacherWorkColumnHeadClass(col.key) : undefined,
           }))}
           sortField={sortField ?? undefined}
           sortDir={sortDir}
           onSort={handleSort}
-          getColumnWidth={(key) => getColumnWidth?.(key) ?? visibleColumns.find(c => c.key === key)?.width}
+          getColumnWidth={(key) => getColumnWidth?.(key) ?? visibleColumns.find((c) => c.key === key)?.width}
           setColumnWidth={onColumnResize ?? (() => {})}
           selection={{
             allSelected,
             someSelected,
             onSelectAll,
-            ariaLabel: allSelected ? t("common.deselect") : t("teachers.table.selectAll")
+            ariaLabel: allSelected ? t("common.deselect") : t("teachers.table.selectAll"),
           }}
           actionsLabel={t("teachers.table.actions")}
           stickyColumnId="name"
@@ -101,7 +101,7 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
                 <motion.tr
                   key={teacher.id}
                   {...rowMotion(Math.min(rowIndex * 0.03, 0.2))}
-                  className={`hover:bg-muted/20 transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
+                  className={cn("hover:bg-muted/20 transition-colors group", isSelected && "bg-primary/5")}
                 >
                   <TableCell
                     className={cn(
@@ -133,6 +133,7 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
                             id={teacher.id}
                             name={displayName}
                             avatar={teacher.avatar}
+                            gender={teacher.gender}
                             size="md"
                             className="shrink-0"
                           />
@@ -147,10 +148,12 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
                               <span className="block truncate">{displayName}</span>
                             </Button>
                             {teacher.employeeId ? (
-                              <p className="text-xs text-muted-foreground truncate">{teacher.employeeId}</p>
+                              <p className="text-xs text-muted-foreground truncate" title={teacher.employeeId}>
+                                {teacher.employeeId}
+                              </p>
                             ) : null}
                             {showDeleted && teacher.deletionReason ? (
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
+                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2" title={teacher.deletionReason}>
                                 {t("teachers.deletionReasonLabel")}: {teacher.deletionReason}
                               </p>
                             ) : null}

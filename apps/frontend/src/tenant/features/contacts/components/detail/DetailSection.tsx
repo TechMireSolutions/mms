@@ -1,4 +1,5 @@
-import type { JSX, ReactNode } from "react";
+import type React from "react";
+import type { ReactNode } from "react";
 import { Tag } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
@@ -6,13 +7,13 @@ import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
 import { COLLECTION_CONTAINER_CLASS, ICON_MAP } from "./contactDetailStyles";
 
-interface DetailSectionProps {
+export interface DetailSectionProps {
   title: string;
   children: ReactNode;
   accentColor?: "info" | "success" | "warning" | "destructive" | "primary" | "secondary" | "purple" | "amber" | "rose" | "teal" | "indigo" | "pink";
 }
 
-export function DetailSection({ title, children, accentColor }: DetailSectionProps): JSX.Element {
+export function DetailSection({ title, children, accentColor }: DetailSectionProps): React.JSX.Element {
   return (
     <div className="space-y-2">
       <DetailSectionTitle>{title}</DetailSectionTitle>
@@ -21,7 +22,7 @@ export function DetailSection({ title, children, accentColor }: DetailSectionPro
   );
 }
 
-interface FieldGroupCardProps {
+export interface FieldGroupCardProps {
   group: string;
   fields: { key: string; label: string; type: string }[];
   formatValue: (field: { key: string; type: string }) => string | null;
@@ -30,7 +31,7 @@ interface FieldGroupCardProps {
   accentColor?: "info" | "success" | "warning" | "destructive" | "primary" | "secondary" | "purple" | "amber" | "rose" | "teal" | "indigo" | "pink";
 }
 
-export function FieldGroupCard({ group, fields, formatValue, getRawValue, accentColor }: FieldGroupCardProps): JSX.Element | null {
+export function FieldGroupCard({ group, fields, formatValue, getRawValue, accentColor }: FieldGroupCardProps): React.JSX.Element | null {
   const validFields = fields.map((f) => ({ field: f, val: formatValue(f) })).filter((item) => Boolean(item.val));
   if (validFields.length === 0) return null;
 

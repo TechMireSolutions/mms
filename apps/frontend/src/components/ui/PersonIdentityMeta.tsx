@@ -2,6 +2,7 @@ import React, { type ReactNode } from "react";
 import { CheckCircle2 } from "lucide-react";
 import { GenderIcon } from "@/components/ui/GenderIcon";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
+import { getGenderBadgeTone } from "@/lib/genderUi";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -60,15 +61,10 @@ export const PersonIdentityMeta = React.memo(function PersonIdentityMeta({
       {hasGender ? (
         <Badge
           as={onGenderClick ? "button" : "span"}
+          type={onGenderClick ? "button" : undefined}
           pill={pill}
           onClick={onGenderClick}
-          tone={
-            normalizedGender === "male"
-              ? "info"
-              : normalizedGender === "female"
-              ? "secondary"
-              : "primary"
-          }
+          tone={getGenderBadgeTone(gender)}
           className={cn(
             "gap-1 text-xs font-semibold capitalize",
             badgePadding,
@@ -76,13 +72,14 @@ export const PersonIdentityMeta = React.memo(function PersonIdentityMeta({
           )}
         >
           <GenderIcon gender={gender} className={cn(iconSize, "inline shrink-0")} />
-          <span>{formatContactGenderLabel(gender!, t)}</span>
+          <span>{formatContactGenderLabel(normalizedGender!, t)}</span>
         </Badge>
       ) : null}
 
       {showSyed ? (
         <Badge
           as={onSyedClick ? "button" : "span"}
+          type={onSyedClick ? "button" : undefined}
           pill={pill}
           onClick={onSyedClick}
           tone="success"

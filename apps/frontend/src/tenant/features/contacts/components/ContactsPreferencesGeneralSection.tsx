@@ -1,3 +1,4 @@
+import type React from "react";
 import { Users } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -7,11 +8,7 @@ import { ToggleRow } from "@/components/ui/ToggleRow";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 
-export function ContactsPreferencesGeneralSection({
-  prefs,
-  countryOptions,
-  onUpdatePreference,
-}: {
+export interface ContactsPreferencesGeneralSectionProps {
   prefs: ContactPreferences;
   isPrefsDirty?: boolean;
   countryOptions: Array<{ value: string; label: string }>;
@@ -19,7 +16,13 @@ export function ContactsPreferencesGeneralSection({
     key: K,
     value: ContactPreferences[K],
   ) => void;
-}): JSX.Element {
+}
+
+export function ContactsPreferencesGeneralSection({
+  prefs,
+  countryOptions,
+  onUpdatePreference,
+}: ContactsPreferencesGeneralSectionProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

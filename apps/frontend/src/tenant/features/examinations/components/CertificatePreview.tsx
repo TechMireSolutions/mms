@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface CertificatePreviewProps {
+export interface CertificatePreviewProps {
   result: StudentResultItem;
   exam: Exam;
   onClose: () => void;
@@ -25,7 +25,7 @@ interface CertificatePreviewProps {
  * @param props.onClose - Action callback to close modal.
  * @returns The CertificatePreview component.
  */
-export function CertificatePreview({ result, exam, onClose }: CertificatePreviewProps): React.ReactElement {
+export function CertificatePreview({ result, exam, onClose }: CertificatePreviewProps): React.JSX.Element {
   const certRef = useRef<HTMLDivElement | null>(null);
   const { primary, secondary } = useBrandPalette();
   const { t } = useTranslation();

@@ -14,7 +14,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
 import { genderStatusBadgeConfig } from "@/lib/genderStatusBadge";
 
-interface Step1SelectStudentProps {
+export interface Step1SelectStudentProps {
   value: Student | null | undefined;
   onChange: (student: Student) => void;
   sessions?: Session[];
@@ -23,7 +23,7 @@ interface Step1SelectStudentProps {
 /**
  * Step 1 component for selecting a student to enroll.
  */
-export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1SelectStudentProps): React.ReactElement {
+export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1SelectStudentProps): React.JSX.Element {
   const { t } = useTranslation();
   const [search, setSearch] = useState<string>("");
   const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);

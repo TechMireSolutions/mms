@@ -13,6 +13,30 @@ import { DuplicatePairCard } from "@/tenant/features/contacts/components/Duplica
 import type { DuplicatePair } from "@/tenant/features/contacts/components/duplicateDetectionTypes";
 import type { DuplicateTierFilter } from "@/tenant/features/contacts/hooks/useDuplicateDetectionState";
 
+export interface DuplicateDetectionModalProps {
+  prefs: ContactPreferences;
+  pairsLoading: boolean;
+  pairsFetching: boolean;
+  pairsError: boolean;
+  hasMore: boolean;
+  activePairs: DuplicatePair[];
+  totalPairs: number;
+  tierCounts: { all: number; high: number; medium: number; low: number };
+  searchQuery: string;
+  setSearchQuery: (query: string) => void;
+  tierFilter: DuplicateTierFilter;
+  setTierFilter: (tier: DuplicateTierFilter) => void;
+  keepIndex: Record<string, number>;
+  totalMerged: number;
+  canWrite: boolean;
+  onClose: () => void;
+  onMergePair: (pair: DuplicatePair) => void;
+  onDismiss: (pairId: string) => void;
+  onSelectKeep: (pairId: string, contactIndex: number) => void;
+  onLoadMore: () => void;
+  onRetry: () => void;
+}
+
 export function DuplicateDetectionModal({
   prefs,
   pairsLoading,
@@ -35,29 +59,7 @@ export function DuplicateDetectionModal({
   onSelectKeep,
   onLoadMore,
   onRetry,
-}: {
-  prefs: ContactPreferences;
-  pairsLoading: boolean;
-  pairsFetching: boolean;
-  pairsError: boolean;
-  hasMore: boolean;
-  activePairs: DuplicatePair[];
-  totalPairs: number;
-  tierCounts: { all: number; high: number; medium: number; low: number };
-  searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  tierFilter: DuplicateTierFilter;
-  setTierFilter: (tier: DuplicateTierFilter) => void;
-  keepIndex: Record<string, number>;
-  totalMerged: number;
-  canWrite: boolean;
-  onClose: () => void;
-  onMergePair: (pair: DuplicatePair) => void;
-  onDismiss: (pairId: string) => void;
-  onSelectKeep: (pairId: string, contactIndex: number) => void;
-  onLoadMore: () => void;
-  onRetry: () => void;
-}): React.JSX.Element {
+}: DuplicateDetectionModalProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const filterTabs: Array<{ id: DuplicateTierFilter; label: string; count: number }> = [

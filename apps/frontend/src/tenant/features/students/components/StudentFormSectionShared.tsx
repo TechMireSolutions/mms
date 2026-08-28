@@ -34,19 +34,23 @@ export function resolveStudentFieldLabel(
 
 export { FieldErrorMessage as FieldError };
 
+import { cn } from "@/lib/utils";
+
+export interface ContactProfileValueProps {
+  label: string;
+  value: string;
+  icon: ComponentType<{ className?: string }>;
+  iconClassName?: string;
+  error?: string;
+}
+
 export function ContactProfileValue({
   label,
   value,
   icon,
   iconClassName,
   error,
-}: {
-  label: string;
-  value: string;
-  icon: ComponentType<{ className?: string }>;
-  iconClassName?: string;
-  error?: string;
-}): React.JSX.Element {
+}: ContactProfileValueProps): React.JSX.Element {
   const { t } = useTranslation();
   const Icon = icon;
   const hasValue = value.trim().length > 0;
@@ -54,14 +58,18 @@ export function ContactProfileValue({
   return (
     <Field label={label} hint={t("students.form.contactFieldHint")} error={error}>
       <div
-        className={`flex min-h-11 items-center gap-3 rounded-lg border px-3.5 py-2.5 ${
-          error ? "border-destructive bg-destructive/10" : "border-border/60 bg-muted/40"
-        }`}
+        className={cn(
+          "flex min-h-11 items-center gap-3 rounded-lg border px-3.5 py-2.5",
+          error ? "border-destructive bg-destructive/10" : "border-border/60 bg-muted/40",
+        )}
       >
         <Icon
-          className={`h-4 w-4 shrink-0 ${error ? "text-destructive" : iconClassName || "text-muted-foreground"}`}
+          className={cn(
+            "h-4 w-4 shrink-0",
+            error ? "text-destructive" : iconClassName || "text-muted-foreground",
+          )}
         />
-        <span className={`text-sm font-semibold ${hasValue ? "text-foreground" : "text-muted-foreground"}`}>
+        <span className={cn("text-sm font-semibold", hasValue ? "text-foreground" : "text-muted-foreground")}>
           {hasValue ? value : t("students.form.notSetOnContact")}
         </span>
       </div>

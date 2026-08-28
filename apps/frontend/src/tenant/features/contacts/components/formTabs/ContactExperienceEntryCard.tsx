@@ -1,3 +1,4 @@
+import type React from "react";
 import { Briefcase, Building2, MapPin } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { DatePicker } from "@/components/ui/DatePicker";
@@ -10,7 +11,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactExperience } from "@mms/shared";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 
-interface ContactExperienceEntryCardProps
+export interface ContactExperienceEntryCardProps
   extends Pick<
     ContactSubListTabBaseProps,
     "formInstanceId" | "getLocalId" | "getListItemError" | "isFieldRequired"
@@ -50,7 +51,7 @@ export function ContactExperienceEntryCard({
   onUpdateEmploymentTypeOptions,
   onUpdate,
   onRemove,
-}: ContactExperienceEntryCardProps): JSX.Element {
+}: ContactExperienceEntryCardProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const titleError = getListItemError("experience", "title", idx);

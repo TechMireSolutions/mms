@@ -11,7 +11,7 @@ import {
 import type { AttendanceRow, GeoData, OfflinePayload } from '@/tenant/features/attendance/components/markAttendanceTypes';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
-interface UseMarkAttendancePersistenceOptions {
+export interface UseMarkAttendancePersistenceOptions {
   filters: { classId: string; date: string };
   role: string;
   rows: AttendanceRow[];

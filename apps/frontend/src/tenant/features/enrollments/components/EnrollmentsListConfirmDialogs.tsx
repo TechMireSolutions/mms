@@ -1,7 +1,7 @@
 import { ModuleSoftDeleteConfirmDialogs } from '@/components/ui/ModuleSoftDeleteConfirmDialogs';
 import { useTranslation } from '@/hooks/useTranslation';
 
-interface EnrollmentsListConfirmDialogsProps {
+export interface EnrollmentsListConfirmDialogsProps {
   pendingDeleteId: string | null;
   onPendingDeleteChange: (id: string | null) => void;
   onConfirmDelete: (reason?: string) => void;

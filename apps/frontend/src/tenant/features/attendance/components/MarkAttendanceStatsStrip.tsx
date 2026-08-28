@@ -2,12 +2,12 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { attendanceStatusLabel } from "@/lib/attendanceStatusUi";
 import type { AttendanceStatus } from "@/lib/data/attendanceData";
 
-interface MarkAttendanceStatsStripProps {
+export interface MarkAttendanceStatsStripProps {
   statuses: AttendanceStatus[];
   stats: Record<string, number>;
 }
 
-export function MarkAttendanceStatsStrip({ statuses, stats }: MarkAttendanceStatsStripProps) {
+export function MarkAttendanceStatsStrip({ statuses, stats }: MarkAttendanceStatsStripProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

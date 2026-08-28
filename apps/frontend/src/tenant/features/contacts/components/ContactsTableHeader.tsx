@@ -5,6 +5,19 @@ import type { useTranslation } from "@/hooks/useTranslation";
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
+export interface ContactsTableHeaderProps {
+  columns: ContactsColumnConfig[];
+  sortField: string;
+  sortDir: "asc" | "desc";
+  onSort: (field: string) => void;
+  getColumnWidth: (key: string) => number | undefined;
+  setColumnWidth: (key: string, width: number) => void;
+  allSelected: boolean;
+  someSelected: boolean;
+  onSelectAll: () => void;
+  t: Translate;
+}
+
 export function ContactsTableHeader({
   columns,
   sortField,
@@ -16,18 +29,7 @@ export function ContactsTableHeader({
   someSelected,
   onSelectAll,
   t,
-}: {
-  columns: ContactsColumnConfig[];
-  sortField: string;
-  sortDir: "asc" | "desc";
-  onSort: (field: string) => void;
-  getColumnWidth: (key: string) => number | undefined;
-  setColumnWidth: (key: string, width: number) => void;
-  allSelected: boolean;
-  someSelected: boolean;
-  onSelectAll: () => void;
-  t: Translate;
-}): React.JSX.Element {
+}: ContactsTableHeaderProps): React.JSX.Element {
   return (
     <ModuleWorkTableHeader
       columns={columns}

@@ -16,7 +16,7 @@ import {
   getStudentVisibleWorkColumns,
 } from "@/tenant/features/students/components/studentsListVisibleColumns";
 
-type StudentsListDesktopTableProps = Pick<
+export type StudentsListDesktopTableProps = Pick<
   StudentsListContentTableProps,
   | "paginatedStudents"
   | "sessions"
@@ -69,7 +69,7 @@ export function StudentsListDesktopTable({
   onOpenComposer,
   getColumnWidth,
   onColumnResize,
-}: StudentsListDesktopTableProps) {
+}: StudentsListDesktopTableProps): React.JSX.Element {
   const { t } = useTranslation();
   const visibleColumns = getStudentVisibleWorkColumns(columnRegistry, isColumnVisible);
   const handleSort = (field: string) => onSort(field as StudentsListContentSortField);

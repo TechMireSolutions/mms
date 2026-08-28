@@ -1,4 +1,5 @@
-import { useState, type JSX } from "react";
+import type React from "react";
+import { useState } from "react";
 import { Tag, Loader2 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,7 @@ export function ContactsBulkTagModal({
   selectedCount,
   onConfirm,
   isPending,
-}: ContactsBulkTagModalProps): JSX.Element | null {
+}: ContactsBulkTagModalProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const [tagInput, setTagInput] = useState("");
 

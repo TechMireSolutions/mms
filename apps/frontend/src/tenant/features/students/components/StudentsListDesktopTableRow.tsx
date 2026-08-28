@@ -11,7 +11,7 @@ import { renderStudentsListDesktopTableCell } from "@/tenant/features/students/c
 import { StudentsRowActions } from "@/tenant/features/students/components/StudentsRowActions";
 import type { StudentsListContentTableProps } from "@/tenant/features/students/components/studentsListTypes";
 
-type StudentsListDesktopTableRowProps = Pick<
+export type StudentsListDesktopTableRowProps = Pick<
   StudentsListContentTableProps,
   | "sessions"
   | "selectedIds"
@@ -51,7 +51,7 @@ export function StudentsListDesktopTableRow({
   onDelete,
   onRestore,
   onOpenComposer,
-}: StudentsListDesktopTableRowProps) {
+}: StudentsListDesktopTableRowProps): React.JSX.Element {
   const { t } = useTranslation();
   const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
   const emptyDash = t("students.table.emptyDash");
@@ -63,9 +63,7 @@ export function StudentsListDesktopTableRow({
     <motion.tr
       key={studentIdStr}
       {...rowMotion(Math.min(rowIndex * 0.03, 0.2))}
-      className={`hover:bg-muted/20 transition-colors group ${
-        isSelected ? "bg-primary/5" : ""
-      }`}
+      className={cn("hover:bg-muted/20 transition-colors group", isSelected && "bg-primary/5")}
     >
       <TableCell
         className={cn(

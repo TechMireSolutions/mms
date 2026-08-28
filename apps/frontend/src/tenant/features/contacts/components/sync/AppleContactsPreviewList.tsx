@@ -1,8 +1,18 @@
+import type React from "react";
 import { RefreshCw, Upload } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { getDisplayName, getPrimaryEmail, getPrimaryPhone } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+
+export interface AppleContactsPreviewListProps {
+  previewList: Contact[];
+  importing: boolean;
+  onClear: () => void;
+  onImport: () => void;
+  onChooseDifferent: () => void;
+  t: TranslationFunction;
+}
 
 export function AppleContactsPreviewList({
   previewList,
@@ -11,14 +21,7 @@ export function AppleContactsPreviewList({
   onImport,
   onChooseDifferent,
   t,
-}: {
-  previewList: Contact[];
-  importing: boolean;
-  onClear: () => void;
-  onImport: () => void;
-  onChooseDifferent: () => void;
-  t: TranslationFunction;
-}) {
+}: AppleContactsPreviewListProps): React.JSX.Element {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">

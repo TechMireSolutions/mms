@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import React from 'react';
 import { BookOpen } from 'lucide-react';
 import { EXAMINATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
@@ -23,7 +23,7 @@ export function ExaminationsBulkActionBar({
   onRequestBulkRestore,
   onClearSelection,
   bulkActions = EXAMINATIONS_MODULE_MANIFEST.work.bulkActions,
-}: ExaminationsBulkActionBarProps): ReactElement {
+}: ExaminationsBulkActionBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

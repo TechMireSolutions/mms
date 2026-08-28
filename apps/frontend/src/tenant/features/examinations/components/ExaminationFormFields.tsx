@@ -12,19 +12,19 @@ import { EXAMINATION_SUBJECT_OPTIONS } from "./examinationFormConstants";
 import type { useExaminationForm } from "./useExaminationForm";
 import type { Exam } from "@/lib/data/examinationData";
 
-type ExaminationFormFieldsProps = Pick<
+export type ExaminationFormFieldsProps = Pick<
   ReturnType<typeof useExaminationForm>,
   "t" | "errors" | "examDraft" | "classes" | "updateDraft" | "getFieldError"
 >;
 
 export const ExaminationFormFields = React.memo(function ExaminationFormFields({
-      t,
-      errors,
-      examDraft,
-      classes,
-      updateDraft,
-      getFieldError,
-    }: ExaminationFormFieldsProps): React.JSX.Element {
+  t,
+  errors,
+  examDraft,
+  classes,
+  updateDraft,
+  getFieldError,
+}: ExaminationFormFieldsProps): React.JSX.Element {
 
       return (
         <div className="space-y-5 text-start">

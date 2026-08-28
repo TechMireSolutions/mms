@@ -4,7 +4,7 @@ import { ActionButton } from "@/components/ui/ActionButton";
 
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface EnrollmentsPageHeaderActionsProps {
+export interface EnrollmentsPageHeaderActionsProps {
   canExport: boolean;
   canWriteEnrollments: boolean;
   showDeleted: boolean;
@@ -20,7 +20,7 @@ export function EnrollmentsPageHeaderActions({
   t,
   onExport,
   onNew,
-}: EnrollmentsPageHeaderActionsProps) {
+}: EnrollmentsPageHeaderActionsProps): React.JSX.Element {
   return (
     <div className="flex items-center gap-2">
       {canExport && !showDeleted ? (

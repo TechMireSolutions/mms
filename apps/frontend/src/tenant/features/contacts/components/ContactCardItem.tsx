@@ -20,7 +20,7 @@ import type { ContactsColumnConfig } from "@/tenant/features/contacts/components
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface ContactCardItemProps {
+export interface ContactCardItemProps {
   contact: Contact;
   isSelected: boolean;
   prefs: ContactPreferences;
@@ -29,7 +29,7 @@ interface ContactCardItemProps {
   contactsMap: Map<string, Contact> | null;
   allContacts: Contact[];
   otherColumns: ContactsColumnConfig[];
-  isColumnVisible: (key: string) => boolean;
+  isColumnVisible?: (key: string) => boolean;
   showArchived: boolean;
   canWrite: boolean;
   canDelete: boolean;
@@ -43,6 +43,7 @@ interface ContactCardItemProps {
   onEmail?: (contacts: Contact[]) => void;
 }
 
+/** Individual Contact Work directory card. */
 export function ContactCardItem({
   contact,
   isSelected,
@@ -67,7 +68,6 @@ export function ContactCardItem({
 }: ContactCardItemProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const displayName = getDisplayName(contact);
   const { phone, countryCode, phoneDisplay } = resolveContactPhoneDisplay(
     contact,
     prefs,
@@ -75,12 +75,19 @@ export function ContactCardItem({
     countryCodes,
   );
   const email = getPrimaryEmail(contact);
+  const displayName = getDisplayName(contact) || phoneDisplay || email || "";
+  const showGenderAccent = !isColumnVisible || isColumnVisible("gender");
+  const columnVisibleFn = isColumnVisible ?? (() => true);
 
   return (
     <DirectoryEntityCard
       isSelected={isSelected}
       reducedMotion={reducedMotion}
-      accentClassName={getGenderAccentBarClass(isSelected, contact.gender)}
+      accentClassName={
+        showGenderAccent
+          ? getGenderAccentBarClass(isSelected, contact.gender)
+          : undefined
+      }
     >
       <ContactCardHeader
         contact={contact}
@@ -88,6 +95,7 @@ export function ContactCardItem({
         displayName={displayName}
         onSelect={onSelect}
         onView={onView}
+        isColumnVisible={isColumnVisible}
         reducedMotion={reducedMotion}
       />
 
@@ -102,7 +110,7 @@ export function ContactCardItem({
         email={email}
         displayName={displayName}
         showArchived={showArchived}
-        isColumnVisible={isColumnVisible}
+        isColumnVisible={columnVisibleFn}
         onWhatsApp={onWhatsApp}
         onSms={onSms}
         onEmail={onEmail}
@@ -114,7 +122,7 @@ export function ContactCardItem({
         allContacts={allContacts}
         contactsMap={contactsMap}
         otherColumns={otherColumns}
-        isColumnVisible={isColumnVisible}
+        isColumnVisible={columnVisibleFn}
         t={t}
       />
 

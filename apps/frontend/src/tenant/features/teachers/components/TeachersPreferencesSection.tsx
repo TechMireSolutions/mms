@@ -6,18 +6,18 @@ import { ToggleRow } from "@/components/ui/ToggleRow";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { TeachersSettings } from "@mms/shared";
 
-type TeachersPreferencesSectionProps = {
+export interface TeachersPreferencesSectionProps {
   settingsDraft: TeachersSettings;
   upd: <K extends keyof TeachersSettings>(field: K, value: TeachersSettings[K]) => void;
   specializationOptions: string[];
-};
+}
 
 /** Teachers Setup Preferences body — Students PreferencesSection analogue. */
 export function TeachersPreferencesSection({
   settingsDraft,
   upd,
   specializationOptions,
-}: TeachersPreferencesSectionProps): React.ReactElement {
+}: TeachersPreferencesSectionProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

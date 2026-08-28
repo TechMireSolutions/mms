@@ -7,18 +7,18 @@ import { AuditLog } from "@/tenant/features/attendance/components/AuditLog";
 import { MarkAttendance } from "@/tenant/features/attendance/components/MarkAttendance";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 
-type AttendanceWorkTab = {
+export type AttendanceWorkTab = {
   id: string;
   label: string;
   icon: React.ComponentType<{ className?: string }>;
 };
 
-type AttendanceColumnProps = Pick<
+export type AttendanceColumnProps = Pick<
   React.ComponentProps<typeof AttendanceRecords>,
   "isColumnVisible" | "getColumnWidth" | "onColumnResize" | "columnCustomizer"
 >;
 
-interface AttendanceWorkTierProps {
+export interface AttendanceWorkTierProps {
   showRoleBanner: boolean;
   role: string;
   roleLabel: string;

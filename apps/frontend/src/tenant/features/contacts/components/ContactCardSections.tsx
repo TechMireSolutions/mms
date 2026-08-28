@@ -1,4 +1,4 @@
-import React, { type JSX } from "react";
+import React from "react";
 import type { Contact, ContactPreferences } from "@mms/shared";
 import { DirectoryCardInfoPills } from "@/components/ui/DirectoryCardInfoPills";
 import {
@@ -10,6 +10,23 @@ export {
   ContactCardMetadataGrid,
   ContactCardDeletedBanner,
 } from "@/tenant/features/contacts/components/ContactCardMetadataGrid";
+
+export interface ContactCardInfoPillsProps {
+  contact?: Contact;
+  prefs?: ContactPreferences;
+  countryCodesMap?: Record<string, string>;
+  countryCodes?: Array<{ country: string; code: string }>;
+  phone?: string | null;
+  countryCode?: string;
+  phoneDisplay?: string;
+  email?: string | null;
+  displayName?: string;
+  showArchived?: boolean;
+  isColumnVisible: (key: string) => boolean;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
+}
 
 /** Contacts face phone/email pills — shared DirectoryCardInfoPills chrome with inline contact actions (multi-channel). */
 export function ContactCardInfoPills({
@@ -27,22 +44,7 @@ export function ContactCardInfoPills({
   onWhatsApp,
   onSms,
   onEmail,
-}: {
-  contact?: Contact;
-  prefs?: ContactPreferences;
-  countryCodesMap?: Record<string, string>;
-  countryCodes?: Array<{ country: string; code: string }>;
-  phone?: string | null;
-  countryCode?: string;
-  phoneDisplay?: string;
-  email?: string | null;
-  displayName?: string;
-  showArchived?: boolean;
-  isColumnVisible: (key: string) => boolean;
-  onWhatsApp?: (contacts: Contact[]) => void;
-  onSms?: (contacts: Contact[]) => void;
-  onEmail?: (contacts: Contact[]) => void;
-}): JSX.Element | null {
+}: ContactCardInfoPillsProps): React.JSX.Element | null {
   const allPhones = React.useMemo(() => {
     if (contact) {
       return resolveAllContactPhones(contact, prefs, countryCodesMap, countryCodes);

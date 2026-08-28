@@ -1,17 +1,18 @@
-import type { JSX } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
-import { ExaminationsFiltersMenuButton } from '@/tenant/features/examinations/components/ExaminationsFiltersMenuButton';
-
-const EXAM_STATUSES = ['upcoming', 'ongoing', 'completed', 'scheduled', 'cancelled'] as const;
+import {
+  ExaminationsFiltersMenuButton,
+  EXAM_STATUSES,
+} from '@/tenant/features/examinations/components/ExaminationsFiltersMenuButton';
 
 export const EXAMINATIONS_WORK_SEARCH_INPUT_ID = 'examinations-work-search';
 
-interface ExaminationsListFiltersProps {
+export interface ExaminationsListFiltersProps {
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;
@@ -43,7 +44,7 @@ export function ExaminationsListFilters({
   onToggleStatus,
   onClearStatuses,
   onNew,
-}: ExaminationsListFiltersProps): JSX.Element {
+}: ExaminationsListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const clearFilters = (): void => {

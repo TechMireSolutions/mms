@@ -1,3 +1,4 @@
+import type React from "react";
 import { Users } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -12,7 +13,7 @@ import { ContactsReportsTier } from "@/tenant/features/contacts/components/Conta
 import { ContactsPageHeaderActions } from "@/tenant/features/contacts/components/ContactsPageHeaderActions";
 import type { useContactsPageController } from "@/tenant/features/contacts/hooks/useContactsPageController";
 
-type ContactsPageViewProps = ReturnType<typeof useContactsPageController>;
+export type ContactsPageViewProps = ReturnType<typeof useContactsPageController>;
 
 export function ContactsPageView({
   t,

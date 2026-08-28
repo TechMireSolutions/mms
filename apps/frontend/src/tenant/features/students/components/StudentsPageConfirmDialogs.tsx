@@ -2,7 +2,7 @@ import { ModuleSoftDeleteConfirmDialogs } from "@/components/ui/ModuleSoftDelete
 import { useTranslation } from "@/hooks/useTranslation";
 import type { StudentsDeleteTarget } from "@/tenant/features/students/hooks/useStudentsPageOverlayState";
 
-interface StudentsPageConfirmDialogsProps {
+export interface StudentsPageConfirmDialogsProps {
   bulkDeleteOpen: boolean;
   onBulkDeleteOpenChange: (open: boolean) => void;
   selectedCount: number;

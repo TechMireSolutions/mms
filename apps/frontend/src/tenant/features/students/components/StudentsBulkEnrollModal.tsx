@@ -1,10 +1,12 @@
-import { useState, type JSX } from "react";
+import type React from "react";
+import { useState } from "react";
 import { BookOpen, Loader2, Check } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessions, useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import type { StudentsBulkEnrollBody } from "@mms/shared";
+import { cn } from "@/lib/utils";
 
 export interface StudentsBulkEnrollModalProps {
   open: boolean;
@@ -20,7 +22,7 @@ export function StudentsBulkEnrollModal({
   selectedCount,
   onConfirm,
   isPending = false,
-}: StudentsBulkEnrollModalProps): JSX.Element | null {
+}: StudentsBulkEnrollModalProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const sessionsQuery = useSessions();
   const sessions = useSessionsCollection();
@@ -110,18 +112,20 @@ export function StudentsBulkEnrollModal({
                   key={opt.id}
                   type="button"
                   onClick={() => setMode(opt.id)}
-                  className={`flex items-start gap-2 p-3 text-start rounded-xl border text-xs transition-colors min-h-11 ${
+                  className={cn(
+                    "flex items-start gap-2 p-3 text-start rounded-xl border text-xs transition-colors min-h-11",
                     isSelected
                       ? "border-primary bg-primary/10 text-foreground font-medium ring-1 ring-primary"
-                      : "border-border/60 hover:bg-muted/50 text-muted-foreground"
-                  }`}
+                      : "border-border/60 hover:bg-muted/50 text-muted-foreground",
+                  )}
                 >
                   <div
-                    className={`w-4 h-4 rounded-full border flex items-center justify-center mt-0.5 shrink-0 ${
+                    className={cn(
+                      "w-4 h-4 rounded-full border flex items-center justify-center mt-0.5 shrink-0",
                       isSelected
                         ? "border-primary bg-primary text-primary-foreground"
-                        : "border-muted-foreground/40"
-                    }`}
+                        : "border-muted-foreground/40",
+                    )}
                   >
                     {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-background" />}
                   </div>
@@ -169,11 +173,12 @@ export function StudentsBulkEnrollModal({
                     key={session.id}
                     type="button"
                     onClick={() => toggleSession(String(session.id))}
-                    className={`w-full flex items-center justify-between p-2.5 rounded-lg text-xs text-start transition-colors min-h-11 ${
+                    className={cn(
+                      "w-full flex items-center justify-between p-2.5 rounded-lg text-xs text-start transition-colors min-h-11",
                       isChecked
                         ? "bg-primary/15 text-foreground font-semibold"
-                        : "hover:bg-muted text-muted-foreground"
-                    }`}
+                        : "hover:bg-muted text-muted-foreground",
+                    )}
                   >
                     <div className="min-w-0">
                       <p className="truncate font-medium text-foreground">

@@ -6,7 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useAttendanceMetrics } from '@/tenant/features/attendance/hooks/useAttendance';
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 
-interface AttendanceCommandMetricsProps {
+export interface AttendanceCommandMetricsProps {
   total: number;
   shown: number;
   selectedDate: string;

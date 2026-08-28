@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import React from 'react';
 import { formatDate } from '@mms/shared';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -16,12 +16,12 @@ import {
   type ExaminationsListContentProps,
 } from '@/tenant/features/examinations/components/examinationsListContentShared';
 
-type ExaminationsListCardsProps = Omit<
+export type ExaminationsListCardsProps = Omit<
   ExaminationsListContentProps,
   'getColumnWidth' | 'onColumnResize'
 >;
 
-export function ExaminationsListCards(props: ExaminationsListCardsProps): JSX.Element {
+export function ExaminationsListCards(props: ExaminationsListCardsProps): React.JSX.Element {
   const {
     exams,
     selectedIds,

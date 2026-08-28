@@ -6,6 +6,7 @@ import { UserAvatar } from "@/components/ui/UserAvatar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { GrBadge } from "@/tenant/features/students/components/GrBadge";
 import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
 export interface SiblingStudentItem {
@@ -17,7 +18,7 @@ export interface SiblingStudentItem {
   sessionNames: string[];
 }
 
-interface StudentDetailSiblingsSectionProps {
+export interface StudentDetailSiblingsSectionProps {
   siblings: SiblingStudentItem[];
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
   onViewSibling?: (siblingId: string) => void;
@@ -39,51 +40,66 @@ export function StudentDetailSiblingsSection({
       </DetailSectionTitle>
 
       <Card accentColor="success" className="divide-y divide-border/50 p-0">
-        {siblings.map((sibling) => (
-          <div
-            key={sibling.id}
-            onClick={onViewSibling ? () => onViewSibling(sibling.id) : undefined}
-            className={`p-3 transition-colors ${
-              onViewSibling
-                ? "hover:bg-muted/60 cursor-pointer"
-                : ""
-            }`}
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <UserAvatar
-                  id={sibling.id}
-                  name={sibling.name}
-                  className="w-8 h-8 rounded-full text-xs font-bold shrink-0"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-xs font-bold text-foreground truncate">
-                      {sibling.name}
-                    </span>
-                    {sibling.grNumber && <GrBadge grNumber={sibling.grNumber} />}
-                    {sibling.status && (
-                      <StatusBadge
-                        status={sibling.status}
-                        size="sm"
-                        config={statusBadgeConfig}
-                      />
+        {siblings.map((sibling) => {
+          const isInteractive = Boolean(onViewSibling);
+          const handleKeyDown = isInteractive
+            ? (e: React.KeyboardEvent) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onViewSibling?.(sibling.id);
+                }
+              }
+            : undefined;
+
+          return (
+            <div
+              key={sibling.id}
+              role={isInteractive ? "button" : undefined}
+              tabIndex={isInteractive ? 0 : undefined}
+              onClick={isInteractive ? () => onViewSibling?.(sibling.id) : undefined}
+              onKeyDown={handleKeyDown}
+              className={cn(
+                "p-3 transition-colors",
+                isInteractive && "hover:bg-muted/60 cursor-pointer focus:outline-none focus-visible:bg-muted/60",
+              )}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <UserAvatar
+                    id={sibling.id}
+                    name={sibling.name}
+                    gender={sibling.gender}
+                    className="w-8 h-8 rounded-full text-xs font-bold shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-bold text-foreground truncate" title={sibling.name}>
+                        {sibling.name}
+                      </span>
+                      {sibling.grNumber && <GrBadge grNumber={sibling.grNumber} />}
+                      {sibling.status && (
+                        <StatusBadge
+                          status={sibling.status}
+                          size="sm"
+                          config={statusBadgeConfig}
+                        />
+                      )}
+                    </div>
+                    {sibling.sessionNames.length > 0 && (
+                      <p className="text-[11px] text-muted-foreground truncate mt-0.5" title={sibling.sessionNames.join(", ")}>
+                        {sibling.sessionNames.join(", ")}
+                      </p>
                     )}
                   </div>
-                  {sibling.sessionNames.length > 0 && (
-                    <p className="text-[11px] text-muted-foreground truncate mt-0.5">
-                      {sibling.sessionNames.join(", ")}
-                    </p>
-                  )}
                 </div>
-              </div>
 
-              {onViewSibling && (
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-              )}
+                {isInteractive && (
+                  <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 rtl:rotate-180" aria-hidden />
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </Card>
     </div>
   );

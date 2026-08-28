@@ -1,4 +1,3 @@
-import type { ReactElement } from 'react';
 import { Briefcase, ChevronDown, IdCard, Users } from 'lucide-react';
 import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
 import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
@@ -68,7 +67,7 @@ export function TeachersBulkActionBar({
   bulkActions = TEACHERS_MODULE_MANIFEST.work.bulkActions,
   statusPending = false,
   specializationPending = false,
-}: TeachersBulkActionBarProps): ReactElement {
+}: TeachersBulkActionBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const showWhatsApp = bulkActions.includes('whatsapp') && canWriteMessaging && Boolean(onWhatsApp);

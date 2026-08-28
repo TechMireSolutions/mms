@@ -1,12 +1,12 @@
 import React from 'react';
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 
-interface RowProps {
+export interface Step6ConfirmationRowProps {
   label: string;
   value: React.ReactNode;
 }
 
-export function Step6ConfirmationRow({ label, value }: RowProps): React.ReactElement {
+export function Step6ConfirmationRow({ label, value }: Step6ConfirmationRowProps): React.JSX.Element {
   return (
     <div className="flex items-start justify-between gap-4 py-2 border-b border-border last:border-0">
       <span className="text-xs text-muted-foreground">{label}</span>
@@ -15,13 +15,13 @@ export function Step6ConfirmationRow({ label, value }: RowProps): React.ReactEle
   );
 }
 
-interface SectionProps {
+export interface Step6ConfirmationSectionProps {
   icon: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
   title: string;
   children: React.ReactNode;
 }
 
-export function Step6ConfirmationSection({ icon: Icon, title, children }: SectionProps): React.ReactElement {
+export function Step6ConfirmationSection({ icon: Icon, title, children }: Step6ConfirmationSectionProps): React.JSX.Element {
   return (
     <section className={`${WORK_SURFACE} overflow-hidden`} aria-label={title}>
       <div className="flex items-center gap-2 px-4 py-2.5 bg-muted/40 border-b border-border">

@@ -3,11 +3,13 @@ import { FileText } from "lucide-react";
 import { Field } from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";
+import { FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FieldDefinition, Teacher } from "@mms/shared";
 import { resolveTeacherFieldLabel } from "@/tenant/features/teachers/components/TeacherFormSectionShared";
 
-interface TeacherNotesSectionProps {
+export interface TeacherNotesSectionProps {
   notes?: string;
   fields: Record<string, FieldDefinition[]>;
   isFieldEnabled: (fieldId: string) => boolean;
@@ -45,7 +47,7 @@ export function TeacherNotesSection({
             value={notes || ""}
             onChange={(event) => onDraftChange({ notes: event.target.value })}
             placeholder={t("teachers.form.notesPlaceholder")}
-            className="min-h-30"
+            className={cn(FORM_TEXTAREA, "min-h-30")}
           />
         </Field>
       </SectionCard>

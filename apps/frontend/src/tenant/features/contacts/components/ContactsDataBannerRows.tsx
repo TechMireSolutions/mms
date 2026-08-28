@@ -1,9 +1,14 @@
+import type React from "react";
 import { WifiOff, CloudUpload, AlertTriangle } from "lucide-react";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { Button } from "@/components/ui/button";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 
-export function ContactsOfflineBanner({ t }: { t: TranslationFunction }): React.JSX.Element {
+export interface ContactsOfflineBannerProps {
+  t: TranslationFunction;
+}
+
+export function ContactsOfflineBanner({ t }: ContactsOfflineBannerProps): React.JSX.Element {
   return (
     <WarningCallout
       icon={WifiOff}
@@ -14,17 +19,19 @@ export function ContactsOfflineBanner({ t }: { t: TranslationFunction }): React.
   );
 }
 
+export interface ContactsPendingBannerProps {
+  pendingCount: number;
+  flushing: boolean;
+  onFlush: () => void;
+  t: TranslationFunction;
+}
+
 export function ContactsPendingBanner({
   pendingCount,
   flushing,
   onFlush,
   t,
-}: {
-  pendingCount: number;
-  flushing: boolean;
-  onFlush: () => void;
-  t: TranslationFunction;
-}): React.JSX.Element {
+}: ContactsPendingBannerProps): React.JSX.Element {
   return (
     <WarningCallout
       icon={CloudUpload}
@@ -52,17 +59,19 @@ export function ContactsPendingBanner({
   );
 }
 
+export interface ContactsConflictBannerProps {
+  conflictCount: number;
+  onReview?: () => void;
+  onDismissAll: () => void;
+  t: TranslationFunction;
+}
+
 export function ContactsConflictBanner({
   conflictCount,
   onReview,
   onDismissAll,
   t,
-}: {
-  conflictCount: number;
-  onReview?: () => void;
-  onDismissAll: () => void;
-  t: TranslationFunction;
-}): React.JSX.Element {
+}: ContactsConflictBannerProps): React.JSX.Element {
   return (
     <WarningCallout
       icon={AlertTriangle}

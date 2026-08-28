@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import type { EnrollmentsReportAggregates } from "@mms/shared";
 import { EMPTY_ENROLLMENTS_REPORT_AGGREGATES } from "@mms/shared";
 
-interface EnrollmentReportsProps {
+export interface EnrollmentReportsProps {
   aggregates?: EnrollmentsReportAggregates;
 }
 
@@ -24,7 +24,7 @@ interface EnrollmentReportsProps {
  */
 export function EnrollmentReports({
   aggregates = EMPTY_ENROLLMENTS_REPORT_AGGREGATES,
-}: EnrollmentReportsProps): React.ReactElement {
+}: EnrollmentReportsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
   const palette = useBrandPalette();

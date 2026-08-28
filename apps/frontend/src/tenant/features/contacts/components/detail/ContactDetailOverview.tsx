@@ -1,3 +1,4 @@
+import type React from "react";
 import { isContactRelationshipTabEnabled, type Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { FieldGroupCard } from "./ContactDetailShared";
@@ -6,7 +7,7 @@ import { ContactDetailNetwork } from "./ContactDetailNetwork";
 import { ContactDetailOverviewHero } from "./ContactDetailOverviewHero";
 import { ContactDetailOverviewQuickActions } from "./ContactDetailOverviewQuickActions";
 
-interface ContactDetailOverviewField {
+export interface ContactDetailOverviewField {
   key: string;
   label: string;
   type: string;
@@ -15,7 +16,7 @@ interface ContactDetailOverviewField {
   description: string;
 }
 
-interface ContactDetailOverviewProps {
+export interface ContactDetailOverviewProps {
   contact: Contact;
   allContacts: Contact[];
   grouped: Record<string, ContactDetailOverviewField[]>;
@@ -50,7 +51,7 @@ export function ContactDetailOverview({
   onSms,
   onEmail,
   onNavigateToContact,
-}: ContactDetailOverviewProps): JSX.Element {
+}: ContactDetailOverviewProps): React.JSX.Element {
   const { enabledTabIds } = useContactConfig();
   const showRelationships =
     isContactRelationshipTabEnabled(enabledTabIds) &&

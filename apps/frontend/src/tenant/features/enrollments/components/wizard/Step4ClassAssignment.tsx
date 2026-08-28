@@ -9,7 +9,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface Step4ClassAssignmentProps {
+export interface Step4ClassAssignmentProps {
   session: Session | null | undefined;
   student: Student | null | undefined;
   suggestedClass: Class | null | undefined;
@@ -28,7 +28,7 @@ interface Step4ClassAssignmentProps {
  * @param props.onChange - Callback on class selection change.
  * @returns The Step4ClassAssignment component.
  */
-export function Step4ClassAssignment({ session, student: _student, suggestedClass, value, onChange }: Step4ClassAssignmentProps): React.ReactElement {
+export function Step4ClassAssignment({ session, student: _student, suggestedClass, value, onChange }: Step4ClassAssignmentProps): React.JSX.Element {
   const { t } = useTranslation();
   const [override, setOverride] = useState<boolean>(false);
   const classes = session?.classes || [];

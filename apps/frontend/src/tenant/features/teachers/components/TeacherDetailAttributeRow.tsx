@@ -5,6 +5,14 @@ import {
   type DetailAttributeRowVariant,
 } from "@/components/ui/DetailAttributeRow";
 
+export interface TeacherDetailAttributeRowProps {
+  icon: LucideIcon;
+  iconClassName?: string;
+  label: string;
+  value: ReactNode;
+  variant?: DetailAttributeRowVariant;
+}
+
 /** Attribute row for TeacherDetail — callers own empty-value rendering (muted dash). */
 export function TeacherDetailAttributeRow({
   icon,
@@ -12,13 +20,7 @@ export function TeacherDetailAttributeRow({
   label,
   value,
   variant,
-}: {
-  icon: LucideIcon;
-  iconClassName?: string;
-  label: string;
-  value: ReactNode;
-  variant?: DetailAttributeRowVariant;
-}): JSX.Element {
+}: TeacherDetailAttributeRowProps): JSX.Element {
   return (
     <DetailAttributeRow
       icon={icon}

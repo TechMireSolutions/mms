@@ -11,6 +11,15 @@ import {
 } from "./contactDetailChannelHelpers";
 import { buildDetailPhoneMessagingActions } from "./contactDetailMessagingActions";
 
+export interface ContactDetailPhonesSectionProps {
+  contact: Contact;
+  phoneLabels: string[];
+  defaultPhoneCountryCode: string;
+  allowOutbound?: boolean;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+}
+
 export function ContactDetailPhonesSection({
   contact,
   phoneLabels,
@@ -18,14 +27,7 @@ export function ContactDetailPhonesSection({
   allowOutbound = true,
   onWhatsApp,
   onSms,
-}: {
-  contact: Contact;
-  phoneLabels: string[];
-  defaultPhoneCountryCode: string;
-  allowOutbound?: boolean;
-  onWhatsApp?: (contacts: Contact[]) => void;
-  onSms?: (contacts: Contact[]) => void;
-}): React.JSX.Element {
+}: ContactDetailPhonesSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const phones = contact.phones && contact.phones.length > 0 ? contact.phones : [];
 

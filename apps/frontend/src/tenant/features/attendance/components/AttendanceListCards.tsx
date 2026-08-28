@@ -13,7 +13,7 @@ import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { AttendanceRecordStatusCell } from './AttendanceRecordStatusCell';
 
-interface AttendanceRecordsMobileListProps {
+export interface AttendanceListCardsProps {
   paginatedRecords: AttendanceRecord[];
   isColumnVisible: (key: string) => boolean;
   editingRecord: AttendanceRecord | null;
@@ -29,6 +29,8 @@ interface AttendanceRecordsMobileListProps {
   onToggleSelectedRecord: (id: string, checked: boolean) => void;
   t: TranslationFunction;
 }
+
+export type AttendanceRecordsMobileListProps = AttendanceListCardsProps;
 
 export function AttendanceListCards({
   paginatedRecords,

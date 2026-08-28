@@ -11,7 +11,7 @@ import type { FieldDefinition, Teacher } from "@mms/shared";
 import { resolveTeacherStatus } from "@mms/shared";
 import { resolveTeacherFieldLabel } from "@/tenant/features/teachers/components/TeacherFormSectionShared";
 
-interface TeacherSectionBaseProps {
+export interface TeacherSectionBaseProps {
   teacherDraft: Partial<Teacher>;
   errors: Record<string, string>;
   fields: Record<string, FieldDefinition[]>;
@@ -25,7 +25,7 @@ export interface TeacherStatusOption {
   label: string;
 }
 
-interface TeacherBasicSectionProps extends TeacherSectionBaseProps {
+export interface TeacherBasicSectionProps extends TeacherSectionBaseProps {
   defaultSpecialization: string;
   linkedTeacherContactIds: Array<string | number>;
   specializationOptions: string[];
@@ -97,7 +97,7 @@ export function TeacherBasicSection({
   );
 }
 
-interface TeacherEmploymentSectionProps extends TeacherSectionBaseProps {
+export interface TeacherEmploymentSectionProps extends TeacherSectionBaseProps {
   autoGenerateId: boolean;
   idPrefix: string;
   nextEmployeeId?: string;

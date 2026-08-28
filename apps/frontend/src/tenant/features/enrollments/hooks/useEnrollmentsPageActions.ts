@@ -8,7 +8,7 @@ import {
   useEnrollmentMutations,
 } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
 
-interface UseEnrollmentsPageActionsParams {
+export interface UseEnrollmentsPageActionsParams {
   enrollments: Enrollment[];
   viewing: Enrollment | null;
   onViewingChange: (enrollment: Enrollment | null) => void;

@@ -8,7 +8,7 @@ export interface Step extends WizardStepItem {
   icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
 }
 
-interface StepIndicatorProps {
+export interface StepIndicatorProps {
   steps: Step[];
   current: number;
 }
@@ -21,7 +21,7 @@ interface StepIndicatorProps {
  * @param props.current - The active step index.
  * @returns StepIndicator layout.
  */
-export function StepIndicator({ steps, current }: StepIndicatorProps): React.ReactElement {
+export function StepIndicator({ steps, current }: StepIndicatorProps): React.JSX.Element {
   const { t } = useTranslation();
   return (
     <WizardStepIndicator

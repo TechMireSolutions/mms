@@ -3,7 +3,7 @@ import { Exam, ExamResult } from '@/lib/data/examinationData';
 import { notify } from '@/lib/notify';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 
-interface ExaminationsMutationDeps {
+export interface ExaminationsMutationDeps {
   exams: Exam[];
   examResults: ExamResult[];
   t: TranslationFunction;

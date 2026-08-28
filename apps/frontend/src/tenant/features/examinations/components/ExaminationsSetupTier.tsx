@@ -4,21 +4,23 @@ import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { ExaminationsSettings } from "@/tenant/features/examinations/components/ExaminationsSettings";
 import React from "react";
 
-interface SetupTab {
+export interface ExaminationsSetupTab {
   id: string;
   label: string;
 }
 
-interface ExaminationsSetupTierProps {
-  tabs: SetupTab[];
+export type SetupTab = ExaminationsSetupTab;
+
+export interface ExaminationsSetupTierProps {
+  tabs: ExaminationsSetupTab[];
   activeTab: string;
   canEditSetup: boolean;
   onTabChange: (tab: string) => void;
 }
 
 export const ExaminationsSetupTier = React.memo(function ExaminationsSetupTier({
-      canEditSetup,
-    }: ExaminationsSetupTierProps) {
+  canEditSetup,
+}: ExaminationsSetupTierProps): React.JSX.Element {
       const { t } = useTranslation();
 
       return (

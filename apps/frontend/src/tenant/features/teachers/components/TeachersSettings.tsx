@@ -16,59 +16,59 @@ import { useTeachersSetupSaveActions } from "@/tenant/features/teachers/hooks/us
 import { TeachersPreferencesSection } from "@/tenant/features/teachers/components/TeachersPreferencesSection";
 
 export const TeachersSettings = React.memo(function TeachersSettings(): React.JSX.Element {
-      const { t } = useTranslation();
-      const { canEditSetup } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
-      const config = useTeacherConfig();
-      const { specializationOptions } = useTeacherLookupOptions();
-      const {
-        settings,
-        settingsDraft,
-        saved,
-        setSaved,
-        upd,
-      } = useModuleSettingsEditor<TeachersSettingsType>({
-        config,
-      });
+  const { t } = useTranslation();
+  const { canEditSetup } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
+  const config = useTeacherConfig();
+  const { specializationOptions } = useTeacherLookupOptions();
+  const {
+    settings,
+    settingsDraft,
+    saved,
+    setSaved,
+    upd,
+  } = useModuleSettingsEditor<TeachersSettingsType>({
+    config,
+  });
 
-      const {
-        saving,
-        isPrefsDirty,
-        handleSave,
-      } = useTeachersSetupSaveActions({
-        settings,
-        settingsDraft,
-        setSaved,
-      });
+  const {
+    saving,
+    isPrefsDirty,
+    handleSave,
+  } = useTeachersSetupSaveActions({
+    settings,
+    settingsDraft,
+    setSaved,
+  });
 
-      const unsavedWarning = isPrefsDirty
-        ? t("teachers.setup.unsavedPreferencesWarning")
-        : undefined;
+  const unsavedWarning = isPrefsDirty
+    ? t("teachers.setup.unsavedPreferencesWarning")
+    : undefined;
 
-      return (
-        <div className="space-y-4">
-          {!canEditSetup ? (
-            <SetupReadOnlyMessage title={t("teachers.setupReadOnly")} />
-          ) : (
-            <SectionCard title={t("teachers.settings.title")} icon={School} accentColor="primary">
-              <div className="space-y-4">
-                <TeachersPreferencesSection
-                  settingsDraft={settingsDraft}
-                  upd={upd}
-                  specializationOptions={specializationOptions}
-                />
+  return (
+    <div className="space-y-4">
+      {!canEditSetup ? (
+        <SetupReadOnlyMessage title={t("teachers.setupReadOnly")} />
+      ) : (
+        <SectionCard title={t("teachers.settings.title")} icon={School} accentColor="primary">
+          <div className="space-y-4">
+            <TeachersPreferencesSection
+              settingsDraft={settingsDraft}
+              upd={upd}
+              specializationOptions={specializationOptions}
+            />
 
-                <ModuleSetupSaveFooter
-                  dirty={isPrefsDirty}
-                  saving={saving}
-                  saved={saved}
-                  unsavedWarning={unsavedWarning}
-                  saveLabel={t("common.save")}
-                  savedLabel={t("settings.savedBadge")}
-                  onSave={handleSave}
-                />
-              </div>
-            </SectionCard>
-          )}
-        </div>
-      );
-    });
+            <ModuleSetupSaveFooter
+              dirty={isPrefsDirty}
+              saving={saving}
+              saved={saved}
+              unsavedWarning={unsavedWarning}
+              saveLabel={t("common.save")}
+              savedLabel={t("settings.savedBadge")}
+              onSave={handleSave}
+            />
+          </div>
+        </SectionCard>
+      )}
+    </div>
+  );
+});

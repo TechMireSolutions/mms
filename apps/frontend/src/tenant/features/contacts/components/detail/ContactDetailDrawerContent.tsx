@@ -3,7 +3,6 @@ import type { ChangeEvent, FormEvent, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { useTranslation } from "@/hooks/useTranslation";
 import { DETAIL_SYSTEM_TAB_KEYS } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
 import { ContactDetailOverview } from "@/tenant/features/contacts/components/detail/ContactDetailOverview";
 import { ContactDetailTimeline } from "@/tenant/features/contacts/components/detail/ContactDetailTimeline";
@@ -12,7 +11,7 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { ContactDetailCustomCollections } from "@/tenant/features/contacts/components/detail/ContactDetailCustomCollections";
 import type { DetailFieldView } from "@/tenant/features/contacts/hooks/useContactDetailViewModel";
 
-interface ContactDetailDrawerContentProps {
+export interface ContactDetailDrawerContentProps {
   activeTab: string;
   contactState: Contact;
   allContacts: Contact[];
@@ -77,8 +76,6 @@ export function ContactDetailDrawerContent({
   onRequestDelete,
 }: ContactDetailDrawerContentProps): React.JSX.Element {
   const reducedMotion = useReducedMotion();
-  const { t } = useTranslation();
-
   const isSystemTab = DETAIL_SYSTEM_TAB_KEYS.has(activeTab);
 
   const { fields, enabledTabIds, formTabs } = useContactConfig();

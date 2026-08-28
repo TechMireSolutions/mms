@@ -6,12 +6,14 @@ import { Exam } from '@/lib/data/examinationData';
 import { toTitleCase } from "@mms/shared";
 import { EXAMINATION_FORM_EMPTY } from "./examinationFormConstants";
 
-interface UseExaminationFormOptions {
+export interface UseExaminationFormOptions {
   open: boolean;
   exam: Exam | null;
   onClose: () => void;
   onSave: (exam: Exam) => void | Promise<void>;
 }
+
+export type UseExaminationFormResult = ReturnType<typeof useExaminationForm>;
 
 export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminationFormOptions) {
   const { t } = useTranslation();

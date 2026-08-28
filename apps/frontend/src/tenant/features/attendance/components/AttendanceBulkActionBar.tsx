@@ -1,4 +1,4 @@
-import type { ReactElement } from 'react';
+import React from 'react';
 import { UserCheck } from 'lucide-react';
 import { ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
 import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
@@ -23,7 +23,7 @@ export function AttendanceBulkActionBar({
   onRequestBulkRestore,
   onClearSelection,
   bulkActions = ATTENDANCE_MODULE_MANIFEST.work.bulkActions,
-}: AttendanceBulkActionBarProps): ReactElement {
+}: AttendanceBulkActionBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

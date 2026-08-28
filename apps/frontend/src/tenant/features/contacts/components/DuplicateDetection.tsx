@@ -1,10 +1,11 @@
+import type React from "react";
 import { AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
 import { MergePreview } from "@/tenant/features/contacts/components/DuplicateMergePreview";
 import { DuplicateDetectionModal } from "@/tenant/features/contacts/components/DuplicateDetectionModal";
 import { useDuplicateDetectionState } from "@/tenant/features/contacts/hooks/useDuplicateDetectionState";
 
-interface DuplicateDetectionProps {
+export interface DuplicateDetectionProps {
   onClose: () => void;
   onMerge: (keepId: string | number, deleteId: string | number, mergedData: Contact) => Promise<void>;
   canWrite?: boolean;
@@ -14,11 +15,11 @@ interface DuplicateDetectionProps {
  * DuplicateDetection component that finds duplicate contacts dynamically
  * and allows the user to merge them.
  */
-export default function DuplicateDetection({
+export function DuplicateDetection({
   onClose,
   onMerge,
   canWrite = false,
-}: DuplicateDetectionProps): JSX.Element {
+}: DuplicateDetectionProps): React.JSX.Element {
   const {
     prefs,
     pairsLoading,
@@ -86,3 +87,5 @@ export default function DuplicateDetection({
     </>
   );
 }
+
+export default DuplicateDetection;

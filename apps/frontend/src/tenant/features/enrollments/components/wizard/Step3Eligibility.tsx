@@ -24,13 +24,13 @@ const LABEL_COLORS: Record<string, string> = {
   warn: "text-warning",
 };
 
-interface Step3EligibilityProps {
+export interface Step3EligibilityProps {
   student: Student;
   session: Session;
   suggestedClass: Class | null;
 }
 
-export function Step3Eligibility({ student, session, suggestedClass }: Step3EligibilityProps): React.ReactElement {
+export function Step3Eligibility({ student, session, suggestedClass }: Step3EligibilityProps): React.JSX.Element {
   const { t } = useTranslation();
   const checks = useMemo<CheckResult[]>(() =>
     runFullEligibility(student, session, suggestedClass, []),

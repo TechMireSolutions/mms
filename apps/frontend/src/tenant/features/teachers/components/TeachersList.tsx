@@ -1,11 +1,11 @@
 import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TeachersListContent } from '@/tenant/features/teachers/components/TeachersListContent';
-import type { TeacherListProps } from '@/tenant/features/teachers/components/TeachersListTypes';
+import type { TeacherListProps } from '@/tenant/features/teachers/components/teachersListTypes';
 import { resolveTeacherDisplayName } from '@/tenant/features/teachers/components/teacherFieldDisplay';
 import { useTeacherListState } from '@/tenant/features/teachers/components/useTeacherListState';
 
-export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/TeachersListTypes';
+export type { TeacherListProps, TeacherSortField } from '@/tenant/features/teachers/components/teachersListTypes';
 
 /** Work directory content (table/cards + empty state) — confirms/drawer live at page level. */
 export function TeachersList({

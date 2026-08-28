@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 
-interface EmployeeIdBadgeProps {
+export interface EmployeeIdBadgeProps {
   employeeId: string | null | undefined;
 }
 

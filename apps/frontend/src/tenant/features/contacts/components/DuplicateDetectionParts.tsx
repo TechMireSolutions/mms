@@ -1,3 +1,4 @@
+import type React from "react";
 import { Check } from "lucide-react";
 import type { Contact, ContactPreferences } from "@mms/shared";
 import { getDuplicateConfidenceBadgeStyle } from "@mms/shared";
@@ -11,13 +12,15 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
+export interface ConfidenceBadgeProps {
+  score: number;
+  prefs: Partial<ContactPreferences>;
+}
+
 export function ConfidenceBadge({
   score,
   prefs,
-}: {
-  score: number;
-  prefs: Partial<ContactPreferences>;
-}): JSX.Element {
+}: ConfidenceBadgeProps): React.JSX.Element {
   const { t } = useTranslation();
   const { colorClass } = getDuplicateConfidenceBadgeStyle(score, prefs);
   return (
@@ -28,17 +31,19 @@ export function ConfidenceBadge({
   );
 }
 
+export interface DuplicateContactCardProps {
+  contact: Contact;
+  selected: boolean;
+  onSelect: () => void;
+  label: string;
+}
+
 export function DuplicateContactCard({
   contact,
   selected,
   onSelect,
   label,
-}: {
-  contact: Contact;
-  selected: boolean;
-  onSelect: () => void;
-  label: string;
-}): JSX.Element {
+}: DuplicateContactCardProps): React.JSX.Element {
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
   const fields = prefs.duplicateDetectionFields || [];

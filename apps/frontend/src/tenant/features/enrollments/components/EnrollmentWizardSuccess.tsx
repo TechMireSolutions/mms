@@ -5,13 +5,13 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { Student } from '@/lib/data/studentsData';
 import type { Session } from '@/lib/data/sessionsData';
 
-interface EnrollmentWizardSuccessProps {
+export interface EnrollmentWizardSuccessProps {
   t: TranslationFunction;
   student: Student | null;
   session: Session | null;
 }
 
-export function EnrollmentWizardSuccess({ t, student, session }: EnrollmentWizardSuccessProps): React.ReactElement {
+export function EnrollmentWizardSuccess({ t, student, session }: EnrollmentWizardSuccessProps): React.JSX.Element {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}

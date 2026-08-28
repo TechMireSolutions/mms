@@ -6,7 +6,7 @@ import type { Contact } from "@mms/shared";
 import { GoogleContactsPanel } from "./sync/GoogleContactsPanel";
 import { AppleContactsPanel } from "./sync/AppleContactsPanel";
 
-interface ContactSyncPanelProps {
+export interface ContactSyncPanelProps {
   onImport: (contacts: Contact[]) => void | Promise<void>;
   /** Requires `contacts.write` — sync imports/mutates entities; do not gate on canEditSetup alone. */
   canWrite?: boolean;
@@ -16,7 +16,7 @@ interface ContactSyncPanelProps {
  * ContactSyncPanel — Google/Apple sync under Setup → Sync.
  * CTAs use `canWrite` (contacts.write), not `canEditSetup`, so Setup-only roles cannot import.
  */
-export default function ContactSyncPanel({
+export function ContactSyncPanel({
   onImport,
   canWrite = false,
 }: ContactSyncPanelProps): React.JSX.Element {
@@ -35,3 +35,5 @@ export default function ContactSyncPanel({
     </div>
   );
 }
+
+export default ContactSyncPanel;

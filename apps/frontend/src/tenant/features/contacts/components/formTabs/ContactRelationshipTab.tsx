@@ -1,3 +1,4 @@
+import type React from "react";
 import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { RELATIONSHIPS } from "@mms/shared";
@@ -11,7 +12,7 @@ import type { ContactSubListTabBaseProps } from "./types";
 /** Fixed static frontend enum list for Relationship Type dropdown per requirements. */
 export const STATIC_RELATIONSHIP_OPTIONS: readonly string[] = [...RELATIONSHIPS];
 
-interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
+export interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
   relationshipOptions?: string[];
   onUpdateRelationships?: (options: string[]) => void;
 }
@@ -27,7 +28,7 @@ export function ContactRelationshipTab({
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
-}: ContactRelationshipTabProps): JSX.Element {
+}: ContactRelationshipTabProps): React.JSX.Element {
   const { t } = useTranslation();
   const options = STATIC_RELATIONSHIP_OPTIONS as string[];
   const links = contactDraft.relationshipContacts || [];

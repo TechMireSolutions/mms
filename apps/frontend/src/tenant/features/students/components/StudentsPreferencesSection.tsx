@@ -8,16 +8,16 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
 import type { StudentsSettings } from "@mms/shared";
 
-type StudentsPreferencesSectionProps = {
+export interface StudentsPreferencesSectionProps {
   settingsDraft: StudentsSettings;
   upd: <K extends keyof StudentsSettings>(field: K, value: StudentsSettings[K]) => void;
-};
+}
 
 /** Students Setup Preferences body — Contacts PreferencesSection analogue. */
 export function StudentsPreferencesSection({
   settingsDraft,
   upd,
-}: StudentsPreferencesSectionProps): React.ReactElement {
+}: StudentsPreferencesSectionProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

@@ -50,7 +50,7 @@ export function StudentsFiltersMenuButton({
   onGenderChange,
   onSortChange,
   onClearFilters,
-}: StudentsFiltersMenuButtonProps) {
+}: StudentsFiltersMenuButtonProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

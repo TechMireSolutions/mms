@@ -18,7 +18,7 @@ import { formatDate } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 
-interface Step2SelectSessionProps {
+export interface Step2SelectSessionProps {
   value: Session | null | undefined;
   onChange: (session: Session) => void;
   sessions?: Session[];
@@ -33,7 +33,7 @@ interface Step2SelectSessionProps {
  * @param props.sessions - Dynamic list of active/inactive sessions.
  * @returns The Step2SelectSession component.
  */
-export function Step2SelectSession({ value, onChange, sessions = [] }: Step2SelectSessionProps): React.ReactElement {
+export function Step2SelectSession({ value, onChange, sessions = [] }: Step2SelectSessionProps): React.JSX.Element {
   const { formatCurrency } = useFinanceCurrency();
   const { t } = useTranslation();
   const sessionStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(

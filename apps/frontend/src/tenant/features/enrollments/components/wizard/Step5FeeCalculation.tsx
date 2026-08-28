@@ -8,14 +8,14 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { Badge } from "@/components/ui/badge";
 
-interface Step5FeeCalculationProps {
+export interface Step5FeeCalculationProps {
   student: Student | null | undefined;
   session: Session | null | undefined;
   feeResult: CalculatedFee | null | undefined;
   onFeeResult: (fee: CalculatedFee) => void;
 }
 
-export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }: Step5FeeCalculationProps): React.ReactElement {
+export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }: Step5FeeCalculationProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
   const baseFee = session?.baseFee || 0;

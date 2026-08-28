@@ -19,7 +19,7 @@ import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
 import { useListRowMotion } from '@/hooks/useListRowMotion';
 
-interface AttendanceListDesktopTableProps {
+export interface AttendanceListDesktopTableProps {
   paginatedRecords: AttendanceRecord[];
   isColumnVisible: (key: string) => boolean;
   visibleColCount: number;

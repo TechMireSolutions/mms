@@ -1,4 +1,4 @@
-import React, { type JSX } from "react";
+import React from "react";
 import type { ContactsQuickFilter } from "@mms/shared";
 import type { ContactsWorkViewMode } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 import { ContactsFiltersMenuButton } from "@/tenant/features/contacts/components/ContactsFiltersMenuButton";
@@ -44,7 +44,7 @@ export const ContactsListFilters = React.memo(function ContactsListFilters({
   viewMode,
   onViewModeChange,
   shownCount,
-}: ContactsListFiltersProps): JSX.Element {
+}: ContactsListFiltersProps): React.JSX.Element {
   const {
     t,
     genders,

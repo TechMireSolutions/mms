@@ -6,7 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useExaminationsMetrics } from '@/tenant/features/examinations/hooks/useExaminationsApi';
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 
-interface ExaminationsCommandMetricsProps {
+export interface ExaminationsCommandMetricsProps {
   shown: number;
   total: number;
 }

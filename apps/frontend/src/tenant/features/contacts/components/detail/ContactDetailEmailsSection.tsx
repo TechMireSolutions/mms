@@ -8,15 +8,17 @@ import {
 } from "./contactDetailChannelHelpers";
 import { buildDetailEmailMessagingActions } from "./contactDetailMessagingActions";
 
+export interface ContactDetailEmailsSectionProps {
+  contact: Contact;
+  emailLabels: string[];
+  onEmail?: (contacts: Contact[]) => void;
+}
+
 export function ContactDetailEmailsSection({
   contact,
   emailLabels,
   onEmail,
-}: {
-  contact: Contact;
-  emailLabels: string[];
-  onEmail?: (contacts: Contact[]) => void;
-}): React.JSX.Element {
+}: ContactDetailEmailsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const emails = contact.emails && contact.emails.length > 0 ? contact.emails : [];
 

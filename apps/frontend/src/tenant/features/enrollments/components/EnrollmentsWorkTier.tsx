@@ -8,17 +8,17 @@ import { EligibilityCheck } from "@/tenant/features/enrollments/components/Eligi
 import { EnrollmentsList } from "@/tenant/features/enrollments/components/EnrollmentsList";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 
-type EnrollmentSubTab = {
+export type EnrollmentSubTab = {
   id: string;
   label: string;
 };
 
-type EnrollmentColumnProps = Pick<
+export type EnrollmentColumnProps = Pick<
   React.ComponentProps<typeof EnrollmentsList>,
   "isColumnVisible" | "getColumnWidth" | "onColumnResize" | "columnCustomizer"
 >;
 
-interface EnrollmentsWorkTierProps {
+export interface EnrollmentsWorkTierProps {
   activeSubTab: string;
   subTabs: EnrollmentSubTab[];
   enrollments: Enrollment[];

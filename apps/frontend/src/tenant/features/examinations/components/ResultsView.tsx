@@ -23,7 +23,7 @@ export function ResultsView({
   onFilteredCountChange,
   isColumnVisible,
   columnCustomizer,
-}: ResultsViewProps): React.ReactElement {
+}: ResultsViewProps): React.JSX.Element {
   const { t } = useTranslation();
   const [selectedExam, setSelectedExam] = useState<string>(exams[0]?.id || "");
   const [selectedStudent, setSelectedStudent] = useState<RankedResult | null>(null);

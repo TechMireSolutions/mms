@@ -7,7 +7,7 @@ import { EnrollmentsListConfirmDialogs } from "@/tenant/features/enrollments/com
 import { EnrollmentWizard } from "@/tenant/features/enrollments/components/EnrollmentWizard";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 
-interface EnrollmentsModalLayerProps {
+export interface EnrollmentsModalLayerProps {
   viewing: Enrollment | null;
   canWrite: boolean;
   showDeleted: boolean;

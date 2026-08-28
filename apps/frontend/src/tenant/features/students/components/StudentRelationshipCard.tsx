@@ -28,7 +28,7 @@ export interface StudentRelationshipCardData {
   targetContact?: Contact;
 }
 
-interface StudentRelationshipCardProps {
+export interface StudentRelationshipCardProps {
   relationship: StudentRelationshipCardData;
   canMessage?: boolean;
   openComposer?: (channel: "sms" | "whatsapp" | "email", recipients: MessagingRecipient[]) => void;
@@ -97,6 +97,7 @@ export function StudentRelationshipCard({
             id={contactId || name}
             name={name}
             avatar={avatar}
+            gender={relationship.gender}
             className="w-10 h-10 rounded-xl text-xs shrink-0 ring-1 ring-border/40 shadow-xs"
           />
           <div className="min-w-0">
@@ -110,7 +111,7 @@ export function StudentRelationshipCard({
                 </span>
               )}
             </div>
-            <h5 className="text-sm font-bold text-foreground truncate mt-0.5">{name}</h5>
+            <h5 className="text-sm font-bold text-foreground truncate mt-0.5" title={name}>{name}</h5>
           </div>
         </div>
 
@@ -144,7 +145,7 @@ export function StudentRelationshipCard({
             >
               <div className="flex items-center gap-2 min-w-0">
                 <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-                <span className="font-mono text-foreground truncate">{phone.number}</span>
+                <span className="font-mono text-foreground truncate" title={phone.number}>{phone.number}</span>
                 {phone.label && (
                   <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
                     {phone.label}
@@ -181,7 +182,7 @@ export function StudentRelationshipCard({
             >
               <div className="flex items-center gap-2 min-w-0">
                 <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-                <span className="text-foreground truncate">{email.address}</span>
+                <span className="text-foreground truncate" title={email.address}>{email.address}</span>
                 {email.label && (
                   <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
                     {email.label}
@@ -213,7 +214,7 @@ export function StudentRelationshipCard({
           {notes && (
             <div className="flex items-center gap-1.5 truncate max-w-full">
               <FileText className="w-3.5 h-3.5 shrink-0" aria-hidden />
-              <span className="truncate italic">{notes}</span>
+              <span className="truncate italic" title={notes}>{notes}</span>
             </div>
           )}
         </div>

@@ -1,11 +1,12 @@
-/** Shared gender accent classes for Work directory entity cards. */
-export function getGenderAccentBarClass(
-  isSelected: boolean,
-  gender?: string | null,
-): string {
-  if (isSelected) return "bg-primary/70 group-hover:bg-primary";
-  const g = gender?.toLowerCase();
-  if (g === "male") return "bg-info/50 group-hover:bg-info";
-  if (g === "female") return "bg-secondary/50 group-hover:bg-secondary";
-  return "bg-muted-foreground/35 group-hover:bg-muted-foreground/60";
-}
+/**
+ * Directory card accent utilities.
+ *
+ * Provides gender-aware accent bars, card accents, borders, and background
+ * tints for Work directory entity cards (Contacts, Students, Teachers).
+ */
+export {
+  getGenderAccentBarClass,
+  getGenderCardAccent,
+  getGenderBorderClass,
+  getGenderBgClass,
+} from "@/lib/genderUi";

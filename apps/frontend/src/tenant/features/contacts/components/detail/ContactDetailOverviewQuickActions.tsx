@@ -2,6 +2,15 @@ import { type Contact, hasWhatsApp } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EntityMessagingQuickActions } from "@/components/ui/EntityMessagingQuickActions";
 
+export interface ContactDetailOverviewQuickActionsProps {
+  contact: Contact;
+  primaryPhone: string | null;
+  primaryEmail: string | null;
+  onWhatsApp?: (contacts: Contact[]) => void;
+  onSms?: (contacts: Contact[]) => void;
+  onEmail?: (contacts: Contact[]) => void;
+}
+
 export function ContactDetailOverviewQuickActions({
   contact,
   primaryPhone,
@@ -9,14 +18,7 @@ export function ContactDetailOverviewQuickActions({
   onWhatsApp,
   onSms,
   onEmail,
-}: {
-  contact: Contact;
-  primaryPhone: string | null;
-  primaryEmail: string | null;
-  onWhatsApp?: (contacts: Contact[]) => void;
-  onSms?: (contacts: Contact[]) => void;
-  onEmail?: (contacts: Contact[]) => void;
-}): React.JSX.Element | null {
+}: ContactDetailOverviewQuickActionsProps): React.JSX.Element | null {
   const { t } = useTranslation();
   if (contact.deletedAt) return null;
 

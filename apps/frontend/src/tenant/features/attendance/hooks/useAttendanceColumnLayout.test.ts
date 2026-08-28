@@ -1,0 +1,54 @@
+import React, { act } from "react";
+import { createRoot } from "react-dom/client";
+import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { useAttendanceColumnLayout } from "./useAttendanceColumnLayout";
+
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
+
+vi.mock("@/hooks/useTranslation", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+  }),
+}));
+
+vi.mock("@/hooks/useModuleColumnLayout", () => ({
+  useModuleColumnLayout: (params: any) => ({
+    moduleId: params.moduleId,
+    isColumnVisible: (_key: string) => true,
+    visibleColumns: ["date", "class", "student", "status"],
+  }),
+}));
+
+describe("useAttendanceColumnLayout Hook", () => {
+  let container: HTMLDivElement | null = null;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    if (container) {
+      document.body.removeChild(container);
+      container = null;
+    }
+  });
+
+  it("builds attendance column layout and returns visibility checkers", async () => {
+    let hookResult: any = null;
+
+    function TestComponent() {
+      hookResult = useAttendanceColumnLayout();
+      return null;
+    }
+
+    await act(async () => {
+      const root = createRoot(container!);
+      root.render(React.createElement(TestComponent));
+    });
+
+    expect(hookResult).toBeDefined();
+    expect(hookResult.moduleId).toBe("attendance");
+    expect(hookResult.isColumnVisible("student")).toBe(true);
+  });
+});

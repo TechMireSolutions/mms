@@ -5,10 +5,11 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";
 import { FORM_TEXTAREA } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 import type { FieldDefinition, Student } from "@mms/shared";
 import { resolveStudentFieldLabel } from "@/tenant/features/students/components/StudentFormSectionShared";
 
-interface StudentNotesSectionProps {
+export interface StudentNotesSectionProps {
   notes?: string;
   fields: Record<string, FieldDefinition[]>;
   isFieldEnabled: (fieldId: string) => boolean;
@@ -46,7 +47,7 @@ export function StudentNotesSection({
             value={notes || ""}
             onChange={(event) => onDraftChange({ notes: event.target.value })}
             placeholder={t("students.form.notesPlaceholder")}
-            className={`${FORM_TEXTAREA} min-h-30`}
+            className={cn(FORM_TEXTAREA, "min-h-30")}
           />
         </Field>
       </SectionCard>

@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import type React from "react";
 import { CheckCircle2, Loader2, Unlink, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FieldErrorMessage } from "@/components/ui/FormField";
@@ -6,6 +6,16 @@ import { FORM_ERROR_BOX } from "@/components/ui/formStyles";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { GoogleContactsSyncRunResult } from "@mms/shared";
+
+export interface GoogleContactsConnectedStateProps {
+  canWrite: boolean;
+  error: string;
+  syncResult: GoogleContactsSyncRunResult | null;
+  syncing: boolean;
+  onDisconnect: () => void;
+  onSync: () => void;
+  t: TranslationFunction;
+}
 
 export function GoogleContactsConnectedState({
   canWrite,
@@ -15,15 +25,7 @@ export function GoogleContactsConnectedState({
   onDisconnect,
   onSync,
   t,
-}: {
-  canWrite: boolean;
-  error: string;
-  syncResult: GoogleContactsSyncRunResult | null;
-  syncing: boolean;
-  onDisconnect: () => void;
-  onSync: () => void;
-  t: TranslationFunction;
-}): JSX.Element {
+}: GoogleContactsConnectedStateProps): React.JSX.Element {
   return (
     <div className="space-y-3">
       <WarningCallout

@@ -10,11 +10,13 @@ import {
 } from "@/components/ui/messagingActionStyles";
 import { cn } from "@/lib/utils";
 
+export interface ContactDetailExperienceSectionProps {
+  contact: Contact;
+}
+
 export function ContactDetailExperienceSection({
   contact,
-}: {
-  contact: Contact;
-}): React.JSX.Element {
+}: ContactDetailExperienceSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const experienceList = contact.experience ?? [];
 

@@ -6,9 +6,9 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { Enrollment } from "@/lib/data/enrollmentData";
 import type { Student, toMessagingRecipient } from "@mms/shared";
 
-type MessageChannel = "whatsapp" | "sms" | "email";
+export type MessageChannel = "whatsapp" | "sms" | "email";
 
-interface EnrollmentRowActionsProps {
+export interface EnrollmentRowActionsProps {
   enrollment: Enrollment;
   student?: Student;
   showDeleted: boolean;

@@ -12,7 +12,7 @@ import {
   type StudentFieldErrorGetter,
 } from "@/tenant/features/students/components/StudentFormSectionShared";
 
-interface StudentContactSectionProps {
+export interface StudentContactSectionProps {
   contactId?: string | number | null;
   excludeIds: string[];
   linkedGenderRaw?: string;

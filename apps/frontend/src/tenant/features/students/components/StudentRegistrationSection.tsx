@@ -19,7 +19,9 @@ import {
   type StudentStatusSelectOption,
 } from "@/tenant/features/students/components/StudentFormSectionShared";
 
-interface StudentRegistrationSectionProps {
+import { cn } from "@/lib/utils";
+
+export interface StudentRegistrationSectionProps {
   studentDraft: Partial<Student>;
   isGrAutoAssigned: boolean;
   grInputDisabled: boolean;
@@ -98,7 +100,7 @@ export function StudentRegistrationSection({
                   placeholder={t("students.form.grNumberPlaceholder")}
                   disabled={grInputDisabled}
                   iconPaddingClass={FORM_INPUT}
-                  className={`ps-10 ${isGrAutoAssigned ? "pe-24" : ""}`}
+                  className={cn("ps-10", isGrAutoAssigned && "pe-24")}
                 />
                 {isGrAutoAssigned ? (
                   <FormFooterBadge

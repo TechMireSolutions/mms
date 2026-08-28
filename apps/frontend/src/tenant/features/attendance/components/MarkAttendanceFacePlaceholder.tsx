@@ -7,11 +7,11 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 const MotionCard = motion.create(Card);
 
-interface MarkAttendanceFacePlaceholderProps {
+export interface MarkAttendanceFacePlaceholderProps {
   onClose: () => void;
 }
 
-export function MarkAttendanceFacePlaceholder({ onClose }: MarkAttendanceFacePlaceholderProps) {
+export function MarkAttendanceFacePlaceholder({ onClose }: MarkAttendanceFacePlaceholderProps): React.JSX.Element {
   const { t } = useTranslation();
   return (
     <MotionCard initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}

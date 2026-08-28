@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import type React from "react";
 import { ExternalLink, Globe, Link2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,17 @@ import { FieldErrorMessage } from "@/components/ui/FormField";
 import { FORM_ERROR_BOX, FORM_LABEL } from "@/components/ui/formStyles";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+
+export interface GoogleContactsConnectStepProps {
+  showAuthCode: boolean;
+  authCode: string;
+  exchanging: boolean;
+  error: string;
+  onConnect: () => void;
+  onAuthCodeChange: (value: string) => void;
+  onExchangeCode: () => void;
+  t: TranslationFunction;
+}
 
 export function GoogleContactsConnectStep({
   showAuthCode,
@@ -16,16 +27,7 @@ export function GoogleContactsConnectStep({
   onAuthCodeChange,
   onExchangeCode,
   t,
-}: {
-  showAuthCode: boolean;
-  authCode: string;
-  exchanging: boolean;
-  error: string;
-  onConnect: () => void;
-  onAuthCodeChange: (value: string) => void;
-  onExchangeCode: () => void;
-  t: TranslationFunction;
-}): JSX.Element {
+}: GoogleContactsConnectStepProps): React.JSX.Element {
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">{t("contacts.sync.credentialsSaved")}</p>

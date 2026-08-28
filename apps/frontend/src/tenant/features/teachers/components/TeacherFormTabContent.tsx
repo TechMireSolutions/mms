@@ -28,22 +28,22 @@ export interface TeacherFormTabContentProps {
 }
 
 export const TeacherFormTabContent = React.memo(function TeacherFormTabContent({
-      tab,
-      teacher,
-      teacherDraft,
-      errors,
-      fields,
-      defaultSpecialization,
-      linkedTeacherContactIds,
-      specializationOptions,
-      autoGenerateId,
-      idPrefix,
-      nextEmployeeId,
-      statusOptions,
-      isFieldEnabled,
-      isFieldRequired,
-      onDraftChange,
-    }: TeacherFormTabContentProps): React.JSX.Element {
+  tab,
+  teacher,
+  teacherDraft,
+  errors,
+  fields,
+  defaultSpecialization,
+  linkedTeacherContactIds,
+  specializationOptions,
+  autoGenerateId,
+  idPrefix,
+  nextEmployeeId,
+  statusOptions,
+  isFieldEnabled,
+  isFieldRequired,
+  onDraftChange,
+}: TeacherFormTabContentProps): React.JSX.Element {
       if (tab === "employment") {
         return (
           <div className="space-y-6 pb-6">

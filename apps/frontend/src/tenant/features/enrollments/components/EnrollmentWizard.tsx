@@ -20,12 +20,12 @@ import { buildEnrollmentPayload } from "@/tenant/features/enrollments/components
 import { EnrollmentWizardSuccess } from "@/tenant/features/enrollments/components/EnrollmentWizardSuccess";
 import { EnrollmentWizardFooter } from "@/tenant/features/enrollments/components/EnrollmentWizardFooter";
 
-interface EnrollmentWizardProps {
+export interface EnrollmentWizardProps {
   onComplete: (enrollment: Enrollment) => void | Promise<void>;
   onCancel: () => void;
 }
 
-export const EnrollmentWizard = React.memo(function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.ReactElement {
+export const EnrollmentWizard = React.memo(function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.JSX.Element {
       const { t } = useTranslation();
       const sessions = useSessionsCollection();
       const [step, setStep] = useState<number>(0);

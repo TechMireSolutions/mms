@@ -23,8 +23,8 @@ export type StudentContactRelationshipLink = {
   relationship: string;
 };
 
-/** @deprecated Triad shape kept only for list/detail hydrate slots (Parent → father*, Guardian → guardian*). */
-type DerivedStudentGuardianLinks = {
+/** Triad shape for list/detail hydrate slots (Father, Mother, Guardian). */
+export type DerivedStudentGuardianLinks = {
   fatherContactId?: string;
   motherContactId?: string;
   guardianContactId?: string;
@@ -33,29 +33,47 @@ type DerivedStudentGuardianLinks = {
   guardianName?: string;
 };
 
-type RelationshipLinkLike = {
+export type RelationshipLinkLike = {
   contactId?: string | number | null;
   name?: string;
   phone?: string;
+  email?: string;
+  gender?: string;
   relationship?: string;
   inferred?: boolean;
 };
 
-type ContactWithRelationships = {
+export type ContactWithRelationships = {
+  id?: string | number | null;
+  name?: string;
+  firstName?: string;
+  lastName?: string;
+  gender?: string;
+  dob?: string;
+  avatar?: string | null;
+  phones?: { number?: string; isPrimary?: boolean }[];
+  emails?: { address?: string; isPrimary?: boolean }[];
+  addresses?: { city?: string; state?: string; country?: string; line1?: string; isPrimary?: boolean }[];
   relationshipContacts?: RelationshipContact[];
   relationships?: ContactRelationship[];
+  [key: string]: unknown;
 };
 
 const RESPONSIBLE_ADULT_LABELS = new Set(['parent', 'guardian']);
 
 /** Merge relationshipContacts + legacy relationships; prefer non-inferred when both exist. */
-export function collectContactRelationshipLinks(contact: ContactWithRelationships): RelationshipLinkLike[] {
+export function collectContactRelationshipLinks(
+  contact?: ContactWithRelationships | null,
+): RelationshipLinkLike[] {
+  if (!contact) return [];
   const byKey = new Map<string, RelationshipLinkLike>();
 
   const add = (entry: RelationshipLinkLike) => {
     const contactId = entry.contactId == null ? '' : String(entry.contactId).trim();
     const name = (entry.name || '').trim();
     const phone = (entry.phone || '').trim();
+    const email = (entry.email || '').trim();
+    const gender = (entry.gender || '').trim();
     if (!contactId && !name && !phone) return;
 
     const key = contactId || (name ? `name:${name.toLowerCase()}` : `phone:${phone}`);
@@ -65,6 +83,8 @@ export function collectContactRelationshipLinks(contact: ContactWithRelationship
       contactId,
       name: name || existing?.name,
       phone: phone || existing?.phone,
+      email: email || existing?.email,
+      gender: gender || existing?.gender,
       relationship: entry.relationship || existing?.relationship,
       inferred: entry.inferred === true,
     });
@@ -95,6 +115,8 @@ export function listStudentContactRelationships(
       ...(contactId ? { contactId } : {}),
       ...(name ? { name } : {}),
       ...(link.phone ? { phone: link.phone } : {}),
+      ...(link.email ? { email: link.email } : {}),
+      ...(link.gender ? { gender: link.gender } : {}),
       relationship,
     });
   }
@@ -119,18 +141,21 @@ export function pickPrimaryResponsibleAdult(
   return links.find((link) => normalizeRelationshipTerm(link.relationship) === 'guardian');
 }
 
-/** Display name for list/export: Parent hydrate slot, else Guardian. */
-export function primaryResponsibleAdultDisplayName(student: {
-  fatherName?: string | null;
-  guardianName?: string | null;
-}): string {
-  return (student.fatherName || student.guardianName || '').trim();
+/** Display name for list/export: Father, else Mother, else Guardian. */
+export function primaryResponsibleAdultDisplayName(
+  student?: {
+    fatherName?: string | null;
+    motherName?: string | null;
+    guardianName?: string | null;
+  } | null,
+): string {
+  if (!student) return '';
+  return (student.fatherName || student.motherName || student.guardianName || '').trim();
 }
 
 /**
- * Display slots for list/hydrate: Parent → father*, Guardian → guardian*.
- * Mother slots are cleared (obsolete triad). Legacy student *ContactId used only when
- * the contact graph has no matching Parent/Guardian link.
+ * Derives student parent and guardian links from the contact relationship graph,
+ * resolving father, mother, and guardian contact IDs and names with legacy field fallbacks.
  */
 export function resolveStudentGuardianLinks(
   student: {
@@ -144,7 +169,7 @@ export function resolveStudentGuardianLinks(
   primaryContact?: ContactWithRelationships | null,
 ): DerivedStudentGuardianLinks {
   const links = listStudentContactRelationships(primaryContact);
-  const parent = links.find(
+  const parentLinks = links.filter(
     (link) => normalizeRelationshipTerm(link.relationship) === 'parent',
   );
   const guardian = links.find(
@@ -155,16 +180,40 @@ export function resolveStudentGuardianLinks(
     student.fatherContactId != null && String(student.fatherContactId).trim()
       ? String(student.fatherContactId)
       : undefined;
+  const legacyMotherId =
+    student.motherContactId != null && String(student.motherContactId).trim()
+      ? String(student.motherContactId)
+      : undefined;
   const legacyGuardianId =
     student.guardianContactId != null && String(student.guardianContactId).trim()
       ? String(student.guardianContactId)
       : undefined;
 
+  const explicitFatherLink = parentLinks.find((l) => l.gender === 'male');
+  const explicitMotherLink = parentLinks.find((l) => l.gender === 'female');
+
+  let fatherLink: StudentContactRelationshipLink | undefined;
+  let motherLink: StudentContactRelationshipLink | undefined;
+
+  if (explicitFatherLink || explicitMotherLink) {
+    fatherLink = explicitFatherLink;
+    motherLink = explicitMotherLink;
+    if (!fatherLink) {
+      fatherLink = parentLinks.find((l) => l !== motherLink && l.gender !== 'female');
+    }
+    if (!motherLink) {
+      motherLink = parentLinks.find((l) => l !== fatherLink && l.gender !== 'male');
+    }
+  } else {
+    fatherLink = parentLinks[0];
+    motherLink = parentLinks.length > 1 ? parentLinks[1] : undefined;
+  }
+
   return {
-    fatherContactId: parent?.contactId ?? legacyFatherId,
-    fatherName: parent?.name ?? (student.fatherName?.trim() || undefined),
-    motherContactId: undefined,
-    motherName: undefined,
+    fatherContactId: fatherLink?.contactId ?? legacyFatherId,
+    fatherName: fatherLink?.name ?? (student.fatherName?.trim() || undefined),
+    motherContactId: motherLink?.contactId ?? legacyMotherId,
+    motherName: motherLink?.name ?? (student.motherName?.trim() || undefined),
     guardianContactId: guardian?.contactId ?? legacyGuardianId,
     guardianName: guardian?.name ?? (student.guardianName?.trim() || undefined),
   };

@@ -8,12 +8,14 @@ import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { RankedResult, ResultsViewStatsData } from "@/tenant/features/examinations/components/resultsViewTypes";
 
-interface UseResultsViewDataOptions {
+export interface UseResultsViewDataOptions {
   exams: Exam[];
   results: ExamResult[];
   selectedExam: string;
   onFilteredCountChange?: (count: number) => void;
 }
+
+export type UseResultsViewDataResult = ReturnType<typeof useResultsViewData>;
 
 export function useResultsViewData({
   exams,

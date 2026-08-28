@@ -1,12 +1,12 @@
 import React from "react";
 
-interface AttendanceSettingRowProps {
+export interface AttendanceSettingRowProps {
   label: string;
   sub?: string;
   children: React.ReactNode;
 }
 
-export function AttendanceSettingRow({ label, sub, children }: AttendanceSettingRowProps) {
+export function AttendanceSettingRow({ label, sub, children }: AttendanceSettingRowProps): React.JSX.Element {
   return (
     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border py-3 last:border-0 sm:gap-4">
       <div className="min-w-0 flex-1 basis-48">

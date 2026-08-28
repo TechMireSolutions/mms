@@ -73,6 +73,23 @@ describe('PersonIdentityMeta Component', () => {
     expect(html).toContain('GR-101');
     expect(html).toContain('Active');
   });
+
+  it('renders interactive button with type="button" when click handlers are passed', () => {
+    const onGender = vi.fn();
+    const onSyed = vi.fn();
+    const html = renderToStaticMarkup(
+      <PersonIdentityMeta
+        gender="female"
+        isSyed={true}
+        onGenderClick={onGender}
+        onSyedClick={onSyed}
+      />,
+    );
+    expect(html).toContain('<button');
+    expect(html).toContain('type="button"');
+    expect(html).toContain('Female');
+    expect(html).toContain('Syed');
+  });
 });
 
 describe('DirectoryCardSubtitleStack Component', () => {

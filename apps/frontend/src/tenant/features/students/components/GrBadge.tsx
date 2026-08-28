@@ -2,7 +2,7 @@ import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 
-interface GrBadgeProps {
+export interface GrBadgeProps {
   grNumber: string | null | undefined;
 }
 

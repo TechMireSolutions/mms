@@ -1,6 +1,8 @@
+import React from "react";
 import {
   isContactCustomCollectionTab,
   listEnabledCustomContactFormFields,
+  type AppTranslationKey,
   type Contact,
   type FieldDefinition,
   type TabDefinition,
@@ -11,9 +13,11 @@ import { DetailCollectionEmpty } from "./contactDetailChannelHelpers";
 import { CollectionRowItem, DetailSection } from "./ContactDetailShared";
 import { isEmptyValue } from "./contactDetailStyles";
 import { readContactCustomCollectionRows } from "../contactCustomCollectionRows";
-import React from "react";
 
-function formatCellValue(value: unknown, t: any): string | null {
+function formatCellValue(
+  value: unknown,
+  t: (key: AppTranslationKey, params?: Record<string, string | number>) => string,
+): string | null {
   if (isEmptyValue(value)) return null;
   if (Array.isArray(value)) return value.join(", ");
   if (typeof value === "boolean") return value ? t("common.yes") : t("common.no");
@@ -24,7 +28,7 @@ function formatRowSummary(
   row: Record<string, unknown>,
   rowFields: readonly FieldDefinition[],
   resolveLabel: (field: FieldDefinition) => string,
-  t: any,
+  t: (key: AppTranslationKey, params?: Record<string, string | number>) => string,
 ): string {
   return rowFields
     .map((field) => {
@@ -73,20 +77,22 @@ function resolveCustomCollectionTabs(
     .map((tabId) => ({ key: tabId, label: tabId, enabled: true, order: 0 }));
 }
 
-export function ContactDetailCustomCollections({
-  contact,
-  fields,
-  enabledTabIds,
-  formTabs,
-  onlyTabId,
-}: {
+export interface ContactDetailCustomCollectionsProps {
   contact: Contact;
   fields: Record<string, FieldDefinition[]>;
   enabledTabIds: Set<string>;
   formTabs?: TabDefinition[];
   /** When set, only that tab section is rendered (drawer tab panel). */
   onlyTabId?: string;
-}): React.JSX.Element | null {
+}
+
+export function ContactDetailCustomCollections({
+  contact,
+  fields,
+  enabledTabIds,
+  formTabs,
+  onlyTabId,
+}: ContactDetailCustomCollectionsProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const tabs = resolveCustomCollectionTabs(formTabs, fields, enabledTabIds, onlyTabId);
 

@@ -1,3 +1,4 @@
+import type React from "react";
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
@@ -8,14 +9,14 @@ import {
   ContactsPendingBanner,
 } from "@/tenant/features/contacts/components/ContactsDataBannerRows";
 
-interface ContactsDataBannerProps {
+export interface ContactsDataBannerProps {
   onReviewConflicts?: () => void;
 }
 
 /** Surfaces offline / sync outbox banners for the Contacts module. */
-export default function ContactsDataBanner({
+export function ContactsDataBanner({
   onReviewConflicts,
-}: ContactsDataBannerProps): JSX.Element | null {
+}: ContactsDataBannerProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const { pendingCount, conflictCount, flushing, flush, clearConflicts } = useContactsSyncOutbox();
   const [offline, setOffline] = useState(() =>
@@ -84,3 +85,5 @@ export default function ContactsDataBanner({
     </>
   );
 }
+
+export default ContactsDataBanner;

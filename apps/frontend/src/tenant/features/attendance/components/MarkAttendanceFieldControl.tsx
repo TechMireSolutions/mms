@@ -9,7 +9,7 @@ import { StatusToggle } from "@/tenant/features/attendance/components/StatusTogg
 import type { AttendanceRow } from "@/tenant/features/attendance/components/markAttendanceTypes";
 import type { ModuleFieldDef } from "@mms/shared";
 
-interface MarkAttendanceFieldControlProps {
+export interface MarkAttendanceFieldControlProps {
   row: AttendanceRow;
   field: ModuleFieldDef;
   idPrefix: string;
@@ -21,7 +21,7 @@ export function MarkAttendanceFieldControl({
   field,
   idPrefix,
   onFieldChange,
-}: MarkAttendanceFieldControlProps) {
+}: MarkAttendanceFieldControlProps): React.JSX.Element {
   const { t } = useTranslation();
   const inputId = `${idPrefix}-${field.id}-${row.studentId}`;
 

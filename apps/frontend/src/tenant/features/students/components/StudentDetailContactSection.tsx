@@ -21,8 +21,8 @@ export interface StudentContactProfileData {
   tags?: string[];
 }
 
-interface StudentDetailContactSectionProps {
-  contactProfile: StudentContactProfileData;
+export interface StudentDetailContactSectionProps {
+  contactProfile?: StudentContactProfileData | null;
   canMessage?: boolean;
   openComposer?: (channel: "sms" | "whatsapp" | "email", recipients: MessagingRecipient[]) => void;
   onNavigateToContact?: (contactId: string | number) => void;
@@ -35,6 +35,8 @@ export function StudentDetailContactSection({
   onNavigateToContact,
 }: StudentDetailContactSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  if (!contactProfile) return null;
+
   const {
     contactId,
     displayName,

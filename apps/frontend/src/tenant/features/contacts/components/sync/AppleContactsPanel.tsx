@@ -13,7 +13,7 @@ import {
   AppleContactsPreviewList,
 } from "@/tenant/features/contacts/components/sync/AppleContactsPanelSections";
 
-interface AppleContactsPanelProps {
+export interface AppleContactsPanelProps {
   onImport: (contacts: Contact[]) => void | Promise<void>;
   canWrite?: boolean;
 }

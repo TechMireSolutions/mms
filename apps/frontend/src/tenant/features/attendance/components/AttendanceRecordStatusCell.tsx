@@ -3,7 +3,7 @@ import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusB
 import { getAttendanceStatusInfo, type AttendanceRecord, type AttendanceStatus } from "@/lib/data/attendanceData";
 import { StatusToggle } from "@/tenant/features/attendance/components/StatusToggle";
 
-interface AttendanceRecordStatusCellProps {
+export interface AttendanceRecordStatusCellProps {
   attendanceRecord: AttendanceRecord;
   editingRecord: AttendanceRecord | null;
   statuses: AttendanceStatus[];

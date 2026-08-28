@@ -3,7 +3,7 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface GuardianContactCardProps {
+export interface GuardianContactCardProps {
   label: string;
   badgeCode: string;
   /** Full semantic badge recipe (SEMANTIC_BADGE) — SSOT for tile + label tone. */

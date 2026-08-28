@@ -17,7 +17,7 @@ import {
   type ExaminationsListContentProps,
 } from "@/tenant/features/examinations/components/examinationsListContentShared";
 
-type ExaminationsListDesktopTableProps = ExaminationsListContentProps;
+export type ExaminationsListDesktopTableProps = ExaminationsListContentProps;
 
 export function ExaminationsListDesktopTable(props: ExaminationsListDesktopTableProps): React.JSX.Element {
   const {

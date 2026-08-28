@@ -1,4 +1,3 @@
-import type { ReactElement } from "react";
 import { type Student } from "@mms/shared";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
@@ -35,7 +34,7 @@ export interface StudentsListContentProps {
 }
 
 /** Students directory content only — form / drawer / composer / confirms mount on page overlays. */
-export default function StudentsListContent({
+export function StudentsListContent({
   students,
   onEdit,
   onRestore,
@@ -59,7 +58,7 @@ export default function StudentsListContent({
   openComposer,
   canWriteMessaging,
   onDeleteTargetChange,
-}: StudentsListContentProps): ReactElement {
+}: StudentsListContentProps): React.JSX.Element {
   const sessions = useSessionsCollection();
   const list = useStudentListController({
     students,
@@ -118,3 +117,5 @@ export default function StudentsListContent({
     </div>
   );
 }
+
+export default StudentsListContent;

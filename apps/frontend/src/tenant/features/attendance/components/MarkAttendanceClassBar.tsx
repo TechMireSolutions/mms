@@ -6,16 +6,16 @@ import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import { MarkAttendanceGeoTag } from "@/tenant/features/attendance/components/MarkAttendanceGeoTag";
 import type { GeoData } from "@/tenant/features/attendance/components/markAttendanceTypes";
 
-interface AttendanceClassSummary {
+export interface AttendanceClassSummary {
   name?: string;
   teacherName?: string;
 }
 
-interface AttendanceSessionSummary {
+export interface AttendanceSessionSummary {
   name?: string;
 }
 
-interface MarkAttendanceClassBarProps {
+export interface MarkAttendanceClassBarProps {
   classInfo?: AttendanceClassSummary;
   sessionInfo?: AttendanceSessionSummary | null;
   date: string;
@@ -39,7 +39,7 @@ export function MarkAttendanceClassBar({
   onRequestGeo,
   onToggleFaceAI,
   onMarkAll,
-}: MarkAttendanceClassBarProps) {
+}: MarkAttendanceClassBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

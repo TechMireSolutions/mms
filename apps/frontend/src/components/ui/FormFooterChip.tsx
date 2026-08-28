@@ -15,6 +15,7 @@ const FORM_FOOTER_BADGE_TONES: Record<FormFooterBadgeTone, string> = {
 export interface FormFooterEntityChipProps {
   children: ReactNode;
   className?: string;
+  title?: string;
 }
 
 /**
@@ -24,9 +25,11 @@ export interface FormFooterEntityChipProps {
 export function FormFooterEntityChip({
   children,
   className,
+  title,
 }: FormFooterEntityChipProps): React.JSX.Element {
   return (
     <span
+      title={title}
       className={cn(
         "font-bold text-foreground bg-muted/65 px-2.5 py-1 rounded-lg border border-border/60",
         className,
@@ -41,6 +44,7 @@ export interface FormFooterBadgeProps {
   children: ReactNode;
   tone?: FormFooterBadgeTone;
   className?: string;
+  title?: string;
 }
 
 /**
@@ -51,9 +55,11 @@ export function FormFooterBadge({
   children,
   tone = "primary",
   className,
+  title,
 }: FormFooterBadgeProps): React.JSX.Element {
   return (
     <span
+      title={title}
       className={cn(
         "inline-flex items-center px-2 py-0.5 rounded-md font-semibold border text-xs",
         FORM_FOOTER_BADGE_TONES[tone],
@@ -68,6 +74,7 @@ export function FormFooterBadge({
 export interface FormFooterErrorChipProps {
   children: ReactNode;
   className?: string;
+  title?: string;
 }
 
 /**
@@ -77,9 +84,12 @@ export interface FormFooterErrorChipProps {
 export function FormFooterErrorChip({
   children,
   className,
+  title,
 }: FormFooterErrorChipProps): React.JSX.Element {
   return (
     <span
+      role="status"
+      title={title}
       className={cn(
         "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive text-xs font-bold border border-destructive/20",
         className,

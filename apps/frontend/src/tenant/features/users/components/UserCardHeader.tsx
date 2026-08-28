@@ -8,6 +8,7 @@ export interface UserCardHeaderProps {
   showSelect: boolean;
   onToggleSelect: (id: string) => void;
   onView: (user: SystemUser) => void;
+  isColumnVisible?: (key: string) => boolean;
   reducedMotion?: boolean;
 }
 
@@ -18,25 +19,33 @@ export function UserCardHeader({
   showSelect,
   onToggleSelect,
   onView,
+  isColumnVisible,
   reducedMotion = false,
 }: UserCardHeaderProps): React.JSX.Element {
   const { t } = useTranslation();
+  const showEmail = !isColumnVisible || isColumnVisible("email");
+  const displayName = user.name?.trim() || user.email || "";
 
   return (
     <DirectoryCardHeader
       id={user.id}
-      displayName={user.name}
+      displayName={displayName}
       isSelected={isSelected}
       showSelect={showSelect}
       onSelect={() => onToggleSelect(user.id)}
-      selectAriaLabel={t("users.selectRow", { name: user.name })}
+      selectAriaLabel={t("users.selectRow", { name: displayName })}
       onView={() => onView(user)}
-      viewAriaLabel={t("users.actionView", { name: user.name })}
+      viewAriaLabel={t("users.actionView", { name: displayName })}
       reducedMotion={reducedMotion}
       subtitle={
-        <p className="mt-0.5 text-xs font-semibold text-muted-foreground truncate">
-          {user.email}
-        </p>
+        showEmail && user.email ? (
+          <p
+            className="mt-0.5 text-xs font-semibold text-muted-foreground truncate"
+            title={user.email}
+          >
+            {user.email}
+          </p>
+        ) : undefined
       }
     />
   );

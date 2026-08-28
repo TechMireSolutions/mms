@@ -5,16 +5,16 @@ import { AttendanceAnalyticsChartPanels } from "@/tenant/features/attendance/com
 import { AttendanceAnalyticsInsights } from "@/tenant/features/attendance/components/AttendanceAnalyticsInsights";
 import { useAttendanceAnalyticsModel } from "@/tenant/features/attendance/components/useAttendanceAnalyticsModel";
 
-interface AnalyticsFilters {
+export interface AnalyticsFilters {
   classId?: string;
 }
 
-interface AttendanceAnalyticsProps {
+export interface AttendanceAnalyticsProps {
   filters: AnalyticsFilters;
   records: AttendanceRecord[];
 }
 
-export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsProps) {
+export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsProps): React.JSX.Element {
   const model = useAttendanceAnalyticsModel(filters, records);
 
   return (
