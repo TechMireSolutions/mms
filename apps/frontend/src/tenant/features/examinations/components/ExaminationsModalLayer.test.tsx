@@ -18,12 +18,13 @@ vi.mock("./EnterMarks", () => ({
 }));
 
 vi.mock("@/components/ui/FormModal", () => ({
-  FormModal: ({ children, title }: any) => (
-    <div data-testid="form-modal">
-      <h2>{title}</h2>
-      {children}
-    </div>
-  ),
+  FormModal: ({ children, title, open }: any) =>
+    open ? (
+      <div data-testid="form-modal">
+        <h2>{title}</h2>
+        {children}
+      </div>
+    ) : null,
 }));
 
 describe("ExaminationsModalLayer Component", () => {

@@ -8,17 +8,17 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { InvoiceDraft } from "@/tenant/features/finance/components/invoiceFormDraft";
 
-interface InvoiceFormFieldsSectionProps {
+export interface InvoiceFormFieldsSectionProps {
   t: TranslationFunction;
   draft: InvoiceDraft;
   onFieldChange: (key: keyof InvoiceDraft, value: string) => void;
 }
 
 export const InvoiceFormFieldsSection = React.memo(function InvoiceFormFieldsSection({
-      t,
-      draft,
-      onFieldChange,
-    }: InvoiceFormFieldsSectionProps): React.ReactElement {
+  t,
+  draft,
+  onFieldChange,
+}: InvoiceFormFieldsSectionProps): React.JSX.Element {
 
       return (
         <div className="space-y-4">

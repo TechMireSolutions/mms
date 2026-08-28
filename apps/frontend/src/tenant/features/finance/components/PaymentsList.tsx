@@ -50,7 +50,7 @@ export function PaymentsList({
   onColumnResize,
   columnCustomizer,
   onRowClick,
-}: PaymentsListProps) {
+}: PaymentsListProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

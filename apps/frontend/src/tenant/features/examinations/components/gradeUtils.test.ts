@@ -11,9 +11,10 @@ describe("gradeUtils", () => {
   });
 
   it("computes ordinal suffix for ranks", () => {
-    expect(getRankSuffix(1)).toBe("st");
-    expect(getRankSuffix(2)).toBe("nd");
-    expect(getRankSuffix(3)).toBe("rd");
-    expect(getRankSuffix(4)).toBe("th");
+    expect(getRankSuffix(1)).toBe("1st");
+    expect(getRankSuffix(2)).toBe("2nd");
+    expect(getRankSuffix(3)).toBe("3rd");
+    expect(getRankSuffix(4)).toBe("4th");
+    expect(getRankSuffix(21)).toBe("21st");
   });
 });

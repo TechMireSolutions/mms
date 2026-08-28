@@ -18,7 +18,7 @@ export const PAYMENT_TRACKER_COLUMN_KEYS = [
   "note",
 ] as const;
 
-interface PaymentsListContentProps {
+export interface PaymentsListContentProps {
   payments: Payment[];
   selectedIds: string[];
   isColumnVisible: (key: string) => boolean;
@@ -57,7 +57,7 @@ export function PaymentsListContent({
   onToggleAll,
   onRequestDelete,
   onRestore,
-}: PaymentsListContentProps) {
+}: PaymentsListContentProps): React.JSX.Element {
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const listProps = {
     payments,

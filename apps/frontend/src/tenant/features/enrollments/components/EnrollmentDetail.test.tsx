@@ -41,11 +41,11 @@ vi.mock("@/components/ui/DetailDrawerShell", () => ({
 const mockEnrollment: Enrollment = {
   id: "enr-1",
   studentId: "std-1",
-  studentName: "Bilal Ahmad",
+  studentName: "Ali Hassan",
   sessionId: "ses-1",
   sessionName: "Spring 2025",
   classId: "cls-1",
-  className: "Hifz 1",
+  className: "Hifz Class A",
   enrolledDate: "2025-01-01T00:00:00Z",
   baseFee: 100,
   discountPct: 0,

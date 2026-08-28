@@ -17,7 +17,7 @@ import {
   type InvoiceDraft,
 } from "@/tenant/features/finance/components/invoiceFormDraft";
 
-interface InvoiceFormProps {
+export interface InvoiceFormProps {
   open: boolean;
   saving?: boolean;
   onClose: () => void;
@@ -25,14 +25,14 @@ interface InvoiceFormProps {
 }
 
 export const InvoiceForm = React.memo(function InvoiceForm({
-      open,
-      saving = false,
-      onClose,
-      onSave,
-    }: InvoiceFormProps): React.ReactElement {
-      const { t } = useTranslation();
-      const { settings } = useFinanceConfig();
-      const { formatCurrency } = useFinanceCurrency();
+  open,
+  saving = false,
+  onClose,
+  onSave,
+}: InvoiceFormProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const { settings } = useFinanceConfig();
+  const { formatCurrency } = useFinanceCurrency();
 
       const [draft, setDraft] = useState<InvoiceDraft>(() => createInitialDraft(settings.dueDays));
       const [submitting, setSubmitting] = useState(false);

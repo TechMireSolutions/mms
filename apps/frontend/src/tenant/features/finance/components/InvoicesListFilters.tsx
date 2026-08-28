@@ -9,7 +9,7 @@ import { InvoicesFiltersMenuButton } from "@/tenant/features/finance/components/
 
 export const FINANCE_INVOICES_WORK_SEARCH_INPUT_ID = "finance-invoices-work-search";
 
-interface InvoicesListFiltersProps {
+export interface InvoicesListFiltersProps {
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
   search: string;

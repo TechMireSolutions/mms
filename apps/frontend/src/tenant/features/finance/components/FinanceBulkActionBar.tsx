@@ -1,4 +1,4 @@
-import type { ReactElement } from "react";
+import React from "react";
 import { Printer, ReceiptText } from "lucide-react";
 import { FINANCE_MODULE_MANIFEST } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -37,7 +37,7 @@ export function FinanceBulkActionBar({
   isBulkStatusPending = false,
   statusBadgeConfig = {},
   bulkActions = FINANCE_MODULE_MANIFEST.work.bulkActions,
-}: FinanceBulkActionBarProps): ReactElement {
+}: FinanceBulkActionBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

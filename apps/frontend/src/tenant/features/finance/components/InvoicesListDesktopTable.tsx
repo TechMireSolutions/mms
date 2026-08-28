@@ -13,7 +13,7 @@ import { InvoicesRowActions } from "@/tenant/features/finance/components/Invoice
 import { renderInvoiceWorkColumnValue } from "@/tenant/features/finance/components/invoiceWorkColumnCell";
 import type { InvoicesListContentProps } from "@/tenant/features/finance/components/invoicesListShared";
 
-type InvoicesListDesktopTableProps = InvoicesListContentProps;
+export type InvoicesListDesktopTableProps = InvoicesListContentProps;
 
 export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): React.JSX.Element {
   const {

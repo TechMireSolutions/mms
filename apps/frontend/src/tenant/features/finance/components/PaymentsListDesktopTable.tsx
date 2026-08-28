@@ -15,7 +15,7 @@ import {
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import type { Payment } from '@/lib/data/financeData';
 
-interface PaymentsListDesktopTableProps {
+export interface PaymentsListDesktopTableProps {
   payments: Payment[];
   selectedIds: string[];
   isColumnVisible: (key: string) => boolean;
@@ -49,7 +49,7 @@ export function PaymentsListDesktopTable({
   onToggleAll,
   onRequestDelete,
   onRestore,
-}: PaymentsListDesktopTableProps) {
+}: PaymentsListDesktopTableProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const renderRowAction = (paymentId: string) => (

@@ -10,7 +10,7 @@ import type { Invoice } from "@/lib/data/financeData";
 
 export type InvoiceMessageChannel = "sms" | "whatsapp" | "email";
 
-interface InvoicesRowActionsProps {
+export interface InvoicesRowActionsProps {
   invoice: Invoice;
   canWrite: boolean;
   canDelete: boolean;

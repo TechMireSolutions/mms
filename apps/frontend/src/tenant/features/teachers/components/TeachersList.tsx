@@ -1,4 +1,5 @@
 import React from 'react';
+import type { Teacher } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { TeachersListContent } from '@/tenant/features/teachers/components/TeachersListContent';
 import type { TeacherListProps } from '@/tenant/features/teachers/components/teachersListTypes';
@@ -60,7 +61,7 @@ export function TeachersList({
   });
 
   const handleRequestDelete = (id: string) => {
-    const teacher = teachers.find((candidate) => String(candidate.id) === String(id));
+    const teacher = teachers.find((candidate: Teacher) => String(candidate.id) === String(id));
     const name = teacher ? resolveTeacherDisplayName(teacher, t, undefined) : undefined;
     onDeleteTargetChange({ id, name });
   };

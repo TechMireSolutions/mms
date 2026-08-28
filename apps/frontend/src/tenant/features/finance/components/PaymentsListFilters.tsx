@@ -11,7 +11,7 @@ import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/comp
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 
-interface PaymentMethodSummaryProps {
+export interface PaymentMethodSummaryProps {
   paymentsByMethod: Record<string, { amount: number; count: number }>;
   methodConfig: Record<string, StatusBadgeConfigItem>;
   formatCurrency: (amount: number) => string;
@@ -21,7 +21,7 @@ export function PaymentMethodSummary({
   paymentsByMethod,
   methodConfig,
   formatCurrency,
-}: PaymentMethodSummaryProps) {
+}: PaymentMethodSummaryProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -39,7 +39,7 @@ export function PaymentMethodSummary({
   );
 }
 
-interface PaymentSelectionBarProps {
+export interface PaymentSelectionBarProps {
   selectedCount: number;
   showDeleted: boolean;
   onOpenBulkConfirm: () => void;
@@ -49,7 +49,7 @@ export function PaymentSelectionBar({
   selectedCount,
   showDeleted,
   onOpenBulkConfirm,
-}: PaymentSelectionBarProps) {
+}: PaymentSelectionBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -77,7 +77,7 @@ export function PaymentSelectionBar({
   );
 }
 
-interface PaymentLogHeaderProps {
+export interface PaymentLogHeaderProps {
   totalPaid: number;
   formatCurrency: (amount: number) => string;
   columnCustomizer?: ModuleColumnCustomizerProps;
@@ -87,7 +87,7 @@ export function PaymentLogHeader({
   totalPaid,
   formatCurrency,
   columnCustomizer,
-}: PaymentLogHeaderProps) {
+}: PaymentLogHeaderProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (

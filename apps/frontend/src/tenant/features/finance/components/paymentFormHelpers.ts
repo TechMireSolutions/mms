@@ -1,6 +1,6 @@
 import { PAYMENT_METHODS } from '@/lib/data/financeData';
-import { useTranslation } from "@/hooks/useTranslation";
-import { AppTranslationKey, todayISO, type PaymentCreateInput } from "@mms/shared";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { type AppTranslationKey, todayISO, type PaymentCreateInput } from "@mms/shared";
 
 export interface PaymentFormDraft {
   amount: string;
@@ -13,7 +13,7 @@ export interface PaymentFormDraft {
 export function validatePaymentFormDraft(
   draft: PaymentFormDraft,
   balance: number,
-  t: ReturnType<typeof useTranslation>["t"],
+  t: TranslationFunction,
 ): Record<string, string> {
   const newErrors: Record<string, string> = {};
 

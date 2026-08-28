@@ -30,7 +30,7 @@ const InvoiceReceiptModal = React.lazy(() =>
 /**
  * Finance — invoices and payments. Work | Reports | Setup.
  */
-export default function Finance() {
+export default function Finance(): React.JSX.Element {
   const c = useFinancePageController();
   const [receiptInvoices, setReceiptInvoices] = React.useState<Invoice[]>([]);
 

@@ -30,7 +30,7 @@ const mockEnrollments: Enrollment[] = [
   {
     id: "enr-1",
     studentId: "std-1",
-    studentName: "Bilal Ahmad",
+    studentName: "Ali Hassan",
     sessionId: "ses-1",
     sessionName: "Spring 2025",
     classId: "cls-1",

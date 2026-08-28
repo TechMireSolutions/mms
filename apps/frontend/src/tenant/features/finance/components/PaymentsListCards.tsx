@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import type { Payment } from '@/lib/data/financeData';
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
 
-interface PaymentsListCardsProps {
+export interface PaymentsListCardsProps {
   payments: Payment[];
   selectedIds: string[];
   isColumnVisible: (key: string) => boolean;

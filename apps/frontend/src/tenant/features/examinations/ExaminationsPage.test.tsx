@@ -73,6 +73,14 @@ vi.mock("@/components/ui/ResponsiveAccordionTabs", () => ({
   ResponsiveAccordionTabs: ({ children }: any) => <div>{children}</div>,
 }));
 
+vi.mock("./components/ExaminationsCommandMetrics", () => ({
+  ExaminationsCommandMetrics: () => <div data-testid="command-metrics">Metrics</div>,
+}));
+
+vi.mock("./components/ExaminationsPageActions", () => ({
+  ExaminationsPageActions: () => <div data-testid="page-actions">Actions</div>,
+}));
+
 vi.mock("./components/ExaminationsWorkTier", () => ({
   ExaminationsWorkTier: () => <div data-testid="work-tier">Work Tier</div>,
 }));

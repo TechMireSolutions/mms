@@ -19,7 +19,11 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { notify } from "@/lib/notify";
 
-export const FinanceSettings = React.memo(function FinanceSettings(): React.ReactElement {
+export type FinanceSettingsProps = Record<string, never>;
+
+export const FinanceSettings = React.memo(function FinanceSettings(
+  _props: FinanceSettingsProps = {},
+): React.JSX.Element {
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(FINANCE_MODULE_MANIFEST);
   const config = useFinanceConfig();

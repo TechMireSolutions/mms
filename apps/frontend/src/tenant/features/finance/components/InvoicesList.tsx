@@ -18,7 +18,7 @@ const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
-interface InvoicesListProps {
+export interface InvoicesListProps {
   invoices: Invoice[];
   onView: (invoice: Invoice) => void;
   onRecord: (invoice: Invoice) => void;

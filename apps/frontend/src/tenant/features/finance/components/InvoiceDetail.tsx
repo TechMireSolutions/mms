@@ -13,7 +13,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { formatDate } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 
-interface InvoiceDetailProps {
+export interface InvoiceDetailProps {
   invoice: Invoice;
   onClose: () => void;
   onRecord: (invoice: Invoice) => void;
@@ -28,7 +28,7 @@ interface InvoiceDetailProps {
  * and payment status.
  * 
  * @param {InvoiceDetailProps} props - The component props.
- * @returns {React.ReactElement}
+ * @returns {React.JSX.Element}
  */
 export const InvoiceDetail = React.memo(function InvoiceDetail({
   invoice,
@@ -36,7 +36,7 @@ export const InvoiceDetail = React.memo(function InvoiceDetail({
   onRecord,
   onPrintReceipt,
   canWrite = true,
-}: InvoiceDetailProps) {
+}: InvoiceDetailProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
 

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
-interface InvoiceFormSummarySectionProps {
+export interface InvoiceFormSummarySectionProps {
   t: TranslationFunction;
   baseFee: number;
   discountAmt: number;
@@ -18,7 +18,7 @@ export function InvoiceFormSummarySection({
   discountAmt,
   finalAmt,
   formatCurrency,
-}: InvoiceFormSummarySectionProps): React.ReactElement {
+}: InvoiceFormSummarySectionProps): React.JSX.Element {
   return (
     <Card accentColor="primary" className={cn("p-5 shadow-sm", CARD_STRIPE_INSET)}>
       <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">

@@ -7,7 +7,7 @@ import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { formatDate, getCollectedAmountForInvoice, getOutstandingAmountForInvoice } from "@mms/shared";
 import { cn } from "@/lib/utils";
 
-interface InvoiceReceiptModalProps {
+export interface InvoiceReceiptModalProps {
   invoices: Invoice[];
   onClose: () => void;
   madrasaName?: string;
@@ -111,7 +111,7 @@ export const InvoiceReceiptModal = React.memo(function InvoiceReceiptModal({
   invoices,
   onClose,
   madrasaName = "Madrasa Management System",
-}: InvoiceReceiptModalProps) {
+}: InvoiceReceiptModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const printRef = useRef<HTMLDivElement>(null);
 

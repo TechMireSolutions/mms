@@ -14,7 +14,7 @@ import { getInvoiceVisibleWorkColumns } from "@/tenant/features/finance/componen
 import { renderInvoiceWorkColumnValue } from "@/tenant/features/finance/components/invoiceWorkColumnCell";
 import type { InvoicesListContentProps } from "@/tenant/features/finance/components/invoicesListShared";
 
-type InvoicesListCardsProps = Omit<
+export type InvoicesListCardsProps = Omit<
   InvoicesListContentProps,
   "visibleColCount" | "getColumnWidth" | "onColumnResize"
 >;

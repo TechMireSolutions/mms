@@ -22,7 +22,7 @@ export const PaymentDetail = React.memo(function PaymentDetail({
   onEdit,
   canDelete = false,
   onRestore,
-}: PaymentDetailProps) {
+}: PaymentDetailProps): React.JSX.Element {
   const { t } = useTranslation();
   const isArchived = !!payment.deletedAt;
 

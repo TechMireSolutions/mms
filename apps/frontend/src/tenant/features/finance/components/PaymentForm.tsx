@@ -25,7 +25,7 @@ import {
   validatePaymentFormDraft,
 } from "@/tenant/features/finance/components/paymentFormHelpers";
 
-interface PaymentFormProps {
+export interface PaymentFormProps {
   open: boolean;
   invoice: Invoice | null;
   onClose: () => void;
@@ -167,10 +167,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                 id="payment-method-select"
                 value={paymentDraft.method}
                 onChange={(value) => updateDraft({ method: value })}
-                options={PAYMENT_METHODS.map((paymentMethod) => ({
-                  value: paymentMethod,
-                  label: t(PAYMENT_METHOD_LABEL_KEYS[paymentMethod] ?? "finance.paymentMethods.other"),
-                }))}
+                options={paymentMethodOptions}
               />
             </Field>
 

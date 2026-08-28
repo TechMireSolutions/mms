@@ -7,6 +7,7 @@ import {
   STUDENTS_MODULE_MANIFEST,
   resolveModuleTierTab,
   resolveStudentStatuses,
+  type StudentsBulkEnrollBody,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsMetrics } from "@/tenant/features/students/hooks/useStudentsAnalyticsQueries";
@@ -170,7 +171,7 @@ export function useStudentsPageController() {
     openEditForm: formState.openEditForm,
     handleRestore: workActions.handleRestore,
     handleBulkStatusChange: workActions.handleBulkStatusChange,
-    handleBulkEnroll: async (payload) => {
+    handleBulkEnroll: async (payload: { sessionIds: string[]; mode: StudentsBulkEnrollBody["mode"] }) => {
       try {
         await workActions.handleBulkEnroll(directory.selectedIds, payload);
         directory.clearSelection();

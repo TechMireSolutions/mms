@@ -4,7 +4,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceMetrics";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 
-interface FinanceCommandMetricsProps {
+export interface FinanceCommandMetricsProps {
   invoiceTotal: number;
 }
 
