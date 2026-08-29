@@ -72,8 +72,18 @@ export function BrandingSettingsProfileSection({
             hint={t('branding.logoHint')}
             value={data.logoUrl}
             purpose="logo"
-            onChange={(url) => upd('logoUrl', url)}
-            onClear={() => upd('logoUrl', '')}
+            onChange={(url) => {
+              upd('logoUrl', url);
+              if (!data.faviconUrl || data.faviconUrl === data.logoUrl) {
+                upd('faviconUrl', url);
+              }
+            }}
+            onClear={() => {
+              if (data.faviconUrl === data.logoUrl) {
+                upd('faviconUrl', '');
+              }
+              upd('logoUrl', '');
+            }}
             onBrandColorsExtracted={(colors) => {
               upd('primaryColor', colors.primaryColor);
               upd('secondaryColor', colors.secondaryColor);
