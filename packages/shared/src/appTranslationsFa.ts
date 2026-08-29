@@ -610,6 +610,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "attendance.audit.title": "گزارش حسابرسی",
   "attendance.clearFilters": "پاک کردن فیلترها",
   "attendance.columns.class": "کلاس",
+  "attendance.columns.session": "دوره تحصیلی",
   "attendance.columns.date": "تاریخ",
   "attendance.columns.fixed": "ثابت شده",
   "attendance.columns.hidden": "پنهان شده",

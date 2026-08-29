@@ -103,6 +103,12 @@ export function AttendanceListCards({
                     ddClassName="font-mono"
                   />
                 )}
+                {isColumnVisible("session") && (
+                  <StatRow
+                    label={t('attendance.columns.session')}
+                    value={attendanceRecord.sessionName || '—'}
+                  />
+                )}
                 {isColumnVisible("status") && (
                   <StatRow
                     label={t('attendance.columns.status')}

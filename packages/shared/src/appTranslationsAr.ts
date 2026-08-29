@@ -606,6 +606,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "attendance.audit.title": "سجل المراجعة",
   "attendance.clearFilters": "مسح الفلاتر",
   "attendance.columns.class": "الصف",
+  "attendance.columns.session": "الدورة الدراسية",
   "attendance.columns.date": "التاريخ",
   "attendance.columns.fixed": "ثابت",
   "attendance.columns.hidden": "مخفية",

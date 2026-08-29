@@ -606,6 +606,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "attendance.audit.title": "آڈٹ لاگ",
   "attendance.clearFilters": "فلٹر صاف کریں",
   "attendance.columns.class": "کلاس",
+  "attendance.columns.session": "سیشن",
   "attendance.columns.date": "تاریخ",
   "attendance.columns.fixed": "مقرر",
   "attendance.columns.hidden": "پوشیدہ",

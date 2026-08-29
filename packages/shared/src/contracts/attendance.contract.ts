@@ -11,7 +11,15 @@ export const attendanceContract = c.router({
   list: {
     method: 'GET',
     path: '/api/attendance',
-    query: baseListQuerySchema,
+    query: baseListQuerySchema.extend({
+      sessionId: z.string().max(100).optional(),
+      classId: z.string().max(100).optional(),
+      teacherId: z.string().max(100).optional(),
+      date: z.string().max(30).optional(),
+      dateFrom: z.string().max(30).optional(),
+      dateTo: z.string().max(30).optional(),
+      status: z.string().max(200).optional(),
+    }),
     responses: {
       200: z.unknown(),
     },

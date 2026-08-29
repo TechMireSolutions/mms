@@ -71,6 +71,7 @@ export function AttendanceListDesktopTable({
           columns={[
             isColumnVisible("date") ? { id: "date", label: t('attendance.columns.date') } : null,
             isColumnVisible("class") ? { id: "class", label: t('attendance.columns.class') } : null,
+            isColumnVisible("session") ? { id: "session", label: t('attendance.columns.session') } : null,
             isColumnVisible("student") ? { id: "student", label: t('attendance.columns.student') } : null,
             isColumnVisible("status") ? { id: "status", label: t('attendance.columns.status') } : null,
             isColumnVisible("timeIn") ? { id: "timeIn", label: t('attendance.columns.timeIn') } : null,
@@ -106,6 +107,9 @@ export function AttendanceListDesktopTable({
               )}
               {isColumnVisible("class") && (
                 <TableCell className="px-3 py-2.5 text-foreground whitespace-nowrap">{classLabel(attendanceRecord.classId)}</TableCell>
+              )}
+              {isColumnVisible("session") && (
+                <TableCell className="px-3 py-2.5 text-foreground whitespace-nowrap">{attendanceRecord.sessionName || '—'}</TableCell>
               )}
               {isColumnVisible("student") && (
                 <TableCell className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{attendanceRecord.studentName}</TableCell>

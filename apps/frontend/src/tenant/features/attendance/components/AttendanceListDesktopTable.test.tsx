@@ -10,6 +10,7 @@ const mockRecord: AttendanceRecord = {
   studentName: "Bilal Ahmad",
   rollNo: "GR-001",
   classId: "cls-1",
+  sessionName: "Spring 2025",
   date: "2025-01-01",
   status: "present",
   timeIn: "08:00",
@@ -47,6 +48,8 @@ describe("AttendanceListDesktopTable Component", () => {
 
     expect(html).toContain("Bilal Ahmad");
     expect(html).toContain("Class 1A");
+    expect(html).toContain("attendance.columns.session");
+    expect(html).toContain("Spring 2025");
     expect(html).toContain("On time");
   });
 });

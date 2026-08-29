@@ -3,6 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AttendanceRecords } from "./AttendanceRecords";
 
+const attendanceMocks = vi.hoisted(() => ({
+  useAttendancePaginated: vi.fn(),
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
@@ -25,7 +29,10 @@ vi.mock("@/tenant/hooks/collections/sessions", () => ({
 }));
 
 vi.mock("@/tenant/features/attendance/hooks/useAttendance", () => ({
-  useAttendancePaginated: () => ({
+  useAttendancePaginated: attendanceMocks.useAttendancePaginated,
+}));
+
+attendanceMocks.useAttendancePaginated.mockReturnValue({
     data: {
       records: [
         {
@@ -51,8 +58,7 @@ vi.mock("@/tenant/features/attendance/hooks/useAttendance", () => ({
     isFetching: false,
     isError: false,
     refetch: vi.fn(),
-  }),
-}));
+  });
 
 vi.mock("./AttendanceListFilters", () => ({
   AttendanceListFilters: () => <div data-testid="filters">Filters</div>,
@@ -70,7 +76,7 @@ describe("AttendanceRecords Component", () => {
   it("renders filters, records desktop table, and pagination", () => {
     const html = renderToStaticMarkup(
       <AttendanceRecords
-        filters={{ sessionId: "", classId: "", teacherId: "", date: "2025-01-01" }}
+        filters={{ sessionId: "ses-1", classId: "cls-1", teacherId: "tch-1", date: "2025-01-01" }}
         onUpdateRecord={vi.fn()}
         onDeleteRecord={vi.fn()}
         onRestoreRecord={vi.fn()}
@@ -82,5 +88,10 @@ describe("AttendanceRecords Component", () => {
     expect(html).toContain("Filters");
     expect(html).toContain("Desktop Table");
     expect(html).toContain("Confirm Dialogs");
+    expect(attendanceMocks.useAttendancePaginated).toHaveBeenCalledWith(expect.objectContaining({
+      sessionId: "ses-1",
+      classId: "cls-1",
+      teacherId: "tch-1",
+    }));
   });
 });

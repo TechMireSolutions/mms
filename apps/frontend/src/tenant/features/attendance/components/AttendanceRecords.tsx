@@ -23,7 +23,7 @@ import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
-const ATTENDANCE_COLUMN_KEYS = ["date", "class", "student", "status", "timeIn", "timeOut", "notes"] as const;
+const ATTENDANCE_COLUMN_KEYS = ["date", "class", "session", "student", "status", "timeIn", "timeOut", "notes"] as const;
 const ATTENDANCE_SEARCH_DEBOUNCE_MS = 300;
 
 
@@ -92,13 +92,15 @@ export function AttendanceRecords({
   // Server-side filter/page reset whenever a filter dimension changes.
   useEffect(() => {
     setListPage(1);
-  }, [deferredSearch, statusFilter, dateFrom, dateTo, filters.classId, filters.date, showDeleted]);
+  }, [deferredSearch, statusFilter, dateFrom, dateTo, filters.sessionId, filters.classId, filters.teacherId, filters.date, showDeleted]);
 
   const attendancePageQuery = useAttendancePaginated({
     page: listPage,
     limit: ATTENDANCE_MODULE_MANIFEST.defaultPageSize,
     search: deferredSearch,
+    sessionId: filters.sessionId,
     classId: filters.classId,
+    teacherId: filters.teacherId,
     date: filters.date,
     status: statusFilter !== "all" ? statusFilter : undefined,
     dateFrom,
@@ -128,7 +130,7 @@ export function AttendanceRecords({
 
   useEffect(() => {
     clearSelection();
-  }, [showDeleted, listPage, debouncedSearch, statusFilter, dateFrom, dateTo, filters.classId, filters.date, clearSelection]);
+  }, [showDeleted, listPage, debouncedSearch, statusFilter, dateFrom, dateTo, filters.sessionId, filters.classId, filters.teacherId, filters.date, clearSelection]);
 
   const statusLabel = (statusId: string) => {
     const found = statuses.find((status) => status.id === statusId);

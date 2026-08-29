@@ -14,6 +14,7 @@ export function useAttendanceColumnLayout() {
       buildAttendanceWorkColumnRegistry({
         date: t('attendance.columns.date'),
         class: t('attendance.columns.class'),
+        session: t('attendance.columns.session'),
         student: t('attendance.columns.student'),
         status: t('attendance.columns.status'),
         timeIn: t('attendance.columns.timeIn'),

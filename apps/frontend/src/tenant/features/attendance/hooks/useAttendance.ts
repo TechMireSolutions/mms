@@ -28,7 +28,9 @@ export interface AttendancePaginatedParams {
   page: number;
   limit?: number;
   search?: string;
+  sessionId?: string;
   classId?: string;
+  teacherId?: string;
   date?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -51,7 +53,9 @@ export function useAttendancePaginated(params: AttendancePaginatedParams) {
         page: params.page,
         limit: params.limit ?? ATTENDANCE_MODULE_MANIFEST.defaultPageSize,
         search: params.search?.trim(),
+        sessionId: params.sessionId?.trim(),
         classId: params.classId?.trim(),
+        teacherId: params.teacherId?.trim(),
         date: params.date?.trim(),
         dateFrom: params.dateFrom?.trim(),
         dateTo: params.dateTo?.trim(),

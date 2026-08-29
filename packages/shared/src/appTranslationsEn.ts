@@ -604,6 +604,7 @@ export const APP_TRANSLATIONS_EN = {
   "attendance.audit.title": "Audit Log",
   "attendance.clearFilters": "Clear Filters",
   "attendance.columns.class": "Class",
+  "attendance.columns.session": "Session",
   "attendance.columns.date": "Date",
   "attendance.columns.fixed": "Fixed",
   "attendance.columns.hidden": "Hidden",

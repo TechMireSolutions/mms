@@ -56,9 +56,23 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
 
   const setFilterValue = (key: keyof AttendanceFilterState, value: string) => onChange({ ...filters, [key]: value });
 
-  const sessionClasses = filters.sessionId
-    ? allClasses.filter((sessionClass) => sessionClass.sessionId === filters.sessionId)
-    : allClasses;
+  const sessionClasses = allClasses.filter((sessionClass) =>
+    (!filters.sessionId || sessionClass.sessionId === filters.sessionId)
+    && (!filters.teacherId || sessionClass.teacherId === filters.teacherId),
+  );
+
+  const setRelationFilter = (key: 'sessionId' | 'teacherId', value: string): void => {
+    const nextFilters = { ...filters, [key]: value };
+    const selectedClassRemainsAvailable = allClasses.some((sessionClass) =>
+      sessionClass.id === filters.classId
+      && (!nextFilters.sessionId || sessionClass.sessionId === nextFilters.sessionId)
+      && (!nextFilters.teacherId || sessionClass.teacherId === nextFilters.teacherId),
+    );
+    onChange({
+      ...nextFilters,
+      classId: selectedClassRemainsAvailable ? filters.classId : '',
+    });
+  };
 
   const today = todayISO();
   
@@ -132,7 +146,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <FormSelect
                   id="filter-session"
                   value={filters.sessionId}
-                  onChange={(value) => setFilterValue("sessionId", value)}
+                  onChange={(value) => setRelationFilter("sessionId", value)}
                   placeholder={t("attendance.filters.allSessions")}
                   options={sessions.map((session) => ({ value: session.id, label: session.name }))}
                 />
@@ -156,7 +170,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <FormSelect
                   id="filter-teacher"
                   value={filters.teacherId}
-                  onChange={(value) => setFilterValue("teacherId", value)}
+                  onChange={(value) => setRelationFilter("teacherId", value)}
                   placeholder={t('attendance.filters.allTeachers')}
                   options={assignableTeachers.map((teacher) => ({ value: teacher.id, label: teacher.name || "Unknown" }))}
                 />

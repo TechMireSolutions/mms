@@ -45,6 +45,7 @@ export function buildFinancePaymentWorkColumnRegistry(
 export interface AttendanceWorkColumnLabels {
   date: string;
   class: string;
+  session: string;
   student: string;
   status: string;
   timeIn: string;
@@ -57,7 +58,7 @@ export function buildAttendanceWorkColumnRegistry(
   labels: AttendanceWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   return createColumnRegistry(
-    ['date', 'class', 'student', 'status', 'timeIn', 'timeOut', 'notes'],
+    ['date', 'class', 'session', 'student', 'status', 'timeIn', 'timeOut', 'notes'],
     labels,
   );
 }

@@ -12,6 +12,20 @@ import {
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
+const attendanceApiMocks = vi.hoisted(() => ({
+  listUseQuery: vi.fn(() => ({
+    data: {
+      body: {
+        records: [{ id: "rec-1", studentName: "Bilal" }],
+        total: 1,
+        page: 1,
+        limit: 25,
+      },
+    },
+    isLoading: false,
+  })),
+}));
+
 vi.mock("@/lib/contexts/AuthContext", () => ({
   useAuth: () => ({
     isAuthenticated: true,
@@ -32,17 +46,7 @@ vi.mock("@/lib/api", () => ({
   tsrClient: {
     attendance: {
       list: {
-        useQuery: () => ({
-          data: {
-            body: {
-              records: [{ id: "rec-1", studentName: "Bilal" }],
-              total: 1,
-              page: 1,
-              limit: 25,
-            },
-          },
-          isLoading: false,
-        }),
+        useQuery: attendanceApiMocks.listUseQuery,
       },
       bulk: { useMutation: () => ({ mutateAsync: vi.fn() }) },
       create: { useMutation: () => ({ mutateAsync: vi.fn() }) },
@@ -71,6 +75,7 @@ describe("useAttendance Hook suite", () => {
   let container: HTMLDivElement | null = null;
 
   beforeEach(() => {
+    attendanceApiMocks.listUseQuery.mockClear();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
@@ -111,5 +116,31 @@ describe("useAttendance Hook suite", () => {
     expect(mutationsResult.createRecord).toBeDefined();
     expect(reportResult.data).toBeDefined();
     expect(metricsResult.data).toBeDefined();
+  });
+
+  it("sends session and teacher filters with the paginated request", async () => {
+    function TestComponent() {
+      useAttendancePaginated({
+        page: 2,
+        sessionId: " session-1 ",
+        teacherId: " teacher-1 ",
+      });
+      return null;
+    }
+
+    await act(async () => {
+      const root = createRoot(container!);
+      root.render(React.createElement(TestComponent));
+    });
+
+    expect(attendanceApiMocks.listUseQuery).toHaveBeenCalledWith(expect.objectContaining({
+      queryData: {
+        query: expect.objectContaining({
+          page: 2,
+          sessionId: "session-1",
+          teacherId: "teacher-1",
+        }),
+      },
+    }));
   });
 });
