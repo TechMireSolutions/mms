@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformWorkspaceRow } from '@mms/shared';
-import { tsrClient, apiContract } from '@/lib/api';
-import { ApiError, isApiError } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
+import { apiJson, ApiError, isApiError } from '@/lib/apiClient';
 import { WORKSPACE_REGISTRY_QUERY_KEY } from '@/platform/hooks/useWorkspaceRegistry';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,21 +20,25 @@ export function usePlatformWorkspaces(): {
 } {
   const { isPlatformAuthenticated, canWorkspaces } = usePlatformPermissions();
 
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const { data: rawData, ...rest } = tsrClient.platform.listWorkspaces.useQuery({
+  const query = useQuery({
     queryKey: PLATFORM_WORKSPACES_QUERY_KEY,
-    queryData: {},
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ workspaces: PlatformWorkspaceRow[] }>('/api/platform/workspaces', {
+        signal,
+      });
+      return res.workspaces;
+    },
     enabled: isPlatformAuthenticated && canWorkspaces,
     staleTime: 60_000,
   });
 
-  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'workspaces' in rawData.body
-    ? (rawData.body as { workspaces?: PlatformWorkspaceRow[] })
-    : undefined;
-
-  const data: PlatformWorkspaceRow[] | undefined = responseBody?.workspaces;
-
-  return { ...rest, data };
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isFetching: query.isFetching,
+    refetch: query.refetch,
+  };
 }
 
 function updateWorkspacesCache(
@@ -43,7 +47,7 @@ function updateWorkspacesCache(
   patch: Partial<PlatformWorkspaceRow>,
 ): unknown {
   if (!old || typeof old !== 'object') return old;
-  const asTsr = old as { body?: { workspaces?: PlatformWorkspaceRow[] } };
+  const asTsr = old as { body?: { workspaces?: PlatformWorkspaceRow[] }; workspaces?: PlatformWorkspaceRow[] };
   if (asTsr.body && Array.isArray(asTsr.body.workspaces)) {
     return {
       ...asTsr,
@@ -53,6 +57,14 @@ function updateWorkspacesCache(
           w.subdomain === subdomain ? { ...w, ...patch } : w,
         ),
       },
+    };
+  }
+  if (Array.isArray(asTsr.workspaces)) {
+    return {
+      ...asTsr,
+      workspaces: asTsr.workspaces.map((w) =>
+        w.subdomain === subdomain ? { ...w, ...patch } : w,
+      ),
     };
   }
   if (Array.isArray(old)) {
@@ -166,21 +178,19 @@ export function useDeleteWorkspace() {
 export function useWorkspaceModules(subdomain: string, open: boolean): { data: string[] | undefined; isLoading: boolean; isError: boolean } {
   const { isPlatformAuthenticated, canWorkspaces } = usePlatformPermissions();
 
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const { data: rawData, ...rest } = tsrClient.platform.getWorkspaceModules.useQuery({
+  const query = useQuery({
     queryKey: ['platform', 'workspace-modules', subdomain],
-    queryData: { params: { subdomain } },
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ modules: string[] }>(`/api/platform/workspaces/${encodeURIComponent(subdomain)}/modules`, {
+        signal,
+      });
+      return res.modules;
+    },
     enabled: isPlatformAuthenticated && canWorkspaces && open && !!subdomain,
     staleTime: 0,
   });
 
-  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'modules' in rawData.body
-    ? (rawData.body as { modules?: string[] })
-    : undefined;
-
-  const data: string[] | undefined = responseBody?.modules;
-
-  return { ...rest, data };
+  return { data: query.data, isLoading: query.isLoading, isError: query.isError };
 }
 
 export function useUpdateWorkspaceModules() {

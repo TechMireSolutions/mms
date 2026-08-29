@@ -47,7 +47,7 @@ export default function ApexWorkspaceGate({
   variant = "tenantOnly",
   showWorkspaceList = true,
 }: ApexWorkspaceGateProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
   const isForgotPicker = variant === "forgotPassword";
   const gateTitle = t(TITLE_KEYS[variant]);
 
@@ -57,7 +57,7 @@ export default function ApexWorkspaceGate({
         title={formatEntryTitle(gateTitle, t("entry.productName"))}
         description={t(META_DESC_KEYS[variant])}
       />
-      <AuthPageFrame dir="ltr">
+      <AuthPageFrame dir={dir}>
         <AuthCardShell
           className="max-w-lg"
           header={

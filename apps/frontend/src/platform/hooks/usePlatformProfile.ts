@@ -1,6 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformUserProfile } from '@mms/shared';
-import { tsrClient, apiContract } from '@/lib/api';
+import { apiContract } from '@/lib/api';
+import { apiJson } from '@/lib/apiClient';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
@@ -10,7 +11,7 @@ export const PLATFORM_PROFILE_QUERY_KEY = ['platform', 'profile'] as const;
 
 function updateProfileCache(old: unknown, user: PlatformUserProfile): unknown {
   if (!old || typeof old !== 'object') return old;
-  const asTsr = old as { body?: { user?: PlatformUserProfile } };
+  const asTsr = old as { body?: { user?: PlatformUserProfile }; user?: PlatformUserProfile };
   if (asTsr.body && typeof asTsr.body === 'object') {
     return {
       ...asTsr,
@@ -20,27 +21,36 @@ function updateProfileCache(old: unknown, user: PlatformUserProfile): unknown {
       },
     };
   }
+  if (asTsr.user) {
+    return {
+      ...asTsr,
+      user,
+    };
+  }
   return user;
 }
 
 export function usePlatformProfile(options?: { enabled?: boolean }) {
   const { isPlatformAuthenticated } = usePlatformAuth();
 
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const { data: rawData, ...rest } = tsrClient.platform.getMe.useQuery({
+  const query = useQuery({
     queryKey: PLATFORM_PROFILE_QUERY_KEY,
-    queryData: {},
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me', {
+        signal,
+      });
+      return res.user;
+    },
     enabled: (options?.enabled ?? true) && isPlatformAuthenticated,
     staleTime: 60_000,
   });
 
-  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'user' in rawData.body
-    ? (rawData.body as { user?: PlatformUserProfile })
-    : undefined;
-
-  const data: PlatformUserProfile | undefined = responseBody?.user;
-
-  return { ...rest, data };
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
+  };
 }
 
 export function useUpdatePlatformProfileName() {

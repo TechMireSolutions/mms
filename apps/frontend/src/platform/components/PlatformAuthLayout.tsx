@@ -1,6 +1,7 @@
 import React from "react";
 import { ShieldCheck, Lock, ShieldAlert } from "lucide-react";
 import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
+import { PlatformLanguagePicker } from "@/platform/components/header/PlatformLanguagePicker";
 import { AuthCardShell, AuthFormHeading, AuthPageFrame } from "@/components/entry";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -13,14 +14,14 @@ export interface PlatformAuthLayoutProps {
   footer?: React.ReactNode;
 }
 
-/** Apex platform auth shell — English/LTR, product mark, apex badge & security trust indicators. */
+/** Apex platform auth shell — product mark, apex badge, language selector & security trust indicators. */
 export default function PlatformAuthLayout({
   children,
   title,
   subtitle,
   footer,
 }: PlatformAuthLayoutProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
 
   const combinedFooter = (
     <div className="space-y-4">
@@ -45,7 +46,10 @@ export default function PlatformAuthLayout({
   );
 
   return (
-    <AuthPageFrame dir="ltr">
+    <AuthPageFrame dir={dir}>
+      <div className="absolute top-4 end-4 z-20">
+        <PlatformLanguagePicker compact />
+      </div>
       <div className="relative z-10 w-full max-w-md text-start">
         {/* Backdrop Glow */}
         <div className="absolute -inset-4 bg-gradient-to-tr from-primary/25 via-primary/10 to-transparent rounded-3xl blur-2xl opacity-75 pointer-events-none" />

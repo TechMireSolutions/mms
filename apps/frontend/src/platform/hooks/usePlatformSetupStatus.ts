@@ -1,5 +1,5 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { tsrClient } from "@/lib/api";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiJson } from "@/lib/apiClient";
 import type { PlatformSetupStatus } from "@mms/shared";
 import { useTenant } from "@/lib/contexts/TenantContext";
 
@@ -14,24 +14,21 @@ export function usePlatformSetupStatus(): {
 } {
   const { isApex } = useTenant();
 
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const query = tsrClient.platform.getSetupStatus.useQuery({
+  const query = useQuery({
     queryKey: PLATFORM_SETUP_STATUS_QUERY_KEY,
-    queryData: {},
+    queryFn: async ({ signal }) => {
+      return await apiJson<PlatformSetupStatus>('/api/platform/setup/status', {
+        signal,
+      });
+    },
     enabled: isApex,
     staleTime: 60_000,
     retry: 5,
     retryDelay: (attempt: number) => Math.min(attempt * 1000, 5000),
   });
 
-  const rawData = query.data;
-  const setupStatus: PlatformSetupStatus | undefined =
-    rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object'
-      ? (rawData.body as PlatformSetupStatus)
-      : undefined;
-
   return {
-    setupStatus,
+    setupStatus: query.data,
     isLoadingSetup: isApex && query.isLoading,
     isError: query.isError,
     refetch: query.refetch,

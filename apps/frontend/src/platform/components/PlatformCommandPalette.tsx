@@ -16,6 +16,8 @@ import type { AppTranslationKey } from '@mms/shared';
 import { ROUTES } from '@/lib/config/routes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
+import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { OVERLAY_BACKDROP } from '@/components/ui/formStyles';
@@ -27,14 +29,17 @@ export interface PlatformCommandPaletteProps {
 
 interface PlatformCommandItem {
   id: string;
-  labelKey: AppTranslationKey;
-  category: 'platform.commandCategory.navigation' | 'platform.commandCategory.actions';
+  labelKey?: AppTranslationKey;
+  customLabel?: string;
+  customSubtitle?: string;
+  category: 'platform.commandCategory.navigation' | 'platform.commandCategory.actions' | 'platform.manageMadrasas';
   path: string;
   icon: React.ElementType;
   keywords: string[];
+  requiredPermission?: 'workspaces' | 'onboard' | 'system' | 'admins';
 }
 
-const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
+const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
   {
     id: 'dashboard',
     labelKey: 'dashboard.title',
@@ -50,6 +55,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
     path: ROUTES.platformWorkspaces,
     icon: Building2,
     keywords: ['madrasas', 'workspaces', 'tenants', 'subdomains', 'instances'],
+    requiredPermission: 'workspaces',
   },
   {
     id: 'reports',
@@ -66,6 +72,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
     path: ROUTES.platformActivityLogs,
     icon: Activity,
     keywords: ['logs', 'audit', 'events', 'history', 'activity'],
+    requiredPermission: 'system',
   },
   {
     id: 'system',
@@ -74,6 +81,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
     path: ROUTES.platformSystem,
     icon: Server,
     keywords: ['system', 'health', 'database', 'postgres', 'rls', 'maintenance'],
+    requiredPermission: 'system',
   },
   {
     id: 'admins',
@@ -82,6 +90,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
     path: ROUTES.platformAdmins,
     icon: ShieldCheck,
     keywords: ['admins', 'super_user', 'operators', 'users', 'access', 'rbac', 'permissions'],
+    requiredPermission: 'admins',
   },
   {
     id: 'account',
@@ -98,6 +107,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
     path: ROUTES.platformSystem,
     icon: Server,
     keywords: ['migrations', 'drizzle', 'database', 'schema', 'reset', 'maintenance'],
+    requiredPermission: 'system',
   },
   {
     id: 'onboard-madrasa',
@@ -106,6 +116,7 @@ const PLATFORM_COMMAND_ITEMS: PlatformCommandItem[] = [
     path: ROUTES.onboarding,
     icon: PlusCircle,
     keywords: ['create', 'add', 'onboard', 'provision', 'new madrasa', 'tenant'],
+    requiredPermission: 'onboard',
   },
 ];
 
@@ -115,18 +126,49 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
   const navigate = useNavigate();
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
+  const perms = usePlatformPermissions();
+  const { data: workspaces } = usePlatformWorkspaces();
+
+  const allAvailableItems = useMemo(() => {
+    // 1. Filter static items by user permissions
+    const permittedStatic = PLATFORM_STATIC_COMMANDS.filter((item) => {
+      if (!item.requiredPermission) return true;
+      if (item.requiredPermission === 'workspaces') return perms.canWorkspaces;
+      if (item.requiredPermission === 'onboard') return perms.canOnboard;
+      if (item.requiredPermission === 'system') return perms.canSystem;
+      if (item.requiredPermission === 'admins') return perms.canAdmins;
+      return true;
+    });
+
+    // 2. Add dynamic workspace items if permitted
+    const workspaceItems: PlatformCommandItem[] = perms.canWorkspaces && workspaces
+      ? workspaces.map((ws) => ({
+          id: `ws-${ws.subdomain}`,
+          customLabel: ws.madrasaName,
+          customSubtitle: ws.subdomain,
+          category: 'platform.manageMadrasas',
+          path: `${ROUTES.platformWorkspaces}?q=${encodeURIComponent(ws.subdomain)}`,
+          icon: Building2,
+          keywords: [ws.subdomain, ws.madrasaName, ws.enabled ? 'active' : 'inactive'],
+        }))
+      : [];
+
+    return [...permittedStatic, ...workspaceItems];
+  }, [perms, workspaces]);
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return PLATFORM_COMMAND_ITEMS;
-    return PLATFORM_COMMAND_ITEMS.filter((item) => {
-      const translatedLabel = t(item.labelKey);
+    if (!q) return allAvailableItems;
+    return allAvailableItems.filter((item) => {
+      const label = item.customLabel ?? (item.labelKey ? t(item.labelKey) : '');
+      const subtitle = item.customSubtitle ?? '';
       return (
-        translatedLabel.toLowerCase().includes(q) ||
+        label.toLowerCase().includes(q) ||
+        subtitle.toLowerCase().includes(q) ||
         item.keywords.some((k) => k.toLowerCase().includes(q))
       );
     });
-  }, [query, t]);
+  }, [allAvailableItems, query, t]);
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -235,7 +277,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
                     const index = filteredItems.indexOf(item);
                     const Icon = item.icon;
                     const isSelected = index === selectedIndex;
-                    const translatedLabel = t(item.labelKey);
+                    const translatedLabel = item.customLabel ?? (item.labelKey ? t(item.labelKey) : '');
                     return (
                       <button
                         key={item.id}
@@ -253,7 +295,14 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
                         )}
                       >
                         <Icon className={cn('h-4.5 w-4.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')} aria-hidden="true" />
-                        <span className="flex-1 truncate">{translatedLabel}</span>
+                        <div className="flex-1 min-w-0 flex flex-col">
+                          <span className="truncate">{translatedLabel}</span>
+                          {item.customSubtitle && (
+                            <span className={cn('text-2xs font-mono truncate', isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
+                              {item.customSubtitle}
+                            </span>
+                          )}
+                        </div>
                         <span className={cn('text-xs opacity-80 font-mono', isSelected ? 'text-primary-foreground' : 'text-muted-foreground')}>
                           {item.path}
                         </span>

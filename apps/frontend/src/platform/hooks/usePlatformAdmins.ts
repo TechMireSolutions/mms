@@ -1,6 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformAdminPermissions, PlatformCreateAdminInput, PlatformUserProfile } from '@mms/shared';
-import { tsrClient, apiContract } from '@/lib/api';
+import { apiContract } from '@/lib/api';
 import { apiJson } from '@/lib/apiClient';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
@@ -16,7 +16,7 @@ function updateAdminsCache(
   patch: Partial<PlatformUserProfile>,
 ): unknown {
   if (!old || typeof old !== 'object') return old;
-  const asTsr = old as { body?: { users?: PlatformUserProfile[] } };
+  const asTsr = old as { body?: { users?: PlatformUserProfile[] }; users?: PlatformUserProfile[] };
   if (asTsr.body && Array.isArray(asTsr.body.users)) {
     return {
       ...asTsr,
@@ -24,6 +24,12 @@ function updateAdminsCache(
         ...asTsr.body,
         users: asTsr.body.users.map((u) => (u.id === adminId ? { ...u, ...patch } : u)),
       },
+    };
+  }
+  if (Array.isArray(asTsr.users)) {
+    return {
+      ...asTsr,
+      users: asTsr.users.map((u) => (u.id === adminId ? { ...u, ...patch } : u)),
     };
   }
   if (Array.isArray(old)) {
@@ -37,25 +43,30 @@ export function usePlatformAdmins(): {
   data: PlatformUserProfile[] | undefined;
   isLoading: boolean;
   isError: boolean;
+  isFetching: boolean;
   refetch: () => Promise<unknown>;
 } {
   const { canAdmins } = usePlatformPermissions();
 
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const { data: rawData, ...rest } = tsrClient.platform.listAdmins.useQuery({
+  const query = useQuery({
     queryKey: PLATFORM_ADMINS_QUERY_KEY,
-    queryData: {},
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ users: PlatformUserProfile[] }>('/api/platform/users', {
+        signal,
+      });
+      return res.users;
+    },
     enabled: canAdmins,
     staleTime: 60_000,
   });
 
-  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'users' in rawData.body
-    ? (rawData.body as { users?: PlatformUserProfile[] })
-    : undefined;
-
-  const data: PlatformUserProfile[] | undefined = responseBody?.users;
-
-  return { ...rest, data };
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    isFetching: query.isFetching,
+    refetch: query.refetch,
+  };
 }
 
 /** Hook for super-users to create/invite new platform administrators. */

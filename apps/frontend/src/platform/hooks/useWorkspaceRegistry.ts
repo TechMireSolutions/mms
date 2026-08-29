@@ -1,5 +1,6 @@
+import { useQuery } from "@tanstack/react-query";
 import type { PublicWorkspaceSummary } from "@mms/shared";
-import { tsrClient } from "@/lib/api";
+import { apiJson } from "@/lib/apiClient";
 import { useTenant } from "@/lib/contexts/TenantContext";
 
 export const WORKSPACE_REGISTRY_QUERY_KEY = ["workspace", "registry"] as const;
@@ -13,19 +14,22 @@ export function useWorkspaceRegistry(options?: { enabled?: boolean }): {
 } {
   const { isApex } = useTenant();
 
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const { data: rawData, ...rest } = tsrClient.workspace.registry.useQuery({
+  const query = useQuery({
     queryKey: WORKSPACE_REGISTRY_QUERY_KEY,
-    queryData: {},
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ workspaces: PublicWorkspaceSummary[] }>('/api/workspaces/registry', {
+        signal,
+      });
+      return res.workspaces;
+    },
     enabled: options?.enabled ?? isApex,
     staleTime: 60_000,
   });
 
-  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'workspaces' in rawData.body
-    ? (rawData.body as { workspaces?: PublicWorkspaceSummary[] })
-    : undefined;
-
-  const data: PublicWorkspaceSummary[] | undefined = responseBody?.workspaces;
-
-  return { ...rest, data };
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
+  };
 }

@@ -22,17 +22,15 @@ interface PlatformPageShellProps {
   width?: 'md' | 'lg' | 'xl' | '7xl';
 }
 
-/** Shared skip-link + footer wrapper, used by both auth and app branches. */
+/** Shared skip-link wrapper, used by both auth and app branches. */
 function PlatformShellFrame({
   dir,
   lang,
   children,
-  footer,
 }: {
   dir: string;
   lang: string;
   children: React.ReactNode;
-  footer: React.ReactNode;
 }): React.JSX.Element {
   const { t } = useTranslation();
   return (
@@ -48,7 +46,6 @@ function PlatformShellFrame({
         {t('common.skipToContent')}
       </a>
       {children}
-      {footer}
     </div>
   );
 }
@@ -78,7 +75,7 @@ function PlatformAuthenticatedShell({
   }, [setCommandPaletteOpen]);
 
   return (
-    <PlatformShellFrame dir={dir} lang={language} footer={footer}>
+    <PlatformShellFrame dir={dir} lang={language}>
       <PlatformSidebar />
       <div className="flex flex-1 flex-col min-w-0 min-h-screen">
         <PlatformPageShellHeader
@@ -90,6 +87,7 @@ function PlatformAuthenticatedShell({
             {children}
           </div>
         </main>
+        {footer}
       </div>
       <PlatformCommandPalette
         open={commandPaletteOpen}

@@ -1,7 +1,7 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { MigrateAndRestartAccepted, PlatformSettings } from '@mms/shared';
-import { apiFetch } from '@/lib/apiClient';
-import { tsrClient, apiContract } from '@/lib/api';
+import { apiFetch, apiJson } from '@/lib/apiClient';
+import { apiContract } from '@/lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
@@ -62,21 +62,24 @@ export async function waitForBackendReadyAfterMigrate(delayMs: number): Promise<
 export function usePlatformSettingsQuery() {
   const { isPlatformAuthenticated, canSettings } = usePlatformPermissions();
 
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const { data: rawData, ...rest } = tsrClient.platform.getSettings.useQuery({
+  const query = useQuery({
     queryKey: PLATFORM_SETTINGS_QUERY_KEY,
-    queryData: {},
+    queryFn: async ({ signal }) => {
+      const res = await apiJson<{ settings: PlatformSettings }>('/api/platform/settings', {
+        signal,
+      });
+      return res.settings;
+    },
     enabled: isPlatformAuthenticated && canSettings,
     staleTime: 60_000,
   });
 
-  const responseBody = rawData && typeof rawData === 'object' && 'body' in rawData && rawData.body && typeof rawData.body === 'object' && 'settings' in rawData.body
-    ? (rawData.body as { settings?: PlatformSettings })
-    : undefined;
-
-  const data: PlatformSettings | undefined = responseBody?.settings;
-
-  return { ...rest, data };
+  return {
+    data: query.data,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    refetch: query.refetch,
+  };
 }
 
 /** Hook for platform super-users to update global platform settings. */
