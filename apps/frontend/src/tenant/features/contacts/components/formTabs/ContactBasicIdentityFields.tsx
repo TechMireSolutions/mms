@@ -1,6 +1,7 @@
 import React from "react";
 import { User } from "lucide-react";
-import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
+import { Field } from "@/components/ui/FormPrimitives";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
@@ -15,8 +16,8 @@ export interface ContactBasicIdentityFieldsProps {
   isFieldRequired: (tabId: string, fieldId: string) => boolean;
   getFieldError: (fieldId: string) => string | undefined;
   updateDraft: (patch: Partial<Contact>) => void;
-  genders: string[];
-  onUpdateGenders: (genders: string[]) => void;
+  genders?: string[];
+  onUpdateGenders?: (genders: string[]) => void;
   tags?: string[];
   onUpdateTags?: (tags: string[]) => void;
   lockGender: boolean;
@@ -30,12 +31,20 @@ export function ContactBasicIdentityFields({
   getFieldError,
   updateDraft,
   genders,
-  onUpdateGenders,
+  onUpdateGenders: _onUpdateGenders,
   tags,
   onUpdateTags,
   lockGender,
 }: ContactBasicIdentityFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
+
+  const genderOptions = React.useMemo(() => {
+    const list = genders && genders.length > 0 ? genders : ["male", "female"];
+    return list.map((g) => ({
+      value: g.toLowerCase(),
+      label: formatContactGenderLabel(g, t),
+    }));
+  }, [genders, t]);
 
   return (
     <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
@@ -102,18 +111,11 @@ export function ContactBasicIdentityFields({
               )}
             </div>
           ) : (
-            <EditableSelect
+            <FormSelect
               id={`cf-${formInstanceId}-gender`}
-              options={genders}
-              value={
-                genders.find(
-                  (option) => option.toLowerCase() === (contactDraft.gender || "").toLowerCase(),
-                ) ||
-                contactDraft.gender ||
-                ""
-              }
-              onChange={(val) => updateDraft({ gender: val.toLowerCase() })}
-              onUpdateOptions={onUpdateGenders}
+              options={genderOptions}
+              value={contactDraft.gender?.toLowerCase() || ""}
+              onChange={(val) => updateDraft({ gender: val ? val.toLowerCase() : undefined })}
               placeholder={t("contacts.form.selectOption")}
               className="w-full"
             />

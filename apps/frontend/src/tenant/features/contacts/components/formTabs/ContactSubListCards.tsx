@@ -16,6 +16,7 @@ export interface ListFieldCardProps {
   iconClass?: string;
   label?: string;
   typeSelect?: ReactNode;
+  headerExtras?: ReactNode;
   onRemove: () => void;
   removeLabel: string;
   children: ReactNode;
@@ -29,11 +30,12 @@ export function ListFieldCard({
   iconClass = "text-primary/70 group-hover:text-primary",
   label,
   typeSelect,
+  headerExtras,
   onRemove,
   removeLabel,
   children,
 }: ListFieldCardProps): React.JSX.Element {
-  const hasHeaderContent = Boolean(Icon || label || typeSelect);
+  const hasHeaderContent = Boolean(Icon || label || typeSelect || headerExtras);
 
   return (
     <motion.div
@@ -60,6 +62,7 @@ export function ListFieldCard({
               </span>
             ) : null}
             {typeSelect}
+            {headerExtras}
           </div>
           <CardRemoveButton onClick={onRemove} label={removeLabel} />
         </div>

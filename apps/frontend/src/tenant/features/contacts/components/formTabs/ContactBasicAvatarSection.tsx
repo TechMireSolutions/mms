@@ -121,7 +121,7 @@ export function ContactBasicAvatarSection({
             variant="destructive"
             size="icon"
             onClick={() => updateDraft({ avatar: null })}
-            className="absolute -top-1.5 -end-1.5 h-6 w-6 rounded-lg shadow-md border-2 border-card p-0 hover:scale-110 transition-transform"
+            className="absolute -top-1.5 -end-1.5 h-6 w-6 rounded-lg shadow-md border-2 border-card p-0 hover:scale-110 before:absolute before:inset-[-10px] before:content-[''] transition-transform cursor-pointer"
             aria-label={t("contacts.form.removePhoto")}
             title={t("contacts.form.removePhoto")}
           >

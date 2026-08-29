@@ -88,6 +88,34 @@ export function ContactForm({
     onClose();
   };
 
+  useEffect(() => {
+    if (!open) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+        e.preventDefault();
+        const canSave =
+          Boolean(draft.contactDraft.firstName?.trim()) &&
+          (!contact || draft.isDirty) &&
+          !draft.saving;
+        if (canSave) {
+          draft.handleSave();
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open, draft, contact]);
+
+  const tabErrorCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    if (!draft.validationErrors || draft.validationErrors.length === 0) return counts;
+    for (const err of draft.validationErrors) {
+      const tabId = err.tabId || "basic";
+      counts[tabId] = (counts[tabId] || 0) + 1;
+    }
+    return counts;
+  }, [draft.validationErrors]);
+
   const visibleTabs = useMemo(() => {
     const countMap: Record<string, number> = {
       phones: draft.collectionCounts.filledPhones,
@@ -109,15 +137,18 @@ export function ContactForm({
       .filter((sys) => enabledTabIds.has(sys.key))
       .map((sys) => {
         const count = countMap[sys.key];
+        const errorCount = tabErrorCounts[sys.key];
+        const hasErrors = Boolean(errorCount && errorCount > 0);
         const label = sys.labelKey ? t(sys.labelKey) : (sys.label || sys.key);
         return {
           key: sys.key,
           icon: SYSTEM_TAB_ICONS[sys.key] ?? FolderKanban,
           label,
-          badge: count && count > 0 ? count : undefined,
+          badge: hasErrors ? errorCount : count && count > 0 ? count : undefined,
+          tone: hasErrors ? ("destructive" as const) : undefined,
         };
       });
-  }, [draft.collectionCounts, t, enabledTabIds]);
+  }, [draft.collectionCounts, tabErrorCounts, t, enabledTabIds]);
 
   useEffect(() => {
     if (!visibleTabs.some((tabItem) => tabItem.key === tab)) {

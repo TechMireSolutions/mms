@@ -75,7 +75,11 @@ export const FormModalTabs = React.memo(function FormModalTabs<K extends string 
                   aria-hidden
                   className={cn(
                     "absolute top-1 end-1 inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-xs font-extrabold transition-colors @md:static @md:ms-auto @md:h-auto @md:min-w-0 @md:px-1.5 @md:py-0.5",
-                    active ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
+                    tab.tone === "destructive"
+                      ? "bg-destructive text-destructive-foreground"
+                      : active
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground",
                   )}
                 >
                   {tab.badge}

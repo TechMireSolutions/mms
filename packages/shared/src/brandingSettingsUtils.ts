@@ -42,13 +42,20 @@ export function buildBrandingFromOnboarding(input: OnboardingBrandingInput): Bra
     primaryColor: input.primaryColor || DEFAULT_BRANDING_SETTINGS.primaryColor,
     secondaryColor: input.secondaryColor || DEFAULT_BRANDING_SETTINGS.secondaryColor,
     logoUrl: logo,
-    faviconUrl: logo,
+    faviconUrl: input.faviconUrl?.trim() || logo,
     footerText: input.footerText?.trim() || DEFAULT_BRANDING_SETTINGS.footerText,
-    legalName: name,
+    legalName: input.legalName?.trim() || name,
+    registrationNumber: input.registrationNumber?.trim() ?? '',
+    addressLine1: input.addressLine1?.trim() ?? '',
+    addressLine2: input.addressLine2?.trim() ?? '',
+    city: input.city?.trim() ?? '',
+    region: input.region?.trim() ?? '',
+    postalCode: input.postalCode?.trim() ?? '',
     country: input.country?.trim() ?? '',
     email: input.adminEmail?.trim() ?? '',
     phone: input.adminPhone?.trim() ?? '',
     website: input.website?.trim() ?? '',
+    socialLinks: input.socialLinks ?? [],
   });
 }
 
@@ -139,8 +146,8 @@ export function mergeBrandingSettings(partial: LegacyBranding | null | undefined
     region: trimField(partial?.region),
     postalCode: trimField(partial?.postalCode),
     country: trimField(partial?.country),
-    logoUrl: partial?.logoUrl ?? DEFAULT_BRANDING_SETTINGS.logoUrl,
-    faviconUrl: partial?.faviconUrl ?? DEFAULT_BRANDING_SETTINGS.faviconUrl,
+    logoUrl: trimField(partial?.logoUrl ?? DEFAULT_BRANDING_SETTINGS.logoUrl),
+    faviconUrl: trimField(partial?.faviconUrl ?? DEFAULT_BRANDING_SETTINGS.faviconUrl),
     footerText:
       partial && 'footerText' in partial
         ? trimField(partial.footerText, BRANDING_FOOTER_MAX)

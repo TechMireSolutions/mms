@@ -42,7 +42,24 @@ import { clearTenantBackgroundJobs } from './backgroundJobService.js';
  * @returns {Promise<TenantDatabaseSnapshot>} The full database sync snapshot.
  */
 export async function fetchDatabaseSnapshot(): Promise<TenantDatabaseSnapshot> {
-  return await dbGetAllData();
+  const snapshot = await dbGetAllData();
+  const tenant = getRequestTenant();
+  if (!tenant) return snapshot;
+
+  const { getWorkspaceBranding, getWorkspaceGlobalSettings } = await import(
+    '../db/repositories/workspaceRepository.js'
+  );
+  const branding = await getWorkspaceBranding(tenant);
+  const globalSettings = await getWorkspaceGlobalSettings(tenant);
+
+  return {
+    ...snapshot,
+    objects: {
+      ...(snapshot.objects ?? {}),
+      ...(branding ? { branding } : {}),
+      ...(globalSettings ? { global_settings: globalSettings } : {}),
+    },
+  };
 }
 
 /**

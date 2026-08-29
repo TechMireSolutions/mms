@@ -14,7 +14,7 @@ import { ContactRelationshipTab } from "@/tenant/features/contacts/components/fo
 
 import type { ContactSubListTabBaseProps } from "@/tenant/features/contacts/components/formTabs/types";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
-import { normalizeContactFormTabId } from "@mms/shared";
+import { normalizeContactFormTabId, type FieldDefinition } from "@mms/shared";
 
 export type ContactFormDraftState = ReturnType<typeof useContactFormDraft>;
 
@@ -27,6 +27,8 @@ export interface ContactFormTabContentProps {
   defaultProvince: string;
 }
 
+const EMPTY_FIELDS: Record<string, FieldDefinition[]> = {};
+
 function subListBaseProps(draft: ContactFormDraftState): ContactSubListTabBaseProps {
   return {
     contactDraft: draft.contactDraft,
@@ -34,7 +36,7 @@ function subListBaseProps(draft: ContactFormDraftState): ContactSubListTabBasePr
     getListItemError: draft.getListItemError,
     isFieldEnabled: draft.isFieldEnabled,
     isFieldRequired: draft.isFieldRequired,
-    fields: ({} as any),
+    fields: draft.fields ?? EMPTY_FIELDS,
     formInstanceId: draft.formInstanceId,
     addSubListItem: draft.addSubListItem,
     ensureSubListItem: draft.ensureSubListItem,
@@ -57,19 +59,7 @@ export function ContactFormTabContent({
   const { t } = useTranslation();
   const normalizedTab = normalizeContactFormTabId(tab);
 
-  const listBase = useMemo(() => subListBaseProps(draft), [
-    draft.contactDraft,
-    draft.getLocalId,
-    draft.getListItemError,
-    draft.isFieldEnabled,
-    draft.isFieldRequired,
-    ({} as any),
-    draft.formInstanceId,
-    draft.addSubListItem,
-    draft.ensureSubListItem,
-    draft.updateSubListItem,
-    draft.removeSubListItem,
-  ]);
+  const listBase = useMemo(() => subListBaseProps(draft), [draft]);
 
   const renderTabBody = () => {
     if (normalizedTab === "basic") {
@@ -89,7 +79,7 @@ export function ContactFormTabContent({
           onUpdateTags={draft.updateTags}
           lockGender={lockGender}
           handleAvatarChange={draft.handleAvatarChange}
-          fields={({} as any)}
+          fields={draft.fields}
         />
       );
     }
@@ -186,6 +176,7 @@ export function ContactFormTabContent({
           tone="warning"
           density="compact"
           icon={AlertTriangle}
+          title={t("contacts.duplicates.title")}
           description={t("contacts.duplicates.potentialDuplicatesAlert", {
             count: draft.duplicateCount,
           })}

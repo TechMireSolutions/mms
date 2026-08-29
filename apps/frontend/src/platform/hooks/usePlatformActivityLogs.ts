@@ -32,7 +32,7 @@ export function usePlatformActivityLogs(): {
   const query = useQuery({
     queryKey: PLATFORM_ACTIVITY_LOGS_QUERY_KEY,
     queryFn: async ({ signal }) => {
-      const res = await apiJson<{ logs: PlatformActivityLogItem[] }>('/api/platform/system/activity-logs', {
+      const res = await apiJson<{ logs: PlatformActivityLogItem[] }>('/api/platform/admin/system/activity-logs', {
         signal,
       });
       return res.logs;

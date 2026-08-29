@@ -78,7 +78,6 @@ export function ContactEducationTab({
     >
       <AnimatePresence initial={false}>
         {educations.map((edu, idx) => {
-          const degreeError = getListItemError("education", "degree", idx);
           const institutionError = getListItemError("education", "institution", idx);
           const fieldOfStudyError = getListItemError("education", "fieldOfStudy", idx);
           const yearError = getListItemError("education", "year", idx);

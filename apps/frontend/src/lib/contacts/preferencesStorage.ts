@@ -2,30 +2,8 @@ import {
   normalizeContactPreferences,
   CONTACTS_MODULE_MANIFEST,
   type ContactPreferences,
-  type FieldConfig,
 } from "@mms/shared";
 import { apiJson } from "@/lib/apiClient";
-
-/**
- * Immutably synchronizes option list changes for a specific field definition in field configuration.
- */
-export function syncOptionsInConfig(
-  config: FieldConfig,
-  tabId: string,
-  fieldKey: string,
-  options: string[],
-): FieldConfig {
-  if (!config.fields?.[tabId]) return config;
-  return {
-    ...config,
-    fields: {
-      ...config.fields,
-      [tabId]: config.fields[tabId].map((field) =>
-        field.key === fieldKey ? { ...field, options: [...options] } : field,
-      ),
-    },
-  };
-}
 
 const PREFERENCES_API = `${CONTACTS_MODULE_MANIFEST.restBasePath}/preferences`;
 const LEGACY_LOCAL_PREFERENCES_KEY = "mms_contact_preferences";

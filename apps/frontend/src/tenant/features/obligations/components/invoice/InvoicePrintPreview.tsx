@@ -68,6 +68,7 @@ export function InvoicePrintPreview({
       : undefined;
 
     if (templateElement.type === "logo") {
+      if (!branding.logoUrl && !onSelect) return null;
       return (
         <div key={templateElement.id} style={baseStyle} onClick={handleClick}>
           {branding.logoUrl ? (

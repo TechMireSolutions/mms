@@ -9,9 +9,6 @@ import type { ContactsColumnConfig } from "./contactConfigContextTypes";
 
 export type { ContactsColumnConfig };
 
-/** Contacts settings = field config (prefs stay a separate slice). */
-export type ContactsConfigSettings = FieldConfig;
-
 /** Extra state Contacts layers on top of the standard-module config core. */
 export type ContactConfigExtras = {
   // ── Preferences & Tabs ──────────────────────────────────────────────────────

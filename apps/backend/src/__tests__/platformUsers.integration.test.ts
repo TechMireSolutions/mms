@@ -1,6 +1,6 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { initDb } from '../db/database.js';
+import { closeDatabase, initDb } from '../db/database.js';
 import { buildApp } from '../app.js';
 import {
   findPlatformUserRowByEmail,
@@ -31,6 +31,18 @@ describe('platformUsers REST API integration routes', () => {
     } catch {
       console.warn('[PlatformUsers Test] Postgres unavailable. Skipping live DB integration test.');
     }
+  });
+
+  afterAll(async () => {
+    if (!isDbAvailable) return;
+    // Delete any test admin users created during this test run (non-super_user @platform.com emails)
+    try {
+      const { getPool } = await import('../db/database.js');
+      await getPool().query(
+        "DELETE FROM platform_users WHERE email LIKE '%@platform.com' AND role != 'super_user'",
+      );
+    } catch { /* best-effort */ }
+    await closeDatabase().catch(() => {});
   });
 
   function signPlatformToken(id = superUserId, sessionVersion = superSessionVersion): string {

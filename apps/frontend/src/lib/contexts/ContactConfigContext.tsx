@@ -22,7 +22,7 @@ import {
 import { useContactPreferencesQuery, useContactPreferencesMutation } from "@/tenant/features/contacts/hooks/useContactSetupConfig";
 import { useContactLookupsQuery, useContactLookupMutation } from "@/tenant/features/contacts/hooks/useContactLookups";
 import { useContactsContractFieldConfig, useContactsContractUpdateFieldConfig } from "@/tenant/features/contacts/hooks/useContactsTsrHooks";
-import { DEFAULT_CONTACT_PREFERENCES, type ContactPreferences } from "@mms/shared";
+import { DEFAULT_CONTACT_PREFERENCES, type ContactPreferences, type FieldConfig } from "@mms/shared";
 import { useContactConfigProviderValue } from "@/lib/contacts/useContactConfigProviderValue";
 
 export { ContactConfigContext };
@@ -53,10 +53,10 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
   const { data: fieldConfigResponse } = useContactsContractFieldConfig();
   const { mutateAsync: updateFieldConfig } = useContactsContractUpdateFieldConfig();
   
-  const updateConfigAsync = async (nextConfig: any) => {
+  const updateConfigAsync = async (nextConfig: FieldConfig) => {
     await updateFieldConfig({ body: nextConfig });
   };
-  const updateConfig = (nextConfig: any) => {
+  const updateConfig = (nextConfig: FieldConfig) => {
     updateConfigAsync(nextConfig).catch(console.error);
   };
 
@@ -73,7 +73,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     updatePhoneLabels: (phoneLabels: string[]) => updateLookupKind({ kind: "phoneLabels", items: phoneLabels }),
     updateEmailLabels: (emailLabels: string[]) => updateLookupKind({ kind: "emailLabels", items: emailLabels }),
     updateAddressLabels: (addressLabels: string[]) => updateLookupKind({ kind: "addressLabels", items: addressLabels }),
-    updateCountryCodes: (countryCodes: any[]) => updateLookupKind({ kind: "countryCodes", items: countryCodes }),
+    updateCountryCodes: (countryCodes: Array<{ country: string; code: string }>) => updateLookupKind({ kind: "countryCodes", items: countryCodes }),
     updateEducationDegrees: (educationDegrees: string[]) => updateLookupKind({ kind: "educationDegrees", items: educationDegrees }),
     updateEmploymentTypes: (employmentTypes: string[]) => updateLookupKind({ kind: "employmentTypes", items: employmentTypes }),
     updateSkillCategories: (skillCategories: string[]) => updateLookupKind({ kind: "skillCategories", items: skillCategories }),
@@ -82,7 +82,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     ...(fieldConfigResponse?.body ?? {}),
     updateConfig,
     updateConfigAsync,
-  } as any;
+  };
 
   const value: ContactConfigContextType = useContactConfigProviderValue(config);
 

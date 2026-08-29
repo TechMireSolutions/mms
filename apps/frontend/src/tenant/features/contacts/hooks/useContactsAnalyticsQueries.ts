@@ -1,9 +1,8 @@
 import {
   CONTACTS_MODULE_MANIFEST,
   type ContactsCommandMetricsSnapshot,
-  type ContactsMonthlyYearCounts,
-  type ContactsReportAnalyticsSnapshot,
   type ContactsWidgetQuery,
+  type ContactsWidgetAggregateResult,
   contactsWidgetQueryFromWidget,
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
@@ -29,11 +28,6 @@ interface ContactsReportAnalyticsParams {
   enabled?: boolean;
   compareYears?: number[];
   language?: string;
-}
-
-interface ContactsReportAnalyticsResult {
-  analytics: ContactsReportAnalyticsSnapshot;
-  monthlyByYear?: ContactsMonthlyYearCounts[];
 }
 
 export function useContactsReportAnalytics(params: ContactsReportAnalyticsParams = {}) {
@@ -95,9 +89,10 @@ export function useContactsWidgetAggregates(
 
   const query = useQuery({
     queryKey: [...CONTACTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async () => {
+    queryFn: async (): Promise<Record<string, ContactsWidgetAggregateResult>> => {
       const res = await apiContract.contacts.widgetAggregates({ body: { widgets: queries } });
-      return (res.body as any)?.results ?? {};
+      const body = res.body as { results?: Record<string, ContactsWidgetAggregateResult> } | undefined;
+      return body?.results ?? {};
     },
     enabled: isAuthenticated && enabled && queries.length > 0,
     staleTime: 30_000,

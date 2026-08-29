@@ -21,7 +21,7 @@ export function ContactsCommandMetrics({
   conflictCount,
   flushing,
   onFlushPending,
-  onOpenDuplicates,
+  onOpenDuplicates: _onOpenDuplicates,
   onReviewConflicts,
 }: ContactsCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -60,7 +60,6 @@ export function ContactsCommandMetrics({
     flushing,
     onFlushPending,
     onReviewConflicts,
-    onOpenDuplicates,
     metrics,
   ]);
 

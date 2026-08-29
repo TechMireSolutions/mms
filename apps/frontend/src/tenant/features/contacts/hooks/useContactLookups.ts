@@ -30,10 +30,11 @@ const defaults = (): ContactLookupsMap => {
   };
 };
 
-export async function fetchContactLookups(signal?: AbortSignal): Promise<ContactLookupsMap> {
+export async function fetchContactLookups(_signal?: AbortSignal): Promise<ContactLookupsMap> {
   const response = await apiContract.contacts.getLookups({ query: {} });
   if (response.status !== 200) return defaults();
-  return (response.body as any)?.lookups ?? defaults();
+  const body = response.body as { lookups?: ContactLookupsMap } | undefined;
+  return body?.lookups ?? defaults();
 }
 
 async function putContactLookupKind(
@@ -45,7 +46,8 @@ async function putContactLookupKind(
     body: { items }
   });
   if (response.status !== 200) throw new Error("Failed to update contact lookups");
-  return (response.body as any)?.items;
+  const body = response.body as { items?: ContactLookupItems } | undefined;
+  return body?.items ?? items;
 }
 
 const lookupsHooks = createModuleLookupsHooks<

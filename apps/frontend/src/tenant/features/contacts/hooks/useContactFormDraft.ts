@@ -60,6 +60,9 @@ export function useContactFormDraft({
     updateSkillProficiencies,
     updateTags,
     updateCountryCodes,
+    fields,
+    isTabFieldEnabled,
+    isTabFieldRequired,
   } = useContactConfig();
 
   const [instanceSuffix] = useState(() => Math.random().toString(36).substring(2, 8));
@@ -137,6 +140,8 @@ export function useContactFormDraft({
     validationErrors,
     contactDraft,
     setContactDraft,
+    isTabFieldEnabled,
+    isTabFieldRequired,
   });
 
   const [duplicateCount, setDuplicateCount] = useState(0);
@@ -180,12 +185,13 @@ export function useContactFormDraft({
     const timer = setTimeout(async () => {
       try {
         // The tag property is a computed frontend-only UI state added by normalization
-        const { tag, ...cleanDraft } = contactDraft as any;
+        const { tag: _tag, ...cleanDraft } = contactDraft as Record<string, unknown>;
         const res = await apiContract.contacts.duplicateCheck({
           body: { contact: cleanDraft },
         });
         if (res.status === 200) {
-          setDuplicateCount((res.body as any)?.matchCount ?? 0);
+          const body = res.body as { matchCount?: number } | undefined;
+          setDuplicateCount(body?.matchCount ?? 0);
         }
       } catch {
         // Non-blocking duplicate check: ignore gracefully
@@ -193,15 +199,7 @@ export function useContactFormDraft({
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [
-    open,
-    contact?.id,
-    contactDraft.name,
-    contactDraft.firstName,
-    contactDraft.cnic,
-    contactDraft.phones,
-    contactDraft.emails,
-  ]);
+  }, [open, contact?.id, contactDraft]);
 
   return {
     formInstanceId,
@@ -255,6 +253,7 @@ export function useContactFormDraft({
     removeSubListItem,
     handleSave,
     validationErrors,
+    fields,
   };
 }
 

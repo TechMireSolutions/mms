@@ -11,10 +11,17 @@ import {
   resolveContactEnabledTabIds,
   CONTACTS_MODULE_MANIFEST,
   type ColumnRegistryEntry,
+  type FieldDefinition,
 } from "@mms/shared";
 import type { ContactConfigContextType } from "@/lib/contacts/contactConfigContextTypes";
+import type { ContactConfigExtras } from "@/lib/contacts/useContactConfigTypes";
 import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
 import { useUiPreference } from "@/lib/useUiStateStore";
+
+type ContactConfigProviderInput = Partial<ContactConfigExtras> & {
+  enabledTabs?: string[];
+  requiredTabs?: string[];
+};
 
 /**
  * Builds ContactConfig context value.
@@ -23,7 +30,7 @@ import { useUiPreference } from "@/lib/useUiStateStore";
  * Lookups kind `relationships` remains a write mirror only.
  */
 export function useContactConfigProviderValue(
-  config: any,
+  config: ContactConfigProviderInput,
 ): ContactConfigContextType {
   const {
     prefs: rawPrefs,
@@ -154,13 +161,13 @@ export function useContactConfigProviderValue(
       isTabFieldEnabled: (tabId: string, fieldId: string) => {
         const tabFields = resolvedFields?.[tabId];
         if (!tabFields) return true;
-        const field = tabFields.find((f: any) => f.key === fieldId);
+        const field = tabFields.find((f: FieldDefinition) => f.key === fieldId);
         return field?.enabled ?? true;
       },
       isTabFieldRequired: (tabId: string, fieldId: string) => {
         const tabFields = resolvedFields?.[tabId];
         if (!tabFields) return false;
-        const field = tabFields.find((f: any) => f.key === fieldId);
+        const field = tabFields.find((f: FieldDefinition) => f.key === fieldId);
         return field?.required ?? false;
       },
       prefs,

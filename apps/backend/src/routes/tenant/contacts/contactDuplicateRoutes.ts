@@ -55,7 +55,6 @@ export const contactDuplicateRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.send({ ...page, pairs });
     } catch (err) {
       request.log.error(err, 'Failed to load duplicate pairs');
-      console.error('duplicates route error:', err);
       return sendDatabaseError(reply, 'Failed to load duplicate pairs');
     }
   });

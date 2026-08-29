@@ -160,6 +160,15 @@ export interface OnboardingBrandingInput {
   adminPhone?: string;
   website?: string;
   footerText?: string;
+  faviconUrl?: string;
+  legalName?: string;
+  registrationNumber?: string;
+  addressLine1?: string;
+  addressLine2?: string;
+  city?: string;
+  region?: string;
+  postalCode?: string;
+  socialLinks?: BrandingSocialLink[];
 }
 
 /** Hardcoded MMS platform theme (apex domain). Tenant workspaces customise via the `branding` object. */
@@ -169,7 +178,7 @@ export const DEFAULT_BRANDING_SETTINGS: BrandingSettings = {
   primaryColor: '#d99b00',
   secondaryColor: '#5c3412',
   cornerStyle: DEFAULT_BRANDING_CORNER_STYLE,
-  logoUrl: '/platform-logo.webp',
+  logoUrl: '',
   faviconUrl: '',
   footerText: '© 2026 MMS. All rights reserved.',
   email: '',

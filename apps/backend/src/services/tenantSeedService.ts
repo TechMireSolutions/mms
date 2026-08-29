@@ -32,6 +32,7 @@ export async function seedTenantDefaults(): Promise<void> {
 
   const objects = getMinimalObjects();
   for (const [key, objectSeed] of Object.entries(objects)) {
+    if (key === 'branding' || key === 'global_settings') continue;
     const existing = await getObject(key);
     if (existing !== null && existing !== undefined) continue;
     await saveObject(key, objectSeed);

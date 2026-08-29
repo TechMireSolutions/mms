@@ -79,7 +79,9 @@ export function useContactDetailActions({
           queryFn: ({ signal }) => fetchContactById(contactId, signal),
         })
         .then((contact) => {
-          setContactState(contact);
+          if (contact) {
+            setContactState(contact);
+          }
         })
         .catch(() => {
           notify.error(t("contacts.detail.loadFailed"));

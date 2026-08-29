@@ -26,7 +26,7 @@ vi.mock("./ContactBasicMetaFields", () => ({
 }));
 
 describe("ContactBasicIdentityFields Component", () => {
-  it("renders firstName, lastName, and gender fields", () => {
+  it("renders firstName, lastName, and gender fields with configured options", () => {
     const html = renderToStaticMarkup(
       <ContactBasicIdentityFields
         contactDraft={{ firstName: "Zayd", lastName: "Harith", gender: "male" }}
@@ -35,8 +35,6 @@ describe("ContactBasicIdentityFields Component", () => {
         isFieldRequired={() => false}
         getFieldError={() => undefined}
         updateDraft={vi.fn()}
-        genders={["male", "female"]}
-        onUpdateGenders={vi.fn()}
         lockGender={false}
       />,
     );
@@ -44,6 +42,25 @@ describe("ContactBasicIdentityFields Component", () => {
     expect(html).toContain("contacts.fields.firstName");
     expect(html).toContain("contacts.fields.lastName");
     expect(html).toContain("contacts.fields.gender");
+    expect(html).toContain("Male");
+    expect(html).toContain("Female");
     expect(html).toContain("Meta Fields");
+  });
+
+  it("renders custom genders when provided", () => {
+    const html = renderToStaticMarkup(
+      <ContactBasicIdentityFields
+        contactDraft={{ firstName: "Zayd", lastName: "Harith", gender: "other" }}
+        formInstanceId="inst-1"
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        getFieldError={() => undefined}
+        updateDraft={vi.fn()}
+        genders={["male", "female", "other"]}
+        lockGender={false}
+      />,
+    );
+
+    expect(html).toContain("Other");
   });
 });

@@ -10,6 +10,7 @@ import { buildBrandingFromOnboarding } from '@mms/shared';
 import { assertPasswordMeetsPolicy, getJwtExpiresIn, loadGlobalSettings, saveGlobalSettings } from '../globalSettingsService.js';
 import { runWithTenant } from '../../lib/tenantContext.js';
 import { seedTenantDefaults } from '../tenantSeedService.js';
+import { saveObject } from '../../db/database.js';
 import { createTwoFactorChallenge, issueRefreshToken } from './twoFactorService.js';
 import { setAuthCookies } from './authCookieService.js';
 import { clearPlatformAccessCookie } from '../platform/platformCookieService.js';
@@ -176,13 +177,24 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
       adminPhone: input.adminPhone,
       website: input.website,
       footerText: input.footerText,
+      country: input.country,
+      faviconUrl: input.faviconUrl,
+      legalName: input.legalName,
+      registrationNumber: input.registrationNumber,
+      addressLine1: input.addressLine1,
+      addressLine2: input.addressLine2,
+      city: input.city,
+      region: input.region,
+      postalCode: input.postalCode,
+      socialLinks: input.socialLinks,
     });
     await upsertWorkspaceBranding(workspace.subdomain, branding);
+    await saveObject('branding', branding);
 
     await upsertContactModulePreferences(workspace.subdomain, {
-      defaultCountry: '',
-      defaultProvince: '',
-      defaultCity: '',
+      defaultCountry: input.country?.trim() || '',
+      defaultProvince: input.region?.trim() || '',
+      defaultCity: input.city?.trim() || '',
       showDetailedSolarAge: false,
       showLunarDob: false,
       showDetailedLunarAge: false,

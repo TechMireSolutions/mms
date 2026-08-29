@@ -44,6 +44,8 @@ export interface ContactLabeledValueSubListTabProps extends ContactSubListTabBas
   enterKeyHint?: "enter" | "done" | "go" | "next" | "previous" | "search" | "send";
   /** Optional leading control beside the value input (e.g. dial-code select). */
   valueLeadingAddon?: (ctx: ContactLabeledValueFieldContext) => ReactNode;
+  /** Optional custom header element (e.g. primary toggle). */
+  headerExtras?: (ctx: ContactLabeledValueFieldContext) => ReactNode;
   /** Override default string patch when the value input changes (e.g. phone parse). */
   onValueChange?: (
     ctx: ContactLabeledValueFieldContext & { value: string },
@@ -81,13 +83,14 @@ export function ContactLabeledValueSubListTab({
   spellCheck,
   enterKeyHint,
   valueLeadingAddon,
+  headerExtras,
   onValueChange,
   onValueBlur,
   getListItemError,
   isFieldEnabled,
   isFieldRequired,
-  fields,
-  formInstanceId,
+  fields: _fields,
+  formInstanceId: _formInstanceId,
   addSubListItem,
   ensureSubListItem,
   updateSubListItem,
@@ -181,6 +184,7 @@ export function ContactLabeledValueSubListTab({
                   />
                 ) : undefined
               }
+              headerExtras={headerExtras ? headerExtras(fieldCtx) : undefined}
               onRemove={() => removeItem(idx)}
               removeLabel={removeLabel(idx + 1)}
             >

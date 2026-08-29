@@ -180,12 +180,22 @@ export function useStudentDetailModel(student: Student) {
     if (studentContact?.addresses && studentContact.addresses.length > 0) {
       return studentContact.addresses;
     }
-    const line1 = studentContact?.address || studentContact?.line1 || student.address;
-    const city = studentContact?.city || student.city;
-    const state = studentContact?.state || student.state;
-    const country = studentContact?.country || student.country;
+    const line1 =
+      (typeof studentContact?.address === "string" ? studentContact.address : undefined) ||
+      (typeof studentContact?.line1 === "string" ? studentContact.line1 : undefined) ||
+      (typeof student.address === "string" ? student.address : undefined);
+    const city =
+      (typeof studentContact?.city === "string" ? studentContact.city : undefined) ||
+      (typeof student.city === "string" ? student.city : undefined);
+    const state =
+      (typeof studentContact?.state === "string" ? studentContact.state : undefined) ||
+      (typeof student.state === "string" ? student.state : undefined);
+    const country =
+      (typeof studentContact?.country === "string" ? studentContact.country : undefined) ||
+      (typeof student.country === "string" ? student.country : undefined);
     if (line1 || city || state || country) {
-      return [{ line1, city, state, country, label: t("students.detail.addressesLabel"), isPrimary: true }];
+      const singleAddr: Address = { line1, city, state, country, label: t("students.detail.addressesLabel"), isPrimary: true };
+      return [singleAddr];
     }
     return [];
   }, [studentContact, student.address, student.city, student.state, student.country, t]);
@@ -197,14 +207,15 @@ export function useStudentDetailModel(student: Student) {
           tag: typeof student.tag === "string" ? student.tag : undefined,
           tags: Array.isArray(student.tags) ? (student.tags as string[]) : undefined,
         });
+    const isSyed = typeof studentContact?.isSyed === "boolean" ? studentContact.isSyed : typeof student.isSyed === "boolean" ? student.isSyed : undefined;
     return {
       contactId: student.contactId != null ? String(student.contactId) : undefined,
       displayName: studentContact?.name || student.name || "",
       phones: studentPhones,
       emails: studentEmails,
       addresses: studentAddresses,
-      cnic: studentContact?.cnic || student.cnic,
-      isSyed: studentContact?.isSyed ?? student.isSyed,
+      cnic: (typeof studentContact?.cnic === "string" ? studentContact.cnic : undefined) || student.cnic,
+      isSyed,
       tags: rawTags,
     };
   }, [studentContact, student, studentPhones, studentEmails, studentAddresses]);

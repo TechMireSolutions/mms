@@ -17,6 +17,7 @@ import {
 import {
   auditContact,
   enqueueContactBackgroundJob,
+  handleContactWriteError,
   requireContactPermission,
   sanitizeOneForUser,
 } from './contactRouteHelpers.js';
@@ -74,7 +75,7 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/merge', {
     bodyLimit: 1048576,
-    schema: { body: z.record(z.string(), z.any()) },
+    schema: { body: z.record(z.string(), z.unknown()) },
   }, async (request, reply) => {
     const user = request.user as User;
     if (!requireContactPermission(reply, user, ['write', 'delete'])) return;
@@ -109,7 +110,7 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
       if (error instanceof Error && /not found/i.test(error.message)) {
         return sendNotFound(reply, error.message);
       }
-      return sendDatabaseError(reply, 'Failed to merge contacts', error);
+      return handleContactWriteError(reply, error, 'Failed to merge contacts');
     }
   });
 

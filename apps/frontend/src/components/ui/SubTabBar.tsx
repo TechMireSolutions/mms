@@ -12,6 +12,7 @@ export interface SubTab<K extends string = string> {
   description?: string;
   icon?: React.ComponentType<{ className?: string }>;
   badge?: number | string;
+  tone?: "destructive" | "primary" | "muted";
 }
 
 export type SubTabBarVariant = "pill" | "underline" | "enclosed";

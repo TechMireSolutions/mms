@@ -20,9 +20,9 @@ export function useContactGoogleSyncMutations() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const saveConfig = tsrClient.contacts.updateGoogleSyncConfig.useMutation({
-    onSuccess: (res: any) => {
-      if (res.status === 200) {
-        queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, (res.body as any).config);
+    onSuccess: (res: { status: number; body?: { config?: unknown } }) => {
+      if (res.status === 200 && res.body?.config) {
+        queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, res.body.config);
       }
     },
   });
@@ -30,9 +30,9 @@ export function useContactGoogleSyncMutations() {
   const logSyncAudit = tsrClient.contacts.logGoogleSyncAudit.useMutation();
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const exchangeOAuth = tsrClient.contacts.exchangeGoogleSyncOAuth.useMutation({
-    onSuccess: (res: any) => {
-      if (res.status === 200) {
-        queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, (res.body as any).config);
+    onSuccess: (res: { status: number; body?: { config?: unknown } }) => {
+      if (res.status === 200 && res.body?.config) {
+        queryClient.setQueryData(CONTACTS_GOOGLE_SYNC_QUERY_KEY, res.body.config);
       }
     },
   });

@@ -98,7 +98,6 @@ export function ContactSkillsTab({
       <AnimatePresence initial={false}>
         {skills.map((skill, idx) => {
           const nameError = getListItemError("skills", "name", idx);
-          const categoryError = getListItemError("skills", "category", idx);
           const proficiencyError = getListItemError("skills", "proficiency", idx);
           const yearsError = getListItemError("skills", "yearsOfExperience", idx);
           const certifiedError = getListItemError("skills", "isCertified", idx);

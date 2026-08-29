@@ -3,9 +3,6 @@ import {
   parsePhoneNumber,
   getPrimaryPhone,
   sanitizePhoneForTel,
-  sanitizePhoneForSms,
-  sanitizePhoneForWhatsApp,
-  sanitizeEmailForMailto,
   type Contact,
   type ContactPreferences,
 } from "@mms/shared";
@@ -33,21 +30,6 @@ export function formatContactPhoneFull(
 /** Formats tel: link href for telephone actions. */
 export function formatTelHref(phoneStr: string | undefined | null): string {
   return sanitizePhoneForTel(phoneStr) || "#";
-}
-
-/** Formats sms: link href for SMS actions. */
-export function formatSmsHref(phoneStr: string | undefined | null): string {
-  return sanitizePhoneForSms(phoneStr) || "#";
-}
-
-/** Formats WhatsApp wa.me link href. */
-export function formatWhatsAppHref(phoneStr: string | undefined | null): string | null {
-  return sanitizePhoneForWhatsApp(phoneStr);
-}
-
-/** Formats mailto: link href for email actions. */
-export function formatMailtoHref(emailStr: string | undefined | null): string {
-  return sanitizeEmailForMailto(emailStr) || "#";
 }
 
 /** Resolves fallback country code from prefs → mapped code → first configured code (no hardcoded dial). */

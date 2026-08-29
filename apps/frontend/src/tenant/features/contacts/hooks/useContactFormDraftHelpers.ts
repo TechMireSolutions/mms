@@ -23,12 +23,16 @@ export function useContactFormDraftHelpers({
   validationErrors,
   contactDraft,
   setContactDraft,
+  isTabFieldEnabled,
+  isTabFieldRequired,
 }: {
   formInstanceId: string;
   defaultCountryCode: string;
   validationErrors: ValidationError[];
   contactDraft: Partial<Contact>;
   setContactDraft: Dispatch<SetStateAction<Partial<Contact>>>;
+  isTabFieldEnabled?: (tabId: string, fieldId: string) => boolean;
+  isTabFieldRequired?: (tabId: string, fieldId: string) => boolean;
 }) {
   const { t } = useTranslation();
   const [cropSrc, setCropSrc] = useState<string | null>(null);
@@ -77,18 +81,20 @@ export function useContactFormDraftHelpers({
   }, [contactDraft]);
 
   const isFieldEnabled = useCallback(
-    (_tabId: string, fieldId: string) => {
+    (tabId: string, fieldId: string) => {
       if ((REMOVED_FORM_FIELD_KEYS as readonly string[]).includes(fieldId)) return false;
+      if (isTabFieldEnabled) return isTabFieldEnabled(tabId, fieldId);
       return true;
     },
-    [],
+    [isTabFieldEnabled],
   );
 
   const isFieldRequired = useCallback(
-    (_tabId: string, _fieldId: string) => {
+    (tabId: string, fieldId: string) => {
+      if (isTabFieldRequired) return isTabFieldRequired(tabId, fieldId);
       return false;
     },
-    [],
+    [isTabFieldRequired],
   );
 
   const getFieldError = useCallback(

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import type { FastifyReply } from 'fastify';
-import { handleContactWriteError } from '../routes/tenant/contacts/contactRouteHelpers.js';
+import {
+  handleContactWriteError,
+  formatContactWriteError,
+} from '../routes/tenant/contacts/contactRouteHelpers.js';
 import { ContactPermissionError, ContactUniqueFieldError } from '../services/contactService.js';
 
 function createMockReply() {
@@ -101,6 +104,42 @@ describe('handleContactWriteError', () => {
     expect(reply.sentData).toEqual({
       type: 'database_error',
       message: 'Failed to save contact record',
+    });
+  });
+});
+
+describe('formatContactWriteError', () => {
+  it('formats ContactUniqueFieldError into 400 validation_error response', () => {
+    const error = new ContactUniqueFieldError([
+      { fieldId: 'number', tabId: 'phones', index: 0, message: 'Phone already exists' },
+    ]);
+    const res = formatContactWriteError(error, 'Fallback message');
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({
+      type: 'validation_error',
+      message: 'Phone already exists',
+      errors: [{ fieldId: 'number', tabId: 'phones', index: 0, message: 'Phone already exists' }],
+    });
+  });
+
+  it('formats validation errors into 400 validation_error response', () => {
+    const error = { statusCode: 400, message: 'Invalid payload', errors: [{ path: 'name', message: 'Required' }] };
+    const res = formatContactWriteError(error, 'Fallback message');
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({
+      type: 'validation_error',
+      message: 'Invalid payload',
+      errors: [{ path: 'name', message: 'Required' }],
+    });
+  });
+
+  it('formats database / unexpected error into 500 database_error response', () => {
+    const error = new Error('Database disconnected');
+    const res = formatContactWriteError(error, 'Fallback message');
+    expect(res.status).toBe(500);
+    expect(res.body).toEqual({
+      type: 'database_error',
+      message: 'Database disconnected',
     });
   });
 });

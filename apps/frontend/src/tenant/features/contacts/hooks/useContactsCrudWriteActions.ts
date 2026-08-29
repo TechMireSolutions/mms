@@ -12,6 +12,18 @@ type NotifyBulkResult = (
   multiSuccessKey: AppTranslationKey,
 ) => void;
 
+function extractSavedContact(res: unknown): Contact {
+  if (typeof res === "object" && res !== null) {
+    if ("body" in res && typeof (res as { body?: unknown }).body === "object" && (res as { body?: { contact?: Contact } }).body?.contact) {
+      return (res as { body: { contact: Contact } }).body.contact;
+    }
+    if ("contact" in res && typeof (res as { contact?: unknown }).contact === "object" && (res as { contact?: Contact }).contact) {
+      return (res as { contact: Contact }).contact;
+    }
+  }
+  return res as Contact;
+}
+
 export function useContactsCrudWriteActions({
   t,
   handleError,
@@ -33,10 +45,10 @@ export function useContactsCrudWriteActions({
       try {
         if (isNew) {
           const res = await upsertContact.mutateAsync(contact);
-          return (res as any)?.body?.contact ?? (res as any)?.contact ?? (res as unknown as Contact);
+          return extractSavedContact(res);
         } else {
           const res = await updateContact.mutateAsync({ id: String(contact.id), contact });
-          return (res as any)?.body?.contact ?? (res as any)?.contact ?? (res as unknown as Contact);
+          return extractSavedContact(res);
         }
       } catch (err) {
         handleError(err, "contacts.save_contact");

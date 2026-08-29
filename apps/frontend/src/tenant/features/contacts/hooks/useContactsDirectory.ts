@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { Contact } from "@mms/shared";
 import { CONTACTS_MODULE_MANIFEST } from "@mms/shared";
 import { useContactsContractList } from "@/tenant/features/contacts/hooks/useContactsTsrHooks";
@@ -45,7 +45,10 @@ export function useContactsDirectory({
     quickFilter: filters.quickFilter,
   }, useServerWork);
 
-  const workContacts = (workPageDataResponse?.body?.contacts ?? []) as Contact[];
+  const workContacts = useMemo(
+    () => (workPageDataResponse?.body?.contacts ?? []) as Contact[],
+    [workPageDataResponse?.body?.contacts],
+  );
   const shownCount = workPageDataResponse?.body?.total ?? 0;
   const isWorkError = isWorkErrorTsr || (workPageDataResponse != null && workPageDataResponse.status !== 200);
   const workPageData = workPageDataResponse?.status === 200 ? workPageDataResponse.body : undefined;

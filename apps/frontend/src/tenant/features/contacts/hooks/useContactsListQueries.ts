@@ -37,14 +37,15 @@ export function useContactsByIds(ids: (string | number | null | undefined)[]) {
   const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
   return useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, 'resolve', normalized.join(',')] as const,
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal: _signal }) => {
       const hydrated: Contact[] = [];
       const resolveChunk = async (chunk: string[]) => {
         const response = await apiContract.contacts.resolve({
           body: { ids: chunk },
         });
         if (response.status === 200) {
-          hydrated.push(...((response.body as any)?.contacts ?? []));
+          const body = response.body as { contacts?: Contact[] } | undefined;
+          hydrated.push(...(body?.contacts ?? []));
         }
       };
       

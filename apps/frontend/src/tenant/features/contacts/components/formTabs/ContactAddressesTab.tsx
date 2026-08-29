@@ -1,5 +1,5 @@
 import type React from "react";
-import { MapPin, Building, Landmark } from "lucide-react";
+import { MapPin, Building, Landmark, Star } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
@@ -34,7 +34,7 @@ export function ContactAddressesTab({
   getListItemError,
   isFieldEnabled,
   isFieldRequired,
-  fields,
+  fields: _fields,
   formInstanceId,
   addSubListItem,
   ensureSubListItem,
@@ -102,6 +102,36 @@ export function ContactAddressesTab({
                     id={`cf-${formInstanceId}-address-label-${idx}`}
                     name={`cf-${formInstanceId}-address-label-${idx}`}
                   />
+                ) : undefined
+              }
+              headerExtras={
+                addresses.length > 1 ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      addresses.forEach((_, i) => {
+                        updateAddress(i, { isPrimary: i === idx });
+                      });
+                    }}
+                    className={cn(
+                      "cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-semibold transition-colors select-none",
+                      (addr.isPrimary || (!addresses.some((a) => a.isPrimary) && idx === 0))
+                        ? "bg-primary/10 text-primary border border-primary/30"
+                        : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40 border border-transparent",
+                    )}
+                    title={t("contacts.form.primaryAddress")}
+                    aria-label={t("contacts.form.primaryAddress")}
+                  >
+                    <Star
+                      className={cn(
+                        "w-3 h-3",
+                        (addr.isPrimary || (!addresses.some((a) => a.isPrimary) && idx === 0)) &&
+                          "fill-primary text-primary",
+                      )}
+                      aria-hidden
+                    />
+                    <span>{t("contacts.form.primaryAddress")}</span>
+                  </button>
                 ) : undefined
               }
               onRemove={() => removeAddress(idx)}

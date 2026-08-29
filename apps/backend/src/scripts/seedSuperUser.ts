@@ -9,9 +9,15 @@ loadBackendEnv();
 
 async function seed() {
   await initDb();
-  const email = process.env.PLATFORM_ADMIN_EMAIL?.trim() || 'syedaalin@gmail.com';
-  const password = process.env.PLATFORM_ADMIN_PASSWORD?.trim() || 'Pa$$w0rd11111';
+  const email = process.env.PLATFORM_ADMIN_EMAIL?.trim();
+  const password = process.env.PLATFORM_ADMIN_PASSWORD?.trim();
   const name = process.env.PLATFORM_ADMIN_NAME?.trim() || 'Platform Admin';
+
+  if (!email || !password) {
+    console.error('❌ Error: PLATFORM_ADMIN_EMAIL and PLATFORM_ADMIN_PASSWORD must be provided to seed a super user.');
+    console.error('Usage: PLATFORM_ADMIN_EMAIL="admin@domain.com" PLATFORM_ADMIN_PASSWORD="your-password" node src/scripts/seedSuperUser.js');
+    process.exit(1);
+  }
 
   const existingByEmail = await findPlatformUserRowByEmail(email);
   if (existingByEmail) {

@@ -15,7 +15,7 @@ function mapGoogleSyncError(
   translate: (key: AppTranslationKey) => string,
 ): string {
   if (typeof error === 'object' && error !== null && 'status' in error) {
-    const err = error as any;
+    const err = error as { status?: number; body?: { code?: string } };
     if (err.body?.code === "session_expired") return translate("contacts.sync.sessionExpired");
     if (err.status === 403) return translate("errors.state.permission");
     return translate("contacts.sync.oauthError");
@@ -115,8 +115,8 @@ export function useGoogleContactsSync({
         skippedName: result.skippedName ?? 0,
         skippedUnique: result.skippedUnique ?? 0,
       });
-    } catch (syncError: any) {
-      if (typeof syncError === 'object' && syncError !== null && syncError.body?.code === "session_expired") {
+    } catch (syncError: unknown) {
+      if (typeof syncError === 'object' && syncError !== null && (syncError as { body?: { code?: string } }).body?.code === "session_expired") {
         invalidateContacts();
       }
       setError(mapGoogleSyncError(syncError, t));

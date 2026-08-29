@@ -35,7 +35,7 @@ export function ContactBasicMetaFields({
 
   const currentTags = useMemo(() => {
     return getContactTags(contactDraft);
-  }, [contactDraft.tags, contactDraft.tag]);
+  }, [contactDraft]);
 
   return (
     <>
@@ -86,6 +86,21 @@ export function ContactBasicMetaFields({
             }}
             placeholder={t("contacts.form.cnicPlaceholder")}
           />
+          {Boolean(contactDraft.cnic) && (
+            <p className="mt-1 text-2xs text-muted-foreground/80 flex items-center justify-between">
+              <span>{t("contacts.form.cnicFormatHint")}</span>
+              <span
+                className={cn(
+                  "font-mono font-medium",
+                  (contactDraft.cnic || "").replace(/\D/g, "").length === 13
+                    ? "text-success font-semibold"
+                    : "text-muted-foreground",
+                )}
+              >
+                {(contactDraft.cnic || "").replace(/\D/g, "").length}/13
+              </span>
+            </p>
+          )}
         </Field>
       )}
 

@@ -48,8 +48,6 @@ export function useContactMutations() {
     onSuccess: invalidate,
   });
 
-  const bulkRestoreContacts = bulkRestoreMutation;
-
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const mergeContactsMutation = tsrClient.contacts.merge.useMutation({
     onSuccess: invalidate,
@@ -137,11 +135,13 @@ export function useContactMutations() {
       }
     },
     logExportAudit: {
-      mutateAsync: (payload: any) => logExportAuditMutation.mutateAsync({ body: payload }),
+      mutateAsync: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) =>
+        logExportAuditMutation.mutateAsync({ body: payload }),
       isPending: logExportAuditMutation.isPending,
     },
     logSetupAudit: {
-      mutateAsync: (payload: any) => logSetupAuditMutation.mutateAsync({ body: payload }),
+      mutateAsync: (payload: { area: 'fields' | 'preferences'; summary: string }) =>
+        logSetupAuditMutation.mutateAsync({ body: payload }),
       isPending: logSetupAuditMutation.isPending,
     },
   };

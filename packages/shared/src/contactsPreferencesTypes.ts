@@ -11,9 +11,6 @@ export interface ContactsWorkDrillDown {
 /** Alias of ModuleColumnPreference — Contacts Work column prefs share the module SSOT. */
 export type ContactColumnPreference = ModuleColumnPreference;
 
-export type ContactColumnPref = ContactColumnPreference;
-
-/** Saved report definition — logic only, re-run against live data. */
 export interface ContactsSavedReport {
   id: string;
   name: string;
@@ -27,5 +24,3 @@ export interface ContactsSavedReport {
   sharedWithRoles?: string[];
   sharedWithUserIds?: string[];
 }
-
-export type ContactUserColumnPreferencesMap = Record<string, ContactColumnPreference[]>;

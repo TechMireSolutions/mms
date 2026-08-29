@@ -135,7 +135,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(fu
         <PopoverTrigger
           type="button"
           disabled={disabled}
-          className="me-2 min-h-11 min-w-11 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground group-focus-within:text-primary hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          className="me-1.5 h-8 w-8 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground group-focus-within:text-primary hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           aria-label={isYearMode ? t("datePicker.openYearAria") : t("datePicker.openAria")}
         >
           <CalendarIcon className="h-4 w-4 transition-colors opacity-80" />
@@ -235,7 +235,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(fu
         <button
           type="button"
           onClick={handleClear}
-          className="min-h-11 min-w-11 flex items-center justify-center hover:bg-destructive/10 rounded-md text-muted-foreground hover:text-destructive transition-colors cursor-pointer shrink-0 ms-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          className="h-7 w-7 flex items-center justify-center hover:bg-destructive/10 rounded-md text-muted-foreground hover:text-destructive transition-colors cursor-pointer shrink-0 ms-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           aria-label={t("datePicker.clearAria")}
         >
           <X className="h-3.5 w-3.5" />

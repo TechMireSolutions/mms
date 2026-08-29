@@ -9,6 +9,7 @@ import {
   getWorkspaceGlobalSettings,
   upsertWorkspaceGlobalSettings as upsertWorkspaceGlobalSettingsRepo,
 } from '../db/repositories/workspaceRepository.js';
+import { saveObject } from '../db/database.js';
 
 /** Loads merged global settings for the current request tenant (or specified subdomain). */
 export async function loadGlobalSettings(subdomain?: string): Promise<GlobalSettings> {
@@ -34,6 +35,7 @@ export async function saveGlobalSettings(
     throw new Error('Tenant context required to save global settings');
   }
   await upsertWorkspaceGlobalSettingsRepo(tenant, settings);
+  await saveObject('global_settings', settings);
 }
 
 /** JWT `expiresIn` string from session timeout preference. */

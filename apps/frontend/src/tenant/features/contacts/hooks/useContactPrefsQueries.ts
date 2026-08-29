@@ -34,9 +34,11 @@ export function useContactColumnPrefs(options?: { enabled?: boolean }) {
     staleTime: 60_000,
   });
 
+  const body = query.data?.body as { preferences?: ContactColumnPreference[] } | undefined;
+
   return {
     ...query,
-    data: query.data?.body ? ((query.data.body as any)?.preferences ?? []) : (Array.isArray(query.data) ? query.data : undefined),
+    data: body?.preferences ?? (Array.isArray(query.data) ? (query.data as ContactColumnPreference[]) : undefined),
   };
 }
 
@@ -44,7 +46,7 @@ export function useContactColumnPrefsMutation() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const mutation = tsrClient.contacts.updateColumnPreferences.useMutation({
-    onSuccess: (response: any) => {
+    onSuccess: (response: { body?: { preferences?: ContactColumnPreference[] } }) => {
       queryClient.setQueryData(
         CONTACT_COLUMN_PREFERENCES_QUERY_KEY,
         response?.body?.preferences ?? [],
@@ -71,19 +73,24 @@ export function useContactColumnPrefsMutation() {
       });
   };
 
+  type RawPreferences =
+    | ContactColumnPreference[]
+    | { body: { preferences: ContactColumnPreference[] } };
+
+  const extractPrefs = (raw: RawPreferences): ContactColumnPreference[] =>
+    Array.isArray(raw)
+      ? raw
+      : Array.isArray((raw as { body: { preferences: ContactColumnPreference[] } }).body?.preferences)
+      ? (raw as { body: { preferences: ContactColumnPreference[] } }).body.preferences
+      : [];
+
   return {
     ...mutation,
-    mutate: (rawPreferences: any, mutateOptions?: any) => {
-      const prefs = Array.isArray(rawPreferences)
-        ? rawPreferences
-        : (Array.isArray(rawPreferences?.body?.preferences) ? rawPreferences.body.preferences : []);
-      return mutation.mutate({ body: { preferences: sanitizePrefs(prefs) } }, mutateOptions);
+    mutate: (rawPreferences: RawPreferences, mutateOptions?: Parameters<typeof mutation.mutate>[1]) => {
+      return mutation.mutate({ body: { preferences: sanitizePrefs(extractPrefs(rawPreferences)) } }, mutateOptions);
     },
-    mutateAsync: async (rawPreferences: any, mutateOptions?: any) => {
-      const prefs = Array.isArray(rawPreferences)
-        ? rawPreferences
-        : (Array.isArray(rawPreferences?.body?.preferences) ? rawPreferences.body.preferences : []);
-      return mutation.mutateAsync({ body: { preferences: sanitizePrefs(prefs) } }, mutateOptions);
+    mutateAsync: async (rawPreferences: RawPreferences, mutateOptions?: Parameters<typeof mutation.mutateAsync>[1]) => {
+      return mutation.mutateAsync({ body: { preferences: sanitizePrefs(extractPrefs(rawPreferences)) } }, mutateOptions);
     },
   };
 }
@@ -133,7 +140,7 @@ export function useContactsSavedReportsSource(): SavedReportsSource<
   const { createSavedReport, deleteSavedReport, runSavedReport } = useContactsSavedReportMutations();
 
   return {
-    reports: reportsQuery.data?.body ? ((reportsQuery.data.body as any)?.reports ?? []) : [],
+    reports: (reportsQuery.data?.body as { reports?: ContactsSavedReport[] } | undefined)?.reports ?? [],
     isLoading: reportsQuery.isLoading,
     isError: reportsQuery.isError,
     retry: () => {

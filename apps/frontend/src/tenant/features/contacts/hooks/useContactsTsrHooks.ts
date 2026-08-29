@@ -10,7 +10,7 @@ export function useContactsContractList(query: Record<string, unknown>, enabled 
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.contacts.list.useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, 'contract-list', query],
-    queryData: { query: query as any },
+    queryData: { query: query as Record<string, unknown> },
     staleTime: 15_000,
     enabled,
   });
@@ -92,28 +92,10 @@ export function useContactsContractFieldConfig(enabled = true) {
   });
 }
 
-export function useContactsContractPreferences(enabled = true) {
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.contacts.getPreferences.useQuery({
-    queryKey: ['contacts', 'preferences', 'contract'],
-    queryData: {},
-    staleTime: 30_000,
-    enabled,
-  });
-}
-
 export function useContactsContractUpdateFieldConfig() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.contacts.updateFieldConfig.useMutation({
-    onSuccess: () => invalidateContactsQueries(queryClient)
-  });
-}
-
-export function useContactsContractUpdatePreferences() {
-  const queryClient = useQueryClient();
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.contacts.updatePreferences.useMutation({
     onSuccess: () => invalidateContactsQueries(queryClient)
   });
 }

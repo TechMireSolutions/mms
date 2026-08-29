@@ -2,13 +2,10 @@ import type { BackgroundJobRecord, Contact, ContactsSavedReportViewer, User } fr
 import type { FastifyReply } from 'fastify';
 import {
   CONTACTS_MODULE_MANIFEST,
-  buildContactWriteSchema,
-  collectContactWriteExtraFieldKeys,
   roleHasPermission,
   sanitizeContactForViewer,
   sanitizeContactsForViewer,
 } from '@mms/shared';
-import type { ZodType } from 'zod';
 import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
 import {
   canReadContacts,
@@ -19,10 +16,8 @@ import { enqueueBackgroundJob, getUserBackgroundJob } from '../../../services/ba
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { loadContactFieldConfig } from '../../../services/contactConfigService.js';
-import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
+import { replyValidationError } from '../../../lib/zodRequest.js';
 import { ContactPermissionError, ContactUniqueFieldError } from '../../../services/contactService.js';
-
-type ContactWriteZod = ZodType<unknown>;
 
 export type ContactPermission = 'read' | 'write' | 'delete';
 
@@ -64,6 +59,33 @@ export function handleContactWriteError(
   }
 
   return sendDatabaseError(reply, fallbackMessage, error);
+}
+
+export function formatContactWriteError(error: unknown, fallbackMessage: string) {
+  if (
+    error instanceof ContactUniqueFieldError ||
+    (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as { errors?: unknown[] }).errors))
+  ) {
+    const errWithErrors = error as { message: string; errors?: Record<string, unknown>[] };
+    return {
+      status: 400 as const,
+      body: { type: 'validation_error' as const, message: errWithErrors.message, errors: errWithErrors.errors },
+    };
+  }
+  const errObj = error as { message?: string; statusCode?: number; errors?: Record<string, unknown>[] };
+  const msg = errObj?.message || fallbackMessage;
+  const isValidation = errObj?.statusCode === 400 || /unique|conflict|already exists|validation/i.test(msg);
+  if (isValidation) {
+    return {
+      status: 400 as const,
+      body: {
+        type: 'validation_error' as const,
+        message: msg,
+        ...(Array.isArray(errObj?.errors) ? { errors: errObj.errors } : {}),
+      },
+    };
+  }
+  return { status: 500 as const, body: { type: 'database_error' as const, message: msg } };
 }
 
 /** Contacts permission gate: sends a 403 reply and returns false when not granted. */
@@ -127,20 +149,6 @@ async function getFieldConfigViewerOptions() {
   };
 }
 
-/** Tenant write schema: system keys ∪ enabled Setup custom field keys (strict). */
-async function loadContactWriteSchema(): Promise<ContactWriteZod> {
-  const fieldConfig = await loadContactFieldConfig();
-  return buildContactWriteSchema(collectContactWriteExtraFieldKeys(fieldConfig));
-}
-
-export async function parseContactWriteBody(
-  body: unknown,
-): Promise<{ ok: true; data: Record<string, unknown> } | { ok: false; message: string }> {
-  const schema = await loadContactWriteSchema();
-  const parsed = parseRequest(schema, body);
-  if (!parsed.ok) return parsed;
-  return { ok: true, data: parsed.data as Record<string, unknown> };
-}
 
 export async function sanitizeForUser(contacts: Contact[], user: User): Promise<Contact[]> {
   const options = await getFieldConfigViewerOptions();
