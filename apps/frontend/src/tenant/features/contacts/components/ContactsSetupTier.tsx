@@ -1,9 +1,9 @@
-import type React from "react";
-import { useMemo, useRef, lazy, Suspense } from "react";
+import React, { useMemo, useRef, lazy, Suspense } from "react";
 import { CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { shouldOpenContactsSyncSetup } from "@/lib/contacts/googleContactsOAuth";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
@@ -21,7 +21,7 @@ export interface ContactsSetupTierProps {
   canEditSetup: boolean;
 }
 
-export function ContactsSetupTier({
+export const ContactsSetupTier = React.memo(function ContactsSetupTier({
   onImport,
   canWrite,
   canEditSetup,
@@ -68,43 +68,45 @@ export function ContactsSetupTier({
 
   return (
     <ModuleTierMotion tier="setup">
-      <div className="space-y-4">
-        <SubTabBar
-          tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
-          value={subTabs.sub}
-          onChange={subTabs.handleSubTabChange}
-        />
-        <Suspense fallback={<ModulePanelSuspenseFallback />}>
-          {subTabs.showPrefs &&
-            (canEditSetup ? (
-              <ContactsSetupPanel
-                onPrefsDirtyChange={setPrefsDirty}
-              />
-            ) : (
-              <SetupReadOnlyMessage title={t("contacts.setupReadOnly")} />
-            ))}
-          {subTabs.showSync && (
-            // Sync mutates contacts + OAuth secrets — gate on contacts.write (canWrite),
-            // never OR with canEditSetup (mms-auth-security). Fields/Prefs stay canEditSetup.
-            <ContactSyncPanel onImport={onImport} canWrite={canWrite} />
-          )}
-        </Suspense>
+      <ErrorBoundary>
+        <div className="space-y-4">
+          <SubTabBar
+            tabs={settingsSubTabs.map((tab) => ({ key: tab.key, label: tab.label }))}
+            value={subTabs.sub}
+            onChange={subTabs.handleSubTabChange}
+          />
+          <Suspense fallback={<ModulePanelSuspenseFallback />}>
+            {subTabs.showPrefs &&
+              (canEditSetup ? (
+                <ContactsSetupPanel
+                  onPrefsDirtyChange={setPrefsDirty}
+                />
+              ) : (
+                <SetupReadOnlyMessage title={t("contacts.setupReadOnly")} />
+              ))}
+            {subTabs.showSync && (
+              // Sync mutates contacts + OAuth secrets — gate on contacts.write (canWrite),
+              // never OR with canEditSetup (mms-auth-security). Fields/Prefs stay canEditSetup.
+              <ContactSyncPanel onImport={onImport} canWrite={canWrite} />
+            )}
+          </Suspense>
 
-        <ConfirmAlertDialog
-          open={subTabs.discardConfirmOpen}
-          onOpenChange={(open) => {
-            if (!open) subTabs.clearPendingSubTab();
-          }}
-          title={t("settings.unsavedChanges")}
-          description={t("contacts.setup.discardUnsavedPreferencesConfirm")}
-          confirmLabel={t("common.yes")}
-          cancelLabel={t("common.cancel")}
-          destructive
-          onConfirm={subTabs.handleConfirmDiscard}
-        />
-      </div>
+          <ConfirmAlertDialog
+            open={subTabs.discardConfirmOpen}
+            onOpenChange={(open) => {
+              if (!open) subTabs.clearPendingSubTab();
+            }}
+            title={t("settings.unsavedChanges")}
+            description={t("contacts.setup.discardUnsavedPreferencesConfirm")}
+            confirmLabel={t("common.yes")}
+            cancelLabel={t("common.cancel")}
+            destructive
+            onConfirm={subTabs.handleConfirmDiscard}
+          />
+        </div>
+      </ErrorBoundary>
     </ModuleTierMotion>
   );
-}
+});
 
 export default ContactsSetupTier;

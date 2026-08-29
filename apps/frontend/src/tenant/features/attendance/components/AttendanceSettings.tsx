@@ -1,61 +1,64 @@
-import { type AttendanceSettings as AttendanceSettingsType } from "@mms/shared";
-import {
-  ATTENDANCE_MODULE_MANIFEST,
-} from "@mms/shared";
-import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
-import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
+import React, { useEffect } from "react";
+import { ATTENDANCE_MODULE_MANIFEST } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { notify } from "@/lib/notify";
 import { AttendanceSettingsPreferencesSection } from "@/tenant/features/attendance/components/AttendanceSettingsPreferencesSection";
-import React from "react";
+import { useAttendanceSetupPanelState } from "@/tenant/features/attendance/hooks/useAttendanceSetupPanelState";
 
-export const AttendanceSettings = React.memo(function AttendanceSettings() {
-      const { canEditSetup } = useModulePermissions(ATTENDANCE_MODULE_MANIFEST);
-      const { t } = useTranslation();
-      const config = useAttendanceConfig();
-      const {
-        settingsDraft,
-        saved,
-        upd,
-        saveSettingsAsync,
-      } = useModuleSettingsEditor<AttendanceSettingsType>({
-        config,
-      });
+export interface AttendanceSettingsProps {
+  /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
+  onPrefsDirtyChange?: (isDirty: boolean) => void;
+}
 
-      const isDirty = !saved;
+export const AttendanceSettings = React.memo(function AttendanceSettings({
+  onPrefsDirtyChange,
+}: AttendanceSettingsProps = {}): React.JSX.Element {
+  const { canEditSetup } = useModulePermissions(ATTENDANCE_MODULE_MANIFEST);
+  const { t } = useTranslation();
+  const {
+    settingsDraft,
+    saved,
+    saving,
+    isPrefsDirty,
+    upd,
+    handleSave,
+  } = useAttendanceSetupPanelState();
 
-      const handleSave = async () => {
-        try {
-          await saveSettingsAsync();
-          notify.success(t("attendance.settings.saved"));
-        } catch (error) {
-          notify.error(t("settings.serverSaveFailed"), {
-            description: error instanceof Error ? error.message : String(error),
-          });
-        }
-      };
+  useEffect(() => {
+    onPrefsDirtyChange?.(isPrefsDirty);
+  }, [isPrefsDirty, onPrefsDirtyChange]);
 
-      return (
-        <section className="max-w-2xl space-y-6">
-          {!canEditSetup ? (
-            <SetupReadOnlyMessage title={t("attendance.settings.readOnly")} />
-          ) : (
-            <>
-              <AttendanceSettingsPreferencesSection t={t} settingsDraft={settingsDraft} upd={upd} />
+  const unsavedWarning = isPrefsDirty
+    ? t("attendance.setup.unsavedPreferencesWarning")
+    : undefined;
 
-              <ModuleSetupSaveFooter
-                dirty={isDirty}
-                saving={false}
-                saved={saved}
-                saveLabel={t("common.save")}
-                savedLabel={t("settings.savedBadge")}
-                onSave={() => void handleSave()}
-              />
-            </>
-          )}
-        </section>
-      );
-    });
+  return (
+    <div className="max-w-3xl space-y-6 text-start">
+      {!canEditSetup ? (
+        <SetupReadOnlyMessage title={t("attendance.settings.readOnly")} />
+      ) : (
+        <>
+          <AttendanceSettingsPreferencesSection
+            t={t}
+            settingsDraft={settingsDraft}
+            upd={upd}
+          />
+
+          <ModuleSetupSaveFooter
+            dirty={isPrefsDirty}
+            saving={saving}
+            saved={saved}
+            unsavedWarning={unsavedWarning}
+            saveLabel={t("common.save")}
+            savedLabel={t("settings.savedBadge")}
+            onSave={handleSave}
+          />
+        </>
+      )}
+    </div>
+  );
+});
+
+export default AttendanceSettings;

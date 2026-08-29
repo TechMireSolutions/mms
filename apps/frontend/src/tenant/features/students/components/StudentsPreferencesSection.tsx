@@ -1,5 +1,5 @@
 import React from "react";
-import { SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal, Hash } from "lucide-react";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,12 @@ export function StudentsPreferencesSection({
 
   return (
     <div className="space-y-4">
-      <SectionCard title={t("students.settings.grSectionTitle")} icon={SlidersHorizontal}>
+      <SectionCard
+        title={t("students.settings.grSectionTitle")}
+        icon={Hash}
+        accentColor="primary"
+        className="shadow-sm hover:shadow-md border-border/80"
+      >
         <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
             <Field
@@ -61,14 +66,22 @@ export function StudentsPreferencesSection({
         </div>
       </SectionCard>
 
-      <div className="mt-3 space-y-2 border-t border-border/60 pt-3" role="group" aria-label={t("students.settings.title")}>
-        <ToggleRow
-          label={t("students.settings.autoGenerateId")}
-          description={t("students.settings.autoGenerateIdDesc")}
-          value={settingsDraft.autoGenerateId}
-          onChange={(value) => upd("autoGenerateId", value)}
-        />
-      </div>
+      <SectionCard
+        title={t("students.settings.title")}
+        icon={SlidersHorizontal}
+        accentColor="primary"
+        className="shadow-sm hover:shadow-md border-border/80"
+      >
+        <div className="space-y-2 pt-1">
+          <ToggleRow
+            label={t("students.settings.autoGenerateId")}
+            description={t("students.settings.autoGenerateIdDesc")}
+            value={settingsDraft.autoGenerateId}
+            onChange={(value) => upd("autoGenerateId", value)}
+          />
+        </div>
+      </SectionCard>
     </div>
   );
 }
+

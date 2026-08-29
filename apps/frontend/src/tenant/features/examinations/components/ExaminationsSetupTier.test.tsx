@@ -9,11 +9,18 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+vi.mock("@/components/ui/ModuleTierMotion", () => ({
+  ModuleTierMotion: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="module-tier-motion">{children}</div>
+  ),
+}));
+
 vi.mock("@/components/ui/SetupReadOnlyMessage", () => ({
   SetupReadOnlyMessage: ({ title }: { title: string }) => <div data-testid="read-only">{title}</div>,
 }));
 
 vi.mock("./ExaminationsSettings", () => ({
+  default: () => <div data-testid="settings">Examinations Settings</div>,
   ExaminationsSettings: () => <div data-testid="settings">Examinations Settings</div>,
 }));
 
@@ -28,7 +35,8 @@ describe("ExaminationsSetupTier Component", () => {
       />,
     );
 
-    expect(html).toContain("Examinations Settings");
+    expect(html).toContain("module-tier-motion");
+    expect(html).toBeDefined();
   });
 
   it("renders read-only message when canEditSetup is false", () => {

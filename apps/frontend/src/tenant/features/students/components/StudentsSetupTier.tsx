@@ -11,7 +11,14 @@ const StudentsSetupPanel = lazy(
   () => import("@/tenant/features/students/components/StudentsSetupPanel"),
 );
 
-export const StudentsSetupTier = React.memo(function StudentsSetupTier(): React.JSX.Element {
+export interface StudentsSetupTierProps {
+  /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
+  onPrefsDirtyChange?: (isDirty: boolean) => void;
+}
+
+export const StudentsSetupTier = React.memo(function StudentsSetupTier({
+  onPrefsDirtyChange,
+}: StudentsSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(STUDENTS_MODULE_MANIFEST);
 
@@ -23,7 +30,7 @@ export const StudentsSetupTier = React.memo(function StudentsSetupTier(): React.
             <SetupReadOnlyMessage title={t("students.setupReadOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
-              <StudentsSetupPanel />
+              <StudentsSetupPanel onPrefsDirtyChange={onPrefsDirtyChange} />
             </Suspense>
           )}
         </div>

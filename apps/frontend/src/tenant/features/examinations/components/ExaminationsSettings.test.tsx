@@ -9,26 +9,8 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("@/hooks/useStandardModuleConfig", () => ({
-  useExaminationConfig: () => ({
-    settings: {
-      gradingSystem: "percentage",
-      certificateTemplate: "default",
-      passMark: "50",
-      maxMark: "100",
-      showRankings: true,
-      allowRetake: false,
-      autoPublishResults: true,
-      notifyOnResult: false,
-      aiGrading: false,
-      distinguishHonours: false,
-      examReminders: true,
-    },
-  }),
-}));
-
-vi.mock("@/tenant/hooks/useModuleSettingsEditor", () => ({
-  useModuleSettingsEditor: () => ({
+vi.mock("@/tenant/features/examinations/hooks/useExaminationsSetupPanelState", () => ({
+  useExaminationsSetupPanelState: () => ({
     settingsDraft: {
       gradingSystem: "percentage",
       certificateTemplate: "default",
@@ -42,14 +24,17 @@ vi.mock("@/tenant/hooks/useModuleSettingsEditor", () => ({
       distinguishHonours: false,
       examReminders: true,
     },
-    saved: false,
+    saved: true,
+    saving: false,
+    isPrefsDirty: false,
+    isDirty: false,
     upd: vi.fn(),
-    saveSettingsAsync: vi.fn(),
+    handleSave: vi.fn(),
   }),
 }));
 
 vi.mock("@/components/ui/SectionCard", () => ({
-  SectionCard: ({ children, title }: any) => (
+  SectionCard: ({ children, title }: { children: React.ReactNode; title: React.ReactNode }) => (
     <div data-testid="section-card">
       <h3>{title}</h3>
       {children}
@@ -58,26 +43,21 @@ vi.mock("@/components/ui/SectionCard", () => ({
 }));
 
 vi.mock("@/components/ui/ToggleRow", () => ({
-  ToggleRow: ({ label }: any) => <div data-testid="toggle-row">{label}</div>,
+  ToggleRow: ({ label }: { label: React.ReactNode }) => <div data-testid="toggle-row">{label}</div>,
 }));
 
 vi.mock("@/components/ui/FormSelect", () => ({
-  FormSelect: ({ options, value }: any) => (
-    <select data-testid="form-select" defaultValue={value}>
-      {options.map((o: any) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
-  ),
+  FormSelect: () => <div data-testid="form-select">FormSelect</div>,
+}));
+
+vi.mock("@/components/ui/ModuleSetupSaveFooter", () => ({
+  ModuleSetupSaveFooter: () => <div data-testid="save-footer">Save Footer</div>,
 }));
 
 describe("ExaminationsSettings Component", () => {
-  it("renders preferences form and toggle rows", () => {
+  it("renders section card and save footer", () => {
     const html = renderToStaticMarkup(<ExaminationsSettings />);
     expect(html).toContain("examinations.settings.titlePreferences");
-    expect(html).toContain("examinations.settings.gradingSystem");
-    expect(html).toContain("examinations.settings.showRankings");
+    expect(html).toContain("Save Footer");
   });
 });

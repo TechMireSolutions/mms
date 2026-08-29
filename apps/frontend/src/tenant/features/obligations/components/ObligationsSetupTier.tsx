@@ -1,10 +1,10 @@
+import React, { lazy, Suspense } from "react";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
-import { ObligationTypeManager } from "@/tenant/features/obligations/components/ObligationTypeManager";
-import { MujtahidManager } from "@/tenant/features/obligations/components/MujtahidManager";
-import { WakalaTypeManager } from "@/tenant/features/obligations/components/WakalaTypeManager";
+import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import type {
   ObligationDistribution,
   ObligationType,
@@ -13,12 +13,33 @@ import type {
   WakalaType,
 } from "@/lib/data/obligationsData";
 
-interface SetupTab {
+const ObligationTypeManager = lazy(
+  () =>
+    import(
+      "@/tenant/features/obligations/components/ObligationTypeManager"
+    ).then((m) => ({ default: m.ObligationTypeManager })),
+);
+
+const MujtahidManager = lazy(
+  () =>
+    import("@/tenant/features/obligations/components/MujtahidManager").then(
+      (m) => ({ default: m.MujtahidManager }),
+    ),
+);
+
+const WakalaTypeManager = lazy(
+  () =>
+    import(
+      "@/tenant/features/obligations/components/WakalaTypeManager"
+    ).then((m) => ({ default: m.WakalaTypeManager })),
+);
+
+export interface SetupTab {
   id: string;
   label: string;
 }
 
-interface ObligationsSetupTierProps {
+export interface ObligationsSetupTierProps {
   tabs: SetupTab[];
   activeTab: string;
   canEditSetup: boolean;
@@ -35,7 +56,7 @@ interface ObligationsSetupTierProps {
   onChangeDistributions: (distributions: ObligationDistribution[]) => Promise<void>;
 }
 
-export function ObligationsSetupTier({
+export const ObligationsSetupTier = React.memo(function ObligationsSetupTier({
   tabs,
   activeTab,
   canEditSetup,
@@ -50,45 +71,56 @@ export function ObligationsSetupTier({
   onChangeReps,
   onChangeWakala,
   onChangeDistributions,
-}: ObligationsSetupTierProps) {
+}: ObligationsSetupTierProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
-    <ErrorBoundary>
-      <SubTabBar
-        tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-        value={activeTab}
-        onChange={onTabChange}
-      />
+    <ModuleTierMotion tier="setup">
+      <ErrorBoundary>
+        <div className="space-y-4">
+          <SubTabBar
+            tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
+            value={activeTab}
+            onChange={onTabChange}
+          />
 
-      {!canEditSetup && (
-        <SetupReadOnlyMessage title={t("obligations.setup.readOnly")} />
-      )}
+          {!canEditSetup ? (
+            <SetupReadOnlyMessage title={t("obligations.setup.readOnly")} />
+          ) : (
+            <Suspense fallback={<ModulePanelSuspenseFallback />}>
+              {activeTab === "types" && (
+                <ObligationTypeManager
+                  types={obligationTypes}
+                  onChange={onChangeTypes}
+                />
+              )}
 
-      {canEditSetup && activeTab === "types" && (
-        <ObligationTypeManager types={obligationTypes} onChange={onChangeTypes} />
-      )}
+              {activeTab === "mujtahids" && (
+                <MujtahidManager
+                  mujtahids={mujtahids}
+                  reps={reps}
+                  onChangeMujtahids={onChangeMujtahids}
+                  onChangeReps={onChangeReps}
+                />
+              )}
 
-      {canEditSetup && activeTab === "mujtahids" && (
-        <MujtahidManager
-          mujtahids={mujtahids}
-          reps={reps}
-          onChangeMujtahids={onChangeMujtahids}
-          onChangeReps={onChangeReps}
-        />
-      )}
-
-      {canEditSetup && activeTab === "wakala" && (
-        <WakalaTypeManager
-          wakalaTypes={wakalaTypes}
-          distributions={distributions}
-          obligationTypes={obligationTypes}
-          reps={reps}
-          mujtahids={mujtahids}
-          onChangeWakala={onChangeWakala}
-          onChangeDistributions={onChangeDistributions}
-        />
-      )}
-    </ErrorBoundary>
+              {activeTab === "wakala" && (
+                <WakalaTypeManager
+                  wakalaTypes={wakalaTypes}
+                  distributions={distributions}
+                  obligationTypes={obligationTypes}
+                  reps={reps}
+                  mujtahids={mujtahids}
+                  onChangeWakala={onChangeWakala}
+                  onChangeDistributions={onChangeDistributions}
+                />
+              )}
+            </Suspense>
+          )}
+        </div>
+      </ErrorBoundary>
+    </ModuleTierMotion>
   );
-}
+});
+
+export default ObligationsSetupTier;

@@ -1,19 +1,35 @@
-import { motion } from "framer-motion";
+import React, { lazy, Suspense } from "react";
+import { SESSIONS_MODULE_MANIFEST } from "@mms/shared";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { SessionsSettings } from "@/tenant/features/sessions/components/SessionsSettings";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 
-export function SessionsSetupTier(): React.JSX.Element {
+const SessionsSettings = lazy(
+  () => import("@/tenant/features/sessions/components/SessionsSettings"),
+);
+
+export const SessionsSetupTier = React.memo(function SessionsSetupTier(): React.JSX.Element {
+  const { t } = useTranslation();
+  const { canEditSetup } = useModulePermissions(SESSIONS_MODULE_MANIFEST);
+
   return (
-    <motion.div
-      key="setup"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
-    >
+    <ModuleTierMotion tier="setup">
       <ErrorBoundary>
-        <SessionsSettings />
+        <div className="space-y-4">
+          {!canEditSetup ? (
+            <SetupReadOnlyMessage title={t("sessions.setupReadOnly")} />
+          ) : (
+            <Suspense fallback={<ModulePanelSuspenseFallback />}>
+              <SessionsSettings />
+            </Suspense>
+          )}
+        </div>
       </ErrorBoundary>
-    </motion.div>
+    </ModuleTierMotion>
   );
-}
+});
+
+export default SessionsSetupTier;

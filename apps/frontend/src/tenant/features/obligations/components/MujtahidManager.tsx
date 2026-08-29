@@ -6,6 +6,7 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { NameFormModal } from "@/tenant/features/obligations/components/MujtahidNameFormModal";
 import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
@@ -28,6 +29,8 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
   const { t } = useTranslation();
   const [modal, setModal] = useState<ModalState | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const [deleteMujtahidId, setDeleteMujtahidId] = useState<string | null>(null);
+  const [deleteRepId, setDeleteRepId] = useState<string | null>(null);
 
   const handleSaveMujtahid = async (form: Partial<Mujtahid>) => {
     if (modal?.mode === "add") {
@@ -38,10 +41,12 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
     setModal(null);
   };
 
-  const handleDeleteMujtahid = async (mujtahidId: string) => {
-    if (!confirm(t("obligations.mujtahids.deleteConfirm"))) return;
-    await onChangeMujtahids(mujtahids.filter((mujtahid) => mujtahid.id !== mujtahidId));
-    await onChangeReps(reps.filter((representative) => representative.mujtahid_id !== mujtahidId));
+  const handleConfirmDeleteMujtahid = async () => {
+    if (!deleteMujtahidId) return;
+    const targetId = deleteMujtahidId;
+    await onChangeMujtahids(mujtahids.filter((mujtahid) => mujtahid.id !== targetId));
+    await onChangeReps(reps.filter((representative) => representative.mujtahid_id !== targetId));
+    setDeleteMujtahidId(null);
   };
 
   const handleSaveRep = async (form: Partial<MujtahidRep>) => {
@@ -53,9 +58,11 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
     setModal(null);
   };
 
-  const handleDeleteRep = async (representativeId: string) => {
-    if (!confirm(t("obligations.mujtahids.repDeleteConfirm"))) return;
-    await onChangeReps(reps.filter((representative) => representative.id !== representativeId));
+  const handleConfirmDeleteRep = async () => {
+    if (!deleteRepId) return;
+    const targetId = deleteRepId;
+    await onChangeReps(reps.filter((representative) => representative.id !== targetId));
+    setDeleteRepId(null);
   };
 
   return (
@@ -101,7 +108,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                     className="rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
                     <Pencil className="w-4 h-4" aria-hidden="true" />
                   </Button>
-                  <Button type="button" aria-label={t("obligations.mujtahids.deleteAria", { name: mujtahid.name })} onClick={() => handleDeleteMujtahid(mujtahid.id)}
+                  <Button type="button" aria-label={t("obligations.mujtahids.deleteAria", { name: mujtahid.name })} onClick={() => setDeleteMujtahidId(mujtahid.id)}
                     variant="outline"
                     size="icon"
                     className="rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
@@ -124,7 +131,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
                             className="rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
                             <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
-                          <Button type="button" aria-label={t("obligations.mujtahids.repDeleteAria", { name: representative.name })} onClick={() => handleDeleteRep(representative.id)}
+                          <Button type="button" aria-label={t("obligations.mujtahids.repDeleteAria", { name: representative.name })} onClick={() => setDeleteRepId(representative.id)}
                             variant="outline"
                             size="icon"
                             className="rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
@@ -159,6 +166,32 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
           onClose={() => setModal(null)}
         />
       ) : null}
+
+      <ConfirmAlertDialog
+        open={Boolean(deleteMujtahidId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteMujtahidId(null);
+        }}
+        title={t("obligations.mujtahids.deleteConfirm")}
+        description={t("obligations.mujtahids.deleteConfirm")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={handleConfirmDeleteMujtahid}
+      />
+
+      <ConfirmAlertDialog
+        open={Boolean(deleteRepId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteRepId(null);
+        }}
+        title={t("obligations.mujtahids.repDeleteConfirm")}
+        description={t("obligations.mujtahids.repDeleteConfirm")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={handleConfirmDeleteRep}
+      />
     </div>
   );
 }

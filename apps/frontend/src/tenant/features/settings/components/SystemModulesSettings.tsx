@@ -24,7 +24,7 @@ export default function SystemModulesSettings(): React.JSX.Element {
     clearSaved,
   } = useSettingsGlobalDraft();
 
-  const platformSettings = useLiveObject<Record<string, any>>('platform_settings', {});
+  const platformSettings = useLiveObject<{ grantedModules?: Record<string, boolean> }>('platform_settings', {});
   const grantedModules = platformSettings?.grantedModules;
 
   const enabledModules = useMemo(

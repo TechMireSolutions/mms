@@ -5,6 +5,7 @@ import { WakalaFormModal } from "@/tenant/features/obligations/components/Wakala
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHeader } from "@/components/ui/SectionHeader";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { WakalaTypeCard } from "@/tenant/features/obligations/components/WakalaTypeCard";
 import { useWakalaTypeManager } from "@/tenant/features/obligations/components/useWakalaTypeManager";
 import type { WakalaTypeManagerProps } from "@/tenant/features/obligations/components/wakalaTypeManagerTypes";
@@ -22,6 +23,10 @@ export function WakalaTypeManager(props: WakalaTypeManagerProps) {
     t,
     modal,
     setModal,
+    deleteWakalaTargetId,
+    setDeleteWakalaTargetId,
+    deleteDistTargetId,
+    setDeleteDistTargetId,
     emDash,
     distributionTypeConfig,
     getRep,
@@ -30,9 +35,9 @@ export function WakalaTypeManager(props: WakalaTypeManagerProps) {
     getDistributions,
     totalPct,
     handleSaveWakala,
-    handleDeleteWakala,
+    handleConfirmDeleteWakala,
     handleSaveDist,
-    handleDeleteDist,
+    handleConfirmDeleteDist,
   } = useWakalaTypeManager(props);
 
   return (
@@ -74,9 +79,9 @@ export function WakalaTypeManager(props: WakalaTypeManagerProps) {
               distributionTypeConfig={distributionTypeConfig}
               t={t}
               onEdit={() => setModal({ mode: "edit", data: { ...wakalaType } })}
-              onDelete={() => { void handleDeleteWakala(wakalaType.id); }}
+              onDelete={() => setDeleteWakalaTargetId(wakalaType.id)}
               onEditDistribution={(distribution) => setModal({ mode: "edit-dist", distMode: "edit", data: { ...distribution } })}
-              onDeleteDistribution={(distributionId) => { void handleDeleteDist(distributionId); }}
+              onDeleteDistribution={(distributionId) => setDeleteDistTargetId(distributionId)}
               onAddDistribution={() => setModal({ mode: "add-dist", distMode: "add", data: { name: "", percentage: 0, wakala_type_id: wakalaType.id, type: "Liability" } })}
             />
           );
@@ -103,6 +108,32 @@ export function WakalaTypeManager(props: WakalaTypeManagerProps) {
           onClose={() => setModal(null)}
         />
       ) : null}
+
+      <ConfirmAlertDialog
+        open={Boolean(deleteWakalaTargetId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteWakalaTargetId(null);
+        }}
+        title={t("obligations.wakala.deleteConfirm")}
+        description={t("obligations.wakala.deleteConfirm")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={handleConfirmDeleteWakala}
+      />
+
+      <ConfirmAlertDialog
+        open={Boolean(deleteDistTargetId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteDistTargetId(null);
+        }}
+        title={t("obligations.wakala.distDeleteConfirm")}
+        description={t("obligations.wakala.distDeleteConfirm")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={handleConfirmDeleteDist}
+      />
     </div>
   );
 }

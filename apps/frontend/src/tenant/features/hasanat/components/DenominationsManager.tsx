@@ -5,6 +5,7 @@ import { Denomination } from '@/lib/data/hasanatData';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DenominationModal } from '@/tenant/features/hasanat/components/DenominationModal';
 import { cn } from '@/lib/utils';
@@ -29,6 +30,7 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
   const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
   const [editDenom, setEditDenom] = useState<Denomination | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Denomination | null>(null);
 
   const handleSave = async (denomination: Denomination) => {
     const existing = denoms.find((candidate) => candidate.id === denomination.id);
@@ -39,8 +41,12 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
   const toggleActive = (id: string) => {
     void onUpdate(denoms.map((denomination) => denomination.id === id ? { ...denomination, active: !denomination.active } : denomination));
   };
-  const handleDelete = (id: string) => {
-    void onUpdate(denoms.filter((denomination) => denomination.id !== id));
+
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    const targetId = deleteTarget.id;
+    await onUpdate(denoms.filter((denomination) => denomination.id !== targetId));
+    setDeleteTarget(null);
   };
 
   return (
@@ -94,7 +100,7 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
                   <Button variant="ghost" type="button" size="icon" aria-label={t('hasanat.denominations.editNamed', { name: denomination.name })} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
                     <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
-                  <Button variant="ghost" type="button" size="icon" aria-label={t('hasanat.denominations.deleteNamed', { name: denomination.name })} onClick={() => handleDelete(denomination.id)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                  <Button variant="ghost" type="button" size="icon" aria-label={t('hasanat.denominations.deleteNamed', { name: denomination.name })} onClick={() => setDeleteTarget(denomination)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
                 </div>
@@ -112,6 +118,19 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
           onSave={handleSave}
         />
       )}
+
+      <ConfirmAlertDialog
+        open={Boolean(deleteTarget)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null);
+        }}
+        title={t('hasanat.trash.deleteTitle')}
+        description={t('hasanat.denominations.deleteNamed', { name: deleteTarget?.name ?? "" })}
+        confirmLabel={t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        destructive
+        onConfirm={handleConfirmDelete}
+      />
     </section>
   );
 }

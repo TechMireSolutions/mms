@@ -1,44 +1,38 @@
-import { type TeachersSettings as TeachersSettingsType } from "@mms/shared";
 import React from "react";
 import { School } from "lucide-react";
-import {
-  TEACHERS_MODULE_MANIFEST,
-} from "@mms/shared";
-import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
+import { TEACHERS_MODULE_MANIFEST } from "@mms/shared";
 import { useTeacherLookupOptions } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
-import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { useTeachersSetupSaveActions } from "@/tenant/features/teachers/hooks/useTeachersSetupSaveActions";
+import { useTeachersSetupPanelState } from "@/tenant/features/teachers/hooks/useTeachersSetupPanelState";
 import { TeachersPreferencesSection } from "@/tenant/features/teachers/components/TeachersPreferencesSection";
 
-export const TeachersSettings = React.memo(function TeachersSettings(): React.JSX.Element {
+export interface TeachersSettingsProps {
+  /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
+  onPrefsDirtyChange?: (isDirty: boolean) => void;
+}
+
+export const TeachersSettings = React.memo(function TeachersSettings({
+  onPrefsDirtyChange,
+}: TeachersSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
-  const config = useTeacherConfig();
   const { specializationOptions } = useTeacherLookupOptions();
   const {
-    settings,
     settingsDraft,
     saved,
-    setSaved,
-    upd,
-  } = useModuleSettingsEditor<TeachersSettingsType>({
-    config,
-  });
-
-  const {
     saving,
     isPrefsDirty,
+    upd,
     handleSave,
-  } = useTeachersSetupSaveActions({
-    settings,
-    settingsDraft,
-    setSaved,
-  });
+  } = useTeachersSetupPanelState();
+
+  React.useEffect(() => {
+    onPrefsDirtyChange?.(isPrefsDirty);
+  }, [isPrefsDirty, onPrefsDirtyChange]);
 
   const unsavedWarning = isPrefsDirty
     ? t("teachers.setup.unsavedPreferencesWarning")
@@ -72,3 +66,5 @@ export const TeachersSettings = React.memo(function TeachersSettings(): React.JS
     </div>
   );
 });
+
+export default TeachersSettings;

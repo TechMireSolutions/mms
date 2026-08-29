@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { type StudentsSettings } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
@@ -12,6 +13,7 @@ export function useStudentsSetupPanelState() {
     saved,
     setSaved,
     upd,
+    discardDrafts,
   } = useModuleSettingsEditor<StudentsSettings>({
     config,
   });
@@ -26,6 +28,18 @@ export function useStudentsSetupPanelState() {
     setSaved,
   });
 
+  const dirtyRef = useRef({ prefs: false });
+
+  useEffect(() => {
+    dirtyRef.current.prefs = isPrefsDirty;
+  }, [isPrefsDirty]);
+
+  const discardSetupDrafts = () => {
+    discardDrafts();
+    dirtyRef.current = { prefs: false };
+    setSaved(true);
+  };
+
   return {
     settingsDraft,
     upd,
@@ -34,6 +48,9 @@ export function useStudentsSetupPanelState() {
     saving,
     isPrefsDirty,
     isDirty: isPrefsDirty,
+    dirtyRef,
     handleSave,
+    discardSetupDrafts,
   };
 }
+

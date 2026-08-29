@@ -9,18 +9,16 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+let mockCanEdit = true;
+
 vi.mock("@/tenant/hooks/usePermissions", () => ({
   useModulePermissions: () => ({
-    canEditSetup: true,
+    canEditSetup: mockCanEdit,
   }),
 }));
 
-vi.mock("@/hooks/useStandardModuleConfig", () => ({
-  useEnrollmentConfig: () => ({}),
-}));
-
-vi.mock("@/tenant/hooks/useModuleSettingsEditor", () => ({
-  useModuleSettingsEditor: () => ({
+vi.mock("@/tenant/features/enrollments/hooks/useEnrollmentsSetupPanelState", () => ({
+  useEnrollmentsSetupPanelState: () => ({
     settingsDraft: {
       maxStudentsPerClass: "30",
       dropDeadlineDays: "14",
@@ -30,10 +28,14 @@ vi.mock("@/tenant/hooks/useModuleSettingsEditor", () => ({
       enrollmentApproval: true,
       allowTransfers: true,
       reenrollmentReminder: true,
+      defaultViewLayout: "table",
     },
     saved: true,
+    saving: false,
+    isPrefsDirty: false,
+    isDirty: false,
     upd: vi.fn(),
-    saveSettings: vi.fn(),
+    handleSave: vi.fn(),
   }),
 }));
 
@@ -51,12 +53,19 @@ vi.mock("@/components/ui/ModuleSetupSaveFooter", () => ({
 }));
 
 describe("EnrollmentsSettings Component", () => {
-  it("renders settings fields and toggle rows", () => {
+  it("renders settings fields and toggle rows when canEditSetup is true", () => {
+    mockCanEdit = true;
     const html = renderToStaticMarkup(<EnrollmentsSettings />);
     expect(html).toContain("enrollments.settings.title");
     expect(html).toContain("enrollments.settings.maxStudentsPerClass");
     expect(html).toContain("30");
     expect(html).toContain("enrollments.settings.waitlistEnabled");
     expect(html).toContain("Save Footer");
+  });
+
+  it("renders read only message when canEditSetup is false", () => {
+    mockCanEdit = false;
+    const html = renderToStaticMarkup(<EnrollmentsSettings />);
+    expect(html).toContain("enrollments.setupReadOnly");
   });
 });

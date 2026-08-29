@@ -4,6 +4,7 @@ import { ObligationType } from '@/lib/data/obligationsData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { Button } from "@/components/ui/button";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ObligationTypeFormModal } from "@/tenant/features/obligations/components/ObligationTypeFormModal";
@@ -40,6 +41,8 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
     no: { label: t("common.no"), cls: SEMANTIC_BADGE.muted },
   }), [t]);
 
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
+
   const handleSave = async (form: Partial<ObligationType>) => {
     if (modal?.mode === "add") {
       await onChange([...types, { ...form, id: `ot${crypto.randomUUID()}`, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as ObligationType]);
@@ -49,9 +52,10 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
     setModal(null);
   };
 
-  const handleDelete = async (obligationTypeId: string) => {
-    if (!confirm(t("obligations.types.deleteConfirm"))) return;
-    await onChange(types.filter((obligationType) => obligationType.id !== obligationTypeId));
+  const handleConfirmDelete = async () => {
+    if (!deleteTargetId) return;
+    await onChange(types.filter((obligationType) => obligationType.id !== deleteTargetId));
+    setDeleteTargetId(null);
   };
 
   return (
@@ -72,7 +76,7 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
         designatedConfig={designatedConfig}
         quantityConfig={quantityConfig}
         onEdit={(obligationType) => setModal({ mode: "edit", data: { ...obligationType } })}
-        onDelete={(obligationTypeId) => { void handleDelete(obligationTypeId); }}
+        onDelete={(obligationTypeId) => setDeleteTargetId(obligationTypeId)}
       />
 
       {modal ? (
@@ -83,6 +87,19 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
           onClose={() => setModal(null)}
         />
       ) : null}
+
+      <ConfirmAlertDialog
+        open={Boolean(deleteTargetId)}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTargetId(null);
+        }}
+        title={t("obligations.types.deleteConfirm")}
+        description={t("obligations.types.deleteConfirm")}
+        confirmLabel={t("common.delete")}
+        cancelLabel={t("common.cancel")}
+        destructive
+        onConfirm={handleConfirmDelete}
+      />
     </div>
   );
 }

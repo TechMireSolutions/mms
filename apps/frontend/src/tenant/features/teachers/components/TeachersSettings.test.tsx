@@ -8,32 +8,19 @@ vi.mock("@/tenant/hooks/usePermissions", () => ({
   useModulePermissions: () => ({ canEditSetup: true }),
 }));
 
-vi.mock("@/hooks/useStandardModuleConfig", () => ({
-  useTeacherConfig: () => ({
-    settings: DEFAULT_TEACHERS_SETTINGS,
-  }),
-}));
-
 vi.mock("@/tenant/features/teachers/hooks/useTeacherStatusConfig", () => ({
   useTeacherLookupOptions: () => ({
     specializationOptions: ["Tajweed", "Hifz"],
   }),
 }));
 
-vi.mock("@/tenant/hooks/useModuleSettingsEditor", () => ({
-  useModuleSettingsEditor: () => ({
-    settings: DEFAULT_TEACHERS_SETTINGS,
+vi.mock("@/tenant/features/teachers/hooks/useTeachersSetupPanelState", () => ({
+  useTeachersSetupPanelState: () => ({
     settingsDraft: DEFAULT_TEACHERS_SETTINGS,
     saved: false,
-    setSaved: vi.fn(),
-    upd: vi.fn(),
-  }),
-}));
-
-vi.mock("@/tenant/features/teachers/hooks/useTeachersSetupSaveActions", () => ({
-  useTeachersSetupSaveActions: () => ({
     saving: false,
     isPrefsDirty: false,
+    upd: vi.fn(),
     handleSave: vi.fn(),
   }),
 }));

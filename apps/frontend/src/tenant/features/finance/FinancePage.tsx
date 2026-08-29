@@ -13,7 +13,7 @@ import { InvoiceForm } from "@/tenant/features/finance/components/InvoiceForm";
 import { PaymentForm } from "@/tenant/features/finance/components/PaymentForm";
 import { PaymentsList } from "@/tenant/features/finance/components/PaymentsList";
 import { PaymentDetail } from "@/tenant/features/finance/components/PaymentDetail";
-import { FinanceSettings } from "@/tenant/features/finance/components/FinanceSettings";
+import { FinanceSetupTier } from "@/tenant/features/finance/components/FinanceSetupTier";
 import ModuleReports from "@/components/ui/reports/ModuleReports";
 import KPISummary from "@/components/ui/reports/KPISummary";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -74,7 +74,7 @@ export default function Finance(): React.JSX.Element {
                   <ModuleReports category="financial" />
                 </div>
               )}
-              {c.activeTab === "setup" && <FinanceSettings />}
+              {c.activeTab === "setup" && <FinanceSetupTier />}
 
               {c.activeTab === "work" && c.activeSubTab === "invoices" && c.invoicesResult.isError ? (
                 <ErrorState
