@@ -40,4 +40,8 @@ export function loadBackendEnv(): void {
       }
     }
   }
+
+  if (process.env.NODE_ENV === 'test') {
+    process.env.MMS_APP_DOMAIN = 'mms.local';
+  }
 }

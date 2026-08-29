@@ -575,6 +575,13 @@
       "when": 1786752000000,
       "tag": "0081_drop_retired_contact_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 82,
+      "version": "7",
+      "when": 1786755600000,
+      "tag": "0082_new_modules",
+      "breakpoints": true
     }
   ]
 }

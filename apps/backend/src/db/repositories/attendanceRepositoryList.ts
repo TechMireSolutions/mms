@@ -7,9 +7,8 @@ import {
   type AttendanceListQuery,
   type AttendanceListPageResult,
 } from '@mms/shared';
-import { attendance } from '../schema.js';
+import { attendance, sessionClasses, sessions } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
-import { runListPage } from './listPageHelper.js';
 
 function buildAttendanceListConditions(subdomain: string, query: AttendanceListQuery): SQL[] {
   const conditions: SQL[] = [eq(attendance.workspaceSubdomain, subdomain)];
@@ -34,6 +33,31 @@ function buildAttendanceListConditions(subdomain: string, query: AttendanceListQ
 
   if (query.classId?.trim()) {
     conditions.push(eq(attendance.classId, query.classId.trim()));
+  }
+  const sessionId = query.sessionId?.trim();
+  const teacherId = query.teacherId?.trim();
+  if (sessionId && teacherId) {
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${sessionClasses} sc
+      WHERE sc.workspace_subdomain = ${attendance.workspaceSubdomain}
+        AND sc.id = ${attendance.classId}
+        AND sc.session_id = ${sessionId}
+        AND sc.teacher_id = ${teacherId}
+    )`);
+  } else if (sessionId) {
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${sessionClasses} sc
+      WHERE sc.workspace_subdomain = ${attendance.workspaceSubdomain}
+        AND sc.id = ${attendance.classId}
+        AND sc.session_id = ${sessionId}
+    )`);
+  } else if (teacherId) {
+    conditions.push(sql`EXISTS (
+      SELECT 1 FROM ${sessionClasses} sc
+      WHERE sc.workspace_subdomain = ${attendance.workspaceSubdomain}
+        AND sc.id = ${attendance.classId}
+        AND sc.teacher_id = ${teacherId}
+    )`);
   }
   if (query.date?.trim()) {
     conditions.push(eq(attendance.date, query.date.trim()));
@@ -111,20 +135,62 @@ export async function listAttendancePage(
 ): Promise<AttendanceListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
-    const result = await runListPage<AttendanceRow, AttendanceRecord>(tx, attendance, {
-      conditions: buildAttendanceListConditions(subdomain, query),
-      orderBy: buildAttendanceOrderBy(query.sortField, query.sortDir),
-      page: query.page,
-      limit: query.limit,
-      defaultPageSize: 15,
-      rowMapper: rowToRecord,
+    const page = Math.max(1, query.page ?? 1);
+    const limit = Math.min(Math.max(1, query.limit ?? 15), 500);
+    const offset = (page - 1) * limit;
+
+    const conditions = buildAttendanceListConditions(subdomain, query);
+    const whereClause = and(...conditions);
+
+    const countRows = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(attendance)
+      .where(whereClause);
+    const total = Number(countRows[0]?.count ?? 0);
+
+    const classJoinConditions: SQL[] = [
+      eq(attendance.workspaceSubdomain, sessionClasses.workspaceSubdomain),
+      eq(attendance.classId, sessionClasses.id),
+    ];
+    if (query.sessionId?.trim()) {
+      classJoinConditions.push(eq(sessionClasses.sessionId, query.sessionId.trim()));
+    }
+    if (query.teacherId?.trim()) {
+      classJoinConditions.push(eq(sessionClasses.teacherId, query.teacherId.trim()));
+    }
+
+    const rows = await tx
+      .select({
+        attendance: attendance,
+        sessionId: sessionClasses.sessionId,
+        sessionName: sessions.name,
+        teacherId: sessionClasses.teacherId,
+      })
+      .from(attendance)
+      .leftJoin(sessionClasses, and(...classJoinConditions))
+      .leftJoin(sessions, and(
+        eq(sessionClasses.workspaceSubdomain, sessions.workspaceSubdomain),
+        eq(sessionClasses.sessionId, sessions.id)
+      ))
+      .where(whereClause)
+      .orderBy(buildAttendanceOrderBy(query.sortField, query.sortDir))
+      .limit(limit)
+      .offset(offset);
+
+    const records = rows.map((r) => {
+      const rec = rowToRecord(r.attendance);
+      rec.sessionId = r.sessionId ?? '';
+      rec.sessionName = r.sessionName ?? '';
+      rec.teacherId = r.teacherId ?? '';
+      return rec;
     });
+
     return {
-      records: result.items,
-      total: result.total,
-      page: result.page,
-      limit: result.limit,
-      hasMore: result.hasMore,
+      records,
+      total,
+      page,
+      limit,
+      hasMore: page * limit < total,
     };
   });
 }

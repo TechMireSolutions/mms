@@ -1,0 +1,94 @@
+import { pgTable, text, timestamp, numeric, varchar, integer, primaryKey, foreignKey } from "drizzle-orm/pg-core";
+import { workspaces } from "./platform.js";
+import { contacts } from "./contacts.js";
+import { students } from "./students.js";
+
+export const workshopEvents = pgTable('workshop_events', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  description: text('description'),
+  startDate: timestamp('start_date', { withTimezone: true, mode: 'date' }),
+  endDate: timestamp('end_date', { withTimezone: true, mode: 'date' }),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+]);
+
+export const workshopParticipants = pgTable('workshop_participants', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  workshopId: text('workshop_id').notNull(),
+  contactId: text('contact_id').notNull(),
+  status: varchar('status', { length: 20 }).default('registered').notNull(), // 'registered' | 'attended' | 'completed'
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.workshopId],
+    foreignColumns: [workshopEvents.workspaceSubdomain, workshopEvents.id],
+  }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
+]);
+
+export const workshopScores = pgTable('workshop_scores', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  workshopId: text('workshop_id').notNull(),
+  participantId: text('participant_id').notNull(),
+  criterionName: text('criterion_name').notNull(),
+  score: numeric('score', { precision: 15, scale: 2 }).notNull(),
+  maxScore: numeric('max_score', { precision: 15, scale: 2 }).notNull(),
+  remarks: text('remarks'),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.workshopId],
+    foreignColumns: [workshopEvents.workspaceSubdomain, workshopEvents.id],
+  }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.participantId],
+    foreignColumns: [workshopParticipants.workspaceSubdomain, workshopParticipants.id],
+  }).onDelete('cascade'),
+]);
+
+export const competitionEvents = pgTable('competition_events', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  eventDate: timestamp('event_date', { withTimezone: true, mode: 'date' }),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+]);
+
+export const competitionParticipants = pgTable('competition_participants', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  competitionId: text('competition_id').notNull(),
+  studentId: text('student_id').notNull(),
+  rank: integer('rank'),
+  score: numeric('score', { precision: 15, scale: 2 }),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.competitionId],
+    foreignColumns: [competitionEvents.workspaceSubdomain, competitionEvents.id],
+  }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.studentId],
+    foreignColumns: [students.workspaceSubdomain, students.id],
+  }).onDelete('cascade'),
+]);
+
+export type WorkshopEvent = typeof workshopEvents.$inferSelect;
+export type NewWorkshopEvent = typeof workshopEvents.$inferInsert;
+export type WorkshopParticipant = typeof workshopParticipants.$inferSelect;
+export type NewWorkshopParticipant = typeof workshopParticipants.$inferInsert;
+export type WorkshopScore = typeof workshopScores.$inferSelect;
+export type NewWorkshopScore = typeof workshopScores.$inferInsert;
+export type CompetitionEvent = typeof competitionEvents.$inferSelect;
+export type NewCompetitionEvent = typeof competitionEvents.$inferInsert;
+export type CompetitionParticipant = typeof competitionParticipants.$inferSelect;
+export type NewCompetitionParticipant = typeof competitionParticipants.$inferInsert;

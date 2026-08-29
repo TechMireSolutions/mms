@@ -119,6 +119,26 @@ describe('attendance REST routes integration', () => {
     await app.close();
   });
 
+  it('GET /api/attendance forwards session and teacher filters', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/attendance?page=2&sessionId=session-1&teacherId=teacher-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadAttendancePage).toHaveBeenCalledWith(expect.objectContaining({
+      page: 2,
+      sessionId: 'session-1',
+      teacherId: 'teacher-1',
+    }));
+    await app.close();
+  });
+
   it('PUT /api/attendance/bulk upserts only supplied records', async () => {
     mockUpsertAttendanceRecords.mockResolvedValueOnce([attendanceRecord]);
 

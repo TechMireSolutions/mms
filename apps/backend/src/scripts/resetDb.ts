@@ -2,9 +2,28 @@ import pg from 'pg';
 import { loadBackendEnv } from '../config/loadEnv.js';
 import { initDb, closeDatabase } from '../db/database.js';
 
+import readline from 'node:readline/promises';
+import { stdin as input, stdout as output } from 'node:process';
+
 loadBackendEnv();
 
 async function resetAndRecreateDb() {
+  const isTest = process.env.NODE_ENV === 'test';
+  const isNonInteractive = !input.isTTY;
+  const hasForceFlag = process.argv.includes('--confirm') || process.argv.includes('--force');
+
+  if (!isTest && !isNonInteractive && !hasForceFlag) {
+    const rl = readline.createInterface({ input, output });
+    try {
+      const answer = await rl.question('⚠️  WARNING: This script will drop ALL tables, views, and delete ALL data in the database. Are you sure you want to proceed? (yes/no): ');
+      if (answer.trim().toLowerCase() !== 'yes') {
+        console.log('Database reset aborted.');
+        process.exit(0);
+      }
+    } finally {
+      rl.close();
+    }
+  }
   const connectionString = process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/mms';
   console.log('[1/2] Clearing database objects...');
   const pool = new pg.Pool({ connectionString });

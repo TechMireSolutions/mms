@@ -15,3 +15,6 @@ export * from "./messaging.js";
 export * from "./dashboard.js";
 export * from "./users.js";
 export * from "./relations.js";
+export * from "./inventory.js";
+export * from "./charity.js";
+export * from "./workshops.js";
