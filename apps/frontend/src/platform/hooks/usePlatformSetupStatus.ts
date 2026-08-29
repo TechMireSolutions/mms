@@ -17,7 +17,7 @@ export function usePlatformSetupStatus(): {
   const query = useQuery({
     queryKey: PLATFORM_SETUP_STATUS_QUERY_KEY,
     queryFn: async ({ signal }) => {
-      return await apiJson<PlatformSetupStatus>('/api/platform/setup/status', {
+      return await apiJson<PlatformSetupStatus>('/api/platform/auth/setup/status', {
         signal,
       });
     },

@@ -80,7 +80,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
           <Link
             to={ROUTES.home}
             onClick={onClose}
-            className="flex min-w-0 flex-1 items-center gap-3 overflow-hidden hover:opacity-90 transition-opacity"
+            className="flex min-h-11 min-w-11 min-w-0 flex-1 items-center gap-3 overflow-hidden hover:opacity-90 transition-opacity"
           >
             {branding.logoUrl && !logoError ? (
               <img

@@ -260,7 +260,6 @@ async function runMigration() {
     let timetableCount = 0;
     for (const tt of mysqlTimetable) {
       const classId = classMap.get(Number(tt.class_id));
-      const teacherId = teacherMap.get(tt.teacher_id) || firstTeacherId;
       const sessionId = tt.session_id ? sessionMap.get(tt.session_id) : null;
       if (!classId || !sessionId) continue;
 
