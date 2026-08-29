@@ -987,6 +987,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "branding.contactTitle": "رابطہ",
   "branding.country": "ملک",
   "branding.countryPlaceholder": "مثلاً برطانیہ",
+  "branding.locationGlobalDefaultsNote": "یہ مقام کی تفصیلات پورے سسٹم میں بنیادی ڈیفالٹ اقدار کے طور پر استعمال ہوں گی۔",
   "branding.email": "ای میل",
   "branding.emailPlaceholder": "info@yourmadrasa.org",
   "branding.favicon": "فیویکن",

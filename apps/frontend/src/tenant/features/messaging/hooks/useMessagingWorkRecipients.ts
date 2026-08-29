@@ -113,6 +113,6 @@ export function useMessagingWorkRecipients(
         void query.refetch();
       },
     }),
-    [data, page, pageSize, query.isError, query.isPending, query.isFetching, query.refetch],
+    [data, page, pageSize, query],
   );
 }

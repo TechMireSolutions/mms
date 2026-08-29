@@ -73,7 +73,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     setBaselineSnapshot(studentDraftSnapshot(nextDraft));
     setValidationErrors([]);
     grManuallyEdited.current = false;
-  }, [student?.id]);
+  }, [student, fields]);
 
   const updateDraft = (patch: Partial<Student>) => {
     setStudentDraft((prev) => ({ ...prev, ...patch }));

@@ -27,7 +27,7 @@ interface ObligationCollectionWakalaSectionProps {
 export function ObligationCollectionWakalaSection({
   form,
   setForm,
-  errors,
+  errors: _errors,
   obligationTypes,
   eligibleReps,
   getMujtahid,

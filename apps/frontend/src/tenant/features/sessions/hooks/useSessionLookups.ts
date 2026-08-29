@@ -7,15 +7,13 @@ import {
 import { apiContract } from '@/lib/api';
 import { createModuleLookupsHooks } from '@/lib/query/createModuleLookupsHooks';
 
-const SESSIONS_API = SESSIONS_MODULE_MANIFEST.restBasePath;
-
 export const SESSIONS_LOOKUPS_QUERY_KEY = [
   SESSIONS_MODULE_MANIFEST.collectionKey,
   'lookups',
 ] as const;
 
 export async function fetchSessionLookups(
-  signal?: AbortSignal,
+  _signal?: AbortSignal,
 ): Promise<SessionLookupsMap> {
   const res = await apiContract.sessions.getLookups({ query: undefined, extraHeaders: {} });
   const response = res.body as any;

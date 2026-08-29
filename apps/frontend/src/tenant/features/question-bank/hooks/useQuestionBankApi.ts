@@ -24,10 +24,12 @@ export const QUESTION_BANK_RESULTS_QUERY_KEY = [QUESTION_BANK_MODULE_MANIFEST.mo
 export function useQuestionBankQuestions(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const { isAuthenticated } = useAuth();
   const includeDeleted = options?.includeDeleted ?? false;
+  const enabled = options?.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.questionBank.listQuestions.useQuery({
     queryKey: [...QUESTION_BANK_QUESTIONS_QUERY_KEY, { includeDeleted }] as any,
     queryData: { query: { includeDeleted: includeDeleted ? 'true' : undefined } },
+    enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
 }
@@ -42,13 +44,13 @@ export function useQuestionBankQuestionsCollection(options?: {
   return Array.isArray(body) ? body : (body?.questions ?? []);
 }
 
-
-
 export function useQuestionBankTests(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.questionBank.listTests.useQuery({
     queryKey: QUESTION_BANK_TESTS_QUERY_KEY,
+    enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
 }
@@ -62,9 +64,11 @@ export function useQuestionBankTestsCollection(options?: { enabled?: boolean }):
 
 export function useQuestionBankResults(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.questionBank.listResults.useQuery({
     queryKey: QUESTION_BANK_RESULTS_QUERY_KEY,
+    enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
 }

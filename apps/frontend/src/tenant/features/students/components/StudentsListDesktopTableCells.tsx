@@ -41,7 +41,7 @@ export function renderStudentsListDesktopTableCell({
   displayName,
   emptyDash,
   statusBadgeConfig,
-  isColumnVisible,
+  isColumnVisible: _isColumnVisible,
   onViewStudent,
   viewingDeleted,
   canWriteMessaging,

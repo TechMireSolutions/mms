@@ -12,9 +12,9 @@ export * from './contactPreferenceConstants.js';
 export * from './contactRelationshipPairUtils.js';
 
 export const DEFAULT_CONTACT_PREFERENCES: ContactPreferences = {
-  defaultCountry: "Pakistan",
-  defaultProvince: "Punjab",
-  defaultCity: "Lahore",
+  defaultCountry: "",
+  defaultProvince: "",
+  defaultCity: "",
   defaultViewLayout: "list",
   duplicateDetectionFields: ["name", "phone", "email"],
   duplicateDetectionThresholdHigh: 90,

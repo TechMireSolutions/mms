@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
 import { QUESTION_TYPE_ICONS, isQuestionSourceFieldId, type QuestionBankQuestion } from '@mms/shared';
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
@@ -8,8 +7,6 @@ import type { useQuestionBankConfig } from '@/tenant/features/question-bank/hook
 type QuestionBankConfig = ReturnType<typeof useQuestionBankConfig>;
 
 export function useQuestionBankDisplayConfig(config: QuestionBankConfig) {
-  const { t } = useTranslation();
-
   const difficultyConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
     easy: { label: config.difficultyLabel('easy'), cls: SEMANTIC_BADGE.success },
     medium: { label: config.difficultyLabel('medium'), cls: SEMANTIC_BADGE.warning },

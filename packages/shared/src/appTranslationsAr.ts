@@ -987,6 +987,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "branding.contactTitle": "التواصل",
   "branding.country": "الدولة",
   "branding.countryPlaceholder": "مثال: المملكة المتحدة",
+  "branding.locationGlobalDefaultsNote": "ستُستخدم تفاصيل الموقع هذه كقيم افتراضية عبر النظام بأكمله.",
   "branding.email": "البريد",
   "branding.emailPlaceholder": "info@yourmadrasa.org",
   "branding.favicon": "أيقونة الموقع",

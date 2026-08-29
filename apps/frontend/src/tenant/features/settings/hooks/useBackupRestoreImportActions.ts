@@ -75,7 +75,7 @@ export function useBackupRestoreImportActions({
         setSafetyStep(false);
       }
     },
-    [adminEmail, downloadSafetyBackup, errorDescription, t],
+    [adminEmail, downloadSafetyBackup, errorDescription, setSafetyReady, setSafetyStep, t],
   );
 
   const beginRestore = useCallback(

@@ -36,7 +36,7 @@ export type StudentsListDesktopTableRowProps = Pick<
 export function StudentsListDesktopTableRow({
   studentRow,
   rowIndex,
-  sessions,
+  sessions: _sessions,
   selectedIds,
   viewingDeleted,
   canWrite,

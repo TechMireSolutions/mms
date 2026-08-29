@@ -329,6 +329,9 @@ export default function InstitutionSetup(): React.JSX.Element {
                       </div>
                     </div>
                   </div>
+                  <p className="text-xs text-muted-foreground pt-1">
+                    {t('branding.locationGlobalDefaultsNote')}
+                  </p>
                 </SectionCard>
               </div>
 

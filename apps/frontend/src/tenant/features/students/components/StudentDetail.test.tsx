@@ -5,7 +5,7 @@ import type { Student } from "@mms/shared";
 import { StudentDetail } from "./StudentDetail";
 
 vi.mock("@/tenant/features/students/components/useStudentDetailModel", () => ({
-  useStudentDetailModel: (student: Student) => ({
+  useStudentDetailModel: (_student: Student) => ({
     t: (key: string, params?: Record<string, string | number>) => {
       if (params?.gr) return `GR: ${params.gr}`;
       return key;

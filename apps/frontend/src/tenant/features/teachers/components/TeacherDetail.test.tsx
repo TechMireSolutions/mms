@@ -12,7 +12,7 @@ vi.mock("@/hooks/useStandardModuleConfig", () => ({
 }));
 
 vi.mock("@/tenant/features/teachers/components/useTeacherDetailModel", () => ({
-  useTeacherDetailModel: (teacher: Teacher) => ({
+  useTeacherDetailModel: (_teacher: Teacher) => ({
     statusConfig: {},
     detailFields: [],
     linkedContact: null,

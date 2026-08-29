@@ -49,9 +49,11 @@ export function useUsersMetrics(options?: { enabled?: boolean }) {
 }
 
 export function useActivityLogs(options?: { enabled?: boolean }) {
+  const enabled = options?.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.users.activity.useQuery({
     queryKey: ACTIVITY_LOGS_QUERY_KEY,
+    enabled,
     staleTime: 15_000,
   });
 }

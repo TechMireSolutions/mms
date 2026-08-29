@@ -47,7 +47,6 @@ export const StudentDetail = React.memo(function StudentDetail({
     t,
     statusBadgeConfig,
     sortedEnabledFields,
-    relationshipLinks,
     hydratedRelationships,
     studentContactProfile,
     age,

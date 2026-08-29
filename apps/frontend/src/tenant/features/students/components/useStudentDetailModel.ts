@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import {
   DEFAULT_STUDENT_ENABLED_TABS,
-  listStudentContactRelationships,
   resolveStudentGuardianLinks,
   mergeStoredAndDerivedSiblingLinks,
   getContactTags,
@@ -42,11 +41,6 @@ export function useStudentDetailModel(student: Student) {
 
   const { data: primaryContact } = useContactById(
     student.contactId != null ? String(student.contactId) : undefined,
-  );
-
-  const rawRelationshipLinks = useMemo(
-    () => listStudentContactRelationships(primaryContact ?? null),
-    [primaryContact],
   );
 
   const guardians = useMemo(

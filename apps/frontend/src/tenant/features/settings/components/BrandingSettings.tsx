@@ -99,6 +99,9 @@ export default function BrandingSettings(): React.JSX.Element {
               <Input id="country" value={data.country} autoComplete="country-name" onChange={(event) => upd('country', event.target.value)} />
             </div>
           </div>
+          <p className="text-xs text-muted-foreground pt-1">
+            {t('branding.locationGlobalDefaultsNote')}
+          </p>
         </div>
       </SectionCard>
 

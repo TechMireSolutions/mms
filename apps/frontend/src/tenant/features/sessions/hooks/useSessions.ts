@@ -20,8 +20,6 @@ export const SESSIONS_REPORT_AGGREGATES_QUERY_KEY = [
   'report-aggregates',
 ] as const;
 
-const SESSIONS_API = SESSIONS_MODULE_MANIFEST.restBasePath;
-
 export interface SessionsPaginatedParams {
   page: number;
   limit?: number;
@@ -43,19 +41,6 @@ export interface SessionsWidgetAggregateWidgetInput {
   filterOperator?: 'equals' | 'contains' | 'gt' | 'lt';
   filterValue?: string;
   xAxisField?: string;
-}
-
-function buildSessionsPageUrl(params: SessionsPaginatedParams): string {
-  const queryParams = new URLSearchParams();
-  queryParams.set('page', String(params.page));
-  queryParams.set('limit', String(params.limit ?? SESSIONS_MODULE_MANIFEST.defaultPageSize));
-  if (params.search?.trim()) queryParams.set('search', params.search.trim());
-  if (params.status?.trim()) queryParams.set('status', params.status.trim());
-  if (params.type?.trim()) queryParams.set('type', params.type.trim());
-  if (params.sortField?.trim()) queryParams.set('sortField', params.sortField.trim());
-  if (params.sortDir) queryParams.set('sortDir', params.sortDir);
-  if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
-  return `${SESSIONS_API}?${queryParams.toString()}`;
 }
 
 export function useSessionsPaginated(params: SessionsPaginatedParams) {
@@ -82,10 +67,12 @@ export function useSessionsPaginated(params: SessionsPaginatedParams) {
 
 export function useSessions(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.sessions.list.useQuery({
     queryKey: SESSIONS_QUERY_KEY,
     queryData: { query: { page: 1, limit: 100, sortField: 'createdAt', sortDir: 'desc' } as any },
+    enabled: isAuthenticated && enabled,
     staleTime: 15_000,
   });
 }

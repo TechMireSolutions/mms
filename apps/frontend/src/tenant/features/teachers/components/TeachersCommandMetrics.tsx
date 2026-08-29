@@ -36,7 +36,7 @@ export const TeachersCommandMetrics = React.memo(function TeachersCommandMetrics
     { icon: Filter, label: t("teachers.metrics.filtered"), value: shown, accent: "info" as const },
     { icon: UserCheck, label: t("teachers.metrics.active"), value: metrics.active, accent: teacherStatusMetricAccent(activeStatus) },
     { icon: UserX, label: t("teachers.metrics.inactive"), value: metrics.inactive, accent: teacherStatusMetricAccent(inactiveStatus) },
-  ], [t, shown, metrics, activeStatus, inactiveStatus, onLeaveStatus]);
+  ], [t, shown, metrics, activeStatus, inactiveStatus]);
 
   return <ModuleCommandMetricsGrid items={items} />;
 });

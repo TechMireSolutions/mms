@@ -22,7 +22,6 @@ export function TeacherDetailSessionsSection({
   error,
 }: TeacherDetailSessionsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
-  const emptyDash = t("teachers.table.emptyDash");
 
   if (loading) {
     return (

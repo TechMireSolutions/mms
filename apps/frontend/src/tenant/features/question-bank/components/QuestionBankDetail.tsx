@@ -30,9 +30,6 @@ export const QuestionBankDetail = React.memo(function QuestionBankDetail({
   const { t } = useTranslation();
   const isArchived = !!question.deletedAt;
 
-  
-  const category = config.categories.find(c => c.id === question.categoryId);
-
   return (
     <DetailDrawerShell
       open

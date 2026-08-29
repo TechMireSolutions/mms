@@ -76,7 +76,6 @@ export function useTeachersPageController() {
     setSearch,
     debouncedSearch,
     filterStatus,
-    setFilterStatus,
     filterSpecialization,
     setFilterSpecialization,
     filterGender,

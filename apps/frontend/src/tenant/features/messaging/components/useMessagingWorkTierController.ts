@@ -234,7 +234,8 @@ export function useMessagingWorkTierController({
     t,
   }), [
     debouncedSearch, channel, status, category, queryStartDate, endDate,
-    channelSelectOptions, statusOptions, categorySelectOptions, t
+    channelSelectOptions, statusOptions, categorySelectOptions, t,
+    setSearch, setChannel, setStatus, setCategory, setStartDate, setEndDate
   ]);
 
   return {

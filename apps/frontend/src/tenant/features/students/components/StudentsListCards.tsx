@@ -17,7 +17,7 @@ export type { StudentsListCardsProps };
 
 export function StudentsListCards({
   paginatedStudents,
-  sessions,
+  sessions: _sessions,
   selectedIds,
   allSelected,
   someSelected,

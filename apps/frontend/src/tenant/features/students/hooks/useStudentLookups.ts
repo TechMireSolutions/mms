@@ -9,7 +9,7 @@ import { createModuleLookupsHooks } from "@/lib/query/createModuleLookupsHooks";
 
 export const STUDENTS_LOOKUPS_QUERY_KEY = [STUDENTS_MODULE_MANIFEST.collectionKey, "lookups"] as const;
 
-async function fetchStudentLookups(signal?: AbortSignal): Promise<StudentLookupsMap> {
+async function fetchStudentLookups(_signal?: AbortSignal): Promise<StudentLookupsMap> {
   const res = await apiContract.students.getLookups({ query: undefined, extraHeaders: {} });
     const response = res.body as any;
   return response.lookups ?? emptyStudentLookupsMap();

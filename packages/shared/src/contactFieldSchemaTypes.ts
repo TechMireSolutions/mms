@@ -75,9 +75,9 @@ export interface FieldConfig {
 
 /** Tenant and user preferences for contact views, defaults, and duplicate scoring thresholds. */
 export interface ContactPreferences {
-  defaultCountry: string;
-  defaultProvince: string;
-  defaultCity: string;
+  defaultCountry?: string;
+  defaultProvince?: string;
+  defaultCity?: string;
   defaultViewLayout?: string;
   namePrefixesToIgnore?: string[];
   duplicateDetectionFields?: string[];

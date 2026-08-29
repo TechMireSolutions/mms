@@ -4,7 +4,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/DatePicker";
 
 import { useTranslation } from "@/hooks/useTranslation";
-import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 import { useWorkspaceRoles } from "@/tenant/hooks/useWorkspaceRoles";
 import { todayISO } from "@mms/shared";
 import { FieldError } from "./AddUserModalFieldHelpers";
@@ -15,9 +14,6 @@ export function Step2({ form, setForm, errors }: AddUserStepProps): JSX.Element 
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
   const selectRole = (id: string): void => setForm((previousForm) => ({ ...previousForm, role: id }));
-
-  const { orderedFields } = useUsersConfig();
-  const additionalFields = orderedFields.filter((field: any) => !["name", "email", "role"].includes(field.id));
 
   return (
     <div className="space-y-4">

@@ -991,6 +991,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "branding.contactTitle": "اطلاعات تماس",
   "branding.country": "کشور",
   "branding.countryPlaceholder": "به عنوان مثال، انگلستان",
+  "branding.locationGlobalDefaultsNote": "این مشخصات مکانی به عنوان مقادیر پیش‌فرض در سراسر سیستم استفاده خواهند شد.",
   "branding.email": "ایمیل",
   "branding.emailPlaceholder": "info@yourmadrasa.org",
   "branding.favicon": "فاوآیکون (Favicon)",

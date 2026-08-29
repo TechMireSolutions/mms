@@ -4,7 +4,7 @@ import type { TeacherModulePreferences } from "@mms/shared";
 import { normalizeTeacherModulePreferences } from "@mms/shared";
 
 const api = createModuleSetupConfigApi<TeacherModulePreferences>({
-  fetchPreferencesFn: async (signal) => {
+  fetchPreferencesFn: async (_signal) => {
     const res = await apiContract.teachers.getPreferences({ query: undefined, extraHeaders: {} });
     return (res.body as any).preferences;
   },

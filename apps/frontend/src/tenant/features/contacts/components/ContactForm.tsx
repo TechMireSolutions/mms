@@ -6,6 +6,7 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { type Contact, DEFAULT_FORM_TABS } from "@mms/shared";
+import { getScopedBrandingSettings } from "@/lib/settingsPreviewStore";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { ContactFormTabContent } from "@/tenant/features/contacts/components/ContactFormTabContent";
@@ -62,13 +63,18 @@ export function ContactForm({
   const [tab, setTab] = useState("basic");
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
+  const branding = getScopedBrandingSettings();
+  const effectiveCountry = defaultCountry || branding.country || "Pakistan";
+  const effectiveCity = defaultCity || branding.city || "Karachi";
+  const effectiveProvince = defaultProvince || branding.region || "Sindh";
+
   const draft = useContactFormDraft({
     open,
     contact,
     initialDraft,
-    defaultCountry,
-    defaultCity,
-    defaultProvince,
+    defaultCountry: effectiveCountry,
+    defaultCity: effectiveCity,
+    defaultProvince: effectiveProvince,
     onSave,
     onClose,
     onValidationTab: (tabId) => setTab(tabId),
@@ -207,9 +213,9 @@ export function ContactForm({
           tab={tab}
           draft={draft}
           lockGender={lockGender}
-          defaultCountry={defaultCountry}
-          defaultCity={defaultCity}
-          defaultProvince={defaultProvince}
+          defaultCountry={effectiveCountry}
+          defaultCity={effectiveCity}
+          defaultProvince={effectiveProvince}
         />
       </FormModal>
 

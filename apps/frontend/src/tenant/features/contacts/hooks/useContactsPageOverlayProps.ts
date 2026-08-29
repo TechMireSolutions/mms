@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { Contact } from "@mms/shared";
+import { getScopedBrandingSettings } from "@/lib/settingsPreviewStore";
 import type { ContactsPageOverlaysProps } from "@/tenant/features/contacts/components/ContactsPageOverlays";
 import type { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";
 import type { useContactsPageActions } from "@/tenant/features/contacts/hooks/useContactsPageActions";
@@ -45,9 +46,10 @@ export function useContactsPageOverlayProps({
   allContactsForLinks: Contact[];
   selectedCount: number;
 }): ContactsPageOverlaysProps {
-  const defaultCountry = prefs?.defaultCountry || "";
-  const defaultCity = prefs?.defaultCity || "";
-  const defaultProvince = prefs?.defaultProvince || "";
+  const branding = getScopedBrandingSettings();
+  const defaultCountry = prefs?.defaultCountry || branding.country || "";
+  const defaultCity = prefs?.defaultCity || branding.city || "";
+  const defaultProvince = prefs?.defaultProvince || branding.region || "";
 
   const currentViewContact = useMemo(() => {
     if (!overlay.viewContact) return null;

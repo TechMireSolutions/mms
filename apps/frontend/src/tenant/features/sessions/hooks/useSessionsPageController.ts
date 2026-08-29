@@ -43,7 +43,7 @@ export function useSessionsPageController() {
     bulkUpdateSessionStatus,
     logExportAudit,
   } = useSessionMutations();
-  const { settings, statuses, types } = useSessionConfig();
+  const { statuses, types } = useSessionConfig();
   const { statusOptions, typeOptions, statusLabels, typeLabels, statusConfig, typeConfig } =
     useSessionDisplayConfig({ statuses, types, t });
 

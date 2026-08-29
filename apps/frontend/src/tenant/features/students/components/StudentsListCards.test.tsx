@@ -60,7 +60,7 @@ const defaultProps = {
   canDelete: true,
   canWriteMessaging: true,
   statusBadgeConfig: { active: { label: "Active", cls: "bg-success/10 text-success" } },
-  isColumnVisible: (key: string) => true,
+  isColumnVisible: (_key: string) => true,
   columnRegistry: DEFAULT_STUDENT_COLUMN_REGISTRY,
   onSelectAll: vi.fn(),
   onSelectOne: vi.fn(),

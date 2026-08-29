@@ -47,7 +47,7 @@ export const MessagingListCards = React.memo(function MessagingListCards({
   selectedIds,
   allVisibleSelected,
   someVisibleSelected,
-  selectedCount,
+  selectedCount: _selectedCount,
   selectedCountLabel,
   pageCountLabel,
   canWrite,

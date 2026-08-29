@@ -4,7 +4,7 @@ import type { SessionModulePreferences } from "@mms/shared";
 import { normalizeSessionModulePreferences } from "@mms/shared";
 
 const api = createModuleSetupConfigApi<SessionModulePreferences>({
-  fetchPreferencesFn: async (signal) => {
+  fetchPreferencesFn: async (_signal) => {
     const res = await apiContract.sessions.getPreferences({ query: undefined, extraHeaders: {} });
     return (res.body as any).preferences;
   },

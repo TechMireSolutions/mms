@@ -11,19 +11,18 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("ContactsPreferencesGeneralSection Component", () => {
-  it("renders country/city/province inputs and detailed age toggles", () => {
+  it("renders age and calendar toggles without redundant location inputs", () => {
     const html = renderToStaticMarkup(
       <ContactsPreferencesGeneralSection
         prefs={DEFAULT_CONTACT_PREFERENCES}
-        countryOptions={[{ value: "PK", label: "Pakistan" }]}
         onUpdatePreference={vi.fn()}
       />,
     );
 
     expect(html).toContain("contacts.setup.generalPreferences");
-    expect(html).toContain("contacts.setup.defaultCountry");
     expect(html).toContain("contacts.setup.showDetailedSolarAge");
     expect(html).toContain("contacts.setup.showLunarDob");
     expect(html).toContain("contacts.setup.showDetailedLunarAge");
+    expect(html).not.toContain("contacts.setup.defaultCountry");
   });
 });

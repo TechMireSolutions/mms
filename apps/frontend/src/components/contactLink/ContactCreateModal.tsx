@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useEffect, useMemo } from "react";
 import { CONTACTS_MODULE_MANIFEST, type Contact, toTitleCase } from "@mms/shared";
+import { getScopedBrandingSettings } from "@/lib/settingsPreviewStore";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useContactMutations } from "@/tenant/hooks/collections/contacts";
@@ -73,6 +74,8 @@ export default function ContactCreateModal({
 
   if (!open || !canWrite) return null;
 
+  const branding = getScopedBrandingSettings();
+
   return (
     <Suspense fallback={<span role="status" className="sr-only">{t("common.loading")}</span>}>
       <ContactForm
@@ -81,9 +84,9 @@ export default function ContactCreateModal({
         priority
         initialDraft={initialDraft}
         lockGender={createDefaults?.lockGender === true}
-        defaultCountry={prefs.defaultCountry || ""}
-        defaultCity={prefs.defaultCity || ""}
-        defaultProvince={prefs.defaultProvince || ""}
+        defaultCountry={prefs.defaultCountry || branding.country || ""}
+        defaultCity={prefs.defaultCity || branding.city || ""}
+        defaultProvince={prefs.defaultProvince || branding.region || ""}
         onClose={onClose}
         onSave={handleSave}
       />

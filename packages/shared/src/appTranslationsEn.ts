@@ -985,6 +985,7 @@ export const APP_TRANSLATIONS_EN = {
   "branding.contactTitle": "Contact",
   "branding.country": "Country",
   "branding.countryPlaceholder": "e.g. United Kingdom",
+  "branding.locationGlobalDefaultsNote": "These location details will be used as the default values across the entire system.",
   "branding.email": "Email",
   "branding.emailPlaceholder": "info@yourmadrasa.org",
   "branding.favicon": "Favicon",

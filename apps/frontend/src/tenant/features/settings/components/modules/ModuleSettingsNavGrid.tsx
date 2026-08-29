@@ -161,7 +161,7 @@ export default function ModuleSettingsNavGrid({
     flushStandalone();
 
     return nodes;
-  }, [enabledModules, language, onToggleModule, requiredLabel, t]);
+  }, [enabledModules, grantedModules, language, onToggleModule, requiredLabel, t]);
 
   const moduleStats = useMemo(() => {
     const availableModules = SYSTEM_MODULES.filter(mod => !grantedModules || grantedModules[mod.id] !== false);

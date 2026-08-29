@@ -17,6 +17,7 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
 import { loadContactLookupKind } from './contactLookupsService.js';
 import { loadContactPreferences } from './contactPreferencesService.js';
+import { getWorkspaceBranding } from '../../db/repositories/workspaceRepository.js';
 import { loadDuplicatePairsPage, getDuplicateScanCache } from './contactDuplicateScanUseCases.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
@@ -194,17 +195,21 @@ function resolveDefaultPhoneCountryCode(
 }
 
 export async function loadContactRuntimeDefaults(): Promise<ContactRuntimeDefaults> {
-  const [countryCodes, phoneLabels, emailLabels, preferences] = await Promise.all([
+  const tenant = getRequestTenant();
+  const [countryCodes, phoneLabels, emailLabels, preferences, branding] = await Promise.all([
     loadContactLookupKind('countryCodes'),
     loadContactLookupKind('phoneLabels'),
     loadContactLookupKind('emailLabels'),
     loadContactPreferences(),
+    tenant ? getWorkspaceBranding(tenant) : Promise.resolve(null),
   ]);
+
+  const defaultCountry = preferences?.defaultCountry?.trim() || branding?.country?.trim() || '';
 
   return {
     defaultPhoneCountryCode: resolveDefaultPhoneCountryCode(
       countryCodes as unknown[],
-      preferences?.defaultCountry?.trim() ?? '',
+      defaultCountry,
     ),
     phoneLabel: firstCollectionString(phoneLabels as unknown[]),
     emailLabel: firstCollectionString(emailLabels as unknown[]),

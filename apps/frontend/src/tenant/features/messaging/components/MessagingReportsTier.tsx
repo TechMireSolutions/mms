@@ -46,9 +46,6 @@ export function MessagingReportsTier({
 
   const stats = metricsQuery.data;
   const total = stats?.total ?? 0;
-  const whatsappCount = stats?.whatsappCount ?? 0;
-  const smsCount = stats?.smsCount ?? 0;
-  const emailCount = stats?.emailCount ?? 0;
 
   // Fix #7: deps simplified to [stats, t] — child counts are fully derived from stats
   const chartData = useMemo(() => {
