@@ -20,6 +20,7 @@ import { buildApp } from '../app.js';
 describe('Multi-Tenant Isolation & Authentication Middleware', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret-at-least-32-chars-long!!';
+    process.env.MMS_APP_DOMAIN = 'mms.local';
   });
 
   it('rejects requests missing tenant subdomain with 403 Forbidden', async () => {

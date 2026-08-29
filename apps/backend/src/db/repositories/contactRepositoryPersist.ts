@@ -3,7 +3,7 @@ import {
   hydrateContactRelationshipFields,
   type Contact,
 } from '@mms/shared';
-import { contacts } from '../schema.js';
+import { contacts, students, teachers, tenantUsers } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import {
   countContactsByWorkspace,
@@ -95,6 +95,12 @@ export async function bulkSaveContacts(tenant: string, records: Contact[]): Prom
 export async function replaceContactsForWorkspace(tenant: string, records: Contact[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
+    await tx
+      .update(students)
+      .set({ contactId: null, fatherContactId: null, motherContactId: null, guardianContactId: null })
+      .where(eq(students.workspaceSubdomain, subdomain));
+    await tx.update(teachers).set({ contactId: null }).where(eq(teachers.workspaceSubdomain, subdomain));
+    await tx.update(tenantUsers).set({ contactId: null }).where(eq(tenantUsers.workspaceSubdomain, subdomain));
     await tx.delete(contacts).where(eq(contacts.workspaceSubdomain, subdomain));
     for (const record of records) {
       await persistContactTx(tx, subdomain, record);
