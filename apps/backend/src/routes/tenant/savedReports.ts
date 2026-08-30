@@ -5,10 +5,14 @@ import {
   type GenericSavedReportCategory,
   type Permission,
   type User,
+  ACCOUNTING_MODULE_MANIFEST,
   ATTENDANCE_MODULE_MANIFEST,
+  ENROLLMENTS_MODULE_MANIFEST,
   EXAMINATIONS_MODULE_MANIFEST,
   FINANCE_MODULE_MANIFEST,
   HASANAT_MODULE_MANIFEST,
+  MESSAGING_MODULE_MANIFEST,
+  OBLIGATIONS_MODULE_MANIFEST,
   QUESTION_BANK_MODULE_MANIFEST,
   SESSIONS_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
@@ -38,6 +42,11 @@ const REPORT_PERMISSION_BY_CATEGORY = {
   hasanat: HASANAT_MODULE_MANIFEST.permissions.reports,
   sessions: SESSIONS_MODULE_MANIFEST.permissions.reports,
   faculty: USERS_MODULE_MANIFEST.permissions.reports,
+  accounting: ACCOUNTING_MODULE_MANIFEST.permissions.reports,
+  enrollments: ENROLLMENTS_MODULE_MANIFEST.permissions.reports,
+  obligations: OBLIGATIONS_MODULE_MANIFEST.permissions.reports,
+  messaging: MESSAGING_MODULE_MANIFEST.permissions.reports,
+  users: USERS_MODULE_MANIFEST.permissions.reports,
 } satisfies Record<GenericSavedReportCategory, Permission>;
 
 function canUseSavedReports(user: User, category: GenericSavedReportCategory): boolean {

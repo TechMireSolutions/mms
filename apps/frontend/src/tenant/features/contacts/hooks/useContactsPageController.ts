@@ -151,7 +151,6 @@ export function useContactsPageController() {
   const overlayProps = useContactsPageOverlayProps({
     canWrite,
     canDelete,
-    prefs,
     overlay,
     messaging,
     actions,

@@ -71,7 +71,7 @@ export function computeDynamicDateRangeComparison(
       const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
       if (monthIndex >= 0) bucketB[monthIndex] += monthBucket.count;
     }
-  } else if (lowerCat === "examinations" || lowerCat === "academic") {
+  } else if (lowerCat === "examinations") {
     for (const monthBucket of examinationsMonthly?.a ?? []) {
       const monthIndex = getComparisonMonthIndex(`${monthBucket.monthKey}-01`);
       if (monthIndex >= 0) {
@@ -97,7 +97,7 @@ export function computeDynamicDateRangeComparison(
       let valueA = bucketA[monthIndex];
       let valueB = bucketB[monthIndex];
 
-      if (lowerCat === "attendance" || lowerCat === "examinations" || lowerCat === "academic") {
+      if (lowerCat === "attendance" || lowerCat === "examinations") {
         valueA = countA[monthIndex] > 0 ? Math.round((bucketA[monthIndex] / countA[monthIndex]) * 100) : 0;
         valueB = countB[monthIndex] > 0 ? Math.round((bucketB[monthIndex] / countB[monthIndex]) * 100) : 0;
       }

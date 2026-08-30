@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { isComposedWidgetType } from '@/components/dashboard-widgets/registry';
 import { isSeededDashboardWidget } from '@/lib/dashboardWidgets';
 import { CustomWidgetRenderer } from '@/components/ui/reports/pinnedWidgets/CustomWidgetRenderer';
-import type { CustomWidget } from '@/components/ui/reports/pinnedWidgets/types';
+import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 
 interface DashboardWidgetsGridProps {
   widgets: CustomWidget[];

@@ -1,7 +1,7 @@
 import { formatMoney } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getFieldLabel } from "@/components/ui/reports/reportMetadata";
-import { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import { getFieldLabel } from "@/lib/reports/reportMetadata";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 
 export interface WidgetRecordFields {
   id?: string;

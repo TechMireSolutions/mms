@@ -14,8 +14,7 @@ import { PaymentForm } from "@/tenant/features/finance/components/PaymentForm";
 import { PaymentsList } from "@/tenant/features/finance/components/PaymentsList";
 import { PaymentDetail } from "@/tenant/features/finance/components/PaymentDetail";
 import { FinanceSetupTier } from "@/tenant/features/finance/components/FinanceSetupTier";
-import ModuleReports from "@/components/ui/reports/ModuleReports";
-import KPISummary from "@/components/ui/reports/KPISummary";
+import { FinanceReportsTier } from "@/tenant/features/finance/components/FinanceReportsTier";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { Invoice } from '@/lib/data/financeData';
 import { FinanceCommandMetrics } from "@/tenant/features/finance/components/FinanceCommandMetrics";
@@ -68,12 +67,7 @@ export default function Finance(): React.JSX.Element {
         <AnimatePresence mode="wait">
           <motion.div key={c.activeTab + "-" + c.activeSubTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-4">
             <ErrorBoundary>
-              {c.activeTab === "reports" && (
-                <div className="space-y-4">
-                  <KPISummary category="financial" />
-                  <ModuleReports category="financial" />
-                </div>
-              )}
+              {c.activeTab === "reports" && <FinanceReportsTier />}
               {c.activeTab === "setup" && <FinanceSetupTier />}
 
               {c.activeTab === "work" && c.activeSubTab === "invoices" && c.invoicesResult.isError ? (

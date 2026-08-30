@@ -2,15 +2,13 @@ import React from 'react';
 import {
   ENROLLMENTS_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
+  toTitleCase,
 } from '@mms/shared';
 import { SubTabBar } from '@/components/ui/SubTabBar';
-import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
-import { StatsSkeleton } from '@/components/ui/LoadingState';
-import { ExportToolbar } from '@/components/ui/ExportToolbar';
-import { ListPagination } from '@/components/ui/ListPagination';
+import { ReportDataGridContainer } from './ReportDataGridContainer';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { StudentReportDashboardWidgets } from './StudentReportDashboardWidgets';
-import { StudentReportFilterBanner } from './StudentReportFilterBanner';
+import PinnedWidgets from './PinnedWidgets';
+import { ReportFilterBanner } from './ReportFilterBanner';
 import { StudentReportTables } from './StudentReportTables';
 import { useStudentReportController } from './useStudentReportController';
 import type { StudentReportProps } from './studentReportTypes';
@@ -37,17 +35,24 @@ const StudentReport = React.memo(function StudentReport({ filters }: StudentRepo
 
   return (
     <div className="space-y-4">
-      {report.metricsLoading && !report.metrics ? (
-        <StatsSkeleton count={4} />
-      ) : (
-        <ModuleCommandMetricsGrid items={report.metricItems} />
-      )}
-
-      <StudentReportFilterBanner
-        hasBaseStatusFilter={Boolean(report.filters.status && report.filters.status !== 'all')}
-        reportStatusFilter={report.reportStatusFilter}
-        studentFilter={report.filters.student}
-        onClearStatusFilter={() => report.setReportStatusFilter(null)}
+      <ReportFilterBanner
+        label={report.t('students.report.filterLabel')}
+        filters={[
+          report.reportStatusFilter
+            ? {
+                key: 'status',
+                value: toTitleCase(report.reportStatusFilter),
+                onClear: () => report.setReportStatusFilter(null),
+                clearLabel: report.t('students.report.clearFilter'),
+              }
+            : null,
+          report.filters.student
+            ? {
+                key: 'student',
+                value: `"${report.filters.student}"`,
+              }
+            : null,
+        ]}
       />
 
       <SubTabBar
@@ -57,15 +62,20 @@ const StudentReport = React.memo(function StudentReport({ filters }: StudentRepo
         panelIdPrefix="student-report-subtab"
       />
 
-      <ExportToolbar
+      <ReportDataGridContainer
         title={report.activeSubTab === 'list' ? report.t('students.report.studentListTab') : report.t('students.report.enrollmentHistoryTab')}
         columns={report.activeSubTab === 'list' ? report.studentExportColumns : report.enrollmentExportColumns}
         rows={report.activeSubTab === 'list' ? (report.students as unknown as Record<string, unknown>[]) : (report.enrollments as unknown as Record<string, unknown>[])}
         resolveRows={report.activeSubTab === 'list' ? report.resolveStudentExportRows : report.resolveEnrollmentExportRows}
         moduleId="students"
-      />
-
-      <div className="space-y-3">
+        page={report.activeSubTab === 'list' ? report.listPage : report.historyPage}
+        total={report.activeSubTab === 'list' ? report.listTotal : (report.enrollmentsPageQuery.data?.total ?? 0)}
+        limit={report.activeSubTab === 'list' ? STUDENTS_MODULE_MANIFEST.defaultPageSize : ENROLLMENTS_MODULE_MANIFEST.defaultPageSize}
+        hasMore={report.activeSubTab === 'list' ? report.listHasMore : (report.enrollmentsPageQuery.data?.hasMore ?? false)}
+        onPageChange={report.activeSubTab === 'list' ? report.setListPage : report.setHistoryPage}
+        i18nNamespace="students"
+        paginationVariant="range"
+      >
         <StudentReportTables
           activeSubTab={report.activeSubTab}
           students={report.students}
@@ -75,34 +85,11 @@ const StudentReport = React.memo(function StudentReport({ filters }: StudentRepo
           listLoading={report.listLoading}
           historyLoading={report.historyLoading}
         />
-        {report.activeSubTab === 'list' && (
-          <ListPagination
-            page={report.listPage}
-            total={report.listTotal}
-            limit={STUDENTS_MODULE_MANIFEST.defaultPageSize}
-            hasMore={report.listHasMore}
-            onPageChange={report.setListPage}
-            i18nNamespace="students"
-            variant="range"
-          />
-        )}
-        {report.activeSubTab === 'history' && report.enrollmentsPageQuery.data && (
-          <ListPagination
-            page={report.historyPage}
-            total={report.enrollmentsPageQuery.data.total}
-            limit={ENROLLMENTS_MODULE_MANIFEST.defaultPageSize}
-            hasMore={report.enrollmentsPageQuery.data.hasMore}
-            onPageChange={report.setHistoryPage}
-            i18nNamespace="students"
-            variant="range"
-          />
-        )}
-      </div>
+      </ReportDataGridContainer>
 
-      <StudentReportDashboardWidgets />
+      <PinnedWidgets category="students" />
     </div>
   );
 });
 
 export default StudentReport;
-

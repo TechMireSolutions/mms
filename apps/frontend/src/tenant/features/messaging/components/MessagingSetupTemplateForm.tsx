@@ -7,11 +7,9 @@ import { FORM_LABEL } from '@/components/ui/formStyles';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
-import { SetupReadOnlyMessage } from '@/components/ui/SetupReadOnlyMessage';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessagingSetupTemplateFormProps {
-  canEditSetup: boolean;
   editingId: string | null;
   label: string;
   body: string;
@@ -28,7 +26,6 @@ interface MessagingSetupTemplateFormProps {
 }
 
 export function MessagingSetupTemplateForm({
-  canEditSetup,
   editingId,
   label,
   body,
@@ -44,10 +41,6 @@ export function MessagingSetupTemplateForm({
   onChannelChange,
 }: MessagingSetupTemplateFormProps): React.JSX.Element {
   const { t } = useTranslation();
-
-  if (!canEditSetup) {
-    return <SetupReadOnlyMessage title={t('messaging.setup.readOnly')} />;
-  }
 
   return (
     <SectionCard

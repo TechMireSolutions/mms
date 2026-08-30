@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 /**
  * Setup SubTabBar state with dirty-gated discard confirm.
@@ -9,6 +9,7 @@ export function useModuleSetupSubTabs({
   isDirty,
   onDiscard,
   onSave,
+  onChange,
 }: {
   initialKey: string;
   /** True when leaving `currentKey` requires a discard confirm. */
@@ -17,9 +18,17 @@ export function useModuleSetupSubTabs({
   onDiscard: (leavingKey: string) => void;
   /** Optional save handler to auto-save dirty tab before switching. */
   onSave?: (leavingKey: string) => Promise<void | boolean>;
+  /** Called when the active sub-tab changes. */
+  onChange?: (nextKey: string) => void;
 }) {
   const [sub, setSub] = useState(initialKey);
   const [pendingSubTab, setPendingSubTab] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (initialKey && initialKey !== sub && !isDirty(sub)) {
+      setSub(initialKey);
+    }
+  }, [initialKey]);
 
   const discardConfirmOpen = pendingSubTab != null;
   const discardConfirmIsFields = sub === "fields" && isDirty("fields");
@@ -32,6 +41,7 @@ export function useModuleSetupSubTabs({
           const res = await onSave(sub);
           if (res === false) return;
           setSub(next);
+          onChange?.(next);
           return;
         } catch {
           // If auto-save threw an error, prompt discard dialog
@@ -43,13 +53,16 @@ export function useModuleSetupSubTabs({
       return;
     }
     setSub(next);
+    onChange?.(next);
   };
 
   const handleConfirmDiscard = (): void => {
     if (!pendingSubTab) return;
     onDiscard(sub);
-    setSub(pendingSubTab);
+    const next = pendingSubTab;
+    setSub(next);
     setPendingSubTab(null);
+    onChange?.(next);
   };
 
   const clearPendingSubTab = (): void => {

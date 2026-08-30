@@ -41,7 +41,7 @@ export function useFinanceContractReportAggregates(query: Record<string, unknown
   return tsrClient.finance.getReportAggregates.useQuery({
     queryKey: ['finance_invoices', 'report-aggregates', 'contract', query],
     queryData: { query: query as any },
-    staleTime: 30_000,
+    staleTime: 5 * 60 * 1000,
     enabled,
   });
 }

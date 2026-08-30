@@ -156,6 +156,16 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
     [t],
   );
 
+  const workloadExportColumns = useMemo<ExportColumn[]>(
+    () => [
+      { header: t('teachers.report.colFaculty'), key: 'faculty' },
+      { header: t('teachers.report.colClasses'), key: 'classes' },
+      { header: t('teachers.report.colSessions'), key: 'sessions' },
+      { header: t('teachers.report.colStudents'), key: 'totalStudents' },
+    ],
+    [t],
+  );
+
   const resolveRosterExportRows = (): Promise<Record<string, unknown>[]> =>
     resolveTeacherReportExportRows({ search: searchParam, status: statusParam });
 
@@ -173,9 +183,9 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
         onStatusFilterChange: setReportStatusFilter,
         onDrillDown: drillDownToWork,
       }),
-      { icon: Users, label: t('teachers.report.totalStudents'), value: totalStudents, accent: 'blue' },
-      { icon: Layers, label: t('teachers.report.totalClasses'), value: totalClasses, accent: 'violet' },
-      { icon: BookOpen, label: t('teachers.report.avgStudentsFaculty'), value: avgStudents, accent: 'green' },
+      { icon: Users, label: t('teachers.report.totalStudents'), value: totalStudents, accent: 'info' },
+      { icon: Layers, label: t('teachers.report.totalClasses'), value: totalClasses, accent: 'secondary' },
+      { icon: BookOpen, label: t('teachers.report.avgStudentsFaculty'), value: avgStudents, accent: 'success' },
     ],
     [t, metrics, reportStatusFilter, drillDownToWork, totalStudents, totalClasses, avgStudents],
   );
@@ -198,6 +208,7 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
     listTotal,
     listHasMore,
     rosterExportColumns,
+    workloadExportColumns,
     resolveRosterExportRows,
     metricItems,
     metrics,

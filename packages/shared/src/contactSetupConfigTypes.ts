@@ -22,9 +22,6 @@ export const contactFieldConfigPutBodySchema = z.preprocess((raw) => {
 /** PUT /api/contacts/preferences — ContactPreferences JSON. */
 export const contactPreferencesPutBodySchema = z
   .object({
-    defaultCountry: z.string().optional(),
-    defaultProvince: z.string().optional(),
-    defaultCity: z.string().optional(),
     relationshipPairs: z.array(relationshipPairSchema).optional(),
   })
   .passthrough();

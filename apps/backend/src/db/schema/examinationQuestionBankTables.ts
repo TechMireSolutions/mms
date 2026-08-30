@@ -187,6 +187,7 @@ export const assessmentResults = pgTable('assessment_results', {
   }).onDelete('cascade'),
   index('assessment_results_workspace_test_idx').on(table.workspaceSubdomain, table.testId),
   index('assessment_results_workspace_student_idx').on(table.workspaceSubdomain, table.studentId),
+  index('assessment_results_workspace_submitted_idx').on(table.workspaceSubdomain, table.submittedAt),
   index('assessment_results_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('assessment_results_workspace_active_idx')
     .on(table.workspaceSubdomain)

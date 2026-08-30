@@ -1,160 +1,110 @@
-import React, { useMemo, useState } from "react";
-import { CalendarCheck, Users, TrendingUp, BarChart2 } from "lucide-react";
-import {
-  useSessionsMetrics,
-  useSessionsReportAggregates,
-} from "@/tenant/hooks/collections/sessions";
-import { formatMonthName } from "@mms/shared";
-import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
+import React, { lazy, Suspense, useMemo, useState } from "react";
+import { useSessions, useSessionsCollection, useSessionsReportAggregates } from "@/tenant/hooks/collections/sessions";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { SessionReportCharts } from "./SessionReportCharts";
-import { SessionReportDashboardWidgets } from "./SessionReportDashboardWidgets";
-import { SessionReportFilterBanner } from "./SessionReportFilterBanner";
 import { SessionReportTable } from "./SessionReportTable";
+import { SessionReportDashboardWidgets } from "./SessionReportDashboardWidgets";
+import { ReportFilterBanner } from "./ReportFilterBanner";
+import PinnedWidgets from "./PinnedWidgets";
+
+const SessionReportCharts = lazy(() =>
+  import("./SessionReportCharts").then((mod) => ({ default: mod.SessionReportCharts })),
+);
+
+import {
+  buildEnrollmentTrends,
+  buildSessionCapacityData,
+  buildTodaysSessions,
+  buildSessionStatusConfig,
+} from "./sessionReportUtils";
 
 import type {
-  CapacityBarDatum,
+  CapacityChartItem,
   EnrollmentTrendItem,
   SessionCapacityItem,
   SessionReportProps,
+  TodaySessionItem,
 } from "./sessionReportTypes";
 
 export type {
+  CapacityChartItem,
   EnrollmentTrendItem,
   SessionCapacityItem,
   SessionReportFilters,
   SessionReportProps,
+  TodaySessionItem,
 } from "./sessionReportTypes";
 
 /**
- * Renders session utilisation and capacity reports with stacked bar and
- * enrollment trend charts, plus a filterable session capacity table.
+ * Renders the session reports and capacity metrics, including utilization bar charts,
+ * enrollment trend lines, and a filterable capacity data grid.
  */
 const SessionReport = React.memo(function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
   const { t } = useTranslation();
-  const sessionStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
-    () => ({
-      active: { label: t("sessions.status.active"), cls: SEMANTIC_BADGE.success },
-      upcoming: { label: t("sessions.status.upcoming"), cls: SEMANTIC_BADGE.info },
-      completed: { label: t("sessions.status.completed"), cls: SEMANTIC_BADGE.muted },
-      cancelled: { label: t("sessions.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
-    }),
-    [t],
-  );
-  const { data: sessionsMetrics } = useSessionsMetrics();
-  const {
-    data: reportAggregates,
-    isError,
-    refetch,
-  } = useSessionsReportAggregates();
+  const { isError, refetch } = useSessions();
+  const sessions = useSessionsCollection();
+  const aggregatesQuery = useSessionsReportAggregates();
+  const aggregates = aggregatesQuery.data?.status === 200 ? aggregatesQuery.data.body : undefined;
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
-  const reportBody = (reportAggregates as any);
-  const sessionCapacity: SessionCapacityItem[] = reportBody?.capacity ?? [];
-  const todaysSessions = reportBody?.todaysSessions ?? [];
+  const sessionStatusConfig = useMemo(() => buildSessionStatusConfig(t), [t]);
+
+  const rawSessionCapacityData = useMemo<SessionCapacityItem[]>(() => {
+    if (aggregates && Array.isArray((aggregates as any).capacity) && (aggregates as any).capacity.length > 0) {
+      return (aggregates as any).capacity as SessionCapacityItem[];
+    }
+    return buildSessionCapacityData(sessions);
+  }, [aggregates, sessions]);
+
+  const capacityChartData = useMemo<CapacityChartItem[]>(() => {
+    return rawSessionCapacityData.map((item: SessionCapacityItem) => ({
+      class: item.class,
+      enrolled: item.enrolled,
+      available: Math.max(0, item.capacity - item.enrolled),
+    }));
+  }, [rawSessionCapacityData]);
 
   const enrollmentTrends = useMemo<EnrollmentTrendItem[]>(() => {
-    const trends = reportBody?.enrollmentTrends ?? [];
-    if (trends.length === 0) {
-      return [{ month: formatMonthName(new Date()), students: 0, sessionName: null }];
+    if (aggregates && Array.isArray((aggregates as any).enrollmentTrends) && (aggregates as any).enrollmentTrends.length > 0) {
+      return ((aggregates as any).enrollmentTrends as Array<{ monthKey: string; students: number; sessionName: string | null }>).map((trend) => ({
+        month: trend.monthKey,
+        students: trend.students,
+        sessionName: trend.sessionName,
+      }));
     }
-    return trends.map((trend: any) => ({
-      month: formatMonthName(`${trend.monthKey}-01`),
-      students: trend.students,
-      sessionName: trend.sessionName,
-    }));
-  }, [reportAggregates?.enrollmentTrends]);
+    return buildEnrollmentTrends(sessions);
+  }, [aggregates, sessions]);
 
   const sessionCapacityData = useMemo<SessionCapacityItem[]>(() => {
-    let filteredSessionCapacity = sessionCapacity;
-    if (filters.session !== "all") {
-      filteredSessionCapacity = filteredSessionCapacity.filter(
-        (capacityItem) => capacityItem.sessionId === filters.session,
-      );
+    let filteredData = rawSessionCapacityData;
+
+    if (filters.session && filters.session !== "all") {
+      filteredData = filteredData.filter((item) => item.sessionId === filters.session);
+    }
+    if (filters.class && filters.class !== "all") {
+      filteredData = filteredData.filter((item) => item.classId === filters.class);
+    }
+    if (filters.status && filters.status !== "all") {
+      filteredData = filteredData.filter((item) => item.status === filters.status);
     }
     if (selectedSession) {
-      filteredSessionCapacity = filteredSessionCapacity.filter(
-        (capacityItem) => capacityItem.session === selectedSession,
-      );
+      filteredData = filteredData.filter((item) => item.session === selectedSession);
     }
     if (selectedClass) {
-      filteredSessionCapacity = filteredSessionCapacity.filter(
-        (capacityItem) => capacityItem.class === selectedClass,
-      );
+      filteredData = filteredData.filter((item) => item.class === selectedClass);
     }
-    return filteredSessionCapacity;
-  }, [filters.session, sessionCapacity, selectedSession, selectedClass]);
 
-  const capacityChartData = useMemo<CapacityBarDatum[]>(
-    () =>
-      sessionCapacityData.map((capacityItem) => ({
-        class: capacityItem.class,
-        enrolled: capacityItem.enrolled,
-        available: capacityItem.capacity - capacityItem.enrolled,
-      })),
-    [sessionCapacityData],
-  );
+    return filteredData;
+  }, [filters, rawSessionCapacityData, selectedSession, selectedClass]);
 
-  const filtersAreGlobal = filters.session === "all" && !selectedSession && !selectedClass;
-  const filteredEnrolled = sessionCapacityData.reduce(
-    (total, capacityItem) => total + capacityItem.enrolled,
-    0,
-  );
-  const filteredCapacity = sessionCapacityData.reduce(
-    (total, capacityItem) => total + capacityItem.capacity,
-    0,
-  );
-  const totalEnrolled = filtersAreGlobal
-    ? (sessionsMetrics?.totalEnrolled ?? filteredEnrolled)
-    : filteredEnrolled;
-  const totalCapacity = filtersAreGlobal
-    ? (sessionsMetrics?.totalCapacity ?? filteredCapacity)
-    : filteredCapacity;
-  const metricsCapacity = sessionsMetrics?.totalCapacity ?? 0;
-  const metricsEnrolled = sessionsMetrics?.totalEnrolled ?? 0;
-  const averageUtilization =
-    filtersAreGlobal && metricsCapacity > 0
-      ? ((metricsEnrolled / metricsCapacity) * 100).toFixed(1)
-      : sessionCapacityData.length
-        ? (
-            sessionCapacityData.reduce((totalRate, capacityItem) => totalRate + capacityItem.rate, 0) /
-            sessionCapacityData.length
-          ).toFixed(1)
-        : 0;
-
-  const activeSessionsCount = sessionsMetrics?.active ?? 0;
-
-  const kpiItems = useMemo(() => [
-    {
-      icon: CalendarCheck,
-      label: t("sessions.report.activeSessions"),
-      value: activeSessionsCount,
-      accent: "primary" as const,
-    },
-    {
-      icon: Users,
-      label: t("sessions.report.totalEnrolled"),
-      value: totalEnrolled,
-      accent: "blue" as const,
-    },
-    {
-      icon: BarChart2,
-      label: t("sessions.report.totalCapacity"),
-      value: totalCapacity,
-      accent: "violet" as const,
-    },
-    {
-      icon: TrendingUp,
-      label: t("sessions.report.avgUtilisation"),
-      value: `${averageUtilization}%`,
-      accent: "green" as const,
-    },
-  ], [t, activeSessionsCount, totalEnrolled, totalCapacity, averageUtilization]);
-
+  const todaysSessions = useMemo<TodaySessionItem[]>(() => {
+    if (aggregates && Array.isArray((aggregates as any).todaysSessions) && (aggregates as any).todaysSessions.length > 0) {
+      return (aggregates as any).todaysSessions as TodaySessionItem[];
+    }
+    return buildTodaysSessions(sessions);
+  }, [aggregates, sessions]);
 
   const toggleSessionFilter = (sessionName: string): void => {
     setSelectedSession((currentSession) => (currentSession === sessionName ? null : sessionName));
@@ -178,20 +128,36 @@ const SessionReport = React.memo(function SessionReport({ filters }: SessionRepo
 
   return (
     <div className="space-y-4">
-      <ModuleCommandMetricsGrid items={kpiItems} />
+      <Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
+        <SessionReportCharts
+          capacityChartData={capacityChartData}
+          enrollmentTrends={enrollmentTrends}
+          onToggleClassFilter={toggleClassFilter}
+          onToggleSessionFilter={toggleSessionFilter}
+        />
+      </Suspense>
 
-      <SessionReportCharts
-        capacityChartData={capacityChartData}
-        enrollmentTrends={enrollmentTrends}
-        onToggleClassFilter={toggleClassFilter}
-        onToggleSessionFilter={toggleSessionFilter}
-      />
-
-      <SessionReportFilterBanner
-        selectedSession={selectedSession}
-        selectedClass={selectedClass}
-        onClearSessionFilter={() => setSelectedSession(null)}
-        onClearClassFilter={() => setSelectedClass(null)}
+      <ReportFilterBanner
+        filters={[
+          selectedSession
+            ? {
+                key: "session",
+                label: t("sessions.report.sessionFilterLabel"),
+                value: selectedSession,
+                onClear: () => setSelectedSession(null),
+                clearLabel: t("sessions.report.clearSessionFilter"),
+              }
+            : null,
+          selectedClass
+            ? {
+                key: "class",
+                label: t("sessions.report.classFilterLabel"),
+                value: selectedClass,
+                onClear: () => setSelectedClass(null),
+                clearLabel: t("sessions.report.clearClassFilter"),
+              }
+            : null,
+        ]}
       />
 
       <SessionReportTable
@@ -202,6 +168,7 @@ const SessionReport = React.memo(function SessionReport({ filters }: SessionRepo
       />
 
       <SessionReportDashboardWidgets todaysSessions={todaysSessions} />
+      <PinnedWidgets category="sessions" />
     </div>
   );
 });

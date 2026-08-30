@@ -1,30 +1,15 @@
 import type React from "react";
-import KPISummary from "@/components/ui/reports/KPISummary";
-import { FinancialReports } from "@/tenant/features/accounting/components/FinancialReports";
-import type { Account, FiscalYear, JournalEntry } from "@mms/shared";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
+import { KPISummary, ModuleReports } from "@/tenant/components/moduleReports";
 
-interface AccountingReportsTierProps {
-  accounts: Account[];
-  entries: JournalEntry[];
-  fiscalYears: FiscalYear[];
-  settings: React.ComponentProps<typeof FinancialReports>["settings"];
-}
-
-export function AccountingReportsTier({
-  accounts,
-  entries,
-  fiscalYears,
-  settings,
-}: AccountingReportsTierProps): React.JSX.Element {
+export function AccountingReportsTier(): React.JSX.Element {
   return (
-    <div className="space-y-4">
-      <KPISummary category="accounting" />
-      <FinancialReports
-        accounts={accounts}
-        entries={entries}
-        fiscalYears={fiscalYears}
-        settings={settings}
-      />
-    </div>
+    <ModuleTierMotion tier="reports" className="space-y-4">
+      <ErrorBoundary>
+        <KPISummary category="accounting" />
+        <ModuleReports category="accounting" />
+      </ErrorBoundary>
+    </ModuleTierMotion>
   );
 }

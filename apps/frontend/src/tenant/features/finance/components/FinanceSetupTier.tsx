@@ -11,7 +11,14 @@ const FinanceSettings = lazy(
   () => import("@/tenant/features/finance/components/FinanceSettings"),
 );
 
-export const FinanceSetupTier = React.memo(function FinanceSetupTier(): React.JSX.Element {
+export interface FinanceSetupTierProps {
+  /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
+  onPrefsDirtyChange?: (isDirty: boolean) => void;
+}
+
+export const FinanceSetupTier = React.memo(function FinanceSetupTier({
+  onPrefsDirtyChange,
+}: FinanceSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(FINANCE_MODULE_MANIFEST);
 
@@ -23,7 +30,7 @@ export const FinanceSetupTier = React.memo(function FinanceSetupTier(): React.JS
             <SetupReadOnlyMessage title={t("finance.setup.readOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
-              <FinanceSettings />
+              <FinanceSettings onPrefsDirtyChange={onPrefsDirtyChange} />
             </Suspense>
           )}
         </div>

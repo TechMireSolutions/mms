@@ -12,12 +12,29 @@ import {
   bulkSoftDeleteQuestions,
   bulkRestoreQuestions,
   loadQuestionBankWidgetAggregates,
+  loadQuestionBankReportAggregates,
 } from '../../../services/questionBankService.js';
 
 const s = initServer();
 
 export const questionBankContractRouter: FastifyPluginAsync = async (fastify) => {
   const router = s.router(rootContract.questionBank, {
+    reportAggregates: async ({ query, request }: any) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, 'questions')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const aggregates = await withTenant(
+          String(request.tenant?.id),
+          () => loadQuestionBankReportAggregates(query || {}),
+          { readOnly: true },
+        );
+        return { status: 200 as const, body: aggregates };
+      } catch {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load report aggregates' } };
+      }
+    },
     listQuestions: async ({ query, request }: any) => {
       const user = request.user as User;
       if (!canReadCollection(user, 'questions')) {

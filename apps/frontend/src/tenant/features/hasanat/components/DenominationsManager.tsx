@@ -94,13 +94,13 @@ export function DenominationsManager({ denoms, onUpdate, canWrite = true }: Deno
               <span className="rounded-lg bg-muted px-2 py-1 text-xs font-bold text-foreground">{t('hasanat.denominations.ptsShort', { points: denomination.points })}</span>
               {canWrite && (
                 <div className="flex shrink-0 items-center gap-1 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100">
-                  <Button variant="ghost" type="button" size="icon" onClick={() => toggleActive(denomination.id)} className="rounded-lg hover:bg-muted text-muted-foreground" title={denomination.active ? t('hasanat.denominations.deactivate') : t('hasanat.denominations.activate')} aria-label={denomination.active ? t('hasanat.denominations.deactivate') : t('hasanat.denominations.activate')}>
+                  <Button variant="ghost" type="button" size="icon" onClick={() => toggleActive(denomination.id)} className="min-h-11 min-w-11 rounded-lg hover:bg-muted text-muted-foreground" title={denomination.active ? t('hasanat.denominations.deactivate') : t('hasanat.denominations.activate')} aria-label={denomination.active ? t('hasanat.denominations.deactivate') : t('hasanat.denominations.activate')}>
                     {denomination.active ? <ToggleRight className="w-4 h-4 text-primary" aria-hidden="true" /> : <ToggleLeft className="w-4 h-4" aria-hidden="true" />}
                   </Button>
-                  <Button variant="ghost" type="button" size="icon" aria-label={t('hasanat.denominations.editNamed', { name: denomination.name })} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
+                  <Button variant="ghost" type="button" size="icon" aria-label={t('hasanat.denominations.editNamed', { name: denomination.name })} onClick={() => { setEditDenom(denomination); setShowModal(true); }} className="min-h-11 min-w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground">
                     <Edit2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
-                  <Button variant="ghost" type="button" size="icon" aria-label={t('hasanat.denominations.deleteNamed', { name: denomination.name })} onClick={() => setDeleteTarget(denomination)} className="rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
+                  <Button variant="ghost" type="button" size="icon" aria-label={t('hasanat.denominations.deleteNamed', { name: denomination.name })} onClick={() => setDeleteTarget(denomination)} className="min-h-11 min-w-11 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive">
                     <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                   </Button>
                 </div>

@@ -52,16 +52,20 @@ vi.mock("@/components/ui/SubTabBar", () => ({
   SubTabBar: () => <div data-testid="sub-tab-bar">SubTabBar</div>,
 }));
 
+vi.mock("@/components/ui/SetupReadOnlyMessage", () => ({
+  SetupReadOnlyMessage: ({ title }: { title: string }) => <div data-testid="read-only">{title}</div>,
+}));
+
 vi.mock("./MessagingSetupTemplateForm", () => ({
-  MessagingSetupTemplateForm: ({ canEditSetup }: { canEditSetup: boolean }) => (
-    <div data-testid="template-form">
-      Template Form (canEditSetup: {String(canEditSetup)})
-    </div>
-  ),
+  MessagingSetupTemplateForm: () => <div data-testid="template-form">Template Form</div>,
+}));
+
+vi.mock("./MessagingTemplateList", () => ({
+  MessagingTemplateList: () => <div data-testid="template-list">Template List</div>,
 }));
 
 describe("MessagingSetupTier Component", () => {
-  it("renders module tier motion and subtabs in editable mode", () => {
+  it("renders module tier motion, template form, and template list in editable mode", () => {
     const html = renderToStaticMarkup(
       <MessagingSetupTier
         canWrite={true}
@@ -71,11 +75,11 @@ describe("MessagingSetupTier Component", () => {
     );
 
     expect(html).toContain("module-tier-motion");
-    expect(html).toContain("SubTabBar");
-    expect(html).toContain("canEditSetup: true");
+    expect(html).toContain("Template Form");
+    expect(html).toContain("Template List");
   });
 
-  it("passes canEditSetup false to template form", () => {
+  it("renders read-only message when canEditSetup is false", () => {
     const html = renderToStaticMarkup(
       <MessagingSetupTier
         canWrite={false}
@@ -84,6 +88,7 @@ describe("MessagingSetupTier Component", () => {
       />,
     );
 
-    expect(html).toContain("canEditSetup: false");
+    expect(html).toContain("messaging.setup.readOnly");
+    expect(html).toContain("read-only");
   });
 });

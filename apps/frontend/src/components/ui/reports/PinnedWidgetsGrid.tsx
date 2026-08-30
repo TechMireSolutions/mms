@@ -10,8 +10,8 @@ import { applyContactsWidgetWorkDrillDown } from "@/lib/contacts/contactsWidgetW
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import { CustomWidgetRenderer } from "@/components/ui/reports/pinnedWidgets/CustomWidgetRenderer";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
-import { METADATA_FIELDS, getCollectionLabel } from "@/components/ui/reports/reportMetadata";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
+import { METADATA_FIELDS, getCollectionLabel } from "@/lib/reports/reportMetadata";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";

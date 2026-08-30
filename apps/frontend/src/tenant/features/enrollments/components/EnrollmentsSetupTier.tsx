@@ -11,7 +11,14 @@ const EnrollmentsSettings = lazy(
   () => import("@/tenant/features/enrollments/components/EnrollmentsSettings"),
 );
 
-export const EnrollmentsSetupTier = React.memo(function EnrollmentsSetupTier(): React.JSX.Element {
+export interface EnrollmentsSetupTierProps {
+  /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
+  onPrefsDirtyChange?: (isDirty: boolean) => void;
+}
+
+export const EnrollmentsSetupTier = React.memo(function EnrollmentsSetupTier({
+  onPrefsDirtyChange,
+}: EnrollmentsSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(ENROLLMENTS_MODULE_MANIFEST);
 
@@ -20,10 +27,10 @@ export const EnrollmentsSetupTier = React.memo(function EnrollmentsSetupTier(): 
       <ErrorBoundary>
         <div className="space-y-4">
           {!canEditSetup ? (
-            <SetupReadOnlyMessage title={t("enrollments.setupReadOnly")} />
+            <SetupReadOnlyMessage title={t("enrollments.setup.readOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
-              <EnrollmentsSettings />
+              <EnrollmentsSettings onPrefsDirtyChange={onPrefsDirtyChange} />
             </Suspense>
           )}
         </div>

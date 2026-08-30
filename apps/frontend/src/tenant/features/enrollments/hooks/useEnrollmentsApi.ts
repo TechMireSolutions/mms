@@ -129,7 +129,7 @@ export function useEnrollmentsReportAggregates(
       } as any,
     },
     enabled: isAuthenticated && enabled,
-    staleTime: 30_000,
+    staleTime: 5 * 60 * 1000,
   });
 }
 

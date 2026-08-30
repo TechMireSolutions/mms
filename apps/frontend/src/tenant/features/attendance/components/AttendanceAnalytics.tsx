@@ -1,9 +1,16 @@
+import React, { lazy, Suspense } from "react";
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
-import { AttendanceAnalyticsChartPanels } from "@/tenant/features/attendance/components/AttendanceAnalyticsChartPanels";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AttendanceAnalyticsInsights } from "@/tenant/features/attendance/components/AttendanceAnalyticsInsights";
 import { useAttendanceAnalyticsModel } from "@/tenant/features/attendance/components/useAttendanceAnalyticsModel";
+
+const AttendanceAnalyticsChartPanels = lazy(() =>
+  import("@/tenant/features/attendance/components/AttendanceAnalyticsChartPanels").then((mod) => ({
+    default: mod.AttendanceAnalyticsChartPanels,
+  })),
+);
 
 export interface AnalyticsFilters {
   classId?: string;
@@ -52,16 +59,18 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
         ]}
       />
 
-      <AttendanceAnalyticsChartPanels
-        t={model.t}
-        colors={model.colors}
-        classStats={model.classStats}
-        monthlyTrend={model.monthlyTrend}
-        studentRates={model.studentRates}
-        pieData={model.pieData}
-        statuses={model.statuses}
-        totalStats={model.totalStats}
-      />
+      <Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
+        <AttendanceAnalyticsChartPanels
+          t={model.t}
+          colors={model.colors}
+          classStats={model.classStats}
+          monthlyTrend={model.monthlyTrend}
+          studentRates={model.studentRates}
+          pieData={model.pieData}
+          statuses={model.statuses}
+          totalStats={model.totalStats}
+        />
+      </Suspense>
 
       <AttendanceAnalyticsInsights
         t={model.t}

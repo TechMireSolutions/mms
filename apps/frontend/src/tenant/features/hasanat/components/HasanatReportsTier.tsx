@@ -1,14 +1,15 @@
+import type React from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import KPISummary from "@/components/ui/reports/KPISummary";
-import ModuleReports from "@/components/ui/reports/ModuleReports";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
+import { KPISummary, ModuleReports } from "@/tenant/components/moduleReports";
 
-export function HasanatReportsTier() {
+export function HasanatReportsTier(): React.JSX.Element {
   return (
-    <ErrorBoundary>
-      <div className="space-y-4">
+    <ModuleTierMotion tier="reports" className="space-y-4">
+      <ErrorBoundary>
         <KPISummary category="hasanat" />
         <ModuleReports category="hasanat" />
-      </div>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </ModuleTierMotion>
   );
 }

@@ -1,7 +1,8 @@
 import React from "react";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
+import { Field } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { EnrollmentsSettings } from "@mms/shared";
 
@@ -19,31 +20,27 @@ export function EnrollmentsPreferencesSection({
   return (
     <div className="space-y-4 text-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className={FORM_LABEL} htmlFor="maxStudentsPerClass">
-            {t("enrollments.settings.maxStudentsPerClass")}
-          </label>
+        <Field label={t("enrollments.settings.maxStudentsPerClass")}>
           <Input
             id="maxStudentsPerClass"
             type="number"
+            className={FORM_INPUT}
             value={settingsDraft.maxStudentsPerClass || ""}
             onChange={(event) => upd("maxStudentsPerClass", event.target.value)}
           />
-        </div>
-        <div>
-          <label className={FORM_LABEL} htmlFor="dropDeadlineDays">
-            {t("enrollments.settings.dropDeadlineDays")}
-          </label>
+        </Field>
+        <Field label={t("enrollments.settings.dropDeadlineDays")}>
           <Input
             id="dropDeadlineDays"
             type="number"
+            className={FORM_INPUT}
             value={settingsDraft.dropDeadlineDays || ""}
             onChange={(event) => upd("dropDeadlineDays", event.target.value)}
           />
-        </div>
+        </Field>
       </div>
 
-      <div className="space-y-2 pt-1">
+      <div className="space-y-2 pt-2 border-t border-border/60">
         <ToggleRow
           label={t("enrollments.settings.waitlistEnabled")}
           description={t("enrollments.settings.waitlistEnabledHint")}

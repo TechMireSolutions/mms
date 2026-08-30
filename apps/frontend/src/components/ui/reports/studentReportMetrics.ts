@@ -9,7 +9,7 @@ export interface StudentReportMetricItem {
   icon: LucideIcon;
   label: string;
   value: string | number;
-  accent: 'primary' | 'green' | 'red' | 'blue' | 'secondary';
+  accent: 'primary' | 'success' | 'destructive' | 'info' | 'secondary';
   isActive?: boolean;
   onClick?: () => void;
 }
@@ -64,7 +64,7 @@ export function buildStudentReportMetricItems(input: {
       icon: UserCheck,
       label: t('students.report.active'),
       value: metrics?.active ?? 0,
-      accent: 'green',
+      accent: 'success',
       isActive: reportStatusFilter === 'active',
       onClick: () => {
         toggleStatus('active');
@@ -75,7 +75,7 @@ export function buildStudentReportMetricItems(input: {
       icon: UserX,
       label: t('students.report.inactive'),
       value: metrics?.inactive ?? 0,
-      accent: 'red',
+      accent: 'destructive',
       isActive: reportStatusFilter === 'inactive',
       onClick: () => {
         toggleStatus('inactive');
@@ -93,7 +93,7 @@ export function buildStudentReportMetricItems(input: {
       icon: TrendingUp,
       label: t('students.report.genderSplit'),
       value: t('students.report.genderSplitValue', { male, female }),
-      accent: 'blue',
+      accent: 'info',
       onClick: onListFocus,
     },
   ];

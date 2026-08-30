@@ -9,7 +9,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Badge } from "@/components/ui/badge";
-import { getFieldLabel } from "@/components/ui/reports/reportMetadata";
+import { getFieldLabel } from "@/lib/reports/reportMetadata";
 import type { ChartOperation, ChartType } from "@/components/ui/reports/dynamicChartVisualizerTypes";
 import type { DynamicChartVisualizerConfigPanelProps } from "@/components/ui/reports/dynamicChartVisualizerConfigPanelTypes";
 

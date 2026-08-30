@@ -13,7 +13,7 @@ import { useTeachersWidgetAggregates } from "@/tenant/hooks/collections/teachers
 import { useSessionsWidgetAggregates } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsWidgetAggregates } from "@/tenant/hooks/collections/enrollments";
 import { notify } from "@/lib/notify";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 
 const DEFAULT_SECTION_SETTINGS: Record<string, boolean> = {
   enrollmentChart: true,
@@ -44,21 +44,38 @@ export function usePinnedWidgetsController(category: string) {
     return getObject<Record<string, boolean>>("dashboard_section_settings", DEFAULT_SECTION_SETTINGS);
   });
 
-  const defaultCollection = useMemo<CustomWidget["collection"]>(() => {
-    if (category === "students") return "students";
-    if (category === "contacts") return "contacts";
-    if (category === "teachers" || category === "faculty") return "teachers";
-    if (category === "attendance") return "attendance_records";
-    if (category === "financial" || category === "accounting") return "finance_invoices";
-    if (category === "hasanat") return "hasanat_distributions";
-    if (category === "sessions") return "sessions";
-    if (category === "enrollments") return "enrollments";
-    return "students";
+  const normalizedCategory = useMemo(() => {
+    if (category === "faculty") return "teachers";
+    if (category === "finance" || category === "financial") return "financial";
+    if (category === "academic" || category === "examinations") return "examinations";
+    if (category === "question-bank" || category === "questionBank") return "questionBank";
+    return category;
   }, [category]);
 
+  const defaultCollection = useMemo<CustomWidget["collection"]>(() => {
+    if (normalizedCategory === "students") return "students";
+    if (normalizedCategory === "contacts") return "contacts";
+    if (normalizedCategory === "teachers") return "teachers";
+    if (normalizedCategory === "attendance") return "attendance_records";
+    if (normalizedCategory === "financial" || normalizedCategory === "accounting") return "finance_invoices";
+    if (normalizedCategory === "hasanat") return "hasanat_distributions";
+    if (normalizedCategory === "sessions") return "sessions";
+    if (normalizedCategory === "enrollments") return "enrollments";
+    if (normalizedCategory === "questionBank") return "questions";
+    if (normalizedCategory === "examinations") return "assessment_results";
+    return "students";
+  }, [normalizedCategory]);
+
   const filteredWidgets = useMemo(() => {
-    return widgets.filter((widget) => widget.category === category);
-  }, [widgets, category]);
+    return widgets.filter((widget) => {
+      const widgetCategory = widget.category === "faculty" ? "teachers"
+        : widget.category === "finance" ? "financial"
+        : widget.category === "academic" ? "examinations"
+        : widget.category === "question-bank" ? "questionBank"
+        : widget.category;
+      return widgetCategory === normalizedCategory;
+    });
+  }, [widgets, normalizedCategory]);
 
   const requiredCollections = useMemo(() => {
     const required = new Set(filteredWidgets.map((widget) => widget.collection));

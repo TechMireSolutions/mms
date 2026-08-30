@@ -6,6 +6,8 @@ import {
   type ObligationDistribution,
   type ObligationCollection,
   type ObligationsCommandMetricsSnapshot,
+  type ObligationsReportAggregates,
+  type ObligationsReportQuery,
   obligationTypeListSchema,
   mujtahidListSchema,
   mujtahidRepListSchema,
@@ -37,6 +39,7 @@ import {
   replaceObligationCollectionsForWorkspace,
 } from '../db/repositories/obligationRepository.js';
 import { aggregateObligationsCommandMetrics } from '../db/repositories/obligationRepositoryMetrics.js';
+import { aggregateObligationsReport } from '../db/repositories/obligationRepositoryReport.js';
 import {
   defineTenantBulkCollectionService,
   scopeDeleted,
@@ -163,3 +166,22 @@ export async function loadObligationsCommandMetrics(): Promise<ObligationsComman
   if (!tenant) return EMPTY_OBLIGATIONS_METRICS;
   return aggregateObligationsCommandMetrics(tenant);
 }
+
+export async function loadObligationsReportAggregates(
+  query: ObligationsReportQuery = {},
+): Promise<ObligationsReportAggregates> {
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    return {
+      totalCollections: 0,
+      totalAmount: 0,
+      uniqueReps: 0,
+      typeBreakdown: [],
+      monthlyTrend: [],
+      wakalaSummary: [],
+      repSummary: [],
+    };
+  }
+  return aggregateObligationsReport(tenant, query);
+}
+

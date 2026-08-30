@@ -1,101 +1,114 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
-import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { QrCode, Bell, Clock, Scan } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { Badge } from "@/components/ui/badge";
-import { CARD_STRIPE_INSET, SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import type { AttendanceSettings } from "@mms/shared";
-import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { AttendanceSettingRow } from "@/tenant/features/attendance/components/AttendanceSettingRow";
+import { useTranslation } from "@/hooks/useTranslation";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { ToggleRow } from "@/components/ui/ToggleRow";
+import { Field } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 
 interface AttendanceSettingsPreferencesSectionProps {
-  t: TranslationFunction;
   settingsDraft: AttendanceSettings;
   upd: <K extends keyof AttendanceSettings>(key: K, value: AttendanceSettings[K]) => void;
 }
 
 export function AttendanceSettingsPreferencesSection({
-  t,
   settingsDraft,
   upd,
 }: AttendanceSettingsPreferencesSectionProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
-    <>
-      <Card accentColor="primary" className="p-0 overflow-hidden">
-        <CardTitleBar
-          headingLevel={2}
-          inset
-          icon={<Clock className="w-4 h-4 text-primary" />}
-          title={t("attendance.settings.timingRules")}
-        />
-        <div className={cn("px-5 pb-2", CARD_STRIPE_INSET)}>
-          <AttendanceSettingRow label={t("attendance.settings.lateThreshold")} sub={t("attendance.settings.lateThresholdDesc")}>
-            <div className="flex items-center gap-2">
-              <label htmlFor="setting-late-threshold" className="sr-only">{t("attendance.settings.lateThresholdMinutes")}</label>
-              <Input
-                id="setting-late-threshold"
-                name="lateThresholdMins"
-                type="number"
-                min={1}
-                max={60}
-                value={settingsDraft.lateThresholdMins || ""}
-                onChange={(event) => upd("lateThresholdMins", Number(event.target.value))}
-                className="w-16 text-sm text-center"
-              />
-              <span className="text-xs text-muted-foreground">{t("attendance.settings.minutesShort")}</span>
-            </div>
-          </AttendanceSettingRow>
-          <AttendanceSettingRow label={t("attendance.settings.autoAbsent")} sub={t("attendance.settings.autoAbsentDesc")}>
-            <div className="flex items-center gap-2">
-              <label htmlFor="setting-auto-absent" className="sr-only">{t("attendance.settings.autoAbsentMinutes")}</label>
-              <Input
-                id="setting-auto-absent"
-                name="autoAbsentAfterMins"
-                type="number"
-                min={10}
-                max={120}
-                value={settingsDraft.autoAbsentAfterMins || ""}
-                onChange={(event) => upd("autoAbsentAfterMins", Number(event.target.value))}
-                className="w-16 text-sm text-center"
-              />
-              <span className="text-xs text-muted-foreground">{t("attendance.settings.minutesShort")}</span>
-            </div>
-          </AttendanceSettingRow>
-          <AttendanceSettingRow label={t("attendance.settings.lockAfterSubmit")} sub={t("attendance.settings.lockAfterSubmitDesc")}>
-            <Switch checked={settingsDraft.lockAfterSubmit} onCheckedChange={(value) => upd("lockAfterSubmit", value)} />
-          </AttendanceSettingRow>
-        </div>
-      </Card>
+    <div className="space-y-6">
+      <SectionCard
+        accentColor="primary"
+        icon={Clock}
+        title={t("attendance.settings.timingRules")}
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Field
+              label={t("attendance.settings.lateThreshold")}
+              hint={t("attendance.settings.lateThresholdDesc")}
+            >
+              <div className="flex items-center gap-2">
+                <Input
+                  id="setting-late-threshold"
+                  name="lateThresholdMins"
+                  type="number"
+                  min={1}
+                  max={60}
+                  value={settingsDraft.lateThresholdMins || ""}
+                  onChange={(event) => upd("lateThresholdMins", Number(event.target.value))}
+                  className={cn(FORM_INPUT, "w-24 text-center")}
+                />
+                <span className="text-xs text-muted-foreground">{t("attendance.settings.minutesShort")}</span>
+              </div>
+            </Field>
 
-      <Card accentColor="info" className="p-0 overflow-hidden">
-        <CardTitleBar
-          headingLevel={2}
-          inset
-          icon={<QrCode className="w-4 h-4 text-primary" />}
-          title={t("attendance.settings.qrAttendance")}
-        />
-        <div className={cn("px-5 pb-2", CARD_STRIPE_INSET)}>
-          <AttendanceSettingRow label={t("attendance.settings.enableQr")} sub={t("attendance.settings.enableQrDesc")}>
-            <Switch checked={Boolean(settingsDraft.qrEnabled)} onCheckedChange={(value) => upd("qrEnabled", value)} />
-          </AttendanceSettingRow>
-        </div>
-      </Card>
+            <Field
+              label={t("attendance.settings.autoAbsent")}
+              hint={t("attendance.settings.autoAbsentDesc")}
+            >
+              <div className="flex items-center gap-2">
+                <Input
+                  id="setting-auto-absent"
+                  name="autoAbsentAfterMins"
+                  type="number"
+                  min={10}
+                  max={120}
+                  value={settingsDraft.autoAbsentAfterMins || ""}
+                  onChange={(event) => upd("autoAbsentAfterMins", Number(event.target.value))}
+                  className={cn(FORM_INPUT, "w-24 text-center")}
+                />
+                <span className="text-xs text-muted-foreground">{t("attendance.settings.minutesShort")}</span>
+              </div>
+            </Field>
+          </div>
 
-      <Card accentColor="warning" className="p-0 overflow-hidden">
-        <CardTitleBar
-          headingLevel={2}
-          inset
-          icon={<Bell className="w-4 h-4 text-primary" />}
-          title={t("attendance.settings.alerts")}
+          <div className="pt-1 border-t border-border/60">
+            <ToggleRow
+              label={t("attendance.settings.lockAfterSubmit")}
+              description={t("attendance.settings.lockAfterSubmitDesc")}
+              value={Boolean(settingsDraft.lockAfterSubmit)}
+              onChange={(value) => upd("lockAfterSubmit", value)}
+            />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        accentColor="info"
+        icon={QrCode}
+        title={t("attendance.settings.qrAttendance")}
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <ToggleRow
+          label={t("attendance.settings.enableQr")}
+          description={t("attendance.settings.enableQrDesc")}
+          value={Boolean(settingsDraft.qrEnabled)}
+          onChange={(value) => upd("qrEnabled", value)}
         />
-        <div className={cn("px-5 pb-2", CARD_STRIPE_INSET)}>
-          <AttendanceSettingRow label={t("attendance.settings.lowThreshold")} sub={t("attendance.settings.lowThresholdDesc")}>
+      </SectionCard>
+
+      <SectionCard
+        accentColor="warning"
+        icon={Bell}
+        title={t("attendance.settings.alerts")}
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <div className="space-y-4">
+          <Field
+            label={t("attendance.settings.lowThreshold")}
+            hint={t("attendance.settings.lowThresholdDesc")}
+          >
             <div className="flex items-center gap-2">
-              <label htmlFor="setting-low-attendance" className="sr-only">{t("attendance.settings.lowThresholdPercent")}</label>
               <Input
                 id="setting-low-attendance"
                 name="lowAttendanceThreshold"
@@ -104,35 +117,58 @@ export function AttendanceSettingsPreferencesSection({
                 max={100}
                 value={(settingsDraft.lowAttendanceThreshold as number | undefined) || ""}
                 onChange={(event) => upd("lowAttendanceThreshold", Number(event.target.value))}
-                className="w-16 text-sm text-center"
+                className={cn(FORM_INPUT, "w-24 text-center")}
               />
               <span className="text-xs text-muted-foreground">%</span>
             </div>
-          </AttendanceSettingRow>
-          <AttendanceSettingRow label={t("attendance.settings.notifyParents")} sub={t("attendance.settings.notifyParentsDesc")}>
-            <Switch checked={Boolean(settingsDraft.notifyParents)} onCheckedChange={(value) => upd("notifyParents", value)} />
-          </AttendanceSettingRow>
-          <AttendanceSettingRow label={t("attendance.settings.requireAbsentNote")} sub={t("attendance.settings.requireAbsentNoteDesc")}>
-            <Switch checked={Boolean(settingsDraft.requireNoteForAbsent)} onCheckedChange={(value) => upd("requireNoteForAbsent", value)} />
-          </AttendanceSettingRow>
-        </div>
-      </Card>
+          </Field>
 
-      <Card accentColor="success" className="p-0 overflow-hidden">
-        <CardTitleBar
-          headingLevel={2}
-          inset
-          icon={<Scan className="w-4 h-4 text-primary" />}
-          title={t("attendance.settings.advanced")}
-        />
-        <div className={cn("px-5 pb-2", CARD_STRIPE_INSET)}>
-          <AttendanceSettingRow label={t("attendance.settings.offlineMode")} sub={t("attendance.settings.offlineModeDesc")}>
-            <Switch checked={Boolean(settingsDraft.offlineEnabled)} onCheckedChange={(value) => upd("offlineEnabled", value)} />
-          </AttendanceSettingRow>
-          <AttendanceSettingRow label={t("attendance.settings.geoTagging")} sub={t("attendance.settings.geoTaggingDesc")}>
-            <Switch checked={Boolean(settingsDraft.geoTagging)} onCheckedChange={(value) => upd("geoTagging", value)} />
-          </AttendanceSettingRow>
-          <AttendanceSettingRow label={t("attendance.settings.defaultLayout")} sub={t("attendance.settings.defaultLayoutDesc")}>
+          <div className="space-y-2 pt-1 border-t border-border/60">
+            <ToggleRow
+              label={t("attendance.settings.notifyParents")}
+              description={t("attendance.settings.notifyParentsDesc")}
+              value={Boolean(settingsDraft.notifyParents)}
+              onChange={(value) => upd("notifyParents", value)}
+            />
+            <ToggleRow
+              label={t("attendance.settings.requireAbsentNote")}
+              description={t("attendance.settings.requireAbsentNoteDesc")}
+              value={Boolean(settingsDraft.requireNoteForAbsent)}
+              onChange={(value) => upd("requireNoteForAbsent", value)}
+            />
+          </div>
+        </div>
+      </SectionCard>
+
+      <SectionCard
+        accentColor="success"
+        icon={Scan}
+        title={t("attendance.settings.advanced")}
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <div className="space-y-3">
+          <ToggleRow
+            label={t("attendance.settings.offlineMode")}
+            description={t("attendance.settings.offlineModeDesc")}
+            value={Boolean(settingsDraft.offlineEnabled)}
+            onChange={(value) => upd("offlineEnabled", value)}
+          />
+          <ToggleRow
+            label={t("attendance.settings.geoTagging")}
+            description={t("attendance.settings.geoTaggingDesc")}
+            value={Boolean(settingsDraft.geoTagging)}
+            onChange={(value) => upd("geoTagging", value)}
+          />
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
+            <div className="min-w-0">
+              <p className="m-0 text-sm font-semibold text-foreground">
+                {t("attendance.settings.defaultLayout")}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("attendance.settings.defaultLayoutDesc")}
+              </p>
+            </div>
             <SegmentedPillFilter
               size="sm"
               value={((settingsDraft.defaultViewLayout as string | undefined) || "list") as "list" | "cards"}
@@ -142,18 +178,38 @@ export function AttendanceSettingsPreferencesSection({
                 { value: "cards", label: t("attendance.settings.cardGrid") },
               ]}
             />
-          </AttendanceSettingRow>
-          <AttendanceSettingRow label={t("attendance.settings.facialRecognition")} sub={t("attendance.settings.facialRecognitionDesc")}>
-            <Badge pill variant="outline" className={cn("px-2 font-bold", SEMANTIC_BADGE.warningStrong)}>{t("attendance.settings.comingSoon")}</Badge>
-          </AttendanceSettingRow>
-          <AttendanceSettingRow label={t("attendance.settings.dailyAutoLock")} sub={t("attendance.settings.dailyAutoLockDesc")}>
-            <Switch checked={settingsDraft.lockAfterSubmit} onCheckedChange={(value) => upd("lockAfterSubmit", value)} />
-          </AttendanceSettingRow>
-          <AttendanceSettingRow label={t("attendance.settings.auditLogging")} sub={t("attendance.settings.auditLoggingDesc")}>
-            <Badge pill variant="outline" className={cn("px-2 font-bold", SEMANTIC_BADGE.successStrong)}>{t("attendance.settings.active")}</Badge>
-          </AttendanceSettingRow>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
+            <div className="min-w-0">
+              <p className="m-0 text-sm font-semibold text-foreground">
+                {t("attendance.settings.facialRecognition")}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("attendance.settings.facialRecognitionDesc")}
+              </p>
+            </div>
+            <Badge pill variant="outline" className={cn("px-2 font-bold", SEMANTIC_BADGE.warningStrong)}>
+              {t("attendance.settings.comingSoon")}
+            </Badge>
+          </div>
+
+
+          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
+            <div className="min-w-0">
+              <p className="m-0 text-sm font-semibold text-foreground">
+                {t("attendance.settings.auditLogging")}
+              </p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("attendance.settings.auditLoggingDesc")}
+              </p>
+            </div>
+            <Badge pill variant="outline" className={cn("px-2 font-bold", SEMANTIC_BADGE.successStrong)}>
+              {t("attendance.settings.active")}
+            </Badge>
+          </div>
         </div>
-      </Card>
-    </>
+      </SectionCard>
+    </div>
   );
 }

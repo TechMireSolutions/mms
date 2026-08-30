@@ -1,7 +1,7 @@
 import { Users, type LucideIcon } from 'lucide-react';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { resolveWidgetSubText, resolveWidgetTitle } from '@/lib/dashboardWidgets';
-import type { CustomCard } from '@/components/ui/reports/reportMetadata';
+import type { CustomCard } from '@/lib/reports/reportMetadata';
 import type { AggregateCardValue, CategorizedKPIItem, KPIItem } from './kpiSummaryTypes';
 import { KPI_ICONS } from './kpiSummaryIcons';
 

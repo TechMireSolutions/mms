@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
-import type { CustomCard } from './reportMetadata';
+import type { CustomCard } from '@/lib/reports/reportMetadata';
 import { getDefaultKPICollection, getCategoryLabelKey } from './kpiSummaryFormatters';
 import { buildStandardKPICards } from './kpiSummaryStandardCards';
 import {
@@ -51,6 +51,10 @@ export function useKPISummaryModel({ category, role }: KPISummaryProps): KPISumm
     auxiliaryTeacherMetrics,
     attendanceMetrics,
     financeMetrics,
+    accountingMetrics,
+    obligationsMetrics,
+    usersMetrics,
+    messagingMetrics,
     hasanatMetrics,
     sessionsMetrics,
     examinationsMetrics,
@@ -71,6 +75,10 @@ export function useKPISummaryModel({ category, role }: KPISummaryProps): KPISumm
       auxiliaryTeacherMetrics,
       attendanceMetrics,
       financeMetrics,
+      accountingMetrics,
+      obligationsMetrics,
+      usersMetrics,
+      messagingMetrics,
       hasanatMetrics,
       sessionsMetrics,
       examinationsMetrics,
@@ -90,6 +98,10 @@ export function useKPISummaryModel({ category, role }: KPISummaryProps): KPISumm
       auxiliaryTeacherMetrics,
       attendanceMetrics,
       financeMetrics,
+      accountingMetrics,
+      obligationsMetrics,
+      usersMetrics,
+      messagingMetrics,
       hasanatMetrics,
       sessionsMetrics,
       examinationsMetrics,

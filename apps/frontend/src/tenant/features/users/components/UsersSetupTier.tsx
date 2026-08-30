@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useEffect, useRef } from "react";
+import React, { lazy, Suspense, useCallback, useRef } from "react";
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -37,7 +37,6 @@ export interface UsersSetupTierProps {
 }
 
 function discardConfirmKey(leavingTab: string): AppTranslationKey {
-  if (leavingTab === "fields") return "users.setup.discardUnsavedFieldsConfirm";
   if (leavingTab === "permissions") return "users.setup.discardUnsavedPermissionsConfirm";
   return "users.setup.discardUnsavedPreferencesConfirm";
 }
@@ -76,13 +75,8 @@ export const UsersSetupTier = React.memo(function UsersSetupTier({
       }
       panelState.discardSetupDrafts();
     },
+    onChange: onTabChange,
   });
-
-  useEffect(() => {
-    if (subTabs.sub !== activeTab) {
-      onTabChange(subTabs.sub);
-    }
-  }, [subTabs.sub, activeTab, onTabChange]);
 
   const showSettingsPanel = subTabs.showPrefs;
 

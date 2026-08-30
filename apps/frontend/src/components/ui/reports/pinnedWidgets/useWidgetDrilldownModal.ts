@@ -9,8 +9,8 @@ import {
 } from "@/lib/reports/widgetRecordToggle";
 import { useWidgetCollections } from "@/lib/reports/useReportCollections";
 import type { ReportCollection } from "@/lib/reports/reportMetadata";
-import { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
-import { getFilteredRecords } from "@/components/ui/reports/pinnedWidgets/widgetDataUtils";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
+import { getFilteredRecords } from "@/lib/reports/widgetDataUtils";
 
 export function useWidgetDrilldownModal(widget: CustomWidget) {
   const { t } = useTranslation();

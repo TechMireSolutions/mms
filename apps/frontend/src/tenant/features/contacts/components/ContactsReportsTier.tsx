@@ -5,12 +5,10 @@ import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 
 export function ContactsReportsTier(): React.JSX.Element {
   return (
-    <ModuleTierMotion tier="reports">
+    <ModuleTierMotion tier="reports" className="space-y-4">
       <ErrorBoundary>
-        <div className="space-y-4">
-          <KPISummary category="contacts" />
-          <ModuleReports category="contacts" />
-        </div>
+        <KPISummary category="contacts" />
+        <ModuleReports category="contacts" />
       </ErrorBoundary>
     </ModuleTierMotion>
   );

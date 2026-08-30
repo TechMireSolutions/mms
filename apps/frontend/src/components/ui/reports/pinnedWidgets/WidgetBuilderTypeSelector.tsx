@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 
 interface WidgetBuilderTypeSelectorProps {
   builderCollection: CustomWidget["collection"];

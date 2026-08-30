@@ -82,7 +82,7 @@ export const ContactsSetupTier = React.memo(function ContactsSetupTier({
                   onPrefsDirtyChange={setPrefsDirty}
                 />
               ) : (
-                <SetupReadOnlyMessage title={t("contacts.setupReadOnly")} />
+                <SetupReadOnlyMessage title={t("contacts.setup.readOnly")} />
               ))}
             {subTabs.showSync && (
               // Sync mutates contacts + OAuth secrets — gate on contacts.write (canWrite),

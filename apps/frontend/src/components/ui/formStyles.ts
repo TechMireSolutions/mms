@@ -81,4 +81,5 @@ export const DETAIL_SECTION_TITLE =
 export const FORM_SELECT_MINI =
   'min-h-11 h-11 px-3 py-2 rounded text-xs font-bold bg-card border border-border text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none touch-manipulation';
 
-
+/** Shared SectionCard className for module Setup settings panels. */
+export const SETUP_SECTION_CARD_CLASS = 'shadow-sm hover:shadow-md border-border/80' as const;

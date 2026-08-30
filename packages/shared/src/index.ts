@@ -252,6 +252,7 @@ export * from './financeModuleSettings.js';
 export * from './financeReportAggregates.js';
 export * from './financeSetupConfigTypes.js';
 export * from './obligationsModuleManifest.js';
+export * from './obligationsReportAggregates.js';
 
 // ---------------------------------------------------------------------------
 // 10. Hasanat, Examinations & Question Bank
@@ -277,6 +278,7 @@ export * from './questionBankModuleManifest.js';
 export * from './questionBankModuleSettings.js';
 export * from './questionBankSetupConfigTypes.js';
 export * from './questionBankSourceUtils.js';
+export * from './questionBankReportAggregates.js';
 export * from './questionBankTypes.js';
 
 // ---------------------------------------------------------------------------
@@ -292,6 +294,7 @@ export * from './usersExportUtils.js';
 export * from './usersListQuery.js';
 export * from './usersModuleManifest.js';
 export * from './usersModuleSettings.js';
+export * from './usersReportAggregates.js';
 export * from './whatsappProvider.js';
 
 // ---------------------------------------------------------------------------

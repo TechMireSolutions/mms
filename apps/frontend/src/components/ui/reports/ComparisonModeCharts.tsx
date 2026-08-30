@@ -1,6 +1,6 @@
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
+import { ReportChartCard } from "./ReportChartCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatNumber } from "@mms/shared";
 import {
@@ -12,6 +12,7 @@ import {
   YAxis,
 } from "recharts";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
+import { ChartTooltip, ChartTooltipRow } from "@/components/ui/ChartTooltip";
 
 import type { ComparisonDataItem, DateRangeDataItem } from "./comparisonModeTypes";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
@@ -63,24 +64,40 @@ export function ComparisonModeCharts({
 
   return (
     <>
-      <div className={`${WORK_SURFACE} p-5 text-start`}>
-        <p className="text-xs text-muted-foreground mb-3">
-          {t("reports.comparison.comparing")} <span className="font-semibold text-primary">{labelA}</span> {t("reports.comparison.vs")} <span className="font-semibold text-warning">{labelB}</span>
-        </p>
-        <div className="h-panel-sm w-full">
-          <SafeResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
-            <BarChart data={translatedData} barSize={22}>
-              <ChartGrid />
-              <XAxis dataKey={mode === "sessions" ? "metric" : "month"} tick={chartAxisTick(11)} />
-              <YAxis tick={chartAxisTick(11)} />
-              <Tooltip />
-              <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-              <Bar dataKey="a" name={labelA} fill={primary} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="b" name={labelB} fill={secondary} radius={[4, 4, 0, 0]} />
-            </BarChart>
-          </SafeResponsiveContainer>
-        </div>
-      </div>
+      <ReportChartCard
+        title={t("reports.moduleTools.compare")}
+        subtitle={`${t("reports.comparison.comparing")} ${labelA || ""} ${t("reports.comparison.vs")} ${labelB || ""}`}
+        heightClass="h-panel-sm"
+        accentColor="primary"
+      >
+        <BarChart data={translatedData} barSize={22}>
+          <ChartGrid />
+          <XAxis dataKey={mode === "sessions" ? "metric" : "month"} tick={chartAxisTick(11)} />
+          <YAxis tick={chartAxisTick(11)} />
+          <Tooltip
+            content={({ active, payload, label }) => {
+              if (!active || !payload?.length) return null;
+              return (
+                <ChartTooltip active={active} payload={payload} label={label}>
+                  <div className="mt-1 space-y-1">
+                    {payload.map((entry) => (
+                      <ChartTooltipRow
+                        key={String(entry.dataKey ?? entry.name)}
+                        color={entry.color}
+                        name={entry.name}
+                        value={formatVal(Number(entry.value))}
+                      />
+                    ))}
+                  </div>
+                </ChartTooltip>
+              );
+            }}
+          />
+          <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+          <Bar dataKey="a" name={labelA} fill={primary} radius={[4, 4, 0, 0]} />
+          <Bar dataKey="b" name={labelB} fill={secondary} radius={[4, 4, 0, 0]} />
+        </BarChart>
+      </ReportChartCard>
 
       {mode === "sessions" && (
         <div className={`${WORK_SURFACE} overflow-hidden`}>

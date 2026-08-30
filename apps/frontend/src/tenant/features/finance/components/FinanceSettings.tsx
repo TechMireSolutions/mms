@@ -1,11 +1,9 @@
 import React, { useEffect } from "react";
 import { DollarSign } from "lucide-react";
-import { FINANCE_MODULE_MANIFEST } from "@mms/shared";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
-import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { FinancePreferencesSection } from "@/tenant/features/finance/components/FinancePreferencesSection";
 import { useFinanceSetupPanelState } from "@/tenant/features/finance/hooks/useFinanceSetupPanelState";
 
@@ -18,7 +16,6 @@ export const FinanceSettings = React.memo(function FinanceSettings({
   onPrefsDirtyChange,
 }: FinanceSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(FINANCE_MODULE_MANIFEST);
   const {
     settings,
     settingsDraft,
@@ -38,35 +35,29 @@ export const FinanceSettings = React.memo(function FinanceSettings({
     : undefined;
 
   return (
-    <div className="space-y-4 max-w-3xl text-start">
-      {!canEditSetup ? (
-        <SetupReadOnlyMessage title={t("finance.setup.readOnly")} />
-      ) : (
-        <SectionCard
-          accentColor="primary"
-          icon={DollarSign}
-          title={t("finance.settings.title")}
-          className="shadow-sm hover:shadow-md border-border/80"
-        >
-          <div className="space-y-4">
-            <FinancePreferencesSection
-              settings={settings}
-              settingsDraft={settingsDraft}
-              upd={upd}
-            />
+    <div className="space-y-6 max-w-3xl text-start">
+      <SectionCard
+        accentColor="primary"
+        icon={DollarSign}
+        title={t("finance.settings.title")}
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <FinancePreferencesSection
+          settings={settings}
+          settingsDraft={settingsDraft}
+          upd={upd}
+        />
+      </SectionCard>
 
-            <ModuleSetupSaveFooter
-              dirty={isPrefsDirty}
-              saving={saving}
-              saved={saved}
-              unsavedWarning={unsavedWarning}
-              saveLabel={t("common.save")}
-              savedLabel={t("settings.savedBadge")}
-              onSave={handleSave}
-            />
-          </div>
-        </SectionCard>
-      )}
+      <ModuleSetupSaveFooter
+        dirty={isPrefsDirty}
+        saving={saving}
+        saved={saved}
+        unsavedWarning={unsavedWarning}
+        saveLabel={t("common.save")}
+        savedLabel={t("settings.savedBadge")}
+        onSave={handleSave}
+      />
     </div>
   );
 });

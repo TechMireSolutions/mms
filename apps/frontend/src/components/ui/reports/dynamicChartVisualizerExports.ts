@@ -1,6 +1,7 @@
-import { formatDateTime, formatNumber, todayISO } from '@mms/shared';
+import { formatDateTime, formatNumber } from '@mms/shared';
 import type { AggregatedItem, ChartOperation } from './dynamicChartVisualizerTypes';
 import { getPdfPageDimensions } from './dynamicChartVisualizerHelpers';
+import { exportReportExcel, sanitizeExportValue } from '@/lib/reports/reportExportCore';
 
 function slugifyTitle(title: string): string {
   return title.toLowerCase().replace(/\s+/g, '-');
@@ -28,16 +29,16 @@ export async function exportVisualizerExcel(options: {
   processedData: AggregatedItem[];
 }): Promise<void> {
   if (options.processedData.length === 0) return;
-  const XLSX = await import('xlsx');
   const sheetData = options.processedData.map((aggregatedItem) => ({
-    'Grouping Key': aggregatedItem.name,
-    'Aggregated Value': aggregatedItem.value,
-    Count: aggregatedItem.count,
+    'Grouping Key': sanitizeExportValue(aggregatedItem.name),
+    'Aggregated Value': sanitizeExportValue(aggregatedItem.value),
+    Count: sanitizeExportValue(aggregatedItem.count),
   }));
-  const worksheet = XLSX.utils.json_to_sheet(sheetData);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, 'Analytics');
-  XLSX.writeFile(workbook, `${options.title.replace(/\s+/g, '_')}_${todayISO()}.xlsx`);
+  await exportReportExcel({
+    title: options.title,
+    rows: sheetData as Record<string, unknown>[],
+    filename: options.title,
+  });
 }
 
 export async function exportVisualizerPdf(options: {
@@ -98,7 +99,11 @@ export async function exportVisualizerPdf(options: {
 
   autoTable(doc, {
     head: [['Grouping Key (X-Axis)', `Aggregated Value (${options.operation.toUpperCase()})`, 'Record Count']],
-    body: options.processedData.map((row) => [row.name, formatNumber(row.value), row.count]),
+    body: options.processedData.map((row) => [
+      sanitizeExportValue(row.name),
+      sanitizeExportValue(formatNumber(row.value)),
+      sanitizeExportValue(row.count),
+    ]),
     startY: chartHeight + 48,
     styles: { fontSize: options.pdfOrientation === 'l' ? 9 : 10 },
     headStyles: { fillColor: [16, 185, 129] },

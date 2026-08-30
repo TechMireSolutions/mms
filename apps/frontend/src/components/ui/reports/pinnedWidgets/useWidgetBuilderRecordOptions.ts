@@ -2,7 +2,7 @@ import { useEffect, useMemo } from "react";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import { type Class, type Session } from "@/lib/data/sessionsData";
 import type { SwitchRecordOption } from "@/components/ui/reports/pinnedWidgets/WidgetBuilderSwitchOptions";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 
 interface UseWidgetBuilderRecordOptionsArgs {
   collections: ReportCollectionsSnapshot;

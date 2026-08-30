@@ -1,34 +1,40 @@
 # ------------------------------------------------------------------------------
-# MADRASA MANAGEMENT SYSTEM (MMS) - GLOBAL .GITIGNORE
+# MADRASA MANAGEMENT SYSTEM (MMS) - MONOREPO .GITIGNORE
 # ------------------------------------------------------------------------------
 
-# Dependency Directories
+# 1. Dependency Directories & Package Managers
 node_modules/
 **/node_modules/
 .pnpm-store/
+.npm/
 
-# Build & Compilation Outputs
+# 2. Build & Compilation Outputs
 dist/
 **/dist/
 dist-ssr/
 build/
+*.tsbuildinfo
 **/tsconfig.tsbuildinfo
 .turbo/
 .vite/
-
-# Temporary config timestamps (e.g. Vite)
 vite.config.ts.timestamp-*
 vite.config.js.timestamp-*
 
-# Environment and Secrets (Never commit secrets)
+# 3. Security, Environment & Credentials (Zero Trust)
 .env
 .env.*
+*.env
+*.local
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
 !.env.example
 !**/.env.example
-*.local
 
-# Logs and Debug Files
-/logs/
+# 4. Logs, Runtime Ephemera & Profiling
+logs/
 .logs/
 .backups/
 *.log
@@ -37,17 +43,61 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+*.heapsnapshot
+*.cpuprofile
+core.*
 
-# System & OS Files
+# 5. Database, Redis & Backup Artifacts
+*.db
+*.db-shm
+*.db-wal
+dump.rdb
+*.dump
+*.sql.gz
+*.mmsbak
+*.bak
+*.tmp
+
+# 6. Test Artifacts, Coverage & Caches
+coverage/
+**/coverage/
+.nyc_output/
+.vitest/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# 7. Local Uploads & Media Storage
+/apps/backend/uploads/
+/apps/backend/src/db/seeds.json
+
+# 8. Tool, Agent & Model Overrides
+.claude/settings.local.json
+.claude/worktrees/
+.wwebjs_auth/
+.wwebjs_cache/
+whatsapp-session/
+
+# 9. Production Deploy State (Server-Only)
+.deploy-lock-hash
+.deploy-apache-fingerprint
+.deploy-current-sha
+.deploy-releases/
+
+# 10. System & Operating System Files
 .DS_Store
 .DS_Store?
 ._*
+.AppleDouble
+.LSOverride
 .Spotlight-V100
 .Trashes
 ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# IDEs & Editor Directories
+# 11. IDEs & Editor Directories
 .idea/
 *.suo
 *.ntvs*
@@ -55,45 +105,16 @@ Thumbs.db
 *.sln
 *.sw?
 *~
-# VS Code files - keep extensions.json for recommended workspace settings
 .vscode/*
 !.vscode/extensions.json
 
-# Test Artifacts and Coverage reports
-coverage/
-**/coverage/
-.nyc_output/
-test-results/
-playwright-report/
-blob-report/
-playwright/.cache/
-
-# Local Uploads & Media (Storage paths)
-/apps/backend/uploads/
-/apps/backend/src/db/seeds.json
-
-# Tool & Model Overrides
-.claude/settings.local.json
-.claude/worktrees/
-.wwebjs_auth/
-.wwebjs_cache/
-
-# SQLite Database Files (if used for local mocks)
-*.db
-*.db-shm
-*.db-wal
-
-# Production deploy state (server-only; never commit)
-.deploy-lock-hash
-.deploy-apache-fingerprint
-.deploy-current-sha
-.deploy-releases/
-
-# Local throwaway dev/scratch scripts
-/scratch.ts
-/scratch*.js
-/temp*.js
-/fix_generic.js
-/test-ts.js
-/test-ts.ts
+# 12. Local Throwaway Dev/Scratch Files
+/scratch/
+/scratch.*
+/scratch_*.*
+/temp*.*
+/fix_*.*
+/test-ts.*
 /typecheck_output.txt
+
+

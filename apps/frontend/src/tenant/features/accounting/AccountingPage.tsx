@@ -142,12 +142,7 @@ export default function Accounting() {
 
           <ErrorBoundary>
           {activeTab === "reports" && (
-            <AccountingReportsTier
-              accounts={accounts}
-              entries={journalEntries}
-              fiscalYears={fiscalYears}
-              settings={settings}
-            />
+            <AccountingReportsTier />
           )}
 
           {activeTab === "work" && (

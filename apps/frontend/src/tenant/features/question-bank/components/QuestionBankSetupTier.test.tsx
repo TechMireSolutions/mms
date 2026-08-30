@@ -19,6 +19,14 @@ vi.mock("@/components/ui/SetupReadOnlyMessage", () => ({
   SetupReadOnlyMessage: ({ title }: { title: string }) => <div data-testid="read-only">{title}</div>,
 }));
 
+let mockCanEditSetup = true;
+
+vi.mock("@/tenant/hooks/usePermissions", () => ({
+  useModulePermissions: () => ({
+    canEditSetup: mockCanEditSetup,
+  }),
+}));
+
 vi.mock("./QuestionBankSettings", () => ({
   default: () => <div data-testid="settings">Question Bank Settings</div>,
   QuestionBankSettings: () => <div data-testid="settings">Question Bank Settings</div>,
@@ -26,28 +34,16 @@ vi.mock("./QuestionBankSettings", () => ({
 
 describe("QuestionBankSetupTier Component", () => {
   it("renders settings when canEditSetup is true", () => {
-    const html = renderToStaticMarkup(
-      <QuestionBankSetupTier
-        tabs={[{ id: "preferences", label: "Preferences" }]}
-        activeTab="preferences"
-        canEditSetup={true}
-        onTabChange={vi.fn()}
-      />,
-    );
+    mockCanEditSetup = true;
+    const html = renderToStaticMarkup(<QuestionBankSetupTier />);
 
     expect(html).toContain("module-tier-motion");
     expect(html).toBeDefined();
   });
 
   it("renders read-only message when canEditSetup is false", () => {
-    const html = renderToStaticMarkup(
-      <QuestionBankSetupTier
-        tabs={[{ id: "preferences", label: "Preferences" }]}
-        activeTab="preferences"
-        canEditSetup={false}
-        onTabChange={vi.fn()}
-      />,
-    );
+    mockCanEditSetup = false;
+    const html = renderToStaticMarkup(<QuestionBankSetupTier />);
 
     expect(html).toContain("questionBank.setup.readOnly");
   });

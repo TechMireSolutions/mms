@@ -9,11 +9,16 @@ export const GENERIC_SAVED_REPORT_CATEGORIES = [
   'teachers',
   'attendance',
   'financial',
+  'accounting',
   'examinations',
   'questionBank',
   'hasanat',
   'sessions',
   'faculty',
+  'enrollments',
+  'obligations',
+  'messaging',
+  'users',
 ] as const;
 
 /** Validates a category supported by the generic saved-reports REST resource. */

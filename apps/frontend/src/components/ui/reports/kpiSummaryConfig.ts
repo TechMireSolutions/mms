@@ -1,5 +1,5 @@
 import type { AppTranslationKey } from '@mms/shared';
-import type { CustomCard } from '@/components/ui/reports/reportMetadata';
+import type { CustomCard } from '@/lib/reports/reportMetadata';
 
 export function areStringListsEqual(left: string[], right: string[]): boolean {
   return left.length === right.length && left.every((value, index) => value === right[index]);

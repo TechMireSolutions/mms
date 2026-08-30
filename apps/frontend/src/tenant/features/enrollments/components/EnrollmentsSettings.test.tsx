@@ -9,7 +9,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-let mockCanEdit = true;
+const mockCanEdit = true;
 
 vi.mock("@/tenant/hooks/usePermissions", () => ({
   useModulePermissions: () => ({
@@ -53,19 +53,12 @@ vi.mock("@/components/ui/ModuleSetupSaveFooter", () => ({
 }));
 
 describe("EnrollmentsSettings Component", () => {
-  it("renders settings fields and toggle rows when canEditSetup is true", () => {
-    mockCanEdit = true;
+  it("renders settings fields and toggle rows", () => {
     const html = renderToStaticMarkup(<EnrollmentsSettings />);
     expect(html).toContain("enrollments.settings.title");
     expect(html).toContain("enrollments.settings.maxStudentsPerClass");
     expect(html).toContain("30");
     expect(html).toContain("enrollments.settings.waitlistEnabled");
     expect(html).toContain("Save Footer");
-  });
-
-  it("renders read only message when canEditSetup is false", () => {
-    mockCanEdit = false;
-    const html = renderToStaticMarkup(<EnrollmentsSettings />);
-    expect(html).toContain("enrollments.setupReadOnly");
   });
 });

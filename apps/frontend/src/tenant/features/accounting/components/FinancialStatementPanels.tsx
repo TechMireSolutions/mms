@@ -32,7 +32,7 @@ export function IncomeStatementPanel({
         totalLabel={t('accounting.reports.totalRevenue')}
         total={revenue}
         debitNormal={false}
-        color="bg-success/10/60"
+        color="bg-success/10"
       />
       <ReportSection
         title={t('accounting.reports.expenses')}
@@ -40,7 +40,7 @@ export function IncomeStatementPanel({
         totalLabel={t('accounting.reports.totalExpenses')}
         total={expenses}
         debitNormal
-        color="bg-destructive/10/60"
+        color="bg-destructive/10"
       />
       <div className={`flex items-center justify-between px-5 py-4 rounded-xl border-2 font-bold text-lg ${netSurplus >= 0 ? 'border-success/40 bg-success/10 text-success' : 'border-destructive/40 bg-destructive/10 text-destructive'}`}>
         <span>{netSurplus >= 0 ? `📈 ${t('accounting.reports.netSurplus')}` : `📉 ${t('accounting.reports.netDeficit')}`}</span>
@@ -81,7 +81,7 @@ export function BalanceSheetPanel({
         totalLabel={t('accounting.reports.totalAssets')}
         total={assets}
         debitNormal
-        color="bg-info/10/60"
+        color="bg-info/10"
       />
       <ReportSection
         title={t('accounting.reports.liabilities')}
@@ -89,7 +89,7 @@ export function BalanceSheetPanel({
         totalLabel={t('accounting.reports.totalLiabilities')}
         total={liabilities}
         debitNormal={false}
-        color="bg-destructive/10/60"
+        color="bg-destructive/10"
       />
       <ReportSection
         title={t('accounting.reports.equity')}

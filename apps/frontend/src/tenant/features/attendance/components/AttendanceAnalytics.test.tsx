@@ -25,22 +25,36 @@ vi.mock("@/components/ui/ModuleCommandMetricsGrid", () => ({
   ),
 }));
 
-vi.mock("./AttendanceAnalyticsChartPanels", () => ({
-  AttendanceAnalyticsChartPanels: () => <div data-testid="chart-panels">Chart Panels</div>,
-}));
+import { AttendanceAnalyticsChartPanels } from "./AttendanceAnalyticsChartPanels";
 
 vi.mock("./AttendanceAnalyticsInsights", () => ({
   AttendanceAnalyticsInsights: () => <div data-testid="insights">Insights</div>,
 }));
 
 describe("AttendanceAnalytics Component", () => {
-  it("renders metrics grid, chart panels, and insights", () => {
+  it("renders metrics grid and insights", () => {
     const html = renderToStaticMarkup(
       <AttendanceAnalytics filters={{}} records={[]} />,
     );
 
     expect(html).toContain("attendance.analytics.kpi.overallAttendance:92%");
-    expect(html).toContain("Chart Panels");
     expect(html).toContain("Insights");
+  });
+
+  it("renders chart panels", () => {
+    const html = renderToStaticMarkup(
+      <AttendanceAnalyticsChartPanels
+        t={((key: string) => key) as unknown as Parameters<typeof AttendanceAnalyticsChartPanels>[0]["t"]}
+        colors={["#000"]}
+        classStats={[]}
+        monthlyTrend={[]}
+        studentRates={[]}
+        pieData={[]}
+        statuses={[]}
+        totalStats={{ present: 100 }}
+      />,
+    );
+
+    expect(html).toBeTruthy();
   });
 });

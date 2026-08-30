@@ -1,7 +1,8 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { UserCheck, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ExportToolbar } from "@/components/ui/ExportToolbar";
+import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
+import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { TableCellLink } from "@/components/ui/TableCellLink";
 import {
@@ -11,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -33,25 +34,60 @@ export const AttendanceReportTables = React.memo(function AttendanceReportTables
 }: AttendanceReportTablesProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const summaryHeaders = useMemo(() => [
-    t("attendance.report.colClass"),
-    t("attendance.report.colTotalStudents"),
-    t("attendance.report.colAvgRate"),
-    t("attendance.report.colPerfectAttendance"),
-    t("attendance.report.colBelowThreshold"),
+  const summaryColumns = useMemo<ExportColumn[]>(() => [
+    { key: "class", header: t("attendance.report.colClass") },
+    { key: "total", header: t("attendance.report.colTotalStudents") },
+    { key: "avgRate", header: t("attendance.report.colAvgRate") },
+    { key: "perfectAttendance", header: t("attendance.report.colPerfectAttendance") },
+    { key: "belowThreshold", header: t("attendance.report.colBelowThreshold") },
   ], [t]);
 
+  const summaryRows = useMemo(() => summary.map((summaryRow) => ({
+    class: summaryRow.class,
+    total: summaryRow.total,
+    avgRate: `${summaryRow.avgRate}%`,
+    perfectAttendance: summaryRow.perfectAttendance,
+    belowThreshold: summaryRow.belowThreshold,
+  })), [summary]);
+
+  const studentColumns = useMemo<ExportColumn[]>(() => [
+    { key: "studentName", header: t("attendance.report.colStudent") },
+    { key: "class", header: t("attendance.report.colStudentClass") },
+    { key: "present", header: t("attendance.report.colPresent") },
+    { key: "absent", header: t("attendance.report.colAbsent") },
+    { key: "late", header: t("attendance.report.colLate") },
+    { key: "total", header: t("attendance.report.colTotal") },
+    { key: "rate", header: t("attendance.report.colRate") },
+  ], [t]);
+
+  const studentRows = useMemo(() => studentAttendanceRows.map((studentAttendance) => ({
+    studentName: studentAttendance.studentName,
+    class: studentAttendance.class,
+    present: studentAttendance.present,
+    absent: studentAttendance.absent,
+    late: studentAttendance.late,
+    total: studentAttendance.total,
+    rate: `${studentAttendance.rate}%`,
+  })), [studentAttendanceRows]);
+
+  const [studentPage, setStudentPage] = useState(1);
+  const studentPageSize = 15;
+  const pagedStudentAttendanceRows = useMemo(
+    () => studentAttendanceRows.slice((studentPage - 1) * studentPageSize, studentPage * studentPageSize),
+    [studentAttendanceRows, studentPage, studentPageSize],
+  );
+
   return (
-    <>
-      <ExportToolbar
-        title={t("attendance.report.summaryTitle")}
-        data={summary}
-        headers={summaryHeaders}
-      />
+    <div className="space-y-6">
       {summary.length === 0 ? (
         <EmptyState icon={UserCheck} title={t("attendance.report.noData")} description={t("attendance.report.adjustFilters")} compact />
       ) : (
-        <div className={WORK_SURFACE}>
+        <ReportDataGridContainer
+          title={t("attendance.report.summaryTitle")}
+          columns={summaryColumns}
+          rows={summaryRows}
+          moduleId="attendance"
+        >
           <div className="space-y-3 p-3 md:hidden">
             {summary.map((summaryRow) => (
               <article key={summaryRow.class} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
@@ -108,28 +144,26 @@ export const AttendanceReportTables = React.memo(function AttendanceReportTables
               </TableBody>
             </Table>
           </div>
-        </div>
+        </ReportDataGridContainer>
       )}
 
-      <ExportToolbar
-        title={t("attendance.report.studentDetailTitle")}
-        data={studentAttendanceRows}
-        headers={[
-          t("attendance.report.colStudent"),
-          t("attendance.report.colStudentClass"),
-          t("attendance.report.colPresent"),
-          t("attendance.report.colAbsent"),
-          t("attendance.report.colLate"),
-          t("attendance.report.colTotal"),
-          t("attendance.report.colRate"),
-        ]}
-      />
       {studentAttendanceRows.length === 0 ? (
         <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
       ) : (
-        <div className={WORK_SURFACE}>
+        <ReportDataGridContainer
+          title={t("attendance.report.studentDetailTitle")}
+          columns={studentColumns}
+          rows={studentRows}
+          moduleId="attendance"
+          page={studentPage}
+          total={studentAttendanceRows.length}
+          limit={studentPageSize}
+          onPageChange={setStudentPage}
+          paginationVariant="range"
+          i18nNamespace="attendance"
+        >
           <div className="space-y-3 p-3 md:hidden">
-            {studentAttendanceRows.map((studentAttendance) => (
+            {pagedStudentAttendanceRows.map((studentAttendance) => (
               <article key={studentAttendance.studentName} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                 <h4 className="truncate text-sm font-semibold text-foreground">{studentAttendance.studentName}</h4>
                 <StatGrid>
@@ -163,7 +197,7 @@ export const AttendanceReportTables = React.memo(function AttendanceReportTables
               </TableHeader>
 
               <TableBody className="divide-y divide-border/50">
-                {studentAttendanceRows.map((studentAttendance) => (
+                {pagedStudentAttendanceRows.map((studentAttendance) => (
                   <TableRow key={studentAttendance.studentName} className="hover:bg-muted/20 transition-colors">
                     <TableCell className="px-3 py-2.5 font-medium text-foreground">{studentAttendance.studentName}</TableCell>
                     <TableCell className="px-3 py-2.5 text-muted-foreground">{studentAttendance.class}</TableCell>
@@ -177,8 +211,8 @@ export const AttendanceReportTables = React.memo(function AttendanceReportTables
               </TableBody>
             </Table>
           </div>
-        </div>
+        </ReportDataGridContainer>
       )}
-    </>
+    </div>
   );
 });

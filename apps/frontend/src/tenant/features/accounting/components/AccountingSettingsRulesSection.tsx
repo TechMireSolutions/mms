@@ -1,11 +1,12 @@
-import type React from "react";
-import { type AccountingSettings } from "@mms/shared";
+import { type AccountingSettings, type Account } from "@mms/shared";
+import { Sliders, Hash } from "lucide-react";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { Switch } from "@/components/ui/switch";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Account } from "@/lib/data/accountingData";
-import { AccountingSettingsField } from "./AccountingSettingsField";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { ToggleRow } from "@/components/ui/ToggleRow";
+import { Field } from "@/components/ui/FormPrimitives";
+import { WarningCallout } from "@/components/ui/WarningCallout";
+import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 
 interface AccountingSettingsRulesSectionProps {
   accounts: Account[];
@@ -22,43 +23,77 @@ export function AccountingSettingsRulesSection({
 
   return (
     <>
-      <SectionCard title={t("accounting.settings.secRules")}>
-        <AccountingSettingsField label={t("accounting.settings.fields.requireNarration")} hint={t("accounting.settings.fields.requireNarrationHint")}>
-          <Switch aria-label={t("accounting.settings.fields.requireNarration")} checked={settingsDraft.requireNarration} onCheckedChange={(checked) => upd("requireNarration", checked)} />
-        </AccountingSettingsField>
-        <AccountingSettingsField label={t("accounting.settings.fields.allowEditPosted")} hint={t("accounting.settings.fields.allowEditPostedHint")}>
-          <Switch aria-label={t("accounting.settings.fields.allowEditPosted")} checked={settingsDraft.allowEditPosted} onCheckedChange={(checked) => upd("allowEditPosted", checked)} />
-          {settingsDraft.allowEditPosted && (
-            <p className="text-xs text-warning mt-1 font-semibold m-0" role="alert">{t("accounting.settings.fields.allowEditPostedWarning")}</p>
-          )}
-        </AccountingSettingsField>
-        <AccountingSettingsField label={t("accounting.settings.fields.autoPostDrafts")} hint={t("accounting.settings.fields.autoPostDraftsHint")}>
-          <Switch aria-label={t("accounting.settings.fields.autoPostDrafts")} checked={settingsDraft.autoPostDrafts} onCheckedChange={(checked) => upd("autoPostDrafts", checked)} />
-        </AccountingSettingsField>
+      <SectionCard
+        title={t("accounting.settings.secRules")}
+        icon={Sliders}
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <div className="space-y-3">
+          <ToggleRow
+            label={t("accounting.settings.fields.requireNarration")}
+            description={t("accounting.settings.fields.requireNarrationHint")}
+            value={Boolean(settingsDraft.requireNarration)}
+            onChange={(checked) => upd("requireNarration", checked)}
+          />
+
+          <div className="space-y-2 pt-1 border-t border-border/60">
+            <ToggleRow
+              label={t("accounting.settings.fields.allowEditPosted")}
+              description={t("accounting.settings.fields.allowEditPostedHint")}
+              value={Boolean(settingsDraft.allowEditPosted)}
+              onChange={(checked) => upd("allowEditPosted", checked)}
+            />
+            {settingsDraft.allowEditPosted && (
+              <WarningCallout title={t("accounting.settings.fields.allowEditPostedWarning")} />
+            )}
+          </div>
+
+          <div className="pt-1 border-t border-border/60">
+            <ToggleRow
+              label={t("accounting.settings.fields.autoPostDrafts")}
+              description={t("accounting.settings.fields.autoPostDraftsHint")}
+              value={Boolean(settingsDraft.autoPostDrafts)}
+              onChange={(checked) => upd("autoPostDrafts", checked)}
+            />
+          </div>
+        </div>
       </SectionCard>
 
-      <SectionCard title={t("accounting.settings.secNumbering")}>
-        <AccountingSettingsField label={t("accounting.settings.fields.defaultCodeLength")} hint={t("accounting.settings.fields.defaultCodeLengthHint")}>
-          <FormSelect
-            aria-label={t("accounting.settings.fields.defaultCodeLength")}
-            value={String(settingsDraft.accountCodeLength ?? 4)}
-            onChange={(codeLengthValue) => upd("accountCodeLength", parseInt(codeLengthValue))}
-            options={[3, 4, 5, 6].map((digitCount) => String(digitCount))}
-            className="w-32"
-          />
-        </AccountingSettingsField>
-        <AccountingSettingsField label={t("accounting.settings.fields.retainedEarningsAccount")} hint={t("accounting.settings.fields.retainedEarningsAccountHint")}>
-          <FormSelect
-            aria-label={t("accounting.settings.fields.retainedEarningsAccount")}
-            value={settingsDraft.retainedEarningsAccount || ""}
-            onChange={(accountId) => upd("retainedEarningsAccount", accountId)}
-            placeholder={t("accounting.journal.form.none")}
-            options={accounts
-              .filter((account) => account.type === "Equity" && account.isActive !== false)
-              .sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code))
-              .map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }))}
-          />
-        </AccountingSettingsField>
+      <SectionCard
+        title={t("accounting.settings.secNumbering")}
+        icon={Hash}
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field
+            label={t("accounting.settings.fields.defaultCodeLength")}
+            hint={t("accounting.settings.fields.defaultCodeLengthHint")}
+          >
+            <FormSelect
+              id="accounting-account-code-length"
+              value={String(settingsDraft.accountCodeLength ?? 4)}
+              onChange={(codeLengthValue) => upd("accountCodeLength", parseInt(codeLengthValue))}
+              options={[3, 4, 5, 6].map((digitCount) => String(digitCount))}
+              className="w-full sm:w-32"
+            />
+          </Field>
+
+          <Field
+            label={t("accounting.settings.fields.retainedEarningsAccount")}
+            hint={t("accounting.settings.fields.retainedEarningsAccountHint")}
+          >
+            <FormSelect
+              id="accounting-retained-earnings-account"
+              value={settingsDraft.retainedEarningsAccount || ""}
+              onChange={(accountId) => upd("retainedEarningsAccount", accountId)}
+              placeholder={t("accounting.journal.form.none")}
+              options={accounts
+                .filter((account) => account.type === "Equity" && account.isActive !== false)
+                .sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code))
+                .map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }))}
+            />
+          </Field>
+        </div>
       </SectionCard>
     </>
   );

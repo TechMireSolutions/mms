@@ -1,4 +1,4 @@
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 
 export function buildWidgetBuilderPreview(
   editWidgetConfig: CustomWidget | null,

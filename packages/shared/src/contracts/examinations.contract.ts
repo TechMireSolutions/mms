@@ -73,7 +73,7 @@ export const examinationContract = c.router({
   },
   reportAggregates: {
     method: 'GET',
-    path: '/api/examinations/reports/aggregates',
+    path: '/api/examinations/report-aggregates',
     responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
     summary: 'Get report aggregates',
   },

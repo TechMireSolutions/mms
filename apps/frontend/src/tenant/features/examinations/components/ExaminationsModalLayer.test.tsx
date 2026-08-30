@@ -9,7 +9,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("./ExamForm", () => ({
+vi.mock("./ExaminationForm", () => ({
   default: () => <div data-testid="exam-form">Exam Form</div>,
 }));
 

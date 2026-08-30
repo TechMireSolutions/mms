@@ -1,12 +1,12 @@
-import React, { useMemo } from "react";
+import React, { lazy, Suspense, useMemo } from "react";
 import {
   getQuestionCategoryIds,
   QUESTION_ACCURACY_WEAK_THRESHOLD,
   calcPercentage as pct,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
-import { PerformanceAnalyticsPanels } from "./PerformanceAnalyticsPanels";
 import {
   sumScores,
   testTotalMarks,
@@ -14,6 +14,12 @@ import {
   type StudentStatItem,
   type CategoryPerformance,
 } from "./performanceAnalyticsUtils";
+
+const PerformanceAnalyticsPanels = lazy(() =>
+  import("./PerformanceAnalyticsPanels").then((mod) => ({
+    default: mod.PerformanceAnalyticsPanels,
+  })),
+);
 
 export type { PerformanceAnalyticsProps } from "./performanceAnalyticsUtils";
 
@@ -117,13 +123,15 @@ export function PerformanceAnalytics({
   const radarData = catPerformance.map((categoryResult) => ({ subject: `${categoryResult.icon} ${categoryResult.name}`, accuracy: categoryResult.accuracy }));
 
   return (
-    <PerformanceAnalyticsPanels
-      weakAreas={weakAreas}
-      trendData={trendData}
-      radarData={radarData}
-      studentStats={studentStats}
-      diffData={diffData}
-      catPerformance={catPerformance}
-    />
+    <Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
+      <PerformanceAnalyticsPanels
+        weakAreas={weakAreas}
+        trendData={trendData}
+        radarData={radarData}
+        studentStats={studentStats}
+        diffData={diffData}
+        catPerformance={catPerformance}
+      />
+    </Suspense>
   );
 }

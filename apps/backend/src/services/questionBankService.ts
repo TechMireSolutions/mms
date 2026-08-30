@@ -3,6 +3,9 @@ import {
   type QuestionBankTest,
   type QuestionBankResult,
   type QuestionBankListQuery,
+  type QuestionBankReportAggregates,
+  type QuestionBankReportQuery,
+  EMPTY_QB_REPORT_AGGREGATES,
   questionBankQuestionListSchema,
   questionBankTestListSchema,
   questionBankResultListSchema,
@@ -24,6 +27,7 @@ import {
 } from '../db/repositories/questionBankRepository.js';
 import { listQuestionsPage } from '../db/repositories/questionBankRepositoryList.js';
 import { aggregateQuestionBankWidgetQueries } from '../db/repositories/questionBankRepositoryWidgets.js';
+import { aggregateQuestionBankReport } from '../db/repositories/questionBankRepositoryReport.js';
 import {
   defineTenantBulkCollectionService,
   scopeDeleted,
@@ -123,3 +127,12 @@ export async function loadQuestionBankWidgetAggregates(
   if (!tenant) return {};
   return aggregateQuestionBankWidgetQueries(tenant, queries);
 }
+
+export async function loadQuestionBankReportAggregates(
+  query: QuestionBankReportQuery = {},
+): Promise<QuestionBankReportAggregates> {
+  const tenant = getRequestTenant();
+  if (!tenant) return EMPTY_QB_REPORT_AGGREGATES;
+  return aggregateQuestionBankReport(tenant, query);
+}
+

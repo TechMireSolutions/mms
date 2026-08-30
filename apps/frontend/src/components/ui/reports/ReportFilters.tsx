@@ -30,10 +30,18 @@ const CATEGORY_FILTERS: Record<string, (keyof ReportFilterFields)[]> = {
   teachers: ['session', 'class', 'status', 'student'],
   /** Contacts dashboard does not consume these academic filters — omit until contact-aware filters ship. */
   contacts: [],
+  finance: ['session', 'dateFrom', 'dateTo', 'status'],
   financial: ['session', 'dateFrom', 'dateTo', 'status'],
   academic: ['session', 'class', 'status', 'student'],
+  examinations: ['session', 'class', 'status', 'student'],
   hasanat: ['session', 'class', 'dateFrom', 'dateTo'],
   sessions: ['status'],
+  enrollments: ['session', 'status', 'dateFrom', 'dateTo'],
+  questionBank: ['status', 'dateFrom', 'dateTo'],
+  accounting: ['dateFrom', 'dateTo', 'status'],
+  obligations: ['dateFrom', 'dateTo', 'status'],
+  messaging: ['dateFrom', 'dateTo', 'status'],
+  users: ['status', 'dateFrom', 'dateTo'],
 };
 
 export default function ReportFilters({ category, filters, onChange }: ReportFiltersProps): React.JSX.Element | null {
@@ -131,6 +139,7 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
             className="overflow-hidden"
           >
             <ReportFilterFieldsPanel
+              category={category}
               allowed={allowed}
               filters={filters}
               onFieldChange={set}

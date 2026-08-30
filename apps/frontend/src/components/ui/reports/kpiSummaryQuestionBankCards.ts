@@ -57,15 +57,15 @@ export function buildQuestionBankKPICards({
       },
       {
         id: 'kpi-generated-tests', icon: CalendarCheck, label: t('reports.kpi.generatedTests'), value: String(totalTests),
-        sub: t('reports.kpi.sub.autoBuiltPapers'), color: 'blue', trend: 'flat', categories: ['questionBank'], isAvailable: totalTests > 0,
+        sub: t('reports.kpi.sub.autoBuiltPapers'), color: 'info', trend: 'flat', categories: ['questionBank'], isAvailable: totalTests > 0,
       },
       {
         id: 'kpi-test-submissions', icon: UserCheck, label: t('reports.kpi.testSubmissions'), value: String(totalResults),
-        sub: t('reports.kpi.sub.gradedAttempts'), color: 'violet', trend: 'flat', categories: ['questionBank'], isAvailable: totalResults > 0,
+        sub: t('reports.kpi.sub.gradedAttempts'), color: 'secondary', trend: 'flat', categories: ['questionBank'], isAvailable: totalResults > 0,
       },
       {
         id: 'kpi-avg-test-score', icon: Target, label: t('reports.kpi.avgTestScore'), value: averageQuestionBankScore,
-        sub: t('reports.kpi.sub.acrossSubmissions'), color: 'green', trend: 'flat', categories: ['questionBank'],
+        sub: t('reports.kpi.sub.acrossSubmissions'), color: 'success', trend: 'flat', categories: ['questionBank'],
         isAvailable: questionBankResults.length > 0 && questionBankTotalMax > 0,
       },
     ],

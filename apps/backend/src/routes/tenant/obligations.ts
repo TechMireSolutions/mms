@@ -17,6 +17,7 @@ import {
 
 
 import { obligationContractRouter } from './obligations/obligationContractRouter.js';
+import { obligationReportRoutes } from './obligations/obligationReportRoutes.js';
 import {
   upsertObligationTypes,
   upsertMujtahids,
@@ -118,6 +119,8 @@ export default async function obligationsRoutes(
         loadMetricsFn: loadObligationsCommandMetrics,
         errorMessagePrefix: 'obligation',
       });
+
+      await sub.register(obligationReportRoutes);
     },
     { prefix: '/api/obligations' },
   );

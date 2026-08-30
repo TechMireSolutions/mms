@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 import type { FilterRule, CustomWidget } from '@/components/ui/reports/dynamicChartVisualizerTypes';
-import type { VisualizerConfig } from '@/components/ui/reports/reportMetadata';
+import type { VisualizerConfig } from '@/lib/reports/reportMetadata';
 import {
   createFilterRule,
   deleteFilterRule,
@@ -9,10 +9,10 @@ import {
   updateFilterRules,
 } from '@/components/ui/reports/dynamicChartVisualizerPin';
 import {
-  runVisualizerExcelExport,
-  runVisualizerPdfExport,
-  runVisualizerPngExport,
-} from '@/components/ui/reports/dynamicChartVisualizerExportHandlers';
+  exportVisualizerExcel,
+  exportVisualizerPdf,
+  exportVisualizerPng,
+} from '@/components/ui/reports/dynamicChartVisualizerExports';
 import type { AggregatedItem, ChartOperation, ChartType } from '@/components/ui/reports/dynamicChartVisualizerTypes';
 import type { CollectionMeta } from '@/components/ui/reports/dynamicChartVisualizerTypes';
 
@@ -87,20 +87,22 @@ export function buildDynamicChartVisualizerHandlers({
   };
 
   const handleExportPNG = () => {
-    void runVisualizerPngExport(chartRef, title).then((ok) => {
-      if (!ok) onExportFailed();
+    if (!chartRef.current) return;
+    void exportVisualizerPng({ chartElement: chartRef.current, title }).catch(() => {
+      onExportFailed();
     });
   };
 
   const handleExportExcel = () => {
-    void runVisualizerExcelExport(title, processedData).then((ok) => {
-      if (!ok) onExportFailed();
+    void exportVisualizerExcel({ title, processedData }).catch(() => {
+      onExportFailed();
     });
   };
 
   const handleExportPDF = () => {
-    void runVisualizerPdfExport({
-      chartRef,
+    if (!chartRef.current) return;
+    void exportVisualizerPdf({
+      chartElement: chartRef.current,
       title,
       processedData,
       operation,
@@ -108,8 +110,8 @@ export function buildDynamicChartVisualizerHandlers({
       collectionLabel: activeMeta.name,
       pdfFormat,
       pdfOrientation,
-    }).then((ok) => {
-      if (!ok) onExportFailed();
+    }).catch(() => {
+      onExportFailed();
     });
   };
 

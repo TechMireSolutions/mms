@@ -3,8 +3,8 @@ import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import { METADATA_FIELDS, COLLECTION_OPTIONS, getFieldLabel, getCollectionLabel } from "@/components/ui/reports/reportMetadata";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import { METADATA_FIELDS, COLLECTION_OPTIONS, getFieldLabel, getCollectionLabel } from "@/lib/reports/reportMetadata";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 
 interface WidgetBuilderMetricOptionsProps {
   builderCollection: CustomWidget["collection"];

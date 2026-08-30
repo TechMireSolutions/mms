@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { CustomCard } from './reportMetadata';
+import type { CustomCard } from '@/lib/reports/reportMetadata';
 import {
   loadPreviousCustomCardIds,
   loadSelectedCardIdsForCategory,

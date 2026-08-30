@@ -5,12 +5,10 @@ import { KPISummary, ModuleReports } from "@/tenant/components/moduleReports";
 
 export function StudentsReportsTier(): React.JSX.Element {
   return (
-    <ModuleTierMotion tier="reports">
+    <ModuleTierMotion tier="reports" className="space-y-4">
       <ErrorBoundary>
-        <div className="space-y-4">
-          <KPISummary category="students" />
-          <ModuleReports category="students" />
-        </div>
+        <KPISummary category="students" />
+        <ModuleReports category="students" />
       </ErrorBoundary>
     </ModuleTierMotion>
   );

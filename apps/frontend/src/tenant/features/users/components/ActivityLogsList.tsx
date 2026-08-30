@@ -1,10 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Activity } from 'lucide-react';
 import { formatDate, type ActivityLog } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ListPagination } from '@/components/ui/ListPagination';
+import { ReportDataGridContainer } from '@/tenant/components/moduleReports';
 import { ActivityActionBadge } from '@/tenant/features/users/components/UserBadges';
 import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
 import {
@@ -42,6 +42,22 @@ export function ActivityLogsList({
   const globalSettings = useGlobalSettings();
   const fmtTs = (ts: string): string => formatDate(ts, globalSettings.dateFormat, false);
 
+  const exportColumns = useMemo(() => [
+    { key: 'time', header: t('users.activityColTime') },
+    { key: 'user', header: t('users.activityColUser') },
+    { key: 'action', header: t('users.activityColAction') },
+    { key: 'detail', header: t('users.activityColDetail') },
+    { key: 'ip', header: t('users.activityColIp') },
+  ], [t]);
+
+  const exportRows = useMemo(() => paginated.map((log) => ({
+    time: fmtTs(log.ts),
+    user: userNameFor(log),
+    action: log.action,
+    detail: log.detail,
+    ip: log.ip,
+  })), [paginated, globalSettings.dateFormat, userNameFor]);
+
   if (paginated.length === 0) {
     return (
       <EmptyState variant="dashed" title={t('users.activityEmpty')} icon={Activity} compact />
@@ -49,7 +65,18 @@ export function ActivityLogsList({
   }
 
   return (
-    <>
+    <ReportDataGridContainer
+      title={t('users.activity')}
+      columns={exportColumns}
+      rows={exportRows}
+      moduleId="users"
+      page={page}
+      total={filteredCount}
+      limit={pageSize}
+      onPageChange={onPageChange}
+      i18nNamespace="users"
+      paginationVariant="range"
+    >
       <div className={WORK_SURFACE}>
         <div className="space-y-3 p-3 md:hidden">
           {paginated.map((log) => (
@@ -116,15 +143,6 @@ export function ActivityLogsList({
           </Table>
         </div>
       </div>
-
-      <ListPagination
-        page={page}
-        total={filteredCount}
-        limit={pageSize}
-        onPageChange={onPageChange}
-        i18nNamespace="users"
-        variant="range"
-      />
-    </>
+    </ReportDataGridContainer>
   );
 }

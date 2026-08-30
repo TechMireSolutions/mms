@@ -7,6 +7,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
+import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 
 export interface UsersSettingsPanelProps {
   settingsDraft: UsersSettings;
@@ -18,50 +19,52 @@ export interface UsersSettingsPanelProps {
 }
 
 export const UsersSettingsPanel = React.memo(function UsersSettingsPanel({
-      settingsDraft,
-      saved,
-      saving,
-      isDirty,
-      upd,
-      onSave,
-    }: UsersSettingsPanelProps): React.JSX.Element {
-      const { t } = useTranslation();
+  settingsDraft,
+  saved,
+  saving,
+  isDirty,
+  upd,
+  onSave,
+}: UsersSettingsPanelProps): React.JSX.Element {
+  const { t } = useTranslation();
 
-      const unsavedWarning = isDirty
-        ? t("users.setup.unsavedPreferencesWarning")
-        : undefined;
+  const unsavedWarning = isDirty
+    ? t("users.setup.unsavedPreferencesWarning")
+    : undefined;
 
-      return (
-        <SectionCard
-          accentColor="primary"
-          icon={Shield}
-          title={t("users.settingsPrefsTitle")}
-          className="shadow-sm hover:shadow-md border-border/80"
-        >
-          <div className="space-y-2 pt-1">
-            <ToggleRow
-              label={t("users.selfRegistration")}
-              description={t("users.selfRegistrationDesc")}
-              value={settingsDraft.allowSelfRegistration || false}
-              onChange={(value) => upd("allowSelfRegistration", value)}
-            />
-            <ToggleRow
-              label={t("users.emailVerification")}
-              description={t("users.emailVerificationDesc")}
-              value={settingsDraft.requireEmailVerification || false}
-              onChange={(value) => upd("requireEmailVerification", value)}
-            />
-          </div>
-
-          <ModuleSetupSaveFooter
-            dirty={isDirty}
-            saving={saving}
-            saved={saved}
-            unsavedWarning={unsavedWarning}
-            saveLabel={t("users.settingsSaveBtn")}
-            savedLabel={t("users.settingsSavedShort")}
-            onSave={onSave}
+  return (
+    <div className="space-y-6 max-w-3xl text-start">
+      <SectionCard
+        accentColor="primary"
+        icon={Shield}
+        title={t("users.settingsPrefsTitle")}
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <div className="space-y-2 pt-1">
+          <ToggleRow
+            label={t("users.selfRegistration")}
+            description={t("users.selfRegistrationDesc")}
+            value={settingsDraft.allowSelfRegistration || false}
+            onChange={(value) => upd("allowSelfRegistration", value)}
           />
-        </SectionCard>
-      );
-    });
+          <ToggleRow
+            label={t("users.emailVerification")}
+            description={t("users.emailVerificationDesc")}
+            value={settingsDraft.requireEmailVerification || false}
+            onChange={(value) => upd("requireEmailVerification", value)}
+          />
+        </div>
+      </SectionCard>
+
+      <ModuleSetupSaveFooter
+        dirty={isDirty}
+        saving={saving}
+        saved={saved}
+        unsavedWarning={unsavedWarning}
+        saveLabel={t("common.save")}
+        savedLabel={t("settings.savedBadge")}
+        onSave={onSave}
+      />
+    </div>
+  );
+});

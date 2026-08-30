@@ -60,11 +60,11 @@ export default function SavedReports({
         category,
         filters,
       });
-      notify.success(t("contacts.savedReports.saveSuccess"));
+      notify.success(t("reports.saved.saveSuccess"));
       setName("");
       setSaveOpen(false);
     } catch {
-      notify.error(t("contacts.savedReports.saveDialogTitle"));
+      notify.error(t("reports.saved.saveDialogTitle"));
     } finally {
       setSaving(false);
     }
@@ -77,9 +77,9 @@ export default function SavedReports({
       try {
         await runReport(report.id);
         onApplyFilters(report.filters);
-        notify.success(t("contacts.savedReports.runSuccess"));
+        notify.success(t("reports.saved.runSuccess"));
       } catch {
-        notify.error(t("contacts.savedReports.staleWarningTitle"));
+        notify.error(t("reports.saved.staleWarningTitle"));
       }
     },
     [onApplyFilters, runReport, t]
@@ -89,9 +89,9 @@ export default function SavedReports({
     async (id: string) => {
       try {
         await deleteReport(id);
-        notify.info(t("contacts.savedReports.deleteSuccess"));
+        notify.info(t("reports.saved.deleteSuccess"));
       } catch {
-        notify.error(t("contacts.savedReports.delete"));
+        notify.error(t("reports.saved.delete"));
       }
     },
     [deleteReport, t]
@@ -152,22 +152,22 @@ export default function SavedReports({
       <FormModal
         open={saveOpen}
         onClose={() => setSaveOpen(false)}
-        title={t("contacts.savedReports.saveDialogTitle")}
+        title={t("reports.saved.saveDialogTitle")}
         size="sm"
         cancelLabel={t("common.cancel")}
-        saveLabel={t("contacts.savedReports.save")}
+        saveLabel={t("reports.saved.save")}
         onSave={() => void handleSave()}
         saving={saving}
         saveDisabled={!name.trim()}
       >
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="saved-report-name">{t("contacts.savedReports.nameLabel")}</Label>
+            <Label htmlFor="saved-report-name">{t("reports.saved.nameLabel")}</Label>
             <Input
               id="saved-report-name"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder={t("contacts.savedReports.namePlaceholder")}
+              placeholder={t("reports.saved.namePlaceholder")}
             />
           </div>
         </div>

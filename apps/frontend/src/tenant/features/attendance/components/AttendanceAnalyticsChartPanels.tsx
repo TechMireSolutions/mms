@@ -1,13 +1,10 @@
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { ReportChartCard } from "@/tenant/components/moduleReports";
 import { LegendChip } from "@/components/ui/LegendChip";
 import { motion } from "framer-motion";
 import {
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip,
 } from "recharts";
-import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import type { AttendanceStatus } from '@/lib/data/attendanceData';
 import { attendanceStatusLabel } from "@/lib/attendanceStatusUi";
@@ -42,19 +39,20 @@ export function AttendanceAnalyticsChartPanels({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.2, ease: "easeOut" }}
       >
-        <Card accentColor="primary" className={cn("p-4", CARD_STRIPE_INSET)}>
-          <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.classRateTitle")}</h2>
-          <SafeResponsiveContainer height={200}>
-            <BarChart data={classStats} barSize={32}>
-              <ChartGrid />
-              <XAxis dataKey="name" tick={chartAxisTick(11)} />
-              <YAxis domain={[0, 100]} tick={chartAxisTick(11)} unit="%" />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Bar dataKey="rate" name={t("attendance.analytics.attendanceLabel")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}
-                label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (value) => value !== undefined && value !== null ? `${value}%` : "" }} />
-            </BarChart>
-          </SafeResponsiveContainer>
-        </Card>
+        <ReportChartCard
+          title={t("attendance.analytics.charts.classRateTitle")}
+          accentColor="primary"
+          heightClass="h-chart-sm"
+        >
+          <BarChart data={classStats} barSize={32}>
+            <ChartGrid />
+            <XAxis dataKey="name" tick={chartAxisTick(11)} />
+            <YAxis domain={[0, 100]} tick={chartAxisTick(11)} unit="%" />
+            <Tooltip formatter={(value) => `${value}%`} />
+            <Bar dataKey="rate" name={t("attendance.analytics.attendanceLabel")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]}
+              label={{ position: "top", fontSize: 10, fill: "hsl(var(--muted-foreground))", formatter: (value) => value !== undefined && value !== null ? `${value}%` : "" }} />
+          </BarChart>
+        </ReportChartCard>
       </motion.div>
 
       <motion.div
@@ -62,24 +60,25 @@ export function AttendanceAnalyticsChartPanels({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.25, ease: "easeOut" }}
       >
-        <Card accentColor="info" className={cn("p-4", CARD_STRIPE_INSET)}>
-          <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.monthlyTrendTitle")}</h2>
-          <SafeResponsiveContainer height={200}>
-            <AreaChart data={monthlyTrend}>
-              <defs>
-                <linearGradient id="att-grad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <ChartGrid />
-              <XAxis dataKey="month" tick={chartAxisTick(11)} />
-              <YAxis domain={[0, 100]} tick={chartAxisTick(11)} unit="%" />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Area type="monotone" dataKey="rate" name={t("attendance.analytics.attendancePercentLabel")} stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
-            </AreaChart>
-          </SafeResponsiveContainer>
-        </Card>
+        <ReportChartCard
+          title={t("attendance.analytics.charts.monthlyTrendTitle")}
+          accentColor="info"
+          heightClass="h-chart-sm"
+        >
+          <AreaChart data={monthlyTrend}>
+            <defs>
+              <linearGradient id="att-grad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <ChartGrid />
+            <XAxis dataKey="month" tick={chartAxisTick(11)} />
+            <YAxis domain={[0, 100]} tick={chartAxisTick(11)} unit="%" />
+            <Tooltip formatter={(value) => `${value}%`} />
+            <Area type="monotone" dataKey="rate" name={t("attendance.analytics.attendancePercentLabel")} stroke="hsl(var(--primary))" fill="url(#att-grad)" strokeWidth={2} dot={{ r: 3 }} />
+          </AreaChart>
+        </ReportChartCard>
       </motion.div>
 
       <motion.div
@@ -87,19 +86,20 @@ export function AttendanceAnalyticsChartPanels({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.3, ease: "easeOut" }}
       >
-        <Card accentColor="info" className={cn("p-4", CARD_STRIPE_INSET)}>
-          <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.studentRatesTitle")}</h2>
-          <SafeResponsiveContainer height={220}>
-            <BarChart data={studentRates} layout="vertical" barSize={12}>
-              <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(10)} unit="%" />
-              <YAxis dataKey="name" type="category" tick={chartAxisTick(10)} width={80} />
-              <Tooltip formatter={(value) => `${value}%`} />
-              <Bar dataKey="rate" name={t("attendance.analytics.rateLabel")} radius={[0, 4, 4, 0]}
-                fill="hsl(var(--primary))"
-                background={{ fill: "hsl(var(--muted))", radius: 4 }} />
-            </BarChart>
-          </SafeResponsiveContainer>
-        </Card>
+        <ReportChartCard
+          title={t("attendance.analytics.charts.studentRatesTitle")}
+          accentColor="info"
+          heightClass="h-chart-sm"
+        >
+          <BarChart data={studentRates} layout="vertical" barSize={12}>
+            <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(10)} unit="%" />
+            <YAxis dataKey="name" type="category" tick={chartAxisTick(10)} width={80} />
+            <Tooltip formatter={(value) => `${value}%`} />
+            <Bar dataKey="rate" name={t("attendance.analytics.rateLabel")} radius={[0, 4, 4, 0]}
+              fill="hsl(var(--primary))"
+              background={{ fill: "hsl(var(--muted))", radius: 4 }} />
+          </BarChart>
+        </ReportChartCard>
       </motion.div>
 
       <motion.div
@@ -107,18 +107,12 @@ export function AttendanceAnalyticsChartPanels({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35, delay: 0.35, ease: "easeOut" }}
       >
-        <Card accentColor="primary" className={cn("p-4", CARD_STRIPE_INSET)}>
-          <h2 className="text-sm font-bold text-foreground mb-3 m-0">{t("attendance.analytics.charts.statusDistributionTitle")}</h2>
-          <div className="flex items-center gap-4">
-            <SafeResponsiveContainer width="60%" height={200}>
-              <PieChart>
-                <Pie data={pieData} cx="50%" cy="50%" innerRadius={55} outerRadius={85} paddingAngle={2} dataKey="value">
-                  {pieData.map((entry, index) => <Cell key={entry.name} fill={colors[index % colors.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </SafeResponsiveContainer>
-            <div className="space-y-2">
+        <ReportChartCard
+          title={t("attendance.analytics.charts.statusDistributionTitle")}
+          accentColor="primary"
+          heightClass="h-chart-sm"
+          action={
+            <div className="flex flex-wrap items-center gap-2">
               {statuses.map((status, index) => (
                 <LegendChip
                   key={status.id}
@@ -130,9 +124,17 @@ export function AttendanceAnalyticsChartPanels({
                 />
               ))}
             </div>
-          </div>
-        </Card>
+          }
+        >
+          <PieChart>
+            <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} paddingAngle={2} dataKey="value">
+              {pieData.map((entry, index) => <Cell key={entry.name} fill={colors[index % colors.length]} />)}
+            </Pie>
+            <Tooltip />
+          </PieChart>
+        </ReportChartCard>
       </motion.div>
     </div>
   );
 }
+

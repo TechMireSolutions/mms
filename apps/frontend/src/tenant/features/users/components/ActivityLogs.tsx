@@ -2,6 +2,7 @@ import React, { useState, useMemo, useCallback } from 'react';
 import {
   type ActivityLog,
   type SystemUser,
+  type WorkspaceUser,
 } from '@mms/shared';
 import { useLocalPagination } from '@/hooks/useLocalPagination';
 import { ActivityLogsFilters } from '@/tenant/features/users/components/ActivityLogsFilters';
@@ -11,7 +12,7 @@ const PAGE_SIZE = 15;
 
 export interface ActivityLogsProps {
   logs: ActivityLog[];
-  users: SystemUser[];
+  users: Array<SystemUser | WorkspaceUser>;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
 }

@@ -53,12 +53,7 @@ export default function Examinations(): React.JSX.Element {
             className="space-y-4"
           >
             {c.effectiveTab === 'setup' && (
-              <ExaminationsSetupTier
-                tabs={c.SETUP_TABS}
-                activeTab={c.effectiveConfigTab}
-                canEditSetup={c.canEditSetup}
-                onTabChange={c.setConfigSubTab}
-              />
+              <ExaminationsSetupTier />
             )}
 
             {c.effectiveTab === 'reports' && <ExaminationsReportsTier />}

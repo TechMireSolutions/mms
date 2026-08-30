@@ -35,7 +35,7 @@ export function useExaminationsReportAggregates(
     queryFn: async ({ signal }) => {
       return apiJson<ExaminationsReportAggregates>(url, { signal });
     },
-    staleTime: 30_000,
+    staleTime: 5 * 60 * 1000,
     enabled,
   });
 }

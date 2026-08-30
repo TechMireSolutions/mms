@@ -1,11 +1,9 @@
 import React, { useEffect } from "react";
 import { Calendar } from "lucide-react";
-import { SESSIONS_MODULE_MANIFEST } from "@mms/shared";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
+import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { SessionsSettingsPreferences } from "@/tenant/features/sessions/components/SessionsSettingsPreferences";
 import { useSessionsSetupPanelState } from "@/tenant/features/sessions/hooks/useSessionsSetupPanelState";
 
@@ -18,7 +16,6 @@ export const SessionsSettings = React.memo(function SessionsSettings({
   onPrefsDirtyChange,
 }: SessionsSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(SESSIONS_MODULE_MANIFEST);
   const {
     settingsDraft,
     typeOptions,
@@ -38,30 +35,29 @@ export const SessionsSettings = React.memo(function SessionsSettings({
     : undefined;
 
   return (
-    <div className="space-y-4 max-w-3xl text-start">
-      {!canEditSetup ? (
-        <SetupReadOnlyMessage title={t("sessions.setupReadOnly")} />
-      ) : (
-        <SectionCard title={t("sessions.settings.title")} icon={Calendar} accentColor="primary">
-          <div className="space-y-4">
-            <SessionsSettingsPreferences
-              settingsDraft={settingsDraft}
-              typeOptions={typeOptions}
-              upd={upd}
-            />
+    <div className="space-y-6 max-w-3xl text-start">
+      <SectionCard
+        title={t("sessions.settings.title")}
+        icon={Calendar}
+        accentColor="primary"
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <SessionsSettingsPreferences
+          settingsDraft={settingsDraft}
+          typeOptions={typeOptions}
+          upd={upd}
+        />
+      </SectionCard>
 
-            <ModuleSetupSaveFooter
-              dirty={isPrefsDirty}
-              saving={saving}
-              saved={saved}
-              unsavedWarning={unsavedWarning}
-              saveLabel={t("common.save")}
-              savedLabel={t("settings.savedBadge")}
-              onSave={handleSave}
-            />
-          </div>
-        </SectionCard>
-      )}
+      <ModuleSetupSaveFooter
+        dirty={isPrefsDirty}
+        saving={saving}
+        saved={saved}
+        unsavedWarning={unsavedWarning}
+        saveLabel={t("common.save")}
+        savedLabel={t("settings.savedBadge")}
+        onSave={handleSave}
+      />
     </div>
   );
 });

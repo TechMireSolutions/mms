@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { getFieldLabel } from "@/components/ui/reports/reportMetadata";
+import { getFieldLabel } from "@/lib/reports/reportMetadata";
 import type { FilterRule } from "@/components/ui/reports/dynamicChartVisualizerTypes";
 import type { DynamicChartVisualizerFiltersPanelProps } from "@/components/ui/reports/dynamicChartVisualizerConfigPanelTypes";
 

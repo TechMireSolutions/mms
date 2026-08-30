@@ -1,4 +1,4 @@
-import type { ReportCollection } from '@/components/ui/reports/reportMetadata';
+import type { ReportCollection } from '@/lib/reports/reportMetadata';
 
 export interface CollectionMeta {
   name: string;

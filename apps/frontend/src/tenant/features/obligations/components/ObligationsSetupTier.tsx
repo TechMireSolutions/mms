@@ -1,17 +1,18 @@
 import React, { lazy, Suspense } from "react";
-import { SubTabBar } from "@/components/ui/SubTabBar";
-import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
-import { useTranslation } from "@/hooks/useTranslation";
-import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
-import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import type {
   ObligationDistribution,
   ObligationType,
   Mujtahid,
   MujtahidRep,
   WakalaType,
-} from "@/lib/data/obligationsData";
+} from "@mms/shared";
+import { SubTabBar } from "@/components/ui/SubTabBar";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
+import { useTranslation } from "@/hooks/useTranslation";
+import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
+import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
+import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 
 const ObligationTypeManager = lazy(
   () =>
@@ -74,28 +75,35 @@ export const ObligationsSetupTier = React.memo(function ObligationsSetupTier({
 }: ObligationsSetupTierProps): React.JSX.Element {
   const { t } = useTranslation();
 
+  const subTabs = useModuleSetupSubTabs({
+    initialKey: activeTab || "types",
+    isDirty: () => false,
+    onDiscard: () => {},
+    onChange: onTabChange,
+  });
+
   return (
     <ModuleTierMotion tier="setup">
       <ErrorBoundary>
         <div className="space-y-4">
           <SubTabBar
             tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
-            value={activeTab}
-            onChange={onTabChange}
+            value={subTabs.sub}
+            onChange={subTabs.handleSubTabChange}
           />
 
           {!canEditSetup ? (
             <SetupReadOnlyMessage title={t("obligations.setup.readOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
-              {activeTab === "types" && (
+              {subTabs.sub === "types" && (
                 <ObligationTypeManager
                   types={obligationTypes}
                   onChange={onChangeTypes}
                 />
               )}
 
-              {activeTab === "mujtahids" && (
+              {subTabs.sub === "mujtahids" && (
                 <MujtahidManager
                   mujtahids={mujtahids}
                   reps={reps}
@@ -104,7 +112,7 @@ export const ObligationsSetupTier = React.memo(function ObligationsSetupTier({
                 />
               )}
 
-              {activeTab === "wakala" && (
+              {subTabs.sub === "wakala" && (
                 <WakalaTypeManager
                   wakalaTypes={wakalaTypes}
                   distributions={distributions}

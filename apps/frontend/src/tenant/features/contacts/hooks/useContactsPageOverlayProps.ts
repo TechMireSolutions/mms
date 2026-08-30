@@ -14,7 +14,6 @@ type Actions = ReturnType<typeof useContactsPageActions>;
 export function useContactsPageOverlayProps({
   canWrite,
   canDelete,
-  prefs,
   overlay,
   messaging,
   actions,
@@ -24,11 +23,6 @@ export function useContactsPageOverlayProps({
 }: {
   canWrite: boolean;
   canDelete: boolean;
-  prefs?: {
-    defaultCountry?: string;
-    defaultCity?: string;
-    defaultProvince?: string;
-  };
   overlay: Overlay;
   messaging: Pick<Messaging, "messagingTarget" | "closeComposer">;
   actions: Pick<
@@ -47,9 +41,9 @@ export function useContactsPageOverlayProps({
   selectedCount: number;
 }): ContactsPageOverlaysProps {
   const branding = getScopedBrandingSettings();
-  const defaultCountry = prefs?.defaultCountry || branding.country || "";
-  const defaultCity = prefs?.defaultCity || branding.city || "";
-  const defaultProvince = prefs?.defaultProvince || branding.region || "";
+  const defaultCountry = branding.country || "";
+  const defaultCity = branding.city || "";
+  const defaultProvince = branding.region || "";
 
   const currentViewContact = useMemo(() => {
     if (!overlay.viewContact) return null;

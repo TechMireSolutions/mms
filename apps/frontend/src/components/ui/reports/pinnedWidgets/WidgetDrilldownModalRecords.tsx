@@ -11,7 +11,7 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
-import { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 import { getWidgetRecordDisplay } from "@/components/ui/reports/pinnedWidgets/widgetRecordDisplay";
 import { buildWidgetDrilldownStatusConfig } from "@/components/ui/reports/pinnedWidgets/widgetDrilldownStatusConfig";
 import type { useWidgetDrilldownModal } from "@/components/ui/reports/pinnedWidgets/useWidgetDrilldownModal";

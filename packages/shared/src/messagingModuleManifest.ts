@@ -50,6 +50,7 @@ export const MESSAGING_MODULE_MANIFEST = {
     clearLogs: 'messaging.clearLogs',
     setupView: 'configuration.view',
     setupWrite: 'messaging.write',
+    reports: 'messaging.read',
   } satisfies Record<string, Permission>,
   /** Admin clear soft-archives active logs (typed `deleted_at`); not a Contacts-style trash browser. */
   logRetention: 'soft-archive-clear' as const,

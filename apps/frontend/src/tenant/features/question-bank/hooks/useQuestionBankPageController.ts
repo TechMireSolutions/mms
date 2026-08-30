@@ -9,7 +9,6 @@ import { ClipboardList, FileText } from 'lucide-react';
 import {
   QUESTION_BANK_MODULE_MANIFEST,
   resolveModuleTierTab,
-  type AppTranslationKey,
   type QuestionBankQuestion,
   type QuestionBankTest,
 } from '@mms/shared';
@@ -24,27 +23,16 @@ import {
 } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
 import { useQuestionBankTrashActions } from '@/tenant/features/question-bank/hooks/useQuestionBankTrashActions';
 
-const SETUP_TAB_LABEL_KEYS: Record<(typeof QUESTION_BANK_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
-  preferences: 'questionBank.setup.preferences',
-};
 
 export function useQuestionBankPageController() {
   const { t } = useTranslation();
   const {
     canWrite,
     canDelete,
-    canEditSetup,
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(QUESTION_BANK_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const SETUP_TABS = useMemo(
-    () => QUESTION_BANK_MODULE_MANIFEST.setupSubTabs.map((id) => ({
-      id,
-      label: t(SETUP_TAB_LABEL_KEYS[id]),
-    })),
-    [t],
-  );
   const [showDeleted, setShowDeleted] = useState(false);
   const questionsResult = useQuestionBankQuestions({ includeDeleted: showDeleted });
   const questions = useQuestionBankQuestionsCollection({ includeDeleted: showDeleted });
@@ -60,7 +48,6 @@ export function useQuestionBankPageController() {
   );
   const [activeTab, setActiveTab] = usePersistedTabState<string>('question_bank_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('question_bank_ops_subtab', 'questions');
-  const [configSubTab, setConfigSubTab] = usePersistedTabState<string>('question_bank_config_subtab', 'preferences');
   const [showQuestionModal, setShowQuestionModal] = useState(false);
   const [editQuestion, setEditQuestion] = useState<QuestionBankQuestion | null>(null);
   const [activeQuestion, setActiveQuestion] = useState<QuestionBankQuestion | null>(null);
@@ -148,7 +135,6 @@ export function useQuestionBankPageController() {
   const effectiveSubTab = OPS_SUB_TABS.find((tab) => tab.id === activeSubTab)
     ? activeSubTab
     : 'questions';
-  const effectiveConfigTab = SETUP_TABS.find((tab) => tab.id === configSubTab)?.id ?? 'preferences';
   const listLoadFailed = questionsResult.isError;
 
   useEffect(() => {
@@ -172,15 +158,12 @@ export function useQuestionBankPageController() {
     t,
     canWrite,
     canDelete,
-    canEditSetup,
     PAGE_TABS,
-    SETUP_TABS,
     OPS_SUB_TABS,
     activeTab,
     setActiveTab,
     effectiveTab,
     effectiveSubTab,
-    effectiveConfigTab,
     showDeleted,
     setShowDeleted,
     showQuestionModal,
@@ -203,7 +186,6 @@ export function useQuestionBankPageController() {
     questionBankConfig,
     listLoadFailed,
     setActiveSubTab,
-    setConfigSubTab,
     openAddQuestion,
     openCreatePaper,
     handleQuestionSave,

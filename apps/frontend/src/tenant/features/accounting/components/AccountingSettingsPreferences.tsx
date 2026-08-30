@@ -1,11 +1,11 @@
-import type React from "react";
-import { type AccountingSettings } from "@mms/shared";
+import { type AccountingSettings, type Account, type FiscalYear } from "@mms/shared";
+import { Building2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Account, FiscalYear } from "@/lib/data/accountingData";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { AccountingSettingsField } from "./AccountingSettingsField";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { Field } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { AccountingSettingsCurrencySection } from "./AccountingSettingsCurrencySection";
 import { AccountingSettingsFiscalYearsSection } from "./AccountingSettingsFiscalYearsSection";
 import { AccountingSettingsRulesSection } from "./AccountingSettingsRulesSection";
@@ -47,10 +47,24 @@ export function AccountingSettingsPreferences({
 
   return (
     <div className="space-y-6">
-      <SectionCard title={t("accounting.settings.secOrganisation")}>
-        <AccountingSettingsField label={t("accounting.settings.fields.organisationName")} hint={t("accounting.settings.fields.organisationNameHint")}>
-          <Input value={settingsDraft.organizationName || ""} aria-label={t("accounting.settings.fields.organisationName")} onChange={(event) => upd("organizationName", event.target.value)} />
-        </AccountingSettingsField>
+      <SectionCard
+        accentColor="primary"
+        title={t("accounting.settings.secOrganisation")}
+        icon={Building2}
+        className={SETUP_SECTION_CARD_CLASS}
+      >
+        <Field
+          label={t("accounting.settings.fields.organisationName")}
+          hint={t("accounting.settings.fields.organisationNameHint")}
+        >
+          <Input
+            id="accounting-org-name"
+            className={FORM_INPUT}
+            value={settingsDraft.organizationName || ""}
+            aria-label={t("accounting.settings.fields.organisationName")}
+            onChange={(event) => upd("organizationName", event.target.value)}
+          />
+        </Field>
       </SectionCard>
 
       <AccountingSettingsCurrencySection

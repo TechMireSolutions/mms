@@ -3,10 +3,10 @@ import { Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { StatCardBody } from "@/components/ui/StatCardBody";
-import { COLOR_MAP, ICONS_LIST } from "@/components/ui/reports/pinnedWidgets/types";
+import { COLOR_MAP, ICONS_LIST } from "@/lib/reports/pinnedWidgetTypes";
 import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
-import type { computeCustomCard } from "@/components/ui/reports/reportMetadata";
+import type { computeCustomCard } from "@/lib/reports/reportMetadata";
 
 type ComputedCustomCard = ReturnType<typeof computeCustomCard>;
 

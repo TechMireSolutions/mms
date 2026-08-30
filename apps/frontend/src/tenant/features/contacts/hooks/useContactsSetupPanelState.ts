@@ -1,12 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   type ContactPreferences,
-  normalizeContactDialCode,
 } from "@mms/shared";
 import type { CountryCodeEntry } from "@/lib/contacts/countryCodeOptions";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useContactsPreferencesSave } from "@/tenant/features/contacts/hooks/useContactsPreferencesSave";
-import { buildCountrySelectOptions } from "@/tenant/features/contacts/hooks/contactsSetupPanelEditor";
 
 export function useContactsSetupPanelState() {
   const {
@@ -44,11 +42,6 @@ export function useContactsSetupPanelState() {
     setCountryCodesDraft(countryCodes);
   }, [countryCodes, isPreferencesDirty]);
 
-  const countryOptions = useMemo(
-    () => buildCountrySelectOptions(countryCodesDraft, normalizeContactDialCode),
-    [countryCodesDraft],
-  );
-
   const updatePreference = useCallback(
     <K extends keyof ContactPreferences>(key: K, value: ContactPreferences[K]): void => {
       setPrefs((currentPreferences) => ({ ...currentPreferences, [key]: value }));
@@ -82,7 +75,6 @@ export function useContactsSetupPanelState() {
     setSaved,
     isSaving,
     isPrefsDirty: isPreferencesDirty,
-    countryOptions,
     countryCodes: countryCodesDraft,
     updateCountryCodes: updateCountryCodesDraft,
     updatePreference,

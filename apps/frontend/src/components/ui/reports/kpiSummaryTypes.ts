@@ -11,7 +11,7 @@ export interface KPIItem {
   label: string;
   value: string;
   sub: string;
-  color: 'primary' | 'green' | 'blue' | 'red' | 'amber' | 'violet';
+  color: 'primary' | 'success' | 'info' | 'warning' | 'destructive' | 'secondary' | 'muted' | 'green' | 'blue' | 'red' | 'amber' | 'violet';
   trend: 'up' | 'down' | 'flat';
   velocity?: string;
   isAvailable: boolean;

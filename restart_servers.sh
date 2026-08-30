@@ -77,7 +77,7 @@ port_in_use() {
 }
 
 port_open() {
-  nc -z localhost "$1" 2>/dev/null
+  nc -w 2 -z localhost "$1" 2>/dev/null || nc -G 2 -z localhost "$1" 2>/dev/null || nc -z localhost "$1" 2>/dev/null
 }
 
 session_running() {
@@ -170,7 +170,7 @@ kill_repo_dev_processes() {
   while IFS= read -r pid; do
     [ -z "$pid" ] && continue
     cmd="$(ps -p "$pid" -o args= 2>/dev/null || true)"
-    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-"* || "$cmd" == *"tsx"* || "$cmd" == *"pnpm"* || "$cmd" == *"vite"* ]] || continue
+    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-backend"* || "$cmd" == *"mms-frontend"* ]] || continue
     case "$cmd" in
       *"turbo"*"run dev"*|*"pnpm"*"dev"*|*"pnpm"*"worker"*|\
       *"/apps/frontend"*"vite"*|*"/apps/backend"*"tsx"*)
@@ -183,7 +183,7 @@ kill_repo_dev_processes() {
   while IFS= read -r pid; do
     [ -z "$pid" ] && continue
     cmd="$(ps -p "$pid" -o args= 2>/dev/null || true)"
-    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-"* || "$cmd" == *"tsx"* || "$cmd" == *"pnpm"* || "$cmd" == *"vite"* ]] || continue
+    [[ "$cmd" == *"$ROOT_DIR"* || "$cmd" == *"mms-backend"* || "$cmd" == *"mms-frontend"* ]] || continue
     case "$cmd" in
       *"turbo"*"run dev"*|*"pnpm"*"dev"*|*"pnpm"*"worker"*|\
       *"/apps/frontend"*"vite"*|*"/apps/backend"*"tsx"*)
@@ -232,7 +232,7 @@ wait_for_port() {
 wait_for_http() {
   local url="$1" label="$2" max="${3:-45}" i=1
   while [ "$i" -le "$max" ]; do
-    if curl -sf "$url" >/dev/null 2>&1; then
+    if curl -sf --max-time 3 "$url" >/dev/null 2>&1; then
       ok "$label healthy ($url)"
       return 0
     fi
@@ -290,11 +290,11 @@ run_dev_foreground() {
   echo "  Backend   http://localhost:$BACKEND_PORT/health"
   echo ""
   trap 'kill 0 2>/dev/null; exit 0' INT TERM
-  (cd apps/backend && npx tsx watch src/index.ts) &
+  pnpm --filter mms-backend exec tsx watch src/index.ts &
   sleep 2
-  (cd apps/backend && npx tsx watch src/worker/index.ts) &
+  pnpm --filter mms-backend exec tsx watch src/worker/index.ts &
   sleep 2
-  (cd apps/frontend && npx vite) &
+  pnpm --filter mms-frontend exec vite &
   wait
 }
 
@@ -342,7 +342,7 @@ start_servers_screen() {
 
   log "Starting dev in screen session '$SCREEN_SESSION'..."
   screen -dmS "$SCREEN_SESSION" bash -lc \
-    "cd '$ROOT_DIR' && MMS_FOREGROUND_WORKER=1 exec ./restart_servers.sh --foreground --no-docker --quick"
+    "cd '$ROOT_DIR' && MMS_FOREGROUND_WORKER=1 exec ./restart_servers.sh --foreground --no-docker --quick >>'$LOG_DIR/dev.log' 2>&1"
 
   wait_for_dev_ports || die "Dev servers did not start — run: screen -r $SCREEN_SESSION"
   save_port_pid "$BACKEND_PORT" "$LOG_DIR/backend.pid"
@@ -377,7 +377,7 @@ show_status() {
       db_host="${host_port%%:*}"
       db_port="${host_port#*:}"
       [ "$db_port" = "$host_port" ] && db_port=5432
-      if nc -z "$db_host" "$db_port" 2>/dev/null; then
+      if nc -w 2 -z "$db_host" "$db_port" 2>/dev/null || nc -G 2 -z "$db_host" "$db_port" 2>/dev/null || nc -z "$db_host" "$db_port" 2>/dev/null; then
         ok "PostgreSQL: database host listening ($db_host:$db_port)"
       else
         warn "PostgreSQL: host not listening ($db_host:$db_port) — verify Docker/Postgres is running"
@@ -403,13 +403,13 @@ show_status() {
 
   if [ -n "$be" ]; then
     ok "Backend:  pid $be  http://localhost:$BACKEND_PORT/health"
-    curl -sf "http://localhost:$BACKEND_PORT/health" 2>/dev/null && echo "" || warn "Backend health check failed"
+    curl -sf --max-time 3 "http://localhost:$BACKEND_PORT/health" 2>/dev/null && echo "" || warn "Backend health check failed"
   else
     warn "Backend:  not listening on port $BACKEND_PORT"
   fi
   if [ -n "$fe" ]; then
     ok "Frontend: pid $fe  http://localhost:$FRONTEND_PORT"
-    curl -sf -o /dev/null "http://localhost:$FRONTEND_PORT/" 2>/dev/null \
+    curl -sf --max-time 3 -o /dev/null "http://localhost:$FRONTEND_PORT/" 2>/dev/null \
       && ok "Frontend HTTP check passed" \
       || warn "Frontend port open but HTTP check failed"
   else

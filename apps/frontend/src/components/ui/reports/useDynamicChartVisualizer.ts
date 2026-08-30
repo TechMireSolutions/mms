@@ -11,7 +11,7 @@ import { useReportCollectionRows } from '@/lib/reports/useReportCollections';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
-import { METADATA_FIELDS, type VisualizerConfig } from '@/components/ui/reports/reportMetadata';
+import { METADATA_FIELDS, type VisualizerConfig } from '@/lib/reports/reportMetadata';
 import type {
   AggregatedItem,
   ChartOperation,

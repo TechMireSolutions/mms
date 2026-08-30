@@ -7,7 +7,7 @@ import {
 } from '@/lib/reports/widgetRecordToggle';
 import { useWidgetCollections } from '@/lib/reports/useReportCollections';
 import type { ReportCollection } from '@/lib/reports/reportMetadata';
-import type { CustomWidget } from '@/components/ui/reports/pinnedWidgets/types';
+import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { WidgetDrilldownModal } from '@/components/ui/reports/pinnedWidgets/CustomWidgetRenderer';
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';

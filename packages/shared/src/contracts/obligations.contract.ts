@@ -120,4 +120,23 @@ export const obligationContract = c.router({
     responses: { 200: ok, 403: ok, 500: ok },
     summary: 'Bulk restore obligation collections',
   },
+  reportAggregates: {
+    method: 'GET',
+    path: '/api/obligations/report-aggregates',
+    query: z.object({
+      dateFrom: z.string().optional(),
+      dateTo: z.string().optional(),
+      typeId: z.string().optional(),
+      repId: z.string().optional(),
+    }).optional(),
+    responses: { 200: ok, 403: ok, 500: ok },
+    summary: 'Get obligation report aggregates',
+  },
+  widgetAggregates: {
+    method: 'POST',
+    path: '/api/obligations/widget-aggregates',
+    body: z.object({ widgets: z.array(z.unknown()) }),
+    responses: { 200: z.unknown(), 403: ok, 500: ok },
+    summary: 'Get widget aggregates',
+  },
 });

@@ -65,7 +65,7 @@ export function buildTeacherReportMetricItems(input: {
       icon: UserCheck,
       label: t('teachers.metrics.active'),
       value: metrics?.active ?? 0,
-      accent: 'green',
+      accent: 'success',
       isActive: reportStatusFilter === activeStatus,
       onClick: () => {
         toggleStatus(activeStatus);
@@ -76,7 +76,7 @@ export function buildTeacherReportMetricItems(input: {
       icon: UserX,
       label: t('teachers.metrics.inactive'),
       value: metrics?.inactive ?? 0,
-      accent: 'red',
+      accent: 'destructive',
       isActive: reportStatusFilter === inactiveStatus,
       onClick: () => {
         toggleStatus(inactiveStatus);
@@ -87,7 +87,7 @@ export function buildTeacherReportMetricItems(input: {
       icon: UserMinus,
       label: t('teachers.metrics.onLeave'),
       value: metrics?.onLeave ?? 0,
-      accent: 'blue',
+      accent: 'warning',
       isActive: reportStatusFilter === onLeaveStatus,
       onClick: () => {
         toggleStatus(onLeaveStatus);

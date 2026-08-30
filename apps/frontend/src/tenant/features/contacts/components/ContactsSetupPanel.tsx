@@ -18,7 +18,6 @@ export function ContactsSetupPanel({
     prefs,
     isSaving,
     isPrefsDirty,
-    countryOptions,
     updatePreference,
     handleSave,
   } = useContactsSetupPanelState();
@@ -36,7 +35,6 @@ export function ContactsSetupPanel({
       <ContactsPreferencesSection
         prefs={prefs}
         isPrefsDirty={isPrefsDirty}
-        countryOptions={countryOptions}
         onUpdatePreference={updatePreference}
       />
 

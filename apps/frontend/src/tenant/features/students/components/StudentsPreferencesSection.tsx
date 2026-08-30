@@ -1,6 +1,6 @@
 import React from "react";
 import { SlidersHorizontal, Hash } from "lucide-react";
-import { FORM_INPUT } from "@/components/ui/formStyles";
+import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
@@ -26,7 +26,7 @@ export function StudentsPreferencesSection({
         title={t("students.settings.grSectionTitle")}
         icon={Hash}
         accentColor="primary"
-        className="shadow-sm hover:shadow-md border-border/80"
+        className={SETUP_SECTION_CARD_CLASS}
       >
         <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
@@ -70,7 +70,7 @@ export function StudentsPreferencesSection({
         title={t("students.settings.title")}
         icon={SlidersHorizontal}
         accentColor="primary"
-        className="shadow-sm hover:shadow-md border-border/80"
+        className={SETUP_SECTION_CARD_CLASS}
       >
         <div className="space-y-2 pt-1">
           <ToggleRow
@@ -84,4 +84,3 @@ export function StudentsPreferencesSection({
     </div>
   );
 }
-

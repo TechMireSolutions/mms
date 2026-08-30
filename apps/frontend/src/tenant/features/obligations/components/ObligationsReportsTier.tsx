@@ -1,34 +1,16 @@
+import type React from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { ObligationsSummary as ObligationsSummaryComponent } from "@/tenant/features/obligations/components/ObligationsSummary";
-import type {
-  ObligationCollection,
-  ObligationDistribution,
-  ObligationType,
-  Mujtahid,
-  MujtahidRep,
-  WakalaType,
-} from "@/lib/data/obligationsData";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
+import { KPISummary, ModuleReports } from "@/tenant/components/moduleReports";
 
-interface ObligationsReportsTierProps {
-  collections: ObligationCollection[];
-  obligationTypes: ObligationType[];
-  reps: MujtahidRep[];
-  mujtahids: Mujtahid[];
-  wakalaTypes: WakalaType[];
-  distributions: ObligationDistribution[];
-}
-
-export function ObligationsReportsTier(props: ObligationsReportsTierProps) {
+export function ObligationsReportsTier(): React.JSX.Element {
   return (
-    <ErrorBoundary>
-      <ObligationsSummaryComponent
-        collections={props.collections}
-        obligationTypes={props.obligationTypes}
-        reps={props.reps}
-        mujtahids={props.mujtahids}
-        wakalaTypes={props.wakalaTypes}
-        distributions={props.distributions}
-      />
-    </ErrorBoundary>
+    <ModuleTierMotion tier="reports" className="space-y-4">
+      <ErrorBoundary>
+        <KPISummary category="obligations" />
+        <ModuleReports category="obligations" />
+      </ErrorBoundary>
+    </ModuleTierMotion>
   );
 }
+

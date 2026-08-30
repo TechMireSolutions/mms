@@ -6,7 +6,7 @@ import { CompactSegmentedControl } from "@/components/ui/CompactSegmentedControl
 import { Input } from "@/components/ui/input";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ICONS_LIST } from "@/components/ui/reports/pinnedWidgets/types";
+import { ICONS_LIST } from "@/lib/reports/pinnedWidgetTypes";
 import { WIDGET_BUILDER_ICON_CATEGORIES, type WidgetBuilderIconTab } from "@/components/ui/reports/pinnedWidgets/widgetBuilderIconCategories";
 
 interface WidgetBuilderIconPickerProps {

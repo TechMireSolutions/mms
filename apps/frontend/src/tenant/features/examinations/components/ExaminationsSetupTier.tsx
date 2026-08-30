@@ -1,35 +1,26 @@
 import React, { lazy, Suspense } from "react";
+import { EXAMINATIONS_MODULE_MANIFEST } from "@mms/shared";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 
 const ExaminationsSettings = lazy(
   () => import("@/tenant/features/examinations/components/ExaminationsSettings"),
 );
 
-export interface ExaminationsSetupTab {
-  id: string;
-  label: string;
-}
-
-export type SetupTab = ExaminationsSetupTab;
-
 export interface ExaminationsSetupTierProps {
-  tabs?: ExaminationsSetupTab[];
-  activeTab?: string;
-  canEditSetup: boolean;
-  onTabChange?: (tab: string) => void;
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
 export const ExaminationsSetupTier = React.memo(function ExaminationsSetupTier({
-  canEditSetup,
   onPrefsDirtyChange,
-}: ExaminationsSetupTierProps): React.JSX.Element {
+}: ExaminationsSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();
+  const { canEditSetup } = useModulePermissions(EXAMINATIONS_MODULE_MANIFEST);
 
   return (
     <ModuleTierMotion tier="setup">

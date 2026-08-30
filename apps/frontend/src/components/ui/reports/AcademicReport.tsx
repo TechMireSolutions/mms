@@ -1,15 +1,18 @@
-import React, { useMemo, useState } from "react";
+import React, { lazy, Suspense, useMemo, useState } from "react";
 import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/hooks/collections/examinations";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { getGrade } from '@mms/shared';
-import { AcademicReportCharts } from "./AcademicReportCharts";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useTranslation } from "@/hooks/useTranslation";
+
+const AcademicReportCharts = lazy(() =>
+  import("./AcademicReportCharts").then((mod) => ({ default: mod.AcademicReportCharts })),
+);
 import { AcademicReportClassRankings } from "./AcademicReportClassRankings";
-import {
-  AcademicReportFilterBanner,
-  AcademicReportKpis,
-  AcademicReportResultsTable,
-} from "./AcademicReportSections";
+import { ReportFilterBanner } from "./ReportFilterBanner";
+import { AcademicReportResultsTable } from "./AcademicReportResultsBody";
+import PinnedWidgets from "./PinnedWidgets";
 
 import type { AcademicReportProps, AcademicResultItem, ClassRankingItem } from "./academicReportTypes";
 
@@ -21,14 +24,10 @@ export type {
 } from "./academicReportTypes";
 
 /**
- * Renders the academic/exam reports including summary KPIs, marks-distribution
- * and class-comparison bar charts, class rankings cards, and a filterable
- * exam-results table.
- *
- * @param props - The component props.
- * @returns The AcademicReport component.
+ * Renders the academic/exam reports including summary charts, class rankings cards, and a filterable exam-results table.
  */
 const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicReportProps): React.JSX.Element {
+  const { t } = useTranslation();
   const examResults = useExaminationsResultsCollection();
   const exams = useExaminationsExamsCollection();
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
@@ -44,22 +43,21 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
 
     examResults.forEach((examResult) => {
       const exam = exams.find((examOption) => examOption.id === examResult.examId);
-      const student = students.find((studentOption: any) => String(studentOption.id) === String(examResult.studentId));
+      const student = students.find((studentOption: { id?: string | number; name?: string }) => String(studentOption.id) === String(examResult.studentId));
       if (!exam || !student) return;
 
       const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
       academicResults.push({
         studentName: student.name || "",
-        class: exam.name, // using exam name as proxy for class group context here
+        class: exam.name,
         subject: exam.subject,
         marks: percentage,
-        total: 100, // normalized to percentage
+        total: 100,
         grade: getGrade(percentage).label,
-        rank: 0 // to be computed
+        rank: 0,
       });
     });
 
-    // Compute rank
     academicResults.sort((firstResult, secondResult) => secondResult.marks - firstResult.marks);
     academicResults.forEach((academicResult, index) => {
       academicResult.rank = index + 1;
@@ -77,18 +75,17 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
   }, [filters, examResults, exams, students]);
 
   const classRankings = useMemo<ClassRankingItem[]>(() => {
-    // Group by class (exam name)
     const resultsByClass: Record<string, { class: string; studentName: string; marks: number }[]> = {};
     const rankingSourceResults = examResults.map((examResult) => {
       const exam = exams.find((examOption) => examOption.id === examResult.examId);
-      const student = students.find((studentOption: any) => String(studentOption.id) === String(examResult.studentId));
+      const student = students.find((studentOption: { id?: string | number; name?: string }) => String(studentOption.id) === String(examResult.studentId));
       if (!exam || !student) return null;
       return {
         class: exam.name,
-        studentName: student.name,
+        studentName: student.name || "",
         marks: Math.round((examResult.marksObtained / exam.totalMarks) * 100),
       };
-    }).filter(Boolean) as { class: string, studentName: string, marks: number }[];
+    }).filter(Boolean) as { class: string; studentName: string; marks: number }[];
 
     rankingSourceResults.forEach((rankingSourceResult) => {
       if (!resultsByClass[rankingSourceResult.class]) resultsByClass[rankingSourceResult.class] = [];
@@ -104,7 +101,7 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
         averageMarks,
         topMarks: sortedClassResults[0]?.marks || 0,
         passRate: Math.round((passingCount / classResults.length) * 100),
-        topStudent: sortedClassResults[0]?.studentName || "—"
+        topStudent: sortedClassResults[0]?.studentName || "—",
       };
     });
 
@@ -130,14 +127,6 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
     [classRankings, selectedClass],
   );
 
-  const averageMarks = filteredAcademicResultsData.length
-    ? (filteredAcademicResultsData.reduce((totalMarks, academicResult) => totalMarks + academicResult.marks, 0) / filteredAcademicResultsData.length).toFixed(1)
-    : 0;
-  const topScore = filteredAcademicResultsData.length ? Math.max(...filteredAcademicResultsData.map((academicResult) => academicResult.marks)) : 0;
-  const passRate = filteredAcademicResultsData.length
-    ? ((filteredAcademicResultsData.filter((academicResult) => academicResult.marks >= 50).length / filteredAcademicResultsData.length) * 100).toFixed(0)
-    : 0;
-
   const toggleClassFilter = (className: string): void => {
     setSelectedClass((currentClass) => (currentClass === className ? null : className));
   };
@@ -148,24 +137,36 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
 
   return (
     <div className="space-y-4">
-      <AcademicReportKpis
-        totalRecords={filteredAcademicResultsData.length}
-        averageMarks={averageMarks}
-        topScore={topScore}
-        passRate={passRate}
-      />
-      <AcademicReportCharts
-        academicResults={filteredAcademicResultsData}
-        classRankings={filteredClassRankings}
-        onToggleStudentFilter={toggleStudentFilter}
-        onToggleClassFilter={toggleClassFilter}
-      />
+      <Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
+        <AcademicReportCharts
+          academicResults={filteredAcademicResultsData}
+          classRankings={filteredClassRankings}
+          onToggleStudentFilter={toggleStudentFilter}
+          onToggleClassFilter={toggleClassFilter}
+        />
+      </Suspense>
 
-      <AcademicReportFilterBanner
-        selectedStudent={selectedStudent}
-        selectedClass={selectedClass}
-        onClearStudent={() => setSelectedStudent(null)}
-        onClearClass={() => setSelectedClass(null)}
+      <ReportFilterBanner
+        filters={[
+          selectedStudent
+            ? {
+                key: "student",
+                label: t("examinations.report.studentFilterLabel"),
+                value: selectedStudent,
+                onClear: () => setSelectedStudent(null),
+                clearLabel: t("examinations.report.clearStudentFilter"),
+              }
+            : null,
+          selectedClass
+            ? {
+                key: "class",
+                label: t("examinations.report.classFilterLabel"),
+                value: selectedClass,
+                onClear: () => setSelectedClass(null),
+                clearLabel: t("examinations.report.clearClassFilter"),
+              }
+            : null,
+        ]}
       />
       <AcademicReportClassRankings
         classRankings={filteredClassRankings}
@@ -175,9 +176,9 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
         academicResults={filteredAcademicResultsData}
         onToggleStudentFilter={toggleStudentFilter}
       />
+      <PinnedWidgets category="examinations" />
     </div>
   );
 });
 
 export default AcademicReport;
-

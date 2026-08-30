@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Plus } from "lucide-react";
-import { ObligationType } from '@/lib/data/obligationsData';
+import type { ObligationType } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { Button } from "@/components/ui/button";
@@ -64,8 +64,12 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
         noMargin
         title={<span className="m-0 min-w-0 text-sm text-muted-foreground">{t("obligations.types.count", { count: types.length })}</span>}
         actions={
-          <Button type="button" onClick={() => setModal({ mode: "add", data: { ...OBLIGATION_TYPE_EMPTY } })}
-            className="flex w-full items-center justify-center gap-1.5 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 sm:w-auto">
+          <Button
+            type="button"
+            size="sm"
+            onClick={() => setModal({ mode: "add", data: { ...OBLIGATION_TYPE_EMPTY } })}
+            className="flex w-full items-center justify-center gap-1.5 font-semibold sm:w-auto"
+          >
             <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.types.add")}
           </Button>
         }

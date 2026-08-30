@@ -94,6 +94,7 @@ export const obligationCollections = pgTable('obligation_collections', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('obligation_collections_workspace_receipt_idx').on(table.workspaceSubdomain, table.receiptNo),
+  index('obligation_collections_workspace_date_idx').on(table.workspaceSubdomain, table.receivedDate),
   index('obligation_collections_workspace_sender_idx').on(table.workspaceSubdomain, table.senderId),
   index('obligation_collections_workspace_type_idx').on(table.workspaceSubdomain, table.obligationTypeId),
   index('obligation_collections_workspace_rep_idx').on(table.workspaceSubdomain, table.mujtahidRepresentativeId),

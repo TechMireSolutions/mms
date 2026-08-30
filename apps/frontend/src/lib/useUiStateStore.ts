@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { create } from 'zustand';
 import type { UserUiState } from '@mms/shared';
 import { apiJson } from './apiClient.js';
@@ -62,9 +63,12 @@ export function useUiPreference<T>(key: string, defaultValue: T): [T, (val: T) =
   const value = useUiStateStore((s) => (s.state[key] !== undefined ? s.state[key] : defaultValue)) as T;
   const updateState = useUiStateStore((s) => s.updateState);
 
-  const setValue = (newVal: T) => {
-    updateState(key, newVal);
-  };
+  const setValue = useCallback(
+    (newVal: T) => {
+      updateState(key, newVal);
+    },
+    [key, updateState],
+  );
 
   // If not initialized yet, we return the default, but we should not crash.
   // The caller needs to decide if they should render a skeleton, or just use default.

@@ -1,5 +1,6 @@
 import React from "react";
 import { BookOpen } from "lucide-react";
+import type { TooltipContentProps } from "recharts";
 import {
   Bar,
   BarChart,
@@ -8,12 +9,35 @@ import {
   YAxis,
 } from "recharts";
 import { EmptyState } from "@/components/ui/EmptyState";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
-import { SectionCard } from "@/components/ui/SectionCard";
+import { ChartTooltip, ChartTooltipRow } from "@/components/ui/ChartTooltip";
+import { buildChartTooltip } from "@/components/dashboard-widgets/charts/chartPrimitives";
+import { ReportChartCard } from "@/components/ui/reports/ReportChartCard";
 import { useTranslation } from "@/hooks/useTranslation";
 
 import type { AcademicResultItem, ClassRankingItem } from "./academicReportTypes";
+
+const MarksTooltip = buildChartTooltip({
+  valueFormatter: (value) => `${value} / 100`,
+});
+
+function ClassRankingTooltip({ active = false, payload = [], label }: Partial<TooltipContentProps>) {
+  if (!active || !payload?.length) return null;
+  return (
+    <ChartTooltip active={active} payload={payload} label={label}>
+      <div className="mt-1 space-y-1">
+        {payload.map((entry) => (
+          <ChartTooltipRow
+            key={String(entry.dataKey ?? entry.name)}
+            color={entry.color}
+            name={entry.name}
+            value={entry.value}
+          />
+        ))}
+      </div>
+    </ChartTooltip>
+  );
+}
 
 interface AcademicReportChartsProps {
   academicResults: AcademicResultItem[];
@@ -41,51 +65,53 @@ export const AcademicReportCharts = React.memo(function AcademicReportCharts({
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-      <SectionCard title={t("examinations.report.marksDistribution")}>
-        <SafeResponsiveContainer width="100%" height={180}>
-          <BarChart
-            data={academicResults}
-            barSize={28}
-            onClick={(state) => {
-              const studentName = getActiveLabel(state);
-              if (studentName) onToggleStudentFilter(studentName);
-            }}
-            className="cursor-pointer"
-          >
-            <ChartGrid />
-            <XAxis dataKey="studentName" tick={chartAxisTick(10)} angle={-25} textAnchor="end" height={40} />
-            <YAxis domain={[0, 100]} tick={chartAxisTick(11)} />
-            <Tooltip formatter={(value) => value !== undefined ? `${value} / 100` : ""} />
-            <Bar dataKey="marks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("examinations.report.marksLabel")} />
-          </BarChart>
-        </SafeResponsiveContainer>
-      </SectionCard>
+      <ReportChartCard
+        title={t("examinations.report.marksDistribution")}
+        accentColor="primary"
+        heightClass="h-chart-sm"
+      >
+        <BarChart
+          data={academicResults}
+          barSize={28}
+          onClick={(state) => {
+            const studentName = getActiveLabel(state);
+            if (studentName) onToggleStudentFilter(studentName);
+          }}
+          className="cursor-pointer"
+        >
+          <ChartGrid />
+          <XAxis dataKey="studentName" tick={chartAxisTick(10)} angle={-25} textAnchor="end" height={40} />
+          <YAxis domain={[0, 100]} tick={chartAxisTick(11)} />
+          <Tooltip content={<MarksTooltip />} />
+          <Bar dataKey="marks" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name={t("examinations.report.marksLabel")} />
+        </BarChart>
+      </ReportChartCard>
 
-      <SectionCard title={t("examinations.report.classComparison")}>
-        {classRankings.length > 0 ? (
-          <SafeResponsiveContainer width="100%" height={180}>
-            <BarChart
-              data={classRankings}
-              barSize={32}
-              layout="vertical"
-              onClick={(state) => {
-                const className = getActiveLabel(state);
-                if (className) onToggleClassFilter(className);
-              }}
-              className="cursor-pointer"
-            >
-              <ChartGrid />
-              <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(11)} />
-              <YAxis dataKey="class" type="category" tick={chartAxisTick(11)} width={90} />
-              <Tooltip />
-              <Bar dataKey="averageMarks" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name={t("examinations.report.avgMarks")} />
-              <Bar dataKey="topMarks" fill="hsl(var(--chart-2))" radius={[0, 4, 4, 0]} name={t("examinations.report.topMarks")} />
-            </BarChart>
-          </SafeResponsiveContainer>
-        ) : (
-          <EmptyState icon={BookOpen} title={t("examinations.report.noClassData")} compact />
-        )}
-      </SectionCard>
+      <ReportChartCard
+        title={t("examinations.report.classComparison")}
+        accentColor="info"
+        heightClass="h-chart-sm"
+        empty={classRankings.length === 0}
+        emptyNode={<EmptyState icon={BookOpen} title={t("examinations.report.noClassData")} compact />}
+      >
+        <BarChart
+          data={classRankings}
+          barSize={32}
+          layout="vertical"
+          onClick={(state) => {
+            const className = getActiveLabel(state);
+            if (className) onToggleClassFilter(className);
+          }}
+          className="cursor-pointer"
+        >
+          <ChartGrid horizontal={false} />
+          <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(11)} />
+          <YAxis type="category" dataKey="class" width={90} tick={chartAxisTick(11)} />
+          <Tooltip content={<ClassRankingTooltip />} />
+          <Bar dataKey="avgMarks" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} name={t("examinations.report.classAvg")} />
+        </BarChart>
+      </ReportChartCard>
     </div>
   );
 });
+

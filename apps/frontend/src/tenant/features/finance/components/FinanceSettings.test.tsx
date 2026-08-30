@@ -9,7 +9,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-let mockCanEdit = true;
+const mockCanEdit = true;
 
 vi.mock("@/tenant/hooks/usePermissions", () => ({
   useModulePermissions: () => ({
@@ -80,17 +80,10 @@ vi.mock("@/components/ui/ModuleSetupSaveFooter", () => ({
 }));
 
 describe("FinanceSettings Component", () => {
-  it("renders section card, preferences section, and save footer when canEditSetup is true", () => {
-    mockCanEdit = true;
+  it("renders section card, preferences section, and save footer", () => {
     const html = renderToStaticMarkup(<FinanceSettings />);
     expect(html).toContain("finance.settings.title");
     expect(html).toContain("Finance Preferences Section");
     expect(html).toContain("Save Footer");
-  });
-
-  it("renders read-only message when canEditSetup is false", () => {
-    mockCanEdit = false;
-    const html = renderToStaticMarkup(<FinanceSettings />);
-    expect(html).toContain("finance.setup.readOnly");
   });
 });

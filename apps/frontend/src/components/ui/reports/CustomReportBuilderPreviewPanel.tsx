@@ -8,7 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { type AppTranslationKey } from "@mms/shared";
 import { DraggableField } from "./CustomReportBuilderDraggableField";
 import { type AggregateFn, type PreviewRow } from "./customReportBuilderFields";
-import { exportCustomReportExcel, exportCustomReportPdf } from "./customReportBuilderPreviewExport";
+import { exportReportExcel, exportReportPdf } from "@/lib/reports/reportExportCore";
 import { CustomReportBuilderPreviewVisualizer } from "./CustomReportBuilderPreviewVisualizer";
 
 interface CustomReportBuilderPreviewPanelProps {
@@ -109,7 +109,13 @@ export function CustomReportBuilderPreviewPanel({
           {previewData.length > 0 && (
             <div className="flex gap-2">
               <Button
-                onClick={() => void exportCustomReportExcel(previewData, reportName)}
+                onClick={() =>
+                  void exportReportExcel({
+                    title: reportName,
+                    rows: previewData as Record<string, unknown>[],
+                    filename: reportName,
+                  })
+                }
                 variant="capsSuccess"
                 size="caps"
                 className="shadow-sm"
@@ -119,7 +125,16 @@ export function CustomReportBuilderPreviewPanel({
                 <FileSpreadsheet className="w-3.5 h-3.5" /> {t("reports.builder.sheet")}
               </Button>
               <Button
-                onClick={() => void exportCustomReportPdf(previewData, selectedFields, reportName, orientation, pageSize)}
+                onClick={() =>
+                  void exportReportPdf({
+                    title: reportName,
+                    sourceColumns: selectedFields.map((f) => ({ header: resolveFieldLabel(f), key: f })),
+                    rows: previewData as Record<string, unknown>[],
+                    filename: reportName,
+                    orientation,
+                    formatSize: pageSize,
+                  })
+                }
                 variant="capsDestructive"
                 size="caps"
                 className="shadow-sm"

@@ -5,6 +5,8 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { Button } from '@/components/ui/button';
+import { calculateReportDateRange } from '@/lib/reports/reportDateUtils';
 
 export interface ActivityLogsFiltersProps {
   search: string;
@@ -48,6 +50,13 @@ export function ActivityLogsFilters({
     })),
   ], [t]);
 
+  const applyPreset = (days?: number) => {
+    const preset = days === undefined ? 'none' : days === 0 ? 'today' : days === 7 ? '7d' : days === 30 ? '30d' : 'none';
+    const range = calculateReportDateRange(preset);
+    onDateFromChange(range.from);
+    onDateToChange(range.to);
+  };
+
   return (
     <div className="flex flex-wrap items-center gap-2">
       <div className="relative min-w-cell-md flex-1">
@@ -73,6 +82,44 @@ export function ActivityLogsFilters({
         aria-label={t('users.activityFilterAction')}
         className="w-auto min-w-cell-sm"
       />
+      <div className="flex items-center gap-1">
+        <Button
+          type="button"
+          variant={!dateFrom && !dateTo ? 'secondary' : 'ghost'}
+          size="sm"
+          className="h-8 px-2 text-xs"
+          onClick={() => applyPreset(undefined)}
+        >
+          {t('common.none')}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2 text-xs"
+          onClick={() => applyPreset(0)}
+        >
+          {t('datePicker.today')}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2 text-xs"
+          onClick={() => applyPreset(7)}
+        >
+          {t('messaging.datePreset7d')}
+        </Button>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2 text-xs"
+          onClick={() => applyPreset(30)}
+        >
+          {t('messaging.datePreset30d')}
+        </Button>
+      </div>
       <DateRangeFilterBar
         idPrefix="activity-logs"
         dateFrom={dateFrom}

@@ -5,10 +5,10 @@ import { isComposedWidgetType } from "@/components/dashboard-widgets/registry";
 import { Switch } from "@/components/ui/switch";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { METADATA_FIELDS, getCollectionLabel } from "@/components/ui/reports/reportMetadata";
+import { METADATA_FIELDS, getCollectionLabel } from "@/lib/reports/reportMetadata";
 import { ProgressRing } from "@/components/ui/reports/pinnedWidgets/WidgetProgressRing";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
-import type { computeCustomCard } from "@/components/ui/reports/reportMetadata";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
+import type { computeCustomCard } from "@/lib/reports/reportMetadata";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 type AlertScheme = {

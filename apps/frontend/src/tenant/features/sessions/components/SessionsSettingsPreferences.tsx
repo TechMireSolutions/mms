@@ -1,9 +1,10 @@
 import React from "react";
 import { formatMonthName, normalizeSessionsViewLayout, type SessionsSettings } from "@mms/shared";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ToggleRow } from "@/components/ui/ToggleRow";
+import { Field } from "@/components/ui/FormPrimitives";
 import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -21,19 +22,19 @@ export function SessionsSettingsPreferences({
   const { t } = useTranslation();
 
   return (
-    <>
+    <div className="space-y-4 text-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label className={FORM_LABEL} htmlFor="defaultDuration">{t("sessions.settings.defaultDuration")}</label>
+        <Field label={t("sessions.settings.defaultDuration")}>
           <Input
             id="defaultDuration"
             type="number"
+            min="1"
+            className={FORM_INPUT}
             value={settingsDraft.defaultDuration || ""}
             onChange={(event) => upd("defaultDuration", event.target.value)}
           />
-        </div>
-        <div>
-          <label className={FORM_LABEL} htmlFor="defaultSessionType">{t("sessions.settings.defaultSessionType")}</label>
+        </Field>
+        <Field label={t("sessions.settings.defaultSessionType")}>
           <FormSelect
             id="defaultSessionType"
             value={settingsDraft.defaultSessionType}
@@ -41,19 +42,18 @@ export function SessionsSettingsPreferences({
             options={typeOptions}
             className="w-full"
           />
-        </div>
-        <div>
-          <label className={FORM_LABEL} htmlFor="academicYear">{t("sessions.settings.academicYear")}</label>
+        </Field>
+        <Field label={t("sessions.settings.academicYear")}>
           <Input
             id="academicYear"
             type="text"
+            className={FORM_INPUT}
             value={settingsDraft.academicYear || ""}
             onChange={(event) => upd("academicYear", event.target.value)}
             placeholder={t("sessions.settings.academicYearPlaceholder")}
           />
-        </div>
-        <div>
-          <label className={FORM_LABEL} htmlFor="sessionStart">{t("sessions.settings.sessionStart")}</label>
+        </Field>
+        <Field label={t("sessions.settings.sessionStart")}>
           <FormSelect
             id="sessionStart"
             value={settingsDraft.sessionStart}
@@ -65,10 +65,10 @@ export function SessionsSettingsPreferences({
               }))}
             className="w-full"
           />
-        </div>
+        </Field>
       </div>
 
-      <div className="space-y-2 pt-1">
+      <div className="space-y-2 pt-2 border-t border-border/60">
         <ToggleRow
           label={t("sessions.settings.allowOverlap")}
           description={t("sessions.settings.allowOverlapHint")}
@@ -100,10 +100,10 @@ export function SessionsSettingsPreferences({
           onChange={(value) => upd("notifyOnSessionStart", value)}
         />
 
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border py-3">
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-border/60 pt-3">
           <div className="min-w-0">
-            <p className="text-sm font-semibold text-foreground">{t("sessions.settings.defaultViewLayout")}</p>
-            <p className="text-xs text-muted-foreground">{t("sessions.settings.defaultViewLayoutHint")}</p>
+            <p className="m-0 text-sm font-semibold text-foreground">{t("sessions.settings.defaultViewLayout")}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t("sessions.settings.defaultViewLayoutHint")}</p>
           </div>
           <SegmentedPillFilter
             size="sm"
@@ -116,6 +116,6 @@ export function SessionsSettingsPreferences({
           />
         </div>
       </div>
-    </>
+    </div>
   );
 }

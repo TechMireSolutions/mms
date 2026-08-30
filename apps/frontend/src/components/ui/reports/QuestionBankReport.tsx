@@ -1,56 +1,51 @@
-import React, { useMemo } from "react";
-import { Bar, BarChart, Tooltip, XAxis, YAxis } from "recharts";
-import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
-import { SectionCard } from "@/components/ui/SectionCard";
-import { BarChart2, ClipboardList, FileCheck2, Target, Users } from "lucide-react";
-import type {
-  QuestionBankQuestion,
-  QuestionBankTest,
-} from "@mms/shared";
+import React, { lazy, Suspense, useMemo, useState } from 'react';
+import { BarChart2, CheckCircle, TrendingUp } from 'lucide-react';
 import { getQuestionCategoryIds } from "@mms/shared";
 import {
   useQuestionBankQuestionsCollection,
   useQuestionBankTestsCollection,
   useQuestionBankResultsCollection,
+  useQuestionBankConfig,
 } from "@/tenant/hooks/collections/questionBank";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
+import { AutoGrading } from "@/tenant/features/question-bank/components/AutoGrading";
+import { PerformanceAnalytics } from "@/tenant/features/question-bank/components/PerformanceAnalytics";
+import { ReportDataGridContainer } from "./ReportDataGridContainer";
+import type { ExportColumn } from "@/components/ui/ExportToolbar";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useQuestionBankConfig } from "@/tenant/hooks/collections/questionBank";
-import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
-import { EmptyState } from "@/components/ui/EmptyState";
+import PinnedWidgets from "./PinnedWidgets";
 
-function sumScores(scores: Record<string, number>): number {
-  return Object.values(scores).reduce((sum, value) => sum + value, 0);
-}
+const QuestionBankReportCharts = lazy(() =>
+  import("./QuestionBankReportCharts").then((mod) => ({ default: mod.QuestionBankReportCharts })),
+);
 
-function testTotalMarks(test: QuestionBankTest, questions: QuestionBankQuestion[]): number {
-  return test.questionIds.reduce((sum, questionId) => {
-    const question = questions.find((questionBankQuestion) => questionBankQuestion.id === questionId);
-    return sum + (question?.marks ?? 0);
-  }, 0);
-}
+type QBReportSubTab = "overview" | "analytics" | "autoGrading";
 
 const QuestionBankReport = React.memo(function QuestionBankReport(): React.JSX.Element {
   const { t } = useTranslation();
+  const [activeSubTab, setActiveSubTab] = useState<QBReportSubTab>("overview");
   const questions = useQuestionBankQuestionsCollection();
   const tests = useQuestionBankTestsCollection();
-  const questionBankResults = useQuestionBankResultsCollection();
+  const results = useQuestionBankResultsCollection();
   const questionBankConfig = useQuestionBankConfig(questions);
+  const categories = questionBankConfig.categories;
 
-  const avgScore = useMemo(() => {
-    const scored = questionBankResults
-      .map((questionBankResult) => {
-        const test = tests.find((questionBankTest) => questionBankTest.id === questionBankResult.testId);
-        if (!test) return null;
-        const total = testTotalMarks(test, questions);
-        return total > 0 ? Math.round((sumScores(questionBankResult.scores) / total) * 100) : null;
-      })
-      .filter((value): value is number => value !== null);
-
-    return scored.length
-      ? Math.round(scored.reduce((sum, value) => sum + value, 0) / scored.length)
-      : 0;
-  }, [questions, questionBankResults, tests]);
+  const tabs: readonly SubTab<QBReportSubTab>[] = useMemo(() => [
+    { key: "overview", label: t("reports.builder.title"), icon: BarChart2 },
+    { key: "analytics", label: t("questionBank.analytics.studentPerformance"), icon: TrendingUp },
+    ...(tests.length > 0
+      ? [{ key: "autoGrading" as const, label: t("questionBank.aiGrading"), icon: CheckCircle }]
+      : []),
+  ], [t, tests.length]);
 
   const difficultyData = useMemo(() => {
     return questionBankConfig.enabledDifficulties.map((difficulty) => ({
@@ -61,84 +56,126 @@ const QuestionBankReport = React.memo(function QuestionBankReport(): React.JSX.E
   }, [questionBankConfig, questions, tests]);
 
   const categoryData = useMemo(() => {
-    return questionBankConfig.categories.map((category) => ({
+    return categories.map((category) => ({
       name: category.name,
       questions: questions.filter((question) => getQuestionCategoryIds(question).includes(category.id)).length,
     }));
-  }, [questionBankConfig.categories, questions]);
+  }, [categories, questions]);
 
-  const kpiItems = useMemo(() => [
-    {
-      icon: ClipboardList,
-      label: t("questionBank.report.totalQuestions"),
-      value: questions.length,
-      accent: "primary" as const,
-    },
-    {
-      icon: FileCheck2,
-      label: t("questionBank.report.generatedTests"),
-      value: tests.length,
-      accent: "blue" as const,
-    },
-    {
-      icon: Users,
-      label: t("questionBank.report.submissions"),
-      value: questionBankResults.length,
-      accent: "violet" as const,
-    },
-    {
-      icon: Target,
-      label: t("questionBank.report.avgScore"),
-      value: `${avgScore}%`,
-      accent: "green" as const,
-    },
-  ], [t, questions.length, tests.length, questionBankResults.length, avgScore]);
+  const hasDifficultyData = difficultyData.some((item) => item.questions > 0 || item.tests > 0);
+  const hasCategoryData = categoryData.some((item) => item.questions > 0);
+
+  const exportColumns = useMemo<ExportColumn[]>(() => [
+    { key: "type", header: t("common.type") },
+    { key: "name", header: t("common.label") },
+    { key: "questions", header: t("questionBank.questions") },
+    { key: "tests", header: t("questionBank.report.generatedTests") },
+  ], [t]);
+
+  const summaryRows = useMemo(() => [
+    ...difficultyData.map((item) => ({
+      type: t("questionBank.columns.difficulty"),
+      name: item.name,
+      questions: item.questions,
+      tests: item.tests,
+    })),
+    ...categoryData.map((item) => ({
+      type: t("questionBank.category"),
+      name: item.name,
+      questions: item.questions,
+      tests: "—",
+    })),
+  ], [difficultyData, categoryData, t]);
 
   return (
     <div className="space-y-4">
-      <ModuleCommandMetricsGrid items={kpiItems} />
+      <SubTabBar
+        tabs={tabs}
+        value={activeSubTab}
+        onChange={setActiveSubTab}
+        panelIdPrefix="qb-report-subtab"
+      />
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SectionCard title={t("questionBank.analytics.difficultyBreakdown")}>
-          {difficultyData.some((item) => item.questions > 0 || item.tests > 0) ? (
-            <div className="h-chart-sm" aria-hidden>
-              <SafeResponsiveContainer width="100%" height={180}>
-                <BarChart data={difficultyData} barSize={28}>
-                  <ChartGrid />
-                  <XAxis dataKey="name" tick={chartAxisTick(10)} />
-                  <YAxis allowDecimals={false} tick={chartAxisTick(11)} />
-                  <Tooltip />
-                  <Bar dataKey="questions" name={t("questionBank.questions")} fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="tests" name={t("questionBank.report.generatedTests")} fill="hsl(var(--chart-2))" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </SafeResponsiveContainer>
-            </div>
-          ) : (
-            <EmptyState icon={BarChart2} title={t("questionBank.report.noDifficultyData")} compact />
-          )}
-        </SectionCard>
+      {activeSubTab === "overview" && (
+        <div className="space-y-4">
+          <Suspense fallback={<Skeleton className="h-chart-sm w-full rounded-xl" />}>
+            <QuestionBankReportCharts
+              difficultyData={difficultyData}
+              categoryData={categoryData}
+              hasDifficultyData={hasDifficultyData}
+              hasCategoryData={hasCategoryData}
+            />
+          </Suspense>
 
-        <SectionCard title={t("questionBank.analytics.categoryBreakdown")}>
-          {categoryData.some((item) => item.questions > 0) ? (
-            <div className="h-chart-sm" aria-hidden>
-              <SafeResponsiveContainer width="100%" height={180}>
-                <BarChart data={categoryData} barSize={28} layout="vertical">
-                  <ChartGrid horizontal={false} />
-                  <XAxis type="number" allowDecimals={false} tick={chartAxisTick(11)} />
-                  <YAxis type="category" dataKey="name" width={96} tick={chartAxisTick(10)} />
-                  <Tooltip />
-                  <Bar dataKey="questions" name={t("questionBank.questions")} fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                </BarChart>
-              </SafeResponsiveContainer>
-            </div>
-          ) : (
-            <EmptyState icon={BarChart2} title={t("questionBank.report.noCategoryData")} compact />
+          {summaryRows.length > 0 && (
+            <ReportDataGridContainer
+              title={t("questionBank.analytics.categoryBreakdown")}
+              columns={exportColumns}
+              rows={summaryRows as unknown as Record<string, unknown>[]}
+              moduleId="questionBank"
+              hideExport={summaryRows.length === 0}
+            >
+              <div className="hidden md:block">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                      <TableHead className="px-4 py-2.5 font-bold">{t("common.type")}</TableHead>
+                      <TableHead className="px-4 py-2.5 font-bold">{t("common.label")}</TableHead>
+                      <TableHead className="px-4 py-2.5 font-bold text-center">{t("questionBank.questions")}</TableHead>
+                      <TableHead className="px-4 py-2.5 font-bold text-center">{t("questionBank.report.generatedTests")}</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody className="divide-y divide-border/50">
+                    {summaryRows.map((row) => (
+                      <TableRow key={`${row.type}-${row.name}`} className="hover:bg-muted/20 transition-colors">
+                        <TableCell className="px-4 py-2.5 text-xs text-muted-foreground uppercase font-bold">{row.type}</TableCell>
+                        <TableCell className="px-4 py-2.5 font-medium text-foreground">{row.name}</TableCell>
+                        <TableCell className="px-4 py-2.5 text-center font-mono font-semibold text-primary">{row.questions}</TableCell>
+                        <TableCell className="px-4 py-2.5 text-center font-mono text-muted-foreground">{row.tests}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <div className="divide-y divide-border/50 md:hidden" role="list">
+                {summaryRows.map((row) => (
+                  <div
+                    key={`${row.type}-${row.name}`}
+                    className="flex min-w-0 items-center justify-between gap-3 px-4 py-3"
+                    role="listitem"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{row.name}</p>
+                      <p className="text-xs text-muted-foreground uppercase font-bold">{row.type}</p>
+                    </div>
+                    <div className="text-end">
+                      <span className="font-mono font-bold text-primary">{row.questions}</span>
+                      <span className="text-xs text-muted-foreground ms-1">{t("questionBank.questions").toLowerCase()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ReportDataGridContainer>
           )}
-        </SectionCard>
-      </div>
+
+          <PinnedWidgets category="questionBank" />
+        </div>
+      )}
+
+      {activeSubTab === "analytics" && (
+        <PerformanceAnalytics
+          tests={tests}
+          results={results}
+          questions={questions}
+          categories={categories}
+        />
+      )}
+
+      {activeSubTab === "autoGrading" && tests.length > 0 && (
+        <AutoGrading tests={tests} results={results} questions={questions} />
+      )}
     </div>
   );
 });
 
 export default QuestionBankReport;
-

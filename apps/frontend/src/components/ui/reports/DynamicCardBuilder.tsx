@@ -1,6 +1,6 @@
 import React, { useCallback, useMemo } from "react";
 import { WidgetBuilder, CustomWidget } from "@/components/ui/reports/PinnedWidgets";
-import { CustomCard } from "@/components/ui/reports/reportMetadata";
+import { CustomCard } from "@/lib/reports/reportMetadata";
 import { getObject, saveObject } from "@/lib/db";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 

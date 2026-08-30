@@ -7,8 +7,8 @@ import {
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/EmptyState";
-import { WORK_SURFACE, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
+import { ReportDataGridContainer } from "@/tenant/components/moduleReports";
 import { sumScores, testTotalMarks, type StatsSummary } from "@/tenant/features/question-bank/components/autoGradingShared";
 import { AutoGradingResultRow } from "@/tenant/features/question-bank/components/AutoGradingResultRow";
 import { AutoGradingStats } from "@/tenant/features/question-bank/components/AutoGradingStats";
@@ -71,27 +71,37 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
             <AutoGradingStats stats={stats} test={test} questions={questions} submittedCount={testResults.length} />
           )}
 
-          <section className={`${WORK_SURFACE} overflow-hidden`} aria-label={t("questionBank.grading.resultsTitle", { name: test.name })}>
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border px-4 py-3">
-              <h3 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">
-                {t("questionBank.grading.resultsTitle", { name: test.name })}
-              </h3>
-              <span className="shrink-0 text-xs text-muted-foreground">
-                {t("questionBank.grading.submissionsCount", { count: testResults.length })}
-              </span>
+          <ReportDataGridContainer
+            title={t("questionBank.grading.resultsTitle", { name: test.name })}
+            columns={[
+              { key: "studentName", header: t("examinations.report.colStudent") },
+              { key: "testName", header: t("nav.questionBank") },
+              { key: "score", header: t("examinations.report.colMarks") },
+              { key: "percentage", header: t("examinations.report.colGrade") },
+            ]}
+            rows={testResults.map((result) => {
+              const totalMarks = testTotalMarks(test, questions) || 100;
+              const marksObtained = sumScores(result.scores);
+              return {
+                studentName: result.studentName,
+                testName: test.name,
+                score: `${marksObtained}/${totalMarks}`,
+                percentage: `${pct(marksObtained, totalMarks)}%`,
+              };
+            })}
+            moduleId="question-bank"
+            filename={`grading_${test.name.toLowerCase().replace(/\s+/g, "_")}`}
+            empty={testResults.length === 0}
+            emptyTitle={t("questionBank.grading.noResults")}
+          >
+            <div role="list">
+              {testResults
+                .sort((a, b) => sumScores(b.scores) - sumScores(a.scores))
+                .map((result) => (
+                  <AutoGradingResultRow key={result.id} result={result} test={test} questions={questions} />
+                ))}
             </div>
-            {testResults.length === 0 ? (
-              <EmptyState title={t("questionBank.grading.noResults")} compact icon={null} />
-            ) : (
-              <div role="list">
-                {testResults
-                  .sort((a, b) => sumScores(b.scores) - sumScores(a.scores))
-                  .map((result) => (
-                    <AutoGradingResultRow key={result.id} result={result} test={test} questions={questions} />
-                  ))}
-              </div>
-            )}
-          </section>
+          </ReportDataGridContainer>
         </>
       )}
     </section>

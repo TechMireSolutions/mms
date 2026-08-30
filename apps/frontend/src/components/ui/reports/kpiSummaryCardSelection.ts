@@ -1,6 +1,6 @@
 import type { Dispatch, MutableRefObject, SetStateAction } from 'react';
 import { getObject, saveObject } from '@/lib/db';
-import type { CustomCard } from './reportMetadata';
+import type { CustomCard } from '@/lib/reports/reportMetadata';
 import {
   areCustomCardsEqual,
   areStringListsEqual,

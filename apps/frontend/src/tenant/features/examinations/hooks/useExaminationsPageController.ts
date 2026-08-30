@@ -5,7 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { BookOpen, FileText } from 'lucide-react';
-import { EXAMINATIONS_MODULE_MANIFEST, resolveModuleTierTab, type AppTranslationKey } from '@mms/shared';
+import { EXAMINATIONS_MODULE_MANIFEST, resolveModuleTierTab } from '@mms/shared';
 import { Exam } from '@/lib/data/examinationData';
 import { useExaminationExamColumnLayout } from '@/tenant/features/examinations/hooks/useExaminationExamColumnLayout';
 import { useExaminationResultsColumnLayout } from '@/tenant/features/examinations/hooks/useExaminationResultsColumnLayout';
@@ -23,10 +23,6 @@ import {
   createExaminationsSaveResultsHandler,
 } from '@/tenant/features/examinations/hooks/examinationsPageControllerActions';
 
-const SETUP_TAB_LABEL_KEYS: Record<(typeof EXAMINATIONS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
-  preferences: 'examinations.setup.preferences',
-};
-
 export function useExaminationsPageController() {
   const { t } = useTranslation();
   const {
@@ -34,16 +30,8 @@ export function useExaminationsPageController() {
     canDelete,
     canReports: canViewReports,
     canViewSetup,
-    canEditSetup,
   } = useModulePermissions(EXAMINATIONS_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const SETUP_TABS = useMemo(
-    () => EXAMINATIONS_MODULE_MANIFEST.setupSubTabs.map((id) => ({
-      id,
-      label: t(SETUP_TAB_LABEL_KEYS[id]),
-    })),
-    [t],
-  );
   const OPS_SUB_TABS = useMemo(
     () => [
       { id: 'exams', label: t('examinations.exams'), icon: BookOpen },
@@ -53,7 +41,6 @@ export function useExaminationsPageController() {
   );
   const [activeTab, setActiveTab] = usePersistedTabState<string>('examinations_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = useState('exams');
-  const [configSubTab, setConfigSubTab] = useState<string>('preferences');
   const [showDeleted, setShowDeleted] = useState(false);
   const [createExamKey, setCreateExamKey] = useState(0);
 
@@ -105,7 +92,6 @@ export function useExaminationsPageController() {
     PAGE_TABS.map((tab) => tab.id),
   );
   const effectiveSubTab = OPS_SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : 'exams';
-  const effectiveConfigTab = SETUP_TABS.find((tab) => tab.id === configSubTab)?.id ?? 'preferences';
 
   useEffect(() => {
     if (effectiveSubTab === 'exams' || effectiveSubTab === 'results') return;
@@ -142,15 +128,12 @@ export function useExaminationsPageController() {
     t,
     canWrite,
     canDelete,
-    canEditSetup,
     PAGE_TABS,
-    SETUP_TABS,
     OPS_SUB_TABS,
     activeTab,
     setActiveTab,
     effectiveTab,
     effectiveSubTab,
-    effectiveConfigTab,
     showDeleted,
     setShowDeleted,
     createExamKey,
@@ -172,7 +155,6 @@ export function useExaminationsPageController() {
     resultsColumnLayout,
     listLoadFailed,
     setActiveSubTab,
-    setConfigSubTab,
     handleSaveExam,
     handleSaveResults,
     handleDeleteExam,

@@ -27,6 +27,6 @@ describe("StudentsSetupPanel Component", () => {
     const html = renderToStaticMarkup(<StudentsSetupPanel />);
 
     expect(html).toContain("students.settings.grSectionTitle");
-    expect(html).toContain("students.settings.saveSettings");
+    expect(html).toContain("common.save");
   });
 });

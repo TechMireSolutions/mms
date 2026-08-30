@@ -107,6 +107,18 @@ export const attendanceContract = c.router({
     },
     summary: 'Restore a soft-deleted attendance record by ID',
   },
+  reportAggregates: {
+    method: 'GET',
+    path: '/api/attendance/report-aggregates',
+    query: z.object({
+      dateFrom: z.string().optional(),
+      dateTo: z.string().optional(),
+      sessionId: z.string().optional(),
+      classId: z.string().optional(),
+    }).optional(),
+    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    summary: 'Get attendance report aggregates',
+  },
   widgetAggregates: {
     method: 'POST',
     path: '/api/attendance/widget-aggregates',

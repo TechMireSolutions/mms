@@ -29,7 +29,7 @@ export const TeachersSetupTier = React.memo(function TeachersSetupTier({
       <ErrorBoundary>
         <div className="space-y-4">
           {!canEditSetup ? (
-            <SetupReadOnlyMessage title={t("teachers.setupReadOnly")} />
+            <SetupReadOnlyMessage title={t("teachers.setup.readOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
               <TeachersSettings onPrefsDirtyChange={onPrefsDirtyChange} />

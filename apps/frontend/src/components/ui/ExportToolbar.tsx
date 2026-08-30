@@ -49,7 +49,7 @@ export function ExportToolbar({
   const [compactFormat, setCompactFormat] = useState<'excel' | 'pdf'>('excel');
   const [exporting, setExporting] = useState(false);
 
-  const resolvedVariant = variant || (data || resolveRows ? 'default' : 'compact');
+  const resolvedVariant = variant || (rows || data || resolveRows ? 'default' : 'compact');
   const resolvedFilename = useMemo(() => filename || title.toLowerCase().replace(/\s+/g, '_'), [filename, title]);
 
   const [titlePrefix, titleSuffix] = useMemo(() => {

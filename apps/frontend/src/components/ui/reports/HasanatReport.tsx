@@ -1,17 +1,17 @@
-import React, { useMemo, useState } from "react";
+import React, { lazy, Suspense, useMemo, useState } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/hooks/collections/hasanat";
 import { useTranslation } from "@/hooks/useTranslation";
+import { Skeleton } from "@/components/ui/skeleton";
 import { getDenominationPoints } from "@mms/shared";
-import {
-  HasanatDashboardWidgets,
-  HasanatDistributionTable,
-  HasanatFacultyFilterBanner,
-  HasanatReportCharts,
-  HasanatReportKpis,
-  type HasanatFacultyBarItem,
-  type HasanatPieItem,
-} from "./HasanatReportSections";
+import { HasanatDistributionTable } from "./HasanatDistributionTable";
+import type { HasanatFacultyBarItem, HasanatPieItem } from "./hasanatReportSectionTypes";
+
+const HasanatReportCharts = lazy(() =>
+  import("./HasanatReportCharts").then((mod) => ({ default: mod.HasanatReportCharts })),
+);
+import { ReportFilterBanner } from "./ReportFilterBanner";
+import PinnedWidgets from "./PinnedWidgets";
 
 /** Active filter state passed down from the parent report view. */
 interface HasanatReportFilters {
@@ -48,9 +48,6 @@ export interface HasanatByFacultyItem {
  * Renders the Hasanat rewards and points distribution reports,
  * including faculty distribution bar charts, redemption pie charts,
  * and a filterable distribution table.
- *
- * @param props - The component props.
- * @returns The HasanatReport component.
  */
 const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatReportProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -68,7 +65,6 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
     const facultyMap: Record<string, HasanatByFacultyItem> = {};
 
     distributions.forEach((distributionRecord) => {
-      // Resolve points from the database denominations collection
       const points = getDenominationPoints(distributionRecord.denominationId, distributionRecord.denominationName, denominations);
 
       const totalPoints = points * distributionRecord.quantity;
@@ -85,7 +81,7 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
               faculty: distributionRecord.issuedBy || "—",
               distributed: 0,
               redeemed: 0,
-              balance: 0
+              balance: 0,
             };
           }
           studentMap[studentKey].distributed += totalPoints;
@@ -99,7 +95,7 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
         facultyMap[facultyKey] = {
           faculty: facultyKey,
           totalDistributed: 0,
-          totalRedeemed: 0
+          totalRedeemed: 0,
         };
       }
       facultyMap[facultyKey].totalDistributed += totalPoints;
@@ -108,7 +104,7 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
 
     return {
       distributionData: Object.values(studentMap),
-      hasanatByFaculty: Object.values(facultyMap)
+      hasanatByFaculty: Object.values(facultyMap),
     };
   }, [distributions, denominations]);
 
@@ -128,50 +124,55 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
     return filteredDistribution;
   }, [filters, distributionData, selectedFaculty]);
 
-  const totalDistributed = distribution.reduce((total, hasanatItem) => total + hasanatItem.distributed, 0);
-  const totalRedeemed    = distribution.reduce((total, hasanatItem) => total + hasanatItem.redeemed, 0);
-  const totalBalance     = distribution.reduce((total, hasanatItem) => total + hasanatItem.balance, 0);
-  const redemptionRate   = totalDistributed
-    ? ((totalRedeemed / totalDistributed) * 100).toFixed(1)
-    : 0;
+  const totalRedeemed = distribution.reduce((total, hasanatItem) => total + hasanatItem.redeemed, 0);
+  const totalBalance = distribution.reduce((total, hasanatItem) => total + hasanatItem.balance, 0);
 
   const facultyChartData = useMemo<HasanatFacultyBarItem[]>(() => {
     return hasanatByFaculty.map((facultyTotals) => ({
-      faculty:     facultyTotals.faculty,
+      faculty: facultyTotals.faculty,
       distributed: facultyTotals.totalDistributed,
-      redeemed:    facultyTotals.totalRedeemed,
+      redeemed: facultyTotals.totalRedeemed,
     }));
   }, [hasanatByFaculty]);
+
   const toggleFacultyFilter = (faculty: string) => {
     setSelectedFaculty((current) => (current === faculty ? null : faculty));
   };
 
   const redemptionPieData = useMemo<HasanatPieItem[]>(() => [
     { name: t("hasanat.report.redeemedPieLabel"), value: totalRedeemed },
-    { name: t("hasanat.report.balancePieLabel"),  value: totalBalance  },
+    { name: t("hasanat.report.balancePieLabel"), value: totalBalance },
   ], [t, totalRedeemed, totalBalance]);
 
   return (
     <div className="space-y-4">
-      <HasanatReportKpis
-        totalDistributed={totalDistributed}
-        totalRedeemed={totalRedeemed}
-        totalBalance={totalBalance}
-        redemptionRate={redemptionRate}
+      <Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
+        <HasanatReportCharts
+          facultyChartData={facultyChartData}
+          redemptionPieData={redemptionPieData}
+          pieColors={PIE_COLORS}
+          onToggleFacultyFilter={toggleFacultyFilter}
+        />
+      </Suspense>
+      <ReportFilterBanner
+        filters={[
+          selectedFaculty
+            ? {
+                key: "faculty",
+                label: t("hasanat.report.facultyFilterLabel"),
+                value: selectedFaculty,
+                onClear: () => setSelectedFaculty(null),
+                clearLabel: t("hasanat.report.clearFacultyFilter"),
+              }
+            : null,
+        ]}
       />
-      <HasanatReportCharts
-        facultyChartData={facultyChartData}
-        redemptionPieData={redemptionPieData}
-        pieColors={PIE_COLORS}
-        onToggleFacultyFilter={toggleFacultyFilter}
-      />
-      <HasanatFacultyFilterBanner selectedFaculty={selectedFaculty} onClear={() => setSelectedFaculty(null)} />
       <HasanatDistributionTable
         distribution={distribution}
         selectedFaculty={selectedFaculty}
         onToggleFacultyFilter={toggleFacultyFilter}
       />
-      <HasanatDashboardWidgets />
+      <PinnedWidgets category="hasanat" />
     </div>
   );
 });

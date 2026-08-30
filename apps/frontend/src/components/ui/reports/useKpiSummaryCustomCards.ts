@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useModuleWidgetAggregates } from './useModuleWidgetAggregates';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
-import type { CustomCard } from './reportMetadata';
+import type { CustomCard } from '@/lib/reports/reportMetadata';
 import { computeCustomCardItems } from './kpiSummaryCardHandlers';
 import { cardsChangedOnLocalUpdate, loadCustomCardsForCategory } from './kpiSummaryCardSelection';
 import type { AggregateCardValue, CategorizedKPIItem } from './kpiSummaryTypes';

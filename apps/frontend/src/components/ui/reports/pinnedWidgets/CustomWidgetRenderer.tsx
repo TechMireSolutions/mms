@@ -6,15 +6,15 @@ import {
 } from "@/components/dashboard-widgets/registry";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
-import { computeCustomCard, type CustomCard } from "@/components/ui/reports/reportMetadata";
+import { computeCustomCard, type CustomCard } from "@/lib/reports/reportMetadata";
 import { getObject } from "@/lib/db";
 import {
   type ReportCollectionsSnapshot,
 } from "@/lib/reports/useReportCollections";
 import {
-  CustomWidget,
+  type CustomWidget,
   ALERT_COLOR_MAP,
-} from "@/components/ui/reports/pinnedWidgets/types";
+} from "@/lib/reports/pinnedWidgetTypes";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import {
   computeWidgetSingleValue,
@@ -23,7 +23,7 @@ import {
   computeTeachersCustomCardValue,
   computeSessionsCustomCardValue,
   computeEnrollmentsCustomCardValue,
-} from "@/components/ui/reports/pinnedWidgets/widgetDataUtils";
+} from "@/lib/reports/widgetDataUtils";
 import { CustomWidgetCompactLayout } from "@/components/ui/reports/pinnedWidgets/CustomWidgetCompactLayout";
 import { CustomWidgetComfortableLayout } from "@/components/ui/reports/pinnedWidgets/CustomWidgetComfortableLayout";
 

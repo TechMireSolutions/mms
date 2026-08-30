@@ -1,9 +1,12 @@
+import { useCallback, useMemo, useState } from "react";
 import {
   STUDENT_MODULE_PREFERENCE_KEYS,
   normalizeStudentModulePreferences,
   type StudentsSettings,
 } from "@mms/shared";
-import { useModuleSetupSaveActions } from "@/lib/setup/useModuleSetupSaveActions";
+import { useTranslation } from "@/hooks/useTranslation";
+import { notify } from "@/lib/notify";
+import { safeAudit } from "@/lib/safeAudit";
 import { useStudentPreferencesMutation } from "@/tenant/features/students/hooks/useStudentSetupConfig";
 import { useStudentMutations } from "@/tenant/features/students/hooks/useStudentMutations";
 
@@ -16,26 +19,45 @@ export function useStudentsSetupSaveActions({
   settingsDraft: StudentsSettings;
   setSaved: (value: boolean | ((curr: boolean) => boolean)) => void;
 }) {
+  const { t } = useTranslation();
+  const [saving, setSaving] = useState(false);
   const preferencesMutation = useStudentPreferencesMutation();
   const { logSetupAudit } = useStudentMutations();
 
-  const saveActions = useModuleSetupSaveActions<StudentsSettings>({
-    settings,
-    settingsDraft,
-    setSaved,
-    prefsKeys: STUDENT_MODULE_PREFERENCE_KEYS,
-    normalizePrefs: normalizeStudentModulePreferences,
-    preferencesMutation: preferencesMutation as unknown as {
-      mutateAsync: (prefs: unknown) => Promise<unknown>;
-    },
-    logSetupAudit,
-    keys: {
-      auditSummary: "students.setup.auditSummary",
-      preferencesSaved: "students.setup.preferencesSaved",
-      saveFailed: "students.setup.saveFailed",
-      auditChannel: "students.setup_audit",
-    },
-  });
+  const isPrefsDirty = useMemo(() => {
+    const draft = settingsDraft as unknown as Record<string, unknown>;
+    const savedSettings = settings as unknown as Record<string, unknown>;
+    return STUDENT_MODULE_PREFERENCE_KEYS.some(
+      (key) => JSON.stringify(draft[key]) !== JSON.stringify(savedSettings[key]),
+    );
+  }, [settings, settingsDraft]);
 
-  return saveActions;
+  const handleSave = useCallback(async (): Promise<void> => {
+    if (!isPrefsDirty || saving) return;
+    setSaving(true);
+    try {
+      await preferencesMutation.mutateAsync(
+        normalizeStudentModulePreferences(settingsDraft) as any,
+      );
+      safeAudit(
+        logSetupAudit.mutateAsync({
+          area: "preferences",
+          summary: t("students.setup.auditSummary", { area: "preferences" }),
+        }),
+        "students.setup_audit",
+      );
+      notify.success(t("students.setup.preferencesSaved"));
+      setSaved(true);
+    } catch {
+      notify.error(t("students.setup.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
+  }, [isPrefsDirty, saving, preferencesMutation, settingsDraft, logSetupAudit, t, setSaved]);
+
+  return {
+    saving,
+    isPrefsDirty,
+    handleSave,
+  };
 }

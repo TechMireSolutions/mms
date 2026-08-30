@@ -1,7 +1,7 @@
-import React from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
+import { ExportToolbar } from "@/components/ui/ExportToolbar";
+import { ReportChartCard } from "@/tenant/components/moduleReports";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { motion } from "framer-motion";
 import {
@@ -74,81 +74,82 @@ export function PerformanceAnalyticsPanels({
       )}
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SectionCard accentColor="primary" title={t("questionBank.analytics.classTrend")}>
-          <div className="h-chart-sm" aria-hidden>
-            <SafeResponsiveContainer width="100%" height="100%">
-              <LineChart data={trendData}>
-                <ChartGrid />
-                <XAxis dataKey="name" tick={chartAxisTick(10)} />
-                <YAxis domain={[0, 100]} tick={chartAxisTick(10)} tickFormatter={(v) => `${v}%`} />
-                <Tooltip
-                  formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAvgScore")]}
-                  contentStyle={{ fontSize: 11, borderRadius: 8 }}
-                />
-                <Line type="monotone" dataKey="avg" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--primary))" }} />
-              </LineChart>
-            </SafeResponsiveContainer>
-          </div>
-        </SectionCard>
+        <ReportChartCard
+          accentColor="primary"
+          title={t("questionBank.analytics.classTrend")}
+          heightClass="h-chart-sm"
+        >
+          <LineChart data={trendData}>
+            <ChartGrid />
+            <XAxis dataKey="name" tick={chartAxisTick(10)} />
+            <YAxis domain={[0, 100]} tick={chartAxisTick(10)} tickFormatter={(v) => `${v}%`} />
+            <Tooltip
+              formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAvgScore")]}
+              contentStyle={{ fontSize: 11, borderRadius: 8 }}
+            />
+            <Line type="monotone" dataKey="avg" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4, fill: "hsl(var(--primary))" }} />
+          </LineChart>
+        </ReportChartCard>
 
-        <SectionCard accentColor="info" title={t("questionBank.analytics.categoryAccuracy")}>
-          {radarData.length >= 3 ? (
-            <div className="h-chart-sm" aria-hidden>
-              <SafeResponsiveContainer width="100%" height="100%">
-                <RadarChart data={radarData}>
-                  <ChartPolarGrid />
-                  <PolarAngleAxis dataKey="subject" tick={chartAxisTick(9)} />
-                  <Radar dataKey="accuracy" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />
-                  <Tooltip
-                    formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAccuracy")]}
-                    contentStyle={{ fontSize: 11, borderRadius: 8 }}
-                  />
-                </RadarChart>
-              </SafeResponsiveContainer>
-            </div>
-          ) : (
+        <ReportChartCard
+          accentColor="info"
+          title={t("questionBank.analytics.categoryAccuracy")}
+          heightClass="h-chart-sm"
+          empty={radarData.length < 3}
+          emptyNode={
             <div className="flex h-chart-sm items-center justify-center text-sm text-muted-foreground" role="status">
               {t("questionBank.analytics.radarInsufficient")}
             </div>
-          )}
-        </SectionCard>
+          }
+        >
+          <RadarChart data={radarData}>
+            <ChartPolarGrid />
+            <PolarAngleAxis dataKey="subject" tick={chartAxisTick(9)} />
+            <Radar dataKey="accuracy" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.15} strokeWidth={2} />
+            <Tooltip
+              formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAccuracy")]}
+              contentStyle={{ fontSize: 11, borderRadius: 8 }}
+            />
+          </RadarChart>
+        </ReportChartCard>
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <SectionCard accentColor="success" title={t("questionBank.analytics.studentPerformance")}>
-          <div className="h-chart-sm" aria-hidden>
-            <SafeResponsiveContainer width="100%" height="100%">
-              <BarChart data={studentStats} layout="vertical">
-                <ChartGrid horizontal={false} />
-                <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(10)} tickFormatter={(v) => `${v}%`} />
-                <YAxis type="category" dataKey="name" tick={chartAxisTick(10)} width={90} />
-                <Tooltip
-                  formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAvg")]}
-                  contentStyle={{ fontSize: 11, borderRadius: 8 }}
-                />
-                <Bar dataKey="avg" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-              </BarChart>
-            </SafeResponsiveContainer>
-          </div>
-        </SectionCard>
+        <ReportChartCard
+          accentColor="success"
+          title={t("questionBank.analytics.studentPerformance")}
+          heightClass="h-chart-sm"
+        >
+          <BarChart data={studentStats} layout="vertical">
+            <ChartGrid horizontal={false} />
+            <XAxis type="number" domain={[0, 100]} tick={chartAxisTick(10)} tickFormatter={(v) => `${v}%`} />
+            <YAxis type="category" dataKey="name" tick={chartAxisTick(10)} width={90} />
+            <Tooltip
+              formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAvg")]}
+              contentStyle={{ fontSize: 11, borderRadius: 8 }}
+            />
+            <Bar dataKey="avg" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
+          </BarChart>
+        </ReportChartCard>
 
-        <SectionCard accentColor="warning" title={t("questionBank.analytics.difficultyBreakdown")}>
-          <div className="h-chart-sm" aria-hidden>
-            <SafeResponsiveContainer width="100%" height="100%">
-              <BarChart data={diffData}>
-                <ChartGrid />
-                <XAxis dataKey="name" tick={chartAxisTick(11)} />
-                <YAxis domain={[0, 100]} tick={chartAxisTick(10)} tickFormatter={(v) => `${v}%`} />
-                <Tooltip
-                  formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAccuracy")]}
-                  contentStyle={{ fontSize: 11, borderRadius: 8 }}
-                />
-                <Bar dataKey="accuracy" radius={[4, 4, 0, 0]} fill="hsl(var(--chart-1))" />
-              </BarChart>
-            </SafeResponsiveContainer>
-          </div>
-        </SectionCard>
+        <ReportChartCard
+          accentColor="warning"
+          title={t("questionBank.analytics.difficultyBreakdown")}
+          heightClass="h-chart-sm"
+        >
+          <BarChart data={diffData}>
+            <ChartGrid />
+            <XAxis dataKey="name" tick={chartAxisTick(11)} />
+            <YAxis domain={[0, 100]} tick={chartAxisTick(10)} tickFormatter={(v) => `${v}%`} />
+            <Tooltip
+              formatter={(v) => [`${v}%`, t("questionBank.analytics.tooltipAccuracy")]}
+              contentStyle={{ fontSize: 11, borderRadius: 8 }}
+            />
+            <Bar dataKey="accuracy" radius={[4, 4, 0, 0]} fill="hsl(var(--chart-1))" />
+          </BarChart>
+        </ReportChartCard>
       </div>
+
 
       <SectionCard accentColor="info" title={t("questionBank.analytics.categoryBreakdown")} padding={false}>
         <div className={cn("divide-y divide-border/50", CARD_STRIPE_INSET)} role="list">
@@ -188,7 +189,32 @@ export function PerformanceAnalyticsPanels({
       </SectionCard>
 
       {studentStats.length > 0 && (
-        <SectionCard accentColor="emerald" title={t("questionBank.analytics.studentLeaderboard")} icon={Trophy}>
+        <SectionCard
+          accentColor="emerald"
+          title={t("questionBank.analytics.studentLeaderboard")}
+          icon={Trophy}
+          actions={
+            <ExportToolbar
+              title={t("questionBank.analytics.studentLeaderboard")}
+              moduleId="question-bank"
+              filename="student_performance_leaderboard"
+              columns={[
+                { key: "rank", header: t("examinations.report.colRank") },
+                { key: "name", header: t("examinations.report.colStudent") },
+                { key: "class", header: t("examinations.report.colClass") },
+                { key: "avg", header: t("examinations.report.colMarks") },
+                { key: "overall", header: t("examinations.report.colGrade") },
+              ]}
+              rows={studentStats.map((studentStat, index) => ({
+                rank: index + 1,
+                name: studentStat.name,
+                class: studentStat.class,
+                avg: `${studentStat.avg}%`,
+                overall: `${studentStat.overall}%`,
+              }))}
+            />
+          }
+        >
           <div className="space-y-2.5" role="list">
             {studentStats.map((studentStat, studentIndex) => (
               <div key={studentStat.name} className="flex items-center gap-3" role="listitem">

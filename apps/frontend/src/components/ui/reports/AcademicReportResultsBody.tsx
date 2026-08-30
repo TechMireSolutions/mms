@@ -1,8 +1,10 @@
-import React from "react";
+import React, { useMemo, useState } from "react";
 import { Trophy } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { TableCellLink } from "@/components/ui/TableCellLink";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
+import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import {
   Table,
   TableBody,
@@ -10,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -44,10 +46,48 @@ export const AcademicReportResultsBody = React.memo(function AcademicReportResul
     { key: "grade", label: t("examinations.report.colGrade") },
   ], [t]);
 
+  const exportColumns = React.useMemo<ExportColumn[]>(() => [
+    { key: "rank", header: t("examinations.report.colRank") },
+    { key: "student", header: t("examinations.report.colStudent") },
+    { key: "class", header: t("examinations.report.colClass") },
+    { key: "subject", header: t("examinations.report.colSubject") },
+    { key: "marks", header: t("examinations.report.colMarks") },
+    { key: "grade", header: t("examinations.report.colGrade") },
+  ], [t]);
+
+  const exportRows = React.useMemo(() => academicResults.map((result) => ({
+    rank: result.rank,
+    student: result.studentName,
+    class: result.class,
+    subject: result.subject,
+    marks: `${result.marks}/${result.total}`,
+    grade: result.grade,
+  })), [academicResults]);
+
+  const [page, setPage] = useState(1);
+  const pageSize = 15;
+  const pagedAcademicResults = useMemo(
+    () => academicResults.slice((page - 1) * pageSize, page * pageSize),
+    [academicResults, page, pageSize],
+  );
+
   return (
-    <div className={WORK_SURFACE}>
+    <ReportDataGridContainer
+      title={t("examinations.report.examResultsTitle")}
+      columns={exportColumns}
+      rows={exportRows}
+      moduleId="examinations"
+      page={page}
+      total={academicResults.length}
+      limit={pageSize}
+      onPageChange={setPage}
+      paginationVariant="range"
+      i18nNamespace="examinations"
+      empty={academicResults.length === 0}
+      emptyTitle={t("examinations.report.noResultsFound")}
+    >
       <div className="space-y-3 p-3 md:hidden">
-        {academicResults.map((academicResult) => (
+        {pagedAcademicResults.map((academicResult) => (
           <article
             key={`${academicResult.studentName}-${academicResult.class}`}
             className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
@@ -100,7 +140,7 @@ export const AcademicReportResultsBody = React.memo(function AcademicReportResul
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/50">
-            {academicResults.map((academicResult) => (
+            {pagedAcademicResults.map((academicResult) => (
               <TableRow key={`${academicResult.studentName}-${academicResult.class}`} className="hover:bg-muted/20 transition-colors">
                 <TableCell className="px-3 py-2.5">
                   {academicResult.rank === 1 ? (
@@ -132,8 +172,8 @@ export const AcademicReportResultsBody = React.memo(function AcademicReportResul
           </TableBody>
         </Table>
       </div>
-    </div>
+    </ReportDataGridContainer>
   );
 });
 
-export { GRADE_BADGE_CLS };
+export { GRADE_BADGE_CLS, AcademicReportResultsBody as AcademicReportResultsTable };

@@ -11,12 +11,12 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { CARD_STRIPE_BASE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
-import { METADATA_FIELDS, getCollectionLabel } from "@/components/ui/reports/reportMetadata";
+import { METADATA_FIELDS, getCollectionLabel } from "@/lib/reports/reportMetadata";
 import { ProgressRing } from "@/components/ui/reports/pinnedWidgets/WidgetProgressRing";
-import { COLOR_MAP, type CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import { COLOR_MAP, type CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 import { CustomWidgetCardLayout } from "@/components/ui/reports/pinnedWidgets/CustomWidgetCardLayout";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
-import type { computeCustomCard } from "@/components/ui/reports/reportMetadata";
+import type { computeCustomCard } from "@/lib/reports/reportMetadata";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 const CustomWidgetChartFallback = React.lazy(() => import("@/components/ui/reports/pinnedWidgets/CustomWidgetChartFallback"));

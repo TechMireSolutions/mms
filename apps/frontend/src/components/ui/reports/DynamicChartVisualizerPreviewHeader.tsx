@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { getCollectionLabel, getFieldLabel } from "@/components/ui/reports/reportMetadata";
+import { getCollectionLabel, getFieldLabel } from "@/lib/reports/reportMetadata";
 import type { CollectionMeta } from "@/components/ui/reports/dynamicChartVisualizerTypes";
 
 interface VisualizerPreviewHeaderProps {

@@ -9,7 +9,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-let mockCanEdit = true;
+const mockCanEdit = true;
 
 vi.mock("@/tenant/hooks/usePermissions", () => ({
   useModulePermissions: () => ({
@@ -41,16 +41,9 @@ vi.mock("@/tenant/features/sessions/hooks/useSessionsSetupPanelState", () => ({
 }));
 
 describe("SessionsSettings Component", () => {
-  it("renders preference form and save footer when canEditSetup is true", () => {
-    mockCanEdit = true;
+  it("renders preference form and save footer", () => {
     const html = renderToStaticMarkup(<SessionsSettings />);
     expect(html).toContain("sessions.settings.title");
     expect(html).toContain("academicYear");
-  });
-
-  it("renders read only banner when canEditSetup is false", () => {
-    mockCanEdit = false;
-    const html = renderToStaticMarkup(<SessionsSettings />);
-    expect(html).toContain("sessions.setupReadOnly");
   });
 });

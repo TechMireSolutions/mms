@@ -1,7 +1,7 @@
 import { AnimatePresence } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
-import ExamForm from "@/tenant/features/examinations/components/ExamForm";
+import ExaminationForm from "@/tenant/features/examinations/components/ExaminationForm";
 import { EnterMarks } from "@/tenant/features/examinations/components/EnterMarks";
 import type { Exam, ExamResult } from "@/lib/data/examinationData";
 
@@ -38,7 +38,7 @@ export function ExaminationsModalLayer({
     <>
       <AnimatePresence>
         {showExamForm && canWrite && !showDeleted && (
-          <ExamForm
+          <ExaminationForm
             open={showExamForm}
             exam={editExam}
             onClose={onCloseExamForm}

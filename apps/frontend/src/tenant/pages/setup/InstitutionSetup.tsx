@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { SectionCard } from '@/components/ui/SectionCard';
+import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from '@/components/ui/formStyles';
 import BrandingIdentityPreview from '@/components/branding/BrandingIdentityPreview';
 import EntryPageHead, { formatEntryTitle } from '@/components/entry/EntryPageHead';
 
@@ -142,6 +143,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                   title={t('institutionSetup.identitySection')}
                   subtitle={t('institutionSetup.identitySectionDesc')}
                   icon={Building2}
+                  className={SETUP_SECTION_CARD_CLASS}
                 >
                   <div className="space-y-4">
                     <div className="space-y-1.5">
@@ -150,6 +152,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                       </Label>
                       <Input
                         id="setup-madrasaName"
+                        className={FORM_INPUT}
                         value={data.madrasaName}
                         onChange={(e) => updateField('madrasaName', e.target.value)}
                         placeholder={t('branding.madrasaNamePlaceholder')}
@@ -170,6 +173,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                       </Label>
                       <Input
                         id="setup-tagline"
+                        className={FORM_INPUT}
                         value={data.tagline}
                         onChange={(e) => updateField('tagline', e.target.value)}
                         placeholder={t('institutionSetup.taglinePlaceholder')}
@@ -187,6 +191,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                   title={t('institutionSetup.contactSection')}
                   subtitle={t('institutionSetup.contactSectionDesc')}
                   icon={Mail}
+                  className={SETUP_SECTION_CARD_CLASS}
                 >
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
@@ -196,6 +201,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                       <Input
                         id="setup-email"
                         type="email"
+                        className={FORM_INPUT}
                         value={data.email}
                         onChange={(e) => updateField('email', e.target.value)}
                         placeholder={t('branding.emailPlaceholder')}
@@ -213,6 +219,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                       <Input
                         id="setup-phone"
                         type="tel"
+                        className={FORM_INPUT}
                         value={data.phone}
                         onChange={(e) => updateField('phone', e.target.value)}
                         placeholder={t('branding.phonePlaceholder')}
@@ -228,6 +235,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                       <Input
                         id="setup-website"
                         type="url"
+                        className={FORM_INPUT}
                         value={data.website}
                         onChange={(e) => updateField('website', e.target.value)}
                         placeholder="https://www.yourmadrasa.org"
@@ -241,6 +249,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                   title={t('institutionSetup.addressSection')}
                   subtitle={t('institutionSetup.addressSectionDesc')}
                   icon={MapPin}
+                  className={SETUP_SECTION_CARD_CLASS}
                 >
                   <div className="space-y-4">
                     <div className="space-y-1.5">
@@ -249,6 +258,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                       </Label>
                       <Input
                         id="setup-addressLine1"
+                        className={FORM_INPUT}
                         value={data.addressLine1}
                         onChange={(e) => updateField('addressLine1', e.target.value)}
                         placeholder="e.g. 123 Education Way"
@@ -263,6 +273,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                       <Label htmlFor="setup-addressLine2">{t('branding.addressLine2')}</Label>
                       <Input
                         id="setup-addressLine2"
+                        className={FORM_INPUT}
                         value={data.addressLine2}
                         onChange={(e) => updateField('addressLine2', e.target.value)}
                         placeholder="Suite, building, floor (optional)"
@@ -276,6 +287,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                         </Label>
                         <Input
                           id="setup-city"
+                          className={FORM_INPUT}
                           value={data.city}
                           onChange={(e) => updateField('city', e.target.value)}
                           placeholder="City / Town"
@@ -290,6 +302,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                         <Label htmlFor="setup-region">{t('branding.region')}</Label>
                         <Input
                           id="setup-region"
+                          className={FORM_INPUT}
                           value={data.region}
                           onChange={(e) => updateField('region', e.target.value)}
                           placeholder="State / Province / County"
@@ -302,6 +315,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                         </Label>
                         <Input
                           id="setup-postalCode"
+                          className={FORM_INPUT}
                           value={data.postalCode}
                           onChange={(e) => updateField('postalCode', e.target.value)}
                           placeholder="Postal / Zip code"
@@ -318,6 +332,7 @@ export default function InstitutionSetup(): React.JSX.Element {
                         </Label>
                         <Input
                           id="setup-country"
+                          className={FORM_INPUT}
                           value={data.country}
                           onChange={(e) => updateField('country', e.target.value)}
                           placeholder={t('branding.countryPlaceholder')}

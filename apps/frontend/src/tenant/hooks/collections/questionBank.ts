@@ -7,6 +7,7 @@ export {
   QUESTION_BANK_QUESTIONS_QUERY_KEY,
   QUESTION_BANK_TESTS_QUERY_KEY,
   QUESTION_BANK_RESULTS_QUERY_KEY,
+  QUESTION_BANK_REPORT_AGGREGATES_QUERY_KEY,
   useQuestionBankQuestions,
   useQuestionBankQuestionsCollection,
   useQuestionBankTests,
@@ -15,6 +16,7 @@ export {
   useQuestionBankResultsCollection,
   useQuestionBankMutations,
   useQuestionBankMetrics,
+  useQuestionBankReportAggregates,
 } from "@/tenant/features/question-bank/hooks/useQuestionBankApi";
 export { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 export { invalidateQuestionBankQueries } from '@/tenant/features/question-bank/hooks/invalidateQuestionBankQueries';

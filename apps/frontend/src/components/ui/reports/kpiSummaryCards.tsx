@@ -7,6 +7,12 @@ import type { CategorizedKPIItem } from './kpiSummaryTypes';
 
 const COLOR = {
   primary: { bg: 'bg-primary/10', text: 'text-primary' },
+  success: { bg: 'bg-success/10', text: 'text-success' },
+  info: { bg: 'bg-info/10', text: 'text-info' },
+  warning: { bg: 'bg-warning/10', text: 'text-warning' },
+  destructive: { bg: 'bg-destructive/10', text: 'text-destructive' },
+  secondary: { bg: 'bg-secondary/10', text: 'text-secondary-foreground' },
+  muted: { bg: 'bg-muted/30', text: 'text-muted-foreground' },
   green: { bg: 'bg-success/10', text: 'text-success' },
   blue: { bg: 'bg-info/10', text: 'text-info' },
   red: { bg: 'bg-destructive/10', text: 'text-destructive' },

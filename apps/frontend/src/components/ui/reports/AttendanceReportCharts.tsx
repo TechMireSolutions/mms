@@ -1,9 +1,13 @@
 import React from "react";
 import { Bar, BarChart, Tooltip, XAxis, YAxis } from "recharts";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
-import { SectionCard } from "@/components/ui/SectionCard";
+import { ReportChartCard } from "@/components/ui/reports/ReportChartCard";
 import { useTranslation } from "@/hooks/useTranslation";
+import { buildChartTooltip } from "@/components/dashboard-widgets/charts/chartPrimitives";
+
+const AttendanceChartTooltip = buildChartTooltip({
+  valueFormatter: (value) => `${value}%`,
+});
 
 import type { AttendanceSummaryItem } from "./attendanceReportTypes";
 
@@ -32,25 +36,28 @@ export const AttendanceReportCharts = React.memo(function AttendanceReportCharts
   }
 
   return (
-    <SectionCard title={t("attendance.report.rateByClass")}>
-      <SafeResponsiveContainer width="100%" height={180}>
-        <BarChart
-          data={summary}
-          barSize={36}
-          onClick={(state) => {
-            const className = getActiveLabel(state);
-            if (className) onToggleClassFilter(className);
-          }}
-          className="cursor-pointer"
-        >
-          <ChartGrid />
-          <XAxis dataKey="class" tick={chartAxisTick(12)} />
-          <YAxis domain={[0, 100]} tick={chartAxisTick(11)} unit="%" />
-          <Tooltip formatter={(value) => value !== undefined ? `${value}%` : ""} />
-          <Bar dataKey="avgRate" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-        </BarChart>
-      </SafeResponsiveContainer>
-    </SectionCard>
+    <ReportChartCard
+      title={t("attendance.report.rateByClass")}
+      accentColor="primary"
+      heightClass="h-chart-sm"
+    >
+      <BarChart
+        data={summary}
+        barSize={36}
+        onClick={(state) => {
+          const className = getActiveLabel(state);
+          if (className) onToggleClassFilter(className);
+        }}
+        className="cursor-pointer"
+      >
+        <ChartGrid />
+        <XAxis dataKey="class" tick={chartAxisTick(12)} />
+        <YAxis domain={[0, 100]} tick={chartAxisTick(11)} unit="%" />
+        <Tooltip content={<AttendanceChartTooltip />} />
+        <Bar dataKey="avgRate" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+      </BarChart>
+    </ReportChartCard>
   );
 });
+
 

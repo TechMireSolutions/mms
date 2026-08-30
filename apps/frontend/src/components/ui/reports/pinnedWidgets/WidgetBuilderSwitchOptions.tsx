@@ -3,8 +3,8 @@ import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import { COLLECTION_OPTIONS, getCollectionLabel } from "@/components/ui/reports/reportMetadata";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import { COLLECTION_OPTIONS, getCollectionLabel } from "@/lib/reports/reportMetadata";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 
 export interface SwitchRecordOption {
   id: string;

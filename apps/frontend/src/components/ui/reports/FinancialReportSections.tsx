@@ -10,12 +10,14 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
+import { ChartTooltip, ChartTooltipRow } from "@/components/ui/ChartTooltip";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { SectionCard } from "@/components/ui/SectionCard";
+import { ReportChartCard } from "@/components/ui/reports/ReportChartCard";
+import { Card } from "@/components/ui/card";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ActiveFilterBanner } from "@/components/ui/ActiveFilterBanner";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -54,54 +56,75 @@ export const FinancialReportCharts = React.memo(function FinancialReportCharts({
 
   return (
     <>
-      <SectionCard title={t("finance.report.chartTitle")}>
-        <SafeResponsiveContainer width="100%" height={200}>
-          <AreaChart
-            data={monthlyFeeCollection}
-            onClick={(state) => {
-              const month = (state as { activeLabel?: string } | undefined)?.activeLabel;
-              if (typeof month === "string" && month.length > 0) onToggleMonthFilter(month);
+      <ReportChartCard
+        title={t("finance.report.chartTitle")}
+        accentColor="primary"
+        heightClass="h-chart-md"
+      >
+        <AreaChart
+          data={monthlyFeeCollection}
+          onClick={(state) => {
+            const month = (state as { activeLabel?: string } | undefined)?.activeLabel;
+            if (typeof month === "string" && month.length > 0) onToggleMonthFilter(month);
+          }}
+          className="cursor-pointer"
+        >
+          <defs>
+            <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
+              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <ChartGrid />
+          <XAxis dataKey="month" tick={chartAxisTick(11)} />
+          <YAxis
+            tick={chartAxisTick(11)}
+            tickFormatter={(value: number) =>
+              value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`
+            }
+          />
+          <Tooltip
+            content={({ active, payload, label }) => {
+              if (!active || !payload?.length) return null;
+              return (
+                <ChartTooltip active={active} payload={payload} label={label}>
+                  <div className="mt-1 space-y-1">
+                    {payload.map((entry) => (
+                      <ChartTooltipRow
+                        key={String(entry.dataKey ?? entry.name)}
+                        color={entry.color}
+                        name={entry.name}
+                        value={formatCurrency(Number(entry.value))}
+                      />
+                    ))}
+                  </div>
+                </ChartTooltip>
+              );
             }}
-            className="cursor-pointer"
-          >
-            <defs>
-              <linearGradient id="colorCollected" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.2} />
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <ChartGrid />
-            <XAxis dataKey="month" tick={chartAxisTick(11)} />
-            <YAxis
-              tick={chartAxisTick(11)}
-              tickFormatter={(value: number) =>
-                value === 0 ? formatCurrency(0) : `${formatCurrency(Math.round(value / 1000))}k`
-              }
-            />
-            <Tooltip formatter={(value) => (value !== undefined ? formatCurrency(Number(value)) : "")} />
-            <Area
-              type="monotone"
-              dataKey="collected"
-              stroke="hsl(var(--primary))"
-              fill="url(#colorCollected)"
-              strokeWidth={2}
-              name={t("finance.report.collected")}
-            />
-            <Area
-              type="monotone"
-              dataKey="outstanding"
-              stroke="var(--color-chart-1)"
-              fill="transparent"
-              strokeWidth={2}
-              strokeDasharray="4 2"
-              name={t("finance.report.outstandingLabel")}
-            />
-          </AreaChart>
-        </SafeResponsiveContainer>
-      </SectionCard>
+          />
+          <Area
+            type="monotone"
+            dataKey="collected"
+            stroke="hsl(var(--primary))"
+            fill="url(#colorCollected)"
+            strokeWidth={2}
+            name={t("finance.report.collected")}
+          />
+          <Area
+            type="monotone"
+            dataKey="outstanding"
+            stroke="var(--color-chart-1)"
+            fill="transparent"
+            strokeWidth={2}
+            strokeDasharray="4 2"
+            name={t("finance.report.outstandingLabel")}
+          />
+        </AreaChart>
+      </ReportChartCard>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <SectionCard title={t("finance.report.collectionRateTitle")}>
+        <Card accentColor="primary" className={cn("p-4 space-y-3", CARD_STRIPE_INSET)}>
+          <h3 className="text-sm font-bold text-foreground">{t("finance.report.collectionRateTitle")}</h3>
           <div className="space-y-2">
             {monthlyFeeCollection.map((monthTotals) => (
               <Button
@@ -126,53 +149,49 @@ export const FinancialReportCharts = React.memo(function FinancialReportCharts({
               </Button>
             ))}
           </div>
-        </SectionCard>
+        </Card>
 
-        <SectionCard title={t("finance.report.discountDistributionTitle")}>
-          <SafeResponsiveContainer width="100%" height={180}>
-            <PieChart>
-              <Pie
-                data={discountUsageByType}
-                dataKey="totalDiscounted"
-                nameKey="type"
-                cx="50%"
-                cy="50%"
-                outerRadius={70}
-                label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
-                labelLine={false}
-              >
-                {discountUsageByType.map((_, index) => (
-                  <Cell key={index} fill={pieColors[index % pieColors.length]} />
-                ))}
-              </Pie>
-              <Tooltip formatter={(value) => (value !== undefined ? formatCurrency(Number(value)) : "")} />
-              <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
-            </PieChart>
-          </SafeResponsiveContainer>
-        </SectionCard>
+        <ReportChartCard
+          title={t("finance.report.discountDistributionTitle")}
+          accentColor="secondary"
+          heightClass="h-chart-sm"
+        >
+          <PieChart>
+            <Pie
+              data={discountUsageByType}
+              dataKey="totalDiscounted"
+              nameKey="type"
+              cx="50%"
+              cy="50%"
+              outerRadius={70}
+              label={({ percent }) => `${((percent ?? 0) * 100).toFixed(0)}%`}
+              labelLine={false}
+            >
+              {discountUsageByType.map((_, index) => (
+                <Cell key={index} fill={pieColors[index % pieColors.length]} />
+              ))}
+            </Pie>
+            <Tooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const first = payload[0];
+                return (
+                  <ChartTooltip
+                    active={active}
+                    payload={payload}
+                    title={first?.name}
+                    value={formatCurrency(Number(first?.value))}
+                  />
+                );
+              }}
+            />
+            <Legend iconSize={10} wrapperStyle={{ fontSize: 11 }} />
+          </PieChart>
+        </ReportChartCard>
       </div>
     </>
   );
 });
 
-interface FinancialMonthFilterBannerProps {
-  selectedMonth: string | null;
-  onClear: () => void;
-}
-
-export const FinancialMonthFilterBanner = React.memo(function FinancialMonthFilterBanner({
-  selectedMonth,
-  onClear,
-}: FinancialMonthFilterBannerProps): React.JSX.Element | null {
-  const { t } = useTranslation();
-  if (!selectedMonth) return null;
-
-  return (
-    <ActiveFilterBanner
-      chips={[{ key: "month", label: t("finance.report.monthFilterLabel"), value: selectedMonth }]}
-      actions={[{ key: "month", label: t("finance.report.clearMonthFilter"), onClick: onClear }]}
-    />
-  );
-});
 
 

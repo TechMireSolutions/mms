@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 
 interface UseWidgetBuilderHydrationOptions {
   editWidgetConfig: CustomWidget | null;

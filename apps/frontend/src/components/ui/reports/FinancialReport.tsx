@@ -1,18 +1,20 @@
-import React, { useMemo, useState } from "react";
+import React, { lazy, Suspense, useMemo, useState } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
-import { AlertCircle, DollarSign, Tag, TrendingUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useFinanceInvoicesPaginated, useFinanceMetrics } from "@/tenant/hooks/collections/finance";
-import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
-import {
-  FinancialMonthFilterBanner,
-  FinancialReportCharts,
-  type DiscountUsageByTypeItem,
-  type MonthlyFeeCollectionItem,
+import { useFinanceInvoicesPaginated } from "@/tenant/hooks/collections/finance";
+import { Skeleton } from "@/components/ui/skeleton";
+import type {
+  DiscountUsageByTypeItem,
+  MonthlyFeeCollectionItem,
 } from "./FinancialReportSections";
-import { FinancialDashboardWidgets, FinancialInvoiceTable } from "./FinancialReportTable";
+
+const FinancialReportCharts = lazy(() =>
+  import("./FinancialReportSections").then((mod) => ({ default: mod.FinancialReportCharts })),
+);
+import { ReportFilterBanner } from "./ReportFilterBanner";
+import PinnedWidgets from "./PinnedWidgets";
+import { FinancialInvoiceTable } from "./FinancialReportTable";
 import { formatMonthYear, getCollectedAmountForInvoice, getOutstandingAmountForInvoice } from "@mms/shared";
-import { useFinanceCurrency } from "@/hooks/useCurrency";
 
 /** Active filter state passed down from the parent report view. */
 interface FinancialReportFilters {
@@ -33,13 +35,9 @@ interface FinancialReportProps {
 /**
  * Renders the financial reports and charts including revenue trends,
  * collection rates, discount distribution, and a filterable invoice table.
- *
- * @param props - The component props.
- * @returns The FinancialReport component.
  */
 const FinancialReport = React.memo(function FinancialReport({ filters }: FinancialReportProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { formatCurrency } = useFinanceCurrency();
   const palette = useBrandPalette();
   const [selectedMonth, setSelectedMonth] = useState<string | null>(null);
   const PIE_COLORS = useMemo(
@@ -47,22 +45,19 @@ const FinancialReport = React.memo(function FinancialReport({ filters }: Financi
     [palette],
   );
   const financeInvoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
-  const { data: financeMetrics } = useFinanceMetrics();
 
   const monthlyFeeCollection = useMemo<MonthlyFeeCollectionItem[]>(() => {
-    // Generate monthly aggregation
-    const monthlyTotals: Record<string, { collected: number, outstanding: number, total: number }> = {};
+    const monthlyTotals: Record<string, { collected: number; outstanding: number; total: number }> = {};
     financeInvoices.forEach((invoice) => {
-      // Use due date or creation date for month bucket (mocking logic using due date)
       const dueDate = new Date(invoice.dueDate);
       if (isNaN(dueDate.getTime())) return;
       const monthLabel = formatMonthYear(dueDate);
-      
+
       if (!monthlyTotals[monthLabel]) monthlyTotals[monthLabel] = { collected: 0, outstanding: 0, total: 0 };
-      
+
       const collected = getCollectedAmountForInvoice(invoice);
       const outstanding = getOutstandingAmountForInvoice(invoice);
-      
+
       monthlyTotals[monthLabel].collected += collected;
       monthlyTotals[monthLabel].outstanding += outstanding;
       monthlyTotals[monthLabel].total += invoice.finalAmt;
@@ -73,12 +68,12 @@ const FinancialReport = React.memo(function FinancialReport({ filters }: Financi
       collected: monthTotals.collected,
       outstanding: monthTotals.outstanding,
       total: monthTotals.total,
-      rate: monthTotals.total > 0 ? Math.round((monthTotals.collected / monthTotals.total) * 100) : 0
-    })).sort((firstMonth, secondMonth) => new Date(firstMonth.month).getTime() - new Date(secondMonth.month).getTime()).slice(-6); // Last 6 months
+      rate: monthTotals.total > 0 ? Math.round((monthTotals.collected / monthTotals.total) * 100) : 0,
+    })).sort((firstMonth, secondMonth) => new Date(firstMonth.month).getTime() - new Date(secondMonth.month).getTime()).slice(-6);
   }, [financeInvoices]);
 
   const discountUsageByType = useMemo<DiscountUsageByTypeItem[]>(() => {
-    const discountTotalsByType: Record<string, { count: number, totalDiscounted: number }> = {};
+    const discountTotalsByType: Record<string, { count: number; totalDiscounted: number }> = {};
     let totalDiscountAmount = 0;
 
     financeInvoices.forEach((invoice) => {
@@ -95,23 +90,9 @@ const FinancialReport = React.memo(function FinancialReport({ filters }: Financi
       type: discountType,
       count: discountTotals.count,
       totalDiscounted: discountTotals.totalDiscounted,
-      percentage: totalDiscountAmount > 0 ? Math.round((discountTotals.totalDiscounted / totalDiscountAmount) * 100) : 0
+      percentage: totalDiscountAmount > 0 ? Math.round((discountTotals.totalDiscounted / totalDiscountAmount) * 100) : 0,
     }));
   }, [financeInvoices]);
-
-  const totalCollected = financeMetrics?.collectedTotal
-    ?? monthlyFeeCollection.reduce((total, monthTotals) => total + monthTotals.collected, 0);
-  const totalOutstanding = financeMetrics?.outstandingBalance
-    ?? monthlyFeeCollection.reduce((total, monthTotals) => total + monthTotals.outstanding, 0);
-  const totalDiscounted = financeMetrics?.discountTotal
-    ?? discountUsageByType.reduce((total, discountTotals) => total + discountTotals.totalDiscounted, 0);
-
-  const kpiItems = useMemo(() => [
-    { icon: DollarSign, label: t("finance.report.totalCollected"), value: formatCurrency(totalCollected), accent: "green" as const },
-    { icon: AlertCircle, label: t("finance.report.outstanding"), value: formatCurrency(totalOutstanding), accent: "red" as const },
-    { icon: TrendingUp, label: t("finance.report.netRevenue"), value: formatCurrency(totalCollected - totalOutstanding), accent: "primary" as const },
-    { icon: Tag, label: t("finance.report.totalDiscounted"), value: formatCurrency(totalDiscounted), accent: "amber" as const },
-  ], [t, formatCurrency, totalCollected, totalOutstanding, totalDiscounted]);
 
   const invoices = useMemo(() => {
     let filteredInvoices = financeInvoices;
@@ -139,18 +120,30 @@ const FinancialReport = React.memo(function FinancialReport({ filters }: Financi
 
   return (
     <div className="space-y-4">
-      <ModuleCommandMetricsGrid items={kpiItems} />
-
-      <FinancialReportCharts
-        monthlyFeeCollection={monthlyFeeCollection}
-        discountUsageByType={discountUsageByType}
-        pieColors={PIE_COLORS}
-        selectedMonth={selectedMonth}
-        onToggleMonthFilter={toggleMonthFilter}
+      <Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
+        <FinancialReportCharts
+          monthlyFeeCollection={monthlyFeeCollection}
+          discountUsageByType={discountUsageByType}
+          pieColors={PIE_COLORS}
+          selectedMonth={selectedMonth}
+          onToggleMonthFilter={toggleMonthFilter}
+        />
+      </Suspense>
+      <ReportFilterBanner
+        filters={[
+          selectedMonth
+            ? {
+                key: "month",
+                label: t("finance.report.monthFilterLabel"),
+                value: selectedMonth,
+                onClear: () => setSelectedMonth(null),
+                clearLabel: t("finance.report.clearMonthFilter"),
+              }
+            : null,
+        ]}
       />
-      <FinancialMonthFilterBanner selectedMonth={selectedMonth} onClear={() => setSelectedMonth(null)} />
       <FinancialInvoiceTable invoices={invoices} />
-      <FinancialDashboardWidgets />
+      <PinnedWidgets category="finance" />
     </div>
   );
 });

@@ -6,9 +6,11 @@ import {
 } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
+import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
+import { Field } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 
 const ALL_PAYMENT_METHODS = ["cash", "bank_transfer", "cheque", "online", "card", "other"] as const;
@@ -37,10 +39,7 @@ export function FinancePreferencesSection({
   return (
     <div className="space-y-4 text-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label htmlFor="finance-currency" className={FORM_LABEL}>
-            {t("finance.settings.currency")}
-          </label>
+        <Field label={t("finance.settings.currency")}>
           <FormSelect
             id="finance-currency"
             value={settingsDraft.currency}
@@ -50,11 +49,9 @@ export function FinancePreferencesSection({
               label: `${c.code} — ${c.name}`,
             }))}
           />
-        </div>
-        <div>
-          <label htmlFor="inv-prefix" className={FORM_LABEL}>
-            {t("finance.settings.invoicePrefix")}
-          </label>
+        </Field>
+
+        <Field label={t("finance.settings.invoicePrefix")}>
           <Input
             id="inv-prefix"
             className={FORM_INPUT}
@@ -62,86 +59,86 @@ export function FinancePreferencesSection({
             onChange={(event) => upd("invoicePrefix", event.target.value)}
             placeholder={settings.invoicePrefix}
           />
-        </div>
-        <div>
-          <label htmlFor="due-days" className={FORM_LABEL}>
-            {t("finance.settings.dueDays")}
-          </label>
+        </Field>
+
+        <Field label={t("finance.settings.dueDays")}>
           <Input
             id="due-days"
             type="number"
+            min="0"
             className={FORM_INPUT}
             value={settingsDraft.dueDays || ""}
             onChange={(event) => upd("dueDays", event.target.value)}
           />
-        </div>
-        <div>
-          <label htmlFor="late-fee" className={FORM_LABEL}>
-            {t("finance.settings.lateFee")}
-          </label>
+        </Field>
+
+        <Field label={t("finance.settings.lateFee")}>
           <Input
             id="late-fee"
             type="number"
+            min="0"
+            max="100"
             className={FORM_INPUT}
             value={settingsDraft.lateFeePercent || ""}
             onChange={(event) => upd("lateFeePercent", event.target.value)}
           />
-        </div>
-        <div>
-          <label htmlFor="tax-rate" className={FORM_LABEL}>
-            {t("finance.settings.taxRate")}
-          </label>
+        </Field>
+
+        <Field label={t("finance.settings.taxRate")}>
           <Input
             id="tax-rate"
             type="number"
+            min="0"
+            max="100"
             className={FORM_INPUT}
             value={settingsDraft.taxRate || ""}
             onChange={(event) => upd("taxRate", event.target.value)}
           />
-        </div>
-        <div>
-          <label htmlFor="reminder-days" className={FORM_LABEL}>
-            {t("finance.settings.reminderDays")}
-          </label>
+        </Field>
+
+        <Field label={t("finance.settings.reminderDays")}>
           <Input
             id="reminder-days"
             type="number"
+            min="0"
             className={FORM_INPUT}
             value={settingsDraft.reminderDaysBefore || ""}
             onChange={(event) => upd("reminderDaysBefore", event.target.value)}
           />
-        </div>
+        </Field>
       </div>
 
-      <div>
-        <span className={FORM_LABEL}>{t("finance.settings.paymentMethods")}</span>
-        <div
-          className="flex flex-wrap gap-2 mt-1"
-          role="group"
-          aria-label={t("finance.settings.paymentMethods")}
-        >
-          {ALL_PAYMENT_METHODS.map((method) => {
-            const active = (settingsDraft.paymentMethods || []).includes(method);
-            return (
-              <Button
-                key={method}
-                type="button"
-                aria-pressed={active}
-                onClick={() => toggleMethod(method)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all capitalize ${
-                  active
-                    ? "bg-primary/10 border-primary/30 text-primary font-bold"
-                    : "border-border text-muted-foreground hover:bg-muted"
-                }`}
-              >
-                {t(`finance.paymentMethod.${method}` as AppTranslationKey)}
-              </Button>
-            );
-          })}
-        </div>
+      <div className="pt-2 border-t border-border/60">
+        <Field label={t("finance.settings.paymentMethods")}>
+          <div
+            className="flex flex-wrap gap-2 mt-1"
+            role="group"
+            aria-label={t("finance.settings.paymentMethods")}
+          >
+            {ALL_PAYMENT_METHODS.map((method) => {
+              const active = (settingsDraft.paymentMethods || []).includes(method);
+              return (
+                <Button
+                  key={method}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => toggleMethod(method)}
+                  className={cn(
+                    "min-h-11 px-3.5 py-2 rounded-lg text-xs font-semibold border transition-all capitalize",
+                    active
+                      ? "bg-primary/10 border-primary/40 text-primary font-bold shadow-xs"
+                      : "border-border text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {t(`finance.paymentMethod.${method}` as AppTranslationKey)}
+                </Button>
+              );
+            })}
+          </div>
+        </Field>
       </div>
 
-      <div className="space-y-2 pt-1" role="group" aria-label={t("finance.settings.flags")}>
+      <div className="space-y-2 pt-2 border-t border-border/60" role="group" aria-label={t("finance.settings.flags")}>
         <ToggleRow
           label={t("finance.settings.autoGenerate")}
           description={t("finance.settings.autoGenerateDescription")}

@@ -58,16 +58,7 @@ export default function Attendance() {
     }
 
     if (effectiveTab === 'reports') {
-      return (
-        <AttendanceReportsTier
-          role={role}
-          filters={filters}
-          records={attendanceRecords}
-          analyticsTabs={visibleAnalyticsTabs}
-          activeAnalyticsTab={effectiveAnalyticsTab}
-          onAnalyticsTabChange={setActiveAnalyticsTab}
-        />
-      );
+      return <AttendanceReportsTier />;
     }
 
     return (

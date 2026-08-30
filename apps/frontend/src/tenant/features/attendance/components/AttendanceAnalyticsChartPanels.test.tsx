@@ -3,11 +3,16 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AttendanceAnalyticsChartPanels } from "./AttendanceAnalyticsChartPanels";
 
-vi.mock("@/components/ui/SafeResponsiveContainer", () => ({
-  SafeResponsiveContainer: ({ children }: { children: React.ReactNode }) => (
+vi.mock("@/components/ui/SafeResponsiveContainer", () => {
+  const MockContainer = ({ children }: { children: React.ReactNode }) => (
     <div data-testid="responsive-container">{children}</div>
-  ),
-}));
+  );
+  return {
+    SafeResponsiveContainer: MockContainer,
+    default: MockContainer,
+  };
+});
+
 
 vi.mock("@/components/ui/ChartGrid", () => ({
   ChartGrid: () => <div data-testid="chart-grid" />,

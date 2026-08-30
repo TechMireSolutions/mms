@@ -46,6 +46,6 @@ describe("EnrollmentsSetupTier Component", () => {
     mockCanEditSetup = false;
     const html = renderToStaticMarkup(<EnrollmentsSetupTier />);
     expect(html).toContain("setup-read-only-message");
-    expect(html).toContain("enrollments.setupReadOnly");
+    expect(html).toContain("enrollments.setup.readOnly");
   });
 });

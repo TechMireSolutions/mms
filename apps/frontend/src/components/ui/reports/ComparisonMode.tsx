@@ -20,11 +20,12 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const { t, language } = useTranslation();
 
   const isContacts = category.toLowerCase() === "contacts";
+  const currentYear = new Date().getFullYear();
   const [mode, setMode] = useState<"sessions" | "daterange">("sessions");
   const [valA, setValA] = useState<string>("s1");
   const [valB, setValB] = useState<string>("s2");
-  const [rangeA, setRangeA] = useState<DateRange>({ from: "2025-01-01", to: "2025-03-31" });
-  const [rangeB, setRangeB] = useState<DateRange>({ from: "2026-01-01", to: "2026-03-31" });
+  const [rangeA, setRangeA] = useState<DateRange>(() => ({ from: `${currentYear - 1}-01-01`, to: `${currentYear - 1}-03-31` }));
+  const [rangeB, setRangeB] = useState<DateRange>(() => ({ from: `${currentYear}-01-01`, to: `${currentYear}-03-31` }));
   const modeTabs = useMemo(
     () => [
       { key: "sessions" as const, label: t("reports.comparison.sessions") },

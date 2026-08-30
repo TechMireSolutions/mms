@@ -1,4 +1,4 @@
-import type { VisualizerConfig } from "@/components/ui/reports/reportMetadata";
+import type { VisualizerConfig } from "@/lib/reports/reportMetadata";
 
 export interface AttendanceReportProps {
   filters: {

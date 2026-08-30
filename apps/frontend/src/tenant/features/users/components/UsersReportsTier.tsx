@@ -1,19 +1,17 @@
-import { motion } from 'framer-motion';
-import KPISummary from '@/components/ui/reports/KPISummary';
-import ModuleReports from '@/components/ui/reports/ModuleReports';
+import type React from "react";
+import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
+import { KPISummary, ModuleReports } from "@/tenant/components/moduleReports";
 
 export function UsersReportsTier(): React.JSX.Element {
   return (
-    <motion.div
-      key="reports"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
-      className="space-y-4"
-    >
-      <KPISummary category="faculty" />
-      <ModuleReports category="faculty" />
-    </motion.div>
+    <ModuleTierMotion tier="reports" className="space-y-4">
+      <ErrorBoundary>
+        <KPISummary category="users" />
+        <ModuleReports category="users" />
+      </ErrorBoundary>
+    </ModuleTierMotion>
   );
 }
+
+

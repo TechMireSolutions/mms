@@ -4,13 +4,13 @@ import { PinnedWidgetsChrome } from "./PinnedWidgetsChrome";
 import { PinnedWidgetsGrid } from "./PinnedWidgetsGrid";
 import { usePinnedWidgetsController } from "./usePinnedWidgetsController";
 
-export type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+export type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 export {
   getWidgetCollections,
   getFilteredRecords,
   computeWidgetSingleValue,
-} from "@/components/ui/reports/pinnedWidgets/widgetDataUtils";
-export { getOrInitializeCustomWidgets } from "@/components/ui/reports/pinnedWidgets/widgetDefaults";
+} from "@/lib/reports/widgetDataUtils";
+export { getOrInitializeCustomWidgets } from "@/lib/reports/widgetDefaults";
 export { DashboardWidgets } from "@/components/ui/reports/pinnedWidgets/DashboardWidgets";
 export { WidgetBuilder } from "@/components/ui/reports/pinnedWidgets/WidgetBuilder";
 

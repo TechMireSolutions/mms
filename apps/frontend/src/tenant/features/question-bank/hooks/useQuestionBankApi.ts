@@ -184,3 +184,25 @@ export function useQuestionBankMetrics(options?: { enabled?: boolean }) {
     enabled: options?.enabled,
   });
 }
+
+export const QUESTION_BANK_REPORT_AGGREGATES_QUERY_KEY = [QUESTION_BANK_MODULE_MANIFEST.moduleId, 'reports', 'aggregates'] as const;
+
+export function useQuestionBankReportAggregates(
+  filters?: {
+    dateFrom?: string;
+    dateTo?: string;
+    categoryId?: string;
+  },
+  options?: { enabled?: boolean },
+) {
+  const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.questionBank.reportAggregates.useQuery({
+    queryKey: [...QUESTION_BANK_REPORT_AGGREGATES_QUERY_KEY, filters ?? {}],
+    queryData: { query: filters },
+    enabled: isAuthenticated && enabled,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+

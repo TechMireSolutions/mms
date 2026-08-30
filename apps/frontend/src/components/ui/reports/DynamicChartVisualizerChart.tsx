@@ -94,7 +94,7 @@ export function DynamicChartVisualizerChart({
   switch (chartType) {
     case 'bar':
       return (
-        <SafeResponsiveContainer width="100%" height={260}>
+        <SafeResponsiveContainer width="100%" height={260} minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
           <BarChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             {showGrid && <ChartGrid vertical={false} />}
             <XAxis dataKey="name" tick={axisTick} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
@@ -112,7 +112,7 @@ export function DynamicChartVisualizerChart({
 
     case 'line':
       return (
-        <SafeResponsiveContainer width="100%" height={260}>
+        <SafeResponsiveContainer width="100%" height={260} minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
           <LineChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             {showGrid && <ChartGrid vertical={false} />}
             <XAxis dataKey="name" tick={axisTick} tickLine={false} axisLine={false} interval="preserveEnd" minTickGap={tickGap} />
@@ -126,7 +126,7 @@ export function DynamicChartVisualizerChart({
 
     case 'area':
       return (
-        <SafeResponsiveContainer width="100%" height={260}>
+        <SafeResponsiveContainer width="100%" height={260} minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
           <AreaChart data={processedData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="visGrad" x1="0" y1="0" x2="0" y2="1">
@@ -146,7 +146,7 @@ export function DynamicChartVisualizerChart({
 
     case 'pie':
       return (
-        <SafeResponsiveContainer width="100%" height={260}>
+        <SafeResponsiveContainer width="100%" height={260} minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
           <PieChart>
             {showTooltip && <Tooltip contentStyle={tooltipStyle} />}
             {showLegend && (
@@ -179,7 +179,7 @@ export function DynamicChartVisualizerChart({
 
     case 'radar':
       return (
-        <SafeResponsiveContainer width="100%" height={260}>
+        <SafeResponsiveContainer width="100%" height={260} minWidth={0} minHeight={0} initialDimension={{ width: 1, height: 1 }}>
           <RadarChart cx="50%" cy="50%" outerRadius="75%" data={processedData}>
             <ChartPolarGrid />
             <PolarAngleAxis dataKey="name" tick={chartAxisTick(Math.max(8, axisFontSize - 1))} />

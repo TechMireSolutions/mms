@@ -1,9 +1,12 @@
+import { useCallback, useMemo, useState } from "react";
 import {
   TEACHER_MODULE_PREFERENCE_KEYS,
   normalizeTeacherModulePreferences,
   type TeachersSettings,
 } from "@mms/shared";
-import { useModuleSetupSaveActions } from "@/lib/setup/useModuleSetupSaveActions";
+import { useTranslation } from "@/hooks/useTranslation";
+import { notify } from "@/lib/notify";
+import { safeAudit } from "@/lib/safeAudit";
 import { useTeacherPreferencesMutation } from "@/tenant/features/teachers/hooks/useTeacherSetupConfig";
 import { useTeacherMutations } from "@/tenant/features/teachers/hooks/useTeachers";
 
@@ -16,26 +19,45 @@ export function useTeachersSetupSaveActions({
   settingsDraft: TeachersSettings;
   setSaved: (value: boolean | ((curr: boolean) => boolean)) => void;
 }) {
+  const { t } = useTranslation();
+  const [saving, setSaving] = useState(false);
   const preferencesMutation = useTeacherPreferencesMutation();
   const { logSetupAudit } = useTeacherMutations();
 
-  const saveActions = useModuleSetupSaveActions<TeachersSettings>({
-    settings,
-    settingsDraft,
-    setSaved,
-    prefsKeys: TEACHER_MODULE_PREFERENCE_KEYS,
-    normalizePrefs: normalizeTeacherModulePreferences,
-    preferencesMutation: preferencesMutation as unknown as {
-      mutateAsync: (prefs: unknown) => Promise<unknown>;
-    },
-    logSetupAudit,
-    keys: {
-      auditSummary: "teachers.setup.auditSummary",
-      preferencesSaved: "teachers.setup.preferencesSaved",
-      saveFailed: "teachers.setup.saveFailed",
-      auditChannel: "teachers.setup_audit",
-    },
-  });
+  const isPrefsDirty = useMemo(() => {
+    const draft = settingsDraft as unknown as Record<string, unknown>;
+    const savedSettings = settings as unknown as Record<string, unknown>;
+    return TEACHER_MODULE_PREFERENCE_KEYS.some(
+      (key) => JSON.stringify(draft[key]) !== JSON.stringify(savedSettings[key]),
+    );
+  }, [settings, settingsDraft]);
 
-  return saveActions;
+  const handleSave = useCallback(async (): Promise<void> => {
+    if (!isPrefsDirty || saving) return;
+    setSaving(true);
+    try {
+      await preferencesMutation.mutateAsync(
+        normalizeTeacherModulePreferences(settingsDraft) as any,
+      );
+      safeAudit(
+        logSetupAudit.mutateAsync({
+          area: "preferences",
+          summary: t("teachers.setup.auditSummary", { area: "preferences" }),
+        }),
+        "teachers.setup_audit",
+      );
+      notify.success(t("teachers.setup.preferencesSaved"));
+      setSaved(true);
+    } catch {
+      notify.error(t("teachers.setup.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
+  }, [isPrefsDirty, saving, preferencesMutation, settingsDraft, logSetupAudit, t, setSaved]);
+
+  return {
+    saving,
+    isPrefsDirty,
+    handleSave,
+  };
 }

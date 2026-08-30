@@ -1,23 +1,25 @@
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import type {
+  SessionsReportCapacityItem,
+  SessionsReportTodaySession,
+} from "@mms/shared";
+
+export type SessionCapacityItem = SessionsReportCapacityItem;
+export type CapacityChartItem = CapacityBarDatum;
+export type TodaySessionItem = SessionsReportTodaySession;
 
 export interface SessionReportFilters {
-  session: string;
+  session?: string;
+  class?: string;
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  student?: string;
 }
 
 export interface SessionReportProps {
   filters: SessionReportFilters;
   onEditVisual?: (config: unknown) => void;
-}
-
-export interface SessionCapacityItem {
-  sessionId: string;
-  classId: string;
-  session: string;
-  class: string;
-  enrolled: number;
-  capacity: number;
-  rate: number;
-  status: string;
 }
 
 export interface EnrollmentTrendItem {
@@ -38,3 +40,4 @@ export interface SessionReportTableProps {
   onToggleSessionFilter: (sessionName: string) => void;
   onToggleClassFilter: (className: string) => void;
 }
+

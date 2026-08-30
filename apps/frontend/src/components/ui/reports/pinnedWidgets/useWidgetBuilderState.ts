@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { METADATA_FIELDS } from "@/components/ui/reports/reportMetadata";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import { METADATA_FIELDS } from "@/lib/reports/reportMetadata";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 import { useWidgetCollections } from "@/lib/reports/useReportCollections";
 import type { ReportCollection } from "@/lib/reports/reportMetadata";
 import { type WidgetBuilderIconTab } from "@/components/ui/reports/pinnedWidgets/WidgetBuilderCardOptions";

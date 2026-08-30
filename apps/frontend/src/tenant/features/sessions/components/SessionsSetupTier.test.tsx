@@ -46,6 +46,6 @@ describe("SessionsSetupTier Component", () => {
     mockCanEditSetup = false;
     const html = renderToStaticMarkup(<SessionsSetupTier />);
     expect(html).toContain("setup-read-only-message");
-    expect(html).toContain("sessions.setupReadOnly");
+    expect(html).toContain("sessions.setup.readOnly");
   });
 });

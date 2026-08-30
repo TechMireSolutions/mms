@@ -27,7 +27,7 @@ export const StudentsSetupTier = React.memo(function StudentsSetupTier({
       <ErrorBoundary>
         <div className="space-y-4">
           {!canEditSetup ? (
-            <SetupReadOnlyMessage title={t("students.setupReadOnly")} />
+            <SetupReadOnlyMessage title={t("students.setup.readOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
               <StudentsSetupPanel onPrefsDirtyChange={onPrefsDirtyChange} />

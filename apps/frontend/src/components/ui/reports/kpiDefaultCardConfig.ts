@@ -1,5 +1,5 @@
 import type { AppTranslationKey } from '@mms/shared';
-import type { CustomCard } from '@/components/ui/reports/reportMetadata';
+import type { CustomCard } from '@/lib/reports/reportMetadata';
 
 export function getDefaultCardConfig(
   category: string,
@@ -76,6 +76,30 @@ export function getDefaultCardConfig(
     case 'kpi-on-leave':
       Object.assign(config, { collection: 'teachers', filterValue: 'on_leave', icon: 'Activity', color: 'amber' });
       break;
+    case 'kpi-obligations-total':
+      Object.assign(config, { icon: 'Receipt', color: 'primary' });
+      break;
+    case 'kpi-obligations-amount':
+      Object.assign(config, { icon: 'TrendingUp', color: 'emerald' });
+      break;
+    case 'kpi-accounting-entries':
+      Object.assign(config, { icon: 'Receipt', color: 'primary' });
+      break;
+    case 'kpi-accounting-surplus':
+      Object.assign(config, { icon: 'DollarSign', color: 'emerald' });
+      break;
+    case 'kpi-users-total':
+      Object.assign(config, { icon: 'Users', color: 'primary' });
+      break;
+    case 'kpi-users-sessions':
+      Object.assign(config, { icon: 'ShieldCheck', color: 'blue' });
+      break;
+    case 'kpi-messaging-total':
+      Object.assign(config, { icon: 'MessageSquare', color: 'primary' });
+      break;
+    case 'kpi-messaging-whatsapp':
+      Object.assign(config, { icon: 'MessageCircle', color: 'emerald' });
+      break;
   }
   return config;
 }
@@ -83,7 +107,7 @@ export function getDefaultCardConfig(
 export function getDefaultKPICollection(category: string): CustomCard['collection'] {
   if (category === 'contacts') return 'contacts';
   if (category === 'attendance') return 'attendance_records';
-  if (category === 'financial' || category === 'accounting') return 'finance_invoices';
+  if (category === 'financial' || category === 'accounting' || category === 'finance') return 'finance_invoices';
   if (category === 'hasanat') return 'hasanat_distributions';
   if (category === 'sessions') return 'sessions';
   if (category === 'enrollments') return 'enrollments';
@@ -98,6 +122,7 @@ export function getCategoryLabelKey(category: string): AppTranslationKey | undef
     students: 'nav.students',
     attendance: 'nav.attendance',
     financial: 'nav.finance',
+    finance: 'nav.finance',
     hasanat: 'nav.hasanatCards',
     sessions: 'nav.sessions',
     examinations: 'nav.examinations',
@@ -106,6 +131,9 @@ export function getCategoryLabelKey(category: string): AppTranslationKey | undef
     faculty: 'nav.teachers',
     teachers: 'nav.teachers',
     accounting: 'nav.accounting',
+    obligations: 'nav.obligations',
+    messaging: 'nav.messaging',
+    users: 'nav.users',
   };
   return keys[category];
 }

@@ -55,20 +55,20 @@ export function useCustomReportBuilderState(initialSource?: string) {
     () => (studentsPreviewPage?.body?.students ?? []) as unknown as Record<string, unknown>[],
     [studentsPreviewPage?.body?.students],
   );
-  const sessionsData = useSessionsCollection();
+  const sessionsData = useSessionsCollection({ enabled: source === 'sessions' });
   const sessionsColl = useMemo(() => (sessionsData ?? []) as unknown as Record<string, unknown>[], [sessionsData]);
 
-  const financialResult = useFinanceInvoicesPaginated({ page: 1, limit: 500 });
+  const financialResult = useFinanceInvoicesPaginated({ page: 1, limit: 50 }, { enabled: source === 'financial' });
   const financialData = financialResult.data?.invoices;
   const financialColl = useMemo(() => (financialData ?? []) as unknown as Record<string, unknown>[], [financialData]);
 
-  const attendanceData = useAttendanceRecordsCollection();
+  const attendanceData = useAttendanceRecordsCollection({ enabled: source === 'attendance' });
   const attendanceColl = useMemo(() => (attendanceData ?? []) as unknown as Record<string, unknown>[], [attendanceData]);
 
-  const hasanatData = useHasanatDistributionsCollection();
+  const hasanatData = useHasanatDistributionsCollection({ enabled: source === 'hasanat' });
   const hasanatColl = useMemo(() => (hasanatData ?? []) as unknown as Record<string, unknown>[], [hasanatData]);
 
-  const academicData = useExaminationsResultsCollection();
+  const academicData = useExaminationsResultsCollection({ enabled: source === 'academic' });
   const academicColl = useMemo(() => (academicData ?? []) as unknown as Record<string, unknown>[], [academicData]);
 
   const resolveFieldLabel = useCallback(

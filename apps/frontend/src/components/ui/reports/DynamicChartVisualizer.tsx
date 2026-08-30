@@ -2,7 +2,7 @@ import React from 'react';
 import { DynamicChartVisualizerConfigPanel } from '@/components/ui/reports/DynamicChartVisualizerConfigPanel';
 import { DynamicChartVisualizerPreview } from '@/components/ui/reports/DynamicChartVisualizerPreview';
 import { useDynamicChartVisualizer } from '@/components/ui/reports/useDynamicChartVisualizer';
-import type { VisualizerConfig } from '@/components/ui/reports/reportMetadata';
+import type { VisualizerConfig } from '@/lib/reports/reportMetadata';
 
 interface DynamicChartVisualizerProps {
   initialConfig?: VisualizerConfig;

@@ -50,14 +50,7 @@ export default function Obligations() {
             className="space-y-4"
           >
             {c.effectiveTab === 'reports' && (
-              <ObligationsReportsTier
-                collections={c.collections}
-                obligationTypes={c.obligationTypes}
-                reps={c.reps}
-                mujtahids={c.mujtahids}
-                wakalaTypes={c.wakalaTypes}
-                distributions={c.distributions}
-              />
+              <ObligationsReportsTier />
             )}
 
             {c.effectiveTab === 'work' && (

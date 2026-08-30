@@ -11,7 +11,14 @@ const AttendanceSettings = lazy(
   () => import("@/tenant/features/attendance/components/AttendanceSettings"),
 );
 
-export const AttendanceSetupTier = React.memo(function AttendanceSetupTier(): React.JSX.Element {
+export interface AttendanceSetupTierProps {
+  /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
+  onPrefsDirtyChange?: (isDirty: boolean) => void;
+}
+
+export const AttendanceSetupTier = React.memo(function AttendanceSetupTier({
+  onPrefsDirtyChange,
+}: AttendanceSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(ATTENDANCE_MODULE_MANIFEST);
 
@@ -23,7 +30,7 @@ export const AttendanceSetupTier = React.memo(function AttendanceSetupTier(): Re
             <SetupReadOnlyMessage title={t("attendance.settings.readOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
-              <AttendanceSettings />
+              <AttendanceSettings onPrefsDirtyChange={onPrefsDirtyChange} />
             </Suspense>
           )}
         </div>

@@ -1,5 +1,5 @@
 import React from "react";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 import { WidgetBuilderPreview } from "@/components/ui/reports/pinnedWidgets/WidgetBuilderPreview";
 import { WidgetBuilderHeader } from "@/components/ui/reports/pinnedWidgets/WidgetBuilderHeader";
 import { WidgetBuilderOptionsPanel } from "@/components/ui/reports/pinnedWidgets/WidgetBuilderOptionsPanel";

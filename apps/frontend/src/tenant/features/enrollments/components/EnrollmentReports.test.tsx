@@ -24,14 +24,24 @@ vi.mock("@/lib/contexts/BrandingPaletteContext", () => ({
   }),
 }));
 
-vi.mock("@/components/ui/SafeResponsiveContainer", () => ({
-  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
+vi.mock("@/components/ui/SafeResponsiveContainer", () => {
+  const MockContainer = ({ children }: { children: React.ReactNode }) => <div>{children}</div>;
+  return {
+    SafeResponsiveContainer: MockContainer,
+    default: MockContainer,
+  };
+});
+
+import { EnrollmentReportsCharts } from "./EnrollmentReportsCharts";
 
 vi.mock("@/components/ui/ModuleCommandMetricsGrid", () => ({
   ModuleCommandMetricsGrid: ({ items }: { items: { label: string }[] }) => (
     <div data-testid="metrics-grid">{items.map((i) => i.label).join(", ")}</div>
   ),
+}));
+
+vi.mock("@/components/ui/reports/PinnedWidgets", () => ({
+  default: () => <div data-testid="pinned-widgets">Pinned Widgets</div>,
 }));
 
 describe("EnrollmentReports Component", () => {
@@ -41,8 +51,15 @@ describe("EnrollmentReports Component", () => {
     );
 
     expect(html).toContain("enrollments.metrics.total");
+    expect(html).toContain("enrollments.reports.revenueBySession");
+  });
+
+  it("renders status and session charts", () => {
+    const html = renderToStaticMarkup(
+      <EnrollmentReportsCharts aggregates={EMPTY_ENROLLMENTS_REPORT_AGGREGATES} />,
+    );
+
     expect(html).toContain("enrollments.reports.byStatus");
     expect(html).toContain("enrollments.reports.bySession");
-    expect(html).toContain("enrollments.reports.revenueBySession");
   });
 });

@@ -1,6 +1,10 @@
 import { todayISO } from '@mms/shared';
 import { useAttendanceMetrics } from '@/tenant/hooks/collections/attendance';
 import { useFinanceMetrics } from '@/tenant/hooks/collections/finance';
+import { useAccountingMetrics } from '@/tenant/hooks/collections/accounting';
+import { useObligationsMetrics } from '@/tenant/hooks/collections/obligations';
+import { useUsersMetrics } from '@/tenant/hooks/collections/users';
+import { useMessagingMetrics } from '@/tenant/hooks/collections/messaging';
 import { useExaminationsMetrics } from '@/tenant/hooks/collections/examinations';
 import { useHasanatMetrics } from '@/tenant/hooks/collections/hasanat';
 import {
@@ -23,10 +27,19 @@ export type KpiSummaryDataSources = ReturnType<typeof useKpiSummaryDataSources>;
  * Other non-person dumps live in `useKpiSummaryCustomCards` when custom cards need them.
  */
 export function useKpiSummaryDataSources(category: string, flags: KpiCategoryFlags) {
-  const { isContactsCategory, isStudentsCategory, isTeachersCategory, needsContactAnalytics } = flags;
+  const {
+    isContactsCategory,
+    isStudentsCategory,
+    isTeachersCategory,
+    isObligationsCategory,
+    isAccountingCategory,
+    isUsersCategory,
+    isMessagingCategory,
+    needsContactAnalytics,
+  } = flags;
 
   const isAttendance = category === 'attendance';
-  const isFinancial = category === 'financial' || category === 'accounting';
+  const isFinancial = category === 'financial' || category === 'finance';
   const isHasanat = category === 'hasanat';
   const isSessions = category === 'sessions' || category === 'enrollments';
   const isExaminations = category === 'examinations' || category === 'students';
@@ -44,6 +57,10 @@ export function useKpiSummaryDataSources(category: string, flags: KpiCategoryFla
 
   const { data: attendanceMetrics } = useAttendanceMetrics(todayISO(), { enabled: isAttendance });
   const { data: financeMetrics } = useFinanceMetrics({ enabled: isFinancial });
+  const { data: accountingMetrics } = useAccountingMetrics({ enabled: isAccountingCategory });
+  const { data: obligationsMetrics } = useObligationsMetrics({ enabled: isObligationsCategory });
+  const { data: usersMetrics } = useUsersMetrics({ enabled: isUsersCategory });
+  const { data: messagingMetrics } = useMessagingMetrics({ enabled: isMessagingCategory });
   const { data: hasanatMetrics } = useHasanatMetrics({ enabled: isHasanat });
   const { data: sessionsMetrics } = useSessionsMetrics({ enabled: isSessions });
   const { data: examinationsMetrics } = useExaminationsMetrics({ enabled: isExaminations });
@@ -65,6 +82,10 @@ export function useKpiSummaryDataSources(category: string, flags: KpiCategoryFla
     auxiliaryTeacherMetrics,
     attendanceMetrics,
     financeMetrics,
+    accountingMetrics,
+    obligationsMetrics,
+    usersMetrics,
+    messagingMetrics,
     hasanatMetrics,
     sessionsMetrics,
     examinationsMetrics,

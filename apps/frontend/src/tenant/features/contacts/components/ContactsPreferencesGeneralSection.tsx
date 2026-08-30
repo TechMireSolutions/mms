@@ -4,11 +4,11 @@ import type { ContactPreferences } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { ToggleRow } from "@/components/ui/ToggleRow";
+import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 
 export interface ContactsPreferencesGeneralSectionProps {
   prefs: ContactPreferences;
   isPrefsDirty?: boolean;
-  countryOptions?: Array<{ value: string; label: string }>;
   onUpdatePreference: <K extends keyof ContactPreferences>(
     key: K,
     value: ContactPreferences[K],
@@ -22,7 +22,12 @@ export function ContactsPreferencesGeneralSection({
   const { t } = useTranslation();
 
   return (
-    <SectionCard title={t("contacts.setup.generalPreferences")} icon={Users} headingLevel={2}>
+    <SectionCard
+      title={t("contacts.setup.generalPreferences")}
+      icon={Users}
+      headingLevel={2}
+      className={SETUP_SECTION_CARD_CLASS}
+    >
       <div className="space-y-2">
         <ToggleRow
           label={t("contacts.setup.showDetailedSolarAge")}

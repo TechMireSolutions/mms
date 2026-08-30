@@ -9,7 +9,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-let mockCanEdit = true;
+const mockCanEdit = true;
 
 vi.mock("@/tenant/hooks/usePermissions", () => ({
   useModulePermissions: () => ({
@@ -73,8 +73,7 @@ vi.mock("@/components/ui/ConfirmAlertDialog", () => ({
 }));
 
 describe("AccountingSettings Component", () => {
-  it("renders preferences and save footer when canEditSetup is true", () => {
-    mockCanEdit = true;
+  it("renders preferences, fiscal year modal, and save footer", () => {
     const html = renderToStaticMarkup(
       <AccountingSettings
         accounts={[]}
@@ -84,17 +83,5 @@ describe("AccountingSettings Component", () => {
     );
     expect(html).toContain("Accounting Preferences Section");
     expect(html).toContain("Save Footer");
-  });
-
-  it("renders read-only message when canEditSetup is false", () => {
-    mockCanEdit = false;
-    const html = renderToStaticMarkup(
-      <AccountingSettings
-        accounts={[]}
-        fiscalYears={[]}
-        onSaveFiscalYears={vi.fn()}
-      />,
-    );
-    expect(html).toContain("accounting.setup.readOnly");
   });
 });

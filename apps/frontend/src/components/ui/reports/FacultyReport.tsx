@@ -1,17 +1,18 @@
-import React from 'react';
-import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
+import React, { lazy, Suspense } from 'react';
+import { TEACHERS_MODULE_MANIFEST, toTitleCase } from '@mms/shared';
 import { SubTabBar } from '@/components/ui/SubTabBar';
-import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
-import { StatsSkeleton } from '@/components/ui/LoadingState';
-import { ExportToolbar } from '@/components/ui/ExportToolbar';
-import { ListPagination } from '@/components/ui/ListPagination';
+import { ReportDataGridContainer } from './ReportDataGridContainer';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { FacultyReportChartSection } from './FacultyReportSections';
-import { FacultyReportDashboardWidgets } from './FacultyReportDashboardWidgets';
-import { FacultyReportFilterBanner } from './FacultyReportFilterBanner';
+import { Skeleton } from '@/components/ui/skeleton';
+import PinnedWidgets from './PinnedWidgets';
+import { ReportFilterBanner } from './ReportFilterBanner';
 import { FacultyReportTables } from './FacultyReportTables';
 import { useFacultyReportController } from './useFacultyReportController';
 import type { TeacherReportProps } from './teacherReportTypes';
+
+const FacultyReportChartSection = lazy(() =>
+  import('./FacultyReportSections').then((mod) => ({ default: mod.FacultyReportChartSection })),
+);
 
 export type {
   FacultyWorkloadItem,
@@ -39,17 +40,24 @@ const FacultyReport = React.memo(function FacultyReport({ filters }: TeacherRepo
 
   return (
     <div className="space-y-4">
-      {report.metricsLoading && !report.metrics ? (
-        <StatsSkeleton count={4} />
-      ) : (
-        <ModuleCommandMetricsGrid items={report.metricItems} />
-      )}
-
-      <FacultyReportFilterBanner
-        hasBaseStatusFilter={Boolean(report.filters.status && report.filters.status !== 'all')}
-        reportStatusFilter={report.reportStatusFilter}
-        studentFilter={report.filters.student}
-        onClearStatusFilter={() => report.setReportStatusFilter(null)}
+      <ReportFilterBanner
+        label={report.t('teachers.report.filterLabel')}
+        filters={[
+          report.reportStatusFilter
+            ? {
+                key: 'status',
+                value: toTitleCase(report.reportStatusFilter),
+                onClear: () => report.setReportStatusFilter(null),
+                clearLabel: report.t('teachers.report.clearFilter'),
+              }
+            : null,
+          report.filters.student
+            ? {
+                key: 'faculty',
+                value: `"${report.filters.student}"`,
+              }
+            : null,
+        ]}
       />
 
       <SubTabBar
@@ -59,31 +67,21 @@ const FacultyReport = React.memo(function FacultyReport({ filters }: TeacherRepo
         panelIdPrefix="faculty-report-subtab"
       />
 
-      <ExportToolbar
-        title={report.activeSubTab === 'roster' ? report.t('teachers.report.rosterTab') : report.t('teachers.report.workloadTab')}
-        columns={report.activeSubTab === 'roster' ? report.rosterExportColumns : undefined}
-        rows={
-          report.activeSubTab === 'roster'
-            ? (report.teachers as unknown as Record<string, unknown>[])
-            : undefined
-        }
-        data={report.activeSubTab === 'roster' ? undefined : report.filteredFacultyWorkload}
-        headers={
-          report.activeSubTab === 'roster'
-            ? undefined
-            : [
-                report.t('teachers.report.colFaculty'),
-                report.t('teachers.report.colClasses'),
-                report.t('teachers.report.colSessions'),
-                report.t('teachers.report.colStudents'),
-              ]
-        }
-        resolveRows={report.activeSubTab === 'roster' ? report.resolveRosterExportRows : undefined}
-        moduleId="teachers"
-      />
-
       {report.activeSubTab === 'roster' ? (
-        <div className="space-y-3">
+        <ReportDataGridContainer
+          title={report.t('teachers.report.rosterTab')}
+          columns={report.rosterExportColumns}
+          rows={report.teachers as unknown as Record<string, unknown>[]}
+          resolveRows={report.resolveRosterExportRows}
+          moduleId="teachers"
+          page={report.listPage}
+          total={report.listTotal}
+          limit={TEACHERS_MODULE_MANIFEST.defaultPageSize}
+          hasMore={report.listHasMore}
+          onPageChange={report.setListPage}
+          i18nNamespace="teachers"
+          paginationVariant="range"
+        >
           <FacultyReportTables
             activeSubTab={report.activeSubTab}
             teachers={report.teachers}
@@ -93,39 +91,38 @@ const FacultyReport = React.memo(function FacultyReport({ filters }: TeacherRepo
             selectedFaculty={report.selectedFaculty}
             onToggleFacultyFilter={report.toggleFacultyFilter}
           />
-          <ListPagination
-            page={report.listPage}
-            total={report.listTotal}
-            limit={TEACHERS_MODULE_MANIFEST.defaultPageSize}
-            hasMore={report.listHasMore}
-            onPageChange={report.setListPage}
-            i18nNamespace="teachers"
-            variant="range"
-          />
-        </div>
+        </ReportDataGridContainer>
       ) : (
         <div className="space-y-3">
-          <FacultyReportChartSection
-            t={report.t}
-            facultyWorkload={report.facultyWorkload}
-            onBarClick={report.toggleFacultyFilter}
-          />
-          <FacultyReportTables
-            activeSubTab={report.activeSubTab}
-            teachers={report.teachers}
-            statusBadgeConfig={report.statusBadgeConfig}
-            listLoading={report.listLoading}
-            workloadRows={report.filteredFacultyWorkload}
-            selectedFaculty={report.selectedFaculty}
-            onToggleFacultyFilter={report.toggleFacultyFilter}
-          />
+          <Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
+            <FacultyReportChartSection
+              t={report.t}
+              facultyWorkload={report.facultyWorkload}
+              onBarClick={report.toggleFacultyFilter}
+            />
+          </Suspense>
+          <ReportDataGridContainer
+            title={report.t('teachers.report.workloadTab')}
+            columns={report.workloadExportColumns}
+            rows={report.filteredFacultyWorkload as unknown as Record<string, unknown>[]}
+            moduleId="teachers"
+          >
+            <FacultyReportTables
+              activeSubTab={report.activeSubTab}
+              teachers={report.teachers}
+              statusBadgeConfig={report.statusBadgeConfig}
+              listLoading={report.listLoading}
+              workloadRows={report.filteredFacultyWorkload}
+              selectedFaculty={report.selectedFaculty}
+              onToggleFacultyFilter={report.toggleFacultyFilter}
+            />
+          </ReportDataGridContainer>
         </div>
       )}
 
-      <FacultyReportDashboardWidgets />
+      <PinnedWidgets category="teachers" />
     </div>
   );
 });
 
 export default FacultyReport;
-

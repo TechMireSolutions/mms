@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentsPreferencesSection } from "@/tenant/features/students/components/StudentsPreferencesSection";
@@ -17,16 +17,15 @@ export const StudentsSetupPanel = React.memo(function StudentsSetupPanel({
     upd,
     saved,
     saving,
-    isDirty,
     isPrefsDirty,
     handleSave,
   } = useStudentsSetupPanelState();
 
-  React.useEffect(() => {
+  useEffect(() => {
     onPrefsDirtyChange?.(isPrefsDirty);
   }, [isPrefsDirty, onPrefsDirtyChange]);
 
-  const unsavedWarning = isDirty
+  const unsavedWarning = isPrefsDirty
     ? t("students.setup.unsavedPreferencesWarning")
     : undefined;
 
@@ -35,12 +34,12 @@ export const StudentsSetupPanel = React.memo(function StudentsSetupPanel({
       <StudentsPreferencesSection settingsDraft={settingsDraft} upd={upd} />
 
       <ModuleSetupSaveFooter
-        dirty={isDirty}
+        dirty={isPrefsDirty}
         saving={saving}
         saved={saved}
         unsavedWarning={unsavedWarning}
-        saveLabel={t("students.settings.saveSettings")}
-        savedLabel={t("students.settings.saveSuccess")}
+        saveLabel={t("common.save")}
+        savedLabel={t("settings.savedBadge")}
         onSave={handleSave}
       />
     </div>

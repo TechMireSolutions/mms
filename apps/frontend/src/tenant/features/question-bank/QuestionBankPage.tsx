@@ -53,21 +53,11 @@ export default function QuestionBankPage(): JSX.Element {
             className="space-y-4"
           >
             {c.effectiveTab === 'setup' && (
-              <QuestionBankSetupTier
-                tabs={c.SETUP_TABS}
-                activeTab={c.effectiveConfigTab}
-                canEditSetup={c.canEditSetup}
-                onTabChange={c.setConfigSubTab}
-              />
+              <QuestionBankSetupTier />
             )}
 
             {c.effectiveTab === 'reports' && (
-              <QuestionBankReportsTier
-                tests={c.tests}
-                results={c.questionBankResults}
-                questions={c.questions}
-                categories={c.questionBankConfig.categories}
-              />
+              <QuestionBankReportsTier />
             )}
 
             {c.effectiveTab === 'work' && (

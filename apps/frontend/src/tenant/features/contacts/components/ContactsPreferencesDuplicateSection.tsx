@@ -6,7 +6,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT, FORM_LABEL, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { getDuplicateFieldLabel } from "@/lib/contacts/contactI18n";
 
 /** Toggleable duplicate-detection fields (subset of the canonical field-id set). */
@@ -46,7 +47,12 @@ export function ContactsPreferencesDuplicateSection({
   };
 
   return (
-    <SectionCard title={t("contacts.setup.duplicateDetection")} icon={Copy} headingLevel={2}>
+    <SectionCard
+      title={t("contacts.setup.duplicateDetection")}
+      icon={Copy}
+      headingLevel={2}
+      className={SETUP_SECTION_CARD_CLASS}
+    >
       <div className="space-y-4">
         <p className="text-xs text-muted-foreground">{t("contacts.setup.duplicateDetectionDesc")}</p>
         <fieldset className="space-y-2">
@@ -59,7 +65,7 @@ export function ContactsPreferencesDuplicateSection({
                 <label
                   key={option}
                   htmlFor={checkboxId}
-                  className="flex min-h-11 items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm"
+                  className="flex min-h-11 items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50 transition-colors"
                 >
                   <Checkbox
                     id={checkboxId}
@@ -73,15 +79,13 @@ export function ContactsPreferencesDuplicateSection({
           </div>
         </fieldset>
 
-        <div>
-          <label className={FORM_LABEL} htmlFor="namePrefixesToIgnore">
-            {t("contacts.setup.namePrefixesToIgnore")}
-          </label>
-          <p className="mb-2 text-xs text-muted-foreground">
-            {t("contacts.setup.namePrefixesToIgnoreDesc")}
-          </p>
+        <Field
+          label={t("contacts.setup.namePrefixesToIgnore")}
+          hint={t("contacts.setup.namePrefixesToIgnoreDesc")}
+        >
           <Input
             id="namePrefixesToIgnore"
+            className={FORM_INPUT}
             value={namePrefixesDraft}
             onChange={(e) => {
               const raw = e.target.value;
@@ -94,18 +98,16 @@ export function ContactsPreferencesDuplicateSection({
             }}
             placeholder={t("contacts.setup.namePrefixesToIgnorePlaceholder")}
           />
-        </div>
+        </Field>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div>
-            <label className={FORM_LABEL} htmlFor="dupThresholdHigh">
-              {t("contacts.setup.duplicateThresholdHigh")}
-            </label>
+          <Field label={t("contacts.setup.duplicateThresholdHigh")}>
             <Input
               id="dupThresholdHigh"
               type="number"
               min={1}
               max={100}
+              className={FORM_INPUT}
               value={prefs.duplicateDetectionThresholdHigh ?? 90}
               onChange={(e) => {
                 const parsed = Number(e.target.value);
@@ -115,16 +117,14 @@ export function ContactsPreferencesDuplicateSection({
                 );
               }}
             />
-          </div>
-          <div>
-            <label className={FORM_LABEL} htmlFor="dupThresholdMedium">
-              {t("contacts.setup.duplicateThresholdMedium")}
-            </label>
+          </Field>
+          <Field label={t("contacts.setup.duplicateThresholdMedium")}>
             <Input
               id="dupThresholdMedium"
               type="number"
               min={1}
               max={100}
+              className={FORM_INPUT}
               value={prefs.duplicateDetectionThresholdMedium ?? 75}
               onChange={(e) => {
                 const parsed = Number(e.target.value);
@@ -134,7 +134,7 @@ export function ContactsPreferencesDuplicateSection({
                 );
               }}
             />
-          </div>
+          </Field>
         </div>
       </div>
     </SectionCard>

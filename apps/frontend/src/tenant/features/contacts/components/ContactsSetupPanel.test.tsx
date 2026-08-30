@@ -10,7 +10,6 @@ vi.mock("@/tenant/features/contacts/hooks/useContactsSetupPanelState", () => ({
     prefs: DEFAULT_CONTACT_PREFERENCES,
     isSaving: false,
     isPrefsDirty: false,
-    countryOptions: [],
     updatePreference: vi.fn(),
     handleSave: vi.fn(),
   }),

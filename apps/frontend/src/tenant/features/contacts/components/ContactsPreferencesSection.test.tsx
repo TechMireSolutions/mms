@@ -19,17 +19,15 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("ContactsPreferencesSection Component", () => {
-  it("renders both general and duplicate sections with unsaved warning when dirty", () => {
+  it("renders both general and duplicate sections", () => {
     const html = renderToStaticMarkup(
       <ContactsPreferencesSection
         prefs={DEFAULT_CONTACT_PREFERENCES}
         isPrefsDirty={true}
-        countryOptions={[]}
         onUpdatePreference={vi.fn()}
       />,
     );
 
-    expect(html).toContain("contacts.setup.unsavedWarning");
     expect(html).toContain("General Section");
     expect(html).toContain("Duplicate Section");
   });

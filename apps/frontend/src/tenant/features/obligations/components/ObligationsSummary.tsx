@@ -1,27 +1,36 @@
+import React, { lazy, Suspense } from "react";
 import { Layers, Receipt, TrendingUp, Users } from "lucide-react";
-import type { ObligationCollection, ObligationDistribution, ObligationType, Mujtahid, MujtahidRep, WakalaType } from "@/lib/data/obligationsData";
+import {
+  useObligationsCollectionsCollection,
+  useObligationsTypesCollection,
+  useObligationsRepsCollection,
+  useObligationsMujtahidsCollection,
+  useObligationsWakalaCollection,
+  useObligationsDistributionsCollection,
+} from "@/tenant/features/obligations/hooks/useObligationsApi";
 import { formatMoney } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ObligationsRepDuesSection } from "./ObligationsRepDuesSection";
-import { ObligationsSummaryChartsSection } from "./ObligationsSummaryChartsSection";
+
+const ObligationsSummaryChartsSection = lazy(() =>
+  import("./ObligationsSummaryChartsSection").then((mod) => ({ default: mod.ObligationsSummaryChartsSection })),
+);
 import { ObligationsTypeBreakdownSection } from "./ObligationsTypeBreakdownSection";
 import { ObligationsWakalaSummarySection } from "./ObligationsWakalaSummarySection";
 import { useObligationsSummaryModel } from "./useObligationsSummaryModel";
 import { ObligationsSummaryFilters } from "./ObligationsSummaryFilters";
+import PinnedWidgets from "@/components/ui/reports/PinnedWidgets";
 
-export interface ObligationsSummaryProps {
-  collections: ObligationCollection[];
-  obligationTypes: ObligationType[];
-  reps: MujtahidRep[];
-  mujtahids: Mujtahid[];
-  wakalaTypes: WakalaType[];
-  distributions: ObligationDistribution[];
-}
+export function ObligationsSummary() {
+  const collections = useObligationsCollectionsCollection();
+  const obligationTypes = useObligationsTypesCollection();
+  const reps = useObligationsRepsCollection();
+  const mujtahids = useObligationsMujtahidsCollection();
+  const wakalaTypes = useObligationsWakalaCollection();
+  const distributions = useObligationsDistributionsCollection();
 
-export function ObligationsSummary({
-  collections, obligationTypes, reps, mujtahids, wakalaTypes, distributions
-}: ObligationsSummaryProps) {
   const { formatCurrency, activeCurrency } = useFinanceCurrency();
   const formatValueOnly = (amount: number | string | null | undefined): string => {
     return formatMoney(amount, activeCurrency.code, { excludeCurrency: true });
@@ -57,21 +66,23 @@ export function ObligationsSummary({
         <ModuleCommandMetricsGrid
           items={[
             { icon: Receipt, label: model.t("obligations.summary.kpi.totalCollections"), value: model.totalRecords, accent: "primary" },
-            { icon: TrendingUp, label: model.t("obligations.summary.kpi.totalAmountReceived"), value: formatCurrency(model.totalAmount), accent: "emerald" },
-            { icon: Users, label: model.t("obligations.summary.kpi.activeReps"), value: model.uniqueReps, accent: "blue" },
-            { icon: Layers, label: model.t("obligations.summary.kpi.obligationTypes"), value: model.typeBreakdown.length, accent: "amber" },
+            { icon: TrendingUp, label: model.t("obligations.summary.kpi.totalAmountReceived"), value: formatCurrency(model.totalAmount), accent: "success" },
+            { icon: Users, label: model.t("obligations.summary.kpi.activeReps"), value: model.uniqueReps, accent: "info" },
+            { icon: Layers, label: model.t("obligations.summary.kpi.obligationTypes"), value: model.typeBreakdown.length, accent: "warning" },
           ]}
         />
       </section>
 
-      <ObligationsSummaryChartsSection
-        filteredCount={model.filtered.length}
-        typeBreakdown={model.typeBreakdown}
-        monthlyTrend={model.monthlyTrend}
-        colors={model.COLORS}
-        primary={model.primary}
-        formatCurrency={formatCurrency}
-      />
+      <Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
+        <ObligationsSummaryChartsSection
+          filteredCount={model.filtered.length}
+          typeBreakdown={model.typeBreakdown}
+          monthlyTrend={model.monthlyTrend}
+          colors={model.COLORS}
+          primary={model.primary}
+          formatCurrency={formatCurrency}
+        />
+      </Suspense>
 
       <ObligationsWakalaSummarySection
         wakalaSummary={model.wakalaSummary}
@@ -96,6 +107,8 @@ export function ObligationsSummary({
         formatCurrency={formatCurrency}
         formatValueOnly={formatValueOnly}
       />
+
+      <PinnedWidgets category="obligations" />
     </div>
   );
 }

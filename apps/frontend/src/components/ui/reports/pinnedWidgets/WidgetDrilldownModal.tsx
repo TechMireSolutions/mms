@@ -1,7 +1,7 @@
 import React from "react";
 import { EyeOff } from "lucide-react";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
-import { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { SimplePagination } from "@/components/ui/SimplePagination";

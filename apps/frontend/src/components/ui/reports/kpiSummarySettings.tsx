@@ -8,7 +8,7 @@ import { cn } from '@/lib/utils';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { useTranslation } from '@/hooks/useTranslation';
 import DynamicCardBuilder from './DynamicCardBuilder';
-import type { CustomCard } from './reportMetadata';
+import type { CustomCard } from '@/lib/reports/reportMetadata';
 import type { CategorizedKPIItem, KPIItem } from './kpiSummaryTypes';
 
 interface KPISummarySettingsProps {

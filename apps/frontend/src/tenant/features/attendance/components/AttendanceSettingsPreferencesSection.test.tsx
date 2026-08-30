@@ -21,7 +21,6 @@ describe("AttendanceSettingsPreferencesSection Component", () => {
   it("renders timing rules, qr, alerts, and advanced settings cards", () => {
     const html = renderToStaticMarkup(
       <AttendanceSettingsPreferencesSection
-        t={((k: string) => k) as any}
         settingsDraft={mockSettings}
         upd={vi.fn()}
       />,

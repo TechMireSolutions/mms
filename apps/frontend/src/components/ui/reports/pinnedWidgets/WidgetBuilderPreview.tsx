@@ -5,7 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import { CustomWidgetRenderer } from "@/components/ui/reports/pinnedWidgets/CustomWidgetRenderer";
-import type { CustomWidget } from "@/components/ui/reports/pinnedWidgets/types";
+import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 

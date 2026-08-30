@@ -2,13 +2,12 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CustomReportBuilder from "@/components/ui/reports/CustomReportBuilder";
 import ComparisonMode from "@/components/ui/reports/ComparisonMode";
-import PinnedWidgets from "@/components/ui/reports/PinnedWidgets";
 import DynamicChartVisualizer from "@/components/ui/reports/DynamicChartVisualizer";
 import DynamicCardBuilder from "@/components/ui/reports/DynamicCardBuilder";
 import SavedReports from "@/components/ui/reports/SavedReports";
 import ContactsSavedReports from "@/components/ui/reports/ContactsSavedReports";
 import { getObject, saveObject } from "@/lib/db";
-import { VisualizerConfig } from "@/components/ui/reports/reportMetadata";
+import { VisualizerConfig } from "@/lib/reports/reportMetadata";
 import { useGenericSavedReportsSource } from "@/hooks/useSavedReportsSource";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
@@ -17,9 +16,26 @@ import {
   type GenericSavedReportCategory,
 } from "@mms/shared";
 
-type ModuleReportCategory = "students" | "teachers" | "contacts" | "attendance" | "financial" | "academic" | "examinations" | "questionBank" | "hasanat" | "sessions" | "faculty" | "saved";
+export type ModuleReportCategory =
+  | "students"
+  | "teachers"
+  | "contacts"
+  | "attendance"
+  | "finance"
+  | "financial"
+  | "accounting"
+  | "enrollments"
+  | "obligations"
+  | "users"
+  | "messaging"
+  | "examinations"
+  | "questionBank"
+  | "hasanat"
+  | "sessions"
+  | "faculty"
+  | "saved";
 
-type ReportToolsTab = "dashboard" | "compare" | "builder" | "widgets" | "visualizer" | "cardBuilder" | "saved";
+type ReportToolsTab = "dashboard" | "compare" | "builder" | "visualizer" | "cardBuilder" | "saved";
 
 interface ModuleReportsToolPanelsProps {
   category: ModuleReportCategory;
@@ -36,13 +52,21 @@ interface ModuleReportsToolPanelsProps {
 export function getInitialReportCollection(category: ModuleReportCategory) {
   switch (category) {
     case "students": return "students" as const;
-    case "teachers": return "teachers" as const;
+    case "teachers":
+    case "faculty": return "teachers" as const;
     case "sessions": return "sessions" as const;
-    case "financial": return "finance_invoices" as const;
+    case "finance":
+    case "financial":
+    case "accounting": return "finance_invoices" as const;
     case "attendance": return "attendance_records" as const;
     case "hasanat": return "hasanat_distributions" as const;
     case "contacts": return "contacts" as const;
     case "questionBank": return "questions" as const;
+    case "examinations": return "assessment_results" as const;
+    case "enrollments": return "enrollments" as const;
+    case "obligations": return "finance_invoices" as const;
+    case "messaging":
+    case "users": return "contacts" as const;
     default: return undefined;
   }
 }
@@ -96,11 +120,6 @@ export function ModuleReportsToolPanels({
       {activeTab === "builder" && (
         <motion.div key="builder" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
           <div className="pb-4"><CustomReportBuilder initialSource={category} onClose={onClosePanel} /></div>
-        </motion.div>
-      )}
-      {activeTab === "widgets" && (
-        <motion.div key="widgets" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-          <div className="pb-4"><PinnedWidgets category={category} /></div>
         </motion.div>
       )}
       {activeTab === "visualizer" && (

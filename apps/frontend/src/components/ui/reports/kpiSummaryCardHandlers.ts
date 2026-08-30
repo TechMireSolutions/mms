@@ -2,7 +2,7 @@ import type { Permission } from '@mms/shared';
 import type { Dispatch, SetStateAction } from 'react';
 import { saveObject } from '@/lib/db';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
-import type { CustomCard } from './reportMetadata';
+import type { CustomCard } from '@/lib/reports/reportMetadata';
 import {
   KPI_ROLE_ATTENDANCE_ONLY_IDS,
   KPI_ROLE_FINANCE_ONLY_IDS,
