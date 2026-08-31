@@ -21,6 +21,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v7
 
+      - name: Cache Turbo (incremental state)
+        uses: actions/cache@v6
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
@@ -36,13 +44,10 @@ jobs:
       - name: Run Typecheck
         run: pnpm typecheck
 
-      - name: Lint Frontend
+      # Lints every package that has a lint script (frontend, backend,
+      # @mms/shared, e2e) via turbo — shared/e2e were previously unlinted.
+      - name: Lint (all packages)
         run: pnpm lint
-        working-directory: apps/frontend
-
-      - name: Lint Backend
-        run: pnpm lint
-        working-directory: apps/backend
 
   unit:
     runs-on: ubuntu-latest
@@ -217,6 +222,14 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
+
+      - name: Cache Turbo (incremental state)
+        uses: actions/cache@v6
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6

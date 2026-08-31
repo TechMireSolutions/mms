@@ -3,7 +3,6 @@ import {
   customWidgetSchema,
   dashboardWidgetsPutBodySchema,
   normalizeDashboardWidget,
-  normalizeDashboardWidgets,
   type DashboardWidgetDto,
 } from "./dashboardWidgetSchema.js";
 

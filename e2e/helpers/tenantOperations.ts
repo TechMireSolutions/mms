@@ -35,7 +35,9 @@ export async function createTestContactJaneDoe(page: Page): Promise<void> {
       if (!res.ok()) {
         try {
           console.log(`[E2E HTTP ERROR BODY]`, await res.text());
-        } catch {}
+        } catch {
+          // Response body may already be consumed or the connection closed.
+        }
       }
     }
   });

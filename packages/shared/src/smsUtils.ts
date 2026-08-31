@@ -53,7 +53,7 @@ export function calculateSmsSegments(text: string): SmsSegmentResult {
     // GSM 7-bit encoding calculation (extension characters count as 2)
     let gsmCharLength = 0;
     for (const ch of text) {
-      if ('{}[\]~^|€'.includes(ch)) {
+      if ('{}[]~^|€'.includes(ch)) {
         gsmCharLength += 2;
       } else {
         gsmCharLength += 1;

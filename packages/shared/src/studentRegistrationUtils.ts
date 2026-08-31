@@ -37,7 +37,7 @@ export function computeNextGrNumber(
   const restartAnnually = settings.grNumberRestartAnnually !== false;
   const year = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
 
-  let nextSeq = 1;
+  let nextSeq: number;
   if (restartAnnually) {
     const yearlyStudents = students.filter((s) => {
       const sDate = s.registeredDate || '';
@@ -127,7 +127,7 @@ export function backfillMissingStudentGrNumbers<T extends StudentGrBackfillRow>(
     const registeredDate = studentRecord.registeredDate || fallbackRegisteredDate;
     const year = registeredDate ? new Date(registeredDate).getFullYear() : new Date().getFullYear();
 
-    let nextSeq = 1;
+    let nextSeq: number;
     if (restartAnnually) {
       const yearlyStudents = working.slice(0, studentIndex).filter((prev) => {
         const prevDate = prev.registeredDate || '';

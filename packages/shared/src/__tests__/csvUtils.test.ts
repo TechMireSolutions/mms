@@ -9,9 +9,9 @@ describe('csvUtils', () => {
 
     it('neutralizes formula injection characters (=, +, -, @)', () => {
       expect(escapeCsvCell('=SUM(A1:A10)')).toBe('"\'=SUM(A1:A10)"');
-      expect(escapeCsvCell('+12345')).toBe('"\'\+12345"');
-      expect(escapeCsvCell('-CMD')).toBe('"\'\-CMD"');
-      expect(escapeCsvCell('@ADMIN')).toBe('"\'\@ADMIN"');
+      expect(escapeCsvCell('+12345')).toBe('"\'+12345"');
+      expect(escapeCsvCell('-CMD')).toBe('"\'-CMD"');
+      expect(escapeCsvCell('@ADMIN')).toBe('"\'@ADMIN"');
     });
 
     it('handles null and undefined values safely', () => {

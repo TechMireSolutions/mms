@@ -4,10 +4,14 @@ import App from '@/App'
 import '@/index.css'
 import { isApexHost } from '@mms/shared'
 import { getAppDomain } from '@/lib/config/tenantConfig'
-import { initErrorReporting } from '@/lib/clientErrorReporting'
 import { applyPlatformDocumentFavicon, applyTenantDocumentFavicon } from '@/lib/documentFavicon'
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
-initErrorReporting()
+// Error reporting is non-interactive: initialize it without blocking first
+// paint. The Sentry SDK (~170KB) now lives behind the lazy
+// clientErrorReporting -> clientErrorReportingCore dynamic-import boundary.
+void import('@/lib/clientErrorReporting').then(({ initErrorReporting }) => initErrorReporting())
+
 if (typeof window !== 'undefined' && isApexHost(window.location.hostname, getAppDomain())) {
   applyPlatformDocumentFavicon();
   void import('@/lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => {
@@ -19,20 +23,21 @@ if (typeof window !== 'undefined' && isApexHost(window.location.hostname, getApp
   void import('@/lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme())
 }
 
-// Suppress Recharts v3 false-positive dimension warnings during mounting
-const originalWarn = console.warn;
-console.warn = (...args: unknown[]) => {
-  if (
-    typeof args[0] === 'string' &&
-    args[0].includes('The width(-1) and height(-1) of chart should be greater than 0')
-  ) {
-    return;
-  }
-  originalWarn(...args);
-};
-
-import * as Sentry from '@sentry/react'
-import { ErrorState } from '@/components/ui/ErrorState'
+// DEV ONLY: suppress the Recharts v3 false-positive dimension warnings that
+// fire during mount. The global console must stay unpatched in production —
+// a global monkey-patch can silently swallow unrelated warnings.
+if (import.meta.env.DEV) {
+  const originalWarn = console.warn;
+  console.warn = (...args: unknown[]) => {
+    if (
+      typeof args[0] === 'string' &&
+      args[0].includes('The width(-1) and height(-1) of chart should be greater than 0')
+    ) {
+      return;
+    }
+    originalWarn(...args);
+  };
+}
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -40,22 +45,13 @@ if (!rootElement) {
 }
 
 const app = (
-  <Sentry.ErrorBoundary
-    fallback={({ error, resetError }) => (
-      <div className="flex min-h-screen items-center justify-center bg-background p-6">
-        <ErrorState
-          title="Application Crash"
-          description={error instanceof Error ? error.message : "A critical error occurred. The application has crashed."}
-          onRetry={() => {
-            resetError();
-            window.location.reload();
-          }}
-        />
-      </div>
-    )}
-  >
+  // Root boundary: the local (Sentry-free) ErrorBoundary — the previous
+  // Sentry.ErrorBoundary here is what forced @sentry/react into the eager
+  // graph. Error reporting still happens via ErrorBoundary's
+  // reportClientError hook once the lazy core has initialized.
+  <ErrorBoundary>
     <App />
-  </Sentry.ErrorBoundary>
+  </ErrorBoundary>
 );
 
 ReactDOM.createRoot(rootElement).render(

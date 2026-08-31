@@ -33,6 +33,9 @@ vi.mock('../db/dbConnection.js', () => ({
   getRootDb: () => mockDb,
   getReadReplicaDb: () => mockDb,
   hasActiveTransaction: () => false,
+  // nested withTenant joins the ALS-registered transaction in production;
+  // in these stubbed tests it runs the callback directly.
+  withActiveTransaction: async (_tx: unknown, cb: () => Promise<unknown>) => await cb(),
 }));
 
 import { deleteWorkspace } from '../services/workspaceService.js';

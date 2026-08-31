@@ -230,19 +230,20 @@ export function composeExaminationsSettings(
 export function stripExaminationsFieldConfigForPersist(
   config: Partial<ExaminationsSettings>
 ): Partial<ExaminationsSettings> {
+  // `name: _name` aliases: the bound locals exist only to omit preference keys from the rest object.
   const {
-    passMark,
-    maxMark,
-    gradingSystem,
-    showRankings,
-    allowRetake,
-    autoPublishResults,
-    notifyOnResult,
-    certificateTemplate,
-    aiGrading,
-    distinguishHonours,
-    examReminders,
-    defaultViewLayout,
+    passMark: _passMark,
+    maxMark: _maxMark,
+    gradingSystem: _gradingSystem,
+    showRankings: _showRankings,
+    allowRetake: _allowRetake,
+    autoPublishResults: _autoPublishResults,
+    notifyOnResult: _notifyOnResult,
+    certificateTemplate: _certificateTemplate,
+    aiGrading: _aiGrading,
+    distinguishHonours: _distinguishHonours,
+    examReminders: _examReminders,
+    defaultViewLayout: _defaultViewLayout,
     ...fieldConfigOnly
   } = config;
   return fieldConfigOnly;

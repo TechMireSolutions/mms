@@ -1,4 +1,4 @@
-import type { TabDefinition, FieldDefinition, ColumnRegistryEntry } from "./contactTypes.js";
+import type { TabDefinition, FieldDefinition } from "./contactTypes.js";
 
 
 // ─── Default Students Field Setup Constants ───────────────────────────────────

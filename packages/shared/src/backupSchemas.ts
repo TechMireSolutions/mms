@@ -1,4 +1,3 @@
-import { z } from 'zod';
 import type { AppTranslationKey } from './appTranslations.js';
 import type { WorkspaceBackupDataSource, WorkspaceBackupStats } from './schemas/backup.dto.js';
 

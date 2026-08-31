@@ -268,7 +268,7 @@ describe("formatMoney", () => {
       (globalThis as any).window = {};
       (globalThis as any).localStorage = {
         length: 1,
-        key: (index: number) => "tenant1:finance_settings",
+        key: (_index: number) => "tenant1:finance_settings",
         getItem: (key: string) => mockStorage[key] || null,
         setItem: () => {},
         removeItem: () => {},

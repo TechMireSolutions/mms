@@ -176,7 +176,8 @@ export function composeHasanatSettings(
 export function stripHasanatFieldConfigForPersist(
   config: Partial<HasanatSettings>
 ): Partial<HasanatSettings> {
-  const { pointsPerUnit, autoApprovePayouts, defaultViewLayout, ...fieldConfigOnly } = config;
+  // `_`-prefixed names omit preference keys from the rest object (ESLint-clean, no behavior change).
+  const { pointsPerUnit: _pointsPerUnit, autoApprovePayouts: _autoApprovePayouts, defaultViewLayout: _defaultViewLayout, ...fieldConfigOnly } = config;
   return fieldConfigOnly;
 }
 

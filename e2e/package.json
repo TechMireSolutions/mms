@@ -8,12 +8,17 @@
     "test:e2e:prod": "E2E_TARGET=production playwright test --grep @smoke",
     "test:e2e:smoke": "playwright test --grep @smoke",
     "test:e2e:local": "playwright test --grep-invert @local-only",
+    "lint": "NODE_OPTIONS='-r ../scripts/eslint-ts-compat.cjs' eslint . --quiet",
     "merge-reports": "playwright merge-reports",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.62.1",
     "@types/node": "^26.2.0",
-    "typescript": "~7.0.2"
+    "eslint": "^10.8.1",
+    "globals": "^17.11.0",
+    "typescript": "~7.0.2",
+    "typescript-eslint": "^8.67.0"
   }
 }

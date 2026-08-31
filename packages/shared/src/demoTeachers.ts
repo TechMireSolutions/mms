@@ -1,5 +1,4 @@
 import {
-  DEMO_TEACHER_COUNT,
   buildDemoTeacherContacts,
   buildDemoTeachers,
 } from './demoSeedBuilders.js';

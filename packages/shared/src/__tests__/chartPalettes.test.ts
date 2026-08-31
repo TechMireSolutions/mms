@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   CHART_PALETTE_DEFS,
   DEFAULT_CHART_PALETTE_ID,
-  WIDGET_CHART_PALETTES,
   getStaticChartPaletteMap,
   getChartPaletteColors,
   isColorblindSafeChartPalette,

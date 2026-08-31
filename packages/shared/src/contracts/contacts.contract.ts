@@ -1,6 +1,5 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { contactWriteSchema } from '../schemas/contacts.dto.js';
 import { baseListQuerySchema } from '../apiSchemas.js';
 
 const c = initContract();

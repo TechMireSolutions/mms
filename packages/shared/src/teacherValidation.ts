@@ -1,17 +1,6 @@
 import { z } from 'zod';
-import { translateApp } from './appTranslations.js';
-import type { AppTranslationKey } from './appTranslations.js';
 import type { FieldDefinition } from './contactTypes.js';
-import { buildCustomFieldSchema, type ValidationError } from './contactValidation.js';
-import { isTeacherLockedEnabledTab } from './moduleFieldSetupPersons.js';
-import {
-  findTeacherFieldInMap,
-  listEnabledCustomTeacherFormFields,
-  listTeacherSystemFormFieldKeys,
-} from './teacherFormCustomFields.js';
-import type { TeachersSettings } from './teachersModuleSettings.js';
-import { TEACHER_STATUS_WRITE_MAX } from './teachersModuleManifest.js';
-import { stripTeacherWriteNoise } from './teacherUtils.js';
+import type { ValidationError } from './contactValidation.js';
 
 export {
   TEACHER_WRITE_SYSTEM_KEYS,

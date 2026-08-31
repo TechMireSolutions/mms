@@ -258,9 +258,9 @@ export function parseDisplayDateToIso(display: string | null | undefined, format
       }
 
       // Compact 6-digit with 2-digit year (e.g. "210795")
-      let year = 0;
-      let month = 0;
-      let day = 0;
+      let year: number;
+      let month: number;
+      let day: number;
       if (id.startsWith('YYYY')) {
         year = Number(trimmed.slice(0, 2));
         month = Number(trimmed.slice(2, 4));
@@ -282,9 +282,9 @@ export function parseDisplayDateToIso(display: string | null | undefined, format
         }
       }
     } else if (trimmed.length === 8) {
-      let year = 0;
-      let month = 0;
-      let day = 0;
+      let year: number;
+      let month: number;
+      let day: number;
       if (id.startsWith('YYYY')) {
         year = Number(trimmed.slice(0, 4));
         month = Number(trimmed.slice(4, 6));
@@ -322,8 +322,8 @@ export function parseDisplayDateToIso(display: string | null | undefined, format
 
   // 2 segments: Month and Year (e.g. "05/2024", "2024-05")
   if (segments.length === 2) {
-    let year = 0;
-    let month = 0;
+    let year: number;
+    let month: number;
 
     if (segments[0]!.length === 4) {
       year = Number(segments[0]);
@@ -347,9 +347,9 @@ export function parseDisplayDateToIso(display: string | null | undefined, format
 
   // 3 segments: Complete Date (Day, Month, Year)
   if (segments.length === 3) {
-    let year = 0;
-    let month = 0;
-    let day = 0;
+    let year: number;
+    let month: number;
+    let day: number;
 
     if (segments[0]!.length === 4) {
       year = Number(segments[0]);

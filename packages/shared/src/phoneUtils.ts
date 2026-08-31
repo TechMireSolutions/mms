@@ -28,7 +28,7 @@ export function parsePhoneNumber(
   const uniqueCodes = Array.from(new Set(codes)).sort((a, b) => b.length - a.length);
 
   for (const code of uniqueCodes) {
-    const escaped = code.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&");
+    const escaped = code.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
     const regex = new RegExp(`^(${escaped})(?:\\s+(.*)|(.*))$`);
     const match = clean.match(regex);
     if (match) {

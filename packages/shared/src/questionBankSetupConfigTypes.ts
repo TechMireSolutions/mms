@@ -192,6 +192,7 @@ export function composeQuestionBankSettings(
 export function stripQuestionBankFieldConfigForPersist(
   config: Partial<QuestionBankSettings>
 ): Partial<QuestionBankSettings> {
-  const { aiGrading, defaultTestDuration, categories, sourceBooks, questionTypes, difficultyLevels, ...fieldConfigOnly } = config;
+  // `_`-prefixed names omit preference keys from the rest object (ESLint-clean, no behavior change).
+  const { aiGrading: _aiGrading, defaultTestDuration: _defaultTestDuration, categories: _categories, sourceBooks: _sourceBooks, questionTypes: _questionTypes, difficultyLevels: _difficultyLevels, ...fieldConfigOnly } = config;
   return fieldConfigOnly;
 }

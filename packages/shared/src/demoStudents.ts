@@ -1,5 +1,4 @@
 import {
-  DEMO_STUDENT_COUNT,
   buildDemoStudentContacts,
   buildDemoStudentParentContacts,
   buildDemoStudents,

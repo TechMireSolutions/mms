@@ -31,22 +31,21 @@ const contactLookupStringItemsSchema = z.array(z.string().min(1).max(200)).max(5
 
 const contactLookupCountryItemsSchema = z.array(contactLookupCountryCodeSchema).max(500);
 
-const contactLookupsMapSchema = z.object({
-  genders: contactLookupStringItemsSchema,
-  socialPlatforms: contactLookupStringItemsSchema,
-  relationships: contactLookupStringItemsSchema,
-  phoneLabels: contactLookupStringItemsSchema,
-  emailLabels: contactLookupStringItemsSchema,
-  addressLabels: contactLookupStringItemsSchema,
-  countryCodes: contactLookupCountryItemsSchema,
-  educationDegrees: contactLookupStringItemsSchema,
-  employmentTypes: contactLookupStringItemsSchema,
-  skillCategories: contactLookupStringItemsSchema,
-  skillProficiencies: contactLookupStringItemsSchema,
-  tags: contactLookupStringItemsSchema,
-});
-
-export type ContactLookupsMap = z.infer<typeof contactLookupsMapSchema>;
+/** Shape of the per-kind lookup map: string lists, except country codes carry objects. */
+export type ContactLookupsMap = {
+  genders: string[];
+  socialPlatforms: string[];
+  relationships: string[];
+  phoneLabels: string[];
+  emailLabels: string[];
+  addressLabels: string[];
+  countryCodes: ContactLookupCountryCode[];
+  educationDegrees: string[];
+  employmentTypes: string[];
+  skillCategories: string[];
+  skillProficiencies: string[];
+  tags: string[];
+};
 
 export const contactLookupKindParamsSchema = z.object({
   kind: contactLookupKindSchema,

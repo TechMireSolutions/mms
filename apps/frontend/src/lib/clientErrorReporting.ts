@@ -1,5 +1,23 @@
-import * as Sentry from '@sentry/react';
-import { isApiError } from '@/lib/apiClient';
+/**
+ * Client-side error reporting facade — the sync, dependency-free contract
+ * used across the app (`initErrorReporting`, `reportClientError`).
+ *
+ * This module deliberately does NOT import `@sentry/react` statically: the
+ * Sentry SDK is ~170KB and error reporting is non-interactive by definition.
+ * The actual implementation lives in `clientErrorReportingCore.ts` and is
+ * pulled in via dynamic import only when a DSN is configured and reporting
+ * is requested. Keep call-site signatures identical — every consumer imports
+ * from here, never from the core module or `@sentry/react` directly.
+ */
+
+type CoreModule = typeof import('./clientErrorReportingCore');
+
+let corePromise: Promise<CoreModule> | null = null;
+
+function loadCore(): Promise<CoreModule> {
+  corePromise ??= import('./clientErrorReportingCore');
+  return corePromise;
+}
 
 /**
  * Initializes client-side error reporting using Sentry if the DSN is configured.
@@ -10,26 +28,17 @@ export function initErrorReporting(): void {
     return;
   }
 
-  Sentry.init({
-    dsn,
-    integrations: [
-      Sentry.browserTracingIntegration(),
-      Sentry.replayIntegration(),
-    ],
-    tracesSampleRate: 1.0,
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
-    beforeSend(event) {
-      // Security: Scrub sensitive headers
-      if (event.request && event.request.headers) {
-        delete event.request.headers['Authorization'];
-        delete event.request.headers['cookie'];
-        delete event.request.headers['Cookie'];
+  void loadCore()
+    .then((core) => {
+      try {
+        core.initSentry(dsn);
+      } catch (initError) {
+        console.error('[MMS] Failed to initialize Sentry:', initError);
       }
-      return event;
-    },
-  });
-  console.log('[MMS] Sentry client error reporting initialized successfully.');
+    })
+    .catch((loadError) => {
+      console.error('[MMS] Failed to load error-reporting module:', loadError);
+    });
 }
 
 /**
@@ -42,29 +51,11 @@ export function reportClientError(error: unknown, context?: Record<string, unkno
     return;
   }
 
-  Sentry.withScope((scope) => {
-    if (isApiError(error) && error.requestId) {
-      scope.setExtra('requestId', error.requestId);
-    }
-
-    if (context) {
-      const sanitizedContext = { ...context };
-      // Security/observability compliance: scrub credentials
-      if ('password' in sanitizedContext) sanitizedContext.password = '[SCRUBBED]';
-      if ('token' in sanitizedContext) sanitizedContext.token = '[SCRUBBED]';
-      if ('jwt' in sanitizedContext) sanitizedContext.jwt = '[SCRUBBED]';
-      if ('secret' in sanitizedContext) sanitizedContext.secret = '[SCRUBBED]';
-      if ('otp' in sanitizedContext) sanitizedContext.otp = '[SCRUBBED]';
-
-      scope.setExtras(sanitizedContext);
-    }
-
-    if (error instanceof Error) {
-      Sentry.captureException(error);
-    } else {
-      Sentry.captureMessage(String(error));
-    }
-  });
+  void loadCore()
+    .then((core) => core.reportErrorToSentry(error, context))
+    .catch(() => {
+      // Reporting must never mask the original failure.
+    });
 
   console.error('[MMS]', error instanceof Error ? error.message : String(error));
 }

@@ -3,6 +3,7 @@ import type { User } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { canReadCollection } from '../../../services/rbacService.js';
+import { handleContractError } from '../../../lib/contractError.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import {
   loadAccounts,
@@ -29,8 +30,8 @@ export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
         }
         const accounts = await withTenant(String(request.tenant?.id), () => loadAccounts(query), { readOnly: true });
         return { status: 200 as const, body: { accounts } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list accounts' } };
+      } catch (error: unknown) {
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to list accounts' } });
       }
     },
     listEntries: async ({ query, request }: any) => {
@@ -45,8 +46,8 @@ export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
         }
         const entries = await withTenant(String(request.tenant?.id), () => loadEntries(query), { readOnly: true });
         return { status: 200 as const, body: { entries } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list journal entries' } };
+      } catch (error: unknown) {
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to list journal entries' } });
       }
     },
     listFiscalYears: async ({ query, request }: any) => {
@@ -61,8 +62,8 @@ export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
         }
         const fiscalYears = await withTenant(String(request.tenant?.id), () => loadFiscalYears(), { readOnly: true });
         return { status: 200 as const, body: { fiscalYears } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list fiscal years' } };
+      } catch (error: unknown) {
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to list fiscal years' } });
       }
     },
   } as any);

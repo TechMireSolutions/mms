@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { AppTranslationKey } from './appTranslations.js';
-import { baseListQueryFields, baseListQuerySchema } from './apiSchemas.js';
+import { baseListQueryFields } from './apiSchemas.js';
 import { TEACHER_STATUS_WRITE_MAX } from './teachersModuleManifest.js';
 import {
   TEACHER_SORT_FIELDS,

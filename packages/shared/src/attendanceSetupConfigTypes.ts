@@ -254,23 +254,24 @@ export function composeAttendanceSettings(
 export function stripAttendanceFieldConfigForPersist(
   config: Partial<AttendanceSettings>
 ): Partial<AttendanceSettings> {
+  // `name: _name` aliases: the bound locals exist only to omit preference keys from the rest object.
   const { 
-    workingDays,
-    cutoffTime,
-    lateThresholdMins,
-    autoAbsentAfterMins,
-    qrEnabled,
-    lowAttendanceThreshold,
-    notifyParents,
-    requireNoteForAbsent,
-    lockAfterSubmit,
-    trackHalfDay,
-    weeklyReport,
-    attendanceAlerts,
-    allowManualOverride,
-    offlineEnabled,
-    geoTagging,
-    defaultViewLayout,
+    workingDays: _workingDays,
+    cutoffTime: _cutoffTime,
+    lateThresholdMins: _lateThresholdMins,
+    autoAbsentAfterMins: _autoAbsentAfterMins,
+    qrEnabled: _qrEnabled,
+    lowAttendanceThreshold: _lowAttendanceThreshold,
+    notifyParents: _notifyParents,
+    requireNoteForAbsent: _requireNoteForAbsent,
+    lockAfterSubmit: _lockAfterSubmit,
+    trackHalfDay: _trackHalfDay,
+    weeklyReport: _weeklyReport,
+    attendanceAlerts: _attendanceAlerts,
+    allowManualOverride: _allowManualOverride,
+    offlineEnabled: _offlineEnabled,
+    geoTagging: _geoTagging,
+    defaultViewLayout: _defaultViewLayout,
     ...fieldConfigOnly 
   } = config;
   return fieldConfigOnly;

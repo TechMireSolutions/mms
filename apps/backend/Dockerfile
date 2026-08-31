@@ -35,6 +35,13 @@ RUN pnpm install --frozen-lockfile --prod --filter mms-backend
 
 WORKDIR /app/apps/backend
 
+# Non-root runtime: apps/backend may create uploads/ at runtime
+# (config/storage.ts). No HEALTHCHECK here on purpose — the worker container
+# shares this image and serves no HTTP; see docker-compose.yml instead.
+RUN mkdir -p /app/apps/backend/uploads \
+  && chown -R node:node /app/apps/backend
+USER node
+
 # Override at runtime — default to PostgreSQL database
 ENV DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/mms
 

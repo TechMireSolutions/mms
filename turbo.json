@@ -1,8 +1,6 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "globalPassThroughEnv": [
-    "DATABASE_URL",
-    "JWT_SECRET",
     "NODE_ENV",
     "PORT",
     "MMS_APP_DOMAIN",
@@ -11,9 +9,11 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
+      "outputs": ["dist/**"],
+      "env": ["VITE_APP_DOMAIN", "MMS_APP_DOMAIN"]
     },
     "dev": {
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },

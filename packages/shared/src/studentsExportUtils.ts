@@ -3,7 +3,6 @@ import { canViewContactField, canViewContactTab } from './contactFieldAccess.js'
 import type { Student } from './studentTypes.js';
 import type { StudentsSettings } from './studentsModuleSettings.js';
 import { primaryResponsibleAdultDisplayName } from './studentGuardianFromContacts.js';
-import type { AppTranslationKey } from './appTranslations.js';
 
 export interface StudentExportColumn {
   id: string;

@@ -8,6 +8,15 @@ import { isTenantBlocked, isTokenRevoked, isUserSessionRevoked } from '../servic
 
 export interface AuthenticatedRequest extends FastifyRequest {
   user: User & { twoFactorVerified?: boolean; tokenType?: string; jti?: string; iat?: number; exp?: number };
+  /** Tenant bound after successful authentication (workspace subdomain). */
+  tenant: { id: string };
+}
+
+declare module 'fastify' {
+  interface FastifyRequest {
+    /** Set by authenticateTenant once the tenant passes all auth checks. */
+    tenant?: { id: string };
+  }
 }
 
 /**
@@ -90,6 +99,13 @@ export async function authenticateTenant(
     });
     return;
   }
+
+  // Route handlers read `request.tenant?.id` to open tenant-scoped work
+  // (withTenant). Bind it right before completing authentication so any
+  // request reaching handlers always has the verified workspace id, never
+  // `undefined` (which previously made contract routes bind the tenant
+  // string "undefined" and double-transact).
+  (request as AuthenticatedRequest).tenant = { id: tenant };
 
   bindRequestUserId(user.id ? String(user.id) : null);
 }

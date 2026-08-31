@@ -12,8 +12,6 @@ import {
   relationshipSchema,
   socialLinkSchema,
 } from './contactNestedSchemas.js';
-import { contactWriteSchema } from './schemas/contacts.dto.js';
-
 export {
   activitySchema,
   attachmentSchema,

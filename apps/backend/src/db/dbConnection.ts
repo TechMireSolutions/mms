@@ -125,6 +125,18 @@ export async function runInTransaction<T>(
 }
 
 /**
+ * Registers an externally-managed transaction (e.g. `withTenant`'s transaction)
+ * as the active one for the duration of `cb`, so nested `runInTransaction`/
+ * `activeDb` consumers reuse it instead of opening a second pool client.
+ */
+export async function withActiveTransaction<T>(
+  tx: DbClient,
+  cb: () => Promise<T>,
+): Promise<T> {
+  return await txStorage.run(tx, cb);
+}
+
+/**
  * Read-only variant of `runInTransaction` using REPEATABLE READ, so every statement
  * observes one consistent snapshot (backup exports must not tear across tables).
  */

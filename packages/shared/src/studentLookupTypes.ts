@@ -18,15 +18,12 @@ type StudentLookupLegacyCollectionKey = keyof typeof STUDENT_LOOKUP_LEGACY_COLLE
 
 const studentLookupKindSchema = z.enum(STUDENT_LOOKUP_KINDS);
 
-import { studentLookupStringItemsSchema } from './schemas/studentLookup.dto.js';
-
-const studentLookupsMapSchema = z.object({
-  statuses: studentLookupStringItemsSchema,
-  genderFilters: studentLookupStringItemsSchema,
-  discountTypes: studentLookupStringItemsSchema,
-});
-
-export type StudentLookupsMap = z.infer<typeof studentLookupsMapSchema>;
+/** Shape of the student per-kind lookup map: string lists for each kind. */
+export type StudentLookupsMap = {
+  statuses: string[];
+  genderFilters: string[];
+  discountTypes: string[];
+};
 
 /** Schema for validating student lookup kind url parameters. */
 export const studentLookupKindParamsSchema = z.object({

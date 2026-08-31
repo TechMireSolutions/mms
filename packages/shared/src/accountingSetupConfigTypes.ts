@@ -227,20 +227,21 @@ export function composeAccountingSettings(
 export function stripAccountingFieldConfigForPersist(
   config: Partial<AccountingSettings>
 ): Partial<AccountingSettings> {
+  // `name: _name` aliases: the bound locals exist only to omit preference keys from the rest object.
   const { 
-    currency,
-    currencySymbol,
-    dateFormat,
-    decimalSeparator,
-    decimalPlaces,
-    fyStartMonth,
-    accountCodeLength,
-    requireNarration,
-    allowEditPosted,
-    autoPostDrafts,
-    retainedEarningsAccount,
-    organizationName,
-    defaultViewLayout,
+    currency: _currency,
+    currencySymbol: _currencySymbol,
+    dateFormat: _dateFormat,
+    decimalSeparator: _decimalSeparator,
+    decimalPlaces: _decimalPlaces,
+    fyStartMonth: _fyStartMonth,
+    accountCodeLength: _accountCodeLength,
+    requireNarration: _requireNarration,
+    allowEditPosted: _allowEditPosted,
+    autoPostDrafts: _autoPostDrafts,
+    retainedEarningsAccount: _retainedEarningsAccount,
+    organizationName: _organizationName,
+    defaultViewLayout: _defaultViewLayout,
     ...fieldConfigOnly 
   } = config;
   return fieldConfigOnly;

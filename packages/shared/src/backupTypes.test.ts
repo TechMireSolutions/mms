@@ -4,7 +4,6 @@ import {
   buildStorageKeysFromSnapshot,
   buildWorkspaceBackupEnvelope,
   buildWorkspaceBackupEnvelopeAsync,
-  computeBackupChecksum,
   extractBackupRawKeys,
   summarizeWorkspaceBackup,
   validateWorkspaceBackupJson,

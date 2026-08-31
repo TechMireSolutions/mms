@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { assertModuleTierSmoke, loginTenant } from '../helpers/moduleTiers.js';
+import { assertModuleTierSmoke } from '../helpers/moduleTiers.js';
 import { bootstrapAuthenticatedTenant, resetPlatformUsers, type TenantBootstrapCredentials } from '../helpers/tenantBootstrap.js';
 import {
   createAccountsAndJournalEntry,
