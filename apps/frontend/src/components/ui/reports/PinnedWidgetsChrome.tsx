@@ -158,7 +158,7 @@ export function PinnedWidgetsChrome({
               </>
             )}
 
-            {(category === "financial" || category === "accounting") && (
+            {(category === "financial" || category === "finance" || category === "accounting") && (
               <>
                 <DashboardControlOption
                   checked={!disabledCardIds.includes("fees")}

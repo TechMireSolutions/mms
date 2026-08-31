@@ -1,9 +1,16 @@
 import React, { lazy, Suspense, useMemo, useState } from "react";
-import { useExaminationsExamsCollection, useExaminationsResultsCollection } from "@/tenant/hooks/collections/examinations";
+import { getGrade } from '@mms/shared';
+import {
+  useExaminationsExams,
+  useExaminationsExamsCollection,
+  useExaminationsResults,
+  useExaminationsResultsCollection,
+  useExaminationsReportAggregates,
+} from "@/tenant/hooks/collections/examinations";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
-import { getGrade } from '@mms/shared';
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
 
 const AcademicReportCharts = lazy(() =>
@@ -28,8 +35,13 @@ export type {
  */
 const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicReportProps): React.JSX.Element {
   const { t } = useTranslation();
-  const examResults = useExaminationsResultsCollection();
+  const examsQuery = useExaminationsExams();
+  const resultsQuery = useExaminationsResults();
+  const aggregatesQuery = useExaminationsReportAggregates();
+
   const exams = useExaminationsExamsCollection();
+  const examResults = useExaminationsResultsCollection();
+
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const studentIds = useMemo(
@@ -134,6 +146,22 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
   const toggleStudentFilter = (studentName: string): void => {
     setSelectedStudent((currentStudent) => (currentStudent === studentName ? null : studentName));
   };
+
+  if (examsQuery.isError || resultsQuery.isError || aggregatesQuery.isError) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title={t("examinations.loadFailed")}
+          description={t("examinations.loadFailedHint")}
+          onRetry={() => {
+            void examsQuery.refetch();
+            void resultsQuery.refetch();
+            void aggregatesQuery.refetch();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

@@ -642,6 +642,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "attendance.filters.title": "فلٹرز",
   "attendance.item.record": "ریکارڈ",
   "attendance.item.records": "ریکارڈز",
+  "attendance.loadFailed": "حاضری کے ریکارڈ لوڈ کرنے میں ناکامی",
   "attendance.loadFailedHint": "اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔",
   "attendance.mark.allAbsent": "تمام غیر حاضر",
   "attendance.mark.allPresent": "تمام حاضر",

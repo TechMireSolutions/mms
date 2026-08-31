@@ -9,22 +9,20 @@ import { useTranslation } from '@/hooks/useTranslation';
 
 import PinnedWidgets from '@/components/ui/reports/PinnedWidgets';
 
-function extractActivityLogs(data: unknown): ActivityLog[] {
-  if (!data || typeof data !== 'object') return [];
-  const statusHolder = data as { status?: number; body?: unknown };
-  if (statusHolder.status !== 200) return [];
-  const body = statusHolder.body;
-  if (Array.isArray(body)) return body as ActivityLog[];
-  if (body && typeof body === 'object' && 'logs' in body && Array.isArray((body as { logs: unknown }).logs)) {
-    return (body as { logs: ActivityLog[] }).logs;
-  }
-  return [];
-}
-
 export default function UsersReport(): React.JSX.Element {
   const { t } = useTranslation();
   const activityQuery = useActivityLogs();
   const users = useUsersCollection();
+
+  const logs = React.useMemo<ActivityLog[]>(() => {
+    if (!activityQuery.data || activityQuery.data.status !== 200) return [];
+    const body = activityQuery.data.body;
+    if (Array.isArray(body)) return body as ActivityLog[];
+    if (body && typeof body === 'object' && 'logs' in body && Array.isArray((body as { logs: unknown }).logs)) {
+      return (body as { logs: ActivityLog[] }).logs;
+    }
+    return [];
+  }, [activityQuery.data]);
 
   if (activityQuery.isError) {
     return (
@@ -35,8 +33,6 @@ export default function UsersReport(): React.JSX.Element {
       />
     );
   }
-
-  const logs = extractActivityLogs(activityQuery.data);
 
   return (
     <ErrorBoundary>

@@ -7,8 +7,8 @@ export function FinanceReportsTier(): React.JSX.Element {
   return (
     <ModuleTierMotion tier="reports" className="space-y-4">
       <ErrorBoundary>
-        <KPISummary category="financial" />
-        <ModuleReports category="financial" />
+        <KPISummary category="finance" />
+        <ModuleReports category="finance" />
       </ErrorBoundary>
     </ModuleTierMotion>
   );

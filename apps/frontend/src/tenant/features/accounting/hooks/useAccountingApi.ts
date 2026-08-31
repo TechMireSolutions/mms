@@ -1,7 +1,9 @@
-import { useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import type {
   AccountingCommandMetricsSnapshot,
   AccountingListQuery,
+  AccountingReportAggregates,
+  AccountingReportQuery,
   Account,
   JournalEntry,
   FiscalYear,
@@ -10,8 +12,10 @@ import { ACCOUNTING_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient } from '@/lib/api';
+import { apiJson } from '@/lib/apiClient';
 
 export const ACCOUNTING_METRICS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'metrics'] as const;
+export const ACCOUNTING_REPORT_AGGREGATES_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'report-aggregates'] as const;
 
 export const ACCOUNTING_ACCOUNTS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'accounts', 'list'] as const;
 export const ACCOUNTING_ENTRIES_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'entries', 'list'] as const;
@@ -172,6 +176,30 @@ export function useAccountingMutations() {
       mutateAsync: (ids: string[]) => bulkRestoreEntries.mutateAsync({ body: { ids } }),
     },
   };
+}
+
+export function useAccountingReportAggregates(
+  options?: AccountingReportQuery & {
+    enabled?: boolean;
+  },
+) {
+  const { isAuthenticated } = useAuth();
+  const enabled = (options?.enabled ?? true) && isAuthenticated;
+  const params = new URLSearchParams();
+  if (options?.dateFrom) params.set('dateFrom', options.dateFrom);
+  if (options?.dateTo) params.set('dateTo', options.dateTo);
+  const qs = params.toString();
+  const url = `${ACCOUNTING_MODULE_MANIFEST.restBasePath}/report-aggregates${qs ? `?${qs}` : ''}`;
+
+  return useQuery({
+    queryKey: [...ACCOUNTING_REPORT_AGGREGATES_QUERY_KEY, options?.dateFrom, options?.dateTo] as const,
+    queryFn: async ({ signal }): Promise<AccountingReportAggregates> => {
+      const res = await apiJson<AccountingReportAggregates>(url, { signal });
+      return res;
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  });
 }
 
 export function useAccountingMetrics(options?: { enabled?: boolean }) {

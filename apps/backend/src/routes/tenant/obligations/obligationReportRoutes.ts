@@ -1,19 +1,15 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { OBLIGATIONS_MODULE_MANIFEST, type User } from '@mms/shared';
-import { z } from 'zod';
+import {
+  OBLIGATIONS_MODULE_MANIFEST,
+  obligationsReportQuerySchema,
+  type User,
+} from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
 import { loadObligationsReportAggregates } from '../../../services/obligationService.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 
 const COLLECTION = OBLIGATIONS_MODULE_MANIFEST.collectionKey;
-
-const obligationsReportQuerySchema = z.object({
-  dateFrom: z.string().max(32).optional(),
-  dateTo: z.string().max(32).optional(),
-  typeId: z.string().max(64).optional(),
-  repId: z.string().max(64).optional(),
-});
 
 /** Obligations report SQL aggregates. */
 export async function obligationReportRoutes(

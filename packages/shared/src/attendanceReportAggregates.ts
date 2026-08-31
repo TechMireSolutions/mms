@@ -29,14 +29,14 @@ export type AttendanceReportComparisonMonth = z.infer<typeof attendanceReportCom
 export type AttendanceReportComparison = z.infer<typeof attendanceReportComparisonSchema>;
 export type AttendanceReportAggregates = z.infer<typeof attendanceReportAggregatesSchema>;
 
+import {
+  type BaseReportComparisonQuery,
+  normalizeReportComparisonQuery,
+  reportComparisonQueryActive,
+} from './reportComparisonQuery.js';
+
 /** Optional ComparisonMode params for GET /attendance/report-aggregates. */
-export type AttendanceReportComparisonQuery = {
-  sessionIds?: string[];
-  rangeAFrom?: string;
-  rangeATo?: string;
-  rangeBFrom?: string;
-  rangeBTo?: string;
-};
+export type AttendanceReportComparisonQuery = BaseReportComparisonQuery;
 
 export const EMPTY_ATTENDANCE_REPORT_COMPARISON: AttendanceReportComparison = {
   sessions: [],
@@ -45,44 +45,18 @@ export const EMPTY_ATTENDANCE_REPORT_COMPARISON: AttendanceReportComparison = {
 
 export const EMPTY_ATTENDANCE_REPORT_AGGREGATES: AttendanceReportAggregates = {};
 
-const DATE_PARAM_RE = /^\d{4}-\d{2}-\d{2}$/;
-
 /**
  * Normalize ComparisonMode query params (max 2 sessionIds; ISO date ranges).
  */
 export function normalizeAttendanceReportComparisonQuery(
   input: AttendanceReportComparisonQuery | undefined,
 ): AttendanceReportComparisonQuery | undefined {
-  if (!input) return undefined;
-  const sessionIds = (input.sessionIds ?? [])
-    .map((id) => String(id).trim())
-    .filter(Boolean)
-    .slice(0, 2);
-  const rangeAFrom = input.rangeAFrom?.trim();
-  const rangeATo = input.rangeATo?.trim();
-  const rangeBFrom = input.rangeBFrom?.trim();
-  const rangeBTo = input.rangeBTo?.trim();
-
-  const hasSessions = sessionIds.length > 0;
-  const hasRangeA = Boolean(rangeAFrom && rangeATo && DATE_PARAM_RE.test(rangeAFrom) && DATE_PARAM_RE.test(rangeATo));
-  const hasRangeB = Boolean(rangeBFrom && rangeBTo && DATE_PARAM_RE.test(rangeBFrom) && DATE_PARAM_RE.test(rangeBTo));
-
-  if (!hasSessions && !hasRangeA && !hasRangeB) return undefined;
-
-  return {
-    ...(hasSessions ? { sessionIds } : {}),
-    ...(hasRangeA ? { rangeAFrom, rangeATo } : {}),
-    ...(hasRangeB ? { rangeBFrom, rangeBTo } : {}),
-  };
+  return normalizeReportComparisonQuery(input);
 }
 
 /** True when any comparison SQL slice should run. */
 export function attendanceReportComparisonQueryActive(
   query: AttendanceReportComparisonQuery | undefined,
 ): boolean {
-  return Boolean(
-    (query?.sessionIds && query.sessionIds.length > 0)
-    || (query?.rangeAFrom && query.rangeATo)
-    || (query?.rangeBFrom && query.rangeBTo),
-  );
+  return reportComparisonQueryActive(query);
 }

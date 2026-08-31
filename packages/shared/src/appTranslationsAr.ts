@@ -642,6 +642,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "attendance.filters.title": "مرشحات",
   "attendance.item.record": "سجل",
   "attendance.item.records": "سجلات",
+  "attendance.loadFailed": "فشل تحميل سجلات الحضور",
   "attendance.loadFailedHint": "تحقق من الاتصال وحاول مرة أخرى.",
   "attendance.mark.allAbsent": "الكل غائب",
   "attendance.mark.allPresent": "الكل حاضر",

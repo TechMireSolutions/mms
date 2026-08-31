@@ -4,6 +4,7 @@ import { baseListQuerySchema } from '../apiSchemas.js';
 import { invoiceCreateSchema, paymentCreateSchema } from '../schemas/finance.dto.js';
 import { invoiceRecordUpdateSchema, paymentRecordUpdateSchema, invoicesBulkStatusSchema } from '../financeModuleManifest.js';
 import { financeReportAggregatesSchema } from '../financeReportAggregates.js';
+import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
 import { financeFieldConfigPutBodySchema, financePreferencesPutBodySchema } from '../financeSetupConfigTypes.js';
 
 const c = initContract();
@@ -170,13 +171,7 @@ export const financeContract = c.router({
   getReportAggregates: {
     method: 'GET',
     path: '/api/finance/report-aggregates',
-    query: z.object({
-      sessionIds: z.string().optional(),
-      rangeAFrom: z.string().optional(),
-      rangeATo: z.string().optional(),
-      rangeBFrom: z.string().optional(),
-      rangeBTo: z.string().optional(),
-    }).optional(),
+    query: reportComparisonQuerySchema.optional(),
     responses: { 200: financeReportAggregatesSchema, 403: errorResponse, 500: errorResponse },
     summary: 'Get finance report aggregates',
   },

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { ReportFilterFieldsPanel } from './ReportFilterFieldsPanel';
 
-export interface ReportFilterFields {
+export interface ReportFilterFields extends Record<string, unknown> {
   session: string;
   class: string;
   status: string;
@@ -28,7 +28,7 @@ const CATEGORY_FILTERS: Record<string, (keyof ReportFilterFields)[]> = {
   students: ['session', 'class', 'status', 'student'],
   faculty: ['session', 'class', 'status', 'student'],
   teachers: ['session', 'class', 'status', 'student'],
-  /** Contacts dashboard does not consume these academic filters — omit until contact-aware filters ship. */
+  /** Handled by internal/dedicated module filters or CRM analytics. */
   contacts: [],
   finance: ['session', 'dateFrom', 'dateTo', 'status'],
   financial: ['session', 'dateFrom', 'dateTo', 'status'],
@@ -38,10 +38,10 @@ const CATEGORY_FILTERS: Record<string, (keyof ReportFilterFields)[]> = {
   sessions: ['status'],
   enrollments: ['session', 'status', 'dateFrom', 'dateTo'],
   questionBank: ['status', 'dateFrom', 'dateTo'],
-  accounting: ['dateFrom', 'dateTo', 'status'],
-  obligations: ['dateFrom', 'dateTo', 'status'],
-  messaging: ['dateFrom', 'dateTo', 'status'],
-  users: ['status', 'dateFrom', 'dateTo'],
+  accounting: [],
+  obligations: [],
+  messaging: [],
+  users: [],
 };
 
 export default function ReportFilters({ category, filters, onChange }: ReportFiltersProps): React.JSX.Element | null {

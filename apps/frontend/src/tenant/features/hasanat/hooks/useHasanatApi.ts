@@ -42,8 +42,12 @@ export function useHasanatDenoms(options?: { enabled?: boolean }) {
 export function useHasanatDenomsCollection(options?: { enabled?: boolean }): Denomination[] {
   const query = useHasanatDenoms(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.denoms ?? []);
+  const body = query.data.body;
+  if (Array.isArray(body)) return body as Denomination[];
+  if (body && typeof body === 'object' && 'denoms' in body && Array.isArray(body.denoms)) {
+    return body.denoms as Denomination[];
+  }
+  return [];
 }
 
 export function useHasanatBatches(options?: { enabled?: boolean }) {
@@ -59,8 +63,12 @@ export function useHasanatBatches(options?: { enabled?: boolean }) {
 export function useHasanatBatchesCollection(options?: { enabled?: boolean }): StockBatch[] {
   const query = useHasanatBatches(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.batches ?? []);
+  const body = query.data.body;
+  if (Array.isArray(body)) return body as StockBatch[];
+  if (body && typeof body === 'object' && 'batches' in body && Array.isArray(body.batches)) {
+    return body.batches as StockBatch[];
+  }
+  return [];
 }
 
 export function useHasanatDistributions(options?: { enabled?: boolean; includeDeleted?: boolean }) {
@@ -81,8 +89,12 @@ export function useHasanatDistributionsCollection(options?: {
 }): Distribution[] {
   const query = useHasanatDistributions(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.distributions ?? []);
+  const body = query.data.body;
+  if (Array.isArray(body)) return body as Distribution[];
+  if (body && typeof body === 'object' && 'distributions' in body && Array.isArray(body.distributions)) {
+    return body.distributions as Distribution[];
+  }
+  return [];
 }
 
 

@@ -1,10 +1,8 @@
 import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
-import { BarChart2, Download, MessageSquareOff } from 'lucide-react';
+import { MessageSquareOff } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Button } from '@/components/ui/button';
-import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { useMessagingMetrics } from '@/tenant/hooks/collections/messaging';
@@ -24,14 +22,16 @@ import { calculateReportDateRange } from '@/lib/reports/reportDateUtils';
 import { notify } from '@/lib/notify';
 import { WORK_SURFACE, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { SEMANTIC_TEXT, getSolidBgClass } from '@/lib/semanticTone';
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
+import { MessagingReportHeaderBar } from './MessagingReportHeaderBar';
+import { MessagingReportSummaryTable, type ChannelSummaryRow } from './MessagingReportSummaryTable';
+import PinnedWidgets from '@/components/ui/reports/PinnedWidgets';
 
 const MessagingReportsVolumeChart = lazy(() =>
   import('@/tenant/features/messaging/components/MessagingReportsVolumeChart').then((m) => ({
     default: m.MessagingReportsVolumeChart,
   }))
 );
-
-import PinnedWidgets from '@/components/ui/reports/PinnedWidgets';
 
 export interface MessagingReportProps {
   canWrite?: boolean;
@@ -113,6 +113,26 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
     }
   }, [canWrite, exporting, queryStartDate, endDate, t]);
 
+  const channelExportColumns = useMemo<ExportColumn[]>(() => [
+    { key: 'channel', header: t('messaging.channel') },
+    { key: 'count', header: t('common.details') },
+    { key: 'rate', header: t('reports.kpi.growthRate') },
+  ], [t]);
+
+  const channelSummaryRows = useMemo<ChannelSummaryRow[]>(() => {
+    if (!stats) return [];
+    return (Object.values(MESSAGING_CHANNEL_CONFIG) as MessagingChannelConfig[]).map((config) => {
+      const count = (stats[`${config.id}Count` as keyof typeof stats] as number) ?? 0;
+      return {
+        id: config.id,
+        channel: t(getChannelLabelKey(config.id)),
+        count,
+        rate: calcPercentage(count),
+        accent: config.themeAccent,
+      };
+    });
+  }, [stats, t, calcPercentage]);
+
   if (metricsQuery.isError) {
     return (
       <ErrorState
@@ -125,81 +145,17 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
 
   return (
     <ErrorBoundary>
-      <div className={`${WORK_SURFACE} p-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between`}>
-        <div className="flex items-center gap-2">
-          <BarChart2 className={`h-5 w-5 ${SEMANTIC_TEXT.primary}`} />
-          <div>
-            <h3 className="text-sm font-bold text-foreground">{t('nav.messaging')}</h3>
-            <p className="text-xs text-muted-foreground">{t('messaging.subtitle')}</p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant={!startDate && !endDate ? 'secondary' : 'ghost'}
-              size="sm"
-              className="h-8 px-2 text-xs"
-              onClick={() => applyPreset(undefined)}
-            >
-              {t('common.none')}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-xs"
-              onClick={() => applyPreset(0)}
-            >
-              {t('datePicker.today')}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-xs"
-              onClick={() => applyPreset(7)}
-            >
-              {t('messaging.datePreset7d')}
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 text-xs"
-              onClick={() => applyPreset(30)}
-            >
-              {t('messaging.datePreset30d')}
-            </Button>
-          </div>
-
-          <DateRangeFilterBar
-            idPrefix="messaging-reports"
-            dateFrom={startDate}
-            dateTo={endDate}
-            onDateFromChange={setStartDate}
-            onDateToChange={setEndDate}
-            fromPlaceholder={t('messaging.dateFrom')}
-            toPlaceholder={t('messaging.dateTo')}
-            pickerClassName="w-full min-w-0 text-sm sm:w-36"
-          />
-
-          {canWrite && (
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={exporting}
-              aria-busy={exporting}
-              onClick={() => void exportAllFilteredLogs()}
-              className="font-semibold h-9"
-            >
-              <Download className="me-1.5 h-4 w-4" />
-              {exporting ? t('common.loading') : t('messaging.exportLogs')}
-            </Button>
-          )}
-        </div>
-      </div>
+      <MessagingReportHeaderBar
+        startDate={startDate}
+        endDate={endDate}
+        exporting={exporting}
+        canWrite={canWrite}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        onApplyPreset={applyPreset}
+        onExport={() => void exportAllFilteredLogs()}
+        t={t}
+      />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 mt-4">
         <div className="lg:col-span-2">
@@ -232,7 +188,7 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
               <div className="mb-4 space-y-1.5">
                 <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted/60">
                   {(Object.values(MESSAGING_CHANNEL_CONFIG) as MessagingChannelConfig[]).map((config) => {
-                    const count = stats?.[`${config.id}Count` as keyof typeof stats] as number ?? 0;
+                    const count = (stats?.[`${config.id}Count` as keyof typeof stats] as number) ?? 0;
                     if (count === 0) return null;
                     return (
                       <div
@@ -253,7 +209,7 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
                 <span className={`font-bold text-sm ${SEMANTIC_TEXT.primary}`}>{total}</span>
               </div>
               {(Object.values(MESSAGING_CHANNEL_CONFIG) as MessagingChannelConfig[]).map((config) => {
-                const count = stats?.[`${config.id}Count` as keyof typeof stats] as number ?? 0;
+                const count = (stats?.[`${config.id}Count` as keyof typeof stats] as number) ?? 0;
                 return (
                   <div key={config.id} className={`${WORK_SURFACE_INNER} p-3 flex items-center justify-between`}>
                     <div className="flex items-center gap-2">
@@ -271,6 +227,18 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
           </div>
         </div>
       </div>
+
+      {total > 0 && (
+        <div className="mt-4">
+          <MessagingReportSummaryTable
+            title={t('messaging.channel')}
+            columns={channelExportColumns}
+            rows={channelSummaryRows}
+            detailsHeader={t('common.details')}
+            growthRateHeader={t('reports.kpi.growthRate')}
+          />
+        </div>
+      )}
 
       <div className="mt-4">
         <PinnedWidgets category="messaging" />

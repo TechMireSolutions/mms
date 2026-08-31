@@ -10,6 +10,7 @@ export {
   OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
   OBLIGATIONS_COLLECTIONS_QUERY_KEY,
   OBLIGATIONS_METRICS_QUERY_KEY,
+  OBLIGATIONS_REPORT_AGGREGATES_QUERY_KEY,
   useObligationsTypes,
   useObligationsTypesCollection,
   useObligationsMujtahids,
@@ -23,6 +24,7 @@ export {
   useObligationsCollections,
   useObligationsCollectionsCollection,
   useObligationsMetrics,
+  useObligationsReportAggregates,
   useObligationsMutations,
 } from '@/tenant/features/obligations/hooks/useObligationsApi';
 export { invalidateObligationsQueries } from '@/tenant/features/obligations/hooks/invalidateObligationsQueries';

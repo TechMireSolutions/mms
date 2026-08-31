@@ -1,8 +1,10 @@
 import React, { lazy, Suspense, useMemo, useState } from "react";
-import { useAttendanceRecordsCollection } from "@/tenant/hooks/collections/attendance";
+import type { AttendanceRecord } from "@/lib/data/attendanceData";
+import { useAttendanceRecords, useAttendanceReportAggregates } from "@/tenant/hooks/collections/attendance";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
 import PinnedWidgets from "./PinnedWidgets";
 
@@ -21,7 +23,9 @@ export type { AttendanceReportProps, AttendanceSummaryItem, StudentAttendanceIte
  */
 const AttendanceReport = React.memo(function AttendanceReport({ filters }: AttendanceReportProps): React.JSX.Element {
   const { t } = useTranslation();
-  const attendanceRecords = useAttendanceRecordsCollection();
+  const recordsQuery = useAttendanceRecords();
+  const aggregatesQuery = useAttendanceReportAggregates();
+  const attendanceRecords: AttendanceRecord[] = recordsQuery.data ?? [];
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
   const sessions = useSessionsCollection();
@@ -121,6 +125,21 @@ const AttendanceReport = React.memo(function AttendanceReport({ filters }: Atten
       />
     );
   };
+
+  if (recordsQuery.isError || aggregatesQuery.isError) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title={t("attendance.loadFailed")}
+          description={t("attendance.loadFailedHint")}
+          onRetry={() => {
+            void recordsQuery.refetch();
+            void aggregatesQuery.refetch();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4 text-start">

@@ -1,8 +1,9 @@
 import React, { lazy, Suspense, useMemo, useState } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useFinanceInvoicesPaginated } from "@/tenant/hooks/collections/finance";
+import { useFinanceInvoicesPaginated, useFinanceReportAggregates } from "@/tenant/hooks/collections/finance";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import type {
   DiscountUsageByTypeItem,
   MonthlyFeeCollectionItem,
@@ -44,9 +45,21 @@ const FinancialReport = React.memo(function FinancialReport({ filters }: Financi
     () => [palette.primary, palette.secondary, palette.charts[2], palette.charts[3], palette.charts[0]],
     [palette],
   );
-  const financeInvoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
+
+  const invoicesQuery = useFinanceInvoicesPaginated({
+    page: 1,
+    limit: 100,
+    search: filters.student || undefined,
+  });
+
+  const aggregatesQuery = useFinanceReportAggregates();
+
+  const financeInvoices = invoicesQuery.data?.invoices ?? [];
 
   const monthlyFeeCollection = useMemo<MonthlyFeeCollectionItem[]>(() => {
+    if (aggregatesQuery.data?.monthlyFeeCollection && aggregatesQuery.data.monthlyFeeCollection.length > 0) {
+      return aggregatesQuery.data.monthlyFeeCollection;
+    }
     const monthlyTotals: Record<string, { collected: number; outstanding: number; total: number }> = {};
     financeInvoices.forEach((invoice) => {
       const dueDate = new Date(invoice.dueDate);
@@ -70,9 +83,12 @@ const FinancialReport = React.memo(function FinancialReport({ filters }: Financi
       total: monthTotals.total,
       rate: monthTotals.total > 0 ? Math.round((monthTotals.collected / monthTotals.total) * 100) : 0,
     })).sort((firstMonth, secondMonth) => new Date(firstMonth.month).getTime() - new Date(secondMonth.month).getTime()).slice(-6);
-  }, [financeInvoices]);
+  }, [aggregatesQuery.data?.monthlyFeeCollection, financeInvoices]);
 
   const discountUsageByType = useMemo<DiscountUsageByTypeItem[]>(() => {
+    if (aggregatesQuery.data?.discountUsageByType && aggregatesQuery.data.discountUsageByType.length > 0) {
+      return aggregatesQuery.data.discountUsageByType;
+    }
     const discountTotalsByType: Record<string, { count: number; totalDiscounted: number }> = {};
     let totalDiscountAmount = 0;
 
@@ -92,17 +108,12 @@ const FinancialReport = React.memo(function FinancialReport({ filters }: Financi
       totalDiscounted: discountTotals.totalDiscounted,
       percentage: totalDiscountAmount > 0 ? Math.round((discountTotals.totalDiscounted / totalDiscountAmount) * 100) : 0,
     }));
-  }, [financeInvoices]);
+  }, [aggregatesQuery.data?.discountUsageByType, financeInvoices]);
 
   const invoices = useMemo(() => {
     let filteredInvoices = financeInvoices;
     if (filters.status !== "all") {
       filteredInvoices = filteredInvoices.filter((invoice) => invoice.status === filters.status);
-    }
-    if (filters.student) {
-      filteredInvoices = filteredInvoices.filter((invoice) =>
-        invoice.studentName.toLowerCase().includes(filters.student.toLowerCase()),
-      );
     }
     if (selectedMonth) {
       filteredInvoices = filteredInvoices.filter((invoice) => {
@@ -112,11 +123,26 @@ const FinancialReport = React.memo(function FinancialReport({ filters }: Financi
       });
     }
     return filteredInvoices;
-  }, [filters, financeInvoices, selectedMonth]);
+  }, [financeInvoices, filters.status, selectedMonth]);
 
   const toggleMonthFilter = (month: string) => {
     setSelectedMonth((current) => (current === month ? null : month));
   };
+
+  if (invoicesQuery.isError || aggregatesQuery.isError) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title={t("finance.loadFailed")}
+          description={t("finance.loadFailedHint")}
+          onRetry={() => {
+            void invoicesQuery.refetch();
+            void aggregatesQuery.refetch();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

@@ -8,6 +8,7 @@ export const GENERIC_SAVED_REPORT_CATEGORIES = [
   'students',
   'teachers',
   'attendance',
+  'finance',
   'financial',
   'accounting',
   'examinations',

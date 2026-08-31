@@ -46,11 +46,13 @@ export type QuestionBankMonthlyResultItem = z.infer<typeof questionBankMonthlyRe
 export type QuestionBankReportAggregates = z.infer<typeof questionBankReportAggregatesSchema>;
 
 /** Optional query params for GET /question-bank/report-aggregates. */
-export type QuestionBankReportQuery = {
-  dateFrom?: string;
-  dateTo?: string;
-  categoryId?: string;
-};
+export const questionBankReportQuerySchema = z.object({
+  dateFrom: z.string().max(32).optional(),
+  dateTo: z.string().max(32).optional(),
+  categoryId: z.string().max(64).optional(),
+});
+
+export type QuestionBankReportQuery = z.infer<typeof questionBankReportQuerySchema>;
 
 // ---------------------------------------------------------------------------
 // Empty sentinel

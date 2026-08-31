@@ -168,8 +168,12 @@ export function useSessionMutations() {
 export function useSessionsCollection(options?: { enabled?: boolean }): Session[] {
   const query = useSessions(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.sessions ?? []);
+  const body = query.data.body;
+  if (Array.isArray(body)) return body as Session[];
+  if (body && typeof body === 'object' && 'sessions' in body && Array.isArray(body.sessions)) {
+    return body.sessions as Session[];
+  }
+  return [];
 }
 
 export function useSessionsWidgetAggregates(

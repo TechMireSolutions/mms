@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   EMPTY_HASANAT_REPORT_AGGREGATES,
+  ensureAllSessionsInComparison,
   hasanatReportComparisonQueryActive,
   type HasanatReportAggregates,
   type HasanatReportComparison,
@@ -96,16 +97,14 @@ export async function loadHasanatReportAggregatesSql(
         GROUP BY ss."sessionId"
       `);
 
-      comparison.sessions = getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => ({
-        sessionId: String(row.sessionId ?? ''),
-        hasanat: Number(row.hasanat ?? 0),
-      } satisfies HasanatReportComparisonSession));
-
-      for (const sessionId of sessionIds) {
-        if (!comparison.sessions.some((row) => row.sessionId === sessionId)) {
-          comparison.sessions.push({ sessionId, hasanat: 0 });
-        }
-      }
+      comparison.sessions = ensureAllSessionsInComparison(
+        getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => ({
+          sessionId: String(row.sessionId ?? ''),
+          hasanat: Number(row.hasanat ?? 0),
+        } satisfies HasanatReportComparisonSession)),
+        sessionIds,
+        (sessionId) => ({ sessionId, hasanat: 0 }),
+      );
     }
 
     const loadMonthlyRange = async (

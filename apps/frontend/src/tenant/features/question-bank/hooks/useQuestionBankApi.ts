@@ -4,6 +4,7 @@ import type {
   QuestionBankQuestion,
   QuestionBankTest,
   QuestionBankResult,
+  QuestionBankReportQuery,
 } from '@mms/shared';
 import { QUESTION_BANK_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
@@ -40,8 +41,12 @@ export function useQuestionBankQuestionsCollection(options?: {
 }): QuestionBankQuestion[] {
   const query = useQuestionBankQuestions(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.questions ?? []);
+  const body = query.data.body;
+  if (Array.isArray(body)) return body as QuestionBankQuestion[];
+  if (body && typeof body === 'object' && 'questions' in body && Array.isArray(body.questions)) {
+    return body.questions as QuestionBankQuestion[];
+  }
+  return [];
 }
 
 export function useQuestionBankTests(options?: { enabled?: boolean }) {
@@ -58,8 +63,12 @@ export function useQuestionBankTests(options?: { enabled?: boolean }) {
 export function useQuestionBankTestsCollection(options?: { enabled?: boolean }): QuestionBankTest[] {
   const query = useQuestionBankTests(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.tests ?? []);
+  const body = query.data.body;
+  if (Array.isArray(body)) return body as QuestionBankTest[];
+  if (body && typeof body === 'object' && 'tests' in body && Array.isArray(body.tests)) {
+    return body.tests as QuestionBankTest[];
+  }
+  return [];
 }
 
 export function useQuestionBankResults(options?: { enabled?: boolean }) {
@@ -76,8 +85,12 @@ export function useQuestionBankResults(options?: { enabled?: boolean }) {
 export function useQuestionBankResultsCollection(options?: { enabled?: boolean }): QuestionBankResult[] {
   const query = useQuestionBankResults(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.results ?? []);
+  const body = query.data.body;
+  if (Array.isArray(body)) return body as QuestionBankResult[];
+  if (body && typeof body === 'object' && 'results' in body && Array.isArray(body.results)) {
+    return body.results as QuestionBankResult[];
+  }
+  return [];
 }
 
 export function useQuestionBankMutations() {
@@ -188,11 +201,7 @@ export function useQuestionBankMetrics(options?: { enabled?: boolean }) {
 export const QUESTION_BANK_REPORT_AGGREGATES_QUERY_KEY = [QUESTION_BANK_MODULE_MANIFEST.moduleId, 'reports', 'aggregates'] as const;
 
 export function useQuestionBankReportAggregates(
-  filters?: {
-    dateFrom?: string;
-    dateTo?: string;
-    categoryId?: string;
-  },
+  filters?: QuestionBankReportQuery,
   options?: { enabled?: boolean },
 ) {
   const { isAuthenticated } = useAuth();

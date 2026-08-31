@@ -239,6 +239,7 @@ export * from './sessionsWidgetAggregate.js';
 export * from './accountingListQuery.js';
 export * from './accountingModuleManifest.js';
 export * from './accountingModuleSettings.js';
+export * from './accountingReportAggregates.js';
 export * from './accountingSetupConfigTypes.js';
 export * from './attendanceListQuery.js';
 export * from './attendanceLookupTypes.js';
@@ -316,4 +317,5 @@ export * from './widgetFilterUtils.js';
 
 
 export * from './examinationsReportAggregates.js';
+export * from './reportComparisonQuery.js';
 export * from './widgetAggregateTypes.js';

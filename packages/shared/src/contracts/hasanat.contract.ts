@@ -1,6 +1,8 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
+import { hasanatReportAggregatesSchema } from '../hasanatReportAggregates.js';
+import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
@@ -53,7 +55,8 @@ export const hasanatContract = c.router({
   reportAggregates: {
     method: 'GET',
     path: '/api/hasanat/report-aggregates',
-    responses: { 200: ok, 403: ok, 500: ok },
+    query: reportComparisonQuerySchema.optional(),
+    responses: { 200: hasanatReportAggregatesSchema, 403: ok, 500: ok },
     summary: 'Report aggregates',
   },
   replaceDenoms: {

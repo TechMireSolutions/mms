@@ -646,6 +646,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "attendance.filters.title": "فیلترها",
   "attendance.item.record": "سابقه",
   "attendance.item.records": "سوابق",
+  "attendance.loadFailed": "بارگیری سوابق حضور و غیاب ناموفق بود",
   "attendance.loadFailedHint": "اتصال خود را بررسی کنید و دوباره تلاش کنید.",
   "attendance.mark.allAbsent": "همه غایب",
   "attendance.mark.allPresent": "همه حاضر",

@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   EMPTY_EXAMINATIONS_REPORT_AGGREGATES,
+  ensureAllSessionsInComparison,
   examinationsReportComparisonQueryActive,
   type ExaminationsReportAggregates,
   type ExaminationsReportComparison,
@@ -80,20 +81,18 @@ export async function loadExaminationsReportAggregatesSql(
         GROUP BY sel."sessionId"
       `);
 
-      comparison.sessions = getQueryRows<Record<string, unknown>>(compareSessionResult).map((row: Record<string, unknown>) => {
-        const total = Number(row.totalCount ?? 0);
-        const pass = Number(row.passCount ?? 0);
-        return {
-          sessionId: String(row.sessionId ?? ''),
-          passRatePct: total > 0 ? Math.round((pass / total) * 100) : 0,
-        } satisfies ExaminationsReportComparisonSession;
-      });
-
-      for (const sessionId of sessionIds) {
-        if (!comparison.sessions.some((row) => row.sessionId === sessionId)) {
-          comparison.sessions.push({ sessionId, passRatePct: 0 });
-        }
-      }
+      comparison.sessions = ensureAllSessionsInComparison(
+        getQueryRows<Record<string, unknown>>(compareSessionResult).map((row: Record<string, unknown>) => {
+          const total = Number(row.totalCount ?? 0);
+          const pass = Number(row.passCount ?? 0);
+          return {
+            sessionId: String(row.sessionId ?? ''),
+            passRatePct: total > 0 ? Math.round((pass / total) * 100) : 0,
+          } satisfies ExaminationsReportComparisonSession;
+        }),
+        sessionIds,
+        (sessionId) => ({ sessionId, passRatePct: 0 }),
+      );
     }
 
     const loadMonthlyRange = async (

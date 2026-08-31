@@ -2,12 +2,17 @@ import React, { lazy, Suspense, useMemo, useState } from 'react';
 import { BarChart2, CheckCircle, TrendingUp } from 'lucide-react';
 import { getQuestionCategoryIds } from "@mms/shared";
 import {
+  useQuestionBankQuestions,
   useQuestionBankQuestionsCollection,
+  useQuestionBankTests,
   useQuestionBankTestsCollection,
+  useQuestionBankResults,
   useQuestionBankResultsCollection,
+  useQuestionBankReportAggregates,
   useQuestionBankConfig,
 } from "@/tenant/hooks/collections/questionBank";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { AutoGrading } from "@/tenant/features/question-bank/components/AutoGrading";
 import { PerformanceAnalytics } from "@/tenant/features/question-bank/components/PerformanceAnalytics";
@@ -22,6 +27,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ReportFilterBanner } from "./ReportFilterBanner";
 import PinnedWidgets from "./PinnedWidgets";
 
 const QuestionBankReportCharts = lazy(() =>
@@ -30,12 +36,43 @@ const QuestionBankReportCharts = lazy(() =>
 
 type QBReportSubTab = "overview" | "analytics" | "autoGrading";
 
-const QuestionBankReport = React.memo(function QuestionBankReport(): React.JSX.Element {
+export interface QuestionBankReportFilters {
+  status?: string;
+  dateFrom?: string;
+  dateTo?: string;
+  session?: string;
+  class?: string;
+  student?: string;
+}
+
+export interface QuestionBankReportProps {
+  filters?: QuestionBankReportFilters;
+  onEditVisual?: (config: unknown) => void;
+}
+
+const QuestionBankReport = React.memo(function QuestionBankReport({
+  filters,
+}: QuestionBankReportProps = {}): React.JSX.Element {
   const { t } = useTranslation();
   const [activeSubTab, setActiveSubTab] = useState<QBReportSubTab>("overview");
-  const questions = useQuestionBankQuestionsCollection();
+  const questionsQuery = useQuestionBankQuestions();
+  const testsQuery = useQuestionBankTests();
+  const resultsQuery = useQuestionBankResults();
+  const aggregatesQuery = useQuestionBankReportAggregates();
+
+  const rawQuestions = useQuestionBankQuestionsCollection();
   const tests = useQuestionBankTestsCollection();
   const results = useQuestionBankResultsCollection();
+
+  const questions = useMemo(() => {
+    if (!filters) return rawQuestions;
+    let filtered = rawQuestions;
+    if (filters.status && filters.status !== "all") {
+      filtered = filtered.filter((q) => q.difficulty === filters.status);
+    }
+    return filtered;
+  }, [rawQuestions, filters]);
+
   const questionBankConfig = useQuestionBankConfig(questions);
   const categories = questionBankConfig.categories;
 
@@ -87,8 +124,43 @@ const QuestionBankReport = React.memo(function QuestionBankReport(): React.JSX.E
     })),
   ], [difficultyData, categoryData, t]);
 
+  if (questionsQuery.isError || testsQuery.isError || resultsQuery.isError || aggregatesQuery.isError) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title={t("questionBank.loadFailed")}
+          description={t("questionBank.loadFailedHint")}
+          onRetry={() => {
+            void questionsQuery.refetch();
+            void testsQuery.refetch();
+            void resultsQuery.refetch();
+            void aggregatesQuery.refetch();
+          }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      <ReportFilterBanner
+        label={t("reports.filters.title")}
+        filters={[
+          filters?.status && filters.status !== "all"
+            ? {
+                key: "status",
+                value: filters.status,
+              }
+            : null,
+          filters?.dateFrom || filters?.dateTo
+            ? {
+                key: "date",
+                value: `${filters.dateFrom || ""} - ${filters.dateTo || ""}`,
+              }
+            : null,
+        ]}
+      />
+
       <SubTabBar
         tabs={tabs}
         value={activeSubTab}

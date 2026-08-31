@@ -13,6 +13,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import type { EnrollmentsReportAggregates } from "@mms/shared";
 import { EMPTY_ENROLLMENTS_REPORT_AGGREGATES } from "@mms/shared";
+import { ReportFilterBanner } from "@/components/ui/reports/ReportFilterBanner";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const EnrollmentReportsCharts = lazy(() =>
@@ -23,6 +24,10 @@ import PinnedWidgets from "@/components/ui/reports/PinnedWidgets";
 
 export interface EnrollmentReportsProps {
   aggregates?: EnrollmentsReportAggregates;
+  filters?: {
+    session?: string;
+    status?: string;
+  };
 }
 
 /**
@@ -30,6 +35,7 @@ export interface EnrollmentReportsProps {
  */
 export function EnrollmentReports({
   aggregates = EMPTY_ENROLLMENTS_REPORT_AGGREGATES,
+  filters,
 }: EnrollmentReportsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
@@ -50,6 +56,24 @@ export function EnrollmentReports({
 
   return (
     <section className="space-y-6" aria-label={t("enrollments.reports.aria")}>
+      <ReportFilterBanner
+        label={t("reports.filters.title")}
+        filters={[
+          filters?.session && filters.session !== "all"
+            ? {
+                key: "session",
+                value: filters.session,
+              }
+            : null,
+          filters?.status && filters.status !== "all"
+            ? {
+                key: "status",
+                value: filters.status,
+              }
+            : null,
+        ]}
+      />
+
       <Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
         <EnrollmentReportsCharts aggregates={aggregates} />
       </Suspense>

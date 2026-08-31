@@ -1,6 +1,10 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
+import {
+  obligationsReportAggregatesSchema,
+  obligationsReportQuerySchema,
+} from '../obligationsReportAggregates.js';
 
 const c = initContract();
 const ok = z.unknown();
@@ -123,13 +127,8 @@ export const obligationContract = c.router({
   reportAggregates: {
     method: 'GET',
     path: '/api/obligations/report-aggregates',
-    query: z.object({
-      dateFrom: z.string().optional(),
-      dateTo: z.string().optional(),
-      typeId: z.string().optional(),
-      repId: z.string().optional(),
-    }).optional(),
-    responses: { 200: ok, 403: ok, 500: ok },
+    query: obligationsReportQuerySchema.optional(),
+    responses: { 200: obligationsReportAggregatesSchema, 403: ok, 500: ok },
     summary: 'Get obligation report aggregates',
   },
   widgetAggregates: {

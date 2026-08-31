@@ -1,6 +1,10 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
+import {
+  accountingReportAggregatesSchema,
+  accountingReportQuerySchema,
+} from '../accountingReportAggregates.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
@@ -115,5 +119,12 @@ export const accountingContract = c.router({
     path: '/api/accounting/lookups/:kind',
     responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
     summary: 'Get a specific lookup kind',
+  },
+  getReportAggregates: {
+    method: 'GET',
+    path: '/api/accounting/report-aggregates',
+    query: accountingReportQuerySchema.optional(),
+    responses: { 200: accountingReportAggregatesSchema, 403: errorResponse, 500: errorResponse },
+    summary: 'Get accounting report aggregates',
   },
 });

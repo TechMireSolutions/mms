@@ -57,12 +57,14 @@ export type ObligationsRepSummaryItem = z.infer<typeof obligationsRepSummaryItem
 export type ObligationsReportAggregates = z.infer<typeof obligationsReportAggregatesSchema>;
 
 /** Optional date-range query params for GET /obligations/report-aggregates. */
-export type ObligationsReportQuery = {
-  dateFrom?: string;
-  dateTo?: string;
-  typeId?: string;
-  repId?: string;
-};
+export const obligationsReportQuerySchema = z.object({
+  dateFrom: z.string().max(32).optional(),
+  dateTo: z.string().max(32).optional(),
+  typeId: z.string().max(64).optional(),
+  repId: z.string().max(64).optional(),
+});
+
+export type ObligationsReportQuery = z.infer<typeof obligationsReportQuerySchema>;
 
 // ---------------------------------------------------------------------------
 // Empty sentinel

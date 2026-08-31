@@ -2,6 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   EMPTY_ATTENDANCE_REPORT_AGGREGATES,
   attendanceReportComparisonQueryActive,
+  ensureAllSessionsInComparison,
   type AttendanceReportAggregates,
   type AttendanceReportComparison,
   type AttendanceReportComparisonMonth,
@@ -83,16 +84,14 @@ export async function loadAttendanceReportAggregatesSql(
         GROUP BY sc."sessionId"
       `);
 
-      comparison.sessions = getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => ({
-        sessionId: String(row.sessionId ?? ''),
-        attendancePct: Number(row.attendancePct ?? 0),
-      } satisfies AttendanceReportComparisonSession));
-
-      for (const sessionId of sessionIds) {
-        if (!comparison.sessions.some((row) => row.sessionId === sessionId)) {
-          comparison.sessions.push({ sessionId, attendancePct: 0 });
-        }
-      }
+      comparison.sessions = ensureAllSessionsInComparison(
+        getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => ({
+          sessionId: String(row.sessionId ?? ''),
+          attendancePct: Number(row.attendancePct ?? 0),
+        } satisfies AttendanceReportComparisonSession)),
+        sessionIds,
+        (sessionId) => ({ sessionId, attendancePct: 0 }),
+      );
     }
 
     const loadMonthlyRange = async (

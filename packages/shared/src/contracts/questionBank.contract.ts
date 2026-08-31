@@ -1,6 +1,10 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
+import {
+  questionBankReportAggregatesSchema,
+  questionBankReportQuerySchema,
+} from '../questionBankReportAggregates.js';
 
 const c = initContract();
 const ok = z.unknown();
@@ -80,12 +84,8 @@ export const questionBankContract = c.router({
   reportAggregates: {
     method: 'GET',
     path: '/api/question-bank/report-aggregates',
-    query: z.object({
-      dateFrom: z.string().optional(),
-      dateTo: z.string().optional(),
-      categoryId: z.string().optional(),
-    }).optional(),
-    responses: { 200: ok, 403: ok, 500: ok },
+    query: questionBankReportQuerySchema.optional(),
+    responses: { 200: questionBankReportAggregatesSchema, 403: ok, 500: ok },
     summary: 'Get question bank report aggregates',
   },
   widgetAggregates: {

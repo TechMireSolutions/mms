@@ -1,6 +1,8 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
+import { enrollmentsReportAggregatesSchema } from '../enrollmentsReportAggregates.js';
+import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
@@ -84,7 +86,8 @@ export const enrollmentContract = c.router({
   reportAggregates: {
     method: 'GET',
     path: '/api/enrollments/report-aggregates',
-    responses: { 200: z.unknown(), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    query: reportComparisonQuerySchema.optional(),
+    responses: { 200: enrollmentsReportAggregatesSchema, 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Report aggregates',
   },
 

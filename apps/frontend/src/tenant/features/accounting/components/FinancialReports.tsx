@@ -1,8 +1,8 @@
 import React, { useMemo, useState } from "react";
-import { computeFinancials } from "@/lib/data/accountingData";
-import type { Account, FiscalYear, JournalEntry } from "@mms/shared";
+import type { FiscalYear } from "@mms/shared";
 import { SubTabBar } from "@/components/ui/SubTabBar";
-import { ExportToolbar, type ExportColumn } from "@/components/ui/ExportToolbar";
+import { ReportDataGridContainer } from "@/tenant/components/moduleReports";
+import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -14,43 +14,26 @@ import {
   IncomeStatementPanel,
 } from "./FinancialStatementPanels";
 import {
-  useAccountingAccountsPaginated,
-  useAccountingEntriesPaginated,
   useAccountingFiscalYearsPaginated,
+  useAccountingReportAggregates,
 } from "../hooks/useAccountingApi";
 
 import PinnedWidgets from "@/components/ui/reports/PinnedWidgets";
 
 type ViewType = "income" | "balance" | "cashflow";
 
-function extractRecords<T>(data: unknown, key: string): T[] {
-  if (!data || typeof data !== "object") return [];
-  const rec = data as Record<string, unknown>;
-  if (Array.isArray(rec[key])) return rec[key] as T[];
-  if (rec.body && typeof rec.body === "object") {
-    const bodyRec = rec.body as Record<string, unknown>;
-    if (Array.isArray(bodyRec[key])) return bodyRec[key] as T[];
-  }
-  return [];
-}
-
 /**
  * FinancialReports component.
  *
  * Displays Income Statement, Balance Sheet, and Cash Flow reports.
- * Self-fetches accounts, entries, and fiscalYears via REST Query hooks.
+ * Powered by server-side SQL report aggregates with Query-caching.
  */
 export function FinancialReports(): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
 
-  const accountsResult = useAccountingAccountsPaginated({ page: 1, limit: 500, includeDeleted: false });
-  const entriesResult = useAccountingEntriesPaginated({ page: 1, limit: 500, includeDeleted: false });
-  const fiscalYearsResult = useAccountingFiscalYearsPaginated({ page: 1, limit: 500 });
-
-  const accounts: Account[] = extractRecords<Account>(accountsResult.data, "accounts");
-  const entries: JournalEntry[] = extractRecords<JournalEntry>(entriesResult.data, "entries");
-  const fiscalYears: FiscalYear[] = extractRecords<FiscalYear>(fiscalYearsResult.data, "fiscalYears");
+  const fiscalYearsResult = useAccountingFiscalYearsPaginated({ page: 1, limit: 100 });
+  const fiscalYears: FiscalYear[] = fiscalYearsResult.data?.status === 200 ? fiscalYearsResult.data.body.fiscalYears : [];
 
   const reportViews = [
     { key: "income" as const, label: t("accounting.reports.views.income") },
@@ -62,13 +45,54 @@ export function FinancialReports(): React.JSX.Element {
   const [dateFrom, setDateFrom] = useState(activeFiscalYear?.startDate || "");
   const [dateTo, setDateTo] = useState(activeFiscalYear?.endDate || "");
 
-  const isError = accountsResult.isError || entriesResult.isError || fiscalYearsResult.isError;
-  const isLoading = accountsResult.isLoading || entriesResult.isLoading;
+  const aggregatesResult = useAccountingReportAggregates({
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
 
-  const { revenue, expenses, netSurplus, assets, liabilities, equity, netCashFlow, cashInflow, cashOutflow, tb } = useMemo(
-    () => computeFinancials(accounts, entries, dateFrom || undefined, dateTo || undefined),
-    [accounts, entries, dateFrom, dateTo],
-  );
+  const isError = aggregatesResult.isError || fiscalYearsResult.isError;
+  const isLoading = aggregatesResult.isLoading || fiscalYearsResult.isLoading;
+
+  const {
+    revenue,
+    expenses,
+    netSurplus,
+    assets,
+    liabilities,
+    equity,
+    netCashFlow,
+    cashInflow,
+    cashOutflow,
+    tb,
+  } = useMemo(() => {
+    const agg = aggregatesResult.data;
+    if (agg && agg.trialBalance) {
+      return {
+        revenue: agg.revenue,
+        expenses: agg.expenses,
+        netSurplus: agg.netSurplus,
+        assets: agg.assets,
+        liabilities: agg.liabilities,
+        equity: agg.equity,
+        netCashFlow: agg.netCashFlow,
+        cashInflow: agg.cashInflow,
+        cashOutflow: agg.cashOutflow,
+        tb: agg.trialBalance,
+      };
+    }
+    return {
+      revenue: 0,
+      expenses: 0,
+      netSurplus: 0,
+      assets: 0,
+      liabilities: 0,
+      equity: 0,
+      netCashFlow: 0,
+      cashInflow: 0,
+      cashOutflow: 0,
+      tb: [] as Array<{ id: string; code: string; name: string; type: string; totalDebit: number; totalCredit: number; balance: number }>,
+    };
+  }, [aggregatesResult.data]);
 
   const getRowsByAccountType = (type: string) => tb.filter((trialBalanceRow) => trialBalanceRow.type === type);
 
@@ -157,8 +181,7 @@ export function FinancialReports(): React.JSX.Element {
           title={t("accounting.loadFailed")}
           description={t("accounting.loadFailedHint")}
           onRetry={() => {
-            void accountsResult.refetch();
-            void entriesResult.refetch();
+            void aggregatesResult.refetch();
             void fiscalYearsResult.refetch();
           }}
         />
@@ -187,7 +210,7 @@ export function FinancialReports(): React.JSX.Element {
         variant="bordered"
       />
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="space-y-4">
         <SubTabBar
           tabs={reportViews}
           value={view}
@@ -195,48 +218,48 @@ export function FinancialReports(): React.JSX.Element {
           panelIdPrefix="financial-report"
         />
 
-        <ExportToolbar
+        <ReportDataGridContainer
           title={t("accounting.reports.export.label", { view })}
           filename={`${view}_report`}
           moduleId="accounting"
           columns={exportColumns}
           rows={exportRows}
-        />
+        >
+          {view === "income" && (
+            <IncomeStatementPanel
+              revenueRows={getRowsByAccountType("Revenue")}
+              expenseRows={getRowsByAccountType("Expense")}
+              revenue={revenue}
+              expenses={expenses}
+              netSurplus={netSurplus}
+            />
+          )}
+
+          {view === "balance" && (
+            <BalanceSheetPanel
+              assetRows={getRowsByAccountType("Asset")}
+              liabilityRows={getRowsByAccountType("Liability")}
+              equityRows={equityRows}
+              assets={assets}
+              liabilities={liabilities}
+              equity={equity}
+              equityTotal={equityTotal}
+            />
+          )}
+
+          {view === "cashflow" && (
+            <CashFlowStatementPanel
+              netSurplus={netSurplus}
+              depreciationAdjustment={depreciationAdjustment}
+              receivablesChange={receivablesChange}
+              payablesChange={payablesChange}
+              netCashFlow={netCashFlow}
+              cashInflow={cashInflow}
+              cashOutflow={cashOutflow}
+            />
+          )}
+        </ReportDataGridContainer>
       </div>
-
-      {view === "income" && (
-        <IncomeStatementPanel
-          revenueRows={getRowsByAccountType("Revenue")}
-          expenseRows={getRowsByAccountType("Expense")}
-          revenue={revenue}
-          expenses={expenses}
-          netSurplus={netSurplus}
-        />
-      )}
-
-      {view === "balance" && (
-        <BalanceSheetPanel
-          assetRows={getRowsByAccountType("Asset")}
-          liabilityRows={getRowsByAccountType("Liability")}
-          equityRows={equityRows}
-          assets={assets}
-          liabilities={liabilities}
-          equity={equity}
-          equityTotal={equityTotal}
-        />
-      )}
-
-      {view === "cashflow" && (
-        <CashFlowStatementPanel
-          netSurplus={netSurplus}
-          depreciationAdjustment={depreciationAdjustment}
-          receivablesChange={receivablesChange}
-          payablesChange={payablesChange}
-          netCashFlow={netCashFlow}
-          cashInflow={cashInflow}
-          cashOutflow={cashOutflow}
-        />
-      )}
 
       <PinnedWidgets category="accounting" />
     </section>

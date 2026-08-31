@@ -62,14 +62,14 @@ export type EnrollmentsReportComparisonMonth = z.infer<typeof enrollmentsReportC
 export type EnrollmentsReportComparison = z.infer<typeof enrollmentsReportComparisonSchema>;
 export type EnrollmentsReportAggregates = z.infer<typeof enrollmentsReportAggregatesSchema>;
 
+import {
+  type BaseReportComparisonQuery,
+  normalizeReportComparisonQuery,
+  reportComparisonQueryActive,
+} from './reportComparisonQuery.js';
+
 /** Optional ComparisonMode params for GET /report-aggregates. */
-export type EnrollmentsReportComparisonQuery = {
-  sessionIds?: string[];
-  rangeAFrom?: string;
-  rangeATo?: string;
-  rangeBFrom?: string;
-  rangeBTo?: string;
-};
+export type EnrollmentsReportComparisonQuery = BaseReportComparisonQuery;
 
 /** Minimal row shape for pure EnrollmentReports panel compute. */
 export type EnrollmentReportPanelRow = {
@@ -92,46 +92,20 @@ export const EMPTY_ENROLLMENTS_REPORT_AGGREGATES: EnrollmentsReportAggregates = 
   bySession: [],
 };
 
-const DATE_PARAM_RE = /^\d{4}-\d{2}-\d{2}$/;
-
 /**
  * Normalize ComparisonMode query params (max 2 sessionIds; ISO date ranges).
  */
 export function normalizeEnrollmentsReportComparisonQuery(
   input: EnrollmentsReportComparisonQuery | undefined,
 ): EnrollmentsReportComparisonQuery | undefined {
-  if (!input) return undefined;
-  const sessionIds = (input.sessionIds ?? [])
-    .map((id) => String(id).trim())
-    .filter(Boolean)
-    .slice(0, 2);
-  const rangeAFrom = input.rangeAFrom?.trim();
-  const rangeATo = input.rangeATo?.trim();
-  const rangeBFrom = input.rangeBFrom?.trim();
-  const rangeBTo = input.rangeBTo?.trim();
-
-  const hasSessions = sessionIds.length > 0;
-  const hasRangeA = Boolean(rangeAFrom && rangeATo && DATE_PARAM_RE.test(rangeAFrom) && DATE_PARAM_RE.test(rangeATo));
-  const hasRangeB = Boolean(rangeBFrom && rangeBTo && DATE_PARAM_RE.test(rangeBFrom) && DATE_PARAM_RE.test(rangeBTo));
-
-  if (!hasSessions && !hasRangeA && !hasRangeB) return undefined;
-
-  return {
-    ...(hasSessions ? { sessionIds } : {}),
-    ...(hasRangeA ? { rangeAFrom, rangeATo } : {}),
-    ...(hasRangeB ? { rangeBFrom, rangeBTo } : {}),
-  };
+  return normalizeReportComparisonQuery(input);
 }
 
 /** True when any comparison SQL slice should run. */
 export function enrollmentsReportComparisonQueryActive(
   query: EnrollmentsReportComparisonQuery | undefined,
 ): boolean {
-  return Boolean(
-    (query?.sessionIds && query.sessionIds.length > 0)
-    || (query?.rangeAFrom && query.rangeATo)
-    || (query?.rangeBFrom && query.rangeBTo),
-  );
+  return reportComparisonQueryActive(query);
 }
 
 /**

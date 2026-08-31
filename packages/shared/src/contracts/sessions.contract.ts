@@ -4,6 +4,7 @@ import { baseListQuerySchema } from '../apiSchemas.js';
 import { sessionCreateBodySchema, sessionsBulkIdsSchema } from '../schemas/sessions.dto.js';
 
 import { sessionsBulkStatusSchema } from '../sessionsModuleManifest.js';
+import { sessionsReportAggregatesSchema } from '../sessionsReportAggregates.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
@@ -103,7 +104,7 @@ export const sessionContract = c.router({
   reportAggregates: {
     method: 'GET',
     path: '/api/sessions/report-aggregates',
-    responses: { 200: z.unknown(), 400: z.unknown(), 403: z.unknown(), 404: z.unknown(), 500: z.unknown() },
+    responses: { 200: sessionsReportAggregatesSchema, 400: z.unknown(), 403: z.unknown(), 404: z.unknown(), 500: z.unknown() },
     summary: 'Report aggregates',
   },
 

@@ -52,21 +52,14 @@ export function useComparisonModeData({
 
   const nonContactsEnabled = !isContacts;
   const categoryKey = category.toLowerCase();
-  const needsEnrollmentDateRange =
-    nonContactsEnabled && mode === 'daterange' && (categoryKey === 'students' || categoryKey === 'enrollments');
-  const needsEnrollmentSessionCompare = nonContactsEnabled && mode === 'sessions';
-  const needsFinanceSessionCompare = nonContactsEnabled && mode === 'sessions';
-  const needsFinanceDateRange = nonContactsEnabled && mode === 'daterange' && categoryKey === 'financial';
-  const needsAttendanceSessionCompare = nonContactsEnabled && mode === 'sessions';
-  const needsAttendanceDateRange = nonContactsEnabled && mode === 'daterange' && categoryKey === 'attendance';
-  const needsHasanatSessionCompare = nonContactsEnabled && mode === 'sessions';
-  const needsHasanatDateRange = nonContactsEnabled && mode === 'daterange' && categoryKey === 'hasanat';
 
-  const enrollmentComparison = useMemo(() => {
-    if (needsEnrollmentSessionCompare) {
-      return { sessionIds: [valA, valB].filter(Boolean) };
+  const buildComparison = (categoryMatchesDateRange: boolean) => {
+    if (!nonContactsEnabled) return undefined;
+    if (mode === 'sessions') {
+      const sessionIds = [valA, valB].filter(Boolean);
+      return sessionIds.length > 0 ? { sessionIds } : undefined;
     }
-    if (needsEnrollmentDateRange) {
+    if (mode === 'daterange' && categoryMatchesDateRange) {
       return {
         rangeAFrom: rangeA.from,
         rangeATo: rangeA.to,
@@ -75,67 +68,32 @@ export function useComparisonModeData({
       };
     }
     return undefined;
-  }, [needsEnrollmentSessionCompare, needsEnrollmentDateRange, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to]);
+  };
 
-  const financeComparison = useMemo(() => {
-    if (needsFinanceSessionCompare) {
-      return { sessionIds: [valA, valB].filter(Boolean) };
-    }
-    if (needsFinanceDateRange) {
-      return {
-        rangeAFrom: rangeA.from,
-        rangeATo: rangeA.to,
-        rangeBFrom: rangeB.from,
-        rangeBTo: rangeB.to,
-      };
-    }
-    return undefined;
-  }, [needsFinanceSessionCompare, needsFinanceDateRange, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to]);
+  const enrollmentComparison = useMemo(
+    () => buildComparison(categoryKey === 'students' || categoryKey === 'enrollments'),
+    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
+  );
 
-  const attendanceComparison = useMemo(() => {
-    if (needsAttendanceSessionCompare) {
-      return { sessionIds: [valA, valB].filter(Boolean) };
-    }
-    if (needsAttendanceDateRange) {
-      return {
-        rangeAFrom: rangeA.from,
-        rangeATo: rangeA.to,
-        rangeBFrom: rangeB.from,
-        rangeBTo: rangeB.to,
-      };
-    }
-    return undefined;
-  }, [needsAttendanceSessionCompare, needsAttendanceDateRange, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to]);
+  const financeComparison = useMemo(
+    () => buildComparison(categoryKey === 'financial' || categoryKey === 'finance'),
+    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
+  );
 
-  const examinationsComparison = useMemo(() => {
-    if (nonContactsEnabled && mode === 'sessions') {
-      return { sessionIds: [valA, valB].filter(Boolean) };
-    }
-    if (nonContactsEnabled && mode === 'daterange' && categoryKey === 'examinations') {
-      return {
-        rangeAFrom: rangeA.from,
-        rangeATo: rangeA.to,
-        rangeBFrom: rangeB.from,
-        rangeBTo: rangeB.to,
-      };
-    }
-    return undefined;
-  }, [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to]);
+  const attendanceComparison = useMemo(
+    () => buildComparison(categoryKey === 'attendance'),
+    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
+  );
 
-  const hasanatComparison = useMemo(() => {
-    if (needsHasanatSessionCompare) {
-      return { sessionIds: [valA, valB].filter(Boolean) };
-    }
-    if (needsHasanatDateRange) {
-      return {
-        rangeAFrom: rangeA.from,
-        rangeATo: rangeA.to,
-        rangeBFrom: rangeB.from,
-        rangeBTo: rangeB.to,
-      };
-    }
-    return undefined;
-  }, [needsHasanatSessionCompare, needsHasanatDateRange, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to]);
+  const examinationsComparison = useMemo(
+    () => buildComparison(categoryKey === 'examinations'),
+    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
+  );
+
+  const hasanatComparison = useMemo(
+    () => buildComparison(categoryKey === 'hasanat'),
+    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
+  );
 
   const { data: enrollmentsReport } = useEnrollmentsReportAggregates({
     enabled: Boolean(enrollmentComparison),

@@ -52,6 +52,7 @@ const mockRestoreJournalEntryById = vi.fn();
 const mockBulkSoftDeleteJournalEntries = vi.fn();
 const mockBulkRestoreJournalEntries = vi.fn();
 const mockLoadAccountingCommandMetrics = vi.fn();
+const mockLoadAccountingReportAggregates = vi.fn();
 
 vi.mock('../services/accountingService.js', () => ({
   loadAccounts: (...args: unknown[]) => mockLoadAccounts(...args),
@@ -68,6 +69,7 @@ vi.mock('../services/accountingService.js', () => ({
   bulkSoftDeleteJournalEntries: (...args: unknown[]) => mockBulkSoftDeleteJournalEntries(...args),
   bulkRestoreJournalEntries: (...args: unknown[]) => mockBulkRestoreJournalEntries(...args),
   loadAccountingCommandMetrics: (...args: unknown[]) => mockLoadAccountingCommandMetrics(...args),
+  loadAccountingReportAggregates: (...args: unknown[]) => mockLoadAccountingReportAggregates(...args),
 }));
 
 const mockGetUserColumnPreferencesForModule = vi.fn();
@@ -152,6 +154,18 @@ describe('accounting REST routes', () => {
       surplus: 0,
       assets: 100,
       liabilities: 0,
+    });
+    mockLoadAccountingReportAggregates.mockReset().mockResolvedValue({
+      trialBalance: [],
+      revenue: 0,
+      expenses: 0,
+      netSurplus: 0,
+      assets: 0,
+      liabilities: 0,
+      equity: 0,
+      netCashFlow: 0,
+      cashInflow: 0,
+      cashOutflow: 0,
     });
   });
 
@@ -369,6 +383,63 @@ describe('accounting REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockRestoreJournalEntryById).toHaveBeenCalledWith('je-1');
+    await app.close();
+  });
+
+  it('GET /api/accounting/report-aggregates returns server-side aggregates for accountant', async () => {
+    mockLoadAccountingReportAggregates.mockResolvedValueOnce({
+      trialBalance: [
+        { id: 'acc-1', code: '1000', name: 'Cash', type: 'Asset', totalDebit: 500, totalCredit: 100, balance: 400 },
+      ],
+      revenue: 1000,
+      expenses: 600,
+      netSurplus: 400,
+      assets: 2500,
+      liabilities: 1000,
+      equity: 1500,
+      netCashFlow: 300,
+      cashInflow: 1000,
+      cashOutflow: 700,
+    });
+
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/accounting/report-aggregates?dateFrom=2026-01-01&dateTo=2026-12-31',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    const body = JSON.parse(res.body);
+    expect(body.revenue).toBe(1000);
+    expect(body.expenses).toBe(600);
+    expect(body.netSurplus).toBe(400);
+    expect(body.trialBalance).toHaveLength(1);
+    expect(mockLoadAccountingReportAggregates).toHaveBeenCalledWith({
+      dateFrom: '2026-01-01',
+      dateTo: '2026-12-31',
+    });
+    await app.close();
+  });
+
+  it('GET /api/accounting/report-aggregates rejects unauthorized users with 403', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/accounting/report-aggregates',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${guardianToken(app, {
+          id: 'u-unauthorized',
+          email: 'unauth@test.com',
+          name: 'Unauthorized',
+        })}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadAccountingReportAggregates).not.toHaveBeenCalled();
     await app.close();
   });
 });

@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
 import { attendanceBulkIdsSchema } from '../schemas/attendance.dto.js';
 import { attendanceBulkSchema } from '../attendanceModuleManifest.js';
+import { attendanceReportAggregatesSchema } from '../attendanceReportAggregates.js';
+import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
@@ -110,13 +112,8 @@ export const attendanceContract = c.router({
   reportAggregates: {
     method: 'GET',
     path: '/api/attendance/report-aggregates',
-    query: z.object({
-      dateFrom: z.string().optional(),
-      dateTo: z.string().optional(),
-      sessionId: z.string().optional(),
-      classId: z.string().optional(),
-    }).optional(),
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    query: reportComparisonQuerySchema.optional(),
+    responses: { 200: attendanceReportAggregatesSchema, 403: errorResponse, 500: errorResponse },
     summary: 'Get attendance report aggregates',
   },
   widgetAggregates: {

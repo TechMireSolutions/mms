@@ -33,8 +33,12 @@ export function useExaminationsExamsCollection(options?: {
 }): Exam[] {
   const query = useExaminationsExams(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.exams ?? []);
+  const body = query.data.body;
+  if (Array.isArray(body)) return body as Exam[];
+  if (body && typeof body === 'object' && 'exams' in body && Array.isArray(body.exams)) {
+    return body.exams as Exam[];
+  }
+  return [];
 }
 
 
@@ -51,8 +55,12 @@ export function useExaminationsResults(options?: { enabled?: boolean }) {
 export function useExaminationsResultsCollection(options?: { enabled?: boolean }): ExamResult[] {
   const query = useExaminationsResults(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.results ?? []);
+  const body = query.data.body;
+  if (Array.isArray(body)) return body as ExamResult[];
+  if (body && typeof body === 'object' && 'results' in body && Array.isArray(body.results)) {
+    return body.results as ExamResult[];
+  }
+  return [];
 }
 
 export function useExaminationsMetrics(options?: { enabled?: boolean }) {

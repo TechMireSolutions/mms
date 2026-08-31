@@ -1,8 +1,15 @@
 import React, { lazy, Suspense, useMemo, useState } from "react";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
-import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from "@/tenant/hooks/collections/hasanat";
+import {
+  useHasanatDistributions,
+  useHasanatDistributionsCollection,
+  useHasanatDenoms,
+  useHasanatDenomsCollection,
+  useHasanatReportAggregates,
+} from "@/tenant/hooks/collections/hasanat";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorState } from "@/components/ui/ErrorState";
 import { getDenominationPoints } from "@mms/shared";
 import { HasanatDistributionTable } from "./HasanatDistributionTable";
 import type { HasanatFacultyBarItem, HasanatPieItem } from "./hasanatReportSectionTypes";
@@ -57,6 +64,10 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
     () => [palette.primary, palette.secondary, palette.charts[2]],
     [palette],
   );
+  const distQuery = useHasanatDistributions();
+  const denomsQuery = useHasanatDenoms();
+  const aggregatesQuery = useHasanatReportAggregates();
+
   const distributions = useHasanatDistributionsCollection();
   const denominations = useHasanatDenomsCollection();
 
@@ -143,6 +154,22 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
     { name: t("hasanat.report.redeemedPieLabel"), value: totalRedeemed },
     { name: t("hasanat.report.balancePieLabel"), value: totalBalance },
   ], [t, totalRedeemed, totalBalance]);
+
+  if (distQuery.isError || denomsQuery.isError || aggregatesQuery.isError) {
+    return (
+      <div className="p-4">
+        <ErrorState
+          title={t("hasanat.loadFailed")}
+          description={t("hasanat.loadFailedHint")}
+          onRetry={() => {
+            void distQuery.refetch();
+            void denomsQuery.refetch();
+            void aggregatesQuery.refetch();
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

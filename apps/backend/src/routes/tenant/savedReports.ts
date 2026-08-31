@@ -36,6 +36,7 @@ const REPORT_PERMISSION_BY_CATEGORY = {
   students: STUDENTS_MODULE_MANIFEST.permissions.reports,
   teachers: TEACHERS_MODULE_MANIFEST.permissions.reports,
   attendance: ATTENDANCE_MODULE_MANIFEST.permissions.reports,
+  finance: FINANCE_MODULE_MANIFEST.permissions.reports,
   financial: FINANCE_MODULE_MANIFEST.permissions.reports,
   examinations: EXAMINATIONS_MODULE_MANIFEST.permissions.reports,
   questionBank: QUESTION_BANK_MODULE_MANIFEST.permissions.reports,

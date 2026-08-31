@@ -118,24 +118,41 @@ const ContactReport = React.memo(function ContactReport(_props: ContactReportPro
             moduleId="contacts"
             hideExport={summaryRows.length === 0}
           >
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="px-4 py-2.5 font-bold">{t("common.label")}</TableHead>
-                  <TableHead className="px-4 py-2.5 font-bold text-center">{t("common.details")}</TableHead>
-                  <TableHead className="px-4 py-2.5 font-bold text-end">{t("reports.kpi.growthRate")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {summaryRows.map((row) => (
-                  <TableRow key={row.metric}>
-                    <TableCell className="px-4 py-2.5 font-medium">{row.metric}</TableCell>
-                    <TableCell className="px-4 py-2.5 text-center font-mono">{row.value}</TableCell>
-                    <TableCell className="px-4 py-2.5 text-end font-mono text-primary font-bold">{row.rate}</TableCell>
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="px-4 py-2.5 font-bold">{t("common.label")}</TableHead>
+                    <TableHead className="px-4 py-2.5 font-bold text-center">{t("common.details")}</TableHead>
+                    <TableHead className="px-4 py-2.5 font-bold text-end">{t("reports.kpi.growthRate")}</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {summaryRows.map((row) => (
+                    <TableRow key={row.metric}>
+                      <TableCell className="px-4 py-2.5 font-medium">{row.metric}</TableCell>
+                      <TableCell className="px-4 py-2.5 text-center font-mono">{row.value}</TableCell>
+                      <TableCell className="px-4 py-2.5 text-end font-mono text-primary font-bold">{row.rate}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="divide-y divide-border/50 md:hidden" role="list">
+              {summaryRows.map((row) => (
+                <div
+                  key={row.metric}
+                  className="flex min-w-0 items-center justify-between gap-3 px-4 py-3"
+                  role="listitem"
+                >
+                  <span className="truncate text-sm font-medium text-foreground">{row.metric}</span>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="font-mono text-sm text-muted-foreground">{row.value}</span>
+                    <span className="font-mono text-sm font-bold text-primary">{row.rate}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </ReportDataGridContainer>
         </div>
       ) : null}

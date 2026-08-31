@@ -6,6 +6,7 @@ import type {
   ObligationDistribution,
   ObligationCollection,
   ObligationsCommandMetricsSnapshot,
+  ObligationsReportQuery,
 } from '@mms/shared';
 import { OBLIGATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
@@ -20,6 +21,7 @@ import {
   OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
   OBLIGATIONS_COLLECTIONS_QUERY_KEY,
   OBLIGATIONS_METRICS_QUERY_KEY,
+  OBLIGATIONS_REPORT_AGGREGATES_QUERY_KEY,
 } from '@/tenant/features/obligations/hooks/obligationsQueryKeys';
 
 export {
@@ -30,6 +32,7 @@ export {
   OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
   OBLIGATIONS_COLLECTIONS_QUERY_KEY,
   OBLIGATIONS_METRICS_QUERY_KEY,
+  OBLIGATIONS_REPORT_AGGREGATES_QUERY_KEY,
 };
 export { useObligationsMutations } from '@/tenant/features/obligations/hooks/useObligationsMutations';
 
@@ -159,5 +162,20 @@ export function useObligationsMetrics(options?: { enabled?: boolean }) {
     moduleId: OBLIGATIONS_MODULE_MANIFEST.moduleId,
     apiPath: OBLIGATIONS_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
+  });
+}
+
+export function useObligationsReportAggregates(
+  query?: ObligationsReportQuery,
+  options?: { enabled?: boolean },
+) {
+  const { isAuthenticated } = useAuth();
+  const enabled = options?.enabled ?? true;
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.obligations.reportAggregates.useQuery({
+    queryKey: [...OBLIGATIONS_REPORT_AGGREGATES_QUERY_KEY, query] as any,
+    queryData: { query: query ?? {} },
+    enabled: isAuthenticated && enabled,
+    staleTime: 5 * 60 * 1000,
   });
 }

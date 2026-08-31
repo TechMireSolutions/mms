@@ -1,7 +1,9 @@
 import { listAccountsPage, listEntriesPage, listFiscalYearsPage } from "../db/repositories/accountingRepositoryList.js";
 import { aggregateAccountingCommandMetrics } from "../db/repositories/accountingRepositoryMetrics.js";
-import type { AccountingListQuery } from "@mms/shared";
+import { aggregateAccountingReport, type AccountingReportQuery } from "../db/repositories/accountingRepositoryReport.js";
+import type { AccountingListQuery, AccountingReportAggregates } from "@mms/shared";
 import {
+  EMPTY_ACCOUNTING_REPORT_AGGREGATES,
   type Account,
   type JournalEntry,
   type FiscalYear,
@@ -193,3 +195,13 @@ export async function loadAccountingCommandMetrics(): Promise<AccountingCommandM
   if (!tenant) return EMPTY_ACCOUNTING_METRICS;
   return aggregateAccountingCommandMetrics(tenant);
 }
+
+/** Accounting financial report SQL aggregates (Trial Balance, Income Statement, Balance Sheet, Cash Flow). */
+export async function loadAccountingReportAggregates(
+  query: AccountingReportQuery = {},
+): Promise<AccountingReportAggregates> {
+  const tenant = getRequestTenant();
+  if (!tenant) return EMPTY_ACCOUNTING_REPORT_AGGREGATES;
+  return aggregateAccountingReport(tenant, query);
+}
+

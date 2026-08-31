@@ -27,6 +27,7 @@ import {
 } from '../../services/accountingService.js';
 import { accountingSetupConfigRoutes } from './accountingSetupConfigRoutes.js';
 import { accountingContractRouter } from './accounting/accountingContractRouter.js';
+import { accountingReportRoutes } from './accounting/accountingReportRoutes.js';
 
 const ACCOUNTING_ENTRIES_COLLECTION = ACCOUNTING_MODULE_MANIFEST.collectionKey;
 const ACCOUNTING_ACCOUNTS_COLLECTION = ACCOUNTING_MODULE_MANIFEST.accountCollectionKey;
@@ -96,6 +97,8 @@ export default async function accountingRoutes(
         loadMetricsFn: loadAccountingCommandMetrics,
         errorMessagePrefix: 'accounting',
       });
+
+      await sub.register(accountingReportRoutes);
     },
     { prefix: '/api/accounting' },
   );

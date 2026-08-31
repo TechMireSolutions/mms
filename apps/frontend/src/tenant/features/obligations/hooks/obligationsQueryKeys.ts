@@ -5,3 +5,4 @@ export const OBLIGATIONS_WAKALA_QUERY_KEY = ['obligations', 'wakala', 'list'] as
 export const OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY = ['obligations', 'distributions', 'list'] as const;
 export const OBLIGATIONS_COLLECTIONS_QUERY_KEY = ['obligations', 'collections', 'list'] as const;
 export const OBLIGATIONS_METRICS_QUERY_KEY = ['obligations', 'metrics'] as const;
+export const OBLIGATIONS_REPORT_AGGREGATES_QUERY_KEY = ['obligations', 'report-aggregates'] as const;

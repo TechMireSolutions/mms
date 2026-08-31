@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   enrollmentsReportComparisonQueryActive,
+  ensureAllSessionsInComparison,
   type EnrollmentsReportAggregates,
   type EnrollmentsReportBySessionItem,
   type EnrollmentsReportComparison,
@@ -190,25 +191,23 @@ export async function loadEnrollmentsReportAggregatesSql(
           GROUP BY 1
         `);
 
-        comparison.sessions = getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => {
-          const rawIds = row.studentIds;
-          const studentIds = Array.isArray(rawIds)
-            ? rawIds.map(String).filter(Boolean)
-            : typeof rawIds === 'string'
-              ? rawIds.replace(/[{}]/g, '').split(',').map((id) => id.trim()).filter(Boolean)
-              : [];
-          return {
-            sessionId: String(row.sessionId ?? ''),
-            enrollmentCount: Number(row.enrollmentCount ?? 0),
-            studentIds,
-          } satisfies EnrollmentsReportComparisonSession;
-        });
-
-        for (const sessionId of sessionIds) {
-          if (!comparison.sessions.some((row) => row.sessionId === sessionId)) {
-            comparison.sessions.push({ sessionId, enrollmentCount: 0, studentIds: [] });
-          }
-        }
+        comparison.sessions = ensureAllSessionsInComparison(
+          getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => {
+            const rawIds = row.studentIds;
+            const studentIds = Array.isArray(rawIds)
+              ? rawIds.map(String).filter(Boolean)
+              : typeof rawIds === 'string'
+                ? rawIds.replace(/[{}]/g, '').split(',').map((id) => id.trim()).filter(Boolean)
+                : [];
+            return {
+              sessionId: String(row.sessionId ?? ''),
+              enrollmentCount: Number(row.enrollmentCount ?? 0),
+              studentIds,
+            } satisfies EnrollmentsReportComparisonSession;
+          }),
+          sessionIds,
+          (sessionId) => ({ sessionId, enrollmentCount: 0, studentIds: [] }),
+        );
       }
 
       const loadMonthlyRange = async (

@@ -6,7 +6,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { scrollDocumentToTop } from "@/lib/routing/scrollDocumentToTop";
-import ReportFilters from "@/components/ui/reports/ReportFilters";
+import ReportFilters, { type ReportFilterFields } from "@/components/ui/reports/ReportFilters";
 import { VisualizerConfig } from "@/lib/reports/reportMetadata";
 import {
   ModuleReportsToolPanels,
@@ -24,7 +24,7 @@ import SessionReport from "@/components/ui/reports/SessionReport";
 import FacultyReport from "@/components/ui/reports/FacultyReport";
 import QuestionBankReport from "@/components/ui/reports/QuestionBankReport";
 import { EnrollmentReports } from "@/tenant/features/enrollments/components/EnrollmentReports";
-import { useEnrollmentsReportAggregates } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { useEnrollmentsReportAggregates } from "@/tenant/hooks/collections/enrollments";
 import {
   EMPTY_ENROLLMENTS_REPORT_AGGREGATES,
   type EnrollmentsReportAggregates,
@@ -35,9 +35,27 @@ import { ObligationsSummary } from "@/tenant/features/obligations/components/Obl
 import MessagingReport from "@/components/ui/reports/MessagingReport";
 import UsersReport from "@/components/ui/reports/UsersReport";
 
-function EnrollmentReportsWrapper(): React.JSX.Element {
+function EnrollmentReportsWrapper({ filters }: { filters: typeof DEFAULT_FILTERS }): React.JSX.Element {
   const { t } = useTranslation();
   const query = useEnrollmentsReportAggregates();
+
+  const rawAggregates =
+    query.data?.status === 200
+      ? (query.data.body as EnrollmentsReportAggregates)
+      : EMPTY_ENROLLMENTS_REPORT_AGGREGATES;
+
+  const aggregates = useMemo<EnrollmentsReportAggregates>(() => {
+    let bySession = rawAggregates.bySession;
+    if (filters.session && filters.session !== "all") {
+      bySession = bySession.filter(
+        (s) => s.sessionId === filters.session || s.name.toLowerCase() === filters.session.toLowerCase(),
+      );
+    }
+    return {
+      ...rawAggregates,
+      bySession,
+    };
+  }, [rawAggregates, filters.session]);
 
   if (query.isError) {
     return (
@@ -49,11 +67,7 @@ function EnrollmentReportsWrapper(): React.JSX.Element {
     );
   }
 
-  const aggregates =
-    query.data?.status === 200
-      ? (query.data.body as EnrollmentsReportAggregates)
-      : EMPTY_ENROLLMENTS_REPORT_AGGREGATES;
-  return <EnrollmentReports aggregates={aggregates} />;
+  return <EnrollmentReports aggregates={aggregates} filters={filters} />;
 }
 
 type ReportsToolsTab = "dashboard" | "compare" | "builder" | "visualizer" | "cardBuilder" | "saved";
@@ -62,7 +76,15 @@ interface ModuleReportsProps {
   category: ModuleReportCategory;
 }
 
-const DEFAULT_FILTERS = {
+const MODULES_WITH_INTERNAL_FILTERS = new Set<ModuleReportCategory>([
+  "contacts",
+  "accounting",
+  "obligations",
+  "messaging",
+  "users",
+]);
+
+const DEFAULT_FILTERS: ReportFilterFields = {
   session: "all",
   class:   "all",
   status:  "all",
@@ -114,13 +136,13 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
       case "financial":    return <FinancialReport  filters={filters} onEditVisual={handleEditVisual} />;
       case "accounting":   return <FinancialReports />;
       case "obligations":  return <ObligationsSummary />;
-      case "enrollments":  return <EnrollmentReportsWrapper />;
+      case "enrollments":  return <EnrollmentReportsWrapper filters={filters} />;
       case "messaging":    return <MessagingReport />;
       case "users":        return <UsersReport />;
       case "examinations":
         return <AcademicReport filters={filters} onEditVisual={handleEditVisual} />;
       case "questionBank":
-        return <QuestionBankReport />;
+        return <QuestionBankReport filters={filters} onEditVisual={handleEditVisual} />;
       case "hasanat":      return <HasanatReport     filters={filters} onEditVisual={handleEditVisual} />;
       case "sessions":     return <SessionReport     filters={filters} onEditVisual={handleEditVisual} />;
       case "saved":        return null;
@@ -169,7 +191,10 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
         visualizerEditConfig={visualizerEditConfig}
         onClosePanel={() => setActiveTab("dashboard")}
         onApplySavedFilters={(appliedFilters) => {
-          setFilters(appliedFilters as typeof DEFAULT_FILTERS);
+          setFilters((prev) => ({
+            ...prev,
+            ...(appliedFilters as Partial<ReportFilterFields>),
+          }));
           setActiveTab("dashboard");
         }}
         onVisualizerSave={() => {
@@ -184,7 +209,7 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
       />
 
       <div className="print:hidden">
-        {category !== "contacts" ? (
+        {!MODULES_WITH_INTERNAL_FILTERS.has(category) ? (
           <ReportFilters category={category} filters={filters} onChange={setFilters} />
         ) : null}
       </div>

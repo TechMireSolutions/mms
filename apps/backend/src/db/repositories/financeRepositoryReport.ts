@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   EMPTY_FINANCE_REPORT_AGGREGATES,
+  ensureAllSessionsInComparison,
   financeReportComparisonQueryActive,
   type FinanceReportAggregates,
   type FinanceReportComparison,
@@ -47,6 +48,67 @@ export async function loadFinanceReportAggregatesSql(
 
   return withTenant(subdomain, async (tx) => {
     const aggregates: FinanceReportAggregates = { ...EMPTY_FINANCE_REPORT_AGGREGATES };
+    const collected = collectedAmountSql('fi');
+
+    // Monthly fee collections
+    const monthlyResult = await tx.execute(sql`
+      SELECT
+        to_char(left(NULLIF(trim(fi.due_date), ''), 10)::date, 'YYYY-MM') AS "monthKey",
+        COALESCE(SUM(${collected}), 0)::float8 AS "collected",
+        COALESCE(SUM(GREATEST(0, COALESCE(fi.final_amt, 0) - ${collected})), 0)::float8 AS "outstanding",
+        COALESCE(SUM(COALESCE(fi.final_amt, 0)), 0)::float8 AS "total"
+      FROM finance_invoices fi
+      WHERE ${activeInvoiceWhere(subdomain, 'fi')}
+        AND NULLIF(trim(fi.due_date), '') IS NOT NULL
+        AND NULLIF(trim(fi.due_date), '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `);
+
+    aggregates.monthlyFeeCollection = getQueryRows<Record<string, unknown>>(monthlyResult)
+      .filter((row) => typeof row.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey))
+      .map((row) => {
+        const rowCollected = Number(row.collected ?? 0);
+        const rowOutstanding = Number(row.outstanding ?? 0);
+        const rowTotal = Number(row.total ?? 0);
+        const rate = rowTotal > 0 ? Math.round((rowCollected / rowTotal) * 100) : 0;
+        return {
+          month: String(row.monthKey),
+          collected: rowCollected,
+          outstanding: rowOutstanding,
+          total: rowTotal,
+          rate,
+        };
+      })
+      .slice(-6);
+
+    // Discount usage by type
+    const discountResult = await tx.execute(sql`
+      SELECT
+        COALESCE(NULLIF(trim(fi.discount_type), ''), 'other') AS "type",
+        COUNT(*)::int AS "count",
+        COALESCE(SUM(COALESCE(fi.discount_amt, 0)), 0)::float8 AS "totalDiscounted"
+      FROM finance_invoices fi
+      WHERE ${activeInvoiceWhere(subdomain, 'fi')}
+        AND COALESCE(fi.discount_amt, 0) > 0
+        AND lower(trim(COALESCE(fi.status, ''))) != 'cancelled'
+      GROUP BY 1
+    `);
+
+    const discountRows = getQueryRows<Record<string, unknown>>(discountResult).map((row) => ({
+      type: String(row.type ?? 'other'),
+      count: Number(row.count ?? 0),
+      totalDiscounted: Number(row.totalDiscounted ?? 0),
+    }));
+
+    const totalDiscountSum = discountRows.reduce((sum, d) => sum + d.totalDiscounted, 0);
+    aggregates.discountUsageByType = discountRows.map((d) => ({
+      type: d.type,
+      count: d.count,
+      totalDiscounted: d.totalDiscounted,
+      percentage: totalDiscountSum > 0 ? Math.round((d.totalDiscounted / totalDiscountSum) * 100) : 0,
+    }));
+
     if (!financeReportComparisonQueryActive(comparisonQuery) || !comparisonQuery) {
       return aggregates;
     }
@@ -88,16 +150,14 @@ export async function loadFinanceReportAggregatesSql(
         GROUP BY sel."sessionId"
       `);
 
-      comparison.sessions = getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => ({
-        sessionId: String(row.sessionId ?? ''),
-        feeCollected: Number(row.feeCollected ?? 0),
-      } satisfies FinanceReportComparisonSession));
-
-      for (const sessionId of sessionIds) {
-        if (!comparison.sessions.some((row) => row.sessionId === sessionId)) {
-          comparison.sessions.push({ sessionId, feeCollected: 0 });
-        }
-      }
+      comparison.sessions = ensureAllSessionsInComparison(
+        getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => ({
+          sessionId: String(row.sessionId ?? ''),
+          feeCollected: Number(row.feeCollected ?? 0),
+        } satisfies FinanceReportComparisonSession)),
+        sessionIds,
+        (sessionId) => ({ sessionId, feeCollected: 0 }),
+      );
     }
 
     const loadMonthlyRange = async (

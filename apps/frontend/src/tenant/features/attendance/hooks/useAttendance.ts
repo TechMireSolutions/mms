@@ -162,13 +162,6 @@ export function useAttendanceReportAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
   const comparison = normalizeAttendanceReportComparisonQuery(options?.comparison);
-  const queryParams = new URLSearchParams();
-  if (comparison?.sessionIds?.length) queryParams.set('sessionIds', comparison.sessionIds.join(','));
-  if (comparison?.rangeAFrom) queryParams.set('rangeAFrom', comparison.rangeAFrom);
-  if (comparison?.rangeATo) queryParams.set('rangeATo', comparison.rangeATo);
-  if (comparison?.rangeBFrom) queryParams.set('rangeBFrom', comparison.rangeBFrom);
-  if (comparison?.rangeBTo) queryParams.set('rangeBTo', comparison.rangeBTo);
-  const queryString = queryParams.toString();
 
   return useQuery({
     queryKey: [...ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,

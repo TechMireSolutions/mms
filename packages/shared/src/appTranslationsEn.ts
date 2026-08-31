@@ -640,6 +640,7 @@ export const APP_TRANSLATIONS_EN = {
   "attendance.filters.title": "Filters",
   "attendance.item.record": "record",
   "attendance.item.records": "records",
+  "attendance.loadFailed": "Failed to load attendance records",
   "attendance.loadFailedHint": "Check your connection and try again.",
   "attendance.mark.allAbsent": "All Absent",
   "attendance.mark.allPresent": "All Present",

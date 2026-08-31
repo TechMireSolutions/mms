@@ -23,9 +23,6 @@ import {
   useQuestionBankResultsCollection,
   useQuestionBankTestsCollection,
 } from '@/tenant/hooks/collections/questionBank';
-import {
-  type StudentRecord,
-} from '@/tenant/hooks/collections/students';
 import type { ReportCollection } from '@/lib/reports/reportMetadata';
 
 export type ReportCollectionsSnapshot = {
@@ -178,5 +175,3 @@ export function useReportCollectionRows(
 
   return { rows, denominations: hasanatDenoms };
 }
-
-export type { StudentRecord };
