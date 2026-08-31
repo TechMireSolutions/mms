@@ -1,10 +1,11 @@
 import React, { lazy, Suspense } from "react";
 import { AlertTriangle, TrendingDown, Award } from "lucide-react";
-import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AttendanceAnalyticsInsights } from "@/tenant/features/attendance/components/AttendanceAnalyticsInsights";
 import { useAttendanceAnalyticsModel } from "@/tenant/features/attendance/components/useAttendanceAnalyticsModel";
+import { StatsSkeleton } from '@/components/ui/LoadingState';
+import { ErrorState } from '@/components/ui/ErrorState';
 
 const AttendanceAnalyticsChartPanels = lazy(() =>
   import("@/tenant/features/attendance/components/AttendanceAnalyticsChartPanels").then((mod) => ({
@@ -18,11 +19,22 @@ export interface AnalyticsFilters {
 
 export interface AttendanceAnalyticsProps {
   filters: AnalyticsFilters;
-  records: AttendanceRecord[];
 }
 
-export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsProps): React.JSX.Element {
-  const model = useAttendanceAnalyticsModel(filters, records);
+export function AttendanceAnalytics({ filters }: AttendanceAnalyticsProps): React.JSX.Element {
+  const model = useAttendanceAnalyticsModel(filters);
+
+  if (model.isError) {
+    return (
+      <ErrorState
+        title={model.t('attendance.toast.loadFailed')}
+        description={model.t('attendance.loadFailedHint')}
+        onRetry={() => void model.refetch()}
+      />
+    );
+  }
+
+  if (model.isLoading) return <StatsSkeleton count={4} />;
 
   return (
     <section className="space-y-6">
@@ -37,14 +49,14 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
           },
           {
             label: model.t("attendance.analytics.kpi.totalPresent"),
-            value: model.totalStats.present,
+            value: model.totalStats.present ?? 0,
             sub: model.t("attendance.analytics.kpi.allRecords"),
             icon: Award,
             accent: "primary",
           },
           {
             label: model.t("attendance.analytics.kpi.lowAttendance"),
-            value: model.lowAttendance.length,
+            value: model.lowAttendanceCount,
             sub: model.t("attendance.analytics.kpi.belowThreshold"),
             icon: AlertTriangle,
             accent: "warning",
@@ -75,6 +87,7 @@ export function AttendanceAnalytics({ filters, records }: AttendanceAnalyticsPro
       <AttendanceAnalyticsInsights
         t={model.t}
         lowAttendance={model.lowAttendance}
+        lowAttendanceCount={model.lowAttendanceCount}
         topStudents={model.topStudents}
       />
     </section>

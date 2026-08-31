@@ -60,15 +60,15 @@ export async function loadDashboardSummary(
         questionBank,
         accounting,
       ] = await Promise.all([
-        studentUseCases.loadStudentsCommandMetrics().catch(() => undefined),
-        teacherUseCases.loadTeachersCommandMetrics().catch(() => undefined),
-        contactUseCases.loadContactsCommandMetrics().catch(() => undefined),
-        loadSessionsCommandMetrics().catch(() => undefined),
-        aggregateAttendanceCommandMetrics(cleanTenant, { selectedDate: date }).catch(() => undefined),
-        loadFinanceCommandMetrics().catch(() => undefined),
-        loadHasanatCommandMetrics().catch(() => undefined),
-        loadQuestionBankCommandMetrics().catch(() => undefined),
-        loadAccountingCommandMetrics().catch(() => undefined),
+        studentUseCases.loadStudentsCommandMetrics(),
+        teacherUseCases.loadTeachersCommandMetrics(),
+        contactUseCases.loadContactsCommandMetrics(),
+        loadSessionsCommandMetrics(),
+        aggregateAttendanceCommandMetrics(cleanTenant, { selectedDate: date }),
+        loadFinanceCommandMetrics(),
+        loadHasanatCommandMetrics(),
+        loadQuestionBankCommandMetrics(),
+        loadAccountingCommandMetrics(),
       ]);
 
       return {

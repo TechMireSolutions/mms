@@ -101,7 +101,7 @@ export default function UsersPage(): React.JSX.Element {
               onRestoreUser={(id) => { void controller.handleRestoreUser(id); }}
               onBulkDeleteUsers={(ids) => { void controller.handleBulkDelete(ids); }}
               onBulkRestoreUsers={(ids) => { void controller.handleBulkRestore(ids); }}
-              onResetPassword={controller.handleResetPassword}
+              onResetPassword={controller.handleOpenPasswordReset}
               onAddUser={() => controller.setShowAddUser(true)}
               onInviteUser={() => controller.setShowInvite(true)}
               onMessageUsers={controller.handleMessageUsers}
@@ -114,6 +114,7 @@ export default function UsersPage(): React.JSX.Element {
       <UsersModalLayer
         viewing={controller.viewing}
         editing={controller.editing}
+        resettingPasswordFor={controller.resettingPasswordFor}
         showAddUser={controller.showAddUser}
         showInvite={controller.showInvite}
         canWrite={controller.canWrite}
@@ -122,9 +123,11 @@ export default function UsersPage(): React.JSX.Element {
         messagingTarget={controller.messagingTarget}
         onCloseViewing={() => controller.setViewing(null)}
         onCloseEditing={() => controller.setEditing(null)}
+        onClosePasswordReset={() => controller.setResettingPasswordFor(null)}
         onCloseAddUser={() => controller.setShowAddUser(false)}
         onCloseInvite={() => controller.setShowInvite(false)}
         onSaveEdit={controller.handleSaveEdit}
+        onResetPassword={controller.handleResetPassword}
         onAddUser={controller.handleAddUser}
         onInvite={controller.handleInvite}
         onRestoreUser={(id) => { void controller.handleRestoreUser(id); }}

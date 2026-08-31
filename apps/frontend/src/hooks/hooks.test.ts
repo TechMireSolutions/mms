@@ -10,8 +10,9 @@ describe('usePermissions matrix', () => {
     expect(roleHasPermission('assistant_teacher', 'users.manage')).toBe(false);
   });
 
-  it('teacher can write contacts but not delete', () => {
-    expect(roleHasPermission('teacher', 'contacts.write')).toBe(true);
+  it('teacher cannot access the contacts directory', () => {
+    expect(roleHasPermission('teacher', 'contacts.read')).toBe(false);
+    expect(roleHasPermission('teacher', 'contacts.write')).toBe(false);
     expect(roleHasPermission('teacher', 'contacts.delete')).toBe(false);
   });
 

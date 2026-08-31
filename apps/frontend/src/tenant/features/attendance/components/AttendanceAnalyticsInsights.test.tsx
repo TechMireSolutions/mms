@@ -8,8 +8,9 @@ describe("AttendanceAnalyticsInsights Component", () => {
     const html = renderToStaticMarkup(
       <AttendanceAnalyticsInsights
         t={((k: string) => k) as any}
-        lowAttendance={[{ name: "Zayd", rate: 60 }]}
-        topStudents={[{ name: "Ali", rate: 99 }]}
+        lowAttendance={[{ id: "student-1", name: "Zayd", rate: 60 }]}
+        lowAttendanceCount={1}
+        topStudents={[{ id: "student-2", name: "Ali", rate: 99 }]}
       />,
     );
 

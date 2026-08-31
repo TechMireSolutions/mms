@@ -53,8 +53,6 @@ const ADMIN: Permission[] = [
 ];
 
 const TEACHER: Permission[] = [
-  "contacts.read",
-  "contacts.write",
   "students.read",
   "students.write",
   "teachers.read",
@@ -81,7 +79,6 @@ const ACCOUNTANT: Permission[] = [
 ];
 
 const ASSISTANT_TEACHER: Permission[] = [
-  "contacts.read",
   "students.read",
   "teachers.read",
   "analytics.view",

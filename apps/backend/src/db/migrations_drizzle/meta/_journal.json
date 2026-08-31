@@ -582,8 +582,27 @@
       "when": 1786755600000,
       "tag": "0082_new_modules",
       "breakpoints": true
+    },
+    {
+      "idx": 83,
+      "version": "7",
+      "when": 1786759200000,
+      "tag": "0083_dedupe_session_classes",
+      "breakpoints": true
+    },
+    {
+      "idx": 84,
+      "version": "7",
+      "when": 1786762800000,
+      "tag": "0084_hydrate_enrollment_relation_names",
+      "breakpoints": true
+    },
+    {
+      "idx": 85,
+      "version": "7",
+      "when": 1786766400000,
+      "tag": "0085_repair_enrollment_session_classes",
+      "breakpoints": true
     }
   ]
 }
-
-

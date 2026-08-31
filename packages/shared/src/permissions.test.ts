@@ -7,8 +7,13 @@ describe("roleHasPermission", () => {
     expect(roleHasPermission("admin", "users.manage")).toBe(true);
   });
 
-  it("denies teacher user management", () => {
+  it("denies teacher access to administrative and financial modules", () => {
     expect(roleHasPermission("teacher", "users.manage")).toBe(false);
+    expect(roleHasPermission("teacher", "configuration.view")).toBe(false);
+    expect(roleHasPermission("teacher", "finance.write")).toBe(false);
+    expect(roleHasPermission("teacher", "contacts.read")).toBe(false);
+    expect(roleHasPermission("teacher", "contacts.write")).toBe(false);
+    expect(roleHasPermission("assistant_teacher", "contacts.read")).toBe(false);
     expect(roleHasPermission("teacher", "students.write")).toBe(true);
   });
 

@@ -32,8 +32,7 @@ export function useAttendancePageController() {
   const activeAttendanceRecords = attendanceCollectionQuery.data ?? [];
   // Work records list is server-paged inside `AttendanceRecords` (filters colocated
   // with the toolbar). `shownCount` is reported back via `onTotalChange` for the
-  // metrics strip; Reports/Mark consume the full collection below.
-  const attendanceRecords = activeAttendanceRecords;
+  // metrics strip; Mark consumes the capped collection while Reports use SQL aggregates.
   const columnLayout = useAttendanceColumnLayout();
   const {
     messagingTarget,
@@ -89,7 +88,6 @@ export function useAttendancePageController() {
     setActiveAnalyticsTab,
     attendanceCollectionQuery,
     activeAttendanceRecords,
-    attendanceRecords,
     shownCount,
     setShownCount,
     columnLayout,

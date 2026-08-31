@@ -216,4 +216,23 @@ describe('dashboard config routes', () => {
 
     await app.close();
   });
+
+  it('GET /api/dashboard/summary reports an atomic snapshot failure', async () => {
+    const app = await buildApp();
+    mockLoadDashboardSummary.mockRejectedValueOnce(new Error('metric query failed'));
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/dashboard/summary',
+      headers: { host: 'demo.localhost', authorization: `Bearer ${adminToken(app)}` },
+    });
+
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toEqual({
+      type: 'database_error',
+      message: 'Failed to load dashboard summary',
+    });
+
+    await app.close();
+  });
 });

@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { QueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -10,6 +10,7 @@ import {
 import { buildDefaultCustomWidgets } from '@/lib/reports/widgetDefaults';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { tsrClient } from '@/lib/api';
+import { fetchDashboardSummaryAsync } from './dashboardApi';
 
 export const DASHBOARD_PREFERENCES_QUERY_KEY = ['dashboard', 'preferences'] as const;
 export const DASHBOARD_WIDGETS_QUERY_KEY = ['dashboard', 'widgets'] as const;
@@ -31,19 +32,19 @@ export function useDashboardSummaryQuery(
   options?: { enabled?: boolean; refetchInterval?: number },
 ) {
   const { isAuthenticated } = useAuth();
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const query = tsrClient.dashboard.getSummary.useQuery({
+  const query = useQuery({
     queryKey: DASHBOARD_SUMMARY_QUERY_KEY(date, role),
-    query: { date, role },
+    queryFn: ({ signal }) => fetchDashboardSummaryAsync(date, role, signal),
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
     refetchOnWindowFocus: true,
     refetchInterval: options?.refetchInterval ?? 60_000,
+    placeholderData: keepPreviousData,
   });
 
   return {
     ...query,
-    summary: query.data?.status === 200 ? (query.data.body.summary as Record<string, unknown>) : undefined,
+    summary: query.data,
   };
 }
 

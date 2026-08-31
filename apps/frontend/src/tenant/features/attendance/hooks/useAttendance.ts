@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import type {
   AttendanceCommandMetricsSnapshot,
   AttendanceListPageResult,
@@ -11,7 +11,6 @@ import {
 } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { tsrClient } from '@/lib/api';
-import { apiContract } from '@/lib/api';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 
@@ -157,19 +156,39 @@ export function useAttendanceMutations() {
 
 
 export function useAttendanceReportAggregates(
-  options?: { enabled?: boolean; comparison?: AttendanceReportComparisonQuery },
+  options?: {
+    enabled?: boolean;
+    classId?: string;
+    comparison?: AttendanceReportComparisonQuery;
+  },
 ) {
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
   const comparison = normalizeAttendanceReportComparisonQuery(options?.comparison);
-
-  return useQuery({
-    queryKey: [...ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as const,
-    queryFn: async ({ signal }): Promise<AttendanceReportAggregates> =>
-      apiContract.attendance.reportAggregates({ query: comparison as any }).then((res: any) => res.body as AttendanceReportAggregates),
+  const classId = options?.classId?.trim() || undefined;
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const query = tsrClient.attendance.reportAggregates.useQuery({
+    queryKey: [...ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY, classId ?? null, comparison ?? null] as const,
+    queryData: {
+      query: {
+        classId,
+        sessionIds: comparison?.sessionIds?.length ? comparison.sessionIds.join(',') : undefined,
+        rangeAFrom: comparison?.rangeAFrom,
+        rangeATo: comparison?.rangeATo,
+        rangeBFrom: comparison?.rangeBFrom,
+        rangeBTo: comparison?.rangeBTo,
+      },
+    },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
+
+  return {
+    ...query,
+    data: query.data?.status === 200
+      ? query.data.body as AttendanceReportAggregates
+      : undefined,
+  };
 }
 
 export function useAttendanceMetrics(selectedDate: string, options?: { enabled?: boolean }) {

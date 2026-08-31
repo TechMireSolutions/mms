@@ -11,7 +11,9 @@ import {
   verifyUserEmailById,
   bulkSoftDeleteUsers,
   bulkRestoreUsers,
+  resetUserPasswordById,
 } from '../../../services/usersService.js';
+import { AUTH_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
 
 import { parseRequest } from '../../../lib/zodRequest.js';
 import { usersListQuerySchema } from '../../../validation/userSchemas.js';
@@ -129,8 +131,39 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to verify user email' } };
       }
     },
-    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
-    //  tracked by the separate contract-router signature refactor)
+    resetPassword: {
+      hooks: { preHandler: fastify.rateLimit(AUTH_RATE_LIMIT) },
+      handler: async ({ params: { id }, body, request }: any) => {
+        const user = request.user as User;
+        if (!canWriteCollection(user, 'users')) {
+          return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+        }
+        if (String(user.id) === id) {
+          return {
+            status: 400 as const,
+            body: {
+              type: 'self_password_reset',
+              message: 'Use profile security settings to change your own password',
+            },
+          };
+        }
+        try {
+          const ok = await resetUserPasswordById(id, body.temporaryPassword);
+          if (!ok) return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
+          return { status: 200 as const, body: { success: true as const } };
+        } catch (error: unknown) {
+          const err = error as Error & { statusCode?: number; type?: string };
+          if (err.statusCode === 400) {
+            return {
+              status: 400 as const,
+              body: { type: err.type ?? 'validation_error', message: err.message },
+            };
+          }
+          request.log.error(error, 'Failed to reset user password');
+          return { status: 500 as const, body: { type: 'database_error', message: 'Failed to reset user password' } };
+        }
+      },
+    },
   } as any);
 
   await fastify.register(s.plugin(router));

@@ -4,6 +4,16 @@ import { z } from 'zod';
 const c = initContract();
 
 export const authContract = c.router({
+  institutionSetupStatus: {
+    method: 'GET',
+    path: '/api/auth/institution-setup-status',
+    responses: {
+      200: z.object({ complete: z.boolean() }),
+      401: z.any(),
+      403: z.any(),
+    },
+    summary: 'Get workspace institution setup completion status',
+  },
   changePassword: {
     method: 'POST',
     path: '/api/auth/change-password',

@@ -79,6 +79,16 @@ describe('attendance REST routes integration', () => {
     mockBulkSoftDeleteAttendance.mockReset();
     mockBulkRestoreAttendance.mockReset();
     mockLoadAttendanceReportAggregates.mockReset().mockResolvedValue({
+      overview: {
+        overallRate: 0,
+        totalRecords: 0,
+        lowAttendanceCount: 0,
+        classRates: [],
+        monthlyTrend: [],
+        studentRates: [],
+        topPerformers: [],
+        statusCounts: [],
+      },
       comparison: { sessions: [], monthly: { a: [], b: [] } },
     });
   });
@@ -252,6 +262,16 @@ describe('attendance REST routes integration', () => {
 
   it('GET /api/attendance/report-aggregates loads comparison for authorized roles', async () => {
     mockLoadAttendanceReportAggregates.mockResolvedValueOnce({
+      overview: {
+        overallRate: 0,
+        totalRecords: 0,
+        lowAttendanceCount: 0,
+        classRates: [],
+        monthlyTrend: [],
+        studentRates: [],
+        topPerformers: [],
+        statusCounts: [],
+      },
       comparison: {
         sessions: [{ sessionId: 's1', attendancePct: 80 }],
         monthly: {
@@ -278,6 +298,34 @@ describe('attendance REST routes integration', () => {
       rangeBTo: '2026-06-30',
     });
     expect(res.json().comparison?.sessions?.[0]?.attendancePct).toBe(80);
+    await app.close();
+  });
+
+  it('GET /api/attendance/report-aggregates forwards the analytics class filter', async () => {
+    mockLoadAttendanceReportAggregates.mockResolvedValueOnce({
+      overview: {
+        overallRate: 75,
+        totalRecords: 4,
+        lowAttendanceCount: 1,
+        classRates: [],
+        monthlyTrend: [],
+        studentRates: [],
+        topPerformers: [],
+        statusCounts: [],
+      },
+    });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/attendance/report-aggregates?classId=class-2',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadAttendanceReportAggregates).toHaveBeenCalledWith({ classId: 'class-2' });
+    expect(res.json().overview.overallRate).toBe(75);
     await app.close();
   });
 

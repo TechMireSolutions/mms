@@ -8,12 +8,32 @@ vi.mock("@/tenant/components/moduleReports", () => ({
   ModuleReports: ({ category }: { category: string }) => <div data-testid="module-reports">Module Reports: {category}</div>,
 }));
 
+vi.mock("@/tenant/features/attendance/components/AttendanceAnalytics", () => ({
+  AttendanceAnalytics: () => <div data-testid="analytics">Attendance Analytics</div>,
+}));
+
+vi.mock("@/components/ui/SubTabBar", () => ({
+  SubTabBar: ({ tabs }: { tabs: { label: string }[] }) => (
+    <div data-testid="sub-tab-bar">{tabs.map((tab) => tab.label).join(", ")}</div>
+  ),
+}));
+
 describe("AttendanceReportsTier Component", () => {
-  it("renders KPI summary and module reports in canonical tier shell", () => {
-    const html = renderToStaticMarkup(<AttendanceReportsTier />);
+  it("renders KPI summary and analytics charts when active", () => {
+    const html = renderToStaticMarkup(
+      <AttendanceReportsTier
+        role="admin"
+        filters={{ date: "2025-01-01", session: "all", classId: "all" } as any}
+        analyticsTabs={[
+          { id: "charts", label: "Charts" },
+          { id: "reports", label: "Reports" },
+        ]}
+        activeAnalyticsTab="charts"
+        onAnalyticsTabChange={vi.fn()}
+      />,
+    );
 
     expect(html).toContain("KPI Summary: attendance");
-    expect(html).toContain("Module Reports: attendance");
+    expect(html).toContain("Attendance Analytics");
   });
 });
-

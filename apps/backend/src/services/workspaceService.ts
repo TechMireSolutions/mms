@@ -10,6 +10,7 @@ import {
   normalizeUserModulePreferences,
   slugifySubdomain,
   isValidSubdomain,
+  isInstitutionSetupComplete,
   isWorkspaceEnabled,
   toPublicBranding,
 } from '@mms/shared';
@@ -44,6 +45,12 @@ async function listWorkspaces(): Promise<Workspace[]> {
 export async function fetchPublicBrandingForSubdomain(subdomain: string) {
   const branding = await getWorkspaceBranding(subdomain);
   return toPublicBranding(branding ? branding : mergeBrandingSettings(null));
+}
+
+/** Workspace-wide setup state derived from authoritative persisted branding. */
+export async function getWorkspaceInstitutionSetupStatus(subdomain: string): Promise<boolean> {
+  const branding = await getWorkspaceBranding(normalizeSubdomainInput(subdomain));
+  return isInstitutionSetupComplete(branding);
 }
 
 export function normalizeSubdomainInput(value: string): string {

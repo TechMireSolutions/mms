@@ -19,6 +19,17 @@ export const editWorkspaceUserSchema = z.object({
 /** Values accepted by the workspace user edit form. */
 export type EditWorkspaceUserInput = z.infer<typeof editWorkspaceUserSchema>;
 
+/** Admin-issued temporary password for an existing workspace user. */
+export const resetWorkspaceUserPasswordSchema = z
+  .object({
+    temporaryPassword: z.string().min(1, 'users.resetPasswordRequired'),
+  })
+  .strict();
+
+export type ResetWorkspaceUserPasswordInput = z.infer<
+  typeof resetWorkspaceUserPasswordSchema
+>;
+
 /** Shared form contract for inviting a workspace user. */
 export const inviteWorkspaceUserSchema = z.object({
   contactId: userFormContactIdSchema,

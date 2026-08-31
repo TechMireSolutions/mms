@@ -12,6 +12,7 @@ import {
   isWidgetActiveForDashboard,
   DASHBOARD_ACCOUNTING_WIDGET_IDS,
 } from '@/lib/dashboardCollections';
+import { isSeededDashboardWidget } from '@/lib/dashboardWidgets';
 import { useStudentsMetrics, useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
 import { useContactsMetrics, useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
@@ -59,6 +60,9 @@ export interface DashboardCollectionData {
   isLoading?: boolean;
 }
 
+function needsWidgetAggregate(widget: CustomWidget): boolean {
+  return widget.widgetType !== 'card' || !isSeededDashboardWidget(widget.id);
+}
 
 /** Loads server metrics for dashboard cards — no full collection dumps for KPI values. */
 export function useDashboardData(
@@ -100,10 +104,10 @@ export function useDashboardData(
 
   const collectionWidgets = useMemo(
     () => ({
-      contacts: filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole),
-      students: filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole),
-      teachers: filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole),
-      sessions: filterDashboardWidgetsByCollection(widgets, 'sessions', dashboardRole),
+      contacts: filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole).filter(needsWidgetAggregate),
+      students: filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole).filter(needsWidgetAggregate),
+      teachers: filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole).filter(needsWidgetAggregate),
+      sessions: filterDashboardWidgetsByCollection(widgets, 'sessions', dashboardRole).filter(needsWidgetAggregate),
     }),
     [widgets, dashboardRole],
   );
@@ -162,4 +166,3 @@ export function useDashboardData(
     isLoading: isLoading || isPending,
   };
 }
-

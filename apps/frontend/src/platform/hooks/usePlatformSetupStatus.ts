@@ -1,9 +1,25 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { apiJson } from "@/lib/apiClient";
+import { apiContract } from "@/lib/api";
+import { ApiError } from "@/lib/apiClient";
 import type { PlatformSetupStatus } from "@mms/shared";
 import { useTenant } from "@/lib/contexts/TenantContext";
 
 export const PLATFORM_SETUP_STATUS_QUERY_KEY = ["platform", "setup", "status"] as const;
+
+export async function fetchPlatformSetupStatus(signal?: AbortSignal): Promise<PlatformSetupStatus> {
+  const response = await apiContract.platform.getSetupStatus({
+    fetchOptions: { signal },
+  });
+  if (response.status !== 200) {
+    const body = response.body as { message?: string; type?: string };
+    throw new ApiError(
+      response.status,
+      body?.message ?? `Platform setup status request failed (${response.status})`,
+      body?.type,
+    );
+  }
+  return response.body as PlatformSetupStatus;
+}
 
 /** First-run platform super-user setup status (apex only). */
 export function usePlatformSetupStatus(): {
@@ -16,11 +32,7 @@ export function usePlatformSetupStatus(): {
 
   const query = useQuery({
     queryKey: PLATFORM_SETUP_STATUS_QUERY_KEY,
-    queryFn: async ({ signal }) => {
-      return await apiJson<PlatformSetupStatus>('/api/platform/auth/setup/status', {
-        signal,
-      });
-    },
+    queryFn: ({ signal }) => fetchPlatformSetupStatus(signal),
     enabled: isApex,
     staleTime: 60_000,
     retry: 5,

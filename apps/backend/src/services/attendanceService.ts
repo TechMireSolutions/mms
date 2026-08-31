@@ -1,10 +1,11 @@
 import {
   attendanceRecordSchema,
   attendanceListSchema,
+  EMPTY_ATTENDANCE_REPORT_AGGREGATES,
   normalizeAttendanceReportComparisonQuery,
   type AttendanceCommandMetricsSnapshot,
   type AttendanceRecord,
-  type AttendanceReportComparisonQuery,
+  type AttendanceReportAggregatesQuery,
 } from '@mms/shared';
 import {
   listAttendanceRecordsByWorkspace,
@@ -87,16 +88,20 @@ export async function countAttendanceRecords(): Promise<number> {
   return countAttendanceActiveByWorkspace(tenant);
 }
 
-/** ComparisonMode attendance SQL aggregates (session attendancePct + dual monthly ranges). */
+/** Attendance analytics plus optional ComparisonMode SQL aggregates. */
 export async function loadAttendanceReportAggregates(
-  comparisonQuery?: AttendanceReportComparisonQuery,
+  query?: AttendanceReportAggregatesQuery,
 ) {
   const tenant = getRequestTenant();
   if (!tenant) {
-    return { comparison: { sessions: [], monthly: { a: [], b: [] } } };
+    return EMPTY_ATTENDANCE_REPORT_AGGREGATES;
   }
-  const normalized = normalizeAttendanceReportComparisonQuery(comparisonQuery);
-  return loadAttendanceReportAggregatesSql(tenant, normalized);
+  const comparison = normalizeAttendanceReportComparisonQuery(query);
+  const classId = query?.classId?.trim();
+  return loadAttendanceReportAggregatesSql(tenant, {
+    ...comparison,
+    ...(classId ? { classId } : {}),
+  });
 }
 
 const EMPTY_ATTENDANCE_METRICS: AttendanceCommandMetricsSnapshot = {

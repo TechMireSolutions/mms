@@ -59,6 +59,11 @@ export const sessionClasses = pgTable('session_classes', {
   }).onDelete('cascade'),
   index('session_classes_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
   index('session_classes_workspace_teacher_idx').on(table.workspaceSubdomain, table.teacherId),
+  uniqueIndex('session_classes_workspace_session_name_uidx').on(
+    table.workspaceSubdomain,
+    table.sessionId,
+    sql`lower(btrim(regexp_replace(${table.name}, '[[:space:]]+', ' ', 'g')))`,
+  ),
 ]);
 
 export const sessionTimetable = pgTable('session_timetable', {

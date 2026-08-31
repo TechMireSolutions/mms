@@ -8,14 +8,18 @@ vi.mock("./useAttendanceAnalyticsModel", () => ({
     t: (key: string) => key,
     overallRate: 92,
     totalStats: { present: 100 },
+    lowAttendanceCount: 0,
     lowAttendance: [],
-    studentRates: [{ name: "Ali", rate: 95 }],
+    studentRates: [{ id: "student-1", name: "Ali", rate: 95 }],
     colors: ["#000"],
     classStats: [],
     monthlyTrend: [],
     pieData: [],
     statuses: [],
     topStudents: [],
+    isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
   }),
 }));
 
@@ -34,7 +38,7 @@ vi.mock("./AttendanceAnalyticsInsights", () => ({
 describe("AttendanceAnalytics Component", () => {
   it("renders metrics grid and insights", () => {
     const html = renderToStaticMarkup(
-      <AttendanceAnalytics filters={{}} records={[]} />,
+      <AttendanceAnalytics filters={{}} />,
     );
 
     expect(html).toContain("attendance.analytics.kpi.overallAttendance:92%");

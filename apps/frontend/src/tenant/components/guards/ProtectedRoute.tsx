@@ -1,11 +1,13 @@
 import React from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
-import { isInstitutionSetupComplete, requiresTwoFactor } from "@mms/shared";
+import { requiresTwoFactor, roleHasPermission } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from "@/lib/config/routes";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import { useBranding } from "@/tenant/hooks/useBranding";
 import { is2FAPending, is2FAVerified } from "@/lib/twoFactor";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { useInstitutionSetupStatus } from "@/tenant/hooks/useInstitutionSetupStatus";
 
 /**
  * Requires an authenticated session. Redirects guests to login with return path.
@@ -16,8 +18,14 @@ import { is2FAPending, is2FAVerified } from "@/lib/twoFactor";
 export default function ProtectedRoute(): React.JSX.Element {
   const { isAuthenticated, user } = useAuth();
   const settings = useGlobalSettings();
-  const branding = useBranding();
   const location = useLocation();
+  const canCompleteInstitutionSetup = roleHasPermission(
+    user?.role,
+    'settings.branding.write',
+  );
+  const institutionSetupStatus = useInstitutionSetupStatus(
+    isAuthenticated && canCompleteInstitutionSetup && !user?.mustChangePassword,
+  );
 
   if (!isAuthenticated) {
     if (is2FAPending()) {
@@ -49,7 +57,22 @@ export default function ProtectedRoute(): React.JSX.Element {
     return <Outlet />;
   }
 
-  if (!isInstitutionSetupComplete(branding)) {
+  if (canCompleteInstitutionSetup && institutionSetupStatus.isLoading) {
+    return <RouteStatusFallback fullScreen />;
+  }
+
+  if (canCompleteInstitutionSetup && institutionSetupStatus.isError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-6">
+        <ErrorState
+          type="network"
+          onRetry={() => void institutionSetupStatus.refetch()}
+        />
+      </div>
+    );
+  }
+
+  if (canCompleteInstitutionSetup && institutionSetupStatus.data === false) {
     if (location.pathname !== ROUTES.institutionSetup) {
       return <Navigate to={ROUTES.institutionSetup} replace />;
     }

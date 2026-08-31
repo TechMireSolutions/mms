@@ -4,8 +4,10 @@ import { baseListQuerySchema } from '../apiSchemas.js';
 import { attendanceBulkIdsSchema } from '../schemas/attendance.dto.js';
 import { attendanceRecordSchema, attendanceBulkSchema } from '../attendanceModuleManifest.js';
 import { attendanceLookupsMapSchema } from '../attendanceLookupTypes.js';
-import { attendanceReportAggregatesSchema } from '../attendanceReportAggregates.js';
-import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
+import {
+  attendanceReportAggregatesHttpQuerySchema,
+  attendanceReportAggregatesSchema,
+} from '../attendanceReportAggregates.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
@@ -151,13 +153,6 @@ export const attendanceContract = c.router({
     },
     summary: 'Restore a soft-deleted attendance record by ID',
   },
-  reportAggregates: {
-    method: 'GET',
-    path: '/api/attendance/report-aggregates',
-    query: reportComparisonQuerySchema.optional(),
-    responses: { 200: attendanceReportAggregatesSchema, 403: errorResponse, 500: errorResponse },
-    summary: 'Get attendance report aggregates',
-  },
   widgetAggregates: {
     method: 'POST',
     path: '/api/attendance/widget-aggregates',
@@ -168,6 +163,17 @@ export const attendanceContract = c.router({
       500: errorResponse,
     },
     summary: 'Get widget aggregates',
+  },
+  reportAggregates: {
+    method: 'GET',
+    path: '/api/attendance/report-aggregates',
+    query: attendanceReportAggregatesHttpQuerySchema,
+    responses: {
+      200: attendanceReportAggregatesSchema,
+      403: errorResponse,
+      500: errorResponse,
+    },
+    summary: 'Get attendance report aggregates',
   },
 
   getFieldConfig: {

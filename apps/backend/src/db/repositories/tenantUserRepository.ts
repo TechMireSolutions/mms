@@ -13,4 +13,5 @@ export {
   softDeleteTenantUserRow,
   restoreTenantUserRow,
   verifyTenantUserEmailRow,
+  resetTenantUserPasswordRow,
 } from './tenantUserRepositoryPersist.js';

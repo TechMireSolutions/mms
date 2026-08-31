@@ -150,7 +150,7 @@ describe("rbacService", () => {
 
   it("aligns contacts write with contacts.write permission", () => {
     expect(canWriteContacts(admin)).toBe(true);
-    expect(canWriteContacts(teacher)).toBe(true);
+    expect(canWriteContacts(teacher)).toBe(false);
     expect(canWriteContacts(accountant)).toBe(false);
     expect(canWriteContacts(viewer)).toBe(false);
   });
@@ -171,7 +171,7 @@ describe("rbacService", () => {
 
   it("aligns contacts read with contacts.read permission", () => {
     expect(canReadContacts(admin)).toBe(true);
-    expect(canReadContacts(teacher)).toBe(true);
+    expect(canReadContacts(teacher)).toBe(false);
     expect(canReadContacts(accountant)).toBe(true);
     expect(canReadContacts(viewer)).toBe(false);
   });

@@ -68,6 +68,14 @@ export const enrollmentsRelations = relations(enrollments, ({ one, many }) => ({
     fields: [enrollments.workspaceSubdomain, enrollments.sessionId],
     references: [sessions.workspaceSubdomain, sessions.id],
   }),
+  sessionClass: one(sessionClasses, {
+    fields: [enrollments.workspaceSubdomain, enrollments.sessionId, enrollments.classId],
+    references: [
+      sessionClasses.workspaceSubdomain,
+      sessionClasses.sessionId,
+      sessionClasses.id,
+    ],
+  }),
   timelineEvents: many(enrollmentTimelineEvents),
 }));
 
@@ -698,11 +706,12 @@ export const sessionsRelations = relations(sessions, ({ one, many }) => ({
   enrollments: many(enrollments),
 }));
 
-export const sessionClassesRelations = relations(sessionClasses, ({ one }) => ({
+export const sessionClassesRelations = relations(sessionClasses, ({ one, many }) => ({
   session: one(sessions, {
     fields: [sessionClasses.workspaceSubdomain, sessionClasses.sessionId],
     references: [sessions.workspaceSubdomain, sessions.id],
   }),
+  enrollments: many(enrollments),
 }));
 
 export const sessionTimetableRelations = relations(sessionTimetable, ({ one }) => ({
@@ -760,4 +769,3 @@ export const dashboardWidgetsRelations = relations(dashboardWidgets, ({ one }) =
     references: [workspaces.subdomain],
   }),
 }));
-

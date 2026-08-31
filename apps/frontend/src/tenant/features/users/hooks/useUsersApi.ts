@@ -110,6 +110,11 @@ export function useUsersMutations() {
   });
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
+  const resetPassword = tsrClient.users.resetPassword.useMutation({
+    onSuccess: () => invalidate(),
+  });
+
+  // @ts-expect-error - TS union discrimination limit with ts-rest
   const logExportAudit = tsrClient.users.exportAudit.useMutation();
 
   return {
@@ -142,6 +147,20 @@ export function useUsersMutations() {
       ...bulkRestoreUsers,
       mutate: (ids: string[], opts?: any) => bulkRestoreUsers.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestoreUsers.mutateAsync({ body: { ids } }),
+    },
+    resetPassword: {
+      ...resetPassword,
+      mutateAsync: async (input: { userId: string; temporaryPassword: string }) => {
+        const response = await resetPassword.mutateAsync({
+          params: { id: input.userId },
+          body: { temporaryPassword: input.temporaryPassword },
+        });
+        if (response.status !== 200) {
+          const body = response.body as { message?: string };
+          throw new Error(body?.message ?? '');
+        }
+        return response.body;
+      },
     },
     logExportAudit: {
       ...logExportAudit,

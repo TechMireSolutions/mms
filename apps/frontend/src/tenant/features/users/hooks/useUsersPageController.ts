@@ -28,6 +28,7 @@ import {
 } from '@/tenant/features/users/hooks/useUsersExportActions';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
+import { notify } from '@/lib/notify';
 
 const SETUP_TAB_LABEL_KEYS: Record<(typeof USERS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
   permissions: 'users.permissions',
@@ -141,10 +142,20 @@ export function useUsersPageController() {
 
   const [viewing, setViewing] = useState<SystemUser | null>(null);
   const [editing, setEditing] = useState<SystemUser | null>(null);
+  const [resettingPasswordFor, setResettingPasswordFor] = useState<SystemUser | null>(null);
   const [showInvite, setShowInvite] = useState(false);
   const [showAddUser, setShowAddUser] = useState(false);
 
   const actorId = authUser?.id ?? 'system';
+  const handleOpenPasswordReset = (user: SystemUser): void => {
+    if (user.id === actorId) {
+      notify.info(t('users.resetPasswordSelfTitle'), {
+        description: t('users.resetPasswordSelfDescription'),
+      });
+      return;
+    }
+    setResettingPasswordFor(user);
+  };
   const {
     handleDeleteUser,
     handleRestoreUser,
@@ -246,6 +257,9 @@ export function useUsersPageController() {
     setViewing,
     editing,
     setEditing,
+    resettingPasswordFor,
+    setResettingPasswordFor,
+    handleOpenPasswordReset,
     showInvite,
     setShowInvite,
     showAddUser,

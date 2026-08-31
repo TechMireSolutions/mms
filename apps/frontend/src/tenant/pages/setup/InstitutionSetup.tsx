@@ -18,6 +18,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from '@/components/ui/formStyles';
 import BrandingIdentityPreview from '@/components/branding/BrandingIdentityPreview';
 import EntryPageHead, { formatEntryTitle } from '@/components/entry/EntryPageHead';
+import { useMarkInstitutionSetupComplete } from '@/tenant/hooks/useInstitutionSetupStatus';
 
 interface FieldErrors {
   madrasaName?: string;
@@ -34,6 +35,7 @@ export default function InstitutionSetup(): React.JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const currentBranding = useBranding();
+  const markInstitutionSetupComplete = useMarkInstitutionSetupComplete();
 
   const [data, setData] = useState<BrandingSettings>(() =>
     mergeBrandingSettings(currentBranding),
@@ -84,6 +86,7 @@ export default function InstitutionSetup(): React.JSX.Element {
       if (!res.ok) {
         throw new Error('Failed to persist institution settings');
       }
+      markInstitutionSetupComplete();
       notify.success(t('institutionSetup.success'), {
         description: t('branding.savedToastDesc'),
       });

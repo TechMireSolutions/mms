@@ -1,4 +1,5 @@
 import { apiContract } from '@/lib/api';
+import { ApiError } from '@/lib/apiClient';
 import {
   normalizeDashboardWidgets,
   type DashboardPreferences,
@@ -77,12 +78,18 @@ export async function fetchDashboardSummaryAsync(
   date?: string,
   role?: string,
   signal?: AbortSignal,
-): Promise<Record<string, unknown> | null> {
+): Promise<Record<string, unknown>> {
   const res = await apiContract.dashboard.getSummary({
     query: { date, role },
+    fetchOptions: { signal },
   });
   if (res.status === 200) {
-    return (res.body as any).summary;
+    return (res.body as { summary: Record<string, unknown> }).summary;
   }
-  return null;
+  const errorBody = res.body as { message?: string; type?: string } | undefined;
+  throw new ApiError(
+    res.status,
+    errorBody?.message ?? `Dashboard summary request failed (${res.status})`,
+    errorBody?.type,
+  );
 }

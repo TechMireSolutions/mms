@@ -17,6 +17,7 @@ import { rotateRefreshToken, validateRefreshToken } from '../../../services/auth
 import { handoffBodySchema } from '../../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendForbidden, sendUnauthorized } from '../../../lib/httpErrors.js';
+import { getWorkspaceInstitutionSetupStatus } from '../../../services/workspaceService.js';
 
 /** Session lifecycle, UI state, refresh, onboarding status, and handoff routes. */
 export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
@@ -31,6 +32,19 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
       isAuthenticated: true,
     });
   });
+
+  fastify.get(
+    '/institution-setup-status',
+    { preHandler: authenticateTenant },
+    async (_request, reply) => {
+      const tenant = getRequestTenant();
+      if (!tenant) {
+        return sendForbidden(reply, 'Tenant context is required');
+      }
+      const complete = await getWorkspaceInstitutionSetupStatus(tenant);
+      return reply.send({ complete });
+    },
+  );
 
   fastify.get('/me/ui-state', { preHandler: authenticateTenant }, async (request, reply) => {
     const user = request.user as User;

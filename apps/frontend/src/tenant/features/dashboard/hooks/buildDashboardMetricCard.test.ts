@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { buildDashboardMetricCard } from './buildDashboardMetricCard';
 import type { DashboardMetricTrends } from './dashboardMetricTrends';
 import type { DashboardCollectionData } from './useDashboardData';
@@ -8,8 +8,14 @@ import type {
   AttendanceCommandMetricsSnapshot,
   SessionsCommandMetricsSnapshot,
 } from '@mms/shared';
+import { queryClientInstance } from '@/lib/queryClient';
+import { STUDENTS_WIDGET_AGGREGATES_QUERY_KEY } from '@/tenant/hooks/collections/students';
 
 describe('buildDashboardMetricCard', () => {
+  afterEach(() => {
+    queryClientInstance.removeQueries({ queryKey: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY });
+  });
+
   const mockData: DashboardCollectionData = {
     studentsTotal: 120,
     teachersTotal: 15,
@@ -81,6 +87,38 @@ describe('buildDashboardMetricCard', () => {
     expect(card.id).toBe('def-card-admin-students');
     expect(card.value).toBe('120');
     expect(card.trend).toBe(7);
+  });
+
+  it('does not let a late aggregate overwrite a seeded summary card', () => {
+    queryClientInstance.setQueryData(
+      [...STUDENTS_WIDGET_AGGREGATES_QUERY_KEY, 'stale-saved-filter'],
+      {
+        'def-card-admin-students': {
+          value: 0,
+          totalCount: 120,
+          chartData: [],
+        },
+      },
+    );
+
+    const card = buildDashboardMetricCard({
+      widget: {
+        id: 'def-card-admin-students',
+        widgetType: 'card',
+        role: 'admin',
+        collection: 'students',
+        isPinnedToDashboard: false,
+        title: 'Total Students',
+        category: 'students',
+        operation: 'count',
+        color: 'emerald',
+      },
+      data: mockData,
+      trends: mockTrends,
+      t: mockT,
+    });
+
+    expect(card.value).toBe('120');
   });
 
   it('maps attendance trend metric correctly via TREND_METRIC_KEY_MAP', () => {

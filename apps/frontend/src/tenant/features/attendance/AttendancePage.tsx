@@ -28,7 +28,6 @@ export default function Attendance() {
     setActiveAnalyticsTab,
     attendanceCollectionQuery,
     activeAttendanceRecords,
-    attendanceRecords,
     shownCount,
     setShownCount,
     columnLayout,
@@ -58,7 +57,15 @@ export default function Attendance() {
     }
 
     if (effectiveTab === 'reports') {
-      return <AttendanceReportsTier />;
+      return (
+        <AttendanceReportsTier
+          role={role}
+          filters={filters}
+          analyticsTabs={visibleAnalyticsTabs}
+          activeAnalyticsTab={effectiveAnalyticsTab}
+          onAnalyticsTabChange={setActiveAnalyticsTab}
+        />
+      );
     }
 
     return (

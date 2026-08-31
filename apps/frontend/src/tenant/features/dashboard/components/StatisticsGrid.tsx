@@ -39,8 +39,7 @@ export function StatisticsGrid({
   const { t } = useTranslation();
   const customCardSet = useMemo(() => new Set(customCardIds), [customCardIds]);
 
-  if (isLoading && statItems.length === 0) {
-
+  if (isLoading) {
     return (
       <section aria-label={t("dashboard.statsSectionLabel")} className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4 font-sans">
         {Array.from({ length: 4 }).map((_, idx) => (
@@ -174,4 +173,3 @@ export function StatisticsGrid({
 }
 
 export default StatisticsGrid;
-

@@ -2,8 +2,9 @@ import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
 import {
-  workspaceUserRecordSchema,
   activityLogRecordSchema,
+  resetWorkspaceUserPasswordSchema,
+  workspaceUserRecordSchema,
 } from '../usersModuleManifest.js';
 
 const c = initContract();
@@ -94,6 +95,21 @@ export const userContract = c.router({
     body: z.any().optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Manually verify a user email address',
+  },
+  resetPassword: {
+    method: 'POST',
+    path: '/api/users/:id/reset-password',
+    pathParams: z.object({ id: z.string().min(1) }),
+    body: resetWorkspaceUserPasswordSchema,
+    responses: {
+      200: z.object({ success: z.literal(true) }),
+      400: errorResponse,
+      403: errorResponse,
+      404: errorResponse,
+      429: errorResponse,
+      500: errorResponse,
+    },
+    summary: 'Issue a temporary password for a workspace user',
   },
   getFieldConfig: {
     method: 'GET',

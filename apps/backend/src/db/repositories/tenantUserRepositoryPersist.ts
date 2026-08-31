@@ -240,3 +240,24 @@ export async function verifyTenantUserEmailRow(id: string): Promise<boolean> {
   return true;
 }
 
+/** Replaces an active user's credential and requires a password change at next sign-in. */
+export async function resetTenantUserPasswordRow(
+  id: string,
+  passwordHash: string,
+): Promise<boolean> {
+  const existing = await findTenantUserRowById(id);
+  if (!existing || existing.deletedAt) return false;
+  const workspaceSubdomain =
+    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
+  await withTenant(workspaceSubdomain, async (tx) => {
+    await tx
+      .update(tenantUsers)
+      .set({
+        passwordHash,
+        mustChangePassword: true,
+        updatedAt: new Date(),
+      })
+      .where(tenantUserIdWhere(id, workspaceSubdomain));
+  });
+  return true;
+}

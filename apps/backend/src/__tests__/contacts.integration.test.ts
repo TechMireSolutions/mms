@@ -277,14 +277,14 @@ describe('contacts REST routes', () => {
     await app.close();
   });
 
-  it('GET /api/contacts returns 403 for roles without read access', async () => {
+  it('GET /api/contacts returns 403 for teachers without read access', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
       url: '/api/contacts',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${viewerToken(app)}`,
+        authorization: `Bearer ${teacherToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(403);
@@ -299,7 +299,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -323,7 +323,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/count',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -339,7 +339,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/metrics',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -379,7 +379,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/report-analytics',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(200);
@@ -413,7 +413,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/widget-aggregates',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
         'content-type': 'application/json',
       },
       payload: {
@@ -475,7 +475,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/resolve',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
         'content-type': 'application/json',
       },
       payload: { ids: ['c1'] },
@@ -526,7 +526,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${adminToken(app)}`,
       },
       payload: { lastName: 'MissingFirstName' },
     });
@@ -542,7 +542,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts?includeDeleted=true',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(403);
@@ -603,7 +603,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${adminToken(app)}`,
       },
       payload: {
         firstName: 'Sara',
@@ -624,7 +624,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/c1',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${adminToken(app)}`,
       },
       payload: { id: 'c1', firstName: 'Ali', lastName: 'Updated' },
     });
@@ -785,7 +785,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/export-audit',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
       payload: { count: 12, scope: 'filtered' },
     });
@@ -801,7 +801,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/export/csv',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
       payload: {
         label: 'Contacts CSV',
@@ -811,12 +811,12 @@ describe('contacts REST routes', () => {
     expect(res.statusCode).toBe(202);
     expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
       'demo',
-      'u-teacher',
+      'u-accountant',
       expect.objectContaining({ moduleId: 'contacts', kind: 'export', label: 'Contacts CSV' }),
       expect.objectContaining({
         columns: [{ id: 'name', label: 'Name' }],
         label: 'Contacts CSV',
-        viewerRole: 'teacher',
+        viewerRole: 'accountant',
         allowDeleted: false,
       }),
     );
@@ -834,7 +834,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/export/csv',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
       payload: {
         label: 'Selection CSV',
@@ -845,7 +845,7 @@ describe('contacts REST routes', () => {
     expect(res.statusCode).toBe(202);
     expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
       'demo',
-      'u-teacher',
+      'u-accountant',
       expect.objectContaining({ moduleId: 'contacts', kind: 'export', label: 'Selection CSV' }),
       expect.objectContaining({
         query: expect.objectContaining({ includeIds: ['c1', 'c2'] }),
@@ -861,7 +861,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/export/vcf',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
       payload: {
         label: 'Apple VCF',
@@ -871,7 +871,7 @@ describe('contacts REST routes', () => {
     expect(res.statusCode).toBe(202);
     expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
       'demo',
-      'u-teacher',
+      'u-accountant',
       expect.objectContaining({ moduleId: 'contacts', kind: 'export-vcf', label: 'Apple VCF' }),
       expect.objectContaining({ filename: 'contacts.vcf' }),
     );
@@ -885,7 +885,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/identity-match',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
       payload: {
         phones: ['923001234567'],
@@ -983,7 +983,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/saved-reports',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
       payload: { name: 'Leads', drillDown: { gender: 'male' } },
     });
@@ -999,11 +999,11 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/saved-reports/csr_test/run',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockTouchContactsSavedReportRun).toHaveBeenCalledWith('csr_test', expect.objectContaining({ id: 'u-teacher', role: 'teacher' }));
+    expect(mockTouchContactsSavedReportRun).toHaveBeenCalledWith('csr_test', expect.objectContaining({ id: 'u-accountant', role: 'accountant' }));
     expect(res.json().report.lastRunAt).toBeTruthy();
     await app.close();
   });
@@ -1046,7 +1046,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts?page=1',
       headers: {
         host: 'other.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${adminToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(403);
@@ -1060,7 +1060,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/export/csv',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
       payload: {
         label: 'Trash CSV',
@@ -1070,7 +1070,7 @@ describe('contacts REST routes', () => {
     expect(res.statusCode).toBe(202);
     expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
       'demo',
-      'u-teacher',
+      'u-accountant',
       expect.objectContaining({ kind: 'export' }),
       expect.objectContaining({
         allowDeleted: false,
@@ -1172,7 +1172,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${adminToken(app)}`,
       },
       payload: sampleContact,
     });
@@ -1191,7 +1191,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/google-sync',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${adminToken(app)}`,
       },
     });
     expect(allow.statusCode).toBe(200);
@@ -1247,7 +1247,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/lookups',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
     });
     expect(readOk.statusCode).toBe(200);
@@ -1306,7 +1306,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/field-config',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${accountantToken(app)}`,
       },
     });
     expect(fieldReadOk.statusCode).toBe(200);
@@ -1382,7 +1382,7 @@ describe('contacts REST routes', () => {
       url: '/api/contacts/bulk-tag',
       headers: {
         host: 'demo.localhost',
-        authorization: `Bearer ${teacherToken(app)}`,
+        authorization: `Bearer ${adminToken(app)}`,
       },
       payload: {
         ids: ['c-1', 'c-2'],

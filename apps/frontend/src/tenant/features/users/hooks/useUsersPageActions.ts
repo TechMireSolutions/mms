@@ -24,6 +24,7 @@ export function useUsersPageActions({
     restoreUser,
     bulkDeleteUsers,
     bulkRestoreUsers,
+    resetPassword,
   } = useUsersMutations();
 
   const saveUsers = useCallback(
@@ -120,15 +121,19 @@ export function useUsersPageActions({
     }
   };
 
-  const handleResetPassword = (user: SystemUser): void => {
+  const handleResetPassword = async (
+    user: SystemUser,
+    temporaryPassword: string,
+  ): Promise<void> => {
+    await resetPassword.mutateAsync({ userId: user.id, temporaryPassword });
     void addLog({
       action: 'update',
       module: 'users',
       detail: t('users.logPasswordReset', { name: user.name }),
       ip: 'local',
-    });
-    notify.info(t('users.resetPasswordToast'), {
-      description: t('users.resetPasswordToastDesc', { email: user.email }),
+    }).catch(() => undefined);
+    notify.success(t('users.resetPasswordToast'), {
+      description: t('users.resetPasswordToastDesc', { name: user.name }),
     });
   };
 

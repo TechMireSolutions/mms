@@ -43,6 +43,7 @@ const mockDeleteUserById = vi.fn();
 const mockRestoreUserById = vi.fn();
 const mockBulkSoftDeleteUsers = vi.fn();
 const mockBulkRestoreUsers = vi.fn();
+const mockResetUserPasswordById = vi.fn();
 
 vi.mock('../services/usersService.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/usersService.js')>();
@@ -60,6 +61,7 @@ vi.mock('../services/usersService.js', async (importOriginal) => {
     restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
     bulkSoftDeleteUsers: (...args: unknown[]) => mockBulkSoftDeleteUsers(...args),
     bulkRestoreUsers: (...args: unknown[]) => mockBulkRestoreUsers(...args),
+    resetUserPasswordById: (...args: unknown[]) => mockResetUserPasswordById(...args),
   };
 });
 
@@ -110,6 +112,7 @@ describe('users REST routes', () => {
     mockRestoreUserById.mockReset().mockResolvedValue(true);
     mockBulkSoftDeleteUsers.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
     mockBulkRestoreUsers.mockReset().mockResolvedValue({ succeeded: 1, failed: 0 });
+    mockResetUserPasswordById.mockReset().mockResolvedValue(true);
     mockGetUserColumnPreferencesForModule.mockReset().mockResolvedValue([]);
     mockSetUserColumnPreferencesForModule.mockReset().mockResolvedValue(undefined);
   });
@@ -230,6 +233,76 @@ describe('users REST routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true });
     expect(mockRestoreUserById).toHaveBeenCalledWith('u-1');
+    await app.close();
+  });
+
+  it('POST /api/users/:id/reset-password issues a temporary password for an admin', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/u-1/reset-password',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ temporaryPassword: 'TemporaryPass1!' }),
+    });
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ success: true });
+    expect(mockResetUserPasswordById).toHaveBeenCalledWith('u-1', 'TemporaryPass1!');
+    await app.close();
+  });
+
+  it('POST /api/users/:id/reset-password denies users without manage permission', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/u-1/reset-password',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ temporaryPassword: 'TemporaryPass1!' }),
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockResetUserPasswordById).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/users/:id/reset-password rejects an administrator resetting self', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/u-admin/reset-password',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ temporaryPassword: 'TemporaryPass1!' }),
+    });
+    expect(res.statusCode).toBe(400);
+    expect(res.json()).toMatchObject({ type: 'self_password_reset' });
+    expect(mockResetUserPasswordById).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/users/:id/reset-password validates the request body', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/u-1/reset-password',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    });
+    expect(res.statusCode).toBe(400);
+    expect(mockResetUserPasswordById).not.toHaveBeenCalled();
     await app.close();
   });
 

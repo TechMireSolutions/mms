@@ -17,6 +17,7 @@ import {
   softDeleteTenantUserRow,
   restoreTenantUserRow,
   verifyTenantUserEmailRow,
+  resetTenantUserPasswordRow,
   findTenantUserRowById,
   listTenantUsersByIds,
 } from '../db/repositories/tenantUserRepository.js';
@@ -26,6 +27,9 @@ import {
   listTenantUsersPage,
 } from '../db/repositories/tenantUserRepositoryList.js';
 import { deleteRefreshTokensForUser } from './auth/authArtifactService.js';
+import { hashPassword } from './auth/passwordService.js';
+import { assertPasswordMeetsPolicy } from './globalSettingsService.js';
+import { revokeAllUserSessions } from './session.service.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { broadcastCollection } from './websocketService.js';
@@ -162,6 +166,24 @@ export async function verifyUserEmailById(id: string): Promise<boolean> {
   const ok = await verifyTenantUserEmailRow(id);
   if (ok) await broadcastCollection('users');
   return ok;
+}
+
+export async function resetUserPasswordById(
+  id: string,
+  temporaryPassword: string,
+): Promise<boolean> {
+  const existing = await findTenantUserRowById(id);
+  if (!existing || existing.deletedAt) return false;
+
+  await assertPasswordMeetsPolicy(temporaryPassword);
+  const passwordHash = await hashPassword(temporaryPassword);
+  const updated = await resetTenantUserPasswordRow(id, passwordHash);
+  if (!updated) return false;
+
+  await deleteRefreshTokensForUser(id);
+  await revokeAllUserSessions(id);
+  await broadcastCollection('users');
+  return true;
 }
 
 export async function bulkSoftDeleteUsers(

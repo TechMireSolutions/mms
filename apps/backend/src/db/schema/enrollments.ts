@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar, bigint, nu
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { students } from "./students.js";
-import { sessions } from "./sessions.js";
+import { sessions, sessionClasses } from "./sessions.js";
 
 export const enrollments = pgTable('enrollments', {
   id: text('id').notNull(),
@@ -40,6 +40,15 @@ export const enrollments = pgTable('enrollments', {
     columns: [table.workspaceSubdomain, table.sessionId],
     foreignColumns: [sessions.workspaceSubdomain, sessions.id],
   }).onDelete('cascade'),
+  foreignKey({
+    name: 'enrollments_session_class_fk',
+    columns: [table.workspaceSubdomain, table.sessionId, table.classId],
+    foreignColumns: [
+      sessionClasses.workspaceSubdomain,
+      sessionClasses.sessionId,
+      sessionClasses.id,
+    ],
+  }),
   index('enrollments_workspace_student_idx').on(table.workspaceSubdomain, table.studentId),
   index('enrollments_workspace_class_idx').on(table.workspaceSubdomain, table.classId),
   index('enrollments_workspace_date_idx').on(table.workspaceSubdomain, table.enrolledDate),

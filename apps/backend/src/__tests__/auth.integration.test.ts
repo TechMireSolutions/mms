@@ -53,6 +53,7 @@ const mockSetPlatformAdminDisabled = vi.fn();
 const mockDeletePlatformAdmin = vi.fn();
 const mockVerifyPlatformUserPassword = vi.fn();
 const mockDeleteWorkspace = vi.fn();
+const mockGetWorkspaceInstitutionSetupStatus = vi.fn();
 const mockIsPlatformSmtpConfigured = vi.fn().mockReturnValue(false);
 const mockGetPlatformUserProfile = vi.fn().mockImplementation(async (id: string) => {
   const stored = await mockGetStoredPlatformUserById(id);
@@ -150,6 +151,8 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
     ),
     listPlatformWorkspaces: (...args: unknown[]) => mockListPlatformWorkspaces(...args),
     deleteWorkspace: (...args: unknown[]) => mockDeleteWorkspace(...args),
+    getWorkspaceInstitutionSetupStatus: (...args: unknown[]) =>
+      mockGetWorkspaceInstitutionSetupStatus(...args),
   };
 });
 
@@ -196,6 +199,7 @@ describe('auth routes', () => {
       createdAt: '2026-01-01T00:00:00.000Z',
       enabled: true,
     });
+    mockGetWorkspaceInstitutionSetupStatus.mockReset().mockResolvedValue(false);
   });
 
   it('POST /api/auth/login rejects apex host without subdomain', async () => {
@@ -276,6 +280,38 @@ describe('auth routes', () => {
       headers: { host: 'demo.localhost' },
     });
     expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('GET /api/auth/institution-setup-status returns workspace-wide completion', async () => {
+    mockGetWorkspaceInstitutionSetupStatus.mockResolvedValueOnce(true);
+    const app = await buildApp();
+    const token = signTenantToken(app, { role: 'admin', workspaceSubdomain: 'demo' });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/auth/institution-setup-status',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${token}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual({ complete: true });
+    expect(mockGetWorkspaceInstitutionSetupStatus).toHaveBeenCalledWith('demo');
+    await app.close();
+  });
+
+  it('GET /api/auth/institution-setup-status requires authentication', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/auth/institution-setup-status',
+      headers: { host: 'demo.localhost' },
+    });
+
+    expect(res.statusCode).toBe(401);
+    expect(mockGetWorkspaceInstitutionSetupStatus).not.toHaveBeenCalled();
     await app.close();
   });
 

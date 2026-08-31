@@ -94,11 +94,11 @@ export function getMonthlyTrend(classId: string, records: AttendanceRecord[]): {
       grouped[month].present++;
     }
   });
-  return months.map((month) => {
+  return months.flatMap((month) => {
     const monthStats = grouped[month];
-    return {
+    return monthStats && monthStats.total ? [{
       month,
-      rate: monthStats && monthStats.total ? Math.round((monthStats.present / monthStats.total) * 100) : 90
-    };
+      rate: Math.round((monthStats.present / monthStats.total) * 100),
+    }] : [];
   });
 }

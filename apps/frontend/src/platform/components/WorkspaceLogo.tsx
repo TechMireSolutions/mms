@@ -10,7 +10,7 @@ interface WorkspaceLogoProps {
 function WorkspaceLogo({
   logoUrl,
   madrasaName,
-  className = 'w-10 h-10 rounded-lg shrink-0',
+  className = 'rounded-lg',
 }: WorkspaceLogoProps): React.JSX.Element {
   if (logoUrl) {
     return (
@@ -19,14 +19,14 @@ function WorkspaceLogo({
         alt={madrasaName}
         loading="lazy"
         decoding="async"
-        className={`object-contain bg-background border border-border ${className}`}
+        className={`h-10 w-10 shrink-0 object-contain bg-background border border-border ${className}`}
       />
     );
   }
 
   return (
     <div
-      className={`bg-primary/15 flex items-center justify-center ${className}`}
+      className={`h-10 w-10 shrink-0 bg-primary/15 flex items-center justify-center ${className}`}
       role="img"
       aria-label={madrasaName}
     >

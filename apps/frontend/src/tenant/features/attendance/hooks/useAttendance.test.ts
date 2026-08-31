@@ -24,6 +24,24 @@ const attendanceApiMocks = vi.hoisted(() => ({
     },
     isLoading: false,
   })),
+  reportUseQuery: vi.fn(() => ({
+    data: {
+      status: 200,
+      body: {
+        overview: {
+          overallRate: 85,
+          totalRecords: 10,
+          lowAttendanceCount: 1,
+          classRates: [],
+          monthlyTrend: [],
+          studentRates: [],
+          topPerformers: [],
+          statusCounts: [],
+        },
+      },
+    },
+    isLoading: false,
+  })),
 }));
 
 vi.mock("@/lib/contexts/AuthContext", () => ({
@@ -48,6 +66,9 @@ vi.mock("@/lib/api", () => ({
       list: {
         useQuery: attendanceApiMocks.listUseQuery,
       },
+      reportAggregates: {
+        useQuery: attendanceApiMocks.reportUseQuery,
+      },
       bulk: { useMutation: () => ({ mutateAsync: vi.fn() }) },
       create: { useMutation: () => ({ mutateAsync: vi.fn() }) },
       update: { useMutation: () => ({ mutateAsync: vi.fn() }) },
@@ -55,11 +76,6 @@ vi.mock("@/lib/api", () => ({
       restore: { useMutation: () => ({ mutateAsync: vi.fn() }) },
       bulkDelete: { useMutation: () => ({ mutateAsync: vi.fn() }) },
       bulkRestore: { useMutation: () => ({ mutateAsync: vi.fn() }) },
-    },
-  },
-  apiContract: {
-    attendance: {
-      reportAggregates: vi.fn().mockResolvedValue({ body: {} }),
     },
   },
 }));
@@ -76,6 +92,7 @@ describe("useAttendance Hook suite", () => {
 
   beforeEach(() => {
     attendanceApiMocks.listUseQuery.mockClear();
+    attendanceApiMocks.reportUseQuery.mockClear();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
@@ -115,6 +132,7 @@ describe("useAttendance Hook suite", () => {
     expect(collectionResult.length).toBe(1);
     expect(mutationsResult.createRecord).toBeDefined();
     expect(reportResult.data).toBeDefined();
+    expect(reportResult.data.overview.overallRate).toBe(85);
     expect(metricsResult.data).toBeDefined();
   });
 

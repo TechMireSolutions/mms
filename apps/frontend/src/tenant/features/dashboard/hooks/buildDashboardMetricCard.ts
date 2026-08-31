@@ -7,6 +7,7 @@ import {
   computeSessionsCustomCardValue,
 } from '@/lib/reports/widgetDataUtils';
 import {
+  isSeededDashboardWidget,
   resolveWidgetTitle,
   resolveWidgetSubText,
   type StatItem,
@@ -165,7 +166,9 @@ export function buildDashboardMetricCard({
   let resolvedMetric: { value: string; sub?: string } | null = null;
   let customTrend: number | undefined;
 
-  const customEvaluator = CUSTOM_CARD_EVALUATORS[widget.collection as keyof typeof CUSTOM_CARD_EVALUATORS];
+  const customEvaluator = isSeededDashboardWidget(widget.id)
+    ? undefined
+    : CUSTOM_CARD_EVALUATORS[widget.collection as keyof typeof CUSTOM_CARD_EVALUATORS];
   if (customEvaluator) {
     resolvedMetric = tryCustomCollectionCardValue(
       widget,

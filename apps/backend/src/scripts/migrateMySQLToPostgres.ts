@@ -20,6 +20,10 @@ function formatDateString(dateVal: any): string {
   }
 }
 
+function normalizeClassName(value: unknown): string {
+  return String(value || 'Class').trim().replace(/\s+/g, ' ').toLowerCase();
+}
+
 async function runMigration() {
   console.log('🚀 Starting Data Migration: MySQL ("mms") ➔ PostgreSQL ("mms")');
   console.log('Madrasa Tenant: Dar ul Quran (subdomain: darulquran)');
@@ -53,7 +57,10 @@ async function runMigration() {
   const teacherMap = new Map<number, string>();
   const studentMap = new Map<number, string>();
   const sessionMap = new Map<number, string>();
+  const sessionNameMap = new Map<string, string>();
   const classMap = new Map<number, string>();
+  const classNameMap = new Map<string, string>();
+  const legacyClassDetailsMap = new Map<number, { name: string; capacity: number }>();
   const inventoryItemMap = new Map<number, string>();
   const workshopEventMap = new Map<number, string>();
   const workshopParticipantMap = new Map<number, string>();
@@ -199,6 +206,7 @@ async function runMigration() {
         endDate: formatDateString(sess.StartDate),
       });
       sessionMap.set(sess.Id, pgId);
+      sessionNameMap.set(pgId, sess.Name || 'Academic Term');
     }
     console.log(`✓ Migrated ${mysqlSessions.length} academic sessions.`);
 
@@ -207,23 +215,36 @@ async function runMigration() {
     const [mysqlClasses] = await mysqlConn.query<any[]>('SELECT * FROM classmanifest');
     // Get a fallback teacher ID if available
     const firstTeacherId = teacherMap.values().next().value || 'unassigned';
+    const normalizedClassMap = new Map<string, string>();
 
     for (const cl of mysqlClasses) {
-      const pgId = crypto.randomUUID();
       const sessionId = cl.session_id ? sessionMap.get(cl.session_id) : null;
       if (!sessionId) continue;
+      const className = cl.ClassName || cl.Class || 'Class';
+      const normalizedKey = `${sessionId}:${normalizeClassName(className)}`;
+      let pgId = normalizedClassMap.get(normalizedKey);
 
-      await tx.insert(schema.sessionClasses).values({
-        id: pgId,
-        workspaceSubdomain: subdomain,
-        sessionId: sessionId,
-        name: cl.ClassName || cl.Class || 'Class',
-        teacherId: firstTeacherId,
+      if (!pgId) {
+        pgId = crypto.randomUUID();
+        await tx.insert(schema.sessionClasses).values({
+          id: pgId,
+          workspaceSubdomain: subdomain,
+          sessionId: sessionId,
+          name: className,
+          teacherId: firstTeacherId,
+          capacity: cl.capacity || 40,
+        });
+        normalizedClassMap.set(normalizedKey, pgId);
+        classNameMap.set(pgId, className);
+      }
+      const legacyClassId = Number(cl.id_auto_gen);
+      classMap.set(legacyClassId, pgId);
+      legacyClassDetailsMap.set(legacyClassId, {
+        name: className,
         capacity: cl.capacity || 40,
       });
-      classMap.set(cl.id_auto_gen, pgId);
     }
-    console.log(`✓ Migrated ${classMap.size} classes.`);
+    console.log(`✓ Migrated ${normalizedClassMap.size} unique classes.`);
 
     // 7. Enrollments
     console.log('[ETL] Migrating student enrollments...');
@@ -231,16 +252,36 @@ async function runMigration() {
     let enrollmentCount = 0;
     for (const e of mysqlEnrollments) {
       const studentId = studentMap.get(e.StudentId);
-      const classId = classMap.get(e.Class ? Number(e.Class) : 0);
+      const legacyClassId = Number(e.Class);
+      const classDetails = legacyClassDetailsMap.get(legacyClassId);
       const sessionId = e.EnrollmentSessionId ? sessionMap.get(e.EnrollmentSessionId) : null;
-      if (!studentId || !classId || !sessionId) continue;
+      if (!studentId || !classDetails || !sessionId) continue;
+
+      const targetClassKey = `${sessionId}:${normalizeClassName(classDetails.name)}`;
+      let classId = normalizedClassMap.get(targetClassKey);
+      if (!classId) {
+        classId = crypto.randomUUID();
+        await tx.insert(schema.sessionClasses).values({
+          id: classId,
+          workspaceSubdomain: subdomain,
+          sessionId,
+          name: classDetails.name,
+          teacherId: firstTeacherId,
+          capacity: classDetails.capacity,
+        });
+        normalizedClassMap.set(targetClassKey, classId);
+        classNameMap.set(classId, classDetails.name);
+      }
 
       await tx.insert(schema.enrollments).values({
         id: crypto.randomUUID(),
         workspaceSubdomain: subdomain,
         studentId: studentId,
+        studentName: studentNameMap.get(studentId)?.name || 'Unknown Student',
         classId: classId,
+        className: classNameMap.get(classId) || '',
         sessionId: sessionId,
+        sessionName: sessionNameMap.get(sessionId) || '',
         enrolledDate: formatDateString(e.EnrollmentDate),
         baseFee: '0.00',
         discountType: 'none',
