@@ -2,6 +2,7 @@ import {
   mergeEmailIntegrationConfig,
   type EmailIntegrationConfig,
   type EmailIntegrationSecrets,
+  type EmailProviderId,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import {
@@ -17,7 +18,9 @@ export async function loadEmailIntegrationConfig(): Promise<EmailIntegrationConf
   if (!row) return mergeEmailIntegrationConfig(null);
 
   return mergeEmailIntegrationConfig({
-    providerId: row.providerId as any,
+    // (typed as EmailProviderId because the column is varchar; mergeEmailIntegrationConfig
+    //  re-validates via isEmailProviderId and falls back to the default)
+    providerId: row.providerId as EmailProviderId,
     fromAddress: row.fromAddress,
     fromName: row.fromName,
     smtpUsername: row.smtpUsername,

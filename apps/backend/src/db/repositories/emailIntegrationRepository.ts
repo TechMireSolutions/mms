@@ -7,7 +7,7 @@ import { DEFAULT_EMAIL_INTEGRATION } from '@mms/shared';
 export async function getEmailIntegrationRow(workspaceSubdomain: string): Promise<EmailIntegrationRow | null> {
   try {
     return await withTenant(workspaceSubdomain, async (tx) => {
-      if (!tx || typeof (tx as any).select !== 'function') return null;
+      if (!tx || typeof tx.select !== 'function') return null;
       const rows = await tx
       .select()
       .from(schema.emailIntegrations)
@@ -27,7 +27,7 @@ export async function upsertEmailIntegrationConfigRow(
   config: EmailIntegrationConfig,
 ): Promise<void> {
   await withTenant(workspaceSubdomain, async (tx) => {
-    if (!tx || typeof (tx as any).insert !== 'function') return;
+    if (!tx || typeof tx.insert !== 'function') return;
     await tx
     .insert(schema.emailIntegrations)
     .values({
@@ -72,7 +72,7 @@ export async function upsertEmailIntegrationSecretsRow(
   secrets: EmailIntegrationSecrets,
 ): Promise<void> {
   await withTenant(workspaceSubdomain, async (tx) => {
-    if (!tx || typeof (tx as any).insert !== 'function') return;
+    if (!tx || typeof tx.insert !== 'function') return;
     await tx
     .insert(schema.emailIntegrations)
     .values({

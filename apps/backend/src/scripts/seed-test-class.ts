@@ -29,7 +29,9 @@ async function main() {
 
   // 2. Find or create student record for Jane Doe
   const studentRows = await db.select().from(students).where(eq(students.workspaceSubdomain, subdomain));
-  let janeStudent = studentRows.find(r => r.contactId === janeContact.id);
+  // (typed as { id } because only the student id is consumed below;
+  //  the non-null literal keeps the extra columns written to the DB above)
+  let janeStudent: { id: string } | undefined = studentRows.find(r => r.contactId === janeContact.id);
   if (!janeStudent) {
     console.log('Creating student record for Jane Doe...');
     const studentId = `std-jane-${Date.now()}`;
@@ -41,7 +43,7 @@ async function main() {
       registeredDate: '2026-01-01',
       grNumber: 'GR-0001',
     });
-    janeStudent = { id: studentId, workspaceSubdomain: subdomain, contactId: janeContact.id } as any;
+    janeStudent = { id: studentId, workspaceSubdomain: subdomain, contactId: janeContact.id } as { id: string };
   }
 
   const sessionId = 'sess-hifz-2026';

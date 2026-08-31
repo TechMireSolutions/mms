@@ -1,78 +1,98 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
+import {
+  workspaceUserRecordSchema,
+  activityLogRecordSchema,
+} from '../usersModuleManifest.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
+
+/** Envelope for paginated workspace-user list responses (`UsersListPageResult`). */
+export const userListPageResponseSchema = z.object({
+  users: z.array(workspaceUserRecordSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  hasMore: z.boolean(),
+});
+
+/** `{ success: true, succeeded, failed }` bulk-operation envelope. */
+const userBulkResultResponseSchema = z.object({
+  success: z.literal(true),
+  succeeded: z.number(),
+  failed: z.number(),
+});
 
 export const userContract = c.router({
   list: {
     method: 'GET',
     path: '/api/users',
     query: baseListQuerySchema,
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    responses: { 200: userListPageResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'List workspace users',
   },
   activity: {
     method: 'GET',
     path: '/api/users/activity',
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    responses: { 200: z.object({ logs: z.array(activityLogRecordSchema) }), 403: errorResponse, 500: errorResponse },
     summary: 'List user activity logs',
   },
   activityBulkUpdate: {
     method: 'PUT',
     path: '/api/users/activity/bulk',
     body: z.any(),
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    responses: { 200: z.object({ logs: z.array(activityLogRecordSchema) }), 403: errorResponse, 500: errorResponse },
     summary: 'Bulk upsert activity logs',
   },
   exportAudit: {
     method: 'POST',
     path: '/api/users/export-audit',
     body: z.object({ count: z.number(), scope: z.string() }),
-    responses: { 200: z.unknown(), 400: errorResponse, 403: errorResponse, 500: errorResponse },
+    responses: { 200: z.object({ success: z.literal(true) }), 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'Log export audit',
   },
   bulkUpdate: {
     method: 'PUT',
     path: '/api/users/bulk',
     body: z.any(),
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    responses: { 200: z.object({ users: z.array(workspaceUserRecordSchema) }), 403: errorResponse, 500: errorResponse },
     summary: 'Bulk upsert workspace users',
   },
   bulkDelete: {
     method: 'POST',
     path: '/api/users/bulk-delete',
     body: z.object({ ids: z.array(z.string()) }),
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    responses: { 200: userBulkResultResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk soft-delete users',
   },
   bulkRestore: {
     method: 'POST',
     path: '/api/users/bulk-restore',
     body: z.object({ ids: z.array(z.string()) }),
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    responses: { 200: userBulkResultResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk restore users',
   },
   delete: {
     method: 'DELETE',
     path: '/api/users/:id',
     body: z.any().optional(),
-    responses: { 200: z.unknown(), 400: errorResponse, 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    responses: { 200: z.object({ success: z.literal(true) }), 400: errorResponse, 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Soft delete a user',
   },
   restore: {
     method: 'POST',
     path: '/api/users/:id/restore',
     body: z.any().optional(),
-    responses: { 200: z.unknown(), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Restore a soft-deleted user',
   },
   verifyEmail: {
     method: 'POST',
     path: '/api/users/:id/verify-email',
     body: z.any().optional(),
-    responses: { 200: z.object({ success: z.boolean() }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Manually verify a user email address',
   },
   getFieldConfig: {
