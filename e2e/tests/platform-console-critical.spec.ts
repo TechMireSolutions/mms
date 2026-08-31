@@ -203,13 +203,13 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
     // ------------------------------------------------------------------
     await page.click('a[href="/onboarding"]');
     await page.waitForURL('**/onboarding');
-    await page.waitForSelector('#wizard-step-title');
+    await expect(page.locator('#wizard-step-title')).toBeVisible({ timeout: 30_000 });
 
     await page.fill('#onboarding-name', madrasaName);
     await page.fill('#onboarding-subdomain', subdomain);
     await expect(page.locator('text=Your URL:')).toBeVisible();
     await page.click('button:has-text("Continue")');
-    await page.waitForSelector('#firstName');
+    await expect(page.locator('#firstName')).toBeVisible({ timeout: 30_000 });
 
     await page.fill('#firstName', 'Platform');
     await page.fill('#lastName', 'E2E');
@@ -264,17 +264,17 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
       await toggleWorkspace(page, subdomain, false);
 
       // ----------------------------------------------------------------
-      // 6. Tenant host now serves the WorkspaceDisabledScreen.
+      // 6. Tenant host now serves the WorkspaceDisabledScreen. The workspace
+      //    lookup response is captured on the first navigation (armed before
+      //    goto, read before any later navigation can discard the body).
       // ----------------------------------------------------------------
-      await page.goto(`${tenantOrigin}/login`);
-      await page.waitForLoadState('domcontentloaded');
       const workspaceLookup = page.waitForResponse(
         (resp) =>
           resp.request().method() === 'GET' &&
           resp.url().includes(`/api/workspace/by-subdomain/${subdomain}`),
-        { timeout: 20_000 },
+        { timeout: 30_000 },
       );
-      await page.reload();
+      await page.goto(`${tenantOrigin}/login`);
       const lookupResponse = await workspaceLookup;
       const lookupBody = (await lookupResponse.json()) as {
         workspace?: { enabled?: boolean; subdomain?: string };

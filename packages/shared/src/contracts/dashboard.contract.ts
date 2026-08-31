@@ -1,19 +1,37 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { dashboardPreferencesPutBodySchema } from '../dashboardPreferencesTypes.js';
-import { dashboardWidgetsPutBodySchema } from '../dashboardWidgetSchema.js';
+import { dashboardWidgetsPutBodySchema, customWidgetSchema } from '../dashboardWidgetSchema.js';
 
 const c = initContract();
 
 const errorResponse = z.unknown();
-const ok = z.unknown();
+
+const dashboardSuccessResponseSchema = z.object({ success: z.literal(true) });
+
+/** Normalized dashboard chart/layout preferences (`DashboardPreferences`). */
+const dashboardPreferencesResponseSchema = z.object({
+  disabledCardIds: z.array(z.string()),
+  gridMode: z.enum(['comfortable', 'compact']),
+  lowAttendanceThreshold: z.number(),
+  urgentAttendanceThreshold: z.number(),
+  enrollmentChartType: z.enum(['area', 'bar', 'line']),
+  enrollmentChartColor: z.string(),
+  enrollmentChartPeriod: z.number(),
+  revenueChartType: z.string(),
+  revenueChartColor: z.string(),
+  attendanceChartType: z.string(),
+  attendanceChartColor: z.string(),
+  hasanatChartType: z.string(),
+  hasanatChartColor: z.string(),
+});
 
 export const dashboardContract = c.router({
   getPreferences: {
     method: 'GET',
     path: '/api/dashboard/preferences',
     responses: {
-      200: ok,
+      200: z.object({ preferences: dashboardPreferencesResponseSchema }),
       403: errorResponse,
       500: errorResponse,
     },
@@ -24,7 +42,7 @@ export const dashboardContract = c.router({
     path: '/api/dashboard/preferences',
     body: dashboardPreferencesPutBodySchema,
     responses: {
-      200: ok,
+      200: z.object({ success: z.literal(true), preferences: dashboardPreferencesResponseSchema }),
       400: errorResponse,
       403: errorResponse,
       500: errorResponse,
@@ -35,7 +53,7 @@ export const dashboardContract = c.router({
     method: 'GET',
     path: '/api/dashboard/widgets',
     responses: {
-      200: ok,
+      200: z.object({ widgets: z.array(customWidgetSchema) }),
       403: errorResponse,
       500: errorResponse,
     },
@@ -46,7 +64,7 @@ export const dashboardContract = c.router({
     path: '/api/dashboard/widgets',
     body: dashboardWidgetsPutBodySchema,
     responses: {
-      200: ok,
+      200: z.object({ success: z.literal(true), widgets: z.array(customWidgetSchema) }),
       400: errorResponse,
       403: errorResponse,
       500: errorResponse,
@@ -58,7 +76,7 @@ export const dashboardContract = c.router({
     path: '/api/dashboard/widgets/:id',
     body: z.any().optional(),
     responses: {
-      200: ok,
+      200: dashboardSuccessResponseSchema,
       400: errorResponse,
       403: errorResponse,
       500: errorResponse,
@@ -77,7 +95,7 @@ export const dashboardContract = c.router({
       ),
     }),
     responses: {
-      200: ok,
+      200: dashboardSuccessResponseSchema,
       400: errorResponse,
       403: errorResponse,
       500: errorResponse,
@@ -94,12 +112,10 @@ export const dashboardContract = c.router({
       })
       .optional(),
     responses: {
-      200: ok,
+      200: z.object({ summary: z.record(z.string(), z.unknown()) }),
       403: errorResponse,
       500: errorResponse,
     },
     summary: 'Get composite tenant dashboard summary metrics',
   },
 });
-
-

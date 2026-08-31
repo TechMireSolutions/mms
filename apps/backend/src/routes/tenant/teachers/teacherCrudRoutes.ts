@@ -91,8 +91,9 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
       try {
-        const result = await withTenant(String(tenant), () => teacherUseCases.createTeacher(// (typed as User & { workspaceId? } because the legacy JWT payload may carry workspaceId;
-          //  it is not on the shared User type)
+        // (typed as User & { workspaceId? } because the legacy JWT payload may carry workspaceId;
+        //  it is not on the shared User type)
+        const result = await withTenant(String(tenant), () => teacherUseCases.createTeacher(
           { ...coreParsed, workspaceId: (user as User & { workspaceId?: string }).workspaceId } as never), { readOnly: false });
         await auditTeacher(user, 'teacher.create', `Created teacher ${result.record.id}`, String(result.record.id));
         return {
