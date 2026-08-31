@@ -30,7 +30,7 @@ export const PaymentDetail = React.memo(function PaymentDetail({
     <DetailDrawerShell
       open
       onClose={onClose}
-      title={t('finance.payments.detail.title' as any, { defaultValue: 'Payment Details' }) as any}
+      title={t('finance.payments.detail.title')}
       subtitle={payment.studentName || 'Student'}
       icon={Banknote}
       headerExtra={isArchived && <DetailDrawerArchivedBanner deletedAt={payment.deletedAt} />}
@@ -41,42 +41,42 @@ export const PaymentDetail = React.memo(function PaymentDetail({
           canRestore={canDelete}
           onEdit={() => onEdit?.(payment)}
           onRestore={() => onRestore?.(payment.id)}
-          restoreLabel={t('common.restore' as any)}
-          editLabel={t('common.edit' as any)}
+          restoreLabel={t('common.restore')}
+          editLabel={t('common.edit')}
         />
       }
     >
       <div className="flex flex-col gap-6 py-6">
         <section>
-          <DetailSectionTitle>{t('finance.payments.detail.overview' as any, { defaultValue: 'Overview' }) as any}</DetailSectionTitle>
+          <DetailSectionTitle>{t('finance.payments.detail.overview')}</DetailSectionTitle>
           <Card className="overflow-hidden">
             <div className="divide-y divide-border">
               <DetailAttributeRow 
-                label={t('finance.fields.payment.invoiceId' as any, { defaultValue: 'Invoice' }) as any} 
+                label={t('finance.fields.payment.invoiceId')}
                 value={payment.invoiceId} 
               />
               <DetailAttributeRow 
-                label={t('finance.fields.payment.student' as any, { defaultValue: 'Student' }) as any} 
+                label={t('finance.fields.payment.student')}
                 value={payment.studentName} 
               />
               <DetailAttributeRow 
-                label={t('finance.fields.payment.amount' as any, { defaultValue: 'Amount' }) as any} 
+                label={t('finance.fields.payment.amount')}
                 value={payment.amount.toString()} 
               />
               <DetailAttributeRow 
-                label={t('finance.fields.payment.date' as any, { defaultValue: 'Date' }) as any} 
+                label={t('finance.fields.payment.date')}
                 value={payment.date} 
               />
               <DetailAttributeRow 
-                label={t('finance.fields.payment.method' as any, { defaultValue: 'Method' }) as any} 
+                label={t('finance.fields.payment.method')}
                 value={payment.method} 
               />
               <DetailAttributeRow 
-                label={t('finance.fields.payment.receivedBy' as any, { defaultValue: 'Received By' }) as any} 
+                label={t('finance.fields.payment.receivedBy')}
                 value={payment.receivedBy || '—'} 
               />
               <DetailAttributeRow 
-                label={t('finance.fields.payment.note' as any, { defaultValue: 'Note' }) as any} 
+                label={t('finance.fields.payment.note')}
                 value={payment.note || '—'} 
               />
             </div>

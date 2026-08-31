@@ -30,7 +30,7 @@ bash .agent/scripts/sync-all.sh
 
 Scoped rules load when Claude reads matching paths (see each file's `paths:` frontmatter). Each rule has a **Workflow skill:** line; full rule→skill map in `mms-core` Standards index.
 
-## Skills (25)
+## Skills (28)
 
 Start with **`mms-dev-setup`** for install/run, **`mms-frontend`** / **`mms-query-factories`** for React/Query work, **`mms-module-page`** for new modules.
 

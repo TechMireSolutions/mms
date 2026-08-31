@@ -30,7 +30,7 @@ export const DistributionDetail = React.memo(function DistributionDetail({
     <DetailDrawerShell
       open
       onClose={onClose}
-      title={t('hasanat.detail.title' as any, { defaultValue: 'Distribution Details' }) as any}
+      title={t('hasanat.detail.title')}
       subtitle={distribution.recipientName || 'Recipient'}
       icon={Send}
       headerExtra={isArchived && <DetailDrawerArchivedBanner deletedAt={distribution.deletedAt} />}
@@ -41,42 +41,42 @@ export const DistributionDetail = React.memo(function DistributionDetail({
           canRestore={canDelete}
           onEdit={() => onEdit?.(distribution)}
           onRestore={() => onRestore?.(distribution.id)}
-          restoreLabel={t('common.restore' as any)}
-          editLabel={t('common.edit' as any)}
+          restoreLabel={t('common.restore')}
+          editLabel={t('common.edit')}
         />
       }
     >
       <div className="flex flex-col gap-6 py-6">
         <section>
-          <DetailSectionTitle>{t('hasanat.detail.overview' as any, { defaultValue: 'Overview' }) as any}</DetailSectionTitle>
+          <DetailSectionTitle>{t('hasanat.detail.overview')}</DetailSectionTitle>
           <Card className="overflow-hidden">
             <div className="divide-y divide-border">
               <DetailAttributeRow 
-                label={t('hasanat.fields.denomination' as any, { defaultValue: 'Denomination' }) as any} 
+                label={t('hasanat.fields.denomination')}
                 value={distribution.denominationName} 
               />
               <DetailAttributeRow 
-                label={t('hasanat.fields.recipient' as any, { defaultValue: 'Recipient' }) as any} 
+                label={t('hasanat.fields.recipient')}
                 value={distribution.recipientName} 
               />
               <DetailAttributeRow 
-                label={t('hasanat.fields.quantity' as any, { defaultValue: 'Quantity' }) as any} 
+                label={t('hasanat.fields.quantity')}
                 value={distribution.quantity} 
               />
               <DetailAttributeRow 
-                label={t('hasanat.fields.status' as any, { defaultValue: 'Status' }) as any} 
+                label={t('hasanat.fields.status')}
                 value={distribution.status} 
               />
               <DetailAttributeRow 
-                label={t('hasanat.fields.issuedDate' as any, { defaultValue: 'Issued Date' }) as any} 
+                label={t('hasanat.fields.issuedDate')}
                 value={distribution.issuedDate} 
               />
               <DetailAttributeRow 
-                label={t('hasanat.fields.issuedBy' as any, { defaultValue: 'Issued By' }) as any} 
+                label={t('hasanat.fields.issuedBy')}
                 value={distribution.issuedBy || '—'} 
               />
               <DetailAttributeRow 
-                label={t('hasanat.fields.reason' as any, { defaultValue: 'Reason' }) as any} 
+                label={t('hasanat.fields.reason')}
                 value={distribution.reason || '—'} 
               />
             </div>

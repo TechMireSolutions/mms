@@ -44,26 +44,26 @@ export const ExaminationDetail = React.memo(function ExaminationDetail({
           canRestore={canDelete}
           onEdit={() => onEdit?.(exam)}
           onRestore={() => onRestore?.(exam.id)}
-          restoreLabel={t('common.restore' as any)}
-          editLabel={t('common.edit' as any)}
+          restoreLabel={t('common.restore')}
+          editLabel={t('common.edit')}
         />
       }
     >
       <div className="flex flex-col gap-6 py-6">
         <section>
-          <DetailSectionTitle>{t('examinations.detail.overview' as any)}</DetailSectionTitle>
+          <DetailSectionTitle>{t('examinations.detail.overview')}</DetailSectionTitle>
           <Card className="overflow-hidden">
             <div className="divide-y divide-border">
               <DetailAttributeRow 
-                label={t('examinations.fields.status' as any)} 
+                label={t('examinations.fields.status')}
                 value={exam.status || '—'} 
               />
               <DetailAttributeRow 
-                label={t('examinations.fields.date' as any)} 
+                label={t('examinations.fields.date')}
                 value={exam.date ? formatDate(exam.date) : '—'} 
               />
               <DetailAttributeRow 
-                label={t('examinations.fields.classTargets' as any)} 
+                label={t('examinations.fields.classTargets')}
                 value={exam.classIds?.length > 0 ? exam.classIds.join(', ') : '—'} 
               />
             </div>
@@ -72,7 +72,7 @@ export const ExaminationDetail = React.memo(function ExaminationDetail({
 
         {exam.description && (
           <section>
-            <DetailSectionTitle>{t('examinations.fields.description' as any)}</DetailSectionTitle>
+            <DetailSectionTitle>{t('examinations.fields.description')}</DetailSectionTitle>
             <Card className="p-4">
               <p className="whitespace-pre-wrap text-sm text-foreground m-0">{exam.description}</p>
             </Card>

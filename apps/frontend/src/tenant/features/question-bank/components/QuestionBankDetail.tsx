@@ -34,7 +34,7 @@ export const QuestionBankDetail = React.memo(function QuestionBankDetail({
     <DetailDrawerShell
       open
       onClose={onClose}
-      title={t('questionBank.detail.title' as any)}
+      title={t('questionBank.detail.title')}
       subtitle={question.type}
       icon={FileQuestion}
       headerExtra={isArchived && <DetailDrawerArchivedBanner deletedAt={question.deletedAt} />}
@@ -45,26 +45,26 @@ export const QuestionBankDetail = React.memo(function QuestionBankDetail({
           canRestore={canDelete}
           onEdit={() => onEdit?.(question)}
           onRestore={() => onRestore?.(question.id)}
-          restoreLabel={t('common.restore' as any)}
-          editLabel={t('common.edit' as any)}
+          restoreLabel={t('common.restore')}
+          editLabel={t('common.edit')}
         />
       }
     >
       <div className="flex flex-col gap-6 py-6">
         <section>
-          <DetailSectionTitle>{t('questionBank.detail.overview' as any)}</DetailSectionTitle>
+          <DetailSectionTitle>{t('questionBank.detail.overview')}</DetailSectionTitle>
           <Card className="overflow-hidden">
             <div className="divide-y divide-border">
               <DetailAttributeRow 
-                label={t('questionBank.fields.type' as any)} 
+                label={t('questionBank.fields.type')}
                 value={config.typeLabel?.(question.type) || question.type} 
               />
               <DetailAttributeRow 
-                label={t('questionBank.fields.difficulty' as any)} 
+                label={t('questionBank.fields.difficulty')}
                 value={config.difficultyLabel?.(question.difficulty) || question.difficulty} 
               />
               <DetailAttributeRow 
-                label={t('questionBank.fields.category' as any)} 
+                label={t('questionBank.fields.category')}
                 value={
                   <div className="flex flex-wrap gap-1">
                     {question.categoryIds?.map(catId => (
@@ -74,7 +74,7 @@ export const QuestionBankDetail = React.memo(function QuestionBankDetail({
                 } 
               />
               <DetailAttributeRow 
-                label={t('questionBank.fields.marks' as any)} 
+                label={t('questionBank.fields.marks')}
                 value={question.marks ?? 1} 
               />
             </div>
@@ -82,7 +82,7 @@ export const QuestionBankDetail = React.memo(function QuestionBankDetail({
         </section>
 
         <section>
-          <DetailSectionTitle>{t('questionBank.fields.content' as any)}</DetailSectionTitle>
+          <DetailSectionTitle>{t('questionBank.fields.content')}</DetailSectionTitle>
           <Card className="p-4">
             <div className="prose prose-sm max-w-none text-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: question.text }} />
           </Card>
@@ -90,7 +90,7 @@ export const QuestionBankDetail = React.memo(function QuestionBankDetail({
 
         {question.answer && (
           <section>
-            <DetailSectionTitle>{t('questionBank.fields.explanation' as any)}</DetailSectionTitle>
+            <DetailSectionTitle>{t('questionBank.fields.explanation')}</DetailSectionTitle>
             <Card className="p-4">
               <div className="prose prose-sm max-w-none text-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: question.answer }} />
             </Card>

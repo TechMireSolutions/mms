@@ -12,7 +12,7 @@ Do **not** use for app shell/routing → `mms-frontend`. Do **not** use for db.t
 ## Workflow
 
 1. Confirm the entity is REST Query-first — no new `useLiveCollection` for REST-migrated entities.
-2. Reuse the shared `lib/query/` factories first — `createModuleCrudMutations` / `createModuleQueryInvalidator` / `createModuleSetupConfigApi` / `createPersonModuleResolveQueries` — before hand-rolling per-module factories (`mms-hooks.mdc`). Thin module facades under `@/tenant/hooks/collections/{module}` or `@/platform/hooks/collections/{module}` wrap them.
+2. Reuse the shared `lib/query/` factories first — `createModuleQueryInvalidator` / `createModuleSetupConfigApi` / `createModuleSetupConfigHooks` / `createModuleLookupsHooks` — before hand-rolling per-module factories (`mms-hooks.mdc`). Thin module facades under `@/tenant/hooks/collections/{module}` or `@/platform/hooks/collections/{module}` wrap them.
 3. Define tuple key constants / key factory (named exports; no ad-hoc string keys).
 4. Colocate TanStack Query v5 `queryOptions` / `mutationOptions` with those keys.
 5. Thin hooks wrap factories: `enabled: isAuthenticated` (tenant) or `enabled: !!session` (platform), pass Query `signal` into `apiJson` / `apiFetch`.

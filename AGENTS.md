@@ -15,7 +15,7 @@ bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 ```
 .agent/
   rules/             # behavioural rules (always_on + model_decision)
-  skills/            # 25 capability modules (SKILL.md per folder)
+  skills/            # 28 capability modules (SKILL.md per folder)
   workflows/         # multi-step procedures
   skills-manifest.json
 ```
