@@ -1019,9 +1019,11 @@ describe('platform auth routes', () => {
   it('POST /api/platform/auth/setup/register creates superuser without requiring SMTP in production', async () => {
     const previousNodeEnv = process.env.NODE_ENV;
     const previousJwt = process.env.JWT_SECRET;
+    const previousDatabaseUrl = process.env.DATABASE_URL;
     try {
       process.env.NODE_ENV = 'production';
       process.env.JWT_SECRET = 'test-secret-must-be-at-least-32-chars!!';
+      process.env.DATABASE_URL = previousDatabaseUrl ?? 'postgres://postgres:postgres@localhost:5432/mms';
       mockHasPlatformUsers.mockResolvedValue(false);
       mockIsPlatformSmtpConfigured.mockReturnValue(false);
 
@@ -1042,17 +1044,22 @@ describe('platform auth routes', () => {
     } finally {
       process.env.NODE_ENV = previousNodeEnv;
       process.env.JWT_SECRET = previousJwt ?? 'test-secret';
+      if (previousDatabaseUrl === undefined) {
+        delete process.env.DATABASE_URL;
+      } else {
+        process.env.DATABASE_URL = previousDatabaseUrl;
+      }
     }
   });
-
-
 
   it('POST /api/platform/auth/password/forgot requires SMTP in production', async () => {
     const previousNodeEnv = process.env.NODE_ENV;
     const previousJwt = process.env.JWT_SECRET;
+    const previousDatabaseUrl = process.env.DATABASE_URL;
     try {
       process.env.NODE_ENV = 'production';
       process.env.JWT_SECRET = 'test-secret-must-be-at-least-32-chars!!';
+      process.env.DATABASE_URL = previousDatabaseUrl ?? 'postgres://postgres:postgres@localhost:5432/mms';
       mockIsPlatformSmtpConfigured.mockReturnValue(false);
       mockPutAuthArtifact.mockClear();
 
@@ -1070,6 +1077,11 @@ describe('platform auth routes', () => {
     } finally {
       process.env.NODE_ENV = previousNodeEnv;
       process.env.JWT_SECRET = previousJwt ?? 'test-secret';
+      if (previousDatabaseUrl === undefined) {
+        delete process.env.DATABASE_URL;
+      } else {
+        process.env.DATABASE_URL = previousDatabaseUrl;
+      }
     }
   });
 
