@@ -19,6 +19,7 @@ catalog:
   vite: "^8.2.1"
   "@tanstack/react-query": "^5.101.4"
   "@ts-rest/react-query": "3.52.1"
+  react-router-dom: "^7.18.2"
 
 minimumReleaseAgeExclude:
   - nodemailer@9.0.1
@@ -36,6 +37,5 @@ peerDependencyRules:
 
 overrides:
   esbuild: "^0.25.0"
-  react-router: "^8.3.0"
   xlsx: "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   nanoid: "^3.3.18"

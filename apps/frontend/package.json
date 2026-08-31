@@ -44,9 +44,10 @@
     "react-day-picker": "^10.0.1",
     "react-dom": "catalog:",
     "react-hook-form": "^7.85.0",
-    "react-router-dom": "^7.18.2",
+    "react-router-dom": "catalog:",
     "recharts": "^3.10.1",
     "tailwind-merge": "^3.6.0",
+    "xlsx": "*",
     "zod": "catalog:",
     "zustand": "^5.0.15"
   },
