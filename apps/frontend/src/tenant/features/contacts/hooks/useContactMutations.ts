@@ -2,6 +2,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import {
   type Contact,
   type ContactIdentityMatchBody,
+  type ContactIdentityMatchResult,
 } from '@mms/shared';
 import { tsrClient } from '@/lib/api';
 import { enqueueContactsOutbox } from '@/lib/contacts/contactsSyncOutbox';
@@ -13,6 +14,15 @@ import {
   useContactsContractLogSetupAudit,
 } from '@/tenant/features/contacts/hooks/useContactsTsrHooks';
 import { invalidateContactsQueries } from '@/tenant/features/contacts/hooks/invalidateContactsQueries';
+import { unwrapContactMutationBody } from '@/tenant/features/contacts/hooks/contactMutationResponse';
+
+type ContactSuccessResponse = { success: true };
+type ContactWrappedResponse = ContactSuccessResponse & { contact: Contact };
+type ContactBulkResult = ContactSuccessResponse & { succeeded: number; failed: number };
+type ContactBulkRestoreResult = ContactBulkResult & {
+  conflicts: Array<{ id: string; errors: Array<{ field: string; message: string }> }>;
+};
+type ContactBulkTagResult = ContactSuccessResponse & { updatedCount: number };
 
 export function useInvalidateContactsQueries() {
   const queryClient = useQueryClient();
@@ -66,7 +76,8 @@ export function useContactMutations() {
       ...upsertContactMutation,
       mutateAsync: async (contact: Contact) => {
         try {
-          return await upsertContactMutation.mutateAsync({ body: contact });
+          const response = await upsertContactMutation.mutateAsync({ body: contact });
+          return unwrapContactMutationBody<ContactWrappedResponse>(response);
         } catch (error) {
           if (typeof navigator !== 'undefined' && !navigator.onLine) {
             enqueueContactsOutbox({ kind: 'upsert', contact });
@@ -79,7 +90,8 @@ export function useContactMutations() {
       ...updateContactMutation,
       mutateAsync: async ({ id, contact }: { id: string; contact: Contact }) => {
         try {
-          return await updateContactMutation.mutateAsync({ params: { id }, body: contact });
+          const response = await updateContactMutation.mutateAsync({ params: { id }, body: contact });
+          return unwrapContactMutationBody<ContactWrappedResponse>(response);
         } catch (error) {
           if (typeof navigator !== 'undefined' && !navigator.onLine) {
             enqueueContactsOutbox({ kind: 'update', contactId: id, contact });
@@ -92,10 +104,11 @@ export function useContactMutations() {
       ...deleteContactMutation,
       mutateAsync: async ({ id, deletionReason }: { id: string; deletionReason?: string }) => {
         try {
-          return await deleteContactMutation.mutateAsync({
+          const response = await deleteContactMutation.mutateAsync({
             params: { id },
             body: deletionReason ? { deletionReason } : {}
           });
+          return unwrapContactMutationBody<ContactSuccessResponse>(response);
         } catch (error) {
           if (typeof navigator !== 'undefined' && !navigator.onLine) {
             enqueueContactsOutbox({ kind: 'delete', contactId: id, deletionReason });
@@ -105,43 +118,59 @@ export function useContactMutations() {
       }
     },
     bulkDeleteContacts: {
-      mutateAsync: (payload: { ids: string[]; deletionReason?: string }) => bulkDeleteMutation.mutateAsync({ body: payload }),
+      mutateAsync: async (payload: { ids: string[]; deletionReason?: string }) => {
+        const response = await bulkDeleteMutation.mutateAsync({ body: payload });
+        return unwrapContactMutationBody<ContactBulkResult>(response);
+      },
       isPending: bulkDeleteMutation.isPending,
     },
     restoreContact: {
-      mutateAsync: (id: string) => restoreMutation.mutateAsync({ params: { id } }),
+      mutateAsync: async (id: string) => {
+        const response = await restoreMutation.mutateAsync({ params: { id } });
+        return unwrapContactMutationBody<ContactWrappedResponse>(response);
+      },
       isPending: restoreMutation.isPending,
     },
     bulkRestoreContacts: {
-      mutateAsync: (ids: string[]) => bulkRestoreMutation.mutateAsync({ body: { ids } }),
+      mutateAsync: async (ids: string[]) => {
+        const response = await bulkRestoreMutation.mutateAsync({ body: { ids } });
+        return unwrapContactMutationBody<ContactBulkRestoreResult>(response);
+      },
       isPending: bulkRestoreMutation.isPending,
     },
     mergeContacts: {
       ...mergeContactsMutation,
       mutateAsync: async (payload: { keepId: string | number; deleteId: string | number; merged?: Contact }) => {
-        return mergeContactsMutation.mutateAsync({ body: payload });
+        const response = await mergeContactsMutation.mutateAsync({ body: payload });
+        return unwrapContactMutationBody<ContactWrappedResponse>(response);
       }
     },
     matchContactIdentity: {
       ...matchContactIdentity,
       mutateAsync: async (body: ContactIdentityMatchBody) => {
-        return matchContactIdentity.mutateAsync({ body });
+        const response = await matchContactIdentity.mutateAsync({ body });
+        return unwrapContactMutationBody<ContactIdentityMatchResult>(response);
       }
     },
     bulkTagContacts: {
       ...bulkTagContactsMutation,
       mutateAsync: async (payload: { ids: string[]; addTags?: string[]; removeTags?: string[] }) => {
-        return bulkTagContactsMutation.mutateAsync({ body: payload });
+        const response = await bulkTagContactsMutation.mutateAsync({ body: payload });
+        return unwrapContactMutationBody<ContactBulkTagResult>(response);
       }
     },
     logExportAudit: {
-      mutateAsync: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) =>
-        logExportAuditMutation.mutateAsync({ body: payload }),
+      mutateAsync: async (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) => {
+        const response = await logExportAuditMutation.mutateAsync({ body: payload });
+        return unwrapContactMutationBody<ContactSuccessResponse>(response);
+      },
       isPending: logExportAuditMutation.isPending,
     },
     logSetupAudit: {
-      mutateAsync: (payload: { area: 'fields' | 'preferences'; summary: string }) =>
-        logSetupAuditMutation.mutateAsync({ body: payload }),
+      mutateAsync: async (payload: { area: 'fields' | 'preferences'; summary: string }) => {
+        const response = await logSetupAuditMutation.mutateAsync({ body: payload });
+        return unwrapContactMutationBody<ContactSuccessResponse>(response);
+      },
       isPending: logSetupAuditMutation.isPending,
     },
   };

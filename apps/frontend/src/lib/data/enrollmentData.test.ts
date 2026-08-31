@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateAgeFromDob, suggestClass, calcFee } from './enrollmentData';
+import { calculateAgeFromDob, suggestClass, runFullEligibility, calcFee } from './enrollmentData';
 import type { Session, Discount } from './sessionsData';
 import type { Student } from './studentsData';
 
@@ -63,6 +63,55 @@ describe('enrollmentData dynamic calculations', () => {
       };
       const suggested = suggestClass(student, mockSession);
       expect(suggested?.id).toBe('cls-senior');
+    });
+
+    it('matches title-cased student genders to canonical class genders', () => {
+      const now = new Date();
+      const session = {
+        ...mockSession,
+        classes: [
+          { ...mockSession.classes[0]!, id: 'cls-female', gender: 'female' as const },
+          { ...mockSession.classes[0]!, id: 'cls-male', gender: 'male' as const },
+        ],
+      };
+      const student: Partial<Student> = {
+        dob: `${now.getFullYear() - 9}-01-01`,
+        gender: 'Male' as unknown as Student['gender'],
+      };
+
+      expect(suggestClass(student, session)?.id).toBe('cls-male');
+    });
+  });
+
+  describe('runFullEligibility', () => {
+    it('passes a title-cased student gender for a matching class', () => {
+      const targetClass = {
+        id: 'cls-male',
+        name: 'Male Class',
+        ageMin: 5,
+        ageMax: 18,
+        gender: 'male' as const,
+        teacherId: 'teacher-1',
+        capacity: 20,
+        enrolled: 5,
+      };
+      const session = {
+        id: 'sess-1',
+        name: 'Academic Year 2026',
+        classes: [targetClass],
+      } as unknown as Session;
+      const student = {
+        id: 'student-1',
+        name: 'Ali',
+        firstName: 'Ali',
+        gender: 'Male',
+      } as unknown as Student;
+
+      const genderCheck = runFullEligibility(student, session, targetClass, []).find(
+        (check) => check.id === 'gender',
+      );
+
+      expect(genderCheck?.status).toBe('pass');
     });
   });
 

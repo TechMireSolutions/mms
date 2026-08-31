@@ -1,5 +1,6 @@
 import { Student } from "@/lib/data/studentsData";
 import { Session, Class, Discount } from "@/lib/data/sessionsData";
+import { normalizeGenderKey } from "@/lib/genderUi";
 
 import type { Enrollment, EnrollmentTimelineItem } from '@mms/shared';
 export type { Enrollment, EnrollmentTimelineItem };
@@ -58,12 +59,20 @@ export function calculateAgeFromDob(dob: string): number {
   return Math.max(0, age);
 }
 
+function studentMatchesClassGender(
+  studentGender: string | null | undefined,
+  classGender: string,
+): boolean {
+  const requirement = classGender.trim().toLowerCase();
+  return requirement === "any" || normalizeGenderKey(studentGender) === requirement;
+}
+
 export function suggestClass(student: Partial<Student>, session: Session): Class | null {
   if (!student.dob) return null;
   const age = calculateAgeFromDob(student.dob);
   for (const sessionClass of session.classes) {
     if (age >= sessionClass.ageMin && age <= sessionClass.ageMax) {
-      if (sessionClass.gender === "any" || student.gender === sessionClass.gender) {
+      if (studentMatchesClassGender(student.gender, sessionClass.gender)) {
         return sessionClass;
       }
     }
@@ -92,7 +101,7 @@ export function runFullEligibility(
     }
   }
 
-  if (targetClass && targetClass.gender !== "any" && student.gender !== targetClass.gender) {
+  if (targetClass && !studentMatchesClassGender(student.gender, targetClass.gender)) {
     checks.push({ id: "gender", label: "Gender Match", status: "fail", detail: `Class is ${targetClass.gender}-only. Student is ${student.gender}.` });
   } else {
     checks.push({ id: "gender", label: "Gender Match", status: "pass", detail: `Gender matches class requirement.` });
