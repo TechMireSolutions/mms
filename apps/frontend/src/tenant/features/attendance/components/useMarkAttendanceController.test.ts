@@ -5,6 +5,10 @@ import { useMarkAttendanceController } from "./useMarkAttendanceController";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
+const mocks = vi.hoisted(() => ({
+  useEnrollmentsCollection: vi.fn(() => []),
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
@@ -31,7 +35,7 @@ vi.mock("@/tenant/hooks/collections/sessions", () => ({
 }));
 
 vi.mock("@/tenant/hooks/collections/enrollments", () => ({
-  useEnrollmentsCollection: () => [],
+  useEnrollmentsCollection: mocks.useEnrollmentsCollection,
 }));
 
 vi.mock("@/tenant/hooks/collections/students", () => ({
@@ -42,6 +46,7 @@ describe("useMarkAttendanceController Hook", () => {
   let container: HTMLDivElement | null = null;
 
   beforeEach(() => {
+    mocks.useEnrollmentsCollection.mockClear();
     container = document.createElement("div");
     document.body.appendChild(container);
   });
@@ -75,5 +80,10 @@ describe("useMarkAttendanceController Hook", () => {
     expect(hookResult.filters.classId).toBe("cls-1");
     expect(hookResult.filters.date).toBe("2025-01-01");
     expect(hookResult.canWriteAttendance).toBe(true);
+    expect(mocks.useEnrollmentsCollection).toHaveBeenCalledWith({
+      enabled: true,
+      sessionId: "ses-1",
+      classId: "cls-1",
+    });
   });
 });

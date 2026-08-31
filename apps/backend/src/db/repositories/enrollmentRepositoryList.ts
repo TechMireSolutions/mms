@@ -79,6 +79,10 @@ function buildListConditions(subdomain: string, query: EnrollmentsListQuery): SQ
     conditions.push(eq(enrollments.sessionId, query.sessionId.trim()));
   }
 
+  if (query.classId?.trim() && query.classId !== 'all') {
+    conditions.push(eq(enrollments.classId, query.classId.trim()));
+  }
+
   const search = query.search?.trim();
   if (search) {
     const pattern = `%${search}%`;

@@ -1,7 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { baseListQuerySchema } from '../apiSchemas.js';
 import { enrollmentRecordSchema } from '../enrollmentsModuleManifest.js';
+import { enrollmentsListQuerySchema } from '../enrollmentsListQuery.js';
 import { enrollmentsReportAggregatesSchema } from '../enrollmentsReportAggregates.js';
 import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
 
@@ -52,7 +52,7 @@ export const enrollmentContract = c.router({
   list: {
     method: 'GET',
     path: '/api/enrollments',
-    query: baseListQuerySchema,
+    query: enrollmentsListQuerySchema,
     responses: { 200: enrollmentListPageResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'List enrollments',
   },

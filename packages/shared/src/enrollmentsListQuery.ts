@@ -1,5 +1,13 @@
 import type { Enrollment } from './enrollmentsModuleManifest.js';
 import { paginateArray } from './utils.js';
+import { baseListQuerySchema } from './apiSchemas.js';
+import { z } from 'zod';
+
+export const enrollmentsListQuerySchema = baseListQuerySchema.extend({
+  status: z.string().max(100).optional(),
+  sessionId: z.string().max(64).optional(),
+  classId: z.string().max(64).optional(),
+});
 
 export interface EnrollmentsListQuery {
   page?: number;
@@ -7,6 +15,7 @@ export interface EnrollmentsListQuery {
   search?: string;
   status?: string;
   sessionId?: string;
+  classId?: string;
   sortField?: string;
   sortDir?: 'asc' | 'desc';
   includeDeleted?: boolean;
@@ -33,6 +42,9 @@ export function filterEnrollmentsForQuery(
   }
   if (query.sessionId?.trim() && query.sessionId !== 'all') {
     rows = rows.filter((enrollment) => enrollment.sessionId === query.sessionId);
+  }
+  if (query.classId?.trim() && query.classId !== 'all') {
+    rows = rows.filter((enrollment) => enrollment.classId === query.classId);
   }
   if (query.search?.trim()) {
     const search = query.search.trim().toLowerCase();

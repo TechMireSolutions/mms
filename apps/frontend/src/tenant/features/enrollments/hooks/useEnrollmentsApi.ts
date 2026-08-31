@@ -46,8 +46,15 @@ export interface EnrollmentsPaginatedParams {
   search?: string;
   status?: string;
   sessionId?: string;
+  classId?: string;
   includeDeleted?: boolean;
   enabled?: boolean;
+}
+
+export interface EnrollmentsCollectionOptions {
+  enabled?: boolean;
+  sessionId?: string;
+  classId?: string;
 }
 
 function buildEnrollmentsPageUrl(params: EnrollmentsPaginatedParams): string {
@@ -57,6 +64,7 @@ function buildEnrollmentsPageUrl(params: EnrollmentsPaginatedParams): string {
   if (params.search?.trim()) queryParams.set('search', params.search.trim());
   if (params.status?.trim() && params.status !== 'all') queryParams.set('status', params.status.trim());
   if (params.sessionId?.trim() && params.sessionId !== 'all') queryParams.set('sessionId', params.sessionId.trim());
+  if (params.classId?.trim() && params.classId !== 'all') queryParams.set('classId', params.classId.trim());
   if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
   return `${ENROLLMENTS_API}?${queryParams.toString()}`;
 }
@@ -74,6 +82,7 @@ export function useEnrollmentsPaginated(params: EnrollmentsPaginatedParams) {
         search: params.search?.trim(),
         status: params.status?.trim() && params.status !== 'all' ? params.status.trim() : undefined,
         sessionId: params.sessionId?.trim() && params.sessionId !== 'all' ? params.sessionId.trim() : undefined,
+        classId: params.classId?.trim() && params.classId !== 'all' ? params.classId.trim() : undefined,
         includeDeleted: params.includeDeleted ? 'true' : undefined,
       } as any,
     },
@@ -83,18 +92,30 @@ export function useEnrollmentsPaginated(params: EnrollmentsPaginatedParams) {
   });
 }
 
-export function useEnrollments(options?: { enabled?: boolean }) {
+export function useEnrollments(options?: EnrollmentsCollectionOptions) {
   const { isAuthenticated } = useAuth();
+  const sessionId = options?.sessionId?.trim() || undefined;
+  const classId = options?.classId?.trim() || undefined;
+  const scopedQueryKey = sessionId || classId
+    ? [...ENROLLMENTS_QUERY_KEY, 'scope', { sessionId, classId }] as const
+    : ENROLLMENTS_QUERY_KEY;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.enrollments.list.useQuery({
-    queryKey: ENROLLMENTS_QUERY_KEY,
-    queryData: { query: { page: 1, limit: ENROLLMENTS_MODULE_MANIFEST.maxPageSize } as any },
+    queryKey: scopedQueryKey,
+    queryData: {
+      query: {
+        page: 1,
+        limit: ENROLLMENTS_MODULE_MANIFEST.maxPageSize,
+        sessionId,
+        classId,
+      } as any,
+    },
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 15_000,
   });
 }
 
-export function useEnrollmentsCollection(options?: { enabled?: boolean }): Enrollment[] {
+export function useEnrollmentsCollection(options?: EnrollmentsCollectionOptions): Enrollment[] {
   const query = useEnrollments(options);
   if (!query.data || query.data.status !== 200) return [];
   const body = query.data.body as any;

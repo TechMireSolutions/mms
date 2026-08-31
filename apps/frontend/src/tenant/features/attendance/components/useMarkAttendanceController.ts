@@ -29,7 +29,11 @@ export function useMarkAttendanceController({
   const { statuses, customFields, orderedFields, isFieldEnabled } = useAttendanceConfig();
   const { canWrite: canWriteAttendance } = useModulePermissions(ATTENDANCE_MODULE_MANIFEST);
   const sessions = useSessionsCollection();
-  const enrollments = useEnrollmentsCollection();
+  const enrollments = useEnrollmentsCollection({
+    enabled: Boolean(filters.classId),
+    sessionId: filters.sessionId || undefined,
+    classId: filters.classId || undefined,
+  });
   const studentIds = useMemo(() => {
     if (!filters.classId) return [];
     return enrollments

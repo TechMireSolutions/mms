@@ -129,6 +129,29 @@ describe('enrollments REST routes integration', () => {
     await app.close();
   });
 
+  it('GET /api/enrollments forwards session and class roster filters', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/enrollments?page=1&limit=500&sessionId=ses-1&classId=cls-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app, { name: 'Admin User' })}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadEnrollmentsPage).toHaveBeenCalledWith(
+      expect.objectContaining({
+        page: 1,
+        limit: 500,
+        sessionId: 'ses-1',
+        classId: 'cls-1',
+      }),
+    );
+    await app.close();
+  });
+
   it('GET /api/enrollments/report-aggregates loads cumulative trends for authorized roles', async () => {
     // Cumulative series (not monthly-new [2,1,1]).
     mockLoadEnrollmentsReportAggregates.mockResolvedValue({
