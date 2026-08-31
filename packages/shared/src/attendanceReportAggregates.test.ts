@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  EMPTY_ATTENDANCE_REPORT_OVERVIEW,
   attendanceReportAggregatesSchema,
   normalizeAttendanceReportComparisonQuery,
   attendanceReportComparisonQueryActive,
@@ -8,6 +9,7 @@ import {
 describe('attendanceReportAggregates', () => {
   it('parses a valid aggregates payload with comparison', () => {
     const parsed = attendanceReportAggregatesSchema.parse({
+      overview: EMPTY_ATTENDANCE_REPORT_OVERVIEW,
       comparison: {
         sessions: [{ sessionId: 's1', attendancePct: 85 }],
         monthly: {

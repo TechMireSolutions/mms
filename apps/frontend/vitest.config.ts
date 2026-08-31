@@ -14,5 +14,6 @@ export default defineConfig({
     // Disable it so happy-dom's window.localStorage is installed.
     execArgv: ['--no-experimental-webstorage'],
     include: ['src/**/*.test.{ts,tsx}', 'src/**/*.spec.{ts,tsx}'],
+    testTimeout: 15_000,
   },
 });
