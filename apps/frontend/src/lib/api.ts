@@ -4,8 +4,34 @@
  * CSRF headers, auth-refresh, request-ID, and timeout behaviour.
  */
 import { initTsrReactQuery } from '@ts-rest/react-query/v5';
+import type { TsRestReactQueryHooksContainer } from '@ts-rest/react-query/v5';
 import { initClient } from '@ts-rest/core';
-import { rootContract } from '@mms/shared';
+import type { AppRouter } from '@ts-rest/core';
+import {
+  rootContract,
+  studentContract,
+  financeContract,
+  attendanceContract,
+  contactsContract,
+  teacherContract,
+  userContract,
+  messagingContract,
+  sessionContract,
+  questionBankContract,
+  accountingContract,
+  hasanatContract,
+  obligationContract,
+  examinationContract,
+  enrollmentContract,
+  dashboardContract,
+  savedReportsContract,
+  workspaceContract,
+  authContract,
+  profileContract,
+  publicContract,
+  aiContract,
+  platformContract,
+} from '@mms/shared';
 import { apiFetch, resolveApiUrl } from '@/lib/apiClient';
 
 type TsrFetcherArgs = {
@@ -58,7 +84,50 @@ export const tsrClient = initTsrReactQuery(rootContract, {
   api: tsrApiFetcher,
 });
 
- 
+/**
+ * Per-domain typed ts-rest react-query accessors.
+ *
+ * WHY: `initTsrReactQuery` over the full 22-domain root contract trips TS's
+ * union-instantiation depth limit — property chains like
+ * `tsrClient.students.list` degrade to non-callable unions, which led to
+ * `@ts-expect-error - TS union discrimination limit` being suppressed at every
+ * hook across all modules (~286 sites), erasing query-param and response
+ * types exactly where the contract layer was supposed to enforce them.
+ *
+ * `tsr.students` instantiates `TsRestReactQueryHooksContainer` against the
+ * small per-domain contract (`studentContract`), which TS resolves fully:
+ * real query/mutation request and response types at every call site. The
+ * single cast per domain lives here in this reviewed file; feature code uses
+ * `tsr.<domain>.<route>.useQuery/useMutation` — not `tsrClient`.
+ */
+type TsrClientArgs = Parameters<typeof initTsrReactQuery>[1];
+type DomainTsr<C extends AppRouter> = TsRestReactQueryHooksContainer<C, TsrClientArgs>;
+
+export const tsr = {
+  students: tsrClient.students as unknown as DomainTsr<typeof studentContract>,
+  finance: tsrClient.finance as unknown as DomainTsr<typeof financeContract>,
+  attendance: tsrClient.attendance as unknown as DomainTsr<typeof attendanceContract>,
+  contacts: tsrClient.contacts as unknown as DomainTsr<typeof contactsContract>,
+  teachers: tsrClient.teachers as unknown as DomainTsr<typeof teacherContract>,
+  users: tsrClient.users as unknown as DomainTsr<typeof userContract>,
+  messaging: tsrClient.messaging as unknown as DomainTsr<typeof messagingContract>,
+  sessions: tsrClient.sessions as unknown as DomainTsr<typeof sessionContract>,
+  questionBank: tsrClient.questionBank as unknown as DomainTsr<typeof questionBankContract>,
+  accounting: tsrClient.accounting as unknown as DomainTsr<typeof accountingContract>,
+  hasanat: tsrClient.hasanat as unknown as DomainTsr<typeof hasanatContract>,
+  obligations: tsrClient.obligations as unknown as DomainTsr<typeof obligationContract>,
+  examinations: tsrClient.examinations as unknown as DomainTsr<typeof examinationContract>,
+  enrollments: tsrClient.enrollments as unknown as DomainTsr<typeof enrollmentContract>,
+  dashboard: tsrClient.dashboard as unknown as DomainTsr<typeof dashboardContract>,
+  savedReports: tsrClient.savedReports as unknown as DomainTsr<typeof savedReportsContract>,
+  workspace: tsrClient.workspace as unknown as DomainTsr<typeof workspaceContract>,
+  auth: tsrClient.auth as unknown as DomainTsr<typeof authContract>,
+  profile: tsrClient.profile as unknown as DomainTsr<typeof profileContract>,
+  public: tsrClient.public as unknown as DomainTsr<typeof publicContract>,
+  ai: tsrClient.ai as unknown as DomainTsr<typeof aiContract>,
+  platform: tsrClient.platform as unknown as DomainTsr<typeof platformContract>,
+};
+
 export const apiContract = initClient(rootContract, {
   baseUrl: typeof window !== 'undefined' ? window.location.origin : '',
   api: tsrApiFetcher,

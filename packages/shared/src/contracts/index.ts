@@ -50,3 +50,58 @@ export const rootContract = c.router({
 });
 
 export type RootContract = typeof rootContract;
+
+/**
+ * Per-domain contracts, re-exported so consumers can type a single domain
+ * at a time. The full `rootContract` (22 domains × ~350 endpoints) exceeds
+ * TS's union-instantiation depth limit — domain-scoped resolution keeps
+ * compile-time types intact (see apps/frontend/src/lib/api.ts `tsr` accessor).
+ */
+export {
+  studentContract,
+  financeContract,
+  attendanceContract,
+  contactsContract,
+  teacherContract,
+  userContract,
+  messagingContract,
+  sessionContract,
+  questionBankContract,
+  accountingContract,
+  hasanatContract,
+  obligationContract,
+  examinationContract,
+  enrollmentContract,
+  dashboardContract,
+  savedReportsContract,
+  workspaceContract,
+  authContract,
+  profileContract,
+  publicContract,
+  aiContract,
+  platformContract,
+};
+export type DomainContracts = {
+  students: typeof studentContract;
+  finance: typeof financeContract;
+  attendance: typeof attendanceContract;
+  contacts: typeof contactsContract;
+  teachers: typeof teacherContract;
+  users: typeof userContract;
+  messaging: typeof messagingContract;
+  sessions: typeof sessionContract;
+  questionBank: typeof questionBankContract;
+  accounting: typeof accountingContract;
+  hasanat: typeof hasanatContract;
+  obligations: typeof obligationContract;
+  examinations: typeof examinationContract;
+  enrollments: typeof enrollmentContract;
+  dashboard: typeof dashboardContract;
+  savedReports: typeof savedReportsContract;
+  workspace: typeof workspaceContract;
+  auth: typeof authContract;
+  profile: typeof profileContract;
+  public: typeof publicContract;
+  ai: typeof aiContract;
+  platform: typeof platformContract;
+};
