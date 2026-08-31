@@ -1,5 +1,5 @@
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { AlertTriangle, Check, GitMerge, Loader2 } from "lucide-react";
 import { mergeContacts, getDisplayName, type Contact } from "@mms/shared";
 import { Button } from "@/components/ui/button";
@@ -34,7 +34,7 @@ export function MergePreview({
 }: MergePreviewProps): React.JSX.Element {
   const { prefs } = useContactConfig();
   const { t } = useTranslation();
-  const colors = useMemo(() => getDuplicateThemeColors(prefs), [prefs]);
+  const colors = (() => getDuplicateThemeColors(prefs))();
   const emptyDash = t("contacts.table.emptyDash");
   const keep = pair.contacts[keepIndex];
   const other = pair.contacts[1 - keepIndex];
@@ -42,9 +42,9 @@ export function MergePreview({
   // Field override state: maps fieldName -> index (0 for keep, 1 for other)
   const [fieldOverrides, setFieldOverrides] = useState<Record<string, number>>({});
 
-  const defaultMerged = useMemo(() => mergeContacts(keep, other), [keep, other]);
+  const defaultMerged = (() => mergeContacts(keep, other))();
 
-  const customMerged = useMemo(() => {
+  const customMerged = (() => {
     const next: Contact = { ...defaultMerged };
     for (const [field, selectedIndex] of Object.entries(fieldOverrides)) {
       const source = selectedIndex === 0 ? keep : other;
@@ -84,7 +84,7 @@ export function MergePreview({
       }
     }
     return next;
-  }, [defaultMerged, fieldOverrides, keep, other]);
+  })();
 
   const fields = prefs.duplicateDetectionFields || ["name", "phone", "email", "cnic"];
 

@@ -10,7 +10,7 @@ export function useUsersContractList(query: Record<string, unknown>, enabled = t
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.users.list.useQuery({
     queryKey: [...USERS_LIST_QUERY_KEY, 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });

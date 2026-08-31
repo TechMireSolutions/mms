@@ -27,7 +27,7 @@ export interface UserAvatarProps {
   fallbackClassName?: string;
 }
 
-export const UserAvatar = React.memo(function UserAvatar({
+export const UserAvatar = (function UserAvatar({
   id,
   name,
   avatar,

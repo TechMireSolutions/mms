@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   Layers, Filter, Package, Star, Gift, TrendingUp, RotateCcw,
 } from 'lucide-react';
@@ -10,13 +10,13 @@ interface HasanatCommandMetricsProps {
   shown: number;
 }
 
-export const HasanatCommandMetrics = React.memo(function HasanatCommandMetrics({
+export const HasanatCommandMetrics = (function HasanatCommandMetrics({
   shown,
 }: HasanatCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: serverMetrics } = useHasanatMetrics();
 
-  const metrics = useMemo(() => ({
+  const metrics = (() => ({
     totalStock: serverMetrics?.totalStock ?? 0,
     available: serverMetrics?.available ?? 0,
     distributed: serverMetrics?.distributed ?? 0,
@@ -24,9 +24,9 @@ export const HasanatCommandMetrics = React.memo(function HasanatCommandMetrics({
     active: serverMetrics?.active ?? 0,
     returned: serverMetrics?.returned ?? 0,
     denominations: serverMetrics?.denominations ?? 0,
-  }), [serverMetrics]);
+  }))();
 
-  const items = useMemo(() => [
+  const items = (() => [
     { icon: Layers, label: t('hasanat.metrics.totalStock'), value: metrics.totalStock, accent: 'primary' as const },
     { icon: Filter, label: t('hasanat.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: Package, label: t('hasanat.metrics.available'), value: metrics.available, accent: 'success' as const },
@@ -34,7 +34,7 @@ export const HasanatCommandMetrics = React.memo(function HasanatCommandMetrics({
     { icon: Gift, label: t('hasanat.metrics.redeemed'), value: metrics.redeemed, accent: 'teal' as const },
     { icon: TrendingUp, label: t('hasanat.metrics.active'), value: metrics.active, accent: 'success' as const },
     { icon: RotateCcw, label: t('hasanat.metrics.returned'), value: metrics.returned, accent: 'warning' as const },
-  ], [t, shown, metrics]);
+  ])();
 
   return <ModuleCommandMetricsGrid items={items} />;
 });

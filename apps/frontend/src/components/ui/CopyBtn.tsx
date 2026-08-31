@@ -19,7 +19,7 @@ interface CopyBtnProps {
 /**
  * Reusable CopyBtn component for copying text to clipboard with feedback icon and toast.
  */
-export const CopyBtn = React.memo(function CopyBtn({
+export const CopyBtn = (function CopyBtn({
   text,
   className,
   variant,

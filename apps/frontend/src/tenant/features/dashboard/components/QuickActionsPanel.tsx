@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { WidgetCard } from '@/components/ui/WidgetCard';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -26,16 +26,13 @@ export function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): Re
   const settings = useGlobalSettings();
   const { t } = useTranslation();
   const { can } = usePermissions();
-  const enabledModules = useMemo(() => settings.enabledModules || {}, [settings.enabledModules]);
+  const enabledModules = (() => settings.enabledModules || {})();
 
-  const actions = useMemo(
-    () =>
+  const actions = (() =>
       getQuickActionsForRole(dashboardRole).filter(
         (quickAction) =>
           enabledModules[quickAction.moduleId] !== false && can(quickAction.permission),
-      ),
-    [dashboardRole, enabledModules, can],
-  );
+      ))();
 
   if (actions.length === 0) return null;
 

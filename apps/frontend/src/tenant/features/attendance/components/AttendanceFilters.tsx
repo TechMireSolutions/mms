@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Filter, X, ChevronDown, ChevronUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -43,16 +43,13 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
     limit: TEACHERS_MODULE_MANIFEST.maxPageSize,
     status: 'active',
   });
-  const assignableTeachers = useMemo(
-    () => activeTeachersForAssignment((activeTeachersPage?.body?.teachers ?? []) as import('@mms/shared').Teacher[]),
-    [activeTeachersPage],
-  );
+  const assignableTeachers = (() => activeTeachersForAssignment((activeTeachersPage?.body?.teachers ?? []) as import('@mms/shared').Teacher[]))();
   
-  const allClasses = useMemo(() => {
+  const allClasses = (() => {
     return sessions.flatMap((session) =>
       (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
     );
-  }, [sessions]);
+  })();
 
   const setFilterValue = (key: keyof AttendanceFilterState, value: string) => onChange({ ...filters, [key]: value });
 

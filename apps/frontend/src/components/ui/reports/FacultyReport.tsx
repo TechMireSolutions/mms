@@ -21,7 +21,7 @@ export type {
   TeacherReportProps,
 } from './teacherReportTypes';
 
-const FacultyReport = React.memo(function FacultyReport({ filters }: TeacherReportProps): React.JSX.Element {
+const FacultyReport = (function FacultyReport({ filters }: TeacherReportProps): React.JSX.Element {
   const report = useFacultyReportController({ filters });
 
   if (report.activeSubTab === 'roster' && report.listError) {

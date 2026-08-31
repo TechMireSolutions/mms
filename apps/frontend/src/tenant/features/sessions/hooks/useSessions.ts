@@ -1,4 +1,5 @@
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import type { MutateOptions } from '@tanstack/react-query';
 import type {
   SessionsCommandMetricsSnapshot,
 } from '@mms/shared';
@@ -48,7 +49,7 @@ export function useSessionsPaginated(params: SessionsPaginatedParams) {
   const enabled = params.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.sessions.list.useQuery({
-    queryKey: [...SESSIONS_QUERY_KEY, 'page', params] as any,
+    queryKey: [...SESSIONS_QUERY_KEY, 'page', params],
     queryData: { query: { 
       page: params.page, 
       limit: params.limit ?? SESSIONS_MODULE_MANIFEST.defaultPageSize,
@@ -58,7 +59,7 @@ export function useSessionsPaginated(params: SessionsPaginatedParams) {
       sortField: params.sortField?.trim(),
       sortDir: params.sortDir,
       includeDeleted: params.includeDeleted ? 'true' : undefined
-    } as any },
+    } },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
     placeholderData: (previousData: unknown) => previousData,
@@ -71,7 +72,7 @@ export function useSessions(options?: { enabled?: boolean }) {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.sessions.list.useQuery({
     queryKey: SESSIONS_QUERY_KEY,
-    queryData: { query: { page: 1, limit: 100, sortField: 'createdAt', sortDir: 'desc' } as any },
+    queryData: { query: { page: 1, limit: 100, sortField: 'createdAt', sortDir: 'desc' } },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
   });
@@ -124,42 +125,42 @@ export function useSessionMutations() {
   return {
     createSession: {
       ...createSession,
-      mutate: (session: Session, opts?: any) => createSession.mutate({ body: session }, opts),
+      mutate: (session: Session, opts?: MutateOptions) => createSession.mutate({ body: session }, opts),
       mutateAsync: (session: Session) => createSession.mutateAsync({ body: session }),
     },
     updateSession: {
       ...updateSession,
-      mutate: ({ id, session }: { id: string; session: Session }, opts?: any) => updateSession.mutate({ params: { id }, body: session }, opts),
+      mutate: ({ id, session }: { id: string; session: Session }, opts?: MutateOptions) => updateSession.mutate({ params: { id }, body: session }, opts),
       mutateAsync: ({ id, session }: { id: string; session: Session }) => updateSession.mutateAsync({ params: { id }, body: session }),
     },
     deleteSession: {
       ...deleteSession,
-      mutate: ({ id, deletionReason }: { id: string; deletionReason?: string }, opts?: any) => deleteSession.mutate({ params: { id }, body: deletionReason ? { deletionReason } : {} }, opts),
+      mutate: ({ id, deletionReason }: { id: string; deletionReason?: string }, opts?: MutateOptions) => deleteSession.mutate({ params: { id }, body: deletionReason ? { deletionReason } : {} }, opts),
       mutateAsync: ({ id, deletionReason }: { id: string; deletionReason?: string }) => deleteSession.mutateAsync({ params: { id }, body: deletionReason ? { deletionReason } : {} }),
     },
     restoreSession: {
       ...restoreSession,
-      mutate: (id: string, opts?: any) => restoreSession.mutate({ params: { id }, body: {} }, opts),
+      mutate: (id: string, opts?: MutateOptions) => restoreSession.mutate({ params: { id }, body: {} }, opts),
       mutateAsync: (id: string) => restoreSession.mutateAsync({ params: { id }, body: {} }),
     },
     bulkDeleteSessions: {
       ...bulkDeleteSessions,
-      mutate: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }, opts?: any) => bulkDeleteSessions.mutate({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }, opts),
+      mutate: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }, opts?: MutateOptions) => bulkDeleteSessions.mutate({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }, opts),
       mutateAsync: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }) => bulkDeleteSessions.mutateAsync({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }),
     },
     bulkRestoreSessions: {
       ...bulkRestoreSessions,
-      mutate: (ids: string[], opts?: any) => bulkRestoreSessions.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkRestoreSessions.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestoreSessions.mutateAsync({ body: { ids } }),
     },
     bulkUpdateSessionStatus: {
       ...bulkUpdateSessionStatus,
-      mutate: ({ ids, status }: { ids: string[]; status: string }, opts?: any) => bulkUpdateSessionStatus.mutate({ body: { ids, status } }, opts),
+      mutate: ({ ids, status }: { ids: string[]; status: string }, opts?: MutateOptions) => bulkUpdateSessionStatus.mutate({ body: { ids, status } }, opts),
       mutateAsync: ({ ids, status }: { ids: string[]; status: string }) => bulkUpdateSessionStatus.mutateAsync({ body: { ids, status } }),
     },
     logExportAudit: {
       ...logExportAudit,
-      mutate: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }, opts?: any) => logExportAudit.mutate({ body: payload }, opts),
+      mutate: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }, opts?: MutateOptions) => logExportAudit.mutate({ body: payload }, opts),
       mutateAsync: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) => logExportAudit.mutateAsync({ body: payload }),
     },
   };
@@ -191,7 +192,7 @@ export function useSessionsWidgetAggregates(
     queryKey: [...SESSIONS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
     queryFn: async () => {
       const res = await apiContract.sessions.widgetAggregates({ body: { widgets: sessionQueries } });
-      return (res.body as any)?.results ?? {};
+      return (res.body as { results?: Record<string, { value?: number; totalCount?: number; chartData?: Array<{ name: string; value: number }> }> } | null)?.results ?? {};
     },
     enabled: isAuthenticated && enabled && sessionQueries.length > 0,
     staleTime: 30_000,

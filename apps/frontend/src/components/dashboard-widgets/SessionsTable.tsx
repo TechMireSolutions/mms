@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Users, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
@@ -54,10 +54,10 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
     enabled: items == null,
   });
 
-  const sessions = useMemo((): UpcomingSessionItem[] => {
+  const sessions = ((): UpcomingSessionItem[] => {
     const rows = items ?? reportAggregates?.todaysSessions ?? [];
     return mapTodayRows(rows, t);
-  }, [items, reportAggregates?.todaysSessions, t]);
+  })();
 
   const {
     searchQuery,

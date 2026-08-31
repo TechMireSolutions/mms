@@ -24,7 +24,7 @@ export interface DirectoryEntityCardProps extends Omit<HTMLMotionProps<"div">, "
 }
 
 /** Shared Work directory entity card shell (FORM_CARD + selection chrome). */
-export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
+export const DirectoryEntityCard = (function DirectoryEntityCard({
   isSelected = false,
   reducedMotion = false,
   accentClassName,

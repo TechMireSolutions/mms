@@ -13,7 +13,7 @@ export interface TeachersSettingsProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const TeachersSettings = React.memo(function TeachersSettings({
+export const TeachersSettings = (function TeachersSettings({
   onPrefsDirtyChange,
 }: TeachersSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();

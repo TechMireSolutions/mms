@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Star } from "lucide-react";
 
 import { FormModal } from "@/components/ui/FormModal";
@@ -58,7 +58,7 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
 
   const { orderedFields, isFieldEnabled, isFieldRequired } = useHasanatConfig();
 
-  const isValid = useMemo(() => {
+  const isValid = (() => {
     if (totalAvailable === 0) return false;
     for (const field of orderedFields) {
       const isEnabled = isFieldEnabled(field.id);
@@ -80,7 +80,7 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
       if (fieldValue === undefined || fieldValue === null || fieldValue === "") return false;
     }
     return true;
-  }, [orderedFields, data, totalAvailable, isFieldEnabled, isFieldRequired]);
+  })();
 
   return (
     <FormModal

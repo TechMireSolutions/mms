@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import { formatDate } from "@mms/shared";
@@ -34,7 +33,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
     posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },
     draft: { label: t("accounting.journal.status.draft"), cls: SEMANTIC_BADGE.warningStrong },
   };
-  const accountTypeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => {
+  const accountTypeConfig = (() => {
     const config: Record<string, StatusBadgeConfigItem> = {};
     for (const [type, meta] of Object.entries(ACCOUNT_TYPE_META)) {
       config[type] = {
@@ -43,7 +42,7 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
       };
     }
     return config;
-  }, [t]);
+  })() as Record<string, StatusBadgeConfigItem>;
   const getAccount = (id: string) => accounts.find((account) => account.id === id);
   const totalDebit = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
   const totalCredit = entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);

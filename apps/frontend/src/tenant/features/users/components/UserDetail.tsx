@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Lock, Phone, Mail, Send } from 'lucide-react';
 import {
   filterRbacModulesForSettings,
@@ -35,7 +35,7 @@ export interface UserDetailProps {
   onRestore?: (userId: string) => void | Promise<void>;
 }
 
-export const UserDetail = React.memo(function UserDetail({
+export const UserDetail = (function UserDetail({
   user,
   onClose,
   onEdit,
@@ -82,18 +82,14 @@ export const UserDetail = React.memo(function UserDetail({
     return formatDate(ts, globalSettings.dateFormat, false);
   };
 
-  const recipient = useMemo(
-    () => [{
+  const recipient = (() => [{
       id: user.id,
       name: user.name,
       phone: user.phone || '',
       email: user.email,
-    }],
-    [user],
-  );
+    }])();
 
-  const headerActionsNode = useMemo(
-    () => (
+  const headerActionsNode = (() => (
       <DetailDrawerRestoreOrEditAction
         isArchived={isArchived}
         canRestore={canDelete}
@@ -103,9 +99,7 @@ export const UserDetail = React.memo(function UserDetail({
         onRestore={onRestore ? () => onRestore(String(user.id)) : undefined}
         onEdit={onEdit ? () => onEdit(user) : undefined}
       />
-    ),
-    [isArchived, canDelete, onEdit, t, onRestore, user],
-  );
+    ))();
 
   return (
     <>

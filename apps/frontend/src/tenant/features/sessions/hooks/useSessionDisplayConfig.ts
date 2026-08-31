@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { type AppTranslationKey, toTitleCase } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -32,14 +31,14 @@ export function useSessionDisplayConfig({
   types,
   t,
 }: UseSessionDisplayConfigParams) {
-  const statusOptions = useMemo(() => {
+  const statusOptions = (() => {
     return statuses.length > 0 ? statuses : ["active", "upcoming", "completed", "cancelled"];
-  }, [statuses]);
-  const typeOptions = useMemo(() => {
+  })();
+  const typeOptions = (() => {
     return types.length > 0 ? types : [...SESSION_TYPES];
-  }, [types]);
+  })();
 
-  const statusLabels = useMemo(() => {
+  const statusLabels = (() => {
     const sessionStatusLabelsByValue: Record<string, string> = {};
     for (const statusOption of statusOptions) {
       const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
@@ -47,25 +46,25 @@ export function useSessionDisplayConfig({
       sessionStatusLabelsByValue[statusOption] = translated === translationKey ? toTitleCase(statusOption) : translated;
     }
     return sessionStatusLabelsByValue;
-  }, [statusOptions, t]);
+  })();
 
-  const typeLabels = useMemo(() => {
+  const typeLabels = (() => {
     const sessionTypeLabelsByValue: Record<string, string> = {};
     for (const typeOption of typeOptions) {
       const translationKey = SESSION_TYPE_LABEL_KEYS[typeOption];
       sessionTypeLabelsByValue[typeOption] = translationKey ? t(translationKey) : typeOption;
     }
     return sessionTypeLabelsByValue;
-  }, [typeOptions, t]);
+  })();
 
-  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const statusConfig = (() => ({
     active: { label: statusLabels.active, cls: SEMANTIC_BADGE.success },
     upcoming: { label: statusLabels.upcoming, cls: SEMANTIC_BADGE.info },
     completed: { label: statusLabels.completed, cls: SEMANTIC_BADGE.muted },
     cancelled: { label: statusLabels.cancelled, cls: SEMANTIC_BADGE.destructive },
-  }), [statusLabels]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const typeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => {
+  const typeConfig = (() => {
     const config: Record<string, StatusBadgeConfigItem> = {};
     for (const [typeValue, label] of Object.entries(typeLabels)) {
       config[typeValue] = {
@@ -74,7 +73,7 @@ export function useSessionDisplayConfig({
       };
     }
     return config;
-  }, [typeLabels]);
+  })() as Record<string, StatusBadgeConfigItem>;
 
   return {
     statusOptions,

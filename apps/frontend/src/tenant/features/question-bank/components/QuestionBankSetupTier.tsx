@@ -16,7 +16,7 @@ export interface QuestionBankSetupTierProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const QuestionBankSetupTier = React.memo(function QuestionBankSetupTier({
+export const QuestionBankSetupTier = (function QuestionBankSetupTier({
   onPrefsDirtyChange,
 }: QuestionBankSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();

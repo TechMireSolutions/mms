@@ -1,24 +1,14 @@
-import { useMemo } from 'react';
 import { formatMonthName } from '@mms/shared';
 import { computeFinancials, type Account, type JournalEntry } from '@/lib/data/accountingData';
 
 export function useAccountingDashboardModel(accounts: Account[], entries: JournalEntry[]) {
-  const financials = useMemo(
-    () => computeFinancials(accounts, entries),
-    [accounts, entries],
-  );
+  const financials = (() => computeFinancials(accounts, entries))();
 
-  const postedEntries = useMemo(
-    () => entries.filter((journalEntry) => journalEntry.status === 'posted'),
-    [entries],
-  );
+  const postedEntries = (() => entries.filter((journalEntry) => journalEntry.status === 'posted'))();
 
-  const draftEntries = useMemo(
-    () => entries.filter((journalEntry) => journalEntry.status === 'draft'),
-    [entries],
-  );
+  const draftEntries = (() => entries.filter((journalEntry) => journalEntry.status === 'draft'))();
 
-  const monthlyData = useMemo(() => {
+  const monthlyData = (() => {
     const totalsByMonth: Record<string, { month: string; revenue: number; expenses: number }> = {};
     postedEntries.forEach((journalEntry) => {
       const monthKey = journalEntry.date.slice(0, 7);
@@ -33,20 +23,17 @@ export function useAccountingDashboardModel(accounts: Account[], entries: Journa
       ...monthTotal,
       month: formatMonthName(`${monthTotal.month}-01`),
     }));
-  }, [postedEntries, accounts]);
+  })();
 
-  const expenseBreakdown = useMemo(() => (
+  const expenseBreakdown = (() => (
     financials.tb
       .filter((trialBalanceRow) => trialBalanceRow.type === 'Expense' && trialBalanceRow.totalDebit > 0)
       .map((trialBalanceRow) => ({ name: trialBalanceRow.name, value: trialBalanceRow.totalDebit - trialBalanceRow.totalCredit }))
       .sort((firstExpense, secondExpense) => secondExpense.value - firstExpense.value)
       .slice(0, 5)
-  ), [financials.tb]);
+  ))();
 
-  const recentEntries = useMemo(
-    () => [...entries].sort((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date)).slice(0, 5),
-    [entries],
-  );
+  const recentEntries = (() => [...entries].sort((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date)).slice(0, 5))();
 
   return {
     ...financials,

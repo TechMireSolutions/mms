@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { AlertTriangle } from "lucide-react";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -59,7 +59,7 @@ export function ContactFormTabContent({
   const { t } = useTranslation();
   const normalizedTab = normalizeContactFormTabId(tab);
 
-  const listBase = useMemo(() => subListBaseProps(draft), [draft]);
+  const listBase = (() => subListBaseProps(draft))();
 
   const renderTabBody = () => {
     if (normalizedTab === "basic") {

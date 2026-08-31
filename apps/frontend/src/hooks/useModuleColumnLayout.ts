@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import {
   applyModuleColumnOverlay,
   clampModuleColumnWidth,
@@ -48,24 +48,15 @@ export function useModuleColumnLayout({
   const prefKey = `${moduleId}.table.columns`;
   const [userOverlayRaw, setUserOverlay] = useUiPreference<ModuleColumnPref[] | null>(prefKey, null);
 
-  const userOverlay = useMemo(() => {
+  const userOverlay = (() => {
     return userOverlayRaw && normalizePreferences ? normalizePreferences(userOverlayRaw) : userOverlayRaw;
-  }, [userOverlayRaw, normalizePreferences]);
+  })();
 
-  const columnRegistry = useMemo(
-    () => applyModuleColumnOverlay(tenantRegistry, userOverlay),
-    [tenantRegistry, userOverlay],
-  );
+  const columnRegistry = (() => applyModuleColumnOverlay(tenantRegistry, userOverlay))();
 
-  const isColumnVisible = useCallback(
-    (key: string) => isModuleColumnVisible(columnRegistry, key),
-    [columnRegistry],
-  );
+  const isColumnVisible = ((key: string) => isModuleColumnVisible(columnRegistry, key));
 
-  const getColumnWidth = useCallback(
-    (key: string) => getModuleColumnWidth(columnRegistry, key),
-    [columnRegistry],
-  );
+  const getColumnWidth = ((key: string) => getModuleColumnWidth(columnRegistry, key));
 
   const updateUserColumnLayout = useCallback(
     (newRegistry: ModuleColumnRegistryEntry[]) => {
@@ -75,19 +66,15 @@ export function useModuleColumnLayout({
     [setUserOverlay],
   );
 
-  const setColumnWidth = useCallback(
-    (key: string, width: number) => {
+  const setColumnWidth = ((key: string, width: number) => {
       const nextWidth = clampModuleColumnWidth(width);
       const nextRegistry = columnRegistry.map((column) =>
         column.key === key ? { ...column, width: nextWidth } : column,
       );
       updateUserColumnLayout(nextRegistry);
-    },
-    [columnRegistry, updateUserColumnLayout],
-  );
+    });
 
-  const customizerLabels = useMemo(
-    () => ({
+  const customizerLabels = (() => ({
       trigger: translationPrefix ? t(`${translationPrefix}.trigger` as AppTranslationKey) : t('common.columns.trigger'),
       title: translationPrefix ? t(`${translationPrefix}.title` as AppTranslationKey) : t('common.columns.title'),
       visibleAndOrder: translationPrefix ? t(`${translationPrefix}.visibleAndOrder` as AppTranslationKey) : t('common.columns.visibleAndOrder'),
@@ -101,9 +88,7 @@ export function useModuleColumnLayout({
       searchPlaceholder: t('common.columns.searchPlaceholder'),
       showAll: t('common.columns.showAll'),
       hideAll: t('common.columns.hideAll'),
-    }),
-    [t, translationPrefix],
-  );
+    }))();
 
   return {
     columnRegistry,

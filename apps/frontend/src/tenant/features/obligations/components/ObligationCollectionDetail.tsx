@@ -1,4 +1,4 @@
-import React, { useState, lazy, Suspense, useMemo } from "react";
+import React, { useState, lazy, Suspense } from "react";
 import { Receipt, Printer } from "lucide-react";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES, formatMoney, formatDate } from '@mms/shared';
@@ -7,7 +7,7 @@ import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
@@ -39,7 +39,7 @@ export interface ObligationCollectionDetailProps {
 /**
  * Displays obligation collection details including distribution breakdown.
  */
-export const ObligationCollectionDetail = React.memo(function ObligationCollectionDetail({
+export const ObligationCollectionDetail = (function ObligationCollectionDetail({
   collection,
   obligationTypes,
   reps,
@@ -53,66 +53,36 @@ export const ObligationCollectionDetail = React.memo(function ObligationCollecti
   const [showPrint, setShowPrint] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
 
-  const contactIds = useMemo(
-    () => [collection.sender_id, collection.reference_id],
-    [collection.sender_id, collection.reference_id],
-  );
+  const contactIds = (() => [collection.sender_id, collection.reference_id])();
   const contacts = useMergedObligationContacts(contactIds);
   const users = useMergedObligationUsers();
 
-  const distributionTypeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const distributionTypeConfig = (() => ({
     Income: { label: t("obligations.distribution.income"), cls: SEMANTIC_BADGE.success },
     Liability: { label: t("obligations.distribution.liability"), cls: SEMANTIC_BADGE.info },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const paymentModeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const paymentModeConfig = (() => ({
     Cash: { label: t("obligations.paymentMode.cash"), cls: SEMANTIC_BADGE.warning },
     Online: { label: t("obligations.paymentMode.online"), cls: SEMANTIC_BADGE.info },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const sender = useMemo(
-    () => contacts.find((contact) => String(contact.id) === String(collection.sender_id)),
-    [contacts, collection.sender_id],
-  );
-  const reference = useMemo(
-    () => (collection.reference_id ? contacts.find((contact) => String(contact.id) === String(collection.reference_id)) : null),
-    [contacts, collection.reference_id],
-  );
-  const currency = useMemo(
-    () => currencies.find((currencyOption) => currencyOption.id === collection.currency_id),
-    [currencies, collection.currency_id],
-  );
-  const user = useMemo(
-    () => users.find((u) => String(u.id) === String(collection.received_by)),
-    [users, collection.received_by],
-  );
-  const rep = useMemo(
-    () => reps.find((r) => r.id === collection.mujtahid_representative_id),
-    [reps, collection.mujtahid_representative_id],
-  );
-  const mujtahid = useMemo(
-    () => (rep ? mujtahids.find((m) => m.id === rep.mujtahid_id) : null),
-    [rep, mujtahids],
-  );
-  const obType = useMemo(
-    () => obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id),
-    [obligationTypes, collection.obligation_type_id],
-  );
+  const sender = (() => contacts.find((contact) => String(contact.id) === String(collection.sender_id)))();
+  const reference = (() => (collection.reference_id ? contacts.find((contact) => String(contact.id) === String(collection.reference_id)) : null))();
+  const currency = (() => currencies.find((currencyOption) => currencyOption.id === collection.currency_id))();
+  const user = (() => users.find((u) => String(u.id) === String(collection.received_by)))();
+  const rep = (() => reps.find((r) => r.id === collection.mujtahid_representative_id))();
+  const mujtahid = (() => (rep ? mujtahids.find((m) => m.id === rep.mujtahid_id) : null))();
+  const obType = (() => obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id))();
 
-  const wakalaType = useMemo(
-    () =>
+  const wakalaType = (() =>
       wakalaTypes.find(
         (wakalaTypeItem) =>
           wakalaTypeItem.obligation_type_id === collection.obligation_type_id &&
           wakalaTypeItem.mujtahid_representative_id === collection.mujtahid_representative_id,
-      ),
-    [wakalaTypes, collection.obligation_type_id, collection.mujtahid_representative_id],
-  );
+      ))();
 
-  const dists = useMemo(
-    () => (wakalaType ? distributions.filter((distribution) => distribution.wakala_type_id === wakalaType.id) : []),
-    [wakalaType, distributions],
-  );
+  const dists = (() => (wakalaType ? distributions.filter((distribution) => distribution.wakala_type_id === wakalaType.id) : []))();
 
   return (
     <DetailDrawerShell open onClose={onClose} title={t("obligations.detail.title")} icon={Receipt} className="max-w-2xl">

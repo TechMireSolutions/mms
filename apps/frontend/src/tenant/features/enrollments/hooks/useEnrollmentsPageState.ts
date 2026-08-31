@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -22,13 +22,10 @@ import { useEnrollmentsSelection } from "@/tenant/features/enrollments/hooks/use
 
 export function useEnrollmentsPageState() {
   const { t } = useTranslation();
-  const SUB_TABS = useMemo(
-    () => [
-      { id: "list", label: t("enrollments.list"), icon: ClipboardList },
+  const SUB_TABS = (() => [
+      { id: "directory", label: t("enrollments.list"), icon: ClipboardList },
       { id: "eligibility", label: t("enrollments.eligibility"), icon: UserCheck },
-    ],
-    [t]
-  );
+    ])();
   const permissions = useModulePermissions(ENROLLMENTS_MODULE_MANIFEST);
   const {
     canWrite: canWriteEnrollments,
@@ -40,7 +37,7 @@ export function useEnrollmentsPageState() {
 
   const TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
   const [tab, setTab] = usePersistedTabState<string>("enrollments_active_tab", "work");
-  const [activeSubTab, setActiveSubTab] = useState("list");
+  const [activeSubTab, setActiveSubTab] = useState("directory");
   const directoryFilters = useEnrollmentsDirectoryFilters();
   const {
     listPage,
@@ -56,7 +53,7 @@ export function useEnrollmentsPageState() {
     setSessionFilter,
   } = directoryFilters;
 
-  const useServerWork = tab === "work" && activeSubTab === "list";
+  const useServerWork = tab === "work" && activeSubTab === "directory";
   const {
     data: workPageData,
     isError: isWorkPageError,
@@ -73,10 +70,7 @@ export function useEnrollmentsPageState() {
 
   const pageData = (workPageData?.body ?? workPageData) as { enrollments?: Enrollment[]; total?: number } | undefined;
 
-  const enrollments = useMemo(
-    () => (pageData?.enrollments ?? []) as Enrollment[],
-    [pageData]
-  );
+  const enrollments = (() => (pageData?.enrollments ?? []) as Enrollment[])();
   const filteredCount = pageData?.total ?? enrollments.length;
 
   const [viewing, setViewing] = useState<Enrollment | null>(null);
@@ -92,7 +86,7 @@ export function useEnrollmentsPageState() {
   }, [debouncedSearch, statusFilter, sessionFilter, showDeleted, selection.setSelectedIds]);
 
   const { logExportAudit } = useEnrollmentMutations();
-  const exportColumns = useMemo(() => defaultEnrollmentsExportColumns(t), [t]);
+  const exportColumns = (() => defaultEnrollmentsExportColumns(t))();
   const exportActions = useEnrollmentsExportActions({
     tableColumns: exportColumns,
     canExport,
@@ -106,7 +100,7 @@ export function useEnrollmentsPageState() {
 
   useEffect(() => {
     if (!canWriteEnrollments && activeSubTab === "eligibility") {
-      setActiveSubTab("list");
+      setActiveSubTab("directory");
     }
   }, [canWriteEnrollments, activeSubTab]);
 

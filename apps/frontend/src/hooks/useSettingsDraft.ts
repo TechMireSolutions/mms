@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type Dispatch, type SetStateAction } from 'react';
+import { useEffect, useState, type Dispatch, type SetStateAction } from 'react';
 
 export interface UseSettingsDraftOptions<T> {
   load: () => T;
@@ -49,12 +49,12 @@ export function useSettingsDraft<T>({
     onPreview(data);
   }, [data, onPreview]);
 
-  const upd = useCallback(<K extends keyof T>(field: K, value: T[K]): void => {
+  const upd = (<K extends keyof T>(field: K, value: T[K]): void => {
     setData((current) => ({ ...current, [field]: value }));
     setDirty(true);
-  }, []);
+  });
 
-  const handleSave = useCallback(async (): Promise<void> => {
+  const handleSave = (async (): Promise<void> => {
     setSaving(true);
     try {
       await onSave(data);
@@ -62,12 +62,12 @@ export function useSettingsDraft<T>({
     } finally {
       setSaving(false);
     }
-  }, [data, onSave]);
+  });
 
-  const resetDraft = useCallback((): void => {
+  const resetDraft = ((): void => {
     setData(load());
     setDirty(false);
-  }, [load]);
+  });
 
   return { data, dirty, saving, setData, upd, handleSave, resetDraft };
 }

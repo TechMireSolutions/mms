@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   ATTENDANCE_MODULE_MANIFEST,
   buildAttendanceWorkColumnRegistry,
@@ -9,8 +8,7 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 export function useAttendanceColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildAttendanceWorkColumnRegistry({
         date: t('attendance.columns.date'),
         class: t('attendance.columns.class'),
@@ -20,9 +18,7 @@ export function useAttendanceColumnLayout() {
         timeIn: t('attendance.columns.timeIn'),
         timeOut: t('attendance.columns.timeOut'),
         notes: t('attendance.columns.notes'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: ATTENDANCE_MODULE_MANIFEST.moduleId,

@@ -7,7 +7,7 @@ export interface DirectoryCardFooterProps {
 }
 
 /** Shared Work directory card footer: optional leading (messaging) + trailing actions. */
-export const DirectoryCardFooter = React.memo(function DirectoryCardFooter({
+export const DirectoryCardFooter = (function DirectoryCardFooter({
   leading,
   trailing,
 }: DirectoryCardFooterProps): React.JSX.Element {

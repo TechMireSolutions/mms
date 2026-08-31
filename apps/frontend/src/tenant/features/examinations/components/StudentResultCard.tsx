@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Award, Printer } from "lucide-react";
 import { getRankSuffix, GradeInfo } from "@/tenant/features/examinations/components/gradeUtils";
 import { Exam } from '@/lib/data/examinationData';
@@ -6,7 +6,7 @@ import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { Card } from "@/components/ui/card";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { CARD_STRIPE_INSET, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -60,10 +60,10 @@ export function StudentResultCard({
 
   const position = result.rank;
   const total = allResults.length;
-  const passFailConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const passFailConfig = (() => ({
     pass: { label: t("examinations.pass"), cls: SEMANTIC_BADGE.success },
     fail: { label: t("examinations.fail"), cls: SEMANTIC_BADGE.destructive },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   return (
     <Modal

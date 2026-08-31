@@ -16,11 +16,11 @@ export function useUsersPaginated(params: UsersPaginatedParams) {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const query = tsrClient.users.list.useQuery({
     queryKey: usersPaginatedQueryKey(params),
-    queryData: { query: usersListQueryKeyParams(params) as any },
+    queryData: { query: usersListQueryKeyParams(params) },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
-    placeholderData: (previousData: any, previousQuery: any) => {
-      const previousParams = previousQuery?.queryKey[3] as
+    placeholderData: (previousData: unknown, previousQuery: unknown) => {
+      const previousParams = ((previousQuery as { queryKey?: unknown[] } | null)?.queryKey?.[3]) as
         | ReturnType<typeof usersListQueryKeyParams>
         | undefined;
       const keyParams = usersListQueryKeyParams(params);
@@ -45,7 +45,7 @@ export async function fetchAllUsersForQuery(
 
   for (;;) {
     const response = await apiContract.users.list({
-      query: { ...(params as any), page, limit }
+      query: { ...(params), page, limit }
     });
     const usersPage = response.body as UsersListPageResult;
     all.push(...usersPage.users);

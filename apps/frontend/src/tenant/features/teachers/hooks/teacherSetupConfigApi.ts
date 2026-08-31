@@ -6,11 +6,11 @@ import { normalizeTeacherModulePreferences } from "@mms/shared";
 const api = createModuleSetupConfigApi<TeacherModulePreferences>({
   fetchPreferencesFn: async (_signal) => {
     const res = await apiContract.teachers.getPreferences({ query: undefined, extraHeaders: {} });
-    return (res.body as any).preferences;
+    return (res.body as { preferences: TeacherModulePreferences }).preferences;
   },
   savePreferencesFn: async (prefs) => {
-    const res = await apiContract.teachers.updatePreferences({ body: prefs as any });
-    return (res.body as any).preferences;
+    const res = await apiContract.teachers.updatePreferences({ body: prefs });
+    return (res.body as { preferences: TeacherModulePreferences }).preferences;
   },
   normalizePrefs: normalizeTeacherModulePreferences as (prefs: unknown) => TeacherModulePreferences,
 });

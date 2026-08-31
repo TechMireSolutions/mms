@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -23,25 +23,19 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
   const invoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
   const { formatCurrency } = useFinanceCurrency();
 
-  const now = useMemo(() => new Date(), []);
+  const now = (() => new Date())();
   const currentYear = now.getFullYear();
   const currentMonth = now.getMonth();
 
-  const prevMonthDate = useMemo(() => {
+  const prevMonthDate = (() => {
     return new Date(currentYear, currentMonth - 1, 1);
-  }, [currentYear, currentMonth]);
+  })();
   const prevYear = prevMonthDate.getFullYear();
   const prevMonth = prevMonthDate.getMonth();
 
   // Calculate overall metrics for current month
-  const totalCollected = useMemo(
-    () => getCollectedAmountForMonth(invoices, currentYear, currentMonth),
-    [invoices, currentYear, currentMonth]
-  );
-  const totalOutstanding = useMemo(
-    () => getOutstandingAmountForMonth(invoices, currentYear, currentMonth),
-    [invoices, currentYear, currentMonth]
-  );
+  const totalCollected = (() => getCollectedAmountForMonth(invoices, currentYear, currentMonth))();
+  const totalOutstanding = (() => getOutstandingAmountForMonth(invoices, currentYear, currentMonth))();
 
   const totalTarget = totalCollected + totalOutstanding;
   const collectedPct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0;
@@ -53,7 +47,7 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
   ];
 
   // Group by Class for current month
-  const classMap = useMemo(() => {
+  const classMap = (() => {
     const map: Record<string, { name: string; collected: number; target: number }> = {};
     invoices.forEach((inv) => {
       if (!inv || inv.status === "cancelled") return;
@@ -76,24 +70,21 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
       }
     });
     return map;
-  }, [invoices, currentYear, currentMonth, t]);
+  })();
 
-  const byClass = useMemo(() => Object.values(classMap), [classMap]);
+  const byClass = (() => Object.values(classMap))();
 
-  const displayDate = useMemo(() => {
+  const displayDate = (() => {
     return formatMonthYear(now, "long");
-  }, [now]);
+  })();
 
-  const comparisonMonthName = useMemo(() => {
+  const comparisonMonthName = (() => {
     return formatMonthName(prevMonthDate);
-  }, [prevMonthDate]);
+  })();
 
-  const prevCollected = useMemo(
-    () => getCollectedAmountForMonth(invoices, prevYear, prevMonth),
-    [invoices, prevYear, prevMonth]
-  );
+  const prevCollected = (() => getCollectedAmountForMonth(invoices, prevYear, prevMonth))();
 
-  const changePct = useMemo(() => percentChange(totalCollected, prevCollected), [totalCollected, prevCollected]);
+  const changePct = (() => percentChange(totalCollected, prevCollected))();
 
   const displayTrendPct = Math.abs(changePct);
   const isPositiveTrend = changePct >= 0;

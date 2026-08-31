@@ -21,7 +21,7 @@ export interface ModuleTrashToggleProps {
 /**
  * Work-tier trash/archive toggle used across soft-delete modules.
  */
-export const ModuleTrashToggle = React.memo(function ModuleTrashToggle({
+export const ModuleTrashToggle = (function ModuleTrashToggle({
   showDeleted,
   onToggle,
   showActiveLabel,

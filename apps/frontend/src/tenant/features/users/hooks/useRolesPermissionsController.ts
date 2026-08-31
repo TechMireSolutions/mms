@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   filterRbacModulesForSettings,
   workspaceRoleLabel,
@@ -22,10 +22,7 @@ export function useRolesPermissionsController() {
   const globalSettings = useGlobalSettings();
   const isAdmin = useIsAdminViewer();
   const loadedRoles = useWorkspaceRoles();
-  const visibleModules = useMemo(
-    () => filterRbacModulesForSettings(globalSettings.enabledModules),
-    [globalSettings.enabledModules],
-  );
+  const visibleModules = (() => filterRbacModulesForSettings(globalSettings.enabledModules))();
   const [roles, setRoles] = useState<WorkspaceRole[]>(loadedRoles);
   const [editing, setEdit] = useState<WorkspaceRole | 'new' | null>(null);
   const [selected, setSel] = useState<WorkspaceRole | null>(null);

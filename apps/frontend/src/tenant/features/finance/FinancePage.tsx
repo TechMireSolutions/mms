@@ -88,8 +88,8 @@ export default function Finance(): React.JSX.Element {
                   onToggleDeleted={() => c.setShowDeleted((value) => !value)}
                   onDelete={(id) => c.deleteInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.deleted")), onError: c.mutationError })}
                   onRestore={(id) => c.restoreInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
-                  onBulkDelete={(ids) => c.bulkDeleteInvoices.mutate(ids, { onSuccess: (result: any) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}
-                  onBulkRestore={(ids) => c.bulkRestoreInvoices.mutate(ids, { onSuccess: (result: any) => c.handleBulkResult(result, "finance.trash.restored"), onError: c.mutationError })}
+                  onBulkDelete={(ids) => c.bulkDeleteInvoices.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.deleted"), onError: c.mutationError })}
+                  onBulkRestore={(ids) => c.bulkRestoreInvoices.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.restored"), onError: c.mutationError })}
                   onBulkStatusChange={(ids, status) => void c.handleBulkStatusChange(ids, status)}
                   onBulkPrintReceipts={(inv) => setReceiptInvoices(inv)}
                   isBulkStatusPending={c.bulkUpdateInvoiceStatus.isPending}
@@ -117,8 +117,8 @@ export default function Finance(): React.JSX.Element {
                   showDeleted={c.showDeleted}
                   onDelete={(id) => c.deletePayment.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.deleted")), onError: c.mutationError })}
                   onRestore={(id) => c.restorePayment.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
-                  onBulkDelete={(ids) => c.bulkDeletePayments.mutate(ids, { onSuccess: (result: any) => c.handleBulkResult(result, "finance.trash.deleted"), onError: c.mutationError })}
-                  onBulkRestore={(ids) => c.bulkRestorePayments.mutate(ids, { onSuccess: (result: any) => c.handleBulkResult(result, "finance.trash.restored"), onError: c.mutationError })}
+                  onBulkDelete={(ids) => c.bulkDeletePayments.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.deleted"), onError: c.mutationError })}
+                  onBulkRestore={(ids) => c.bulkRestorePayments.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.restored"), onError: c.mutationError })}
                   selectionResetKey={`${c.activeSubTab}:${c.showDeleted}`}
                   isColumnVisible={c.paymentColumnLayout.isColumnVisible}
                   getColumnWidth={c.paymentColumnLayout.getColumnWidth}
@@ -129,7 +129,7 @@ export default function Finance(): React.JSX.Element {
                     labels: c.paymentColumnLayout.customizerLabels,
                   }}
                   onRowClick={(id: string) => {
-                    const p = c.payments.find((x: any) => x.id === id);
+                    const p = c.payments.find((x) => x.id === id);
                     if (p) c.setActivePayment(p);
                   }}
                 />

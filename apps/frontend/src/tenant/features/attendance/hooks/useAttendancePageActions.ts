@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { notify } from "@/lib/notify";
@@ -36,40 +35,41 @@ export function useAttendancePageActions() {
     );
   };
 
-  const persistRecords = useCallback(async (recordsForClassDate: AttendanceRecord[]) => {
-    await bulkUpsert.mutateAsync({ body: { records: recordsForClassDate } } as any);
-  }, [bulkUpsert]);
+  const persistRecords = (async (recordsForClassDate: AttendanceRecord[]) => {
+    await bulkUpsert.mutateAsync({ body: { records: recordsForClassDate } });
+  });
 
-  const handleUpdateRecord = useCallback(async (record: AttendanceRecord) => {
-    await updateRecord.mutateAsync({ params: { id: record.id }, body: record } as any);
-  }, [updateRecord]);
+  const handleUpdateRecord = (async (record: AttendanceRecord) => {
+    await updateRecord.mutateAsync({ params: { id: record.id }, body: record });
+  });
 
-  const handleDeleteRecord = useCallback(async (id: string) => {
+  const handleDeleteRecord = (async (id: string) => {
     try {
-      await deleteRecord.mutateAsync({ params: { id } } as any);
+      await deleteRecord.mutateAsync({ params: { id } });
       notify.success(t("attendance.toast.archived"));
     } catch (error) {
       notify.error(t("attendance.toast.saveFailed"), {
         description: error instanceof Error ? error.message : String(error),
       });
     }
-  }, [deleteRecord, t]);
+  });
 
-  const handleRestoreRecord = useCallback(async (id: string) => {
+  const handleRestoreRecord = (async (id: string) => {
     try {
-      await restoreRecord.mutateAsync({ params: { id }, body: {} } as any);
+      await restoreRecord.mutateAsync({ params: { id }, body: {} });
       notify.success(t("attendance.toast.restored"));
     } catch (error) {
       notify.error(t("attendance.toast.saveFailed"), {
         description: error instanceof Error ? error.message : String(error),
       });
     }
-  }, [restoreRecord, t]);
+  });
 
-  const handleBulkDeleteRecords = useCallback(async (ids: string[]) => {
+  const handleBulkDeleteRecords = (async (ids: string[]) => {
     try {
-      const result = await bulkDeleteRecords.mutateAsync({ body: { ids } } as any);
-      const succeeded = (result as any)?.body?.succeeded ?? (result as any)?.succeeded ?? ids.length;
+      const result = await bulkDeleteRecords.mutateAsync({ body: { ids } });
+      const body = (result.body ?? result) as { succeeded?: number };
+      const succeeded = body.succeeded ?? ids.length;
       notify.success(
         t(succeeded > 1 ? "attendance.trash.bulkDeleted" : "attendance.toast.archived", {
           count: succeeded,
@@ -80,12 +80,13 @@ export function useAttendancePageActions() {
         description: error instanceof Error ? error.message : String(error),
       });
     }
-  }, [bulkDeleteRecords, t]);
+  });
 
-  const handleBulkRestoreRecords = useCallback(async (ids: string[]) => {
+  const handleBulkRestoreRecords = (async (ids: string[]) => {
     try {
-      const result = await bulkRestoreRecords.mutateAsync({ body: { ids } } as any);
-      const succeeded = (result as any)?.body?.succeeded ?? (result as any)?.succeeded ?? ids.length;
+      const result = await bulkRestoreRecords.mutateAsync({ body: { ids } });
+      const body = (result.body ?? result) as { succeeded?: number };
+      const succeeded = body.succeeded ?? ids.length;
       notify.success(
         t(succeeded > 1 ? "attendance.trash.bulkRestored" : "attendance.toast.restored", {
           count: succeeded,
@@ -96,7 +97,7 @@ export function useAttendancePageActions() {
         description: error instanceof Error ? error.message : String(error),
       });
     }
-  }, [bulkRestoreRecords, t]);
+  });
 
   return {
     messagingTarget,

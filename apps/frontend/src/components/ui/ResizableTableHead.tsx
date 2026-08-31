@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { clampModuleColumnWidth } from '@mms/shared';
@@ -34,8 +34,7 @@ export function ResizableTableHead({
 
   const resolvedWidth = draftWidth ?? width;
 
-  const handlePointerDown = useCallback(
-    (event: React.PointerEvent<HTMLSpanElement>) => {
+  const handlePointerDown = ((event: React.PointerEvent<HTMLSpanElement>) => {
       if (!onResize) return;
       event.preventDefault();
       event.stopPropagation();
@@ -79,9 +78,7 @@ export function ResizableTableHead({
 
       window.addEventListener('pointermove', handlePointerMove);
       window.addEventListener('pointerup', handlePointerUp);
-    },
-    [columnKey, isRtl, maxWidth, minWidth, onResize, resolvedWidth],
-  );
+    });
 
   return (
     <th

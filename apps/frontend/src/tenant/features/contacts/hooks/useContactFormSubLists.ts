@@ -1,4 +1,4 @@
-import { useCallback, type Dispatch, type SetStateAction } from "react";
+import { type Dispatch, type SetStateAction } from "react";
 import { ensureSinglePrimaryFlag, type Contact, type PhoneNumber } from "@mms/shared";
 import type {
   AddSubListItem,
@@ -19,8 +19,7 @@ function withHealedPrimary(
 export function useContactFormSubLists(
   setContactDraft: Dispatch<SetStateAction<Partial<Contact>>>,
 ) {
-  const addSubListItem = useCallback<AddSubListItem>(
-    (fieldKey, newItem) => {
+  const addSubListItem: AddSubListItem = ((fieldKey, newItem) => {
       setContactDraft((prev) => {
         const rawList = (prev as Record<string, unknown>)[fieldKey];
         const currentList = Array.isArray(rawList) ? rawList : [];
@@ -29,25 +28,19 @@ export function useContactFormSubLists(
           [fieldKey]: withHealedPrimary(fieldKey, [...currentList, newItem]),
         };
       });
-    },
-    [setContactDraft],
-  );
+    });
 
   /** Seed one row when the list is empty (idempotent under Strict Mode). */
-  const ensureSubListItem = useCallback<EnsureSubListItem>(
-    (fieldKey, newItem) => {
+  const ensureSubListItem: EnsureSubListItem = ((fieldKey, newItem) => {
       setContactDraft((prev) => {
         const rawList = (prev as Record<string, unknown>)[fieldKey];
         const currentList = Array.isArray(rawList) ? rawList : [];
         if (currentList.length > 0) return prev;
         return { ...prev, [fieldKey]: withHealedPrimary(fieldKey, [newItem]) };
       });
-    },
-    [setContactDraft],
-  );
+    });
 
-  const updateSubListItem = useCallback<UpdateSubListItem>(
-    (fieldKey, idx, patch) => {
+  const updateSubListItem: UpdateSubListItem = ((fieldKey, idx, patch) => {
       setContactDraft((prev) => {
         const rawList = (prev as Record<string, unknown>)[fieldKey];
         const currentList = Array.isArray(rawList) ? (rawList as Record<string, unknown>[]) : [];
@@ -63,12 +56,9 @@ export function useContactFormSubLists(
         });
         return { ...prev, [fieldKey]: withHealedPrimary(fieldKey, nextList) };
       });
-    },
-    [setContactDraft],
-  );
+    });
 
-  const removeSubListItem = useCallback<RemoveSubListItem>(
-    (fieldKey: ContactSubListKey, idx: number) => {
+  const removeSubListItem: RemoveSubListItem = ((fieldKey: ContactSubListKey, idx: number) => {
       setContactDraft((prev) => {
         const rawList = (prev as Record<string, unknown>)[fieldKey];
         const currentList = Array.isArray(rawList) ? rawList : [];
@@ -80,9 +70,7 @@ export function useContactFormSubLists(
           ),
         };
       });
-    },
-    [setContactDraft],
-  );
+    });
 
   return { addSubListItem, ensureSubListItem, updateSubListItem, removeSubListItem };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { notify } from "@/lib/notify";
@@ -35,15 +35,12 @@ export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminati
     setExamDraft((prev) => ({ ...prev, ...patch }));
   };
 
-  const classes = useMemo(
-    () => sessions.flatMap((session) =>
+  const classes = (() => sessions.flatMap((session) =>
       (session.classes || []).map((sessionClass) => ({
         id: sessionClass.id,
         name: `${session.name} - ${sessionClass.name}`,
       })),
-    ),
-    [sessions],
-  );
+    ))();
 
   const handleSave = async () => {
     setErrors({});

@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import {
   formatCnic,
   getContactTags,
@@ -56,10 +56,10 @@ export function ContactMetadataCell({
   const showLunarDob = Boolean(prefs.showLunarDob);
   const showDetailedLunarAge = Boolean(prefs.showDetailedLunarAge);
 
-  const contactsMap = useMemo(() => {
+  const contactsMap = (() => {
     if (externalContactsMap !== undefined) return externalContactsMap;
     return buildContactsMap(allContacts);
-  }, [allContacts, externalContactsMap]);
+  })();
 
   const renderDash = (): React.ReactNode => (
     <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>

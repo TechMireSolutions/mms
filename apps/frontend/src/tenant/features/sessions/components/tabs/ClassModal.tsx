@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { GraduationCap } from "lucide-react";
 import { type AppTranslationKey, type Teacher, TEACHERS_MODULE_MANIFEST } from "@mms/shared";
 
@@ -37,24 +37,21 @@ export function ClassModal({ open, sessionClass, onClose, onSave, saving }: Clas
   }, open);
 
   const currentTeacherId = classDraft.teacherId || sessionClass?.teacherId;
-  const activeTeachers = useMemo(() => (activeTeachersPage?.body?.teachers ?? []) as Teacher[], [activeTeachersPage?.body?.teachers]);
+  const activeTeachers = (() => (activeTeachersPage?.body?.teachers ?? []) as Teacher[])();
   const needsCurrentResolve = Boolean(
     currentTeacherId
     && !activeTeachers.some((teacher) => String(teacher.id) === String(currentTeacherId)),
   );
   const { data: extraTeachers = [] } = useTeachersByIds(needsCurrentResolve ? [String(currentTeacherId)] : []);
 
-  const teachers = useMemo(() => {
+  const teachers = (() => {
     const teacherById = new Map<string, Teacher>();
     for (const teacher of activeTeachers) teacherById.set(String(teacher.id), teacher);
     for (const teacher of extraTeachers) teacherById.set(String(teacher.id), teacher);
     return [...teacherById.values()];
-  }, [activeTeachers, extraTeachers]);
+  })();
 
-  const teacherOptions = useMemo(
-    () => teacherOptionsForClass(teachers, classDraft.teacherId || sessionClass?.teacherId),
-    [teachers, classDraft.teacherId, sessionClass?.teacherId],
-  );
+  const teacherOptions = (() => teacherOptionsForClass(teachers, classDraft.teacherId || sessionClass?.teacherId))();
 
   const handleTeacher = (id: string) => {
     setClassDraft((currentDraft) => ({ ...currentDraft, ...assignClassTeacher(id) }));

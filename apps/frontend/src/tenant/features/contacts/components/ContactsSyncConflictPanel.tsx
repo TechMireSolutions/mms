@@ -1,5 +1,5 @@
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { AlertTriangle } from "lucide-react";
 import type { ContactsSyncConflict } from "@/lib/contacts/contactsSyncOutbox";
 import {
@@ -47,16 +47,13 @@ export function ContactsSyncConflictPanel({
     return () => window.removeEventListener("contacts-sync-outbox-changed", handler);
   }, [refreshList]);
 
-  const handleDismiss = useCallback(
-    (id: string) => {
+  const handleDismiss = ((id: string) => {
       dismissContactsSyncConflict(id);
       refreshList();
       notify.info(t("contacts.sync.conflictDismissed"));
-    },
-    [refreshList, t],
-  );
+    });
 
-  const handleRetryAll = useCallback(async () => {
+  const handleRetryAll = (async () => {
     setRetryingId("__all__");
     try {
       requeueAllContactsSyncConflicts();
@@ -65,16 +62,13 @@ export function ContactsSyncConflictPanel({
     } finally {
       setRetryingId(null);
     }
-  }, [flush, refreshList]);
+  });
 
-  const rows = useMemo(
-    () =>
+  const rows = (() =>
       conflicts.map((entry) => {
         const { title } = describeContactsOutboxEntry(entry);
         return { entry, title };
-      }),
-    [conflicts],
-  );
+      }))();
 
   return (
     <>

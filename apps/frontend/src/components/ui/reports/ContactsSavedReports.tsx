@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import type { ContactsSavedReport, ContactsSavedReportShareScope, ContactsWorkDrillDown } from "@mms/shared";
 import {
@@ -52,21 +52,21 @@ export default function ContactsSavedReports({
 
   const searchLabel = t("contacts.savedReports.searchLabel");
 
-  const shareScopeOptions = useMemo(() => {
+  const shareScopeOptions = (() => {
     const scopes = [...SHARE_SCOPES];
     if (!isAdmin) return scopes.filter((scope) => scope !== "global");
     return scopes;
-  }, [isAdmin]);
+  })();
 
-  const openSaveDialog = useCallback(() => {
+  const openSaveDialog = (() => {
     setName("");
     setSearch(suggestedDrillDown.search ?? "");
     setShareScope("private");
     setSharedWithUserIds([]);
     setSaveOpen(true);
-  }, [suggestedDrillDown.search]);
+  });
 
-  const handleSave = useCallback(async () => {
+  const handleSave = (async () => {
     const trimmedName = name.trim();
     if (!trimmedName) return;
     if (shareScope === "users" && sharedWithUserIds.length === 0) {
@@ -92,10 +92,9 @@ export default function ContactsSavedReports({
     } finally {
       setSaving(false);
     }
-  }, [name, search, shareScope, sharedWithUserIds, role, createReport, t]);
+  });
 
-  const handleRun = useCallback(
-    async (report: ContactsSavedReport) => {
+  const handleRun = (async (report: ContactsSavedReport) => {
       const issues = validateContactsSavedReportDrillDown(report.drillDown, {
         genders: genders,
       });
@@ -113,29 +112,21 @@ export default function ContactsSavedReports({
       } catch {
         notify.error(t("settings.serverSaveFailed"));
       }
-    },
-    [runReport, t, genders],
-  );
+    });
 
-  const handleDelete = useCallback(
-    async (id: string) => {
+  const handleDelete = (async (id: string) => {
       try {
         await deleteReport(id);
         notify.info(t("contacts.savedReports.deleteSuccess"));
       } catch {
         notify.error(t("settings.serverSaveFailed"));
       }
-    },
-    [deleteReport, t],
-  );
+    });
 
-  const formatLastRun = useMemo(
-    () => (iso?: string) => {
+  const formatLastRun = (() => (iso?: string) => {
       if (!iso) return t("contacts.savedReports.neverRun");
       return formatDate(iso);
-    },
-    [t],
-  );
+    })();
 
   const shareLabel = (scope: ContactsSavedReportShareScope | undefined): string => {
     const key = scope ?? "private";

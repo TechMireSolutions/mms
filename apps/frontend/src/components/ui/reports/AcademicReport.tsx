@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo, useState } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import { getGrade } from '@mms/shared';
 import {
   useExaminationsExams,
@@ -21,7 +21,7 @@ import { ReportFilterBanner } from "./ReportFilterBanner";
 import { AcademicReportResultsTable } from "./AcademicReportResultsBody";
 import PinnedWidgets from "./PinnedWidgets";
 
-import type { AcademicReportProps, AcademicResultItem, ClassRankingItem } from "./academicReportTypes";
+import type { AcademicReportProps, AcademicResultItem, ClassRankingItem } from './academicReportTypes';
 
 export type {
   AcademicReportFilters,
@@ -33,7 +33,7 @@ export type {
 /**
  * Renders the academic/exam reports including summary charts, class rankings cards, and a filterable exam-results table.
  */
-const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicReportProps): React.JSX.Element {
+const AcademicReport = (function AcademicReport({ filters }: AcademicReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const examsQuery = useExaminationsExams();
   const resultsQuery = useExaminationsResults();
@@ -44,13 +44,10 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
 
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
-  const studentIds = useMemo(
-    () => uniqueRegistryIds(examResults.map((examResult) => examResult.studentId)),
-    [examResults],
-  );
+  const studentIds = (() => uniqueRegistryIds(examResults.map((examResult) => examResult.studentId)))();
   const { data: students = [] } = useStudentsByIds(studentIds);
 
-  const academicResultsData = useMemo<AcademicResultItem[]>(() => {
+  const academicResultsData = (() => {
     let academicResults: AcademicResultItem[] = [];
 
     examResults.forEach((examResult) => {
@@ -84,9 +81,9 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
       );
     }
     return academicResults;
-  }, [filters, examResults, exams, students]);
+  })() as AcademicResultItem[];
 
-  const classRankings = useMemo<ClassRankingItem[]>(() => {
+  const classRankings = (() => {
     const resultsByClass: Record<string, { class: string; studentName: string; marks: number }[]> = {};
     const rankingSourceResults = examResults.map((examResult) => {
       const exam = exams.find((examOption) => examOption.id === examResult.examId);
@@ -121,9 +118,9 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
       classRankingItems = classRankingItems.filter((classRankingItem) => classRankingItem.class === filters.class);
     }
     return classRankingItems;
-  }, [filters, examResults, exams, students]);
+  })() as ClassRankingItem[];
 
-  const filteredAcademicResultsData = useMemo(() => {
+  const filteredAcademicResultsData = (() => {
     let filteredAcademicResults = academicResultsData;
     if (selectedClass) {
       filteredAcademicResults = filteredAcademicResults.filter((academicResult) => academicResult.class === selectedClass);
@@ -132,12 +129,9 @@ const AcademicReport = React.memo(function AcademicReport({ filters }: AcademicR
       filteredAcademicResults = filteredAcademicResults.filter((academicResult) => academicResult.studentName === selectedStudent);
     }
     return filteredAcademicResults;
-  }, [academicResultsData, selectedClass, selectedStudent]);
+  })();
 
-  const filteredClassRankings = useMemo(
-    () => (selectedClass ? classRankings.filter((classRanking) => classRanking.class === selectedClass) : classRankings),
-    [classRankings, selectedClass],
-  );
+  const filteredClassRankings = (() => (selectedClass ? classRankings.filter((classRanking) => classRanking.class === selectedClass) : classRankings))();
 
   const toggleClassFilter = (className: string): void => {
     setSelectedClass((currentClass) => (currentClass === className ? null : className));

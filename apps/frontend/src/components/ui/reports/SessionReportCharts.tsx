@@ -65,7 +65,7 @@ function getTrendPayload(state: unknown): EnrollmentTrendItem | null {
   return payload as EnrollmentTrendItem;
 }
 
-export const SessionReportCharts = React.memo(function SessionReportCharts({
+export const SessionReportCharts = (function SessionReportCharts({
   capacityChartData,
   enrollmentTrends,
   onToggleClassFilter,

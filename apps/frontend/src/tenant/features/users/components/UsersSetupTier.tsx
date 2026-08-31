@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useRef } from "react";
+import React, { lazy, Suspense, useRef } from "react";
 import type { AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -41,7 +41,7 @@ function discardConfirmKey(leavingTab: string): AppTranslationKey {
   return "users.setup.discardUnsavedPreferencesConfirm";
 }
 
-export const UsersSetupTier = React.memo(function UsersSetupTier({
+export const UsersSetupTier = (function UsersSetupTier({
   tabs,
   activeTab,
   canEditSetup,
@@ -52,13 +52,13 @@ export const UsersSetupTier = React.memo(function UsersSetupTier({
   const permissionsDirtyRef = useRef(false);
   const discardPermissionsRef = useRef<() => void>(() => {});
 
-  const handlePermissionsDirtyChange = useCallback((dirty: boolean) => {
+  const handlePermissionsDirtyChange = ((dirty: boolean) => {
     permissionsDirtyRef.current = dirty;
-  }, []);
+  });
 
-  const handleRegisterPermissionsDiscard = useCallback((discard: () => void) => {
+  const handleRegisterPermissionsDiscard = ((discard: () => void) => {
     discardPermissionsRef.current = discard;
-  }, []);
+  });
 
   const subTabs = useModuleSetupSubTabs({
     initialKey: activeTab || "permissions",

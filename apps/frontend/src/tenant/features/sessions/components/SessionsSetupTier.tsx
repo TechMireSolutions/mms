@@ -16,7 +16,7 @@ export interface SessionsSetupTierProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const SessionsSetupTier = React.memo(function SessionsSetupTier({
+export const SessionsSetupTier = (function SessionsSetupTier({
   onPrefsDirtyChange,
 }: SessionsSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();

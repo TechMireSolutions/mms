@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { GraduationCap, IdCard } from "lucide-react";
 import type { Student } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
@@ -31,7 +31,7 @@ export interface StudentDetailProps {
   onViewContact?: (contactId: string | number) => void;
 }
 
-export const StudentDetail = React.memo(function StudentDetail({
+export const StudentDetail = (function StudentDetail({
   student,
   onClose,
   onEdit,
@@ -72,8 +72,7 @@ export const StudentDetail = React.memo(function StudentDetail({
     }
   };
 
-  const headerActionsNode = useMemo(
-    () => (
+  const headerActionsNode = (() => (
       <div className="flex items-center gap-1.5">
         {!isArchived && onPrintIdCard && (
           <Button
@@ -99,25 +98,17 @@ export const StudentDetail = React.memo(function StudentDetail({
           onEdit={onEdit ? () => onEdit(student) : undefined}
         />
       </div>
-    ),
-    [isArchived, onPrintIdCard, canDelete, onEdit, t, onRestore, student],
-  );
+    ))();
 
-  const headerExtraNode = useMemo(
-    () => <StudentArchivedBanner student={student} />,
-    [student],
-  );
+  const headerExtraNode = (() => <StudentArchivedBanner student={student} />)();
 
-  const footerNode = useMemo(
-    () => (
+  const footerNode = (() => (
       <DrawerUpdatedStamp
         updatedAt={student.updatedAt}
         createdAt={student.createdAt}
         label={t("students.detail.updatedLabel")}
       />
-    ),
-    [student.updatedAt, student.createdAt, t],
-  );
+    ))();
 
   return (
     <DetailDrawerShell

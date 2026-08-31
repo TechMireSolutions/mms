@@ -35,7 +35,7 @@ export interface SubTabBarProps<K extends string> {
 /**
  * Responsive sub-tab navigation. Supports modern underline, segmented pill, and accordion modes.
  */
-export const SubTabBar = React.memo(function SubTabBar<K extends string>({
+export const SubTabBar = (function SubTabBar<K extends string>({
   tabs,
   value,
   onChange,

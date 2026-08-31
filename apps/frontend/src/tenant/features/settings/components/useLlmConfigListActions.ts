@@ -40,9 +40,11 @@ export function useLlmConfigListActions({
     try {
       setHealthStatuses((prev) => ({ ...prev, [configId]: 'testing' }));
 
-      const { status, body } = await apiContract.ai.test({
+      const res = await apiContract.ai.test({
         body: { prompt: 'Write a short greeting for a school portal.', configId },
       });
+      const status = res.status;
+      const body = res.body as LlmTestResult;
       if (status !== 200) {
         throw new Error(body.message || 'Failed to test connection');
       }
@@ -54,11 +56,11 @@ export function useLlmConfigListActions({
         metrics: body.metrics,
       });
       setHealthStatuses((prev) => ({ ...prev, [configId]: body.success ? 'verified' : 'failed' }));
-    } catch (err: any) {
+    } catch (err: unknown) {
       setTestResult({
         configId,
         success: false,
-        message: err.message || t('settings.llmTestRequestFailed'),
+        message: (err instanceof Error ? err.message : undefined) || t('settings.llmTestRequestFailed'),
       });
       setHealthStatuses((prev) => ({ ...prev, [configId]: 'failed' }));
     } finally {

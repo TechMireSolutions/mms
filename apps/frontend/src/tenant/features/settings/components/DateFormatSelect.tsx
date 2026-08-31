@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Check, ChevronsUpDown, Languages } from 'lucide-react';
 import {
   DEFAULT_GLOBAL_SETTINGS,
@@ -40,7 +40,7 @@ export default function DateFormatSelect({
     value,
     DEFAULT_GLOBAL_SETTINGS.dateFormat as DateFormatId,
   );
-  const options = useMemo(() => getDateFormatOptions(language), [language]);
+  const options = (() => getDateFormatOptions(language))();
   const selected = options.find((dateFormatOption) => dateFormatOption.value === normalizedValue) ?? options[0];
 
   const applyLocaleFormat = (): void => {

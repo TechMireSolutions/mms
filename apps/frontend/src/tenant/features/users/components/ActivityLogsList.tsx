@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Activity } from 'lucide-react';
 import { formatDate, type ActivityLog } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -42,21 +42,21 @@ export function ActivityLogsList({
   const globalSettings = useGlobalSettings();
   const fmtTs = (ts: string): string => formatDate(ts, globalSettings.dateFormat, false);
 
-  const exportColumns = useMemo(() => [
+  const exportColumns = (() => [
     { key: 'time', header: t('users.activityColTime') },
     { key: 'user', header: t('users.activityColUser') },
     { key: 'action', header: t('users.activityColAction') },
     { key: 'detail', header: t('users.activityColDetail') },
     { key: 'ip', header: t('users.activityColIp') },
-  ], [t]);
+  ])();
 
-  const exportRows = useMemo(() => paginated.map((log) => ({
+  const exportRows = (() => paginated.map((log) => ({
     time: fmtTs(log.ts),
     user: userNameFor(log),
     action: log.action,
     detail: log.detail,
     ip: log.ip,
-  })), [paginated, globalSettings.dateFormat, userNameFor]);
+  })))();
 
   if (paginated.length === 0) {
     return (

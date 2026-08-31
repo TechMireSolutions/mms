@@ -1,16 +1,16 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Enrollment } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
-import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { EnrollmentsListContent } from "@/tenant/features/enrollments/components/EnrollmentsListContent";
 import { EnrollmentsListFilters } from "@/tenant/features/enrollments/components/EnrollmentsListFilters";
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -92,18 +92,18 @@ export function EnrollmentsList({
   const { data: students = [] } = useStudentsByIds(enrollments.map((enrollment) => enrollment.studentId));
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
-  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const statusConfig = (() => ({
     pending: { label: t("enrollments.status.pending"), cls: SEMANTIC_BADGE.warning },
     confirmed: { label: t("enrollments.status.confirmed"), cls: SEMANTIC_BADGE.success },
     cancelled: { label: t("enrollments.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
     completed: { label: t("enrollments.status.completed"), cls: SEMANTIC_BADGE.info },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const paymentConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const paymentConfig = (() => ({
     paid: { label: t("enrollments.payment.paid"), cls: SEMANTIC_BADGE.success },
     pending: { label: t("enrollments.payment.pending"), cls: SEMANTIC_BADGE.warning },
     none: { label: t("enrollments.payment.none"), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   return (
     <section className="space-y-4" aria-label={t("enrollments.list")}>

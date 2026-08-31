@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -7,12 +7,12 @@ import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import type { Invoice } from "@/lib/data/financeData";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useInvoiceSelection } from "@/tenant/features/finance/hooks/useInvoiceSelection";
 import { FinanceBulkActionBar } from "@/tenant/features/finance/components/FinanceBulkActionBar";
 import { InvoicesListContent } from "@/tenant/features/finance/components/InvoicesListContent";
 import { InvoicesListFilters } from "@/tenant/features/finance/components/InvoicesListFilters";
 import { getInvoiceVisibleWorkColumns } from "@/tenant/features/finance/components/invoiceListVisibleColumns";
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -75,7 +75,7 @@ export function InvoicesList({
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
   const columnRegistry = columnCustomizer?.columnRegistry ?? [];
 
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     return invoices.filter((invoice) => {
       const normalizedSearch = search.toLowerCase();
       const matchSearch = !normalizedSearch
@@ -85,7 +85,7 @@ export function InvoicesList({
       const matchStatus = filterStatus.length === 0 || filterStatus.includes(invoice.status);
       return matchSearch && matchStatus;
     });
-  }, [invoices, search, filterStatus]);
+  })();
 
   const {
     selectedIds,
@@ -99,13 +99,13 @@ export function InvoicesList({
 
   useEffect(() => setSelectedIds([]), [selectionResetKey, showDeleted, setSelectedIds]);
 
-  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const statusConfig = (() => ({
     paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
     pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
     overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
     partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
     cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   const visibleColCount =
     getInvoiceVisibleWorkColumns(columnRegistry, columnVisible).length

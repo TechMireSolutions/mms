@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { type AccountingSettings } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
@@ -34,15 +34,15 @@ export function useAccountingSetupSaveActions({
   const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
 
-  const isPrefsDirty = useMemo(() => {
+  const isPrefsDirty = (() => {
     const draft = settingsDraft as unknown as Record<string, unknown>;
     const savedSettings = settings as unknown as Record<string, unknown>;
     return PREF_KEYS.some(
       (key) => JSON.stringify(draft[key]) !== JSON.stringify(savedSettings[key]),
     );
-  }, [settings, settingsDraft]);
+  })();
 
-  const handleSave = useCallback(async (): Promise<void> => {
+  const handleSave = (async (): Promise<void> => {
     if (!isPrefsDirty || saving) return;
     setSaving(true);
     try {
@@ -56,7 +56,7 @@ export function useAccountingSetupSaveActions({
     } finally {
       setSaving(false);
     }
-  }, [isPrefsDirty, saving, saveSettingsAsync, setSaved, t]);
+  });
 
   return {
     saving,

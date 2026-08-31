@@ -45,19 +45,19 @@ export function ContactCardInfoPills({
   onSms,
   onEmail,
 }: ContactCardInfoPillsProps): React.JSX.Element | null {
-  const allPhones = React.useMemo(() => {
+  const allPhones = (() => {
     if (contact) {
       return resolveAllContactPhones(contact, prefs, countryCodesMap, countryCodes);
     }
     return phone ? [{ phone, countryCode: countryCode || "", phoneDisplay: phoneDisplay || phone }] : [];
-  }, [contact, prefs, countryCodesMap, countryCodes, phone, countryCode, phoneDisplay]);
+  })();
 
-  const allEmails = React.useMemo(() => {
+  const allEmails = (() => {
     if (contact) {
       return resolveAllContactEmails(contact);
     }
     return email ? [{ email }] : [];
-  }, [contact, email]);
+  })();
 
   return (
     <DirectoryCardInfoPills

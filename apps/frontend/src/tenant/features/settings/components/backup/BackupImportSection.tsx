@@ -13,7 +13,7 @@ interface BackupImportSectionProps {
   onFileSelected: (file: File | undefined) => void;
 }
 
-const BackupImportSection = React.memo(function BackupImportSection({
+const BackupImportSection = (function BackupImportSection({
   dragActive,
   selectedFileName,
   uploadLimitLabel,

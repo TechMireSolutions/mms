@@ -107,7 +107,7 @@ function SignatureBlock({ label }: { label: string }) {
   );
 }
 
-export const InvoiceReceiptModal = React.memo(function InvoiceReceiptModal({
+export const InvoiceReceiptModal = (function InvoiceReceiptModal({
   invoices,
   onClose,
   madrasaName = "Madrasa Management System",

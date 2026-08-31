@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -47,10 +47,7 @@ export function InviteUserModal({
   const workspaceRoles = useWorkspaceRoles();
   const [submitting, setSubmitting] = useState(false);
 
-  const excludeIds = useMemo(
-    () => existingContactIds.map(String),
-    [existingContactIds],
-  );
+  const excludeIds = (() => existingContactIds.map(String))();
 
   const form = useForm<InviteWorkspaceUserInput>({
     resolver: zodResolver(inviteWorkspaceUserSchema),
@@ -112,7 +109,7 @@ export function InviteUserModal({
       error={firstZodFieldError(form.formState.errors, t) || undefined}
       cancelLabel={t('users.cancel')}
       saveLabel={t('users.inviteSubmit')}
-      onSave={handleSave}
+      onSave={() => { void handleSave(); }}
       saving={submitting}
     >
       <Form {...form}>

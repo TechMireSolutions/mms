@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useState } from 'react';
 import { MessageSquareOff } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -22,9 +22,8 @@ import { calculateReportDateRange } from '@/lib/reports/reportDateUtils';
 import { notify } from '@/lib/notify';
 import { WORK_SURFACE, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { SEMANTIC_TEXT, getSolidBgClass } from '@/lib/semanticTone';
-import type { ExportColumn } from '@/components/ui/ExportToolbar';
 import { MessagingReportHeaderBar } from './MessagingReportHeaderBar';
-import { MessagingReportSummaryTable, type ChannelSummaryRow } from './MessagingReportSummaryTable';
+import { type ChannelSummaryRow, MessagingReportSummaryTable } from './MessagingReportSummaryTable';
 import PinnedWidgets from '@/components/ui/reports/PinnedWidgets';
 
 const MessagingReportsVolumeChart = lazy(() =>
@@ -32,6 +31,7 @@ const MessagingReportsVolumeChart = lazy(() =>
     default: m.MessagingReportsVolumeChart,
   }))
 );
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 export interface MessagingReportProps {
   canWrite?: boolean;
@@ -45,11 +45,8 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
   const [endDate, setEndDate] = useState('');
   const [exporting, setExporting] = useState(false);
 
-  const queryStartDate = useMemo(() => startDate.trim() || undefined, [startDate]);
-  const queryEndDate = useMemo(
-    () => (endDate.trim() ? messagingExportEndDateBound(endDate) : undefined),
-    [endDate],
-  );
+  const queryStartDate = (() => startDate.trim() || undefined)();
+  const queryEndDate = (() => (endDate.trim() ? messagingExportEndDateBound(endDate) : undefined))();
 
   const metricsQuery = useMessagingMetrics({
     startDate: queryStartDate,
@@ -59,7 +56,7 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
   const stats = metricsQuery.data;
   const total = stats?.total ?? 0;
 
-  const chartData = useMemo(() => {
+  const chartData = (() => {
     if (!stats) return [];
     return (Object.values(MESSAGING_CHANNEL_CONFIG) as MessagingChannelConfig[]).map((config) => {
       const value = (stats[`${config.id}Count` as keyof typeof stats] as number) ?? 0;
@@ -69,7 +66,7 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
         fillColor: `var(--color-${config.themeAccent})`,
       };
     }).filter((item) => item.value > 0);
-  }, [stats, t]);
+  })();
 
   const showSkeleton = metricsQuery.isPending && !metricsQuery.data;
 
@@ -81,7 +78,7 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
     [total],
   );
 
-  const applyPreset = useCallback((days?: number): void => {
+  const applyPreset = ((days?: number): void => {
     if (days === undefined) {
       setStartDate('');
       setEndDate('');
@@ -91,9 +88,9 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
     const range = calculateReportDateRange(preset);
     setStartDate(range.from);
     setEndDate(range.to);
-  }, []);
+  });
 
-  const exportAllFilteredLogs = useCallback(async (): Promise<void> => {
+  const exportAllFilteredLogs = (async (): Promise<void> => {
     if (!canWrite || exporting) return;
     setExporting(true);
     try {
@@ -111,15 +108,15 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
     } finally {
       setExporting(false);
     }
-  }, [canWrite, exporting, queryStartDate, endDate, t]);
+  });
 
-  const channelExportColumns = useMemo<ExportColumn[]>(() => [
+  const channelExportColumns = (() => [
     { key: 'channel', header: t('messaging.channel') },
     { key: 'count', header: t('common.details') },
     { key: 'rate', header: t('reports.kpi.growthRate') },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const channelSummaryRows = useMemo<ChannelSummaryRow[]>(() => {
+  const channelSummaryRows = (() => {
     if (!stats) return [];
     return (Object.values(MESSAGING_CHANNEL_CONFIG) as MessagingChannelConfig[]).map((config) => {
       const count = (stats[`${config.id}Count` as keyof typeof stats] as number) ?? 0;
@@ -131,7 +128,7 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
         accent: config.themeAccent,
       };
     });
-  }, [stats, t, calcPercentage]);
+  })() as ChannelSummaryRow[];
 
   if (metricsQuery.isError) {
     return (

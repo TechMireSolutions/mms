@@ -1,5 +1,5 @@
-import { useMemo, useRef, useState, type ChangeEvent } from 'react';
-import { calculateProfileCompleteness } from '@mms/shared';
+import { useRef, useState, type ChangeEvent } from 'react';
+import { calculateProfileCompleteness, type FieldConfig } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTenantProfile } from '@/tenant/hooks/useTenantProfile';
 import { genderAvatarGradient } from '@/lib/semanticTone';
@@ -16,23 +16,20 @@ export function useAccountProfilePageController() {
   const [showCropper, setShowCropper] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const loginVerified = useMemo(
-    () => Boolean(profile?.emailVerifiedAt),
-    [profile?.emailVerifiedAt],
-  );
+  const loginVerified = (() => Boolean(profile?.emailVerifiedAt))();
 
-  const completeness = useMemo(() => {
+  const completeness = (() => {
     if (!profile?.contact) return 0;
-    return calculateProfileCompleteness(profile.contact, { fields: {}, version: 1, enabledTabs: [], requiredTabs: [] } as any);
-  }, [profile?.contact]);
+    return calculateProfileCompleteness(profile.contact, { fields: {}, version: 1, enabledTabs: [], requiredTabs: [] } satisfies FieldConfig);
+  })();
 
-  const avatarGradient = useMemo(() => {
+  const avatarGradient = (() => {
     return genderAvatarGradient(profile?.contact?.gender ?? '');
-  }, [profile?.contact?.gender]);
+  })();
 
-  const passwordStrength = useMemo(() => {
+  const passwordStrength = (() => {
     return getPasswordStrength(security.newPassword);
-  }, [security.newPassword]);
+  })();
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

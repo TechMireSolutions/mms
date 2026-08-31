@@ -14,7 +14,7 @@ export default function UsersReport(): React.JSX.Element {
   const activityQuery = useActivityLogs();
   const users = useUsersCollection();
 
-  const logs = React.useMemo<ActivityLog[]>(() => {
+  const logs = (() => {
     if (!activityQuery.data || activityQuery.data.status !== 200) return [];
     const body = activityQuery.data.body;
     if (Array.isArray(body)) return body as ActivityLog[];
@@ -22,7 +22,7 @@ export default function UsersReport(): React.JSX.Element {
       return (body as { logs: ActivityLog[] }).logs;
     }
     return [];
-  }, [activityQuery.data]);
+  })() as ActivityLog[];
 
   if (activityQuery.isError) {
     return (

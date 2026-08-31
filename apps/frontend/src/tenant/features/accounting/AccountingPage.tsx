@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -48,14 +48,11 @@ export default function Accounting() {
     canViewSetup,
   } = useModulePermissions(ACCOUNTING_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const SUB_TABS = useMemo(
-    () => ACCOUNTING_SUB_TAB_IDS.map((subTabId) => ({
+  const SUB_TABS = (() => ACCOUNTING_SUB_TAB_IDS.map((subTabId) => ({
       id: subTabId,
       label: t(ACCOUNTING_SUB_TAB_KEYS[subTabId]),
       icon: ACCOUNTING_SUB_TAB_ICONS[subTabId],
-    })),
-    [t]
-  );
+    })))();
   const [activeTab, setActiveTab] = usePersistedTabState<string>("accounting_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("overview");
   const [showDeleted, setShowDeleted] = useState(false);
@@ -64,9 +61,12 @@ export default function Accounting() {
   const accountsResult = useAccountingAccountsPaginated({ includeDeleted: false, page: 1, limit: 100 });
   const entriesResult = useAccountingEntriesPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
   const fiscalYearsResult = useAccountingFiscalYearsPaginated({ page: 1, limit: 100 });
-  const accounts: Account[] = (accountsResult.data as any)?.body?.accounts ?? (accountsResult.data as any)?.accounts ?? [];
-  const journalEntries: JournalEntry[] = (entriesResult.data as any)?.body?.entries ?? (entriesResult.data as any)?.entries ?? [];
-  const fiscalYears: FiscalYear[] = (fiscalYearsResult.data as any)?.body?.fiscalYears ?? (fiscalYearsResult.data as any)?.fiscalYears ?? [];
+  const accountsEnvelope = accountsResult.data as { body?: { accounts?: Account[] }; accounts?: Account[] } | null;
+  const entriesEnvelope = entriesResult.data as { body?: { entries?: JournalEntry[] }; entries?: JournalEntry[] } | null;
+  const fiscalYearsEnvelope = fiscalYearsResult.data as { body?: { fiscalYears?: FiscalYear[] }; fiscalYears?: FiscalYear[] } | null;
+  const accounts: Account[] = accountsEnvelope?.body?.accounts ?? accountsEnvelope?.accounts ?? [];
+  const journalEntries: JournalEntry[] = entriesEnvelope?.body?.entries ?? entriesEnvelope?.entries ?? [];
+  const fiscalYears: FiscalYear[] = fiscalYearsEnvelope?.body?.fiscalYears ?? fiscalYearsEnvelope?.fiscalYears ?? [];
   const { settings } = useAccountingConfig();
   const { activeCurrency } = useAccountingCurrency();
   const [filteredCount, setFilteredCount] = useState(0);

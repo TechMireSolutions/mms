@@ -12,7 +12,7 @@ export interface QuickActionButtonProps {
   ariaLabel?: string;
 }
 
-export const QuickActionButton = React.memo(function QuickActionButton({
+export const QuickActionButton = (function QuickActionButton({
   label,
   icon: Icon,
   onClick,

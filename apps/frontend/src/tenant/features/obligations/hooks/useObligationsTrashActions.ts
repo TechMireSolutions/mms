@@ -34,21 +34,21 @@ export function useObligationsTrashActions({
     }
   }, [t]);
 
-  const handleDelete = useCallback(async (id: string) => {
+  const handleDelete = (async (id: string) => {
     await runTrashAction(async () => {
       await deleteCollection.mutateAsync(id);
       notify.success(t('obligations.trash.deleted'));
     });
-  }, [deleteCollection, runTrashAction, t]);
+  });
 
-  const handleRestore = useCallback(async (id: string) => {
+  const handleRestore = (async (id: string) => {
     await runTrashAction(async () => {
       await restoreCollection.mutateAsync(id);
       notify.success(t('obligations.trash.restored'));
     });
-  }, [restoreCollection, runTrashAction, t]);
+  });
 
-  const handleBulkDelete = useCallback(async (ids: string[]) => {
+  const handleBulkDelete = (async (ids: string[]) => {
     await runTrashAction(async () => {
       const result = await bulkDeleteCollections.mutateAsync(ids);
       if (result.failed > 0) {
@@ -64,9 +64,9 @@ export function useObligationsTrashActions({
         );
       }
     });
-  }, [bulkDeleteCollections, runTrashAction, t]);
+  });
 
-  const handleBulkRestore = useCallback(async (ids: string[]) => {
+  const handleBulkRestore = (async (ids: string[]) => {
     await runTrashAction(async () => {
       const result = await bulkRestoreCollections.mutateAsync(ids);
       if (result.failed > 0) {
@@ -82,7 +82,7 @@ export function useObligationsTrashActions({
         );
       }
     });
-  }, [bulkRestoreCollections, runTrashAction, t]);
+  });
 
   return { handleDelete, handleRestore, handleBulkDelete, handleBulkRestore };
 }

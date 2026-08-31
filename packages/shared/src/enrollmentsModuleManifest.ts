@@ -100,7 +100,7 @@ export const ENROLLMENTS_MODULE_MANIFEST = {
     reports: 'enrollments.read',
   } satisfies Record<string, Permission>,
   work: {
-    directoryViews: ['list', 'eligibility'] as const,
+    directoryViews: ['directory', 'eligibility'] as const,
     bulkActions: ['cancel', 'delete', 'export'] as const,
   },
   defaultExportFilename: 'enrollments.csv',

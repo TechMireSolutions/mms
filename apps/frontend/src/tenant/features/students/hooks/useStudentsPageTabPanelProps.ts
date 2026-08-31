@@ -14,7 +14,7 @@ export type StudentsPageTabPanelProps = {
 export function useStudentsPageTabPanelProps(
   activeTab: string,
   workSource: StudentsWorkTierSource,
-): any {
+): StudentsPageTabPanelProps {
   return {
     activeTab,
     workTierProps: buildStudentsWorkTierProps(workSource),

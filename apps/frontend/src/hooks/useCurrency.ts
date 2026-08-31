@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { DEFAULT_CURRENCIES, formatMoney } from "@mms/shared";
 import { useFinanceConfig, useAccountingConfig } from "./useStandardModuleConfig";
 
@@ -8,15 +7,15 @@ export interface UseCurrencyOptions {
 }
 
 export function useCurrency({ currencyCode, decimalPlaces }: UseCurrencyOptions = {}) {
-  const activeCurrency = useMemo(() => {
+  const activeCurrency = (() => {
     return (
       DEFAULT_CURRENCIES.find((c) => c.code === currencyCode) ||
       DEFAULT_CURRENCIES[0] ||
       { symbol: "$", code: "USD", name: "US Dollar" }
     );
-  }, [currencyCode]);
+  })();
 
-  const formatCurrency = useMemo(() => {
+  const formatCurrency = (() => {
     return (amount: number | string | null | undefined): string => {
       return formatMoney(amount, activeCurrency.code, {
         useSymbol: true,
@@ -24,7 +23,7 @@ export function useCurrency({ currencyCode, decimalPlaces }: UseCurrencyOptions 
         maximumFractionDigits: decimalPlaces,
       });
     };
-  }, [activeCurrency.code, decimalPlaces]);
+  })();
 
   return {
     activeCurrency,

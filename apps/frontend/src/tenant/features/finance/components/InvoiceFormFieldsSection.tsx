@@ -14,7 +14,7 @@ export interface InvoiceFormFieldsSectionProps {
   onFieldChange: (key: keyof InvoiceDraft, value: string) => void;
 }
 
-export const InvoiceFormFieldsSection = React.memo(function InvoiceFormFieldsSection({
+export const InvoiceFormFieldsSection = (function InvoiceFormFieldsSection({
   t,
   draft,
   onFieldChange,

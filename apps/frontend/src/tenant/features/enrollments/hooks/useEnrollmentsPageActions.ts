@@ -2,6 +2,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { apiContract } from "@/lib/api";
 import { notify } from "@/lib/notify";
 import type { Enrollment } from "@/lib/data/enrollmentData";
+import type { StudentRecord } from "@mms/shared";
 import { useStudentMutations } from "@/tenant/hooks/collections/students";
 import { useEnrollmentViewerRole } from "@/tenant/hooks/useViewerRole";
 import {
@@ -40,9 +41,12 @@ export function useEnrollmentsPageActions({
         const res = await apiContract.students.resolve({
           body: { ids: [String(enrollment.studentId)] },
         });
-        const student = res.body.students[0];
+        const body = res.body as {
+          students?: Array<StudentRecord & { enrolledSessions?: string[] }>;
+        };
+        const student = body.students?.[0];
         if (student) {
-          const enrolled = (student.enrolledSessions as string[] | undefined) ?? [];
+          const enrolled = student.enrolledSessions ?? [];
           if (!enrolled.includes(enrollment.sessionId)) {
             updateStudent.mutate({
               id: String(student.id),
@@ -54,7 +58,7 @@ export function useEnrollmentsPageActions({
         console.error("Failed to update student enrolled sessions", error);
       }
       notify.success(t("enrollments.toast.created"));
-      onActiveSubTabChange("list");
+      onActiveSubTabChange("directory");
     } catch (error) {
       notify.error(t("enrollments.toast.saveFailed"), {
         description: error instanceof Error ? error.message : String(error),
@@ -107,11 +111,12 @@ export function useEnrollmentsPageActions({
 
   const handleBulkDelete = (ids: string[], deletionReason?: string) => {
     bulkDeleteEnrollments.mutate({ ids, deletionReason }, {
-      onSuccess: (result: any) => {
+      onSuccess: (raw: unknown) => {
+        const result = (raw ?? {}) as { succeeded?: number; failed?: number };
         notify.success(
-          result?.failed > 0
-            ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded, failed: result.failed })
-            : t("enrollments.toast.bulkDeleted", { count: result?.succeeded ?? ids.length }),
+          (result.failed ?? 0) > 0
+            ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded ?? 0, failed: result.failed ?? 0 })
+            : t("enrollments.toast.bulkDeleted", { count: result.succeeded ?? ids.length }),
         );
       },
       onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
@@ -122,11 +127,12 @@ export function useEnrollmentsPageActions({
 
   const handleBulkRestore = (ids: string[]) => {
     bulkRestoreEnrollments.mutate(ids, {
-      onSuccess: (result: any) => {
+      onSuccess: (raw: unknown) => {
+        const result = (raw ?? {}) as { succeeded?: number; failed?: number };
         notify.success(
-          result?.failed > 0
-            ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded, failed: result.failed })
-            : t("enrollments.toast.bulkRestored", { count: result?.succeeded ?? ids.length }),
+          (result.failed ?? 0) > 0
+            ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded ?? 0, failed: result.failed ?? 0 })
+            : t("enrollments.toast.bulkRestored", { count: result.succeeded ?? ids.length }),
         );
       },
       onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {

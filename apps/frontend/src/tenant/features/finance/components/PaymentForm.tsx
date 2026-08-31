@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { ReceiptText, Coins, DollarSign, FileText } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
@@ -44,14 +44,11 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
     buildInitialPaymentDraft(balance, authUser?.id || ""),
   );
 
-  const paymentMethodOptions = useMemo(
-    () =>
+  const paymentMethodOptions = (() =>
       PAYMENT_METHODS.map((method) => ({
         value: method,
         label: t(PAYMENT_METHOD_LABEL_KEYS[method]),
-      })),
-    [t],
-  );
+      })))();
 
   const updateDraft = (patch: Partial<typeof paymentDraft>) => {
     setPaymentDraft((prev) => ({ ...prev, ...patch }));

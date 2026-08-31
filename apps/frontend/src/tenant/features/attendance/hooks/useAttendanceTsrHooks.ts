@@ -10,7 +10,7 @@ export function useAttendanceContractList(query: Record<string, unknown>, enable
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.attendance.list.useQuery({
     queryKey: [...ATTENDANCE_QUERY_KEY, 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });

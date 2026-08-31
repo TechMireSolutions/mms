@@ -64,7 +64,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
     studentMetricsInactive,
   } = useDashboardData([], dashboardRole);
 
-  const notifications = React.useMemo(() => {
+  const notifications = (() => {
     return buildDashboardNotifications(
       dashboardRole,
       {
@@ -79,7 +79,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
       t,
       formatCurrency,
     );
-  }, [dashboardRole, financeMetrics, attendanceMetrics, studentMetricsInactive, t, formatCurrency]);
+  })();
 
   const unreadCount = notifications.length;
 

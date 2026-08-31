@@ -36,7 +36,7 @@ export function useEmployeeIdMigration(activeTab: string, canEditSetup: boolean)
   const migrationAppliedRef = useRef(false);
 
   const { mutate } = useMutation({
-    mutationFn: () => apiContract.teachers.migrateEmployeeIds({ body: {} }).then((res: any) => ({ updated: (res.body as any)?.updated ?? 0 })),
+    mutationFn: () => apiContract.teachers.migrateEmployeeIds({ body: {} }).then((res) => ({ updated: (res.body as { updated?: number } | null)?.updated ?? 0 })),
     onSuccess: (result: { updated: number }) => {
       invalidateTeachersQueries(queryClient);
       markEmployeeIdMigrationDone();

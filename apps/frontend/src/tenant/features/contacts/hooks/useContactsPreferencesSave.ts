@@ -1,4 +1,4 @@
-import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import {
   type AppTranslationKey,
   type ContactPreferences,
@@ -50,7 +50,7 @@ export function useContactsPreferencesSave({
   const { logSetupAudit } = useContactMutations();
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = useCallback(async (): Promise<void> => {
+  const handleSave = (async (): Promise<void> => {
     const prepared = prepareContactPreferencesSetupSave(prefs, countryCodesDraft);
     if (!prepared.ok) {
       notify.error(t(PREFS_SETUP_ISSUE_KEYS[prepared.issue]));
@@ -84,18 +84,7 @@ export function useContactsPreferencesSave({
     } finally {
       setIsSaving(false);
     }
-  }, [
-    contextPrefs,
-    prefs,
-    countryCodesDraft,
-    updatePrefsAsync,
-    updateCountryCodes,
-    setPrefs,
-    setCountryCodesDraft,
-    setSaved,
-    t,
-    logSetupAudit,
-  ]);
+  });
 
   return { isSaving, handleSave };
 }

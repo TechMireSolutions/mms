@@ -34,7 +34,7 @@ export function useAccountingPageActions({
     });
   }, [t]);
 
-  const setAccounts = useCallback(async (updater: Account[] | ((prev: Account[]) => Account[])) => {
+  const setAccounts = (async (updater: Account[] | ((prev: Account[]) => Account[])) => {
     const nextAccounts = typeof updater === "function" ? updater(accounts) : updater;
     try {
       await replaceAccounts.mutateAsync(nextAccounts);
@@ -42,9 +42,9 @@ export function useAccountingPageActions({
       notifySaveFailure(error);
       throw error;
     }
-  }, [accounts, replaceAccounts, notifySaveFailure]);
+  });
 
-  const setEntries = useCallback(async (updater: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => {
+  const setEntries = (async (updater: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => {
     const nextJournalEntries = typeof updater === "function" ? updater(journalEntries) : updater;
     try {
       await replaceEntries.mutateAsync(nextJournalEntries);
@@ -52,9 +52,9 @@ export function useAccountingPageActions({
       notifySaveFailure(error);
       throw error;
     }
-  }, [journalEntries, replaceEntries, notifySaveFailure]);
+  });
 
-  const setFiscalYears = useCallback(async (updater: FiscalYear[] | ((prev: FiscalYear[]) => FiscalYear[])) => {
+  const setFiscalYears = (async (updater: FiscalYear[] | ((prev: FiscalYear[]) => FiscalYear[])) => {
     const nextFiscalYears = typeof updater === "function" ? updater(fiscalYears) : updater;
     try {
       await replaceFiscalYears.mutateAsync(nextFiscalYears);
@@ -62,9 +62,9 @@ export function useAccountingPageActions({
       notifySaveFailure(error);
       throw error;
     }
-  }, [fiscalYears, replaceFiscalYears, notifySaveFailure]);
+  });
 
-  const handleDeleteEntry = useCallback(async (id: string) => {
+  const handleDeleteEntry = (async (id: string) => {
     try {
       await deleteEntry.mutateAsync(id);
       notify.success(t("accounting.trash.deleted"));
@@ -74,9 +74,9 @@ export function useAccountingPageActions({
       });
       throw error;
     }
-  }, [deleteEntry, t]);
+  });
 
-  const handleRestoreEntry = useCallback(async (id: string) => {
+  const handleRestoreEntry = (async (id: string) => {
     try {
       await restoreEntry.mutateAsync(id);
       notify.success(t("accounting.trash.restored"));
@@ -86,9 +86,9 @@ export function useAccountingPageActions({
       });
       throw error;
     }
-  }, [restoreEntry, t]);
+  });
 
-  const handleBulkDeleteEntries = useCallback(async (ids: string[]) => {
+  const handleBulkDeleteEntries = (async (ids: string[]) => {
     try {
       const result = await bulkDeleteEntries.mutateAsync(ids);
       if (result.failed > 0) {
@@ -109,9 +109,9 @@ export function useAccountingPageActions({
       });
       throw error;
     }
-  }, [bulkDeleteEntries, t]);
+  });
 
-  const handleBulkRestoreEntries = useCallback(async (ids: string[]) => {
+  const handleBulkRestoreEntries = (async (ids: string[]) => {
     try {
       const result = await bulkRestoreEntries.mutateAsync(ids);
       if (result.failed > 0) {
@@ -132,7 +132,7 @@ export function useAccountingPageActions({
       });
       throw error;
     }
-  }, [bulkRestoreEntries, t]);
+  });
 
   return {
     setAccounts,

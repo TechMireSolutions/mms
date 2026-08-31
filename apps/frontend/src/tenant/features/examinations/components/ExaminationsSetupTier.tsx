@@ -16,7 +16,7 @@ export interface ExaminationsSetupTierProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const ExaminationsSetupTier = React.memo(function ExaminationsSetupTier({
+export const ExaminationsSetupTier = (function ExaminationsSetupTier({
   onPrefsDirtyChange,
 }: ExaminationsSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();

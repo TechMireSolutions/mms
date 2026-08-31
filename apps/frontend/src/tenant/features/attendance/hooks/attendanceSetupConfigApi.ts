@@ -6,11 +6,11 @@ import { normalizeAttendanceModulePreferences } from "@mms/shared";
 const api = createModuleSetupConfigApi<AttendanceModulePreferences>({
   fetchPreferencesFn: async (signal) => {
     const res = await apiContract.attendance.getPreferences({ query: undefined, extraHeaders: {} });
-    return (res.body as any).preferences;
+    return (res.body as { preferences: AttendanceModulePreferences }).preferences;
   },
   savePreferencesFn: async (prefs) => {
-    const res = await apiContract.attendance.updatePreferences({ body: prefs as any });
-    return (res.body as any).preferences;
+    const res = await apiContract.attendance.updatePreferences({ body: prefs });
+    return (res.body as { preferences: AttendanceModulePreferences }).preferences;
   },
   normalizePrefs: normalizeAttendanceModulePreferences as (prefs: unknown) => AttendanceModulePreferences,
 });

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
 import { resolveDashboardRole } from "@/lib/dashboardRole";
 
@@ -23,7 +22,7 @@ export function normalizeEnrollmentViewerRole(role: string | undefined): Enrollm
 /** Active viewer dashboardRole from RBAC — prefer over raw JWT role string. */
 export function useViewerRole(): ViewerRole {
   const { can } = usePermissions();
-  return useMemo(() => resolveDashboardRole(can), [can]);
+  return (() => resolveDashboardRole(can))();
 }
 
 /** Whether the signed-in viewer has admin privileges (gates Users config/analytics). */
@@ -34,5 +33,5 @@ export function useIsAdminViewer(): boolean {
 
 export function useEnrollmentViewerRole(): EnrollmentViewerRole {
   const role = useViewerRole();
-  return useMemo(() => (role === "teacher" ? "staff" : role), [role]);
+  return (() => (role === "teacher" ? "staff" : role))();
 }

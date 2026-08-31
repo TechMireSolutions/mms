@@ -13,7 +13,7 @@ export async function fetchAllEnrollmentsForQuery(params: {
   let page = 1;
   for (;;) {
     const res = await apiContract.enrollments.list({ query: { page, limit, search: params.search?.trim(), sessionId: (params.sessionId?.trim() && params.sessionId !== "all") ? params.sessionId.trim() : undefined } });
-    const result = res.body as any;
+    const result = res.body as { enrollments?: Enrollment[]; hasMore?: boolean };
     all.push(...(result.enrollments ?? []));
     if (!result.hasMore || page >= 200) break;
     page += 1;

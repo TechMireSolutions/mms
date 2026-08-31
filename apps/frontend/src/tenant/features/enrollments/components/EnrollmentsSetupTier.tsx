@@ -16,7 +16,7 @@ export interface EnrollmentsSetupTierProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const EnrollmentsSetupTier = React.memo(function EnrollmentsSetupTier({
+export const EnrollmentsSetupTier = (function EnrollmentsSetupTier({
   onPrefsDirtyChange,
 }: EnrollmentsSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();

@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { ArrowRight, ExternalLink } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { AppTranslationKey, PublicWorkspaceSummary } from "@mms/shared";
@@ -94,7 +94,7 @@ export default function WorkspaceRegistryList({
   );
 }
 
-const RegistryWorkspaceRow = memo(function RegistryWorkspaceRow({
+const RegistryWorkspaceRow = (function RegistryWorkspaceRow({
   workspace,
   appDomain,
   destinationPath,

@@ -17,7 +17,7 @@ export interface ErrorStateProps {
 /**
  * ErrorState — shown when a data fetch or validation fails.
  */
-export const ErrorState = React.memo(function ErrorState({
+export const ErrorState = (function ErrorState({
   title,
   description,
   onRetry,

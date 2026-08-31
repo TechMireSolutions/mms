@@ -16,7 +16,7 @@ export interface FinanceSetupTierProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const FinanceSetupTier = React.memo(function FinanceSetupTier({
+export const FinanceSetupTier = (function FinanceSetupTier({
   onPrefsDirtyChange,
 }: FinanceSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();

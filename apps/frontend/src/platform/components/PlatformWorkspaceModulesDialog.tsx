@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { SYSTEM_MODULES } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -92,7 +92,7 @@ export function PlatformWorkspaceModulesDialog({
     }
   };
 
-  const categories = useMemo(() => {
+  const categories = (() => {
     const map = new Map<string, typeof SYSTEM_MODULES>();
     for (const mod of SYSTEM_MODULES) {
       const cat = mod.category || 'core';
@@ -100,7 +100,7 @@ export function PlatformWorkspaceModulesDialog({
       map.get(cat)!.push(mod);
     }
     return Array.from(map.entries());
-  }, []);
+  })();
 
   return (
     <Modal

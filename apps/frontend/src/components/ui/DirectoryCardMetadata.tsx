@@ -22,7 +22,7 @@ export interface DirectoryCardMetadataProps<TColumn extends { label: string }> {
  * (Contacts/Students/Teachers) pass their own column list and value closures,
  * so the mapper chrome stays single-authority.
  */
-export const DirectoryCardMetadata = React.memo(function DirectoryCardMetadata<
+export const DirectoryCardMetadata = (function DirectoryCardMetadata<
   TColumn extends { label: string },
 >({
   columns,

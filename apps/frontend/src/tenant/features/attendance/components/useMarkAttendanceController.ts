@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { AttendanceRecord, type ClassStudent } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
@@ -34,7 +34,7 @@ export function useMarkAttendanceController({
     sessionId: filters.sessionId || undefined,
     classId: filters.classId || undefined,
   });
-  const studentIds = useMemo(() => {
+  const studentIds = (() => {
     if (!filters.classId) return [];
     return enrollments
       .filter((enrollment) =>
@@ -43,19 +43,19 @@ export function useMarkAttendanceController({
         enrollment.status !== "completed"
       )
       .map((enrollment) => enrollment.studentId);
-  }, [enrollments, filters.classId]);
+  })();
 
   const { data: enrolledStudents = [] } = useStudentsByIds(studentIds);
 
-  const allClasses = useMemo(() => {
+  const allClasses = (() => {
     return sessions.flatMap((session) =>
       (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
     );
-  }, [sessions]);
+  })();
 
-  const classInfo = useMemo(() => allClasses.find((sessionClass) => sessionClass.id === filters.classId), [allClasses, filters.classId]);
-  const sessionInfo = useMemo(() => classInfo ? sessions.find((session) => session.id === classInfo.sessionId) : null, [sessions, classInfo]);
-  const students: ClassStudent[] = useMemo(() => {
+  const classInfo = (() => allClasses.find((sessionClass) => sessionClass.id === filters.classId))();
+  const sessionInfo = (() => classInfo ? sessions.find((session) => session.id === classInfo.sessionId) : null)();
+  const students: ClassStudent[] = (() => {
     if (!filters.classId) return [];
     return enrolledStudentsForClass(
       filters.classId,
@@ -63,7 +63,7 @@ export function useMarkAttendanceController({
       enrolledStudents,
       t("common.unnamedStudent"),
     );
-  }, [enrollments, enrolledStudents, filters.classId, t]);
+  })();
 
   const [rows, setRows] = useState<AttendanceRow[]>(() => {
     if (!filters.classId || !filters.date) return [];
@@ -111,18 +111,16 @@ export function useMarkAttendanceController({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stableKey]);
 
-  const filteredRows = useMemo(() =>
-    rows.filter((row) => row.name.toLowerCase().includes(search.toLowerCase())),
-    [rows, search]
-  );
+  const filteredRows = (() =>
+    rows.filter((row) => row.name.toLowerCase().includes(search.toLowerCase())))();
 
-  const stats = useMemo(() => {
+  const stats = (() => {
     const counts: Record<string, number> = {};
     rows.forEach((row) => {
       counts[row.status] = (counts[row.status] || 0) + 1;
     });
     return counts;
-  }, [rows]);
+  })();
 
   const setRow = (studentId: string, key: string, value: unknown) => {
     const before = rows.find((row) => row.studentId === studentId);

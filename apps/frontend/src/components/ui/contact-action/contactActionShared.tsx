@@ -22,7 +22,7 @@ interface ActionIconButtonProps {
   onClick?: (e: React.MouseEvent) => void;
 }
 
-export const ActionIconButton = React.memo(function ActionIconButton({
+export const ActionIconButton = (function ActionIconButton({
   icon: Icon,
   label,
   tooltipText,
@@ -96,7 +96,7 @@ interface ActionCopyButtonProps {
   className?: string;
 }
 
-export const ActionCopyButton = React.memo(function ActionCopyButton({
+export const ActionCopyButton = (function ActionCopyButton({
   text,
   copyToastMessage,
   tooltipCopyText = "Copy",

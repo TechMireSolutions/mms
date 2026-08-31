@@ -62,7 +62,7 @@ export interface ContactPhoneActionProps {
   };
 }
 
-export const ContactPhoneAction = React.memo(function ContactPhoneAction({
+export const ContactPhoneAction = (function ContactPhoneAction({
   phone,
   countryCode: countryCodeProp,
   phoneDisplay: phoneDisplayProp,

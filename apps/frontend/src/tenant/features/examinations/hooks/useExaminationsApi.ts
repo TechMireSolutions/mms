@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import type { MutateOptions } from '@tanstack/react-query';
 import type { Exam, ExamResult, ExaminationsCommandMetricsSnapshot } from '@mms/shared';
 import { EXAMINATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { useServerMetrics } from '@/hooks/useServerMetrics';
@@ -21,7 +22,7 @@ export function useExaminationsExams(options?: { enabled?: boolean; includeDelet
   const includeDeleted = options?.includeDeleted ?? false;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.examinations.listExams.useQuery({
-    queryKey: [...EXAMINATIONS_EXAMS_QUERY_KEY, { includeDeleted }] as any,
+    queryKey: [...EXAMINATIONS_EXAMS_QUERY_KEY, { includeDeleted }],
     queryData: { query: { includeDeleted: includeDeleted ? 'true' : undefined } },
     staleTime: 30_000,
   });
@@ -117,32 +118,32 @@ export function useExaminationsMutations() {
   return {
     replaceExams: {
       ...replaceExams,
-      mutate: (exams: Exam[], opts?: any) => replaceExams.mutate({ body: exams }, opts),
+      mutate: (exams: Exam[], opts?: MutateOptions) => replaceExams.mutate({ body: exams }, opts),
       mutateAsync: (exams: Exam[]) => replaceExams.mutateAsync({ body: exams }),
     },
     replaceExamResults: {
       ...replaceExamResults,
-      mutate: (results: ExamResult[], opts?: any) => replaceExamResults.mutate({ body: results }, opts),
+      mutate: (results: ExamResult[], opts?: MutateOptions) => replaceExamResults.mutate({ body: results }, opts),
       mutateAsync: (results: ExamResult[]) => replaceExamResults.mutateAsync({ body: results }),
     },
     deleteExam: {
       ...deleteExam,
-      mutate: (id: string, opts?: any) => deleteExam.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => deleteExam.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => deleteExam.mutateAsync({ params: { id } }),
     },
     restoreExam: {
       ...restoreExam,
-      mutate: (id: string, opts?: any) => restoreExam.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => restoreExam.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => restoreExam.mutateAsync({ params: { id } }),
     },
     bulkDeleteExams: {
       ...bulkDeleteExams,
-      mutate: (ids: string[], opts?: any) => bulkDeleteExams.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkDeleteExams.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkDeleteExams.mutateAsync({ body: { ids } }),
     },
     bulkRestoreExams: {
       ...bulkRestoreExams,
-      mutate: (ids: string[], opts?: any) => bulkRestoreExams.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkRestoreExams.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestoreExams.mutateAsync({ body: { ids } }),
     },
   };

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
   Activity,
   ShieldAlert,
@@ -30,7 +30,7 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
   const [timeframe, setTimeframe] = useState<LogTimeframe>('all');
   const [inspectLog, setInspectLog] = useState<PlatformActivityLogItem | null>(null);
 
-  const items = useMemo(() => {
+  const items = (() => {
     const raw = logs ?? [];
     const now = Date.now();
 
@@ -63,7 +63,7 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
 
       return true;
     });
-  }, [logs, filterQuery, category, timeframe]);
+  })();
 
   const handleExportCsv = () => {
     if (items.length === 0) return;

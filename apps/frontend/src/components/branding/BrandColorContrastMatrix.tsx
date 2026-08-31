@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Sparkles } from 'lucide-react';
 import {
   brandingTokenToHex,
@@ -26,14 +26,8 @@ export function BrandColorContrastMatrix({
 }: BrandColorContrastMatrixProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
-  const lightTokens = useMemo(
-    () => buildBrandingCssVariables(primaryColor, secondaryColor, 'light'),
-    [primaryColor, secondaryColor],
-  );
-  const darkTokens = useMemo(
-    () => buildBrandingCssVariables(primaryColor, secondaryColor, 'dark'),
-    [primaryColor, secondaryColor],
-  );
+  const lightTokens = (() => buildBrandingCssVariables(primaryColor, secondaryColor, 'light'))();
+  const darkTokens = (() => buildBrandingCssVariables(primaryColor, secondaryColor, 'dark'))();
 
   const lightPrimaryBg = brandingTokenToHex(lightTokens['--primary'] ?? '', primaryColor);
   const lightPrimaryFg = brandingTokenToHex(lightTokens['--primary-foreground'] ?? '', '#ffffff');

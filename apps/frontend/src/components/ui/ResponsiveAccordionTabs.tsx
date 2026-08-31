@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -13,7 +13,7 @@ export type { AccordionTabItem, ResponsiveAccordionTabsProps } from "@/component
  * Responsive tab shell — mobile accordion (content under active heading),
  * desktop horizontal tabs or sidebar nav.
  */
-export const ResponsiveAccordionTabs = React.memo(function ResponsiveAccordionTabs({
+export const ResponsiveAccordionTabs = (function ResponsiveAccordionTabs({
   tabs,
   activeTab,
   onTabChange,
@@ -30,8 +30,7 @@ export const ResponsiveAccordionTabs = React.memo(function ResponsiveAccordionTa
   const sectionRefs = useRef<Partial<Record<string, HTMLElement | null>>>({});
   const prefix = panelIdPrefix;
 
-  const handleTabChange = useCallback(
-    async (tabId: string) => {
+  const handleTabChange = (async (tabId: string) => {
       if (collapsible && activeTab === tabId) {
         onTabChange("");
         return;
@@ -46,9 +45,7 @@ export const ResponsiveAccordionTabs = React.memo(function ResponsiveAccordionTa
         }
       }
       onTabChange(tabId);
-    },
-    [activeTab, collapsible, isDirty, onSave, onTabChange],
-  );
+    });
 
   useScrollSurfaceOnChange(activeTab, {
     resolveMobileTarget: (key) => sectionRefs.current[key],

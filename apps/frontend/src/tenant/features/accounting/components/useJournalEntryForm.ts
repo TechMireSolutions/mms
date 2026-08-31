@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { generateJERef, type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
 import { hasFieldValue } from "@/lib/formCompleteness";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -70,7 +70,7 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
   const totalCredit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.credit) || 0), 0);
   const isBalanced  = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;
 
-  const completeness = useMemo(() => {
+  const completeness = (() => {
     const total = 4;
     let filled = 0;
     if (hasFieldValue(form.date)) filled += 1;
@@ -78,7 +78,7 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     if (form.lines.filter((line) => line.account_id).length >= 2) filled += 1;
     if (isBalanced) filled += 1;
     return Math.round((filled / total) * 100);
-  }, [form.date, form.description, form.lines, isBalanced]);
+  })();
 
   const updateLine = (lineIndex: number, field: keyof DraftLine, fieldValue: string | number) => {
     const lines = [...form.lines];
@@ -144,10 +144,7 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     label: `${account.type}: ${account.code} – ${account.name}`
   }));
 
-  const errorMessages = useMemo(
-    () => Object.values(errors).filter(Boolean),
-    [errors],
-  );
+  const errorMessages = (() => Object.values(errors).filter(Boolean))();
 
   return {
     t,

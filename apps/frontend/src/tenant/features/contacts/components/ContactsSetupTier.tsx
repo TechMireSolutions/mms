@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, lazy, Suspense } from "react";
+import React, { useRef, lazy, Suspense } from "react";
 import { CONTACTS_MODULE_MANIFEST, DEFAULT_SETTINGS_SUB_TABS } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -21,7 +21,7 @@ export interface ContactsSetupTierProps {
   canEditSetup: boolean;
 }
 
-export const ContactsSetupTier = React.memo(function ContactsSetupTier({
+export const ContactsSetupTier = (function ContactsSetupTier({
   onImport,
   canWrite,
   canEditSetup,
@@ -29,7 +29,7 @@ export const ContactsSetupTier = React.memo(function ContactsSetupTier({
   const { t } = useTranslation();
   const dirtyRef = useRef({ prefs: false });
 
-  const settingsSubTabs = useMemo(() => {
+  const settingsSubTabs = (() => {
     const defaultByKey = new Map(DEFAULT_SETTINGS_SUB_TABS.map((tab) => [tab.key, tab]));
     return CONTACTS_MODULE_MANIFEST.setupSubTabs
       .map((key, index) => {
@@ -47,7 +47,7 @@ export const ContactsSetupTier = React.memo(function ContactsSetupTier({
       })
       .filter((tab) => tab.enabled)
       .sort((a, b) => a.order - b.order);
-  }, [t]);
+  })();
 
   const subTabs = useModuleSetupSubTabs({
     initialKey: shouldOpenContactsSyncSetup()

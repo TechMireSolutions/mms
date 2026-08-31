@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
@@ -31,10 +31,7 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
   const [dateFrom, setDateFrom] = useState(activeFiscalYear?.startDate || "");
   const [dateTo,   setDateTo]   = useState(activeFiscalYear?.endDate   || "");
 
-  const rows = useMemo(
-    () => computeTrialBalance(accounts, entries, dateFrom || undefined, dateTo || undefined),
-    [accounts, entries, dateFrom, dateTo]
-  );
+  const rows = (() => computeTrialBalance(accounts, entries, dateFrom || undefined, dateTo || undefined))();
 
   const grandDebit  = rows.reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalDebit,  0);
   const grandCredit = rows.reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalCredit, 0);

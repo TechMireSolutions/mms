@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { normalizeEnabledModules, SYSTEM_MODULES_BY_ID } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
@@ -27,10 +27,7 @@ export default function SystemModulesSettings(): React.JSX.Element {
   const platformSettings = useLiveObject<{ grantedModules?: Record<string, boolean> }>('platform_settings', {});
   const grantedModules = platformSettings?.grantedModules;
 
-  const enabledModules = useMemo(
-    () => normalizeEnabledModules(data.enabledModules),
-    [data.enabledModules],
-  );
+  const enabledModules = (() => normalizeEnabledModules(data.enabledModules))();
 
   const updModule = (moduleId: string, enabled: boolean): void => {
     const mod = SYSTEM_MODULES_BY_ID[moduleId];

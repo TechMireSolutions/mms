@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermissions, useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
@@ -29,22 +28,16 @@ export function useAttendancePageTabs(
     canViewReports: canSeeAttendanceAnalytics,
   });
 
-  const visibleOperationsTabs = useMemo(
-    () => [
+  const visibleOperationsTabs = (() => [
       { id: 'mark', label: t('attendance.tabs.mark'), icon: ClipboardEdit, visible: canWriteAttendance },
       { id: 'records', label: t('attendance.tabs.records'), icon: BookOpen, visible: canAnalyticsView },
       { id: 'audit', label: t('attendance.tabs.audit'), icon: ClipboardList, visible: canDeleteAttendance },
-    ].filter((tab) => tab.visible),
-    [t, canWriteAttendance, canAnalyticsView, canDeleteAttendance],
-  );
+    ].filter((tab) => tab.visible))();
 
-  const visibleAnalyticsTabs = useMemo(
-    () => [
+  const visibleAnalyticsTabs = (() => [
       { id: 'charts', label: t('attendance.tabs.analyticsCharts'), icon: BarChart2, visible: canSeeAttendanceAnalytics },
       { id: 'reports', label: t('attendance.tabs.reports'), icon: ClipboardList, visible: canSeeAttendanceAnalytics },
-    ].filter((tab) => tab.visible),
-    [t, canSeeAttendanceAnalytics],
-  );
+    ].filter((tab) => tab.visible))();
 
   const effectiveTab = resolveModuleTierTab(
     activeTab,

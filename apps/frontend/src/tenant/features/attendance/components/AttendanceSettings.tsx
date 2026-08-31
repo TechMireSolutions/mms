@@ -9,7 +9,7 @@ export interface AttendanceSettingsProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const AttendanceSettings = React.memo(function AttendanceSettings({
+export const AttendanceSettings = (function AttendanceSettings({
   onPrefsDirtyChange,
 }: AttendanceSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();

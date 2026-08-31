@@ -1,77 +1,61 @@
-import { useMemo } from 'react';
 import {
   getMessageCategoryLabelKey,
   MESSAGING_MODULE_MANIFEST,
 } from '@mms/shared';
-import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 export function useMessagingPageOptions() {
   const { t } = useTranslation();
 
-  const categorySelectOptions = useMemo(() => [
+  const categorySelectOptions = (() => [
     { value: 'all', label: t('messaging.category.all') },
     ...MESSAGING_MODULE_MANIFEST.categoryOptions.map((option) => ({
       value: option.value,
       label: t(option.labelKey),
     })),
-  ], [t]);
+  ])();
 
-  const templateCategorySelectOptions = useMemo(
-    () => MESSAGING_MODULE_MANIFEST.categoryOptions.map((option) => ({
+  const templateCategorySelectOptions = (() => MESSAGING_MODULE_MANIFEST.categoryOptions.map((option) => ({
       value: option.value,
       label: t(option.labelKey),
-    })),
-    [t],
-  );
+    })))();
 
-  const channelSelectOptions = useMemo(
-    () => MESSAGING_MODULE_MANIFEST.channelOptions.map((option) => ({
+  const channelSelectOptions = (() => MESSAGING_MODULE_MANIFEST.channelOptions.map((option) => ({
       value: option.value,
       label: t(option.labelKey),
-    })),
-    [t],
-  );
+    })))();
 
-  const roleOptions = useMemo(
-    () => MESSAGING_MODULE_MANIFEST.roleOptions.map((option) => ({
+  const roleOptions = (() => MESSAGING_MODULE_MANIFEST.roleOptions.map((option) => ({
       value: option.value,
       label: t(option.labelKey),
-    })),
-    [t],
-  );
+    })))();
 
-  const genderOptions = useMemo(
-    () => MESSAGING_MODULE_MANIFEST.genderOptions.map((option) => ({
+  const genderOptions = (() => MESSAGING_MODULE_MANIFEST.genderOptions.map((option) => ({
       value: option.value,
       label: t(option.labelKey),
-    })),
-    [t],
-  );
+    })))();
 
-  const statusOptions = useMemo(
-    () => MESSAGING_MODULE_MANIFEST.statusOptions.map((option) => ({
+  const statusOptions = (() => MESSAGING_MODULE_MANIFEST.statusOptions.map((option) => ({
       value: option.value,
       label: t(option.labelKey),
-    })),
-    [t],
-  );
+    })))();
 
-  const categoryBadgeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const categoryBadgeConfig = (() => ({
     general: { label: t(getMessageCategoryLabelKey('general')), cls: SEMANTIC_BADGE.muted },
     academic: { label: t(getMessageCategoryLabelKey('academic')), cls: SEMANTIC_BADGE.info },
     financial: { label: t(getMessageCategoryLabelKey('financial')), cls: SEMANTIC_BADGE.success },
     attendance: { label: t(getMessageCategoryLabelKey('attendance')), cls: SEMANTIC_BADGE.warning },
     emergency: { label: t(getMessageCategoryLabelKey('emergency')), cls: SEMANTIC_BADGE.destructive },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const logStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const logStatusConfig = (() => ({
     sent: { label: t('messaging.status.sent'), cls: SEMANTIC_BADGE.success },
     delivered: { label: t('messaging.status.delivered'), cls: SEMANTIC_BADGE.successStrong },
     failed: { label: t('messaging.status.failed'), cls: SEMANTIC_BADGE.destructive },
     skipped: { label: t('messaging.status.skipped'), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   return {
     categorySelectOptions,

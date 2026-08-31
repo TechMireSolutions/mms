@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   BarChart3,
   Eye,
@@ -61,22 +61,16 @@ export function BrandSemanticPreview({
     setLocalMode(previewMode);
   }, [previewMode]);
 
-  const activeTokens = useMemo(
-    () => buildBrandingCssVariables(primaryColor, secondaryColor, localMode),
-    [primaryColor, secondaryColor, localMode],
-  );
+  const activeTokens = (() => buildBrandingCssVariables(primaryColor, secondaryColor, localMode))();
 
-  const previewContext = useMemo(
-    () => ({
+  const previewContext = (() => ({
       activeOnPrimaryBg: brandingTokenToHex(activeTokens["--primary"] ?? "", primaryColor),
       activeOnPrimaryFg: brandingTokenToHex(activeTokens["--primary-foreground"] ?? "", "#ffffff"),
       activeOnSecondaryBg: brandingTokenToHex(activeTokens["--secondary"] ?? "", secondaryColor),
       activeOnSecondaryFg: brandingTokenToHex(activeTokens["--secondary-foreground"] ?? "", "#ffffff"),
       activeTokens,
       chartPalette: resolveBrandingChartPaletteHex(primaryColor, secondaryColor, localMode),
-    }),
-    [activeTokens, primaryColor, secondaryColor, localMode],
-  );
+    }))();
 
   const filterStyle =
     visionFilter !== "normal" ? { filter: `url(#mms-cb-${visionFilter})` } : undefined;

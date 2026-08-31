@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { formatLlmSpeed } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
@@ -18,7 +17,7 @@ export function useLlmSettingsController() {
     handleSaveGlobal,
   } = useSettingsGlobalDraft();
 
-  const configs = useMemo(() => data.llmConfigs ?? [], [data.llmConfigs]);
+  const configs = (() => data.llmConfigs ?? [])();
 
   const { healthStatuses, setHealthStatuses } = useLlmHealthChecks();
   const modal = useLlmSettingsModal({ configs, upd });

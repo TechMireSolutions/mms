@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { Scale } from "lucide-react";
 import { formatMoney, formatDate } from "@mms/shared";
@@ -32,10 +32,7 @@ export function OverdueObligationsWidgetMobileList({
   onRemind,
   t,
 }: OverdueObligationsWidgetMobileListProps): React.ReactElement {
-  const studentsById = useMemo(
-    () => new Map(students.map((entry) => [String(entry.id), entry])),
-    [students],
-  );
+  const studentsById = (() => new Map(students.map((entry) => [String(entry.id), entry])))();
 
   if (paginatedStudents.length === 0) {
     return (

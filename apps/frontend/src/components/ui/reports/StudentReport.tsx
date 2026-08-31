@@ -15,7 +15,7 @@ import type { StudentReportProps } from './studentReportTypes';
 
 export type { EnrollmentHistoryItem, ReportStudent, StudentReportFilters, StudentReportProps } from './studentReportTypes';
 
-const StudentReport = React.memo(function StudentReport({ filters }: StudentReportProps): React.JSX.Element {
+const StudentReport = (function StudentReport({ filters }: StudentReportProps): React.JSX.Element {
   const report = useStudentReportController({ filters });
 
   if ((report.activeSubTab === 'list' && report.listError) || (report.activeSubTab === 'history' && report.historyError)) {

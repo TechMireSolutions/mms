@@ -17,7 +17,7 @@ export interface AccountingSettingsProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const AccountingSettings = React.memo(function AccountingSettings({
+export const AccountingSettings = (function AccountingSettings({
   accounts,
   fiscalYears,
   onSaveFiscalYears,

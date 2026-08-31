@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import {
   DEFAULT_STUDENT_EXPORT_COLUMNS,
   studentColumnLabelKey,
@@ -49,24 +48,18 @@ export function useStudentsExportActions({
 }: UseStudentsExportActionsOptions) {
   const { t, handleError } = useStudentsCrudNotify();
 
-  const buildFilteredQuery = useCallback(
-    (): StudentsListQuery => ({
+  const buildFilteredQuery = ((): StudentsListQuery => ({
       search: search.trim() || undefined,
       status: filterStatus.length > 0 ? filterStatus.join(",") : undefined,
       gender: filterGender || undefined,
       quickFilter: quickFilter === "all" ? undefined : quickFilter,
       sortField: sortField ?? undefined,
       sortDir: sortField ? sortDir : undefined,
-    }),
-    [search, filterStatus, filterGender, quickFilter, sortField, sortDir],
-  );
+    }));
 
-  const onError = useCallback(
-    (err: unknown, scope: string) => {
+  const onError = ((err: unknown, scope: string) => {
       handleError(err, scope, "students.exportFailed");
-    },
-    [handleError],
-  );
+    });
 
   return useModuleServerCsvExportActions<StudentExportColumn, StudentsListQuery>({
     canExport,

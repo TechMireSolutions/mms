@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Save, CheckCircle2, Users, Search, Loader2 } from "lucide-react";
@@ -45,26 +45,23 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
 
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
-  const classNamesById = useMemo(
-    () => new Map(
+  const classNamesById = (() => new Map(
       sessions.flatMap((session) =>
         (session.classes || []).map((sessionClass) => [sessionClass.id, `${session.name} - ${sessionClass.name}`] as const),
       ),
-    ),
-    [sessions],
-  );
+    ))();
 
-  const studentIds = useMemo(() => {
+  const studentIds = (() => {
     if (!exam) return [];
     const classIds = new Set(exam.classIds);
     return uniqueRegistryIds(
       enrollments.filter((enrollment) => classIds.has(enrollment.classId)).map((enrollment) => enrollment.studentId),
     );
-  }, [exam, enrollments]);
+  })();
 
   const { data: resolvedStudents = [] } = useStudentsByIds(studentIds);
 
-  const students = useMemo((): Array<Student & { classId: string; rollNo: string }> => {
+  const students = ((): Array<Student & { classId: string; rollNo: string }> => {
     if (!exam) return [];
     const classIds = new Set(exam.classIds);
     const enrollmentByStudent = new Map(
@@ -82,9 +79,9 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
           rollNo: student.grNumber ?? "",
         };
       });
-  }, [exam, resolvedStudents, enrollments]);
+  })();
 
-  const filteredStudents = useMemo(() => {
+  const filteredStudents = (() => {
     if (!searchQuery.trim()) return students;
     const query = searchQuery.toLowerCase();
     return students.filter(
@@ -92,7 +89,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
         (s.name && s.name.toLowerCase().includes(query)) ||
         (s.rollNo && s.rollNo.toLowerCase().includes(query)),
     );
-  }, [students, searchQuery]);
+  })();
 
   // Pre-fill from existing results using useEffect to avoid state-setting side effects in render/memo
   React.useEffect(() => {
@@ -105,14 +102,14 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
     setSaved(false);
   }, [selectedExam, exam, results]);
 
-  const hasInvalidMarks = useMemo(() => {
+  const hasInvalidMarks = (() => {
     if (!exam) return false;
     return Object.values(marks).some((m) => {
       if (m === "" || m === undefined) return false;
       const num = Number(m);
       return isNaN(num) || num < 0 || num > exam.totalMarks;
     });
-  }, [marks, exam]);
+  })();
 
   const handleSave = async () => {
     if (!exam || isSaving || hasInvalidMarks) return;

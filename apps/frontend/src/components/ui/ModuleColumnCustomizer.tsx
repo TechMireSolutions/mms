@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Columns3, Search, RotateCcw, X } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ import type {
 export type { ModuleColumnCustomizerLabels, ModuleColumnCustomizerProps };
 
 /** Per-user Work directory column layout picker (globle1 §3.4). */
-export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer({
+export const ModuleColumnCustomizer = (function ModuleColumnCustomizer({
   columnRegistry,
   updateUserColumnLayout,
   onResetLayout,
@@ -31,7 +31,7 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
   const [dragOver, setDragOver] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const resolvedLabels = useMemo<ModuleColumnCustomizerLabels>(() => ({
+  const resolvedLabels = (() => ({
     trigger: labels?.trigger ?? t('common.columns.trigger'),
     title: labels?.title ?? t('common.columns.title'),
     visibleAndOrder: labels?.visibleAndOrder ?? t('common.columns.visibleAndOrder'),
@@ -45,24 +45,18 @@ export const ModuleColumnCustomizer = React.memo(function ModuleColumnCustomizer
     hideAll: labels?.hideAll ?? t('common.columns.hideAll'),
     visibleCount: labels?.visibleCount ?? ((visible: number, total: number) => t('common.columns.visibleCount', { visible, total })),
     noMatches: labels?.noMatches ?? t('common.columns.noMatches'),
-  }), [labels, t]);
+  }))() as ModuleColumnCustomizerLabels;
 
-  const visibleColumns = useMemo(
-    () =>
+  const visibleColumns = (() =>
       [...columnRegistry]
         .filter((column) => column.enabled)
         .sort((firstColumn, secondColumn) => firstColumn.order - secondColumn.order)
-        .filter((column) => !searchQuery || column.label.toLowerCase().includes(searchQuery.toLowerCase())),
-    [columnRegistry, searchQuery],
-  );
+        .filter((column) => !searchQuery || column.label.toLowerCase().includes(searchQuery.toLowerCase())))();
 
-  const hiddenColumns = useMemo(
-    () =>
+  const hiddenColumns = (() =>
       [...columnRegistry]
         .filter((column) => !column.enabled)
-        .filter((column) => !searchQuery || column.label.toLowerCase().includes(searchQuery.toLowerCase())),
-    [columnRegistry, searchQuery],
-  );
+        .filter((column) => !searchQuery || column.label.toLowerCase().includes(searchQuery.toLowerCase())))();
 
   const toggle = (columnKey: string): void => {
     const updated = columnRegistry.map((column) => {

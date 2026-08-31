@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type React from 'react';
 import { apiContract } from '@/lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { LlmConfig } from '@mms/shared';
+import type { LlmConfig, LlmTestResult } from '@mms/shared';
 import type { SandboxMessage } from './llmSettingsTypes';
 
 export function useLlmSettingsSandbox(configs: LlmConfig[]) {
@@ -37,7 +37,7 @@ export function useLlmSettingsSandbox(configs: LlmConfig[]) {
     }));
 
     try {
-      const { status, body } = await apiContract.ai.test({
+      const res = await apiContract.ai.test({
         body: {
           prompt: promptText,
           systemInstruction: sandboxSystemInstruction.trim() || undefined,
@@ -45,14 +45,17 @@ export function useLlmSettingsSandbox(configs: LlmConfig[]) {
           messages: historyForApi,
         },
       });
+      const status = res.status;
+      const body = res.body as LlmTestResult;
 
       if (status === 200 && body.success && body.response) {
+        const responseText = body.response;
         setSandboxMessages((prev) => [
           ...prev,
           {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content: body.response as string,
+            content: responseText,
             metrics: body.metrics,
           },
         ]);
@@ -62,18 +65,18 @@ export function useLlmSettingsSandbox(configs: LlmConfig[]) {
           {
             id: crypto.randomUUID(),
             role: 'assistant',
-            content: body?.message || t('settings.llmTestConnectionError'),
+            content: body.message || t('settings.llmTestConnectionError'),
             error: true,
           },
         ]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setSandboxMessages((prev) => [
         ...prev,
         {
           id: crypto.randomUUID(),
           role: 'assistant',
-          content: err.message || t('settings.llmSendFailed'),
+          content: (err instanceof Error ? err.message : undefined) || t('settings.llmSendFailed'),
           error: true,
         },
       ]);

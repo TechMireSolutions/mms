@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import type { Message, StandardMessagingRecipient as MessagingRecipient } from '@mms/shared';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { notify } from '@/lib/notify';
@@ -35,7 +35,7 @@ export function useMessagingWorkTierBulkActions({
 }: UseMessagingWorkTierBulkActionsParams) {
   const [exporting, setExporting] = useState(false);
 
-  const handleBulkResendLogs = useCallback((targetLogs: Message[], targetChannel?: 'whatsapp' | 'sms' | 'email'): void => {
+  const handleBulkResendLogs = ((targetLogs: Message[], targetChannel?: 'whatsapp' | 'sms' | 'email'): void => {
     if (targetLogs.length === 0) return;
     const selectedRecipients: MessagingRecipient[] = targetLogs.map((log) => {
       const rec = getRecipient(log.contactId);
@@ -52,7 +52,7 @@ export function useMessagingWorkTierBulkActions({
       const first = targetLogs[0];
       if (first) onResend(first, selectedRecipients[0]!);
     }
-  }, [getRecipient, getRecipientName, onBulkResend, onResend]);
+  });
 
   const handleExportLogs = async (): Promise<void> => {
     if (!canWrite || exporting) return;

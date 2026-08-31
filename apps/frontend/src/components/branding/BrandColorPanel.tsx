@@ -1,10 +1,11 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { ArrowLeftRight, Copy, Upload, Wand2 } from 'lucide-react';
 import {
   BRANDING_HARMONY_SCHEMES,
   brandingTokenToHex,
   buildBrandingCssVariables,
   suggestHarmoniousSecondaryColor,
+  type AppTranslationKey,
   type BrandingHarmonyScheme,
   type BrandingThemeMode,
 } from '@mms/shared';
@@ -41,10 +42,7 @@ export default function BrandColorPanel({
   const [harmonyScheme, setHarmonyScheme] = useState<BrandingHarmonyScheme>('split-complementary');
   const [isImporting, setIsImporting] = useState(false);
 
-  const tokens = useMemo(
-    () => buildBrandingCssVariables(primaryColor, secondaryColor, previewMode),
-    [primaryColor, secondaryColor, previewMode],
-  );
+  const tokens = (() => buildBrandingCssVariables(primaryColor, secondaryColor, previewMode))();
 
   const onPrimaryBg = brandingTokenToHex(tokens['--primary'] ?? '', primaryColor);
   const onPrimaryFg = brandingTokenToHex(tokens['--primary-foreground'] ?? '', '#ffffff');
@@ -156,7 +154,7 @@ export default function BrandColorPanel({
               <SelectContent>
                 {BRANDING_HARMONY_SCHEMES.map((scheme) => (
                   <SelectItem key={scheme.id} value={scheme.id} className="text-xs">
-                    {t(scheme.labelKey as any)}
+                    {t(scheme.labelKey as AppTranslationKey)}
                   </SelectItem>
                 ))}
               </SelectContent>

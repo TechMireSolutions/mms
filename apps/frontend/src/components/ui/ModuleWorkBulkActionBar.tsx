@@ -1,4 +1,4 @@
-import React, { useMemo, type JSX, type ReactNode } from "react";
+import React, { type JSX, type ReactNode } from "react";
 import { Trash2 } from "lucide-react";
 import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
 import {
@@ -47,7 +47,7 @@ export interface ModuleWorkBulkActionBarProps {
 }
 
 /** Shared Work bulk selection chrome — Contacts/Students compose labels + slots. */
-export const ModuleWorkBulkActionBar = React.memo(function ModuleWorkBulkActionBar({
+export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
   selectedCount,
   viewingDeleted,
   countLabel,
@@ -62,12 +62,9 @@ export const ModuleWorkBulkActionBar = React.memo(function ModuleWorkBulkActionB
   extraActions,
   deleteAction,
 }: ModuleWorkBulkActionBarProps): JSX.Element {
-  const trailingNode = useMemo(
-    () => (
+  const trailingNode = (() => (
       <BulkSelectionClearAction label={deselectLabel} onClick={onClearSelection} />
-    ),
-    [deselectLabel, onClearSelection],
-  );
+    ))();
 
   return (
     <BulkSelectionBar

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import {
   DEFAULT_GLOBAL_SETTINGS,
@@ -51,12 +51,12 @@ export default function TwoFactorAuth(): React.JSX.Element {
     });
   }, []);
 
-  const maskedEmail = useMemo(() => {
+  const maskedEmail = (() => {
     const email = user?.email ?? "";
     return email ? maskEmail(email) : t("auth.maskedEmailFallback");
-  }, [user?.email, t]);
+  })();
 
-  const twoFactorSubtitleKey = useMemo(() => {
+  const twoFactorSubtitleKey = (() => {
     switch (resolveNotificationChannel(settings)) {
       case "sms":
         return "auth.twoFactorSubtitleSms" as const;
@@ -65,7 +65,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
       default:
         return "auth.twoFactorSubtitleEmail" as const;
     }
-  }, [settings]);
+  })();
 
   const [code, setCode] = useState(createEmptyOtp);
   const [loading, setLoading] = useState(false);

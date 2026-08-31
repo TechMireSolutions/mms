@@ -1,4 +1,3 @@
-import { useMemo, useCallback } from "react";
 import { DEFAULT_COLUMN_REGISTRY, type ColumnRegistryEntry } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -25,7 +24,7 @@ export function useContactsToolbarModel(): ContactsListFiltersModel {
     useContactConfig();
   const { t } = useTranslation();
 
-  const sortOptions = useMemo<ContactsListFiltersSortOption[]>(() => {
+  const sortOptions = (() => {
     const dynamicSorts: ContactsListFiltersSortOption[] = availableColumns
       .filter((column): column is typeof column & { sortField: string } => Boolean(column.sortField))
       .map((column) => ({
@@ -41,14 +40,13 @@ export function useContactsToolbarModel(): ContactsListFiltersModel {
     });
 
     return combined;
-  }, [availableColumns, systemSortOptions]);
+  })() as ContactsListFiltersSortOption[];
 
-  const handleResetColumnLayout = useCallback(() => {
+  const handleResetColumnLayout = (() => {
     updateUserColumnLayout(DEFAULT_COLUMN_REGISTRY);
-  }, [updateUserColumnLayout]);
+  });
 
-  const columnCustomizerLabels = useMemo<ModuleColumnCustomizerLabels>(
-    () => ({
+  const columnCustomizerLabels = (() => ({
       trigger: t("contacts.columns"),
       title: t("contacts.columns"),
       visibleAndOrder: t("contacts.visibleAndOrder"),
@@ -57,9 +55,7 @@ export function useContactsToolbarModel(): ContactsListFiltersModel {
       hideColumn: (label: string) => t("contacts.hideColumn", { label }),
       reset: t("contacts.resetLayout"),
       searchPlaceholder: t("contacts.searchColumnsPlaceholder"),
-    }),
-    [t],
-  );
+    }))() as ModuleColumnCustomizerLabels;
 
   return {
     t,

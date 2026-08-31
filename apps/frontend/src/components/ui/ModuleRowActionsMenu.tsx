@@ -45,7 +45,7 @@ export interface ModuleRowActionsMenuProps {
  * delete / restore items; modules inject their own extras (messaging channels)
  * and translated labels, so Contacts and Students no longer fork the menu shell.
  */
-export const ModuleRowActionsMenu = React.memo(function ModuleRowActionsMenu({
+export const ModuleRowActionsMenu = (function ModuleRowActionsMenu({
   triggerLabel,
   viewLabel,
   editLabel,

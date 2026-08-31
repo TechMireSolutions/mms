@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Calendar } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -30,7 +30,7 @@ interface SessionFormProps {
   onSave: (session: Session) => void | Promise<void>;
 }
 
-export const SessionForm = React.memo(function SessionForm({
+export const SessionForm = (function SessionForm({
       open = true,
       session,
       onClose,
@@ -130,28 +130,22 @@ export const SessionForm = React.memo(function SessionForm({
         }
       };
 
-      const sessionTypeOptions = useMemo(
-        (): SessionSelectOption[] =>
+      const sessionTypeOptions = ((): SessionSelectOption[] =>
           typeOptions.map((typeOption) => {
             const translationKey = SESSION_TYPE_LABEL_KEYS[typeOption];
             return {
               value: typeOption,
               label: translationKey ? t(translationKey) : typeOption,
             };
-          }),
-        [typeOptions, t],
-      );
+          }))();
 
-      const statusOptions = useMemo(
-        (): SessionSelectOption[] =>
+      const statusOptions = ((): SessionSelectOption[] =>
           statusValues.map((statusOption) => {
             const translationKey = `sessions.statuses.${statusOption}` as AppTranslationKey;
             const translated = t(translationKey);
             const label = translated === translationKey ? toTitleCase(statusOption) : translated;
             return { value: statusOption, label };
-          }),
-        [statusValues, t],
-      );
+          }))();
 
       return (
         <FormModal

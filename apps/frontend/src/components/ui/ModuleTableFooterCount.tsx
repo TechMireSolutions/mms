@@ -13,7 +13,7 @@ export interface ModuleTableFooterCountProps {
  * Work table footer count bar shared by Contacts, Students, and Teachers.
  * Shows the selected-count + page-count combo, or just the page count when nothing is selected.
  */
-export const ModuleTableFooterCount = React.memo(function ModuleTableFooterCount({
+export const ModuleTableFooterCount = (function ModuleTableFooterCount({
   selectedCount,
   selectedCountLabel,
   pageCountLabel,

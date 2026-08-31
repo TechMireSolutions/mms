@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   DEFAULT_EMAIL_INTEGRATION,
   listEmailProviderPresets,
@@ -14,7 +14,7 @@ import {
 
 export function useEmailIntegrationPanel() {
   const { t } = useTranslation();
-  const providers = useMemo(() => listEmailProviderPresets(), []);
+  const providers = (() => listEmailProviderPresets())();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);

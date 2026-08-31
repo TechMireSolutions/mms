@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
 import { useBrandPalette } from '@/lib/contexts/BrandingPaletteContext';
@@ -34,7 +34,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
   const { primary, secondary, charts } = useBrandPalette();
-  const pieColors = useMemo(() => [...charts], [charts]);
+  const pieColors = (() => [...charts])();
   const { data: serverMetrics } = useAccountingMetrics();
 
   const {

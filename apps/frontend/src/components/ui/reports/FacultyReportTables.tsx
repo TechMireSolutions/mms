@@ -19,7 +19,7 @@ import { FacultyReportWorkloadTable } from "@/components/ui/reports/FacultyRepor
 
 import type { TeacherReportTablesProps } from "./teacherReportTypes";
 
-export const FacultyReportTables = React.memo(function FacultyReportTables({
+export const FacultyReportTables = (function FacultyReportTables({
   activeSubTab,
   teachers,
   statusBadgeConfig,

@@ -22,7 +22,7 @@ export interface ReportChartCardProps {
  * Standardized chart card wrapper for all module report views.
  * Ensures zero-CLS ResponsiveContainer initialization, theme stripe inset, and consistent typography.
  */
-export const ReportChartCard = React.memo(function ReportChartCard({
+export const ReportChartCard = (function ReportChartCard({
   title,
   subtitle,
   action,

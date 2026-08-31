@@ -55,7 +55,7 @@ function getActiveLabel(state: unknown): string | null {
   return typeof activeLabel === "string" && activeLabel.length > 0 ? activeLabel : null;
 }
 
-export const AcademicReportCharts = React.memo(function AcademicReportCharts({
+export const AcademicReportCharts = (function AcademicReportCharts({
   academicResults,
   classRankings,
   onToggleStudentFilter,

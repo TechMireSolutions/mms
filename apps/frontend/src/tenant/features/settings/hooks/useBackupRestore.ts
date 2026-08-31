@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import {
   BACKUP_UPLOAD_MAX_BYTES,
   DEFAULT_BACKUP_HISTORY,
@@ -29,10 +28,7 @@ export function useBackupRestore({
   const storagePrefix = getWorkspaceLocalStoragePrefix();
   const tenantLabel = branding.madrasaName?.trim() || subdomain || 'workspace';
 
-  const errorDescription = useCallback(
-    (message: string): string => (isBackupErrorKey(message) ? t(message) : message),
-    [t],
-  );
+  const errorDescription = ((message: string): string => (isBackupErrorKey(message) ? t(message) : message));
 
   const exportActions = useBackupRestoreExport({
     subdomain,

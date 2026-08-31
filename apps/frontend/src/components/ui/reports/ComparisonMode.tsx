@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { GitCompare, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
@@ -26,13 +26,10 @@ export default function ComparisonMode({ category, onClose }: ComparisonModeProp
   const [valB, setValB] = useState<string>("s2");
   const [rangeA, setRangeA] = useState<DateRange>(() => ({ from: `${currentYear - 1}-01-01`, to: `${currentYear - 1}-03-31` }));
   const [rangeB, setRangeB] = useState<DateRange>(() => ({ from: `${currentYear}-01-01`, to: `${currentYear}-03-31` }));
-  const modeTabs = useMemo(
-    () => [
+  const modeTabs = (() => [
       { key: "sessions" as const, label: t("reports.comparison.sessions") },
       { key: "daterange" as const, label: t("reports.comparison.dateRanges") },
-    ],
-    [t],
-  );
+    ])();
 
   const { sessionsOptions, comparisonData, labelA, labelB } = useComparisonModeData({
     category,

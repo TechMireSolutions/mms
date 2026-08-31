@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES } from '@mms/shared';
 import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,12 +19,12 @@ export function usePlatformSessionTimeout({
 }: PlatformSessionTimeoutOptions): void {
   const { t } = useTranslation();
 
-  const handleTimeout = useCallback((): void => {
+  const handleTimeout = ((): void => {
     notify.info(t('platform.sessionEndedTitle'), {
       description: t('platform.sessionEndedDesc'),
     });
     onTimeout();
-  }, [onTimeout, t]);
+  });
 
   useIdleTimer({
     enabled,

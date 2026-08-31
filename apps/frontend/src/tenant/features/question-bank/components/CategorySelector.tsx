@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { createQuestionCategory, type AppTranslationKey, type QuestionCategory } from '@mms/shared';
@@ -46,13 +46,13 @@ export function CategorySelector({
   const [showCreate, setShowCreate] = useState(false);
   const selectedIds = toSelectedIds(value);
 
-  const filtered = useMemo(() => {
+  const filtered = (() => {
     const searchQuery = search.trim().toLowerCase();
     if (!searchQuery) return categories;
     return categories.filter(
       (category) => category.name.toLowerCase().includes(searchQuery) || category.id.toLowerCase().includes(searchQuery),
     );
-  }, [categories, search]);
+  })();
 
   const applySelection = (nextIds: string[]): void => {
     if (multiple) {

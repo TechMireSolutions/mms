@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   SYSTEM_MODULE_NAV,
   SYSTEM_MODULES,
@@ -93,7 +93,7 @@ export default function ModuleSettingsNavGrid({
 
   const requiredLabel = t('module.system.required');
 
-  const blocks = useMemo(() => {
+  const blocks = (() => {
     const moduleLabel = (mod: ModuleDefinition): string =>
       translateSystemModuleLabel(mod.id, language, mod.label);
     const moduleDesc = (mod: ModuleDefinition): string =>
@@ -161,14 +161,14 @@ export default function ModuleSettingsNavGrid({
     flushStandalone();
 
     return nodes;
-  }, [enabledModules, grantedModules, language, onToggleModule, requiredLabel, t]);
+  })();
 
-  const moduleStats = useMemo(() => {
+  const moduleStats = (() => {
     const availableModules = SYSTEM_MODULES.filter(mod => !grantedModules || grantedModules[mod.id] !== false);
     const total = availableModules.length;
     const enabled = availableModules.filter((moduleDefinition) => enabledModules[moduleDefinition.id] !== false).length;
     return { total, enabled };
-  }, [enabledModules, grantedModules]);
+  })();
 
   return (
     <>

@@ -17,7 +17,7 @@ export type ExaminationFormFieldsProps = Pick<
   "t" | "errors" | "examDraft" | "classes" | "updateDraft" | "getFieldError"
 >;
 
-export const ExaminationFormFields = React.memo(function ExaminationFormFields({
+export const ExaminationFormFields = (function ExaminationFormFields({
   t,
   errors,
   examDraft,

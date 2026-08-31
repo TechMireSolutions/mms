@@ -9,7 +9,6 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiContract, tsrClient } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import {
   CONTACTS_DUPLICATES_QUERY_KEY,
   CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
@@ -65,15 +64,12 @@ export function useContactsWidgetAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
 
-  const queries = useMemo(
-    () =>
+  const queries = (() =>
       widgets
         .filter((widget) => widget.collection === 'contacts')
-        .map((widget) => contactsWidgetQueryFromWidget(widget)),
-    [widgets],
-  );
+        .map((widget) => contactsWidgetQueryFromWidget(widget)))();
 
-  const querySignature = useMemo(() => {
+  const querySignature = (() => {
     return JSON.stringify(
       [...queries]
         .sort((a, b) => a.id.localeCompare(b.id))
@@ -85,7 +81,7 @@ export function useContactsWidgetAggregates(
           xAxis: query.xAxisField,
         })),
     );
-  }, [queries]);
+  })();
 
   const query = useQuery({
     queryKey: [...CONTACTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,

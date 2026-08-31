@@ -26,12 +26,12 @@ vi.mock("./EligibilityCheck", () => ({
 }));
 
 describe("EnrollmentsWorkTier Component", () => {
-  it("renders list view when activeSubTab is 'list'", () => {
+  it("renders directory view when activeSubTab is 'directory'", () => {
     const html = renderToStaticMarkup(
       <EnrollmentsWorkTier
-        activeSubTab="list"
+        activeSubTab="directory"
         subTabs={[
-          { id: "list", label: "Directory" },
+          { id: "directory", label: "Directory" },
           { id: "eligibility", label: "Eligibility" },
         ]}
         enrollments={[]}
@@ -79,7 +79,7 @@ describe("EnrollmentsWorkTier Component", () => {
       />,
     );
 
-    expect(html).toContain("Active: list");
+    expect(html).toContain("Active: directory");
     expect(html).toContain("Bulk Action Bar");
     expect(html).toContain("Enrollments List");
   });

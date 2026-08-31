@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface DragCoordinate {
   x: number;
@@ -63,13 +63,10 @@ export function useAvatarCropperCanvas(src: string) {
     setDragStart({ x: event.clientX - offset.x, y: event.clientY - offset.y });
   };
 
-  const onMouseMove = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement>): void => {
+  const onMouseMove = ((event: React.MouseEvent<HTMLCanvasElement>): void => {
       if (!dragging || !dragStart) return;
       setOffset({ x: event.clientX - dragStart.x, y: event.clientY - dragStart.y });
-    },
-    [dragging, dragStart],
-  );
+    });
 
   const onMouseUp = (): void => {
     setDragging(false);
@@ -81,14 +78,11 @@ export function useAvatarCropperCanvas(src: string) {
     setDragStart({ x: touch.clientX - offset.x, y: touch.clientY - offset.y });
   };
 
-  const onTouchMove = useCallback(
-    (event: React.TouchEvent<HTMLCanvasElement>): void => {
+  const onTouchMove = ((event: React.TouchEvent<HTMLCanvasElement>): void => {
       if (!dragging || !dragStart) return;
       const touch = event.touches[0];
       setOffset({ x: touch.clientX - dragStart.x, y: touch.clientY - dragStart.y });
-    },
-    [dragging, dragStart],
-  );
+    });
 
   const resetTransform = (): void => {
     setScale(1);

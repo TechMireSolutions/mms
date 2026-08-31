@@ -6,11 +6,11 @@ import { normalizeAccountingModulePreferences } from "@mms/shared";
 const api = createModuleSetupConfigApi<AccountingModulePreferences>({
   fetchPreferencesFn: async (signal) => {
     const res = await apiContract.accounting.getPreferences({ query: undefined, extraHeaders: {} });
-    return (res.body as any).preferences;
+    return (res.body as { preferences: AccountingModulePreferences }).preferences;
   },
   savePreferencesFn: async (prefs) => {
-    const res = await apiContract.accounting.updatePreferences({ body: prefs as any });
-    return (res.body as any).preferences;
+    const res = await apiContract.accounting.updatePreferences({ body: prefs });
+    return (res.body as { preferences: AccountingModulePreferences }).preferences;
   },
   normalizePrefs: normalizeAccountingModulePreferences as (prefs: unknown) => AccountingModulePreferences,
 });

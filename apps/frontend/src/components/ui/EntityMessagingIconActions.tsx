@@ -47,7 +47,7 @@ export interface EntityMessagingIconActionsProps {
 /**
  * Dense icon-only Call / WhatsApp / SMS / Email row for directory cards and network links.
  */
-export const EntityMessagingIconActions = React.memo(function EntityMessagingIconActions({
+export const EntityMessagingIconActions = (function EntityMessagingIconActions({
   primaryPhone,
   primaryEmail,
   labels,

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useStudentsContractList } from '@/tenant/features/students/hooks/useStudentsTsrHooks';
 import { useTeachersContractList } from '@/tenant/features/teachers/hooks/useTeachersTsrHooks';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -48,7 +48,7 @@ export function RegistryPersonSelect({
 
   const excludeIdsKey = excludeIds.join(',');
 
-  const options = useMemo<Array<{ id: string | number; name?: string | null }>>(() => {
+  const options = (() => {
     const rows = (kind === 'student'
       ? (studentPage?.body?.students ?? [])
       : (teacherPage?.body?.teachers ?? [])) as Array<{ id: string | number; name?: string | null }>;
@@ -56,7 +56,7 @@ export function RegistryPersonSelect({
     return rows
       .filter((row: { id: string | number; name?: string | null }) => !excluded.has(String(row.id)))
       .sort((a: { id: string | number; name?: string | null }, b: { id: string | number; name?: string | null }) => (a.name ?? '').localeCompare(b.name ?? ''));
-  }, [kind, studentPage, teacherPage, excludeIdsKey]);
+  })() as Array<{ id: string | number; name?: string | null }>;
 
   const hasMore = kind === 'student'
     ? Boolean(studentPage?.body?.hasMore)
@@ -74,7 +74,7 @@ export function RegistryPersonSelect({
   const searchInputId = `person-search-${sanitizedId}`;
   const searchInputName = `personSearchQuery-${sanitizedId}`;
 
-  const selectOptions = useMemo(() => {
+  const selectOptions = (() => {
     const list = options.map((row) => ({
       value: String(row.id),
       label: row.name ?? String(row.id),
@@ -83,7 +83,7 @@ export function RegistryPersonSelect({
       list.unshift({ value, label: value });
     }
     return list;
-  }, [value, valueInOptions, options]);
+  })();
 
   return (
     <div className="space-y-1.5">

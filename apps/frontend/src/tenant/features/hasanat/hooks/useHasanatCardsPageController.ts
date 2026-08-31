@@ -1,11 +1,11 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { LayoutDashboard, Package, Send, Gift } from 'lucide-react';
-import { HASANAT_MODULE_MANIFEST, resolveModuleTierTab, toMessagingRecipient, type AppTranslationKey } from '@mms/shared';
+import { HASANAT_MODULE_MANIFEST, resolveModuleTierTab, toMessagingRecipient, type AppTranslationKey, type Denomination, type StockBatch, type Distribution } from '@mms/shared';
 import { useHasanatDistributionColumnLayout } from '@/tenant/features/hasanat/hooks/useHasanatDistributionColumnLayout';
 import { useHasanatRedemptionColumnLayout } from '@/tenant/features/hasanat/hooks/useHasanatRedemptionColumnLayout';
 import {
@@ -34,35 +34,32 @@ export function useHasanatCardsPageController() {
     canEditSetup,
   } = useModulePermissions(HASANAT_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const SETUP_TABS = useMemo(
-    () => HASANAT_MODULE_MANIFEST.setupSubTabs.map((id) => ({
+  const SETUP_TABS = (() => HASANAT_MODULE_MANIFEST.setupSubTabs.map((id) => ({
       id,
       label: t(SETUP_TAB_LABEL_KEYS[id]),
-    })),
-    [t],
-  );
-  const SUB_TABS = useMemo(
-    () => [
+    })))();
+  const SUB_TABS = (() => [
       { id: 'overview' as const, label: t('hasanat.tabs.overview'), icon: LayoutDashboard },
       { id: 'stock' as const, label: t('hasanat.tabs.stock'), icon: Package },
       { id: 'distribute' as const, label: t('hasanat.tabs.distribute'), icon: Send },
       { id: 'redemptions' as const, label: t('hasanat.tabs.redemptions'), icon: Gift },
-    ],
-    [t],
-  );
+    ])();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('hasanat_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const [configSubTab, setConfigSubTab] = useState<string>('denominations');
   const [showDeleted, setShowDeleted] = useState(false);
   const [createDistributeKey, setCreateDistributeKey] = useState(0);
-  const [activeDistribution, setActiveDistribution] = useState<any>(null);
+  const [activeDistribution, setActiveDistribution] = useState<Distribution | null>(null);
 
   const denomsResult = useHasanatDenoms();
   const batchesResult = useHasanatBatches();
   const distributionsResult = useHasanatDistributions({ includeDeleted: showDeleted });
-  const denoms = Array.isArray(denomsResult.data?.body) ? denomsResult.data.body : (denomsResult.data?.body as any)?.denoms ?? [];
-  const batches = Array.isArray(batchesResult.data?.body) ? batchesResult.data.body : (batchesResult.data?.body as any)?.batches ?? [];
-  const distributions = Array.isArray(distributionsResult.data?.body) ? distributionsResult.data.body : (distributionsResult.data?.body as any)?.distributions ?? [];
+  const denomsEnvelope = denomsResult.data?.body as Denomination[] | { denoms?: Denomination[] } | null;
+  const batchesEnvelope = batchesResult.data?.body as StockBatch[] | { batches?: StockBatch[] } | null;
+  const distributionsEnvelope = distributionsResult.data?.body as Distribution[] | { distributions?: Distribution[] } | null;
+  const denoms = Array.isArray(denomsEnvelope) ? denomsEnvelope : denomsEnvelope?.denoms ?? [];
+  const batches = Array.isArray(batchesEnvelope) ? batchesEnvelope : batchesEnvelope?.batches ?? [];
+  const distributions = Array.isArray(distributionsEnvelope) ? distributionsEnvelope : distributionsEnvelope?.distributions ?? [];
 
   const {
     replaceDenoms,
@@ -91,12 +88,12 @@ export function useHasanatCardsPageController() {
     bulkRestoreDistributions,
   });
 
-  const notifySaveFailure = useCallback((error: unknown) => {
+  const notifySaveFailure = ((error: unknown) => {
     if (error instanceof NotifiedMutationError) return;
     notify.error(t('hasanat.saveFailed'), {
       description: error instanceof Error ? error.message : String(error),
     });
-  }, [t]);
+  });
 
   const handleMessageDistributions = (channel: 'sms' | 'whatsapp' | 'email', distList: Array<{ id: string; recipientName?: string; phone?: string; email?: string }>) => {
     if (!canWriteMessaging) return;

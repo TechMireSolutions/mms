@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import type { FiscalYear } from "@mms/shared";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ReportDataGridContainer } from "@/tenant/components/moduleReports";
-import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -21,6 +20,7 @@ import {
 import PinnedWidgets from "@/components/ui/reports/PinnedWidgets";
 
 type ViewType = "income" | "balance" | "cashflow";
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 /**
  * FinancialReports component.
@@ -64,7 +64,7 @@ export function FinancialReports(): React.JSX.Element {
     cashInflow,
     cashOutflow,
     tb,
-  } = useMemo(() => {
+  } = (() => {
     const agg = aggregatesResult.data;
     if (agg && agg.trialBalance) {
       return {
@@ -92,7 +92,7 @@ export function FinancialReports(): React.JSX.Element {
       cashOutflow: 0,
       tb: [] as Array<{ id: string; code: string; name: string; type: string; totalDebit: number; totalCredit: number; balance: number }>,
     };
-  }, [aggregatesResult.data]);
+  })();
 
   const getRowsByAccountType = (type: string) => tb.filter((trialBalanceRow) => trialBalanceRow.type === type);
 
@@ -105,14 +105,14 @@ export function FinancialReports(): React.JSX.Element {
   const payablesRow = tb.find((trialBalanceRow) => trialBalanceRow.code === "2000");
   const payablesChange = payablesRow ? payablesRow.totalCredit - payablesRow.totalDebit : 0;
 
-  const exportColumns = useMemo<ExportColumn[]>(() => [
+  const exportColumns = (() => [
     { header: t("accounting.reports.export.section"), key: "section" },
     { header: t("accounting.reports.export.code"), key: "code" },
     { header: t("accounting.reports.export.account"), key: "account" },
     { header: t("accounting.reports.export.amount"), key: "amount" },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const exportRows = useMemo(() => {
+  const exportRows = (() => {
     const rows: Record<string, string>[] = [];
     if (view === "income") {
       getRowsByAccountType("Revenue").forEach((trialBalanceRow) =>
@@ -172,7 +172,7 @@ export function FinancialReports(): React.JSX.Element {
       rows.push({ section: t("accounting.reports.views.cashflow"), code: "", account: t("accounting.reports.totalExpenses"), amount: formatCurrency(cashOutflow) });
     }
     return rows;
-  }, [view, tb, revenue, expenses, netSurplus, assets, liabilities, equityRows, equityTotal, depreciationAdjustment, receivablesChange, payablesChange, netCashFlow, cashInflow, cashOutflow, t, formatCurrency]);
+  })();
 
   if (isError) {
     return (

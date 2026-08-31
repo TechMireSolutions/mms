@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ComposedChart, Bar, Line, Area, XAxis, YAxis,
@@ -33,10 +32,10 @@ export function RevenueChartPlot({
   const navigate = useNavigate();
   const { formatCurrency } = useFinanceCurrency();
 
-  const formatYAxisTick = useCallback((value: number) => {
+  const formatYAxisTick = ((value: number) => {
     if (value === 0) return formatCurrency(0);
     return `${formatCurrency(Math.round(value / 1000))}k`;
-  }, [formatCurrency]);
+  });
 
   return (
     <SafeResponsiveContainer height={200}>

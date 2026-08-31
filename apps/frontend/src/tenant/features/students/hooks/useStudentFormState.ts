@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useContactMutations } from "@/tenant/hooks/collections/contacts";
@@ -33,10 +33,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const lookupMutation = useStudentLookupMutation();
 
   const formInstanceId = String(student?.id ?? "new");
-  const fields = useMemo(
-    () => (settings.fields || {}) as Record<string, FieldDefinition[]>,
-    [settings.fields],
-  );
+  const fields = (() => (settings.fields || {}) as Record<string, FieldDefinition[]>)();
 
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<import("@mms/shared").ValidationError[]>([]);
@@ -52,8 +49,8 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const [activeTab, setActiveTab] = useState("basic");
   const grManuallyEdited = useRef(false);
 
-  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
-  const statusSelectOptions = useMemo((): StudentStatusSelectOption[] => {
+  const statusBadgeConfig = (() => studentStatusBadgeConfig(t))();
+  const statusSelectOptions = ((): StudentStatusSelectOption[] => {
     const resolved = [...resolveStudentStatuses(configStatuses)];
     const current = studentDraft.status || "active";
     if (current && !resolved.includes(current)) resolved.unshift(current);
@@ -61,7 +58,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
       value: status,
       label: studentStatusLabel(t, status),
     }));
-  }, [configStatuses, studentDraft.status, t]);
+  })();
 
   const handleUpdateStatuses = async (nextStatuses: string[]) => {
     await lookupMutation.mutateAsync({ kind: "statuses", items: nextStatuses });
@@ -81,15 +78,15 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
 
   const isDirty = studentDraftSnapshot(studentDraft) !== baselineSnapshot;
 
-  const enabledTabs = useMemo(() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS), [settings.enabledTabs]);
+  const enabledTabs = (() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS))();
 
-  const visibleTabs = useMemo(() => {
+  const visibleTabs = (() => {
     return resolveStudentFormModalTabs(settings.formTabs, enabledTabs, fields).map((tabItem) => ({
       key: tabItem.key,
       icon: tabItem.icon,
       label: resolveRegistryLabel(tabItem, t),
     }));
-  }, [settings.formTabs, enabledTabs, fields, t]);
+  })();
 
   useEffect(() => {
     const normalized = normalizeStudentFormModalTab(activeTab);

@@ -61,7 +61,7 @@ export function useMarkAttendancePersistence({
     buildOfflinePayload(filters.classId, filters.date, rows, typeof geo === 'object' ? geo : null, role),
   [filters.classId, filters.date, geo, role, rows]);
 
-  const handleSaveDraft = useCallback(async () => {
+  const handleSaveDraft = (async () => {
     if (isOffline) {
       queueOfflinePayload(currentOfflinePayload());
       setIsDraft(true);
@@ -79,9 +79,9 @@ export function useMarkAttendancePersistence({
         description: error instanceof Error ? error.message : String(error),
       });
     }
-  }, [buildRecords, currentOfflinePayload, filters.classId, filters.date, isOffline, persistBatch, queueOfflinePayload, role, rows, setIsDraft, t]);
+  });
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = (async () => {
     const payload = currentOfflinePayload();
     if (isOffline) {
       queueOfflinePayload(payload);
@@ -100,9 +100,9 @@ export function useMarkAttendancePersistence({
         description: error instanceof Error ? error.message : String(error),
       });
     }
-  }, [buildRecords, currentOfflinePayload, filters.classId, filters.date, isOffline, persistBatch, queueOfflinePayload, role, rows, setSubmitted, t]);
+  });
 
-  const handleSync = useCallback(async () => {
+  const handleSync = (async () => {
     if (isOffline) return;
 
     try {
@@ -119,7 +119,7 @@ export function useMarkAttendancePersistence({
         description: error instanceof Error ? error.message : String(error),
       });
     }
-  }, [buildRecords, isOffline, offlineQueue, persistBatch, setOfflineQueue, setSyncedMsg, t]);
+  });
 
   return { handleSaveDraft, handleSubmit, handleSync };
 }

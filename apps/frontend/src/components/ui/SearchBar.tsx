@@ -24,8 +24,7 @@ export interface SearchBarProps {
  * SearchBar — consistent search input used across modules with full a11y,
  * virtual keyboard hints, ref forwarding, and animated loading feedback.
  */
-export const SearchBar = React.memo(
-  forwardRef<HTMLInputElement, SearchBarProps>(function SearchBar(
+export const SearchBar = (forwardRef<HTMLInputElement, SearchBarProps>(function SearchBar(
     {
       value,
       onChange,
@@ -110,5 +109,4 @@ export const SearchBar = React.memo(
         )}
       </div>
     );
-  }),
-);
+  }));

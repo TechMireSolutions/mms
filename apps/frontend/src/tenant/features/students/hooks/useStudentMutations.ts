@@ -33,11 +33,11 @@ export function useStudentMutations() {
     bulkRestoreStudents: bulkRestoreStudentsMutation,
     bulkUpdateStudentStatus: bulkUpdateStudentStatusMutation,
     logExportAudit: {
-      mutateAsync: (payload: any) => logExportAuditMutation.mutateAsync({ body: payload }),
+      mutateAsync: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) => logExportAuditMutation.mutateAsync({ body: payload }),
       isPending: logExportAuditMutation.isPending,
     },
     logSetupAudit: {
-      mutateAsync: (payload: any) => logSetupAuditMutation.mutateAsync({ body: payload }),
+      mutateAsync: (payload: { area: 'fields' | 'preferences'; summary: string }) => logSetupAuditMutation.mutateAsync({ body: payload }),
       isPending: logSetupAuditMutation.isPending,
     },
   };

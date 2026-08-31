@@ -1,5 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
-import { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { useState, useCallback } from "react";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
@@ -8,6 +7,7 @@ import type {
   ObligationDistribution,
 } from "@/lib/data/obligationsData";
 import type { WakalaTypeManagerProps } from "@/tenant/features/obligations/components/wakalaTypeManagerTypes";
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 interface ModalState {
   mode: "add" | "edit" | "add-dist" | "edit-dist";
@@ -30,17 +30,17 @@ export function useWakalaTypeManager({
   const [deleteDistTargetId, setDeleteDistTargetId] = useState<string | null>(null);
   const emDash = t("obligations.wakala.emDash");
 
-  const distributionTypeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const distributionTypeConfig = (() => ({
     Income: { label: t("obligations.distribution.income"), cls: SEMANTIC_BADGE.success },
     Liability: { label: t("obligations.distribution.liability"), cls: SEMANTIC_BADGE.info },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const getRep = useCallback((repId: string) => reps.find((rep) => rep.id === repId), [reps]);
-  const getMujtahid = useCallback((mujtahidId: string) => mujtahids.find((mujtahid) => mujtahid.id === mujtahidId), [mujtahids]);
-  const getObType = useCallback((obligationTypeId: string) => obligationTypes.find((obligationType) => obligationType.id === obligationTypeId), [obligationTypes]);
+  const getRep = ((repId: string) => reps.find((rep) => rep.id === repId));
+  const getMujtahid = ((mujtahidId: string) => mujtahids.find((mujtahid) => mujtahid.id === mujtahidId));
+  const getObType = ((obligationTypeId: string) => obligationTypes.find((obligationType) => obligationType.id === obligationTypeId));
   const getDistributions = useCallback((wakalaTypeId: string) => distributions.filter((distribution) => distribution.wakala_type_id === wakalaTypeId), [distributions]);
-  const totalPct = useCallback((wakalaTypeId: string) =>
-    getDistributions(wakalaTypeId).reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0), [getDistributions]);
+  const totalPct = ((wakalaTypeId: string) =>
+    getDistributions(wakalaTypeId).reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0));
 
   const handleSaveWakala = async (form: Partial<WakalaType>) => {
     if (modal?.mode === "add") {

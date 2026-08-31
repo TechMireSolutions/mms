@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { DASHBOARD_MODULE_MANIFEST } from '@mms/shared';
 import { resolveDashboardRole } from '@/lib/dashboardRole';
 import { getActiveCustomCardIds, getPinnedDashboardWidgetCount } from '@/lib/dashboardCollections';
@@ -17,7 +17,7 @@ export function useDashboardPageController() {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
   const { can } = usePermissions();
-  const dashboardRole = useMemo(() => resolveDashboardRole(can), [can]);
+  const dashboardRole = (() => resolveDashboardRole(can))();
   const globalSettings = useGlobalSettings();
   const enabledModules = globalSettings.enabledModules || {};
 
@@ -77,44 +77,29 @@ export function useDashboardPageController() {
     [openWidgetBuilder],
   );
 
-  const handleSaveWidget = useCallback(
-    async (savedWidget: CustomWidget) => {
+  const handleSaveWidget = (async (savedWidget: CustomWidget) => {
       try {
         await saveWidget(savedWidget);
         closeBuilder();
       } catch {
         // onError already toasted; keep builder open for retry.
       }
-    },
-    [closeBuilder, saveWidget],
-  );
+    });
 
-  const handleReorderWidgets = useCallback(
-    (reorderedWidgets: CustomWidget[]) => {
+  const handleReorderWidgets = ((reorderedWidgets: CustomWidget[]) => {
       const order = reorderedWidgets.map((w, idx) => ({ id: w.id, sortOrder: idx }));
       reorderCustomWidgets(order);
-    },
-    [reorderCustomWidgets],
-  );
+    });
 
-  const handleUpdateThreshold = useCallback(
-    (key: 'lowAttendanceThreshold' | 'urgentAttendanceThreshold', value: number) => {
+  const handleUpdateThreshold = ((key: 'lowAttendanceThreshold' | 'urgentAttendanceThreshold', value: number) => {
       updatePref(key, value);
-    },
-    [updatePref],
-  );
+    });
 
-  const handleUpdateGridMode = useCallback(
-    (mode: 'comfortable' | 'compact') => {
+  const handleUpdateGridMode = ((mode: 'comfortable' | 'compact') => {
       updatePref('gridMode', mode);
-    },
-    [updatePref],
-  );
+    });
 
-  const activeCustomCardIds = useMemo(
-    () => getActiveCustomCardIds(customWidgets, dashboardRole),
-    [customWidgets, dashboardRole],
-  );
+  const activeCustomCardIds = (() => getActiveCustomCardIds(customWidgets, dashboardRole))();
 
   const dashboardMetricCards = useDashboardMetricCards({
     customWidgets,
@@ -124,28 +109,18 @@ export function useDashboardPageController() {
     t,
   });
 
-  const handleEditCustomCard = useCallback(
-    (customCardId: string) => {
+  const handleEditCustomCard = ((customCardId: string) => {
       const widget = customWidgets.find((dashboardWidget) => dashboardWidget.id === customCardId);
       if (widget) handleEditWidget(widget);
-    },
-    [customWidgets, handleEditWidget],
-  );
+    });
 
-  const visibleDashboardMetricCards = useMemo(
-    () => dashboardMetricCards.filter((dashboardCard) => !disabledCardIds.includes(dashboardCard.id)),
-    [dashboardMetricCards, disabledCardIds],
-  );
+  const visibleDashboardMetricCards = (() => dashboardMetricCards.filter((dashboardCard) => !disabledCardIds.includes(dashboardCard.id)))();
 
   const selectedDashboardCardCount = visibleDashboardMetricCards.length;
 
-  const pinnedDashboardWidgetCount = useMemo(
-    () => getPinnedDashboardWidgetCount(customWidgets),
-    [customWidgets],
-  );
+  const pinnedDashboardWidgetCount = (() => getPinnedDashboardWidgetCount(customWidgets))();
 
-  const notifications = useMemo(
-    () =>
+  const notifications = (() =>
       buildDashboardNotifications(
         dashboardRole,
         {
@@ -161,23 +136,11 @@ export function useDashboardPageController() {
         formatCurrency,
         can,
         { lowAttendanceThreshold, urgentAttendanceThreshold },
-      ),
-    [
-      dashboardRole,
-      financeMetrics,
-      attendanceMetrics,
-      studentMetricsInactive,
-      t,
-      formatCurrency,
-      can,
-      lowAttendanceThreshold,
-      urgentAttendanceThreshold,
-    ],
-  );
+      ))();
 
-  const handleResetCards = useCallback(() => {
+  const handleResetCards = (() => {
     updatePref('disabledCardIds', []);
-  }, [updatePref]);
+  });
 
   return {
     t,

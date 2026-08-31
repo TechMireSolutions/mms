@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useModuleWidgetAggregates } from './useModuleWidgetAggregates';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { CustomCard } from '@/lib/reports/reportMetadata';
@@ -35,8 +35,7 @@ export function useKpiSummaryCustomCards(
 
   const [customCards, setCustomCards] = useState<CustomCard[]>(() => loadCustomCardsForCategory(category));
 
-  const customCardWidgetInputs = useMemo(
-    () => customCards.map((card) => ({
+  const customCardWidgetInputs = (() => customCards.map((card) => ({
       id: card.id,
       collection: card.collection,
       operation: card.operation,
@@ -44,9 +43,7 @@ export function useKpiSummaryCustomCards(
       filterField: card.filterField,
       filterOperator: card.filterOperator,
       filterValue: card.filterValue,
-    })),
-    [customCards],
-  );
+    })))();
 
   const { data: widgetAggregates } = useModuleWidgetAggregates(customCardWidgetInputs);
 
@@ -58,8 +55,7 @@ export function useKpiSummaryCustomCards(
     return () => window.removeEventListener('local-database-update', handleUpdate);
   }, [category]);
 
-  const computedCustomCards = useMemo(
-    (): CategorizedKPIItem[] => computeCustomCardItems(
+  const computedCustomCards = ((): CategorizedKPIItem[] => computeCustomCardItems(
       customCards,
       category,
       t,
@@ -67,14 +63,7 @@ export function useKpiSummaryCustomCards(
         customCards,
         widgetAggregates,
       ),
-    ),
-    [
-      customCards,
-      widgetAggregates,
-      category,
-      t,
-    ],
-  );
+    ))();
 
   return { customCards, setCustomCards, computedCustomCards };
 }

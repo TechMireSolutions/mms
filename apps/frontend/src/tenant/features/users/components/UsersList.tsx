@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ModuleColumnRegistryEntry, SystemUser, UsersListPageResult } from '@mms/shared';
@@ -113,10 +113,7 @@ export function UsersList({
     return formatDate(ts, globalSettings.dateFormat, false);
   };
 
-  const selectedUsers = useMemo(
-    () => users.filter((user) => selectedIds.includes(user.id)),
-    [users, selectedIds],
-  );
+  const selectedUsers = (() => users.filter((user) => selectedIds.includes(user.id)))();
 
   const pageData = workPageData
     ? {

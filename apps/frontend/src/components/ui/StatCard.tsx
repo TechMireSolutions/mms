@@ -23,7 +23,7 @@ export interface StatCardProps {
   isActive?: boolean;
 }
 
-const StatCardTrend = React.memo(function StatCardTrend({ trend }: { trend: number }) {
+const StatCardTrend = (function StatCardTrend({ trend }: { trend: number }) {
   const { t } = useTranslation();
   return (
     <span
@@ -43,7 +43,7 @@ const StatCardTrend = React.memo(function StatCardTrend({ trend }: { trend: numb
   );
 });
 
-export const StatCard = React.memo(function StatCard({
+export const StatCard = (function StatCard({
   label,
   value,
   sub = null,

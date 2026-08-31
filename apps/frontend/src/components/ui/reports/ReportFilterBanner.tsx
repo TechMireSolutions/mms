@@ -1,5 +1,5 @@
-import React, { useMemo } from "react";
-import { ActiveFilterBanner, type ActiveFilterBannerChip, type ActiveFilterBannerAction } from "@/components/ui/ActiveFilterBanner";
+import React from "react";
+import { ActiveFilterBanner, type ActiveFilterBannerAction, type ActiveFilterBannerChip } from '@/components/ui/ActiveFilterBanner';
 
 export interface ReportFilterItem {
   key: string;
@@ -21,28 +21,22 @@ export interface ReportFilterBannerProps {
  * Universal active-filter banner for module reporting tabs.
  * Renders active filter chips and individual or bulk clear buttons.
  */
-export const ReportFilterBanner = React.memo(function ReportFilterBanner({
+export const ReportFilterBanner = (function ReportFilterBanner({
   label,
   filters = [],
   onClearAll,
   clearAllLabel,
 }: ReportFilterBannerProps): React.JSX.Element | null {
-  const activeFilters = useMemo(
-    () => filters.filter((item): item is ReportFilterItem => Boolean(item && item.value && item.value.trim() !== "")),
-    [filters],
-  );
+  const activeFilters = (() => filters.filter((item): item is ReportFilterItem => Boolean(item && item.value && item.value.trim() !== "")))();
 
-  const chips = useMemo<ActiveFilterBannerChip[]>(
-    () =>
+  const chips = (() =>
       activeFilters.map((item) => ({
         key: item.key,
         label: item.label,
         value: item.value as string,
-      })),
-    [activeFilters],
-  );
+      })))() as ActiveFilterBannerChip[];
 
-  const actions = useMemo<ActiveFilterBannerAction[]>(() => {
+  const actions = (() => {
     if (onClearAll && clearAllLabel && activeFilters.length > 1) {
       return [{ key: "clear-all", label: clearAllLabel, onClick: onClearAll }];
     }
@@ -53,7 +47,7 @@ export const ReportFilterBanner = React.memo(function ReportFilterBanner({
         label: item.clearLabel || `Clear ${item.label || item.key}`,
         onClick: item.onClear as () => void,
       }));
-  }, [activeFilters, onClearAll, clearAllLabel]);
+  })() as ActiveFilterBannerAction[];
 
   if (chips.length === 0) {
     return null;

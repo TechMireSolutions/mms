@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { getInitials } from "@mms/shared";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { calcAge } from '@/lib/data/studentsData';
-import { runFullEligibility, suggestClass, CheckResult } from '@/lib/data/enrollmentData';
+import { type CheckResult, runFullEligibility, suggestClass } from '@/lib/data/enrollmentData';
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { WarningCallout } from "@/components/ui/WarningCallout";
@@ -40,10 +40,10 @@ export function EligibilityCheck(): React.JSX.Element {
   const session = sessions.find((sessionOption) => sessionOption.id === sessionId);
   const suggested = student && session ? suggestClass(student, session) : null;
 
-  const checks = useMemo<CheckResult[]>(() => {
+  const checks = (() => {
     if (!student || !session) return [];
     return runFullEligibility(student, session, suggested, []);
-  }, [student, session, suggested]);
+  })() as CheckResult[];
 
   const failCount = checks.filter((check) => check.status === "fail").length;
   const warnCount = checks.filter((check) => check.status === "warn").length;

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import type { ModuleFieldDef, ModuleCustomField } from '@mms/shared';
 import {
   getFlatFieldsConfig,
@@ -38,17 +37,17 @@ export type {
 } from './standardModuleConfigRegistry';
 export { STANDARD_MODULES_CONFIG_REGISTRY } from './standardModuleConfigRegistry';
 
-export function useUsersConfig() {
+export function useUsersConfig(): StandardModuleConfigCore<UsersSettings> {
   const registry = STANDARD_MODULES_CONFIG_REGISTRY.users;
 
   const defaultSettings = registry.defaultSettings as UsersSettings;
   const defaultFieldDefs = registry.defaultFieldDefs as unknown as ModuleFieldDef[];
 
   const settings = defaultSettings;
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(() => (settings.customFields || []) as ModuleCustomField[], [settings.customFields]);
-  const fieldOrder = useMemo(() => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [], [settings.fieldOrder, defaultSettings.fieldOrder]);
-  const orderedFields = useMemo(() => getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields), [defaultFieldDefs, fieldOrder, fields, customFields]);
+  const fields = (() => getFlatFieldsConfig(settings.fields))();
+  const customFields = (() => (settings.customFields || []) as ModuleCustomField[])();
+  const fieldOrder = (() => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [])();
+  const orderedFields = (() => getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields))();
 
   return {
     settings,
@@ -58,11 +57,11 @@ export function useUsersConfig() {
     updateSettings: () => {},
     updateSettingsAsync: async () => {},
     reloadConfig: () => {},
-    mergeSettings: (s: any) => s as UsersSettings,
+    mergeSettings: (draft) => draft as UsersSettings,
     loadSettings: () => settings,
-    isFieldEnabled: (f: any) => fields[f]?.enabled !== false,
-    isFieldRequired: (f: any) => !!fields[f]?.required,
-  } as any;
+    isFieldEnabled: (fieldId) => fields[fieldId]?.enabled !== false,
+    isFieldRequired: (fieldId) => !!fields[fieldId]?.required,
+  };
 }
 
 const useTeacherConfigImpl = createStandardModuleConfigHook<

@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import {
   MESSAGING_MODULE_MANIFEST,
   mergeMessageTemplates,
@@ -28,7 +28,7 @@ export interface MessagingSetupTierProps {
   onDeleteRequest: (templateId: string) => void;
 }
 
-export const MessagingSetupTier = React.memo(function MessagingSetupTier({
+export const MessagingSetupTier = (function MessagingSetupTier({
   canWrite,
   canEditSetup,
   onDeleteRequest,
@@ -59,22 +59,16 @@ export const MessagingSetupTier = React.memo(function MessagingSetupTier({
     },
   });
 
-  const setupTabs = useMemo(
-    () => MESSAGING_MODULE_MANIFEST.setupSubTabs.map((key) => ({ key, label: t("messaging.tabs.templates") })),
-    [t],
-  );
-  const templates = useMemo(() => mergeMessageTemplates(templatesQuery.templates), [templatesQuery.templates]);
-  const filteredTemplates = useMemo(
-    () =>
+  const setupTabs = (() => MESSAGING_MODULE_MANIFEST.setupSubTabs.map((key) => ({ key, label: t("messaging.tabs.templates") })))();
+  const templates = (() => mergeMessageTemplates(templatesQuery.templates))();
+  const filteredTemplates = (() =>
       templates.filter(
         (template) =>
           (!search.trim() ||
             template.label.toLowerCase().includes(search.toLowerCase()) ||
             template.body.toLowerCase().includes(search.toLowerCase())) &&
           (categoryFilter === "all" || (template.category || "general") === categoryFilter),
-      ),
-    [categoryFilter, search, templates],
-  );
+      ))();
 
   const resetForm = (): void => {
     setEditingId(null);

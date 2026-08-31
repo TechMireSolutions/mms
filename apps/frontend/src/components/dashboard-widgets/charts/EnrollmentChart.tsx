@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useBrandedDashboardChartColors } from "@/components/dashboard-widgets/useBrandedDashboardChartColors";
 import {
   ComposedChart, Area, Line, Bar, XAxis, YAxis,
@@ -60,19 +59,20 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
     updatePref,
   } = useDashboardConfig();
 
-  const months = useMemo(() => getRecentMonthsList(12), []);
+  const months = (() => getRecentMonthsList(12))();
   const activeMonths = months.slice(-monthsCount);
 
-  const enrollmentData: EnrollmentPoint[] = useMemo(() => {
-    const trends = (reportAggregates as any)?.body?.cumulativeTrends ?? (reportAggregates as any)?.cumulativeTrends ?? [];
+  const enrollmentData: EnrollmentPoint[] = (() => {
+    const trendsEnvelope = reportAggregates as { body?: { cumulativeTrends?: Array<{ monthKey: string; students: number }> }; cumulativeTrends?: Array<{ monthKey: string; students: number }> } | null;
+    const trends = trendsEnvelope?.body?.cumulativeTrends ?? trendsEnvelope?.cumulativeTrends ?? [];
     const byKey = new Map<string, number>(
-      trends.map((trend: any) => [String(trend.monthKey), Number(trend.students) || 0]),
+      trends.map((trend) => [trend.monthKey, Number(trend.students) || 0]),
     );
     return buildBucketedSeries(activeMonths, byKey, (month, students) => ({
       month: month.label || formatMonthName(`${month.key}-01`),
       students: students ?? 0,
     }));
-  }, [activeMonths, reportAggregates]);
+  })();
 
   const start = enrollmentData[0]?.students || 0;
   const end = enrollmentData[enrollmentData.length - 1]?.students || 0;

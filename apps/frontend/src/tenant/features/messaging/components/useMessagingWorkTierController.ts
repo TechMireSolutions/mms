@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
@@ -107,12 +107,12 @@ export function useMessagingWorkTierController({
 
   const urlLogId = searchParams.get('logId');
 
-  const activeDetailLog = useMemo(() => {
+  const activeDetailLog = (() => {
     if (!urlLogId || logsQuery.logs.length === 0) return null;
     return logsQuery.logs.find((l: Message) => String(l.id) === urlLogId) || null;
-  }, [urlLogId, logsQuery.logs]);
+  })();
 
-  const handleOpenDetail = useCallback((log: Message): void => {
+  const handleOpenDetail = ((log: Message): void => {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
@@ -121,9 +121,9 @@ export function useMessagingWorkTierController({
       },
       { replace: true }
     );
-  }, [setSearchParams]);
+  });
 
-  const handleCloseDetail = useCallback((): void => {
+  const handleCloseDetail = ((): void => {
     setSearchParams(
       (prev) => {
         const next = new URLSearchParams(prev);
@@ -132,9 +132,9 @@ export function useMessagingWorkTierController({
       },
       { replace: true }
     );
-  }, [setSearchParams]);
+  });
 
-  const contactIds = useMemo(() => logsQuery.logs.map((log: Message) => log.contactId), [logsQuery.logs]);
+  const contactIds = (() => logsQuery.logs.map((log: Message) => log.contactId))();
   const { getRecipient } = useMessagingRecipientsByIds(contactIds);
 
   const {
@@ -151,7 +151,7 @@ export function useMessagingWorkTierController({
     return recipient?.name || t('messaging.contactFallback', { id: contactId });
   }, [getRecipient, t]);
 
-  const handleResendLog = useCallback((log: Message): void => {
+  const handleResendLog = ((log: Message): void => {
     const recipient = getRecipient(log.contactId);
     onResend(log, recipient ?? {
       id: log.contactId,
@@ -159,7 +159,7 @@ export function useMessagingWorkTierController({
       phone: '',
       email: '',
     });
-  }, [getRecipient, getRecipientName, onResend]);
+  });
 
   const {
     selectedById,
@@ -199,23 +199,23 @@ export function useMessagingWorkTierController({
     onBulkResend,
   });
 
-  const handleBulkResend = useCallback((targetChannel?: 'whatsapp' | 'sms' | 'email'): void => {
+  const handleBulkResend = ((targetChannel?: 'whatsapp' | 'sms' | 'email'): void => {
     handleBulkResendLogs(selectedList, targetChannel);
-  }, [handleBulkResendLogs, selectedList]);
+  });
 
-  const failedLogs = useMemo(() => logsQuery.logs.filter((l: Message) => l.status === 'failed'), [logsQuery.logs]);
+  const failedLogs = (() => logsQuery.logs.filter((l: Message) => l.status === 'failed'))();
 
-  const activeRecipient = useMemo(() => {
+  const activeRecipient = (() => {
     if (!activeDetailLog) return null;
     return getRecipient(activeDetailLog.contactId);
-  }, [activeDetailLog, getRecipient]);
+  })();
 
-  const handleFilterContact = useCallback((contactName: string): void => {
+  const handleFilterContact = ((contactName: string): void => {
     setSearch(contactName);
     setLogsPage(1);
-  }, []);
+  });
 
-  const filterChips = useMemo(() => buildMessagingWorkFilterChips({
+  const filterChips = (() => buildMessagingWorkFilterChips({
     search: debouncedSearch,
     onSearchChange: setSearch,
     channel,
@@ -232,11 +232,7 @@ export function useMessagingWorkTierController({
     endDate,
     onEndDateChange: setEndDate,
     t,
-  }), [
-    debouncedSearch, channel, status, category, queryStartDate, endDate,
-    channelSelectOptions, statusOptions, categorySelectOptions, t,
-    setSearch, setChannel, setStatus, setCategory, setStartDate, setEndDate
-  ]);
+  }))();
 
   return {
     t,

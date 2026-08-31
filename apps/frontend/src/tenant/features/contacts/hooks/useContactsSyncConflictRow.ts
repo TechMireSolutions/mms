@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { Contact } from "@mms/shared";
 import {
   defaultSyncFieldPicks,
@@ -41,10 +41,10 @@ export function useContactsSyncConflictRow({
     expanded && Boolean(contactId),
   );
 
-  const diffs = useMemo(() => {
+  const diffs = (() => {
     if (!local) return [];
     return diffContactForSync(local, serverContact);
-  }, [local, serverContact]);
+  })();
 
   useEffect(() => {
     if (expanded && !serverLoading && diffs.length > 0 && Object.keys(fieldPicks).length === 0) {
@@ -56,7 +56,7 @@ export function useContactsSyncConflictRow({
     setFieldPicks((prev) => ({ ...prev, [field]: pick }));
   };
 
-  const handleKeepMine = useCallback(async () => {
+  const handleKeepMine = (async () => {
     setApplying(true);
     try {
       requeueContactsSyncConflict(entry.id);
@@ -65,15 +65,15 @@ export function useContactsSyncConflictRow({
     } finally {
       setApplying(false);
     }
-  }, [entry.id, onResolved, t]);
+  });
 
-  const handleUseServer = useCallback(() => {
+  const handleUseServer = (() => {
     dismissContactsSyncConflict(entry.id);
     onResolved();
     notify.info(t("contacts.sync.conflictUseServer"));
-  }, [entry.id, onResolved, t]);
+  });
 
-  const handleApplyMerge = useCallback(async () => {
+  const handleApplyMerge = (async () => {
     if (!local) return;
     setApplying(true);
     try {
@@ -93,19 +93,7 @@ export function useContactsSyncConflictRow({
     } finally {
       setApplying(false);
     }
-  }, [
-    local,
-    serverContact,
-    fieldPicks,
-    entry.kind,
-    entry.id,
-    contactId,
-    upsertContact,
-    updateContact,
-    deleteContact,
-    onResolved,
-    t,
-  ]);
+  });
 
   return {
     expanded,

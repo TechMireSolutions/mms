@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 
 /** Directory filters, trash, and selection SSOT for Users Work (Students-shaped). */
@@ -16,15 +16,15 @@ export function useUsersDirectoryFilters() {
     setSelectedIds([]);
   }, [debouncedSearch, roleFilter, statusFilter, showDeleted]);
 
-  const clearFilters = useCallback(() => {
+  const clearFilters = (() => {
     setSearch('');
     setRoleFilter('all');
     setStatusFilter('all');
-  }, []);
+  });
 
-  const clearSelection = useCallback(() => {
+  const clearSelection = (() => {
     setSelectedIds([]);
-  }, []);
+  });
 
   const hasActiveFilters =
     Boolean(search.trim()) ||

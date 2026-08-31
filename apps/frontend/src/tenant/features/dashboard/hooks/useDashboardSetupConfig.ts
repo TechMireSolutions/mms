@@ -72,7 +72,7 @@ export function useDashboardPreferencesMutation() {
   return tsrClient.dashboard.putPreferences.useMutation({
     onSuccess: (res: { status: number; body?: { preferences?: unknown } }) => {
       if (res.status === 200 && res.body?.preferences) {
-        queryClient.setQueryData(DASHBOARD_PREFERENCES_QUERY_KEY, normalizeDashboardPreferences(res.body.preferences as any));
+        queryClient.setQueryData(DASHBOARD_PREFERENCES_QUERY_KEY, normalizeDashboardPreferences(res.body.preferences as Record<string, unknown> | null));
         invalidateDashboardQueries(queryClient);
       }
     },

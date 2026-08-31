@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Settings, Eye } from 'lucide-react';
 import { FormProgressBar } from '@/components/ui/FormProgressBar';
 import type { SubTab } from '@/components/ui/SubTabBar';
@@ -50,35 +50,35 @@ export function useFormModalLayout<K extends string>({
 
   const panelClassName = cn(tall ? 'h-modal-tall max-h-modal-tall' : undefined, panelClassNameProp);
 
-  const effectiveSize = useMemo((): FormModalSize => {
+  const effectiveSize = ((): FormModalSize => {
     const requested = size ?? 'lg';
     if (requested === 'xl') return 'xl';
     if (tall || hasTabs) return 'lg';
     return requested;
-  }, [size, tall, hasTabs]);
+  })();
 
-  const activeIndex = useMemo(() => {
+  const activeIndex = (() => {
     if (!tabs || !activeTab) return -1;
     return tabs.findIndex((tab) => tab.key === activeTab);
-  }, [tabs, activeTab]);
+  })();
 
-  const computedProgress = useMemo(() => {
+  const computedProgress = (() => {
     if (progress !== undefined) return progress;
     if (hasTabs && activeIndex !== -1 && tabs) {
       return Math.round(((activeIndex + 1) / tabs.length) * 100);
     }
     return domProgress;
-  }, [progress, hasTabs, activeIndex, tabs, domProgress]);
+  })();
 
-  const computedProgressLabel = useMemo(() => {
+  const computedProgressLabel = (() => {
     if (progressLabel !== undefined) return progressLabel;
     if (hasTabs && activeIndex !== -1 && tabs) {
       return `${activeIndex + 1}/${tabs.length}`;
     }
     return domLabel;
-  }, [progressLabel, hasTabs, activeIndex, tabs, domLabel]);
+  })();
 
-  const resolvedHeaderExtra = useMemo(() => {
+  const resolvedHeaderExtra = (() => {
     if (computedProgress === undefined) return headerExtra;
     const bar = <FormProgressBar value={computedProgress} label={computedProgressLabel} />;
     if (!headerExtra) return bar;
@@ -88,9 +88,9 @@ export function useFormModalLayout<K extends string>({
         {headerExtra}
       </div>
     );
-  }, [headerExtra, computedProgress, computedProgressLabel]);
+  })();
 
-  const headerActions = useMemo(() => {
+  const headerActions = (() => {
     if (!showBuilderToggle || !onBuilderModeChange) return null;
     return (
       <Button
@@ -112,7 +112,7 @@ export function useFormModalLayout<K extends string>({
         )}
       </Button>
     );
-  }, [showBuilderToggle, builderMode, onBuilderModeChange, t]);
+  })();
 
   return {
     hasTabs,

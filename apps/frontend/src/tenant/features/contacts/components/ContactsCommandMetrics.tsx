@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Users, Filter, Clock, AlertTriangle } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactsMetrics } from "@/tenant/features/contacts/hooks/useContacts";
@@ -27,15 +27,15 @@ export function ContactsCommandMetrics({
   const { t } = useTranslation();
   const { data: serverMetrics } = useContactsMetrics();
 
-  const metrics = useMemo(() => ({
+  const metrics = (() => ({
     total: serverMetrics?.total ?? 0,
     newThisPeriod: serverMetrics?.newThisPeriod ?? 0,
     whatsappCount: serverMetrics?.whatsappCount ?? 0,
     incompleteCount: serverMetrics?.incompleteCount ?? 0,
     duplicatePairCount: serverMetrics?.duplicatePairCount ?? 0,
-  }), [serverMetrics]);
+  }))();
 
-  const items = useMemo(() => [
+  const items = (() => [
     { icon: Users, label: t("contacts.metrics.total"), value: metrics.total, accent: "primary" as const },
     { icon: Filter, label: t("contacts.metrics.filtered"), value: shown, accent: "info" as const },
     {
@@ -52,16 +52,7 @@ export function ContactsCommandMetrics({
       accent: "destructive" as const,
       onClick: conflictCount > 0 ? onReviewConflicts : undefined,
     },
-  ], [
-    t,
-    shown,
-    pendingCount,
-    conflictCount,
-    flushing,
-    onFlushPending,
-    onReviewConflicts,
-    metrics,
-  ]);
+  ])();
 
   return <ModuleCommandMetricsGrid items={items} />;
 }

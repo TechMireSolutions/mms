@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { User, Calendar } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { STUDENTS_MODULE_MANIFEST } from "@mms/shared";
@@ -26,11 +26,8 @@ export interface Step1SelectStudentProps {
 export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1SelectStudentProps): React.JSX.Element {
   const { t } = useTranslation();
   const [search, setSearch] = useState<string>("");
-  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
-  const genderConfig = useMemo(
-    () => genderStatusBadgeConfig(t),
-    [t],
-  );
+  const statusBadgeConfig = (() => studentStatusBadgeConfig(t))();
+  const genderConfig = (() => genderStatusBadgeConfig(t))();
 
   const { data: studentPage, isFetching } = useStudentsContractList({
     page: 1,
@@ -45,7 +42,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
     selectedId && !valueInPage ? [selectedId] : [],
   );
 
-  const students = useMemo(() => {
+  const students = (() => {
     const rows = (studentPage?.body?.students ?? []) as unknown as Student[];
     if (value && !rows.some((student) => String(student.id) === String(value.id))) {
       return [value, ...rows];
@@ -54,7 +51,7 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
       return [resolvedSelected[0], ...rows];
     }
     return rows;
-  }, [studentPage, value, resolvedSelected]);
+  })();
 
   const sessionName = (sessionId: string): string => sessions.find((session) => session.id === sessionId)?.name || sessionId;
   const hasMore = Boolean(studentPage?.body?.hasMore);

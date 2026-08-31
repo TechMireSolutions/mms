@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { UserCheck, Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
-import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { TableCellLink } from "@/components/ui/TableCellLink";
 import {
@@ -18,6 +17,7 @@ import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 
 import type { AttendanceSummaryItem, RateBarRenderer, StudentAttendanceItem } from "./attendanceReportTypes";
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 interface AttendanceReportTablesProps {
   summary: AttendanceSummaryItem[];
@@ -26,7 +26,7 @@ interface AttendanceReportTablesProps {
   onToggleClassFilter: (className: string) => void;
 }
 
-export const AttendanceReportTables = React.memo(function AttendanceReportTables({
+export const AttendanceReportTables = (function AttendanceReportTables({
   summary,
   studentAttendanceRows,
   rateBar,
@@ -34,23 +34,23 @@ export const AttendanceReportTables = React.memo(function AttendanceReportTables
 }: AttendanceReportTablesProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const summaryColumns = useMemo<ExportColumn[]>(() => [
+  const summaryColumns = (() => [
     { key: "class", header: t("attendance.report.colClass") },
     { key: "total", header: t("attendance.report.colTotalStudents") },
     { key: "avgRate", header: t("attendance.report.colAvgRate") },
     { key: "perfectAttendance", header: t("attendance.report.colPerfectAttendance") },
     { key: "belowThreshold", header: t("attendance.report.colBelowThreshold") },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const summaryRows = useMemo(() => summary.map((summaryRow) => ({
+  const summaryRows = (() => summary.map((summaryRow) => ({
     class: summaryRow.class,
     total: summaryRow.total,
     avgRate: `${summaryRow.avgRate}%`,
     perfectAttendance: summaryRow.perfectAttendance,
     belowThreshold: summaryRow.belowThreshold,
-  })), [summary]);
+  })))();
 
-  const studentColumns = useMemo<ExportColumn[]>(() => [
+  const studentColumns = (() => [
     { key: "studentName", header: t("attendance.report.colStudent") },
     { key: "class", header: t("attendance.report.colStudentClass") },
     { key: "present", header: t("attendance.report.colPresent") },
@@ -58,9 +58,9 @@ export const AttendanceReportTables = React.memo(function AttendanceReportTables
     { key: "late", header: t("attendance.report.colLate") },
     { key: "total", header: t("attendance.report.colTotal") },
     { key: "rate", header: t("attendance.report.colRate") },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const studentRows = useMemo(() => studentAttendanceRows.map((studentAttendance) => ({
+  const studentRows = (() => studentAttendanceRows.map((studentAttendance) => ({
     studentName: studentAttendance.studentName,
     class: studentAttendance.class,
     present: studentAttendance.present,
@@ -68,14 +68,11 @@ export const AttendanceReportTables = React.memo(function AttendanceReportTables
     late: studentAttendance.late,
     total: studentAttendance.total,
     rate: `${studentAttendance.rate}%`,
-  })), [studentAttendanceRows]);
+  })))();
 
   const [studentPage, setStudentPage] = useState(1);
   const studentPageSize = 15;
-  const pagedStudentAttendanceRows = useMemo(
-    () => studentAttendanceRows.slice((studentPage - 1) * studentPageSize, studentPage * studentPageSize),
-    [studentAttendanceRows, studentPage, studentPageSize],
-  );
+  const pagedStudentAttendanceRows = (() => studentAttendanceRows.slice((studentPage - 1) * studentPageSize, studentPage * studentPageSize))();
 
   return (
     <div className="space-y-6">

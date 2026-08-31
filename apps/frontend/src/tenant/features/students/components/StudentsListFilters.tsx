@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import type { StudentsQuickFilter } from "@mms/shared";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -67,16 +66,13 @@ export function StudentsListFilters({
 }: StudentsListFiltersProps) {
   const { t } = useTranslation();
 
-  const sortOptions = useMemo(
-    () =>
+  const sortOptions = (() =>
       getStudentVisibleWorkColumns(columnLayout.columnRegistry, columnLayout.isColumnVisible)
         .map((col) => {
           const field = toStudentsListContentSortField(col.key);
           return field ? { field, label: col.label } : null;
         })
-        .filter((option): option is { field: StudentsListContentSortField; label: string } => option !== null),
-    [columnLayout],
-  );
+        .filter((option): option is { field: StudentsListContentSortField; label: string } => option !== null))();
 
   return (
     <ModuleWorkToolbar

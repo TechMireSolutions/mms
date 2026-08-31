@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   createQuestionSourceBook,
@@ -49,10 +49,7 @@ export function QuestionSourcesTab({
   const [editingBookId, setEditingBookId] = useState<string | null>(null);
   const [draftBook, setDraftBook] = useState<QuestionSourceBook | null>(null);
 
-  const fieldById = useMemo(
-    () => new Map(orderedSourceFields.map((field) => [field.id, field])),
-    [orderedSourceFields],
-  );
+  const fieldById = (() => new Map(orderedSourceFields.map((field) => [field.id, field])))();
 
   const citationEntries = citations.length > 0 ? citations : [{ bookId: '', citation: {} }];
 

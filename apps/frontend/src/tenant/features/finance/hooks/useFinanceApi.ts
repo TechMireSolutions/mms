@@ -31,7 +31,13 @@ const FINANCE_API = FINANCE_MODULE_MANIFEST.restBasePath;
 
 
 
-export function useFinanceInvoicesPaginated(query: FinanceListQuery, options?: { enabled?: boolean }): Omit<any, 'data'> & { data: FinanceInvoicesListPageResult | undefined } {
+/** Contract list hooks return the TanStack Query envelope; `data` is narrowed to the parsed page shape. */
+export type FinancePaginatedQueryResult<TPage> = Omit<
+  UseQueryResult<{ status: number; body: unknown; headers: Headers }>,
+  'data'
+> & { data: TPage | undefined };
+
+export function useFinanceInvoicesPaginated(query: FinanceListQuery, options?: { enabled?: boolean }): FinancePaginatedQueryResult<FinanceInvoicesListPageResult> {
   const { isAuthenticated } = useAuth();
   const enabled = (options?.enabled ?? true) && isAuthenticated;
   
@@ -50,7 +56,7 @@ export function useFinanceInvoicesPaginated(query: FinanceListQuery, options?: {
   };
 }
 
-export function useFinancePaymentsPaginated(query: FinanceListQuery, options?: { enabled?: boolean }): Omit<any, 'data'> & { data: FinancePaymentsListPageResult | undefined } {
+export function useFinancePaymentsPaginated(query: FinanceListQuery, options?: { enabled?: boolean }): FinancePaginatedQueryResult<FinancePaymentsListPageResult> {
   const { isAuthenticated } = useAuth();
   const enabled = (options?.enabled ?? true) && isAuthenticated;
   
@@ -104,6 +110,7 @@ import {
   useFinanceContractBulkDeletePayments,
 } from '@/tenant/features/finance/hooks/useFinanceTsrHooks';
 import { useQueryClient } from '@tanstack/react-query';
+import type { MutateOptions, UseQueryResult } from '@tanstack/react-query';
 
 export function useFinanceMutations() {
   const queryClient = useQueryClient();
@@ -128,71 +135,71 @@ export function useFinanceMutations() {
   return {
     createInvoice: {
       ...createInvoice,
-      mutate: (invoice: InvoiceCreateInput, opts?: any) => createInvoice.mutate({ body: invoice }, opts),
+      mutate: (invoice: InvoiceCreateInput, opts?: MutateOptions) => createInvoice.mutate({ body: invoice }, opts),
       mutateAsync: (invoice: InvoiceCreateInput) => createInvoice.mutateAsync({ body: invoice }),
     },
     updateInvoice: {
       ...updateInvoice,
-      mutate: ({ id, invoice }: { id: string; invoice: Invoice }, opts?: any) =>
+      mutate: ({ id, invoice }: { id: string; invoice: Invoice }, opts?: MutateOptions) =>
         updateInvoice.mutate({ params: { id }, body: invoice }, opts),
       mutateAsync: ({ id, invoice }: { id: string; invoice: Invoice }) =>
         updateInvoice.mutateAsync({ params: { id }, body: invoice }),
     },
     deleteInvoice: {
       ...deleteInvoice,
-      mutate: (id: string, opts?: any) => deleteInvoice.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => deleteInvoice.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => deleteInvoice.mutateAsync({ params: { id } }),
     },
     restoreInvoice: restoreInvoice ? {
       ...restoreInvoice,
-      mutate: (id: string, opts?: any) => restoreInvoice.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => restoreInvoice.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => restoreInvoice.mutateAsync({ params: { id } }),
     } : null,
     bulkDeleteInvoices: {
       ...bulkDeleteInvoices,
-      mutate: (ids: string[], opts?: any) => bulkDeleteInvoices.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkDeleteInvoices.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkDeleteInvoices.mutateAsync({ body: { ids } }),
     },
     bulkRestoreInvoices: bulkRestoreInvoices ? {
       ...bulkRestoreInvoices,
-      mutate: (ids: string[], opts?: any) => bulkRestoreInvoices.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkRestoreInvoices.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestoreInvoices.mutateAsync({ body: { ids } }),
     } : null,
     bulkUpdateInvoiceStatus: {
       ...bulkUpdateInvoiceStatus,
-      mutate: (body: InvoicesBulkStatusBody, opts?: any) => bulkUpdateInvoiceStatus.mutate({ body }, opts),
+      mutate: (body: InvoicesBulkStatusBody, opts?: MutateOptions) => bulkUpdateInvoiceStatus.mutate({ body }, opts),
       mutateAsync: (body: InvoicesBulkStatusBody) => bulkUpdateInvoiceStatus.mutateAsync({ body }),
     },
     createPayment: {
       ...createPayment,
-      mutate: (payment: PaymentCreateInput, opts?: any) => createPayment.mutate({ body: payment }, opts),
+      mutate: (payment: PaymentCreateInput, opts?: MutateOptions) => createPayment.mutate({ body: payment }, opts),
       mutateAsync: (payment: PaymentCreateInput) => createPayment.mutateAsync({ body: payment }),
     },
     updatePayment: {
       ...updatePayment,
-      mutate: ({ id, payment }: { id: string; payment: Payment }, opts?: any) =>
+      mutate: ({ id, payment }: { id: string; payment: Payment }, opts?: MutateOptions) =>
         updatePayment.mutate({ params: { id }, body: payment }, opts),
       mutateAsync: ({ id, payment }: { id: string; payment: Payment }) =>
         updatePayment.mutateAsync({ params: { id }, body: payment }),
     },
     deletePayment: {
       ...deletePayment,
-      mutate: (id: string, opts?: any) => deletePayment.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => deletePayment.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => deletePayment.mutateAsync({ params: { id } }),
     },
     restorePayment: restorePayment ? {
       ...restorePayment,
-      mutate: (id: string, opts?: any) => restorePayment.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => restorePayment.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => restorePayment.mutateAsync({ params: { id } }),
     } : null,
     bulkDeletePayments: {
       ...bulkDeletePayments,
-      mutate: (ids: string[], opts?: any) => bulkDeletePayments.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkDeletePayments.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkDeletePayments.mutateAsync({ body: { ids } }),
     },
     bulkRestorePayments: bulkRestorePayments ? {
       ...bulkRestorePayments,
-      mutate: (ids: string[], opts?: any) => bulkRestorePayments.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkRestorePayments.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestorePayments.mutateAsync({ body: { ids } }),
     } : null,
   };

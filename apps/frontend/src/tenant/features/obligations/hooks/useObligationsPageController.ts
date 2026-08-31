@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -43,13 +43,10 @@ export function useObligationsPageController() {
     canEditSetup,
   } = useModulePermissions(OBLIGATIONS_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const CONFIG_SUB_TABS = useMemo(
-    () => OBLIGATIONS_MODULE_MANIFEST.setupSubTabs.map((id) => ({
+  const CONFIG_SUB_TABS = (() => OBLIGATIONS_MODULE_MANIFEST.setupSubTabs.map((id) => ({
       id,
       label: t(SETUP_TAB_LABEL_KEYS[id]),
-    })),
-    [t],
-  );
+    })))();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('obligations_active_tab', 'work');
   const [activeConfigTab, setActiveConfigTab] = useState('types');
   const [showDeleted, setShowDeleted] = useState(false);
@@ -97,12 +94,12 @@ export function useObligationsPageController() {
 
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
 
-  const notifySaveFailure = useCallback((error: unknown) => {
+  const notifySaveFailure = ((error: unknown) => {
     if (error instanceof NotifiedObligationsMutationError) return;
     notify.error(t('obligations.saveFailed'), {
       description: error instanceof Error ? error.message : String(error),
     });
-  }, [t]);
+  });
 
   const handleMessageCollections = (channel: 'sms' | 'whatsapp' | 'email', collectionList: ObligationCollection[]) => {
     if (!canWriteMessaging) return;

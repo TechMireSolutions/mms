@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { CustomCard } from '@/lib/reports/reportMetadata';
 import {
   loadPreviousCustomCardIds,
@@ -16,10 +16,7 @@ export function useKpiSummaryCardSelection(
 ) {
   const [selectedCardIds, setSelectedCardIds] = useState<string[]>(() => loadSelectedCardIdsForCategory(category, role));
 
-  const availableCardIdsKey = useMemo(
-    () => possibleCards.filter((card) => card.isAvailable).map((card) => card.id).join('\u0000'),
-    [possibleCards],
-  );
+  const availableCardIdsKey = (() => possibleCards.filter((card) => card.isAvailable).map((card) => card.id).join('\u0000'))();
 
   useEffect(() => {
     syncSelectedCardIdsWithAvailable(

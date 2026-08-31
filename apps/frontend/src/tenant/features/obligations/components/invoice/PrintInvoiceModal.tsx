@@ -1,4 +1,4 @@
-import React, { useRef, useMemo } from "react";
+import React, { useRef } from "react";
 import { Printer, FileDown, Settings } from "lucide-react";
 import { loadTemplate, PAGE_SIZES, InvoiceTemplate } from "@/lib/invoiceTemplateStore";
 import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
@@ -38,22 +38,19 @@ export function PrintInvoiceModal({
   const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
   const printRef = useRef<HTMLDivElement>(null);
 
-  const contactIds = useMemo(
-    () => [collection.sender_id, collection.reference_id],
-    [collection.sender_id, collection.reference_id],
-  );
+  const contactIds = (() => [collection.sender_id, collection.reference_id])();
   const liveContacts = useMergedObligationContacts(contactIds);
   const liveUsers = useMergedObligationUsers();
   const currencies = DEFAULT_CURRENCIES;
 
-  const lookups = useMemo(() => ({
+  const lookups = (() => ({
     contacts: liveContacts,
     users: liveUsers,
     currencies,
     obligationTypes,
     mujtahids,
     reps,
-  }), [liveContacts, liveUsers, currencies, obligationTypes, mujtahids, reps]);
+  }))();
 
   const handlePrint = () => {
     const content = printRef.current;

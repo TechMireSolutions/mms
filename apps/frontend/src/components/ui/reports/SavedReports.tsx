@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import { Bookmark, Plus } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -49,7 +49,7 @@ export default function SavedReports({
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const handleSave = useCallback(async () => {
+  const handleSave = (async () => {
     const trimmedName = name.trim();
     if (!trimmedName) return;
 
@@ -68,10 +68,9 @@ export default function SavedReports({
     } finally {
       setSaving(false);
     }
-  }, [name, category, filters, createReport, t]);
+  });
 
-  const handleRun = useCallback(
-    async (report: GenericSavedReport) => {
+  const handleRun = (async (report: GenericSavedReport) => {
       if (!onApplyFilters) return;
 
       try {
@@ -81,21 +80,16 @@ export default function SavedReports({
       } catch {
         notify.error(t("reports.saved.staleWarningTitle"));
       }
-    },
-    [onApplyFilters, runReport, t]
-  );
+    });
 
-  const handleDelete = useCallback(
-    async (id: string) => {
+  const handleDelete = (async (id: string) => {
       try {
         await deleteReport(id);
         notify.info(t("reports.saved.deleteSuccess"));
       } catch {
         notify.error(t("reports.saved.delete"));
       }
-    },
-    [deleteReport, t]
-  );
+    });
 
   return (
     <div className="space-y-4">

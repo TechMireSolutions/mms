@@ -66,6 +66,7 @@ describe("TeachersPageView Component", () => {
         openCreateForm={vi.fn()}
         handleExportCSV={vi.fn()}
         tabPanelProps={{
+          activeTab: "work",
           workTierProps: {} as never,
         }}
         pageOverlaysProps={{} as never}

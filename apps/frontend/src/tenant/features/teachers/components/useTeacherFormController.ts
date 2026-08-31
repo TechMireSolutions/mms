@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/tenant/features/teachers/hooks/useTeachers";
@@ -13,7 +13,6 @@ import {
   resolveTeacherEnabledTabIds,
   resolveTeacherFieldsMapForColumnSync,
 } from "@mms/shared";
-import type { TeacherStatusOption } from "@/tenant/features/teachers/components/TeacherFormSections";
 import {
   getInitialTeacherDraft,
   teacherDraftSnapshot,
@@ -26,6 +25,7 @@ import {
   DUPLICATE_ERROR_KEYS,
 } from "@/tenant/features/teachers/components/teacherFormValidation";
 import { resolveTeacherFormModalTabs } from "@/tenant/features/teachers/components/teacherFormTabs";
+import type { TeacherStatusOption } from '@/tenant/features/teachers/components/TeacherFormSections';
 
 export interface UseTeacherFormControllerOptions {
   teacher?: Teacher;
@@ -46,15 +46,9 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   const autoGenerateId = settings.autoGenerateId !== false;
   const requireContactLink = settings.requireContactLink !== false;
 
-  const fieldsMap = useMemo(
-    () => resolveTeacherFieldsMapForColumnSync(settings.fields),
-    [settings.fields],
-  );
+  const fieldsMap = (() => resolveTeacherFieldsMapForColumnSync(settings.fields))();
 
-  const statusOptions = useMemo<TeacherStatusOption[]>(
-    () => teacherStatusOptions(t, statusValues),
-    [statusValues, t],
-  );
+  const statusOptions = (() => teacherStatusOptions(t, statusValues))() as TeacherStatusOption[];
 
   const statusConfig = useTeacherStatusConfig();
 
@@ -86,18 +80,15 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
 
   const isDirty = teacherDraftSnapshot(teacherDraft) !== baselineSnapshot;
 
-  const enabledTabs = useMemo(
-    () => new Set(resolveTeacherEnabledTabIds(settings)),
-    [settings],
-  );
+  const enabledTabs = (() => new Set(resolveTeacherEnabledTabIds(settings)))();
 
-  const visibleTabs = useMemo(() => {
+  const visibleTabs = (() => {
     return resolveTeacherFormModalTabs(settings.formTabs, enabledTabs).map((tabItem) => ({
       key: tabItem.key,
       icon: tabItem.icon,
       label: resolveRegistryLabel(tabItem, t),
     }));
-  }, [settings.formTabs, enabledTabs, t]);
+  })();
 
   useEffect(() => {
     if (!visibleTabs.some((tabItem) => tabItem.key === activeTab)) {
@@ -109,14 +100,14 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     errors[fieldId] || errors[`custom:${fieldId}`];
 
   /** FormModal error banner — deduped field validation messages (Students parity). */
-  const validationErrorSummary = useMemo(() => {
+  const validationErrorSummary = (() => {
     const messages = Object.values(errors).filter((message) => Boolean(message));
     const reasonMessage = typedDuplicateReason
       ? t(DUPLICATE_ERROR_KEYS[typedDuplicateReason])
       : "";
     if (reasonMessage) messages.push(reasonMessage);
     return messages.length > 0 ? [...new Set(messages)] : undefined;
-  }, [errors, typedDuplicateReason, t]);
+  })();
 
   const { data: linkedContact } = useContactById(
     teacherDraft.contactId ? String(teacherDraft.contactId) : undefined,

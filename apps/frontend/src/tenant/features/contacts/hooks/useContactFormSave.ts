@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
@@ -45,8 +45,7 @@ export function useContactFormSave({
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
-  const handleSave = useCallback(
-    async (options?: { keepOpen?: boolean }): Promise<boolean> => {
+  const handleSave = (async (options?: { keepOpen?: boolean }): Promise<boolean> => {
       setValidationErrors([]);
 
       if (contact && isContactDeleted(contact)) {
@@ -193,21 +192,7 @@ export function useContactFormSave({
       } finally {
         setSaving(false);
       }
-    },
-    [
-      contact,
-      contactDraft,
-      defaultCountryCode,
-      fields,
-      language,
-      onBaselineReset,
-      onClose,
-      onSave,
-      onValidationTab,
-      t,
-      validate,
-    ],
-  );
+    });
 
   return { saving, validationErrors, setValidationErrors, handleSave };
 }

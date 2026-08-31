@@ -15,7 +15,7 @@ export interface DirectoryCardViewButtonProps {
 }
 
 /** Shared outline View control for Work directory entity card footers. */
-export const DirectoryCardViewButton = React.memo(function DirectoryCardViewButton({
+export const DirectoryCardViewButton = (function DirectoryCardViewButton({
   label,
   ariaLabel,
   onClick,

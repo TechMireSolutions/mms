@@ -41,7 +41,7 @@ export function useGrMigration(activeTab: string, canEditSetup: boolean): void {
   const migrationAppliedRef = useRef(false);
 
   const { mutate } = useMutation({
-    mutationFn: () => apiContract.students.migrateGrNumbers({ body: {} }).then((res: any) => res.body as GrMigrationResult),
+    mutationFn: () => apiContract.students.migrateGrNumbers({ body: {} }).then((res) => res.body as GrMigrationResult),
     onSuccess: (result: GrMigrationResult) => {
       invalidateStudentsQueries(queryClient);
       markGrMigrationDone();

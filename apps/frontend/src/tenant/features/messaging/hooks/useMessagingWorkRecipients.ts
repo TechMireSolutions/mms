@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { keepPreviousData, useQuery } from '@tanstack/react-query';
 import type {
   Contact,
@@ -99,8 +98,7 @@ export function useMessagingWorkRecipients(
 
   const data = query.data;
 
-  return useMemo(
-    () => ({
+  return (() => ({
       contacts: data?.contacts ?? [],
       page: data?.page ?? page,
       total: data?.total ?? 0,
@@ -112,7 +110,5 @@ export function useMessagingWorkRecipients(
       refetch: () => {
         void query.refetch();
       },
-    }),
-    [data, page, pageSize, query],
-  );
+    }))();
 }

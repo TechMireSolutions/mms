@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import {
   buildBackupFileName,
   decryptWorkspaceBackup,
@@ -41,8 +40,7 @@ export function useBackupRestoreDecryptActions({
   setSelectedFileName,
   queuePlaintextRestore,
 }: UseBackupRestoreDecryptActionsOptions) {
-  const handleDecryptSubmit = useCallback(
-    async (password: string, email: string): Promise<void> => {
+  const handleDecryptSubmit = (async (password: string, email: string): Promise<void> => {
       if (!pendingDecrypt) return;
       setDecryptLoading(true);
       try {
@@ -77,20 +75,14 @@ export function useBackupRestoreDecryptActions({
       } finally {
         setDecryptLoading(false);
       }
-    },
-    [errorDescription, pendingDecrypt, queuePlaintextRestore, t, setPendingDecrypt, setDecryptLoading, setSelectedFileName],
-  );
+    });
 
-  const processImportFile = useCallback(
-    (file: File | undefined): void => {
+  const processImportFile = ((file: File | undefined): void => {
       if (!file) return;
       processBackupImportFile(file, adminEmail, subdomain, t, setPendingDecrypt);
-    },
-    [adminEmail, subdomain, t, setPendingDecrypt],
-  );
+    });
 
-  const openHistoryRestore = useCallback(
-    (backup: WorkspaceBackupRecord): void => {
+  const openHistoryRestore = ((backup: WorkspaceBackupRecord): void => {
       if (!backup.data) {
         notify.error(t('backup.noData'), { description: t('backup.noDataDesc') });
         return;
@@ -102,12 +94,9 @@ export function useBackupRestoreDecryptActions({
       notify.error(t('backup.restoreFailed'), {
         description: t('backup.encryptedRequired'),
       });
-    },
-    [t, setPendingDecrypt],
-  );
+    });
 
-  const handleDownloadBackup = useCallback(
-    (backup: WorkspaceBackupRecord): void => {
+  const handleDownloadBackup = ((backup: WorkspaceBackupRecord): void => {
       if (!backup.data) {
         notify.error(t('backup.noData'), { description: t('backup.noDataDesc') });
         return;
@@ -119,15 +108,13 @@ export function useBackupRestoreDecryptActions({
           encrypted: backup.encrypted ?? isEncryptedBackupPayload(backup.data),
         });
       triggerFileDownload(new Blob([backup.data], { type: 'application/json' }), fileName);
-    },
-    [subdomain, t],
-  );
+    });
 
-  const handleClearHistory = useCallback((): void => {
+  const handleClearHistory = ((): void => {
     saveCollection('backups', DEFAULT_BACKUP_HISTORY);
     setClearHistoryOpen(false);
     notify.success(t('settings.backupResetToast'), { description: t('settings.backupResetToastDesc') });
-  }, [t, setClearHistoryOpen]);
+  });
 
   return {
     handleDecryptSubmit,

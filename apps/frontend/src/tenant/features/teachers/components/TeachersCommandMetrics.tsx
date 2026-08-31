@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { School, Filter, UserCheck, UserX } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTeachersMetrics } from "@/tenant/features/teachers/hooks/useTeachers";
@@ -11,32 +11,29 @@ export interface TeachersCommandMetricsProps {
   shown: number;
 }
 
-export const TeachersCommandMetrics = React.memo(function TeachersCommandMetrics({
+export const TeachersCommandMetrics = (function TeachersCommandMetrics({
   total,
   shown,
 }: TeachersCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: serverMetrics } = useTeachersMetrics();
-  const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } = useMemo(
-    () => resolveTeacherStatusRoles(),
-    [],
-  );
+  const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } = (() => resolveTeacherStatusRoles())();
 
-  const metrics = useMemo(() => ({
+  const metrics = (() => ({
     total: serverMetrics?.total ?? total,
     active: serverMetrics?.active ?? 0,
     inactive: serverMetrics?.inactive ?? 0,
     onLeave: serverMetrics?.onLeave ?? 0,
     other: serverMetrics?.other ?? 0,
     newThisPeriod: serverMetrics?.newThisPeriod ?? 0,
-  }), [serverMetrics, total]);
+  }))();
 
-  const items = useMemo(() => [
+  const items = (() => [
     { icon: School, label: t("teachers.metrics.total"), value: metrics.total, accent: "primary" as const },
     { icon: Filter, label: t("teachers.metrics.filtered"), value: shown, accent: "info" as const },
     { icon: UserCheck, label: t("teachers.metrics.active"), value: metrics.active, accent: teacherStatusMetricAccent(activeStatus) },
     { icon: UserX, label: t("teachers.metrics.inactive"), value: metrics.inactive, accent: teacherStatusMetricAccent(inactiveStatus) },
-  ], [t, shown, metrics, activeStatus, inactiveStatus]);
+  ])();
 
   return <ModuleCommandMetricsGrid items={items} />;
 });

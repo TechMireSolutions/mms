@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getObject, saveObject } from "@/lib/db";
 import {
@@ -44,15 +44,15 @@ export function usePinnedWidgetsController(category: string) {
     return getObject<Record<string, boolean>>("dashboard_section_settings", DEFAULT_SECTION_SETTINGS);
   });
 
-  const normalizedCategory = useMemo(() => {
+  const normalizedCategory = (() => {
     if (category === "faculty") return "teachers";
     if (category === "finance" || category === "financial") return "financial";
     if (category === "academic" || category === "examinations") return "examinations";
     if (category === "question-bank" || category === "questionBank") return "questionBank";
     return category;
-  }, [category]);
+  })();
 
-  const defaultCollection = useMemo<CustomWidget["collection"]>(() => {
+  const defaultCollection = (() => {
     if (normalizedCategory === "students") return "students";
     if (normalizedCategory === "contacts") return "contacts";
     if (normalizedCategory === "teachers") return "teachers";
@@ -64,9 +64,9 @@ export function usePinnedWidgetsController(category: string) {
     if (normalizedCategory === "questionBank") return "questions";
     if (normalizedCategory === "examinations") return "assessment_results";
     return "students";
-  }, [normalizedCategory]);
+  })() as CustomWidget["collection"];
 
-  const filteredWidgets = useMemo(() => {
+  const filteredWidgets = (() => {
     return widgets.filter((widget) => {
       const widgetCategory = widget.category === "faculty" ? "teachers"
         : widget.category === "finance" ? "financial"
@@ -75,12 +75,12 @@ export function usePinnedWidgetsController(category: string) {
         : widget.category;
       return widgetCategory === normalizedCategory;
     });
-  }, [widgets, normalizedCategory]);
+  })();
 
-  const requiredCollections = useMemo(() => {
+  const requiredCollections = (() => {
     const required = new Set(filteredWidgets.map((widget) => widget.collection));
     return required;
-  }, [filteredWidgets]);
+  })();
   const collections = useWidgetCollections({
     enabled: filteredWidgets.length > 0,
     requiredCollections,

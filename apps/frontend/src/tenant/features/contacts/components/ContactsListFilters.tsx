@@ -26,7 +26,7 @@ export interface ContactsListFiltersProps {
   shownCount?: number;
 }
 
-export const ContactsListFilters = React.memo(function ContactsListFilters({
+export const ContactsListFilters = (function ContactsListFilters({
   search,
   onSearchChange,
   filterGender,

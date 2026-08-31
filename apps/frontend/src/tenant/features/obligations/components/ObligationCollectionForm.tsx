@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { Receipt } from "lucide-react";
 import {
   generateReceiptNo,
@@ -45,8 +45,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
   const [errors, setErrors] = useState<Partial<Record<keyof ObligationCollectionFormState, AppTranslationKey>>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const completeness = useMemo(
-    () =>
+  const completeness = (() =>
       calculateKeyedUnitsCompleteness(form as unknown as Record<string, unknown>, [
         { key: "received_date" },
         { key: "sender_id" },
@@ -55,9 +54,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
         { key: "obligation_type_id" },
         { key: "mujtahid_representative_id" },
         { key: "received_by" },
-      ]),
-    [form],
-  );
+      ]))();
 
   const eligibleRepIds = wakalaTypes
     .filter((wakalaType) => wakalaType.obligation_type_id === form.obligation_type_id)

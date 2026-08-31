@@ -1,7 +1,6 @@
 import {
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   useId,
@@ -61,13 +60,10 @@ export function useContactPickerState({
   const avatarInputId = `${resolvedId}-avatar`;
   const menuStyle = useAnchorMenuStyle(open, anchorRef);
 
-  const normalizedExcludeIds = useMemo(
-    () =>
+  const normalizedExcludeIds = (() =>
       excludeIds
         .filter((excludeId): excludeId is string | number => excludeId != null && String(excludeId).length > 0)
-        .map(String),
-    [excludeIds],
-  );
+        .map(String))();
 
   const debouncedQuery = useDebounce(query, 250);
   const { data: searchPage, isFetching: isSearching } = useContactsContractList({
@@ -83,10 +79,7 @@ export function useContactPickerState({
     serverMode && value != null,
   );
 
-  const directory = useMemo(
-    () => (serverMode ? ((searchPage?.body?.contacts ?? []) as Contact[]) : contacts),
-    [serverMode, searchPage?.body?.contacts, contacts],
-  );
+  const directory = (() => (serverMode ? ((searchPage?.body?.contacts ?? []) as Contact[]) : contacts))();
 
   const closeDropdown = useCallback(() => {
     setQuery("");
@@ -114,18 +107,15 @@ export function useContactPickerState({
 
   const [selectedCache, setSelectedCache] = useState<Contact | null>(null);
 
-  const matches = useMemo(
-    () =>
+  const matches = (() =>
       filterContactsForQuery(directory, {
         search: query,
         gender: filterGender,
         hasPhone,
         excludeIds: normalizedExcludeIds,
-      }).slice(0, PICKER_PAGE_SIZE),
-    [directory, normalizedExcludeIds, hasPhone, filterGender, query],
-  );
+      }).slice(0, PICKER_PAGE_SIZE))();
 
-  const selected = useMemo(() => {
+  const selected = (() => {
     if (value == null) return null;
     const valStr = String(value);
     const matchById = (contact: Contact) => String(contact.id) === valStr;
@@ -137,9 +127,9 @@ export function useContactPickerState({
       directory.find(matchById) ??
       null
     );
-  }, [serverMode, selectedFromServer, contacts, value, directory, selectedCache]);
+  })();
 
-  const handleFileChange = useCallback(async (event: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (async (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
@@ -150,12 +140,12 @@ export function useContactPickerState({
       reportClientError(err, { scope: "ContactPicker.avatar_upload" });
     }
     event.target.value = "";
-  }, [onAvatarChange, t]);
+  });
 
-  const openCreateFlow = useCallback((searchText: string): void => {
+  const openCreateFlow = ((searchText: string): void => {
     setCreateQuery(searchText);
     setCreateOpen(true);
-  }, []);
+  });
 
   return {
     t,

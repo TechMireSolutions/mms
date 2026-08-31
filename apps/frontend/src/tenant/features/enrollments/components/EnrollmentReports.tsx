@@ -1,6 +1,6 @@
-import React, { lazy, Suspense, useMemo } from "react";
+import React, { lazy, Suspense } from "react";
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 import { ReportDataGridContainer } from "@/tenant/components/moduleReports";
-import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import {
   Table,
@@ -42,17 +42,17 @@ export function EnrollmentReports({
 
   const { bySession } = aggregates;
 
-  const exportColumns = useMemo<ExportColumn[]>(() => [
+  const exportColumns = (() => [
     { key: "session", header: t("enrollments.columns.session") },
     { key: "count", header: t("enrollments.metrics.total") },
     { key: "revenue", header: t("enrollments.columns.finalFee") },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const exportRows = useMemo(() => bySession.map((sessionStats) => ({
+  const exportRows = (() => bySession.map((sessionStats) => ({
     session: sessionStats.name,
     count: sessionStats.count,
     revenue: formatCurrency(sessionStats.revenue),
-  })), [bySession, formatCurrency]);
+  })))();
 
   return (
     <section className="space-y-6" aria-label={t("enrollments.reports.aria")}>

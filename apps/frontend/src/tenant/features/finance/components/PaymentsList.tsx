@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Payment } from '@/lib/data/financeData';
 import { PAYMENT_METHOD_BADGE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -6,9 +6,9 @@ import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCu
 import { type AppTranslationKey } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { PaymentsListContent, PAYMENT_TRACKER_COLUMN_KEYS } from "@/tenant/features/finance/components/PaymentsListContent";
 import { PaymentMethodSummary, PaymentSelectionBar } from "@/tenant/features/finance/components/PaymentsListFilters";
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 const METHOD_LABEL_KEYS: Record<string, AppTranslationKey> = {
   Cash: "finance.paymentMethod.cash",
@@ -74,7 +74,7 @@ export function PaymentsList({
     (canDelete ? 2 : 0);
   const allSelected = payments.length > 0 && payments.every((payment) => selectedIds.includes(payment.id));
 
-  const methodConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => {
+  const methodConfig = (() => {
     const entries = Object.keys(PAYMENT_METHOD_BADGE).map((method) => [
       method,
       {
@@ -83,7 +83,7 @@ export function PaymentsList({
       },
     ] as const);
     return Object.fromEntries(entries);
-  }, [t]);
+  })() as Record<string, StatusBadgeConfigItem>;
 
   return (
     <section aria-label={t("finance.payments")} className="space-y-4">

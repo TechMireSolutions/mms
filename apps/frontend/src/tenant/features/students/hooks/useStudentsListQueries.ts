@@ -1,7 +1,6 @@
-import { STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
+import { STUDENTS_MODULE_MANIFEST, type Student, type StudentsListQuery } from "@mms/shared";
 import { apiContract, tsrClient } from "@/lib/api";
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import {
   STUDENTS_QUERY_KEY,
   type StudentRecord,
@@ -9,7 +8,7 @@ import {
   type StudentsPaginatedParams,
 } from "@/tenant/features/students/hooks/studentsQueryKeys";
 
-/** Fetches all pages matching Work filters for export (globle1 §8). */
+/** Fetches all pages matching Work filters for export (server-paged walk). */
 export async function fetchAllStudentsForQuery(
   params: Omit<StudentsPaginatedParams, "page" | "enabled">,
   onProgress?: (fetched: number, total: number) => void,
@@ -20,9 +19,8 @@ export async function fetchAllStudentsForQuery(
   let total = 0;
 
   for (;;) {
-    const response = await apiContract.students.list({
-      query: { ...(params as any), page, limit }
-    });
+    const listQuery: StudentsListQuery & { page: number; limit: number } = { ...params, page, limit };
+    const response = await apiContract.students.list({ query: listQuery });
     const studentsPage = response.body as StudentsListPageResult;
     all.push(...(studentsPage.students as StudentRecord[]));
     total = studentsPage.total;
@@ -47,18 +45,18 @@ export function useStudentLinkedContactIds(excludeId?: string, enabled = true) {
     staleTime: 30_000,
   });
   
-  return { ...query, data: (query.data?.body as any)?.contactIds as Array<string | number> | undefined };
+  return { ...query, data: (query.data?.body as { contactIds?: Array<string | number> } | null)?.contactIds };
 }
 
 export function useStudentsByIds(ids: (string | number | null | undefined)[]) {
   const { isAuthenticated } = useAuth();
-  const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
+  const normalized = (() => uniqueRegistryIds(ids))();
   
   const query = useQuery({
     queryKey: [...STUDENTS_QUERY_KEY, 'resolve', normalized.join(',')] as const,
     queryFn: async () => {
       const res = await apiContract.students.resolve({ body: { ids: normalized } });
-      return (res.body as any)?.students as Student[] | undefined;
+      return (res.body as { students?: Student[] } | null)?.students;
     },
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,

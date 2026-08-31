@@ -13,7 +13,7 @@ export const financeSetupConfigApi = createModuleSetupConfigApi<FinanceModulePre
     // Implement save
     return prefs as FinanceModulePreferences;
   },
-  normalizePrefs: (prefs: unknown) => normalizeFinanceModulePreferences(prefs as any),
+  normalizePrefs: (prefs: unknown) => normalizeFinanceModulePreferences(prefs as Record<string, unknown>),
 });
 
 export const fetchFinancePreferences = financeSetupConfigApi.fetchPreferences;

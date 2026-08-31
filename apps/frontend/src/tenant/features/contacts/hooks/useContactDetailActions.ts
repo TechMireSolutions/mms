@@ -1,4 +1,4 @@
-import { useCallback, type Dispatch, type FormEvent, type SetStateAction } from "react";
+import { type Dispatch, type FormEvent, type SetStateAction } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { type Contact, type ContactActivity, todayISO } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -30,8 +30,7 @@ export function useContactDetailActions({
   const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const handleAddNote = useCallback(
-    async (event: FormEvent): Promise<void> => {
+  const handleAddNote = (async (event: FormEvent): Promise<void> => {
       event.preventDefault();
       const trimmed = noteText.trim();
       if (!trimmed || !canPersistContact || !onUpdateContact) return;
@@ -60,12 +59,9 @@ export function useContactDetailActions({
         setNoteText(trimmed);
         notify.error(t("contacts.detail.noteSaveFailed"));
       }
-    },
-    [canPersistContact, contactState, noteText, onUpdateContact, setContactState, setNoteText, t, user?.name],
-  );
+    });
 
-  const handleNavigateToContact = useCallback(
-    (targetId: string | number): void => {
+  const handleNavigateToContact = ((targetId: string | number): void => {
       const target = allContacts.find((contact) => String(contact.id) === String(targetId));
       if (target) {
         setContactState(target);
@@ -86,9 +82,7 @@ export function useContactDetailActions({
         .catch(() => {
           notify.error(t("contacts.detail.loadFailed"));
         });
-    },
-    [allContacts, queryClient, setContactState, t],
-  );
+    });
 
   return {
     handleAddNote,

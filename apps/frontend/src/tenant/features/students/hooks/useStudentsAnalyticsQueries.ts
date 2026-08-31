@@ -9,7 +9,6 @@ import {
 import { useServerMetrics } from "@/hooks/useServerMetrics";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useQuery } from '@tanstack/react-query';
-import { useMemo } from 'react';
 import {
   STUDENTS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
@@ -37,15 +36,15 @@ export function useStudentNextGrNumber(params: StudentNextGrNumberParams) {
     staleTime: 15_000,
   });
 
-  return { ...query, data: (query.data?.body as any)?.grNumber as string | undefined };
+  return { ...query, data: (query.data?.body as { grNumber?: string } | null)?.grNumber };
 }
 
 export async function checkStudentRegistrationDuplicate(
   input: StudentDuplicateCheckInput,
 ): Promise<StudentDuplicateReason | null> {
-  const res = await apiContract.students.duplicateCheck({ body: input as any });
+  const res = await apiContract.students.duplicateCheck({ body: input });
   if (res.status !== 200) throw new Error("Duplicate check failed");
-  return (res.body as any)?.reason ?? null;
+  return (res.body as { reason?: StudentDuplicateReason | null } | null)?.reason ?? null;
 }
 
 export function useStudentsMetrics(options?: { enabled?: boolean }) {
@@ -63,15 +62,12 @@ export function useStudentsWidgetAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
 
-  const queries = useMemo(
-    () =>
+  const queries = (() =>
       widgets
         .filter((widget) => widget.collection === 'students')
-        .map((widget) => studentsWidgetQueryFromWidget(widget)),
-    [widgets],
-  );
+        .map((widget) => studentsWidgetQueryFromWidget(widget)))();
 
-  const querySignature = useMemo(() => {
+  const querySignature = (() => {
     return JSON.stringify(
       [...queries]
         .sort((a, b) => a.id.localeCompare(b.id))
@@ -83,13 +79,13 @@ export function useStudentsWidgetAggregates(
           xAxis: query.xAxisField,
         })),
     );
-  }, [queries]);
+  })();
 
   const query = useQuery({
     queryKey: [...STUDENTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
     queryFn: async () => {
       const res = await apiContract.students.widgetAggregates({ body: { widgets: queries } });
-      return (res.body as any)?.results ?? {};
+      return (res.body as { results?: Record<string, { value?: number; totalCount?: number; chartData?: Array<{ name: string; value: number }> }> } | null)?.results ?? {};
     },
     enabled: isAuthenticated && enabled && queries.length > 0,
     staleTime: 30_000,

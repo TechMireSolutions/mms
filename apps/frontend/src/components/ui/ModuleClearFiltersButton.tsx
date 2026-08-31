@@ -14,7 +14,7 @@ export interface ModuleClearFiltersButtonProps {
 }
 
 /** Shared Work toolbar clear-filters control (ghost + RefreshCw). */
-export const ModuleClearFiltersButton = React.memo(function ModuleClearFiltersButton({
+export const ModuleClearFiltersButton = (function ModuleClearFiltersButton({
   label,
   onClearFilters,
   className,

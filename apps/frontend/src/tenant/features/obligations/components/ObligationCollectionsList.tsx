@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import {
   ObligationCollection, ObligationType, MujtahidRep, Mujtahid
 } from '@/lib/data/obligationsData';
@@ -8,7 +8,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ObligationCollectionsListContent } from "@/tenant/features/obligations/components/ObligationCollectionsListContent";
 import { ObligationCollectionsListFilters } from "@/tenant/features/obligations/components/ObligationCollectionsListFilters";
@@ -16,6 +15,7 @@ import { ObligationsBulkActionBar } from "@/tenant/features/obligations/componen
 import { useObligationSelection } from "@/tenant/features/obligations/hooks/useObligationSelection";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
@@ -73,7 +73,7 @@ export function ObligationCollectionsList({
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
-  const senderIds = useMemo(() => collections.map((collection) => collection.sender_id), [collections]);
+  const senderIds = (() => collections.map((collection) => collection.sender_id))();
   const contacts = useMergedObligationContacts(senderIds);
 
   const getContact = useCallback((contactId?: string | number | null) => contacts.find((contact) => String(contact.id) === String(contactId)), [contacts]);
@@ -84,7 +84,7 @@ export function ObligationCollectionsList({
   };
   const getObType = (obligationTypeId: string) => obligationTypes.find((obligationType) => obligationType.id === obligationTypeId);
 
-  const filtered = useMemo(() => collections.filter((collection) => {
+  const filtered = (() => collections.filter((collection) => {
     if (typeFilter !== "all" && collection.obligation_type_id !== typeFilter) return false;
     if (debouncedSearch) {
       const searchQuery = debouncedSearch.toLowerCase();
@@ -93,7 +93,7 @@ export function ObligationCollectionsList({
       if (!sender.includes(searchQuery) && !receipt.includes(searchQuery)) return false;
     }
     return true;
-  }), [collections, debouncedSearch, typeFilter, getContact]);
+  }))();
 
   useEffect(() => {
     onFilteredCountChange?.(filtered.length);
@@ -101,10 +101,10 @@ export function ObligationCollectionsList({
 
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
-  const paymentModeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const paymentModeConfig = (() => ({
     Cash: { label: t("obligations.paymentMode.cash"), cls: SEMANTIC_BADGE.warning },
     Online: { label: t("obligations.paymentMode.online"), cls: SEMANTIC_BADGE.info },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   const {
     selectedIds,

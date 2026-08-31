@@ -1,4 +1,5 @@
 import { Send } from "lucide-react";
+import type { AppTranslationKey } from '@mms/shared';
 import { ActionButton } from "@/components/ui/ActionButton";
 import {
   DropdownMenu,
@@ -51,7 +52,7 @@ export function MessagingPageHeaderActions({
                 }`}
               />
               <span className="font-medium flex-1">
-                {t(config.labelSendKey as any)}
+                {t(config.labelSendKey as AppTranslationKey)}
               </span>
             </DropdownMenuItem>
           ))}

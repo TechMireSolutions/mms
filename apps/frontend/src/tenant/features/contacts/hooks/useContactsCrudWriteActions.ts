@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import type { Contact, AppTranslationKey } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { notify } from "@/lib/notify";
@@ -40,8 +39,7 @@ export function useContactsCrudWriteActions({
     bulkTagContacts: bulkTagMutation,
   } = useContactMutations();
 
-  const saveContact = useCallback(
-    async (contact: Contact, isNew: boolean): Promise<Contact> => {
+  const saveContact = (async (contact: Contact, isNew: boolean): Promise<Contact> => {
       try {
         if (isNew) {
           const res = await upsertContact.mutateAsync(contact);
@@ -54,12 +52,9 @@ export function useContactsCrudWriteActions({
         handleError(err, "contacts.save_contact");
         throw err;
       }
-    },
-    [upsertContact, updateContact, handleError],
-  );
+    });
 
-  const mergeContacts = useCallback(
-    async (keepId: string | number, deleteId: string | number, merged: Contact): Promise<void> => {
+  const mergeContacts = (async (keepId: string | number, deleteId: string | number, merged: Contact): Promise<void> => {
       try {
         await mergeContactsMutation.mutateAsync({
           keepId,
@@ -73,12 +68,9 @@ export function useContactsCrudWriteActions({
         handleError(err, "contacts.merge_contacts");
         throw err;
       }
-    },
-    [mergeContactsMutation, t, handleError],
-  );
+    });
 
-  const importContacts = useCallback(
-    async (list: Contact[]): Promise<void> => {
+  const importContacts = (async (list: Contact[]): Promise<void> => {
       let succeeded = 0;
       let failed = 0;
       for (const contact of list) {
@@ -91,12 +83,9 @@ export function useContactsCrudWriteActions({
         }
       }
       notifyBulkResult(succeeded, failed, "contacts.importSuccessOne", "contacts.importSuccess");
-    },
-    [upsertContact, notifyBulkResult],
-  );
+    });
 
-  const bulkTagContacts = useCallback(
-    async (ids: string[], addTags?: string[], removeTags?: string[]): Promise<number> => {
+  const bulkTagContacts = (async (ids: string[], addTags?: string[], removeTags?: string[]): Promise<number> => {
       try {
         const res = await bulkTagMutation.mutateAsync({ ids, addTags, removeTags });
         notify.success(t("contacts.bulkTagSuccess", { count: res.updatedCount }));
@@ -105,9 +94,7 @@ export function useContactsCrudWriteActions({
         handleError(err, "contacts.bulk_tag");
         throw err;
       }
-    },
-    [bulkTagMutation, t, handleError],
-  );
+    });
 
   return {
     updateContact,

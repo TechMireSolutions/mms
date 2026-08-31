@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -44,7 +44,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   const attendanceRecords = useAttendanceRecordsCollection();
   const sessions = useSessionsCollection();
 
-  const classNameMap = useMemo(() => {
+  const classNameMap = (() => {
     const map = new Map<string, string>();
     sessions.forEach((session) => {
       (session.classes || []).forEach((classInfo) => {
@@ -54,37 +54,35 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
       });
     });
     return map;
-  }, [sessions]);
+  })();
 
   const today = todayISO();
 
-  const todayRecords = useMemo(() =>
-    attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === today),
-    [attendanceRecords, today]
-  );
+  const todayRecords = (() =>
+    attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === today))();
 
   // Use most recent date if no records today (demo data)
-  const displayRecords = useMemo(() => {
+  const displayRecords = (() => {
     if (todayRecords.length > 0) return todayRecords;
     const dates = Array.from(new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date))).sort().reverse();
     return dates.length > 0 ? attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === dates[0]) : [];
-  }, [todayRecords, attendanceRecords]);
+  })();
 
   const displayDate = displayRecords.length > 0 ? displayRecords[0].date : today;
   const isToday = displayDate === today;
 
-  const stats = useMemo(() => {
+  const stats = (() => {
     const counts: Record<string, number> = { total: displayRecords.length };
     displayRecords.forEach((attendanceRecord) => {
       counts[attendanceRecord.status] = (counts[attendanceRecord.status] || 0) + 1;
     });
     return counts;
-  }, [displayRecords]);
+  })();
 
   const rate = stats.total ? Math.round((((stats.present || 0) + (stats.late || 0)) / stats.total) * 100) : 0;
 
   // Per-class breakdown
-  const classBreakdown = useMemo(() => {
+  const classBreakdown = (() => {
     const attendanceByClassId: Record<string, Record<string, number>> = {};
     displayRecords.forEach((attendanceRecord) => {
       if (!attendanceByClassId[attendanceRecord.classId]) attendanceByClassId[attendanceRecord.classId] = { total: 0 };
@@ -102,7 +100,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
       total: statusCounts.total,
       rate: statusCounts.total ? Math.round((((statusCounts.present || 0) + (statusCounts.late || 0)) / statusCounts.total) * 100) : 0,
     })) as ClassBreakdown[];
-  }, [displayRecords, classNameMap]);
+  })();
 
   const { text: rateColor, bar: rateBarColor } = rateToneClass(rate);
 

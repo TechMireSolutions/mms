@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, type Dispatch, type SetStateAction } from "react";
+import { useEffect, useRef, type Dispatch, type SetStateAction } from "react";
 import { useContactsSyncOutbox } from "@/tenant/features/contacts/hooks/useContactsSyncOutbox";
 
 /**
@@ -10,10 +10,7 @@ export function useContactsConflictPanel(
   const { pendingCount, conflictCount, flushing, flush } = useContactsSyncOutbox();
   const prevConflictCount = useRef(conflictCount);
 
-  const openConflictReview = useCallback(
-    () => setConflictPanelOpen(true),
-    [setConflictPanelOpen],
-  );
+  const openConflictReview = (() => setConflictPanelOpen(true));
 
   useEffect(() => {
     if (prevConflictCount.current === 0 && conflictCount > 0) {

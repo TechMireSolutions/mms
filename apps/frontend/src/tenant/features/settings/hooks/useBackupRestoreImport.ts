@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import {
   summarizeWorkspaceBackup,
   type PendingDecrypt,
@@ -27,8 +27,7 @@ export function useBackupRestoreImport({
   const [safetyStep, setSafetyStep] = useState(false);
   const [safetyReady, setSafetyReady] = useState(false);
 
-  const queuePlaintextRestore = useCallback(
-    (
+  const queuePlaintextRestore = ((
       jsonText: string,
       meta?: { fileName?: string; backupId?: string },
     ): void => {
@@ -57,9 +56,7 @@ export function useBackupRestoreImport({
         backupId: meta?.backupId,
       });
       setSafetyReady(false);
-    },
-    [storagePrefix, subdomain, t],
-  );
+    });
 
   const actions = useBackupRestoreImportActions({
     subdomain,

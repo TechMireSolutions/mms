@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Trophy } from "lucide-react";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { TableCellLink } from "@/components/ui/TableCellLink";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
-import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import {
   Table,
   TableBody,
@@ -26,50 +25,48 @@ const GRADE_BADGE_CLS: Record<string, string> = {
   "C": SEMANTIC_BADGE.warning,
   "F": SEMANTIC_BADGE.destructive,
 };
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 interface AcademicReportResultsBodyProps {
   academicResults: AcademicResultItem[];
   onToggleStudentFilter: (studentName: string) => void;
 }
 
-export const AcademicReportResultsBody = React.memo(function AcademicReportResultsBody({
+export const AcademicReportResultsBody = (function AcademicReportResultsBody({
   academicResults,
   onToggleStudentFilter,
 }: AcademicReportResultsBodyProps): React.JSX.Element {
   const { t } = useTranslation();
-  const headers = React.useMemo(() => [
+  const headers = (() => [
     { key: "rank", label: t("examinations.report.colRank") },
     { key: "student", label: t("examinations.report.colStudent") },
     { key: "class", label: t("examinations.report.colClass") },
     { key: "subject", label: t("examinations.report.colSubject") },
     { key: "marks", label: t("examinations.report.colMarks") },
     { key: "grade", label: t("examinations.report.colGrade") },
-  ], [t]);
+  ])();
 
-  const exportColumns = React.useMemo<ExportColumn[]>(() => [
+  const exportColumns = (() => [
     { key: "rank", header: t("examinations.report.colRank") },
     { key: "student", header: t("examinations.report.colStudent") },
     { key: "class", header: t("examinations.report.colClass") },
     { key: "subject", header: t("examinations.report.colSubject") },
     { key: "marks", header: t("examinations.report.colMarks") },
     { key: "grade", header: t("examinations.report.colGrade") },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const exportRows = React.useMemo(() => academicResults.map((result) => ({
+  const exportRows = (() => academicResults.map((result) => ({
     rank: result.rank,
     student: result.studentName,
     class: result.class,
     subject: result.subject,
     marks: `${result.marks}/${result.total}`,
     grade: result.grade,
-  })), [academicResults]);
+  })))();
 
   const [page, setPage] = useState(1);
   const pageSize = 15;
-  const pagedAcademicResults = useMemo(
-    () => academicResults.slice((page - 1) * pageSize, page * pageSize),
-    [academicResults, page, pageSize],
-  );
+  const pagedAcademicResults = (() => academicResults.slice((page - 1) * pageSize, page * pageSize))();
 
   return (
     <ReportDataGridContainer

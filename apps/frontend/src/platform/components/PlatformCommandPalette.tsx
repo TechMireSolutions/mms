@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search,
@@ -129,7 +129,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
   const perms = usePlatformPermissions();
   const { data: workspaces } = usePlatformWorkspaces();
 
-  const allAvailableItems = useMemo(() => {
+  const allAvailableItems = (() => {
     // 1. Filter static items by user permissions
     const permittedStatic = PLATFORM_STATIC_COMMANDS.filter((item) => {
       if (!item.requiredPermission) return true;
@@ -154,9 +154,9 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
       : [];
 
     return [...permittedStatic, ...workspaceItems];
-  }, [perms, workspaces]);
+  })();
 
-  const filteredItems = useMemo(() => {
+  const filteredItems = (() => {
     const q = query.trim().toLowerCase();
     if (!q) return allAvailableItems;
     return allAvailableItems.filter((item) => {
@@ -168,7 +168,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
         item.keywords.some((k) => k.toLowerCase().includes(q))
       );
     });
-  }, [allAvailableItems, query, t]);
+  })();
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -183,8 +183,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
     [navigate, onClose],
   );
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = ((e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedIndex((prev) => (filteredItems.length > 0 ? (prev + 1) % filteredItems.length : 0));
@@ -202,9 +201,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
         e.preventDefault();
         onClose();
       }
-    },
-    [filteredItems, selectedIndex, handleSelect, onClose],
-  );
+    });
 
   if (!open) return null;
 

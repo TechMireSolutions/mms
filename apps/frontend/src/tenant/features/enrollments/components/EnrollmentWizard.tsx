@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   User, BookOpen, CheckCircle2, Layers, DollarSign, ClipboardCheck,
@@ -25,7 +25,7 @@ export interface EnrollmentWizardProps {
   onCancel: () => void;
 }
 
-export const EnrollmentWizard = React.memo(function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.JSX.Element {
+export const EnrollmentWizard = (function EnrollmentWizard({ onComplete, onCancel }: EnrollmentWizardProps): React.JSX.Element {
       const { t } = useTranslation();
       const sessions = useSessionsCollection();
       const [step, setStep] = useState<number>(0);
@@ -41,14 +41,14 @@ export const EnrollmentWizard = React.memo(function EnrollmentWizard({ onComplet
 
       const { fields, customFields } = useEnrollmentConfig();
 
-      const steps: Step[] = useMemo(() => [
+      const steps: Step[] = (() => [
         { id: "student",     label: t("enrollments.columns.student"), icon: User },
         { id: "session",     label: t("enrollments.columns.session"), icon: BookOpen },
         { id: "eligibility", label: t("enrollments.eligibility"), icon: CheckCircle2 },
         { id: "class",       label: t("enrollments.columns.class"), icon: Layers },
         { id: "fee",         label: t("enrollments.columns.finalFee"), icon: DollarSign },
         { id: "confirm",     label: t("enrollments.new"), icon: ClipboardCheck },
-      ], [t]);
+      ])();
 
       const suggested = student && session ? suggestClass(student, session) : null;
 

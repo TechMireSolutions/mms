@@ -1,4 +1,4 @@
-import React, { memo } from "react";
+import React from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
 import { cn } from "@/lib/utils";
@@ -21,7 +21,7 @@ export interface ModuleTableHeaderCellProps {
   onSort?: (field: string) => void;
 }
 
-export const ModuleTableHeaderCell = memo(function ModuleTableHeaderCell({
+export const ModuleTableHeaderCell = (function ModuleTableHeaderCell({
   columnKey,
   width,
   onResize,

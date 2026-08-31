@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
 import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
@@ -8,10 +8,10 @@ import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { type AppTranslationKey } from "@mms/shared";
-import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 interface ChartOfAccountsProps {
   accounts: Account[];
@@ -47,17 +47,16 @@ export function ChartOfAccounts({
   const [typeFilter,  setTypeFilter] = useState<AccountType | "all">("all");
   const [showInactive, setShowInactive] = useState(false);
   const [modal,       setModal]      = useState<Partial<Account> | null>(null);
-  const balanceConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const balanceConfig = (() => ({
     debit: { label: t("accounting.ledger.dr"), cls: SEMANTIC_BADGE.infoStrong },
     credit: { label: t("accounting.ledger.cr"), cls: SEMANTIC_BADGE.successStrong },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const filtered = useMemo(() => accounts
+  const filtered = (() => accounts
     .filter((account) => typeFilter === "all" || account.type === typeFilter)
     .filter((account) => showInactive || account.isActive !== false)
     .filter((account) => !search || account.name.toLowerCase().includes(search.toLowerCase()) || account.code.includes(search))
-    .sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code)),
-  [accounts, search, typeFilter, showInactive]);
+    .sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code)))();
 
   useEffect(() => {
     onFilteredCountChange?.(filtered.length);

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import {
   isDashboardAdmin,
@@ -69,10 +68,7 @@ export function useDashboardData(
   widgets: CustomWidget[],
   dashboardRole: DashboardRole,
 ): DashboardCollectionData {
-  const requiredDashboardCollections = useMemo(
-    () => getRequiredDashboardCollections(widgets, dashboardRole),
-    [widgets, dashboardRole],
-  );
+  const requiredDashboardCollections = (() => getRequiredDashboardCollections(widgets, dashboardRole))();
 
   const shouldLoadContacts = requiredDashboardCollections.has('contacts');
   const shouldLoadStudents = requiredDashboardCollections.has('students') || isDashboardAdmin(dashboardRole);
@@ -92,25 +88,19 @@ export function useDashboardData(
     requiredDashboardCollections.has('questions') ||
     requiredDashboardCollections.has('tests') ||
     requiredDashboardCollections.has('assessment_results');
-  const shouldLoadAccounting = useMemo(
-    () =>
+  const shouldLoadAccounting = (() =>
       widgets.some(
         (widget) =>
           isWidgetActiveForDashboard(widget, dashboardRole) &&
           (widget.category === ACCOUNTING_MODULE_MANIFEST.moduleId || DASHBOARD_ACCOUNTING_WIDGET_IDS.has(widget.id)),
-      ),
-    [widgets, dashboardRole],
-  );
+      ))();
 
-  const collectionWidgets = useMemo(
-    () => ({
-      contacts: filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole).filter(needsWidgetAggregate),
-      students: filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole).filter(needsWidgetAggregate),
-      teachers: filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole).filter(needsWidgetAggregate),
-      sessions: filterDashboardWidgetsByCollection(widgets, 'sessions', dashboardRole).filter(needsWidgetAggregate),
-    }),
-    [widgets, dashboardRole],
-  );
+  const collectionWidgets = {
+    contacts: filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole).filter(needsWidgetAggregate),
+    students: filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole).filter(needsWidgetAggregate),
+    teachers: filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole).filter(needsWidgetAggregate),
+    sessions: filterDashboardWidgetsByCollection(widgets, 'sessions', dashboardRole).filter(needsWidgetAggregate),
+  };
 
   useContactsWidgetAggregates(collectionWidgets.contacts, { enabled: shouldLoadContacts });
   useStudentsWidgetAggregates(collectionWidgets.students, { enabled: shouldLoadStudents });

@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 export type { ModuleColumnCustomizerListProps };
 
-export const ModuleColumnCustomizerList = React.memo(function ModuleColumnCustomizerList({
+export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
   visibleColumns,
   hiddenColumns,
   dragging,

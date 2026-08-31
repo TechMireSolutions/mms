@@ -37,7 +37,7 @@ export interface MessagingTemplateListProps {
   onDeleteRequest: (id: string) => void;
 }
 
-export const MessagingTemplateList = React.memo(function MessagingTemplateList({
+export const MessagingTemplateList = (function MessagingTemplateList({
   templates,
   canWrite,
   search,

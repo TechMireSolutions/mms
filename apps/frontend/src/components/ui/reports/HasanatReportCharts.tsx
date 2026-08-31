@@ -40,7 +40,7 @@ interface HasanatReportChartsProps {
   onToggleFacultyFilter: (faculty: string) => void;
 }
 
-export const HasanatReportCharts = React.memo(function HasanatReportCharts({
+export const HasanatReportCharts = (function HasanatReportCharts({
   facultyChartData,
   redemptionPieData,
   pieColors,

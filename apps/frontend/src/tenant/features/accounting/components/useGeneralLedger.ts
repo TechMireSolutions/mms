@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { computeLedger, Account, JournalEntry, AccountType } from '@/lib/data/accountingData';
 
 export interface GeneralLedgerLineWithRunning {
@@ -23,10 +23,7 @@ export function useGeneralLedger(accounts: Account[], entries: JournalEntry[]) {
     .sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code));
 
   const activeAccount = accounts.find((account) => account.id === selectedAccount);
-  const lines = useMemo(
-    () => selectedAccount ? computeLedger(selectedAccount, entries, dateFrom || undefined, dateTo || undefined) : [],
-    [selectedAccount, entries, dateFrom, dateTo]
-  );
+  const lines = (() => selectedAccount ? computeLedger(selectedAccount, entries, dateFrom || undefined, dateTo || undefined) : [])();
 
   const totalDebit = lines.reduce((sum, ledgerLine) => sum + ledgerLine.debit, 0);
   const totalCredit = lines.reduce((sum, ledgerLine) => sum + ledgerLine.credit, 0);

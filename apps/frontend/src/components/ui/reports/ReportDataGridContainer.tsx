@@ -37,7 +37,7 @@ export interface ReportDataGridContainerProps {
  * Integrates ExportToolbar at the top, scrollable table content in the middle,
  * and ListPagination at the bottom.
  */
-export const ReportDataGridContainer = React.memo(function ReportDataGridContainer({
+export const ReportDataGridContainer = (function ReportDataGridContainer({
   children,
   title,
   columns,

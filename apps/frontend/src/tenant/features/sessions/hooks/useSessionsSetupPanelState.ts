@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { type SessionsSettings } from "@mms/shared";
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SESSION_TYPES } from "@/lib/data/sessionsData";
@@ -32,10 +31,7 @@ export function useSessionsSetupPanelState(): UseSessionsSetupPanelStateReturn {
     config,
   });
 
-  const typeOptions = useMemo(
-    () => (types.length > 0 ? types : [...SESSION_TYPES]),
-    [types],
-  );
+  const typeOptions = (() => (types.length > 0 ? types : [...SESSION_TYPES]))();
 
   const {
     saving,

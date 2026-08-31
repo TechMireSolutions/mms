@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import type { AppTranslationKey } from "@mms/shared";
 import { cn } from "@/lib/utils";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -41,14 +41,14 @@ const DEFAULT_CLS: Record<string, string> = {
   skipped: SEMANTIC_BADGE.muted,
 };
 
-export const StatusBadge = React.memo(function StatusBadge({
+export const StatusBadge = (function StatusBadge({
   status,
   config = {},
   size = "md",
 }: StatusBadgeProps): React.ReactElement {
   const { t } = useTranslation();
 
-  const defaultConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => {
+  const defaultConfig = (() => {
     const labels: Record<string, AppTranslationKey> = {
       active: "statusBadge.active",
       inactive: "statusBadge.inactive",
@@ -78,7 +78,7 @@ export const StatusBadge = React.memo(function StatusBadge({
       built[key] = { label: t(labelKey), cls: DEFAULT_CLS[key] ?? SEMANTIC_BADGE.muted };
     }
     return built;
-  }, [t]);
+  })() as Record<string, StatusBadgeConfigItem>;
 
   const badgeConfigByStatus = { ...defaultConfig, ...(config || {}) };
   const badgeConfig = badgeConfigByStatus[status] || { label: status, cls: SEMANTIC_BADGE.muted };

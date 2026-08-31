@@ -72,12 +72,12 @@ export function MessageComposerRecipientPicker({
     }
   }, [existingIds, onAdd, onRemove]);
 
-  const handleSelect = useCallback((contactId: string | number) => {
+  const handleSelect = ((contactId: string | number) => {
     const contact = contacts.find((c) => String(c.id) === String(contactId));
     if (contact) handleToggle(contact);
-  }, [contacts, handleToggle]);
+  });
 
-  const handleSelectAll = useCallback(() => {
+  const handleSelectAll = (() => {
     // If all current page contacts are selected, deselect them. Otherwise, select all.
     const allSelected = contacts.every(c => existingIds.has(String(c.id)));
     if (allSelected) {
@@ -94,7 +94,7 @@ export function MessageComposerRecipientPicker({
         }
       });
     }
-  }, [contacts, existingIds, onAdd, onRemove]);
+  });
 
   const allSelected = contacts.length > 0 && contacts.every(c => existingIds.has(String(c.id)));
   const someSelected = contacts.length > 0 && contacts.some(c => existingIds.has(String(c.id))) && !allSelected;

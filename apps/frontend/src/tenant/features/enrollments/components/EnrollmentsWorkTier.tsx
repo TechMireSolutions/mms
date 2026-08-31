@@ -113,7 +113,7 @@ export function EnrollmentsWorkTier({
         onChange={onSubTabChange}
       />
 
-      {activeSubTab === "list" && (
+      {activeSubTab === "directory" && (
         <ErrorBoundary>
           {isWorkListError ? (
             <ErrorState

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { formatDate, type AppTranslationKey } from '@mms/shared';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
@@ -37,12 +36,12 @@ export function useComparisonModeData({
   language,
   t,
 }: UseComparisonModeDataParams) {
-  const compareYears = useMemo(() => {
+  const compareYears = (() => {
     if (!isContacts || mode !== 'daterange') return undefined;
     const yearA = Number.parseInt(rangeA.from.slice(0, 4), 10);
     const yearB = Number.parseInt(rangeB.from.slice(0, 4), 10);
     return [yearA, yearB].filter((year) => Number.isFinite(year));
-  }, [isContacts, mode, rangeA.from, rangeB.from]);
+  })();
 
   const { data: reportData } = useContactsReportAnalytics({
     enabled: isContacts,
@@ -70,30 +69,15 @@ export function useComparisonModeData({
     return undefined;
   };
 
-  const enrollmentComparison = useMemo(
-    () => buildComparison(categoryKey === 'students' || categoryKey === 'enrollments'),
-    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
-  );
+  const enrollmentComparison = (() => buildComparison(categoryKey === 'students' || categoryKey === 'enrollments'))();
 
-  const financeComparison = useMemo(
-    () => buildComparison(categoryKey === 'financial' || categoryKey === 'finance'),
-    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
-  );
+  const financeComparison = (() => buildComparison(categoryKey === 'financial' || categoryKey === 'finance'))();
 
-  const attendanceComparison = useMemo(
-    () => buildComparison(categoryKey === 'attendance'),
-    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
-  );
+  const attendanceComparison = (() => buildComparison(categoryKey === 'attendance'))();
 
-  const examinationsComparison = useMemo(
-    () => buildComparison(categoryKey === 'examinations'),
-    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
-  );
+  const examinationsComparison = (() => buildComparison(categoryKey === 'examinations'))();
 
-  const hasanatComparison = useMemo(
-    () => buildComparison(categoryKey === 'hasanat'),
-    [nonContactsEnabled, mode, categoryKey, valA, valB, rangeA.from, rangeA.to, rangeB.from, rangeB.to],
-  );
+  const hasanatComparison = (() => buildComparison(categoryKey === 'hasanat'))();
 
   const { data: enrollmentsReport } = useEnrollmentsReportAggregates({
     enabled: Boolean(enrollmentComparison),
@@ -121,15 +105,12 @@ export function useComparisonModeData({
   });
 
   const sessions = useSessionsCollection({ enabled: nonContactsEnabled });
-  const sessionsOptions = useMemo<{ id: string; name: string }[]>(
-    () =>
+  const sessionsOptions = (() =>
       sessions
         .filter((session) => session.id !== 'all')
-        .map((session) => ({ id: session.id, name: session.name })),
-    [sessions],
-  );
+        .map((session) => ({ id: session.id, name: session.name })))() as { id: string; name: string }[];
 
-  const comparisonData = useMemo<ComparisonDataItem[] | DateRangeDataItem[]>(() => {
+  const comparisonData = (() => {
     if (mode === 'sessions') {
       if (isContacts) {
         return [];
@@ -159,23 +140,7 @@ export function useComparisonModeData({
       rangeA,
       rangeB,
     );
-  }, [
-    mode,
-    isContacts,
-    reportData,
-    valA,
-    valB,
-    rangeA,
-    rangeB,
-    sessions,
-    enrollmentsReport,
-    attendanceReport,
-    financeReport,
-    hasanatReport,
-    examinationsReport,
-    category,
-    t,
-  ]);
+  })() as ComparisonDataItem[] | DateRangeDataItem[];
 
   const labelA =
     mode === 'sessions'

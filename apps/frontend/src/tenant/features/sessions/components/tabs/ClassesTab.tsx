@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Plus, GraduationCap } from "lucide-react";
 import { Session, Class } from '@/lib/data/sessionsData';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -28,10 +28,7 @@ interface ClassesTabProps {
  */
 export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
   const { t } = useTranslation();
-  const teacherIds = useMemo(
-    () => collectTeacherIdsFromClasses(session.classes),
-    [session.classes],
-  );
+  const teacherIds = (() => collectTeacherIdsFromClasses(session.classes))();
   const { data: teachers = [] } = useTeachersByIds(teacherIds);
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [showModal, setShowModal] = useState(false);
@@ -41,7 +38,7 @@ export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
   const deletePendingRef = React.useRef(false);
 
   const handleClassMessage = (channel: 'sms' | 'whatsapp' | 'email', sessionClass: Class) => {
-    const teacher = teachers.find((t: any) => t.id === sessionClass.teacherId);
+    const teacher = teachers.find((t) => t.id === sessionClass.teacherId);
     const recipientName = (teacher ? teacher.name : sessionClass.teacherName || sessionClass.name) || t("sessions.classes.fallbackName");
     const teacherObj = teacher as unknown as { phone?: string; email?: string } | undefined;
     const phoneStr: string = teacherObj?.phone ?? "";

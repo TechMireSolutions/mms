@@ -5,10 +5,10 @@ interface BuildMessagingWorkFilterChipsOptions {
   search: string;
   onSearchChange: (value: string) => void;
   channel: string;
-  onChannelChange: (val: any) => void;
+  onChannelChange: (val: "all" | "sms" | "whatsapp" | "email") => void;
   channelOptions: Array<{ value: string; label: string }>;
   status: string;
-  onStatusChange: (val: any) => void;
+  onStatusChange: (val: "all" | "sent" | "delivered" | "failed" | "skipped") => void;
   statusOptions: Array<{ value: string; label: string }>;
   category: string;
   onCategoryChange: (val: string) => void;

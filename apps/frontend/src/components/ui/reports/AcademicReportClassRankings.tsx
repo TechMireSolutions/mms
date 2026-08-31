@@ -12,7 +12,7 @@ interface AcademicReportClassRankingsProps {
   onToggleClassFilter: (className: string) => void;
 }
 
-export const AcademicReportClassRankings = React.memo(function AcademicReportClassRankings({
+export const AcademicReportClassRankings = (function AcademicReportClassRankings({
   classRankings,
   onToggleClassFilter,
 }: AcademicReportClassRankingsProps): React.JSX.Element {

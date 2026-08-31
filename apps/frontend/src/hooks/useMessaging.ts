@@ -3,6 +3,7 @@ import {
   MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
   type Message,
   type MessageLogCreateDto,
+  type MessageTemplate,
 } from '@mms/shared';
 import { tsrClient } from '@/lib/api';
 import { notifyApiFailure } from '@/lib/apiErrorNotify';
@@ -37,7 +38,7 @@ export function useMessageTemplates(options?: { enabled?: boolean }) {
     enabled: options?.enabled !== false && isAuthenticated,
   });
   
-  const templates = (query.data?.status === 200) ? ((query.data.body as any).templates || []) : [];
+  const templates = (query.data?.status === 200) ? ((query.data.body as { templates?: MessageTemplate[] } | null)?.templates ?? []) : [];
   
   return { ...query, templates };
 }
@@ -86,14 +87,20 @@ export function useMessageLogs(options?: {
     },
     staleTime: 15_000,
     enabled: options?.enabled !== false && isAuthenticated,
-    placeholderData: (previous: any) => previous,
+    placeholderData: (previous: unknown) => previous,
   });
 
-  const res = query.data?.status === 200 ? query.data.body as any : {};
+  const res = (query.data?.status === 200 ? query.data.body : {}) as {
+    logs?: Message[];
+    total?: number;
+    page?: number;
+    pageSize?: number;
+    hasMore?: boolean;
+  };
   
   return {
     ...query,
-    logs: (res.logs || []) as Message[],
+    logs: res.logs ?? [],
     total: res.total ?? res.logs?.length ?? 0,
     page: res.page ?? page,
     pageSize: res.pageSize ?? pageSize,

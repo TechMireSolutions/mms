@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import type { StandardMessagingRecipient } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -13,17 +12,14 @@ const RESOLVE_BATCH_SIZE = 100;
  */
 export function useMessagingRecipientsByIds(ids: (string | number | null | undefined)[]) {
   const { isAuthenticated } = useAuth();
-  const normalized = useMemo(
-    () =>
+  const normalized = (() =>
       [
         ...new Set(
           ids
             .filter((id) => id !== null && id !== undefined && String(id).length > 0)
             .map(String),
         ),
-      ].sort(),
-    [ids],
-  );
+      ].sort())();
   const signature = normalized.join(',');
 
   const query = useQuery({
@@ -56,18 +52,12 @@ export function useMessagingRecipientsByIds(ids: (string | number | null | undef
 
   const recipients = query.data ?? [];
 
-  const recipientMap = useMemo(
-    () => new Map(recipients.flatMap((recipient) => [[recipient.id, recipient], [String(recipient.id), recipient]])),
-    [recipients],
-  );
+  const recipientMap = (() => new Map(recipients.flatMap((recipient) => [[recipient.id, recipient], [String(recipient.id), recipient]])))();
 
-  const getRecipient = useCallback(
-    (id: string | number | null | undefined): StandardMessagingRecipient | null => {
+  const getRecipient = ((id: string | number | null | undefined): StandardMessagingRecipient | null => {
       if (id === null || id === undefined) return null;
       return recipientMap.get(id) ?? recipientMap.get(String(id)) ?? null;
-    },
-    [recipientMap],
-  );
+    });
 
   return {
     ...query,

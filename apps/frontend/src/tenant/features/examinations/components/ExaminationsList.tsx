@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import type { Exam } from '@/lib/data/examinationData';
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
@@ -11,12 +11,12 @@ import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { useDebounce } from "@/hooks/useDebounce";
 import { EXAMINATIONS_MODULE_MANIFEST } from "@mms/shared";
-import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ExaminationsListContent } from "@/tenant/features/examinations/components/ExaminationsListContent";
 import { ExaminationsListFilters } from "@/tenant/features/examinations/components/ExaminationsListFilters";
 import { ExaminationsBulkActionBar } from "@/tenant/features/examinations/components/ExaminationsBulkActionBar";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 const EXAM_SEARCH_DEBOUNCE_MS = 300;
@@ -75,15 +75,12 @@ export default function ExaminationsList({
 
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
-  const classes = React.useMemo(
-    () => sessions.flatMap((session) =>
+  const classes = (() => sessions.flatMap((session) =>
       (session.classes || []).map((sessionClass) => ({
         id: sessionClass.id,
         name: `${session.name} - ${sessionClass.name}`,
       })),
-    ),
-    [sessions],
-  );
+    ))();
 
   // Server-side filter/page reset whenever a filter dimension changes.
   useEffect(() => {
@@ -108,16 +105,13 @@ export default function ExaminationsList({
     onFilteredCountChange?.(serverTotal);
   }, [onFilteredCountChange, serverTotal]);
 
-  const statusLabels = useMemo(
-    () => ({
+  const statusLabels = (() => ({
       upcoming: t("examinations.status.upcoming"),
       ongoing: t("examinations.status.ongoing"),
       completed: t("examinations.status.completed"),
       scheduled: t("examinations.status.scheduled"),
       cancelled: t("examinations.status.cancelled"),
-    }),
-    [t],
-  );
+    }))();
 
   useEffect(() => {
     if (createRequestKey > 0 && canWrite && !showDeleted) onNew();
@@ -143,13 +137,13 @@ export default function ExaminationsList({
 
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
-  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const statusConfig = (() => ({
     upcoming:  { label: statusLabels.upcoming,  cls: SEMANTIC_BADGE.info },
     ongoing:   { label: statusLabels.ongoing,   cls: SEMANTIC_BADGE.warning },
     completed: { label: statusLabels.completed, cls: SEMANTIC_BADGE.success },
     scheduled: { label: statusLabels.scheduled, cls: 'bg-primary/10 text-primary border-primary/20' },
     cancelled: { label: statusLabels.cancelled, cls: SEMANTIC_BADGE.muted },
-  }), [statusLabels]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   const confirmRowTrash = (): void => {
     if (!pendingTrashId) return;

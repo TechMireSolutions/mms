@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import {
   AreaChart,
@@ -25,7 +25,7 @@ export function PlatformReportsGrowthChart({ workspaces }: PlatformReportsGrowth
   const { t } = useTranslation();
   const [timeframe, setTimeframe] = useState<Timeframe>('all');
 
-  const filteredWorkspaces = useMemo(() => {
+  const filteredWorkspaces = (() => {
     if (!workspaces) return [];
     if (timeframe === 'all') return workspaces;
     const now = Date.now();
@@ -35,9 +35,9 @@ export function PlatformReportsGrowthChart({ workspaces }: PlatformReportsGrowth
       const created = new Date(w.createdAt).getTime();
       return Number.isFinite(created) && created >= threshold;
     });
-  }, [workspaces, timeframe]);
+  })();
 
-  const growthTrendData = useMemo(() => {
+  const growthTrendData = (() => {
     if (!filteredWorkspaces.length) return [];
     const sorted = [...filteredWorkspaces].sort(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
@@ -56,7 +56,7 @@ export function PlatformReportsGrowthChart({ workspaces }: PlatformReportsGrowth
       data.push({ period, count, cumulative });
     }
     return data;
-  }, [filteredWorkspaces]);
+  })();
 
   return (
     <WidgetCard className="p-6 space-y-4">

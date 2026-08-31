@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from 'react';
 import {
   STUDENTS_MODULE_MANIFEST,
   buildStudentWorkColumnRegistry,
@@ -10,8 +9,7 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 export function useStudentColumnLayout(settings: StudentsSettings) {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildStudentWorkColumnRegistry(settings, {
         name: t('students.columns.name'),
         grNumber: t('students.columns.grNumber'),
@@ -23,9 +21,7 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
         status: t('students.columns.status'),
         registeredDate: t('students.columns.registeredDate'),
         notes: t('students.columns.notes'),
-      }),
-    [settings, t],
-  );
+      }))();
 
   const { customizerLabels: baseLabels, updateUserColumnLayout, ...base } = useModuleColumnLayout({
     moduleId: STUDENTS_MODULE_MANIFEST.moduleId,
@@ -34,18 +30,15 @@ export function useStudentColumnLayout(settings: StudentsSettings) {
     translationPrefix: 'students.columns',
   });
 
-  const customizerLabels = useMemo(
-    () => ({
+  const customizerLabels = (() => ({
       ...baseLabels,
       reset: t('students.resetLayout'),
       searchPlaceholder: t('students.searchColumnsPlaceholder'),
-    }),
-    [baseLabels, t],
-  );
+    }))();
 
-  const resetColumnLayout = useCallback(() => {
+  const resetColumnLayout = (() => {
     updateUserColumnLayout(tenantRegistry);
-  }, [updateUserColumnLayout, tenantRegistry]);
+  });
 
   return {
     ...base,

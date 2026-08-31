@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { STUDENTS_MODULE_MANIFEST, type Student, type StudentsQuickFilter } from "@mms/shared";
 import { useStudentsContractList } from "@/tenant/features/students/hooks/useStudentsTsrHooks";
 import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
@@ -51,10 +50,7 @@ export function useStudentsPageWorkQuery({
     includeDeleted: viewingDeleted,
   }, enabled);
 
-  const workStudents = useMemo(
-    () => (workPageQuery.data?.body?.students ?? []) as Student[],
-    [workPageQuery.data],
-  );
+  const workStudents = (() => (workPageQuery.data?.body?.students ?? []) as Student[])();
   const shownCount = workPageQuery.data?.body?.total ?? 0;
   
   const isWorkError = workPageQuery.isError || (workPageQuery.data != null && workPageQuery.data.status !== 200);

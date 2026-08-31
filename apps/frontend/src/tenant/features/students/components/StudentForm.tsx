@@ -17,7 +17,7 @@ export interface StudentFormProps {
   priority?: boolean;
 }
 
-export const StudentForm = React.memo(function StudentForm({
+export const StudentForm = (function StudentForm({
   student,
   onClose,
   onSave,

@@ -16,17 +16,15 @@ export async function fetchSessionLookups(
   _signal?: AbortSignal,
 ): Promise<SessionLookupsMap> {
   const res = await apiContract.sessions.getLookups({ query: undefined, extraHeaders: {} });
-  const response = res.body as any;
-  return response.lookups ?? emptySessionLookupsMap;
+  return (res.body as { lookups?: SessionLookupsMap }).lookups ?? emptySessionLookupsMap;
 }
 
 export async function putSessionLookupKind(
   kind: SessionLookupKind,
   items: string[],
 ): Promise<string[]> {
-  const res = await apiContract.sessions.updateLookupKind({ params: { kind: kind as any }, body: { items }, query: undefined, extraHeaders: {} });
-  const response = res.body as any;
-  return response.items;
+  const res = await apiContract.sessions.updateLookupKind({ params: { kind }, body: { items }, query: undefined, extraHeaders: {} });
+  return (res.body as { items?: string[] }).items ?? [];
 }
 
 const lookupsHooks = createModuleLookupsHooks<

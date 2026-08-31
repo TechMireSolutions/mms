@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import type { useHasanatMutations } from '@/tenant/features/hasanat/hooks/useHasanatApi';
@@ -12,7 +11,7 @@ export function useHasanatDistributionTrashActions(mutations: HasanatTrashMutati
   const { t } = useTranslation();
   const { deleteDistribution, restoreDistribution, bulkDeleteDistributions, bulkRestoreDistributions } = mutations;
 
-  const handleDeleteDistribution = useCallback(async (id: string) => {
+  const handleDeleteDistribution = (async (id: string) => {
     try {
       await deleteDistribution.mutateAsync(id);
       notify.success(t('hasanat.trash.deleted'));
@@ -22,9 +21,9 @@ export function useHasanatDistributionTrashActions(mutations: HasanatTrashMutati
       });
       throw error;
     }
-  }, [deleteDistribution, t]);
+  });
 
-  const handleRestoreDistribution = useCallback(async (id: string) => {
+  const handleRestoreDistribution = (async (id: string) => {
     try {
       await restoreDistribution.mutateAsync(id);
       notify.success(t('hasanat.trash.restored'));
@@ -34,9 +33,9 @@ export function useHasanatDistributionTrashActions(mutations: HasanatTrashMutati
       });
       throw error;
     }
-  }, [restoreDistribution, t]);
+  });
 
-  const handleBulkDelete = useCallback(async (ids: string[]) => {
+  const handleBulkDelete = (async (ids: string[]) => {
     try {
       const result = await bulkDeleteDistributions.mutateAsync(ids);
       if (result.failed > 0) {
@@ -57,9 +56,9 @@ export function useHasanatDistributionTrashActions(mutations: HasanatTrashMutati
       });
       throw error;
     }
-  }, [bulkDeleteDistributions, t]);
+  });
 
-  const handleBulkRestore = useCallback(async (ids: string[]) => {
+  const handleBulkRestore = (async (ids: string[]) => {
     try {
       const result = await bulkRestoreDistributions.mutateAsync(ids);
       if (result.failed > 0) {
@@ -80,7 +79,7 @@ export function useHasanatDistributionTrashActions(mutations: HasanatTrashMutati
       });
       throw error;
     }
-  }, [bulkRestoreDistributions, t]);
+  });
 
   return {
     handleDeleteDistribution,

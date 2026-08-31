@@ -16,7 +16,7 @@ export interface AttendanceSetupTierProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const AttendanceSetupTier = React.memo(function AttendanceSetupTier({
+export const AttendanceSetupTier = (function AttendanceSetupTier({
   onPrefsDirtyChange,
 }: AttendanceSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();

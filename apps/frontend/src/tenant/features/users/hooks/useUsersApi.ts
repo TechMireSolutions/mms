@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import type { MutateOptions } from '@tanstack/react-query';
 import type { WorkspaceUser, ActivityLog, UsersCommandMetricsSnapshot } from '@mms/shared';
 import { USERS_MODULE_MANIFEST, normalizeWorkspaceUser, type SystemUser } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -33,9 +34,11 @@ export function useUsersCollection(options?: {
 }): WorkspaceUser[] {
   const query = useUsers(options);
   if (!query.data || query.data.status !== 200) return [];
-  const responseData = query.data.body as any;
-  const users = Array.isArray(responseData) ? responseData : (responseData?.users ?? []);
-  return users.map((user: any) =>
+  const responseData: unknown = query.data.body;
+  const users = Array.isArray(responseData)
+    ? responseData
+    : (responseData as { users?: unknown[] } | null)?.users ?? [];
+  return users.map((user) =>
     normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
   );
 }
@@ -61,9 +64,11 @@ export function useActivityLogs(options?: { enabled?: boolean }) {
 export function useActivityLogsCollection(options?: { enabled?: boolean }): ActivityLog[] {
   const query = useActivityLogs(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  if (Array.isArray(body)) return body;
-  return Array.isArray(body?.logs) ? body.logs : [];
+  const body: unknown = query.data.body;
+  if (Array.isArray(body)) return body as ActivityLog[];
+  return Array.isArray((body as { logs?: ActivityLog[] } | null)?.logs)
+    ? (body as { logs: ActivityLog[] }).logs
+    : [];
 }
 
 export function useUsersMutations() {
@@ -120,32 +125,32 @@ export function useUsersMutations() {
   return {
     replaceUsers: {
       ...replaceUsers,
-      mutate: (users: WorkspaceUser[], opts?: any) => replaceUsers.mutate({ body: users as any }, opts),
-      mutateAsync: (users: WorkspaceUser[]) => replaceUsers.mutateAsync({ body: users as any }),
+      mutate: (users: WorkspaceUser[], opts?: MutateOptions) => replaceUsers.mutate({ body: users }, opts),
+      mutateAsync: (users: WorkspaceUser[]) => replaceUsers.mutateAsync({ body: users }),
     },
     replaceLogs: {
       ...replaceLogs,
-      mutate: (logs: ActivityLog[], opts?: any) => replaceLogs.mutate({ body: logs as any }, opts),
-      mutateAsync: (logs: ActivityLog[]) => replaceLogs.mutateAsync({ body: logs as any }),
+      mutate: (logs: ActivityLog[], opts?: MutateOptions) => replaceLogs.mutate({ body: logs }, opts),
+      mutateAsync: (logs: ActivityLog[]) => replaceLogs.mutateAsync({ body: logs }),
     },
     deleteUser: {
       ...deleteUser,
-      mutate: (id: string, opts?: any) => deleteUser.mutate({ params: { id }, body: {} }, opts),
+      mutate: (id: string, opts?: MutateOptions) => deleteUser.mutate({ params: { id }, body: {} }, opts),
       mutateAsync: (id: string) => deleteUser.mutateAsync({ params: { id }, body: {} }),
     },
     restoreUser: {
       ...restoreUser,
-      mutate: (id: string, opts?: any) => restoreUser.mutate({ params: { id }, body: {} }, opts),
+      mutate: (id: string, opts?: MutateOptions) => restoreUser.mutate({ params: { id }, body: {} }, opts),
       mutateAsync: (id: string) => restoreUser.mutateAsync({ params: { id }, body: {} }),
     },
     bulkDeleteUsers: {
       ...bulkDeleteUsers,
-      mutate: (ids: string[], opts?: any) => bulkDeleteUsers.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkDeleteUsers.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkDeleteUsers.mutateAsync({ body: { ids } }),
     },
     bulkRestoreUsers: {
       ...bulkRestoreUsers,
-      mutate: (ids: string[], opts?: any) => bulkRestoreUsers.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkRestoreUsers.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestoreUsers.mutateAsync({ body: { ids } }),
     },
     resetPassword: {
@@ -164,7 +169,7 @@ export function useUsersMutations() {
     },
     logExportAudit: {
       ...logExportAudit,
-      mutate: (payload: { count: number; scope: string }, opts?: any) => logExportAudit.mutate({ body: payload }, opts),
+      mutate: (payload: { count: number; scope: string }, opts?: MutateOptions) => logExportAudit.mutate({ body: payload }, opts),
       mutateAsync: (payload: { count: number; scope: string }) => logExportAudit.mutateAsync({ body: payload }),
     },
   };

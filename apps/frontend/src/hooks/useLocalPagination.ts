@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 export interface UseLocalPaginationOptions<T> {
   items: T[];
@@ -16,16 +16,16 @@ export function useLocalPagination<T>({
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const handleSearchChange = useCallback((val: string) => {
+  const handleSearchChange = ((val: string) => {
     setSearchQuery(val);
     setCurrentPage(1);
-  }, []);
+  });
 
   useEffect(() => {
     setCurrentPage(1);
   }, [items]);
 
-  const filteredItems = useMemo(() => {
+  const filteredItems = (() => {
     if (!searchQuery.trim()) return items;
     const query = searchQuery.toLowerCase();
 
@@ -42,16 +42,16 @@ export function useLocalPagination<T>({
     }
 
     return items;
-  }, [items, searchQuery, searchFields, filterFn]);
+  })();
 
-  const totalPages = useMemo(() => {
+  const totalPages = (() => {
     return Math.max(1, Math.ceil(filteredItems.length / pageSize));
-  }, [filteredItems, pageSize]);
+  })();
 
-  const paginatedItems = useMemo(() => {
+  const paginatedItems = (() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredItems.slice(startIndex, startIndex + pageSize);
-  }, [filteredItems, currentPage, pageSize]);
+  })();
 
   return {
     searchQuery,

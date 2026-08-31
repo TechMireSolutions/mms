@@ -14,7 +14,7 @@ export interface HasanatSettingsProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const HasanatSettings = React.memo(function HasanatSettings({
+export const HasanatSettings = (function HasanatSettings({
   onPrefsDirtyChange,
 }: HasanatSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();

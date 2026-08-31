@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { School } from "lucide-react";
 import { ModuleWorkDirectoryEmpty } from "@/components/ui/ModuleWorkDirectoryEmpty";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
@@ -16,10 +16,7 @@ type TeacherListContentInput = Omit<TeacherListContentProps, "customFieldsById">
 export function TeachersListContent(props: TeacherListContentInput): React.JSX.Element {
   const { t } = useTranslation();
   const { teachers, showDeleted, viewMode, columnRegistry, hasActiveFilters, onClearFilters, onShowActive, canWrite } = props;
-  const customFieldsById = useMemo(
-    () => buildTeacherCustomFieldsById(columnRegistry),
-    [columnRegistry],
-  );
+  const customFieldsById = (() => buildTeacherCustomFieldsById(columnRegistry))();
   const contentProps: TeacherListContentProps = { ...props, customFieldsById };
 
   if (teachers.length === 0) {

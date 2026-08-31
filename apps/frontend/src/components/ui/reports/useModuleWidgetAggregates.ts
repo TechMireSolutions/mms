@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
-import { useMemo } from 'react';
 import type { WidgetQuery, WidgetAggregateResult } from '@mms/shared';
 
 export interface DynamicWidgetInput {
@@ -39,7 +38,7 @@ export function useModuleWidgetAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
 
-  const groupedWidgets = useMemo(() => {
+  const groupedWidgets = (() => {
     const groups: Record<string, WidgetQuery[]> = {};
     for (const widget of widgets) {
       const apiPath = COLLECTION_TO_API_PATH[widget.collection];
@@ -57,9 +56,9 @@ export function useModuleWidgetAggregates(
       });
     }
     return groups;
-  }, [widgets]);
+  })();
 
-  const querySignature = useMemo(() => {
+  const querySignature = (() => {
     return JSON.stringify(
       widgets
         .map((w) => ({
@@ -73,7 +72,7 @@ export function useModuleWidgetAggregates(
         }))
         .sort((a, b) => a.id.localeCompare(b.id))
     );
-  }, [widgets]);
+  })();
 
   const query = useQuery({
     queryKey: ['dynamic_widget_aggregates', querySignature] as const,

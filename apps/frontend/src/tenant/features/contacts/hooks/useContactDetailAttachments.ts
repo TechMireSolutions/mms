@@ -69,11 +69,11 @@ export function useContactDetailAttachments({
     }
   }, [canPersistContact, contactState.attachments, t, updateContactAttachments]);
 
-  const handleFileChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = ((e: ChangeEvent<HTMLInputElement>) => {
     void handleFiles(e.target.files);
-  }, [handleFiles]);
+  });
 
-  const confirmAttachmentDelete = useCallback(async (): Promise<void> => {
+  const confirmAttachmentDelete = (async (): Promise<void> => {
     if (!pendingAttachmentDelete || !canPersistContact) return;
     const remainingAttachments = (contactState.attachments || []).filter(
       (attachment) => attachment.id !== pendingAttachmentDelete.id,
@@ -85,7 +85,7 @@ export function useContactDetailAttachments({
       false,
     );
     if (removed) setPendingAttachmentDelete(null);
-  }, [canPersistContact, contactState.attachments, pendingAttachmentDelete, updateContactAttachments]);
+  });
 
   return {
     isDragging,

@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from "react";
 import {
   canViewContactField,
   CONTACTS_MODULE_MANIFEST,
@@ -46,12 +45,9 @@ export function useContactDetailFields({
   isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
   t: TranslationFunction;
 }) {
-  const heroFieldSet = useMemo(
-    () => new Set<string>(CONTACTS_MODULE_MANIFEST.heroFieldKeys),
-    [],
-  );
+  const heroFieldSet = (() => new Set<string>(CONTACTS_MODULE_MANIFEST.heroFieldKeys))();
 
-  const allFields = useMemo((): DetailFieldView[] => {
+  const allFields = ((): DetailFieldView[] => {
     return Object.entries(fields).flatMap(([tabId, tabFields]) =>
       (tabFields || [])
         .filter((field) => canViewContactField(viewerRole, field))
@@ -64,9 +60,9 @@ export function useContactDetailFields({
           description: resolveRegistryDescription(field, t),
         })),
     );
-  }, [fields, t, viewerRole]);
+  })();
 
-  const visibleCollectionFields = useMemo(() => {
+  const visibleCollectionFields = (() => {
     const relationshipTabId = resolveRelationshipFieldsTabId(fields) ?? "relationship";
     return {
       phones: filterVisibleCollection(fields.phones, viewerRole),
@@ -78,7 +74,7 @@ export function useContactDetailFields({
       skills: filterVisibleCollection(fields.skills, viewerRole),
       relationship: filterVisibleCollection(fields[relationshipTabId], viewerRole),
     };
-  }, [fields, viewerRole]);
+  })();
 
   const fieldsToRender = allFields.filter(
     (field) =>
@@ -94,8 +90,7 @@ export function useContactDetailFields({
     return acc;
   }, {});
 
-  const formatFieldValue = useCallback(
-    (field: { key: string; type: string }): string | null => {
+  const formatFieldValue = ((field: { key: string; type: string }): string | null => {
       const fieldValue = (contactState as Record<string, unknown>)[field.key];
       if (isEmptyValue(fieldValue)) return null;
       if (Array.isArray(fieldValue)) return fieldValue.join(", ");
@@ -109,9 +104,7 @@ export function useContactDetailFields({
         return fieldValue ? t("common.yes") : t("common.no");
       }
       return String(fieldValue);
-    },
-    [contactState, t],
-  );
+    });
 
   return {
     grouped,

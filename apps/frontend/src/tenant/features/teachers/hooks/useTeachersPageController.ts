@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
@@ -112,7 +112,7 @@ export function useTeachersPageController() {
   const mutations = useTeacherMutations();
   const pageActions = useTeachersPageActions({ editTeacher: formState.editTeacher });
 
-  const exportColumns = useMemo(() => {
+  const exportColumns = (() => {
     const visible = columnLayout.columnRegistry.filter((col) =>
       columnLayout.isColumnVisible(col.key),
     );
@@ -130,7 +130,7 @@ export function useTeachersPageController() {
       });
     }
     return columns;
-  }, [columnLayout, t]);
+  })();
 
   const { handleExportCSV, handleBulkExport } = useTeachersExportActions({
     tableColumns: exportColumns,
@@ -163,10 +163,7 @@ export function useTeachersPageController() {
     includeDeleted: showDeleted,
   }, useServerWork);
 
-  const workTeachers = useMemo(
-    () => (workPageQuery.data?.body?.teachers ?? []) as unknown as Teacher[],
-    [workPageQuery.data],
-  );
+  const workTeachers = (() => (workPageQuery.data?.body?.teachers ?? []) as unknown as Teacher[])();
   const shownCount = workPageQuery.data?.body?.total ?? workTeachers.length;
 
   const isWorkError = workPageQuery.isError || (workPageQuery.data != null && workPageQuery.data.status !== 200);

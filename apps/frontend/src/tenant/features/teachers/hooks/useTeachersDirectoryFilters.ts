@@ -60,7 +60,7 @@ export function useTeachersDirectoryFilters({
     sortDir,
   ]);
 
-  const toggleStatus = useCallback((status: string) => {
+  const toggleStatus = ((status: string) => {
     // Manual status selection supersedes any quick-filter preset.
     setQuickFilter('all');
     setFilterStatus((selectedStatuses) =>
@@ -68,7 +68,7 @@ export function useTeachersDirectoryFilters({
         ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
         : [...selectedStatuses, status],
     );
-  }, []);
+  });
 
   const applyDrillDown = useCallback(
     (filter: TeachersWorkDrillDown) => {
@@ -94,24 +94,24 @@ export function useTeachersDirectoryFilters({
     return () => window.removeEventListener(TEACHERS_WORK_DRILLDOWN_EVENT, handler);
   }, [applyDrillDown]);
 
-  const changeQuickFilter = useCallback((preset: string) => {
+  const changeQuickFilter = ((preset: string) => {
     if (!isTeachersQuickFilter(preset)) return;
     // Status presets express status via the preset; clear the overlapping status filter.
     setFilterStatus([]);
     setQuickFilter(preset);
-  }, []);
+  });
 
-  const clearFilters = useCallback(() => {
+  const clearFilters = (() => {
     setSearch('');
     setFilterStatus([]);
     setFilterSpecialization('');
     setFilterGender('');
     setQuickFilter('all');
-  }, []);
+  });
 
-  const clearSelection = useCallback(() => {
+  const clearSelection = (() => {
     setSelectedIds([]);
-  }, []);
+  });
 
   const hasActiveFilters =
     Boolean(search.trim()) ||
@@ -127,13 +127,13 @@ export function useTeachersDirectoryFilters({
     (search.trim() ? 1 : 0) +
     (quickFilter !== 'all' ? 1 : 0);
 
-  const handleSelectOne = useCallback((id: string) => {
+  const handleSelectOne = ((id: string) => {
     setSelectedIds((current) => toggleIdInSelection(current, id));
-  }, []);
+  });
 
-  const handleSelectAll = useCallback((pageIds: string[]) => {
+  const handleSelectAll = ((pageIds: string[]) => {
     setSelectedIds((current) => togglePageIdsInSelection(current, pageIds));
-  }, []);
+  });
 
   return {
     listPage,

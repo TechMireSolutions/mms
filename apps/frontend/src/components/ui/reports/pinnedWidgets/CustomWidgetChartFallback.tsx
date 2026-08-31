@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis } from "recharts";
 import SafeResponsiveContainer from "@/components/ui/SafeResponsiveContainer";
@@ -18,9 +18,9 @@ export default function CustomWidgetChartFallback({
 }): React.JSX.Element | null {
   const { t } = useTranslation();
   const palette = useBrandPalette();
-  const chartData = useMemo(() => {
+  const chartData = (() => {
     return computeWidgetChartData(widget, collections);
-  }, [widget, collections]);
+  })();
 
   const colorHex = resolveWidgetChartHex(widget.color, palette);
 

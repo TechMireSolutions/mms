@@ -9,14 +9,21 @@ import {
   ModuleFilterRadioGroup,
 } from '@/components/ui/ModuleFiltersMenuButton';
 
+/** String options from the filter menu narrowed into the safe channel/status unions. */
+const toChannel = (value: string): "all" | "sms" | "whatsapp" | "email" =>
+  value === "sms" || value === "whatsapp" || value === "email" ? value : "all";
+
+const toStatus = (value: string): "all" | "sent" | "delivered" | "failed" | "skipped" =>
+  value === "sent" || value === "delivered" || value === "failed" || value === "skipped" ? value : "all";
+
 export interface MessagingFiltersMenuButtonProps {
   activeFilterCount: number;
   onClearFilters: () => void;
   channel: string;
-  onChannelChange: (val: any) => void;
+  onChannelChange: (val: "all" | "sms" | "whatsapp" | "email") => void;
   channelOptions: Array<{ value: string; label: string }>;
   status: string;
-  onStatusChange: (val: any) => void;
+  onStatusChange: (val: "all" | "sent" | "delivered" | "failed" | "skipped") => void;
   statusOptions: Array<{ value: string; label: string }>;
   category: string;
   onCategoryChange: (val: string) => void;
@@ -60,14 +67,14 @@ export function MessagingFiltersMenuButton({
       <ModuleFilterRadioGroup
         label={t('messaging.channel')}
         value={channel}
-        onValueChange={onChannelChange}
+        onValueChange={(value: string) => onChannelChange(toChannel(value))}
         options={channelOptions}
       />
       <ModuleFilterDivider />
       <ModuleFilterRadioGroup
         label={t('common.status')}
         value={status}
-        onValueChange={onStatusChange}
+        onValueChange={(value: string) => onStatusChange(toStatus(value))}
         options={statusOptions}
       />
       <ModuleFilterDivider />

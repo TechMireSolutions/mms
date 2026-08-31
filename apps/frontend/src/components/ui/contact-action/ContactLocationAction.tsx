@@ -41,7 +41,7 @@ export interface ContactLocationActionProps {
 /**
  * Reusable location / address action component with Map and Copy buttons.
  */
-export const ContactLocationAction = React.memo(function ContactLocationAction({
+export const ContactLocationAction = (function ContactLocationAction({
   address,
   addressDisplay,
   mapsHref,

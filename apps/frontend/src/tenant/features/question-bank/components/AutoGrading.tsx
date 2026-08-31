@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   calcPercentage as pct,
   type QuestionBankQuestion as Question,
@@ -9,7 +9,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { ReportDataGridContainer } from "@/tenant/components/moduleReports";
-import { sumScores, testTotalMarks, type StatsSummary } from "@/tenant/features/question-bank/components/autoGradingShared";
+import { type StatsSummary, sumScores, testTotalMarks } from '@/tenant/features/question-bank/components/autoGradingShared';
 import { AutoGradingResultRow } from "@/tenant/features/question-bank/components/AutoGradingResultRow";
 import { AutoGradingStats } from "@/tenant/features/question-bank/components/AutoGradingStats";
 
@@ -25,7 +25,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
   const test = tests.find((item) => item.id === selectedTest);
   const testResults = results.filter((result) => result.testId === selectedTest);
 
-  const stats = useMemo<StatsSummary | null>(() => {
+  const stats = (() => {
     if (!test || testResults.length === 0) return null;
     const totalMarks = testTotalMarks(test, questions) || 100;
     const averageScore = Math.round(
@@ -34,7 +34,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
     const highest = Math.max(...testResults.map((result) => sumScores(result.scores)));
     const lowest = Math.min(...testResults.map((result) => sumScores(result.scores)));
     return { avg: averageScore, highest, lowest };
-  }, [test, testResults, questions]);
+  })() as StatsSummary | null;
 
   return (
     <section className="space-y-5" aria-labelledby="auto-grading-title">

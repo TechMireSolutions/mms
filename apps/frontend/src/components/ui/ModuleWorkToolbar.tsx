@@ -57,7 +57,7 @@ export interface ModuleWorkToolbarProps {
   children?: React.ReactNode; 
 }
 
-export const ModuleWorkToolbar = React.memo(function ModuleWorkToolbar({
+export const ModuleWorkToolbar = (function ModuleWorkToolbar({
   shownCountLabel,
   regionLabel,
   search,

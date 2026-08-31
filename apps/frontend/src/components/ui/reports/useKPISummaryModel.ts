@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
@@ -64,8 +64,7 @@ export function useKPISummaryModel({ category, role }: KPISummaryProps): KPISumm
     questionBankResults,
   } = dataSources;
 
-  const standardCards = useMemo(
-    () => buildStandardKPICards({
+  const standardCards = (() => buildStandardKPICards({
       category,
       activeCurrencyCode: activeCurrency.code,
       contactAnalytics,
@@ -87,36 +86,9 @@ export function useKPISummaryModel({ category, role }: KPISummaryProps): KPISumm
       questionBankTests,
       questionBankResults,
       t,
-    }),
-    [
-      category,
-      activeCurrency.code,
-      contactAnalytics,
-      studentMetrics,
-      auxiliaryStudentMetrics,
-      teacherMetrics,
-      auxiliaryTeacherMetrics,
-      attendanceMetrics,
-      financeMetrics,
-      accountingMetrics,
-      obligationsMetrics,
-      usersMetrics,
-      messagingMetrics,
-      hasanatMetrics,
-      sessionsMetrics,
-      examinationsMetrics,
-      questionBankMetrics,
-      questionBankQuestions,
-      questionBankTests,
-      questionBankResults,
-      t,
-    ],
-  );
+    }))();
 
-  const standardPossibleCards = useMemo(
-    () => filterStandardPossibleCards(standardCards, category, can),
-    [standardCards, category, can],
-  );
+  const standardPossibleCards = (() => filterStandardPossibleCards(standardCards, category, can))();
 
   const [editingCardConfig, setEditingCardConfig] = useState<CustomCard | null>(null);
   const [isConfigOpen, setIsConfigOpen] = useState(false);
@@ -132,10 +104,7 @@ export function useKPISummaryModel({ category, role }: KPISummaryProps): KPISumm
     setEditingCardConfig(null);
   }, [category]);
 
-  const possibleCards = useMemo(
-    () => buildPossibleCards(standardPossibleCards, computedCustomCards),
-    [standardPossibleCards, computedCustomCards],
-  );
+  const possibleCards = (() => buildPossibleCards(standardPossibleCards, computedCustomCards))();
 
   const { selectedCardIds, setSelectedCardIds } = useKpiSummaryCardSelection(
     category,
@@ -156,8 +125,7 @@ export function useKPISummaryModel({ category, role }: KPISummaryProps): KPISumm
     setIsConfigOpen,
   );
 
-  const primaryVolume = useMemo(
-    () => computePrimaryVolume({
+  const primaryVolume = (() => computePrimaryVolume({
       category,
       studentMetrics,
       teacherMetrics,
@@ -171,23 +139,7 @@ export function useKPISummaryModel({ category, role }: KPISummaryProps): KPISumm
       questionBankQuestions,
       questionBankTests,
       questionBankResults,
-    }),
-    [
-      category,
-      studentMetrics,
-      teacherMetrics,
-      contactAnalytics,
-      attendanceMetrics,
-      financeMetrics,
-      hasanatMetrics,
-      sessionsMetrics,
-      examinationsMetrics,
-      questionBankMetrics,
-      questionBankQuestions,
-      questionBankTests,
-      questionBankResults,
-    ],
-  );
+    }))();
 
   const categoryLabelKey = getCategoryLabelKey(category);
   const moduleLabel = categoryLabelKey ? t(categoryLabelKey) : category;

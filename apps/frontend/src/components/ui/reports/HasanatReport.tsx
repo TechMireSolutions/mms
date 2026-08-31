@@ -1,4 +1,5 @@
-import React, { lazy, Suspense, useMemo, useState } from "react";
+import React, { lazy, Suspense, useState } from "react";
+import type { HasanatFacultyBarItem, HasanatPieItem } from "./hasanatReportSectionTypes";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import {
   useHasanatDistributions,
@@ -12,7 +13,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { getDenominationPoints } from "@mms/shared";
 import { HasanatDistributionTable } from "./HasanatDistributionTable";
-import type { HasanatFacultyBarItem, HasanatPieItem } from "./hasanatReportSectionTypes";
 
 const HasanatReportCharts = lazy(() =>
   import("./HasanatReportCharts").then((mod) => ({ default: mod.HasanatReportCharts })),
@@ -56,14 +56,11 @@ export interface HasanatByFacultyItem {
  * including faculty distribution bar charts, redemption pie charts,
  * and a filterable distribution table.
  */
-const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatReportProps): React.JSX.Element {
+const HasanatReport = (function HasanatReport({ filters }: HasanatReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const [selectedFaculty, setSelectedFaculty] = useState<string | null>(null);
   const palette = useBrandPalette();
-  const PIE_COLORS = useMemo(
-    () => [palette.primary, palette.secondary, palette.charts[2]],
-    [palette],
-  );
+  const PIE_COLORS = (() => [palette.primary, palette.secondary, palette.charts[2]])();
   const distQuery = useHasanatDistributions();
   const denomsQuery = useHasanatDenoms();
   const aggregatesQuery = useHasanatReportAggregates();
@@ -71,7 +68,7 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
   const distributions = useHasanatDistributionsCollection();
   const denominations = useHasanatDenomsCollection();
 
-  const { distributionData, hasanatByFaculty } = useMemo(() => {
+  const { distributionData, hasanatByFaculty } = (() => {
     const studentMap: Record<string, HasanatReportItem> = {};
     const facultyMap: Record<string, HasanatByFacultyItem> = {};
 
@@ -117,9 +114,9 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
       distributionData: Object.values(studentMap),
       hasanatByFaculty: Object.values(facultyMap),
     };
-  }, [distributions, denominations]);
+  })();
 
-  const distribution = useMemo<HasanatReportItem[]>(() => {
+  const distribution = (() => {
     let filteredDistribution = distributionData;
     if (filters.class !== "all") {
       filteredDistribution = filteredDistribution.filter((hasanatItem) => hasanatItem.class === filters.class);
@@ -133,27 +130,27 @@ const HasanatReport = React.memo(function HasanatReport({ filters }: HasanatRepo
       filteredDistribution = filteredDistribution.filter((hasanatItem) => hasanatItem.faculty === selectedFaculty);
     }
     return filteredDistribution;
-  }, [filters, distributionData, selectedFaculty]);
+  })() as HasanatReportItem[];
 
   const totalRedeemed = distribution.reduce((total, hasanatItem) => total + hasanatItem.redeemed, 0);
   const totalBalance = distribution.reduce((total, hasanatItem) => total + hasanatItem.balance, 0);
 
-  const facultyChartData = useMemo<HasanatFacultyBarItem[]>(() => {
+  const facultyChartData = (() => {
     return hasanatByFaculty.map((facultyTotals) => ({
       faculty: facultyTotals.faculty,
       distributed: facultyTotals.totalDistributed,
       redeemed: facultyTotals.totalRedeemed,
     }));
-  }, [hasanatByFaculty]);
+  })() as HasanatFacultyBarItem[];
 
   const toggleFacultyFilter = (faculty: string) => {
     setSelectedFaculty((current) => (current === faculty ? null : faculty));
   };
 
-  const redemptionPieData = useMemo<HasanatPieItem[]>(() => [
+  const redemptionPieData = (() => [
     { name: t("hasanat.report.redeemedPieLabel"), value: totalRedeemed },
     { name: t("hasanat.report.balancePieLabel"), value: totalBalance },
-  ], [t, totalRedeemed, totalBalance]);
+  ])() as HasanatPieItem[];
 
   if (distQuery.isError || denomsQuery.isError || aggregatesQuery.isError) {
     return (

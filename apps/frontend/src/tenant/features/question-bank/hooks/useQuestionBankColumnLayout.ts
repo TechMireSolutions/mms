@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   QUESTION_BANK_MODULE_MANIFEST,
   buildQuestionBankWorkColumnRegistry,
@@ -9,8 +8,7 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 export function useQuestionBankColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildQuestionBankWorkColumnRegistry({
         text: t('questionBank.columns.text'),
         category: t('questionBank.columns.category'),
@@ -18,9 +16,7 @@ export function useQuestionBankColumnLayout() {
         type: t('questionBank.columns.type'),
         difficulty: t('questionBank.columns.difficulty'),
         source: t('questionBank.columns.source'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: QUESTION_BANK_MODULE_MANIFEST.moduleId,

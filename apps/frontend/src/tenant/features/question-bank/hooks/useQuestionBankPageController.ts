@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState, useEffect } from 'react';
+import { useCallback, useState, useEffect } from 'react';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
@@ -39,13 +39,10 @@ export function useQuestionBankPageController() {
   const tests = useQuestionBankTestsCollection();
   const questionBankResults = useQuestionBankResultsCollection();
   const questionBankConfig = useQuestionBankConfig(questions);
-  const OPS_SUB_TABS = useMemo(
-    () => [
+  const OPS_SUB_TABS = (() => [
       { id: 'questions', label: t('questionBank.questions'), icon: ClipboardList },
       ...(canWrite && !showDeleted ? [{ id: 'generate', label: t('questionBank.generator'), icon: FileText }] : []),
-    ],
-    [t, canWrite, showDeleted],
-  );
+    ])();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('question_bank_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('question_bank_ops_subtab', 'questions');
   const [showQuestionModal, setShowQuestionModal] = useState(false);
@@ -86,23 +83,22 @@ export function useQuestionBankPageController() {
     [questions, replaceQuestions],
   );
 
-  const openAddQuestion = useCallback((): void => {
+  const openAddQuestion = ((): void => {
     setActiveTab('work');
     setActiveSubTab('questions');
     setEditQuestion(null);
     setShowQuestionModal(true);
-  }, [setActiveTab, setActiveSubTab]);
+  });
 
-  const openCreatePaper = useCallback((): void => {
+  const openCreatePaper = ((): void => {
     setActiveTab('work');
     setActiveSubTab('generate');
     setPaperBuilderTab('details');
     setPaperBuilderSession((session) => session + 1);
     setPaperBuilderOpen(true);
-  }, [setActiveTab, setActiveSubTab]);
+  });
 
-  const handleQuestionSave = useCallback(
-    async (question: QuestionBankQuestion): Promise<void> => {
+  const handleQuestionSave = (async (question: QuestionBankQuestion): Promise<void> => {
       const existingQuestion = questions.find((questionItem) => questionItem.id === question.id);
       await setQuestions(
         existingQuestion
@@ -111,22 +107,20 @@ export function useQuestionBankPageController() {
       );
       setShowQuestionModal(false);
       setEditQuestion(null);
-    },
-    [questions, setQuestions],
-  );
+    });
 
-  const closeQuestionModal = useCallback((): void => {
+  const closeQuestionModal = ((): void => {
     setShowQuestionModal(false);
     setEditQuestion(null);
-  }, []);
+  });
 
-  const handleSaveTest = useCallback(async (test: QuestionBankTest) => {
+  const handleSaveTest = (async (test: QuestionBankTest) => {
     await replaceTests.mutateAsync(
       tests.some((paper) => paper.id === test.id)
         ? tests.map((paper) => (paper.id === test.id ? test : paper))
         : [...tests, test],
     );
-  }, [replaceTests, tests]);
+  });
 
   const effectiveTab = resolveModuleTierTab(
     activeTab,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { getQuestionCategoryIds, type QuestionBankQuestion as Question } from "@mms/shared";
 import {
   ALL_FILTER,
@@ -35,11 +35,8 @@ export function usePaperBuilderState({
   const [difficultyFilter, setDifficultyFilter] = useState<DifficultyFilter>(ALL_FILTER);
   const [saved, setSaved] = useState(false);
 
-  const questionsById = useMemo(() => new Map(questions.map((question) => [question.id, question])), [questions]);
-  const selectedQuestionIds = useMemo(
-    () => new Set(sections.flatMap((section) => section.questionIds)),
-    [sections],
-  );
+  const questionsById = (() => new Map(questions.map((question) => [question.id, question])))();
+  const selectedQuestionIds = (() => new Set(sections.flatMap((section) => section.questionIds)))();
   const selectedCount = selectedQuestionIds.size;
   const activeSection = sections.find((section) => section.id === activeSectionId) ?? sections[0];
 
@@ -48,7 +45,7 @@ export function usePaperBuilderState({
     setActiveSectionId(sections[0].id);
   }, [activeSectionId, sections]);
 
-  const filteredQuestions = useMemo(() => {
+  const filteredQuestions = (() => {
     const normalizedSearch = search.trim().toLowerCase();
     return questions.filter((question) => {
       const matchesSearch = !normalizedSearch || question.text.toLowerCase().includes(normalizedSearch);
@@ -57,7 +54,7 @@ export function usePaperBuilderState({
       const matchesDifficulty = difficultyFilter === ALL_FILTER || question.difficulty === difficultyFilter;
       return matchesSearch && matchesCategory && matchesDifficulty;
     });
-  }, [categoryFilter, difficultyFilter, questions, search]);
+  })();
 
   const markDirty = () => setSaved(false);
 

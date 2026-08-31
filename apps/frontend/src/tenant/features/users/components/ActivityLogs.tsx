@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState } from 'react';
 import {
   type ActivityLog,
   type SystemUser,
@@ -28,10 +28,10 @@ export function ActivityLogs({
   const [dateFrom, setFrom] = useState('');
   const [dateTo, setTo] = useState('');
 
-  const userNameFor = useCallback((log: ActivityLog): string =>
-    log.userName ?? users.find((user) => user.id === log.userId)?.name ?? log.userId, [users]);
+  const userNameFor = ((log: ActivityLog): string =>
+    log.userName ?? users.find((user) => user.id === log.userId)?.name ?? log.userId);
 
-  const baseFilteredLogs = useMemo(() => {
+  const baseFilteredLogs = (() => {
     return logs.filter((log) => {
       if (userFilter !== 'all' && log.userId !== userFilter) return false;
       if (actionFilter !== 'all' && log.action !== actionFilter) return false;
@@ -39,7 +39,7 @@ export function ActivityLogs({
       if (dateTo && log.ts > `${dateTo}T23:59:59`) return false;
       return true;
     });
-  }, [logs, userFilter, actionFilter, dateFrom, dateTo]);
+  })();
 
   const {
     searchQuery: search,

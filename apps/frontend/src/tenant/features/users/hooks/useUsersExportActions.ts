@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import type { UserExportColumn, UsersListQuery } from '@mms/shared';
 import { startServerUsersCsvExport } from '@/lib/backgroundJobs/startServerUsersCsvExport';
 import { useModuleServerCsvExportActions } from '@/lib/backgroundJobs/useModuleServerCsvExportActions';
@@ -36,23 +35,17 @@ export function useUsersExportActions({
 }: UseUsersExportActionsOptions) {
   const { t } = useTranslation();
 
-  const buildFilteredQuery = useCallback(
-    (): UsersListQuery => ({
+  const buildFilteredQuery = ((): UsersListQuery => ({
       search: search.trim() || undefined,
       status: statusFilter !== 'all' ? statusFilter : undefined,
       role: roleFilter !== 'all' ? roleFilter : undefined,
-    }),
-    [search, roleFilter, statusFilter],
-  );
+    }));
 
-  const onError = useCallback(
-    (err: unknown) => {
+  const onError = ((err: unknown) => {
       notify.error(t('users.exportFailed'), {
         description: err instanceof Error ? err.message : String(err),
       });
-    },
-    [t],
-  );
+    });
 
   return useModuleServerCsvExportActions<UserExportColumn, UsersListQuery>({
     canExport,

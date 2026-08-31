@@ -65,7 +65,7 @@ function MissingFieldBadge({ label }: { label: string }): JSX.Element {
   );
 }
 
-export const MessagingWorkRecipientsList = React.memo(function MessagingWorkRecipientsList({
+export const MessagingWorkRecipientsList = (function MessagingWorkRecipientsList({
   viewMode,
   contacts,
   selectedById,

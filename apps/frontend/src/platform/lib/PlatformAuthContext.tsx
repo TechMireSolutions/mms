@@ -1,4 +1,4 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import type { PlatformUserProfile } from '@mms/shared';
 import { normalizePlatformAdminPermissions } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
@@ -115,8 +115,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     void checkPlatformAuth();
   }, [checkPlatformAuth]);
 
-  const value = useMemo(
-    () => ({
+  const value = (() => ({
       platformUser,
       isPlatformAuthenticated,
       isCheckingPlatformAuth,
@@ -125,22 +124,11 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       platformLogin,
       platformLogout,
       checkPlatformAuth,
-    }),
-    [
-      platformUser,
-      isPlatformAuthenticated,
-      isCheckingPlatformAuth,
-      isPlatformLoginSubmitting,
-      platformAuthChecked,
-      platformLogin,
-      platformLogout,
-      checkPlatformAuth,
-    ],
-  );
+    }))();
 
-  const handleTimeoutLogout = useCallback(() => {
+  const handleTimeoutLogout = (() => {
     void platformLogout();
-  }, [platformLogout]);
+  });
 
   return (
     <PlatformAuthContext.Provider value={value}>

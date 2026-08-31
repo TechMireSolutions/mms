@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type RefObject } from 'react';
+import { useEffect, useState, type RefObject } from 'react';
 import {
   computeAxisFontSize,
   computeLegendFontSize,
@@ -21,9 +21,9 @@ export function useDynamicChartVisualizerContainer(chartRef: RefObject<HTMLDivEl
     return () => observer.disconnect();
   }, [chartRef]);
 
-  const axisFontSize = useMemo(() => computeAxisFontSize(containerWidth), [containerWidth]);
-  const legendFontSize = useMemo(() => computeLegendFontSize(containerWidth), [containerWidth]);
-  const tickGap = useMemo(() => computeTickGap(containerWidth), [containerWidth]);
+  const axisFontSize = (() => computeAxisFontSize(containerWidth))();
+  const legendFontSize = (() => computeLegendFontSize(containerWidth))();
+  const tickGap = (() => computeTickGap(containerWidth))();
 
   return { containerWidth, axisFontSize, legendFontSize, tickGap };
 }

@@ -20,10 +20,10 @@ export function buildSessionStatusConfig(
   t: TranslationFunction,
 ): Record<string, StatusBadgeConfigItem> {
   return {
-    active: { label: t("sessions.status.active") || "Active", cls: SEMANTIC_BADGE.success },
-    upcoming: { label: t("sessions.status.upcoming") || "Upcoming", cls: SEMANTIC_BADGE.info },
-    completed: { label: t("sessions.status.completed") || "Completed", cls: SEMANTIC_BADGE.muted },
-    cancelled: { label: t("sessions.status.cancelled") || "Cancelled", cls: SEMANTIC_BADGE.destructive },
+    active: { label: t("sessions.status.active"), cls: SEMANTIC_BADGE.success },
+    upcoming: { label: t("sessions.status.upcoming"), cls: SEMANTIC_BADGE.info },
+    completed: { label: t("sessions.status.completed"), cls: SEMANTIC_BADGE.muted },
+    cancelled: { label: t("sessions.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
   };
 }
 

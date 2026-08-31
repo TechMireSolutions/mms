@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Modal } from '@/components/ui/Modal';
 import { FormErrorBanner } from '@/components/ui/FormErrorBanner';
 import { FormModalTabs } from '@/components/ui/FormModalTabs';
@@ -30,7 +30,7 @@ export interface FormModalProps<K extends string = string> {
   dir?: 'ltr' | 'rtl';
   cancelLabel?: string;
   saveLabel?: string;
-  onSave?: (options?: { keepOpen?: boolean } | any) => void | Promise<unknown>;
+  onSave?: (options?: { keepOpen?: boolean }) => void | Promise<unknown>;
   isDirty?: boolean;
   saving?: boolean;
   saveDisabled?: boolean;
@@ -84,13 +84,12 @@ export function FormModal<K extends string = string>({
   children,
 }: FormModalProps<K>): React.JSX.Element {
   const { t } = useTranslation();
-  const errors = useMemo(() => {
+  const errors = (() => {
     if (!error) return [];
     return (Array.isArray(error) ? error : [error]).filter(Boolean);
-  }, [error]);
+  })();
 
-  const handleTabChange = React.useCallback(
-    async (nextTab: K) => {
+  const handleTabChange = (async (nextTab: K) => {
       if (nextTab === activeTab) return;
       if (isDirty && onSave && !saveDisabled && !saving) {
         try {
@@ -101,9 +100,7 @@ export function FormModal<K extends string = string>({
         }
       }
       onTabChange?.(nextTab);
-    },
-    [activeTab, isDirty, onSave, onTabChange, saveDisabled, saving],
-  );
+    });
 
   const {
     hasTabs,

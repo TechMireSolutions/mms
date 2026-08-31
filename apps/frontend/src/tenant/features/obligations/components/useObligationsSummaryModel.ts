@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { ObligationCollection, ObligationDistribution, ObligationType, Mujtahid, MujtahidRep, WakalaType } from "@/lib/data/obligationsData";
 import { useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { useDebounce } from "@/hooks/useDebounce";
@@ -36,7 +36,7 @@ export function useObligationsSummaryModel(
   const usersRaw = useMergedObligationUsers();
   const users = Array.isArray(usersRaw) ? usersRaw : [];
   const { primary, secondary, charts } = useBrandPalette();
-  const COLORS = useMemo(() => [primary, charts[3], secondary, charts[4], charts[0], charts[2]], [primary, secondary, charts]);
+  const COLORS = (() => [primary, charts[3], secondary, charts[4], charts[0], charts[2]])();
 
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -47,7 +47,7 @@ export function useObligationsSummaryModel(
 
   const debouncedSearch = useDebounce(search, 300);
 
-  const filtered = useMemo(() => collections.filter((collection) => {
+  const filtered = (() => collections.filter((collection) => {
     if (typeFilter !== "all" && collection.obligation_type_id !== typeFilter) return false;
     if (repFilter !== "all" && collection.mujtahid_representative_id !== repFilter) return false;
     if (userFilter !== "all" && collection.received_by !== userFilter) return false;
@@ -60,13 +60,13 @@ export function useObligationsSummaryModel(
       if (!collection.receipt_no.toLowerCase().includes(searchQuery) && !repName.includes(searchQuery) && !typeName.includes(searchQuery)) return false;
     }
     return true;
-  }), [collections, typeFilter, repFilter, userFilter, dateFrom, dateTo, debouncedSearch, reps, obligationTypes]);
+  }))();
 
   const totalAmount = filtered.reduce((sum, collection) => sum + collection.amount, 0);
   const totalRecords = filtered.length;
   const uniqueReps = new Set(filtered.map((collection) => collection.mujtahid_representative_id)).size;
 
-  const wakalaSummary = useMemo(() => {
+  const wakalaSummary = (() => {
     const wakalaSummaryByKey: Record<string, WakalaSummaryEntry> = {};
     filtered.forEach((collection) => {
       const rep = reps.find((candidateRep) => candidateRep.id === collection.mujtahid_representative_id);
@@ -93,9 +93,9 @@ export function useObligationsSummaryModel(
       wakalaSummaryByKey[key].total += collection.amount;
     });
     return Object.values(wakalaSummaryByKey).sort((a, b) => b.total - a.total);
-  }, [filtered, reps, mujtahids, wakalaTypes, distributions, obligationTypes, t]);
+  })();
 
-  const repSummary = useMemo(() => {
+  const repSummary = (() => {
     const repSummaryByKey: Record<string, RepSummaryEntry> = {};
     filtered.forEach((collection) => {
       const rep = reps.find((candidateRep) => candidateRep.id === collection.mujtahid_representative_id);
@@ -127,9 +127,9 @@ export function useObligationsSummaryModel(
       repSummaryByKey[key].byType[typeName] = (repSummaryByKey[key].byType[typeName] ?? 0) + amount;
     });
     return Object.values(repSummaryByKey).sort((a, b) => b.total - a.total);
-  }, [filtered, reps, mujtahids, wakalaTypes, distributions, obligationTypes, t]);
+  })();
 
-  const typeBreakdown = useMemo(() => {
+  const typeBreakdown = (() => {
     const typeBreakdownByName: Record<string, TypeBreakdownEntry> = {};
     filtered.forEach((collection) => {
       const name = obligationTypes.find((obligationType) => obligationType.id === collection.obligation_type_id)?.name ?? t("obligations.summary.other");
@@ -138,9 +138,9 @@ export function useObligationsSummaryModel(
       typeBreakdownByName[name].count++;
     });
     return Object.values(typeBreakdownByName).sort((a, b) => b.total - a.total);
-  }, [filtered, obligationTypes, t]);
+  })();
 
-  const monthlyTrend = useMemo(() => {
+  const monthlyTrend = (() => {
     const monthlyTrendByMonth: Record<string, Omit<MonthlyTrendEntry, "label">> = {};
     filtered.forEach((collection) => {
       const month = collection.received_date?.slice(0, 7) ?? t("obligations.summary.unknown");
@@ -152,24 +152,24 @@ export function useObligationsSummaryModel(
       ...monthlyEntry,
       label: formatMonthYear(monthlyEntry.month + "-01"),
     }));
-  }, [filtered, t]);
+  })();
 
   const hasFilters = dateFrom || dateTo || repFilter !== "all" || typeFilter !== "all" || userFilter !== "all" || search;
 
-  const repOptions = useMemo(() => [
+  const repOptions = (() => [
     { value: "all", label: t("obligations.summary.filters.allReps") },
     ...reps.map((rep) => ({ value: rep.id, label: rep.name }))
-  ], [reps, t]);
+  ])();
 
-  const typeOptions = useMemo(() => [
+  const typeOptions = (() => [
     { value: "all", label: t("obligations.summary.filters.allTypes") },
     ...obligationTypes.map((obligationType) => ({ value: obligationType.id, label: obligationType.name }))
-  ], [obligationTypes, t]);
+  ])();
 
-  const userOptions = useMemo(() => [
+  const userOptions = (() => [
     { value: "all", label: t("obligations.summary.filters.allCollectors") },
     ...users.map((user) => ({ value: user.id, label: user.name || "" }))
-  ], [users, t]);
+  ])();
 
   const clearFilters = () => {
     setDateFrom("");

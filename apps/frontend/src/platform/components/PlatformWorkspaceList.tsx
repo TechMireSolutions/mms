@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Globe, Ban, Download, ArrowUpDown } from 'lucide-react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
@@ -84,7 +84,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
 
   const items = workspaces ?? [];
 
-  const filteredItems = useMemo(() => {
+  const filteredItems = (() => {
     return items.filter((workspace) => {
       const matchesSearch =
         workspace.madrasaName.toLowerCase().includes(search.toLowerCase()) ||
@@ -97,9 +97,9 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
 
       return matchesSearch && matchesStatus;
     });
-  }, [items, search, statusFilter]);
+  })();
 
-  const sortedItems = useMemo(() => {
+  const sortedItems = (() => {
     return [...filteredItems].sort((a, b) => {
       let comparison = 0;
       if (sortField === 'name') {
@@ -113,7 +113,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
       }
       return sortDirection === 'asc' ? comparison : -comparison;
     });
-  }, [filteredItems, sortField, sortDirection]);
+  })();
 
   const totalCount = items.length;
   const activeCount = items.filter((w) => w.enabled).length;

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { resolveTeacherSpecializations, resolveTeacherStatuses } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -13,7 +12,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 export function useTeacherStatusConfig(): Record<string, StatusBadgeConfigItem> {
   const { t } = useTranslation();
   const { statuses } = useTeacherConfig();
-  return useMemo(() => teacherStatusBadgeConfig(t, statuses), [statuses, t]);
+  return (() => teacherStatusBadgeConfig(t, statuses))();
 }
 
 /**
@@ -26,12 +25,9 @@ export function useTeacherLookupOptions(): {
   specializationOptions: string[];
 } {
   const { statuses, specializations } = useTeacherConfig();
-  return useMemo(
-    () => ({
+  return (() => ({
       statusOptions: [...resolveTeacherStatuses(statuses)],
       specializationOptions: [...resolveTeacherSpecializations(specializations)],
-    }),
-    [statuses, specializations],
-  );
+    }))();
 }
 

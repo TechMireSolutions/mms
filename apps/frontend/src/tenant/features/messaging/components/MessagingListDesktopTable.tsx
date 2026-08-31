@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import {
   AlertCircle,
   Check,
@@ -51,7 +51,7 @@ export interface MessagingListDesktopTableProps {
   onFilterContact?: (name: string) => void;
 }
 
-export const MessagingListDesktopTable = React.memo(function MessagingListDesktopTable({
+export const MessagingListDesktopTable = (function MessagingListDesktopTable({
   logs,
   selectedIds,
   allVisibleSelected,
@@ -76,8 +76,7 @@ export const MessagingListDesktopTable = React.memo(function MessagingListDeskto
   const showBody = isColumnVisible('body');
   const showDateSent = isColumnVisible('dateSent');
 
-  const handleCopyBody = useCallback(
-    async (e: React.MouseEvent, log: Message): Promise<void> => {
+  const handleCopyBody = (async (e: React.MouseEvent, log: Message): Promise<void> => {
       e.stopPropagation();
       try {
         await navigator.clipboard.writeText(log.body);
@@ -87,9 +86,7 @@ export const MessagingListDesktopTable = React.memo(function MessagingListDeskto
       } catch {
         notify.error(t('messaging.loadFailedHint'));
       }
-    },
-    [t],
-  );
+    });
 
   const selectedCount = Object.keys(selectedIds).length;
   const pageCountLabel = formatDirectoryPageCountLabel(logs.length, t, {

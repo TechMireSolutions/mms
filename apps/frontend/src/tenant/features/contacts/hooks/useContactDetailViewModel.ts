@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { LayoutDashboard } from "lucide-react";
 import {
   Contact,
@@ -39,7 +39,7 @@ export function useContactDetailViewModel({
   const isArchived = Boolean(contactState.deletedAt ?? initialContact.deletedAt);
   const canPersistContact = canWrite && Boolean(onUpdateContact) && !isArchived;
 
-  const detailTabs = useMemo(() => {
+  const detailTabs = (() => {
     const systemTabs = Array.from(DEFAULT_DETAIL_TAB_BY_KEY.values()).map((tab) => ({
       key: tab.key,
       label: tab.labelKey ? t(tab.labelKey) : tab.label,
@@ -55,7 +55,7 @@ export function useContactDetailViewModel({
       }));
 
     return [...systemTabs, ...customTabs];
-  }, [t, formTabs, enabledTabIds]);
+  })();
 
   const [activeTab, setActiveTab] = useState<string>(() => detailTabs[0]?.key || "");
 
@@ -73,12 +73,12 @@ export function useContactDetailViewModel({
     });
   }, [initialContact.id, detailTabs]);
 
-  const combinedActivities = useMemo(() => {
+  const combinedActivities = (() => {
     const noteActs = contactState.activities || [];
     return [...noteActs].sort(
       (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime(),
     );
-  }, [contactState.activities]);
+  })();
 
   const { grouped, formatFieldValue, visibleCollectionFields } = useContactDetailFields({
     fields,

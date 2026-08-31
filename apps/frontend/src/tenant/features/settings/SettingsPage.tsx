@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback } from 'react';
+import React, { Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
@@ -31,14 +31,11 @@ export default function Settings(): React.JSX.Element {
   const { t } = useTranslation();
   const [tab, setTab] = usePersistedTabState<SettingsSection>('mms-settings-tab', 'global');
 
-  const handleTabChange = useCallback(
-    (id: string) => {
+  const handleTabChange = ((id: string) => {
       if (isSettingsSection(id)) {
         setTab(id);
       }
-    },
-    [setTab],
-  );
+    });
 
   const tabs: AccordionTabItem[] = SETTINGS_NAV.map((item) => ({
     id: item.id,

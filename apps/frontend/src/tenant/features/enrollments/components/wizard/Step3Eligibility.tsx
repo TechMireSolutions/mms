@@ -1,6 +1,6 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
-import { runFullEligibility, CheckResult } from '@/lib/data/enrollmentData';
+import { type CheckResult, runFullEligibility } from '@/lib/data/enrollmentData';
 import { Student } from '@/lib/data/studentsData';
 import { Session, Class } from '@/lib/data/sessionsData';
 import { useTranslation } from "@/hooks/useTranslation";
@@ -32,10 +32,8 @@ export interface Step3EligibilityProps {
 
 export function Step3Eligibility({ student, session, suggestedClass }: Step3EligibilityProps): React.JSX.Element {
   const { t } = useTranslation();
-  const checks = useMemo<CheckResult[]>(() =>
-    runFullEligibility(student, session, suggestedClass, []),
-    [student, session, suggestedClass]
-  );
+  const checks = (() =>
+    runFullEligibility(student, session, suggestedClass, []))() as CheckResult[];
 
   const passCount = checks.filter((check) => check.status === "pass").length;
   const failCount = checks.filter((check) => check.status === "fail").length;

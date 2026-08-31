@@ -34,7 +34,7 @@ export interface StudentFormTabContentProps {
   onDraftChange: (patch: Partial<Student>) => void;
 }
 
-export const StudentFormTabContent = React.memo(function StudentFormTabContent({
+export const StudentFormTabContent = (function StudentFormTabContent({
   tab,
   formInstanceId,
   studentDraft,

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import type { Contact } from "@mms/shared";
 import { getScopedBrandingSettings } from "@/lib/settingsPreviewStore";
 import type { ContactsPageOverlaysProps } from "@/tenant/features/contacts/components/ContactsPageOverlays";
@@ -45,16 +44,15 @@ export function useContactsPageOverlayProps({
   const defaultCity = branding.city || "";
   const defaultProvince = branding.region || "";
 
-  const currentViewContact = useMemo(() => {
+  const currentViewContact = (() => {
     if (!overlay.viewContact) return null;
     const fresh = allContactsForLinks.find(
       (c) => String(c.id) === String(overlay.viewContact?.id),
     );
     return fresh ?? overlay.viewContact;
-  }, [overlay.viewContact, allContactsForLinks]);
+  })();
 
-  return useMemo(
-    () => ({
+  return (() => ({
       canWrite,
       canDelete,
       showForm: overlay.showForm,
@@ -105,20 +103,5 @@ export function useContactsPageOverlayProps({
       bulkRestoreOpen: overlay.bulkRestoreOpen,
       onBulkRestoreOpenChange: overlay.setBulkRestoreOpen,
       onConfirmBulkRestore: actions.confirmBulkRestore,
-    }),
-    [
-      canWrite,
-      canDelete,
-      overlay,
-      defaultCountry,
-      defaultCity,
-      defaultProvince,
-      actions,
-      messaging,
-      currentViewContact,
-      messagingHandlers,
-      allContactsForLinks,
-      selectedCount,
-    ],
-  );
+    }))();
 }

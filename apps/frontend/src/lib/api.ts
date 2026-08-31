@@ -128,7 +128,27 @@ export const tsr = {
   platform: tsrClient.platform as unknown as DomainTsr<typeof platformContract>,
 };
 
+/**
+ * Typed structural view over the direct-call client.
+ *
+ * WHY not the contract-generic `Client` type: @ts-rest 3.52.1 route
+ * classification fails under TS 5.9 instantiation (even single-route contracts
+ * do not satisfy `AppRoute`), so contract-generic clients degrade to
+ * non-callable unions. Instead of `any`, callers get `unknown` request bodies
+ * and responses — narrowing against the shared-contract SSOT happens at the
+ * call site with explicit casts (unknown + narrowing, never any).
+ */
+type ApiCallArgs = {
+  query?: object;
+  params?: object;
+  body?: unknown;
+  rawBody?: unknown;
+  extraHeaders?: Record<string, string>;
+};
+type ApiCallResponse = { status: number; body: unknown; headers: Headers };
+type ApiContract = Record<string, Record<string, (args?: ApiCallArgs) => Promise<ApiCallResponse>>>;
+
 export const apiContract = initClient(rootContract, {
   baseUrl: typeof window !== 'undefined' ? window.location.origin : '',
   api: tsrApiFetcher,
-}) as any; // ts-rest initClient union discrimination limit — callers use direct-call pattern
+}) as unknown as ApiContract;

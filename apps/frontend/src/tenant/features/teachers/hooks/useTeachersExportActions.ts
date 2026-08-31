@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import {
   DEFAULT_TEACHER_EXPORT_COLUMNS,
   teacherColumnLabelKey,
@@ -53,8 +52,7 @@ export function useTeachersExportActions({
 }: UseTeachersExportActionsOptions) {
   const { t } = useTranslation();
 
-  const buildFilteredQuery = useCallback(
-    (): TeachersListQuery =>
+  const buildFilteredQuery = ((): TeachersListQuery =>
       buildTeachersDirectoryQuery({
         search,
         filterStatus,
@@ -63,18 +61,13 @@ export function useTeachersExportActions({
         quickFilter,
         sortField,
         sortDir,
-      }),
-    [search, filterStatus, filterSpecialization, filterGender, quickFilter, sortField, sortDir],
-  );
+      }));
 
-  const onError = useCallback(
-    (err: unknown, _scope: string) => {
+  const onError = ((err: unknown, _scope: string) => {
       notify.error(t("teachers.exportFailed"), {
         description: err instanceof Error ? err.message : String(err),
       });
-    },
-    [t],
-  );
+    });
 
   return useModuleServerCsvExportActions<TeacherExportColumn, TeachersListQuery>({
     canExport,

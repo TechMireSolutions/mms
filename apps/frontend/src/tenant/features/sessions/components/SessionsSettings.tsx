@@ -12,7 +12,7 @@ export interface SessionsSettingsProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const SessionsSettings = React.memo(function SessionsSettings({
+export const SessionsSettings = (function SessionsSettings({
   onPrefsDirtyChange,
 }: SessionsSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();

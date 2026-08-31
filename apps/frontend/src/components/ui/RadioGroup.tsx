@@ -25,15 +25,12 @@ const RadioGroup = React.forwardRef<HTMLDivElement, RadioGroupProps>(
     const isControlled = controlledValue !== undefined;
     const value = isControlled ? controlledValue : uncontrolledValue;
 
-    const onChange = React.useCallback(
-      (nextValue: string) => {
+    const onChange = ((nextValue: string) => {
         if (!isControlled) {
           setUncontrolledValue(nextValue);
         }
         onValueChange?.(nextValue);
-      },
-      [isControlled, onValueChange],
-    );
+      });
 
     return (
       <RadioGroupContext.Provider value={{ name, value, onChange, disabled }}>

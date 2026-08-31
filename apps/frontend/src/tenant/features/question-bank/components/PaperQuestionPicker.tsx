@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FORM_INPUT, WORK_SURFACE } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import {
   type QuestionBankQuestion as Question,
 } from "@mms/shared";
 import type { DifficultyFilter, PaperSection } from "@/tenant/features/question-bank/components/paperBuilderUtils";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { CategoryColorChip } from "@/tenant/features/question-bank/components/CategoryColorChip";
 
@@ -53,11 +53,11 @@ export function PaperQuestionPicker({
   onSearchChange,
 }: PaperQuestionPickerProps): React.ReactElement {
   const { t } = useTranslation();
-  const difficultyConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const difficultyConfig = (() => ({
     easy: { label: difficultyLabel("easy"), cls: SEMANTIC_BADGE.success },
     medium: { label: difficultyLabel("medium"), cls: SEMANTIC_BADGE.warning },
     hard: { label: difficultyLabel("hard"), cls: SEMANTIC_BADGE.destructive },
-  }), [difficultyLabel]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   return (
     <section className={`${WORK_SURFACE} p-3 sm:p-4`}>

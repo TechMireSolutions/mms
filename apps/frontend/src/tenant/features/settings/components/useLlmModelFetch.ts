@@ -36,7 +36,7 @@ export function useLlmModelFetch({
       const fetchModels = async () => {
         setFetchingModels(true);
         try {
-          const { status, body } = await apiContract.ai.models({
+          const res = await apiContract.ai.models({
             body: {
               provider: formProvider,
               apiKey: key || undefined,
@@ -44,6 +44,8 @@ export function useLlmModelFetch({
               baseUrl: formBaseUrl.trim() || undefined,
             },
           });
+          const status = res.status;
+          const body = res.body as { success?: boolean; models?: string[] };
           if (status === 200 && body.success && body.models && body.models.length > 0) {
             const models = body.models;
             setFetchedModels(models);

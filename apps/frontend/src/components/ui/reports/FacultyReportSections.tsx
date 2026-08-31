@@ -33,7 +33,7 @@ interface FacultyReportChartSectionProps {
   onBarClick: (faculty: string) => void;
 }
 
-export const FacultyReportChartSection = React.memo(function FacultyReportChartSection({ t, facultyWorkload, onBarClick }: FacultyReportChartSectionProps): React.JSX.Element {
+export const FacultyReportChartSection = (function FacultyReportChartSection({ t, facultyWorkload, onBarClick }: FacultyReportChartSectionProps): React.JSX.Element {
   return (
     <ReportChartCard
       title={t("teachers.report.workloadOverview")}

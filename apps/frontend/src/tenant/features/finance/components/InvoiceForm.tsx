@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ReceiptText } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
@@ -24,7 +24,7 @@ export interface InvoiceFormProps {
   onSave: (invoice: InvoiceCreateInput) => void | Promise<void>;
 }
 
-export const InvoiceForm = React.memo(function InvoiceForm({
+export const InvoiceForm = (function InvoiceForm({
   open,
   saving = false,
   onClose,
@@ -44,7 +44,7 @@ export const InvoiceForm = React.memo(function InvoiceForm({
       }, [open, settings.dueDays]);
 
       const { baseFee, discountValue, discountAmt, finalAmt } = computeInvoiceAmounts(draft.baseFee, draft.discountValue);
-      const canSave = useMemo(() => canSaveInvoiceDraft(draft, baseFee), [baseFee, draft]);
+      const canSave = (() => canSaveInvoiceDraft(draft, baseFee))();
 
       const setField = (key: keyof InvoiceDraft, value: string): void => {
         setDraft((currentDraft) => ({ ...currentDraft, [key]: value }));

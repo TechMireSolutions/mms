@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSavedFlash } from '@/tenant/hooks/useSavedFlash';
 import {
   isBrandingFieldsDirty,
@@ -69,12 +69,12 @@ export function useBrandingDraft({
   const [data, setData] = useState<BrandingSettings>(loadDraftBranding);
   const [saving, setSaving] = useState(false);
 
-  const isDirty = useMemo(() => {
+  const isDirty = (() => {
     if (!trackKeys) {
       return JSON.stringify(data) !== JSON.stringify(baseline);
     }
     return isBrandingFieldsDirty(data, baseline, trackKeys);
-  }, [baseline, data, trackKeys]);
+  })();
 
   useEffect(() => {
     const sync = (): void => {
@@ -93,21 +93,20 @@ export function useBrandingDraft({
     previewBrandingSettings(buildBrandingPreviewPatch(merged, trackKeys));
   }, [data, trackKeys]);
 
-  const applyPersisted = useCallback((brandingSettings: BrandingSettings): void => {
+  const applyPersisted = ((brandingSettings: BrandingSettings): void => {
     const merged = mergeBrandingSettings(brandingSettings);
     setBaseline(merged);
     setData(merged);
     clearBrandingSettingsPreview();
     clearSaved();
-  }, [clearSaved]);
+  });
 
-  const upd = useCallback(<K extends keyof BrandingSettings>(field: K, value: BrandingSettings[K]): void => {
+  const upd = (<K extends keyof BrandingSettings>(field: K, value: BrandingSettings[K]): void => {
     setData((current) => ({ ...current, [field]: value }));
     clearSaved();
-  }, [clearSaved]);
+  });
 
-  const handleSave = useCallback(
-    async (
+  const handleSave = (async (
       toast?: UseBrandingDraftSaveToast,
       options?: UseBrandingDraftSaveOptions,
     ): Promise<boolean> => {
@@ -138,12 +137,9 @@ export function useBrandingDraft({
       } finally {
         setSaving(false);
       }
-    },
-    [data, flashSaved, saveSuccessDescription, saveSuccessMessage, t],
-  );
+    });
 
-  const handleSaveIdentity = useCallback(
-    async (toast?: UseBrandingDraftSaveToast): Promise<boolean> => {
+  const handleSaveIdentity = (async (toast?: UseBrandingDraftSaveToast): Promise<boolean> => {
       setSaving(true);
       try {
         const cleanedSocialLinks = (data.socialLinks || []).filter(
@@ -170,11 +166,9 @@ export function useBrandingDraft({
       } finally {
         setSaving(false);
       }
-    },
-    [baseline, data, flashSaved, saveSuccessDescription, saveSuccessMessage, t, trackKeys],
-  );
+    });
 
-  const handleDiscardIdentity = useCallback((): void => {
+  const handleDiscardIdentity = ((): void => {
     setData((current) => ({
       ...current,
       madrasaName: baseline.madrasaName,
@@ -193,7 +187,7 @@ export function useBrandingDraft({
       socialLinks: baseline.socialLinks,
     }));
     clearSaved();
-  }, [baseline, clearSaved]);
+  });
 
   return {
     data,

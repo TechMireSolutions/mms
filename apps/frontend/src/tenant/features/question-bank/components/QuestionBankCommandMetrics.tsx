@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import {
   HelpCircle, Filter, Sparkles, BarChart3,
 } from 'lucide-react';
@@ -11,14 +11,14 @@ interface QuestionBankCommandMetricsProps {
   total: number;
 }
 
-export const QuestionBankCommandMetrics = React.memo(function QuestionBankCommandMetrics({
+export const QuestionBankCommandMetrics = (function QuestionBankCommandMetrics({
   shown,
   total,
 }: QuestionBankCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: serverMetrics } = useQuestionBankMetrics();
 
-  const metrics = useMemo(() => ({
+  const metrics = (() => ({
     total: serverMetrics?.total ?? total,
     easy: serverMetrics?.easy ?? 0,
     medium: serverMetrics?.medium ?? 0,
@@ -26,14 +26,14 @@ export const QuestionBankCommandMetrics = React.memo(function QuestionBankComman
     totalTests: serverMetrics?.totalTests ?? 0,
     totalResults: serverMetrics?.totalResults ?? 0,
     categories: serverMetrics?.categories ?? 0,
-  }), [serverMetrics, total]);
+  }))();
 
-  const items = useMemo(() => [
+  const items = (() => [
     { icon: HelpCircle, label: t('questionBank.metrics.total'), value: metrics.total, accent: 'primary' as const },
     { icon: Filter, label: t('questionBank.metrics.filtered'), value: shown, accent: 'info' as const },
     { icon: Sparkles, label: t('questionBank.metrics.easy'), value: metrics.easy, accent: 'success' as const },
     { icon: BarChart3, label: t('questionBank.metrics.medium'), value: metrics.medium, accent: 'warning' as const },
-  ], [t, shown, metrics]);
+  ])();
 
   return <ModuleCommandMetricsGrid items={items} />;
 });

@@ -104,20 +104,22 @@ export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions
     };
 
     try {
-      const { status, body } = await apiContract.ai.test({
+      const res = await apiContract.ai.test({
         body: {
           prompt: 'Test connectivity check',
           customConfig,
         },
       });
+      const status = res.status;
+      const body = res.body as LlmTestResult;
       if (status !== 200) {
         throw new Error(body.message || 'Failed to test connection');
       }
-      setModalTestResult(body as any);
-    } catch (err: any) {
+      setModalTestResult(body);
+    } catch (err: unknown) {
       setModalTestResult({
         success: false,
-        message: err.message || t('settings.llmTestConnectionFailed'),
+        message: (err instanceof Error ? err.message : undefined) || t('settings.llmTestConnectionFailed'),
       });
     } finally {
       setModalTesting(false);

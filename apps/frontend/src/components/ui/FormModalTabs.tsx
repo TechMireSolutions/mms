@@ -17,7 +17,7 @@ interface FormModalTabsProps<K extends string = string> {
  * viewport — so half-desktop and full-desktop keep the same chrome while the
  * dialog stays max-w-2xl.
  */
-export const FormModalTabs = React.memo(function FormModalTabs<K extends string = string>({
+export const FormModalTabs = (function FormModalTabs<K extends string = string>({
   tabs,
   activeTab,
   onTabChange,

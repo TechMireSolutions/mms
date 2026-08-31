@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import type { SessionExportColumn, SessionsListQuery } from "@mms/shared";
 import { startServerSessionsCsvExport } from "@/lib/backgroundJobs/startServerSessionsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
@@ -41,23 +40,17 @@ export function useSessionsExportActions({
 }: UseSessionsExportActionsOptions) {
   const { t } = useTranslation();
 
-  const buildFilteredQuery = useCallback(
-    (): SessionsListQuery => ({
+  const buildFilteredQuery = ((): SessionsListQuery => ({
       search: search.trim() || undefined,
       status: filterStatus.length > 0 ? filterStatus.join(",") : undefined,
       type: filterType.length > 0 ? filterType.join(",") : undefined,
       sortField,
       sortDir,
-    }),
-    [search, filterStatus, filterType, sortField, sortDir],
-  );
+    }));
 
-  const onError = useCallback(
-    () => {
+  const onError = (() => {
       notify.error(t("sessions.exportFailed"));
-    },
-    [t],
-  );
+    });
 
   return useModuleServerCsvExportActions<SessionExportColumn, SessionsListQuery>({
     canExport,

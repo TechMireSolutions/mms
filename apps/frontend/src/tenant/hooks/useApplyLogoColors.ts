@@ -1,4 +1,4 @@
-import { useCallback, useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import type { LogoColorProportion } from '@mms/shared';
 import { extractLogoBrandColors } from '@/lib/extractLogoBrandColors';
 import { notify } from '@/lib/notify';
@@ -69,28 +69,28 @@ export function useApplyLogoColors({
     };
   }, []);
 
-  const clearPalette = useCallback(() => {
+  const clearPalette = (() => {
     setExtractedPalette([]);
     setProportions([]);
     setBestPair(null);
-  }, []);
+  });
 
-  const setSampleLogo = useCallback((dataUrl: string) => {
+  const setSampleLogo = ((dataUrl: string) => {
     setSampleLogoUrl(dataUrl);
-  }, []);
+  });
 
-  const clearSampleLogo = useCallback(() => {
+  const clearSampleLogo = (() => {
     setSampleLogoUrl(null);
-  }, []);
+  });
 
-  const applyBestPair = useCallback(() => {
+  const applyBestPair = (() => {
     if (!bestPair) return;
     onPrimaryChange(bestPair.primary);
     onSecondaryChange(bestPair.secondary);
     notify.success(t('theme.logoColorsApplied'), { description: t('theme.logoColorsAppliedDesc') });
-  }, [bestPair, onPrimaryChange, onSecondaryChange, t]);
+  });
 
-  const apply = useCallback(async (): Promise<void> => {
+  const apply = (async (): Promise<void> => {
     if (applying) return;
     if (!effectiveLogoUrl) {
       notify.error(t('theme.logoColorsMissing'), { description: t('theme.logoColorsMissingDesc') });
@@ -125,7 +125,7 @@ export function useApplyLogoColors({
         controllerRef.current = null;
       }
     }
-  }, [effectiveLogoUrl, onPrimaryChange, onSecondaryChange, t, applying]);
+  });
 
   return {
     applying,

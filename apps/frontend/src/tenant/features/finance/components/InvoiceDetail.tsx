@@ -1,9 +1,9 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { ReceiptText, User, Calendar, CreditCard, Printer } from "lucide-react";
 import { Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -30,7 +30,7 @@ export interface InvoiceDetailProps {
  * @param {InvoiceDetailProps} props - The component props.
  * @returns {React.JSX.Element}
  */
-export const InvoiceDetail = React.memo(function InvoiceDetail({
+export const InvoiceDetail = (function InvoiceDetail({
   invoice,
   onClose,
   onRecord,
@@ -40,23 +40,23 @@ export const InvoiceDetail = React.memo(function InvoiceDetail({
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
 
-  const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const statusConfig = (() => ({
     paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
     pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
     overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
     partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
     cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const rows = useMemo(() => [
+  const rows = (() => [
     { label: t("finance.columns.baseFee"), value: formatCurrency(invoice.baseFee), highlight: false, neg: false },
     ...(invoice.discountAmt > 0 ? [{ label: t("finance.detail.discount", { type: invoice.discountType ?? t("common.none"), value: invoice.discountValue }), value: `– ${formatCurrency(invoice.discountAmt)}`, highlight: false, neg: true }] : []),
     { label: t("finance.form.finalAmount"), value: formatCurrency(invoice.finalAmt), highlight: true, neg: false },
     ...(invoice.paidAmt ? [{ label: t("finance.detail.amountPaid"), value: formatCurrency(invoice.paidAmt), highlight: false, neg: false }] : []),
     ...(invoice.paidAmt && invoice.paidAmt < invoice.finalAmt ? [{ label: t("finance.balanceDue"), value: formatCurrency(invoice.finalAmt - invoice.paidAmt), highlight: false, neg: true }] : []),
-  ], [t, formatCurrency, invoice]);
+  ])();
 
-  const footerNode = useMemo(() => (
+  const footerNode = (() => (
     <div className="space-y-2">
       {canWrite && invoice.status !== "paid" && invoice.status !== "cancelled" && (
         <Button
@@ -76,7 +76,7 @@ export const InvoiceDetail = React.memo(function InvoiceDetail({
         </Button>
       )}
     </div>
-  ), [canWrite, invoice, onRecord, onPrintReceipt, onClose, t]);
+  ))();
 
   return (
     <DetailDrawerShell

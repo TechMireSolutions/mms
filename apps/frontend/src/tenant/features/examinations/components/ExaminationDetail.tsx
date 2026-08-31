@@ -18,7 +18,7 @@ export interface ExaminationDetailProps {
   onRestore?: (examId: string) => void | Promise<void>;
 }
 
-export const ExaminationDetail = React.memo(function ExaminationDetail({
+export const ExaminationDetail = (function ExaminationDetail({
   exam,
   onClose,
   onEdit,

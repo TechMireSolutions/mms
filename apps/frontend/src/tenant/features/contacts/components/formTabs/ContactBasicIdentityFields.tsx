@@ -38,13 +38,13 @@ export function ContactBasicIdentityFields({
 }: ContactBasicIdentityFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const genderOptions = React.useMemo(() => {
+  const genderOptions = (() => {
     const list = genders && genders.length > 0 ? genders : ["male", "female"];
     return list.map((g) => ({
       value: g.toLowerCase(),
       label: formatContactGenderLabel(g, t),
     }));
-  }, [genders, t]);
+  })();
 
   return (
     <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">

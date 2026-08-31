@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from "recharts";
 import { chartAxisTick } from "@/components/ui/ChartGrid";
 import { ReportChartCard } from "@/tenant/components/moduleReports";
@@ -17,19 +17,16 @@ export function EnrollmentReportsCharts({ aggregates }: EnrollmentReportsChartsP
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
   const palette = useBrandPalette();
-  const COLORS = useMemo(
-    () => [palette.primary, palette.secondary, palette.charts[0], palette.charts[3]],
-    [palette],
-  );
+  const COLORS = (() => [palette.primary, palette.secondary, palette.charts[0], palette.charts[3]])();
 
   const { statusCounts, bySession } = aggregates;
 
-  const statusLabels = useMemo(() => ({
+  const statusLabels = (() => ({
     pending: t("enrollments.status.pending"),
     confirmed: t("enrollments.status.confirmed"),
     cancelled: t("enrollments.status.cancelled"),
     completed: t("enrollments.status.completed"),
-  }), [t]);
+  }))();
 
   const statusData = ENROLLMENT_STATUSES.map((status) => ({
     name: statusLabels[status.id as keyof typeof statusLabels] ?? status.id,

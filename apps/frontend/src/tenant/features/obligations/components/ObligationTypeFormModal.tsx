@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { DESIGNATED_FOR_OPTIONS } from '@/lib/data/obligationsData';
 import { FormModal } from "@/components/ui/FormModal";
 import { RequiredMark } from "@/components/ui/FormPrimitives";
@@ -23,13 +23,10 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
   const [form, setForm] = useState({ ...initial });
   const [errors, setErrors] = useState<Partial<Record<"name", AppTranslationKey>>>({});
 
-  const designatedOptions = useMemo(
-    () => DESIGNATED_FOR_OPTIONS.map((option) => ({
+  const designatedOptions = (() => DESIGNATED_FOR_OPTIONS.map((option) => ({
       value: option,
       label: t(DESIGNATED_LABEL_KEYS[option as DesignatedFor]),
-    })),
-    [t],
-  );
+    })))();
 
   const validate = (): Partial<Record<"name", AppTranslationKey>> => {
     const nextErrors: Partial<Record<"name", AppTranslationKey>> = {};

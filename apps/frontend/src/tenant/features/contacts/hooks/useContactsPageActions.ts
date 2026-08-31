@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import type { Contact } from "@mms/shared";
 import type { useContactsCrudActions } from "@/tenant/features/contacts/hooks/useContactsCrudActions";
 import { useContactsPageDeleteActions } from "@/tenant/features/contacts/hooks/useContactsPageDeleteActions";
@@ -60,12 +59,9 @@ export function useContactsPageActions({
     | "bulkRestoreContactsAction"
   >;
 }) {
-  const findContactById = useCallback(
-    (id: string | number): Contact | undefined =>
+  const findContactById = ((id: string | number): Contact | undefined =>
       workContacts.find((contact) => contact.id === id) ??
-      linkContacts.find((contact) => contact.id === id),
-    [workContacts, linkContacts],
-  );
+      linkContacts.find((contact) => contact.id === id));
 
   const writeActions = useContactsPageWriteActions({
     canWrite,

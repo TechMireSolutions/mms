@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { CONTACTS_MODULE_MANIFEST, resolveModuleTierTab } from "@mms/shared";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -53,9 +52,9 @@ export function useContactsPageController() {
   const effectiveTab = resolveModuleTierTab(activeTab, visibleTopTabs.map((tab) => tab.id));
 
   useGoogleContactsOAuthListener(
-    useCallback(() => {
+    (() => {
       setActiveTab("setup");
-    }, [setActiveTab]),
+    }),
   );
 
   const directory = useContactsDirectory({

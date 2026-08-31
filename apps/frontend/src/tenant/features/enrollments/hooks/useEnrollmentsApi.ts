@@ -1,8 +1,10 @@
 import { useQueryClient, useQuery } from '@tanstack/react-query';
+import type { MutateOptions } from '@tanstack/react-query';
 import type {
   Enrollment,
   EnrollmentsCommandMetricsSnapshot,
   EnrollmentsReportComparisonQuery,
+  EnrollmentsWidgetAggregateResult,
   EnrollmentsWidgetOperation,
   EnrollmentsWidgetFilterOperator,
 } from '@mms/shared';
@@ -74,7 +76,7 @@ export function useEnrollmentsPaginated(params: EnrollmentsPaginatedParams) {
   const enabled = params.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.enrollments.list.useQuery({
-    queryKey: [...ENROLLMENTS_QUERY_KEY, 'page', params] as any,
+    queryKey: [...ENROLLMENTS_QUERY_KEY, 'page', params],
     queryData: {
       query: {
         page: params.page,
@@ -84,7 +86,7 @@ export function useEnrollmentsPaginated(params: EnrollmentsPaginatedParams) {
         sessionId: params.sessionId?.trim() && params.sessionId !== 'all' ? params.sessionId.trim() : undefined,
         classId: params.classId?.trim() && params.classId !== 'all' ? params.classId.trim() : undefined,
         includeDeleted: params.includeDeleted ? 'true' : undefined,
-      } as any,
+      },
     },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
@@ -108,7 +110,7 @@ export function useEnrollments(options?: EnrollmentsCollectionOptions) {
         limit: ENROLLMENTS_MODULE_MANIFEST.maxPageSize,
         sessionId,
         classId,
-      } as any,
+      },
     },
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 15_000,
@@ -118,8 +120,10 @@ export function useEnrollments(options?: EnrollmentsCollectionOptions) {
 export function useEnrollmentsCollection(options?: EnrollmentsCollectionOptions): Enrollment[] {
   const query = useEnrollments(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.enrollments ?? []);
+  const body: unknown = query.data.body;
+  return Array.isArray(body)
+    ? (body as Enrollment[])
+    : ((body as { enrollments?: Enrollment[] } | null)?.enrollments ?? []);
 }
 
 export function useEnrollmentsMetrics(options?: { enabled?: boolean }) {
@@ -139,7 +143,7 @@ export function useEnrollmentsReportAggregates(
   
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.enrollments.reportAggregates.useQuery({
-    queryKey: [...ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as any,
+    queryKey: [...ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null],
     queryData: {
       query: {
         sessionIds: comparison?.sessionIds?.length ? comparison.sessionIds.join(',') : undefined,
@@ -147,7 +151,7 @@ export function useEnrollmentsReportAggregates(
         rangeATo: comparison?.rangeATo,
         rangeBFrom: comparison?.rangeBFrom,
         rangeBTo: comparison?.rangeBTo,
-      } as any,
+      },
     },
     enabled: isAuthenticated && enabled,
     staleTime: 5 * 60 * 1000,
@@ -169,7 +173,8 @@ export function useEnrollmentsWidgetAggregates(
     queryKey: [...ENROLLMENTS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
     queryFn: async () => {
       const res = await apiContract.enrollments.widgetAggregates({ body: { widgets: enrollmentQueries } });
-      return (res.body as any)?.results ?? {};
+      const body = res.body as { results?: Record<string, EnrollmentsWidgetAggregateResult> } | null;
+      return body?.results ?? {};
     },
     enabled: isAuthenticated && enabled && enrollmentQueries.length > 0,
     staleTime: 30_000,
@@ -221,37 +226,37 @@ export function useEnrollmentMutations() {
   return {
     createEnrollment: {
       ...createEnrollment,
-      mutate: (enrollment: Enrollment, opts?: any) => createEnrollment.mutate({ body: enrollment }, opts),
+      mutate: (enrollment: Enrollment, opts?: MutateOptions) => createEnrollment.mutate({ body: enrollment }, opts),
       mutateAsync: (enrollment: Enrollment) => createEnrollment.mutateAsync({ body: enrollment }),
     },
     updateEnrollment: {
       ...updateEnrollment,
-      mutate: ({ id, enrollment }: { id: string; enrollment: Enrollment }, opts?: any) => updateEnrollment.mutate({ params: { id }, body: enrollment }, opts),
+      mutate: ({ id, enrollment }: { id: string; enrollment: Enrollment }, opts?: MutateOptions) => updateEnrollment.mutate({ params: { id }, body: enrollment }, opts),
       mutateAsync: ({ id, enrollment }: { id: string; enrollment: Enrollment }) => updateEnrollment.mutateAsync({ params: { id }, body: enrollment }),
     },
     deleteEnrollment: {
       ...deleteEnrollment,
-      mutate: ({ id, deletionReason }: { id: string; deletionReason?: string }, opts?: any) => deleteEnrollment.mutate({ params: { id }, body: deletionReason ? { deletionReason } : {} }, opts),
+      mutate: ({ id, deletionReason }: { id: string; deletionReason?: string }, opts?: MutateOptions) => deleteEnrollment.mutate({ params: { id }, body: deletionReason ? { deletionReason } : {} }, opts),
       mutateAsync: ({ id, deletionReason }: { id: string; deletionReason?: string }) => deleteEnrollment.mutateAsync({ params: { id }, body: deletionReason ? { deletionReason } : {} }),
     },
     restoreEnrollment: {
       ...restoreEnrollment,
-      mutate: (id: string, opts?: any) => restoreEnrollment.mutate({ params: { id }, body: {} }, opts),
+      mutate: (id: string, opts?: MutateOptions) => restoreEnrollment.mutate({ params: { id }, body: {} }, opts),
       mutateAsync: (id: string) => restoreEnrollment.mutateAsync({ params: { id }, body: {} }),
     },
     bulkDeleteEnrollments: {
       ...bulkDeleteEnrollments,
-      mutate: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }, opts?: any) => bulkDeleteEnrollments.mutate({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }, opts),
+      mutate: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }, opts?: MutateOptions) => bulkDeleteEnrollments.mutate({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }, opts),
       mutateAsync: ({ ids, deletionReason }: { ids: string[]; deletionReason?: string }) => bulkDeleteEnrollments.mutateAsync({ body: { ids, ...(deletionReason ? { deletionReason } : {}) } }),
     },
     bulkRestoreEnrollments: {
       ...bulkRestoreEnrollments,
-      mutate: (ids: string[], opts?: any) => bulkRestoreEnrollments.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkRestoreEnrollments.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestoreEnrollments.mutateAsync({ body: { ids } }),
     },
     logExportAudit: {
       ...logExportAudit,
-      mutate: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }, opts?: any) => logExportAudit.mutate({ body: payload }, opts),
+      mutate: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }, opts?: MutateOptions) => logExportAudit.mutate({ body: payload }, opts),
       mutateAsync: (payload: { count: number; scope: 'all' | 'filtered' | 'selection' }) => logExportAudit.mutateAsync({ body: payload }),
     },
   };

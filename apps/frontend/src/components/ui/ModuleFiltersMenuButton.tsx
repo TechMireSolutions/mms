@@ -31,8 +31,7 @@ export interface ModuleFiltersMenuTriggerProps extends ComponentPropsWithoutRef<
 /**
  * Shared Filters menu trigger (badge + active styles). Use as DropdownMenuTrigger child via asChild.
  */
-export const ModuleFiltersMenuTrigger = React.memo(
-  forwardRef<HTMLButtonElement, ModuleFiltersMenuTriggerProps>(
+export const ModuleFiltersMenuTrigger = (forwardRef<HTMLButtonElement, ModuleFiltersMenuTriggerProps>(
     function ModuleFiltersMenuTrigger(
       {
         label,
@@ -70,8 +69,7 @@ export const ModuleFiltersMenuTrigger = React.memo(
         </Button>
       );
     },
-  ),
-);
+  ));
 
 export interface ModuleFilterDropdownProps {
   /** Localized label shown on the trigger button. */
@@ -92,7 +90,7 @@ export interface ModuleFilterDropdownProps {
  * filter menus (Contacts / Students / Teachers / Messaging). Compose checkbox/radio
  * groups via {@link ModuleFilterCheckboxGroup} / {@link ModuleFilterRadioGroup}.
  */
-export const ModuleFilterDropdown = React.memo(function ModuleFilterDropdown({
+export const ModuleFilterDropdown = (function ModuleFilterDropdown({
   label,
   activeCount,
   icon,
@@ -141,7 +139,7 @@ export interface ModuleFilterCheckboxGroupProps {
 }
 
 /** Labeled multi-select checkbox group for a filter dropdown. */
-export const ModuleFilterCheckboxGroup = React.memo(function ModuleFilterCheckboxGroup({
+export const ModuleFilterCheckboxGroup = (function ModuleFilterCheckboxGroup({
   label,
   options,
   selected,
@@ -176,7 +174,7 @@ export interface ModuleFilterRadioGroupProps {
 }
 
 /** Labeled single-select radio group for a filter dropdown. */
-export const ModuleFilterRadioGroup = React.memo(function ModuleFilterRadioGroup({
+export const ModuleFilterRadioGroup = (function ModuleFilterRadioGroup({
   label,
   options,
   value,
@@ -201,7 +199,7 @@ export interface ModuleFilterDividerProps {
 }
 
 /** Vertical divider between groups within a filter dropdown. */
-export const ModuleFilterDivider = React.memo(function ModuleFilterDivider({ className }: ModuleFilterDividerProps): React.JSX.Element {
+export const ModuleFilterDivider = (function ModuleFilterDivider({ className }: ModuleFilterDividerProps): React.JSX.Element {
   return <DropdownMenuSeparator className={cn("bg-border", className)} />;
 });
 

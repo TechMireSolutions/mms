@@ -40,7 +40,7 @@ export interface MessagingWorkRecipientsToolbarProps {
   columnCustomizerLabels?: ModuleColumnCustomizerLabels;
 }
 
-export const MessagingWorkRecipientsToolbar = React.memo(function MessagingWorkRecipientsToolbar({
+export const MessagingWorkRecipientsToolbar = (function MessagingWorkRecipientsToolbar({
   viewMode,
   onViewModeChange,
   searchContact,

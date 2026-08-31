@@ -1,4 +1,4 @@
-import React, { useId, useMemo, useCallback } from "react";
+import React, { useId, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, type PanInfo, useDragControls } from "framer-motion";
 import { X } from "lucide-react";
@@ -43,7 +43,7 @@ export interface DetailDrawerShellProps {
  * Standard touch-first responsive drawer shell.
  * Adapts between a bottom sheet on mobile viewports (<640px) and a right-sliding drawer on desktop (≥640px).
  */
-export const DetailDrawerShell = React.memo(function DetailDrawerShell({
+export const DetailDrawerShell = (function DetailDrawerShell({
   open = true,
   onClose,
   title,
@@ -68,30 +68,26 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
   
   const slideFromX = isRtl ? "-100%" : "100%";
 
-  const panelTransition = useMemo(() => reducedMotion
+  const panelTransition = (() => reducedMotion
     ? { duration: 0 }
-    : { type: "spring" as const, damping: 28, stiffness: 260 },
-  [reducedMotion]);
+    : { type: "spring" as const, damping: 28, stiffness: 260 })();
 
   // Motion variants that adapt based on the viewport
-  const initial = useMemo(() => reducedMotion
+  const initial = (() => reducedMotion
     ? false
     : isDesktop
       ? { x: slideFromX, y: 0, opacity: 0 }
-      : { x: 0, y: "100%", opacity: 0 },
-  [reducedMotion, isDesktop, slideFromX]);
+      : { x: 0, y: "100%", opacity: 0 })();
 
-  const animate = useMemo(() => reducedMotion
+  const animate = (() => reducedMotion
     ? { opacity: 1 }
-    : { x: 0, y: 0, opacity: 1 },
-  [reducedMotion]);
+    : { x: 0, y: 0, opacity: 1 })();
 
-  const exit = useMemo(() => reducedMotion
+  const exit = (() => reducedMotion
     ? { opacity: 0 }
     : isDesktop
       ? { x: slideFromX, y: 0, opacity: 0 }
-      : { x: 0, y: "100%", opacity: 0 },
-  [reducedMotion, isDesktop, slideFromX]);
+      : { x: 0, y: "100%", opacity: 0 })();
 
   const handleDragEnd = useCallback((_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     // If the user swipes down fast enough or drags down far enough, close it.
@@ -100,7 +96,7 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
     }
   }, [onClose]);
 
-  const dragProps = useMemo(() => isDesktop
+  const dragProps = (() => isDesktop
     ? {}
     : {
         drag: "y" as const,
@@ -109,8 +105,7 @@ export const DetailDrawerShell = React.memo(function DetailDrawerShell({
         onDragEnd: handleDragEnd,
         dragListener: false, // Disables dragging the entire content area
         dragControls,
-      },
-  [isDesktop, handleDragEnd, dragControls]);
+      })();
 
   if (typeof document === "undefined") {
     return null;

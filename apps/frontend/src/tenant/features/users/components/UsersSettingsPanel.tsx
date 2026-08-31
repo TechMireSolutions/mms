@@ -18,7 +18,7 @@ export interface UsersSettingsPanelProps {
   onSave: () => void | Promise<void>;
 }
 
-export const UsersSettingsPanel = React.memo(function UsersSettingsPanel({
+export const UsersSettingsPanel = (function UsersSettingsPanel({
   settingsDraft,
   saved,
   saving,

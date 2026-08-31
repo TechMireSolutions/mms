@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -34,14 +34,11 @@ export function useAccountingPageController() {
     canViewSetup,
   } = useModulePermissions(ACCOUNTING_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const SUB_TABS = useMemo(
-    () => ACCOUNTING_SUB_TAB_IDS.map((subTabId) => ({
+  const SUB_TABS = (() => ACCOUNTING_SUB_TAB_IDS.map((subTabId) => ({
       id: subTabId,
       label: t(ACCOUNTING_SUB_TAB_KEYS[subTabId]),
       icon: ACCOUNTING_SUB_TAB_ICONS[subTabId],
-    })),
-    [t],
-  );
+    })))();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('accounting_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const [createJournalRequestKey, setCreateJournalRequestKey] = useState(0);

@@ -1,5 +1,6 @@
 import React, { useEffect, type JSX } from 'react';
 import { ChevronDown, MessageSquare, RotateCcw, Trash2 } from 'lucide-react';
+import type { AppTranslationKey } from '@mms/shared';
 import { BulkSelectionBar } from '@/components/ui/BulkSelectionBar';
 import {
   BulkSelectionClearAction,
@@ -27,7 +28,7 @@ export interface MessagingWorkBulkActionBarProps {
   onClearLogsRequest?: () => void;
 }
 
-export const MessagingWorkBulkActionBar = React.memo(function MessagingWorkBulkActionBar({
+export const MessagingWorkBulkActionBar = (function MessagingWorkBulkActionBar({
   selectedCount,
   canWrite,
   canClearLogs,
@@ -89,7 +90,7 @@ export const MessagingWorkBulkActionBar = React.memo(function MessagingWorkBulkA
                   className="cursor-pointer gap-2 py-2 text-xs font-medium"
                 >
                   <Icon className={`h-3.5 w-3.5 ${SEMANTIC_TEXT[config.themeAccent as keyof typeof SEMANTIC_TEXT]}`} />
-                  <span>{t(`messaging.channel.${config.id}` as any)}</span>
+                  <span>{t(`messaging.channel.${config.id}` as AppTranslationKey)}</span>
                 </DropdownMenuItem>
               );
             })}

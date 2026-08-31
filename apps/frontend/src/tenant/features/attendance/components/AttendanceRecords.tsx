@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect, useDeferredValue } from "react";
+import React, { useState, useEffect, useDeferredValue } from "react";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -71,11 +71,11 @@ export function AttendanceRecords({
   } = useModulePermissions(ATTENDANCE_MODULE_MANIFEST);
   const sessions = useSessionsCollection();
 
-  const allClasses = useMemo(() => {
+  const allClasses = (() => {
     return sessions.flatMap((session) =>
       (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
     );
-  }, [sessions]);
+  })();
 
   const [searchInput, setSearchInput] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");

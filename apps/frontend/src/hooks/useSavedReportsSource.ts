@@ -50,7 +50,7 @@ export function useGenericSavedReportsSource(
         extraHeaders: {},
       });
       if (response.status === 200) {
-        return response.body.reports as GenericSavedReport[];
+        return (response.body as { reports?: GenericSavedReport[] }).reports ?? [];
       }
       return [];
     },

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   EXAMINATIONS_MODULE_MANIFEST,
   buildExaminationExamWorkColumnRegistry,
@@ -13,8 +12,7 @@ export function useExaminationExamColumnLayout() {
 
   const storageModuleId = `${EXAMINATIONS_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`;
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildExaminationExamWorkColumnRegistry({
         name: t('examinations.columns.exam.name'),
         subject: t('examinations.columns.exam.subject'),
@@ -24,9 +22,7 @@ export function useExaminationExamColumnLayout() {
         totalMarks: t('examinations.columns.exam.totalMarks'),
         passingMarks: t('examinations.columns.exam.passingMarks'),
         classes: t('examinations.columns.exam.classes'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: storageModuleId,

@@ -18,7 +18,7 @@ import { toTitleCase } from "@mms/shared";
 
 import type { StudentReportTablesProps } from "./studentReportTypes";
 
-export const StudentReportTables = React.memo(function StudentReportTables({
+export const StudentReportTables = (function StudentReportTables({
   activeSubTab,
   students,
   enrollments,

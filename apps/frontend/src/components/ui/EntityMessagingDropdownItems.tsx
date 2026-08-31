@@ -23,7 +23,7 @@ export interface EntityMessagingDropdownItemsProps {
  * Modules translate the labels and pass `show*` + click handlers; the icon
  * tones stay canonical (`text-success` WhatsApp, `text-info` SMS, `text-primary` Email).
  */
-export const EntityMessagingDropdownItems = React.memo(function EntityMessagingDropdownItems({
+export const EntityMessagingDropdownItems = (function EntityMessagingDropdownItems({
   showWhatsApp,
   showSms,
   showEmail,

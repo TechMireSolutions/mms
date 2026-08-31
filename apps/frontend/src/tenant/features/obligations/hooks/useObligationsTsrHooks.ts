@@ -19,7 +19,7 @@ export function useObligationsContractCollections(query: Record<string, unknown>
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.obligations.listCollections.useQuery({
     queryKey: [...OBLIGATIONS_COLLECTIONS_QUERY_KEY, 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });

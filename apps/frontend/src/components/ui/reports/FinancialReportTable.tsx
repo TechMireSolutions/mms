@@ -1,10 +1,9 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { DollarSign } from "lucide-react";
 import { formatDate } from "@mms/shared";
 import type { Invoice } from "@/lib/data/financeData";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
-import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
@@ -19,22 +18,23 @@ import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 interface FinancialInvoiceTableProps {
   invoices: Invoice[];
 }
 
-export const FinancialInvoiceTable = React.memo(function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps): React.JSX.Element {
+export const FinancialInvoiceTable = (function FinancialInvoiceTable({ invoices }: FinancialInvoiceTableProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
-  const statusConfig = useMemo(() => ({
+  const statusConfig = (() => ({
     paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
     pending: { label: t("finance.invoiceStatus.pending"), cls: SEMANTIC_BADGE.warning },
     overdue: { label: t("finance.invoiceStatus.overdue"), cls: SEMANTIC_BADGE.destructive },
     partial: { label: t("finance.invoiceStatus.partial"), cls: SEMANTIC_BADGE.info },
     cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
-  const headers = useMemo(() => [
+  }))();
+  const headers = (() => [
     { key: "invoice", label: t("finance.columns.invoice") },
     { key: "student", label: t("finance.columns.student") },
     { key: "class", label: t("finance.report.classColumn") },
@@ -43,9 +43,9 @@ export const FinancialInvoiceTable = React.memo(function FinancialInvoiceTable({
     { key: "final", label: t("finance.columns.final") },
     { key: "dueDate", label: t("finance.columns.dueDate") },
     { key: "status", label: t("finance.columns.status") },
-  ], [t]);
+  ])();
 
-  const exportColumns = useMemo<ExportColumn[]>(() => [
+  const exportColumns = (() => [
     { key: "invoice", header: t("finance.columns.invoice") },
     { key: "student", header: t("finance.columns.student") },
     { key: "class", header: t("finance.report.classColumn") },
@@ -54,9 +54,9 @@ export const FinancialInvoiceTable = React.memo(function FinancialInvoiceTable({
     { key: "final", header: t("finance.columns.final") },
     { key: "dueDate", header: t("finance.columns.dueDate") },
     { key: "status", header: t("finance.columns.status") },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const exportRows = useMemo(() => invoices.map((inv) => ({
+  const exportRows = (() => invoices.map((inv) => ({
     invoice: inv.id,
     student: inv.studentName,
     class: inv.class,
@@ -65,14 +65,11 @@ export const FinancialInvoiceTable = React.memo(function FinancialInvoiceTable({
     final: formatCurrency(inv.finalAmt),
     dueDate: formatDate(inv.dueDate),
     status: statusConfig[inv.status as keyof typeof statusConfig]?.label ?? inv.status,
-  })), [invoices, formatCurrency, statusConfig]);
+  })))();
 
   const [page, setPage] = useState(1);
   const pageSize = 15;
-  const pagedInvoices = useMemo(
-    () => invoices.slice((page - 1) * pageSize, page * pageSize),
-    [invoices, page, pageSize],
-  );
+  const pagedInvoices = (() => invoices.slice((page - 1) * pageSize, page * pageSize))();
 
   if (invoices.length === 0) {
     return <EmptyState icon={DollarSign} title={t("finance.report.noInvoicesMatch")} compact />;

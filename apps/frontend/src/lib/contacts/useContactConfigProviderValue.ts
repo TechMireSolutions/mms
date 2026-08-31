@@ -71,32 +71,32 @@ export function useContactConfigProviderValue(
     requiredTabs = ["basic"],
   } = config || {};
 
-  const resolvedFields = React.useMemo(() => {
+  const resolvedFields = (() => {
     if (!fields || Object.keys(fields).length === 0) {
       return INITIAL_FIELD_SEED;
     }
     return fields;
-  }, [fields]);
+  })();
 
-  const prefs = React.useMemo(() => normalizeContactPreferences(rawPrefs), [rawPrefs]);
+  const prefs = (() => normalizeContactPreferences(rawPrefs))();
 
   const prefKey = `${CONTACTS_MODULE_MANIFEST.moduleId}.table.columns`;
   const [userOverlayRaw, setUserOverlayRaw] = useUiPreference<ColumnRegistryEntry[] | null>(prefKey, null);
 
-  const columnRegistry = React.useMemo(() => {
+  const columnRegistry = (() => {
     if (userOverlayRaw && userOverlayRaw.length > 0) {
       return userOverlayRaw;
     }
     return config?.columnRegistry?.length ? config.columnRegistry : DEFAULT_COLUMN_REGISTRY;
-  }, [userOverlayRaw, config?.columnRegistry]);
+  })();
 
-  const syncedColumnRegistry = React.useMemo(() => {
+  const syncedColumnRegistry = (() => {
     return syncContactColumnRegistryWithFields(
       columnRegistry,
       resolvedFields,
       enabledTabs.length > 0 ? enabledTabs : DEFAULT_FORM_TABS.filter(t => t.enabled).map(t => t.key)
     );
-  }, [columnRegistry, resolvedFields, enabledTabs]);
+  })();
 
   const updateUserColumnLayout = React.useCallback((layout: ColumnRegistryEntry[]) => {
     setUserOverlayRaw(layout);
@@ -118,16 +118,16 @@ export function useContactConfigProviderValue(
     return syncedColumnRegistry.find((c) => c.key === key)?.enabled ?? false;
   }, [syncedColumnRegistry]);
 
-  const availableColumns = React.useMemo(() => {
+  const availableColumns = (() => {
     return syncedColumnRegistry.map((entry) => ({
       id: entry.key,
       label: entry.label,
       sortField: entry.sortField,
       width: entry.width,
     }));
-  }, [syncedColumnRegistry]);
+  })();
 
-  const visibleColumns = React.useMemo(() => {
+  const visibleColumns = (() => {
     return syncedColumnRegistry
       .filter((entry) => entry.enabled)
       .map((entry) => ({
@@ -136,23 +136,19 @@ export function useContactConfigProviderValue(
         sortField: entry.sortField,
         width: entry.width,
       }));
-  }, [syncedColumnRegistry]);
+  })();
 
-  const defaultPhoneCountryCode = React.useMemo(
-    () => getFallbackCountryCode(prefs, countryCodesMap, countryCodes),
-    [countryCodes, countryCodesMap, prefs],
-  );
+  const defaultPhoneCountryCode = (() => getFallbackCountryCode(prefs, countryCodesMap, countryCodes))();
 
   /** Form Relationship-type dropdown — fixed system catalog (Parent/Child, …). */
-  const resolvedRelationships = React.useMemo(() => {
+  const resolvedRelationships = (() => {
     const derived = deriveRelationshipOptionsFromPairs(
       resolveRelationshipPairs(prefs?.relationshipPairs),
     );
     return applyRelationshipOptionOrder(derived, prefs?.relationshipOptionOrder);
-  }, [prefs?.relationshipPairs, prefs?.relationshipOptionOrder]);
+  })();
 
-  return React.useMemo(
-    () => ({
+  return (() => ({
       formTabsReady: true,
       enabledTabIds: resolveContactEnabledTabIds({ formTabs, enabledTabs }, "admin"),
       requiredTabIds: new Set(requiredTabs),
@@ -211,53 +207,5 @@ export function useContactConfigProviderValue(
       getColumnWidth,
       setColumnWidth,
       systemSortOptions,
-    }),
-    [
-      prefs,
-      resolvedFields,
-      formTabs,
-      enabledTabs,
-      requiredTabs,
-      updateConfig,
-      updateConfigAsync,
-      updatePrefs,
-      updatePrefsAsync,
-      genders,
-      socialPlatforms,
-      resolvedRelationships,
-      phoneLabels,
-      emailLabels,
-      addressLabels,
-      countryCodes,
-      countryCodesMap,
-      educationDegrees,
-      employmentTypes,
-      skillCategories,
-      skillProficiencies,
-      tags,
-      lookupsLoading,
-      lookupsError,
-      defaultPhoneCountryCode,
-      syncedColumnRegistry,
-      availableColumns,
-      visibleColumns,
-      updateGenders,
-      updateSocialPlatforms,
-      updateRelationships,
-      updatePhoneLabels,
-      updateEmailLabels,
-      updateAddressLabels,
-      updateEducationDegrees,
-      updateEmploymentTypes,
-      updateSkillCategories,
-      updateSkillProficiencies,
-      updateTags,
-      updateCountryCodes,
-      updateUserColumnLayout,
-      isColumnVisible,
-      getColumnWidth,
-      setColumnWidth,
-      systemSortOptions,
-    ],
-  );
+    }))();
 }

@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Star } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
-import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import { TableCellLink } from "@/components/ui/TableCellLink";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
@@ -17,6 +16,7 @@ import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { HasanatReportItem } from "./HasanatReport";
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 interface HasanatDistributionTableProps {
   distribution: HasanatReportItem[];
@@ -24,45 +24,42 @@ interface HasanatDistributionTableProps {
   onToggleFacultyFilter: (faculty: string) => void;
 }
 
-export const HasanatDistributionTable = React.memo(function HasanatDistributionTable({
+export const HasanatDistributionTable = (function HasanatDistributionTable({
   distribution,
   selectedFaculty,
   onToggleFacultyFilter,
 }: HasanatDistributionTableProps): React.JSX.Element {
   const { t } = useTranslation();
-  const headers = useMemo(() => [
+  const headers = (() => [
     { key: "student", label: t("hasanat.report.colStudent") },
     { key: "class", label: t("hasanat.report.colClass") },
     { key: "faculty", label: t("hasanat.report.colFaculty") },
     { key: "distributed", label: t("hasanat.report.colDistributed") },
     { key: "redeemed", label: t("hasanat.report.colRedeemed") },
     { key: "balance", label: t("hasanat.report.colBalance") },
-  ], [t]);
+  ])();
 
-  const exportColumns = useMemo<ExportColumn[]>(() => [
+  const exportColumns = (() => [
     { key: "student", header: t("hasanat.report.colStudent") },
     { key: "class", header: t("hasanat.report.colClass") },
     { key: "faculty", header: t("hasanat.report.colFaculty") },
     { key: "distributed", header: t("hasanat.report.colDistributed") },
     { key: "redeemed", header: t("hasanat.report.colRedeemed") },
     { key: "balance", header: t("hasanat.report.colBalance") },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const exportRows = useMemo(() => distribution.map((item) => ({
+  const exportRows = (() => distribution.map((item) => ({
     student: item.studentName,
     class: item.class,
     faculty: item.faculty,
     distributed: item.distributed,
     redeemed: item.redeemed,
     balance: item.balance,
-  })), [distribution]);
+  })))();
 
   const [page, setPage] = useState(1);
   const pageSize = 15;
-  const pagedDistribution = useMemo(
-    () => distribution.slice((page - 1) * pageSize, page * pageSize),
-    [distribution, page, pageSize],
-  );
+  const pagedDistribution = (() => distribution.slice((page - 1) * pageSize, page * pageSize))();
 
   if (distribution.length === 0) {
     return <EmptyState icon={Star} title={t("hasanat.report.noData")} compact />;

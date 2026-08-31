@@ -42,13 +42,13 @@ export function YearPickerGrid({
   const canGoPrevious = yearPageStart > minYear
   const canGoNext = pageEndYear < maxYear
 
-  const years = React.useMemo(() => {
+  const years = (() => {
     const list: number[] = []
     for (let y = yearPageStart; y <= pageEndYear; y++) {
       list.push(y)
     }
     return list
-  }, [yearPageStart, pageEndYear])
+  })()
 
   return (
     <div className={cn("w-[270px] sm:w-[280px] p-3 select-none", className)}>

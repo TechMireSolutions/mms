@@ -30,7 +30,7 @@ export interface DirectoryCardInfoPillsProps {
 }
 
 /** Phone/email face pills stack for Work directory entity cards with inline contact actions (supports multiple channels). */
-export const DirectoryCardInfoPills = React.memo(function DirectoryCardInfoPills({
+export const DirectoryCardInfoPills = (function DirectoryCardInfoPills({
   phones: phonesProp,
   emails: emailsProp,
   phone,
@@ -46,7 +46,7 @@ export const DirectoryCardInfoPills = React.memo(function DirectoryCardInfoPills
   onCall,
   onEmail,
 }: DirectoryCardInfoPillsProps): JSX.Element | null {
-  const effectivePhones: Array<{ phone: string; countryCode?: string; phoneDisplay?: string; label?: string }> = React.useMemo(() => {
+  const effectivePhones: Array<{ phone: string; countryCode?: string; phoneDisplay?: string; label?: string }> = (() => {
     if (Array.isArray(phonesProp) && phonesProp.length > 0) {
       return phonesProp
         .map((p) => {
@@ -74,9 +74,9 @@ export const DirectoryCardInfoPills = React.memo(function DirectoryCardInfoPills
       ];
     }
     return [];
-  }, [phonesProp, phone, countryCode, phoneDisplay]);
+  })();
 
-  const effectiveEmails: Array<{ email: string; label?: string }> = React.useMemo(() => {
+  const effectiveEmails: Array<{ email: string; label?: string }> = (() => {
     if (Array.isArray(emailsProp) && emailsProp.length > 0) {
       return emailsProp
         .map((e) => {
@@ -94,7 +94,7 @@ export const DirectoryCardInfoPills = React.memo(function DirectoryCardInfoPills
       return [{ email: email.trim() }];
     }
     return [];
-  }, [emailsProp, email]);
+  })();
 
   const showPhones = showPhone && effectivePhones.length > 0;
   const showEmails = showEmail && effectiveEmails.length > 0;

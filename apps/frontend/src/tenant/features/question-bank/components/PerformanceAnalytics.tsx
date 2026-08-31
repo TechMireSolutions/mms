@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo } from "react";
+import React, { lazy, Suspense } from "react";
 import {
   getQuestionCategoryIds,
   QUESTION_ACCURACY_WEAK_THRESHOLD,
@@ -7,13 +7,7 @@ import {
 import { useTranslation } from "@/hooks/useTranslation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
-import {
-  sumScores,
-  testTotalMarks,
-  type PerformanceAnalyticsProps,
-  type StudentStatItem,
-  type CategoryPerformance,
-} from "./performanceAnalyticsUtils";
+import { type CategoryPerformance, type PerformanceAnalyticsProps, type StudentStatItem, sumScores, testTotalMarks } from './performanceAnalyticsUtils';
 
 const PerformanceAnalyticsPanels = lazy(() =>
   import("./PerformanceAnalyticsPanels").then((mod) => ({
@@ -32,7 +26,7 @@ export function PerformanceAnalytics({
   const { t } = useTranslation();
   const qbConfig = useQuestionBankConfig(questions);
 
-  const studentStats = useMemo<StudentStatItem[]>(() => {
+  const studentStats = (() => {
     const statsByStudentId: Record<string, { name: string; class: string; scores: number[]; totalPts: number; maxPts: number }> = {};
     results.forEach((result) => {
       const test = tests.find((item) => item.id === result.testId);
@@ -59,9 +53,9 @@ export function PerformanceAnalytics({
         return { ...studentStat, avg: averageScore, overall: pct(studentStat.totalPts, studentStat.maxPts) };
       })
       .sort((a, b) => b.avg - a.avg);
-  }, [tests, results, questions, t]);
+  })() as StudentStatItem[];
 
-  const catPerformance = useMemo<CategoryPerformance[]>(() => {
+  const catPerformance = (() => {
     return categories
       .map((category) => {
         const categoryQuestionIds = questions
@@ -82,7 +76,7 @@ export function PerformanceAnalytics({
         return { name: category.name, icon: category.icon, color: category.color, accuracy, correct, total };
       })
       .filter((categoryResult) => categoryResult.total > 0);
-  }, [categories, questions, results]);
+  })() as CategoryPerformance[];
 
   const weakAreas = catPerformance
     .filter((categoryResult) => categoryResult.accuracy < QUESTION_ACCURACY_WEAK_THRESHOLD)

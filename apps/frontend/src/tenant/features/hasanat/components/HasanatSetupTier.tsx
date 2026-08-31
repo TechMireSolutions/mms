@@ -37,7 +37,7 @@ export interface HasanatSetupTierProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const HasanatSetupTier = React.memo(function HasanatSetupTier({
+export const HasanatSetupTier = (function HasanatSetupTier({
   tabs,
   activeTab,
   canEditSetup,

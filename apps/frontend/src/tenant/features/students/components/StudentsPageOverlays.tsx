@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { Student } from "@mms/shared";
 import {
@@ -23,7 +23,7 @@ const StudentIdCardModal = lazy(() =>
   })),
 );
 
-export const StudentsPageOverlays = React.memo(function StudentsPageOverlays({
+export const StudentsPageOverlays = (function StudentsPageOverlays({
   showStudentForm,
   editStudent,
   onCloseForm,
@@ -57,7 +57,7 @@ export const StudentsPageOverlays = React.memo(function StudentsPageOverlays({
   const configPending = false;
   const sessions = useSessionsCollection();
 
-  const idCardItems = useMemo(() => {
+  const idCardItems = (() => {
     return idCardStudents.map((student) => {
       const sessionNames = sessions
         .filter((sess) => student.enrolledSessions?.includes(sess.id))
@@ -69,7 +69,7 @@ export const StudentsPageOverlays = React.memo(function StudentsPageOverlays({
         emergencyPhone: student.phone,
       };
     });
-  }, [idCardStudents, sessions]);
+  })();
 
   return (
     <>

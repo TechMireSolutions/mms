@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from "react";
+import React, { useState, useRef } from "react";
 import { ImageIcon, X, Loader2 } from "lucide-react";
 import {
   IMAGE_UPLOAD_MAX_INPUT_BYTES,
@@ -52,7 +52,7 @@ export function ImageUploadField({
   const resolvedPurpose: ImageUploadPurpose =
     purpose ?? (previewSize === 'favicon' ? 'favicon' : 'logo');
 
-  const processFile = useCallback(async (file: File) => {
+  const processFile = (async (file: File) => {
     if (!file.type.startsWith('image/')) {
       setError(t('branding.imageErrorType'));
       return;
@@ -85,7 +85,7 @@ export function ImageUploadField({
       setUploading(false);
       if (inputRef.current) inputRef.current.value = '';
     }
-  }, [onBrandColorsExtracted, onChange, resolvedPurpose, t]);
+  });
 
   const previewClass =
     previewSize === 'favicon' ? 'h-14 w-14 rounded-lg' : 'h-20 w-20 rounded-xl';

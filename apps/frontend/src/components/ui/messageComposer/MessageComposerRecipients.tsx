@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
 import type { StandardMessagingRecipient } from '@mms/shared';
 import { getInitials } from '@mms/shared';
@@ -34,7 +34,7 @@ interface RecipientRowProps {
   sendLabel: string;
 }
 
-const RecipientRow = React.memo(function RecipientRow({
+const RecipientRow = (function RecipientRow({
   recipient,
   eligibleIndex,
   previewIndex,
@@ -166,16 +166,10 @@ export function MessageComposerRecipients({
   const { t } = useTranslation();
 
   // Fix #1: memoised — stable Set reference when recipients haven't changed
-  const existingIds = useMemo(
-    () => new Set(validatedRecipients.map((r) => String(r.id))),
-    [validatedRecipients],
-  );
+  const existingIds = (() => new Set(validatedRecipients.map((r) => String(r.id))))();
 
   // Fix #3: O(n) pre-computed index map — replaces O(n²) findIndex inside .map()
-  const eligibleIndexMap = useMemo(
-    () => new Map(eligibleRecipients.map((r, i) => [r.id, i])),
-    [eligibleRecipients],
-  );
+  const eligibleIndexMap = (() => new Map(eligibleRecipients.map((r, i) => [r.id, i])))();
 
   const missingAddressLabel = isEmail ? t('messaging.missingEmail') : t('messaging.missingPhone');
   const removeLabel = t('messaging.removeRecipient');

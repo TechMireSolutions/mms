@@ -56,20 +56,14 @@ export function useDashboardConfig() {
   }, [widgetsQuery.status, serverWidgets.length, canWriteDashboard, widgetsMutation]);
 
   /** Full-array upsert (visualizer pin set + bulk flows). Upsert-only — never wipes absent rows. */
-  const updateCustomWidgets = useCallback(
-    (customWidgetsDraft: CustomWidget[]) => {
+  const updateCustomWidgets = ((customWidgetsDraft: CustomWidget[]) => {
       widgetsMutation.mutate(customWidgetsDraft);
-    },
-    [widgetsMutation],
-  );
+    });
 
   /** Atomic widget reordering with optimistic cache update. */
-  const reorderCustomWidgets = useCallback(
-    (order: Array<{ id: string; sortOrder: number }>) => {
+  const reorderCustomWidgets = ((order: Array<{ id: string; sortOrder: number }>) => {
       widgetsReorderMutation.mutate({ body: { order } });
-    },
-    [widgetsReorderMutation],
-  );
+    });
 
   const updatePref = useCallback(
     <K extends keyof DashboardPreferences>(key: K, value: DashboardPreferences[K]) => {
@@ -78,48 +72,33 @@ export function useDashboardConfig() {
     [prefs, prefsMutation],
   );
 
-  const toggleCardVisibility = useCallback(
-    (cardId: string) => {
+  const toggleCardVisibility = ((cardId: string) => {
       const disabledCardIds = prefs.disabledCardIds;
       const updated = disabledCardIds.includes(cardId)
         ? disabledCardIds.filter((id) => id !== cardId)
         : [...disabledCardIds, cardId];
       updatePref('disabledCardIds', updated);
-    },
-    [prefs.disabledCardIds, updatePref],
-  );
+    });
 
   /** Upsert only the affected widget (inserts new, updates existing; leaves others untouched). Resolves on success so builder flows can await before closing (§7). */
-  const saveWidget = useCallback(
-    (savedWidget: CustomWidget) => widgetsMutation.mutateAsync([savedWidget]),
-    [widgetsMutation],
-  );
+  const saveWidget = ((savedWidget: CustomWidget) => widgetsMutation.mutateAsync([savedWidget]));
 
-  const toggleWidgetPin = useCallback(
-    (widgetId: string) => {
+  const toggleWidgetPin = ((widgetId: string) => {
       const target = customWidgets.find((widget) => widget.id === widgetId);
       if (!target) return;
       widgetsMutation.mutate([{ ...target, isPinnedToDashboard: !target.isPinnedToDashboard }]);
-    },
-    [customWidgets, widgetsMutation],
-  );
+    });
 
-  const unpinWidget = useCallback(
-    (widgetId: string) => {
+  const unpinWidget = ((widgetId: string) => {
       const target = customWidgets.find((widget) => widget.id === widgetId);
       if (!target) return;
       widgetsMutation.mutate([{ ...target, isPinnedToDashboard: false }]);
-    },
-    [customWidgets, widgetsMutation],
-  );
+    });
 
   /** Hard delete via `DELETE /:id` (never bulk-wipe PUT). */
-  const deleteWidget = useCallback(
-    (widgetId: string) => {
+  const deleteWidget = ((widgetId: string) => {
       widgetDeleteMutation.mutate({ params: { id: widgetId }, body: {} });
-    },
-    [widgetDeleteMutation],
-  );
+    });
 
 
   return {

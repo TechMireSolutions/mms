@@ -53,9 +53,11 @@ export function useObligationsTypes(options?: { enabled?: boolean }) {
 export function useObligationsTypesCollection(options?: { enabled?: boolean }): ObligationType[] {
   const query = useObligationsTypes(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  if (Array.isArray(body)) return body;
-  return Array.isArray(body?.types) ? body.types : [];
+  const body: unknown = query.data.body;
+  if (Array.isArray(body)) return body as ObligationType[];
+  return Array.isArray((body as { types?: ObligationType[] } | null)?.types)
+    ? (body as { types: ObligationType[] }).types
+    : [];
 }
 
 export function useObligationsMujtahids(options?: { enabled?: boolean }) {
@@ -72,9 +74,11 @@ export function useObligationsMujtahids(options?: { enabled?: boolean }) {
 export function useObligationsMujtahidsCollection(options?: { enabled?: boolean }): Mujtahid[] {
   const query = useObligationsMujtahids(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  if (Array.isArray(body)) return body;
-  return Array.isArray(body?.mujtahids) ? body.mujtahids : [];
+  const body: unknown = query.data.body;
+  if (Array.isArray(body)) return body as Mujtahid[];
+  return Array.isArray((body as { mujtahids?: Mujtahid[] } | null)?.mujtahids)
+    ? (body as { mujtahids: Mujtahid[] }).mujtahids
+    : [];
 }
 
 export function useObligationsReps(options?: { enabled?: boolean }) {
@@ -91,9 +95,7 @@ export function useObligationsReps(options?: { enabled?: boolean }) {
 export function useObligationsRepsCollection(options?: { enabled?: boolean }): MujtahidRep[] {
   const query = useObligationsReps(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  if (Array.isArray(body)) return body;
-  return Array.isArray(body?.reps) ? body.reps : [];
+  return query.data.body.reps;
 }
 
 export function useObligationsWakala(options?: { enabled?: boolean }) {
@@ -110,9 +112,7 @@ export function useObligationsWakala(options?: { enabled?: boolean }) {
 export function useObligationsWakalaCollection(options?: { enabled?: boolean }): WakalaType[] {
   const query = useObligationsWakala(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  if (Array.isArray(body)) return body;
-  return Array.isArray(body?.wakalaTypes) ? body.wakalaTypes : [];
+  return query.data.body.wakalaTypes;
 }
 
 export function useObligationsDistributions(options?: { enabled?: boolean }) {
@@ -129,9 +129,11 @@ export function useObligationsDistributions(options?: { enabled?: boolean }) {
 export function useObligationsDistributionsCollection(options?: { enabled?: boolean }): ObligationDistribution[] {
   const query = useObligationsDistributions(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  if (Array.isArray(body)) return body;
-  return Array.isArray(body?.distributions) ? body.distributions : [];
+  const body: unknown = query.data.body;
+  if (Array.isArray(body)) return body as ObligationDistribution[];
+  return Array.isArray((body as { distributions?: ObligationDistribution[] } | null)?.distributions)
+    ? (body as { distributions: ObligationDistribution[] }).distributions
+    : [];
 }
 
 export function useObligationsCollections(options?: { enabled?: boolean; includeDeleted?: boolean }) {
@@ -140,7 +142,7 @@ export function useObligationsCollections(options?: { enabled?: boolean; include
   const enabled = options?.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.obligations.listCollections.useQuery({
-    queryKey: [...OBLIGATIONS_COLLECTIONS_QUERY_KEY, { includeDeleted }] as any,
+    queryKey: [...OBLIGATIONS_COLLECTIONS_QUERY_KEY, { includeDeleted }],
     queryData: { query: { includeDeleted: includeDeleted ? 'true' : undefined } },
     staleTime: 30_000,
   });
@@ -152,9 +154,11 @@ export function useObligationsCollectionsCollection(options?: {
 }): ObligationCollection[] {
   const query = useObligationsCollections(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  if (Array.isArray(body)) return body;
-  return Array.isArray(body?.collections) ? body.collections : [];
+  const body: unknown = query.data.body;
+  if (Array.isArray(body)) return body as ObligationCollection[];
+  return Array.isArray((body as { collections?: ObligationCollection[] } | null)?.collections)
+    ? (body as { collections: ObligationCollection[] }).collections
+    : [];
 }
 
 export function useObligationsMetrics(options?: { enabled?: boolean }) {
@@ -173,7 +177,7 @@ export function useObligationsReportAggregates(
   const enabled = options?.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.obligations.reportAggregates.useQuery({
-    queryKey: [...OBLIGATIONS_REPORT_AGGREGATES_QUERY_KEY, query] as any,
+    queryKey: [...OBLIGATIONS_REPORT_AGGREGATES_QUERY_KEY, query],
     queryData: { query: query ?? {} },
     enabled: isAuthenticated && enabled,
     staleTime: 5 * 60 * 1000,

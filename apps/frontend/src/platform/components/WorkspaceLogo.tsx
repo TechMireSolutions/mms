@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React from 'react';
 
 interface WorkspaceLogoProps {
   logoUrl?: string | null;
@@ -37,4 +37,4 @@ function WorkspaceLogo({
   );
 }
 
-export default memo(WorkspaceLogo);
+export default (WorkspaceLogo);

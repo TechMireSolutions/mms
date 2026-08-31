@@ -25,7 +25,7 @@ function getActiveLabel(state: unknown): string | null {
   return typeof activeLabel === "string" && activeLabel.length > 0 ? activeLabel : null;
 }
 
-export const AttendanceReportCharts = React.memo(function AttendanceReportCharts({
+export const AttendanceReportCharts = (function AttendanceReportCharts({
   summary,
   onToggleClassFilter,
 }: AttendanceReportChartsProps): React.JSX.Element | null {

@@ -22,7 +22,7 @@ const VIEW_MODE_OPTIONS: ReadonlyArray<{
   { mode: "cards", labelKey: "common.viewMode.cards", icon: LayoutGrid },
 ];
 
-export const WorkViewModeToggle = React.memo(function WorkViewModeToggle({
+export const WorkViewModeToggle = (function WorkViewModeToggle({
   viewMode,
   onViewModeChange,
   className,

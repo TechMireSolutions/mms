@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import type { StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
 import { validateRecipientAddress } from "@mms/shared";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
@@ -91,14 +91,11 @@ export function useMessageComposerState(): UseMessageComposerStateResult {
     setMessagingTarget(null);
   }, []);
 
-  return useMemo(
-    () => ({
+  return (() => ({
       messagingTarget,
       setMessagingTarget,
       openComposer,
       closeComposer,
       canWriteMessaging,
-    }),
-    [messagingTarget, openComposer, closeComposer, canWriteMessaging],
-  );
+    }))();
 }

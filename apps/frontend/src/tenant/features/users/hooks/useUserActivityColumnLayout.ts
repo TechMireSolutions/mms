@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   USERS_MODULE_MANIFEST,
   buildUsersActivityWorkColumnRegistry,
@@ -11,17 +10,14 @@ const STORAGE_SUFFIX = 'activity';
 export function useUserActivityColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildUsersActivityWorkColumnRegistry({
         time: t('users.activityColTime'),
         user: t('users.activityColUser'),
         action: t('users.activityColAction'),
         detail: t('users.activityColDetail'),
         ip: t('users.activityColIp'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: `${USERS_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`,

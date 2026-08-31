@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   FINANCE_MODULE_MANIFEST,
   buildFinancePaymentWorkColumnRegistry,
@@ -13,8 +12,7 @@ export function useFinancePaymentColumnLayout() {
 
   const storageModuleId = `${FINANCE_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`;
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildFinancePaymentWorkColumnRegistry({
         date: t('finance.columns.paymentDate'),
         student: t('finance.columns.student'),
@@ -23,9 +21,7 @@ export function useFinancePaymentColumnLayout() {
         method: t('finance.columns.method'),
         receivedBy: t('finance.columns.receivedBy'),
         note: t('finance.columns.note'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: storageModuleId,

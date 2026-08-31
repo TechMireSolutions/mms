@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { getDenominationPoints } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from '@/tenant/hooks/collections/hasanat';
@@ -22,7 +21,7 @@ export function useHasanatChartData() {
     updatePref,
   } = useDashboardConfig();
 
-  const { hasanatData, total, activeColors } = useMemo(() => {
+  const { hasanatData, total, activeColors } = (() => {
     let memorisationPoints = 0;
     let attendancePoints = 0;
     let behaviorPoints = 0;
@@ -52,7 +51,7 @@ export function useHasanatChartData() {
     ];
     const sum = data.reduce((s, hasanatPoint) => s + hasanatPoint.value, 0);
     return { hasanatData: data, total: sum, activeColors };
-  }, [distributions, denominations, colorTheme, HASANAT_THEMES, t]);
+  })();
 
   return {
     t,

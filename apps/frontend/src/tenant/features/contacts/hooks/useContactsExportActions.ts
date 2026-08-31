@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import type {
   ContactExportColumn,
   ContactsListQuery,
@@ -43,23 +42,17 @@ export function useContactsExportActions({
   handleError,
   t,
 }: UseContactsExportActionsOptions) {
-  const buildFilteredQuery = useCallback(
-    (): ContactsListQuery => ({
+  const buildFilteredQuery = ((): ContactsListQuery => ({
       search,
       gender: filterGender || undefined,
       sortField,
       sortDir,
       quickFilter,
-    }),
-    [search, filterGender, sortField, sortDir, quickFilter],
-  );
+    }));
 
-  const onError = useCallback(
-    (err: unknown, scope: string) => {
+  const onError = ((err: unknown, scope: string) => {
       handleError(err, scope, "contacts.exportFailed");
-    },
-    [handleError],
-  );
+    });
 
   return useModuleServerCsvExportActions<ContactExportColumn, ContactsListQuery>({
     canExport,

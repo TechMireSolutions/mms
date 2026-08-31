@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Bell, Languages } from 'lucide-react';
 import {
   APP_LANGUAGES,
@@ -46,10 +46,7 @@ export default function GlobalSettings(): React.JSX.Element {
     handleDiscardGlobal,
   } = useSettingsGlobalDraft();
 
-  const notificationChannel = useMemo(
-    () => resolveNotificationChannel(data),
-    [data],
-  );
+  const notificationChannel = (() => resolveNotificationChannel(data))();
 
   return (
     <SettingsPanel

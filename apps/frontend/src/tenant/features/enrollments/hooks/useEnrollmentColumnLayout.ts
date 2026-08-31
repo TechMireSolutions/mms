@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   ENROLLMENTS_MODULE_MANIFEST,
   buildEnrollmentWorkColumnRegistry,
@@ -9,8 +8,7 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 export function useEnrollmentColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildEnrollmentWorkColumnRegistry({
         student: t('enrollments.columns.student'),
         session: t('enrollments.columns.session'),
@@ -19,9 +17,7 @@ export function useEnrollmentColumnLayout() {
         finalFee: t('enrollments.columns.finalFee'),
         status: t('enrollments.columns.status'),
         payment: t('enrollments.columns.payment'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: ENROLLMENTS_MODULE_MANIFEST.moduleId,

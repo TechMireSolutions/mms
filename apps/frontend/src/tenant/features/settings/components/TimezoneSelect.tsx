@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { ChevronsUpDown, Loader2, MapPin } from 'lucide-react';
 import {
   DEFAULT_GLOBAL_SETTINGS,
@@ -42,9 +42,9 @@ export default function TimezoneSelect({
   const [detecting, setDetecting] = useState(false);
 
   const normalizedValue = normalizeTimezone(value, DEFAULT_GLOBAL_SETTINGS.timezone);
-  const options = useMemo(() => getTimezoneOptions(language), [language]);
-  const grouped = useMemo(() => groupTimezoneOptions(options), [options]);
-  const filtered = useMemo(() => filterGroupedTimezones(grouped, query), [grouped, query]);
+  const options = (() => getTimezoneOptions(language))();
+  const grouped = (() => groupTimezoneOptions(options))();
+  const filtered = (() => filterGroupedTimezones(grouped, query))();
   const selectedLabel = formatTimezoneLabel(normalizedValue, language);
 
   const applyTimezone = (timezone: string, closePopover = false): void => {

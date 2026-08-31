@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useBrandPalette } from '@/lib/contexts/BrandingPaletteContext';
 
 interface EnrollmentColorConfig {
@@ -34,7 +33,7 @@ export function useBrandedDashboardChartColors(): {
 } {
   const palette = useBrandPalette();
 
-  return useMemo(() => {
+  return (() => {
     const { primary, secondary, charts } = palette;
     const brandedEnroll = (key: string): EnrollmentColorConfig => ({
       stroke: primary,
@@ -88,5 +87,5 @@ export function useBrandedDashboardChartColors(): {
       hasanat,
       pie: [...charts],
     };
-  }, [palette]);
+  })();
 }

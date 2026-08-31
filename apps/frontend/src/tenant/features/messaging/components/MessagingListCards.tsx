@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useState } from 'react';
 import { AlertCircle, Check, Copy, Filter, RotateCcw } from 'lucide-react';
 import {
   calculateSmsSegments,
@@ -42,7 +42,7 @@ export interface MessagingListCardsProps {
   onFilterContact?: (name: string) => void;
 }
 
-export const MessagingListCards = React.memo(function MessagingListCards({
+export const MessagingListCards = (function MessagingListCards({
   logs,
   selectedIds,
   allVisibleSelected,
@@ -64,8 +64,7 @@ export const MessagingListCards = React.memo(function MessagingListCards({
   const reducedMotion = useReducedMotion();
   const [copiedLogId, setCopiedLogId] = useState<string | null>(null);
 
-  const handleCopyBody = useCallback(
-    async (e: React.MouseEvent, log: Message): Promise<void> => {
+  const handleCopyBody = (async (e: React.MouseEvent, log: Message): Promise<void> => {
       e.stopPropagation();
       try {
         await navigator.clipboard.writeText(log.body);
@@ -75,9 +74,7 @@ export const MessagingListCards = React.memo(function MessagingListCards({
       } catch {
         notify.error(t('messaging.loadFailedHint'));
       }
-    },
-    [t],
-  );
+    });
 
   const getChannelAccentBarClass = (isSelected: boolean, channel: string): string => {
     if (isSelected) return "bg-primary/70 group-hover:bg-primary";

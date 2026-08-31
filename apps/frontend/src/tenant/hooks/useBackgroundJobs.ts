@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BackgroundJobRecord } from '@mms/shared';
 import { fetchBackgroundJobs } from '@/lib/backgroundJobs/backgroundJobApi';
@@ -34,15 +34,15 @@ export function useBackgroundJobs() {
     return () => window.removeEventListener(BACKGROUND_JOBS_EVENT, handler);
   }, [queryClient]);
 
-  const jobs = useMemo(() => {
+  const jobs = (() => {
     const _tick = localTick; // forces local cache re-evaluation
     return mergeServerBackgroundJobs(serverJobs.length > 0 ? serverJobs : getAllBackgroundJobs());
-  }, [serverJobs, localTick]);
+  })();
 
-  const refresh = useCallback(() => {
+  const refresh = (() => {
     setLocalTick((n) => n + 1);
     void queryClient.invalidateQueries({ queryKey: BACKGROUND_JOBS_QUERY_KEY });
-  }, [queryClient]);
+  });
 
   return {
     jobs,

@@ -13,7 +13,7 @@ interface BackupExportSectionProps {
   onStartExport: () => void;
 }
 
-const BackupExportSection = React.memo(function BackupExportSection({
+const BackupExportSection = (function BackupExportSection({
   adminEmail,
   isCreating,
   lastExportStats,

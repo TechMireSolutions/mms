@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import type { ContactsSavedReportShareScope } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormModal } from "@/components/ui/FormModal";
@@ -19,10 +19,7 @@ function ContactsSavedReportUserPicker({
 }: ContactsSavedReportUserPickerProps): React.JSX.Element {
   const { t } = useTranslation();
   const users = useUsersCollection();
-  const options = useMemo(
-    () => users.slice().sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")),
-    [users],
-  );
+  const options = (() => users.slice().sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")))();
 
   const toggle = (userId: string) => {
     if (value.includes(userId)) {

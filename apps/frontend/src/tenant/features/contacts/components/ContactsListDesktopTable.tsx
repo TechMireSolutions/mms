@@ -1,4 +1,4 @@
-import React, { useMemo, useRef } from "react";
+import React, { useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
@@ -67,8 +67,8 @@ export function ContactsListDesktopTable({
   const { t } = useTranslation();
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
-  const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const contactsMap = (() => buildContactsMap(allContacts))();
+  const selectedSet = (() => new Set(selected))();
   const pageCountLabel = formatDirectoryPageCountLabel(contacts.length, t, {
     singular: "contacts.form.contact",
     plural: "contacts.table.contacts",

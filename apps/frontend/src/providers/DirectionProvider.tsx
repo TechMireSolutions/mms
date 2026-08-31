@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   getLanguageDirection,
@@ -55,14 +55,11 @@ export function DirectionProvider({ children }: DirectionProviderProps): React.J
     }
   }, [language, dir]);
 
-  const value = useMemo<DirectionContextValue>(
-    () => ({
+  const value = (() => ({
       dir,
       isRtl,
       language,
-    }),
-    [dir, isRtl, language],
-  );
+    }))() as DirectionContextValue;
 
   return <DirectionContext.Provider value={value}>{children}</DirectionContext.Provider>;
 }

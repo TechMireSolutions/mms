@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 /**
  * A full-page loading spinner with the app's branding.
  */
-export const PageLoader = React.memo(function PageLoader(): React.ReactElement {
+export const PageLoader = (function PageLoader(): React.ReactElement {
   return (
     <div className="flex items-center justify-center min-h-viewport-half" role="status" aria-live="polite" aria-busy="true">
       <div className="flex flex-col items-center gap-4">
@@ -26,7 +26,7 @@ interface CardSkeletonProps {
 /**
  * A skeleton loader for card-based layouts.
  */
-export const CardSkeleton = React.memo(function CardSkeleton({ count = 3, className = "" }: CardSkeletonProps): React.ReactElement {
+export const CardSkeleton = (function CardSkeleton({ count = 3, className = "" }: CardSkeletonProps): React.ReactElement {
   return (
     <div className={cn("grid gap-4", className)} role="status" aria-live="polite" aria-busy="true">
       {Array.from({ length: count }).map((_, i) => (
@@ -53,7 +53,7 @@ interface StatsSkeletonProps {
 /**
  * A skeleton loader for dashboard stat grids.
  */
-export const StatsSkeleton = React.memo(function StatsSkeleton({ count = 4 }: StatsSkeletonProps): React.ReactElement {
+export const StatsSkeleton = (function StatsSkeleton({ count = 4 }: StatsSkeletonProps): React.ReactElement {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4" role="status" aria-live="polite" aria-busy="true">
       {Array.from({ length: count }).map((_, i) => (
@@ -78,7 +78,7 @@ interface TableSkeletonProps {
 /**
  * A skeleton loader for data tables.
  */
-export const TableSkeleton = React.memo(function TableSkeleton({ rows = 5, cols = 5 }: TableSkeletonProps): React.ReactElement {
+export const TableSkeleton = (function TableSkeleton({ rows = 5, cols = 5 }: TableSkeletonProps): React.ReactElement {
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden" role="status" aria-live="polite" aria-busy="true">
       <div className="px-4 py-3 border-b border-border bg-muted/40 flex gap-4">
@@ -108,7 +108,7 @@ export interface ChartSkeletonProps {
   heightClassName?: string;
 }
 
-export const ChartSkeleton = React.memo(function ChartSkeleton({
+export const ChartSkeleton = (function ChartSkeleton({
   className = "",
   heightClassName = "h-chart-md",
 }: ChartSkeletonProps): React.ReactElement {
@@ -144,7 +144,7 @@ export const ChartSkeleton = React.memo(function ChartSkeleton({
 /**
  * Skeleton loader matching Three-Tier Module layout to eliminate Cumulative Layout Shift (CLS).
  */
-export const ModuleViewSkeleton = React.memo(function ModuleViewSkeleton(): React.ReactElement {
+export const ModuleViewSkeleton = (function ModuleViewSkeleton(): React.ReactElement {
   return (
     <div className="space-y-6 animate-pulse" role="status" aria-live="polite" aria-busy="true">
       {/* Module Header Skeleton */}

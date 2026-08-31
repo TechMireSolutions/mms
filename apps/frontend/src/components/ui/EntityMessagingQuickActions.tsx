@@ -34,7 +34,7 @@ const ACTION_BASE = cn(WORK_SURFACE_INNER, MESSAGING_QUICK_ACTION_BASE, "shadow-
 /**
  * Presentational Call / WhatsApp / SMS / Email grid for person-directory detail drawers.
  */
-export const EntityMessagingQuickActions = React.memo(function EntityMessagingQuickActions({
+export const EntityMessagingQuickActions = (function EntityMessagingQuickActions({
   primaryPhone,
   primaryEmail,
   labels,

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { Exam, ExamResult } from '@/lib/data/examinationData';
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import type { Student } from "@/lib/data/studentsData";
@@ -6,7 +6,7 @@ import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { getGrade } from "@/tenant/features/examinations/components/gradeUtils";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { RankedResult, ResultsViewStatsData } from "@/tenant/features/examinations/components/resultsViewTypes";
+import type { RankedResult, ResultsViewStatsData } from '@/tenant/features/examinations/components/resultsViewTypes';
 
 export interface UseResultsViewDataOptions {
   exams: Exam[];
@@ -26,39 +26,33 @@ export function useResultsViewData({
   const { t } = useTranslation();
 
   const exam = exams.find((examOption) => examOption.id === selectedExam);
-  const studentIdsForExam = useMemo(() => {
+  const studentIdsForExam = (() => {
     if (!exam) return [];
     return results
       .filter((examResult) => examResult.examId === exam.id)
       .map((examResult) => examResult.studentId);
-  }, [exam, results]);
+  })();
 
   const { data: students = [] } = useStudentsByIds(studentIdsForExam);
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
 
-  const studentsById = useMemo(
-    () => new Map(students.map((student: Student) => [String(student.id), student])),
-    [students],
-  );
-  const classNamesById = useMemo(
-    () => new Map(
+  const studentsById = (() => new Map(students.map((student: Student) => [String(student.id), student])))();
+  const classNamesById = (() => new Map(
       sessions.flatMap((session) =>
         (session.classes || []).map((sessionClass) => [sessionClass.id, `${session.name} - ${sessionClass.name}`] as const),
       ),
-    ),
-    [sessions],
-  );
-  const classByStudentId = useMemo(() => {
+    ))();
+  const classByStudentId = (() => {
     const classIds = new Set(exam?.classIds || []);
     return new Map(
       enrollments
         .filter((enrollment) => classIds.has(enrollment.classId))
         .map((enrollment) => [String(enrollment.studentId), enrollment.classId] as const),
     );
-  }, [enrollments, exam]);
+  })();
 
-  const rankedResults = useMemo<RankedResult[]>(() => {
+  const rankedResults = (() => {
     if (!exam) return [];
     return results
       .filter((examResult) => examResult.examId === exam.id)
@@ -68,7 +62,7 @@ export function useResultsViewData({
         const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
         return {
           ...examResult,
-          student: student ? { name: (student as any).name || t("common.unnamedStudent"), rollNo: (student as any).grNumber || String((student as any).id) } : undefined,
+          student: student ? { name: student.name || t("common.unnamedStudent"), rollNo: student.grNumber || String(student.id) } : undefined,
           cls: classId ? { name: classNamesById.get(classId) || classId } : undefined,
           pct: percentage,
           grade: getGrade(percentage),
@@ -77,18 +71,18 @@ export function useResultsViewData({
       })
       .sort((firstResult, secondResult) => secondResult.marksObtained - firstResult.marksObtained)
       .map((rankedResult, index) => ({ ...rankedResult, rank: index + 1 }));
-  }, [classByStudentId, classNamesById, exam, results, studentsById, t]);
+  })() as RankedResult[];
 
   useEffect(() => {
     onFilteredCountChange?.(rankedResults.length);
   }, [rankedResults.length, onFilteredCountChange]);
 
-  const stats = useMemo<ResultsViewStatsData | null>(() => {
+  const stats = (() => {
     if (rankedResults.length === 0) return null;
     const average = Math.round(rankedResults.reduce((sum, rankedResult) => sum + rankedResult.pct, 0) / rankedResults.length);
     const passed = rankedResults.filter((rankedResult) => rankedResult.passed).length;
     return { average, passed, failed: rankedResults.length - passed, total: rankedResults.length };
-  }, [rankedResults]);
+  })() as ResultsViewStatsData | null;
 
   return { exam, rankedResults, stats };
 }

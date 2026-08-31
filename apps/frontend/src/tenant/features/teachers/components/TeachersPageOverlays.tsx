@@ -1,6 +1,6 @@
 import { getTeacherAssignedClasses } from "@/lib/teachers/teacherAssignment";
 
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
   ModuleDrawerLoadingSkeleton,
@@ -28,7 +28,7 @@ const TeacherIdCardModal = lazy(() =>
   })),
 );
 
-export const TeachersPageOverlays = React.memo(function TeachersPageOverlays({
+export const TeachersPageOverlays = (function TeachersPageOverlays({
   showForm,
   editTeacher,
   onCloseForm,
@@ -59,9 +59,9 @@ export const TeachersPageOverlays = React.memo(function TeachersPageOverlays({
 }: TeachersPageOverlaysProps): React.JSX.Element {
   const configPending = false;
   const sessionsQuery = useSessions();
-  const sessions = useMemo(() => sessionsQuery.data ?? [], [sessionsQuery.data]);
+  const sessions = (() => sessionsQuery.data ?? [])();
 
-  const idCardItems = useMemo(() => {
+  const idCardItems = (() => {
     return idCardTeachers.map((teacher) => {
       const assignedClasses = teacher.id
         ? getTeacherAssignedClasses(teacher.id, sessions)
@@ -74,7 +74,7 @@ export const TeachersPageOverlays = React.memo(function TeachersPageOverlays({
         emergencyPhone: teacher.phone ? String(teacher.phone) : undefined,
       };
     });
-  }, [idCardTeachers, sessions]);
+  })();
 
   return (
     <>

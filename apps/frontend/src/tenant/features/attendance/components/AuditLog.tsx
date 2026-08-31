@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { formatDateTime, todayISO, type AppTranslationKey } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ClipboardList, RefreshCw } from "lucide-react";
@@ -11,7 +11,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import {
   Table,
@@ -75,25 +75,25 @@ export function AuditLog({ filters }: AuditLogProps): React.JSX.Element {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const [log, setLog] = useState<AuditEntry[]>([]);
-  const studentIds = useMemo(() => uniqueRegistryIds(log.map((entry) => entry.studentId)), [log]);
+  const studentIds = (() => uniqueRegistryIds(log.map((entry) => entry.studentId)))();
   const { data: students = [] } = useStudentsByIds(studentIds);
-  const actionConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const actionConfig = (() => ({
     edit: { label: t("attendance.audit.action.edit"), cls: SEMANTIC_BADGE.info },
     bulk_mark: { label: t("attendance.audit.action.bulkMark"), cls: SEMANTIC_BADGE.warning },
     submitted: { label: t("attendance.audit.action.submitted"), cls: SEMANTIC_BADGE.success },
     draft_saved: { label: t("attendance.audit.action.draftSaved"), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   const studentNameFor = (id?: string): string => {
     if (!id) return "";
-    return students.find((student: any) => String(student.id) === String(id))?.name ?? "";
+    return students.find((student) => String(student.id) === String(id))?.name ?? "";
   };
   
-  const allClasses = useMemo(() => {
+  const allClasses = (() => {
     return sessions.flatMap((session) =>
       (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
     );
-  }, [sessions]);
+  })();
 
   const [classId, setClassId] = useState(filters.classId || "");
   const [date, setDate] = useState(filters.date || todayISO());

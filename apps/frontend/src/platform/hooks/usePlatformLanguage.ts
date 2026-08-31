@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { APP_LANGUAGES, normalizeAppLanguage, type AppLanguageCode } from '@mms/shared';
 
 const PLATFORM_LANGUAGE_KEY = 'mms_platform_language';
@@ -42,10 +42,10 @@ export function usePlatformLanguage(): {
     return () => window.removeEventListener('storage', onStorage);
   }, []);
 
-  const setPlatformLanguage = useCallback((code: AppLanguageCode) => {
+  const setPlatformLanguage = ((code: AppLanguageCode) => {
     writeStoredPlatformLanguage(code);
     setPlatformLanguageState(code);
-  }, []);
+  });
 
   return { platformLanguage, setPlatformLanguage, languages: APP_LANGUAGES };
 }

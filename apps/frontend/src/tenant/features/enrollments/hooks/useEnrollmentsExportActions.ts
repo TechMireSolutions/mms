@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import type { EnrollmentExportColumn, EnrollmentsListQuery } from "@mms/shared";
 import { startServerEnrollmentsCsvExport } from "@/lib/backgroundJobs/startServerEnrollmentsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
@@ -36,23 +35,17 @@ export function useEnrollmentsExportActions({
 }: UseEnrollmentsExportActionsOptions) {
   const { t } = useTranslation();
 
-  const buildFilteredQuery = useCallback(
-    (): EnrollmentsListQuery => ({
+  const buildFilteredQuery = ((): EnrollmentsListQuery => ({
       search: search.trim() || undefined,
       status: statusFilter !== "all" ? statusFilter : undefined,
       sessionId: sessionFilter !== "all" ? sessionFilter : undefined,
-    }),
-    [search, statusFilter, sessionFilter],
-  );
+    }));
 
-  const onError = useCallback(
-    (err: unknown, _scope: string) => {
+  const onError = ((err: unknown, _scope: string) => {
       notify.error(t("enrollments.exportFailed"), {
         description: err instanceof Error ? err.message : String(err),
       });
-    },
-    [t],
-  );
+    });
 
   return useModuleServerCsvExportActions<EnrollmentExportColumn, EnrollmentsListQuery>({
     canExport,

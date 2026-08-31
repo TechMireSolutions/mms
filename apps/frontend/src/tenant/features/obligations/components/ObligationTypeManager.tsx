@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import type { ObligationType } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -6,7 +6,6 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { Button } from "@/components/ui/button";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ObligationTypeFormModal } from "@/tenant/features/obligations/components/ObligationTypeFormModal";
 import { ObligationTypeManagerList } from "@/tenant/features/obligations/components/ObligationTypeManagerList";
 import {
@@ -14,6 +13,7 @@ import {
   OBLIGATION_TYPE_EMPTY,
   type ObligationTypeModalState,
 } from "@/tenant/features/obligations/components/obligationTypeManagerShared";
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 export type { DesignatedFor } from "@/tenant/features/obligations/components/obligationTypeManagerShared";
 
@@ -29,17 +29,17 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
   const { t } = useTranslation();
   const [modal, setModal] = useState<ObligationTypeModalState | null>(null);
 
-  const designatedConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const designatedConfig = (() => ({
     Syed: { label: t(DESIGNATED_LABEL_KEYS.Syed), cls: SEMANTIC_BADGE.info },
     "Non-Syed": { label: t(DESIGNATED_LABEL_KEYS["Non-Syed"]), cls: SEMANTIC_BADGE.warning },
     Both: { label: t(DESIGNATED_LABEL_KEYS.Both), cls: SEMANTIC_BADGE.success },
     None: { label: t(DESIGNATED_LABEL_KEYS.None), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const quantityConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const quantityConfig = (() => ({
     yes: { label: t("common.yes"), cls: SEMANTIC_BADGE.successStrong },
     no: { label: t("common.no"), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 

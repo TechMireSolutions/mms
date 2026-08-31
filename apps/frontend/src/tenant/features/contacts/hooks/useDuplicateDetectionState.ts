@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   applyTitleCaseToContact,
   getDuplicateConfidenceBadgeStyle,
@@ -76,22 +76,19 @@ export function useDuplicateDetectionState({
     });
   }, [serverPairs, dupPage, t]);
 
-  const detectedPairs = useMemo<DuplicatePair[]>(() => {
+  const detectedPairs = (() => {
     if (pairsError) return [];
     if (pairsSuccess || loadedPairs.length > 0) return loadedPairs;
     return [];
-  }, [loadedPairs, pairsError, pairsSuccess]);
+  })() as DuplicatePair[];
 
-  const handleLoadMoreDuplicates = useCallback(() => {
+  const handleLoadMoreDuplicates = (() => {
     if (serverPairs?.hasMore) setDupPage((currentPage) => currentPage + 1);
-  }, [serverPairs?.hasMore]);
+  });
 
-  const unhandledPairs = useMemo<DuplicatePair[]>(
-    () => detectedPairs.filter((pair) => !dismissedPairIds.has(pair.id) && !mergedPairIds.has(pair.id)),
-    [detectedPairs, dismissedPairIds, mergedPairIds],
-  );
+  const unhandledPairs = (() => detectedPairs.filter((pair) => !dismissedPairIds.has(pair.id) && !mergedPairIds.has(pair.id)))() as DuplicatePair[];
 
-  const tierCounts = useMemo(() => {
+  const tierCounts = (() => {
     let high = 0;
     let medium = 0;
     let low = 0;
@@ -102,9 +99,9 @@ export function useDuplicateDetectionState({
       else low++;
     }
     return { all: unhandledPairs.length, high, medium, low };
-  }, [unhandledPairs, prefs]);
+  })();
 
-  const activePairs = useMemo<DuplicatePair[]>(() => {
+  const activePairs = (() => {
     const query = searchQuery.trim().toLowerCase();
     return unhandledPairs.filter((pair) => {
       if (tierFilter !== "all") {
@@ -125,7 +122,7 @@ export function useDuplicateDetectionState({
         return false;
       });
     });
-  }, [unhandledPairs, tierFilter, searchQuery, prefs]);
+  })() as DuplicatePair[];
 
   const totalPairs = serverPairs?.total ?? detectedPairs.length;
 

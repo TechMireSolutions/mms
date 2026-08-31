@@ -9,7 +9,7 @@ export interface DirectoryCardMetaTileProps {
 }
 
 /** Shared metadata tile for Work directory entity cards. */
-export const DirectoryCardMetaTile = React.memo(function DirectoryCardMetaTile({
+export const DirectoryCardMetaTile = (function DirectoryCardMetaTile({
   label,
   children,
   className,

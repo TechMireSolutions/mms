@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo, useState } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import type { SessionsReportAggregates } from "@mms/shared";
 import { useSessions, useSessionsCollection, useSessionsReportAggregates } from "@/tenant/hooks/collections/sessions";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,13 +20,7 @@ import {
   buildSessionStatusConfig,
 } from "./sessionReportUtils";
 
-import type {
-  CapacityChartItem,
-  EnrollmentTrendItem,
-  SessionCapacityItem,
-  SessionReportProps,
-  TodaySessionItem,
-} from "./sessionReportTypes";
+import type { CapacityChartItem, EnrollmentTrendItem, SessionCapacityItem, SessionReportProps, TodaySessionItem } from './sessionReportTypes';
 
 export type {
   CapacityChartItem,
@@ -41,7 +35,7 @@ export type {
  * Renders the session reports and capacity metrics, including utilization bar charts,
  * enrollment trend lines, and a filterable capacity data grid.
  */
-const SessionReport = React.memo(function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
+const SessionReport = (function SessionReport({ filters }: SessionReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const sessionsQuery = useSessions();
   const sessions = useSessionsCollection();
@@ -53,24 +47,24 @@ const SessionReport = React.memo(function SessionReport({ filters }: SessionRepo
   const [selectedSession, setSelectedSession] = useState<string | null>(null);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
-  const sessionStatusConfig = useMemo(() => buildSessionStatusConfig(t), [t]);
+  const sessionStatusConfig = (() => buildSessionStatusConfig(t))();
 
-  const rawSessionCapacityData = useMemo<SessionCapacityItem[]>(() => {
+  const rawSessionCapacityData = (() => {
     if (aggregates && Array.isArray(aggregates.capacity) && aggregates.capacity.length > 0) {
       return aggregates.capacity;
     }
     return buildSessionCapacityData(sessions);
-  }, [aggregates, sessions]);
+  })() as SessionCapacityItem[];
 
-  const capacityChartData = useMemo<CapacityChartItem[]>(() => {
+  const capacityChartData = (() => {
     return rawSessionCapacityData.map((item: SessionCapacityItem) => ({
       class: item.class,
       enrolled: item.enrolled,
       available: Math.max(0, item.capacity - item.enrolled),
     }));
-  }, [rawSessionCapacityData]);
+  })() as CapacityChartItem[];
 
-  const enrollmentTrends = useMemo<EnrollmentTrendItem[]>(() => {
+  const enrollmentTrends = (() => {
     if (aggregates && Array.isArray(aggregates.enrollmentTrends) && aggregates.enrollmentTrends.length > 0) {
       return aggregates.enrollmentTrends.map((trend) => ({
         month: trend.monthKey,
@@ -79,9 +73,9 @@ const SessionReport = React.memo(function SessionReport({ filters }: SessionRepo
       }));
     }
     return buildEnrollmentTrends(sessions);
-  }, [aggregates, sessions]);
+  })() as EnrollmentTrendItem[];
 
-  const sessionCapacityData = useMemo<SessionCapacityItem[]>(() => {
+  const sessionCapacityData = (() => {
     let filteredData = rawSessionCapacityData;
 
     if (filters.session && filters.session !== "all") {
@@ -101,14 +95,14 @@ const SessionReport = React.memo(function SessionReport({ filters }: SessionRepo
     }
 
     return filteredData;
-  }, [filters, rawSessionCapacityData, selectedSession, selectedClass]);
+  })() as SessionCapacityItem[];
 
-  const todaysSessions = useMemo<TodaySessionItem[]>(() => {
+  const todaysSessions = (() => {
     if (aggregates && Array.isArray(aggregates.todaysSessions) && aggregates.todaysSessions.length > 0) {
       return aggregates.todaysSessions;
     }
     return buildTodaysSessions(sessions);
-  }, [aggregates, sessions]);
+  })() as TodaySessionItem[];
 
   const toggleSessionFilter = (sessionName: string): void => {
     setSelectedSession((currentSession) => (currentSession === sessionName ? null : sessionName));

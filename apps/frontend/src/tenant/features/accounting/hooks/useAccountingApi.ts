@@ -1,4 +1,5 @@
 import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import type { MutateOptions } from '@tanstack/react-query';
 import type {
   AccountingCommandMetricsSnapshot,
   AccountingListQuery,
@@ -27,7 +28,7 @@ export function useAccountingAccountsPaginated(query: AccountingListQuery, optio
   
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.accounting.listAccounts.useQuery({
-    queryKey: [...ACCOUNTING_ACCOUNTS_QUERY_KEY, query] as any,
+    queryKey: [...ACCOUNTING_ACCOUNTS_QUERY_KEY, query],
     queryData: {
       query: {
         page: query.page,
@@ -36,7 +37,7 @@ export function useAccountingAccountsPaginated(query: AccountingListQuery, optio
         sortField: query.sortField,
         sortDir: query.sortDir,
         includeDeleted: query.includeDeleted ? 'true' : undefined,
-      } as any,
+      },
     },
     enabled,
     placeholderData: keepPreviousData,
@@ -49,7 +50,7 @@ export function useAccountingEntriesPaginated(query: AccountingListQuery, option
   
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.accounting.listEntries.useQuery({
-    queryKey: [...ACCOUNTING_ENTRIES_QUERY_KEY, query] as any,
+    queryKey: [...ACCOUNTING_ENTRIES_QUERY_KEY, query],
     queryData: {
       query: {
         page: query.page,
@@ -58,7 +59,7 @@ export function useAccountingEntriesPaginated(query: AccountingListQuery, option
         sortField: query.sortField,
         sortDir: query.sortDir,
         includeDeleted: query.includeDeleted ? 'true' : undefined,
-      } as any,
+      },
     },
     enabled,
     placeholderData: keepPreviousData,
@@ -71,7 +72,7 @@ export function useAccountingFiscalYearsPaginated(query: AccountingListQuery, op
   
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.accounting.listFiscalYears.useQuery({
-    queryKey: [...ACCOUNTING_FISCAL_YEARS_QUERY_KEY, query] as any,
+    queryKey: [...ACCOUNTING_FISCAL_YEARS_QUERY_KEY, query],
     queryData: {
       query: {
         page: query.page,
@@ -80,7 +81,7 @@ export function useAccountingFiscalYearsPaginated(query: AccountingListQuery, op
         sortField: query.sortField,
         sortDir: query.sortDir,
         includeDeleted: query.includeDeleted ? 'true' : undefined,
-      } as any,
+      },
     },
     enabled,
     placeholderData: keepPreviousData,
@@ -142,37 +143,37 @@ export function useAccountingMutations() {
   return {
     replaceAccounts: {
       ...replaceAccounts,
-      mutate: (accounts: Account[], opts?: any) => replaceAccounts.mutate({ body: accounts }, opts),
+      mutate: (accounts: Account[], opts?: MutateOptions) => replaceAccounts.mutate({ body: accounts }, opts),
       mutateAsync: (accounts: Account[]) => replaceAccounts.mutateAsync({ body: accounts }),
     },
     replaceEntries: {
       ...replaceEntries,
-      mutate: (entries: JournalEntry[], opts?: any) => replaceEntries.mutate({ body: entries }, opts),
+      mutate: (entries: JournalEntry[], opts?: MutateOptions) => replaceEntries.mutate({ body: entries }, opts),
       mutateAsync: (entries: JournalEntry[]) => replaceEntries.mutateAsync({ body: entries }),
     },
     replaceFiscalYears: {
       ...replaceFiscalYears,
-      mutate: (fiscalYears: FiscalYear[], opts?: any) => replaceFiscalYears.mutate({ body: fiscalYears }, opts),
+      mutate: (fiscalYears: FiscalYear[], opts?: MutateOptions) => replaceFiscalYears.mutate({ body: fiscalYears }, opts),
       mutateAsync: (fiscalYears: FiscalYear[]) => replaceFiscalYears.mutateAsync({ body: fiscalYears }),
     },
     deleteEntry: {
       ...deleteEntry,
-      mutate: (id: string, opts?: any) => deleteEntry.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => deleteEntry.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => deleteEntry.mutateAsync({ params: { id } }),
     },
     restoreEntry: {
       ...restoreEntry,
-      mutate: (id: string, opts?: any) => restoreEntry.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => restoreEntry.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => restoreEntry.mutateAsync({ params: { id } }),
     },
     bulkDeleteEntries: {
       ...bulkDeleteEntries,
-      mutate: (ids: string[], opts?: any) => bulkDeleteEntries.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkDeleteEntries.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkDeleteEntries.mutateAsync({ body: { ids } }),
     },
     bulkRestoreEntries: {
       ...bulkRestoreEntries,
-      mutate: (ids: string[], opts?: any) => bulkRestoreEntries.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkRestoreEntries.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestoreEntries.mutateAsync({ body: { ids } }),
     },
   };

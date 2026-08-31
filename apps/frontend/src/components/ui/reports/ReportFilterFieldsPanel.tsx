@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Calendar } from 'lucide-react';
 import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -37,16 +37,16 @@ export function ReportFilterFieldsPanel({
   const showDateFrom = allowed.includes('dateFrom');
   const showDateTo = allowed.includes('dateTo');
 
-  const normalizedCategory = useMemo(() => {
+  const normalizedCategory = (() => {
     const c = category?.toLowerCase() || '';
     if (c === 'faculty') return 'teachers';
     if (c === 'financial') return 'finance';
     if (c === 'academic') return 'examinations';
     if (c === 'questionbank') return 'question-bank';
     return c;
-  }, [category]);
+  })();
 
-  const statusOptions = useMemo(() => {
+  const statusOptions = (() => {
     let rawStatuses: readonly string[] = ['all'];
 
     switch (normalizedCategory) {
@@ -105,19 +105,19 @@ export function ReportFilterFieldsPanel({
 
       return { value: st, label };
     });
-  }, [normalizedCategory, t]);
+  })();
 
-  const searchLabel = useMemo(() => {
+  const searchLabel = (() => {
     if (normalizedCategory === 'teachers') return t('teachers.report.colFaculty');
     if (normalizedCategory === 'contacts') return t('contacts.columns.name');
     return t('reports.filters.student');
-  }, [normalizedCategory, t]);
+  })();
 
-  const searchPlaceholder = useMemo(() => {
+  const searchPlaceholder = (() => {
     if (normalizedCategory === 'teachers') return t('teachers.searchPlaceholder');
     if (normalizedCategory === 'contacts') return t('contacts.searchPlaceholder');
     return t('reports.filters.searchName');
-  }, [normalizedCategory, t]);
+  })();
 
   return (
     <div className="px-4 pb-4 flex flex-wrap gap-4 border-t border-border/50 pt-4">

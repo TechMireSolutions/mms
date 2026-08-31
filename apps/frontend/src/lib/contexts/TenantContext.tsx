@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext } from "react";
 import {
   parseTenantFromHost,
   isApexHost,
@@ -38,14 +38,8 @@ const TenantContext = createContext<TenantContextValue | undefined>(undefined);
 export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const hostname = typeof window !== "undefined" ? window.location.hostname : "localhost";
   const appDomain = useDeploymentAppDomain();
-  const subdomain = useMemo(
-    () => (typeof window !== "undefined" ? parseTenantFromHost(hostname, appDomain) : null),
-    [hostname, appDomain],
-  );
-  const isApex = useMemo(
-    () => (typeof window !== "undefined" ? isApexHost(hostname, appDomain) : true),
-    [hostname, appDomain],
-  );
+  const subdomain = (() => (typeof window !== "undefined" ? parseTenantFromHost(hostname, appDomain) : null))();
+  const isApex = (() => (typeof window !== "undefined" ? isApexHost(hostname, appDomain) : true))();
 
   const tenantLookupEnabled = !isApex && Boolean(subdomain);
   const {
@@ -59,7 +53,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   } = useWorkspaceBySubdomain(subdomain, tenantLookupEnabled);
   const workspaceLoading = tenantLookupEnabled && isPending && !isFetched;
   const lookupBody = workspaceLookup?.body as { workspace?: PublicWorkspace; branding?: PublicBranding | null } | undefined;
-  const workspace = lookupBody?.workspace ?? (workspaceLookup as any)?.workspace ?? null;
+  const workspace = lookupBody?.workspace ?? null;
   const notFound = isWorkspaceNotFoundError(workspaceError) || workspaceLookup?.status === 404;
   const workspaceMissing =
     tenantLookupEnabled &&
@@ -68,7 +62,7 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const workspaceLookupFailed =
     tenantLookupEnabled && !workspaceLoading && isError && !notFound;
   // Missing tenants hard-redirect to apex Tenant Not Found — skip branding fetch.
-  const publicBranding = lookupBody?.branding ?? (workspaceLookup as any)?.branding ?? null;
+  const publicBranding = lookupBody?.branding ?? null;
 
   const workspaceUrl = subdomain
     ? buildTenantUrl(subdomain, "/", getTenantUrlOptions())

@@ -42,7 +42,7 @@ export interface ContactEmailActionProps {
   };
 }
 
-export const ContactEmailAction = React.memo(function ContactEmailAction({
+export const ContactEmailAction = (function ContactEmailAction({
   email,
   name,
   variant = "stacked",

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { useQuestionBankFilters } from '@/tenant/features/question-bank/hooks/useQuestionBankFilters';
@@ -120,15 +120,9 @@ export function QuestionBank({
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
   const showSource = columnVisible('source');
 
-  const listMetaFields = useMemo(
-    () => buildQuestionsListMetaFields(config, columnVisible),
-    [config, columnVisible],
-  );
+  const listMetaFields = (() => buildQuestionsListMetaFields(config, columnVisible))();
 
-  const showSourceCitation = useMemo(
-    () => shouldShowQuestionSourceCitation(config, showSource),
-    [config, showSource],
-  );
+  const showSourceCitation = (() => shouldShowQuestionSourceCitation(config, showSource))();
 
   const openNewQuestion = (): void => {
     setEditingQuestion(null);

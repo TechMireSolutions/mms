@@ -83,10 +83,10 @@ export function useContactsSyncOutbox() {
     }
   }, [deleteContact, flushing, refreshCounts, t, updateContact, upsertContact]);
 
-  const flushManual = useCallback(async () => {
+  const flushManual = (async () => {
     userInitiatedFlush.current = true;
     return flush({ notify: true });
-  }, [flush]);
+  });
 
   useEffect(() => {
     const onOnline = () => {

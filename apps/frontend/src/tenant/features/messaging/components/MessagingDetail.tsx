@@ -38,7 +38,7 @@ export interface MessagingDetailProps {
   onResend: (log: Message) => void;
 }
 
-export const MessagingDetail = React.memo(function MessagingDetail({
+export const MessagingDetail = (function MessagingDetail({
   log,
   recipient,
   logStatusConfig,

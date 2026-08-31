@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -44,24 +44,21 @@ export default function MessagingPage(): React.JSX.Element {
   const { deleteTemplate, clearLogs } = useMessagingMutations();
   const visibleTabs = useFilteredModuleTierTabs({ canViewSetup: canViewSetup || canEditSetup });
 
-  const handleTabChange = useCallback((tab: 'work' | 'reports' | 'setup'): void => {
+  const handleTabChange = ((tab: 'work' | 'reports' | 'setup'): void => {
     setActiveTab(tab);
     const next = new URLSearchParams(searchParams);
     if (tab !== 'work') next.set('tab', tab);
     else next.delete('tab');
     setSearchParams(next, { replace: true });
-  }, [setActiveTab, searchParams, setSearchParams]);
+  });
 
-  const templates = useMemo(
-    () => mergeMessageTemplates(templatesQuery.templates),
-    [templatesQuery.templates],
-  );
-  const stats = useMemo(() => ({
+  const templates = (() => mergeMessageTemplates(templatesQuery.templates))();
+  const stats = (() => ({
     total: metricsQuery.data?.total ?? 0,
     sms: metricsQuery.data?.smsCount ?? 0,
     whatsapp: metricsQuery.data?.whatsappCount ?? 0,
     email: metricsQuery.data?.emailCount ?? 0,
-  }), [metricsQuery.data]);
+  }))();
 
   const triggerCompose = useCallback((
     channel: 'sms' | 'whatsapp' | 'email',
@@ -137,17 +134,17 @@ export default function MessagingPage(): React.JSX.Element {
     enabled: activeTab === 'work',
   });
 
-  const resend = useCallback((log: Message, recipient: MessagingRecipient): void => {
+  const resend = ((log: Message, recipient: MessagingRecipient): void => {
     triggerCompose(log.channel, [recipient], log.body, log.subject);
-  }, [triggerCompose]);
+  });
 
-  const handleBulkResend = useCallback((logs: Message[], recipients: MessagingRecipient[], targetChannel?: 'whatsapp' | 'sms' | 'email'): void => {
+  const handleBulkResend = ((logs: Message[], recipients: MessagingRecipient[], targetChannel?: 'whatsapp' | 'sms' | 'email'): void => {
     if (logs.length === 0) return;
     const channel = targetChannel ?? logs[0]?.channel ?? 'whatsapp';
     const initialMessage = logs.length === 1 ? logs[0]?.body : undefined;
     const initialSubject = logs.length === 1 ? logs[0]?.subject : undefined;
     triggerCompose(channel, recipients, initialMessage, initialSubject);
-  }, [triggerCompose]);
+  });
 
   const confirmDeleteTemplate = async (): Promise<void> => {
     if (!deleteTemplateId) return;
@@ -170,15 +167,15 @@ export default function MessagingPage(): React.JSX.Element {
     }
   };
 
-  const handleDispatchSent = useCallback((): void => {
+  const handleDispatchSent = ((): void => {
     void metricsQuery.refetch();
     void queryClient.invalidateQueries({ queryKey: MESSAGING_LOGS_QUERY_KEY });
     void queryClient.invalidateQueries({ queryKey: MESSAGING_METRICS_QUERY_KEY });
-  }, [metricsQuery, queryClient]);
+  });
 
-  const refetchMetrics = useCallback((): void => {
+  const refetchMetrics = ((): void => {
     void metricsQuery.refetch();
-  }, [metricsQuery]);
+  });
 
   return (
     <MessagingPageView

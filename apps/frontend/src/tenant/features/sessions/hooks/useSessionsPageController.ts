@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -93,10 +93,7 @@ export function useSessionsPageController() {
   const isError = isErrorTsr || (workPageData != null && workPageData.status !== 200);
   const pageData = workPageData?.status === 200 ? (workPageData.body as SessionsListPageResult) : undefined;
 
-  const sessions = useMemo(
-    () => (pageData?.sessions ?? []) as Session[],
-    [pageData],
-  );
+  const sessions = (() => (pageData?.sessions ?? []) as Session[])();
 
   const {
     selectedIds,
@@ -154,10 +151,7 @@ export function useSessionsPageController() {
     setSelectedIds,
   });
 
-  const exportColumns = useMemo(
-    () => defaultSessionsExportColumns(t),
-    [t],
-  );
+  const exportColumns = (() => defaultSessionsExportColumns(t))();
 
   const { handleExportCSV, handleBulkExport } = useSessionsExportActions({
     tableColumns: exportColumns,

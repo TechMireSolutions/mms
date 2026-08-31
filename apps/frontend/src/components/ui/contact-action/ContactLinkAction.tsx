@@ -39,7 +39,7 @@ export interface ContactLinkActionProps {
 /**
  * Reusable link / website action component with ExternalLink and Copy buttons.
  */
-export const ContactLinkAction = React.memo(function ContactLinkAction({
+export const ContactLinkAction = (function ContactLinkAction({
   href,
   text,
   label,

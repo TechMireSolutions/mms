@@ -14,7 +14,7 @@ export function useQuestionBankContractList(query: Record<string, unknown> = {},
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.questionBank.listQuestions.useQuery({
     queryKey: [...QUESTION_BANK_QUESTIONS_QUERY_KEY, 'contract-list', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });

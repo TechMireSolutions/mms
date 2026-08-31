@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React from "react";
 import { WidgetBuilder, CustomWidget } from "@/components/ui/reports/PinnedWidgets";
 import { CustomCard } from "@/lib/reports/reportMetadata";
 import { getObject, saveObject } from "@/lib/db";
@@ -20,7 +20,7 @@ export default function DynamicCardBuilder({
   onCancelEdit
 }: DynamicCardBuilderProps): React.JSX.Element {
   // Convert CustomCard to CustomWidget
-  const editWidgetConfig = useMemo<CustomWidget | null>(() => {
+  const editWidgetConfig = (() => {
     if (!editCardConfig) return null;
 
     return {
@@ -43,11 +43,11 @@ export default function DynamicCardBuilder({
       trendType: editCardConfig.trendType,
       role: editCardConfig.role
     };
-  }, [category, editCardConfig]);
+  })() as CustomWidget | null;
 
   const { saveWidget } = useDashboardConfig();
 
-  const handleSaveWidget = useCallback(async (savedWidget: CustomWidget) => {
+  const handleSaveWidget = (async (savedWidget: CustomWidget) => {
     // Convert CustomWidget to CustomCard
     const newCard: CustomCard = {
       id: savedWidget.id,
@@ -92,11 +92,11 @@ export default function DynamicCardBuilder({
     if (mode === "kpi") {
       window.dispatchEvent(new Event("local-database-update"));
     }
-  }, [category, editCardConfig, mode, onCancelEdit, saveWidget]);
+  });
 
-  const handleCancelEdit = useCallback(() => {
+  const handleCancelEdit = (() => {
     onCancelEdit?.();
-  }, [onCancelEdit]);
+  });
 
   return (
     <WidgetBuilder

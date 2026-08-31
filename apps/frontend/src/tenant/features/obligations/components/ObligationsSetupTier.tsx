@@ -57,7 +57,7 @@ export interface ObligationsSetupTierProps {
   onChangeDistributions: (distributions: ObligationDistribution[]) => Promise<void>;
 }
 
-export const ObligationsSetupTier = React.memo(function ObligationsSetupTier({
+export const ObligationsSetupTier = (function ObligationsSetupTier({
   tabs,
   activeTab,
   canEditSetup,

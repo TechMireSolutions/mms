@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { roleHasPermission, type Permission } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
@@ -17,7 +17,7 @@ export function usePermissions(): UsePermissionsResult {
     [role],
   );
 
-  return useMemo(() => ({ role, can }), [role, can]);
+  return (() => ({ role, can }))();
 }
 
 export interface ModulePermissionsManifest {
@@ -36,7 +36,7 @@ export interface ModulePermissionsManifest {
 /** Resolves all standard tier & action permissions for a module manifest (Rule 11 / DRY). */
 export function useModulePermissions(manifest: ModulePermissionsManifest) {
   const { can } = usePermissions();
-  return useMemo(() => {
+  return (() => {
     const p = manifest.permissions;
     return {
       canRead: p.read ? can(p.read) : false,
@@ -48,6 +48,6 @@ export function useModulePermissions(manifest: ModulePermissionsManifest) {
       canEditSetup: p.setupWrite ? can(p.setupWrite) : false,
       canClearLogs: p.clearLogs ? can(p.clearLogs) : false,
     };
-  }, [can, manifest.permissions]);
+  })();
 }
 

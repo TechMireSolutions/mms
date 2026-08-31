@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
@@ -26,14 +25,14 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
 
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
 
-  const mappedRows = useMemo(() => {
+  const mappedRows = (() => {
     const now = new Date();
     const nowYear = now.getFullYear();
     const nowMonth = now.getMonth();
 
     return unpaidInvoices.map((invoice) => {
       const student = studentMap.get(String(invoice.studentId));
-      const contact = (student as any)?.phone || "";
+      const contact = student?.phone || "";
       const amount = getOutstandingAmountForInvoice(invoice);
 
       const due = new Date(invoice.dueDate);
@@ -47,11 +46,11 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         amount,
         months: diffMonths,
         contact,
-        email: (student as any)?.email || "",
+        email: student?.email || "",
         dueDate: invoice.dueDate,
       };
     });
-  }, [unpaidInvoices, studentMap]);
+  })();
 
   const {
     searchQuery,

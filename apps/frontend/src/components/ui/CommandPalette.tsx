@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -33,7 +33,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
     [t],
   );
 
-  const filteredItems = useMemo(() => {
+  const filteredItems = (() => {
     const q = query.trim().toLowerCase();
     if (!q) return COMMAND_ITEMS;
     return COMMAND_ITEMS.filter((item) => {
@@ -44,7 +44,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
         item.keywords.some((k) => k.toLowerCase().includes(q))
       );
     });
-  }, [query, translate]);
+  })();
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -59,8 +59,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
     [navigate, onClose],
   );
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = ((e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === "ArrowDown") {
         e.preventDefault();
         setSelectedIndex((prev) => (filteredItems.length > 0 ? (prev + 1) % filteredItems.length : 0));
@@ -78,9 +77,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
         e.preventDefault();
         onClose();
       }
-    },
-    [filteredItems, selectedIndex, handleSelect, onClose],
-  );
+    });
 
   if (!open) return null;
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useContactsContractList } from '@/tenant/hooks/collections/contacts';
 import { useStudentsContractList } from '@/tenant/hooks/collections/students';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
@@ -47,48 +47,39 @@ export function useCustomReportBuilderState(initialSource?: string) {
     page: 1,
     limit: STUDENTS_MODULE_MANIFEST.defaultPageSize,
   }, source === 'students');
-  const contactsColl = useMemo(
-    () => (contactsPreviewPage?.body?.contacts ?? []) as unknown as Record<string, unknown>[],
-    [contactsPreviewPage?.body?.contacts],
-  );
-  const studentsColl = useMemo(
-    () => (studentsPreviewPage?.body?.students ?? []) as unknown as Record<string, unknown>[],
-    [studentsPreviewPage?.body?.students],
-  );
+  const contactsColl = (() => (contactsPreviewPage?.body?.contacts ?? []) as unknown as Record<string, unknown>[])();
+  const studentsColl = (() => (studentsPreviewPage?.body?.students ?? []) as unknown as Record<string, unknown>[])();
   const sessionsData = useSessionsCollection({ enabled: source === 'sessions' });
-  const sessionsColl = useMemo(() => (sessionsData ?? []) as unknown as Record<string, unknown>[], [sessionsData]);
+  const sessionsColl = (() => (sessionsData ?? []) as unknown as Record<string, unknown>[])();
 
   const financialResult = useFinanceInvoicesPaginated({ page: 1, limit: 50 }, { enabled: source === 'financial' });
   const financialData = financialResult.data?.invoices;
-  const financialColl = useMemo(() => (financialData ?? []) as unknown as Record<string, unknown>[], [financialData]);
+  const financialColl = (() => (financialData ?? []) as unknown as Record<string, unknown>[])();
 
   const attendanceData = useAttendanceRecordsCollection({ enabled: source === 'attendance' });
-  const attendanceColl = useMemo(() => (attendanceData ?? []) as unknown as Record<string, unknown>[], [attendanceData]);
+  const attendanceColl = (() => (attendanceData ?? []) as unknown as Record<string, unknown>[])();
 
   const hasanatData = useHasanatDistributionsCollection({ enabled: source === 'hasanat' });
-  const hasanatColl = useMemo(() => (hasanatData ?? []) as unknown as Record<string, unknown>[], [hasanatData]);
+  const hasanatColl = (() => (hasanatData ?? []) as unknown as Record<string, unknown>[])();
 
   const academicData = useExaminationsResultsCollection({ enabled: source === 'academic' });
-  const academicColl = useMemo(() => (academicData ?? []) as unknown as Record<string, unknown>[], [academicData]);
+  const academicColl = (() => (academicData ?? []) as unknown as Record<string, unknown>[])();
 
   const resolveFieldLabel = useCallback(
     (field: string): string => resolveCustomReportFieldLabel(source, field, {}, (key) => t(key)),
     [source, t],
   );
 
-  const contactsFieldCatalog = useMemo(() => {
+  const contactsFieldCatalog = (() => {
     if (source !== 'contacts') return [];
     return buildContactsCustomReportFieldCatalog(
       {},
       [],
       viewerRole,
     );
-  }, [source, viewerRole]);
+  })();
 
-  const available = useMemo(
-    () => buildCustomReportFieldCatalog(source, selectedFields, contactsFieldCatalog),
-    [source, selectedFields, contactsFieldCatalog],
-  );
+  const available = (() => buildCustomReportFieldCatalog(source, selectedFields, contactsFieldCatalog))();
 
   useEffect(() => {
     if (groupBy && !selectedFields.includes(groupBy)) {

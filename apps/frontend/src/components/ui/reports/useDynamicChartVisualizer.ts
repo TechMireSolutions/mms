@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useRef } from 'react';
 import {
   DEFAULT_CHART_PALETTE_ID,
   getChartPaletteColors,
@@ -86,7 +86,7 @@ export function useDynamicChartVisualizer({
     isContacts || isStudents ? '' : collectionKey,
   );
 
-  const contactsVisualizerWidgets = useMemo(() => {
+  const contactsVisualizerWidgets = (() => {
     if (!isContacts) return [];
     return [
       {
@@ -105,9 +105,9 @@ export function useDynamicChartVisualizer({
         chartLimit: 20,
       },
     ];
-  }, [isContacts, operation, targetField, xAxisField, filters]);
+  })();
 
-  const studentsVisualizerWidgets = useMemo(() => {
+  const studentsVisualizerWidgets = (() => {
     if (!isStudents) return [];
     return [
       {
@@ -126,7 +126,7 @@ export function useDynamicChartVisualizer({
         chartLimit: 20,
       },
     ];
-  }, [isStudents, operation, targetField, xAxisField, filters]);
+  })();
 
   const { data: contactsAggregates } = useContactsWidgetAggregates(contactsVisualizerWidgets, {
     enabled: isContacts,
@@ -150,10 +150,10 @@ export function useDynamicChartVisualizer({
     setFilters,
   });
 
-  const processedData = useMemo<AggregatedItem[]>(() => {
+  const processedData = (() => {
     if (isContacts) {
       const chartData = contactsAggregates?.[CONTACTS_VISUALIZER_QUERY_ID]?.chartData ?? [];
-      const items: AggregatedItem[] = chartData.map((row: any) => ({
+      const items: AggregatedItem[] = chartData.map((row) => ({
         name: row.name,
         value: row.value,
         count: row.value,
@@ -162,7 +162,7 @@ export function useDynamicChartVisualizer({
     }
     if (isStudents) {
       const chartData = studentsAggregates?.[STUDENTS_VISUALIZER_QUERY_ID]?.chartData ?? [];
-      const items: AggregatedItem[] = chartData.map((row: any) => ({
+      const items: AggregatedItem[] = chartData.map((row) => ({
         name: row.name,
         value: row.value,
         count: row.value,
@@ -178,24 +178,9 @@ export function useDynamicChartVisualizer({
       operation,
       targetField,
     });
-  }, [
-    isContacts,
-    isStudents,
-    contactsAggregates,
-    studentsAggregates,
-    collectionKey,
-    xAxisField,
-    operation,
-    targetField,
-    filters,
-    collectionRows,
-    denominations,
-  ]);
+  })() as AggregatedItem[];
 
-  const isPinned = useMemo(
-    () => isVisualizerWidgetPinned(visualizerWidgets, collectionKey, xAxisField, operation, chartType),
-    [visualizerWidgets, collectionKey, xAxisField, operation, chartType],
-  );
+  const isPinned = (() => isVisualizerWidgetPinned(visualizerWidgets, collectionKey, xAxisField, operation, chartType))();
 
   const {
     handleTogglePin,

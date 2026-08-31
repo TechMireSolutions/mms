@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, AlertTriangle, Calendar, User, DollarSign, X } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -49,9 +49,9 @@ export function NotificationsPanel({ items }: NotificationsPanelProps): React.JS
   const { t } = useTranslation();
   const [dismissed, setDismissed] = useState<Array<string | number>>(getInitialDismissed);
 
-  const dismissedSet = useMemo(() => new Set(dismissed), [dismissed]);
+  const dismissedSet = (() => new Set(dismissed))();
 
-  const { visible, urgent } = useMemo(() => {
+  const { visible, urgent } = (() => {
     let urgentCount = 0;
     const filtered = items.filter((item) => {
       if (dismissedSet.has(item.id)) return false;
@@ -59,20 +59,20 @@ export function NotificationsPanel({ items }: NotificationsPanelProps): React.JS
       return true;
     });
     return { visible: filtered, urgent: urgentCount };
-  }, [items, dismissedSet]);
+  })();
 
-  const handleDismiss = useCallback((id: string | number) => {
+  const handleDismiss = ((id: string | number) => {
     setDismissed((prev) => {
       const next = [...prev, id];
       saveDismissedToSession(next);
       return next;
     });
-  }, []);
+  });
 
-  const handleRestoreAll = useCallback(() => {
+  const handleRestoreAll = (() => {
     setDismissed([]);
     saveDismissedToSession([]);
-  }, []);
+  });
 
   return (
     <WidgetCard ariaLabelledby="notifications-heading" accentColor="warning">

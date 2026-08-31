@@ -19,7 +19,7 @@ export type ContactActionProps =
 /**
  * Unified contact action component for Phone, Email, Location, and Link channels with Call, SMS, WhatsApp, Mail, Maps, ExternalLink, and Copy actions.
  */
-export const ContactAction = React.memo(function ContactAction(props: ContactActionProps): React.JSX.Element | null {
+export const ContactAction = (function ContactAction(props: ContactActionProps): React.JSX.Element | null {
   if (props.type === "phone") {
     const { type: _, ...rest } = props;
     return <ContactPhoneAction {...rest} />;

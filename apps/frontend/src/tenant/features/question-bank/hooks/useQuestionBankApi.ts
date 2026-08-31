@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import type { MutateOptions } from '@tanstack/react-query';
 import type {
   QuestionBankCommandMetricsSnapshot,
   QuestionBankQuestion,
@@ -28,7 +29,7 @@ export function useQuestionBankQuestions(options?: { enabled?: boolean; includeD
   const enabled = options?.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.questionBank.listQuestions.useQuery({
-    queryKey: [...QUESTION_BANK_QUESTIONS_QUERY_KEY, { includeDeleted }] as any,
+    queryKey: [...QUESTION_BANK_QUESTIONS_QUERY_KEY, { includeDeleted }],
     queryData: { query: { includeDeleted: includeDeleted ? 'true' : undefined } },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
@@ -153,37 +154,37 @@ export function useQuestionBankMutations() {
   return {
     replaceQuestions: {
       ...replaceQuestions,
-      mutate: (questions: QuestionBankQuestion[], opts?: any) => replaceQuestions.mutate({ body: questions }, opts),
+      mutate: (questions: QuestionBankQuestion[], opts?: MutateOptions) => replaceQuestions.mutate({ body: questions }, opts),
       mutateAsync: (questions: QuestionBankQuestion[]) => replaceQuestions.mutateAsync({ body: questions }),
     },
     replaceTests: {
       ...replaceTests,
-      mutate: (tests: QuestionBankTest[], opts?: any) => replaceTests.mutate({ body: tests }, opts),
+      mutate: (tests: QuestionBankTest[], opts?: MutateOptions) => replaceTests.mutate({ body: tests }, opts),
       mutateAsync: (tests: QuestionBankTest[]) => replaceTests.mutateAsync({ body: tests }),
     },
     replaceResults: {
       ...replaceResults,
-      mutate: (results: QuestionBankResult[], opts?: any) => replaceResults.mutate({ body: results }, opts),
+      mutate: (results: QuestionBankResult[], opts?: MutateOptions) => replaceResults.mutate({ body: results }, opts),
       mutateAsync: (results: QuestionBankResult[]) => replaceResults.mutateAsync({ body: results }),
     },
     deleteQuestion: {
       ...deleteQuestion,
-      mutate: (id: string, opts?: any) => deleteQuestion.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => deleteQuestion.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => deleteQuestion.mutateAsync({ params: { id } }),
     },
     restoreQuestion: {
       ...restoreQuestion,
-      mutate: (id: string, opts?: any) => restoreQuestion.mutate({ params: { id } }, opts),
+      mutate: (id: string, opts?: MutateOptions) => restoreQuestion.mutate({ params: { id } }, opts),
       mutateAsync: (id: string) => restoreQuestion.mutateAsync({ params: { id } }),
     },
     bulkDeleteQuestions: {
       ...bulkDeleteQuestions,
-      mutate: (ids: string[], opts?: any) => bulkDeleteQuestions.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkDeleteQuestions.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkDeleteQuestions.mutateAsync({ body: { ids } }),
     },
     bulkRestoreQuestions: {
       ...bulkRestoreQuestions,
-      mutate: (ids: string[], opts?: any) => bulkRestoreQuestions.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkRestoreQuestions.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestoreQuestions.mutateAsync({ body: { ids } }),
     },
     invalidate,

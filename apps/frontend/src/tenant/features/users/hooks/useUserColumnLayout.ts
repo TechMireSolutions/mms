@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   USERS_MODULE_MANIFEST,
   buildUsersWorkColumnRegistry,
@@ -9,8 +8,7 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 export function useUserColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildUsersWorkColumnRegistry({
         user: t('users.colUser'),
         role: t('users.colRole'),
@@ -18,9 +16,7 @@ export function useUserColumnLayout() {
         lastLogin: t('users.colLastLogin'),
         created: t('users.colCreated'),
         twoFactor: t('users.col2fa'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: USERS_MODULE_MANIFEST.moduleId,

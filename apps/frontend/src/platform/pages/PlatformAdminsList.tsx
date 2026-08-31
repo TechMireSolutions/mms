@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { ShieldCheck, Download } from 'lucide-react';
 import type { PlatformUserProfile } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -44,7 +44,7 @@ export function PlatformAdminsList({
 
   const rawItems = admins ?? [];
 
-  const filteredItems = useMemo(() => {
+  const filteredItems = (() => {
     if (!searchQuery.trim()) return rawItems;
     const q = searchQuery.trim().toLowerCase();
     return rawItems.filter(
@@ -53,7 +53,7 @@ export function PlatformAdminsList({
         a.email.toLowerCase().includes(q) ||
         a.role.toLowerCase().includes(q),
     );
-  }, [rawItems, searchQuery]);
+  })();
 
   const handleExportCsv = () => {
     if (filteredItems.length === 0) return;

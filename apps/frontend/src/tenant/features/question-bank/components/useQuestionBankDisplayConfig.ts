@@ -1,19 +1,18 @@
-import { useMemo } from 'react';
 import { QUESTION_TYPE_ICONS, isQuestionSourceFieldId, type QuestionBankQuestion } from '@mms/shared';
-import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import type { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 
 type QuestionBankConfig = ReturnType<typeof useQuestionBankConfig>;
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 export function useQuestionBankDisplayConfig(config: QuestionBankConfig) {
-  const difficultyConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const difficultyConfig = (() => ({
     easy: { label: config.difficultyLabel('easy'), cls: SEMANTIC_BADGE.success },
     medium: { label: config.difficultyLabel('medium'), cls: SEMANTIC_BADGE.warning },
     hard: { label: config.difficultyLabel('hard'), cls: SEMANTIC_BADGE.destructive },
-  }), [config]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const typeConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => (
+  const typeConfig = (() => (
     Object.fromEntries(
       Object.keys(QUESTION_TYPE_ICONS).map((typeId) => [
         typeId,
@@ -23,7 +22,7 @@ export function useQuestionBankDisplayConfig(config: QuestionBankConfig) {
         },
       ]),
     )
-  ), [config]);
+  ))() as Record<string, StatusBadgeConfigItem>;
 
   return { difficultyConfig, typeConfig };
 }

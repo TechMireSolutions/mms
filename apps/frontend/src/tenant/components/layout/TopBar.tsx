@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Search } from "lucide-react";
 import TopBarActions from "@/tenant/components/layout/TopBarActions";
 import { Button } from "@/components/ui/button";
@@ -17,11 +17,11 @@ export interface TopBarProps {
 export default function TopBar({ sidebarCollapsed, onOpenCommandPalette }: TopBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const shortcutText = useMemo(() => {
+  const shortcutText = (() => {
     if (typeof navigator === "undefined") return "⌘K";
     const isMac = /(Mac|iPhone|iPod|iPad)/i.test(navigator.platform || navigator.userAgent || "");
     return isMac ? "⌘K" : "Ctrl+K";
-  }, []);
+  })();
 
   return (
     <header

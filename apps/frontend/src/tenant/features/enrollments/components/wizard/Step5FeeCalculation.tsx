@@ -20,9 +20,9 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
   const { formatCurrency } = useFinanceCurrency();
   const baseFee = session?.baseFee || 0;
 
-  const fee = React.useMemo<CalculatedFee>(() => {
+  const fee = (() => {
     return calcFee(baseFee, student || {}, [], session?.discounts || []);
-  }, [baseFee, student, session?.discounts]);
+  })() as CalculatedFee;
 
   // Notify parent
   React.useEffect(() => {

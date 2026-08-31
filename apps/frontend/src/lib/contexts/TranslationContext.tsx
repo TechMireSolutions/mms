@@ -149,12 +149,9 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
     ensureLocaleFontsLoaded(activeLanguage);
   }, [activeLanguage]);
 
-  const t = React.useCallback(
-    <K extends AppTranslationKey>(key: K, ...args: TranslationArgs<K>) => {
+  const t = (<K extends AppTranslationKey>(key: K, ...args: TranslationArgs<K>) => {
       return translateAppParams(key, activeLanguage, ...args);
-    },
-    [activeLanguage],
-  );
+    });
 
   if (!isLanguageLoaded && !hasLoadedAnyLanguage) {
     return (

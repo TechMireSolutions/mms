@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   PERMISSION_ACTIONS,
   type PermissionAction,
@@ -22,10 +22,10 @@ export function useRolesPermissionDraft(displayRole: WorkspaceRole | null) {
     }
   }, [displayRole, permDraftRoleId]);
 
-  const permDirty = useMemo(() => {
+  const permDirty = (() => {
     if (!displayRole || !permDraft) return false;
     return JSON.stringify(permDraft) !== JSON.stringify(displayRole.permissions);
-  }, [displayRole, permDraft]);
+  })();
 
   const togglePermDraft = (moduleId: string, action: PermissionAction): void => {
     setPermDraft((previousPermissions) => {

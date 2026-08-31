@@ -27,7 +27,7 @@ export interface TeacherFormTabContentProps {
   onDraftChange: (patch: Partial<Teacher>) => void;
 }
 
-export const TeacherFormTabContent = React.memo(function TeacherFormTabContent({
+export const TeacherFormTabContent = (function TeacherFormTabContent({
   tab,
   teacher,
   teacherDraft,

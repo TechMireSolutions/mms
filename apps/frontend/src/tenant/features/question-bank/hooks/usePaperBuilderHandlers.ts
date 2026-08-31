@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import type { RefObject } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
@@ -46,26 +45,17 @@ export function usePaperBuilderHandlers({
   const { t } = useTranslation();
   const qbConfig = useQuestionBankConfig(questions);
 
-  const categoryById = useMemo(
-    () => new Map(qbConfig.categories.map((category) => [category.id, { color: category.color, name: category.name }])),
-    [qbConfig.categories],
-  );
+  const categoryById = (() => new Map(qbConfig.categories.map((category) => [category.id, { color: category.color, name: category.name }])))();
 
-  const categoryOptions = useMemo(
-    () => [
+  const categoryOptions = (() => [
       { value: ALL_FILTER, label: t("questionBank.allCategories") },
       ...qbConfig.categories.map((category) => ({ value: category.id, label: category.name })),
-    ],
-    [qbConfig.categories, t],
-  );
+    ])();
 
-  const difficultyOptions = useMemo(
-    () => [
+  const difficultyOptions = (() => [
       { value: ALL_FILTER, label: t("questionBank.difficultyAny") },
       ...qbConfig.enabledDifficulties.map((difficulty) => ({ value: difficulty, label: qbConfig.difficultyLabel(difficulty) })),
-    ],
-    [qbConfig, t],
-  );
+    ])();
 
   const handlePrintPaper = (): void => {
     const content = printRef.current;

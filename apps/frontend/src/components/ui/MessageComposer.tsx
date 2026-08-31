@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Mail, MessageCircle, MessageSquare } from 'lucide-react';
 import {
   mergeMessageTemplates,
@@ -40,16 +40,10 @@ export default function MessageComposer({
   const { t } = useTranslation();
   const { templates: fetchedTemplates } = useMessageTemplates();
 
-  const activeTemplates = useMemo(
-    () => templates ?? mergeMessageTemplates(fetchedTemplates),
-    [fetchedTemplates, templates],
-  );
-  const channelTemplates = useMemo(
-    () => activeTemplates.filter(
+  const activeTemplates = (() => templates ?? mergeMessageTemplates(fetchedTemplates))();
+  const channelTemplates = (() => activeTemplates.filter(
       (tpl) => !tpl.channel || tpl.channel === 'all' || tpl.channel === channel,
-    ),
-    [activeTemplates, channel],
-  );
+    ))();
 
   const [templateId, setTemplateId] = useState(
     () => channelTemplates[0]?.id || activeTemplates[0]?.id || 'custom',
@@ -65,7 +59,7 @@ export default function MessageComposer({
   const [step, setStep] = useState<'pick' | 'compose'>(recipients.length > 0 ? 'compose' : 'pick');
 
   // Fix #1: read current state before setter — no mutation inside the updater closure
-  const addRecipient = useCallback((candidate: MessagingRecipient): void => {
+  const addRecipient = ((candidate: MessagingRecipient): void => {
     const isDuplicate = localRecipients.some((r) => String(r.id) === String(candidate.id));
     if (!isDuplicate) {
       setLocalRecipients((prev) => [...prev, candidate]);
@@ -73,12 +67,12 @@ export default function MessageComposer({
     } else {
       notify.warning(t('messaging.recipientAlreadyAdded'));
     }
-  }, [localRecipients, t]);
+  });
 
-  const removeRecipient = useCallback((id: string | number): void => {
+  const removeRecipient = ((id: string | number): void => {
     setLocalRecipients((prev) => prev.filter((r) => String(r.id) !== String(id)));
     notify.success(t('messaging.recipientRemoved'));
-  }, [t]);
+  });
 
   const dispatch = useMessageComposerDispatch({
     channel,
@@ -91,7 +85,7 @@ export default function MessageComposer({
     onSent,
   });
 
-  const displayedRecipients = useMemo(() => {
+  const displayedRecipients = (() => {
     const list =
       recipientTab === 'eligible'
         ? dispatch.eligibleRecipients
@@ -107,13 +101,7 @@ export default function MessageComposer({
             r.email?.toLowerCase().includes(query),
         )
       : list;
-  }, [
-    dispatch.eligibleRecipients,
-    dispatch.skippedRecipients,
-    dispatch.validatedRecipients,
-    recipientSearch,
-    recipientTab,
-  ]);
+  })();
 
   const isEmail = channel === 'email';
   const isSms = channel === 'sms';
@@ -122,7 +110,7 @@ export default function MessageComposer({
 
   // Fix #2: dep narrowed to first recipient's name — full array ref not needed
   const firstRecipientName = localRecipients[0]?.name ?? '';
-  const title = useMemo(() => {
+  const title = (() => {
     if (step === 'pick') return t('messaging.selectRecipients');
     if (isBulk) {
       return isEmail
@@ -136,9 +124,9 @@ export default function MessageComposer({
       : isSms
         ? `${t('messaging.sms')} – ${firstRecipientName}`
         : t('messaging.whatsappSingleTitle', { name: firstRecipientName });
-  }, [step, isBulk, isEmail, isSms, firstRecipientName, t]);
+  })();
 
-  const subtitle = useMemo(() => {
+  const subtitle = (() => {
     if (step === 'pick') return t('messaging.selectRecipientsDesc');
     if (!isBulk) return undefined;
     const eligible = dispatch.eligibleRecipients.length;
@@ -148,19 +136,16 @@ export default function MessageComposer({
       : isSms
         ? `${eligible} ${t('messaging.of')} ${total} ${t('messaging.contactsHavePhone')}`
         : `${eligible} ${t('messaging.of')} ${total} ${t('messaging.contactsHaveWhatsapp')}`;
-  }, [step, isBulk, isEmail, isSms, dispatch.eligibleRecipients.length, localRecipients.length, t]);
+  })();
 
-  const note = useMemo(
-    () =>
+  const note = (() =>
       isEmail
         ? t('messaging.bulkEmailDesc')
         : isSms
           ? t('messaging.smsManualSendNote')
-          : t('messaging.whatsappBulkManualNote'),
-    [isEmail, isSms, t],
-  );
+          : t('messaging.whatsappBulkManualNote'))();
 
-  const saveLabel = useMemo(() => {
+  const saveLabel = (() => {
     if (step === 'pick') return t('common.next');
     if (dispatch.pendingAudit) return t('messaging.retrySaveHistory');
     if (dispatch.opening) return isEmail ? t('messaging.openingMail') : t('messaging.openingTabs');
@@ -174,25 +159,25 @@ export default function MessageComposer({
         : isBulk
           ? `${t('messaging.openAllWhatsapp')} (${count})`
           : t('messaging.openWhatsapp');
-  }, [step, dispatch.pendingAudit, dispatch.opening, dispatch.eligibleRecipients.length, isEmail, isSms, isBulk, t]);
+  })();
 
   // Fix #4: stable reference — prevents MessageComposerFormBody re-render on every keystroke
-  const changeTemplate = useCallback((nextTemplateId: string): void => {
+  const changeTemplate = ((nextTemplateId: string): void => {
     setTemplateId(nextTemplateId);
     const selected = channelTemplates.find((tpl) => tpl.id === nextTemplateId);
     if (selected && selected.id !== 'custom') setMessage(selected.body);
-  }, [channelTemplates]);
+  });
 
-  const handleSave = useCallback(() => {
+  const handleSave = (() => {
     if (step === 'pick') {
       setStep('compose');
       return;
     }
     void dispatch.sendAll();
-  }, [step, dispatch]);
+  });
 
   // Fix #6: stable ref — setRecipientTab is stable so deps are empty
-  const showSkipped = useCallback(() => setRecipientTab('skipped'), []);
+  const showSkipped = (() => setRecipientTab('skipped'));
 
   // Fix #7: single source for the busy guard used in two places below
   const isBusy = dispatch.opening || dispatch.saving;

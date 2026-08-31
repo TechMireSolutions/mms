@@ -1,11 +1,11 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { BookOpen, FileText } from 'lucide-react';
-import { EXAMINATIONS_MODULE_MANIFEST, resolveModuleTierTab } from '@mms/shared';
+import { EXAMINATIONS_MODULE_MANIFEST, resolveModuleTierTab, type ExamResult } from '@mms/shared';
 import { Exam } from '@/lib/data/examinationData';
 import { useExaminationExamColumnLayout } from '@/tenant/features/examinations/hooks/useExaminationExamColumnLayout';
 import { useExaminationResultsColumnLayout } from '@/tenant/features/examinations/hooks/useExaminationResultsColumnLayout';
@@ -32,13 +32,10 @@ export function useExaminationsPageController() {
     canViewSetup,
   } = useModulePermissions(EXAMINATIONS_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const OPS_SUB_TABS = useMemo(
-    () => [
+  const OPS_SUB_TABS = (() => [
       { id: 'exams', label: t('examinations.exams'), icon: BookOpen },
       { id: 'results', label: t('examinations.results'), icon: FileText },
-    ],
-    [t],
-  );
+    ])();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('examinations_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = useState('exams');
   const [showDeleted, setShowDeleted] = useState(false);
@@ -46,8 +43,10 @@ export function useExaminationsPageController() {
 
   const examsResult = useExaminationsExams({ includeDeleted: showDeleted });
   const resultsResult = useExaminationsResults();
-  const exams = Array.isArray(examsResult.data?.body) ? examsResult.data.body : (examsResult.data?.body as any)?.exams ?? [];
-  const examResults = Array.isArray(resultsResult.data?.body) ? resultsResult.data.body : (resultsResult.data?.body as any)?.results ?? [];
+  const examsEnvelope = examsResult.data?.body as Exam[] | { exams?: Exam[] } | null;
+  const resultsEnvelope = resultsResult.data?.body as ExamResult[] | { results?: ExamResult[] } | null;
+  const exams = Array.isArray(examsEnvelope) ? examsEnvelope : examsEnvelope?.exams ?? [];
+  const examResults = Array.isArray(resultsEnvelope) ? resultsEnvelope : resultsEnvelope?.results ?? [];
   const {
     replaceExams,
     replaceExamResults,

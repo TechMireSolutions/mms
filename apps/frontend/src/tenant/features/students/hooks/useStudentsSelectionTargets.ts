@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import type { Student } from "@mms/shared";
 import {
   computeStudentsSelectionTargets,
@@ -12,8 +11,5 @@ export function useStudentsSelectionTargets({
   selectedIds: string[];
   workStudents: Student[];
 }): StudentsSelectionTargets {
-  return useMemo(
-    () => computeStudentsSelectionTargets({ selectedIds, workStudents }),
-    [selectedIds, workStudents],
-  );
+  return (() => computeStudentsSelectionTargets({ selectedIds, workStudents }))();
 }

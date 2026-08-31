@@ -29,7 +29,7 @@ const GRID_COLS_BY_COUNT: Record<number, string> = {
   8: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8',
 };
 
-export const ModuleCommandMetricsGrid = React.memo(function ModuleCommandMetricsGrid({
+export const ModuleCommandMetricsGrid = (function ModuleCommandMetricsGrid({
   items,
   className,
 }: ModuleCommandMetricsGridProps): React.JSX.Element {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { JournalEntry, Account } from '@/lib/data/accountingData';
@@ -20,10 +20,7 @@ export function CashbookView({ entries, accounts: _accounts }: CashbookViewProps
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<EntryType | "all">("all");
 
-  const rows = useMemo(
-    () => buildCashbookRows(entries, search, filterType, t),
-    [entries, search, filterType, t],
-  );
+  const rows = (() => buildCashbookRows(entries, search, filterType, t))();
 
   const totalIn = rows.filter((cashbookRow) => cashbookRow.flowType === "in").reduce((sum, cashbookRow) => sum + cashbookRow.flowAmount, 0);
   const totalOut = rows.filter((cashbookRow) => cashbookRow.flowType === "out").reduce((sum, cashbookRow) => sum + cashbookRow.flowAmount, 0);

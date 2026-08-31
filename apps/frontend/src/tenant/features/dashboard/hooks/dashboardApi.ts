@@ -15,7 +15,7 @@ export async function fetchDashboardPreferences(
     query: {},
   });
   if (res.status === 200) {
-    return (res.body as any).preferences;
+    return (res.body as { preferences?: DashboardPreferences }).preferences ?? null;
   }
   return null;
 }
@@ -28,7 +28,7 @@ export async function saveDashboardPreferencesAsync(
     body: prefs,
   });
   if (res.status === 200) {
-    return (res.body as any).preferences;
+    return (res.body as { preferences: DashboardPreferences }).preferences;
   }
   throw new Error('Failed to save dashboard preferences');
 }
@@ -36,7 +36,7 @@ export async function saveDashboardPreferencesAsync(
 export async function fetchDashboardWidgets(signal?: AbortSignal): Promise<DashboardWidgetDto[]> {
   const res = await apiContract.dashboard.getWidgets({ query: {} });
   if (res.status === 200) {
-    return (res.body as any).widgets;
+    return (res.body as { widgets?: DashboardWidgetDto[] }).widgets ?? [];
   }
   return [];
 }
@@ -50,7 +50,7 @@ export async function saveDashboardWidgetsAsync(
     body: sanitizedWidgets,
   });
   if (res.status === 200) {
-    return (res.body as any).widgets;
+    return (res.body as { widgets: DashboardWidgetDto[] }).widgets;
   }
   throw new Error('Failed to save dashboard widgets');
 }

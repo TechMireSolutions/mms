@@ -8,7 +8,7 @@ export interface DirectoryCardMetaGridProps {
 }
 
 /** Shared metadata tile grid wrapper for Work directory entity cards. */
-export const DirectoryCardMetaGrid = React.memo(function DirectoryCardMetaGrid({
+export const DirectoryCardMetaGrid = (function DirectoryCardMetaGrid({
   children,
   className,
 }: DirectoryCardMetaGridProps): React.JSX.Element {

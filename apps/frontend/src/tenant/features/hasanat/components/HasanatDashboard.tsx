@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -46,15 +46,12 @@ export function HasanatDashboard({
   const totalActive = safeDistributions.filter((distribution: Distribution) => distribution.status === "active").reduce((sum: number, distribution: Distribution) => sum + distribution.quantity, 0);
   const usedPct = totalStock > 0 ? Math.round(((totalStock - totalRemaining) / totalStock) * 100) : 0;
 
-  const pieData = useMemo(
-    () => [
+  const pieData = (() => [
       { name: t("hasanat.status.active"), value: totalActive, color: palette.charts[3] },
       { name: t("hasanat.status.redeemed"), value: totalRedeemed, color: palette.charts[4] },
       { name: t("hasanat.status.returned"), value: totalReturned, color: palette.charts[1] },
       { name: t("hasanat.stats.available"), value: totalRemaining, color: palette.primary },
-    ],
-    [t, palette, totalActive, totalRedeemed, totalReturned, totalRemaining],
-  );
+    ])();
 
   // Per-denomination stock
   interface DenStockEntry extends Denomination {

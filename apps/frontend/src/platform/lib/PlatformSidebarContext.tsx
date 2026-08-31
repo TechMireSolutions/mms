@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const STORAGE_KEY = 'mms_platform_sidebar_collapsed';
 
@@ -41,13 +41,13 @@ export function PlatformSidebarProvider({ children }: { children: React.ReactNod
     }
   }, [collapsed]);
 
-  const toggleCollapsed = useCallback(() => {
+  const toggleCollapsed = (() => {
     setCollapsed((prev) => !prev);
-  }, []);
+  });
 
-  const openCommandPalette = useCallback(() => {
+  const openCommandPalette = (() => {
     setCommandPaletteOpen(true);
-  }, []);
+  });
 
   return (
     <PlatformSidebarContext.Provider

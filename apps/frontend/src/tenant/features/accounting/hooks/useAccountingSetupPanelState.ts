@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useState } from "react";
 import {
   DEFAULT_CURRENCIES,
   type AccountingSettings,
@@ -58,22 +58,16 @@ export function useAccountingSetupPanelState({
     config,
   });
 
-  const decimalSeparators = useMemo(
-    () => [
+  const decimalSeparators = (() => [
       { label: t("accounting.settings.decimal.period"), value: "period" },
       { label: t("accounting.settings.decimal.comma"), value: "comma" },
-    ],
-    [t],
-  );
+    ])();
 
-  const fyStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
-    () => ({
+  const fyStatusConfig = (() => ({
       active: { label: t("accounting.settings.fy.status.active"), cls: SEMANTIC_BADGE.successStrong },
       closed: { label: t("accounting.settings.fy.status.closed"), cls: SEMANTIC_BADGE.muted },
       upcoming: { label: t("accounting.settings.fy.status.upcoming"), cls: SEMANTIC_BADGE.infoStrong },
-    }),
-    [t],
-  );
+    }))() as Record<string, StatusBadgeConfigItem>;
 
   const currencies = DEFAULT_CURRENCIES;
   const activeCurrency = currencies.find(
@@ -90,8 +84,7 @@ export function useAccountingSetupPanelState({
     saveSettingsAsync,
   });
 
-  const handleSaveFY = useCallback(
-    async (fiscalYear: FiscalYear) => {
+  const handleSaveFY = (async (fiscalYear: FiscalYear) => {
       await onSaveFiscalYears((prev) => {
         const updatedFiscalYears = prev.find(
           (existingFiscalYear) => existingFiscalYear.id === fiscalYear.id,
@@ -103,12 +96,9 @@ export function useAccountingSetupPanelState({
         return updatedFiscalYears;
       });
       setFyModal(null);
-    },
-    [onSaveFiscalYears],
-  );
+    });
 
-  const handleRequestDeleteFY = useCallback(
-    (fiscalYearId: string) => {
+  const handleRequestDeleteFY = ((fiscalYearId: string) => {
       const fiscalYear = fiscalYears.find(
         (existingFiscalYear) => existingFiscalYear.id === fiscalYearId,
       );
@@ -118,18 +108,16 @@ export function useAccountingSetupPanelState({
         return;
       }
       setDeleteFyTarget(fiscalYear);
-    },
-    [fiscalYears, t],
-  );
+    });
 
-  const handleConfirmDeleteFY = useCallback(async () => {
+  const handleConfirmDeleteFY = (async () => {
     if (!deleteFyTarget) return;
     const targetId = deleteFyTarget.id;
     await onSaveFiscalYears((prev) =>
       prev.filter((existingFiscalYear) => existingFiscalYear.id !== targetId),
     );
     setDeleteFyTarget(null);
-  }, [deleteFyTarget, onSaveFiscalYears]);
+  });
 
   return {
     settingsDraft,

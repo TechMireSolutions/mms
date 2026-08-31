@@ -1,5 +1,4 @@
 import type React from "react";
-import { useMemo } from "react";
 import {
   CONTACT_CARD_FACE_COLUMN_IDS,
   getVisibleWorkColumns,
@@ -64,18 +63,18 @@ export function ContactsListCards({
     isColumnVisible: isRegistryColumnVisible,
   } = useContactConfig();
 
-  const selectedSet = useMemo(() => new Set(selected), [selected]);
-  const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
+  const selectedSet = (() => new Set(selected))();
+  const contactsMap = (() => buildContactsMap(allContacts))();
 
-  const isColumnVisible = useMemo(() => {
+  const isColumnVisible = (() => {
     if (columns.length > 0) {
       const visibleIds = new Set(columns.map((col) => col.id));
       return (id: string) => visibleIds.has(id);
     }
     return isRegistryColumnVisible;
-  }, [columns, isRegistryColumnVisible]);
+  })();
 
-  const otherColumns = useMemo(() => {
+  const otherColumns = (() => {
     const metaColumns = getVisibleWorkColumns(columnRegistry, isColumnVisible, {
       excludeFace: CONTACT_CARD_FACE_COLUMN_IDS,
     });
@@ -89,7 +88,7 @@ export function ContactsListCards({
         label: col.label,
       }),
     );
-  }, [columnRegistry, columns, isColumnVisible]);
+  })();
 
   const pageCountLabel = formatDirectoryPageCountLabel(contacts.length, t, {
     singular: "contacts.form.contact",

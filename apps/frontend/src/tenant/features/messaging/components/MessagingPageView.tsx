@@ -1,11 +1,16 @@
 import { Suspense, lazy } from "react";
-import { MessageSquare } from "lucide-react";
-import { type Message, type StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
+import { MessageSquare, type LucideIcon } from "lucide-react";
+import {
+  type Message,
+  type MessageTemplate,
+  type StandardMessagingRecipient as MessagingRecipient,
+} from "@mms/shared";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { MessagingTarget } from "@/hooks/useMessageComposerState";
 import { MessagingCommandMetrics } from "./MessagingCommandMetrics";
 import { MessagingPageHeaderActions } from "./MessagingPageHeaderActions";
 import { MessagingReportsTier } from "./MessagingReportsTier";
@@ -21,11 +26,11 @@ export interface MessagingPageViewProps {
   canEditSetup: boolean;
   canClearLogs: boolean;
   activeTab: "work" | "reports" | "setup";
-  visibleTabs: { id: string; label: string; icon: any }[];
+  visibleTabs: { id: string; label: string; icon: LucideIcon }[];
   channelFilter: "all" | "sms" | "whatsapp" | "email";
   startingCampaign: boolean;
-  messagingTarget: any;
-  templates: any[];
+  messagingTarget: MessagingTarget | null;
+  templates: MessageTemplate[];
   stats: { total: number; sms: number; whatsapp: number; email: number };
   metricsQueryIsError: boolean;
   deleteTemplateId: string | null;

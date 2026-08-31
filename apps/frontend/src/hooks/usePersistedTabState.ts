@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from "react";
 import { normalizeModuleTierTabId } from "@mms/shared";
 import { useUiPreference } from "@/lib/useUiStateStore";
 
@@ -11,17 +10,11 @@ export function usePersistedTabState<T extends string>(
 ): [T, (value: T) => void] {
   const [value, setUiPref] = useUiPreference<T>(key, defaultValue);
 
-  const setPersisted = useCallback(
-    (tabValue: T) => {
+  const setPersisted = ((tabValue: T) => {
       setUiPref(normalizeModuleTierTabId(tabValue) as T);
-    },
-    [setUiPref],
-  );
+    });
 
-  const normalizedValue = useMemo(
-    () => (normalizeModuleTierTabId(value as string) as T) || defaultValue,
-    [value, defaultValue],
-  );
+  const normalizedValue = (() => (normalizeModuleTierTabId(value as string) as T) || defaultValue)();
 
   return [normalizedValue, setPersisted];
 }

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   SESSIONS_MODULE_MANIFEST,
   buildSessionWorkColumnRegistry,
@@ -9,8 +8,7 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 export function useSessionColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildSessionWorkColumnRegistry({
         name: t('sessions.columns.name'),
         type: t('sessions.columns.type'),
@@ -18,9 +16,7 @@ export function useSessionColumnLayout() {
         fee: t('sessions.columns.fee'),
         enrolled: t('sessions.columns.enrolled'),
         status: t('sessions.columns.status'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: SESSIONS_MODULE_MANIFEST.moduleId,

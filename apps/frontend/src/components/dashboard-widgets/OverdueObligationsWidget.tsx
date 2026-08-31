@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { AlertTriangle, Bell, ChevronDown, ChevronUp } from "lucide-react";
@@ -22,7 +22,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   const { unpaidInvoices, students, studentMap } = useUnpaidInvoiceStudents();
   const { activeCurrency, formatCurrency } = useFinanceCurrency();
 
-  const overdueStudents = useMemo(() => {
+  const overdueStudents = (() => {
     const todayIso = formatDateToIso(new Date());
     const rows: OverdueStudent[] = [];
 
@@ -43,7 +43,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     });
 
     return rows.sort((a, b) => b.daysOverdue - a.daysOverdue);
-  }, [unpaidInvoices, activeCurrency.code, t]);
+  })();
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<string>>(new Set());
@@ -63,20 +63,17 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     searchFields: (overdueStudent) => [overdueStudent.name, overdueStudent.obligationType],
   });
 
-  const totalOverdue = useMemo(
-    () => overdueStudents.reduce((sum, overdueStudent) => sum + overdueStudent.amount, 0),
-    [overdueStudents],
-  );
+  const totalOverdue = (() => overdueStudents.reduce((sum, overdueStudent) => sum + overdueStudent.amount, 0))();
 
   const handleRemind = (overdueStudent: OverdueStudent) => {
     const student = studentMap.get(String(overdueStudent.id));
-    const phone = (student as any)?.phone || "";
+    const phone = student?.phone || "";
     if (!phone) return;
     openComposer("sms", [{
       id: overdueStudent.id,
       name: overdueStudent.name,
       phone,
-      email: (student as any)?.email || "",
+      email: student?.email || "",
       amount: overdueStudent.amount,
       dueDate: overdueStudent.dueDate,
     }]);
@@ -94,8 +91,8 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
         return {
           id: overdueStudent.id,
           name: overdueStudent.name,
-          phone: (student as any)?.phone || "",
-          email: (student as any).email || "",
+          phone: student?.phone || "",
+          email: student?.email || "",
           amount: overdueStudent.amount,
           dueDate: overdueStudent.dueDate,
         };

@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { applyContactsWidgetWorkDrillDown } from "@/lib/contacts/contactsWidgetWorkDrillDown";
 import { notify } from "@/lib/notify";
@@ -22,19 +22,13 @@ export function useWidgetDrilldownModal(widget: CustomWidget) {
     }
   }, [widget]);
 
-  const requiredCollections = useMemo(
-    () => new Set<ReportCollection>([widget.collection, "students"]),
-    [widget.collection],
-  );
+  const requiredCollections = (() => new Set<ReportCollection>([widget.collection, "students"]))();
   const collections = useWidgetCollections({
     requiredCollections,
     enabled: widget.collection !== "contacts",
   });
 
-  const widgetRecords = useMemo(
-    () => (widget.collection === "contacts" ? [] : getFilteredRecords(widget, collections)),
-    [widget, collections],
-  );
+  const widgetRecords = (() => (widget.collection === "contacts" ? [] : getFilteredRecords(widget, collections)))();
 
   const pagination = useLocalPagination({
     items: widgetRecords,
@@ -45,13 +39,13 @@ export function useWidgetDrilldownModal(widget: CustomWidget) {
       ),
   });
 
-  const studentNameMap = useMemo(() => {
+  const studentNameMap = (() => {
     const students = collections.students;
     return new Map((students as unknown as Record<string, unknown>[]).map((student) => [
       String(student.id),
       String(student.name || student.studentName || student.id),
     ]));
-  }, [collections.students]);
+  })();
 
   const handleToggleStatus = (recordId: string) => {
     void (async () => {

@@ -50,11 +50,11 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     setSettingsDraft(settings);
   }, [settings]);
 
-  const upd = useCallback(<K extends keyof T>(field: K, value: T[K]): void => {
+  const upd = (<K extends keyof T>(field: K, value: T[K]): void => {
     settingsDraftDirtyRef.current = true;
     setSettingsDraft((curr) => ({ ...curr, [field]: value }));
     setSaved(false);
-  }, [setSaved]);
+  });
 
   const saveSettingsAsync = useCallback(async (
     preferencesDraft?: Partial<T>,
@@ -84,15 +84,15 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
     setSaved,
   ]);
 
-  const saveSettings = useCallback((preferencesDraft?: Partial<T>, additionalFields?: Partial<T>) => {
+  const saveSettings = ((preferencesDraft?: Partial<T>, additionalFields?: Partial<T>) => {
     void saveSettingsAsync(preferencesDraft, additionalFields);
-  }, [saveSettingsAsync]);
+  });
 
   /** Reset preferences drafts to last persisted settings (Setup dirty-tab discard). */
-  const discardDrafts = useCallback(() => {
+  const discardDrafts = (() => {
     settingsDraftDirtyRef.current = false;
     setSettingsDraft(settings);
-  }, [settings]);
+  });
 
   return {
     settings,

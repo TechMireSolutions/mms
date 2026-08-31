@@ -69,23 +69,23 @@ export function useStudentsDirectoryFilters({
     return () => window.removeEventListener(STUDENTS_WORK_DRILLDOWN_EVENT, handler);
   }, [applyDrillDown]);
 
-  const changeQuickFilter = useCallback((preset: string) => {
+  const changeQuickFilter = ((preset: string) => {
     if (!isStudentsQuickFilter(preset)) return;
     // Status presets express status via the preset; clear the overlapping status filter.
     setStudentFilterStatus([]);
     setQuickFilter(preset);
-  }, []);
+  });
 
-  const clearFilters = useCallback(() => {
+  const clearFilters = (() => {
     setStudentSearch("");
     setStudentFilterStatus([]);
     setStudentFilterGender("");
     setQuickFilter("all");
-  }, []);
+  });
 
-  const clearSelection = useCallback(() => {
+  const clearSelection = (() => {
     setSelectedIds([]);
-  }, []);
+  });
 
   const hasActiveFilters =
     Boolean(studentSearch.trim()) ||
@@ -99,27 +99,24 @@ export function useStudentsDirectoryFilters({
     (studentSearch.trim() ? 1 : 0) +
     (quickFilter !== "all" ? 1 : 0);
 
-  const handleServerSort = useCallback(
-    (field: StudentsListContentSortField) => {
+  const handleServerSort = ((field: StudentsListContentSortField) => {
       if (sortField === field) {
         setSortDir((currentDir) => (currentDir === "asc" ? "desc" : "asc"));
       } else {
         setSortField(field);
         setSortDir("asc");
       }
-    },
-    [sortField],
-  );
+    });
 
-  const handleSelectOne = useCallback((id: string) => {
+  const handleSelectOne = ((id: string) => {
     setSelectedIds((current) => toggleIdInSelection(current, id));
-  }, []);
+  });
 
-  const handleSelectAll = useCallback((pageIds: string[]) => {
+  const handleSelectAll = ((pageIds: string[]) => {
     setSelectedIds((current) => togglePageIdsInSelection(current, pageIds));
-  }, []);
+  });
 
-  const toggleStudentStatus = useCallback((status: string) => {
+  const toggleStudentStatus = ((status: string) => {
     // Manual status selection supersedes any quick-filter preset.
     setQuickFilter("all");
     setStudentFilterStatus((selectedStatuses) =>
@@ -127,11 +124,11 @@ export function useStudentsDirectoryFilters({
         ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
         : [...selectedStatuses, status],
     );
-  }, []);
+  });
 
-  const toggleViewingDeleted = useCallback(() => {
+  const toggleViewingDeleted = (() => {
     setViewingDeleted((previous) => !previous);
-  }, []);
+  });
 
   return {
     listPage,

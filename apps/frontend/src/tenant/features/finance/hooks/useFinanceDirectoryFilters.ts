@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 
 /** Directory filters and pagination SSOT for Finance Work. */
@@ -18,22 +18,22 @@ export function useFinanceDirectoryFilters() {
     setPaymentListPage(1);
   }, [showDeleted]);
 
-  const clearInvoiceStatuses = useCallback(() => {
+  const clearInvoiceStatuses = (() => {
     setInvoiceFilterStatus([]);
-  }, []);
+  });
 
-  const clearInvoiceFilters = useCallback(() => {
+  const clearInvoiceFilters = (() => {
     setInvoiceSearch('');
     setInvoiceFilterStatus([]);
-  }, []);
+  });
 
-  const toggleInvoiceStatus = useCallback((status: string) => {
+  const toggleInvoiceStatus = ((status: string) => {
     setInvoiceFilterStatus((current) => (
       current.includes(status)
         ? current.filter((value) => value !== status)
         : [...current, status]
     ));
-  }, []);
+  });
 
   const hasActiveInvoiceFilters =
     Boolean(invoiceSearch.trim()) || invoiceFilterStatus.length > 0;

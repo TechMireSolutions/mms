@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { hasWhatsApp, type Teacher } from "@mms/shared";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { resolveTeacherPrimaryChannels } from "@/lib/teachers/teacherPrimaryChannels";
@@ -19,15 +18,12 @@ export function useTeacherDetailModel(teacher: Teacher) {
   const sessionsQuery = useSessions();
   const sessions = useSessionsCollection();
 
-  const assignedClasses: TeacherAssignedClassItem[] = useMemo(() => {
+  const assignedClasses: TeacherAssignedClassItem[] = (() => {
     if (!teacher.id) return [];
     return getTeacherAssignedClasses(teacher.id, sessions);
-  }, [teacher.id, sessions]);
+  })();
 
-  const detailFields = useMemo(
-    () => listTeacherDetailAttributeFields(settings),
-    [settings],
-  );
+  const detailFields = (() => listTeacherDetailAttributeFields(settings))();
 
   const { phone: primaryPhone, email: primaryEmail } = resolveTeacherPrimaryChannels(
     teacher,

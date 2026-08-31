@@ -15,7 +15,7 @@ export function useHasanatContractList(query: Record<string, unknown> = {}, enab
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.hasanat.listDistributions.useQuery({
     queryKey: [HASANAT_DISTRIBUTIONS_QUERY_KEY, 'contract-list', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });

@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { BarChart2, CheckCircle, TrendingUp } from 'lucide-react';
 import { getQuestionCategoryIds } from "@mms/shared";
 import {
@@ -17,7 +17,6 @@ import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { AutoGrading } from "@/tenant/features/question-bank/components/AutoGrading";
 import { PerformanceAnalytics } from "@/tenant/features/question-bank/components/PerformanceAnalytics";
 import { ReportDataGridContainer } from "./ReportDataGridContainer";
-import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import {
   Table,
   TableBody,
@@ -33,6 +32,7 @@ import PinnedWidgets from "./PinnedWidgets";
 const QuestionBankReportCharts = lazy(() =>
   import("./QuestionBankReportCharts").then((mod) => ({ default: mod.QuestionBankReportCharts })),
 );
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 type QBReportSubTab = "overview" | "analytics" | "autoGrading";
 
@@ -50,7 +50,7 @@ export interface QuestionBankReportProps {
   onEditVisual?: (config: unknown) => void;
 }
 
-const QuestionBankReport = React.memo(function QuestionBankReport({
+const QuestionBankReport = (function QuestionBankReport({
   filters,
 }: QuestionBankReportProps = {}): React.JSX.Element {
   const { t } = useTranslation();
@@ -64,52 +64,52 @@ const QuestionBankReport = React.memo(function QuestionBankReport({
   const tests = useQuestionBankTestsCollection();
   const results = useQuestionBankResultsCollection();
 
-  const questions = useMemo(() => {
+  const questions = (() => {
     if (!filters) return rawQuestions;
     let filtered = rawQuestions;
     if (filters.status && filters.status !== "all") {
       filtered = filtered.filter((q) => q.difficulty === filters.status);
     }
     return filtered;
-  }, [rawQuestions, filters]);
+  })();
 
   const questionBankConfig = useQuestionBankConfig(questions);
   const categories = questionBankConfig.categories;
 
-  const tabs: readonly SubTab<QBReportSubTab>[] = useMemo(() => [
+  const tabs: readonly SubTab<QBReportSubTab>[] = (() => [
     { key: "overview", label: t("reports.builder.title"), icon: BarChart2 },
     { key: "analytics", label: t("questionBank.analytics.studentPerformance"), icon: TrendingUp },
     ...(tests.length > 0
       ? [{ key: "autoGrading" as const, label: t("questionBank.aiGrading"), icon: CheckCircle }]
       : []),
-  ], [t, tests.length]);
+  ])();
 
-  const difficultyData = useMemo(() => {
+  const difficultyData = (() => {
     return questionBankConfig.enabledDifficulties.map((difficulty) => ({
       name: questionBankConfig.difficultyLabel(difficulty),
       questions: questions.filter((question) => question.difficulty === difficulty).length,
       tests: tests.filter((test) => test.difficulty === difficulty).length,
     }));
-  }, [questionBankConfig, questions, tests]);
+  })();
 
-  const categoryData = useMemo(() => {
+  const categoryData = (() => {
     return categories.map((category) => ({
       name: category.name,
       questions: questions.filter((question) => getQuestionCategoryIds(question).includes(category.id)).length,
     }));
-  }, [categories, questions]);
+  })();
 
   const hasDifficultyData = difficultyData.some((item) => item.questions > 0 || item.tests > 0);
   const hasCategoryData = categoryData.some((item) => item.questions > 0);
 
-  const exportColumns = useMemo<ExportColumn[]>(() => [
+  const exportColumns = (() => [
     { key: "type", header: t("common.type") },
     { key: "name", header: t("common.label") },
     { key: "questions", header: t("questionBank.questions") },
     { key: "tests", header: t("questionBank.report.generatedTests") },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const summaryRows = useMemo(() => [
+  const summaryRows = (() => [
     ...difficultyData.map((item) => ({
       type: t("questionBank.columns.difficulty"),
       name: item.name,
@@ -122,7 +122,7 @@ const QuestionBankReport = React.memo(function QuestionBankReport({
       questions: item.questions,
       tests: "—",
     })),
-  ], [difficultyData, categoryData, t]);
+  ])();
 
   if (questionsQuery.isError || testsQuery.isError || resultsQuery.isError || aggregatesQuery.isError) {
     return (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   ENROLLMENTS_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
@@ -12,7 +12,6 @@ import {
   useStudentsWidgetAggregates,
   useStudentsContractList,
 } from '@/tenant/hooks/collections/students';
-import type { ExportColumn } from '@/components/ui/ExportToolbar';
 import { studentStatusBadgeConfig } from '@/lib/students/studentStatusUi';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import {
@@ -24,36 +23,28 @@ import {
   applyStudentsReportDrillDown,
   buildStudentReportMetricItems,
 } from './studentReportMetrics';
-import {
-  mapStudentRow,
-  type EnrollmentHistoryItem,
-  type ReportStudent,
-  type StudentReportProps,
-  type StudentReportSubTab,
-} from './studentReportTypes';
-import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import type { SubTab as UINavTab } from '@/components/ui/SubTabBar';
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
+import { type EnrollmentHistoryItem, mapStudentRow, type ReportStudent, type StudentReportProps, type StudentReportSubTab } from './studentReportTypes';
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 /** Controller for Students Reports tier — Query + filters; presentational shell stays thin. */
 export function useStudentReportController({ filters }: StudentReportProps) {
   const { t } = useTranslation();
   const sessions = useSessionsCollection();
   const [activeSubTab, setActiveSubTab] = useState<StudentReportSubTab>('list');
-  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
-  const enrollmentStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const statusBadgeConfig = (() => studentStatusBadgeConfig(t))();
+  const enrollmentStatusConfig = (() => ({
     pending: { label: t('enrollments.status.pending'), cls: SEMANTIC_BADGE.warning },
     confirmed: { label: t('enrollments.status.confirmed'), cls: SEMANTIC_BADGE.success },
     cancelled: { label: t('enrollments.status.cancelled'), cls: SEMANTIC_BADGE.destructive },
     completed: { label: t('enrollments.status.completed'), cls: SEMANTIC_BADGE.info },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
-  const REPORT_TABS = useMemo<readonly UINavTab<StudentReportSubTab>[]>(
-    () => [
+  const REPORT_TABS = (() => [
       { key: 'list', label: t('students.report.studentListTab') },
       { key: 'history', label: t('students.report.enrollmentHistoryTab') },
-    ],
-    [t],
-  );
+    ])() as readonly UINavTab<StudentReportSubTab>[];
   const [listPage, setListPage] = useState(1);
   const [historyPage, setHistoryPage] = useState(1);
   const [reportStatusFilter, setReportStatusFilter] = useState<string | null>(null);
@@ -100,24 +91,20 @@ export function useStudentReportController({ filters }: StudentReportProps) {
   const historyError = enrollmentsPageQuery.isError;
   const historyLoading = enrollmentsPageQuery.isLoading;
 
-  const students = useMemo<ReportStudent[]>(() => {
+  const students = (() => {
     const studentRows = (studentsPageQuery.data?.body?.students ?? []) as unknown as Student[];
     return studentRows.map((student) => mapStudentRow(student, sessions));
-  }, [studentsPageQuery.data, sessions]);
+  })() as ReportStudent[];
 
   const listTotal = studentsPageQuery.data?.body?.total ?? 0;
   const listHasMore = Boolean(studentsPageQuery.data?.body?.hasMore);
 
-  const enrollments = useMemo<EnrollmentHistoryItem[]>(
-    () => (enrollmentsPageQuery.data?.enrollments ?? []).map(mapEnrollmentRow),
-    [enrollmentsPageQuery.data],
-  );
+  const enrollments = (() => (enrollmentsPageQuery.data?.enrollments ?? []).map(mapEnrollmentRow))() as EnrollmentHistoryItem[];
 
   const male = genderAggregates?.male?.value ?? 0;
   const female = genderAggregates?.female?.value ?? 0;
 
-  const studentExportColumns = useMemo<ExportColumn[]>(
-    () => [
+  const studentExportColumns = (() => [
       { header: t('students.report.colName'), key: 'name' },
       { header: t('students.report.colGender'), key: 'gender' },
       { header: t('students.report.colClass'), key: 'class' },
@@ -126,20 +113,15 @@ export function useStudentReportController({ filters }: StudentReportProps) {
       { header: t('students.report.colAge'), key: 'age' },
       { header: t('students.report.colRegistered'), key: 'registered' },
       { header: t('students.report.colStatus'), key: 'status' },
-    ],
-    [t],
-  );
+    ])() as ExportColumn[];
 
-  const enrollmentExportColumns = useMemo<ExportColumn[]>(
-    () => [
+  const enrollmentExportColumns = (() => [
       { header: t('students.report.colStudent'), key: 'studentName' },
       { header: t('students.report.colSession'), key: 'session' },
       { header: t('students.report.colClass'), key: 'class' },
       { header: t('students.report.colEnrolled'), key: 'enrolled' },
       { header: t('students.report.colStatus'), key: 'status' },
-    ],
-    [t],
-  );
+    ])() as ExportColumn[];
 
   const resolveStudentExportRows = () =>
     resolveStudentReportExportRows({
@@ -158,8 +140,7 @@ export function useStudentReportController({ filters }: StudentReportProps) {
     [t],
   );
 
-  const metricItems = useMemo(
-    () =>
+  const metricItems = (() =>
       buildStudentReportMetricItems({
         t,
         metrics,
@@ -169,9 +150,7 @@ export function useStudentReportController({ filters }: StudentReportProps) {
         onStatusFilterChange: setReportStatusFilter,
         onListFocus: () => setActiveSubTab('list'),
         onDrillDown: drillDownToWork,
-      }),
-    [t, metrics, male, female, reportStatusFilter, drillDownToWork],
-  );
+      }))();
 
   return {
     t,

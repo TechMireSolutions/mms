@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, ShieldAlert, User, Users, ChevronDown, Search, Bell } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -47,9 +47,9 @@ export function PlatformHeaderUserNav({
   const [popoverOpen, setPopoverOpen] = useState(false);
   const { ackedIds, ackAll } = usePlatformNotificationAck();
 
-  const notifications = useMemo(() => {
+  const notifications = (() => {
     return buildPlatformNotifications(workspaces, isSuperUser, t);
-  }, [workspaces, isSuperUser, t]);
+  })();
 
   const unreadCount = notifications.filter((n) => !ackedIds.has(n.id)).length;
   const initials = getInitials(platformUser?.name, 2) || 'OP';

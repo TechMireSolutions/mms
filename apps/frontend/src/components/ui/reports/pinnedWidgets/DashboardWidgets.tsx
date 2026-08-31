@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { getObject, saveObject } from '@/lib/db';
 import {
@@ -45,13 +45,13 @@ export function DashboardWidgets({
   const [drilldownWidget, setDrilldownWidget] = useState<CustomWidget | null>(null);
 
   const activeWidgets = widgets ?? [];
-  const requiredCollections = useMemo(() => {
+  const requiredCollections = (() => {
     const required = new Set<ReportCollection>();
     for (const widget of activeWidgets) {
       required.add(widget.collection);
     }
     return required;
-  }, [activeWidgets]);
+  })();
   const collections = useWidgetCollections({
     enabled: activeWidgets.length > 0,
     requiredCollections,
@@ -63,10 +63,10 @@ export function DashboardWidgets({
   useSessionsWidgetAggregates(activeWidgets);
   useEnrollmentsWidgetAggregates(activeWidgets);
 
-  const handleMetricClick = useCallback((widget: CustomWidget) => {
+  const handleMetricClick = ((widget: CustomWidget) => {
     if (applyContactsWidgetWorkDrillDown(widget)) return;
     setDrilldownWidget(widget);
-  }, []);
+  });
 
   const handleLocalUnpin = (id: string) => {
     onUnpin?.(id);

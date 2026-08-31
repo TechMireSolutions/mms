@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveWidgetTitle, resolveWidgetSubText } from "@/lib/dashboardWidgets";
 import {
@@ -50,7 +50,7 @@ export function CustomWidgetRenderer({
   const { t } = useTranslation();
   const palette = useBrandPalette();
   
-  const resolvedWidgetType = useMemo(() => {
+  const resolvedWidgetType = (() => {
     const type = widget.widgetType || "";
     if (["bar", "line", "area", "pie", "radar"].includes(type) || ["bar", "line", "area", "pie", "radar"].includes(widget.chartType || "")) {
       return "chart";
@@ -63,16 +63,16 @@ export function CustomWidgetRenderer({
       return type;
     }
     return "kpi";
-  }, [widget.widgetType, widget.chartType]);
+  })();
 
-  const { value, formattedValue, isAlert } = useMemo(() => {
+  const { value, formattedValue, isAlert } = (() => {
     if (resolvedWidgetType === "card") {
       return { value: 0, formattedValue: "", isAlert: false };
     }
     return computeWidgetSingleValue(widget, collections);
-  }, [resolvedWidgetType, widget, collections]);
+  })();
 
-  const isSwitchOn = useMemo(() => {
+  const isSwitchOn = (() => {
     if (resolvedWidgetType === "card") return false;
     if (widget.switchActionType === "app_setting") {
       const switchStateKey = widget.switchStateKey || "";
@@ -95,9 +95,9 @@ export function CustomWidgetRenderer({
     if (!matchedRecord) return false;
     const fieldValue = (matchedRecord as Record<string, unknown>)[targetField];
     return String(fieldValue) === "active" || String(fieldValue) === "paid" || !!fieldValue;
-  }, [resolvedWidgetType, widget, collections]);
+  })();
 
-  const computedCard = useMemo(() => {
+  const computedCard = (() => {
     if (resolvedWidgetType !== "card") return null;
 
     const card = widget as unknown as CustomCard;
@@ -109,7 +109,7 @@ export function CustomWidgetRenderer({
       teachers: [],
       contacts: [],
     });
-  }, [collections, resolvedWidgetType, t, widget]);
+  })();
 
   const colorHex = isAlert
     ? resolveThresholdChartHex(widget.thresholdColor, palette)

@@ -16,7 +16,7 @@ export interface DistributionDetailProps {
   onRestore?: (id: string) => void | Promise<void>;
 }
 
-export const DistributionDetail = React.memo(function DistributionDetail({
+export const DistributionDetail = (function DistributionDetail({
   distribution,
   onClose,
   onEdit,

@@ -64,8 +64,8 @@ export function useAccountProfileSecurityActions() {
       setChallengeId(body.challengeId);
       if (body.devCode) setDevCode(body.devCode);
       notify.success(t('account.sendCode'));
-    } catch (error: any) {
-      const message = error.message || t('errors.boundary.description');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message || t('errors.boundary.description') : t('errors.boundary.description');
       notify.error(message);
     } finally {
       setLoginEmailBusy(false);
@@ -97,8 +97,8 @@ export function useAccountProfileSecurityActions() {
       await queryClient.invalidateQueries({ queryKey: TENANT_PROFILE_KEY });
       await refetch();
       notify.success(t('account.loginEmailChanged'));
-    } catch (error: any) {
-      const message = error.message || t('errors.boundary.description');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message || t('errors.boundary.description') : t('errors.boundary.description');
       notify.error(message);
     } finally {
       setLoginEmailBusy(false);
@@ -133,8 +133,8 @@ export function useAccountProfileSecurityActions() {
       setNewPassword('');
       setConfirmPassword('');
       notify.success(t('account.passwordChanged'));
-    } catch (error: any) {
-      const message = error.message || t('errors.boundary.description');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message || t('errors.boundary.description') : t('errors.boundary.description');
       notify.error(message);
     } finally {
       setPasswordBusy(false);

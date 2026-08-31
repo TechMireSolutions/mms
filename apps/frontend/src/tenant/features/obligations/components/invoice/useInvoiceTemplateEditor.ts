@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { PAGE_SIZES, loadTemplate, saveTemplate, type ElementStyle, type InvoiceTemplate, type TemplateElement } from "@/lib/invoiceTemplateStore";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
@@ -39,10 +39,10 @@ export function useInvoiceTemplateEditor() {
     return () => observer.disconnect();
   }, [size.width]);
 
-  const pushHistory = useCallback((currentTemplate: InvoiceTemplate) => {
+  const pushHistory = ((currentTemplate: InvoiceTemplate) => {
     setHistory((historyStack) => [...historyStack.slice(-30), currentTemplate]);
     setFuture([]);
-  }, []);
+  });
 
   const undo = () => {
     if (!history.length) return;
@@ -60,18 +60,18 @@ export function useInvoiceTemplateEditor() {
     setTemplate(nextTemplate);
   };
 
-  const updateElements = useCallback((updateFn: (templateElements: TemplateElement[]) => TemplateElement[]) => {
+  const updateElements = ((updateFn: (templateElements: TemplateElement[]) => TemplateElement[]) => {
     setTemplate((currentTemplate) => ({ ...currentTemplate, elements: updateFn(currentTemplate.elements) }));
-  }, []);
+  });
 
-  const commitUpdate = useCallback((updateFn: (templateElements: TemplateElement[]) => TemplateElement[]) => {
+  const commitUpdate = ((updateFn: (templateElements: TemplateElement[]) => TemplateElement[]) => {
     setTemplate((currentTemplate) => {
       const nextTemplate = { ...currentTemplate, elements: updateFn(currentTemplate.elements) };
       setHistory((historyStack) => [...historyStack.slice(-30), currentTemplate]);
       setFuture([]);
       return nextTemplate;
     });
-  }, []);
+  });
 
   useInvoiceTemplateEditorInteractions({
     canvasScale,

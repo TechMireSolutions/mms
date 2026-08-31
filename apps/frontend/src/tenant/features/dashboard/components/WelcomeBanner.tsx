@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import { formatDayName, formatLongDate, formatHijriDate } from '@mms/shared';
@@ -33,22 +33,19 @@ export function WelcomeBanner({
   const { t } = useTranslation();
   const { user } = useAuth();
 
-  const now = useMemo(() => new Date(), []);
-  const dayName = useMemo(() => formatDayName(now), [now]);
-  const gregDate = useMemo(() => formatLongDate(now), [now]);
-  const hijriDate = useMemo(() => formatHijriDate(now), [now]);
+  const now = (() => new Date())();
+  const dayName = (() => formatDayName(now))();
+  const gregDate = (() => formatLongDate(now))();
+  const hijriDate = (() => formatHijriDate(now))();
 
   const userName = user?.name ?? '';
 
-  const subtitle = useMemo(
-    () =>
+  const subtitle = (() =>
       resolveDashboardWelcomeSubtitle(
         dashboardRole,
         { activeSessionsCount, activeStudentCount },
         t,
-      ),
-    [dashboardRole, activeSessionsCount, activeStudentCount, t],
-  );
+      ))();
 
   return (
     <motion.header

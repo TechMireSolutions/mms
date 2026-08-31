@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -44,7 +44,7 @@ function resolveContactId(user: SystemUser): string | number | null {
 export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const workspaceRoles = useWorkspaceRoles();
-  const initialContactId = useMemo(() => resolveContactId(user), [user]);
+  const initialContactId = (() => resolveContactId(user))();
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<EditWorkspaceUserInput>({
@@ -102,7 +102,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
       error={firstZodFieldError(form.formState.errors, t) || undefined}
       cancelLabel={t('users.cancel')}
       saveLabel={t('users.saveChanges')}
-      onSave={handleSave}
+      onSave={() => { void handleSave(); }}
       saving={submitting}
       saveDisabled={!watchedContactId || !form.formState.isDirty}
     >

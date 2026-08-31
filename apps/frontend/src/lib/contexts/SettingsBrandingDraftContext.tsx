@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext } from 'react';
 import {
   BRANDING_IDENTITY_FIELD_KEYS,
   BRANDING_THEME_FIELD_KEYS,
@@ -28,7 +28,7 @@ export function SettingsBrandingDraftProvider({
 }: UseBrandingDraftOptions & { children: React.ReactNode }): React.JSX.Element {
   const draft = useBrandingDraft(draftOptions);
 
-  const value = useMemo((): SettingsBrandingDraftContextValue => {
+  const value = ((): SettingsBrandingDraftContextValue => {
     const isDirtyFor = (keys: readonly (keyof BrandingSettings)[]): boolean =>
       isBrandingFieldsDirty(draft.data, draft.baseline, keys);
 
@@ -38,7 +38,7 @@ export function SettingsBrandingDraftProvider({
       isThemeFieldsDirty: isDirtyFor(BRANDING_THEME_FIELD_KEYS),
       isDirtyFor,
     };
-  }, [draft]);
+  })();
 
   return (
     <SettingsBrandingDraftContext.Provider value={value}>{children}</SettingsBrandingDraftContext.Provider>

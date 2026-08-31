@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { FileSpreadsheet, FileText, Printer, Settings as SettingsIcon } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
@@ -50,28 +50,22 @@ export function ExportToolbar({
   const [exporting, setExporting] = useState(false);
 
   const resolvedVariant = variant || (rows || data || resolveRows ? 'default' : 'compact');
-  const resolvedFilename = useMemo(() => filename || title.toLowerCase().replace(/\s+/g, '_'), [filename, title]);
+  const resolvedFilename = (() => filename || title.toLowerCase().replace(/\s+/g, '_'))();
 
-  const [titlePrefix, titleSuffix] = useMemo(() => {
+  const [titlePrefix, titleSuffix] = (() => {
     const parts = t('reports.export.title', { name: '||TITLE||' }).split('||TITLE||');
     return [parts[0] || '', parts[1] || ''];
-  }, [t]);
+  })();
 
-  const pageSizeOptions = useMemo(
-    () => [
+  const pageSizeOptions = (() => [
       { value: 'a4', label: t('reports.builder.formatA4') },
       { value: 'letter', label: t('reports.builder.formatLetter') },
       { value: 'a3', label: t('reports.builder.formatA3') },
       { value: 'legal', label: t('reports.builder.formatLegal') },
-    ],
-    [t],
-  );
+    ])();
 
-  const finalRows = useMemo(() => rows || (data as Record<string, unknown>[]) || [], [rows, data]);
-  const finalColumns = useMemo(
-    () => columns || (headers ? headers.map((h) => ({ header: h, key: h })) : []),
-    [columns, headers],
-  );
+  const finalRows = (() => rows || (data as Record<string, unknown>[]) || [])();
+  const finalColumns = (() => columns || (headers ? headers.map((h) => ({ header: h, key: h })) : []))();
   const canExport = Boolean(resolveRows) || finalRows.length > 0;
 
   const handlePrint = (): void => {

@@ -12,7 +12,7 @@ export interface FinanceSettingsProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const FinanceSettings = React.memo(function FinanceSettings({
+export const FinanceSettings = (function FinanceSettings({
   onPrefsDirtyChange,
 }: FinanceSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();

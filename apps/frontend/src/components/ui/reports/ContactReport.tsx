@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo } from "react";
+import React, { lazy, Suspense } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { useContactsReportAnalytics } from "@/tenant/hooks/collections/contacts";
@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import type { ExportColumn } from "@/components/ui/ExportToolbar";
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 const ContactReportCharts = lazy(() =>
   import("./ContactReportCharts").then((mod) => ({ default: mod.ContactReportCharts })),
@@ -26,14 +26,14 @@ interface ContactReportProps {
 }
 
 /** Contacts CRM Report dashboard — analytics metrics, distribution charts, and pinned widgets. */
-const ContactReport = React.memo(function ContactReport(_props: ContactReportProps = {}): React.JSX.Element {
+const ContactReport = (function ContactReport(_props: ContactReportProps = {}): React.JSX.Element {
   const { t } = useTranslation();
   const palette = useBrandPalette();
   const analyticsQuery = useContactsReportAnalytics();
 
   const data = analyticsQuery.data?.status === 200 ? analyticsQuery.data.body : undefined;
 
-  const chartData = useMemo(() => {
+  const chartData = (() => {
     if (!data) return [];
     const verified = data.whatsappCount;
     const unverified = Math.max(0, data.total - data.whatsappCount);
@@ -43,15 +43,15 @@ const ContactReport = React.memo(function ContactReport(_props: ContactReportPro
       { name: t("reports.contacts.kpi.activeContacts"), value: unverified, color: palette.charts[1] || palette.secondary },
       { name: t("reports.contacts.kpi.missingContactInfo"), value: missing, color: palette.charts[2] || palette.primary },
     ].filter((item) => item.value > 0);
-  }, [data, t, palette]);
+  })();
 
-  const exportColumns = useMemo<ExportColumn[]>(() => [
+  const exportColumns = (() => [
     { key: "metric", header: t("common.label") },
     { key: "value", header: t("common.details") },
     { key: "rate", header: t("reports.kpi.growthRate") },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const summaryRows = useMemo(() => {
+  const summaryRows = (() => {
     if (!data || data.total === 0) return [];
     const total = data.total;
     return [
@@ -81,7 +81,7 @@ const ContactReport = React.memo(function ContactReport(_props: ContactReportPro
         rate: `${Math.round((data.newLast30Days / total) * 100)}%`,
       },
     ];
-  }, [data, t]);
+  })();
 
   if (analyticsQuery.isError) {
     return (

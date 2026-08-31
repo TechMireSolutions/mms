@@ -1,8 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { CalendarCheck } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
-import type { ExportColumn } from "@/components/ui/ExportToolbar";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { TableCellLink } from "@/components/ui/TableCellLink";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
@@ -20,8 +19,9 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { utilisationColour } from "./sessionReportUtils";
 
 import type { SessionReportTableProps } from "./sessionReportTypes";
+import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
-const UtilisationBar = React.memo(function UtilisationBar({ rate }: { rate: number }): React.JSX.Element {
+const UtilisationBar = (function UtilisationBar({ rate }: { rate: number }): React.JSX.Element {
   return (
     <ProgressBar
       value={rate}
@@ -32,7 +32,7 @@ const UtilisationBar = React.memo(function UtilisationBar({ rate }: { rate: numb
   );
 });
 
-export const SessionReportTable = React.memo(function SessionReportTable({
+export const SessionReportTable = (function SessionReportTable({
   sessionCapacityData,
   sessionStatusConfig,
   onToggleSessionFilter,
@@ -40,30 +40,27 @@ export const SessionReportTable = React.memo(function SessionReportTable({
 }: SessionReportTableProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const exportColumns = useMemo<ExportColumn[]>(() => [
+  const exportColumns = (() => [
     { key: "session", header: t("sessions.report.colSession") },
     { key: "class", header: t("sessions.report.colClass") },
     { key: "enrolled", header: t("sessions.report.colEnrolled") },
     { key: "capacity", header: t("sessions.report.colCapacity") },
     { key: "utilisation", header: t("sessions.report.colUtilisation") },
     { key: "status", header: t("sessions.report.colStatus") },
-  ], [t]);
+  ])() as ExportColumn[];
 
-  const exportRows = useMemo(() => sessionCapacityData.map((item) => ({
+  const exportRows = (() => sessionCapacityData.map((item) => ({
     session: item.session,
     class: item.class,
     enrolled: item.enrolled,
     capacity: item.capacity,
     utilisation: `${item.rate}%`,
     status: sessionStatusConfig[item.status]?.label ?? item.status,
-  })), [sessionCapacityData, sessionStatusConfig]);
+  })))();
 
   const [page, setPage] = useState(1);
   const pageSize = 15;
-  const pagedSessionCapacityData = useMemo(
-    () => sessionCapacityData.slice((page - 1) * pageSize, page * pageSize),
-    [sessionCapacityData, page, pageSize],
-  );
+  const pagedSessionCapacityData = (() => sessionCapacityData.slice((page - 1) * pageSize, page * pageSize))();
 
   if (sessionCapacityData.length === 0) {
     return <EmptyState icon={CalendarCheck} title={t("sessions.report.noData")} compact />;

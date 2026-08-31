@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { Trash2, Plus, Pencil } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -37,7 +37,7 @@ export function StatisticsGrid({
   onResetCards,
 }: StatisticsGridProps): React.JSX.Element {
   const { t } = useTranslation();
-  const customCardSet = useMemo(() => new Set(customCardIds), [customCardIds]);
+  const customCardSet = (() => new Set(customCardIds))();
 
   if (isLoading) {
     return (

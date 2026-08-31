@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useRef } from "react";
 import type {
   Contact,
   FieldDefinition,
@@ -77,10 +77,10 @@ export function useStudentFormActionHandlers({
     setPendingSaveData(null);
   }, [setDuplicateConfirmOpen, setPendingSaveData, setTypedDuplicateReason]);
 
-  const handleDuplicateDialogOpenChange = useCallback((open: boolean) => {
+  const handleDuplicateDialogOpenChange = ((open: boolean) => {
     if (!open) clearDuplicatePrompt();
     else setDuplicateConfirmOpen(true);
-  }, [clearDuplicatePrompt, setDuplicateConfirmOpen]);
+  });
 
   const savingRef = useRef(false);
 
@@ -164,15 +164,15 @@ export function useStudentFormActionHandlers({
     }
   };
 
-  const errorSummary = useMemo(() => {
+  const errorSummary = (() => {
     if (typedDuplicateReason) return t(DUPLICATE_ERROR_KEYS[typedDuplicateReason]);
     return "";
-  }, [typedDuplicateReason, t]);
+  })();
 
-  const validationErrorSummary = useMemo(() => {
+  const validationErrorSummary = (() => {
     if (validationErrors.length === 0) return undefined;
     return validationErrors.map((validationError) => validationError.message);
-  }, [validationErrors]);
+  })();
 
   return {
     handleDuplicateDialogOpenChange,

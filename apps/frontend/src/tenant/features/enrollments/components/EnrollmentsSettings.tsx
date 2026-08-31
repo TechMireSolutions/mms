@@ -12,7 +12,7 @@ export interface EnrollmentsSettingsProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const EnrollmentsSettings = React.memo(function EnrollmentsSettings({
+export const EnrollmentsSettings = (function EnrollmentsSettings({
   onPrefsDirtyChange,
 }: EnrollmentsSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();

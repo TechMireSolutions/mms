@@ -2,7 +2,7 @@
  * @file SessionDetail.tsx
  * @description Detail drawer for Session records (Classes, Timetable, Discounts, Budget, Events, Tabarruk).
  */
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GraduationCap, Clock, Tag, DollarSign,
@@ -14,7 +14,7 @@ import {
   DrawerSyncStatusFooter,
 } from "@/components/ui/DetailDrawerArchiveChrome";
 import { SessionArchivedBanner } from "@/tenant/features/sessions/components/SessionArchivedBanner";
-import { StatusBadge } from "@/components/ui/StatusBadge";
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import {
   formatMoney,
   SESSIONS_MODULE_MANIFEST,
@@ -29,7 +29,6 @@ import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
 import { ClassesTab } from "@/tenant/features/sessions/components/tabs/ClassesTab";
 import { TimetableTab } from "@/tenant/features/sessions/components/tabs/TimetableTab";
@@ -67,7 +66,7 @@ export interface SessionDetailProps {
   onRestore?: (sessionId: string) => void | Promise<void>;
 }
 
-export const SessionDetail = React.memo(function SessionDetail({
+export const SessionDetail = (function SessionDetail({
       session,
       onClose,
       onUpdate,
@@ -86,7 +85,7 @@ export const SessionDetail = React.memo(function SessionDetail({
       const typeKey = sessionTypeI18nKey(session.type);
       const sessionTypeLabel = typeKey ? t(typeKey) : session.type;
 
-      const statusLabels = useMemo(() => {
+      const statusLabels = (() => {
         const labels: Record<string, string> = {};
         for (const statusOption of statusOptions) {
           const translationKey = `sessions.status.${statusOption}` as AppTranslationKey;
@@ -94,24 +93,21 @@ export const SessionDetail = React.memo(function SessionDetail({
           labels[statusOption] = translated === translationKey ? toTitleCase(statusOption) : translated;
         }
         return labels;
-      }, [statusOptions, t]);
+      })();
 
-      const statusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+      const statusConfig = (() => ({
         active: { label: statusLabels.active || t("sessions.status.active"), cls: SEMANTIC_BADGE.success },
         upcoming: { label: statusLabels.upcoming || t("sessions.status.upcoming"), cls: SEMANTIC_BADGE.info },
         completed: { label: statusLabels.completed || t("sessions.status.completed"), cls: SEMANTIC_BADGE.muted },
         cancelled: { label: statusLabels.cancelled || t("sessions.status.cancelled"), cls: SEMANTIC_BADGE.destructive },
-      }), [statusLabels, t]);
+      }))() as Record<string, StatusBadgeConfigItem>;
 
-      const tabs: readonly SubTab[] = useMemo(
-        () =>
+      const tabs: readonly SubTab[] = (() =>
           TAB_KEYS.map((key) => ({
             key,
             label: t(`sessions.detail.tab.${key}` as AppTranslationKey),
             icon: TAB_ICONS[key],
-          })),
-        [t],
-      );
+          })))();
 
       const formatSessionDate = (date?: string | null) => formatDate(date, true);
 

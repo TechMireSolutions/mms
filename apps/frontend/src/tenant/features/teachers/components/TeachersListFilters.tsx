@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import type { ModuleColumnRegistryEntry, TeacherSortField, TeachersQuickFilter } from "@mms/shared";
 import type { ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -76,16 +75,13 @@ export function TeachersListFilters({
 }: TeachersListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const sortOptions = useMemo(
-    () =>
+  const sortOptions = (() =>
       getTeacherVisibleWorkColumns(columnRegistry, isColumnVisible)
         .map((col) => {
           const field = toTeacherListSortField(col.key);
           return field ? { field, label: col.label } : null;
         })
-        .filter((option): option is { field: TeacherSortField; label: string } => option !== null),
-    [columnRegistry, isColumnVisible],
-  );
+        .filter((option): option is { field: TeacherSortField; label: string } => option !== null))();
 
   return (
     <ModuleWorkToolbar

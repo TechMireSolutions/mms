@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
   mergeCountryDialCodeOptions,
   mergeCountryNameOptions,
@@ -36,8 +35,7 @@ export function useContactFormDraftOptions({
   defaultCountry: string;
   updateCountryCodes: (next: CountryCodeEntry[]) => void;
 }) {
-  const optionDefaults = useMemo(
-    () =>
+  const optionDefaults = (() =>
       buildOptionDefaults({
         phoneLabels,
         emailLabels,
@@ -49,33 +47,20 @@ export function useContactFormDraftOptions({
         skillCategories,
         skillProficiencies,
         defaultPhoneCountryCode: defaultCountryCode,
-      }),
-    [
-      phoneLabels,
-      emailLabels,
-      addressLabels,
-      socialPlatforms,
-      relationshipOptions,
-      educationDegrees,
-      employmentTypes,
-      skillCategories,
-      skillProficiencies,
-      defaultCountryCode,
-    ],
-  );
+      }))();
 
-  const countryCodeOptions = useMemo(() => {
+  const countryCodeOptions = (() => {
     const list = (countryCodes || [])
       .map((countryItem) => normalizeDialCode(countryItem.code))
       .filter(Boolean);
     const fallback = normalizeDialCode(defaultCountryCode);
     return Array.from(new Set([fallback, ...list].filter(Boolean)));
-  }, [countryCodes, defaultCountryCode]);
+  })();
 
-  const countryOptions = useMemo(() => {
+  const countryOptions = (() => {
     const names = (countryCodes || []).map((entry) => entry.country).filter(Boolean);
     return Array.from(new Set([defaultCountry, ...names].filter(Boolean)));
-  }, [countryCodes, defaultCountry]);
+  })();
 
   const updateCountryOptions = (nextCountries: string[]) => {
     updateCountryCodes(mergeCountryNameOptions(countryCodes, nextCountries));

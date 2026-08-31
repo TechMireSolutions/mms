@@ -27,13 +27,10 @@ export function useUsersPageActions({
     resetPassword,
   } = useUsersMutations();
 
-  const saveUsers = useCallback(
-    async (updater: SystemUser[] | ((prev: SystemUser[]) => SystemUser[])) => {
+  const saveUsers = (async (updater: SystemUser[] | ((prev: SystemUser[]) => SystemUser[])) => {
       const nextUsers = typeof updater === 'function' ? updater(users) : updater;
       await replaceUsers.mutateAsync(nextUsers);
-    },
-    [users, replaceUsers],
-  );
+    });
 
   const saveLogs = useCallback(
     async (updater: ActivityLog[] | ((prev: ActivityLog[]) => ActivityLog[])) => {
@@ -43,8 +40,7 @@ export function useUsersPageActions({
     [logs, replaceLogs],
   );
 
-  const addLog = useCallback(
-    async (entry: Partial<ActivityLog> & { action: ActivityLog['action']; module: string; detail: string }) => {
+  const addLog = (async (entry: Partial<ActivityLog> & { action: ActivityLog['action']; module: string; detail: string }) => {
       await saveLogs((prev) => [
         {
           id: `log${crypto.randomUUID()}`,
@@ -57,9 +53,7 @@ export function useUsersPageActions({
         },
         ...prev,
       ]);
-    },
-    [actorId, saveLogs],
-  );
+    });
 
   const handleDeleteUser = async (id: string): Promise<void> => {
     try {

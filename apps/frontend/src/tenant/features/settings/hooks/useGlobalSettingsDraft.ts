@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   applyDocumentLanguage,
   mergeGlobalSettings,
@@ -52,14 +52,8 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
   const [data, setData] = useState<GlobalSettings>(loadPersistedGlobal);
   const [saving, setSaving] = useState(false);
 
-  const isGlobalDirty = useMemo(
-    () => isGlobalPreferencesDirty(data, baseline),
-    [baseline, data],
-  );
-  const isModulesDirty = useMemo(
-    () => isEnabledModulesDraftDirty(data, baseline),
-    [baseline, data],
-  );
+  const isGlobalDirty = (() => isGlobalPreferencesDirty(data, baseline))();
+  const isModulesDirty = (() => isEnabledModulesDraftDirty(data, baseline))();
   const isDirty = isGlobalDirty || isModulesDirty;
 
   useEffect(() => {
@@ -79,21 +73,20 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
     applyDocumentLanguage(data.language);
   }, [data]);
 
-  const applyPersisted = useCallback((globalSettings: GlobalSettings): void => {
+  const applyPersisted = ((globalSettings: GlobalSettings): void => {
     const merged = mergeGlobalSettings(globalSettings);
     setBaseline(merged);
     setData(merged);
     clearGlobalSettingsPreview();
     clearSaved();
-  }, [clearSaved]);
+  });
 
-  const upd = useCallback(<K extends keyof GlobalSettings>(field: K, value: GlobalSettings[K]): void => {
+  const upd = (<K extends keyof GlobalSettings>(field: K, value: GlobalSettings[K]): void => {
     setData((current) => ({ ...current, [field]: value }));
     clearSaved();
-  }, [clearSaved]);
+  });
 
-  const handleSaveGlobal = useCallback(
-    async (toast?: UseGlobalSettingsDraftSaveToast): Promise<boolean> => {
+  const handleSaveGlobal = (async (toast?: UseGlobalSettingsDraftSaveToast): Promise<boolean> => {
       setSaving(true);
       try {
         const persisted = mergeGlobalSettingsDraft(data);
@@ -117,12 +110,9 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
       } finally {
         setSaving(false);
       }
-    },
-    [data, flashSaved, t],
-  );
+    });
 
-  const handleSaveModules = useCallback(
-    async (toast?: UseGlobalSettingsDraftSaveToast): Promise<boolean> => {
+  const handleSaveModules = (async (toast?: UseGlobalSettingsDraftSaveToast): Promise<boolean> => {
       setSaving(true);
       try {
         const persisted = mergeGlobalSettings({
@@ -148,11 +138,9 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
       } finally {
         setSaving(false);
       }
-    },
-    [data, flashSaved, t],
-  );
+    });
 
-  const handleDiscardGlobal = useCallback((): void => {
+  const handleDiscardGlobal = ((): void => {
     setData((current) => ({
       ...current,
       language: baseline.language,
@@ -165,15 +153,15 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
       passwordPolicy: baseline.passwordPolicy,
     }));
     clearSaved();
-  }, [baseline, clearSaved]);
+  });
 
-  const handleDiscardModules = useCallback((): void => {
+  const handleDiscardModules = ((): void => {
     setData((current) => ({
       ...current,
       enabledModules: baseline.enabledModules,
     }));
     clearSaved();
-  }, [baseline.enabledModules, clearSaved]);
+  });
 
   return {
     data,

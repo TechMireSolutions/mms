@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { getDisplayName, type Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -92,8 +92,7 @@ export function ContactDetail({
     onUpdateContact,
   });
 
-  const headerActionsNode = useMemo(
-    () => (
+  const headerActionsNode = (() => (
       <ContactDetailDrawerHeaderActions
         canWrite={canWrite}
         canDelete={canDelete}
@@ -101,12 +100,9 @@ export function ContactDetail({
         onEdit={onEdit}
         onRestore={onRestore}
       />
-    ),
-    [canWrite, canDelete, contactState, onEdit, onRestore],
-  );
+    ))();
 
-  const headerExtraNode = useMemo(
-    () => (
+  const headerExtraNode = (() => (
       <div className="space-y-2">
         <ContactDetailDrawerArchivedBanner contact={contactState} />
         <ContactDetailDrawerTabBar
@@ -115,14 +111,9 @@ export function ContactDetail({
           onTabChange={setActiveTab}
         />
       </div>
-    ),
-    [contactState, detailTabs, activeTab, setActiveTab],
-  );
+    ))();
 
-  const footerNode = useMemo(
-    () => (hasFooterStamp ? <ContactDetailDrawerFooter contact={contactState} /> : null),
-    [hasFooterStamp, contactState],
-  );
+  const footerNode = (() => (hasFooterStamp ? <ContactDetailDrawerFooter contact={contactState} /> : null))();
 
   return (
     <DetailDrawerShell

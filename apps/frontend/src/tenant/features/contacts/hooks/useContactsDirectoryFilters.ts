@@ -57,27 +57,27 @@ export function useContactsDirectoryFilters({
   const activeFilterCount =
     (filterGender ? 1 : 0) + (quickFilter !== "all" ? 1 : 0) + (search.trim() ? 1 : 0);
 
-  const handleSort = useCallback((field: string) => {
+  const handleSort = ((field: string) => {
     if (sortField === field) setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
     else {
       setSortField(field);
       setSortDir("asc");
     }
-  }, [sortField]);
+  });
 
-  const handleSelect = useCallback((id: string | number) => {
+  const handleSelect = ((id: string | number) => {
     setSelected((selectedIds) => toggleIdInSelection(selectedIds, id));
-  }, []);
+  });
 
   /** Toggle current-page ids into/out of selection (keeps selections from other pages). */
-  const handleSelectAll = useCallback((workContactIds: Array<string | number>) => {
+  const handleSelectAll = ((workContactIds: Array<string | number>) => {
     setSelected((selectedIds) => togglePageIdsInSelection(selectedIds, workContactIds));
-  }, []);
-  const clearFilters = useCallback(() => {
+  });
+  const clearFilters = (() => {
     setFilterGender("");
     setSearch("");
     setQuickFilter("all");
-  }, []);
+  });
 
   return {
     viewingDeleted,

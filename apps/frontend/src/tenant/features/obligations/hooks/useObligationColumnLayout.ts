@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   OBLIGATIONS_MODULE_MANIFEST,
   buildObligationCollectionWorkColumnRegistry,
@@ -9,8 +8,7 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 export function useObligationColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildObligationCollectionWorkColumnRegistry({
         receiptNo: t('obligations.columns.receiptNo'),
         receivedDate: t('obligations.columns.receivedDate'),
@@ -19,9 +17,7 @@ export function useObligationColumnLayout() {
         repMujtahid: t('obligations.columns.repMujtahid'),
         amount: t('obligations.columns.amount'),
         paymentMode: t('obligations.columns.paymentMode'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: OBLIGATIONS_MODULE_MANIFEST.moduleId,

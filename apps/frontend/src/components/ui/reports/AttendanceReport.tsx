@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo, useState } from "react";
+import React, { lazy, Suspense, useState } from "react";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import { useAttendanceRecords, useAttendanceReportAggregates } from "@/tenant/hooks/collections/attendance";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
@@ -14,14 +14,14 @@ const AttendanceReportCharts = lazy(() =>
 import { ReportFilterBanner } from "./ReportFilterBanner";
 import { AttendanceReportTables } from "./AttendanceReportTables";
 
-import type { AttendanceReportProps, AttendanceSummaryItem, StudentAttendanceItem } from "./attendanceReportTypes";
+import type { AttendanceReportProps, AttendanceSummaryItem, StudentAttendanceItem } from './attendanceReportTypes';
 
 export type { AttendanceReportProps, AttendanceSummaryItem, StudentAttendanceItem } from "./attendanceReportTypes";
 
 /**
  * Renders the attendance reports and metrics.
  */
-const AttendanceReport = React.memo(function AttendanceReport({ filters }: AttendanceReportProps): React.JSX.Element {
+const AttendanceReport = (function AttendanceReport({ filters }: AttendanceReportProps): React.JSX.Element {
   const { t } = useTranslation();
   const recordsQuery = useAttendanceRecords();
   const aggregatesQuery = useAttendanceReportAggregates();
@@ -29,9 +29,9 @@ const AttendanceReport = React.memo(function AttendanceReport({ filters }: Atten
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
 
   const sessions = useSessionsCollection();
-  const sessionClasses = useMemo(() => sessions.flatMap((session) => session.classes || []), [sessions]);
+  const sessionClasses = (() => sessions.flatMap((session) => session.classes || []))();
 
-  const studentAttendanceRows = useMemo<StudentAttendanceItem[]>(() => {
+  const studentAttendanceRows = (() => {
     const attendanceByStudent: Record<string, StudentAttendanceItem> = {};
 
     attendanceRecords.forEach((attendanceRecord) => {
@@ -62,9 +62,9 @@ const AttendanceReport = React.memo(function AttendanceReport({ filters }: Atten
       ...studentAttendance,
       rate: studentAttendance.total > 0 ? Math.round((studentAttendance.present / studentAttendance.total) * 100) : 0,
     }));
-  }, [attendanceRecords, sessionClasses]);
+  })() as StudentAttendanceItem[];
 
-  const summary = useMemo<AttendanceSummaryItem[]>(() => {
+  const summary = (() => {
     const classGroups: Record<string, { totalStudents: number; sumRates: number; perfect: number; below: number }> = {};
 
     studentAttendanceRows.forEach((studentAttendance) => {
@@ -85,24 +85,18 @@ const AttendanceReport = React.memo(function AttendanceReport({ filters }: Atten
       perfectAttendance: classGroup.perfect,
       belowThreshold: classGroup.below,
     }));
-  }, [studentAttendanceRows]);
+  })() as AttendanceSummaryItem[];
 
-  const filteredSummary = useMemo(
-    () => (selectedClass ? summary.filter((summaryItem) => summaryItem.class === selectedClass) : summary),
-    [summary, selectedClass],
-  );
+  const filteredSummary = (() => (selectedClass ? summary.filter((summaryItem) => summaryItem.class === selectedClass) : summary))();
 
-  const filteredStudentAttendanceRows = useMemo(
-    () =>
+  const filteredStudentAttendanceRows = (() =>
       selectedClass
         ? studentAttendanceRows.filter((studentAttendance) => studentAttendance.class === selectedClass)
         : studentAttendanceRows.filter((row) => {
             const matchesClass = filters.class === "all" || sessionClasses.find((c) => c.name === row.class)?.id === filters.class;
             const matchesStudent = !filters.student || row.studentName.toLowerCase().includes(filters.student.toLowerCase());
             return matchesClass && matchesStudent;
-          }),
-    [studentAttendanceRows, selectedClass, filters, sessionClasses],
-  );
+          }))();
 
   const toggleClassFilter = (className: string): void => {
     setSelectedClass((currentClass) => (currentClass === className ? null : className));

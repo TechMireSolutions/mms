@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Phone, Mail, X } from "lucide-react";
 import {
@@ -41,10 +41,10 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
     }));
   };
 
-  const statusOptions = useMemo(() => USER_STATUS_VALUES.map((status) => ({
+  const statusOptions = (() => USER_STATUS_VALUES.map((status) => ({
     value: status,
     label: t(`users.status.${status}`),
-  })), [t]);
+  })))();
 
   return (
     <div className="space-y-4">

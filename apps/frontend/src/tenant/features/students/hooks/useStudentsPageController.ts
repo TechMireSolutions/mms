@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
@@ -107,7 +107,7 @@ export function useStudentsPageController() {
 
   const overlays = useStudentsPageOverlayState();
 
-  const exportColumns = useMemo(() => {
+  const exportColumns = (() => {
     const visible = columnLayout.columnRegistry.filter(
       (col) => columnLayout.isColumnVisible(col.key) && col.key !== "sessions",
     );
@@ -116,7 +116,7 @@ export function useStudentsPageController() {
       id: col.key,
       label: col.label || col.key,
     }));
-  }, [columnLayout, t]);
+  })();
 
   const { handleExportCSV, handleBulkExport } = useStudentsExportActions({
     tableColumns: exportColumns,

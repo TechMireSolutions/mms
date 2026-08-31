@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useMemo, useEffect, type ComponentType } from "react";
+import { useState, useEffect, type ComponentType } from "react";
 import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart, Sparkles, FolderKanban } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -112,7 +112,7 @@ export function ContactForm({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [open, draft, contact]);
 
-  const tabErrorCounts = useMemo(() => {
+  const tabErrorCounts = (() => {
     const counts: Record<string, number> = {};
     if (!draft.validationErrors || draft.validationErrors.length === 0) return counts;
     for (const err of draft.validationErrors) {
@@ -120,9 +120,9 @@ export function ContactForm({
       counts[tabId] = (counts[tabId] || 0) + 1;
     }
     return counts;
-  }, [draft.validationErrors]);
+  })();
 
-  const visibleTabs = useMemo(() => {
+  const visibleTabs = (() => {
     const countMap: Record<string, number> = {
       phones: draft.collectionCounts.filledPhones,
       emails: draft.collectionCounts.filledEmails,
@@ -154,7 +154,7 @@ export function ContactForm({
           tone: hasErrors ? ("destructive" as const) : undefined,
         };
       });
-  }, [draft.collectionCounts, tabErrorCounts, t, enabledTabIds]);
+  })();
 
   useEffect(() => {
     if (!visibleTabs.some((tabItem) => tabItem.key === tab)) {
@@ -162,14 +162,14 @@ export function ContactForm({
     }
   }, [tab, visibleTabs]);
 
-  const validationErrorSummary = useMemo(() => {
+  const validationErrorSummary = (() => {
     if (draft.lookupsError) return t("contacts.form.lookupsLoadFailed");
     if (!draft.validationErrors || draft.validationErrors.length === 0) return undefined;
     const messages = draft.validationErrors
       .map((err) => err.message)
       .filter((msg): msg is string => Boolean(msg));
     return messages.length > 0 ? Array.from(new Set(messages)) : undefined;
-  }, [draft.lookupsError, draft.validationErrors, t]);
+  })();
 
   return (
     <>

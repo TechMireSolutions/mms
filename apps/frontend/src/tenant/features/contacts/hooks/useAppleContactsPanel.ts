@@ -1,5 +1,4 @@
 import {
-  useCallback,
   useRef,
   useState,
   type ChangeEvent,
@@ -40,8 +39,7 @@ export function useAppleContactsPanel({
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const processFile = useCallback(
-    (file: File): void => {
+  const processFile = ((file: File): void => {
       const reader = new FileReader();
       reader.onload = (readerEvent) => {
         if (readerEvent.target && typeof readerEvent.target.result === "string") {
@@ -56,9 +54,7 @@ export function useAppleContactsPanel({
         }
       };
       reader.readAsText(file);
-    },
-    [mobileLabel, personalLabel, defaultPhoneCountryCode],
-  );
+    });
 
   const handleFile = (event: ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];

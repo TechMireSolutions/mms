@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { toTitleCase, AppTranslationKey } from '@mms/shared';
 import {
   FormFooterBadge,
@@ -22,12 +22,12 @@ export function SessionFormFooter({
   nameRequiredLabel,
 }: SessionFormFooterProps): React.JSX.Element {
   const { t } = useTranslation();
-  const statusLabel = useMemo(() => {
+  const statusLabel = (() => {
     const status = sessionStatus || 'active';
     const translationKey = `sessions.status.${status}` as AppTranslationKey;
     const translated = t(translationKey);
     return translated === translationKey ? toTitleCase(status) : translated;
-  }, [sessionStatus, t]);
+  })();
 
   if (!sessionName) {
     return (

@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   ACCOUNTING_MODULE_MANIFEST,
   buildAccountingAccountWorkColumnRegistry,
@@ -13,17 +12,14 @@ export function useAccountingAccountColumnLayout() {
 
   const storageModuleId = `${ACCOUNTING_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`;
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildAccountingAccountWorkColumnRegistry({
         code: t('accounting.columns.account.code'),
         name: t('accounting.columns.account.name'),
         subtype: t('accounting.columns.account.subtype'),
         description: t('accounting.columns.account.description'),
         normalBalance: t('accounting.columns.account.normalBalance'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: storageModuleId,

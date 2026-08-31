@@ -13,7 +13,6 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient, apiContract } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
-import { useMemo } from 'react';
 import {
   TEACHERS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
@@ -39,7 +38,7 @@ export async function fetchAllTeachersForQuery(
 
   for (;;) {
     const response = await apiContract.teachers.list({
-      query: { ...(params as any), page, limit }
+      query: { ...(params), page, limit }
     });
     const teachersPage = response.body as TeachersListPageResult;
     all.push(...(teachersPage.teachers as TeacherRecord[]));
@@ -62,18 +61,18 @@ export function useTeacherLinkedContactIds(excludeId?: string, enabled = true) {
     staleTime: 30_000,
   });
   
-  return { ...query, data: (query.data?.body as any)?.contactIds as Array<string | number> | undefined };
+  return { ...query, data: (query.data?.body as { contactIds?: Array<string | number> } | null)?.contactIds };
 }
 
 export function useTeachersByIds(ids: (string | number | null | undefined)[]) {
   const { isAuthenticated } = useAuth();
-  const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
+  const normalized = (() => uniqueRegistryIds(ids))();
   
   const query = useQuery({
     queryKey: [...TEACHERS_QUERY_KEY, 'resolve', normalized.join(',')] as const,
     queryFn: async () => {
       const res = await apiContract.teachers.resolve({ body: { ids: normalized } });
-      return (res.body as any)?.teachers as Teacher[] | undefined;
+      return (res.body as { teachers?: Teacher[] } | null)?.teachers;
     },
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,
@@ -95,7 +94,7 @@ export function useTeacherNextEmployeeId(params: TeacherNextEmployeeIdParams = {
     staleTime: 15_000,
   });
   
-  return { ...query, data: (query.data?.body as any)?.employeeId as string | undefined };
+  return { ...query, data: (query.data?.body as { employeeId?: string } | null)?.employeeId };
 }
 
 /** Server-authoritative active duplicate probe (contact / employeeId) before save. */
@@ -104,7 +103,7 @@ export async function checkTeacherRegistrationDuplicate(
 ): Promise<TeacherDuplicateReason | null> {
   const res = await apiContract.teachers.duplicateCheck({ body: input });
   if (res.status !== 200) throw new Error("Duplicate check failed");
-  return (res.body as any)?.reason ?? null;
+  return (res.body as { reason?: TeacherDuplicateReason | null } | null)?.reason ?? null;
 }
 
 export function useTeachersMetrics(options?: { enabled?: boolean }) {
@@ -122,15 +121,12 @@ export function useTeachersWidgetAggregates(
   const { isAuthenticated } = useAuth();
   const enabled = options?.enabled ?? true;
 
-  const queries = useMemo(
-    () =>
+  const queries = (() =>
       widgets
         .filter((widget) => widget.collection === 'teachers')
-        .map((widget) => teachersWidgetQueryFromWidget(widget)),
-    [widgets],
-  );
+        .map((widget) => teachersWidgetQueryFromWidget(widget)))();
 
-  const querySignature = useMemo(() => {
+  const querySignature = (() => {
     return JSON.stringify(
       [...queries]
         .sort((a, b) => a.id.localeCompare(b.id))
@@ -142,13 +138,13 @@ export function useTeachersWidgetAggregates(
           xAxis: query.xAxisField,
         })),
     );
-  }, [queries]);
+  })();
 
   const query = useQuery({
     queryKey: [...TEACHERS_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
     queryFn: async () => {
       const res = await apiContract.teachers.widgetAggregates({ body: { widgets: queries } });
-      return (res.body as any)?.results ?? {};
+      return (res.body as { results?: Record<string, { value?: number; totalCount?: number; chartData?: Array<{ name: string; value: number }> }> } | null)?.results ?? {};
     },
     enabled: isAuthenticated && enabled && queries.length > 0,
     staleTime: 30_000,
@@ -161,7 +157,7 @@ export function useTeachersWidgetAggregates(
 export async function migrateTeachersEmployeeIds(): Promise<{ updated: number }> {
   const res = await apiContract.teachers.migrateEmployeeIds({ body: {} });
   if (res.status !== 200) throw new Error("Migration failed");
-  return { updated: (res.body as any)?.updated ?? 0 };
+  return { updated: (res.body as { updated?: number } | null)?.updated ?? 0 };
 }
 
 export type { TeachersPaginatedParams, TeacherNextEmployeeIdParams, TeachersWidgetAggregateWidgetInput };

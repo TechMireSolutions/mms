@@ -13,7 +13,7 @@ export function useExaminationsContractList(query: Record<string, unknown> = {},
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.examinations.listExams.useQuery({
     queryKey: [...EXAMINATIONS_EXAMS_QUERY_KEY, 'contract-list', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });
@@ -23,7 +23,7 @@ export function useExaminationsContractResults(query: Record<string, unknown> = 
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.examinations.listResults.useQuery({
     queryKey: [...EXAMINATIONS_RESULTS_QUERY_KEY, 'contract-results', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });

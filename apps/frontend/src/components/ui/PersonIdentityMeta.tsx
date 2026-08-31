@@ -28,7 +28,7 @@ export interface PersonIdentityMetaProps {
 }
 
 /** Gender (+ optional Syed) identity row for person directory cards/tables/detail. */
-export const PersonIdentityMeta = React.memo(function PersonIdentityMeta({
+export const PersonIdentityMeta = (function PersonIdentityMeta({
   gender,
   isSyed,
   syedLabel,
@@ -101,7 +101,7 @@ export const PersonIdentityMeta = React.memo(function PersonIdentityMeta({
 });
 
 /** Optional wrapper when subtitle stacks multiple identity rows (e.g. GR + gender). */
-export const DirectoryCardSubtitleStack = React.memo(function DirectoryCardSubtitleStack({
+export const DirectoryCardSubtitleStack = (function DirectoryCardSubtitleStack({
   children,
   className,
 }: {

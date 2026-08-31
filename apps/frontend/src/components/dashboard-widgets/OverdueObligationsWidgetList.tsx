@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { Scale } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
@@ -54,10 +54,7 @@ export function OverdueObligationsWidgetList({
 }: OverdueObligationsWidgetListProps): React.ReactElement | null {
   const { t } = useTranslation();
 
-  const studentsById = useMemo(
-    () => new Map(students.map((entry) => [String(entry.id), entry])),
-    [students],
-  );
+  const studentsById = (() => new Map(students.map((entry) => [String(entry.id), entry])))();
 
   if (!expanded) return null;
 

@@ -9,7 +9,6 @@ export interface ModuleTierTab {
   icon: LucideIcon;
 }
 
-import { useMemo } from "react";
 
 export interface FilterTabsOptions {
   canViewSetup?: boolean;
@@ -49,12 +48,12 @@ export function useFilteredModuleTierTabs(options: FilterTabsOptions): ModuleTie
   const canViewSetup = options.canViewSetup ?? true;
   const canViewReports = options.canViewReports ?? true;
 
-  return useMemo(() => {
+  return (() => {
     return tabs.filter((tab) => {
       if (tab.id === "setup") return canViewSetup;
       if (tab.id === "reports") return canViewReports;
       return true;
     });
-  }, [tabs, canViewSetup, canViewReports]);
+  })();
 }
 

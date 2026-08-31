@@ -1,8 +1,8 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { ShieldAlert, Trash2 } from 'lucide-react';
 import { SectionCard } from '@/components/ui/SectionCard';
 import BackupRestoreConfirmModal from '@/tenant/features/settings/components/BackupRestoreConfirmModal';
-import BackupCredentialsModal, { type BackupCredentialsModalProps } from '@/tenant/features/settings/components/BackupCredentialsModal';
+import BackupCredentialsModal from '@/tenant/features/settings/components/BackupCredentialsModal';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import BackupExportSection from '@/tenant/features/settings/components/backup/BackupExportSection';
 import BackupHistorySection from '@/tenant/features/settings/components/backup/BackupHistorySection';
@@ -14,8 +14,9 @@ import { useTenant } from '@/lib/contexts/TenantContext';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
+import type { BackupCredentialsModalProps } from '@/tenant/features/settings/components/BackupCredentialsModal';
 
-const BackupRestore = React.memo(function BackupRestore(): React.JSX.Element {
+const BackupRestore = (function BackupRestore(): React.JSX.Element {
   const { t } = useTranslation();
   const { can } = usePermissions();
   const { subdomain } = useTenant();
@@ -25,7 +26,7 @@ const BackupRestore = React.memo(function BackupRestore(): React.JSX.Element {
 
   const backup = useBackupRestore({ subdomain, adminEmail });
 
-  const credentialsModalProps = useMemo<BackupCredentialsModalProps | null>(() => {
+  const credentialsModalProps = (() => {
     if (backup.exportModalOpen) {
       return {
         open: true,
@@ -57,7 +58,7 @@ const BackupRestore = React.memo(function BackupRestore(): React.JSX.Element {
       };
     }
     return null;
-  }, [backup, adminEmail]);
+  })() as BackupCredentialsModalProps | null;
 
   if (!isAdmin) {
     return (

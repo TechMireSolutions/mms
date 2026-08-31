@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { BookOpen } from 'lucide-react';
 import { ACCOUNT_TYPES, ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
 import { useAccountingConfig } from '@/hooks/useStandardModuleConfig';
@@ -67,10 +67,7 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
     }
   };
 
-  const errorMessages = useMemo(
-    () => Object.values(errors).filter(Boolean),
-    [errors],
-  );
+  const errorMessages = (() => Object.values(errors).filter(Boolean))();
 
   return (
     <FormModal

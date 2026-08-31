@@ -88,7 +88,7 @@ export default function Examinations(): React.JSX.Element {
                 }}
                 onFilteredCountChange={c.setFilteredCount}
                 onRowClick={(id) => {
-                  const e = c.exams.find((ex: any) => ex.id === id);
+                  const e = c.exams.find((ex) => ex.id === id);
                   if (e) c.setActiveExam(e);
                 }}
               />

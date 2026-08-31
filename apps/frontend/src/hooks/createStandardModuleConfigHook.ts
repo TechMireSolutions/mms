@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from "react";
 import {
   getFlatFieldsConfig,
   getSortedFields,
@@ -59,57 +58,36 @@ export function createStandardModuleConfigHook<
   return function useStandardModuleConfigHook() {
     const settings = defaultSettings;
 
-    const mergeSettings = useCallback(
-      (settingsDraft: Partial<TSettings> | null | undefined): TSettings => {
+    const mergeSettings = ((settingsDraft: Partial<TSettings> | null | undefined): TSettings => {
         return {
           ...defaultSettings,
           ...(settingsDraft ?? {}),
         };
-      },
-      [],
-    );
+      });
 
-    const updateSettings = useCallback((settingsDraft: TSettings) => {}, []);
-    const updateSettingsAsync = useCallback(async (settingsDraft: TSettings) => {}, []);
+    const updateSettings = ((settingsDraft: TSettings) => {});
+    const updateSettingsAsync = (async (settingsDraft: TSettings) => {});
 
-    const fields = useMemo(
-      () => getFlatFieldsConfig(settings.fields),
-      [settings.fields],
-    );
+    const fields = (() => getFlatFieldsConfig(settings.fields))();
 
-    const customFields = useMemo<ModuleCustomField[]>(
-      () =>
+    const customFields = (() =>
         customFieldsFrom
           ? customFieldsFrom(settings)
-          : ((settings.customFields ?? []) as ModuleCustomField[]),
-      [settings],
-    );
+          : ((settings.customFields ?? []) as ModuleCustomField[]))() as ModuleCustomField[];
 
-    const fieldOrder = useMemo(
-      () => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-      [settings.fieldOrder],
-    );
+    const fieldOrder = (() => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [])();
 
-    const orderedFields = useMemo(
-      () =>
+    const orderedFields = (() =>
         orderedFieldsFrom
           ? orderedFieldsFrom({ fieldOrder, settings })
-          : getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields),
-      [fieldOrder, settings, fields, customFields],
-    );
+          : getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields))();
 
-    const reloadConfig = useCallback(() => {}, []);
-    const loadSettings = useCallback(() => settings, [settings]);
+    const reloadConfig = (() => {});
+    const loadSettings = (() => settings);
 
-    const isFieldEnabled = useCallback(
-      (fieldId: string): boolean => fields[fieldId]?.enabled !== false,
-      [fields],
-    );
+    const isFieldEnabled = ((fieldId: string): boolean => fields[fieldId]?.enabled !== false);
 
-    const isFieldRequired = useCallback(
-      (fieldId: string): boolean => !!fields[fieldId]?.required,
-      [fields],
-    );
+    const isFieldRequired = ((fieldId: string): boolean => !!fields[fieldId]?.required);
 
     const extra = lookupsFrom ? lookupsFrom() : ({} as TExtra);
     const core: StandardModuleConfigCore<TSettings> = {

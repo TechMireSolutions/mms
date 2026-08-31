@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { ReceiptText, CreditCard } from "lucide-react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
@@ -6,7 +6,7 @@ import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Invoice } from '@/lib/data/financeData';
-import { FINANCE_MODULE_MANIFEST, type InvoiceCreateInput, type PaymentCreateInput } from "@mms/shared";
+import { FINANCE_MODULE_MANIFEST, type InvoiceCreateInput, type Payment, type PaymentCreateInput } from "@mms/shared";
 import {
   useFinanceInvoicesPaginated,
   useFinancePaymentsPaginated,
@@ -27,16 +27,13 @@ export function useFinancePageController() {
     canViewSetup,
   } = useModulePermissions(FINANCE_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const SUB_TABS = useMemo(
-    () => [
+  const SUB_TABS = (() => [
       { id: "invoices", label: t("finance.invoices"), icon: ReceiptText },
       { id: "payments", label: t("finance.payments"), icon: CreditCard },
-    ],
-    [t],
-  );
+    ])();
   const [activeTab, setActiveTab] = usePersistedTabState<string>("finance_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
-  const [activePayment, setActivePayment] = useState<any>(null);
+  const [activePayment, setActivePayment] = useState<Payment | null>(null);
   const [showDeleted, setShowDeleted] = useState(false);
   const invoicesResult = useFinanceInvoicesPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
   const paymentsResult = useFinancePaymentsPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });

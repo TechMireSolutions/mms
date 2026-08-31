@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import { parseSessionTimeoutMinutes, translateApp } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
@@ -14,12 +13,12 @@ export function useSessionTimeout(): void {
   const minutes = parseSessionTimeoutMinutes(settings.sessionTimeout);
   const language = settings.language;
 
-  const handleTimeout = useCallback((): void => {
+  const handleTimeout = ((): void => {
     notify.info(translateApp("global.sessionEndedTitle", language), {
       description: translateApp("global.sessionEndedDesc", language),
     });
     logout();
-  }, [logout, language]);
+  });
 
   useIdleTimer({
     enabled: isAuthenticated,

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
@@ -46,20 +46,14 @@ export function useUsersPageController() {
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(USERS_MODULE_MANIFEST);
-  const USERS_CONFIG_TABS = useMemo(
-    () => USERS_MODULE_MANIFEST.setupSubTabs.map((id) => ({
+  const USERS_CONFIG_TABS = (() => USERS_MODULE_MANIFEST.setupSubTabs.map((id) => ({
       id,
       label: t(SETUP_TAB_LABEL_KEYS[id]),
-    })),
-    [t],
-  );
-  const SUB_TABS = useMemo(
-    () => [
+    })))();
+  const SUB_TABS = (() => [
       { id: 'users', label: t('users.list'), icon: UsersIcon },
       { id: 'activity', label: t('users.activity'), icon: Activity },
-    ],
-    [t],
-  );
+    ])();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('users_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('users_ops_subtab', 'users');
   const [configSubTab, setConfigSubTab] = usePersistedTabState<string>(
@@ -100,13 +94,10 @@ export function useUsersPageController() {
     enabled: useServerWork,
   });
 
-  const users = useMemo(
-    () =>
-      (workPageQuery.data?.users ?? []).map((user: any) =>
+  const users = (() =>
+      ((workPageQuery.data?.users ?? []) as unknown[]).map((user) =>
         normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
-      ),
-    [workPageQuery.data],
-  );
+      ))();
   const shownCount = workPageQuery.data?.total ?? users.length;
   const listLoadFailed = workPageQuery.isError;
 
@@ -122,7 +113,7 @@ export function useUsersPageController() {
     useUserActivityColumnLayout();
 
   const { logExportAudit } = useUsersMutations();
-  const exportColumns = useMemo(() => defaultUsersExportColumns(t), [t]);
+  const exportColumns = (() => defaultUsersExportColumns(t))();
   const { handleExportCSV } = useUsersExportActions({
     tableColumns: exportColumns,
     canExport,

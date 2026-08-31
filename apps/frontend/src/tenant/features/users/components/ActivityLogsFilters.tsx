@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Search } from 'lucide-react';
 import { ACTIVITY_ACTION_VALUES, type SystemUser } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -37,18 +37,18 @@ export function ActivityLogsFilters({
 }: ActivityLogsFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const userOptions = useMemo(() => [
+  const userOptions = (() => [
     { value: 'all', label: t('users.activityAllUsers') },
     ...users.map((user) => ({ value: user.id, label: user.name })),
-  ], [users, t]);
+  ])();
 
-  const actionOptions = useMemo(() => [
+  const actionOptions = (() => [
     { value: 'all', label: t('users.activityAllActions') },
     ...ACTIVITY_ACTION_VALUES.map((activityAction) => ({
       value: activityAction,
       label: t(`users.action.${activityAction === 'login_failed' ? 'loginFailed' : activityAction === 'role_change' ? 'roleChange' : activityAction}`),
     })),
-  ], [t]);
+  ])();
 
   const applyPreset = (days?: number) => {
     const preset = days === undefined ? 'none' : days === 0 ? 'today' : days === 7 ? '7d' : days === 30 ? '30d' : 'none';

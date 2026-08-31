@@ -10,7 +10,7 @@ export function useFinanceContractInvoices(query: Record<string, unknown>, enabl
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.finance.listInvoices.useQuery({
     queryKey: [...FINANCE_INVOICES_QUERY_KEY, 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });
@@ -20,7 +20,7 @@ export function useFinanceContractPayments(query: Record<string, unknown>, enabl
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.finance.listPayments.useQuery({
     queryKey: [...FINANCE_PAYMENTS_QUERY_KEY, 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });
@@ -40,7 +40,7 @@ export function useFinanceContractReportAggregates(query: Record<string, unknown
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.finance.getReportAggregates.useQuery({
     queryKey: ['finance_invoices', 'report-aggregates', 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 5 * 60 * 1000,
     enabled,
   });

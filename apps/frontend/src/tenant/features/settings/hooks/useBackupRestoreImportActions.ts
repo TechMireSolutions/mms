@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import {
   type BackupCredentials,
   type PendingDecrypt,
@@ -54,8 +53,7 @@ export function useBackupRestoreImportActions({
    * Step 1 of restore: re-authenticate the signed-in admin, then download an encrypted
    * safety copy of the current workspace. Only a completed download unlocks the wipe.
    */
-  const createSafetyBackup = useCallback(
-    async (password: string): Promise<void> => {
+  const createSafetyBackup = (async (password: string): Promise<void> => {
       setSafetyStep(true);
       try {
         const verified = await verifyAdminBackupPassword(adminEmail, password);
@@ -74,12 +72,9 @@ export function useBackupRestoreImportActions({
       } finally {
         setSafetyStep(false);
       }
-    },
-    [adminEmail, downloadSafetyBackup, errorDescription, setSafetyReady, setSafetyStep, t],
-  );
+    });
 
-  const beginRestore = useCallback(
-    async (payload: PendingRestore): Promise<void> => {
+  const beginRestore = (async (payload: PendingRestore): Promise<void> => {
       if (!safetyReady) {
         notify.error(t('backup.restoreFailed'), {
           description: t('backup.safetyBackupRequired'),
@@ -103,15 +98,13 @@ export function useBackupRestoreImportActions({
         notify.error(t('backup.restoreFailed'), { description: errorDescription(error.message) });
         setRestoreId(null);
       }
-    },
-    [errorDescription, safetyReady, t, setRestoreId, setPendingRestore, setSelectedFileName],
-  );
+    });
 
-  const cancelRestore = useCallback((): void => {
+  const cancelRestore = ((): void => {
     setPendingRestore(null);
     setSelectedFileName(null);
     setSafetyReady(false);
-  }, [setPendingRestore, setSelectedFileName, setSafetyReady]);
+  });
 
   const decryptActions = useBackupRestoreDecryptActions({
     subdomain,

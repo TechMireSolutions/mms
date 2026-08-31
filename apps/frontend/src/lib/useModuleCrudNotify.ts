@@ -21,21 +21,17 @@ export function useModuleCrudNotify({
 }: UseModuleCrudNotifyOptions) {
   const { t } = useTranslation();
 
-  const handleError = useCallback(
-    (err: unknown, scope: string, messageKey: AppTranslationKey = defaultErrorKey) => {
+  const handleError = ((err: unknown, scope: string, messageKey: AppTranslationKey = defaultErrorKey) => {
       const validationMessage = getApiValidationMessage(err);
       notify.error(t(messageKey), validationMessage ? { description: validationMessage } : undefined);
       reportClientError(err, { scope });
-    },
-    [t, defaultErrorKey],
-  );
+    });
 
   const saveFailed = useCallback(() => {
     notify.error(t(saveFailedKey));
   }, [t, saveFailedKey]);
 
-  const notifyBulkResult = useCallback(
-    (
+  const notifyBulkResult = ((
       succeeded: number,
       failed: number,
       singleSuccessKey: AppTranslationKey,
@@ -57,9 +53,7 @@ export function useModuleCrudNotify({
       } else {
         saveFailed();
       }
-    },
-    [t, saveFailed, bulkPartialFailureKey, messageKeyForBulkFailure],
-  );
+    });
 
   return { t, handleError, notifyBulkResult };
 }

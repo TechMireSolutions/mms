@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { JournalEntry } from '@/lib/data/accountingData';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
@@ -47,9 +47,9 @@ export function useJournalEntriesController({
 }: JournalEntriesProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
-  const journalStatusConfig = useMemo(() => buildJournalStatusConfig(t), [t]);
-  const journalSubTabs = useMemo(() => buildJournalSubTabs(t), [t]);
-  const modeTabs = useMemo(() => buildJournalModeTabs(t), [t]);
+  const journalStatusConfig = (() => buildJournalStatusConfig(t))();
+  const journalSubTabs = (() => buildJournalSubTabs(t))();
+  const modeTabs = (() => buildJournalModeTabs(t))();
 
   const [mode, setMode] = useState<'simple' | 'advanced'>('simple');
   const [tab, setTab] = useState<'transactions' | 'cashbook'>('transactions');
@@ -80,10 +80,7 @@ export function useJournalEntriesController({
     }
   }, [createRequestKey, canWrite, showDeleted]);
 
-  const filtered = useMemo(
-    () => filterJournalEntries(entries, { search, statusFilter, tagFilter, dateFrom, dateTo }),
-    [entries, search, statusFilter, tagFilter, dateFrom, dateTo],
-  );
+  const filtered = (() => filterJournalEntries(entries, { search, statusFilter, tagFilter, dateFrom, dateTo }))();
 
   useEffect(() => {
     onFilteredCountChange?.(filtered.length);
@@ -129,7 +126,7 @@ export function useJournalEntriesController({
     setSimpleModal,
   );
 
-  const { grandDebit, grandCredit } = useMemo(() => computeJournalGrandTotals(filtered), [filtered]);
+  const { grandDebit, grandCredit } = (() => computeJournalGrandTotals(filtered))();
 
   const requestRowTrash = (id: string) => {
     if (showDeleted) {

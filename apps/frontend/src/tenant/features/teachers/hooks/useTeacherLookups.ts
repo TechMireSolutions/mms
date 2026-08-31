@@ -11,17 +11,15 @@ export const TEACHERS_LOOKUPS_QUERY_KEY = [TEACHERS_MODULE_MANIFEST.collectionKe
 
 export async function fetchTeacherLookups(_signal?: AbortSignal): Promise<TeacherLookupsMap> {
   const res = await apiContract.teachers.getLookups({ query: undefined, extraHeaders: {} });
-    const response = res.body as any;
-  return response.lookups ?? emptyTeacherLookupsMap();
+    return (res.body as { lookups?: TeacherLookupsMap }).lookups ?? emptyTeacherLookupsMap();
 }
 
 export async function putTeacherLookupKind(
   kind: TeacherLookupKind,
   items: string[],
 ): Promise<string[]> {
-  const res = await apiContract.teachers.updateLookupKind({ params: { kind: kind as any }, body: { items }, query: undefined, extraHeaders: {} });
-  const response = res.body as any;
-  return response.items;
+  const res = await apiContract.teachers.updateLookupKind({ params: { kind }, body: { items }, query: undefined, extraHeaders: {} });
+  return (res.body as { items?: string[] }).items ?? [];
 }
 
 const lookupsHooks = createModuleLookupsHooks<TeacherLookupsMap, TeacherLookupKind, string[]>({

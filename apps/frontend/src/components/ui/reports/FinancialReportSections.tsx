@@ -44,7 +44,7 @@ interface FinancialReportChartsProps {
   onToggleMonthFilter: (month: string) => void;
 }
 
-export const FinancialReportCharts = React.memo(function FinancialReportCharts({
+export const FinancialReportCharts = (function FinancialReportCharts({
   monthlyFeeCollection,
   discountUsageByType,
   pieColors,

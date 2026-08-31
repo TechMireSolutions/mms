@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { Lock, User } from "lucide-react";
 import type { TenantUserProfile } from "@mms/shared";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -89,13 +89,10 @@ export function AccountProfileSettingsTabs({
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<"profile" | "security">("profile");
 
-  const tabs = useMemo(
-    () => [
+  const tabs = (() => [
       { key: "profile" as const, label: t("account.contactSection"), icon: User },
       { key: "security" as const, label: t("account.loginSection"), icon: Lock },
-    ],
-    [t],
-  );
+    ])();
 
   return (
     <div className="w-full">

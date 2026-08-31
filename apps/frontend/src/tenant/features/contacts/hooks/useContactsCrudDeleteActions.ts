@@ -1,4 +1,3 @@
-import { useCallback } from "react";
 import type { AppTranslationKey } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { notify } from "@/lib/notify";
@@ -27,8 +26,7 @@ export function useContactsCrudDeleteActions({
     restoreContact: restoreMutation,
   } = useContactMutations();
 
-  const removeContact = useCallback(
-    async (id: string | number, name?: string, deletionReason?: string): Promise<void> => {
+  const removeContact = (async (id: string | number, name?: string, deletionReason?: string): Promise<void> => {
       try {
         await deleteContact.mutateAsync({
           id: String(id),
@@ -42,12 +40,9 @@ export function useContactsCrudDeleteActions({
       } catch (err) {
         handleError(err, "contacts.remove_contact");
       }
-    },
-    [deleteContact, t, handleError],
-  );
+    });
 
-  const bulkDeleteContactsAction = useCallback(
-    async (ids: (string | number)[], deletionReason?: string): Promise<void> => {
+  const bulkDeleteContactsAction = (async (ids: (string | number)[], deletionReason?: string): Promise<void> => {
       if (ids.length === 0) return;
       try {
         const result = await bulkDeleteMutation.mutateAsync({
@@ -63,19 +58,13 @@ export function useContactsCrudDeleteActions({
       } catch (err) {
         handleError(err, "contacts.bulk_delete");
       }
-    },
-    [bulkDeleteMutation, notifyBulkResult, handleError],
-  );
+    });
 
-  const restoreContactAction = useCallback(
-    async (id: string): Promise<void> => {
+  const restoreContactAction = (async (id: string): Promise<void> => {
       await restoreMutation.mutateAsync(id);
-    },
-    [restoreMutation],
-  );
+    });
 
-  const bulkRestoreContactsAction = useCallback(
-    async (
+  const bulkRestoreContactsAction = (async (
       ids: (string | number)[],
     ): Promise<{
       succeeded: number;
@@ -83,9 +72,7 @@ export function useContactsCrudDeleteActions({
       conflicts?: Array<{ id: string; errors: Array<{ message: string }> }>;
     }> => {
       return bulkRestoreMutation.mutateAsync(ids.map(String));
-    },
-    [bulkRestoreMutation],
-  );
+    });
 
   return {
     removeContact,

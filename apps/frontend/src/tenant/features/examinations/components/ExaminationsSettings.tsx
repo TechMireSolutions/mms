@@ -12,7 +12,7 @@ export interface ExaminationsSettingsProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const ExaminationsSettings = React.memo(function ExaminationsSettings({
+export const ExaminationsSettings = (function ExaminationsSettings({
   onPrefsDirtyChange,
 }: ExaminationsSettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();

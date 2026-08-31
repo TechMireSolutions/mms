@@ -1,4 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
+import type { MutateOptions } from '@tanstack/react-query';
 import type {
   Denomination,
   StockBatch,
@@ -76,8 +77,8 @@ export function useHasanatDistributions(options?: { enabled?: boolean; includeDe
   const includeDeleted = options?.includeDeleted ?? false;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.hasanat.listDistributions.useQuery({
-    queryKey: [...HASANAT_DISTRIBUTIONS_QUERY_KEY, { includeDeleted }] as any,
-    queryData: { query: { includeDeleted: includeDeleted ? 'true' : 'false' } as any },
+    queryKey: [...HASANAT_DISTRIBUTIONS_QUERY_KEY, { includeDeleted }],
+    queryData: { query: { includeDeleted: includeDeleted ? 'true' : 'false' } },
     enabled: isAuthenticated && (options?.enabled ?? true),
     staleTime: 30_000,
   });
@@ -108,7 +109,7 @@ export function useHasanatReportAggregates(
   
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.hasanat.reportAggregates.useQuery({
-    queryKey: [...HASANAT_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null] as any,
+    queryKey: [...HASANAT_REPORT_AGGREGATES_QUERY_KEY, comparison ?? null],
     queryData: {
       query: {
         sessionIds: comparison?.sessionIds?.length ? comparison.sessionIds.join(',') : undefined,
@@ -116,7 +117,7 @@ export function useHasanatReportAggregates(
         rangeATo: comparison?.rangeATo,
         rangeBFrom: comparison?.rangeBFrom,
         rangeBTo: comparison?.rangeBTo,
-      } as any,
+      },
     },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
@@ -136,8 +137,9 @@ export function useHasanatRedemptions(options?: { enabled?: boolean }) {
 export function useHasanatRedemptionsCollection(options?: { enabled?: boolean }): Redemption[] {
   const query = useHasanatRedemptions(options);
   if (!query.data || query.data.status !== 200) return [];
-  const body = query.data.body as any;
-  return Array.isArray(body) ? body : (body?.redemptions ?? []);
+  const body: unknown = query.data.body;
+  if (Array.isArray(body)) return body as Redemption[];
+  return (body as { redemptions?: Redemption[] } | null)?.redemptions ?? [];
 }
 
 export function useHasanatMetrics(options?: { enabled?: boolean }) {
@@ -210,42 +212,42 @@ export function useHasanatMutations() {
   return {
     replaceDenoms: {
       ...replaceDenoms,
-      mutate: (denoms: Denomination[], opts?: any) => replaceDenoms.mutate({ body: denoms }, opts),
+      mutate: (denoms: Denomination[], opts?: MutateOptions) => replaceDenoms.mutate({ body: denoms }, opts),
       mutateAsync: (denoms: Denomination[]) => replaceDenoms.mutateAsync({ body: denoms }),
     },
     replaceBatches: {
       ...replaceBatches,
-      mutate: (batches: StockBatch[], opts?: any) => replaceBatches.mutate({ body: batches }, opts),
+      mutate: (batches: StockBatch[], opts?: MutateOptions) => replaceBatches.mutate({ body: batches }, opts),
       mutateAsync: (batches: StockBatch[]) => replaceBatches.mutateAsync({ body: batches }),
     },
     replaceDistributions: {
       ...replaceDistributions,
-      mutate: (distributions: Distribution[], opts?: any) => replaceDistributions.mutate({ body: distributions }, opts),
+      mutate: (distributions: Distribution[], opts?: MutateOptions) => replaceDistributions.mutate({ body: distributions }, opts),
       mutateAsync: (distributions: Distribution[]) => replaceDistributions.mutateAsync({ body: distributions }),
     },
     replaceRedemptions: {
       ...replaceRedemptions,
-      mutate: (redemptions: Redemption[], opts?: any) => replaceRedemptions.mutate({ body: redemptions }, opts),
+      mutate: (redemptions: Redemption[], opts?: MutateOptions) => replaceRedemptions.mutate({ body: redemptions }, opts),
       mutateAsync: (redemptions: Redemption[]) => replaceRedemptions.mutateAsync({ body: redemptions }),
     },
     deleteDistribution: {
       ...deleteDistribution,
-      mutate: (id: string, opts?: any) => deleteDistribution.mutate({ params: { id }, body: {} }, opts),
+      mutate: (id: string, opts?: MutateOptions) => deleteDistribution.mutate({ params: { id }, body: {} }, opts),
       mutateAsync: (id: string) => deleteDistribution.mutateAsync({ params: { id }, body: {} }),
     },
     restoreDistribution: {
       ...restoreDistribution,
-      mutate: (id: string, opts?: any) => restoreDistribution.mutate({ params: { id }, body: {} }, opts),
+      mutate: (id: string, opts?: MutateOptions) => restoreDistribution.mutate({ params: { id }, body: {} }, opts),
       mutateAsync: (id: string) => restoreDistribution.mutateAsync({ params: { id }, body: {} }),
     },
     bulkDeleteDistributions: {
       ...bulkDeleteDistributions,
-      mutate: (ids: string[], opts?: any) => bulkDeleteDistributions.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkDeleteDistributions.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkDeleteDistributions.mutateAsync({ body: { ids } }),
     },
     bulkRestoreDistributions: {
       ...bulkRestoreDistributions,
-      mutate: (ids: string[], opts?: any) => bulkRestoreDistributions.mutate({ body: { ids } }, opts),
+      mutate: (ids: string[], opts?: MutateOptions) => bulkRestoreDistributions.mutate({ body: { ids } }, opts),
       mutateAsync: (ids: string[]) => bulkRestoreDistributions.mutateAsync({ body: { ids } }),
     },
   };

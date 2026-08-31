@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect, useMemo } from "react";
+import React, { lazy, Suspense, useEffect } from "react";
 import { CONTACTS_MODULE_MANIFEST, type Contact, toTitleCase } from "@mms/shared";
 import { getScopedBrandingSettings } from "@/lib/settingsPreviewStore";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -49,13 +49,13 @@ export default function ContactCreateModal({
   const { upsertContact } = useContactMutations();
   const { canWrite } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
 
-  const initialDraft = useMemo(() => {
+  const initialDraft = (() => {
     const draft = nameToDraft(initialName);
     if (createDefaults?.gender) {
       draft.gender = createDefaults.gender;
     }
     return draft;
-  }, [initialName, createDefaults?.gender]);
+  })();
 
   useEffect(() => {
     if (!open || canWrite) return;

@@ -21,7 +21,7 @@ export interface AccountingSetupTierProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const AccountingSetupTier = React.memo(function AccountingSetupTier({
+export const AccountingSetupTier = (function AccountingSetupTier({
   accounts,
   fiscalYears,
   onSaveFiscalYears,

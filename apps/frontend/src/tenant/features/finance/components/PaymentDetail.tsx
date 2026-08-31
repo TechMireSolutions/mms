@@ -16,7 +16,7 @@ export interface PaymentDetailProps {
   onRestore?: (id: string) => void | Promise<void>;
 }
 
-export const PaymentDetail = React.memo(function PaymentDetail({
+export const PaymentDetail = (function PaymentDetail({
   payment,
   onClose,
   onEdit,

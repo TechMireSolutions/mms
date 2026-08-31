@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
@@ -18,11 +17,11 @@ export function useServerMetrics<T>({
 }: UseServerMetricsOptions) {
   const { isAuthenticated } = useAuth();
 
-  const queryKey = useMemo(() => {
+  const queryKey = (() => {
     return extraParam
       ? [moduleId, 'metrics', extraParam] as const
       : [moduleId, 'metrics'] as const;
-  }, [moduleId, extraParam]);
+  })();
 
   return useQuery({
     queryKey,

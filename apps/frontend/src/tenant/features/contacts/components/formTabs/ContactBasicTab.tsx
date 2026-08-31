@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import type { ChangeEvent } from "react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Field, FormCheckboxCard, EditableMultiSelect } from "@/components/ui/FormPrimitives";
@@ -54,10 +54,10 @@ export function ContactBasicTab({
 }: ContactBasicTabProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const customBasicFields = useMemo(() => {
+  const customBasicFields = (() => {
     if (!fields) return [];
     return listEnabledCustomContactFormFields(fields, "basic");
-  }, [fields]);
+  })();
 
   return (
     <SectionCard accentColor="primary" className="text-start">

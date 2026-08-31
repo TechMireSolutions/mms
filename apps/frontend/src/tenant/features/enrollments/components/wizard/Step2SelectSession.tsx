@@ -1,8 +1,8 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { BookOpen, Calendar, Users, DollarSign } from "lucide-react";
 import { Session } from '@/lib/data/sessionsData';
 import { SEMANTIC_BADGE, WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
-import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,13 +36,10 @@ export interface Step2SelectSessionProps {
 export function Step2SelectSession({ value, onChange, sessions = [] }: Step2SelectSessionProps): React.JSX.Element {
   const { formatCurrency } = useFinanceCurrency();
   const { t } = useTranslation();
-  const sessionStatusConfig = useMemo<Record<string, StatusBadgeConfigItem>>(
-    () => ({
+  const sessionStatusConfig = (() => ({
       full: { label: t("enrollment.session.full"), cls: SEMANTIC_BADGE.destructiveStrong },
       almost_full: { label: t("enrollment.session.almostFull"), cls: SEMANTIC_BADGE.warningStrong },
-    }),
-    [t],
-  );
+    }))() as Record<string, StatusBadgeConfigItem>;
   const activeSessions = sessions.filter((session) => session.status === "active");
 
   return (

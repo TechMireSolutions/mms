@@ -6,11 +6,11 @@ import { normalizeSessionModulePreferences } from "@mms/shared";
 const api = createModuleSetupConfigApi<SessionModulePreferences>({
   fetchPreferencesFn: async (_signal) => {
     const res = await apiContract.sessions.getPreferences({ query: undefined, extraHeaders: {} });
-    return (res.body as any).preferences;
+    return (res.body as { preferences: SessionModulePreferences }).preferences;
   },
   savePreferencesFn: async (prefs) => {
-    const res = await apiContract.sessions.updatePreferences({ body: prefs as any });
-    return (res.body as any).preferences;
+    const res = await apiContract.sessions.updatePreferences({ body: prefs });
+    return (res.body as { preferences: SessionModulePreferences }).preferences;
   },
   normalizePrefs: normalizeSessionModulePreferences as (prefs: unknown) => SessionModulePreferences,
 });

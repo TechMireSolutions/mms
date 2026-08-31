@@ -8,7 +8,7 @@ export interface StudentsSetupPanelProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
 
-export const StudentsSetupPanel = React.memo(function StudentsSetupPanel({
+export const StudentsSetupPanel = (function StudentsSetupPanel({
   onPrefsDirtyChange,
 }: StudentsSetupPanelProps): React.JSX.Element {
   const { t } = useTranslation();

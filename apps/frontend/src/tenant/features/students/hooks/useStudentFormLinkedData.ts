@@ -1,4 +1,4 @@
-import { useCallback, useMemo, type MutableRefObject } from "react";
+import { type MutableRefObject } from "react";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
 import { formatDate, todayISO, type Student } from "@mms/shared";
@@ -52,15 +52,12 @@ export function useStudentFormLinkedData({
     enabled: isStudentCreate(student) && autoGenerateId,
   });
 
-  const handleGrNumberChange = useCallback((value: string) => {
+  const handleGrNumberChange = ((value: string) => {
     grManuallyEdited.current = true;
     updateDraft({ grNumber: value });
-  }, [grManuallyEdited, updateDraft]);
+  });
 
-  const excludeIds = useMemo(
-    () => buildStudentContactExcludeIds(linkedStudentContactIds, linkedContact),
-    [linkedStudentContactIds, linkedContact],
-  );
+  const excludeIds = (() => buildStudentContactExcludeIds(linkedStudentContactIds, linkedContact))();
 
   const isGrAutoAssigned =
     autoGenerateId

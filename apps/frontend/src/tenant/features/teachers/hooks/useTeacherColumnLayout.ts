@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from 'react';
 import {
   TEACHERS_MODULE_MANIFEST,
   buildTeacherWorkColumnRegistry,
@@ -12,14 +11,11 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 export function useTeacherColumnLayout(settings: TeachersSettings) {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildTeacherWorkColumnRegistry(
         settings,
         teacherWorkColumnLabelsFrom((key) => t(teacherColumnLabelKey(key))),
-      ),
-    [settings, t],
-  );
+      ))();
 
   const { customizerLabels: baseLabels, updateUserColumnLayout, ...base } = useModuleColumnLayout({
     moduleId: TEACHERS_MODULE_MANIFEST.moduleId,
@@ -28,18 +24,15 @@ export function useTeacherColumnLayout(settings: TeachersSettings) {
     translationPrefix: 'teachers.columns',
   });
 
-  const customizerLabels = useMemo(
-    () => ({
+  const customizerLabels = (() => ({
       ...baseLabels,
       reset: t('teachers.resetLayout'),
       searchPlaceholder: t('teachers.searchColumnsPlaceholder'),
-    }),
-    [baseLabels, t],
-  );
+    }))();
 
-  const resetColumnLayout = useCallback(() => {
+  const resetColumnLayout = (() => {
     updateUserColumnLayout(tenantRegistry);
-  }, [updateUserColumnLayout, tenantRegistry]);
+  });
 
   return {
     ...base,

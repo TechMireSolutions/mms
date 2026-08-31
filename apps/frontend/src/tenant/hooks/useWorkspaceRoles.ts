@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
   cloneDefaultWorkspaceRoles,
   type WorkspaceRole,
@@ -9,15 +8,15 @@ import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
 export function useWorkspaceRoles(): WorkspaceRole[] {
   const { settings } = useUsersConfig();
 
-  const roles = useMemo(() => {
+  const roles = (() => {
     if (settings.workspaceRoles?.length) {
-      return settings.workspaceRoles.map((r: any) => ({
+      return settings.workspaceRoles.map((r) => ({
         ...r,
         permissions: structuredClone(r.permissions),
       }));
     }
     return cloneDefaultWorkspaceRoles();
-  }, [settings.workspaceRoles]);
+  })();
 
   return roles;
 }

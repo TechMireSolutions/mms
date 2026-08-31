@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import type { Message } from '@mms/shared';
 import type { MessagingSelectedLogsMap } from './MessagingWorkTier';
 
@@ -14,10 +14,10 @@ export function useMessagingWorkTierSelection({ logs }: UseMessagingWorkTierSele
     logs.length > 0 && logs.every((log: Message) => Boolean(selectedById[String(log.id)]));
   const someVisibleSelected =
     logs.some((log: Message) => Boolean(selectedById[String(log.id)]));
-  const selectedList = useMemo(() => Object.values(selectedById), [selectedById]);
+  const selectedList = (() => Object.values(selectedById))();
   const selectedCount = selectedList.length;
 
-  const toggleLog = useCallback((log: Message, shiftKey?: boolean): void => {
+  const toggleLog = ((log: Message, shiftKey?: boolean): void => {
     const key = String(log.id);
     const isCurrentlySelected = Boolean(selectedById[key]);
 
@@ -46,7 +46,7 @@ export function useMessagingWorkTierSelection({ logs }: UseMessagingWorkTierSele
     if (next[key]) delete next[key];
     else next[key] = log;
     setSelectedById(next);
-  }, [logs, selectedById]);
+  });
 
   const toggleAllVisible = (checked: boolean): void => {
     const next = { ...selectedById };

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import {
   appendBackupHistory,
   BACKUP_HISTORY_MAX_BYTES,
@@ -35,8 +35,7 @@ export function useBackupRestoreExport({
   const [exportModalOpen, setExportModalOpen] = useState(false);
   const [lastExportStats, setLastExportStats] = useState<WorkspaceExportStats | null>(null);
 
-  const downloadSafetyBackup = useCallback(
-    async (credentials: { adminEmail: string; password: string }): Promise<void> => {
+  const downloadSafetyBackup = (async (credentials: { adminEmail: string; password: string }): Promise<void> => {
       const { encrypted } = await exportEncryptedTenantBackup(credentials, tenantLabel);
       // The restore gate trusts this file — never hand back an empty undo copy.
       if (!encrypted) {
@@ -46,12 +45,9 @@ export function useBackupRestoreExport({
         new Blob([encrypted], { type: 'application/json' }),
         buildBackupFileName(new Date(), { tenantSlug: subdomain, suffix: 'pre_restore', encrypted: true }),
       );
-    },
-    [subdomain, tenantLabel],
-  );
+    });
 
-  const runEncryptedExport = useCallback(
-    async (password: string, email: string): Promise<void> => {
+  const runEncryptedExport = (async (password: string, email: string): Promise<void> => {
       setIsCreating(true);
       try {
         const verified = await verifyAdminBackupPassword(email, password);
@@ -95,9 +91,7 @@ export function useBackupRestoreExport({
       } finally {
         setIsCreating(false);
       }
-    },
-    [backups, errorDescription, subdomain, t, tenantLabel],
-  );
+    });
 
   return {
     isCreating,

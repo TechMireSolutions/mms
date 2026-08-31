@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
   getCollectedAmountForInvoice,
   getRecentMonthsList,
@@ -19,11 +18,13 @@ export function useRevenueChartData() {
   const invoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
   const entriesQueryResult = useAccountingEntriesPaginated({ page: 1, limit: 500 }).data;
   const accountsQueryResult = useAccountingAccountsPaginated({ page: 1, limit: 500 }).data;
-  const entries: JournalEntry[] = (entriesQueryResult as any)?.body?.entries ?? (entriesQueryResult as any)?.entries ?? [];
-  const accounts: Account[] = (accountsQueryResult as any)?.body?.accounts ?? (accountsQueryResult as any)?.accounts ?? [];
-  const months = useMemo((): { key: string; label: string }[] => getRecentMonthsList(10), []);
+  const entriesEnvelope = entriesQueryResult as { body?: { entries?: JournalEntry[] }; entries?: JournalEntry[] } | null;
+  const accountsEnvelope = accountsQueryResult as { body?: { accounts?: Account[] }; accounts?: Account[] } | null;
+  const entries: JournalEntry[] = entriesEnvelope?.body?.entries ?? entriesEnvelope?.entries ?? [];
+  const accounts: Account[] = accountsEnvelope?.body?.accounts ?? accountsEnvelope?.accounts ?? [];
+  const months = ((): { key: string; label: string }[] => getRecentMonthsList(10))();
 
-  const revenueData: RevenuePoint[] = useMemo(() => {
+  const revenueData: RevenuePoint[] = (() => {
     const postedEntries = entries.filter((journalEntry) => journalEntry.status === "posted");
     const hasAccountingData = postedEntries.length > 0 && accounts.length > 0;
     const accountMap = new Map(accounts.map((acc) => [acc.id, acc]));
@@ -74,7 +75,7 @@ export function useRevenueChartData() {
       revenue: totals?.revenue ?? 0,
       expenses: totals?.expenses ?? 0,
     }));
-  }, [months, invoices, entries, accounts]);
+  })();
 
   return { revenueData };
 }

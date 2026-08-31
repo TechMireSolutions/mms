@@ -19,17 +19,15 @@ export async function fetchAttendanceLookups(
   signal?: AbortSignal,
 ): Promise<AttendanceLookupsMap> {
   const res = await apiContract.attendance.getLookups({ query: undefined, extraHeaders: {} });
-  const response = res.body as any;
-  return response.lookups ?? emptyAttendanceLookupsMap;
+  return (res.body as { lookups?: AttendanceLookupsMap }).lookups ?? emptyAttendanceLookupsMap;
 }
 
 export async function putAttendanceLookupKind(
   kind: AttendanceLookupKind,
   items: AttendanceStatus[],
 ): Promise<AttendanceStatus[]> {
-  const res = await apiContract.attendance.updateLookupKind({ params: { kind: kind as any }, body: { items }, query: undefined, extraHeaders: {} });
-  const response = res.body as any;
-  return response.items;
+  const res = await apiContract.attendance.updateLookupKind({ params: { kind }, body: { items }, query: undefined, extraHeaders: {} });
+  return (res.body as { items?: AttendanceStatus[] }).items ?? [];
 }
 
 const lookupsHooks = createModuleLookupsHooks<

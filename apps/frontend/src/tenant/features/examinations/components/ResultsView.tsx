@@ -1,16 +1,16 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { StudentResultCard } from "@/tenant/features/examinations/components/StudentResultCard";
 import { CertificatePreview } from "@/tenant/features/examinations/components/CertificatePreview";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { Button } from "@/components/ui/button";
-import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useResultsViewData } from "@/tenant/features/examinations/components/useResultsViewData";
 import { ResultsViewStats } from "@/tenant/features/examinations/components/ResultsViewStats";
 import { ResultsViewRankingsList } from "@/tenant/features/examinations/components/ResultsViewRankingsList";
 import type { RankedResult, ResultsViewProps } from "@/tenant/features/examinations/components/resultsViewTypes";
+import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
@@ -29,10 +29,10 @@ export function ResultsView({
   const [selectedStudent, setSelectedStudent] = useState<RankedResult | null>(null);
   const [certStudent, setCertStudent] = useState<RankedResult | null>(null);
 
-  const passFailConfig = useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const passFailConfig = (() => ({
     pass: { label: t("examinations.pass"), cls: SEMANTIC_BADGE.success },
     fail: { label: t("examinations.fail"), cls: SEMANTIC_BADGE.destructive },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   const { exam, rankedResults, stats } = useResultsViewData({
     exams,

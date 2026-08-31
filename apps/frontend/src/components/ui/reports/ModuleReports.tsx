@@ -1,10 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { BarChart2, GitCompare, Wrench, Sparkles, CreditCard, Bookmark } from "lucide-react";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
+import { type SubTab, SubTabBar } from '@/components/ui/SubTabBar';
 import { scrollDocumentToTop } from "@/lib/routing/scrollDocumentToTop";
 import ReportFilters, { type ReportFilterFields } from "@/components/ui/reports/ReportFilters";
 import { VisualizerConfig } from "@/lib/reports/reportMetadata";
@@ -44,7 +44,7 @@ function EnrollmentReportsWrapper({ filters }: { filters: typeof DEFAULT_FILTERS
       ? (query.data.body as EnrollmentsReportAggregates)
       : EMPTY_ENROLLMENTS_REPORT_AGGREGATES;
 
-  const aggregates = useMemo<EnrollmentsReportAggregates>(() => {
+  const aggregates = (() => {
     let bySession = rawAggregates.bySession;
     if (filters.session && filters.session !== "all") {
       bySession = bySession.filter(
@@ -55,7 +55,7 @@ function EnrollmentReportsWrapper({ filters }: { filters: typeof DEFAULT_FILTERS
       ...rawAggregates,
       bySession,
     };
-  }, [rawAggregates, filters.session]);
+  })() as EnrollmentsReportAggregates;
 
   if (query.isError) {
     return (
@@ -102,22 +102,16 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
   const [activeTab, setActiveTab] = useState<ReportsToolsTab>("dashboard");
   const [visualizerEditConfig, setVisualizerEditConfig] = useState<VisualizerConfig | undefined>(undefined);
 
-  const REPORT_TABS = useMemo<readonly SubTab<ReportsToolsTab>[]>(
-    () => [
+  const REPORT_TABS = (() => [
       { key: "dashboard", label: t("dashboard.title"), icon: BarChart2 },
       { key: "compare", label: t("reports.moduleTools.compare"), icon: GitCompare },
       { key: "builder", label: t("reports.moduleTools.reportBuilder"), icon: Wrench },
       { key: "visualizer", label: t("reports.moduleTools.visualizerBuilder"), icon: Sparkles },
       { key: "cardBuilder", label: t("reports.moduleTools.cardBuilder"), icon: CreditCard },
       { key: "saved", label: t("reports.saved.title"), icon: Bookmark },
-    ],
-    [t]
-  );
+    ])() as readonly SubTab<ReportsToolsTab>[];
 
-  const toolSelectOptions = useMemo(
-    () => REPORT_TABS.map((tab) => ({ value: tab.key, label: tab.label })),
-    [REPORT_TABS],
-  );
+  const toolSelectOptions = (() => REPORT_TABS.map((tab) => ({ value: tab.key, label: tab.label })))();
 
   const handleEditVisual = (config: unknown) => {
     setVisualizerEditConfig(config as VisualizerConfig);

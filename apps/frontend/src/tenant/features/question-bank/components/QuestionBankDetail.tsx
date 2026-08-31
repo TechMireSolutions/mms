@@ -19,7 +19,7 @@ export interface QuestionBankDetailProps {
   onRestore?: (questionId: string) => void | Promise<void>;
 }
 
-export const QuestionBankDetail = React.memo(function QuestionBankDetail({
+export const QuestionBankDetail = (function QuestionBankDetail({
   question,
   config,
   onClose,
@@ -84,7 +84,7 @@ export const QuestionBankDetail = React.memo(function QuestionBankDetail({
         <section>
           <DetailSectionTitle>{t('questionBank.fields.content')}</DetailSectionTitle>
           <Card className="p-4">
-            <div className="prose prose-sm max-w-none text-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: question.text }} />
+            <div className="whitespace-pre-line text-sm text-foreground">{question.text}</div>
           </Card>
         </section>
 
@@ -92,7 +92,7 @@ export const QuestionBankDetail = React.memo(function QuestionBankDetail({
           <section>
             <DetailSectionTitle>{t('questionBank.fields.explanation')}</DetailSectionTitle>
             <Card className="p-4">
-              <div className="prose prose-sm max-w-none text-foreground dark:prose-invert" dangerouslySetInnerHTML={{ __html: question.answer }} />
+              <div className="whitespace-pre-line text-sm text-foreground">{question.answer}</div>
             </Card>
           </section>
         )}

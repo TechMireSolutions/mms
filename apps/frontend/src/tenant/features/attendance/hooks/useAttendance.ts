@@ -66,7 +66,7 @@ export function useAttendancePaginated(params: AttendancePaginatedParams) {
     },
     enabled: isAuthenticated && (params.enabled ?? true),
     staleTime: 15_000,
-    placeholderData: (previousData: any) => previousData,
+    placeholderData: (previousData: unknown) => previousData,
   });
   
   return { ...query, data: query.data?.body as AttendanceListPageResult | undefined };
@@ -84,8 +84,8 @@ export function useAttendanceRecords(options?: { enabled?: boolean }) {
     staleTime: 15_000,
   });
   
-  const records = query.data?.body ? (query.data.body as any).records ?? [] : [];
-  return { ...query, data: records as AttendanceRecord[] };
+  const records = (query.data?.body as { records?: AttendanceRecord[] } | null)?.records ?? [];
+  return { ...query, data: records };
 }
 
 export function useAttendanceRecordsCollection(options?: { enabled?: boolean }): AttendanceRecord[] {

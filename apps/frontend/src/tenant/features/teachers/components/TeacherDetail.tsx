@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { IdCard, School } from "lucide-react";
 import type { Teacher } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
@@ -31,7 +31,7 @@ export interface TeacherDetailProps {
   canWriteMessaging: boolean;
 }
 
-export const TeacherDetail = React.memo(function TeacherDetail({
+export const TeacherDetail = (function TeacherDetail({
   teacher,
   onClose,
   onEdit,
@@ -59,8 +59,7 @@ export const TeacherDetail = React.memo(function TeacherDetail({
   const isArchived = Boolean(teacher.deletedAt);
   const displayName = resolveTeacherDisplayName(teacher, t, linkedContact);
 
-  const headerActionsNode = useMemo(
-    () => (
+  const headerActionsNode = (() => (
       <div className="flex items-center gap-1.5">
         {!isArchived && onPrintIdCard && (
           <Button
@@ -86,25 +85,17 @@ export const TeacherDetail = React.memo(function TeacherDetail({
           onEdit={onEdit ? () => onEdit(teacher) : undefined}
         />
       </div>
-    ),
-    [isArchived, onPrintIdCard, canDelete, onEdit, t, onRestore, teacher],
-  );
+    ))();
 
-  const headerExtraNode = useMemo(
-    () => <TeacherArchivedBanner teacher={teacher} />,
-    [teacher],
-  );
+  const headerExtraNode = (() => <TeacherArchivedBanner teacher={teacher} />)();
 
-  const footerNode = useMemo(
-    () => (
+  const footerNode = (() => (
       <DrawerUpdatedStamp
         updatedAt={teacher.updatedAt}
         createdAt={teacher.createdAt}
         label={t("teachers.detail.updatedLabel")}
       />
-    ),
-    [teacher.updatedAt, teacher.createdAt, t],
-  );
+    ))();
 
   return (
     <DetailDrawerShell

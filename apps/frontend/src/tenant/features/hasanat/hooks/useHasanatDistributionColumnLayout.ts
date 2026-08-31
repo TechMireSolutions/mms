@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   HASANAT_MODULE_MANIFEST,
   buildHasanatDistributionWorkColumnRegistry,
@@ -13,8 +12,7 @@ export function useHasanatDistributionColumnLayout() {
 
   const storageModuleId = `${HASANAT_MODULE_MANIFEST.moduleId}_${STORAGE_SUFFIX}`;
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildHasanatDistributionWorkColumnRegistry({
         card: t('hasanat.columns.distribution.card'),
         recipient: t('hasanat.columns.distribution.recipient'),
@@ -24,9 +22,7 @@ export function useHasanatDistributionColumnLayout() {
         issuedDate: t('hasanat.columns.distribution.issuedDate'),
         issuedBy: t('hasanat.columns.distribution.issuedBy'),
         status: t('hasanat.columns.distribution.status'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: storageModuleId,

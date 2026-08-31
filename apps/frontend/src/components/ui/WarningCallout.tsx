@@ -50,7 +50,7 @@ export interface WarningCalloutProps {
   className?: string;
 }
 
-export const WarningCallout = React.memo(function WarningCallout({
+export const WarningCallout = (function WarningCallout({
   icon: Icon = AlertTriangle,
   title,
   description,

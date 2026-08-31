@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 
 /** Directory filters and trash SSOT for Enrollments Work. */
@@ -14,11 +14,11 @@ export function useEnrollmentsDirectoryFilters() {
     setListPage(1);
   }, [debouncedSearch, statusFilter, sessionFilter, showDeleted]);
 
-  const clearFilters = useCallback(() => {
+  const clearFilters = (() => {
     setSearch('');
     setStatusFilter('all');
     setSessionFilter('all');
-  }, []);
+  });
 
   const hasActiveFilters =
     Boolean(search.trim()) || statusFilter !== 'all' || sessionFilter !== 'all';

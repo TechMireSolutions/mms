@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import type { DashboardRole } from '@/lib/dashboardRole';
 import {
@@ -31,7 +30,7 @@ export function useDashboardMetricCards({
   data,
   t,
 }: UseDashboardMetricCardsArgs): StatItem[] {
-  return useMemo(() => {
+  return (() => {
     const trends = computeDashboardMetricTrends(data);
 
     const dashboardCardWidgets = filterDashboardCardWidgets(customWidgets, dashboardRole);
@@ -39,19 +38,6 @@ export function useDashboardMetricCards({
       isDashboardWidgetModuleEnabled(widget, enabledModules),
     );
 
-    const cards = enabledDashboardCardWidgets.map((widget) =>
-      buildDashboardMetricCard({ widget, data, trends, t }),
-    );
-    console.debug('[dashboard-card-debug]', JSON.stringify({
-      studentsTotal: data.studentsTotal,
-      studentMetricsActive: data.studentMetricsActive,
-      widgets: enabledDashboardCardWidgets.map(({ id, collection, operation }) => ({
-        id,
-        collection,
-        operation,
-      })),
-      cards: cards.map(({ id, value }) => ({ id, value })),
-    }));
-    return cards;
-  }, [dashboardRole, enabledModules, customWidgets, data, t]);
+    return enabledDashboardCardWidgets.map((widget) => buildDashboardMetricCard({ widget, data, trends, t }));
+  })();
 }

@@ -15,7 +15,7 @@ export function useAccountingContractAccounts(query: Record<string, unknown>, en
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.accounting.listAccounts.useQuery({
     queryKey: [...ACCOUNTING_ACCOUNTS_QUERY_KEY, 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });
@@ -25,7 +25,7 @@ export function useAccountingContractEntries(query: Record<string, unknown>, ena
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.accounting.listEntries.useQuery({
     queryKey: [...ACCOUNTING_ENTRIES_QUERY_KEY, 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });
@@ -35,7 +35,7 @@ export function useAccountingContractFiscalYears(query: Record<string, unknown>,
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.accounting.listFiscalYears.useQuery({
     queryKey: [...ACCOUNTING_FISCAL_YEARS_QUERY_KEY, 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });

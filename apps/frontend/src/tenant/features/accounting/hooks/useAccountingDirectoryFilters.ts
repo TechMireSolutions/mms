@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 
 /** Directory filters and pagination SSOT for Accounting Work (journal + CoA). */
@@ -23,17 +23,17 @@ export function useAccountingDirectoryFilters() {
     setAccountListPage(1);
   }, [debouncedAccountSearch, accountTypeFilter]);
 
-  const clearEntryFilters = useCallback(() => {
+  const clearEntryFilters = (() => {
     setEntrySearch('');
     setEntryStatusFilter('all');
     setEntryDateFrom('');
     setEntryDateTo('');
-  }, []);
+  });
 
-  const clearAccountFilters = useCallback(() => {
+  const clearAccountFilters = (() => {
     setAccountSearch('');
     setAccountTypeFilter('all');
-  }, []);
+  });
 
   return {
     entryListPage,

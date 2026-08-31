@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import {
   MESSAGING_MODULE_MANIFEST,
   buildMessagingRecipientsWorkColumnRegistry,
@@ -11,15 +10,12 @@ import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 export function useMessagingRecipientsColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildMessagingRecipientsWorkColumnRegistry({
         recipient: t('messaging.recipient'),
         phone: t('contacts.form.primaryPhone'),
         email: t('contacts.form.primaryEmail'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_recipients`,
@@ -32,16 +28,13 @@ export function useMessagingRecipientsColumnLayout() {
 export function useMessagingHistoryColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildMessagingHistoryWorkColumnRegistry({
         recipient: t('messaging.recipient'),
         channel: t('messaging.channel'),
         body: t('messaging.messageBody'),
         dateSent: t('messaging.dateSent'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_history`,
@@ -54,15 +47,12 @@ export function useMessagingHistoryColumnLayout() {
 export function useMessagingTemplatesColumnLayout() {
   const { t } = useTranslation();
 
-  const tenantRegistry = useMemo(
-    () =>
+  const tenantRegistry = (() =>
       buildMessagingTemplatesWorkColumnRegistry({
         label: t('messaging.templateLabel'),
         category: t('messaging.category'),
         body: t('messaging.templateCopy'),
-      }),
-    [t],
-  );
+      }))();
 
   return useModuleColumnLayout({
     moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_templates`,

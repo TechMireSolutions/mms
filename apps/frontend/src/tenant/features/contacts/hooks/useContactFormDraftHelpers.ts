@@ -1,6 +1,4 @@
 import {
-  useCallback,
-  useMemo,
   useState,
   type ChangeEvent,
   type Dispatch,
@@ -37,12 +35,9 @@ export function useContactFormDraftHelpers({
   const { t } = useTranslation();
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  const getLocalId = useCallback(
-    (tabName: string, idx: number): string => `${formInstanceId}-${tabName}-${idx}`,
-    [formInstanceId],
-  );
+  const getLocalId = ((tabName: string, idx: number): string => `${formInstanceId}-${tabName}-${idx}`);
 
-  const collectionCounts = useMemo(() => {
+  const collectionCounts = (() => {
     const filledPhones = (contactDraft.phones || []).filter((phone) => (phone.number || "").trim()).length;
     const filledEmails = (contactDraft.emails || []).filter((email) => (email.address || "").trim()).length;
     const filledAddresses = (contactDraft.addresses || []).filter(
@@ -78,46 +73,34 @@ export function useContactFormDraftHelpers({
       filledRelationships,
       ...customCounts,
     };
-  }, [contactDraft]);
+  })();
 
-  const isFieldEnabled = useCallback(
-    (tabId: string, fieldId: string) => {
+  const isFieldEnabled = ((tabId: string, fieldId: string) => {
       if ((REMOVED_FORM_FIELD_KEYS as readonly string[]).includes(fieldId)) return false;
       if (isTabFieldEnabled) return isTabFieldEnabled(tabId, fieldId);
       return true;
-    },
-    [isTabFieldEnabled],
-  );
+    });
 
-  const isFieldRequired = useCallback(
-    (tabId: string, fieldId: string) => {
+  const isFieldRequired = ((tabId: string, fieldId: string) => {
       if (isTabFieldRequired) return isTabFieldRequired(tabId, fieldId);
       return false;
-    },
-    [isTabFieldRequired],
-  );
+    });
 
-  const getFieldError = useCallback(
-    (fieldId: string) => {
+  const getFieldError = ((fieldId: string) => {
       const found = validationErrors.find(
         (err) => err.fieldId === fieldId && err.index === undefined,
       );
       return found?.message;
-    },
-    [validationErrors],
-  );
+    });
 
-  const getListItemError = useCallback(
-    (tabId: string, fieldId: string, index: number) => {
+  const getListItemError = ((tabId: string, fieldId: string, index: number) => {
       const found = validationErrors.find(
         (err) => err.tabId === tabId && err.fieldId === fieldId && err.index === index,
       );
       return found?.message;
-    },
-    [validationErrors],
-  );
+    });
 
-  const updateDraft = useCallback((patch: Partial<Contact>) => {
+  const updateDraft = ((patch: Partial<Contact>) => {
     setContactDraft((prev) => {
       const next = { ...prev, ...patch };
       if (patch.firstName !== undefined || patch.lastName !== undefined) {
@@ -127,7 +110,7 @@ export function useContactFormDraftHelpers({
       }
       return next;
     });
-  }, [setContactDraft]);
+  });
 
   const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

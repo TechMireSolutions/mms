@@ -34,7 +34,7 @@ export function useObligationsMutations() {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
   });
-  const replaceTypes = { ..._replaceTypes, mutateAsync: (types: ObligationType[]) => _replaceTypes.mutateAsync({ body: types as any }) };
+  const replaceTypes = { ..._replaceTypes, mutateAsync: (types: ObligationType[]) => _replaceTypes.mutateAsync({ body: types }) };
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
 
@@ -44,7 +44,7 @@ export function useObligationsMutations() {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
   });
-  const replaceMujtahids = { ..._replaceMujtahids, mutateAsync: (mujtahids: Mujtahid[]) => _replaceMujtahids.mutateAsync({ body: mujtahids as any }) };
+  const replaceMujtahids = { ..._replaceMujtahids, mutateAsync: (mujtahids: Mujtahid[]) => _replaceMujtahids.mutateAsync({ body: mujtahids }) };
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
 
@@ -54,7 +54,7 @@ export function useObligationsMutations() {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
   });
-  const replaceReps = { ..._replaceReps, mutateAsync: (reps: MujtahidRep[]) => _replaceReps.mutateAsync({ body: reps as any }) };
+  const replaceReps = { ..._replaceReps, mutateAsync: (reps: MujtahidRep[]) => _replaceReps.mutateAsync({ body: reps }) };
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
 
@@ -64,7 +64,7 @@ export function useObligationsMutations() {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
   });
-  const replaceWakala = { ..._replaceWakala, mutateAsync: (wakalaTypes: WakalaType[]) => _replaceWakala.mutateAsync({ body: wakalaTypes as any }) };
+  const replaceWakala = { ..._replaceWakala, mutateAsync: (wakalaTypes: WakalaType[]) => _replaceWakala.mutateAsync({ body: wakalaTypes }) };
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
 
@@ -74,14 +74,14 @@ export function useObligationsMutations() {
       void queryClient.invalidateQueries({ queryKey: OBLIGATIONS_METRICS_QUERY_KEY });
     },
   });
-  const replaceDistributions = { ..._replaceDistributions, mutateAsync: (distributions: ObligationDistribution[]) => _replaceDistributions.mutateAsync({ body: distributions as any }) };
+  const replaceDistributions = { ..._replaceDistributions, mutateAsync: (distributions: ObligationDistribution[]) => _replaceDistributions.mutateAsync({ body: distributions }) };
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
 
   const _replaceCollections = tsrClient.obligations.replaceCollections.useMutation({
     onSuccess: () => invalidateCollections(),
   });
-  const replaceCollections = { ..._replaceCollections, mutateAsync: (collections: ObligationCollection[]) => _replaceCollections.mutateAsync({ body: collections as any }) };
+  const replaceCollections = { ..._replaceCollections, mutateAsync: (collections: ObligationCollection[]) => _replaceCollections.mutateAsync({ body: collections }) };
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
 

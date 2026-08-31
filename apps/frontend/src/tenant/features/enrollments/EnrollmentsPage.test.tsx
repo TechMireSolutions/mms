@@ -6,11 +6,11 @@ import EnrollmentsPage from "./EnrollmentsPage";
 vi.mock("@/tenant/features/enrollments/hooks/useEnrollmentsPageState", () => ({
   useEnrollmentsPageState: () => ({
     t: (key: string) => key,
-    SUB_TABS: [{ id: "list", label: "Directory" }],
+    SUB_TABS: [{ id: "directory", label: "Directory" }],
     TABS: [{ key: "work", label: "Work" }],
     tab: "work",
     setTab: vi.fn(),
-    activeSubTab: "list",
+    activeSubTab: "directory",
     setActiveSubTab: vi.fn(),
     canWriteEnrollments: true,
     canDelete: true,

@@ -28,13 +28,13 @@ export function EventsTab({ session, onUpdate, canWrite }: EventsTabProps): Reac
   const deletePendingRef = React.useRef(false);
   const events = [...(session.events ?? [])].sort((a, b) => a.date.localeCompare(b.date));
 
-  const eventTypeConfig = React.useMemo<Record<string, StatusBadgeConfigItem>>(() => ({
+  const eventTypeConfig = (() => ({
     ceremony: { label: t('sessions.events.type.ceremony'), cls: SEMANTIC_BADGE.warning },
     assessment: { label: t('sessions.events.type.assessment'), cls: SEMANTIC_BADGE.destructive },
     meeting: { label: t('sessions.events.type.meeting'), cls: SEMANTIC_BADGE.info },
     trip: { label: t('sessions.events.type.trip'), cls: SEMANTIC_BADGE.success },
     other: { label: t('sessions.events.type.other'), cls: SEMANTIC_BADGE.muted },
-  }), [t]);
+  }))() as Record<string, StatusBadgeConfigItem>;
 
   const handleSave = async (eventToSave: SessionEvent) => {
     const existing = session.events?.find((sessionEvent) => sessionEvent.id === eventToSave.id);

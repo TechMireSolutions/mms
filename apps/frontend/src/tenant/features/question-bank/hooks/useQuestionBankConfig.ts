@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react';
+import { useCallback } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useComposedQuestionBankSettings } from './useQuestionBankSetupConfig';
 import { STANDARD_MODULES_CONFIG_REGISTRY } from '@/hooks/standardModuleConfigRegistry';
@@ -54,59 +54,32 @@ export function useQuestionBankConfig(
     [updateAsync],
   );
 
-  const updateSettings = useCallback(
-    (settingsDraft: QuestionBankSettings) => {
+  const updateSettings = ((settingsDraft: QuestionBankSettings) => {
       // Fire-and-forget for local updates
       updateSettingsAsync(settingsDraft).catch(console.error);
-    },
-    [updateSettingsAsync],
-  );
+    });
 
-  const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
-  const customFields = useMemo(
-    () => (settings.customFields || []) as ModuleCustomField[],
-    [settings.customFields],
-  );
-  const fieldOrder = useMemo(
-    () => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [],
-    [settings.fieldOrder, defaultSettings.fieldOrder],
-  );
+  const fields = (() => getFlatFieldsConfig(settings.fields))();
+  const customFields = (() => (settings.customFields || []) as ModuleCustomField[])();
+  const fieldOrder = (() => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [])();
 
-  const orderedFields = useMemo(
-    () => getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields),
-    [defaultFieldDefs, fieldOrder, fields, customFields],
-  );
+  const orderedFields = (() => getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields))();
 
-  const isFieldEnabled = useCallback(
-    (fieldId: string): boolean => fields[fieldId]?.enabled !== false,
-    [fields],
-  );
+  const isFieldEnabled = ((fieldId: string): boolean => fields[fieldId]?.enabled !== false);
 
-  const enabledDifficulties = useMemo(
-    () =>
+  const enabledDifficulties = (() =>
       (settings.difficultyLevels ?? [])
-        .filter((entry: any) => entry.enabled)
-        .map((entry: any) => entry.id),
-    [settings.difficultyLevels],
-  );
+        .filter((entry) => entry.enabled)
+        .map((entry) => entry.id))();
 
-  const enabledQuestionTypes = useMemo(
-    () =>
+  const enabledQuestionTypes = (() =>
       (settings.questionTypes ?? [])
-        .filter((entry: any) => entry.enabled)
-        .map((entry: any) => entry.id),
-    [settings.questionTypes],
-  );
+        .filter((entry) => entry.enabled)
+        .map((entry) => entry.id))();
 
-  const categories = useMemo(
-    () => mergeQuestionCategories(settings.categories, questions),
-    [settings.categories, questions],
-  );
+  const categories = (() => mergeQuestionCategories(settings.categories, questions))();
 
-  const sourceBooks = useMemo(
-    () => settings.sourceBooks ?? [],
-    [settings.sourceBooks],
-  );
+  const sourceBooks = (() => settings.sourceBooks ?? [])();
 
   return {
     settings,

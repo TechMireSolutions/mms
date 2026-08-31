@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { METADATA_FIELDS } from "@/lib/reports/reportMetadata";
 import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
@@ -61,13 +61,13 @@ export function useWidgetBuilderState({
   const [activeIconTab, setActiveIconTab] = useState<WidgetBuilderIconTab>("all");
   const [scalerSize, setScalerSize] = useState(180);
 
-  const requiredCollections = useMemo(() => {
+  const requiredCollections = (() => {
     const required = new Set<ReportCollection>([builderCollection]);
     if (widgetType === "switch" && switchActionType === "db_record") {
       required.add(switchCollection);
     }
     return required;
-  }, [builderCollection, widgetType, switchActionType, switchCollection]);
+  })();
   const collections = useWidgetCollections({ requiredCollections });
 
   useWidgetBuilderHydration({
@@ -114,20 +114,13 @@ export function useWidgetBuilderState({
     setBuilderTargetField(firstNumField ? firstNumField.value : "");
   }, [builderCollection, editWidgetConfig]);
 
-  const previewWidget = useMemo<CustomWidget>(() => buildWidgetBuilderPreview(
+  const previewWidget = (() => buildWidgetBuilderPreview(
     editWidgetConfig, category, builderTitle, builderCollection, widgetType, builderOperation,
     builderTargetField, builderFilterField, builderFilterOperator, builderFilterValue, builderColor,
     thresholdEnabled, thresholdCondition, thresholdValue, thresholdColor, switchActionType, switchStateKey,
     switchCollection, switchRecordId, switchField, switchLabelOn, switchLabelOff, builderIcon, subTextType,
     fixedSubText, trend, trendType, builderRole, t("reports.widgets.customLiveWidget"),
-  ), [
-    builderTitle, category, builderCollection, widgetType, builderOperation,
-    builderTargetField, builderFilterField, builderFilterOperator, builderFilterValue,
-    builderColor, thresholdEnabled, thresholdCondition, thresholdValue, thresholdColor,
-    switchActionType, switchStateKey, switchCollection, switchRecordId, switchField,
-    switchLabelOn, switchLabelOff, editWidgetConfig,
-    builderIcon, subTextType, fixedSubText, trend, trendType, builderRole, t,
-  ]);
+  ))() as CustomWidget;
 
   const handleSaveWidget = () => {
     onSaveWidget(buildWidgetSavePayload(

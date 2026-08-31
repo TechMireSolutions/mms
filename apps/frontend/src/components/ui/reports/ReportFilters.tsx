@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Filter, ChevronDown, ChevronUp, X } from 'lucide-react';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
@@ -50,15 +50,15 @@ export default function ReportFilters({ category, filters, onChange }: ReportFil
   const rawSessions = useSessionsCollection();
   const allowed = CATEGORY_FILTERS[category] || ['session', 'class', 'status', 'dateFrom', 'dateTo', 'student'];
 
-  const sessions = useMemo(() => {
+  const sessions = (() => {
     return [{ id: 'all', name: t('reports.filters.allSessions') }, ...rawSessions.map((session) => ({ id: session.id, name: session.name }))];
-  }, [rawSessions, t]);
+  })();
 
-  const classes = useMemo(() => {
+  const classes = (() => {
     const uniqueClasses = new Set<string>();
     rawSessions.forEach((session) => (session.classes || []).forEach((sessionClass) => uniqueClasses.add(sessionClass.name)));
     return [{ id: 'all', name: t('reports.filters.allClasses') }, ...Array.from(uniqueClasses).map((name) => ({ id: name, name }))];
-  }, [rawSessions, t]);
+  })();
 
   if (allowed.length === 0) {
     return null;

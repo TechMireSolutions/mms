@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
 import type { SessionSortField, SessionStatus, SessionType } from '@/tenant/features/sessions/components/sessionPageTypes';
 
@@ -17,11 +17,11 @@ export function useSessionsDirectoryFilters() {
     setListPage(1);
   }, [debouncedSearch, filterStatus, filterType, showDeleted, sortField, sortDir]);
 
-  const clearFilters = useCallback(() => {
+  const clearFilters = (() => {
     setSearch('');
     setFilterStatus([]);
     setFilterType([]);
-  }, []);
+  });
 
   const hasActiveFilters =
     Boolean(search.trim()) ||

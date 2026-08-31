@@ -42,8 +42,8 @@ export function useComposedQuestionBankSettings() {
     }
     
     const composedSettings = composeQuestionBankSettings(
-      normalizeQuestionBankFieldConfigOnly(fieldsRes.body as any),
-      normalizeQuestionBankModulePreferences(prefsRes.body as any)
+      normalizeQuestionBankFieldConfigOnly(fieldsRes.body),
+      normalizeQuestionBankModulePreferences(prefsRes.body)
     );
     
     queryClient.setQueryData(QUERY_KEY_COMPOSED, composedSettings);
@@ -57,7 +57,7 @@ export function useComposedQuestionBankSettings() {
     return composedSettings;
   };
   return {
-    data: (query.data?.body as any) ?? DEFAULT_QUESTION_BANK_SETTINGS,
+    data: (query.data?.body ?? DEFAULT_QUESTION_BANK_SETTINGS) as QuestionBankSettings,
     isLoading: query.isLoading,
     isError: query.isError,
     updateAsync,

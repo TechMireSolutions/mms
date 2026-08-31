@@ -91,7 +91,7 @@ export default function HasanatCards() {
                 onUpdateDistributions={(next) => c.runHasanatSave(() => c.replaceDistributions.mutateAsync(next))}
                 onFilteredCountChange={c.setFilteredCount}
                 onDelete={c.handleDeleteDistribution}
-                onRowClick={(id) => { const d = c.distributions.find((x: any) => x.id === id); if (d) c.setActiveDistribution(d); }}
+                onRowClick={(id) => { const d = c.distributions.find((x) => x.id === id); if (d) c.setActiveDistribution(d); }}
                 onRestore={c.handleRestoreDistribution}
                 onBulkDelete={c.handleBulkDelete}
                 onBulkRestore={c.handleBulkRestore}

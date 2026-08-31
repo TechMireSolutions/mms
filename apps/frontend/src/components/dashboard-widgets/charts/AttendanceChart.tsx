@@ -1,4 +1,3 @@
-import { useMemo, useCallback } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetChartHeader } from "@/components/ui/WidgetChartHeader";
 import { useNavigate } from "react-router-dom";
@@ -49,25 +48,19 @@ export function AttendanceChart({ isEditMode = false }: { isEditMode?: boolean }
     updatePref,
   } = useDashboardConfig();
 
-  const attendanceData: AttendancePoint[] = useMemo(
-    () => buildWeeklyAttendancePoints(attendanceRecords),
-    [attendanceRecords],
-  );
+  const attendanceData: AttendancePoint[] = (() => buildWeeklyAttendancePoints(attendanceRecords))();
   
-  const avg = useMemo(() => {
+  const avg = (() => {
     return attendanceData.length ? Math.round(attendanceData.reduce((sum, attendancePoint) => sum + attendancePoint.rate, 0) / attendanceData.length) : 0;
-  }, [attendanceData]);
+  })();
 
   const isSemantic = colorTheme === "semantic";
   const themeColor = ATTENDANCE_COLORS[colorTheme] || ATTENDANCE_COLORS.brand;
-  const semanticBarFill = useCallback(
-    (rate: number): string => {
+  const semanticBarFill = ((rate: number): string => {
       if (rate >= 90) return palette.primary;
       if (rate >= 80) return palette.secondary;
       return palette.charts[0];
-    },
-    [palette.primary, palette.secondary, palette.charts],
-  );
+    });
 
   return (
     <WidgetCard ariaLabelledby="attendance-chart-heading" accentColor="primary" className="p-5">

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import type React from 'react';
 import {
   PERMISSION_ACTIONS,
@@ -65,13 +65,13 @@ export function RoleFormModal({
     setDiscardConfirmOpen(false);
   }, [role, open]);
 
-  const formDirty = useMemo(() => {
+  const formDirty = (() => {
     return (
       name !== baseline.name ||
       desc !== baseline.desc ||
       JSON.stringify(perms) !== JSON.stringify(baseline.perms)
     );
-  }, [name, desc, perms, baseline]);
+  })();
 
   const togglePerm = (moduleId: string, action: PermissionAction): void => {
     setPerms((previousPermissions) => {

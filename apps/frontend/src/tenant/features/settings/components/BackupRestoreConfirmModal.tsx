@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { AlertTriangle, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { formatBackupSize, formatDateTime, type WorkspaceBackupSummary } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -32,7 +32,7 @@ function formatExportedAt(iso: string | null): string | null {
   return formatted === "—" ? iso : formatted;
 }
 
-const BackupRestoreConfirmModal = React.memo(function BackupRestoreConfirmModal({
+const BackupRestoreConfirmModal = (function BackupRestoreConfirmModal({
   open,
   onClose,
   summary,
@@ -59,10 +59,7 @@ const BackupRestoreConfirmModal = React.memo(function BackupRestoreConfirmModal(
   const workspaceMatches =
     compareBackupSubdomains(summary?.subdomain, targetSubdomain) === 'match';
   const busy = restoring || safetyStep;
-  const exportedLabel = useMemo(
-    () => formatExportedAt(summary?.exportedAt ?? null),
-    [summary?.exportedAt],
-  );
+  const exportedLabel = (() => formatExportedAt(summary?.exportedAt ?? null))();
 
   return (
     <Modal

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect } from "react";
 import {
   DEFAULT_BRANDING_SETTINGS,
   type PublicBranding,
@@ -46,7 +46,7 @@ export default function AuthLayout({
   const displayTagline = publicBranding?.tagline.trim() || workspace?.tagline?.trim() || "";
   const logoUrl = publicBranding?.logoUrl.trim() || "";
 
-  const entryBranding = useMemo((): PublicBranding | null => {
+  const entryBranding = ((): PublicBranding | null => {
     if (publicBranding) {
       return publicBranding;
     }
@@ -61,7 +61,7 @@ export default function AuthLayout({
       primaryColor: DEFAULT_BRANDING_SETTINGS.primaryColor,
       secondaryColor: DEFAULT_BRANDING_SETTINGS.secondaryColor,
     };
-  }, [publicBranding, workspace]);
+  })();
 
   useEffect(() => {
     if (!brandingReady || !entryBranding) {

@@ -3,7 +3,6 @@ import type { Contact } from "@mms/shared";
 import { useAuth } from "@/lib/contexts/AuthContext";
 
 import { uniqueRegistryIds } from '@/lib/registryResolve';
-import { useMemo } from 'react';
 import { apiContract } from '@/lib/api';
 import {
   CONTACTS_QUERY_KEY,
@@ -34,7 +33,7 @@ export function useContactById(contactId: string | undefined, enabled = true) {
 /** Batch-resolve contact labels by id (pickers & cross-module links). */
 export function useContactsByIds(ids: (string | number | null | undefined)[]) {
   const { isAuthenticated } = useAuth();
-  const normalized = useMemo(() => uniqueRegistryIds(ids), [ids]);
+  const normalized = (() => uniqueRegistryIds(ids))();
   return useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, 'resolve', normalized.join(',')] as const,
     queryFn: async ({ signal: _signal }) => {

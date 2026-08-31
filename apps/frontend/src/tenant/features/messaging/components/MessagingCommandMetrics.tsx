@@ -1,4 +1,5 @@
 import { Send } from "lucide-react";
+import type { AppTranslationKey } from '@mms/shared';
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -47,7 +48,7 @@ export function MessagingCommandMetrics({
         },
         ...Object.values(MESSAGING_CHANNEL_CONFIG).map((config) => ({
           icon: config.icon,
-          label: t(config.labelStatsKey as any),
+          label: t(config.labelStatsKey as AppTranslationKey),
           value: stats[config.id as keyof typeof stats],
           accent: config.themeAccent,
         })),

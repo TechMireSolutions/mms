@@ -14,7 +14,7 @@ export interface ExamFormProps {
 
 export type ExaminationFormProps = ExamFormProps;
 
-const ExamForm = React.memo(function ExamForm({
+const ExamForm = (function ExamForm({
   open = true,
   exam,
   onClose,

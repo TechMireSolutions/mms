@@ -10,7 +10,7 @@ export function useEnrollmentsContractList(query: Record<string, unknown>, enabl
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.enrollments.list.useQuery({
     queryKey: [...ENROLLMENTS_QUERY_KEY, 'contract', query],
-    queryData: { query: query as any },
+    queryData: { query },
     staleTime: 15_000,
     enabled,
   });

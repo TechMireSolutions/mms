@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSavedFlash } from '@/tenant/hooks/useSavedFlash';
 import {
   DEFAULT_BRANDING_SETTINGS,
@@ -94,22 +94,16 @@ export function useThemeSettingsDraft(
 
   const previewMode = resolveBrandingThemeMode(displayMode, systemPrefersDark);
 
-  const displayModeSummary = useMemo(
-    () => formatThemeDisplayModeSummary(displayMode, previewMode, language),
-    [displayMode, language, previewMode],
-  );
+  const displayModeSummary = (() => formatThemeDisplayModeSummary(displayMode, previewMode, language))();
 
-  const defaultFooterPreview = useMemo(
-    () => formatBrandingFooterDefault(branding.data.madrasaName, language),
-    [branding.data.madrasaName, language],
-  );
+  const defaultFooterPreview = (() => formatBrandingFooterDefault(branding.data.madrasaName, language))();
 
-  const setDisplayMode = useCallback((mode: ThemeMode): void => {
+  const setDisplayMode = ((mode: ThemeMode): void => {
     setDisplayModeState(normalizeThemeMode(mode));
     clearSavedFlash();
-  }, [clearSavedFlash]);
+  });
 
-  const handleSave = useCallback(async (): Promise<void> => {
+  const handleSave = (async (): Promise<void> => {
     const wasBrandingDirty = branding.isThemeFieldsDirty;
 
     if (wasBrandingDirty) {
@@ -146,33 +140,25 @@ export function useThemeSettingsDraft(
       flashSaved();
       notify.success(saveSuccessMessage, { description: saveSuccessDescription });
     }
-  }, [
-    branding,
-    displayMode,
-    displayModeDirty,
-    flashSaved,
-    saveSuccessDescription,
-    saveSuccessMessage,
-    t,
-  ]);
+  });
 
-  const handleResetToDefaults = useCallback((): void => {
+  const handleResetToDefaults = ((): void => {
     setDisplayModeState(DEFAULT_GLOBAL_SETTINGS.theme);
     branding.upd('primaryColor', DEFAULT_BRANDING_SETTINGS.primaryColor);
     branding.upd('secondaryColor', DEFAULT_BRANDING_SETTINGS.secondaryColor);
     branding.upd('cornerStyle', DEFAULT_BRANDING_SETTINGS.cornerStyle);
     branding.upd('footerText', '');
     clearSavedFlash();
-  }, [branding, clearSavedFlash]);
+  });
 
-  const handleDiscardChanges = useCallback((): void => {
+  const handleDiscardChanges = ((): void => {
     setDisplayModeState(themeBaseline);
     branding.upd('primaryColor', branding.baseline.primaryColor);
     branding.upd('secondaryColor', branding.baseline.secondaryColor);
     branding.upd('cornerStyle', branding.baseline.cornerStyle);
     branding.upd('footerText', branding.baseline.footerText);
     clearSavedFlash();
-  }, [branding, clearSavedFlash, themeBaseline]);
+  });
 
   const saved = !isDirty && (branding.saved || savedFlash);
 

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
   DEFAULT_STUDENT_ENABLED_TABS,
   resolveStudentGuardianLinks,
@@ -35,7 +34,7 @@ import type { StudentRelationshipCardData } from "@/tenant/features/students/com
 export function useStudentDetailModel(student: Student) {
   const { t } = useTranslation();
   const emptyDash = t("students.table.emptyDash");
-  const statusBadgeConfig = useMemo(() => studentStatusBadgeConfig(t), [t]);
+  const statusBadgeConfig = (() => studentStatusBadgeConfig(t))();
   const sessionsQuery = useSessions();
   const sessions = useSessionsCollection();
 
@@ -43,12 +42,9 @@ export function useStudentDetailModel(student: Student) {
     student.contactId != null ? String(student.contactId) : undefined,
   );
 
-  const guardians = useMemo(
-    () => resolveStudentGuardianLinks(student, primaryContact ?? null),
-    [student, primaryContact],
-  );
+  const guardians = (() => resolveStudentGuardianLinks(student, primaryContact ?? null))();
 
-  const linkedIds = useMemo(() => {
+  const linkedIds = (() => {
     const ids = new Set<string>();
     if (student.contactId != null && String(student.contactId).trim()) {
       ids.add(String(student.contactId).trim());
@@ -74,41 +70,30 @@ export function useStudentDetailModel(student: Student) {
     }
 
     return Array.from(ids);
-  }, [
-    student.contactId,
-    student.fatherContactId,
-    student.guardianContactId,
-    guardians.fatherContactId,
-    guardians.guardianContactId,
-    primaryContact?.relationshipContacts,
-    primaryContact?.relationships,
-  ]);
+  })();
 
   const contactsQuery = useContactsByIds(linkedIds);
   const contactList = contactsQuery.data ?? [];
 
-  const studentContact = useMemo(() => {
+  const studentContact = (() => {
     return (
       contactList.find((c) => String(c.id) === String(student.contactId)) ??
       primaryContact ??
       undefined
     );
-  }, [contactList, student.contactId, primaryContact]);
+  })();
 
   const { settings } = useStudentConfig();
-  const fields = useMemo(() => settings.fields || {}, [settings.fields]);
+  const fields = (() => settings.fields || {})();
 
-  const tabOrderMap = useMemo(() => {
+  const tabOrderMap = (() => {
     const tabs = settings.formTabs || [];
     return Object.fromEntries(tabs.map((tab, tabIndex) => [tab.key, tabIndex]));
-  }, [settings.formTabs]);
+  })();
 
-  const enabledTabIds = useMemo(
-    () => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS),
-    [settings.enabledTabs],
-  );
+  const enabledTabIds = (() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS))();
 
-  const sortedEnabledFields = useMemo(() => {
+  const sortedEnabledFields = (() => {
     const list: Array<{
       key: string;
       label: string;
@@ -146,9 +131,9 @@ export function useStudentDetailModel(student: Student) {
       }
       return (a.order ?? 999) - (b.order ?? 999);
     });
-  }, [fields, enabledTabIds, tabOrderMap, t]);
+  })();
 
-  const studentPhones: PhoneNumber[] = useMemo(() => {
+  const studentPhones: PhoneNumber[] = (() => {
     if (studentContact?.phones && studentContact.phones.length > 0) {
       return studentContact.phones;
     }
@@ -157,9 +142,9 @@ export function useStudentDetailModel(student: Student) {
       return [{ number: fallbackPhone, label: t("contacts.fields.phoneNumber"), isPrimary: true }];
     }
     return [];
-  }, [studentContact, student.phone, t]);
+  })();
 
-  const studentEmails: EmailAddress[] = useMemo(() => {
+  const studentEmails: EmailAddress[] = (() => {
     if (studentContact?.emails && studentContact.emails.length > 0) {
       return studentContact.emails;
     }
@@ -168,9 +153,9 @@ export function useStudentDetailModel(student: Student) {
       return [{ address: fallbackEmail, label: t("contacts.fields.emailAddress"), isPrimary: true }];
     }
     return [];
-  }, [studentContact, student.email, t]);
+  })();
 
-  const studentAddresses: Address[] = useMemo(() => {
+  const studentAddresses: Address[] = (() => {
     if (studentContact?.addresses && studentContact.addresses.length > 0) {
       return studentContact.addresses;
     }
@@ -192,9 +177,9 @@ export function useStudentDetailModel(student: Student) {
       return [singleAddr];
     }
     return [];
-  }, [studentContact, student.address, student.city, student.state, student.country, t]);
+  })();
 
-  const studentContactProfile: StudentContactProfileData = useMemo(() => {
+  const studentContactProfile: StudentContactProfileData = (() => {
     const rawTags = studentContact
       ? getContactTags(studentContact)
       : getContactTags({
@@ -212,9 +197,9 @@ export function useStudentDetailModel(student: Student) {
       isSyed,
       tags: rawTags,
     };
-  }, [studentContact, student, studentPhones, studentEmails, studentAddresses]);
+  })();
 
-  const hydratedRelationships: StudentRelationshipCardData[] = useMemo(() => {
+  const hydratedRelationships: StudentRelationshipCardData[] = (() => {
     const mergedLinks = studentContact
       ? mergeStoredAndDerivedSiblingLinks(studentContact, contactList)
       : [];
@@ -323,17 +308,7 @@ export function useStudentDetailModel(student: Student) {
     }
 
     return results;
-  }, [
-    studentContact,
-    contactList,
-    guardians,
-    student.fatherName,
-    student.fatherContactId,
-    student.guardianName,
-    student.guardianContactId,
-    emptyDash,
-    t,
-  ]);
+  })();
 
   const age = calcAge(student.dob || studentContact?.dob);
   const enrolledSessionDetails = sessions.filter((session) => student.enrolledSessions?.includes(session.id));
@@ -355,9 +330,9 @@ export function useStudentDetailModel(student: Student) {
   });
 
   const allStudentsQuery = useStudentsContractList({ page: 1, limit: 100 });
-  const allStudents = useMemo(() => allStudentsQuery.data?.body?.students ?? [], [allStudentsQuery.data?.body?.students]);
+  const allStudents = (() => allStudentsQuery.data?.body?.students ?? [])();
 
-  const siblings: SiblingStudentItem[] = useMemo(() => {
+  const siblings: SiblingStudentItem[] = (() => {
     if (!student.id) return [];
     const fatherId = guardians.fatherContactId ? String(guardians.fatherContactId) : null;
     const guardianId = guardians.guardianContactId ? String(guardians.guardianContactId) : null;
@@ -395,11 +370,11 @@ export function useStudentDetailModel(student: Student) {
     }
 
     return matched;
-  }, [student, guardians, allStudents, sessions]);
+  })();
 
   const showNotesSection = Boolean(student.notes) && sortedEnabledFields.some((field) => field.key === "notes");
 
-  const legacyRelationshipLinks: StudentContactRelationshipLink[] = useMemo(() => {
+  const legacyRelationshipLinks: StudentContactRelationshipLink[] = (() => {
     return hydratedRelationships.map((r) => ({
       contactId: r.contactId,
       name: r.name,
@@ -408,7 +383,7 @@ export function useStudentDetailModel(student: Student) {
       gender: r.gender,
       relationship: r.relationship,
     }));
-  }, [hydratedRelationships]);
+  })();
 
   return {
     t,

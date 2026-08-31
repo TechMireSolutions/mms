@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import {
   TEACHER_MODULE_PREFERENCE_KEYS,
   normalizeTeacherModulePreferences,
@@ -24,20 +24,20 @@ export function useTeachersSetupSaveActions({
   const preferencesMutation = useTeacherPreferencesMutation();
   const { logSetupAudit } = useTeacherMutations();
 
-  const isPrefsDirty = useMemo(() => {
+  const isPrefsDirty = (() => {
     const draft = settingsDraft as unknown as Record<string, unknown>;
     const savedSettings = settings as unknown as Record<string, unknown>;
     return TEACHER_MODULE_PREFERENCE_KEYS.some(
       (key) => JSON.stringify(draft[key]) !== JSON.stringify(savedSettings[key]),
     );
-  }, [settings, settingsDraft]);
+  })();
 
-  const handleSave = useCallback(async (): Promise<void> => {
+  const handleSave = (async (): Promise<void> => {
     if (!isPrefsDirty || saving) return;
     setSaving(true);
     try {
       await preferencesMutation.mutateAsync(
-        normalizeTeacherModulePreferences(settingsDraft) as any,
+        normalizeTeacherModulePreferences(settingsDraft),
       );
       safeAudit(
         logSetupAudit.mutateAsync({
@@ -53,7 +53,7 @@ export function useTeachersSetupSaveActions({
     } finally {
       setSaving(false);
     }
-  }, [isPrefsDirty, saving, preferencesMutation, settingsDraft, logSetupAudit, t, setSaved]);
+  });
 
   return {
     saving,

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   findUnknownPersonalizationTokens,
   MESSAGE_LOG_RECORD_BATCH_MAX,
@@ -67,16 +67,13 @@ export function useMessageComposerDispatch({
   const auditSavedCountRef = useRef(0);
   const auditIdempotencyKeyRef = useRef<string | null>(null);
   pausedRef.current = isPaused;
-  const personalizeOptions = useMemo(
-    () => ({ madrasaName: branding.madrasaName || undefined }),
-    [branding.madrasaName],
-  );
-  const validatedRecipients = useMemo<ValidatedMessagingRecipient[]>(() => recipients.map((recipient) => {
+  const personalizeOptions = (() => ({ madrasaName: branding.madrasaName || undefined }))();
+  const validatedRecipients = (() => recipients.map((recipient) => {
     const validation = validateRecipientAddress(recipient, channel);
     return { ...recipient, isValid: validation.isValid, address: validation.address, reason: validation.reason };
-  }), [channel, recipients]);
-  const eligibleRecipients = useMemo(() => validatedRecipients.filter((recipient) => recipient.isValid), [validatedRecipients]);
-  const skippedRecipients = useMemo(() => validatedRecipients.filter((recipient) => !recipient.isValid), [validatedRecipients]);
+  }))() as ValidatedMessagingRecipient[];
+  const eligibleRecipients = (() => validatedRecipients.filter((recipient) => recipient.isValid))();
+  const skippedRecipients = (() => validatedRecipients.filter((recipient) => !recipient.isValid))();
 
   const executeSend = (recipient: MessagingRecipient, text: string): boolean => {
     const personalizedBody = personalizeMessage(text, recipient, personalizeOptions);
@@ -120,7 +117,7 @@ export function useMessageComposerDispatch({
             logs: messages,
             idempotencyKey: `${idempotencyKey}:${auditSavedCountRef.current + index}`,
           },
-        } as any);
+        });
         auditSavedCountRef.current += chunk.length;
       } catch {
         return false;
