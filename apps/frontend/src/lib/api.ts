@@ -144,6 +144,8 @@ type ApiCallArgs = {
   body?: unknown;
   rawBody?: unknown;
   extraHeaders?: Record<string, string>;
+  fetchOptions?: { signal?: AbortSignal };
+  signal?: AbortSignal;
 };
 type ApiCallResponse = { status: number; body: unknown; headers: Headers };
 type ApiContract = Record<string, Record<string, (args?: ApiCallArgs) => Promise<ApiCallResponse>>>;

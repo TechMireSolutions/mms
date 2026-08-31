@@ -1,16 +1,7 @@
 import {
-  DEFAULT_STUDENT_ENABLED_TABS,
   resolveStudentGuardianLinks,
-  mergeStoredAndDerivedSiblingLinks,
-  getContactTags,
   STUDENT_DETAIL_HERO_FIELD_KEYS,
-  STUDENT_GUARDIAN_RELATIONSHIP_LABEL,
-  STUDENT_PARENT_RELATIONSHIP_LABEL,
   OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS,
-  type Address,
-  type EmailAddress,
-  type FieldDefinition,
-  type PhoneNumber,
   type Student,
   type StudentContactRelationshipLink,
   calcAge,
@@ -23,17 +14,18 @@ import { useContactsByIds, useContactById } from "@/tenant/hooks/collections/con
 import { useStudentsContractList } from "@/tenant/features/students/hooks/useStudentsTsrHooks";
 import { useStudentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatLocalizedRelationshipParts } from "@/lib/contacts/formatLocalizedRelationshipLabel";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { studentStatusBadgeConfig } from "@/lib/students/studentStatusUi";
-import { relationshipBadgeCode } from "@/tenant/features/students/components/guardianRelationshipBadge";
 import type { SiblingStudentItem } from "@/tenant/features/students/components/StudentDetailSiblingsSection";
-import type { StudentContactProfileData } from "@/tenant/features/students/components/StudentDetailContactSection";
-import type { StudentRelationshipCardData } from "@/tenant/features/students/components/StudentRelationshipCard";
+import { buildStudentSortedEnabledFields } from "@/tenant/features/students/components/studentDetailSortedFields";
+import {
+  buildStudentContactProfile,
+} from "@/tenant/features/students/components/studentDetailContactProfile";
+import { buildStudentRelationships } from "@/tenant/features/students/components/studentDetailRelationships";
+import { buildStudentSiblings } from "@/tenant/features/students/components/studentDetailSiblingMatch";
 
+/** Detail drawer model: contact hydration, profile blocks, relationships, field config, siblings. */
 export function useStudentDetailModel(student: Student) {
   const { t } = useTranslation();
-  const emptyDash = t("students.table.emptyDash");
   const statusBadgeConfig = (() => studentStatusBadgeConfig(t))();
   const sessionsQuery = useSessions();
   const sessions = useSessionsCollection();
@@ -84,231 +76,19 @@ export function useStudentDetailModel(student: Student) {
   })();
 
   const { settings } = useStudentConfig();
-  const fields = (() => settings.fields || {})();
+  const sortedEnabledFields = buildStudentSortedEnabledFields(settings, t);
 
-  const tabOrderMap = (() => {
-    const tabs = settings.formTabs || [];
-    return Object.fromEntries(tabs.map((tab, tabIndex) => [tab.key, tabIndex]));
-  })();
+  const { profile: studentContactProfile } = buildStudentContactProfile(student, studentContact, t);
 
-  const enabledTabIds = (() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS))();
-
-  const sortedEnabledFields = (() => {
-    const list: Array<{
-      key: string;
-      label: string;
-      labelKey?: FieldDefinition["labelKey"];
-      type: string;
-      tab: string;
-      enabled: boolean;
-      order: number;
-      group: string;
-    }> = [];
-
-    Object.entries(fields).forEach(([tabId, tabFields]) => {
-      if (tabId !== "basic" && !enabledTabIds.has(tabId)) return;
-      (tabFields as FieldDefinition[]).forEach((fieldDefinition) => {
-        if (fieldDefinition.enabled) {
-          list.push({
-            key: fieldDefinition.key,
-            label: fieldDefinition.label,
-            labelKey: fieldDefinition.labelKey,
-            type: fieldDefinition.type,
-            tab: tabId,
-            enabled: fieldDefinition.enabled,
-            order: fieldDefinition.order,
-            group: fieldDefinition.group?.trim() || t("students.detail.extendedProfiles"),
-          });
-        }
-      });
-    });
-
-    return list.sort((a, b) => {
-      const aTabIdx = tabOrderMap[a.tab] ?? 9999;
-      const bTabIdx = tabOrderMap[b.tab] ?? 9999;
-      if (aTabIdx !== bTabIdx) {
-        return aTabIdx - bTabIdx;
-      }
-      return (a.order ?? 999) - (b.order ?? 999);
-    });
-  })();
-
-  const studentPhones: PhoneNumber[] = (() => {
-    if (studentContact?.phones && studentContact.phones.length > 0) {
-      return studentContact.phones;
-    }
-    const fallbackPhone = (studentContact ? getPrimaryPhone(studentContact) : null) || student.phone;
-    if (fallbackPhone) {
-      return [{ number: fallbackPhone, label: t("contacts.fields.phoneNumber"), isPrimary: true }];
-    }
-    return [];
-  })();
-
-  const studentEmails: EmailAddress[] = (() => {
-    if (studentContact?.emails && studentContact.emails.length > 0) {
-      return studentContact.emails;
-    }
-    const fallbackEmail = (studentContact ? getPrimaryEmail(studentContact) : null) || student.email;
-    if (fallbackEmail) {
-      return [{ address: fallbackEmail, label: t("contacts.fields.emailAddress"), isPrimary: true }];
-    }
-    return [];
-  })();
-
-  const studentAddresses: Address[] = (() => {
-    if (studentContact?.addresses && studentContact.addresses.length > 0) {
-      return studentContact.addresses;
-    }
-    const line1 =
-      (typeof studentContact?.address === "string" ? studentContact.address : undefined) ||
-      (typeof studentContact?.line1 === "string" ? studentContact.line1 : undefined) ||
-      (typeof student.address === "string" ? student.address : undefined);
-    const city =
-      (typeof studentContact?.city === "string" ? studentContact.city : undefined) ||
-      (typeof student.city === "string" ? student.city : undefined);
-    const state =
-      (typeof studentContact?.state === "string" ? studentContact.state : undefined) ||
-      (typeof student.state === "string" ? student.state : undefined);
-    const country =
-      (typeof studentContact?.country === "string" ? studentContact.country : undefined) ||
-      (typeof student.country === "string" ? student.country : undefined);
-    if (line1 || city || state || country) {
-      const singleAddr: Address = { line1, city, state, country, label: t("students.detail.addressesLabel"), isPrimary: true };
-      return [singleAddr];
-    }
-    return [];
-  })();
-
-  const studentContactProfile: StudentContactProfileData = (() => {
-    const rawTags = studentContact
-      ? getContactTags(studentContact)
-      : getContactTags({
-          tag: typeof student.tag === "string" ? student.tag : undefined,
-          tags: Array.isArray(student.tags) ? (student.tags as string[]) : undefined,
-        });
-    const isSyed = typeof studentContact?.isSyed === "boolean" ? studentContact.isSyed : typeof student.isSyed === "boolean" ? student.isSyed : undefined;
-    return {
-      contactId: student.contactId != null ? String(student.contactId) : undefined,
-      displayName: studentContact?.name || student.name || "",
-      phones: studentPhones,
-      emails: studentEmails,
-      addresses: studentAddresses,
-      cnic: (typeof studentContact?.cnic === "string" ? studentContact.cnic : undefined) || student.cnic,
-      isSyed,
-      tags: rawTags,
-    };
-  })();
-
-  const hydratedRelationships: StudentRelationshipCardData[] = (() => {
-    const mergedLinks = studentContact
-      ? mergeStoredAndDerivedSiblingLinks(studentContact, contactList)
-      : [];
-
-    const relationshipKeySet = new Set<string>();
-    const results: StudentRelationshipCardData[] = [];
-
-    const addRelationshipItem = (
-      contactId: string | undefined,
-      name: string | undefined,
-      relationshipStr: string,
-      inferred = false,
-      derivedSibling = false,
-      phoneHint?: string,
-      emailHint?: string,
-      notesHint?: string,
-    ) => {
-      const target = contactId
-        ? contactList.find((entry) => String(entry.id) === String(contactId))
-        : undefined;
-
-      const resolvedName = target?.name || name || t("students.detail.unknownContact");
-      const key = contactId
-        ? `contact-${contactId}-${relationshipStr}`
-        : `name-${resolvedName.toLowerCase()}-${relationshipStr}`;
-
-      if (relationshipKeySet.has(key)) return;
-      relationshipKeySet.add(key);
-
-      const resolvedGender = target?.gender;
-      const { display, label } = formatLocalizedRelationshipParts(
-        relationshipStr,
-        resolvedGender,
-        t,
-      );
-
-      const targetPhones: PhoneNumber[] =
-        target?.phones && target.phones.length > 0
-          ? target.phones
-          : target?.phone || phoneHint
-            ? [{ number: (target?.phone || phoneHint)!, label: t("contacts.fields.phoneNumber"), isPrimary: true }]
-            : [];
-
-      const targetEmails: EmailAddress[] =
-        target?.emails && target.emails.length > 0
-          ? target.emails
-          : target?.email || emailHint
-            ? [{ address: (target?.email || emailHint)!, label: t("contacts.fields.emailAddress"), isPrimary: true }]
-            : [];
-
-      results.push({
-        key,
-        contactId: target?.id != null ? String(target.id) : contactId,
-        name: resolvedName,
-        avatar: target?.avatar,
-        gender: resolvedGender,
-        relationship: relationshipStr,
-        relationshipLabel: label,
-        badgeCode: relationshipBadgeCode(display, emptyDash),
-        badgeTone: SEMANTIC_BADGE.info,
-        inferred: inferred || Boolean(target && edgeIsInferred(contactId, studentContact)),
-        derivedSibling,
-        phones: targetPhones,
-        emails: targetEmails,
-        cnic: target?.cnic,
-        notes: target?.notes || notesHint,
-        targetContact: target,
-      });
-    };
-
-    function edgeIsInferred(targetId?: string, subject?: typeof studentContact): boolean {
-      if (!targetId || !subject?.relationshipContacts) return false;
-      const found = subject.relationshipContacts.find((r: { contactId?: string | number; inferred?: boolean }) => String(r.contactId) === String(targetId));
-      return found?.inferred === true;
-    }
-
-    for (const link of mergedLinks) {
-      addRelationshipItem(
-        link.contactId ? String(link.contactId) : undefined,
-        link.name,
-        link.relationship || STUDENT_PARENT_RELATIONSHIP_LABEL,
-        link.inferred === true,
-        link.derivedSibling === true,
-        link.phone,
-      );
-    }
-
-    if (guardians.fatherContactId || guardians.fatherName || student.fatherName || student.fatherContactId) {
-      const fatherId = guardians.fatherContactId ? String(guardians.fatherContactId) : (student.fatherContactId ? String(student.fatherContactId) : undefined);
-      const fatherName = guardians.fatherName || student.fatherName || undefined;
-      addRelationshipItem(
-        fatherId,
-        fatherName,
-        STUDENT_PARENT_RELATIONSHIP_LABEL,
-      );
-    }
-
-    if (guardians.guardianContactId || guardians.guardianName || student.guardianName || student.guardianContactId) {
-      const guardianId = guardians.guardianContactId ? String(guardians.guardianContactId) : (student.guardianContactId ? String(student.guardianContactId) : undefined);
-      const guardianName = guardians.guardianName || student.guardianName || undefined;
-      addRelationshipItem(
-        guardianId,
-        guardianName,
-        STUDENT_GUARDIAN_RELATIONSHIP_LABEL,
-      );
-    }
-
-    return results;
-  })();
+  const emptyDash = t("students.table.emptyDash");
+  const hydratedRelationships = buildStudentRelationships({
+    student,
+    studentContact,
+    contactList,
+    guardians,
+    t,
+    emptyDash,
+  });
 
   const age = calcAge(student.dob || studentContact?.dob);
   const enrolledSessionDetails = sessions.filter((session) => student.enrolledSessions?.includes(session.id));
@@ -330,47 +110,9 @@ export function useStudentDetailModel(student: Student) {
   });
 
   const allStudentsQuery = useStudentsContractList({ page: 1, limit: 100 });
-  const allStudents = (() => allStudentsQuery.data?.body?.students ?? [])();
+  const allStudents = getStudentsFromPage(allStudentsQuery.data?.body);
 
-  const siblings: SiblingStudentItem[] = (() => {
-    if (!student.id) return [];
-    const fatherId = guardians.fatherContactId ? String(guardians.fatherContactId) : null;
-    const guardianId = guardians.guardianContactId ? String(guardians.guardianContactId) : null;
-    const fatherName = (guardians.fatherName || student.fatherName || "").trim().toLowerCase();
-
-    if (!fatherId && !guardianId && !fatherName) return [];
-
-    const matched: SiblingStudentItem[] = [];
-
-    for (const other of allStudents) {
-      if (String(other.id) === String(student.id)) continue;
-      const otherFatherId = other.fatherContactId ? String(other.fatherContactId) : null;
-      const otherGuardianId = other.guardianContactId ? String(other.guardianContactId) : null;
-      const otherFatherName = (other.fatherName || "").trim().toLowerCase();
-
-      const isMatch =
-        (fatherId && otherFatherId && fatherId === otherFatherId) ||
-        (guardianId && otherGuardianId && guardianId === otherGuardianId) ||
-        (fatherName && otherFatherName && fatherName === otherFatherName);
-
-      if (isMatch) {
-        const sessionNames = sessions
-          .filter((sess) => other.enrolledSessions?.includes(sess.id))
-          .map((sess) => sess.name);
-
-        matched.push({
-          id: String(other.id),
-          name: other.name || "",
-          grNumber: other.grNumber,
-          status: other.status,
-          gender: other.gender,
-          sessionNames,
-        });
-      }
-    }
-
-    return matched;
-  })();
+  const siblings: SiblingStudentItem[] = buildStudentSiblings(student, guardians, allStudents, sessions);
 
   const showNotesSection = Boolean(student.notes) && sortedEnabledFields.some((field) => field.key === "notes");
 
@@ -407,3 +149,7 @@ export function useStudentDetailModel(student: Student) {
   };
 }
 
+/** Contract list pages are union-shaped at classification-failure sites — narrow to the students array. */
+function getStudentsFromPage(body: unknown): Student[] {
+  return (body as { students?: Student[] } | null)?.students ?? [];
+}
