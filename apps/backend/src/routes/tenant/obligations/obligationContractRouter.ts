@@ -63,6 +63,8 @@ export const obligationContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list distributions' } };
       }
     },
+    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+    //  tracked by the separate contract-router signature refactor)
   } as any);
 
   await fastify.register(s.plugin(router));

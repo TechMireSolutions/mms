@@ -55,7 +55,7 @@ export const teacherAggregateRoutes: FastifyPluginAsync = async (sub) => {
     }
     const { id } = request.params;
     try {
-      const restored = await withTenant(String((request as any).tenant?.id), () => teacherUseCases.restoreTeacherById(id), { readOnly: false });
+      const restored = await withTenant(String(request.tenant?.id), () => teacherUseCases.restoreTeacherById(id), { readOnly: false });
       if (!restored) {
         return reply.status(404).send({ type: 'not_found', message: 'Teacher not found or not deleted' });
       }

@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { User, WorkspaceUser } from '@mms/shared';
+import type { User, UsersListQuery, WorkspaceUser } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
@@ -30,7 +30,9 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 400 as const, body: { type: 'validation_error', message: parsedQuery.message } };
       }
       try {
-        const result = await loadUsersPage(parsedQuery.data as any);
+        // (typed as UsersListQuery because the wire query schema's includeDeleted allows 'true'/'false'
+        //  strings while the service query type expects boolean)
+        const result = await loadUsersPage(parsedQuery.data as UsersListQuery);
         return { status: 200 as const, body: result };
       } catch (err) {
         request.log.error(err, 'Failed to list users');
@@ -127,6 +129,8 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to verify user email' } };
       }
     },
+    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+    //  tracked by the separate contract-router signature refactor)
   } as any);
 
   await fastify.register(s.plugin(router));

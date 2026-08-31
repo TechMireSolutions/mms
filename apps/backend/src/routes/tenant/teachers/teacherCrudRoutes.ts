@@ -91,10 +91,12 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
       try {
-        const result = await withTenant(String(tenant), () => teacherUseCases.createTeacher({ ...coreParsed, workspaceId: (user as any).workspaceId } as never), { readOnly: false });
+        const result = await withTenant(String(tenant), () => teacherUseCases.createTeacher(// (typed as User & { workspaceId? } because the legacy JWT payload may carry workspaceId;
+          //  it is not on the shared User type)
+          { ...coreParsed, workspaceId: (user as User & { workspaceId?: string }).workspaceId } as never), { readOnly: false });
         await auditTeacher(user, 'teacher.create', `Created teacher ${result.record.id}`, String(result.record.id));
         return {
-          status: (result.restored ? 200 : 201) as any,
+          status: (result.restored ? 200 : 201) as 200 | 201,
           body: { success: true, teacher: await sanitizeOneTeacherForUser(result.record as Teacher, user) },
         };
       } catch {
@@ -144,7 +146,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const reason = (body as any)?.deletionReason;
+        const reason = body?.deletionReason;
         const deleted = await withTenant(String(request.tenant?.id), () => teacherUseCases.deleteTeacherById(id, String(user.id), reason), { readOnly: false });
         if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Teacher not found' } };
         const reasonNote = reason?.trim() ? ` — ${reason.trim()}` : '';
@@ -163,13 +165,13 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           teacherUseCases.bulkUpdateTeacherStatus(
-            (body as any).ids.map(String),
-            (body as any).status,
+            body.ids.map(String),
+            body.status,
           ), { readOnly: false });
         await auditTeacher(
           user,
           'teacher.bulk_status',
-          `Updated status to ${(body as any).status} for ${result.succeeded} teacher(s); ${result.failed} failed`,
+          `Updated status to ${body.status} for ${result.succeeded} teacher(s); ${result.failed} failed`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -185,13 +187,13 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           teacherUseCases.bulkUpdateTeacherSpecialization(
-            (body as any).ids.map(String),
-            (body as any).specialization,
+            body.ids.map(String),
+            body.specialization,
           ), { readOnly: false });
         await auditTeacher(
           user,
           'teacher.bulk_specialization',
-          `Updated specialization to ${(body as any).specialization} for ${result.succeeded} teacher(s); ${result.failed} failed`,
+          `Updated specialization to ${body.specialization} for ${result.succeeded} teacher(s); ${result.failed} failed`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -242,6 +244,8 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate employee IDs' } };
       }
     },
+    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+    //  tracked by the separate contract-router signature refactor)
   } as any);
 
   await fastify.register(s.plugin(router));

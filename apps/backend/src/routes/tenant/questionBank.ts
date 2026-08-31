@@ -58,7 +58,7 @@ export default async function questionBankRoutes(
         collection: QUESTIONS_COLLECTION,
         schema: questionBankQuestionListSchema,
         loadFn: loadQuestions,
-        saveFn: upsertQuestions as any,
+        saveFn: upsertQuestions,
         deleteFn: deleteQuestionById,
         restoreFn: restoreQuestionById,
         bulkDeleteFn: bulkSoftDeleteQuestions,

@@ -1,7 +1,7 @@
 import { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { FINANCE_MODULE_MANIFEST, type User, rootContract } from '@mms/shared';
+import { FINANCE_MODULE_MANIFEST, type User, type WidgetQuery, rootContract } from '@mms/shared';
 import { registerStandardExtendedRoutes } from '../../lib/crudStandardRoutes.js';
 
 import {
@@ -66,7 +66,7 @@ export default async function financeRoutes(
         }
         const { id } = request.params;
         try {
-          const restored = await withTenant(String((request as any).tenant?.id), () => restoreInvoiceById(id, String(user.id)), { readOnly: false });
+          const restored = await withTenant(String(request.tenant?.id), () => restoreInvoiceById(id, String(user.id)), { readOnly: false });
           if (!restored) {
             return reply.status(404).send({ type: 'not_found', message: 'Invoice not found or not deleted' });
           }
@@ -92,7 +92,7 @@ export default async function financeRoutes(
         }
         const { id } = request.params;
         try {
-          const restored = await withTenant(String((request as any).tenant?.id), () => restorePaymentById(id, String(user.id)), { readOnly: false });
+          const restored = await withTenant(String(request.tenant?.id), () => restorePaymentById(id, String(user.id)), { readOnly: false });
           if (!restored) {
             return reply.status(404).send({ type: 'not_found', message: 'Payment not found or not deleted' });
           }
@@ -222,7 +222,7 @@ export default async function financeRoutes(
       if (!canDeleteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          bulkSoftDeleteInvoices((body as any).ids.map(String), String(user.id)), { readOnly: false });
+          bulkSoftDeleteInvoices(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete invoices' } };
@@ -234,7 +234,7 @@ export default async function financeRoutes(
       if (!canDeleteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          bulkRestoreInvoices((body as any).ids.map(String)), { readOnly: false });
+          bulkRestoreInvoices(body.ids.map(String)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore invoices' } };
@@ -246,7 +246,7 @@ export default async function financeRoutes(
       if (!canWriteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          bulkUpdateInvoicesStatus((body as any).ids, (body as any).status), { readOnly: false });
+          bulkUpdateInvoicesStatus(body.ids, body.status), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update invoice status' } };
@@ -258,7 +258,7 @@ export default async function financeRoutes(
       if (!canDeleteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          bulkSoftDeletePayments((body as any).ids.map(String), String(user.id)), { readOnly: false });
+          bulkSoftDeletePayments(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete payments' } };
@@ -270,7 +270,7 @@ export default async function financeRoutes(
       if (!canDeleteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          bulkRestorePayments((body as any).ids.map(String)), { readOnly: false });
+          bulkRestorePayments(body.ids.map(String)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore payments' } };
@@ -290,12 +290,15 @@ export default async function financeRoutes(
       const user = request.user as User;
       if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadFinanceWidgetAggregates(body.widgets as any), { readOnly: true });
+        // (typed as WidgetQuery[] because the contract body is passthrough)
+        const result = await withTenant(String(request.tenant?.id), () => loadFinanceWidgetAggregates(body.widgets as WidgetQuery[]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
+    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+    //  tracked by the separate contract-router signature refactor)
   } as any);
 
   await fastify.register(s.plugin(router));

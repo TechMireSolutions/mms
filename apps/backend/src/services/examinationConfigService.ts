@@ -3,7 +3,7 @@ import {
   stripExaminationsFieldConfigForPersist,
   type FieldDefinition,
   type ExaminationsSettings,
-  type TabDefinition,
+  type TabDefinition,  type ExaminationsModulePreferences,
 } from '@mms/shared';
 import { createModuleFieldConfigService } from '../lib/createModuleFieldConfigService.js';
 import {
@@ -24,7 +24,9 @@ const examinationFieldConfig = createModuleFieldConfigService<
   upsert: setExaminationFieldConfig,
   toDocument: async (raw, tenant) => {
     const prefs = await getExaminationModulePreferences(tenant);
-    return composeExaminationsSettings((raw as unknown) as ExaminationsSettings, (prefs || {}) as any);
+    return composeExaminationsSettings((raw as unknown) as ExaminationsSettings, // (typed as ExaminationsModulePreferences because preferences are untyped JSON rows)
+    // (typed as ExaminationsModulePreferences because preferences are untyped JSON rows from the db)
+    (prefs || {}) as unknown as ExaminationsModulePreferences);
   },
   stripForPersist: stripExaminationsFieldConfigForPersist,
   reloadFailedMessage: 'Failed to reload examinations field config after save',
@@ -35,6 +37,6 @@ export const getExaminationFieldConfigService = examinationFieldConfig.load;
 export async function updateExaminationFieldConfigService(
   config: ExaminationsSettings | Record<string, unknown>,
 ): Promise<ExaminationsSettings> {
-  return examinationFieldConfig.save(config as Partial<ExaminationsSettings> as any);
+  return examinationFieldConfig.save(config as ExaminationsSettings);
 }
 

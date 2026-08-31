@@ -27,13 +27,13 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.user as User;
 
       if (!canReadCollection(user, 'students')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
 
       const includeDeleted = query.includeDeleted === 'true' || query.includeDeleted === true;
 
       if (includeDeleted && !canDeleteCollection(user, 'students')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } as any };
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
       }
 
       const result = await withTenant(String(request.tenant?.id), () => studentUseCases.loadStudentsPage({
@@ -54,13 +54,13 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const user = request.user as User;
 
       if (!canReadCollection(user, 'students')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
 
       try {
         const includeDeleted = query.includeDeleted === true || query.includeDeleted === 'true';
         if (includeDeleted && !canDeleteCollection(user, 'students')) {
-          return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } as any };
+          return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
         }
         const item = await withTenant(String(request.tenant?.id), () => studentUseCases.loadStudentById(id, includeDeleted), { readOnly: true });
         if (!item) {
@@ -98,7 +98,9 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const result = await withTenant(String(tenant), () => studentUseCases.createStudent(
-          { ...body, workspaceId: (user as any).workspaceId } as never,
+          // (typed as User & { workspaceId? } because the legacy JWT payload may carry workspaceId;
+          //  it is not on the shared User type)
+          { ...body, workspaceId: (user as User & { workspaceId?: string }).workspaceId } as never,
           user,
         ), { readOnly: false });
 
@@ -109,18 +111,20 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         const response = await sanitizeOneStudentForUser(result.record as Student, user);
-        return { status: (result.restored ? 200 : 201) as any, body: { student: response } };
+        return { status: (result.restored ? 200 : 201) as 200 | 201, body: { student: response } };
       } catch (error: unknown) {
         if (error instanceof StudentPermissionError) {
           return { status: 403 as const, body: { type: 'forbidden', message: error.message } };
         }
         if (error && typeof error === 'object' && 'type' in error && 'field' in error) {
+          // (typed as the error shape just guarded above)
+          const e = error as { type: string; message: string; field: string };
           return {
             status: 400 as const,
             body: {
-              type: (error as any).type,
-              message: (error as any).message,
-              errors: [{ field: (error as any).field, message: (error as any).message }],
+              type: e.type,
+              message: e.message,
+              errors: [{ field: e.field, message: e.message }],
             },
           };
         }
@@ -198,13 +202,13 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           studentUseCases.bulkUpdateStudentStatus(
-            (body as any).ids.map(String),
-            (body as any).status,
+            body.ids.map(String),
+            body.status,
           ), { readOnly: false });
         await auditStudent(
           user,
           'student.bulk_status',
-          `Updated status to ${(body as any).status} for ${result.succeeded} student(s); ${result.failed} failed`,
+          `Updated status to ${body.status} for ${result.succeeded} student(s); ${result.failed} failed`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -220,14 +224,14 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           studentUseCases.bulkEnrollStudents({
-            studentIds: (body as any).studentIds.map(String),
-            sessionIds: (body as any).sessionIds.map(String),
-            mode: (body as any).mode,
+            studentIds: body.studentIds.map(String),
+            sessionIds: body.sessionIds.map(String),
+            mode: body.mode,
           }), { readOnly: false });
         await auditStudent(
           user,
           'student.bulk_enroll',
-          `Updated session enrollments (${(body as any).mode}) for ${result.succeeded} student(s)`,
+          `Updated session enrollments (${body.mode}) for ${result.succeeded} student(s)`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -280,6 +284,8 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate GR numbers' } };
       }
     },
+    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+    //  tracked by the separate contract-router signature refactor)
   } as any);
 
   await fastify.register(s.plugin(router));

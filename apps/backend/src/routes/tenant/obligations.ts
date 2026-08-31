@@ -103,7 +103,7 @@ export default async function obligationsRoutes(
         collection: OBLIGATIONS_COLLECTION,
         schema: obligationCollectionListSchema,
         loadFn: loadObligationCollections,
-        saveFn: upsertObligationCollections as any,
+        saveFn: upsertObligationCollections,
         deleteFn: deleteObligationCollectionById,
         restoreFn: restoreObligationCollectionById,
         bulkDeleteFn: bulkSoftDeleteObligationCollections,

@@ -63,7 +63,7 @@ export default async function accountingRoutes(
         collection: ACCOUNTING_ENTRIES_COLLECTION,
         schema: journalEntryListSchema,
         loadFn: loadEntries,
-        saveFn: upsertEntries as any,
+        saveFn: upsertEntries,
         deleteFn: deleteJournalEntryById,
         restoreFn: restoreJournalEntryById,
         bulkDeleteFn: bulkSoftDeleteJournalEntries,

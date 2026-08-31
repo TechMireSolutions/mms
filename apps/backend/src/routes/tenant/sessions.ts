@@ -71,7 +71,7 @@ export default async function sessionsRoutes(
   const s = initServer();
   const sessionsBulkRouter = s.router(rootContract.sessions, {
     list: async ({ query, request }: any) => {
-      const user = (request as any).user as User;
+      const user = request.user as User;
       if (!canReadCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true ? true : (query?.includeDeleted === 'false' || query?.includeDeleted === false ? false : undefined);
@@ -79,57 +79,59 @@ export default async function sessionsRoutes(
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String((request as any).tenant?.id), () => loadSessionsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => loadSessionsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list sessions' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list sessions' } };
       }
     },
     create: async ({ body, request }: any) => {
-      const user = (request as any).user as User;
+      const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const item = await withTenant(String((request as any).tenant?.id), () => createSession(body as Parameters<typeof createSession>[0]), { readOnly: false });
+        const item = await withTenant(String(request.tenant?.id), () => createSession(body as Parameters<typeof createSession>[0]), { readOnly: false });
         return { status: 201 as const, body: { session: item } };
       } catch (error: unknown) {
         const message = error instanceof Error ? error.message : 'Failed to create session';
-        return { status: 500 as const, body: { type: 'database_error', message } as any };
+        return { status: 500 as const, body: { type: 'database_error', message } };
       }
     },
     bulkDelete: async ({ body, request }: any) => {
-      const user = (request as any).user as User;
+      const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String((request as any).tenant?.id), () => bulkSoftDeleteSessions(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => bulkSoftDeleteSessions(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete sessions' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete sessions' } };
       }
     },
     bulkStatus: async ({ body, request }: any) => {
-      const user = (request as any).user as User;
+      const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String((request as any).tenant?.id), () => bulkUpdateSessionsStatus(body.ids.map(String), body.status), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => bulkUpdateSessionsStatus(body.ids.map(String), body.status), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update session status' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update session status' } };
       }
     },
     bulkRestore: async ({ body, request }: any) => {
-      const user = (request as any).user as User;
+      const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String((request as any).tenant?.id), () => bulkRestoreSessions(body.ids.map(String)), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => bulkRestoreSessions(body.ids.map(String)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore sessions' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore sessions' } };
       }
     },
+    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+    //  tracked by the separate contract-router signature refactor)
   } as any);
 
   await fastify.register(s.plugin(sessionsBulkRouter));

@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { User } from '@mms/shared';
+import type { User, WidgetQuery } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
@@ -115,12 +115,14 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadQuestionBankWidgetAggregates(body.widgets as any), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => loadQuestionBankWidgetAggregates(body.widgets as WidgetQuery[]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
+    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+    //  tracked by the separate contract-router signature refactor)
   } as any);
 
   await fastify.register(s.plugin(router));

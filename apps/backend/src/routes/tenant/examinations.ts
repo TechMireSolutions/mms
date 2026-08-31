@@ -55,7 +55,7 @@ export default async function examinationsRoutes(
         collection: EXAMS_COLLECTION,
         schema: examListSchema,
         loadFn: loadExams,
-        saveFn: upsertExams as any,
+        saveFn: upsertExams,
         deleteFn: deleteExamById,
         restoreFn: restoreExamById,
         bulkDeleteFn: bulkSoftDeleteExams,

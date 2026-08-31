@@ -73,24 +73,24 @@ async function auditSavedReport(
 
 const savedReportsRouter = s.router(rootContract.savedReports, {
   list: async ({ query, request }: any) => {
-    const user = (request as any).user as User;
+    const user = request.user as User;
     if (!canUseSavedReports(user, query.category)) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
     }
     try {
-      const reports = await withTenant(String((request as any).tenant?.id), () => listSavedReports(query.category, String(user.id)), { readOnly: true });
+      const reports = await withTenant(String(request.tenant?.id), () => listSavedReports(query.category, String(user.id)), { readOnly: true });
       return { status: 200 as const, body: { reports } };
     } catch {
-      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list saved reports' } as any };
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list saved reports' } };
     }
   },
   create: async ({ body, request }: any) => {
-    const user = (request as any).user as User;
+    const user = request.user as User;
     if (!canUseSavedReports(user, body.category)) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
     }
     try {
-      const report = await withTenant(String((request as any).tenant?.id), () => createSavedReport({
+      const report = await withTenant(String(request.tenant?.id), () => createSavedReport({
         ...body,
         createdBy: String(user.id),
         createdByName: user.name || user.email,
@@ -98,37 +98,39 @@ const savedReportsRouter = s.router(rootContract.savedReports, {
       await auditSavedReport(user, 'create', body.category, report.id, `Saved report "${report.name}"`);
       return { status: 201 as const, body: { report } };
     } catch {
-      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save report' } as any };
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save report' } };
     }
   },
   delete: async ({ params: { id }, query, request }: any) => {
-    const user = (request as any).user as User;
+    const user = request.user as User;
     if (!canUseSavedReports(user, query.category)) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
     }
     try {
-      const deleted = await withTenant(String((request as any).tenant?.id), () => deleteSavedReport(id, query.category, String(user.id)), { readOnly: false });
+      const deleted = await withTenant(String(request.tenant?.id), () => deleteSavedReport(id, query.category, String(user.id)), { readOnly: false });
       if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Saved report not found' } };
       await auditSavedReport(user, 'delete', query.category, id, `Deleted saved report ${id}`);
       return { status: 200 as const, body: { success: true } };
     } catch {
-      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete saved report' } as any };
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete saved report' } };
     }
   },
   run: async ({ params: { id }, query, request }: any) => {
-    const user = (request as any).user as User;
+    const user = request.user as User;
     if (!canUseSavedReports(user, query.category)) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
     }
     try {
-      const report = await withTenant(String((request as any).tenant?.id), () => runSavedReport(id, query.category, String(user.id)), { readOnly: true });
+      const report = await withTenant(String(request.tenant?.id), () => runSavedReport(id, query.category, String(user.id)), { readOnly: true });
       if (!report) return { status: 404 as const, body: { type: 'not_found', message: 'Saved report not found' } };
       await auditSavedReport(user, 'run', query.category, report.id, `Ran saved report "${report.name}"`);
       return { status: 200 as const, body: { report } };
     } catch {
-      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to run saved report' } as any };
+      return { status: 500 as const, body: { type: 'database_error', message: 'Failed to run saved report' } };
     }
   },
+  // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+  //  tracked by the separate contract-router signature refactor)
 } as any);
 
 /**

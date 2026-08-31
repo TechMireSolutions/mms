@@ -186,6 +186,8 @@ const dashboardRouter = s.router(rootContract.dashboard, {
       },
       'Failed to load dashboard summary',
     ),
+  // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+  //  tracked by the separate contract-router signature refactor)
 } as any);
 
 /**

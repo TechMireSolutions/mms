@@ -80,7 +80,7 @@ export default async function hasanatRoutes(
         collection: HASANAT_DISTRIBUTIONS_COLLECTION,
         schema: distributionListSchema,
         loadFn: loadDistributions,
-        saveFn: upsertDistributions as any,
+        saveFn: upsertDistributions,
         deleteFn: deleteDistributionById,
         restoreFn: restoreDistributionById,
         bulkDeleteFn: bulkSoftDeleteDistributions,

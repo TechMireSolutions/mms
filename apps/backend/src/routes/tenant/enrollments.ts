@@ -72,7 +72,7 @@ export default async function enrollmentsRoutes(
         }
         const { id } = request.params;
         try {
-          const restored = await withTenant(String((request as any).tenant?.id), () => restoreEnrollmentById(id, String(user.id)), { readOnly: false });
+          const restored = await withTenant(String(request.tenant?.id), () => restoreEnrollmentById(id, String(user.id)), { readOnly: false });
           if (!restored) {
             return reply.status(404).send({ type: 'not_found', message: 'Enrollment not found or not deleted' });
           }
@@ -90,73 +90,75 @@ export default async function enrollmentsRoutes(
     list: async ({ query, request }: any) => {
       const user = request.user as User;
       if (!canReadCollection(user, ENROLLMENTS_COLLECTION))
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true ? true : (query?.includeDeleted === 'false' || query?.includeDeleted === false ? false : undefined);
-        const result = await withTenant(String((request as any).tenant?.id), () => loadEnrollmentsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => loadEnrollmentsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list enrollments' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list enrollments' } };
       }
     },
-    get: async () => ({ status: 404 as const, body: { type: 'not_found', message: 'Not implemented' } as any }),
+    get: async () => ({ status: 404 as const, body: { type: 'not_found', message: 'Not implemented' } }),
     create: async ({ body, request }: any) => {
       const user = request.user as User;
       if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const item = await withTenant(String((request as any).tenant?.id), () => createEnrollment(body as any), { readOnly: false });
+        const item = await withTenant(String(request.tenant?.id), () => createEnrollment(body), { readOnly: false });
         return { status: 201 as const, body: item };
       } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create enrollment' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create enrollment' } };
       }
     },
     update: async ({ params: { id }, body, request }: any) => {
       const user = request.user as User;
       if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const updated = await withTenant(String((request as any).tenant?.id), () => updateEnrollmentById(id, body as any), { readOnly: false });
-        if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } as any };
+        const updated = await withTenant(String(request.tenant?.id), () => updateEnrollmentById(id, body), { readOnly: false });
+        if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } };
         return { status: 200 as const, body: updated };
       } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update enrollment' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update enrollment' } };
       }
     },
     delete: async ({ params: { id }, body, request }: any) => {
       const user = request.user as User;
       if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const deleted = await withTenant(String((request as any).tenant?.id), () => deleteEnrollmentById(id, String(user.id), body?.deletionReason), { readOnly: false });
-        if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } as any };
+        const deleted = await withTenant(String(request.tenant?.id), () => deleteEnrollmentById(id, String(user.id), body?.deletionReason), { readOnly: false });
+        if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } };
         return { status: 200 as const, body: { success: true } };
       } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete enrollment' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete enrollment' } };
       }
     },
     bulkDelete: async ({ body, request }: any) => {
       const user = request.user as User;
       if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String((request as any).tenant?.id), () => bulkSoftDeleteEnrollments(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => bulkSoftDeleteEnrollments(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete enrollments' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete enrollments' } };
       }
     },
     bulkRestore: async ({ body, request }: any) => {
       const user = request.user as User;
       if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } as any };
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String((request as any).tenant?.id), () => bulkRestoreEnrollments(body.ids.map(String)), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => bulkRestoreEnrollments(body.ids.map(String)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore enrollments' } as any };
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore enrollments' } };
       }
     },
+    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
+    //  tracked by the separate contract-router signature refactor)
   } as any);
 
   await fastify.register(s.plugin(router));
