@@ -9,6 +9,6 @@ describe("invalidateEnrollmentsQueries", () => {
 
     invalidateEnrollmentsQueries(mockQueryClient);
 
-    expect(mockQueryClient.invalidateQueries).toHaveBeenCalledTimes(6);
+    expect(mockQueryClient.invalidateQueries).toHaveBeenCalledTimes(4);
   });
 });

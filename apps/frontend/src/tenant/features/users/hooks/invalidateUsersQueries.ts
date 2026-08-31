@@ -10,6 +10,4 @@ export function invalidateUsersQueries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: USERS_LIST_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: USERS_METRICS_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: ACTIVITY_LOGS_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: ["dummy"] });
-  void queryClient.invalidateQueries({ queryKey: ["dummy"] });
 }

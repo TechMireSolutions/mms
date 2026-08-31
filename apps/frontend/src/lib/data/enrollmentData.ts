@@ -42,10 +42,25 @@ export const STATUS_MAP: Record<string, EnrollmentStatus> = {
   completed: ENROLLMENT_STATUSES[3] as EnrollmentStatus
 };
 
+export function calculateAgeFromDob(dob: string): number {
+  const parts = dob.split("-");
+  const birthYear = parseInt(parts[0] || "0", 10);
+  const birthMonth = parseInt(parts[1] || "1", 10) - 1;
+  const birthDay = parseInt(parts[2] || "1", 10);
+  if (isNaN(birthYear) || birthYear <= 0) return 0;
+
+  const today = new Date();
+  let age = today.getFullYear() - birthYear;
+  const m = today.getMonth() - birthMonth;
+  if (m < 0 || (m === 0 && today.getDate() < birthDay)) {
+    age--;
+  }
+  return Math.max(0, age);
+}
+
 export function suggestClass(student: Partial<Student>, session: Session): Class | null {
   if (!student.dob) return null;
-  const birthYear = parseInt(student.dob.split("-")[0]);
-  const age = 2026 - birthYear;
+  const age = calculateAgeFromDob(student.dob);
   for (const sessionClass of session.classes) {
     if (age >= sessionClass.ageMin && age <= sessionClass.ageMax) {
       if (sessionClass.gender === "any" || student.gender === sessionClass.gender) {
@@ -67,7 +82,7 @@ export function runFullEligibility(
   if (!student.dob) {
     checks.push({ id: "age", label: "Age Eligibility", status: "warn", detail: "Date of birth not set — cannot verify age." });
   } else {
-    const age = 2026 - parseInt(student.dob.split("-")[0]);
+    const age = calculateAgeFromDob(student.dob);
     const minAge = targetClass ? targetClass.ageMin : 5;
     const maxAge = targetClass ? targetClass.ageMax : 25;
     if (age < minAge || age > maxAge) {
@@ -117,28 +132,37 @@ export function calcFee(
   baseFee: number,
   student: Partial<Student>,
   _students: Student[],
-  _sessionDiscounts: Discount[]
+  sessionDiscounts: Discount[] = []
 ): CalculatedFee {
   const discountType = student.discountType || "none";
-  let pct = student.discountPct || 0;
+  let pct = student.discountPct ?? 0;
   let label = "No Discount";
 
-  if (discountType === "sibling") {
+  const matchedSessionDiscount = sessionDiscounts.find(
+    (d) => d.id === discountType || d.name.toLowerCase() === discountType.toLowerCase()
+  );
+
+  if (matchedSessionDiscount) {
+    label = matchedSessionDiscount.name;
+    pct = matchedSessionDiscount.value;
+  } else if (discountType === "sibling") {
     label = "Sibling Discount";
-    pct = 10;
+    if (pct === 0) pct = 10;
   } else if (discountType === "financial_aid") {
     label = "Financial Aid";
-    pct = 25;
+    if (pct === 0) pct = 25;
   } else if (discountType === "staff") {
     label = "Staff Child";
-    pct = 50;
+    if (pct === 0) pct = 50;
   } else if (discountType === "scholarship") {
     label = "Full Scholarship";
-    pct = 100;
+    if (pct === 0) pct = 100;
+  } else if (pct > 0) {
+    label = "Custom Discount";
   }
 
   const discountAmt = Math.round((baseFee * pct) / 100);
-  const finalFee = baseFee - discountAmt;
+  const finalFee = Math.max(0, baseFee - discountAmt);
 
   return {
     id: discountType,

@@ -4,10 +4,18 @@ import { motion } from "framer-motion";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { itemVariants } from "@/platform/lib/animations";
 import { useTranslation } from "@/hooks/useTranslation";
+import { usePlatformTelemetry } from "@/platform/hooks/usePlatformTelemetry";
 
 export function PlatformDashboardTelemetry(): React.JSX.Element {
   const reducedMotion = useReducedMotion();
   const { t } = useTranslation();
+  const { data: telemetry, isLoading } = usePlatformTelemetry();
+
+  const dbPoolPct = telemetry ? `${telemetry.dbPool.utilizationRate}%` : "—";
+  const activeConns = telemetry?.dbPool.activeCount ?? 0;
+  const totalConns = telemetry?.dbPool.totalCount ?? 0;
+  const latencyStr = telemetry ? `${telemetry.latencyMs}ms` : "—";
+  const memoryStr = telemetry ? `${telemetry.memory.rssMb}MB` : "—";
 
   return (
     <motion.div
@@ -21,9 +29,12 @@ export function PlatformDashboardTelemetry(): React.JSX.Element {
             <Database className="w-3.5 h-3.5" aria-hidden />
           </div>
         </div>
-        <p className="text-2xl font-black font-mono tracking-tight text-foreground">12%</p>
+        <p className="text-2xl font-black font-mono tracking-tight text-foreground">
+          {isLoading ? <span className="animate-pulse opacity-50">...</span> : dbPoolPct}
+        </p>
         <p className="text-3xs text-success font-medium flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-pulse" /> {t('platform.telemetry.activeConns', { active: 8, total: 64 })}
+          <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-pulse" />{" "}
+          {t('platform.telemetry.activeConns', { active: activeConns, total: totalConns })}
         </p>
       </div>
 
@@ -34,9 +45,12 @@ export function PlatformDashboardTelemetry(): React.JSX.Element {
             <Zap className="w-3.5 h-3.5" aria-hidden />
           </div>
         </div>
-        <p className="text-2xl font-black font-mono tracking-tight text-foreground">14ms</p>
+        <p className="text-2xl font-black font-mono tracking-tight text-foreground">
+          {isLoading ? <span className="animate-pulse opacity-50">...</span> : latencyStr}
+        </p>
         <p className="text-3xs text-success font-medium flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-pulse" /> {t('platform.telemetry.fastResponse')}
+          <span className="w-1.5 h-1.5 rounded-full bg-success inline-block animate-pulse" />{" "}
+          {t('platform.telemetry.fastResponse')}
         </p>
       </div>
 
@@ -58,7 +72,9 @@ export function PlatformDashboardTelemetry(): React.JSX.Element {
             <HardDrive className="w-3.5 h-3.5" aria-hidden />
           </div>
         </div>
-        <p className="text-2xl font-black font-mono tracking-tight text-foreground">340MB</p>
+        <p className="text-2xl font-black font-mono tracking-tight text-foreground">
+          {isLoading ? <span className="animate-pulse opacity-50">...</span> : memoryStr}
+        </p>
         <p className="text-3xs text-muted-foreground font-medium">{t('platform.telemetry.nodejsRss')}</p>
       </div>
     </motion.div>

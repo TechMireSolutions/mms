@@ -167,7 +167,7 @@ export function getCollectedAmountForInvoice(invoice: Invoice): number {
     return invoice.finalAmt;
   }
   if (invoice.status === "partial") {
-    return invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
+    return invoice.paidAmt !== undefined && invoice.paidAmt !== null ? invoice.paidAmt : 0;
   }
   return 0;
 }
@@ -184,7 +184,7 @@ export function getOutstandingAmountForInvoice(invoice: Invoice): number {
     return 0;
   }
   if (invoice.status === "partial") {
-    const paid = invoice.paidAmt !== undefined ? invoice.paidAmt : Math.round(invoice.finalAmt / 2);
+    const paid = invoice.paidAmt !== undefined && invoice.paidAmt !== null ? invoice.paidAmt : 0;
     return Math.max(0, invoice.finalAmt - paid);
   }
   return invoice.finalAmt;

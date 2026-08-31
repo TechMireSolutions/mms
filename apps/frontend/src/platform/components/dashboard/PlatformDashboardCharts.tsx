@@ -15,6 +15,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
+import { usePlatformActivityTrend } from "@/platform/hooks/usePlatformTelemetry";
 
 export interface PlatformDashboardChartsProps {
   activeWorkspaces: number;
@@ -26,6 +27,7 @@ export function PlatformDashboardCharts({
   disabledWorkspaces,
 }: PlatformDashboardChartsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { data: activityTrend } = usePlatformActivityTrend();
 
   const chartData = [
     {
@@ -40,13 +42,16 @@ export function PlatformDashboardCharts({
     },
   ];
 
-  const trendData = [
-    { month: "Jan", tenants: Math.max(1, Math.round(activeWorkspaces * 0.4)), ops: 120 },
-    { month: "Feb", tenants: Math.max(1, Math.round(activeWorkspaces * 0.55)), ops: 190 },
-    { month: "Mar", tenants: Math.max(1, Math.round(activeWorkspaces * 0.7)), ops: 340 },
-    { month: "Apr", tenants: Math.max(1, Math.round(activeWorkspaces * 0.85)), ops: 480 },
-    { month: "May", tenants: activeWorkspaces, ops: 620 },
-  ];
+  const trendData = activityTrend && activityTrend.length > 0
+    ? activityTrend
+    : [
+        { month: "Jan", tenants: activeWorkspaces, ops: 0 },
+        { month: "Feb", tenants: activeWorkspaces, ops: 0 },
+        { month: "Mar", tenants: activeWorkspaces, ops: 0 },
+        { month: "Apr", tenants: activeWorkspaces, ops: 0 },
+        { month: "May", tenants: activeWorkspaces, ops: 0 },
+        { month: "Jun", tenants: activeWorkspaces, ops: 0 },
+      ];
 
   return (
     <WidgetCard className="p-6 space-y-4 rounded-2xl border border-border/60 bg-card/70 backdrop-blur-sm shadow-xs">

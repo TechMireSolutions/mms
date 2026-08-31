@@ -12,6 +12,4 @@ export function invalidateEnrollmentsQueries(queryClient: QueryClient): void {
   void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_METRICS_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_WIDGET_AGGREGATES_QUERY_KEY });
   void queryClient.invalidateQueries({ queryKey: ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY });
-  void queryClient.invalidateQueries({ queryKey: ["dummy"] });
-  void queryClient.invalidateQueries({ queryKey: ["dummy"] });
 }

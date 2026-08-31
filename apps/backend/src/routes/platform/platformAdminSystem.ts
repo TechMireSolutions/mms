@@ -23,6 +23,10 @@ import {
   MIGRATE_RESTART_DELAY_MS,
   scheduleMigrateAndRestart,
 } from '../../services/platform/platformAdminService.js';
+import {
+  getPlatformTelemetry,
+  getPlatformActivityTrend,
+} from '../../services/platform/platformTelemetryService.js';
 
 /**
  * Platform apex system ops — full initDb (DDL + data migrations) + PM2 reload.
@@ -100,5 +104,24 @@ export default async function platformAdminSystemRoutes(
         return reply.send({ logs });
       },
     );
+
+    inner.get(
+      '/telemetry',
+      { preHandler: [authenticatePlatform, requirePlatformPermission('system')] },
+      async (_request, reply) => {
+        const telemetry = await getPlatformTelemetry();
+        return reply.send(telemetry);
+      },
+    );
+
+    inner.get(
+      '/activity-trend',
+      { preHandler: [authenticatePlatform, requirePlatformPermission('system')] },
+      async (_request, reply) => {
+        const trend = await getPlatformActivityTrend(6);
+        return reply.send({ trend });
+      },
+    );
   });
 }
+

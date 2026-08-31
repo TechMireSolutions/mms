@@ -47,31 +47,51 @@ function getSourceRows(
   if (source === "hasanat") return collections.hasanat;
   if (source === "academic") return collections.academic;
 
-  const workloadByFacultyName: Record<string, { classes: Set<string>, sessions: Set<string>, students: number }> = {};
+  const workloadByFacultyName: Record<
+    string,
+    { classes: Set<string>; sessions: Set<string>; students: number; specializations: Set<string> }
+  > = {};
   collections.sessions.forEach((session) => {
-    const classes = session.classes as { id: string; teacherName?: string; enrolled: number }[] | undefined;
+    const classes = session.classes as
+      | { id: string; teacherName?: string; enrolled?: number; subject?: string; specialization?: string }[]
+      | undefined;
     if (classes) {
       classes.forEach((sessionClass) => {
         const facultyName = sessionClass.teacherName || translate("reports.builder.unassigned");
         if (!workloadByFacultyName[facultyName]) {
-          workloadByFacultyName[facultyName] = { classes: new Set(), sessions: new Set(), students: 0 };
+          workloadByFacultyName[facultyName] = {
+            classes: new Set(),
+            sessions: new Set(),
+            students: 0,
+            specializations: new Set(),
+          };
         }
         workloadByFacultyName[facultyName].classes.add(sessionClass.id);
         workloadByFacultyName[facultyName].sessions.add(String(session.id));
         workloadByFacultyName[facultyName].students += Number(sessionClass.enrolled || 0);
+        if (sessionClass.specialization) {
+          workloadByFacultyName[facultyName].specializations.add(sessionClass.specialization);
+        } else if (sessionClass.subject) {
+          workloadByFacultyName[facultyName].specializations.add(sessionClass.subject);
+        }
       });
     }
   });
 
-  return Object.entries(workloadByFacultyName).map(([facultyName, workload]) => ({
-    facultyName,
-    classes: workload.classes.size,
-    sessions: workload.sessions.size,
-    totalStudents: workload.students,
-    // Legacy "Hours/Week" column maps to class count — hours are not tracked.
-    hoursWeek: workload.classes.size,
-    specialization: translate("reports.builder.generalStudies"),
-  }));
+  return Object.entries(workloadByFacultyName).map(([facultyName, workload]) => {
+    const specList = Array.from(workload.specializations).filter(Boolean);
+    const specialization =
+      specList.length > 0 ? specList.join(", ") : translate("reports.builder.generalStudies");
+
+    return {
+      facultyName,
+      classes: workload.classes.size,
+      sessions: workload.sessions.size,
+      totalStudents: workload.students,
+      hoursWeek: workload.classes.size,
+      specialization,
+    };
+  });
 }
 
 function buildFlatPreviewRows({

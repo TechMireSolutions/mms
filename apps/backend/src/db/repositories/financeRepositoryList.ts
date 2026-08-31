@@ -200,12 +200,12 @@ export async function aggregateFinanceCommandMetrics(
     // Per-invoice collected / outstanding amounts, mirroring the JS reducer.
     const collectedExpr = sql<number>`case
       when ${financeInvoices.status} = 'paid' then ${financeInvoices.finalAmt}::numeric
-      when ${financeInvoices.status} = 'partial' then coalesce(${financeInvoices.paidAmt}, round(${financeInvoices.finalAmt} / 2, 0))
+      when ${financeInvoices.status} = 'partial' then coalesce(${financeInvoices.paidAmt}, 0)
       else 0
     end`;
     const outstandingExpr = sql<number>`case
       when ${financeInvoices.status} in ('cancelled','paid') then 0
-      when ${financeInvoices.status} = 'partial' then greatest(0, ${financeInvoices.finalAmt} - coalesce(${financeInvoices.paidAmt}, round(${financeInvoices.finalAmt} / 2, 0)))
+      when ${financeInvoices.status} = 'partial' then greatest(0, ${financeInvoices.finalAmt} - coalesce(${financeInvoices.paidAmt}, 0))
       else ${financeInvoices.finalAmt}
     end`;
     // paid_date || due_date — empty paid_date falls back to due_date (JS falsy '' ).
