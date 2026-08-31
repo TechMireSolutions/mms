@@ -1,4 +1,18 @@
-version: '3.8'
+# MMS full-stack compose (self-hosted / local ops profile).
+#
+# SECURITY CONTRACT (do not regress):
+# - No secrets are committed to this file. All credentials are interpolated
+#   from the environment (root .env or `docker compose --env-file`). Missing
+#   required values fail fast with a clear error instead of shipping defaults.
+# - Postgres/Redis are bound to 127.0.0.1 only. Backend/worker reach them over
+#   the internal compose network; nothing listens on 0.0.0.0.
+# - Redis requires a password (requirepass) and REDIS_URL carries it.
+#
+# Required before `docker compose up` (root .env or shell env):
+#   POSTGRES_PASSWORD   (chosen by operator)
+#   REDIS_PASSWORD      (generated, e.g. openssl rand -hex 24)
+#   JWT_SECRET          (32+ chars, e.g. openssl rand -hex 32)
+# See apps/backend/.env.example for the full application env contract.
 
 services:
   postgres:
@@ -6,15 +20,15 @@ services:
     container_name: mms-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
-      POSTGRES_DB: mms
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-mms}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     volumes:
       - mms-pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d mms"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-mms}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -23,12 +37,18 @@ services:
     image: redis:7-alpine
     container_name: mms-redis
     restart: unless-stopped
+    command:
+      - redis-server
+      - --requirepass
+      - ${REDIS_PASSWORD:?set REDIS_PASSWORD in .env}
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - mms-redisdata:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping | grep -q PONG"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -44,14 +64,20 @@ services:
     environment:
       NODE_ENV: production
       PORT: 5002
-      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/mms
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: production_jwt_secret_mms_enterprise_key_change_me
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mms}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:?generate one with openssl rand -hex 32}
     depends_on:
       postgres:
         condition: service_healthy
       redis:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:5002/health >/dev/null 2>&1 || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   worker:
     build:
@@ -62,9 +88,9 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://postgres:postgrespassword@postgres:5432/mms
-      REDIS_URL: redis://redis:6379
-      JWT_SECRET: production_jwt_secret_mms_enterprise_key_change_me
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mms}
+      REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:?generate one with openssl rand -hex 32}
     depends_on:
       postgres:
         condition: service_healthy

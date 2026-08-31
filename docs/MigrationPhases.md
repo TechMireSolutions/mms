@@ -1,4 +1,10 @@
 ```
+
+> **Status note:** this is the historical phase plan. Per-phase completion
+> status is NOT tracked here — the live Open Gaps Register lives in
+> [`.agent/rules/mms-migration-status.md`](../.agent/rules/mms-migration-status.md)
+> (synced to `.cursor/` and `.claude/`). Agents: trust the rule, not this file.
+```
                                     MMS 10-PHASE MIGRATION TIMELINE
                                     
   [Phase 1] ──► [Phase 2] ──► [Phase 3] ──► [Phase 4] ──► [Phase 5]
