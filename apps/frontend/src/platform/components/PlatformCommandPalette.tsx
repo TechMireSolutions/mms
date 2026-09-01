@@ -1,19 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Search,
-  LayoutDashboard,
-  Building2,
-  BarChart3,
-  Activity,
-  Server,
-  ShieldCheck,
-  User,
-  PlusCircle,
-} from 'lucide-react';
+import { Search } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { AppTranslationKey } from '@mms/shared';
-import { ROUTES } from '@/lib/config/routes';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
@@ -21,104 +10,17 @@ import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { OVERLAY_BACKDROP } from '@/components/ui/formStyles';
+import {
+  PLATFORM_STATIC_COMMANDS,
+  buildWorkspaceCommandItems,
+  commandItemIsPermitted,
+  type PlatformCommandItem,
+} from '@/platform/components/platformCommandItems';
 
 export interface PlatformCommandPaletteProps {
   open: boolean;
   onClose: () => void;
 }
-
-interface PlatformCommandItem {
-  id: string;
-  labelKey?: AppTranslationKey;
-  customLabel?: string;
-  customSubtitle?: string;
-  category: 'platform.commandCategory.navigation' | 'platform.commandCategory.actions' | 'platform.manageMadrasas';
-  path: string;
-  icon: React.ElementType;
-  keywords: string[];
-  requiredPermission?: 'workspaces' | 'onboard' | 'system' | 'admins';
-}
-
-const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
-  {
-    id: 'dashboard',
-    labelKey: 'dashboard.title',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformDashboard,
-    icon: LayoutDashboard,
-    keywords: ['home', 'overview', 'metrics', 'stats', 'kpi', 'dashboard'],
-  },
-  {
-    id: 'workspaces',
-    labelKey: 'platform.manageMadrasas',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformWorkspaces,
-    icon: Building2,
-    keywords: ['madrasas', 'workspaces', 'tenants', 'subdomains', 'instances'],
-    requiredPermission: 'workspaces',
-  },
-  {
-    id: 'reports',
-    labelKey: 'module.reports',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformReports,
-    icon: BarChart3,
-    keywords: ['analytics', 'reports', 'charts', 'distribution', 'graphs'],
-  },
-  {
-    id: 'activity-logs',
-    labelKey: 'platform.activityLogsTitle',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformActivityLogs,
-    icon: Activity,
-    keywords: ['logs', 'audit', 'events', 'history', 'activity'],
-    requiredPermission: 'system',
-  },
-  {
-    id: 'system',
-    labelKey: 'platform.systemMaintenance',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformSystem,
-    icon: Server,
-    keywords: ['system', 'health', 'database', 'postgres', 'rls', 'maintenance'],
-    requiredPermission: 'system',
-  },
-  {
-    id: 'admins',
-    labelKey: 'platform.adminsTitle',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformAdmins,
-    icon: ShieldCheck,
-    keywords: ['admins', 'super_user', 'operators', 'users', 'access', 'rbac', 'permissions'],
-    requiredPermission: 'admins',
-  },
-  {
-    id: 'account',
-    labelKey: 'platform.myAccount',
-    category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformAccount,
-    icon: User,
-    keywords: ['account', 'profile', 'session', 'email', 'me', 'password', 'security'],
-  },
-  {
-    id: 'migrations',
-    labelKey: 'platform.profileMigrateRestart',
-    category: 'platform.commandCategory.actions',
-    path: ROUTES.platformSystem,
-    icon: Server,
-    keywords: ['migrations', 'drizzle', 'database', 'schema', 'reset', 'maintenance'],
-    requiredPermission: 'system',
-  },
-  {
-    id: 'onboard-madrasa',
-    labelKey: 'auth.createMadrasa',
-    category: 'platform.commandCategory.actions',
-    path: ROUTES.onboarding,
-    icon: PlusCircle,
-    keywords: ['create', 'add', 'onboard', 'provision', 'new madrasa', 'tenant'],
-    requiredPermission: 'onboard',
-  },
-];
 
 export function PlatformCommandPalette({ open, onClose }: PlatformCommandPaletteProps): React.JSX.Element | null {
   const [query, setQuery] = useState('');
@@ -131,27 +33,13 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
 
   const allAvailableItems = (() => {
     // 1. Filter static items by user permissions
-    const permittedStatic = PLATFORM_STATIC_COMMANDS.filter((item) => {
-      if (!item.requiredPermission) return true;
-      if (item.requiredPermission === 'workspaces') return perms.canWorkspaces;
-      if (item.requiredPermission === 'onboard') return perms.canOnboard;
-      if (item.requiredPermission === 'system') return perms.canSystem;
-      if (item.requiredPermission === 'admins') return perms.canAdmins;
-      return true;
-    });
+    const permittedStatic = PLATFORM_STATIC_COMMANDS.filter((item) =>
+      commandItemIsPermitted(item, perms),
+    );
 
     // 2. Add dynamic workspace items if permitted
-    const workspaceItems: PlatformCommandItem[] = perms.canWorkspaces && workspaces
-      ? workspaces.map((ws) => ({
-          id: `ws-${ws.subdomain}`,
-          customLabel: ws.madrasaName,
-          customSubtitle: ws.subdomain,
-          category: 'platform.manageMadrasas',
-          path: `${ROUTES.platformWorkspaces}?q=${encodeURIComponent(ws.subdomain)}`,
-          icon: Building2,
-          keywords: [ws.subdomain, ws.madrasaName, ws.enabled ? 'active' : 'inactive'],
-        }))
-      : [];
+    const workspaceItems: PlatformCommandItem[] =
+      perms.canWorkspaces && workspaces ? buildWorkspaceCommandItems(workspaces) : [];
 
     return [...permittedStatic, ...workspaceItems];
   })();

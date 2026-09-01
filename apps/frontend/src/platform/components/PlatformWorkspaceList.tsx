@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Globe, Ban, Download, ArrowUpDown } from 'lucide-react';
+import { Globe, Ban, Download } from 'lucide-react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { getAppDomain } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -14,12 +14,6 @@ import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { SearchBar } from '@/components/ui/SearchBar';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { Button } from '@/components/ui/button';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
@@ -27,15 +21,19 @@ import { PlatformWorkspaceTable } from '@/platform/components/PlatformWorkspaceT
 import { PlatformWorkspaceCards } from '@/platform/components/PlatformWorkspaceCards';
 import { PlatformWorkspaceDeleteDialog } from '@/platform/components/PlatformWorkspaceDeleteDialog';
 import { PlatformWorkspaceModulesDialog } from '@/platform/components/PlatformWorkspaceModulesDialog';
+import { PlatformWorkspaceSortMenu } from '@/platform/components/PlatformWorkspaceSortMenu';
+import {
+  downloadWorkspacesCsv,
+  filterWorkspaces,
+  sortWorkspaces,
+  type WorkspaceSortDirection,
+  type WorkspaceSortField,
+} from '@/platform/components/platformWorkspaceListData';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
-import { triggerFileDownload } from '@/lib/download';
-
-type SortField = 'name' | 'subdomain' | 'createdAt' | 'status';
-type SortDirection = 'asc' | 'desc';
 
 /**
  * Super-user workspace list with enable/disable and delete controls.
- * Single Source of Truth (SSOT) managing directory view modes, sorting, and action dialogs.
+ * View state lives in the URL params; row data transforms live in `platformWorkspaceListData`.
  */
 export default function PlatformWorkspaceList(): React.JSX.Element {
   const { t } = useTranslation();
@@ -48,16 +46,16 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const search = searchParams.get('q') ?? '';
   const statusFilter = (searchParams.get('status') as 'all' | 'active' | 'inactive') ?? 'all';
-  const sortField = (searchParams.get('sort') as SortField) ?? 'name';
-  const sortDirection = (searchParams.get('dir') as SortDirection) ?? 'asc';
+  const sortField = (searchParams.get('sort') as WorkspaceSortField) ?? 'name';
+  const sortDirection = (searchParams.get('dir') as WorkspaceSortDirection) ?? 'asc';
 
   const setSearch = (v: string) =>
     setSearchParams((p) => { if (v) { p.set('q', v); } else { p.delete('q'); } return p; }, { replace: true });
   const setStatusFilter = (v: 'all' | 'active' | 'inactive') =>
     setSearchParams((p) => { if (v === 'all') { p.delete('status'); } else { p.set('status', v); } return p; }, { replace: true });
-  const setSortField = (v: SortField) =>
+  const setSortField = (v: WorkspaceSortField) =>
     setSearchParams((p) => { p.set('sort', v); return p; }, { replace: true });
-  const setSortDirection = (v: SortDirection) =>
+  const setSortDirection = (v: WorkspaceSortDirection) =>
     setSearchParams((p) => { p.set('dir', v); return p; }, { replace: true });
 
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
@@ -84,60 +82,13 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
 
   const items = workspaces ?? [];
 
-  const filteredItems = (() => {
-    return items.filter((workspace) => {
-      const matchesSearch =
-        workspace.madrasaName.toLowerCase().includes(search.toLowerCase()) ||
-        workspace.subdomain.toLowerCase().includes(search.toLowerCase());
-
-      const matchesStatus =
-        statusFilter === 'all' ||
-        (statusFilter === 'active' && workspace.enabled) ||
-        (statusFilter === 'inactive' && !workspace.enabled);
-
-      return matchesSearch && matchesStatus;
-    });
-  })();
-
-  const sortedItems = (() => {
-    return [...filteredItems].sort((a, b) => {
-      let comparison = 0;
-      if (sortField === 'name') {
-        comparison = a.madrasaName.localeCompare(b.madrasaName);
-      } else if (sortField === 'subdomain') {
-        comparison = a.subdomain.localeCompare(b.subdomain);
-      } else if (sortField === 'createdAt') {
-        comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
-      } else if (sortField === 'status') {
-        comparison = Number(b.enabled) - Number(a.enabled);
-      }
-      return sortDirection === 'asc' ? comparison : -comparison;
-    });
-  })();
+  const sortedItems = sortWorkspaces(filterWorkspaces(items, search, statusFilter), sortField, sortDirection);
 
   const totalCount = items.length;
   const activeCount = items.filter((w) => w.enabled).length;
   const inactiveCount = items.filter((w) => !w.enabled).length;
 
-  const handleExportCsv = (): void => {
-    if (sortedItems.length === 0) return;
-    const headers = ['Subdomain', 'Madrasa Name', 'Status', 'Email Verification', 'Created At'];
-    const rows = sortedItems.map((w) => [
-      w.subdomain,
-      w.madrasaName,
-      w.enabled ? 'Active' : 'Disabled',
-      w.requireEmailVerification ? 'Required' : 'Optional',
-      w.createdAt,
-    ]);
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
-    ].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    triggerFileDownload(blob, `platform-workspaces-${new Date().toISOString().slice(0, 10)}.csv`);
-  };
-
-  const toggleSort = (field: SortField): void => {
+  const toggleSort = (field: WorkspaceSortField): void => {
     if (sortField === field) {
       setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
     } else {
@@ -200,51 +151,13 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             onChange={setStatusFilter}
           />
 
-          {/* Sort Dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-10 px-3 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer select-none"
-              >
-                <ArrowUpDown className="w-3.5 h-3.5" aria-hidden />
-                {t('platform.sort.sortBy')}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 p-1 rounded-xl">
-              <DropdownMenuItem
-                onClick={() => toggleSort('name')}
-                className="text-xs font-semibold cursor-pointer"
-              >
-                {t('platform.sort.name')} {sortField === 'name' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => toggleSort('subdomain')}
-                className="text-xs font-semibold cursor-pointer"
-              >
-                {t('platform.sort.subdomain')} {sortField === 'subdomain' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => toggleSort('createdAt')}
-                className="text-xs font-semibold cursor-pointer"
-              >
-                {t('platform.sort.createdAt')} {sortField === 'createdAt' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => toggleSort('status')}
-                className="text-xs font-semibold cursor-pointer"
-              >
-                {t('platform.sort.status')} {sortField === 'status' ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <PlatformWorkspaceSortMenu sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} />
 
           {/* Export Workspaces CSV */}
           <Button
             variant="outline"
             size="sm"
-            onClick={handleExportCsv}
+            onClick={() => downloadWorkspacesCsv(sortedItems)}
             disabled={sortedItems.length === 0}
             className="h-10 px-3 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
             title={t('platform.exportWorkspacesCsv')}

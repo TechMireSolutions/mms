@@ -10,12 +10,11 @@ import {
   normalizeDateFormat,
   parseDisplayDateToIso,
   parseFlexibleIsoDate,
-  parseYearValue,
   resolveDatePickerMonthBounds,
-  resolveYearPickerBounds,
   type DateFormatId,
 } from "@mms/shared"
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings"
+import { useDatePickerYearMode } from "./datePickerYearMode"
 
 export interface UseDatePickerStateOptions {
   value?: string | number | Date | null
@@ -54,7 +53,6 @@ export function useDatePickerState({
   minYear,
   maxYear,
 }: UseDatePickerStateOptions) {
-  const isYearMode = mode === "year" || Boolean(yearOnly)
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState("")
   const fallbackId = React.useId()
@@ -65,40 +63,47 @@ export function useDatePickerState({
     DEFAULT_GLOBAL_SETTINGS.dateFormat as DateFormatId,
   )
 
-  const selectedYear = React.useMemo(() => parseYearValue(value), [value])
-  const yearBounds = React.useMemo(
-    () => resolveYearPickerBounds(min, max, minYear, maxYear),
-    [min, max, minYear, maxYear],
-  )
-  const resolvedMinYear = yearBounds.minYear
-  const resolvedMaxYear = yearBounds.maxYear
-
-  const [yearPageStart, setYearPageStart] = React.useState<number>(() =>
-    Math.floor((selectedYear ?? new Date().getFullYear()) / 10) * 10,
-  )
-
   const lastParsedRef = React.useRef<string | null>(null)
   const lastFormatRef = React.useRef<string>(dateFormat)
+
+  const {
+    isYearMode,
+    selectedYear,
+    resolvedMinYear,
+    resolvedMaxYear,
+    yearPageStart,
+    setYearPageStart,
+    goToPreviousYearPage,
+    goToNextYearPage,
+    handleSelectYear,
+    handleSelectThisYear,
+    isThisYearAllowed,
+  } = useDatePickerYearMode({
+    mode,
+    yearOnly,
+    value,
+    min,
+    max,
+    minYear,
+    maxYear,
+    open,
+    onChange,
+    setOpen,
+    setInputValue,
+    lastParsedRef,
+  })
 
   const rawIsoString = typeof value === "string" ? value : value instanceof Date ? formatDateToIso(value) : ""
 
   React.useEffect(() => {
-    if (isYearMode) {
-      const y = parseYearValue(value)
-      const formatted = y != null ? String(y) : ""
-      if (formatted !== lastParsedRef.current) {
-        setInputValue(formatted)
-        lastParsedRef.current = formatted
-      }
-      return
-    }
+    if (isYearMode) return
 
     if (rawIsoString !== lastParsedRef.current || dateFormat !== lastFormatRef.current) {
       setInputValue(formatIsoDateToDisplay(rawIsoString || "", dateFormat))
       lastParsedRef.current = rawIsoString || null
       lastFormatRef.current = dateFormat
     }
-  }, [value, rawIsoString, dateFormat, isYearMode])
+  }, [rawIsoString, dateFormat, isYearMode])
 
   const dateValue = React.useMemo(
     () => (typeof value === "string" ? parseFlexibleIsoDate(value) : value instanceof Date ? value : undefined),
@@ -111,13 +116,9 @@ export function useDatePickerState({
   )
 
   React.useEffect(() => {
-    if (!open) return
-    if (isYearMode) {
-      setYearPageStart(Math.floor((selectedYear ?? new Date().getFullYear()) / 10) * 10)
-    } else {
-      setDisplayMonth(resolveInitialDisplayMonth(dateValue, min, max))
-    }
-  }, [open, dateValue, min, max, isYearMode, selectedYear])
+    if (!open || isYearMode) return
+    setDisplayMonth(resolveInitialDisplayMonth(dateValue, min, max))
+  }, [open, dateValue, min, max, isYearMode])
 
   const minIsoStr = typeof min === "string" ? min : undefined
   const maxIsoStr = typeof max === "string" ? max : undefined
@@ -162,34 +163,6 @@ export function useDatePickerState({
     }
     commitIso(formatDateToIso(date), date)
     setOpen(false)
-  }
-
-  const handleSelectYear = (year: number) => {
-    if (!isYearWithinBounds(year, resolvedMinYear, resolvedMaxYear)) return
-    const yearStr = String(year)
-    lastParsedRef.current = yearStr
-    onChange?.(yearStr)
-    setInputValue(yearStr)
-    setOpen(false)
-  }
-
-  const goToPreviousYearPage = () => {
-    setYearPageStart((prev) => prev - 12)
-  }
-
-  const goToNextYearPage = () => {
-    setYearPageStart((prev) => prev + 12)
-  }
-
-  const isThisYearAllowed = React.useMemo(() => {
-    return isYearWithinBounds(new Date().getFullYear(), resolvedMinYear, resolvedMaxYear)
-  }, [resolvedMinYear, resolvedMaxYear])
-
-  const handleSelectThisYear = () => {
-    const currentYear = new Date().getFullYear()
-    if (isThisYearAllowed) {
-      handleSelectYear(currentYear)
-    }
   }
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
