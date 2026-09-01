@@ -1,11 +1,14 @@
 import React from "react";
-import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from "@mms/shared";
+import { Calendar } from "lucide-react";
+import { formatDate, type PlatformWorkspaceRow as PlatformWorkspaceRowData } from "@mms/shared";
 import { WorkspaceIdentityCell } from "@/platform/components/workspace/WorkspaceIdentityCell";
 import { WorkspaceStatusBadge } from "@/platform/components/workspace/WorkspaceStatusBadge";
 import { WorkspaceRowActions } from "@/platform/components/workspace/WorkspaceRowActions";
 import { tenantUrl } from "@/lib/config/tenantConfig";
 import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { useTranslation } from "@/hooks/useTranslation";
+import { cn } from "@/lib/utils";
 
 export interface PlatformWorkspaceCardsProps {
   workspaces: PlatformWorkspaceRowData[];
@@ -30,6 +33,8 @@ export function PlatformWorkspaceCards({
   onOpenModules,
   onOpenDelete,
 }: PlatformWorkspaceCardsProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <ModuleDirectoryCards
       items={workspaces}
@@ -39,15 +44,30 @@ export function PlatformWorkspaceCards({
         return (
           <DirectoryEntityCard
             key={workspace.subdomain}
-            accentClassName={!workspace.enabled ? "bg-destructive/80" : "bg-primary/80"}
-            className="flex flex-col justify-between"
+            accentClassName={!workspace.enabled ? "bg-muted-foreground/50" : "bg-primary/80"}
+            className={cn(
+              "flex flex-col justify-between transition-all",
+              !workspace.enabled && "opacity-85 hover:opacity-100",
+              isTargetDelete && "opacity-40 pointer-events-none",
+            )}
           >
-            <div className="flex items-start justify-between gap-3 mb-4">
-              <WorkspaceIdentityCell workspace={workspace} appDomain={appDomain} />
-              <WorkspaceStatusBadge enabled={workspace.enabled} />
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <WorkspaceIdentityCell workspace={workspace} appDomain={appDomain} />
+                <WorkspaceStatusBadge enabled={workspace.enabled} />
+              </div>
+
+              {workspace.createdAt ? (
+                <div className="flex items-center gap-1.5 text-2xs font-semibold text-muted-foreground/70">
+                  <Calendar className="w-3.5 h-3.5 shrink-0 opacity-75" aria-hidden />
+                  <span>
+                    {t("platform.sort.createdAt")}: {formatDate(workspace.createdAt)}
+                  </span>
+                </div>
+              ) : null}
             </div>
 
-            <div className="flex items-center justify-end border-t border-border/30 pt-3 mt-auto">
+            <div className="mt-4">
               <WorkspaceRowActions
                 subdomain={workspace.subdomain}
                 enabled={workspace.enabled}

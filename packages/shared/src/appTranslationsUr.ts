@@ -1121,6 +1121,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "common.previous": "پچھلا",
   "common.readMore": "مزید پڑھیں",
   "common.required": "ضروری",
+  "common.refresh": "ریفریش کریں",
   "common.restore": "بحال کریں",
   "common.retry": "دوبارہ کوشش کریں",
   "common.save": "محفوظ کریں",

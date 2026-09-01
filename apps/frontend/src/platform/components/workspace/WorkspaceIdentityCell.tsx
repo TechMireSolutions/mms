@@ -4,6 +4,7 @@ import WorkspaceLogo from '@/platform/components/WorkspaceLogo';
 import { tenantUrl } from '@/lib/config/tenantConfig';
 import { CopyBtn } from '@/components/ui/CopyBtn';
 import { ExternalLink } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 
 interface WorkspaceIdentityCellProps {
   workspace: PlatformWorkspaceRowData;
@@ -14,7 +15,9 @@ export function WorkspaceIdentityCell({
   workspace,
   appDomain,
 }: WorkspaceIdentityCellProps): React.JSX.Element {
+  const { t } = useTranslation();
   const tenantLink = tenantUrl(workspace.subdomain, '/');
+  const openTitle = `${t('platform.openWorkspace')} (${workspace.subdomain}.${appDomain})`;
 
   return (
     <div className="flex items-center gap-3.5">
@@ -27,22 +30,30 @@ export function WorkspaceIdentityCell({
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-black tracking-tight text-foreground truncate group-hover:text-primary transition-colors">
-            {workspace.madrasaName}
-          </h3>
           <a
             href={tenantLink}
             target="_blank"
             rel="noopener noreferrer"
-            title={`Open ${workspace.subdomain}.${appDomain}`}
-            className="text-muted-foreground hover:text-primary transition-colors inline-flex p-1 rounded-lg hover:bg-primary/10"
-            aria-label={`Open ${workspace.subdomain}.${appDomain}`}
+            title={openTitle}
+            className="text-sm font-bold tracking-tight text-foreground truncate hover:text-primary transition-colors inline-flex items-center gap-1.5 group/link"
           >
-            <ExternalLink className="w-3.5 h-3.5" aria-hidden />
+            <span className="truncate">{workspace.madrasaName}</span>
+            <ExternalLink
+              className="w-3.5 h-3.5 shrink-0 text-muted-foreground group-hover/link:text-primary transition-colors"
+              aria-hidden
+            />
           </a>
         </div>
+        {workspace.tagline ? (
+          <p className="text-xs font-medium text-muted-foreground/75 truncate">
+            {workspace.tagline}
+          </p>
+        ) : null}
         <div className="text-xs font-medium text-muted-foreground flex items-center gap-1.5">
-          <div className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 border border-border/50 font-mono text-2xs">
+          <div
+            dir="ltr"
+            className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 border border-border/50 font-mono text-2xs"
+          >
             <span className="font-bold text-primary">{workspace.subdomain}</span>
             <span className="text-muted-foreground/70">.{appDomain}</span>
           </div>

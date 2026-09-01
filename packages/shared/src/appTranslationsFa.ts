@@ -1125,6 +1125,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "common.previous": "قبلی",
   "common.readMore": "نمایش بیشتر",
   "common.required": "الزامی",
+  "common.refresh": "تازه‌سازی",
   "common.restore": "بازیابی",
   "common.retry": "تلاش مجدد",
   "common.save": "ذخیره",

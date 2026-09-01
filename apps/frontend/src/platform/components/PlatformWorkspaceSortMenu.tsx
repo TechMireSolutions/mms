@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowUpDown } from 'lucide-react';
+import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { WorkspaceSortDirection, WorkspaceSortField } from '@/platform/components/platformWorkspaceListData';
+import { cn } from '@/lib/utils';
 
 const SORT_MENU_ITEMS: { field: WorkspaceSortField; labelKey: 'platform.sort.name' | 'platform.sort.subdomain' | 'platform.sort.createdAt' | 'platform.sort.status' }[] = [
   { field: 'name', labelKey: 'platform.sort.name' },
@@ -37,22 +38,35 @@ export function PlatformWorkspaceSortMenu({
         <Button
           variant="outline"
           size="sm"
-          className="h-10 px-3 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer select-none"
+          className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer select-none"
         >
           <ArrowUpDown className="w-3.5 h-3.5" aria-hidden />
           {t('platform.sort.sortBy')}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 p-1 rounded-xl">
-        {SORT_MENU_ITEMS.map((item) => (
-          <DropdownMenuItem
-            key={item.field}
-            onClick={() => onToggleSort(item.field)}
-            className="text-xs font-semibold cursor-pointer"
-          >
-            {t(item.labelKey)} {sortField === item.field ? (sortDirection === 'asc' ? '↑' : '↓') : ''}
-          </DropdownMenuItem>
-        ))}
+      <DropdownMenuContent align="end" className="w-52 p-1.5 rounded-xl shadow-md">
+        {SORT_MENU_ITEMS.map((item) => {
+          const isActive = sortField === item.field;
+          return (
+            <DropdownMenuItem
+              key={item.field}
+              onClick={() => onToggleSort(item.field)}
+              className={cn(
+                "text-xs font-semibold cursor-pointer flex items-center justify-between gap-2 px-3 py-2 rounded-lg transition-colors",
+                isActive && "bg-primary/10 text-primary font-bold",
+              )}
+            >
+              <span>{t(item.labelKey)}</span>
+              {isActive ? (
+                sortDirection === 'asc' ? (
+                  <ArrowUp className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
+                ) : (
+                  <ArrowDown className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
+                )
+              ) : null}
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );

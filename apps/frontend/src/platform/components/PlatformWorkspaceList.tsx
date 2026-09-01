@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useDeferredValue } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Globe, Ban, Download } from 'lucide-react';
+import { Globe, Ban, Download, RefreshCw } from 'lucide-react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { getAppDomain } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -81,8 +81,8 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   }, [confirmOpen]);
 
   const items = workspaces ?? [];
-
-  const sortedItems = sortWorkspaces(filterWorkspaces(items, search, statusFilter), sortField, sortDirection);
+  const deferredSearch = useDeferredValue(search);
+  const sortedItems = sortWorkspaces(filterWorkspaces(items, deferredSearch, statusFilter), sortField, sortDirection);
 
   const totalCount = items.length;
   const activeCount = items.filter((w) => w.enabled).length;
@@ -130,6 +130,16 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
     setModulesOpen(true);
   };
 
+  const isFiltered = Boolean(search || statusFilter !== 'all');
+
+  const handleClearFilters = (): void => {
+    setSearchParams((p) => {
+      p.delete('q');
+      p.delete('status');
+      return p;
+    }, { replace: true });
+  };
+
   return (
     <div className="space-y-6 w-full text-start">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
@@ -153,13 +163,26 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
 
           <PlatformWorkspaceSortMenu sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} />
 
+          {/* Refresh button */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => void refetch()}
+            disabled={isFetching}
+            className="min-h-11 h-11 min-w-11 w-11 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
+            title={t('common.refresh')}
+            aria-label={t('common.refresh')}
+          >
+            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} aria-hidden />
+          </Button>
+
           {/* Export Workspaces CSV */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => downloadWorkspacesCsv(sortedItems)}
             disabled={sortedItems.length === 0}
-            className="h-10 px-3 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
+            className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
             title={t('platform.exportWorkspacesCsv')}
           >
             <Download className="w-3.5 h-3.5" aria-hidden />
@@ -178,7 +201,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         errorTitle={t('platform.loadFailed')}
         errorHint={t('platform.loadFailedHint')}
         viewMode={viewMode}
-        skeletonColumnCount={3}
+        skeletonColumnCount={5}
         useServerWork={false}
         pageData={null}
         onPageChange={() => {}}
@@ -191,9 +214,21 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             <EmptyState
               icon={Globe}
               title={
-                search || statusFilter !== 'all'
+                isFiltered
                   ? t('platform.noSearchResults')
                   : t('apex.noMadrasasYet')
+              }
+              action={
+                isFiltered ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleClearFilters}
+                    className="min-h-11 h-11 px-4 text-xs font-bold rounded-xl cursor-pointer"
+                  >
+                    {t('common.clearFilters')}
+                  </Button>
+                ) : undefined
               }
             />
           </div>
@@ -204,6 +239,9 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             togglePending={setEnabled.isPending || setEmailVerification.isPending}
             deletePending={deleteWorkspace.isPending}
             targetDeleteSubdomain={targetWorkspace?.subdomain}
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onToggleSort={toggleSort}
             onToggle={(subdomain, enabled) => setEnabled.mutate({ subdomain, enabled })}
             onToggleEmailVerification={(subdomain, requireEmailVerification) =>
               setEmailVerification.mutate({ subdomain, requireEmailVerification })

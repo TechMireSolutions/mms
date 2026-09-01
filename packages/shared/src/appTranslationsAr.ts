@@ -1121,6 +1121,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "common.previous": "السابق",
   "common.readMore": "اقرأ المزيد",
   "common.required": "مطلوب",
+  "common.refresh": "تحديث",
   "common.restore": "استعادة",
   "common.retry": "إعادة المحاولة",
   "common.save": "حفظ",

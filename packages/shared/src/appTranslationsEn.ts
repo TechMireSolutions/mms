@@ -1119,6 +1119,7 @@ export const APP_TRANSLATIONS_EN = {
   "common.previous": "Previous",
   "common.readMore": "Read more",
   "common.required": "Required",
+  "common.refresh": "Refresh",
   "common.restore": "Restore",
   "common.retry": "Retry",
   "common.save": "Save",
