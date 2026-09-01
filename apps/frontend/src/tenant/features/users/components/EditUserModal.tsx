@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
@@ -42,10 +42,6 @@ export interface EditUserModalProps {
   onSave: (user: SystemUser) => void | Promise<void>;
 }
 
-function resolveContactId(user: SystemUser): string | number | null {
-  return user.contactId ?? null;
-}
-
 export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
@@ -56,13 +52,13 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
     () => filterAssignableRoles(workspaceRoles, authUser?.role),
     [workspaceRoles, authUser?.role],
   );
-  const initialContactId = (() => resolveContactId(user))();
+  const initialContactId = user.contactId ?? '';
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<EditWorkspaceUserInput & Record<string, unknown>>({
     resolver: zodResolver(editWorkspaceUserSchema),
     defaultValues: {
-      contactId: initialContactId ?? '',
+      contactId: initialContactId,
       role: user.role,
       status: user.status,
       twoFactorEnabled: user.twoFactorEnabled,
@@ -71,6 +67,18 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
       ),
     },
   });
+
+  useEffect(() => {
+    form.reset({
+      contactId: user.contactId ?? '',
+      role: user.role,
+      status: user.status,
+      twoFactorEnabled: user.twoFactorEnabled,
+      ...Object.fromEntries(
+        customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
+      ),
+    });
+  }, [user, customFields, form]);
 
   const watchedContactId = form.watch('contactId');
   const { data: selectedContact } = useContactById(

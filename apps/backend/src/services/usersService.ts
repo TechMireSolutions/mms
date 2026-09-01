@@ -50,6 +50,33 @@ import type { ContactLike } from '@mms/shared';
 import { hydrateWorkspaceUserProfile } from '@mms/shared';
 import { loadContactsByIds } from './contactService.js';
 
+function createHttpError(statusCode: number, type: string, message: string): Error & { statusCode: number; type: string } {
+  const err = new Error(message) as Error & { statusCode: number; type: string };
+  err.statusCode = statusCode;
+  err.type = type;
+  return err;
+}
+
+async function recordUserActivityLog(
+  tenant: string,
+  userId: string,
+  action: ActivityLog['action'],
+  detail: string,
+  ip = '127.0.0.1',
+): Promise<void> {
+  const log: ActivityLog = {
+    id: `log_${randomBytes(8).toString('hex')}`,
+    userId,
+    action,
+    module: 'users',
+    detail,
+    ts: new Date().toISOString(),
+    ip,
+  };
+  await bulkSaveActivityLogs(tenant, [log]);
+  await broadcastCollection('user_activity_logs');
+}
+
 async function hydrateUserRows(rows: Awaited<ReturnType<typeof listTenantUsersByIds>>): Promise<WorkspaceUser[]> {
   const contactIds = [
     ...new Set(
@@ -140,22 +167,10 @@ export async function upsertWorkspaceUsers(
     for (const update of parsed) {
       const existingUser = existingById.get(String(update.id));
       if (existingUser && !canManageTargetUser(actorRole, existingUser.role)) {
-        const err = new Error('Cannot modify a Super Admin user account') as Error & {
-          statusCode?: number;
-          type?: string;
-        };
-        err.statusCode = 403;
-        err.type = 'forbidden_super_admin_mutation';
-        throw err;
+        throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
       }
       if (update.role && !canAssignRole(actorRole, update.role)) {
-        const err = new Error('Only Super Admin can assign the Super Admin role') as Error & {
-          statusCode?: number;
-          type?: string;
-        };
-        err.statusCode = 403;
-        err.type = 'forbidden_super_admin_assignment';
-        throw err;
+        throw createHttpError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
       }
     }
   }
@@ -184,13 +199,7 @@ export async function createWorkspaceUser(
   if (!tenant) throw new Error('Tenant context required');
 
   if (actorRole && !canAssignRole(actorRole, input.role)) {
-    const err = new Error('Only Super Admin can assign the Super Admin role') as Error & {
-      statusCode?: number;
-      type?: string;
-    };
-    err.statusCode = 403;
-    err.type = 'forbidden_super_admin_assignment';
-    throw err;
+    throw createHttpError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
   }
 
   let name = String(input.name || '').trim();
@@ -209,18 +218,12 @@ export async function createWorkspaceUser(
   }
 
   if (!email) {
-    const err = new Error('User email is required') as Error & { statusCode?: number; type?: string };
-    err.statusCode = 400;
-    err.type = 'validation_error';
-    throw err;
+    throw createHttpError(400, 'validation_error', 'User email is required');
   }
 
   const existing = await getHydratedUsers();
   if (existing.some((u) => u.loginEmail?.toLowerCase() === email || u.email?.toLowerCase() === email)) {
-    const err = new Error(`User with email "${email}" already exists`) as Error & { statusCode?: number; type?: string };
-    err.statusCode = 400;
-    err.type = 'duplicate_user_email';
-    throw err;
+    throw createHttpError(400, 'duplicate_user_email', `User with email "${email}" already exists`);
   }
 
   let passwordHash = '';
@@ -262,18 +265,13 @@ export async function createWorkspaceUser(
   await saveUsers(users);
   await broadcastCollection('users');
 
-  // Record transactional server activity log
-  const log: ActivityLog = {
-    id: `log_${randomBytes(8).toString('hex')}`,
-    userId: actorId,
-    action: 'create',
-    module: 'users',
-    detail: `Created user ${name} (${email}) with role ${input.role}`,
-    ts: new Date().toISOString(),
+  await recordUserActivityLog(
+    tenant,
+    actorId,
+    'create',
+    `Created user ${name} (${email}) with role ${input.role}`,
     ip,
-  };
-  await bulkSaveActivityLogs(tenant, [log]);
-  await broadcastCollection('user_activity_logs');
+  );
 
   const reloaded = await loadWorkspaceUsers();
   const created = reloaded.find((u) => String(u.id) === userId);
@@ -292,33 +290,21 @@ export async function updateWorkspaceUser(
 
   const existingRow = await findTenantUserRowById(id);
   if (!existingRow || existingRow.deletedAt) {
-    const err = new Error('User not found') as Error & { statusCode?: number; type?: string };
-    err.statusCode = 404;
-    err.type = 'not_found';
-    throw err;
+    throw createHttpError(404, 'not_found', 'User not found');
   }
 
   if (actorRole && !canManageTargetUser(actorRole, existingRow.role)) {
-    const err = new Error('Cannot modify a Super Admin user account') as Error & { statusCode?: number; type?: string };
-    err.statusCode = 403;
-    err.type = 'forbidden_super_admin_mutation';
-    throw err;
+    throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
   }
 
   if (input.role && actorRole && !canAssignRole(actorRole, input.role)) {
-    const err = new Error('Only Super Admin can assign the Super Admin role') as Error & { statusCode?: number; type?: string };
-    err.statusCode = 403;
-    err.type = 'forbidden_super_admin_assignment';
-    throw err;
+    throw createHttpError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
   }
 
   const rawUsers = await getRawUsers();
   const target = rawUsers.find((u) => String(u.id) === id);
   if (!target) {
-    const err = new Error('User not found') as Error & { statusCode?: number; type?: string };
-    err.statusCode = 404;
-    err.type = 'not_found';
-    throw err;
+    throw createHttpError(404, 'not_found', 'User not found');
   }
 
   if (input.contactId !== undefined) {
@@ -338,18 +324,13 @@ export async function updateWorkspaceUser(
   await saveUsers(rawUsers);
   await broadcastCollection('users');
 
-  // Record transactional server activity log
-  const log: ActivityLog = {
-    id: `log_${randomBytes(8).toString('hex')}`,
-    userId: actorId,
-    action: 'update',
-    module: 'users',
-    detail: `Updated user ${target.name || id}`,
-    ts: new Date().toISOString(),
+  await recordUserActivityLog(
+    tenant,
+    actorId,
+    'update',
+    `Updated user ${target.name || id}`,
     ip,
-  };
-  await bulkSaveActivityLogs(tenant, [log]);
-  await broadcastCollection('user_activity_logs');
+  );
 
   const reloaded = await loadWorkspaceUsers();
   const updated = reloaded.find((u) => String(u.id) === id);
@@ -382,26 +363,14 @@ export async function deleteUserById(
   ip = '127.0.0.1',
 ): Promise<boolean> {
   if (id === deletedBy) {
-    const err = new Error('Cannot delete your own account') as Error & {
-      statusCode?: number;
-      type?: string;
-    };
-    err.statusCode = 400;
-    err.type = 'self_delete';
-    throw err;
+    throw createHttpError(400, 'self_delete', 'Cannot delete your own account');
   }
 
   const existing = await findTenantUserRowById(id);
   if (!existing || existing.deletedAt) return false;
 
   if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
-    const err = new Error('Cannot delete a Super Admin user account') as Error & {
-      statusCode?: number;
-      type?: string;
-    };
-    err.statusCode = 403;
-    err.type = 'forbidden_super_admin_deletion';
-    throw err;
+    throw createHttpError(403, 'forbidden_super_admin_deletion', 'Cannot delete a Super Admin user account');
   }
 
   const ok = await softDeleteTenantUserRow(id, deletedBy);
@@ -411,17 +380,13 @@ export async function deleteUserById(
 
     const tenant = getRequestTenant();
     if (tenant) {
-      const log: ActivityLog = {
-        id: `log_${randomBytes(8).toString('hex')}`,
-        userId: deletedBy,
-        action: 'delete',
-        module: 'users',
-        detail: `Deleted user ${existing.name || id}`,
-        ts: new Date().toISOString(),
+      await recordUserActivityLog(
+        tenant,
+        deletedBy,
+        'delete',
+        `Deleted user ${existing.name || id}`,
         ip,
-      };
-      await bulkSaveActivityLogs(tenant, [log]);
-      await broadcastCollection('user_activity_logs');
+      );
     }
   }
   return ok;
@@ -437,13 +402,7 @@ export async function restoreUserById(
   if (!existing) return false;
 
   if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
-    const err = new Error('Cannot restore a Super Admin user account') as Error & {
-      statusCode?: number;
-      type?: string;
-    };
-    err.statusCode = 403;
-    err.type = 'forbidden_super_admin_mutation';
-    throw err;
+    throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot restore a Super Admin user account');
   }
 
   const ok = await restoreTenantUserRow(id);
@@ -452,17 +411,13 @@ export async function restoreUserById(
 
     const tenant = getRequestTenant();
     if (tenant) {
-      const log: ActivityLog = {
-        id: `log_${randomBytes(8).toString('hex')}`,
-        userId: actorId,
-        action: 'update',
-        module: 'users',
-        detail: `Restored user ${existing.name || id}`,
-        ts: new Date().toISOString(),
+      await recordUserActivityLog(
+        tenant,
+        actorId,
+        'update',
+        `Restored user ${existing.name || id}`,
         ip,
-      };
-      await bulkSaveActivityLogs(tenant, [log]);
-      await broadcastCollection('user_activity_logs');
+      );
     }
   }
   return ok;
@@ -473,13 +428,7 @@ export async function verifyUserEmailById(id: string, actorRole?: string): Promi
   if (!existing) return false;
 
   if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
-    const err = new Error('Cannot modify a Super Admin user account') as Error & {
-      statusCode?: number;
-      type?: string;
-    };
-    err.statusCode = 403;
-    err.type = 'forbidden_super_admin_mutation';
-    throw err;
+    throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
   }
 
   const ok = await verifyTenantUserEmailRow(id);
@@ -498,13 +447,7 @@ export async function resetUserPasswordById(
   if (!existing || existing.deletedAt) return false;
 
   if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
-    const err = new Error('Cannot reset password of a Super Admin user account') as Error & {
-      statusCode?: number;
-      type?: string;
-    };
-    err.statusCode = 403;
-    err.type = 'forbidden_super_admin_mutation';
-    throw err;
+    throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot reset password of a Super Admin user account');
   }
 
   await assertPasswordMeetsPolicy(temporaryPassword);
@@ -518,17 +461,13 @@ export async function resetUserPasswordById(
 
   const tenant = getRequestTenant();
   if (tenant) {
-    const log: ActivityLog = {
-      id: `log_${randomBytes(8).toString('hex')}`,
-      userId: actorId,
-      action: 'update',
-      module: 'users',
-      detail: `Reset password for user ${existing.name || id}`,
-      ts: new Date().toISOString(),
+    await recordUserActivityLog(
+      tenant,
+      actorId,
+      'update',
+      `Reset password for user ${existing.name || id}`,
       ip,
-    };
-    await bulkSaveActivityLogs(tenant, [log]);
-    await broadcastCollection('user_activity_logs');
+    );
   }
   return true;
 }

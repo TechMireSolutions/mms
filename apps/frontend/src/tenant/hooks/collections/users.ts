@@ -6,11 +6,16 @@ export {
   USERS_LIST_QUERY_KEY,
   USERS_METRICS_QUERY_KEY,
   ACTIVITY_LOGS_QUERY_KEY,
+  extractActivityLogs,
   useUsersCollection,
   useUsersMetrics,
   useActivityLogs,
   useUsersMutations,
 } from '@/tenant/features/users/hooks/useUsersApi';
+export {
+  type UsersListPageResult,
+  type UsersPaginatedParams,
+} from '@/tenant/features/users/hooks/usersQueryKeys';
 export { useUsersPaginated, fetchAllUsersForQuery } from '@/tenant/features/users/hooks/useUsersListQueries';
 export {
   setUserFieldConfigMemory,

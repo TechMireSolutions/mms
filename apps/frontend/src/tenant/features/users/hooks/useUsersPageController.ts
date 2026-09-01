@@ -14,8 +14,8 @@ import {
 } from '@mms/shared';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import {
+  extractActivityLogs,
   useActivityLogs,
-  useActivityLogsCollection,
   useUsersMutations,
 } from '@/tenant/features/users/hooks/useUsersApi';
 import { useUsersPaginated } from '@/tenant/features/users/hooks/useUsersListQueries';
@@ -31,11 +31,31 @@ import {
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 import { notify } from '@/lib/notify';
+import { buildUsersWorkTierProps } from '@/tenant/features/users/hooks/usersPageWorkTierProps';
+import { buildUsersModalLayerProps } from '@/tenant/features/users/hooks/usersPageModalLayerProps';
 
 const SETUP_TAB_LABEL_KEYS: Record<(typeof USERS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
   permissions: 'users.permissions',
   preferences: 'users.setup.preferences',
 };
+
+function getUsersConfigTabs(canAccessRoles: boolean, t: (key: AppTranslationKey) => string) {
+  const tabs = canAccessRoles
+    ? USERS_MODULE_MANIFEST.setupSubTabs
+    : USERS_MODULE_MANIFEST.setupSubTabs.filter((id) => id !== 'permissions');
+
+  return tabs.map((id) => ({
+    id,
+    label: t(SETUP_TAB_LABEL_KEYS[id]),
+  }));
+}
+
+function getUsersSubTabs(t: (key: AppTranslationKey) => string) {
+  return [
+    { id: 'users', label: t('users.list'), icon: UsersIcon },
+    { id: 'activity', label: t('users.activity'), icon: Activity },
+  ];
+}
 
 export function useUsersPageController() {
   const { t } = useTranslation();
@@ -49,47 +69,30 @@ export function useUsersPageController() {
     canViewSetup,
   } = useModulePermissions(USERS_MODULE_MANIFEST);
   const canAccessRoles = canAccessRolesAndPermissions(authUser?.role);
-  const USERS_CONFIG_TABS = (() => {
-    const subTabs = canAccessRoles
-      ? USERS_MODULE_MANIFEST.setupSubTabs
-      : USERS_MODULE_MANIFEST.setupSubTabs.filter((id) => id !== 'permissions');
-    return subTabs.map((id) => ({
-      id,
-      label: t(SETUP_TAB_LABEL_KEYS[id]),
-    }));
-  })();
-  const SUB_TABS = (() => [
-      { id: 'users', label: t('users.list'), icon: UsersIcon },
-      { id: 'activity', label: t('users.activity'), icon: Activity },
-    ])();
+  const USERS_CONFIG_TABS = getUsersConfigTabs(canAccessRoles, t);
+  const SUB_TABS = getUsersSubTabs(t);
   const [activeTab, setActiveTab] = usePersistedTabState<string>('users_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('users_ops_subtab', 'users');
   const [configSubTab, setConfigSubTab] = usePersistedTabState<string>(
     'users_config_subtab',
     'permissions',
   );
+  const filters = useUsersDirectoryFilters();
   const {
     listPage,
-    setListPage,
     showDeleted,
-    setShowDeleted,
     search,
-    setSearch,
     debouncedSearch,
     roleFilter,
-    setRoleFilter,
     statusFilter,
-    setStatusFilter,
     selectedIds,
     setSelectedIds,
-    clearFilters,
-    clearSelection,
-    hasActiveFilters,
-  } = useUsersDirectoryFilters();
+  } = filters;
 
   const logsResult = useActivityLogs({ enabled: activeTab === 'work' && activeSubTab === 'activity' });
-  const logs = useActivityLogsCollection({ enabled: activeTab === 'work' && activeSubTab === 'activity' });
+  const logs = extractActivityLogs(logsResult.data);
   const logsLoadFailed = logsResult.isError;
+  const isLogsLoading = logsResult.isLoading;
 
   const useServerWork = activeTab === 'work' && activeSubTab === 'users';
   const workPageQuery = useUsersPaginated({
@@ -102,26 +105,17 @@ export function useUsersPageController() {
     enabled: useServerWork,
   });
 
-  const users = (() =>
-      ((workPageQuery.data?.users ?? []) as unknown[]).map((user) =>
-        normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
-      ))();
+  const users = ((workPageQuery.data?.users ?? []) as unknown[]).map((user) =>
+    normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
+  );
   const shownCount = workPageQuery.data?.total ?? users.length;
   const listLoadFailed = workPageQuery.isError;
 
-  const {
-    getColumnWidth: getUserColumnWidth,
-    setColumnWidth: setUserColumnWidth,
-    isColumnVisible: isUserColumnVisible,
-    columnRegistry: userColumnRegistry,
-    updateUserColumnLayout: updateUserColumnLayout,
-    customizerLabels: userColumnCustomizerLabels,
-  } = useUserColumnLayout();
-  const { getColumnWidth: getActivityColumnWidth, setColumnWidth: setActivityColumnWidth } =
-    useUserActivityColumnLayout();
+  const columns = useUserColumnLayout();
+  const activityColumns = useUserActivityColumnLayout();
 
   const { logExportAudit } = useUsersMutations();
-  const exportColumns = (() => defaultUsersExportColumns(t))();
+  const exportColumns = defaultUsersExportColumns(t);
   const { handleExportCSV } = useUsersExportActions({
     tableColumns: exportColumns,
     canExport,
@@ -139,6 +133,10 @@ export function useUsersPageController() {
     }
   }, [canViewSetup, canViewReports, activeTab, setActiveTab]);
 
+  useEffect(() => {
+    setSelectedIds([]);
+  }, [activeTab, activeSubTab, setSelectedIds]);
+
   const [viewing, setViewing] = useState<SystemUser | null>(null);
   const [editing, setEditing] = useState<SystemUser | null>(null);
   const [resettingPasswordFor, setResettingPasswordFor] = useState<SystemUser | null>(null);
@@ -146,6 +144,15 @@ export function useUsersPageController() {
   const [showAddUser, setShowAddUser] = useState(false);
 
   const actorId = authUser?.id ?? 'system';
+
+  const handleOpenEdit = (user: SystemUser): void => {
+    if (!canManageTargetUser(authUser?.role, user.role)) {
+      notify.error(t('users.errors.cannotModifySuperAdmin'));
+      return;
+    }
+    setEditing(user);
+  };
+
   const handleOpenPasswordReset = (user: SystemUser): void => {
     if (user.id === actorId) {
       notify.info(t('users.resetPasswordSelfTitle'), {
@@ -159,16 +166,8 @@ export function useUsersPageController() {
     }
     setResettingPasswordFor(user);
   };
-  const {
-    handleDeleteUser,
-    handleRestoreUser,
-    handleBulkDelete,
-    handleBulkRestore,
-    handleResetPassword,
-    handleSaveEdit,
-    handleInvite,
-    handleAddUser,
-  } = useUsersPageActions({ users, logs, actorId, t });
+
+  const actions = useUsersPageActions({ actorId, t });
 
   const visibleTopTabs = useFilteredModuleTierTabs({
     canViewSetup,
@@ -188,9 +187,9 @@ export function useUsersPageController() {
   useUsersKeyboardShortcuts({
     enabled: effectiveTab === 'work' && effectiveSubTab === 'users',
     selectedCount: selectedIds.length,
-    hasActiveFilters,
-    clearFilters,
-    clearSelection,
+    hasActiveFilters: filters.hasActiveFilters,
+    clearFilters: filters.clearFilters,
+    clearSelection: filters.clearSelection,
     canWrite,
     showDeleted,
     onCreate: () => {
@@ -213,75 +212,79 @@ export function useUsersPageController() {
     );
   };
 
-  return {
-    t,
-    canWrite,
-    canDelete,
-    canExport,
-    canEditSetup,
-    USERS_CONFIG_TABS,
-    SUB_TABS,
-    activeTab,
-    setActiveTab,
-    effectiveTab,
-    effectiveSubTab,
-    effectiveConfigTab,
-    setActiveSubTab,
-    setConfigSubTab,
-    showDeleted,
-    setShowDeleted,
-    search,
-    setSearch,
-    roleFilter,
-    setRoleFilter,
-    statusFilter,
-    setStatusFilter,
-    listPage,
-    setListPage,
-    selectedIds,
-    setSelectedIds,
-    clearFilters,
+  const handleOpenAddUser = () => setShowAddUser(true);
+  const handleOpenInviteUser = () => setShowInvite(true);
+  const refetchUsers = () => { void workPageQuery.refetch(); };
+  const refetchLogs = () => { void logsResult.refetch(); };
+
+  const workTierProps = buildUsersWorkTierProps({
+    tabs: SUB_TABS,
+    activeSubTab: effectiveSubTab,
     users,
-    shownCount,
+    logs,
+    filters,
+    columns,
+    activityColumns,
+    actions,
     workPageData: workPageQuery.data,
     isWorkPageLoading: workPageQuery.isLoading,
     isWorkPageFetching: workPageQuery.isFetching,
-    logs,
+    isLogsLoading,
     listLoadFailed,
     logsLoadFailed,
-    getUserColumnWidth,
-    setUserColumnWidth,
-    isUserColumnVisible,
-    userColumnRegistry,
-    updateUserColumnLayout,
-    userColumnCustomizerLabels,
-    getActivityColumnWidth,
-    setActivityColumnWidth,
+    canWrite,
+    canDelete,
+    onSubTabChange: setActiveSubTab,
+    onRetryUsers: refetchUsers,
+    onRetryLogs: refetchLogs,
+    onViewUser: setViewing,
+    onEditUser: handleOpenEdit,
+    onResetPassword: handleOpenPasswordReset,
+    onAddUser: handleOpenAddUser,
+    onInviteUser: handleOpenInviteUser,
+    onMessageUsers: handleMessageUsers,
+  });
+
+  const modalLayerProps = buildUsersModalLayerProps({
     viewing,
-    setViewing,
     editing,
-    setEditing,
     resettingPasswordFor,
-    setResettingPasswordFor,
-    handleOpenPasswordReset,
-    showInvite,
-    setShowInvite,
     showAddUser,
-    setShowAddUser,
-    visibleTopTabs,
-    handleDeleteUser,
-    handleRestoreUser,
-    handleBulkDelete,
-    handleBulkRestore,
-    handleResetPassword,
-    handleSaveEdit,
-    handleInvite,
-    handleAddUser,
-    handleMessageUsers,
-    handleExportCSV,
+    showInvite,
+    canWrite,
+    canDelete,
+    users,
     messagingTarget,
+    actions,
+    setViewing,
+    setEditing,
+    setResettingPasswordFor,
+    setShowAddUser,
+    setShowInvite,
+    handleOpenEdit,
     closeComposer,
-    refetchUsers: () => { void workPageQuery.refetch(); },
-    refetchLogs: () => { void logsResult.refetch(); },
+  });
+
+  return {
+    t,
+    canWrite,
+    canExport,
+    canEditSetup,
+    showDeleted,
+    shownCount,
+    visibleTopTabs,
+    effectiveTab,
+    effectiveSubTab,
+    setActiveTab,
+    USERS_CONFIG_TABS,
+    effectiveConfigTab,
+    setConfigSubTab,
+    handleExportCSV,
+    onAddUser: handleOpenAddUser,
+    onInviteUser: handleOpenInviteUser,
+    refetchUsers,
+    refetchLogs,
+    workTierProps,
+    modalLayerProps,
   };
 }

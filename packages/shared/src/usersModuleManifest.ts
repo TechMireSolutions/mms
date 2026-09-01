@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import type { Permission } from './permissions.js';
 
+/** Allowed workspace user status states. */
 export const userStatusSchema = z.enum(['active', 'inactive', 'suspended']);
 
 const userFormContactIdSchema = z.union([
@@ -26,6 +27,7 @@ export const resetWorkspaceUserPasswordSchema = z
   })
   .strict();
 
+/** Values accepted by the admin-issued temporary password reset action. */
 export type ResetWorkspaceUserPasswordInput = z.infer<
   typeof resetWorkspaceUserPasswordSchema
 >;
@@ -57,6 +59,7 @@ export const createWorkspaceUserSchema = z.object({
 /** Values accepted by the workspace user create form. */
 export type CreateWorkspaceUserInput = z.infer<typeof createWorkspaceUserSchema>;
 
+/** Validates persisted and transfer-level workspace user records. */
 export const workspaceUserRecordSchema = z
   .object({
     id: z.string(),
@@ -81,8 +84,10 @@ export const workspaceUserRecordSchema = z
   })
   .passthrough();
 
+/** Validates arrays of workspace user records. */
 export const workspaceUserListSchema = z.array(workspaceUserRecordSchema);
 
+/** Allowed user activity log action codes. */
 export const activityActionSchema = z.enum([
   'login',
   'login_failed',
@@ -92,6 +97,7 @@ export const activityActionSchema = z.enum([
   'role_change',
 ]);
 
+/** Validates single user activity log entries. */
 export const activityLogRecordSchema = z.object({
   id: z.string(),
   userId: z.string(),
@@ -103,8 +109,8 @@ export const activityLogRecordSchema = z.object({
   ip: z.string(),
 });
 
+/** Validates arrays of user activity log entries. */
 export const activityLogListSchema = z.array(activityLogRecordSchema);
-
 
 /** Users module manifest — aligns with globle1 universal module architecture. */
 export const USERS_MODULE_MANIFEST = {
@@ -146,4 +152,5 @@ export const USERS_MODULE_MANIFEST = {
   exportChunkSize: 100,
 } as const;
 
+/** Union of supported top-level tiers in the Users module. */
 export type UsersModuleTier = (typeof USERS_MODULE_MANIFEST.tiers)[number];

@@ -9,6 +9,7 @@ import {
   USERS_LIST_QUERY_KEY,
   USERS_METRICS_QUERY_KEY,
 } from '@/tenant/features/users/hooks/usersQueryKeys';
+import { invalidateUsersQueries } from '@/tenant/features/users/hooks/invalidateUsersQueries';
 import { tsrClient } from '@/lib/api';
 
 const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
@@ -51,6 +52,17 @@ export function useUsersMetrics(options?: { enabled?: boolean }) {
   });
 }
 
+export function extractActivityLogs(queryData: unknown): ActivityLog[] {
+  if (!queryData || typeof queryData !== 'object') return [];
+  const status = (queryData as { status?: number }).status;
+  if (status !== undefined && status !== 200) return [];
+  const body: unknown = (queryData as { body?: unknown }).body ?? queryData;
+  if (Array.isArray(body)) return body as ActivityLog[];
+  return Array.isArray((body as { logs?: ActivityLog[] } | null)?.logs)
+    ? (body as { logs: ActivityLog[] }).logs
+    : [];
+}
+
 export function useActivityLogs(options?: { enabled?: boolean }) {
   const enabled = options?.enabled ?? true;
   // @ts-expect-error - TS union discrimination limit with ts-rest
@@ -63,22 +75,13 @@ export function useActivityLogs(options?: { enabled?: boolean }) {
 
 export function useActivityLogsCollection(options?: { enabled?: boolean }): ActivityLog[] {
   const query = useActivityLogs(options);
-  if (!query.data || query.data.status !== 200) return [];
-  const body: unknown = query.data.body;
-  if (Array.isArray(body)) return body as ActivityLog[];
-  return Array.isArray((body as { logs?: ActivityLog[] } | null)?.logs)
-    ? (body as { logs: ActivityLog[] }).logs
-    : [];
+  return extractActivityLogs(query.data);
 }
 
 export function useUsersMutations() {
   const queryClient = useQueryClient();
 
-  const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: USERS_LIST_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: USERS_METRICS_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: ACTIVITY_LOGS_QUERY_KEY });
-  };
+  const invalidate = () => invalidateUsersQueries(queryClient);
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
   const createUser = tsrClient.users.create.useMutation({

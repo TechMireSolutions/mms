@@ -4,7 +4,7 @@ import { notify } from '@/lib/notify';
 import { useUsersMutations } from '@/tenant/features/users/hooks/useUsersApi';
 
 interface UseUsersPageActionsParams {
-  actorId: string;
+  actorId?: string;
   t: TranslationFunction;
 }
 

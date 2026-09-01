@@ -1,13 +1,15 @@
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
-import { clear2FAState, mark2FAVerified, setPendingChallengeId } from '@/lib/twoFactor';
+import { clear2FAState, getPendingChallengeId, mark2FAVerified, setPendingChallengeId } from '@/lib/twoFactor';
 import { type User } from '@mms/shared';
 import { appNavigate } from '@/lib/routing/appNavigate';
 import { ROUTES } from '@/lib/config/routes';
 import { apiFetch, apiJson, isApiError } from '@/lib/apiClient';
 import { isCurrentHostApex } from '@/lib/config/tenantConfig';
 import { getWorkspaceLocalStoragePrefix } from '@/lib/db';
-import { parseAuthError, type AuthError } from '@/lib/authErrors';
+import { queryClientInstance } from '@/lib/queryClient';
+import { isAuthErrorType, parseAuthError, type AuthError } from '@/lib/authErrors';
 import {
+  AUTH_USER_STORAGE_KEY,
   AuthFailureError,
   buildConnectionAuthError,
   clearPersistedAuthUser,
@@ -35,17 +37,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authChecked, setAuthChecked] = useState<boolean>(false);
   const [appPublicSettings, setAppPublicSettings] = useState<unknown | null>(null);
 
-  const checkAppState = useCallback(async (): Promise<void> => {
+  const checkAppState = useCallback(async (signal?: AbortSignal): Promise<void> => {
     try {
       setIsLoadingPublicSettings(true);
-      const response = await apiFetch('/health');
+      const response = await apiFetch('/health', { signal });
       if (response.ok) {
         setAppPublicSettings({ id: 'app-online', public_settings: {} });
       }
-    } catch (error) {
-      console.warn('API server seems to be offline:', error);
+    } catch {
+      // Ignore offline/aborted errors during public state probe
     } finally {
-      setIsLoadingPublicSettings(false);
+      if (!signal?.aborted) {
+        setIsLoadingPublicSettings(false);
+      }
     }
   }, []);
 
@@ -59,17 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  const checkUserAuth = useCallback(async (): Promise<void> => {
+  const checkUserAuth = useCallback(async (signal?: AbortSignal): Promise<void> => {
     if (isCurrentHostApex()) {
-      setUser(null);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      setIsLoadingAuth(false);
-      return;
-    }
-
-    const persistedUser = getPersistedAuthUser();
-    if (!persistedUser) {
       setUser(null);
       setIsAuthenticated(false);
       setAuthChecked(true);
@@ -81,17 +76,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
 
     try {
-      const authResponse = await apiJson<{ user: User }>('/api/auth/me');
+      const authResponse = await apiJson<{ user: User }>('/api/auth/me', { signal });
       await applyAuthSession(authResponse.user);
     } catch (error) {
+      if (signal?.aborted) return;
       setUser(null);
       setIsAuthenticated(false);
       if (isApiError(error) && (error.status === 401 || error.status === 403)) {
         clearPersistedAuthUser();
       }
     } finally {
-      setAuthChecked(true);
-      setIsLoadingAuth(false);
+      if (!signal?.aborted) {
+        setAuthChecked(true);
+        setIsLoadingAuth(false);
+      }
     }
   }, [applyAuthSession]);
 
@@ -136,6 +134,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const verify2FA = async (code: string): Promise<{ user: User }> => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
+    try {
+      const challengeId = getPendingChallengeId();
+      if (!challengeId) {
+        throw new Error('No pending 2FA challenge found');
+      }
+      const response = await apiJson<{ user: User }>('/api/auth/2fa/verify', {
+        method: 'POST',
+        body: JSON.stringify({ challengeId, code }),
+      });
+      await applyAuthSession(response.user);
+      mark2FAVerified();
+      return { user: response.user };
+    } catch (error) {
+      const authErr: AuthError = isApiError(error)
+        ? {
+            type: isAuthErrorType(error.type) ? error.type : 'invalid_credentials',
+            message: error.message,
+          }
+        : buildConnectionAuthError(error);
+      setAuthError(authErr);
+      throw error;
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  };
+
   const logout = (shouldRedirect = true): void => {
     clear2FAState();
 
@@ -143,6 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       clearUserScopedCachesOnLogout(user.id, getWorkspaceLocalStoragePrefix());
     }
 
+    queryClientInstance.clear();
     clearPersistedAuthUser();
     setUser(null);
     setIsAuthenticated(false);
@@ -179,10 +207,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    const controller = new AbortController();
+
     if (!isCurrentHostApex()) {
-      void checkAppState();
+      void checkAppState(controller.signal);
     }
-    void checkUserAuth();
+    void checkUserAuth(controller.signal);
+
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === AUTH_USER_STORAGE_KEY) {
+        if (!event.newValue) {
+          setUser(null);
+          setIsAuthenticated(false);
+          setAuthChecked(true);
+          queryClientInstance.clear();
+        } else {
+          try {
+            const nextUser = JSON.parse(event.newValue) as User;
+            if (nextUser?.id) {
+              setUser(nextUser);
+              setIsAuthenticated(true);
+              setAuthChecked(true);
+            }
+          } catch {
+            // Ignore parse errors
+          }
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      controller.abort();
+      window.removeEventListener('storage', handleStorage);
+    };
   }, [checkAppState, checkUserAuth]);
 
   return (
@@ -195,6 +254,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       appPublicSettings,
       authChecked,
       login,
+      verify2FA,
       logout,
       navigateToLogin,
       checkUserAuth,

@@ -9,11 +9,15 @@ import {
   useAttendanceContractDelete,
 } from "./useAttendanceTsrHooks";
 
-vi.mock("@tanstack/react-query", () => ({
-  useQueryClient: () => ({
-    invalidateQueries: vi.fn(),
-  }),
-}));
+vi.mock("@tanstack/react-query", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-query")>();
+  return {
+    ...actual,
+    useQueryClient: () => ({
+      invalidateQueries: vi.fn(),
+    }),
+  };
+});
 
 vi.mock("@/lib/api", () => ({
   tsrClient: {

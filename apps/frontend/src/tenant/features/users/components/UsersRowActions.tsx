@@ -87,8 +87,8 @@ export function UsersRowActions({
           onClick={() => (showDeleted ? onRestore(user.id) : onDelete(user.id))}
           className={
             showDeleted
-              ? "min-h-11 min-w-11 rounded-lg border-success/30 bg-success/5 text-success hover:text-success hover:bg-success/15 hover:border-success/40 shadow-none"
-              : "min-h-11 min-w-11 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none"
+              ? 'min-h-11 min-w-11 rounded-lg border-success/30 bg-success/5 text-success hover:text-success hover:bg-success/15 hover:border-success/40 shadow-none'
+              : 'min-h-11 min-w-11 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none'
           }
           aria-label={
             showDeleted

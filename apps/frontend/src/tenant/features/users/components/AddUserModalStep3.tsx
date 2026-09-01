@@ -1,20 +1,20 @@
-import { useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import {
   getPasswordPolicyHintKey,
-} from "@mms/shared";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input as UiInput } from "@/components/ui/input";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import { FieldError, Label } from "./AddUserModalFieldHelpers";
-import type { AddUserStepProps } from "./addUserModalTypes";
+} from '@mms/shared';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input as UiInput } from '@/components/ui/input';
+import { useTranslation } from '@/hooks/useTranslation';
+import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
+import { FieldError, Label } from './AddUserModalFieldHelpers';
+import type { AddUserStepProps } from './addUserModalTypes';
 
 const SETUP_OPTIONS = [
-  { id: "invite", labelKey: "users.addMethodInvite" as const, descKey: "users.addMethodInviteDesc" as const, icon: Mail },
-  { id: "password", labelKey: "users.addMethodPassword" as const, descKey: "users.addMethodPasswordDesc" as const, icon: Lock },
+  { id: 'invite', labelKey: 'users.addMethodInvite' as const, descKey: 'users.addMethodInviteDesc' as const, icon: Mail },
+  { id: 'password', labelKey: 'users.addMethodPassword' as const, descKey: 'users.addMethodPasswordDesc' as const, icon: Lock },
 ] as const;
 
 export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element {
@@ -26,7 +26,7 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
   return (
     <div className="space-y-4">
       <div>
-        <Label>{t("users.addAccountMethod")}</Label>
+        <Label>{t('users.addAccountMethod')}</Label>
         <div className="grid grid-cols-1 gap-2 mt-1 sm:grid-cols-2">
           {SETUP_OPTIONS.map((setupOption) => {
             const Icon = setupOption.icon;
@@ -38,12 +38,12 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
                 key={setupOption.id}
                 onClick={() => setForm((previousForm) => ({ ...previousForm, setupMethod: setupOption.id }))}
                 className={`p-3 rounded-xl border-2 text-start transition-all h-auto flex flex-col items-start shadow-none ${
-                  active ? "border-primary bg-primary/5 hover:bg-primary/5 text-foreground" : "border-border bg-card hover:border-primary/40 text-muted-foreground hover:text-foreground"
+                  active ? 'border-primary bg-primary/5 hover:bg-primary/5 text-foreground' : 'border-border bg-card hover:border-primary/40 text-muted-foreground hover:text-foreground'
                 }`}
               >
                 <div className="flex items-center gap-1.5 mb-1">
-                  <Icon className={`w-3.5 h-3.5 ${active ? "text-primary" : "text-muted-foreground"}`} />
-                  <span className={`text-xs font-bold ${active ? "text-primary" : "text-foreground"}`}>{t(setupOption.labelKey)}</span>
+                  <Icon className={`w-3.5 h-3.5 ${active ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <span className={`text-xs font-bold ${active ? 'text-primary' : 'text-foreground'}`}>{t(setupOption.labelKey)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-snug">{t(setupOption.descKey)}</p>
               </Button>
@@ -53,7 +53,7 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
       </div>
 
       <AnimatePresence mode="wait">
-        {form.setupMethod === "invite" && (
+        {form.setupMethod === 'invite' && (
           <motion.div
             key="invite"
             initial={{ opacity: 0, y: 6 }}
@@ -63,16 +63,16 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
           >
             <div className="flex items-center gap-2">
               <Mail className="w-4 h-4 text-primary" />
-              <span className="text-sm font-bold text-foreground">{t("users.addInviteTitle")}</span>
+              <span className="text-sm font-bold text-foreground">{t('users.addInviteTitle')}</span>
             </div>
             <p className="text-xs text-muted-foreground">
-              {t("users.addInviteBody", { email: form.email || "…" })}
+              {t('users.addInviteBody', { email: form.email || '…' })}
             </p>
-            <p className="text-xs text-muted-foreground">{t("users.addInvitePending")}</p>
+            <p className="text-xs text-muted-foreground">{t('users.addInvitePending')}</p>
           </motion.div>
         )}
 
-        {form.setupMethod === "password" && (
+        {form.setupMethod === 'password' && (
           <motion.div
             key="password"
             initial={{ opacity: 0, y: 6 }}
@@ -81,13 +81,13 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
             className="space-y-3"
           >
             <div>
-              <Label required>{t("users.addTempPassword")}</Label>
+              <Label required>{t('users.addTempPassword')}</Label>
               <div className="relative">
                 <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <UiInput
-                  type={showPwd ? "text" : "password"}
+                  type={showPwd ? 'text' : 'password'}
                   placeholder={passwordHint}
-                  value={form.password || ""}
+                  value={form.password || ''}
                   onChange={(event) => setForm((previousForm) => ({ ...previousForm, password: event.target.value }))}
                   className="ps-9.5 pe-9"
                 />
@@ -95,6 +95,7 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
                   type="button"
                   variant="ghost"
                   onClick={() => setShowPwd((visible) => !visible)}
+                  aria-label={showPwd ? t('auth.hidePassword') : t('auth.showPassword')}
                   className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground min-h-11 min-w-11 hover:bg-transparent shadow-none"
                 >
                   {showPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
@@ -109,7 +110,7 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
                 checked={form.forceReset !== false}
                 onCheckedChange={(checked) => setForm((previousForm) => ({ ...previousForm, forceReset: !!checked }))}
               />
-              <span className="text-xs font-medium text-foreground">{t("users.addForceReset")}</span>
+              <span className="text-xs font-medium text-foreground">{t('users.addForceReset')}</span>
             </label>
           </motion.div>
         )}
@@ -121,8 +122,8 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
           onCheckedChange={(checked) => setForm((previousForm) => ({ ...previousForm, twoFactorEnabled: !!checked }))}
         />
         <div>
-          <span className="text-xs font-semibold text-foreground">{t("users.add2faTitle")}</span>
-          <p className="text-xs text-muted-foreground">{t("users.add2faDesc")}</p>
+          <span className="text-xs font-semibold text-foreground">{t('users.add2faTitle')}</span>
+          <p className="text-xs text-muted-foreground">{t('users.add2faDesc')}</p>
         </div>
       </label>
     </div>

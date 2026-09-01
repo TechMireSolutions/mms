@@ -2,21 +2,22 @@ import { motion } from 'framer-motion';
 import type { ActivityLog, ModuleColumnRegistryEntry, SystemUser, UsersListPageResult } from '@mms/shared';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ErrorState } from '@/components/ui/ErrorState';
+import { CardSkeleton } from '@/components/ui/LoadingState';
 import type { ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useUsersCollection } from '@/tenant/features/users/hooks/useUsersApi';
 import { ActivityLogs } from '@/tenant/features/users/components/ActivityLogs';
 import { UsersList } from '@/tenant/features/users/components/UsersList';
 
-interface UsersWorkSubTab {
+export interface UsersWorkSubTab {
   id: string;
   label: string;
 }
 
-interface UsersWorkTierProps {
+export interface UsersWorkTierProps {
   tabs: UsersWorkSubTab[];
   activeSubTab: string;
   users: SystemUser[];
+  activityUsers?: SystemUser[];
   workPageData?: UsersListPageResult;
   listPage: number;
   onPageChange: (page: number) => void;
@@ -33,6 +34,7 @@ interface UsersWorkTierProps {
   logsLoadFailed: boolean;
   isWorkPageLoading: boolean;
   isWorkPageFetching: boolean;
+  isLogsLoading?: boolean;
   canWrite: boolean;
   canDelete: boolean;
   showDeleted: boolean;
@@ -64,6 +66,7 @@ export function UsersWorkTier({
   tabs,
   activeSubTab,
   users,
+  activityUsers,
   workPageData,
   listPage,
   onPageChange,
@@ -80,6 +83,7 @@ export function UsersWorkTier({
   logsLoadFailed,
   isWorkPageLoading,
   isWorkPageFetching,
+  isLogsLoading,
   canWrite,
   canDelete,
   showDeleted,
@@ -107,9 +111,6 @@ export function UsersWorkTier({
   onToggleDeleted,
 }: UsersWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
-  const activityUsers = useUsersCollection({
-    enabled: activeSubTab === 'activity',
-  }) as SystemUser[];
 
   return (
     <>
@@ -177,10 +178,14 @@ export function UsersWorkTier({
           />
         )}
 
-        {activeSubTab === 'activity' && !logsLoadFailed && (
+        {activeSubTab === 'activity' && !logsLoadFailed && isLogsLoading && (
+          <CardSkeleton count={3} />
+        )}
+
+        {activeSubTab === 'activity' && !logsLoadFailed && !isLogsLoading && (
           <ActivityLogs
             logs={logs}
-            users={activityUsers}
+            users={activityUsers ?? users}
             getColumnWidth={getActivityColumnWidth}
             onColumnResize={setActivityColumnWidth}
           />

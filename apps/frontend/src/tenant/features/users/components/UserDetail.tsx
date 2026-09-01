@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { Shield } from 'lucide-react';
 import {
   filterRbacModulesForSettings,
@@ -15,7 +15,7 @@ import {
   DetailDrawerRestoreOrEditAction,
 } from '@/components/ui/DetailDrawerArchiveChrome';
 import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
-import { useToast } from '@/components/ui/use-toast';
+import { notify } from '@/lib/notify';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useUsersContractVerifyEmail } from '@/tenant/hooks/collections/users';
 import { UserDetailSections } from '@/tenant/features/users/components/UserDetailSections';
@@ -30,7 +30,7 @@ export interface UserDetailProps {
   onRestore?: (userId: string) => void | Promise<void>;
 }
 
-export const UserDetail = (function UserDetail({
+export function UserDetail({
   user,
   onClose,
   onEdit,
@@ -38,7 +38,6 @@ export const UserDetail = (function UserDetail({
   onRestore,
 }: UserDetailProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { toast } = useToast();
   const { canManageUser } = usePermissions();
   const globalSettings = useGlobalSettings();
   const workspaceRoles = useWorkspaceRoles();
@@ -50,18 +49,13 @@ export const UserDetail = (function UserDetail({
         params: { id: String(user.id) },
         body: {},
       });
-      toast({
-        title: t('users.emailVerifiedSuccess'),
-      });
+      notify.success(t('users.emailVerifiedSuccess'));
     } catch {
-      toast({
-        title: t('errors.state.generic'),
-        variant: 'destructive',
-      });
+      notify.error(t('errors.state.generic'));
     }
   };
 
-  const [messagingTarget, setMessagingTarget] = React.useState<{
+  const [messagingTarget, setMessagingTarget] = useState<{
     channel: 'sms' | 'whatsapp' | 'email';
     recipients: Array<{ id: string; name: string; phone: string; email: string }>;
   } | null>(null);
@@ -78,18 +72,6 @@ export const UserDetail = (function UserDetail({
     return formatDate(ts, globalSettings.dateFormat, false);
   };
 
-  const headerActionsNode = (() => (
-      <DetailDrawerRestoreOrEditAction
-        isArchived={isArchived}
-        canRestore={canDelete && canManageThisUser}
-        canEdit={Boolean(onEdit && canManageThisUser)}
-        restoreLabel={t('users.trash.restore')}
-        editLabel={t('users.edit')}
-        onRestore={onRestore ? () => onRestore(String(user.id)) : undefined}
-        onEdit={onEdit ? () => onEdit(user) : undefined}
-      />
-    ))();
-
   const handleCompose = (channel: 'sms' | 'whatsapp' | 'email') => {
     if (isArchived) return;
     setMessagingTarget({
@@ -105,7 +87,17 @@ export const UserDetail = (function UserDetail({
         title={user.name}
         subtitle={isArchived ? t('users.detail.archivedSubtitle') : user.email}
         icon={Shield}
-        headerActions={headerActionsNode}
+        headerActions={
+          <DetailDrawerRestoreOrEditAction
+            isArchived={isArchived}
+            canRestore={canDelete && canManageThisUser}
+            canEdit={Boolean(onEdit && canManageThisUser)}
+            restoreLabel={t('users.trash.restore')}
+            editLabel={t('users.edit')}
+            onRestore={onRestore ? () => onRestore(String(user.id)) : undefined}
+            onEdit={onEdit ? () => onEdit(user) : undefined}
+          />
+        }
       >
         {isArchived ? (
           <DetailDrawerArchivedBanner
@@ -143,4 +135,4 @@ export const UserDetail = (function UserDetail({
       )}
     </>
   );
-});
+}

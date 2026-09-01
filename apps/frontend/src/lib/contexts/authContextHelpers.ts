@@ -51,10 +51,11 @@ export interface AuthContextType {
   appPublicSettings: unknown | null;
   authChecked: boolean;
   login: (email: string, password: string) => Promise<{ user: User; requires2FA: boolean; challengeId?: string }>;
+  verify2FA: (code: string) => Promise<{ user: User }>;
   logout: (shouldRedirect?: boolean) => void;
   navigateToLogin: () => void;
-  checkUserAuth: () => Promise<void>;
-  checkAppState: () => Promise<void>;
+  checkUserAuth: (signal?: AbortSignal) => Promise<void>;
+  checkAppState: (signal?: AbortSignal) => Promise<void>;
   onboard: (onboardingPayload: OnboardPayload) => Promise<OnboardResult>;
   exchangeHandoff: (code: string) => Promise<void>;
 }
@@ -65,6 +66,8 @@ export interface LoginApiResponse {
   challengeId?: string;
 }
 
+export const AUTH_USER_STORAGE_KEY = 'mms_user';
+
 export function buildConnectionAuthError(error: unknown): AuthError {
   const message = error instanceof Error ? error.message : 'Failed to connect to authentication server';
   return { type: 'connection_error', message };
@@ -72,17 +75,19 @@ export function buildConnectionAuthError(error: unknown): AuthError {
 
 export function getPersistedAuthUser(): User | null {
   try {
-    const raw = typeof window !== 'undefined' ? localStorage.getItem('mms_user') : null;
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(AUTH_USER_STORAGE_KEY) : null;
     if (!raw) return null;
     const user = JSON.parse(raw) as User;
-    if (!user || typeof user !== 'object') return null;
+    if (!user || typeof user !== 'object' || typeof user.id !== 'string' || !user.id) {
+      return null;
+    }
 
     if (isCurrentHostApex()) {
       return null;
     }
 
     const currentSubdomain = getCurrentSubdomain();
-    if (currentSubdomain && user.workspaceSubdomain?.toLowerCase() !== currentSubdomain.toLowerCase()) {
+    if (currentSubdomain && user.workspaceSubdomain && user.workspaceSubdomain.toLowerCase() !== currentSubdomain.toLowerCase()) {
       clearPersistedAuthUser();
       return null;
     }
@@ -94,9 +99,9 @@ export function getPersistedAuthUser(): User | null {
 }
 
 export function persistAuthUser(authUser: User): void {
-  localStorage.setItem('mms_user', JSON.stringify(authUser));
+  localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(authUser));
 }
 
 export function clearPersistedAuthUser(): void {
-  localStorage.removeItem('mms_user');
+  localStorage.removeItem(AUTH_USER_STORAGE_KEY);
 }

@@ -1,15 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import React, { useState } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
-  DEFAULT_GLOBAL_SETTINGS,
   maskEmail,
-  mergeGlobalSettings,
   requiresTwoFactor,
   resolveNotificationChannel,
-  type GlobalSettings,
-} from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
-import AuthLayout from "@/tenant/components/AuthLayout";
+} from '@mms/shared';
+import { useTranslation } from '@/hooks/useTranslation';
+import AuthLayout from '@/tenant/components/AuthLayout';
 import {
   AuthBackLink,
   AuthMutedPanel,
@@ -18,26 +15,24 @@ import {
   AuthSubmitButton,
   EntryPageHead,
   formatEntryTitle,
-} from "@/components/entry";
+} from '@/components/entry';
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import {
   getPendingChallengeId,
   is2FAVerified,
   resend2FACode,
-  verify2FACode,
-} from "@/lib/twoFactor";
-import { useResendCountdown } from "@/hooks/useResendCountdown";
-import { OtpInput, createEmptyOtp, isOtpComplete } from "@/components/ui/OtpInput";
+} from '@/lib/twoFactor';
+import { useResendCountdown } from '@/hooks/useResendCountdown';
+import { OtpInput, createEmptyOtp, isOtpComplete } from '@/components/ui/OtpInput';
 
 /**
  * Two-factor verification after login when global settings require it.
  */
 export default function TwoFactorAuth(): React.JSX.Element {
-  const { isAuthenticated, user, checkUserAuth } = useAuth();
-  const [settings, setSettings] = useState<GlobalSettings>(() =>
-    mergeGlobalSettings(DEFAULT_GLOBAL_SETTINGS),
-  );
+  const { isAuthenticated, user, verify2FA } = useAuth();
+  const settings = useGlobalSettings();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,31 +40,25 @@ export default function TwoFactorAuth(): React.JSX.Element {
   const redirectTo =
     (location.state as { from?: string } | null)?.from ?? DEFAULT_AUTH_REDIRECT;
 
-  useEffect(() => {
-    void import("@/lib/settingsPreviewStore").then(({ getScopedGlobalSettings }) => {
-      setSettings(getScopedGlobalSettings());
-    });
-  }, []);
-
   const maskedEmail = (() => {
-    const email = user?.email ?? "";
-    return email ? maskEmail(email) : t("auth.maskedEmailFallback");
+    const email = user?.email ?? '';
+    return email ? maskEmail(email) : t('auth.maskedEmailFallback');
   })();
 
   const twoFactorSubtitleKey = (() => {
     switch (resolveNotificationChannel(settings)) {
-      case "sms":
-        return "auth.twoFactorSubtitleSms" as const;
-      case "none":
-        return "auth.twoFactorSubtitleNone" as const;
+      case 'sms':
+        return 'auth.twoFactorSubtitleSms' as const;
+      case 'none':
+        return 'auth.twoFactorSubtitleNone' as const;
       default:
-        return "auth.twoFactorSubtitleEmail" as const;
+        return 'auth.twoFactorSubtitleEmail' as const;
     }
   })();
 
   const [code, setCode] = useState(createEmptyOtp);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
   const [resendCycle, setResendCycle] = useState(0);
 
   const resendCountdown = useResendCountdown(challengeId !== null, 30, resendCycle);
@@ -87,51 +76,51 @@ export default function TwoFactorAuth(): React.JSX.Element {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     if (!isComplete || !challengeId) {
-      setError(t("auth.otpIncomplete"));
+      setError(t('auth.otpIncomplete'));
       return;
     }
     setLoading(true);
-    setError("");
+    setError('');
 
-    const entered = code.join("");
-    const ok = await verify2FACode(challengeId, entered);
-    if (ok) {
-      await checkUserAuth();
+    const entered = code.join('');
+    try {
+      await verify2FA(entered);
       navigate(redirectTo, { replace: true });
-    } else {
-      setError(t("auth.otpInvalid"));
+    } catch {
+      setError(t('auth.otpInvalid'));
       setCode(createEmptyOtp());
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleResend = async (): Promise<void> => {
     if (!challengeId) return;
     const ok = await resend2FACode(challengeId);
     if (!ok) {
-      setError(t("auth.otpResendFailed"));
+      setError(t('auth.otpResendFailed'));
       return;
     }
     setResendCycle((c) => c + 1);
-    setError("");
+    setError('');
     setCode(createEmptyOtp());
   };
 
   return (
     <>
       <EntryPageHead
-        title={formatEntryTitle(t("auth.twoFactorTitle"), t("entry.productName"))}
-        description={t("entry.meta.tenantTwoFactor")}
+        title={formatEntryTitle(t('auth.twoFactorTitle'), t('entry.productName'))}
+        description={t('entry.meta.tenantTwoFactor')}
       />
       <AuthLayout
-        title={t("auth.twoFactorTitle")}
+        title={t('auth.twoFactorTitle')}
         subtitle={t(twoFactorSubtitleKey)}
       >
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-5" noValidate aria-busy={loading}>
           <fieldset disabled={loading} className="m-0 min-w-0 space-y-5 border-0 p-0">
             <AuthMutedPanel align="center">
               <p className="text-xs text-muted-foreground">
-                {t("auth.codeSentTo")}{" "}
+                {t('auth.codeSentTo')}{' '}
                 <span className="font-medium text-foreground">{maskedEmail}</span>
               </p>
             </AuthMutedPanel>
@@ -140,9 +129,9 @@ export default function TwoFactorAuth(): React.JSX.Element {
               value={code}
               onChange={(next) => {
                 setCode(next);
-                if (error) setError("");
+                if (error) setError('');
               }}
-              ariaLabel={t("auth.twoFactorTitle")}
+              ariaLabel={t('auth.twoFactorTitle')}
               disabled={loading}
               hasError={Boolean(error)}
             />
@@ -151,8 +140,8 @@ export default function TwoFactorAuth(): React.JSX.Element {
 
             <AuthSubmitButton
               busy={loading}
-              busyLabel={t("auth.verifying")}
-              label={t("auth.verifySignIn")}
+              busyLabel={t('auth.verifying')}
+              label={t('auth.verifySignIn')}
               disabled={!isComplete}
               showArrow={false}
             />
@@ -161,11 +150,11 @@ export default function TwoFactorAuth(): React.JSX.Element {
               countdown={resendCountdown}
               onResend={() => void handleResend()}
               disabled={loading}
-              countdownLabel={t("auth.resendCountdown", { seconds: resendCountdown })}
-              resendLabel={t("auth.resendCode")}
+              countdownLabel={t('auth.resendCountdown', { seconds: resendCountdown })}
+              resendLabel={t('auth.resendCode')}
             />
 
-            <AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />
+            <AuthBackLink to={ROUTES.login} label={t('auth.backToSignIn')} />
           </fieldset>
         </form>
       </AuthLayout>

@@ -1,15 +1,26 @@
-import React from 'react';
-import { UserCog, Download } from 'lucide-react';
-import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import React, { Suspense } from 'react';
+import { UserCog, Download, Mail, Plus } from 'lucide-react';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { UsersModalLayer } from '@/tenant/features/users/components/UsersModalLayer';
-import { UsersReportsTier } from '@/tenant/features/users/components/UsersReportsTier';
-import { UsersSetupTier } from '@/tenant/features/users/components/UsersSetupTier';
 import { UsersWorkTier } from '@/tenant/features/users/components/UsersWorkTier';
 import { UsersCommandMetrics } from '@/tenant/features/users/components/UsersCommandMetrics';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { CardSkeleton } from '@/components/ui/LoadingState';
 import { useUsersPageController } from '@/tenant/features/users/hooks/useUsersPageController';
+
+const UsersReportsTier = React.lazy(() =>
+  import('@/tenant/features/users/components/UsersReportsTier').then((m) => ({
+    default: m.UsersReportsTier,
+  })),
+);
+
+const UsersSetupTier = React.lazy(() =>
+  import('@/tenant/features/users/components/UsersSetupTier').then((m) => ({
+    default: m.UsersSetupTier,
+  })),
+);
 
 /**
  * Users and roles — Work | Reports | Setup.
@@ -36,6 +47,24 @@ export default function UsersPage(): React.JSX.Element {
                 {controller.t('users.exportCsv')}
               </ActionButton>
             ) : null}
+            {controller.canWrite && !controller.showDeleted ? (
+              <>
+                <ActionButton
+                  variant="secondary"
+                  icon={Mail}
+                  onClick={controller.onInviteUser}
+                >
+                  {controller.t('users.invite')}
+                </ActionButton>
+                <ActionButton
+                  variant="primary"
+                  icon={Plus}
+                  onClick={controller.onAddUser}
+                >
+                  {controller.t('users.add')}
+                </ActionButton>
+              </>
+            ) : null}
           </div>
         ) : undefined
       }
@@ -51,92 +80,28 @@ export default function UsersPage(): React.JSX.Element {
         panelIdPrefix="users-tab"
       >
         <ErrorBoundary>
-          {controller.effectiveTab === 'reports' && <UsersReportsTier />}
+          {controller.effectiveTab === 'reports' && (
+            <Suspense fallback={<CardSkeleton count={2} />}>
+              <UsersReportsTier />
+            </Suspense>
+          )}
           {controller.effectiveTab === 'setup' && (
-            <UsersSetupTier
-              tabs={controller.USERS_CONFIG_TABS}
-              activeTab={controller.effectiveConfigTab}
-              canEditSetup={controller.canEditSetup}
-              onTabChange={controller.setConfigSubTab}
-            />
+            <Suspense fallback={<CardSkeleton count={2} />}>
+              <UsersSetupTier
+                tabs={controller.USERS_CONFIG_TABS}
+                activeTab={controller.effectiveConfigTab}
+                canEditSetup={controller.canEditSetup}
+                onTabChange={controller.setConfigSubTab}
+              />
+            </Suspense>
           )}
           {controller.effectiveTab === 'work' && (
-            <UsersWorkTier
-              tabs={controller.SUB_TABS}
-              activeSubTab={controller.effectiveSubTab}
-              users={controller.users}
-              workPageData={controller.workPageData}
-              listPage={controller.listPage}
-              onPageChange={controller.setListPage}
-              search={controller.search}
-              roleFilter={controller.roleFilter}
-              statusFilter={controller.statusFilter}
-              selectedIds={controller.selectedIds}
-              onSelectedIdsChange={controller.setSelectedIds}
-              onSearchChange={controller.setSearch}
-              onRoleFilterChange={controller.setRoleFilter}
-              onStatusFilterChange={controller.setStatusFilter}
-              logs={controller.logs}
-              listLoadFailed={controller.listLoadFailed}
-              logsLoadFailed={controller.logsLoadFailed}
-              isWorkPageLoading={controller.isWorkPageLoading}
-              isWorkPageFetching={controller.isWorkPageFetching}
-              canWrite={controller.canWrite}
-              canDelete={controller.canDelete}
-              showDeleted={controller.showDeleted}
-              getUserColumnWidth={controller.getUserColumnWidth}
-              setUserColumnWidth={controller.setUserColumnWidth}
-              isUserColumnVisible={controller.isUserColumnVisible}
-              userColumnRegistry={controller.userColumnRegistry}
-              updateUserColumnLayout={controller.updateUserColumnLayout}
-              userColumnCustomizerLabels={controller.userColumnCustomizerLabels}
-              getActivityColumnWidth={controller.getActivityColumnWidth}
-              setActivityColumnWidth={controller.setActivityColumnWidth}
-              onSubTabChange={controller.setActiveSubTab}
-              onRetryUsers={controller.refetchUsers}
-              onRetryLogs={controller.refetchLogs}
-              onViewUser={controller.setViewing}
-              onEditUser={controller.setEditing}
-              onDeleteUser={(id) => { void controller.handleDeleteUser(id); }}
-              onRestoreUser={(id) => { void controller.handleRestoreUser(id); }}
-              onBulkDeleteUsers={(ids) => { void controller.handleBulkDelete(ids); }}
-              onBulkRestoreUsers={(ids) => { void controller.handleBulkRestore(ids); }}
-              onResetPassword={controller.handleOpenPasswordReset}
-              onAddUser={() => controller.setShowAddUser(true)}
-              onInviteUser={() => controller.setShowInvite(true)}
-              onMessageUsers={controller.handleMessageUsers}
-              onToggleDeleted={controller.setShowDeleted}
-            />
+            <UsersWorkTier {...controller.workTierProps} />
           )}
         </ErrorBoundary>
       </ResponsiveAccordionTabs>
 
-      <UsersModalLayer
-        viewing={controller.viewing}
-        editing={controller.editing}
-        resettingPasswordFor={controller.resettingPasswordFor}
-        showAddUser={controller.showAddUser}
-        showInvite={controller.showInvite}
-        canWrite={controller.canWrite}
-        canDelete={controller.canDelete}
-        users={controller.users}
-        messagingTarget={controller.messagingTarget}
-        onCloseViewing={() => controller.setViewing(null)}
-        onCloseEditing={() => controller.setEditing(null)}
-        onClosePasswordReset={() => controller.setResettingPasswordFor(null)}
-        onCloseAddUser={() => controller.setShowAddUser(false)}
-        onCloseInvite={() => controller.setShowInvite(false)}
-        onSaveEdit={controller.handleSaveEdit}
-        onResetPassword={controller.handleResetPassword}
-        onAddUser={controller.handleAddUser}
-        onInvite={controller.handleInvite}
-        onRestoreUser={(id) => { void controller.handleRestoreUser(id); }}
-        onEditFromDetail={(user) => {
-          controller.setViewing(null);
-          controller.setEditing(user);
-        }}
-        onCloseComposer={controller.closeComposer}
-      />
+      <UsersModalLayer {...controller.modalLayerProps} />
     </ModulePageShell>
   );
 }

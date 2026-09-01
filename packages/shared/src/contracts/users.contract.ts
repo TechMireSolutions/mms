@@ -68,7 +68,7 @@ export const userContract = c.router({
   activityBulkUpdate: {
     method: 'PUT',
     path: '/api/users/activity/bulk',
-    body: z.any(),
+    body: z.array(activityLogRecordSchema),
     responses: { 200: z.object({ logs: z.array(activityLogRecordSchema) }), 403: errorResponse, 500: errorResponse },
     summary: 'Bulk upsert activity logs',
   },
@@ -82,7 +82,7 @@ export const userContract = c.router({
   bulkUpdate: {
     method: 'PUT',
     path: '/api/users/bulk',
-    body: z.any(),
+    body: z.array(workspaceUserRecordSchema),
     responses: { 200: z.object({ users: z.array(workspaceUserRecordSchema) }), 403: errorResponse, 500: errorResponse },
     summary: 'Bulk upsert workspace users',
   },
@@ -103,21 +103,21 @@ export const userContract = c.router({
   delete: {
     method: 'DELETE',
     path: '/api/users/:id',
-    body: z.any().optional(),
+    body: z.unknown().optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 400: errorResponse, 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Soft delete a user',
   },
   restore: {
     method: 'POST',
     path: '/api/users/:id/restore',
-    body: z.any().optional(),
+    body: z.unknown().optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Restore a soft-deleted user',
   },
   verifyEmail: {
     method: 'POST',
     path: '/api/users/:id/verify-email',
-    body: z.any().optional(),
+    body: z.unknown().optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Manually verify a user email address',
   },
