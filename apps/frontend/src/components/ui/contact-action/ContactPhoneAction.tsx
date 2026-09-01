@@ -88,10 +88,10 @@ export const ContactPhoneAction = (function ContactPhoneAction({
     return emptyFallback ? <>{emptyFallback}</> : null;
   }
 
-  const defaultCountryCode = countryCodeProp || "+92";
+  const defaultCountryCode = countryCodeProp?.trim() || "";
   const formattedPhone = formatPhoneWithCountryCode(rawPhone, defaultCountryCode) || rawPhone;
   const parsed = parsePhoneNumber(formattedPhone, defaultCountryCode);
-  const countryCode = countryCodeProp || parsed.countryCode || defaultCountryCode;
+  const countryCode = countryCodeProp || parsed.countryCode;
   const phoneDisplay = phoneDisplayProp || parsed.number || rawPhone;
 
   const telHref = sanitizePhoneForTel(formattedPhone, defaultCountryCode);

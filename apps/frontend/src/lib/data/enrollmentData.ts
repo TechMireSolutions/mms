@@ -12,8 +12,6 @@ export const ENROLLMENT_STATUSES = [
   { id: "completed", label: "Completed", color: "bg-info/10 text-info border-info/30" },
 ];
 
-export const SAMPLE_ENROLLMENTS: Enrollment[] = [];
-
 export interface CalculatedFee {
   id: string;
   label: string;

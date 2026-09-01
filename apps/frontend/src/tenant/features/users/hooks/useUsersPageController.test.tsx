@@ -41,9 +41,17 @@ vi.mock('@/lib/notify', () => ({
 vi.mock('@/tenant/features/users/hooks/useUsersApi', () => ({
   extractActivityLogs: (data: any) => data?.body ?? [],
   useActivityLogs: () => ({
-    data: { status: 200, body: [{ id: 'log-1', action: 'create', timestamp: '2026-09-01' }] },
+    data: {
+      status: 200,
+      body: [{ id: 'log-1', userId: 'u1', action: 'create', timestamp: '2026-09-01' }],
+    },
     isError: false,
+    isLoading: false,
     refetch: vi.fn(),
+  }),
+  useUsersByIds: () => ({
+    data: [{ id: 'u1', name: 'User 1', email: 'u1@test.com', role: 'teacher' }],
+    isLoading: false,
   }),
   useUsersMutations: () => ({
     logExportAudit: vi.fn(),
@@ -89,6 +97,7 @@ describe('useUsersPageController', () => {
     expect(controller.workTierProps.users.length).toBe(2);
     expect(controller.workTierProps.logs.length).toBe(1);
     expect(controller.workTierProps.logs[0]?.id).toBe('log-1');
+    expect(controller.workTierProps.activityUsers?.[0]?.id).toBe('u1');
 
     act(() => {
       root.unmount();

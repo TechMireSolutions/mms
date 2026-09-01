@@ -98,7 +98,7 @@ export const accountingPreferencesPutBodySchema = z
     allowEditPosted: z.boolean().default(false),
     autoPostDrafts: z.boolean().default(false),
     retainedEarningsAccount: z.string().default('a3100'),
-    organizationName: z.string().default('Al-Madrasa Al-Islamiyya'),
+    organizationName: z.string().default(''),
     defaultViewLayout: z.string().optional(),
   })
   .strict();

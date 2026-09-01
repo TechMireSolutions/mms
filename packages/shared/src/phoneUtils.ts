@@ -3,6 +3,7 @@
  */
 
 import type { Contact } from "./contactTypes.js";
+import { COUNTRY_CODES } from "./contactPreferenceConstants.js";
 
 /**
  * Extract country code and local number parts from a raw phone number.
@@ -12,7 +13,7 @@ import type { Contact } from "./contactTypes.js";
  */
 export function parsePhoneNumber(
   rawNumber: unknown,
-  defaultCode = "+92",
+  defaultCode = "",
   knownCodes: string[] = []
 ): { countryCode: string; number: string } {
   if (!rawNumber) return { countryCode: defaultCode, number: "" };
@@ -22,7 +23,7 @@ export function parsePhoneNumber(
   }
 
   // Normalize known codes and default codes to form a unique sorted list (longest first)
-  const codes = [defaultCode, ...knownCodes, "+92", "+91", "+98", "+964", "+1", "+44"]
+  const codes = [defaultCode, ...knownCodes, ...COUNTRY_CODES.map((entry) => entry.code)]
     .map((c) => c.trim())
     .filter((c) => c.startsWith("+"));
   const uniqueCodes = Array.from(new Set(codes)).sort((a, b) => b.length - a.length);
@@ -65,7 +66,7 @@ export function normalizeToE164(countryCode: string, number: string): string {
     return `+${cleanNumber}`;
   }
 
-  return `+${cleanCode}${cleanNumber}`;
+  return cleanCode ? `+${cleanCode}${cleanNumber}` : cleanNumber;
 }
 
 /**
@@ -73,7 +74,7 @@ export function normalizeToE164(countryCode: string, number: string): string {
  */
 export function normalizePhoneInput(
   rawNumber: string | null | undefined,
-  defaultCountryCode = "+92",
+  defaultCountryCode = "",
 ): string {
   if (!rawNumber?.trim()) return "";
   const parsed = parsePhoneNumber(rawNumber, defaultCountryCode);
@@ -88,7 +89,7 @@ export function normalizePhoneInput(
  */
 export function formatPhoneWithCountryCode(
   phone: string | null | undefined,
-  defaultCountryCode: string = "+92",
+  defaultCountryCode = "",
 ): string | null {
   if (!phone || !phone.trim()) return null;
   const raw = phone.trim();
@@ -96,28 +97,28 @@ export function formatPhoneWithCountryCode(
   const code = (parsed.countryCode || defaultCountryCode).trim();
   let num = (parsed.number || "").trim();
 
-  // Strip leading zero if prepending country code
-  if (num.startsWith("0")) {
+  // Strip a local trunk prefix only when an international code is present.
+  if (code && num.startsWith("0")) {
     num = num.replace(/^0+/, "");
   }
 
-  if (!num) return code;
+  if (!num) return code || null;
 
   // If number already starts with +, return cleaned
   if (num.startsWith("+")) {
     return num;
   }
 
-  return `${code} ${num}`;
+  return code ? `${code} ${num}` : num;
 }
 
 /**
  * Extract primary phone from contact formatted with country code (DRY).
  * @param contact - Contact object
- * @param defaultCountryCode - Optional fallback country code if missing (defaults to "+92")
+ * @param defaultCountryCode - Optional fallback country code if configured by the tenant.
  * @returns The formatted primary phone number with country code or null.
  */
-export function getPrimaryPhone(contact?: Partial<Contact> | null, defaultCountryCode: string = "+92"): string | null {
+export function getPrimaryPhone(contact?: Partial<Contact> | null, defaultCountryCode = ""): string | null {
   if (!contact) return null;
   const phones = contact.phones || [];
   const phoneObj = phones.find((p) => p.isPrimary && (p.number || "").trim().length > 0)

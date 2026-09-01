@@ -20,6 +20,12 @@ export interface StudentsListQuery {
   sessionId?: string;
   /** Only students enrolled in a session containing this class name (Reports filter). */
   className?: string;
+  /** Match students sharing any of these father/guardian contact ids. */
+  relatedContactIds?: string;
+  /** Fallback sibling match when the father is not linked to a contact. */
+  fatherName?: string;
+  /** Exclude the current student from a relationship lookup. */
+  excludeId?: string;
 }
 
 /** Work-directory filter presets — SSOT for schema + Filters menu. */
@@ -67,6 +73,9 @@ export const studentsListQuerySchema = baseListQuerySchema.extend({
   quickFilter: studentsQuickFilterSchema.optional(),
   sessionId: z.string().max(100).optional(),
   className: z.string().max(100).optional(),
+  relatedContactIds: z.string().max(1000).optional(),
+  fatherName: z.string().max(255).optional(),
+  excludeId: z.string().max(100).optional(),
 });
 
 export interface StudentsListPageResult {

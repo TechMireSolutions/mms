@@ -32,7 +32,8 @@ interface HasanatWorkTierProps {
   onSubTabChange: (tab: string) => void;
   onRetry: () => void;
   onUpdateBatches: (batches: StockBatch[]) => void | Promise<void>;
-  onUpdateDistributions: (dists: Distribution[]) => void | Promise<void>;
+  onCreateDistribution: (distribution: Distribution) => void | Promise<void>;
+  onUpdateDistribution: (distribution: Distribution) => void | Promise<void>;
   onFilteredCountChange: (count: number) => void;
   onToggleDeleted: () => void;
   onDelete: (id: string) => Promise<void>;
@@ -40,7 +41,7 @@ interface HasanatWorkTierProps {
   onBulkDelete: (ids: string[]) => Promise<void>;
   onBulkRestore: (ids: string[]) => Promise<void>;
   onMessage: (channel: "sms" | "whatsapp" | "email", distributions: Distribution[]) => void;
-  onRowClick?: (id: string) => void;
+  onRowClick?: (distribution: Distribution) => void;
 }
 
 export function HasanatWorkTier({
@@ -60,7 +61,8 @@ export function HasanatWorkTier({
   onSubTabChange,
   onRetry,
   onUpdateBatches,
-  onUpdateDistributions,
+  onCreateDistribution,
+  onUpdateDistribution,
   onFilteredCountChange,
   onToggleDeleted,
   onDelete,
@@ -99,10 +101,10 @@ export function HasanatWorkTier({
           )}
           {activeSubTab === "distribute" && (
             <DistributionsList
-              distributions={distributions}
               denoms={denoms}
               batches={batches}
-              onUpdate={onUpdateDistributions}
+              onCreate={onCreateDistribution}
+              onUpdate={onUpdateDistribution}
               onFilteredCountChange={onFilteredCountChange}
               canWrite={canWrite}
               canDelete={canDelete}
@@ -128,7 +130,7 @@ export function HasanatWorkTier({
           {activeSubTab === "redemptions" && (
             <RedemptionTracker
               distributions={distributions}
-              onUpdateDistributions={onUpdateDistributions}
+              onUpdateDistribution={onUpdateDistribution}
               onFilteredCountChange={onFilteredCountChange}
               canWrite={canWrite}
               isColumnVisible={redemptionColumnLayout.isColumnVisible}

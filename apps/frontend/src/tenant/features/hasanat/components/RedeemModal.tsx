@@ -7,8 +7,7 @@ import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useUsersCollection } from "@/tenant/hooks/collections/users";
-import { todayISO, type SystemUser } from "@mms/shared";
+import { todayISO } from "@mms/shared";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 
@@ -22,7 +21,7 @@ interface RedeemModalProps {
 export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModalProps) {
   const { t } = useTranslation();
   const activeDistributions = distributions.filter((distribution) => distribution.status === "active");
-  const users = useUsersCollection() as unknown as SystemUser[];
+  const [approvedByName, setApprovedByName] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [data, setData] = useState<Partial<Redemption>>({
     distributionId: activeDistributions[0]?.id || "",
@@ -45,6 +44,7 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
         date: todayISO(),
         approvedByUserId: "",
       });
+      setApprovedByName("");
     }
   }, [open, distributions]);
 
@@ -59,8 +59,7 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
       saving={submitting}
       onSave={() => {
         void (async () => {
-          const selectedUser = users.find((user) => user.id === data.approvedByUserId);
-          const approvedBy = selectedUser ? selectedUser.name : (data.approvedByUserId ? `User #${data.approvedByUserId}` : '');
+          const approvedBy = approvedByName || (data.approvedByUserId ? `User #${data.approvedByUserId}` : '');
           setSubmitting(true);
           try {
             await onSave({
@@ -116,7 +115,10 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
           id="approved-by"
           label={t("hasanat.columns.redemption.approvedBy")}
           value={data.approvedByUserId || ""}
-          onChange={(id) => updateField("approvedByUserId", id)}
+          onChange={(id, name) => {
+            updateField("approvedByUserId", id);
+            setApprovedByName(name ?? "");
+          }}
           allowEmpty
         />
       </div>

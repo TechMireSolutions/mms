@@ -16,6 +16,7 @@ import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import {
   extractActivityLogs,
   useActivityLogs,
+  useUsersByIds,
   useUsersMutations,
 } from '@/tenant/features/users/hooks/useUsersApi';
 import { useUsersPaginated } from '@/tenant/features/users/hooks/useUsersListQueries';
@@ -91,8 +92,12 @@ export function useUsersPageController() {
 
   const logsResult = useActivityLogs({ enabled: activeTab === 'work' && activeSubTab === 'activity' });
   const logs = extractActivityLogs(logsResult.data);
+  const activityUsersResult = useUsersByIds(logs.map((log) => log.userId), {
+    enabled: activeTab === 'work' && activeSubTab === 'activity',
+  });
+  const activityUsers = activityUsersResult.data as SystemUser[];
   const logsLoadFailed = logsResult.isError;
-  const isLogsLoading = logsResult.isLoading;
+  const isLogsLoading = logsResult.isLoading || activityUsersResult.isLoading;
 
   const useServerWork = activeTab === 'work' && activeSubTab === 'users';
   const workPageQuery = useUsersPaginated({
@@ -221,6 +226,7 @@ export function useUsersPageController() {
     tabs: SUB_TABS,
     activeSubTab: effectiveSubTab,
     users,
+    activityUsers,
     logs,
     filters,
     columns,

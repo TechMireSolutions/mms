@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { paginateUsers, userMatchesSearch } from './usersListQuery.js';
+import { paginateUsers, userMatchesSearch, usersListQuerySchema } from './usersListQuery.js';
 import type { WorkspaceUser } from './userEntityTypes.js';
 
 const sampleUsers: WorkspaceUser[] = [
@@ -49,5 +49,17 @@ describe('usersListQuery', () => {
     });
     expect(page.total).toBe(1);
     expect(page.users[0]?.id).toBe('2');
+  });
+
+  it('filters a bounded user lookup by ids', () => {
+    const query = usersListQuerySchema.parse({ ids: '2,missing', page: '1', limit: '50' });
+    const page = paginateUsers(sampleUsers, {
+      ids: query.ids,
+      page: query.page,
+      limit: query.limit,
+    });
+
+    expect(page.total).toBe(1);
+    expect(page.users.map((user) => user.id)).toEqual(['2']);
   });
 });

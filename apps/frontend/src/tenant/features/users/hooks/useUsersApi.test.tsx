@@ -3,7 +3,7 @@ import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
 import {
   extractActivityLogs,
-  useUsersCollection,
+  useUsersByIds,
   useUsersMutations,
 } from './useUsersApi';
 import { invalidateUsersQueries } from './invalidateUsersQueries';
@@ -87,8 +87,8 @@ describe('useUsersApi', () => {
     });
   });
 
-  describe('useUsersCollection', () => {
-    it('normalizes users from list query data', () => {
+  describe('useUsersByIds', () => {
+    it('requests and normalizes only the referenced users', () => {
       mockUseQuery.mockReturnValue({
         data: {
           status: 200,
@@ -98,17 +98,26 @@ describe('useUsersApi', () => {
         },
       });
 
-      const { result, unmount } = renderTestHook(() => useUsersCollection());
-      expect(result.current.length).toBe(1);
-      expect(result.current[0]?.name).toBe('Alice');
-      expect(result.current[0]?.role).toBe('admin');
+      const { result, unmount } = renderTestHook(() => useUsersByIds(['u1', 'u1']));
+      expect(result.current.data).toHaveLength(1);
+      expect(result.current.data[0]?.name).toBe('Alice');
+      expect(result.current.data[0]?.role).toBe('admin');
+      expect(mockUseQuery).toHaveBeenCalledWith(expect.objectContaining({
+        queryData: {
+          query: {
+            ids: 'u1',
+            page: 1,
+            limit: 1,
+          },
+        },
+      }));
       unmount();
     });
 
-    it('returns empty array when query data is empty or errored', () => {
+    it('returns an empty data array when query data is errored', () => {
       mockUseQuery.mockReturnValue({ data: { status: 500, body: null } });
-      const { result, unmount } = renderTestHook(() => useUsersCollection());
-      expect(result.current).toEqual([]);
+      const { result, unmount } = renderTestHook(() => useUsersByIds(['u1']));
+      expect(result.current.data).toEqual([]);
       unmount();
     });
   });

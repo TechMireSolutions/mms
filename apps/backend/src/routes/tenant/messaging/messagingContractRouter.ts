@@ -13,6 +13,15 @@ import {
 
 const s = initServer();
 
+function requireMessagingTenant(request: any): { id: string; subdomain: string } {
+  const id = request.tenant?.id;
+  const subdomain = getRequestTenant() || request.tenant?.subdomain;
+  if (!id || !subdomain) {
+    throw new Error('Tenant context required');
+  }
+  return { id: String(id), subdomain: String(subdomain) };
+}
+
 export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
   const router = s.router(rootContract.messaging, {
     listLogs: async ({ query, request }: any) => {
@@ -21,9 +30,9 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const subdomain = getRequestTenant() || request.tenant?.subdomain || (request.tenant?.id === 'ws-demo' ? 'demo' : String(request.tenant?.id ?? 'demo'));
-        const result = await withTenant(String(request.tenant?.id), () =>
-          loadFilteredMessageLogs(subdomain, query),
+        const tenant = requireMessagingTenant(request);
+        const result = await withTenant(tenant.id, () =>
+          loadFilteredMessageLogs(tenant.subdomain, query),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };
@@ -51,9 +60,9 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const parsed = messagingRecipientsQuerySchema.safeParse(query);
         const effectiveQuery = parsed.success ? parsed.data : query;
-        const subdomain = getRequestTenant() || request.tenant?.subdomain || (request.tenant?.id === 'ws-demo' ? 'demo' : String(request.tenant?.id ?? 'demo'));
-        const result = await withTenant(String(request.tenant?.id), () =>
-          loadMessagingRecipients(subdomain, effectiveQuery),
+        const tenant = requireMessagingTenant(request);
+        const result = await withTenant(tenant.id, () =>
+          loadMessagingRecipients(tenant.subdomain, effectiveQuery),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };

@@ -35,7 +35,6 @@ export interface ObligationCollectionFormFieldsProps {
   eligibleReps: MujtahidRep[];
   getMujtahid: (repId: string) => Mujtahid | null | undefined;
   selectedMujtahid: Mujtahid | null | undefined;
-  users: Array<{ id: string; name: string }>;
   currencies?: Array<{ id: string; code: string; name: string; symbol: string }>;
 }
 
@@ -47,7 +46,6 @@ export function ObligationCollectionFormFields({
   eligibleReps,
   getMujtahid,
   selectedMujtahid,
-  users,
   currencies = DEFAULT_CURRENCIES,
 }: ObligationCollectionFormFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -176,7 +174,6 @@ export function ObligationCollectionFormFields({
         eligibleReps={eligibleReps}
         getMujtahid={getMujtahid}
         selectedMujtahid={selectedMujtahid}
-        users={users}
         formField={formField}
       />
     </div>

@@ -84,7 +84,7 @@ export const AGGREGATE_FNS = ["None", "Sum", "Average", "Count", "Max", "Min"] a
 
 export type AggregateFn = (typeof AGGREGATE_FNS)[number];
 
-/** Mock preview row shape — values may be missing for unmapped fields. */
+/** Preview row shape - values may be missing for unmapped fields. */
 export type PreviewRow = Record<string, string | number>;
 
 type ContactFieldRegistry = Parameters<typeof resolveContactReportFieldLabel>[1];

@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { User, WidgetQuery } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
-import { canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
+import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import {
   loadDistributionsPage,
@@ -12,6 +12,8 @@ import {
   bulkSoftDeleteDistributions,
   bulkRestoreDistributions,
   loadHasanatWidgetAggregates,
+  createDistribution,
+  updateDistributionById,
 } from '../../../services/hasanatService.js';
 
 const s = initServer();
@@ -32,6 +34,41 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list distributions' } };
+      }
+    },
+    createDistribution: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, 'hasanat_distributions')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const distribution = await withTenant(
+          String(request.tenant?.id),
+          () => createDistribution(body),
+          { readOnly: false },
+        );
+        return { status: 201 as const, body: { distribution } };
+      } catch {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create distribution' } };
+      }
+    },
+    updateDistribution: async ({ params: { id }, body, request }: any) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, 'hasanat_distributions')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const distribution = await withTenant(
+          String(request.tenant?.id),
+          () => updateDistributionById(id, body),
+          { readOnly: false },
+        );
+        if (!distribution) {
+          return { status: 404 as const, body: { type: 'not_found', message: 'Distribution not found' } };
+        }
+        return { status: 200 as const, body: { distribution } };
+      } catch {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update distribution' } };
       }
     },
     bulkDeleteDistributions: async ({ body, request }: any) => {

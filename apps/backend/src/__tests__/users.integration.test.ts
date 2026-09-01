@@ -162,6 +162,24 @@ describe('users REST routes', () => {
     await app.close();
   });
 
+  it('GET /api/users forwards bounded id lookup', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/users?page=1&limit=2&ids=u-1%2Cu-2',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith(
+      expect.objectContaining({ page: 1, limit: 2, ids: 'u-1,u-2' }),
+    );
+    await app.close();
+  });
+
   it('GET /api/users?includeDeleted=true loads trash for admin', async () => {
     const deletedUser = {
       ...sampleUser,

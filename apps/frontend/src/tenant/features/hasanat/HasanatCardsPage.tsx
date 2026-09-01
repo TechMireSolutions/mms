@@ -88,10 +88,15 @@ export default function HasanatCards() {
                 onToggleDeleted={() => c.setShowDeleted((prev) => !prev)}
                 onRetry={c.refetchDistributions}
                 onUpdateBatches={(next) => c.runHasanatSave(() => c.replaceBatches.mutateAsync(next))}
-                onUpdateDistributions={(next) => c.runHasanatSave(() => c.replaceDistributions.mutateAsync(next))}
+                onCreateDistribution={(distribution) => c.runHasanatSave(
+                  () => c.createDistribution.mutateAsync(distribution),
+                )}
+                onUpdateDistribution={(distribution) => c.runHasanatSave(
+                  () => c.updateDistribution.mutateAsync(distribution),
+                )}
                 onFilteredCountChange={c.setFilteredCount}
                 onDelete={c.handleDeleteDistribution}
-                onRowClick={(id) => { const d = c.distributions.find((x) => x.id === id); if (d) c.setActiveDistribution(d); }}
+                onRowClick={c.setActiveDistribution}
                 onRestore={c.handleRestoreDistribution}
                 onBulkDelete={c.handleBulkDelete}
                 onBulkRestore={c.handleBulkRestore}

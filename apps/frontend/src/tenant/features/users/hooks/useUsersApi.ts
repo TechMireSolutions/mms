@@ -16,32 +16,42 @@ const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
 
 export { USERS_LIST_QUERY_KEY, USERS_METRICS_QUERY_KEY, ACTIVITY_LOGS_QUERY_KEY };
 
-function useUsers(options?: { enabled?: boolean; includeDeleted?: boolean }) {
+/** Resolve only the users referenced by another collection. */
+export function useUsersByIds(
+  ids: Array<string | number | null | undefined>,
+  options?: { enabled?: boolean },
+) {
   const { isAuthenticated } = useAuth();
-  const includeDeleted = options?.includeDeleted ?? false;
+  const normalizedIds = Array.from(new Set(
+    ids.map((id) => String(id ?? '').trim()).filter(Boolean),
+  )).sort();
+  const idsKey = normalizedIds.join(',');
   const enabled = options?.enabled ?? true;
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.users.list.useQuery({
-    queryKey: [...USERS_LIST_QUERY_KEY, 'all', { includeDeleted }] as const,
-    queryData: { query: { includeDeleted: includeDeleted ? 'true' : undefined } },
-    staleTime: 30_000,
-    enabled: isAuthenticated && enabled,
-  });
-}
 
-export function useUsersCollection(options?: {
-  enabled?: boolean;
-  includeDeleted?: boolean;
-}): WorkspaceUser[] {
-  const query = useUsers(options);
-  if (!query.data || query.data.status !== 200) return [];
-  const responseData: unknown = query.data.body;
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const query = tsrClient.users.list.useQuery({
+    queryKey: [...USERS_LIST_QUERY_KEY, 'resolve', idsKey] as const,
+    queryData: {
+      query: {
+        ids: idsKey,
+        page: 1,
+        limit: Math.max(1, Math.min(normalizedIds.length, USERS_MODULE_MANIFEST.maxPageSize)),
+      },
+    },
+    staleTime: 30_000,
+    enabled: isAuthenticated && enabled && normalizedIds.length > 0,
+  });
+
+  const responseData: unknown = query.data?.status === 200 ? query.data.body : undefined;
   const users = Array.isArray(responseData)
     ? responseData
     : (responseData as { users?: unknown[] } | null)?.users ?? [];
-  return users.map((user) =>
-    normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
-  );
+  return {
+    ...query,
+    data: users.map((user) =>
+      normalizeWorkspaceUser(user as Partial<SystemUser> & { roles?: string[]; role?: string }),
+    ) as WorkspaceUser[],
+  };
 }
 
 export function useUsersMetrics(options?: { enabled?: boolean }) {

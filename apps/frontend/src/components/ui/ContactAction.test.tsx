@@ -46,6 +46,17 @@ describe("ContactAction Primitives", () => {
       expect(html).not.toContain("sms:");
     });
 
+    it("keeps local numbers local when no country code is configured", () => {
+      const html = renderToStaticMarkup(
+        <ContactPhoneAction phone="0300 1234567" />,
+      );
+
+      expect(html).toContain('href="tel:03001234567"');
+      expect(html).toContain('href="sms:03001234567"');
+      expect(html).not.toContain("wa.me");
+      expect(html).not.toContain("+92");
+    });
+
     it("supports pill variant with inline value and action links", () => {
       const html = renderToStaticMarkup(
         <ContactPhoneAction phone="+92 300 1234567" variant="pill" />,

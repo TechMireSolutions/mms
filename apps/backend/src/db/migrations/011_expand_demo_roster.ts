@@ -81,8 +81,7 @@ async function expandTenantRoster(
 }
 
 /**
- * Expands minimal demo rosters to {@link DEMO_STUDENT_COUNT} students and
- * {@link DEMO_TEACHER_COUNT} teachers (with linked contacts).
+ * Initializes empty roster collections and default student/teacher settings.
  */
 export async function runMigration011(): Promise<void> {
   const subdomains = await discoverTenantSubdomains();
@@ -98,7 +97,7 @@ export async function runMigration011(): Promise<void> {
         TEACHERS_SETTINGS_KEY,
       )
     ) {
-      console.log('[Migration 011] Expanded demo roster (legacy storage)');
+      console.log('[Migration 011] Initialized roster storage (legacy storage)');
       changed = true;
     }
   } else {
@@ -112,13 +111,13 @@ export async function runMigration011(): Promise<void> {
           tenantObjectKey(subdomain, TEACHERS_SETTINGS_KEY),
         )
       ) {
-        console.log(`[Migration 011] Expanded demo roster for tenant "${subdomain}"`);
+        console.log(`[Migration 011] Initialized roster storage for tenant "${subdomain}"`);
         changed = true;
       }
     }
   }
 
   if (changed) {
-    console.log('[Migration 011] Demo roster expansion completed.');
+    console.log('[Migration 011] Roster storage migration completed.');
   }
 }

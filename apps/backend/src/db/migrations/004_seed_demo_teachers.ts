@@ -38,8 +38,8 @@ async function discoverTenantSubdomains(): Promise<Set<string>> {
 }
 
 /**
- * Seeds demo teachers for tenants that have an empty or missing `teachers` collection.
- * Idempotent — skips tenants that already have teacher records.
+ * Initializes empty teacher storage and default settings without creating teacher records.
+ * Idempotent - skips tenants that already have teacher records and settings.
  */
 export async function runMigration004(): Promise<void> {
   const subdomains = await discoverTenantSubdomains();
@@ -83,6 +83,6 @@ export async function runMigration004(): Promise<void> {
   }
 
   if (changed) {
-    console.log('[Migration 004] Demo teachers migration completed.');
+    console.log('[Migration 004] Teacher storage migration completed.');
   }
 }

@@ -5,7 +5,6 @@ import {
   ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
 } from "@/lib/data/obligationsData";
 import { todayISO, type AppTranslationKey } from "@mms/shared";
-import { useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { calculateKeyedUnitsCompleteness } from "@/lib/formCompleteness";
@@ -39,8 +38,6 @@ export interface ObligationCollectionFormProps {
 
 export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
   const { t } = useTranslation();
-  const users = useMergedObligationUsers();
-
   const [form, setForm] = useState<ObligationCollectionFormState>({ ...EMPTY, receipt_no: generateReceiptNo(existingCollections) });
   const [errors, setErrors] = useState<Partial<Record<keyof ObligationCollectionFormState, AppTranslationKey>>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -131,7 +128,6 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
         eligibleReps={eligibleReps}
         getMujtahid={getMujtahid}
         selectedMujtahid={selectedMujtahid}
-        users={users}
       />
     </FormModal>
   );

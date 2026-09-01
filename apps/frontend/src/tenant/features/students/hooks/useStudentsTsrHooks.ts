@@ -9,7 +9,17 @@ import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/inva
 import { SESSIONS_QUERY_KEY } from '@/tenant/hooks/collections/sessions';
 
 export function useStudentsContractList(
-  query: { page?: number; limit?: number; search?: string; sessionId?: string; className?: string; [key: string]: unknown },
+  query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sessionId?: string;
+    className?: string;
+    relatedContactIds?: string;
+    fatherName?: string;
+    excludeId?: string;
+    [key: string]: unknown;
+  },
   enabled = true,
 ) {
   // @ts-expect-error - TS union discrimination limit with ts-rest

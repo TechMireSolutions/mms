@@ -10,7 +10,7 @@ export interface ParseVCardOptions {
   mobileLabel?: string;
   /** Label for generated email entries (default: 'Personal'). */
   personalLabel?: string;
-  /** Default phone country code for E.164 parsing (default: '+92'). */
+  /** Tenant-configured phone country code for parsing local numbers. */
   defaultPhoneCountryCode?: string;
 }
 
@@ -24,7 +24,7 @@ export interface ParseVCardOptions {
 export function parseVCard(text: string, options?: ParseVCardOptions): Contact[] {
   const mobileLabel = options?.mobileLabel || 'Mobile';
   const personalLabel = options?.personalLabel || 'Personal';
-  const defaultPhoneCountryCode = options?.defaultPhoneCountryCode || '+92';
+  const defaultPhoneCountryCode = options?.defaultPhoneCountryCode?.trim() ?? '';
 
   const contacts: Contact[] = [];
   const cards = text.split(/BEGIN:VCARD/i).filter((cardText) => cardText.trim());

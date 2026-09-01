@@ -44,7 +44,10 @@ export async function fetchAllTeachersForQuery(
     all.push(...(teachersPage.teachers as TeacherRecord[]));
     total = teachersPage.total;
     onProgress?.(all.length, total);
-    if (!teachersPage.hasMore || page >= 200) break;
+    if (!teachersPage.hasMore) break;
+    if (page >= 200) {
+      throw new Error('Teacher export exceeds the 100,000-record safety limit; narrow the filters.');
+    }
     page += 1;
   }
 

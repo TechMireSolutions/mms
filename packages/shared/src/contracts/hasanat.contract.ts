@@ -52,6 +52,29 @@ export const hasanatContract = c.router({
     responses: { 200: hasanatDistributionsPageResponseSchema, 403: ok, 500: ok },
     summary: 'List hasanat distributions',
   },
+  createDistribution: {
+    method: 'POST',
+    path: '/api/hasanat/distributions',
+    body: distributionRecordSchema,
+    responses: {
+      201: z.object({ distribution: distributionRecordSchema }),
+      403: ok,
+      500: ok,
+    },
+    summary: 'Create a hasanat distribution',
+  },
+  updateDistribution: {
+    method: 'PUT',
+    path: '/api/hasanat/distributions/:id',
+    body: distributionRecordSchema,
+    responses: {
+      200: z.object({ distribution: distributionRecordSchema }),
+      403: ok,
+      404: ok,
+      500: ok,
+    },
+    summary: 'Update a hasanat distribution',
+  },
   bulkDeleteDistributions: {
     method: 'POST',
     path: '/api/hasanat/distributions/bulk-delete',

@@ -55,7 +55,7 @@ export const ObligationCollectionDetail = (function ObligationCollectionDetail({
 
   const contactIds = (() => [collection.sender_id, collection.reference_id])();
   const contacts = useMergedObligationContacts(contactIds);
-  const users = useMergedObligationUsers();
+  const users = useMergedObligationUsers([collection.received_by]);
 
   const distributionTypeConfig = (() => ({
     Income: { label: t("obligations.distribution.income"), cls: SEMANTIC_BADGE.success },
@@ -215,4 +215,3 @@ export const ObligationCollectionDetail = (function ObligationCollectionDetail({
     </DetailDrawerShell>
   );
 });
-

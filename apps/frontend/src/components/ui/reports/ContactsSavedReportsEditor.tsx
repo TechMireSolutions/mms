@@ -1,12 +1,13 @@
 import React from "react";
-import type { ContactsSavedReportShareScope } from "@mms/shared";
+import type { ContactsSavedReportShareScope, WorkspaceUser } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormModal } from "@/components/ui/FormModal";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useUsersCollection } from "@/tenant/hooks/collections/users";
+import { useUsersPaginated } from "@/tenant/hooks/collections/users";
+import { SearchBar } from "@/components/ui/SearchBar";
 
 interface ContactsSavedReportUserPickerProps {
   value: string[];
@@ -18,8 +19,11 @@ function ContactsSavedReportUserPicker({
   onChange,
 }: ContactsSavedReportUserPickerProps): React.JSX.Element {
   const { t } = useTranslation();
-  const users = useUsersCollection();
-  const options = (() => users.slice().sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")))();
+  const [userSearch, setUserSearch] = React.useState("");
+  const usersQuery = useUsersPaginated({ page: 1, limit: 50, search: userSearch });
+  const users: WorkspaceUser[] = usersQuery.data?.users ?? [];
+  const options = (() =>
+    users.slice().sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")))();
 
   const toggle = (userId: string) => {
     if (value.includes(userId)) {
@@ -32,6 +36,13 @@ function ContactsSavedReportUserPicker({
   return (
     <div className="space-y-1.5">
       <Label>{t("contacts.savedReports.usersPickerLabel")}</Label>
+      <SearchBar
+        id="saved-report-user-search"
+        name="savedReportUserSearch"
+        value={userSearch}
+        onChange={setUserSearch}
+        placeholder={t("registryPerson.searchPlaceholder")}
+      />
       <div className="max-h-40 overflow-y-auto rounded-lg border border-border divide-y divide-border">
         {options.length === 0 ? (
           <p className="px-3 py-2 text-xs text-muted-foreground">{t("common.loading")}</p>
@@ -44,6 +55,9 @@ function ContactsSavedReportUserPicker({
           ))
         )}
       </div>
+      {usersQuery.data?.hasMore && (
+        <p className="text-xs text-muted-foreground">{t("registryPerson.refineSearch")}</p>
+      )}
     </div>
   );
 }

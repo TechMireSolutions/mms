@@ -1,4 +1,4 @@
-import { eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
+import { eq, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import {
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
@@ -199,6 +199,35 @@ export function buildListConditions(
         AND s.deleted_at IS NULL
         AND sc.name = ${className}
     )`);
+  }
+
+  const relatedContactIds = query.relatedContactIds
+    ?.split(',')
+    .map((id) => id.trim())
+    .filter(Boolean) ?? [];
+  const fatherName = query.fatherName?.trim().toLowerCase();
+  const relationshipConditions: SQL[] = [];
+  if (relatedContactIds.length > 0) {
+    relationshipConditions.push(sql`${students.fatherContactId} IN (${sql.join(
+      relatedContactIds.map((id) => sql`${id}`),
+      sql`, `,
+    )})`);
+    relationshipConditions.push(sql`${students.guardianContactId} IN (${sql.join(
+      relatedContactIds.map((id) => sql`${id}`),
+      sql`, `,
+    )})`);
+  }
+  if (fatherName) {
+    relationshipConditions.push(
+      sql`lower(trim(COALESCE(${students.fatherName}, ''))) = ${fatherName}`,
+    );
+  }
+  if (relationshipConditions.length > 0) {
+    conditions.push(sql`(${sql.join(relationshipConditions, sql` OR `)})`);
+  }
+
+  if (query.excludeId?.trim()) {
+    conditions.push(ne(students.id, query.excludeId.trim()));
   }
 
   return conditions;

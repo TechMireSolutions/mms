@@ -1,5 +1,4 @@
 import {
-  DEMO_TEACHER_CONTACT_BY_ID,
   normalizeStoredTeacher,
   parseTenantScopedStorageKey,
   tenantCollectionKey,
@@ -11,6 +10,8 @@ import {
   listCollectionStorageNames,
   saveCollection,
 } from '../database.js';
+
+const LEGACY_SEEDED_TEACHER_ID = /^tch([1-9]|[12]\d|30)$/;
 
 interface LegacyTeacherRow {
   id: string | number;
@@ -34,8 +35,8 @@ function resolveContactId(
   if (teacher.contactId != null && teacher.contactId !== '') {
     return teacher.contactId;
   }
-  const demo = DEMO_TEACHER_CONTACT_BY_ID[String(teacher.id)];
-  if (demo != null) return demo;
+  const seededId = String(teacher.id).match(LEGACY_SEEDED_TEACHER_ID);
+  if (seededId) return Number(seededId[1]);
   if (teacher.name) {
     const match = contacts.find((contact) => contact.name === teacher.name);
     if (match) return match.id;

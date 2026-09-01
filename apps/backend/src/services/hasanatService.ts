@@ -130,6 +130,8 @@ export const upsertRedemptions = (records: Redemption[]) =>
   upsertWithBroadcast(redemptionListSchema, records, bulkSaveRedemptions, 'hasanat_redemptions');
 
 export const deleteDistributionById = distributionCrud.deleteById;
+export const createDistribution = distributionCrud.create;
+export const updateDistributionById = distributionCrud.updateById;
 export const restoreDistributionById = distributionCrud.restoreById;
 export const bulkSoftDeleteDistributions = distributionCrud.bulkDeleteByIds;
 export const bulkRestoreDistributions = distributionCrud.bulkRestoreByIds;

@@ -64,7 +64,8 @@ export function useHasanatCardsPageController() {
   const {
     replaceDenoms,
     replaceBatches,
-    replaceDistributions,
+    createDistribution,
+    updateDistribution,
     deleteDistribution,
     restoreDistribution,
     bulkDeleteDistributions,
@@ -194,7 +195,8 @@ export function useHasanatCardsPageController() {
     runHasanatSave,
     replaceDenoms,
     replaceBatches,
-    replaceDistributions,
+    createDistribution,
+    updateDistribution,
     openDistribute,
     refetchDistributions: () => { void distributionsResult.refetch(); },
   };

@@ -12,9 +12,8 @@ import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 const DISTRIBUTION_SEARCH_DEBOUNCE_MS = 300;
 
 export interface UseDistributionsListStateOptions {
-  /** Full list — used by mutation handlers (`handleDistribute`/`changeStatus`) only. */
-  distributions: Distribution[];
-  onUpdate: (dists: Distribution[]) => void | Promise<void>;
+  onCreate: (distribution: Distribution) => void | Promise<void>;
+  onUpdate: (distribution: Distribution) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   showDeleted?: boolean;
@@ -22,7 +21,7 @@ export interface UseDistributionsListStateOptions {
 }
 
 export function useDistributionsList({
-  distributions,
+  onCreate,
   onUpdate,
   onFilteredCountChange,
   canWrite = true,
@@ -79,12 +78,13 @@ export function useDistributionsList({
   const toggleStatus = (status: DistributionStatus) => setFilterStatus((selectedStatuses) => selectedStatuses.includes(status) ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status) : [...selectedStatuses, status]);
 
   const handleDistribute = async (dist: Distribution) => {
-    await onUpdate([...distributions, dist]);
+    await onCreate(dist);
     setShowModal(false);
   };
 
   const changeStatus = (id: string, status: DistributionStatus) => {
-    void onUpdate(distributions.map((distribution) => distribution.id === id ? { ...distribution, status } : distribution));
+    const distribution = pageDistributions.find((item) => item.id === id);
+    if (distribution) void onUpdate({ ...distribution, status });
   };
 
   return {

@@ -26,7 +26,7 @@ const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 export interface RedemptionTrackerProps {
   distributions: Distribution[];
-  onUpdateDistributions: (distributions: Distribution[]) => void | Promise<void>;
+  onUpdateDistribution: (distribution: Distribution) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   isColumnVisible?: (key: string) => boolean;
@@ -37,7 +37,7 @@ export interface RedemptionTrackerProps {
 
 export function RedemptionTracker({
   distributions,
-  onUpdateDistributions,
+  onUpdateDistribution,
   onFilteredCountChange,
   canWrite = true,
   isColumnVisible,
@@ -59,7 +59,10 @@ export function RedemptionTracker({
 
   const handleSave = async (redemption: Redemption) => {
     await replaceRedemptions.mutateAsync([...redemptions, redemption]);
-    await onUpdateDistributions(distributions.map((distribution: Distribution) => distribution.id === redemption.distributionId ? { ...distribution, status: "redeemed" as const } : distribution));
+    const distribution = distributions.find((item) => item.id === redemption.distributionId);
+    if (distribution) {
+      await onUpdateDistribution({ ...distribution, status: "redeemed" as const });
+    }
     setShowModal(false);
   };
 

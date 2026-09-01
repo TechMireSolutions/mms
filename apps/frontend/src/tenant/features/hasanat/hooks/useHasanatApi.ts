@@ -175,10 +175,13 @@ export function useHasanatMutations() {
   });
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  const replaceDistributions = tsrClient.hasanat.replaceDistributions.useMutation({
-    onSuccess: () => {
-      invalidateDistributions();
-    },
+  const createDistribution = tsrClient.hasanat.createDistribution.useMutation({
+    onSuccess: () => invalidateDistributions(),
+  });
+
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const updateDistribution = tsrClient.hasanat.updateDistribution.useMutation({
+    onSuccess: () => invalidateDistributions(),
   });
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
@@ -220,10 +223,16 @@ export function useHasanatMutations() {
       mutate: (batches: StockBatch[], opts?: MutateOptions) => replaceBatches.mutate({ body: batches }, opts),
       mutateAsync: (batches: StockBatch[]) => replaceBatches.mutateAsync({ body: batches }),
     },
-    replaceDistributions: {
-      ...replaceDistributions,
-      mutate: (distributions: Distribution[], opts?: MutateOptions) => replaceDistributions.mutate({ body: distributions }, opts),
-      mutateAsync: (distributions: Distribution[]) => replaceDistributions.mutateAsync({ body: distributions }),
+    createDistribution: {
+      ...createDistribution,
+      mutateAsync: (distribution: Distribution) => createDistribution.mutateAsync({ body: distribution }),
+    },
+    updateDistribution: {
+      ...updateDistribution,
+      mutateAsync: (distribution: Distribution) => updateDistribution.mutateAsync({
+        params: { id: String(distribution.id) },
+        body: distribution,
+      }),
     },
     replaceRedemptions: {
       ...replaceRedemptions,

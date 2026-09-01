@@ -180,7 +180,7 @@ export const DEFAULT_BRANDING_SETTINGS: BrandingSettings = {
   cornerStyle: DEFAULT_BRANDING_CORNER_STYLE,
   logoUrl: '',
   faviconUrl: '',
-  footerText: '© 2026 MMS. All rights reserved.',
+  footerText: '',
   email: '',
   phone: '',
   website: '',

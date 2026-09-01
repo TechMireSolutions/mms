@@ -71,8 +71,12 @@ export async function runMigration002(): Promise<boolean> {
   if (hasCurrency) {
     const financeSettings = ((await getObject('finance_settings')) ?? {}) as FinanceSettingsRecord;
     // Only set if not already present in the target (idempotency guard).
-    if (!('currency' in financeSettings)) {
-      financeSettings.currency = globalSettings.currency ?? 'PKR';
+    if (
+      !('currency' in financeSettings) &&
+      typeof globalSettings.currency === 'string' &&
+      globalSettings.currency.trim()
+    ) {
+      financeSettings.currency = globalSettings.currency.trim();
       await saveObject('finance_settings', financeSettings);
       console.log('[Migration 002]  ✓ currency moved to finance_settings');
     }
@@ -82,14 +86,24 @@ export async function runMigration002(): Promise<boolean> {
   const sessionsSettingsRecord = ((await getObject('sessions_settings')) ?? {}) as SessionsSettingsRecord;
   let sessionsModified = false;
 
-  if (hasAcademicYear && !('academicYear' in sessionsSettingsRecord)) {
-    sessionsSettingsRecord.academicYear = globalSettings.academicYear ?? '2025-2026';
+  if (
+    hasAcademicYear &&
+    !('academicYear' in sessionsSettingsRecord) &&
+    typeof globalSettings.academicYear === 'string' &&
+    globalSettings.academicYear.trim()
+  ) {
+    sessionsSettingsRecord.academicYear = globalSettings.academicYear.trim();
     sessionsModified = true;
     console.log('[Migration 002]  ✓ academicYear moved to sessions_settings');
   }
 
-  if (hasSessionStart && !('sessionStart' in sessionsSettingsRecord)) {
-    sessionsSettingsRecord.sessionStart = globalSettings.sessionStart ?? 'april';
+  if (
+    hasSessionStart &&
+    !('sessionStart' in sessionsSettingsRecord) &&
+    typeof globalSettings.sessionStart === 'string' &&
+    globalSettings.sessionStart.trim()
+  ) {
+    sessionsSettingsRecord.sessionStart = globalSettings.sessionStart.trim();
     sessionsModified = true;
     console.log('[Migration 002]  ✓ sessionStart moved to sessions_settings');
   }

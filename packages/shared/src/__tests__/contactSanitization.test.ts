@@ -18,6 +18,10 @@ describe("contactSanitization", () => {
       expect(sanitizePhoneForTel("03001234567", "+92")).toBe("tel:+923001234567");
     });
 
+    it("preserves a local tel link when no country code is configured", () => {
+      expect(sanitizePhoneForTel("03001234567")).toBe("tel:03001234567");
+    });
+
     it("returns null for null, empty or invalid strings", () => {
       expect(sanitizePhoneForTel(null)).toBeNull();
       expect(sanitizePhoneForTel("")).toBeNull();
@@ -47,6 +51,10 @@ describe("contactSanitization", () => {
 
     it("converts local phone using default country code", () => {
       expect(sanitizePhoneForWhatsApp("03001234567", "+92")).toBe("https://wa.me/923001234567");
+    });
+
+    it("does not build a WhatsApp link without an international code", () => {
+      expect(sanitizePhoneForWhatsApp("03001234567")).toBeNull();
     });
 
     it("returns null for invalid or empty phone", () => {

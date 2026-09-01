@@ -3,7 +3,7 @@ import type { ActivityLog } from '@mms/shared';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { UsersCommandMetrics } from '@/tenant/features/users/components/UsersCommandMetrics';
 import { ActivityLogs } from '@/tenant/features/users/components/ActivityLogs';
-import { useActivityLogs, useUsersCollection } from '@/tenant/features/users/hooks/useUsersApi';
+import { useActivityLogs, useUsersByIds } from '@/tenant/features/users/hooks/useUsersApi';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -12,7 +12,6 @@ import PinnedWidgets from '@/components/ui/reports/PinnedWidgets';
 export default function UsersReport(): React.JSX.Element {
   const { t } = useTranslation();
   const activityQuery = useActivityLogs();
-  const users = useUsersCollection();
 
   const logs = (() => {
     if (!activityQuery.data || activityQuery.data.status !== 200) return [];
@@ -23,6 +22,7 @@ export default function UsersReport(): React.JSX.Element {
     }
     return [];
   })() as ActivityLog[];
+  const users = useUsersByIds(logs.map((log) => log.userId)).data;
 
   if (activityQuery.isError) {
     return (

@@ -45,7 +45,7 @@ export const DEFAULT_SESSIONS_SETTINGS: SessionsSettings = {
   requireBudget: false,
   timetableConflictCheck: true,
   notifyOnSessionStart: true,
-  academicYear: "2025-2026",
+  academicYear: "",
   sessionStart: "april",
   defaultViewLayout: "table",
   fields: {

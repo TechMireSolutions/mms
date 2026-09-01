@@ -1,5 +1,5 @@
 import { useContactsByIds } from "@/tenant/hooks/collections/contacts";
-import { useUsersCollection } from "@/tenant/hooks/collections/users";
+import { useUsersByIds } from "@/tenant/hooks/collections/users";
 import type { Contact, WorkspaceUser } from "@mms/shared";
 
 /** Resolve obligation-linked contacts by id (globle2 §10 — no full list fetch). */
@@ -10,7 +10,9 @@ export function useMergedObligationContacts(
   return linkedContacts;
 }
 
-/** Live users merged with obligation demo fixtures (deduped by id). */
-export function useMergedObligationUsers(): WorkspaceUser[] {
-  return useUsersCollection();
+/** Resolve only users referenced by obligation records. */
+export function useMergedObligationUsers(
+  ids: (string | number | null | undefined)[],
+): WorkspaceUser[] {
+  return useUsersByIds(ids).data;
 }

@@ -14,6 +14,9 @@ export const studentListQuerySchema = baseListQuerySchema.extend({
   status: z.string().optional(),
   gender: z.string().optional(),
   quickFilter: z.string().optional(),
+  relatedContactIds: z.string().optional(),
+  fatherName: z.string().optional(),
+  excludeId: z.string().optional(),
 }).passthrough();
 
 /** Envelope for paginated student list responses (`StudentsListPageResult`). */

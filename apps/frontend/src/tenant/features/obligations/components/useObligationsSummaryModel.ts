@@ -33,7 +33,9 @@ export function useObligationsSummaryModel(
   wakalaTypes = Array.isArray(wakalaTypes) ? wakalaTypes : [];
   distributions = Array.isArray(distributions) ? distributions : [];
   const { t } = useTranslation();
-  const usersRaw = useMergedObligationUsers();
+  const receiverIds = (() =>
+    collections.map((collection) => collection.received_by))();
+  const usersRaw = useMergedObligationUsers(receiverIds);
   const users = Array.isArray(usersRaw) ? usersRaw : [];
   const { primary, secondary, charts } = useBrandPalette();
   const COLORS = (() => [primary, charts[3], secondary, charts[4], charts[0], charts[2]])();

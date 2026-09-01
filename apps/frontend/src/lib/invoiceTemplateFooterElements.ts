@@ -7,6 +7,11 @@ export function buildInvoiceTemplateFooterElements(
   primary: string,
 ): InvoiceTemplate["elements"] {
   const { muted, border } = PRINT_NEUTRAL;
+  const contactLine = [
+    b.phone ? `Phone: ${b.phone}` : '',
+    b.email ? `Email: ${b.email}` : '',
+  ].filter(Boolean).join('   |   ');
+
   return [
     {
       id: "divider6",
@@ -32,14 +37,14 @@ export function buildInvoiceTemplateFooterElements(
     {
       id: "footer_address",
       type: "static",
-      label: formatBrandingAddress(b) || "123 Islamic Street, Karachi, Pakistan",
+      label: formatBrandingAddress(b),
       x: 20, y: 398, w: 357, h: 14,
       style: { fontSize: 9, textAlign: "center", color: muted },
     },
     {
       id: "footer_contact",
       type: "static",
-      label: `Phone: ${b.phone || "+92 300 0000000"}   |   Email: ${b.email || "info@madrasa.edu.pk"}`,
+      label: contactLine,
       x: 20, y: 414, w: 357, h: 14,
       style: { fontSize: 9, textAlign: "center", color: muted },
     },

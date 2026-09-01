@@ -2,6 +2,7 @@ import {
   resolveStudentGuardianLinks,
   STUDENT_DETAIL_HERO_FIELD_KEYS,
   OBSOLETE_STUDENT_GUARDIAN_FIELD_KEYS,
+  STUDENTS_MODULE_MANIFEST,
   type Student,
   type StudentContactRelationshipLink,
   calcAge,
@@ -109,7 +110,20 @@ export function useStudentDetailModel(student: Student) {
     return true;
   });
 
-  const allStudentsQuery = useStudentsContractList({ page: 1, limit: 100 });
+  const siblingRelatedContactIds = (() =>
+    Array.from(new Set([
+      guardians.fatherContactId ? String(guardians.fatherContactId) : "",
+      guardians.guardianContactId ? String(guardians.guardianContactId) : "",
+    ].filter(Boolean))))();
+  const siblingFatherName = (guardians.fatherName || student.fatherName || "").trim();
+  const hasSiblingLookup = siblingRelatedContactIds.length > 0 || Boolean(siblingFatherName);
+  const allStudentsQuery = useStudentsContractList({
+    page: 1,
+    limit: STUDENTS_MODULE_MANIFEST.maxPageSize,
+    relatedContactIds: siblingRelatedContactIds.join(",") || undefined,
+    fatherName: siblingFatherName || undefined,
+    excludeId: student.id ? String(student.id) : undefined,
+  }, hasSiblingLookup);
   const allStudents = getStudentsFromPage(allStudentsQuery.data?.body);
 
   const siblings: SiblingStudentItem[] = buildStudentSiblings(student, guardians, allStudents, sessions);
@@ -148,7 +162,6 @@ export function useStudentDetailModel(student: Student) {
     allStudents,
   };
 }
-
 /** Contract list pages are union-shaped at classification-failure sites — narrow to the students array. */
 function getStudentsFromPage(body: unknown): Student[] {
   return (body as { students?: Student[] } | null)?.students ?? [];

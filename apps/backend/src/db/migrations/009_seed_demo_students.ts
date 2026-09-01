@@ -65,8 +65,8 @@ async function seedTenantStudents(
 }
 
 /**
- * Seeds demo students (and their contact profiles) for tenants with an empty students collection.
- * Idempotent — skips tenants that already have student records.
+ * Initializes student/contact storage and default settings without creating student records.
+ * Idempotent - skips storage that is already initialized.
  */
 export async function runMigration009(): Promise<void> {
   const subdomains = await discoverTenantSubdomains();
@@ -76,7 +76,7 @@ export async function runMigration009(): Promise<void> {
     if (
       await seedTenantStudents(STUDENTS_COLLECTION, CONTACTS_COLLECTION, STUDENTS_SETTINGS_KEY)
     ) {
-      console.log('[Migration 009] Seeded demo students (legacy storage)');
+      console.log('[Migration 009] Initialized student storage (legacy storage)');
       changed = true;
     }
   } else {
@@ -88,13 +88,13 @@ export async function runMigration009(): Promise<void> {
           tenantObjectKey(subdomain, STUDENTS_SETTINGS_KEY),
         )
       ) {
-        console.log(`[Migration 009] Seeded demo students for tenant "${subdomain}"`);
+        console.log(`[Migration 009] Initialized student storage for tenant "${subdomain}"`);
         changed = true;
       }
     }
   }
 
   if (changed) {
-    console.log('[Migration 009] Demo students migration completed.');
+    console.log('[Migration 009] Student storage migration completed.');
   }
 }

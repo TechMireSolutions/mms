@@ -4,6 +4,7 @@ import { Mujtahid, MujtahidRep, ObligationType } from '@/lib/data/obligationsDat
 import { type AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { UserActorSelect } from '@/components/ui/UserActorSelect';
 import { SectionCard } from '@/components/ui/SectionCard';
 import type { ObligationCollectionFormState } from './ObligationCollectionFormFields';
 
@@ -15,7 +16,6 @@ interface ObligationCollectionWakalaSectionProps {
   eligibleReps: MujtahidRep[];
   getMujtahid: (repId: string) => Mujtahid | null | undefined;
   selectedMujtahid: Mujtahid | null | undefined;
-  users: Array<{ id: string; name: string }>;
   formField: (
     key: keyof ObligationCollectionFormState,
     label: string,
@@ -32,7 +32,6 @@ export function ObligationCollectionWakalaSection({
   eligibleReps,
   getMujtahid,
   selectedMujtahid,
-  users,
   formField,
 }: ObligationCollectionWakalaSectionProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -83,15 +82,13 @@ export function ObligationCollectionWakalaSection({
             </div>,
           )}
 
-          {formField('received_by', t('obligations.form.receivedBy'), true,
-            <FormSelect
-              value={form.received_by}
-              onChange={(val) => setForm({ ...form, received_by: val })}
-              placeholder={t('obligations.form.selectUser')}
-              options={users.map((user) => ({ value: user.id, label: user.name }))}
-              className="w-full"
-            />,
-          )}
+          <UserActorSelect
+            id="obligation-received-by"
+            label={t('obligations.form.receivedBy')}
+            required
+            value={form.received_by}
+            onChange={(value) => setForm({ ...form, received_by: value })}
+          />
         </div>
       </fieldset>
     </SectionCard>

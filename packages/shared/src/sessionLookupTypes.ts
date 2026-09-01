@@ -17,9 +17,20 @@ export type SessionLookupsMap = {
   types: string[];
 };
 
+export const DEFAULT_SESSION_STATUSES = ['active', 'upcoming', 'completed', 'cancelled'] as const;
+
+export const DEFAULT_SESSION_TYPES = [
+  'Hifz',
+  'Qaidah',
+  'Tajweed',
+  'Islamic Studies',
+  'Arabic',
+  'Other',
+] as const;
+
 export const defaultSessionLookupItems: SessionLookupsMap = {
-  statuses: [],
-  types: [],
+  statuses: [...DEFAULT_SESSION_STATUSES],
+  types: [...DEFAULT_SESSION_TYPES],
 };
 
 export const emptySessionLookupsMap: SessionLookupsMap = {

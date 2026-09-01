@@ -8,7 +8,7 @@ import { PuppeteerWhatsAppProvider } from "./whatsappProvider.js";
  */
 export function sanitizePhoneForTel(
   phone: string | null | undefined,
-  defaultCountryCode = "+92",
+  defaultCountryCode = "",
 ): string | null {
   if (!phone || !String(phone).trim()) return null;
   const raw = String(phone).trim();
@@ -17,11 +17,10 @@ export function sanitizePhoneForTel(
   const number = (parsed.number || "").trim();
   if (!number && !raw.startsWith("+")) return null;
 
-  const e164 = normalizeToE164(code, number || raw);
-  // Must have at least country code + 4 digits
-  const digits = e164.replace(/\D/g, "");
+  const normalized = normalizeToE164(code, number || raw);
+  const digits = normalized.replace(/\D/g, "");
   if (digits.length < 5) return null;
-  return `tel:${e164}`;
+  return `tel:${code ? normalized : digits}`;
 }
 
 /**
@@ -31,7 +30,7 @@ export function sanitizePhoneForTel(
  */
 export function sanitizePhoneForSms(
   phone: string | null | undefined,
-  defaultCountryCode = "+92",
+  defaultCountryCode = "",
 ): string | null {
   if (!phone || !String(phone).trim()) return null;
   const raw = String(phone).trim();
@@ -40,10 +39,10 @@ export function sanitizePhoneForSms(
   const number = (parsed.number || "").trim();
   if (!number && !raw.startsWith("+")) return null;
 
-  const e164 = normalizeToE164(code, number || raw);
-  const digits = e164.replace(/\D/g, "");
+  const normalized = normalizeToE164(code, number || raw);
+  const digits = normalized.replace(/\D/g, "");
   if (digits.length < 5) return null;
-  return `sms:${e164}`;
+  return `sms:${code ? normalized : digits}`;
 }
 
 /**
@@ -54,10 +53,12 @@ export function sanitizePhoneForSms(
  */
 export function sanitizePhoneForWhatsApp(
   phone: string | null | undefined,
-  defaultCountryCode = "+92",
+  defaultCountryCode = "",
 ): string | null {
   if (!phone || !String(phone).trim()) return null;
   const raw = String(phone).trim();
+  const parsed = parsePhoneNumber(raw, defaultCountryCode);
+  if (!parsed.countryCode) return null;
   const formatted = formatPhoneWithCountryCode(raw, defaultCountryCode);
   const numberId = PuppeteerWhatsAppProvider.getNumberId(formatted || raw);
   if (!numberId) return null;
@@ -82,7 +83,7 @@ export function sanitizeEmailForMailto(email: string | null | undefined): string
  */
 export function getContactPhoneActionHrefs(
   phone: string | null | undefined,
-  defaultCountryCode = "+92",
+  defaultCountryCode = "",
 ): {
   tel: string | null;
   sms: string | null;

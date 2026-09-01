@@ -65,8 +65,8 @@ async function seedTenantTeachers(
 }
 
 /**
- * Ensures demo teacher rows and faculty contact profiles exist.
- * Idempotent — merges missing contacts; seeds teachers only when collection is empty.
+ * Initializes teacher/contact storage and default settings without creating records.
+ * Idempotent - skips storage that is already initialized.
  */
 export async function runMigration010(): Promise<void> {
   const subdomains = await discoverTenantSubdomains();
@@ -76,7 +76,7 @@ export async function runMigration010(): Promise<void> {
     if (
       await seedTenantTeachers(TEACHERS_COLLECTION, CONTACTS_COLLECTION, TEACHERS_SETTINGS_KEY)
     ) {
-      console.log('[Migration 010] Seeded demo teachers (legacy storage)');
+      console.log('[Migration 010] Initialized teacher/contact storage (legacy storage)');
       changed = true;
     }
   } else {
@@ -88,13 +88,13 @@ export async function runMigration010(): Promise<void> {
           tenantObjectKey(subdomain, TEACHERS_SETTINGS_KEY),
         )
       ) {
-        console.log(`[Migration 010] Seeded demo teachers for tenant "${subdomain}"`);
+        console.log(`[Migration 010] Initialized teacher/contact storage for tenant "${subdomain}"`);
         changed = true;
       }
     }
   }
 
   if (changed) {
-    console.log('[Migration 010] Demo teachers migration completed.');
+    console.log('[Migration 010] Teacher/contact storage migration completed.');
   }
 }

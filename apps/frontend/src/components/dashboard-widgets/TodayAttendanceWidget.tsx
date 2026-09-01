@@ -61,7 +61,7 @@ export default function TodayAttendanceWidget({ title }: { title?: string }) {
   const todayRecords = (() =>
     attendanceRecords.filter((attendanceRecord) => attendanceRecord.date === today))();
 
-  // Use most recent date if no records today (demo data)
+  // Keep the widget useful when the latest stored attendance predates today.
   const displayRecords = (() => {
     if (todayRecords.length > 0) return todayRecords;
     const dates = Array.from(new Set(attendanceRecords.map((attendanceRecord) => attendanceRecord.date))).sort().reverse();

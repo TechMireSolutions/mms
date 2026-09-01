@@ -25,7 +25,10 @@ export async function fetchAllStudentsForQuery(
     all.push(...(studentsPage.students as StudentRecord[]));
     total = studentsPage.total;
     onProgress?.(all.length, total);
-    if (!studentsPage.hasMore || page >= 200) break;
+    if (!studentsPage.hasMore) break;
+    if (page >= 200) {
+      throw new Error('Student export exceeds the 100,000-record safety limit; narrow the filters.');
+    }
     page += 1;
   }
 

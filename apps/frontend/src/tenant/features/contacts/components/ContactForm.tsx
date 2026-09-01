@@ -50,9 +50,9 @@ export function ContactForm({
   contact,
   onClose,
   onSave,
-  defaultCountry = "Pakistan",
-  defaultCity = "Karachi",
-  defaultProvince = "Sindh",
+  defaultCountry = "",
+  defaultCity = "",
+  defaultProvince = "",
   initialDraft,
   lockGender = false,
   priority = false,
@@ -64,9 +64,9 @@ export function ContactForm({
   const [confirmDiscardOpen, setConfirmDiscardOpen] = useState(false);
 
   const branding = getScopedBrandingSettings();
-  const effectiveCountry = defaultCountry || branding.country || "Pakistan";
-  const effectiveCity = defaultCity || branding.city || "Karachi";
-  const effectiveProvince = defaultProvince || branding.region || "Sindh";
+  const effectiveCountry = defaultCountry || branding.country || "";
+  const effectiveCity = defaultCity || branding.city || "";
+  const effectiveProvince = defaultProvince || branding.region || "";
 
   const draft = useContactFormDraft({
     open,

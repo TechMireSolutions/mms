@@ -7,7 +7,7 @@ export {
   USERS_METRICS_QUERY_KEY,
   ACTIVITY_LOGS_QUERY_KEY,
   extractActivityLogs,
-  useUsersCollection,
+  useUsersByIds,
   useUsersMetrics,
   useActivityLogs,
   useUsersMutations,

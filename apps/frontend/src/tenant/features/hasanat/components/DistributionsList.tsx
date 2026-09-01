@@ -16,10 +16,10 @@ import { useDistributionsList } from "../hooks/useDistributionsList";
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 export interface DistributionsListProps {
-  distributions: Distribution[];
   denoms: Denomination[];
   batches: StockBatch[];
-  onUpdate: (dists: Distribution[]) => void | Promise<void>;
+  onCreate: (distribution: Distribution) => void | Promise<void>;
+  onUpdate: (distribution: Distribution) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   canDelete?: boolean;
@@ -35,7 +35,7 @@ export interface DistributionsListProps {
   onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
   onMessage?: (channel: 'sms' | 'whatsapp' | 'email', distributions: Distribution[]) => void;
-  onRowClick?: (id: string) => void;
+  onRowClick?: (distribution: Distribution) => void;
 }
 
 /**
@@ -49,9 +49,9 @@ export interface DistributionsListProps {
  * @returns React element representing the card distribution manager UI.
  */
 export function DistributionsList({
-  distributions,
   denoms,
   batches,
+  onCreate,
   onUpdate,
   onFilteredCountChange,
   canWrite = true,
@@ -95,7 +95,7 @@ export function DistributionsList({
     handleDistribute,
     changeStatus,
   } = useDistributionsList({
-    distributions,
+    onCreate,
     onUpdate,
     onFilteredCountChange,
     canWrite,
@@ -186,7 +186,10 @@ export function DistributionsList({
           canRestoreRows={!!onRestore}
           canDeleteRows={!!onDelete}
           onMessage={onMessage}
-          onRowClick={onRowClick}
+          onRowClick={onRowClick ? (id) => {
+            const distribution = pageDistributions.find((item) => item.id === id);
+            if (distribution) onRowClick(distribution);
+          } : undefined}
           onChangeStatus={changeStatus}
           onToggleSelectedDistribution={toggleSelectedDistribution}
           onToggleSelectAll={toggleSelectAll}

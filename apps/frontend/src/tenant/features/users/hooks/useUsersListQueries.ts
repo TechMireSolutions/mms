@@ -51,7 +51,10 @@ export async function fetchAllUsersForQuery(
     all.push(...usersPage.users);
     total = usersPage.total;
     onProgress?.(all.length, total);
-    if (!usersPage.hasMore || page >= 200) break;
+    if (!usersPage.hasMore) break;
+    if (page >= 200) {
+      throw new Error('User export exceeds the 100,000-record safety limit; narrow the filters.');
+    }
     page += 1;
   }
 

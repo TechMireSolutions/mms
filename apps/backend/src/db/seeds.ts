@@ -63,8 +63,18 @@ function loadSeeds(): SeedsData {
  * @returns {Promise<StoredSeedUser[]>} Canonical users with password hashes.
  */
 async function normalizeSeedUsers(rawUsers: unknown[]): Promise<StoredSeedUser[]> {
-  const seedPassword = process.env.SEED_DEV_PASSWORD || 'Madrasa@123';
-  const passwordHash = await hashPassword(seedPassword);
+  const needsGeneratedPassword = rawUsers.some(
+    (entry) => !(entry as LegacySeedUser).passwordHash,
+  );
+  const seedPassword = process.env.SEED_DEV_PASSWORD?.trim();
+
+  if (needsGeneratedPassword && !seedPassword) {
+    throw new Error(
+      'SEED_DEV_PASSWORD is required when legacy seed users do not include password hashes',
+    );
+  }
+
+  const generatedPasswordHash = seedPassword ? await hashPassword(seedPassword) : '';
 
   return rawUsers.map((entry) => {
     const user = entry as LegacySeedUser;
@@ -76,7 +86,7 @@ async function normalizeSeedUsers(rawUsers: unknown[]): Promise<StoredSeedUser[]
       email: user.email,
       name: user.name,
       role,
-      passwordHash: user.passwordHash ?? passwordHash,
+      passwordHash: user.passwordHash ?? generatedPasswordHash,
       createdAt,
     };
   });

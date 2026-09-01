@@ -1,55 +1,116 @@
-import { getDefaultCollectionsForSeed, getDefaultObjects } from '../db/seeds.js';
 import {
-  DEFAULT_SESSIONS_SETTINGS,
+  CONFIG_VERSION,
+  DEFAULT_ACCOUNTING_SETTINGS,
+  DEFAULT_ADDRESS_LABELS,
   DEFAULT_ATTENDANCE_SETTINGS,
+  DEFAULT_ATTENDANCE_STATUSES,
+  DEFAULT_BRANDING_SETTINGS,
+  DEFAULT_CONTACT_PREFERENCES,
+  DEFAULT_CURRENCIES,
+  DEFAULT_EMAIL_LABELS,
+  DEFAULT_ENABLED_TABS,
+  DEFAULT_ENROLLMENTS_SETTINGS,
+  DEFAULT_EXAMINATIONS_SETTINGS,
+  DEFAULT_FINANCE_SETTINGS,
+  DEFAULT_GLOBAL_SETTINGS,
+  DEFAULT_PHONE_LABELS,
   DEFAULT_QUESTION_BANK_SETTINGS,
-  WORKSPACES_COLLECTION,
-  sanitizeContactSeedObjects,
+  DEFAULT_REQUIRED_TABS,
+  DEFAULT_SESSIONS_SETTINGS,
+  GENDERS,
+  INITIAL_FIELD_SEED,
+  SOCIAL_PLATFORMS,
+  curatedContactCountryCodes,
+  defaultSessionLookupItems,
 } from '@mms/shared';
 
-const MINIMAL_SEEDED_COLLECTIONS = new Set([
-  'currencies',
-  'genders',
-  'socialPlatforms',
-  'phoneLabels',
-  'emailLabels',
-  'addressLabels',
-  'countryCodes',
-  'sessionStatuses',
-  'sessionTypes',
-  'attendanceStatuses',
-]);
+const EMPTY_TENANT_COLLECTIONS = [
+  'studentStatuses',
+  'studentGenderFilters',
+  'teacherStatuses',
+  'teacherSpecializations',
+  'studentDiscountTypes',
+  'relationships',
+  'whatsappTemplates',
+  'contacts',
+  'students',
+  'enrollments',
+  'sessions',
+  'attendance_records',
+  'finance_invoices',
+  'finance_payments',
+  'hasanat_denoms',
+  'hasanat_batches',
+  'hasanat_distributions',
+  'exams',
+  'exam_results',
+  'users',
+  'user_activity_logs',
+  'obligation_types',
+  'mujtahids',
+  'reps',
+  'wakala_types',
+  'distributions',
+  'collections',
+  'accounting_accounts',
+  'accounting_entries',
+  'accounting_fiscal_years',
+  'reports_student_list',
+  'reports_enrollment_history',
+  'revenue_expenses',
+  'questions',
+  'tests',
+  'assessment_results',
+  'backups',
+] as const;
 
-/** Empty collections plus default settings objects — no demo roster on new madrasa onboard. */
+function clone<T>(value: T): T {
+  return structuredClone(value);
+}
+
+/** Lookup catalogs plus empty tenant-owned collections for a new workspace. */
 export async function getMinimalCollectionsForSeed(): Promise<Record<string, unknown[]>> {
-  const full = await getDefaultCollectionsForSeed();
   const minimal: Record<string, unknown[]> = {};
-  for (const name of Object.keys(full)) {
-    if (name === WORKSPACES_COLLECTION) continue;
-    if (MINIMAL_SEEDED_COLLECTIONS.has(name)) {
-      minimal[name] = full[name];
-    } else {
-      minimal[name] = [];
-    }
+  for (const name of EMPTY_TENANT_COLLECTIONS) {
+    minimal[name] = [];
   }
-  minimal['relationships'] = [];
-  minimal['questions'] = [];
-  minimal['tests'] = [];
-  minimal['assessment_results'] = [];
-  minimal['backups'] = [];
-  return minimal;
+
+  return {
+    ...minimal,
+    currencies: clone(DEFAULT_CURRENCIES),
+    genders: [...GENDERS],
+    socialPlatforms: [...SOCIAL_PLATFORMS],
+    phoneLabels: [...DEFAULT_PHONE_LABELS],
+    emailLabels: [...DEFAULT_EMAIL_LABELS],
+    addressLabels: [...DEFAULT_ADDRESS_LABELS],
+    countryCodes: curatedContactCountryCodes(),
+    sessionStatuses: [...defaultSessionLookupItems.statuses],
+    sessionTypes: [...defaultSessionLookupItems.types],
+    attendanceStatuses: clone(DEFAULT_ATTENDANCE_STATUSES),
+  };
 }
 
 export function getMinimalObjects(): Record<string, unknown> {
-  const objects = sanitizeContactSeedObjects(getDefaultObjects());
-  const next = { ...objects };
-  delete next.students_settings;
-  delete next.student_user_column_preferences;
-  delete next.teachers_settings;
+  const contactFieldConfig = {
+    version: CONFIG_VERSION,
+    enabledTabs: [...DEFAULT_ENABLED_TABS],
+    requiredTabs: [...DEFAULT_REQUIRED_TABS],
+    fields: clone(INITIAL_FIELD_SEED),
+  };
+
   return {
-    ...next,
-    sessions_settings: objects.sessions_settings ?? DEFAULT_SESSIONS_SETTINGS,
-    attendance_settings: objects.attendance_settings ?? DEFAULT_ATTENDANCE_SETTINGS,
-    question_bank_settings: objects.question_bank_settings ?? DEFAULT_QUESTION_BANK_SETTINGS,
+    socialPlaceholders: {},
+    contact_field_config: contactFieldConfig,
+    contact_field_config_default: clone(contactFieldConfig),
+    contact_prefs: clone(DEFAULT_CONTACT_PREFERENCES),
+    branding: clone(DEFAULT_BRANDING_SETTINGS),
+    global_settings: clone(DEFAULT_GLOBAL_SETTINGS),
+    sessions_settings: clone(DEFAULT_SESSIONS_SETTINGS),
+    enrollments_settings: clone(DEFAULT_ENROLLMENTS_SETTINGS),
+    attendance_settings: clone(DEFAULT_ATTENDANCE_SETTINGS),
+    examinations_settings: clone(DEFAULT_EXAMINATIONS_SETTINGS),
+    finance_settings: clone(DEFAULT_FINANCE_SETTINGS),
+    accounting_settings: clone(DEFAULT_ACCOUNTING_SETTINGS),
+    question_bank_settings: clone(DEFAULT_QUESTION_BANK_SETTINGS),
   };
 }

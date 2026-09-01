@@ -40,7 +40,7 @@ export function PrintInvoiceModal({
 
   const contactIds = (() => [collection.sender_id, collection.reference_id])();
   const liveContacts = useMergedObligationContacts(contactIds);
-  const liveUsers = useMergedObligationUsers();
+  const liveUsers = useMergedObligationUsers([collection.received_by]);
   const currencies = DEFAULT_CURRENCIES;
 
   const lookups = (() => ({

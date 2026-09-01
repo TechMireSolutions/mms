@@ -138,7 +138,7 @@ describe('students routes', () => {
     await app.close();
   });
 
-  it('GET /api/students forwards sessionId/className report filters', async () => {
+  it('GET /api/students forwards report and sibling relationship filters', async () => {
     mockLoadStudentsPage.mockResolvedValue({
       students: [{ id: 's1', name: 'Ali' }],
       total: 1,
@@ -149,7 +149,7 @@ describe('students routes', () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
-      url: '/api/students?page=1&limit=50&sessionId=ses-1&className=Grade%20A',
+      url: '/api/students?page=1&limit=50&sessionId=ses-1&className=Grade%20A&relatedContactIds=father-1%2Cguardian-1&fatherName=Ahmed%20Ali&excludeId=s-current',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -162,6 +162,9 @@ describe('students routes', () => {
         limit: 50,
         sessionId: 'ses-1',
         className: 'Grade A',
+        relatedContactIds: 'father-1,guardian-1',
+        fatherName: 'Ahmed Ali',
+        excludeId: 's-current',
       }),
     );
     expect(res.json()).toMatchObject({ total: 1 });
@@ -669,4 +672,3 @@ describe('students routes', () => {
     await app.close();
   });
 });
-

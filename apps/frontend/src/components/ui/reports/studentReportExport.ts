@@ -15,7 +15,10 @@ export async function fetchAllEnrollmentsForQuery(params: {
     const res = await apiContract.enrollments.list({ query: { page, limit, search: params.search?.trim(), sessionId: (params.sessionId?.trim() && params.sessionId !== "all") ? params.sessionId.trim() : undefined } });
     const result = res.body as { enrollments?: Enrollment[]; hasMore?: boolean };
     all.push(...(result.enrollments ?? []));
-    if (!result.hasMore || page >= 200) break;
+    if (!result.hasMore) break;
+    if (page >= 200) {
+      throw new Error('Enrollment export exceeds the 100,000-record safety limit; narrow the filters.');
+    }
     page += 1;
   }
   return all;

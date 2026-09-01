@@ -25,6 +25,13 @@ describe("parsePhoneNumber", () => {
     });
   });
 
+  it("does not assume a country code for a bare local number", () => {
+    expect(parsePhoneNumber("03001234567")).toEqual({
+      countryCode: "",
+      number: "03001234567",
+    });
+  });
+
   it("handles empty input", () => {
     expect(parsePhoneNumber("", "+1")).toEqual({ countryCode: "+1", number: "" });
   });
@@ -72,6 +79,10 @@ describe("formatPhoneWithCountryCode", () => {
   it("returns null for empty or null phone input", () => {
     expect(formatPhoneWithCountryCode(null)).toBeNull();
     expect(formatPhoneWithCountryCode("")).toBeNull();
+  });
+
+  it("preserves a local number when no country code is configured", () => {
+    expect(formatPhoneWithCountryCode("03001234567")).toBe("03001234567");
   });
 });
 
@@ -1002,4 +1013,3 @@ describe("cleanContactDraft", () => {
     expect(cleaned.custom_work).toEqual([{ title: "Teacher", notes: "" }]);
   });
 });
-

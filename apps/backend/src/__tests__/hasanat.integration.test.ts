@@ -26,6 +26,8 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 const mockLoadHasanatReportAggregates = vi.fn();
 const mockLoadDistributionsPage = vi.fn();
 const mockLoadHasanatCommandMetrics = vi.fn();
+const mockCreateDistribution = vi.fn();
+const mockUpdateDistributionById = vi.fn();
 
 vi.mock('../services/hasanatService.js', () => ({
   loadDenoms: vi.fn().mockResolvedValue([]),
@@ -41,6 +43,8 @@ vi.mock('../services/hasanatService.js', () => ({
   bulkSoftDeleteDistributions: vi.fn(),
   bulkRestoreDistributions: vi.fn(),
   loadDistributionsPage: (...args: unknown[]) => mockLoadDistributionsPage(...args),
+  createDistribution: (...args: unknown[]) => mockCreateDistribution(...args),
+  updateDistributionById: (...args: unknown[]) => mockUpdateDistributionById(...args),
   loadHasanatReportAggregates: (...args: unknown[]) => mockLoadHasanatReportAggregates(...args),
   loadHasanatCommandMetrics: (...args: unknown[]) => mockLoadHasanatCommandMetrics(...args),
 }));
@@ -114,6 +118,8 @@ describe('hasanat distributions pagination', () => {
       limit: 15,
       hasMore: false,
     });
+    mockCreateDistribution.mockReset();
+    mockUpdateDistributionById.mockReset();
   });
 
   afterEach(() => {
@@ -193,6 +199,52 @@ describe('hasanat distributions pagination', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(mockLoadDistributionsPage).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('creates and updates one distribution without replacing the collection', async () => {
+    const distribution = {
+      id: 'd-1',
+      batchId: 'batch-1',
+      denominationId: 'den-1',
+      denominationName: 'Gold',
+      recipientType: 'student',
+      recipientStudentId: 'student-1',
+      recipientName: 'Ali',
+      recipientClass: 'Class A',
+      quantity: 1,
+      reason: 'Good work',
+      issuedDate: '2026-09-01',
+      status: 'active',
+    };
+    mockCreateDistribution.mockResolvedValueOnce(distribution);
+    mockUpdateDistributionById.mockResolvedValueOnce({ ...distribution, status: 'redeemed' });
+    const app = await buildApp();
+
+    const created = await app.inject({
+      method: 'POST',
+      url: '/api/hasanat/distributions',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: distribution,
+    });
+    expect(created.statusCode).toBe(201);
+    expect(mockCreateDistribution).toHaveBeenCalledWith(distribution);
+
+    const updatedPayload = { ...distribution, status: 'redeemed' };
+    const updated = await app.inject({
+      method: 'PUT',
+      url: '/api/hasanat/distributions/d-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: updatedPayload,
+    });
+    expect(updated.statusCode).toBe(200);
+    expect(mockUpdateDistributionById).toHaveBeenCalledWith('d-1', updatedPayload);
     await app.close();
   });
 });

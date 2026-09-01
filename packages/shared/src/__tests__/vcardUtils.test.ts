@@ -66,4 +66,18 @@ describe('vcardUtils', () => {
     expect(parseVCard('')).toEqual([]);
     expect(parseVCard('INVALID CONTENT')).toEqual([]);
   });
+
+  it('does not invent a country code for local phone numbers', () => {
+    const vcf = [
+      'BEGIN:VCARD',
+      'VERSION:3.0',
+      'FN:Local Contact',
+      'TEL;TYPE=CELL:03001234567',
+      'END:VCARD',
+    ].join('\r\n');
+
+    expect(parseVCard(vcf)[0]?.phones).toEqual([
+      { label: 'Mobile', countryCode: '', number: '03001234567' },
+    ]);
+  });
 });

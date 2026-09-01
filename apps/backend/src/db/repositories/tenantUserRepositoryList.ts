@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import {
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
@@ -78,6 +78,11 @@ function buildListConditions(subdomain: string, query: UsersListQuery & { includ
     conditions.push(isNotNull(tenantUsers.deletedAt));
   } else {
     conditions.push(isNull(tenantUsers.deletedAt));
+  }
+
+  const ids = query.ids?.split(',').map((id) => id.trim()).filter(Boolean) ?? [];
+  if (ids.length > 0) {
+    conditions.push(inArray(tenantUsers.id, ids));
   }
 
   if (query.role?.trim() && query.role !== 'all') {

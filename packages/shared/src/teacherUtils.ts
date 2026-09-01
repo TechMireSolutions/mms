@@ -6,7 +6,6 @@ import {
   stripRecordFields,
 } from './contactLinkPolicy.js';
 import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
-import { DEMO_TEACHERS } from './demoTeachers.js';
 
 /** Strip client soft-delete metadata from teacher create/update payloads. */
 export function stripTeacherClientSoftDeleteFields<T extends Record<string, unknown>>(record: T): T {
@@ -40,11 +39,6 @@ export function normalizeStoredTeacher<T extends Record<string, unknown>>(record
   }
   return next as T;
 }
-
-/** Demo teacher ids → contact ids in minimal seeds. */
-export const DEMO_TEACHER_CONTACT_BY_ID: Record<string, number> = Object.fromEntries(
-  DEMO_TEACHERS.map((teacher) => [teacher.id, Number(teacher.contactId)]),
-);
 
 /** Resolves display fields (including the canonical avatar) from the linked contact record. */
 export function hydrateTeacherFromContact<T extends Teacher>(

@@ -38,7 +38,7 @@ export const DEFAULT_ACCOUNTING_SETTINGS: AccountingSettings = {
   allowEditPosted: false,
   autoPostDrafts: false,
   retainedEarningsAccount: "a3100",
-  organizationName: "Al-Madrasa Al-Islamiyya",
+  organizationName: "",
   defaultViewLayout: "list",
   fields: {
     basic: INITIAL_ACCOUNTING_FIELD_SEED.basic.map((f) => ({ ...f })),

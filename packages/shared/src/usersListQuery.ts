@@ -15,12 +15,15 @@ export interface UsersListQuery {
   sortDir?: 'asc' | 'desc';
   /** When true, SQL list returns deleted-only rows (Work trash). */
   includeDeleted?: boolean;
+  /** Comma-separated ids for bounded relationship/actor resolution. */
+  ids?: string;
 }
 
 /** Validates Users Work list query received over HTTP. */
 export const usersListQuerySchema = baseListQuerySchema.extend({
   status: z.string().max(200).optional(),
   role: z.string().max(64).optional(),
+  ids: z.string().max(10_000).optional(),
 });
 
 export type UsersListQueryParsed = z.infer<typeof usersListQuerySchema>;
@@ -45,6 +48,10 @@ export function userMatchesSearch(user: WorkspaceUser, search: string): boolean 
 
 export function filterUsersForQuery(users: WorkspaceUser[], query: UsersListQuery): WorkspaceUser[] {
   let rows = users;
+  if (query.ids?.trim()) {
+    const ids = new Set(query.ids.split(',').map((id) => id.trim()).filter(Boolean));
+    rows = rows.filter((user) => ids.has(String(user.id)));
+  }
   if (query.role?.trim() && query.role !== 'all') {
     rows = rows.filter((user) => user.role === query.role);
   }
