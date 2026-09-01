@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useDeferredValue } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import {
   Activity,
   ShieldAlert,
   Download,
+  RefreshCw,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformActivityLogs } from '@/platform/hooks/usePlatformActivityLogs';
@@ -12,7 +14,7 @@ import { CardSkeleton } from '@/components/ui/LoadingState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Button } from '@/components/ui/button';
-import { SearchBar } from '@/components/ui/SearchBar';
+import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { triggerFileDownload } from '@/lib/download';
 import { getActionCategory, type LogCategory } from './activity-logs/activityLogMeta';
@@ -24,19 +26,58 @@ type LogTimeframe = 'all' | 'today' | '7d' | '30d';
 
 export function PlatformActivityLogsContent(): React.JSX.Element {
   const { t } = useTranslation();
-  const { data: logs, isLoading, isError, refetch } = usePlatformActivityLogs();
-  const [filterQuery, setFilterQuery] = useState('');
-  const [category, setCategory] = useState<LogCategory>('all');
-  const [timeframe, setTimeframe] = useState<LogTimeframe>('all');
-  const [inspectLog, setInspectLog] = useState<PlatformActivityLogItem | null>(null);
+  const { data: logs, isLoading, isError, refetch, isFetching } = usePlatformActivityLogs();
 
-  const items = (() => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filterQuery = searchParams.get('q') ?? '';
+  const category = (searchParams.get('cat') as LogCategory) ?? 'all';
+  const timeframe = (searchParams.get('time') as LogTimeframe) ?? 'all';
+  const [inspectLog, setInspectLog] = React.useState<PlatformActivityLogItem | null>(null);
+
+  const deferredQuery = useDeferredValue(filterQuery);
+
+  const setFilterQuery = (q: string) => {
+    setSearchParams((p) => {
+      if (q) p.set('q', q);
+      else p.delete('q');
+      return p;
+    }, { replace: true });
+  };
+
+  const setCategory = (cat: LogCategory) => {
+    setSearchParams((p) => {
+      if (cat === 'all') p.delete('cat');
+      else p.set('cat', cat);
+      return p;
+    }, { replace: true });
+  };
+
+  const setTimeframe = (time: LogTimeframe) => {
+    setSearchParams((p) => {
+      if (time === 'all') p.delete('time');
+      else p.set('time', time);
+      return p;
+    }, { replace: true });
+  };
+
+  const handleClearFilters = () => {
+    setSearchParams((p) => {
+      p.delete('q');
+      p.delete('cat');
+      p.delete('time');
+      return p;
+    }, { replace: true });
+  };
+
+  const isFiltered = Boolean(filterQuery || category !== 'all' || timeframe !== 'all');
+
+  const items = React.useMemo(() => {
     const raw = logs ?? [];
     const now = Date.now();
+    const q = deferredQuery.trim().toLowerCase();
 
     return raw.filter((l) => {
-      if (filterQuery.trim()) {
-        const q = filterQuery.trim().toLowerCase();
+      if (q) {
         const matchesText =
           l.action.toLowerCase().includes(q) ||
           l.userEmail.toLowerCase().includes(q) ||
@@ -63,7 +104,7 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
 
       return true;
     });
-  })();
+  }, [logs, deferredQuery, category, timeframe]);
 
   const handleExportCsv = () => {
     if (items.length === 0) return;
@@ -100,69 +141,93 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
 
   return (
     <div className="space-y-6 w-full text-start">
-      <WidgetCard className="p-6 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <WidgetCardHeader
-            icon={<Activity className="w-5 h-5 text-primary" />}
-            title={t('platform.activityLogsTitle')}
-            subtitle={t('platform.activityLogsSubtitle')}
-          />
-
-          <div className="flex items-center gap-3 w-full sm:w-auto">
-            <SearchBar
-              value={filterQuery}
-              onChange={setFilterQuery}
-              placeholder={t('platform.filterLogsPlaceholder')}
-              className="w-full sm:w-64"
-            />
+      <ModuleWorkToolbar
+        regionLabel={t('platform.activityLogsTitle')}
+        search={filterQuery}
+        onSearchChange={setFilterQuery}
+        searchPlaceholder={t('platform.filterLogsPlaceholder')}
+        searchId="platform-logs-search"
+        isSearching={isFetching}
+        hasActiveFilters={isFiltered}
+        onClearFilters={handleClearFilters}
+        clearFiltersLabel={t('common.clearFilters')}
+        primaryAction={
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+              className="min-h-11 h-11 min-w-11 w-11 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
+              title={t('common.refresh')}
+              aria-label={t('common.refresh')}
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} aria-hidden />
+            </Button>
 
             <Button
               variant="outline"
               size="sm"
               onClick={handleExportCsv}
               disabled={items.length === 0}
-              className="h-9 px-3 text-xs font-semibold rounded-xl shrink-0 cursor-pointer"
+              className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 shrink-0 cursor-pointer"
               title={t('platform.exportCsv')}
             >
-              <Download className="w-3.5 h-3.5 me-1.5" aria-hidden />
+              <Download className="w-3.5 h-3.5" aria-hidden />
               {t('platform.exportCsv')}
             </Button>
           </div>
-        </div>
+        }
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <SubTabBar
+            tabs={[
+              { key: 'all', label: t('platform.logs.categoryAll') },
+              { key: 'auth', label: t('platform.logs.categoryAuth') },
+              { key: 'workspace', label: t('platform.logs.categoryWorkspace') },
+              { key: 'system', label: t('platform.logs.categorySystem') },
+              { key: 'admin', label: t('platform.logs.categoryAdmin') },
+            ]}
+            value={category}
+            onChange={(k) => setCategory(k as LogCategory)}
+          />
 
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pt-2 border-t border-border/40">
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-            <SubTabBar
-              tabs={[
-                { key: 'all', label: t('platform.logs.categoryAll') },
-                { key: 'auth', label: t('platform.logs.categoryAuth') },
-                { key: 'workspace', label: t('platform.logs.categoryWorkspace') },
-                { key: 'system', label: t('platform.logs.categorySystem') },
-                { key: 'admin', label: t('platform.logs.categoryAdmin') },
-              ]}
-              value={category}
-              onChange={(k) => setCategory(k as LogCategory)}
-            />
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            <SubTabBar
-              tabs={[
-                { key: 'all', label: t('platform.logs.timeAll') },
-                { key: 'today', label: t('platform.logs.timeToday') },
-                { key: '7d', label: t('platform.logs.timeWeek') },
-                { key: '30d', label: t('platform.logs.timeMonth') },
-              ]}
-              value={timeframe}
-              onChange={(k) => setTimeframe(k as LogTimeframe)}
-            />
-          </div>
+          <SubTabBar
+            tabs={[
+              { key: 'all', label: t('platform.logs.timeAll') },
+              { key: 'today', label: t('platform.logs.timeToday') },
+              { key: '7d', label: t('platform.logs.timeWeek') },
+              { key: '30d', label: t('platform.logs.timeMonth') },
+            ]}
+            value={timeframe}
+            onChange={(k) => setTimeframe(k as LogTimeframe)}
+          />
         </div>
+      </ModuleWorkToolbar>
+
+      <WidgetCard className="p-6 space-y-6">
+        <WidgetCardHeader
+          icon={<Activity className="w-5 h-5 text-primary" />}
+          title={t('platform.activityLogsTitle')}
+          subtitle={t('platform.activityLogsSubtitle')}
+        />
 
         {items.length === 0 ? (
           <EmptyState
             icon={ShieldAlert}
-            title={filterQuery || category !== 'all' || timeframe !== 'all' ? t('platform.noMatchingLogs') : t('platform.noActivityLogsYet')}
+            title={isFiltered ? t('platform.noMatchingLogs') : t('platform.noActivityLogsYet')}
+            action={
+              isFiltered ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="min-h-11 h-11 px-4 text-xs font-bold rounded-xl cursor-pointer"
+                >
+                  {t('common.clearFilters')}
+                </Button>
+              ) : undefined
+            }
             compact
           />
         ) : (

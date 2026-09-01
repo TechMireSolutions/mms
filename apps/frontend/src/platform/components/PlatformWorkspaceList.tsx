@@ -1,4 +1,4 @@
-import { useState, useEffect, useDeferredValue } from 'react';
+import { useState, useEffect, useDeferredValue, useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Globe, Ban, Download, RefreshCw } from 'lucide-react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
@@ -11,10 +11,9 @@ import {
   useSetWorkspaceEnabled,
 } from '@/platform/hooks/usePlatformWorkspaces';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
-import { SearchBar } from '@/components/ui/SearchBar';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { Button } from '@/components/ui/button';
-import { WorkViewModeToggle } from '@/components/ui/WorkViewModeToggle';
+import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
 import { PlatformWorkspaceTable } from '@/platform/components/PlatformWorkspaceTable';
@@ -82,11 +81,21 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
 
   const items = workspaces ?? [];
   const deferredSearch = useDeferredValue(search);
-  const sortedItems = sortWorkspaces(filterWorkspaces(items, deferredSearch, statusFilter), sortField, sortDirection);
 
-  const totalCount = items.length;
-  const activeCount = items.filter((w) => w.enabled).length;
-  const inactiveCount = items.filter((w) => !w.enabled).length;
+  const sortedItems = useMemo(
+    () => sortWorkspaces(filterWorkspaces(items, deferredSearch, statusFilter), sortField, sortDirection),
+    [items, deferredSearch, statusFilter, sortField, sortDirection],
+  );
+
+  const { totalCount, activeCount, inactiveCount } = useMemo(() => {
+    let active = 0;
+    let inactive = 0;
+    for (const w of items) {
+      if (w.enabled) active += 1;
+      else inactive += 1;
+    }
+    return { totalCount: items.length, activeCount: active, inactiveCount: inactive };
+  }, [items]);
 
   const toggleSort = (field: WorkspaceSortField): void => {
     if (sortField === field) {
@@ -142,56 +151,64 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
 
   return (
     <div className="space-y-6 w-full text-start">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border/40 pb-4">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder={t('common.search')}
-          className="w-full md:max-w-md"
+      <ModuleWorkToolbar
+        regionLabel={t('platform.manageMadrasas')}
+        shownCountLabel={`${sortedItems.length} of ${totalCount}`}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={t('common.search')}
+        searchId="platform-workspaces-search"
+        isSearching={isFetching}
+        hasActiveFilters={isFiltered}
+        onClearFilters={handleClearFilters}
+        clearFiltersLabel={t('common.clearFilters')}
+        viewModeToggle={{
+          viewMode,
+          onViewModeChange: setViewMode,
+        }}
+      >
+        <SubTabBar
+          tabs={[
+            { key: 'all', label: `${t('platform.filterAll')} (${totalCount})` },
+            { key: 'active', label: `${t('platform.workspaceActive')} (${activeCount})`, icon: Globe },
+            { key: 'inactive', label: `${t('platform.workspaceInactive')} (${inactiveCount})`, icon: Ban },
+          ]}
+          value={statusFilter}
+          onChange={setStatusFilter}
         />
 
-        <div className="flex flex-wrap items-center gap-3">
-          <SubTabBar
-            tabs={[
-              { key: 'all', label: `${t('platform.filterAll')} (${totalCount})` },
-              { key: 'active', label: `${t('platform.workspaceActive')} (${activeCount})`, icon: Globe },
-              { key: 'inactive', label: `${t('platform.workspaceInactive')} (${inactiveCount})`, icon: Ban },
-            ]}
-            value={statusFilter}
-            onChange={setStatusFilter}
-          />
+        <PlatformWorkspaceSortMenu
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onToggleSort={toggleSort}
+        />
 
-          <PlatformWorkspaceSortMenu sortField={sortField} sortDirection={sortDirection} onToggleSort={toggleSort} />
+        {/* Refresh button */}
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={() => void refetch()}
+          disabled={isFetching}
+          className="min-h-11 h-11 min-w-11 w-11 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
+          title={t('common.refresh')}
+          aria-label={t('common.refresh')}
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} aria-hidden />
+        </Button>
 
-          {/* Refresh button */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => void refetch()}
-            disabled={isFetching}
-            className="min-h-11 h-11 min-w-11 w-11 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
-            title={t('common.refresh')}
-            aria-label={t('common.refresh')}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} aria-hidden />
-          </Button>
-
-          {/* Export Workspaces CSV */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => downloadWorkspacesCsv(sortedItems)}
-            disabled={sortedItems.length === 0}
-            className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
-            title={t('platform.exportWorkspacesCsv')}
-          >
-            <Download className="w-3.5 h-3.5" aria-hidden />
-            {t('platform.exportWorkspacesCsv')}
-          </Button>
-
-          <WorkViewModeToggle viewMode={viewMode} onViewModeChange={setViewMode} />
-        </div>
-      </div>
+        {/* Export Workspaces CSV */}
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => downloadWorkspacesCsv(sortedItems)}
+          disabled={sortedItems.length === 0}
+          className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
+          title={t('platform.exportWorkspacesCsv')}
+        >
+          <Download className="w-3.5 h-3.5" aria-hidden />
+          {t('platform.exportWorkspacesCsv')}
+        </Button>
+      </ModuleWorkToolbar>
 
       <ModuleWorkListStateShell
         isError={isError}

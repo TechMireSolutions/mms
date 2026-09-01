@@ -63,7 +63,7 @@ export function PlatformAdminTable({
                   <p className="font-bold text-foreground">{admin.name}</p>
                   <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                     <Mail className="w-3.5 h-3.5" aria-hidden />
-                    {admin.email}
+                    <span dir="ltr">{admin.email}</span>
                   </div>
                   {admin.createdAt ? (
                     <p className="text-2xs text-muted-foreground/60 font-semibold mt-1">

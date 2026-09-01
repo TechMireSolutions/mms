@@ -46,7 +46,7 @@ export function PlatformAdminCards({
             </div>
             <div className="flex min-w-0 items-center gap-1.5 text-xs font-medium text-muted-foreground">
               <Mail className="w-4 h-4 shrink-0 opacity-80" aria-hidden />
-              <span className="min-w-0 truncate">{admin.email}</span>
+              <span className="min-w-0 truncate" dir="ltr">{admin.email}</span>
             </div>
             <PlatformAdminPermissionsBadges admin={admin} />
           </div>
