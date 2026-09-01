@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/DetailDrawerArchiveChrome';
 import { UserRoleBadge, UserStatusBadge } from '@/tenant/features/users/components/UserBadges';
 import { useToast } from '@/components/ui/use-toast';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useUsersContractVerifyEmail } from '@/tenant/hooks/collections/users';
 import { UserDetailSections } from '@/tenant/features/users/components/UserDetailSections';
 
@@ -38,6 +39,7 @@ export const UserDetail = (function UserDetail({
 }: UserDetailProps): React.JSX.Element {
   const { t } = useTranslation();
   const { toast } = useToast();
+  const { canManageUser } = usePermissions();
   const globalSettings = useGlobalSettings();
   const workspaceRoles = useWorkspaceRoles();
   const verifyEmailMutation = useUsersContractVerifyEmail();
@@ -65,7 +67,8 @@ export const UserDetail = (function UserDetail({
   } | null>(null);
 
   const isArchived = Boolean(user.deletedAt);
-  const canMutate = !isArchived;
+  const canManageThisUser = canManageUser(user.role);
+  const canMutate = !isArchived && canManageThisUser;
 
   const workspaceRole = resolveWorkspaceRole(user.role, workspaceRoles);
   const effectivePerms = workspaceRole?.permissions ?? {};
@@ -78,8 +81,8 @@ export const UserDetail = (function UserDetail({
   const headerActionsNode = (() => (
       <DetailDrawerRestoreOrEditAction
         isArchived={isArchived}
-        canRestore={canDelete}
-        canEdit={Boolean(onEdit)}
+        canRestore={canDelete && canManageThisUser}
+        canEdit={Boolean(onEdit && canManageThisUser)}
         restoreLabel={t('users.trash.restore')}
         editLabel={t('users.edit')}
         onRestore={onRestore ? () => onRestore(String(user.id)) : undefined}
@@ -88,6 +91,7 @@ export const UserDetail = (function UserDetail({
     ))();
 
   const handleCompose = (channel: 'sms' | 'whatsapp' | 'email') => {
+    if (isArchived) return;
     setMessagingTarget({
       channel,
       recipients: [{ id: user.id, name: user.name, phone: user.phone || '', email: user.email }],

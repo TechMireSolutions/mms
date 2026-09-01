@@ -3,6 +3,9 @@ import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
 import {
   activityLogRecordSchema,
+  createWorkspaceUserSchema,
+  editWorkspaceUserSchema,
+  inviteWorkspaceUserSchema,
   resetWorkspaceUserPasswordSchema,
   workspaceUserRecordSchema,
 } from '../usersModuleManifest.js';
@@ -33,6 +36,28 @@ export const userContract = c.router({
     query: baseListQuerySchema,
     responses: { 200: userListPageResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'List workspace users',
+  },
+  create: {
+    method: 'POST',
+    path: '/api/users',
+    body: createWorkspaceUserSchema.or(workspaceUserRecordSchema),
+    responses: { 200: z.object({ user: workspaceUserRecordSchema }), 400: errorResponse, 403: errorResponse, 500: errorResponse },
+    summary: 'Create a single workspace user',
+  },
+  update: {
+    method: 'PATCH',
+    path: '/api/users/:id',
+    pathParams: z.object({ id: z.string().min(1) }),
+    body: editWorkspaceUserSchema.partial().passthrough(),
+    responses: { 200: z.object({ user: workspaceUserRecordSchema }), 400: errorResponse, 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    summary: 'Update a single workspace user',
+  },
+  invite: {
+    method: 'POST',
+    path: '/api/users/invite',
+    body: inviteWorkspaceUserSchema,
+    responses: { 200: z.object({ user: workspaceUserRecordSchema }), 400: errorResponse, 403: errorResponse, 500: errorResponse },
+    summary: 'Invite a workspace user',
   },
   activity: {
     method: 'GET',

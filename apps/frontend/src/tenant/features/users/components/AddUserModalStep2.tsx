@@ -1,24 +1,31 @@
+import { useMemo } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { CalendarClock } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/DatePicker";
 
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { useWorkspaceRoles } from "@/tenant/hooks/useWorkspaceRoles";
-import { todayISO } from "@mms/shared";
+import { filterAssignableRoles, todayISO } from "@mms/shared";
 import { FieldError } from "./AddUserModalFieldHelpers";
 import { RoleCard } from "./AddUserModalRoleCard";
 import type { AddUserStepProps } from "./addUserModalTypes";
 
 export function Step2({ form, setForm, errors }: AddUserStepProps): JSX.Element {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const workspaceRoles = useWorkspaceRoles();
+  const assignableRoles = useMemo(
+    () => filterAssignableRoles(workspaceRoles, user?.role),
+    [workspaceRoles, user?.role],
+  );
   const selectRole = (id: string): void => setForm((previousForm) => ({ ...previousForm, role: id }));
 
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        {workspaceRoles.map((role) => (
+        {assignableRoles.map((role) => (
           <RoleCard key={role.id} role={role} selected={form.role === role.id} onSelect={selectRole} />
         ))}
       </div>

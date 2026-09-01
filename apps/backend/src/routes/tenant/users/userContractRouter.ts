@@ -5,6 +5,9 @@ import { initServer } from '@ts-rest/fastify';
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import {
   loadUsersPage,
+  createWorkspaceUser,
+  updateWorkspaceUser,
+  inviteWorkspaceUser,
   upsertWorkspaceUsers,
   deleteUserById,
   restoreUserById,
@@ -41,15 +44,85 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list users' } };
       }
     },
+    create: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, 'users')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const created = await createWorkspaceUser(body, String(user.id), user.role, request.ip);
+        return { status: 200 as const, body: { user: created } };
+      } catch (err: unknown) {
+        const error = err as Error & { statusCode?: number; type?: string };
+        if (error.statusCode === 403) {
+          return { status: 403 as const, body: { type: error.type ?? 'forbidden', message: error.message } };
+        }
+        if (error.statusCode === 400) {
+          return { status: 400 as const, body: { type: error.type ?? 'validation_error', message: error.message } };
+        }
+        request.log.error(err, 'Failed to create workspace user');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create workspace user' } };
+      }
+    },
+    update: async ({ params: { id }, body, request }: any) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, 'users')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const updated = await updateWorkspaceUser(id, body, String(user.id), user.role, request.ip);
+        return { status: 200 as const, body: { user: updated } };
+      } catch (err: unknown) {
+        const error = err as Error & { statusCode?: number; type?: string };
+        if (error.statusCode === 404) {
+          return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
+        }
+        if (error.statusCode === 403) {
+          return { status: 403 as const, body: { type: error.type ?? 'forbidden', message: error.message } };
+        }
+        if (error.statusCode === 400) {
+          return { status: 400 as const, body: { type: error.type ?? 'validation_error', message: error.message } };
+        }
+        request.log.error(err, 'Failed to update workspace user');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update workspace user' } };
+      }
+    },
+    invite: async ({ body, request }: any) => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, 'users')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const invited = await inviteWorkspaceUser(body, String(user.id), user.role, request.ip);
+        return { status: 200 as const, body: { user: invited } };
+      } catch (err: unknown) {
+        const error = err as Error & { statusCode?: number; type?: string };
+        if (error.statusCode === 403) {
+          return { status: 403 as const, body: { type: error.type ?? 'forbidden', message: error.message } };
+        }
+        if (error.statusCode === 400) {
+          return { status: 400 as const, body: { type: error.type ?? 'validation_error', message: error.message } };
+        }
+        request.log.error(err, 'Failed to invite workspace user');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to invite workspace user' } };
+      }
+    },
     bulkUpdate: async ({ body, request }: any) => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const updated = await upsertWorkspaceUsers(body as WorkspaceUser[]);
+        const updated = await upsertWorkspaceUsers(body as WorkspaceUser[], user.role);
         return { status: 200 as const, body: { users: updated } };
-      } catch (err) {
+      } catch (err: unknown) {
+        const error = err as Error & { statusCode?: number; type?: string };
+        if (error.statusCode === 403) {
+          return { status: 403 as const, body: { type: error.type ?? 'forbidden', message: error.message } };
+        }
+        if (error.statusCode === 400) {
+          return { status: 400 as const, body: { type: error.type ?? 'validation_error', message: error.message } };
+        }
         request.log.error(err, 'Failed to update workspace users');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update workspace users' } };
       }
@@ -60,9 +133,13 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await bulkSoftDeleteUsers(body.ids.map(String), String(user.id));
+        const result = await bulkSoftDeleteUsers(body.ids.map(String), String(user.id), user.role);
         return { status: 200 as const, body: { success: true, ...result } };
-      } catch (err) {
+      } catch (err: unknown) {
+        const error = err as Error & { statusCode?: number; type?: string };
+        if (error.statusCode === 403) {
+          return { status: 403 as const, body: { type: error.type ?? 'forbidden', message: error.message } };
+        }
         request.log.error(err, 'Failed to bulk delete users');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete users' } };
       }
@@ -73,9 +150,13 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await bulkRestoreUsers(body.ids.map(String));
+        const result = await bulkRestoreUsers(body.ids.map(String), user.role);
         return { status: 200 as const, body: { success: true, ...result } };
-      } catch (err) {
+      } catch (err: unknown) {
+        const error = err as Error & { statusCode?: number; type?: string };
+        if (error.statusCode === 403) {
+          return { status: 403 as const, body: { type: error.type ?? 'forbidden', message: error.message } };
+        }
         request.log.error(err, 'Failed to bulk restore users');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore users' } };
       }
@@ -86,16 +167,26 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const ok = await deleteUserById(id, String(user.id));
+        const ok = await deleteUserById(id, String(user.id), user.role);
         if (!ok) return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
         return { status: 200 as const, body: { success: true } };
       } catch (error: unknown) {
-        if (error instanceof Error && (error as Error & { statusCode?: number }).statusCode === 400) {
+        const err = error as Error & { statusCode?: number; type?: string };
+        if (err.statusCode === 403) {
+          return {
+            status: 403 as const,
+            body: {
+              type: err.type ?? 'forbidden',
+              message: err.message,
+            },
+          };
+        }
+        if (err.statusCode === 400) {
           return {
             status: 400 as const,
             body: {
-              type: (error as Error & { type?: string }).type ?? 'validation_error',
-              message: error.message,
+              type: err.type ?? 'validation_error',
+              message: err.message,
             },
           };
         }
@@ -109,10 +200,14 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const ok = await restoreUserById(id);
+        const ok = await restoreUserById(id, user.role);
         if (!ok) return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
         return { status: 200 as const, body: { success: true } };
-      } catch (err) {
+      } catch (err: unknown) {
+        const error = err as Error & { statusCode?: number; type?: string };
+        if (error.statusCode === 403) {
+          return { status: 403 as const, body: { type: error.type ?? 'forbidden', message: error.message } };
+        }
         request.log.error(err, 'Failed to restore user');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to restore user' } };
       }
@@ -123,10 +218,14 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const ok = await verifyUserEmailById(id);
+        const ok = await verifyUserEmailById(id, user.role);
         if (!ok) return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
         return { status: 200 as const, body: { success: true } };
-      } catch (err) {
+      } catch (err: unknown) {
+        const error = err as Error & { statusCode?: number; type?: string };
+        if (error.statusCode === 403) {
+          return { status: 403 as const, body: { type: error.type ?? 'forbidden', message: error.message } };
+        }
         request.log.error(err, 'Failed to verify user email');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to verify user email' } };
       }
@@ -148,11 +247,17 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
           };
         }
         try {
-          const ok = await resetUserPasswordById(id, body.temporaryPassword);
+          const ok = await resetUserPasswordById(id, body.temporaryPassword, user.role);
           if (!ok) return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
           return { status: 200 as const, body: { success: true as const } };
         } catch (error: unknown) {
           const err = error as Error & { statusCode?: number; type?: string };
+          if (err.statusCode === 403) {
+            return {
+              status: 403 as const,
+              body: { type: err.type ?? 'forbidden', message: err.message },
+            };
+          }
           if (err.statusCode === 400) {
             return {
               status: 400 as const,

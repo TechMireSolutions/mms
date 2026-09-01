@@ -6,7 +6,7 @@ import {
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
-import { useIsAdminViewer } from '@/tenant/hooks/useViewerRole';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { useUsersConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
@@ -20,7 +20,7 @@ export function useRolesPermissionsController() {
   const { t } = useTranslation();
   const { settings, updateSettings } = useUsersConfig();
   const globalSettings = useGlobalSettings();
-  const isAdmin = useIsAdminViewer();
+  const { isAdmin, isSuperAdmin, canManageRole, canAccessRolesAndPermissions } = usePermissions();
   const loadedRoles = useWorkspaceRoles();
   const visibleModules = (() => filterRbacModulesForSettings(globalSettings.enabledModules))();
   const [roles, setRoles] = useState<WorkspaceRole[]>(loadedRoles);
@@ -35,6 +35,7 @@ export function useRolesPermissionsController() {
   }, [loadedRoles, editing]);
 
   const displayRole = selected ?? roles[0] ?? null;
+  const canManageDisplayRole = canManageRole(displayRole?.id);
 
   const {
     permDraft,
@@ -46,6 +47,10 @@ export function useRolesPermissionsController() {
   } = useRolesPermissionDraft(displayRole);
 
   const commitRole = (role: WorkspaceRole, toastKey: 'role' | 'permissions'): void => {
+    if (!canManageRole(role.id)) {
+      notify.error(t('users.errors.cannotModifySuperAdmin'));
+      return;
+    }
     setRoles((previousRoles) => {
       const existingRole = previousRoles.find((workspaceRole) => workspaceRole.id === role.id);
       const updatedRoles = existingRole
@@ -72,7 +77,7 @@ export function useRolesPermissionsController() {
   };
 
   const savePermissionDraft = (): void => {
-    if (!displayRole || !permDraft || !isAdmin) return;
+    if (!displayRole || !permDraft || !canManageDisplayRole) return;
     commitRole({ ...displayRole, permissions: structuredClone(permDraft) }, 'permissions');
   };
 
@@ -86,6 +91,9 @@ export function useRolesPermissionsController() {
   };
 
   const requestEditRole = (target: WorkspaceRole | 'new'): void => {
+    if (target !== 'new' && !canManageRole(target.id)) {
+      return;
+    }
     if (!permDirty) {
       setEdit(target);
       return;
@@ -121,6 +129,10 @@ export function useRolesPermissionsController() {
   return {
     t,
     isAdmin,
+    isSuperAdmin,
+    canAccessRolesAndPermissions,
+    canManageRole,
+    canManageDisplayRole,
     visibleModules,
     roles,
     editing,
@@ -133,9 +145,9 @@ export function useRolesPermissionsController() {
     displayRole,
     permDraft,
     permDirty,
-    togglePermDraft,
-    selectAllDraft,
-    clearAllDraft,
+    togglePermDraft: canManageDisplayRole ? togglePermDraft : () => {},
+    selectAllDraft: canManageDisplayRole ? selectAllDraft : () => {},
+    clearAllDraft: canManageDisplayRole ? clearAllDraft : () => {},
     resetPermDraft,
     handleSave,
     savePermissionDraft,

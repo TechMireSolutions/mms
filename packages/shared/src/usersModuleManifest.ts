@@ -41,6 +41,22 @@ export const inviteWorkspaceUserSchema = z.object({
 /** Values accepted by the workspace user invite form. */
 export type InviteWorkspaceUserInput = z.infer<typeof inviteWorkspaceUserSchema>;
 
+/** Shared form contract for creating a workspace user. */
+export const createWorkspaceUserSchema = z.object({
+  contactId: userFormContactIdSchema,
+  role: z.string().min(1, 'users.errorRoleRequired'),
+  status: userStatusSchema,
+  temporaryRole: z.boolean().optional(),
+  roleExpiry: z.string().optional(),
+  setupMethod: z.enum(['invite', 'password']),
+  password: z.string().optional(),
+  forceReset: z.boolean().optional(),
+  twoFactorEnabled: z.boolean(),
+});
+
+/** Values accepted by the workspace user create form. */
+export type CreateWorkspaceUserInput = z.infer<typeof createWorkspaceUserSchema>;
+
 export const workspaceUserRecordSchema = z
   .object({
     id: z.string(),

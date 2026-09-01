@@ -16,6 +16,24 @@ export function useUsersContractList(query: Record<string, unknown>, enabled = t
   });
 }
 
+export function useUsersContractCreate() {
+  const queryClient = useQueryClient();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.users.create.useMutation({ onSuccess: () => invalidateUsersQueries(queryClient) });
+}
+
+export function useUsersContractUpdate() {
+  const queryClient = useQueryClient();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.users.update.useMutation({ onSuccess: () => invalidateUsersQueries(queryClient) });
+}
+
+export function useUsersContractInvite() {
+  const queryClient = useQueryClient();
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  return tsrClient.users.invite.useMutation({ onSuccess: () => invalidateUsersQueries(queryClient) });
+}
+
 export function useUsersContractBulkUpdate() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest

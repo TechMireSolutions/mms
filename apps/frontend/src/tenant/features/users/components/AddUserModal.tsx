@@ -13,7 +13,7 @@ import { FormModal } from "@/components/ui/FormModal";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUsersConfig } from "@/hooks/useStandardModuleConfig";
-import { getGlobalSettings } from "@/lib/db";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { notify } from "@/lib/notify";
 import type { AddUserFormState } from "./addUserModalTypes";
 import { ADD_USER_MODAL_STEP_DEFS, StepIndicator } from "./AddUserModalStepIndicator";
@@ -30,6 +30,7 @@ export interface AddUserModalProps {
 export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserModalProps): JSX.Element {
   const { t } = useTranslation();
   const { customFields } = useUsersConfig();
+  const globalSettings = useGlobalSettings();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -73,7 +74,6 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
       if (!form.password) {
         validationErrors.password = t("users.addErrorPassword");
       } else {
-        const globalSettings = getGlobalSettings();
         const policyResult = validatePasswordPolicy(
           form.password,
           globalSettings.passwordPolicy

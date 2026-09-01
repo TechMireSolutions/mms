@@ -25,6 +25,10 @@ export function RolesPermissions({
   const {
     t,
     isAdmin,
+    isSuperAdmin,
+    canManageRole,
+    canManageDisplayRole,
+    canAccessRolesAndPermissions,
     visibleModules,
     roles,
     editing,
@@ -143,8 +147,13 @@ export function RolesPermissions({
                     {t('users.permissions.matrixTitle', { name: workspaceRoleLabel(displayRole, t) })}
                   </p>
                   {displayRole.isSystem ? <Lock className="h-3 w-3 text-muted-foreground" aria-hidden /> : null}
+                  {displayRole.id === 'super_admin' && !isSuperAdmin ? (
+                    <SettingsMetaBadge variant="primary">
+                      {t('users.permissions.superAdminProtectedBadge')}
+                    </SettingsMetaBadge>
+                  ) : null}
                 </div>
-                {isAdmin ? (
+                {canManageDisplayRole ? (
                   <div className="flex items-center gap-2">
                     {permDirty ? (
                       <SettingsMetaBadge variant="warning">{t('users.permissions.unsaved')}</SettingsMetaBadge>
@@ -164,13 +173,15 @@ export function RolesPermissions({
                   </div>
                 ) : null}
               </div>
-              {isAdmin ? (
+              {canManageDisplayRole ? (
                 <p className="text-xs text-muted-foreground">{t('users.permissions.editHint')}</p>
+              ) : displayRole.id === 'super_admin' ? (
+                <p className="text-xs text-muted-foreground">{t('users.permissions.superAdminProtected')}</p>
               ) : null}
               <PermissionMatrix
                 modules={visibleModules}
                 perms={permDraft}
-                readOnly={!isAdmin}
+                readOnly={!canManageDisplayRole}
                 onToggle={togglePermDraft}
                 onSelectAll={selectAllDraft}
                 onClearAll={clearAllDraft}

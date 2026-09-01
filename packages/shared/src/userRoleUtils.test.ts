@@ -1,9 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
   activityActionMeta,
+  canAccessRolesAndPermissions,
+  canAssignRole,
+  canManageRole,
+  canManageTargetUser,
   cloneDefaultWorkspaceRoles,
   computeUserInitials,
+  filterAssignableRoles,
   findWorkspaceRole,
+  isAdminRole,
+  isSuperAdminRole,
   normalizeWorkspaceUser,
   rbacModuleLabel,
   resolveRoleDisplayName,
@@ -126,6 +133,87 @@ describe('userRoleUtils', () => {
     it('userStatusMeta and activityActionMeta return correct records', () => {
       expect(userStatusMeta('active')?.id).toBe('active');
       expect(activityActionMeta('login')?.id).toBe('login');
+    });
+  });
+
+  describe('role governance & hierarchy', () => {
+    it('isSuperAdminRole checks correctly', () => {
+      expect(isSuperAdminRole('super_admin')).toBe(true);
+      expect(isSuperAdminRole('SUPER_ADMIN')).toBe(true);
+      expect(isSuperAdminRole('admin')).toBe(false);
+      expect(isSuperAdminRole('teacher')).toBe(false);
+      expect(isSuperAdminRole(undefined)).toBe(false);
+    });
+
+    it('isAdminRole checks correctly', () => {
+      expect(isAdminRole('admin')).toBe(true);
+      expect(isAdminRole('ADMIN')).toBe(true);
+      expect(isAdminRole('super_admin')).toBe(false);
+      expect(isAdminRole('principal')).toBe(false);
+    });
+
+    it('canAccessRolesAndPermissions only grants access to super_admin and admin', () => {
+      expect(canAccessRolesAndPermissions('super_admin')).toBe(true);
+      expect(canAccessRolesAndPermissions('admin')).toBe(true);
+      expect(canAccessRolesAndPermissions('principal')).toBe(false);
+      expect(canAccessRolesAndPermissions('teacher')).toBe(false);
+      expect(canAccessRolesAndPermissions('accountant')).toBe(false);
+      expect(canAccessRolesAndPermissions(undefined)).toBe(false);
+    });
+
+    it('canManageRole: super_admin can manage any role, admin can manage all except super_admin', () => {
+      expect(canManageRole('super_admin', 'super_admin')).toBe(true);
+      expect(canManageRole('super_admin', 'admin')).toBe(true);
+      expect(canManageRole('super_admin', 'teacher')).toBe(true);
+      expect(canManageRole('super_admin', 'custom_role')).toBe(true);
+
+      expect(canManageRole('admin', 'super_admin')).toBe(false);
+      expect(canManageRole('admin', 'admin')).toBe(true);
+      expect(canManageRole('admin', 'teacher')).toBe(true);
+      expect(canManageRole('admin', 'custom_role')).toBe(true);
+
+      expect(canManageRole('teacher', 'teacher')).toBe(false);
+      expect(canManageRole('principal', 'teacher')).toBe(false);
+    });
+
+    it('canAssignRole: super_admin can assign any role, admin can assign any except super_admin', () => {
+      expect(canAssignRole('super_admin', 'super_admin')).toBe(true);
+      expect(canAssignRole('super_admin', 'admin')).toBe(true);
+      expect(canAssignRole('super_admin', 'teacher')).toBe(true);
+
+      expect(canAssignRole('admin', 'super_admin')).toBe(false);
+      expect(canAssignRole('admin', 'admin')).toBe(true);
+      expect(canAssignRole('admin', 'teacher')).toBe(true);
+
+      expect(canAssignRole('teacher', 'teacher')).toBe(false);
+    });
+
+    it('canManageTargetUser: admin cannot manage super_admin users', () => {
+      expect(canManageTargetUser('super_admin', 'super_admin')).toBe(true);
+      expect(canManageTargetUser('super_admin', 'admin')).toBe(true);
+      expect(canManageTargetUser('super_admin', 'teacher')).toBe(true);
+
+      expect(canManageTargetUser('admin', 'super_admin')).toBe(false);
+      expect(canManageTargetUser('admin', 'admin')).toBe(true);
+      expect(canManageTargetUser('admin', 'teacher')).toBe(true);
+
+      expect(canManageTargetUser('teacher', 'teacher')).toBe(false);
+    });
+
+    it('filterAssignableRoles filters out super_admin for admin actor and empties for non-admin', () => {
+      const roles = DEFAULT_WORKSPACE_ROLES;
+
+      const superAdminFiltered = filterAssignableRoles(roles, 'super_admin');
+      expect(superAdminFiltered.some((r) => r.id === 'super_admin')).toBe(true);
+      expect(superAdminFiltered.length).toBe(roles.length);
+
+      const adminFiltered = filterAssignableRoles(roles, 'admin');
+      expect(adminFiltered.some((r) => r.id === 'super_admin')).toBe(false);
+      expect(adminFiltered.some((r) => r.id === 'admin')).toBe(true);
+      expect(adminFiltered.length).toBe(roles.length - 1);
+
+      const teacherFiltered = filterAssignableRoles(roles, 'teacher');
+      expect(teacherFiltered).toEqual([]);
     });
   });
 });

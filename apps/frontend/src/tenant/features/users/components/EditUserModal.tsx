@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { User } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import {
   USER_STATUS_VALUES,
+  canManageTargetUser,
   editWorkspaceUserSchema,
+  filterAssignableRoles,
   toTitleCase,
   type EditWorkspaceUserInput,
   type SystemUser,
@@ -13,6 +15,7 @@ import {
   getPrimaryPhone,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { useContactById } from '@/tenant/hooks/collections/contacts';
 import { FormModal } from '@/components/ui/FormModal';
@@ -20,6 +23,8 @@ import ContactPicker from '@/components/contactLink/ContactPicker';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { useUsersConfig } from '@/hooks/useStandardModuleConfig';
 import {
   Form,
   FormControl,
@@ -43,17 +48,27 @@ function resolveContactId(user: SystemUser): string | number | null {
 
 export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { user: authUser } = useAuth();
   const workspaceRoles = useWorkspaceRoles();
+  const { customFields } = useUsersConfig();
+  const canManageThisUser = canManageTargetUser(authUser?.role, user.role);
+  const assignableRoles = useMemo(
+    () => filterAssignableRoles(workspaceRoles, authUser?.role),
+    [workspaceRoles, authUser?.role],
+  );
   const initialContactId = (() => resolveContactId(user))();
   const [submitting, setSubmitting] = useState(false);
 
-  const form = useForm<EditWorkspaceUserInput>({
+  const form = useForm<EditWorkspaceUserInput & Record<string, unknown>>({
     resolver: zodResolver(editWorkspaceUserSchema),
     defaultValues: {
       contactId: initialContactId ?? '',
       role: user.role,
       status: user.status,
       twoFactorEnabled: user.twoFactorEnabled,
+      ...Object.fromEntries(
+        customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
+      ),
     },
   });
 
@@ -69,6 +84,9 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
     const name = toTitleCase(contact.name.trim()) as string;
     const email = (getPrimaryEmail(contact) || '').toLowerCase();
     const phone = getPrimaryPhone(contact) || '';
+    const customFieldValues = Object.fromEntries(
+      customFields.map((cf) => [cf.id, values[cf.id] ?? (user as unknown as Record<string, unknown>)[cf.id] ?? '']),
+    );
     setSubmitting(true);
     try {
       await onSave({
@@ -81,6 +99,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
         status: values.status,
         twoFactorEnabled: values.twoFactorEnabled,
         avatarInitials: getInitials(name),
+        ...customFieldValues,
       });
       onClose();
     } catch (error: unknown) {
@@ -104,10 +123,15 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
       saveLabel={t('users.saveChanges')}
       onSave={() => { void handleSave(); }}
       saving={submitting}
-      saveDisabled={!watchedContactId || !form.formState.isDirty}
+      saveDisabled={!canManageThisUser || !watchedContactId || !form.formState.isDirty}
     >
       <Form {...form}>
         <form className="space-y-4" onSubmit={handleSave}>
+          {!canManageThisUser && (
+            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
+              {t('users.errors.cannotModifySuperAdmin')}
+            </div>
+          )}
           <FormField
             control={form.control}
             name="contactId"
@@ -138,11 +162,12 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
               <FormItem>
                 <FormLabel>{t('users.fieldRole')}</FormLabel>
                 <div className="mt-1.5 flex flex-wrap gap-2">
-                  {workspaceRoles.map((workspaceRole) => (
+                  {assignableRoles.map((workspaceRole) => (
                     <Button
                       key={workspaceRole.id}
                       type="button"
                       size="sm"
+                      disabled={!canManageThisUser}
                       variant={field.value === workspaceRole.id ? 'default' : 'outline'}
                       onClick={() => field.onChange(workspaceRole.id)}
                     >
@@ -192,6 +217,32 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
               </FormItem>
             )}
           />
+          {customFields.length > 0 && (
+            <div className="space-y-3 pt-2 border-t border-border/50">
+              <p className="text-xs font-bold text-foreground">{t('customFields.title')}</p>
+              {customFields.map((cf) => (
+                <FormField
+                  key={cf.id}
+                  control={form.control}
+                  name={cf.id}
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel htmlFor={`custom-field-${cf.id}`}>{cf.label}</FormLabel>
+                      <FormControl>
+                        <Input
+                          id={`custom-field-${cf.id}`}
+                          value={String(field.value ?? '')}
+                          onChange={field.onChange}
+                          placeholder={cf.placeholder || cf.label}
+                        />
+                      </FormControl>
+                      <TranslatedFormMessage messageKey={form.formState.errors[cf.id]?.message as string} />
+                    </FormItem>
+                  )}
+                />
+              ))}
+            </div>
+          )}
         </form>
       </Form>
     </FormModal>

@@ -12,6 +12,8 @@ import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
 import { deepSanitizeStrings } from './schemas/sanitize.js';
 import type { WorkspaceRole } from './userEntityTypes.js';
+import { DEFAULT_WORKSPACE_ROLES_MAP } from './userRbacRegistry.js';
+import { isSuperAdminRole } from './userRoleUtils.js';
 
 /** Deep clone {@link INITIAL_USERS_FIELD_SEED} for default and Setup states. */
 export function cloneUsersFieldSeed(): Record<string, FieldDefinition[]> {
@@ -123,18 +125,34 @@ const PREF_KEYS = [
   'workspaceRoles',
 ] as const;
 
-function normalizeWorkspaceRoles(raw: unknown): WorkspaceRole[] | undefined {
+export function normalizeWorkspaceRoles(raw: unknown, actorRole?: string): WorkspaceRole[] | undefined {
   if (!Array.isArray(raw)) return undefined;
-  const roles = raw.filter(
+  let roles = raw.filter(
     (role): role is WorkspaceRole =>
       !!role && typeof role === 'object' && !Array.isArray(role) && typeof (role as { id?: unknown }).id === 'string',
   );
-  return roles.length > 0 ? roles : undefined;
+  if (roles.length === 0) return undefined;
+
+  // When actor is not Super Admin, preserve Super Admin role definition and full permissions
+  if (actorRole && !isSuperAdminRole(actorRole)) {
+    const defaultSuperAdmin = DEFAULT_WORKSPACE_ROLES_MAP['super_admin'];
+    if (defaultSuperAdmin) {
+      const hasSuperAdmin = roles.some((r) => isSuperAdminRole(r.id));
+      if (!hasSuperAdmin) {
+        roles = [defaultSuperAdmin, ...roles];
+      } else {
+        roles = roles.map((r) => (isSuperAdminRole(r.id) ? defaultSuperAdmin : r));
+      }
+    }
+  }
+
+  return roles;
 }
 
 /** Normalize Users module preferences (typed `user_module_preferences`). */
 export function normalizeUserModulePreferences(
   partial?: Partial<UserModulePreferences> | Record<string, unknown> | null,
+  actorRole?: string,
 ): UserModulePreferences {
   const defaults: UserModulePreferences = {
     allowSelfRegistration: DEFAULT_USERS_SETTINGS.allowSelfRegistration,
@@ -144,7 +162,7 @@ export function normalizeUserModulePreferences(
   };
   if (!partial || typeof partial !== 'object') return { ...defaults };
 
-  const workspaceRoles = normalizeWorkspaceRoles(partial.workspaceRoles);
+  const workspaceRoles = normalizeWorkspaceRoles(partial.workspaceRoles, actorRole);
 
   return {
     allowSelfRegistration:

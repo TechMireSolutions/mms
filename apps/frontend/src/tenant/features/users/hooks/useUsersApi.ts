@@ -81,6 +81,21 @@ export function useUsersMutations() {
   };
 
   // @ts-expect-error - TS union discrimination limit with ts-rest
+  const createUser = tsrClient.users.create.useMutation({
+    onSuccess: () => invalidate(),
+  });
+
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const updateUser = tsrClient.users.update.useMutation({
+    onSuccess: () => invalidate(),
+  });
+
+  // @ts-expect-error - TS union discrimination limit with ts-rest
+  const inviteUser = tsrClient.users.invite.useMutation({
+    onSuccess: () => invalidate(),
+  });
+
+  // @ts-expect-error - TS union discrimination limit with ts-rest
   const replaceUsers = tsrClient.users.bulkUpdate.useMutation({
     onSuccess: () => {
       invalidate();
@@ -123,6 +138,43 @@ export function useUsersMutations() {
   const logExportAudit = tsrClient.users.exportAudit.useMutation();
 
   return {
+    createUser: {
+      ...createUser,
+      mutate: (user: Record<string, unknown>, opts?: MutateOptions) => createUser.mutate({ body: user }, opts),
+      mutateAsync: async (user: Record<string, unknown>) => {
+        const res = await createUser.mutateAsync({ body: user });
+        if (res.status !== 200) {
+          const body = res.body as { message?: string };
+          throw new Error(body?.message ?? 'Failed to create user');
+        }
+        return res.body.user;
+      },
+    },
+    updateUser: {
+      ...updateUser,
+      mutate: (input: { id: string; data: Record<string, unknown> }, opts?: MutateOptions) =>
+        updateUser.mutate({ params: { id: input.id }, body: input.data }, opts),
+      mutateAsync: async (input: { id: string; data: Record<string, unknown> }) => {
+        const res = await updateUser.mutateAsync({ params: { id: input.id }, body: input.data });
+        if (res.status !== 200) {
+          const body = res.body as { message?: string };
+          throw new Error(body?.message ?? 'Failed to update user');
+        }
+        return res.body.user;
+      },
+    },
+    inviteUser: {
+      ...inviteUser,
+      mutate: (user: Record<string, unknown>, opts?: MutateOptions) => inviteUser.mutate({ body: user }, opts),
+      mutateAsync: async (user: Record<string, unknown>) => {
+        const res = await inviteUser.mutateAsync({ body: user });
+        if (res.status !== 200) {
+          const body = res.body as { message?: string };
+          throw new Error(body?.message ?? 'Failed to invite user');
+        }
+        return res.body.user;
+      },
+    },
     replaceUsers: {
       ...replaceUsers,
       mutate: (users: WorkspaceUser[], opts?: MutateOptions) => replaceUsers.mutate({ body: users }, opts),

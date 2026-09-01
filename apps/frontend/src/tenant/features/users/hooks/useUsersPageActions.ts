@@ -1,25 +1,21 @@
-import { useCallback } from 'react';
-import type { ActivityLog, SystemUser } from '@mms/shared';
+import type { SystemUser } from '@mms/shared';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { notify } from '@/lib/notify';
 import { useUsersMutations } from '@/tenant/features/users/hooks/useUsersApi';
 
 interface UseUsersPageActionsParams {
-  users: SystemUser[];
-  logs: ActivityLog[];
   actorId: string;
   t: TranslationFunction;
 }
 
 export function useUsersPageActions({
-  users,
-  logs,
-  actorId,
+  actorId: _actorId,
   t,
 }: UseUsersPageActionsParams) {
   const {
-    replaceUsers,
-    replaceLogs,
+    createUser,
+    updateUser,
+    inviteUser,
     deleteUser,
     restoreUser,
     bulkDeleteUsers,
@@ -27,39 +23,10 @@ export function useUsersPageActions({
     resetPassword,
   } = useUsersMutations();
 
-  const saveUsers = (async (updater: SystemUser[] | ((prev: SystemUser[]) => SystemUser[])) => {
-      const nextUsers = typeof updater === 'function' ? updater(users) : updater;
-      await replaceUsers.mutateAsync(nextUsers);
-    });
-
-  const saveLogs = useCallback(
-    async (updater: ActivityLog[] | ((prev: ActivityLog[]) => ActivityLog[])) => {
-      const nextLogs = typeof updater === 'function' ? updater(logs) : updater;
-      await replaceLogs.mutateAsync(nextLogs);
-    },
-    [logs, replaceLogs],
-  );
-
-  const addLog = (async (entry: Partial<ActivityLog> & { action: ActivityLog['action']; module: string; detail: string }) => {
-      await saveLogs((prev) => [
-        {
-          id: `log${crypto.randomUUID()}`,
-          userId: entry.userId ?? actorId,
-          action: entry.action,
-          module: entry.module,
-          detail: entry.detail,
-          ts: new Date().toISOString(),
-          ip: entry.ip ?? 'local',
-        },
-        ...prev,
-      ]);
-    });
-
   const handleDeleteUser = async (id: string): Promise<void> => {
     try {
       await deleteUser.mutateAsync(id);
       notify.success(t('users.trash.deleted'));
-      await addLog({ action: 'delete', module: 'users', detail: t('users.logDeleted', { id }) });
     } catch (error: unknown) {
       notify.error(t('users.trash.actionFailed'), {
         description: error instanceof Error ? error.message : String(error),
@@ -71,7 +38,6 @@ export function useUsersPageActions({
     try {
       await restoreUser.mutateAsync(id);
       notify.success(t('users.trash.restored'));
-      await addLog({ action: 'update', module: 'users', detail: t('users.logRestored', { id }) });
     } catch (error: unknown) {
       notify.error(t('users.trash.actionFailed'), {
         description: error instanceof Error ? error.message : String(error),
@@ -120,39 +86,24 @@ export function useUsersPageActions({
     temporaryPassword: string,
   ): Promise<void> => {
     await resetPassword.mutateAsync({ userId: user.id, temporaryPassword });
-    void addLog({
-      action: 'update',
-      module: 'users',
-      detail: t('users.logPasswordReset', { name: user.name }),
-      ip: 'local',
-    }).catch(() => undefined);
     notify.success(t('users.resetPasswordToast'), {
       description: t('users.resetPasswordToastDesc', { name: user.name }),
     });
   };
 
   const handleSaveEdit = async (updated: SystemUser): Promise<void> => {
-    await saveUsers((prev) => prev.map((user) => (user.id === updated.id ? updated : user)));
-    await addLog({ action: 'update', module: 'users', detail: t('users.logUpdated', { name: updated.name }) });
+    await updateUser.mutateAsync({ id: updated.id, data: updated as unknown as Record<string, unknown> });
+    notify.success(t('users.saveChanges'));
   };
 
   const handleInvite = async (user: SystemUser): Promise<void> => {
-    await saveUsers((prev) => [user, ...prev]);
-    await addLog({
-      action: 'create',
-      module: 'users',
-      detail: t('users.logInvited', { name: user.name, email: user.email }),
-      ip: 'local',
-    });
+    await inviteUser.mutateAsync(user as unknown as Record<string, unknown>);
+    notify.success(t('users.addSuccessTitle'));
   };
 
   const handleAddUser = async (user: SystemUser): Promise<void> => {
-    await saveUsers((prev) => [user, ...prev]);
-    await addLog({
-      action: 'create',
-      module: 'users',
-      detail: t('users.logCreated', { name: user.name, email: user.email, role: user.role }),
-    });
+    await createUser.mutateAsync(user as unknown as Record<string, unknown>);
+    notify.success(t('users.addSuccessTitle'));
   };
 
   return {

@@ -414,7 +414,7 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockDeleteUserById).toHaveBeenCalledWith('u-1', 'u-admin');
+    expect(mockDeleteUserById).toHaveBeenCalledWith('u-1', 'u-admin', 'admin');
     await app.close();
   });
 
@@ -430,7 +430,7 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1');
+    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1', 'admin');
     await app.close();
   });
 });

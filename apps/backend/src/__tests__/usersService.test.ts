@@ -68,8 +68,20 @@ describe('usersService activity log upsert', () => {
 
   it('verifies user email and broadcasts collection update', async () => {
     const { verifyUserEmailById } = await import('../services/usersService.js');
-    const { verifyTenantUserEmailRow } = await import('../db/repositories/tenantUserRepository.js');
+    const { findTenantUserRowById, verifyTenantUserEmailRow } = await import(
+      '../db/repositories/tenantUserRepository.js'
+    );
     const { broadcastCollection } = await import('../services/websocketService.js');
+
+    vi.mocked(findTenantUserRowById).mockResolvedValue({
+      id: 'u-123',
+      workspaceSubdomain: 'demo',
+      passwordHash: 'hash',
+      loginEmail: 'user@demo.local',
+      name: 'Demo User',
+      role: 'teacher',
+      deletedAt: null,
+    });
 
     const result = await verifyUserEmailById('u-123');
 
@@ -110,5 +122,89 @@ describe('usersService activity log upsert', () => {
     expect(deleteRefreshTokensForUser).toHaveBeenCalledWith('u-123');
     expect(revokeAllUserSessions).toHaveBeenCalledWith('u-123');
     expect(broadcastCollection).toHaveBeenCalledWith('users');
+  });
+
+  it('rejects password reset of a super_admin user by a regular admin', async () => {
+    const { resetUserPasswordById } = await import('../services/usersService.js');
+    const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepository.js');
+
+    vi.mocked(findTenantUserRowById).mockResolvedValue({
+      id: 'u-super',
+      workspaceSubdomain: 'demo',
+      passwordHash: 'old-hash',
+      loginEmail: 'super@demo.local',
+      name: 'Super Admin',
+      role: 'super_admin',
+      deletedAt: null,
+    });
+
+    await expect(resetUserPasswordById('u-super', 'TemporaryPass1!', 'admin')).rejects.toThrow(
+      'Cannot reset password of a Super Admin user account',
+    );
+  });
+
+  it('allows password reset of a super_admin user by another super_admin', async () => {
+    const { resetUserPasswordById } = await import('../services/usersService.js');
+    const {
+      findTenantUserRowById,
+      resetTenantUserPasswordRow,
+    } = await import('../db/repositories/tenantUserRepository.js');
+
+    vi.mocked(findTenantUserRowById).mockResolvedValue({
+      id: 'u-super',
+      workspaceSubdomain: 'demo',
+      passwordHash: 'old-hash',
+      loginEmail: 'super@demo.local',
+      name: 'Super Admin',
+      role: 'super_admin',
+      deletedAt: null,
+    });
+    vi.mocked(resetTenantUserPasswordRow).mockResolvedValue(true);
+
+    const result = await resetUserPasswordById('u-super', 'TemporaryPass1!', 'super_admin');
+    expect(result).toBe(true);
+  });
+
+  it('rejects deleting a super_admin user by a regular admin', async () => {
+    const { deleteUserById } = await import('../services/usersService.js');
+    const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepository.js');
+
+    vi.mocked(findTenantUserRowById).mockResolvedValue({
+      id: 'u-super',
+      workspaceSubdomain: 'demo',
+      passwordHash: 'old-hash',
+      loginEmail: 'super@demo.local',
+      name: 'Super Admin',
+      role: 'super_admin',
+      deletedAt: null,
+    });
+
+    await expect(deleteUserById('u-super', 'u-admin', 'admin')).rejects.toThrow(
+      'Cannot delete a Super Admin user account',
+    );
+  });
+
+  it('rejects assigning super_admin role by a regular admin in upsertWorkspaceUsers', async () => {
+    const { upsertWorkspaceUsers } = await import('../services/usersService.js');
+    const superAdminUser = {
+      id: 'u-new',
+      contactId: 'c-1',
+      name: 'New Super',
+      email: 'new@demo.local',
+      loginEmail: 'new@demo.local',
+      phone: '3001234567',
+      role: 'super_admin',
+      status: 'active' as const,
+      twoFactorEnabled: false,
+      lastLogin: '2026-06-26T12:00:00.000Z',
+      createdDate: '2026-06-26',
+      failedLoginAttempts: 0,
+      activeSessions: 1,
+      avatarInitials: 'NS',
+    };
+
+    await expect(upsertWorkspaceUsers([superAdminUser], 'admin')).rejects.toThrow(
+      'Only Super Admin can assign the Super Admin role',
+    );
   });
 });

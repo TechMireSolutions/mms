@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import {
   USER_STATUS_VALUES,
+  filterAssignableRoles,
   inviteWorkspaceUserSchema,
   toTitleCase,
   type InviteWorkspaceUserInput,
@@ -14,6 +15,7 @@ import {
   getPrimaryPhone,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useAuth } from '@/lib/contexts/AuthContext';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { useContactById } from '@/tenant/hooks/collections/contacts';
 import { FormModal } from '@/components/ui/FormModal';
@@ -44,7 +46,12 @@ export function InviteUserModal({
   existingContactIds = [],
 }: InviteUserModalProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { user: authUser } = useAuth();
   const workspaceRoles = useWorkspaceRoles();
+  const assignableRoles = useMemo(
+    () => filterAssignableRoles(workspaceRoles, authUser?.role),
+    [workspaceRoles, authUser?.role],
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const excludeIds = (() => existingContactIds.map(String))();
@@ -139,7 +146,7 @@ export function InviteUserModal({
               <FormItem>
                 <FormLabel>{t('users.fieldRole')}</FormLabel>
                 <div className="mt-1.5 flex flex-wrap gap-2">
-                  {workspaceRoles.map((workspaceRole) => (
+                  {assignableRoles.map((workspaceRole) => (
                     <Button
                       key={workspaceRole.id}
                       type="button"

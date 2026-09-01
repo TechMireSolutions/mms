@@ -20,6 +20,9 @@ export { invalidateUsersQueries } from '@/tenant/features/users/hooks/invalidate
 // Phase 7: contract-driven tsrClient hooks
 export {
   useUsersContractList,
+  useUsersContractCreate,
+  useUsersContractUpdate,
+  useUsersContractInvite,
   useUsersContractBulkUpdate,
   useUsersContractBulkDelete,
   useUsersContractBulkRestore,

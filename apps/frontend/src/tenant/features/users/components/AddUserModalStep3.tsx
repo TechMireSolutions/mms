@@ -3,13 +3,12 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import {
   getPasswordPolicyHintKey,
-  translateApp,
 } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input as UiInput } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getGlobalSettings } from "@/lib/db";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { FieldError, Label } from "./AddUserModalFieldHelpers";
 import type { AddUserStepProps } from "./addUserModalTypes";
 
@@ -21,8 +20,8 @@ const SETUP_OPTIONS = [
 export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element {
   const { t } = useTranslation();
   const [showPwd, setShowPwd] = useState(false);
-  const globalSettings = getGlobalSettings();
-  const passwordHint = translateApp(getPasswordPolicyHintKey(globalSettings.passwordPolicy), globalSettings.language);
+  const globalSettings = useGlobalSettings();
+  const passwordHint = t(getPasswordPolicyHintKey(globalSettings.passwordPolicy));
 
   return (
     <div className="space-y-4">

@@ -4,6 +4,8 @@ import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { Users as UsersIcon, Activity } from 'lucide-react';
 import {
+  canAccessRolesAndPermissions,
+  canManageTargetUser,
   normalizeWorkspaceUser,
   resolveModuleTierTab,
   USERS_MODULE_MANIFEST,
@@ -46,10 +48,16 @@ export function useUsersPageController() {
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(USERS_MODULE_MANIFEST);
-  const USERS_CONFIG_TABS = (() => USERS_MODULE_MANIFEST.setupSubTabs.map((id) => ({
+  const canAccessRoles = canAccessRolesAndPermissions(authUser?.role);
+  const USERS_CONFIG_TABS = (() => {
+    const subTabs = canAccessRoles
+      ? USERS_MODULE_MANIFEST.setupSubTabs
+      : USERS_MODULE_MANIFEST.setupSubTabs.filter((id) => id !== 'permissions');
+    return subTabs.map((id) => ({
       id,
       label: t(SETUP_TAB_LABEL_KEYS[id]),
-    })))();
+    }));
+  })();
   const SUB_TABS = (() => [
       { id: 'users', label: t('users.list'), icon: UsersIcon },
       { id: 'activity', label: t('users.activity'), icon: Activity },
@@ -145,6 +153,10 @@ export function useUsersPageController() {
       });
       return;
     }
+    if (!canManageTargetUser(authUser?.role, user.role)) {
+      notify.error(t('users.errors.cannotResetSuperAdminPassword'));
+      return;
+    }
     setResettingPasswordFor(user);
   };
   const {
@@ -168,9 +180,10 @@ export function useUsersPageController() {
     visibleTopTabs.map((tab) => tab.id),
   );
   const effectiveSubTab = SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : 'users';
-  const effectiveConfigTab = USERS_CONFIG_TABS.find((tab) => tab.id === configSubTab)
-    ? configSubTab
-    : 'permissions';
+  const effectiveConfigTab =
+    USERS_CONFIG_TABS.find((tab) => tab.id === configSubTab)?.id ??
+    USERS_CONFIG_TABS[0]?.id ??
+    'preferences';
 
   useUsersKeyboardShortcuts({
     enabled: effectiveTab === 'work' && effectiveSubTab === 'users',

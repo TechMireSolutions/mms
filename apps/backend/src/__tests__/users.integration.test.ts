@@ -200,7 +200,7 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ users: [sampleUser] });
-    expect(mockUpsertWorkspaceUsers).toHaveBeenCalledWith([sampleUser]);
+    expect(mockUpsertWorkspaceUsers).toHaveBeenCalledWith([sampleUser], 'admin');
     await app.close();
   });
 
@@ -216,7 +216,7 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true });
-    expect(mockDeleteUserById).toHaveBeenCalledWith('u-1', 'u-admin');
+    expect(mockDeleteUserById).toHaveBeenCalledWith('u-1', 'u-admin', 'admin');
     await app.close();
   });
 
@@ -232,7 +232,7 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true });
-    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1');
+    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1', 'admin');
     await app.close();
   });
 
@@ -250,7 +250,7 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true });
-    expect(mockResetUserPasswordById).toHaveBeenCalledWith('u-1', 'TemporaryPass1!');
+    expect(mockResetUserPasswordById).toHaveBeenCalledWith('u-1', 'TemporaryPass1!', 'admin');
     await app.close();
   });
 
@@ -320,7 +320,7 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 1, failed: 0 });
-    expect(mockBulkRestoreUsers).toHaveBeenCalledWith(['u-1']);
+    expect(mockBulkRestoreUsers).toHaveBeenCalledWith(['u-1'], 'admin');
     await app.close();
   });
 

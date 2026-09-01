@@ -1,8 +1,9 @@
 import type { JSX } from 'react';
 import { Eye, KeyRound, Pencil, RotateCcw, Trash2 } from 'lucide-react';
-import type { SystemUser } from '@mms/shared';
+import { canManageTargetUser, type SystemUser } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useOptionalAuth } from '@/lib/contexts/AuthContext';
 
 interface UsersRowActionsProps {
   user: SystemUser;
@@ -31,6 +32,14 @@ export function UsersRowActions({
   onResetPassword,
 }: UsersRowActionsProps): JSX.Element {
   const { t } = useTranslation();
+  const auth = useOptionalAuth();
+  const authUser = auth?.user;
+
+  const isSelf = authUser ? String(user.id) === String(authUser.id) : false;
+  const canManageTarget = authUser ? canManageTargetUser(authUser.role, user.role) : true;
+  const canMutateTarget = canWrite && canManageTarget;
+  const canDeleteTarget = canDelete && !isSelf && canManageTarget;
+  const canRestoreTarget = canDelete && canManageTarget;
 
   return (
     <div className="flex items-center justify-end gap-1">
@@ -46,7 +55,7 @@ export function UsersRowActions({
           <Eye className="h-4 w-4" />
         </Button>
       )}
-      {canWrite && !showDeleted && (
+      {canMutateTarget && !showDeleted && (
         <>
           <Button
             type="button"
@@ -70,7 +79,7 @@ export function UsersRowActions({
           </Button>
         </>
       )}
-      {canDelete && (
+      {((showDeleted && canRestoreTarget) || (!showDeleted && canDeleteTarget)) && (
         <Button
           type="button"
           size="icon"

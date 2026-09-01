@@ -148,3 +148,89 @@ export function userStatusMeta(status: UserStatus): (typeof USER_STATUS_MAP)[Use
 export function activityActionMeta(action: ActivityAction): (typeof ACTIVITY_ACTION_MAP)[ActivityAction] | undefined {
   return ACTIVITY_ACTION_MAP[action];
 }
+
+/** Whether the given role ID corresponds to Super Admin. */
+export function isSuperAdminRole(role: string | undefined): boolean {
+  return (role ?? '').trim().toLowerCase() === 'super_admin';
+}
+
+/** Whether the given role ID corresponds to standard Admin. */
+export function isAdminRole(role: string | undefined): boolean {
+  return (role ?? '').trim().toLowerCase() === 'admin';
+}
+
+/**
+ * Whether the actor role is allowed to view and access Roles & Permissions administration.
+ * Strictly restricted to Super Admin and Admin. All other roles return false.
+ */
+export function canAccessRolesAndPermissions(actorRole: string | undefined): boolean {
+  const normalized = (actorRole ?? '').trim().toLowerCase();
+  return normalized === 'super_admin' || normalized === 'admin';
+}
+
+/**
+ * Whether the actor role can create, modify, or delete the target role or its permissions.
+ * - Super Admin can manage ANY role (including Super Admin).
+ * - Admin can manage standard and custom roles, but CANNOT change Super Admin.
+ * - Other roles cannot manage any roles.
+ */
+export function canManageRole(
+  actorRole: string | undefined,
+  targetRoleOrId: WorkspaceRole | string | undefined,
+): boolean {
+  if (!canAccessRolesAndPermissions(actorRole)) return false;
+  if (isSuperAdminRole(actorRole)) return true;
+
+  const targetId = typeof targetRoleOrId === 'string' ? targetRoleOrId : targetRoleOrId?.id;
+  if (isSuperAdminRole(targetId)) return false;
+
+  return true;
+}
+
+/**
+ * Whether the actor role can assign a specific role to a user.
+ * - Super Admin can assign ANY role (including Super Admin).
+ * - Admin can assign any role EXCEPT Super Admin.
+ * - Other roles cannot assign roles.
+ */
+export function canAssignRole(
+  actorRole: string | undefined,
+  roleToAssign: string | undefined,
+): boolean {
+  if (!canAccessRolesAndPermissions(actorRole)) return false;
+  if (isSuperAdminRole(actorRole)) return true;
+  if (isSuperAdminRole(roleToAssign)) return false;
+  return true;
+}
+
+/**
+ * Whether the actor role can edit, delete, or reset the password of a target user.
+ * - Super Admin can manage ANY user account.
+ * - Admin can manage non-Super-Admin accounts, but CANNOT modify Super Admin users.
+ * - Other roles cannot manage user accounts.
+ */
+export function canManageTargetUser(
+  actorRole: string | undefined,
+  targetUserRole: string | undefined,
+): boolean {
+  if (!canAccessRolesAndPermissions(actorRole)) return false;
+  if (isSuperAdminRole(actorRole)) return true;
+  if (isSuperAdminRole(targetUserRole)) return false;
+  return true;
+}
+
+/**
+ * Filters the list of assignable workspace roles according to the actor's authorization.
+ * - Super Admin sees all roles (including Super Admin).
+ * - Admin sees all roles except Super Admin.
+ * - Other roles receive an empty list.
+ */
+export function filterAssignableRoles(
+  roles: readonly WorkspaceRole[],
+  actorRole: string | undefined,
+): WorkspaceRole[] {
+  if (!canAccessRolesAndPermissions(actorRole)) return [];
+  if (isSuperAdminRole(actorRole)) return [...roles];
+  return roles.filter((r) => !isSuperAdminRole(r.id));
+}
+
