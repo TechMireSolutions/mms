@@ -7,7 +7,7 @@ import {
 } from '@/platform/lib/platformNav';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AppTranslationKey } from '@mms/shared';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { isNavPathActive } from '@/lib/config/routes';
 import { prefetchRoute } from '@/lib/routing/routePrefetch';
