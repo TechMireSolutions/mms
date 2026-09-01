@@ -54,7 +54,7 @@ export async function createTestContactJaneDoe(page: Page): Promise<void> {
     const isNativeSelect = await janeGender.evaluate((el) => el.tagName.toLowerCase() === 'select').catch(() => false);
     if (isNativeSelect) {
       await janeGender.selectOption('female').catch(async () => {
-        await janeGender.selectOption({ label: /Female/i });
+        await janeGender.selectOption({ label: 'Female' });
       });
     } else {
       await janeGender.click();
@@ -113,7 +113,7 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
     const isNativeSelect = await johnGender.evaluate((el) => el.tagName.toLowerCase() === 'select').catch(() => false);
     if (isNativeSelect) {
       await johnGender.selectOption('male').catch(async () => {
-        await johnGender.selectOption({ label: /Male/i });
+        await johnGender.selectOption({ label: 'Male' });
       });
     } else {
       await johnGender.click();
