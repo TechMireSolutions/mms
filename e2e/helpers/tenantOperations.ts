@@ -49,8 +49,18 @@ export async function createTestContactJaneDoe(page: Page): Promise<void> {
   await janeDialog.locator('input[name="firstName"]').fill('Jane');
   await janeDialog.locator('input[name="lastName"]').fill('Doe');
 
-  await janeDialog.locator('[id$="-gender"]').click();
-  await page.locator('[role="option"]').filter({ hasText: /^Female$/i }).click();
+  const janeGender = janeDialog.locator('[id$="-gender"]');
+  if (await janeGender.isVisible({ timeout: 2000 }).catch(() => false)) {
+    const isNativeSelect = await janeGender.evaluate((el) => el.tagName.toLowerCase() === 'select').catch(() => false);
+    if (isNativeSelect) {
+      await janeGender.selectOption('female').catch(async () => {
+        await janeGender.selectOption({ label: /Female/i });
+      });
+    } else {
+      await janeGender.click();
+      await page.locator('[role="option"]').filter({ hasText: /^Female$/i }).click();
+    }
+  }
 
   const dobInput = janeDialog.locator('[id$="-dob"], input[name="dob"]').first();
   await expect(dobInput).toBeVisible({ timeout: 5000 });
@@ -97,8 +107,19 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
   const johnDialog = page.getByRole('dialog', { name: /(Add New Contact|Edit John Doe|Edit Contact)/i });
   await johnDialog.locator('input[name="firstName"]').fill('John');
   await johnDialog.locator('input[name="lastName"]').fill('Doe');
-  await johnDialog.locator('[id$="-gender"]').click();
-  await page.locator('[role="option"]').filter({ hasText: /^Male$/i }).click();
+  
+  const johnGender = johnDialog.locator('[id$="-gender"]');
+  if (await johnGender.isVisible({ timeout: 2000 }).catch(() => false)) {
+    const isNativeSelect = await johnGender.evaluate((el) => el.tagName.toLowerCase() === 'select').catch(() => false);
+    if (isNativeSelect) {
+      await johnGender.selectOption('male').catch(async () => {
+        await johnGender.selectOption({ label: /Male/i });
+      });
+    } else {
+      await johnGender.click();
+      await page.locator('[role="option"]').filter({ hasText: /^Male$/i }).click();
+    }
+  }
   await johnDialog.getByRole('tab', { name: 'Phones' }).click();
   const phoneInput = johnDialog.locator('[id$="-phone-number-0"]');
   if (!(await phoneInput.isVisible({ timeout: 1500 }).catch(() => false))) {

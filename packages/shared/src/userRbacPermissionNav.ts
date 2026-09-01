@@ -1,3 +1,8 @@
+/**
+ * @file userRbacPermissionNav.ts
+ * @description Layout grouping and ordering of RBAC module rows for the permissions matrix.
+ */
+
 import type { AppTranslationKey } from './appTranslations.js';
 import type { RbacModuleDef } from './userEntityTypes.js';
 
@@ -10,6 +15,7 @@ export interface RbacPermissionNavModule {
 /** Grouped RBAC rows — mirrors sidebar Academics section. */
 export interface RbacPermissionNavGroup {
   type: 'group';
+  groupId: string;
   labelKey: AppTranslationKey;
   rbacIds: readonly string[];
 }
@@ -22,20 +28,31 @@ export type RbacPermissionNavEntry = RbacPermissionNavModule | RbacPermissionNav
  */
 export const RBAC_PERMISSION_NAV: readonly RbacPermissionNavEntry[] = [
   { type: 'module', rbacId: 'dashboard' },
+  { type: 'module', rbacId: 'contacts' },
+  { type: 'module', rbacId: 'messaging' },
   {
     type: 'group',
+    groupId: 'academics',
     labelKey: 'nav.academics',
     rbacIds: ['students', 'teachers', 'sessions', 'attendance', 'enrollments', 'hasanat', 'examinations', 'questionBank'],
   },
   { type: 'module', rbacId: 'finance' },
+  { type: 'module', rbacId: 'accounting' },
+  { type: 'module', rbacId: 'obligations' },
   { type: 'module', rbacId: 'users' },
   { type: 'module', rbacId: 'settings' },
 ] as const;
 
 /** One render section in the permissions matrix (optional group heading + module rows). */
 export interface RbacPermissionMatrixGroup {
+  groupId: string;
   labelKey?: AppTranslationKey;
   modules: RbacModuleDef[];
+}
+
+/** Helper checking if a group represents a multi-module category. */
+export function isRbacPermissionGroup(group: RbacPermissionMatrixGroup): boolean {
+  return Boolean(group.labelKey && group.modules.length > 0);
 }
 
 /** Orders visible RBAC modules into sidebar-aligned groups for the permissions matrix. */
@@ -50,7 +67,10 @@ export function groupRbacModulesForPermissionsNav(
     const moduleDefinition = moduleById.get(rbacId);
     if (!moduleDefinition || placed.has(rbacId)) return;
     placed.add(rbacId);
-    groups.push({ modules: [moduleDefinition] });
+    groups.push({
+      groupId: `module-${rbacId}`,
+      modules: [moduleDefinition],
+    });
   };
 
   for (const entry of RBAC_PERMISSION_NAV) {
@@ -67,15 +87,29 @@ export function groupRbacModulesForPermissionsNav(
       }
     }
     if (mods.length > 0) {
-      groups.push({ labelKey: entry.labelKey, modules: mods });
+      groups.push({
+        groupId: `group-${entry.groupId}`,
+        labelKey: entry.labelKey,
+        modules: mods,
+      });
     }
   }
 
   for (const mod of visibleModules) {
     if (!placed.has(mod.id)) {
-      groups.push({ modules: [mod] });
+      groups.push({
+        groupId: `module-${mod.id}`,
+        modules: [mod],
+      });
     }
   }
 
   return groups;
+}
+
+/** Flattens permission matrix groups into an ordered list of module definitions. */
+export function flattenRbacPermissionGroups(
+  groups: readonly RbacPermissionMatrixGroup[],
+): RbacModuleDef[] {
+  return groups.flatMap((group) => group.modules);
 }

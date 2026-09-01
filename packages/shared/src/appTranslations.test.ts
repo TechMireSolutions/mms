@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { translateAppParams, registerLanguagePack } from "./appTranslations.js";
+import { APP_TRANSLATIONS_EN, translateAppParams, registerLanguagePack } from "./appTranslations.js";
+import { APP_TRANSLATIONS_AR } from "./appTranslationsAr.js";
+import { APP_TRANSLATIONS_UR } from "./appTranslationsUr.js";
+import { APP_TRANSLATIONS_FA } from "./appTranslationsFa.js";
+import type { AppTranslationKey } from "./appTranslations.js";
 
 describe("Translation System Enhancements", () => {
   it("translates simple placeholders", () => {
@@ -81,5 +85,76 @@ describe("Translation System Enhancements", () => {
     );
     expect(result).toBe("Total count is 1,250, ID is 9876, code is 1122.");
   });
+
+  it("validates integrity of canonical APP_TRANSLATIONS_EN keys and values", () => {
+    const keys = Object.keys(APP_TRANSLATIONS_EN);
+    expect(keys.length).toBeGreaterThan(6000);
+
+    // Ensure all role keys exist
+    const roleKeys = [
+      "users.role.superAdmin",
+      "users.role.admin",
+      "users.role.principal",
+      "users.role.registrar",
+      "users.role.teacher",
+      "users.role.assistantTeacher",
+      "users.role.librarian",
+      "users.role.accountant",
+      "users.role.auditor",
+      "users.role.custom",
+    ];
+
+    for (const roleKey of roleKeys) {
+      expect(APP_TRANSLATIONS_EN[roleKey as keyof typeof APP_TRANSLATIONS_EN]).toBeDefined();
+      expect(typeof APP_TRANSLATIONS_EN[roleKey as keyof typeof APP_TRANSLATIONS_EN]).toBe("string");
+    }
+
+    // Verify well-formed placeholder braces
+    for (const key of keys) {
+      const val = APP_TRANSLATIONS_EN[key as keyof typeof APP_TRANSLATIONS_EN];
+      expect(typeof val).toBe("string");
+      expect(val.length).toBeGreaterThan(0);
+      const openCount = (val.match(/\{/g) || []).length;
+      const closeCount = (val.match(/\}/g) || []).length;
+      expect(openCount).toBe(closeCount);
+    }
+  });
+
+  it("validates integrity of Persian (FA) translation dictionary", () => {
+    const faKeys = Object.keys(APP_TRANSLATIONS_FA);
+    expect(faKeys.length).toBeGreaterThan(6000);
+
+    for (const key of faKeys) {
+      const val = APP_TRANSLATIONS_FA[key as AppTranslationKey];
+      if (!val) continue;
+      expect(typeof val).toBe("string");
+      const openCount = (val.match(/\{/g) || []).length;
+      const closeCount = (val.match(/\}/g) || []).length;
+      expect(openCount).toBe(closeCount);
+    }
+  });
+
+  it("validates integrity of Arabic (AR) and Urdu (UR) translation dictionaries", () => {
+    const arKeys = Object.keys(APP_TRANSLATIONS_AR);
+    expect(arKeys.length).toBeGreaterThan(6000);
+    for (const key of arKeys) {
+      const val = APP_TRANSLATIONS_AR[key as AppTranslationKey];
+      if (!val) continue;
+      const openCount = (val.match(/\{/g) || []).length;
+      const closeCount = (val.match(/\}/g) || []).length;
+      expect(openCount).toBe(closeCount);
+    }
+
+    const urKeys = Object.keys(APP_TRANSLATIONS_UR);
+    expect(urKeys.length).toBeGreaterThan(6000);
+    for (const key of urKeys) {
+      const val = APP_TRANSLATIONS_UR[key as AppTranslationKey];
+      if (!val) continue;
+      const openCount = (val.match(/\{/g) || []).length;
+      const closeCount = (val.match(/\}/g) || []).length;
+      expect(openCount).toBe(closeCount);
+    }
+  });
 });
+
 
