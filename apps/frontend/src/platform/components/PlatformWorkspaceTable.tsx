@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/hooks/useTranslation";
 import { WorkspaceIdentityCell } from "@/platform/components/workspace/WorkspaceIdentityCell";
 import { WorkspaceStatusBadge } from "@/platform/components/workspace/WorkspaceStatusBadge";
@@ -130,11 +131,14 @@ export function PlatformWorkspaceTable({
                         }
                         aria-label={t("platform.emailVerification")}
                       />
-                      <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap">
+                      <Label
+                        htmlFor={`table-verify-${workspace.subdomain}`}
+                        className="text-xs font-semibold text-muted-foreground whitespace-nowrap cursor-pointer select-none"
+                      >
                         {workspace.requireEmailVerification
                           ? t("platform.emailVerificationRequired")
                           : t("platform.emailVerificationOptional")}
-                      </span>
+                      </Label>
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-3 align-middle text-xs font-medium text-muted-foreground whitespace-nowrap">
