@@ -30,18 +30,18 @@ export function WorkspaceIdentityCell({
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2">
+          <h3 className="text-sm font-bold tracking-tight text-foreground truncate group-hover:text-primary transition-colors">
+            {workspace.madrasaName}
+          </h3>
           <a
             href={tenantLink}
             target="_blank"
             rel="noopener noreferrer"
             title={openTitle}
-            className="text-sm font-bold tracking-tight text-foreground truncate hover:text-primary transition-colors inline-flex items-center gap-1.5 group/link"
+            className="text-muted-foreground hover:text-primary transition-colors inline-flex p-1.5 rounded-lg hover:bg-primary/10 shrink-0"
+            aria-label={openTitle}
           >
-            <span className="truncate">{workspace.madrasaName}</span>
-            <ExternalLink
-              className="w-3.5 h-3.5 shrink-0 text-muted-foreground group-hover/link:text-primary transition-colors"
-              aria-hidden
-            />
+            <ExternalLink className="w-3.5 h-3.5" aria-hidden />
           </a>
         </div>
         {workspace.tagline ? (
