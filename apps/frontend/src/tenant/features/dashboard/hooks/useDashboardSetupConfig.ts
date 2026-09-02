@@ -72,7 +72,7 @@ export function useDashboardPreferencesMutation() {
   return tsrClient.dashboard.putPreferences.useMutation({
     onSuccess: (res: { status: number; body?: { preferences?: unknown } }) => {
       if (res.status === 200 && res.body?.preferences) {
-        queryClient.setQueryData(DASHBOARD_PREFERENCES_QUERY_KEY, normalizeDashboardPreferences(res.body.preferences as Record<string, unknown> | null));
+        queryClient.setQueryData(DASHBOARD_PREFERENCES_QUERY_KEY, res);
         invalidateDashboardQueries(queryClient);
       }
     },
@@ -103,7 +103,7 @@ export function useDashboardWidgetsMutation() {
   return tsrClient.dashboard.putWidgets.useMutation({
     onSuccess: (res: { status: number; body?: { widgets?: unknown } }) => {
       if (res.status === 200 && res.body?.widgets) {
-        queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, res.body.widgets as CustomWidget[]);
+        queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, res);
         invalidateDashboardQueries(queryClient);
       }
     },
@@ -122,9 +122,17 @@ export function useDashboardWidgetDeleteMutation() {
           ? variables
           : (variables as { params?: { id?: string } })?.params?.id;
       if (widgetId) {
-        queryClient.setQueryData<CustomWidget[]>(DASHBOARD_WIDGETS_QUERY_KEY, (old) =>
-          old ? old.filter((widget) => widget.id !== widgetId) : [],
-        );
+        queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, (old: unknown) => {
+          const cached = old as { body?: { widgets?: CustomWidget[] } } | undefined;
+          if (!cached?.body?.widgets) return old;
+          return {
+            ...cached,
+            body: {
+              ...cached.body,
+              widgets: cached.body.widgets.filter((widget) => widget.id !== widgetId),
+            },
+          };
+        });
       }
       invalidateDashboardQueries(queryClient);
     },
@@ -139,7 +147,10 @@ export function useDashboardWidgetsReorderMutation() {
   return tsrClient.dashboard.reorderWidgets.useMutation({
     onMutate: async ({ body }: { body: { order: Array<{ id: string; sortOrder: number }> } }) => {
       await queryClient.cancelQueries({ queryKey: DASHBOARD_WIDGETS_QUERY_KEY });
-      const previousWidgets = queryClient.getQueryData<CustomWidget[]>(DASHBOARD_WIDGETS_QUERY_KEY);
+      const previousResponse = queryClient.getQueryData<{
+        body?: { widgets?: CustomWidget[] };
+      }>(DASHBOARD_WIDGETS_QUERY_KEY);
+      const previousWidgets = previousResponse?.body?.widgets;
 
       if (previousWidgets) {
         const orderMap = new Map(body.order.map((item) => [item.id, item.sortOrder]));
@@ -150,18 +161,21 @@ export function useDashboardWidgetsReorderMutation() {
           })
           .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
-        queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, updated);
+        queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, {
+          ...previousResponse,
+          body: { ...previousResponse?.body, widgets: updated },
+        });
       }
 
-      return { previousWidgets };
+      return { previousResponse };
     },
     onError: (
       _err: unknown,
       _newOrder: unknown,
-      context: { previousWidgets?: CustomWidget[] } | undefined,
+      context: { previousResponse?: { body?: { widgets?: CustomWidget[] } } } | undefined,
     ) => {
-      if (context?.previousWidgets) {
-        queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, context.previousWidgets);
+      if (context?.previousResponse) {
+        queryClient.setQueryData(DASHBOARD_WIDGETS_QUERY_KEY, context.previousResponse);
       }
       notify.error(t('dashboard.toast.saveFailed'));
     },

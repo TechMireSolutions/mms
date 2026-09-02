@@ -1,7 +1,43 @@
 import type { CustomWidget } from "./pinnedWidgetTypes";
-import { DASHBOARD_WIDGETS_KEY } from "@mms/shared";
+import {
+  DASHBOARD_WIDGETS_KEY,
+  normalizeDashboardWidgets,
+} from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
 import { getDefaultCustomWidgets, withDefaultI18nKeys } from "./widgetDefaultSeeds.js";
+
+const SEEDED_WIDGET_BEHAVIOR_KEYS = [
+  "category",
+  "collection",
+  "widgetType",
+  "operation",
+  "role",
+  "targetField",
+  "filterField",
+  "filterOperator",
+  "filterValue",
+  "switchActionType",
+  "switchStateKey",
+  "switchCollection",
+  "switchField",
+  "xAxisField",
+] as const satisfies readonly (keyof CustomWidget)[];
+
+function restoreSeededWidgetBehavior(
+  widget: CustomWidget,
+  defaultWidget: CustomWidget,
+): CustomWidget {
+  const restored = { ...widget } as Record<string, unknown>;
+  for (const key of SEEDED_WIDGET_BEHAVIOR_KEYS) {
+    const value = defaultWidget[key];
+    if (value === undefined) {
+      delete restored[key];
+    } else {
+      restored[key] = value;
+    }
+  }
+  return restored as unknown as CustomWidget;
+}
 
 /** Pure union of all seeded default widgets across categories (no localStorage I/O). */
 export function buildDefaultCustomWidgets(): CustomWidget[] {
@@ -27,10 +63,18 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
       saveObject(DASHBOARD_WIDGETS_KEY, defaults);
       return defaults;
     }
-    const parsed = saved.map(withDefaultI18nKeys);
+    const defaultsById = new Map(defaults.map((widget) => [widget.id, widget]));
+    const normalized = normalizeDashboardWidgets(saved) as CustomWidget[];
+    const parsed = normalized.map((widget) => {
+      const defaultWidget = defaultsById.get(widget.id);
+      const repaired = defaultWidget
+        ? restoreSeededWidgetBehavior(widget, defaultWidget)
+        : widget;
+      return withDefaultI18nKeys(repaired);
+    });
     const existingIds = new Set(parsed.map((widget) => widget.id));
     const merged = [...parsed];
-    let hasChanges = false;
+    let hasChanges = JSON.stringify(saved) !== JSON.stringify(parsed);
     for (const defaultWidget of defaults) {
       if (!existingIds.has(defaultWidget.id)) {
         merged.push(defaultWidget);

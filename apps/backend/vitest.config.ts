@@ -17,7 +17,8 @@ export default defineConfig({
     },
     include: ['src/__tests__/**/*.{test,spec}.ts'],
     pool: 'threads',
-    maxWorkers: 4,
+    // Turbo runs backend and frontend tests together; leave capacity for both suites.
+    maxWorkers: 2,
     fileParallelism: true,
     clearMocks: true,
     restoreMocks: true,

@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useRef } from 'react';
-import { DASHBOARD_MODULE_MANIFEST, DEFAULT_DASHBOARD_PREFERENCES, type DashboardPreferences } from '@mms/shared';
+import { useCallback, useEffect } from 'react';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
+import {
+  DASHBOARD_MODULE_MANIFEST,
+  DEFAULT_DASHBOARD_PREFERENCES,
+  type DashboardPreferences,
+} from '@mms/shared';
 import { getOrInitializeCustomWidgets } from '@/lib/reports/widgetDefaults';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
@@ -19,12 +24,15 @@ import {
  * after migration; localStorage is no longer read for display once the server has rows.
  */
 let cachedMigrationSeed: CustomWidget[] | null = null;
+const dashboardWidgetSeedAttempts = new WeakSet<QueryClient>();
+
 function getMigrationSeedWidgets(): CustomWidget[] {
   if (cachedMigrationSeed === null) cachedMigrationSeed = getOrInitializeCustomWidgets();
   return cachedMigrationSeed;
 }
 
 export function useDashboardConfig() {
+  const queryClient = useQueryClient();
   const prefsQuery = useDashboardPreferencesQuery();
   const widgetsQuery = useDashboardWidgetsQuery();
   const prefsMutation = useDashboardPreferencesMutation();
@@ -43,63 +51,65 @@ export function useDashboardConfig() {
 
   // One-time local→server widget seed. Runs only when the server query has settled
   // empty AND the user may write — viewers keep the local fallback (read-only display).
-  const migratedRef = useRef(false);
   useEffect(() => {
-    if (migratedRef.current) return;
     if (widgetsQuery.status !== 'success') return;
-    if (serverWidgets.length > 0 || !canWriteDashboard) {
-      migratedRef.current = true;
-      return;
-    }
-    migratedRef.current = true;
-    widgetsMutation.mutate(getMigrationSeedWidgets());
-  }, [widgetsQuery.status, serverWidgets.length, canWriteDashboard, widgetsMutation]);
+    if (serverWidgets.length > 0 || !canWriteDashboard) return;
+    if (dashboardWidgetSeedAttempts.has(queryClient)) return;
+
+    dashboardWidgetSeedAttempts.add(queryClient);
+    widgetsMutation.mutate(
+      { body: getMigrationSeedWidgets() },
+      { onError: () => dashboardWidgetSeedAttempts.delete(queryClient) },
+    );
+  }, [widgetsQuery.status, serverWidgets.length, canWriteDashboard, queryClient, widgetsMutation]);
 
   /** Full-array upsert (visualizer pin set + bulk flows). Upsert-only — never wipes absent rows. */
-  const updateCustomWidgets = ((customWidgetsDraft: CustomWidget[]) => {
-      widgetsMutation.mutate(customWidgetsDraft);
-    });
+  const updateCustomWidgets = (customWidgetsDraft: CustomWidget[]) => {
+    widgetsMutation.mutate({ body: customWidgetsDraft });
+  };
 
   /** Atomic widget reordering with optimistic cache update. */
-  const reorderCustomWidgets = ((order: Array<{ id: string; sortOrder: number }>) => {
-      widgetsReorderMutation.mutate({ body: { order } });
-    });
+  const reorderCustomWidgets = (order: Array<{ id: string; sortOrder: number }>) => {
+    widgetsReorderMutation.mutate({ body: { order } });
+  };
 
   const updatePref = useCallback(
     <K extends keyof DashboardPreferences>(key: K, value: DashboardPreferences[K]) => {
-      prefsMutation.mutate({ ...prefs, [key]: value });
+      prefsMutation.mutate({ body: { ...prefs, [key]: value } });
     },
     [prefs, prefsMutation],
   );
 
-  const toggleCardVisibility = ((cardId: string) => {
-      const disabledCardIds = prefs.disabledCardIds;
-      const updated = disabledCardIds.includes(cardId)
-        ? disabledCardIds.filter((id) => id !== cardId)
-        : [...disabledCardIds, cardId];
-      updatePref('disabledCardIds', updated);
-    });
+  const toggleCardVisibility = (cardId: string) => {
+    const disabledCardIds = prefs.disabledCardIds;
+    const updated = disabledCardIds.includes(cardId)
+      ? disabledCardIds.filter((id) => id !== cardId)
+      : [...disabledCardIds, cardId];
+    updatePref('disabledCardIds', updated);
+  };
 
   /** Upsert only the affected widget (inserts new, updates existing; leaves others untouched). Resolves on success so builder flows can await before closing (§7). */
-  const saveWidget = ((savedWidget: CustomWidget) => widgetsMutation.mutateAsync([savedWidget]));
+  const saveWidget = (savedWidget: CustomWidget) =>
+    widgetsMutation.mutateAsync({ body: [savedWidget] });
 
-  const toggleWidgetPin = ((widgetId: string) => {
-      const target = customWidgets.find((widget) => widget.id === widgetId);
-      if (!target) return;
-      widgetsMutation.mutate([{ ...target, isPinnedToDashboard: !target.isPinnedToDashboard }]);
+  const toggleWidgetPin = (widgetId: string) => {
+    const target = customWidgets.find((widget) => widget.id === widgetId);
+    if (!target) return;
+    widgetsMutation.mutate({
+      body: [{ ...target, isPinnedToDashboard: !target.isPinnedToDashboard }],
     });
+  };
 
-  const unpinWidget = ((widgetId: string) => {
-      const target = customWidgets.find((widget) => widget.id === widgetId);
-      if (!target) return;
-      widgetsMutation.mutate([{ ...target, isPinnedToDashboard: false }]);
-    });
+  const unpinWidget = (widgetId: string) => {
+    const target = customWidgets.find((widget) => widget.id === widgetId);
+    if (!target) return;
+    widgetsMutation.mutate({ body: [{ ...target, isPinnedToDashboard: false }] });
+  };
 
   /** Hard delete via `DELETE /:id` (never bulk-wipe PUT). */
-  const deleteWidget = ((widgetId: string) => {
-      widgetDeleteMutation.mutate({ params: { id: widgetId }, body: {} });
-    });
-
+  const deleteWidget = (widgetId: string) => {
+    widgetDeleteMutation.mutate({ params: { id: widgetId }, body: {} });
+  };
 
   return {
     disabledCardIds: prefs.disabledCardIds,
