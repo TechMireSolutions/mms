@@ -1,8 +1,12 @@
 import React from "react";
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { EnrollmentDetail } from "./EnrollmentDetail";
 import type { Enrollment } from "@/lib/data/enrollmentData";
+
+(globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -63,6 +67,7 @@ describe("EnrollmentDetail Component", () => {
         enrollment={mockEnrollment}
         onClose={vi.fn()}
         onStatusChange={vi.fn()}
+        onPaymentStatusChange={vi.fn()}
         canWrite={true}
       />,
     );
@@ -71,5 +76,33 @@ describe("EnrollmentDetail Component", () => {
     expect(html).toContain("Spring 2025");
     expect(html).toContain("Hifz Class A");
     expect(html).toContain("$100");
+  });
+
+  it("allows a pending enrollment payment to be marked paid", () => {
+    const onPaymentStatusChange = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <EnrollmentDetail
+          enrollment={{ ...mockEnrollment, paymentStatus: "pending" }}
+          onClose={vi.fn()}
+          onStatusChange={vi.fn()}
+          onPaymentStatusChange={onPaymentStatusChange}
+          canWrite={true}
+        />,
+      );
+    });
+
+    const paidButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("enrollments.payment.paid"),
+    );
+    expect(paidButton).toBeDefined();
+
+    act(() => paidButton?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
+    expect(onPaymentStatusChange).toHaveBeenCalledWith("enr-1", "paid");
+
+    act(() => root.unmount());
   });
 });

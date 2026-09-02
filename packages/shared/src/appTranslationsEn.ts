@@ -2414,6 +2414,7 @@ export const APP_TRANSLATIONS_EN = {
   "enrollments.table.selectEnrollment": "Select enrollment for {name}",
   "enrollments.table.viewProfile": "View Details",
   "enrollments.timeline.cancelled": "Enrollment cancelled",
+  "enrollments.timeline.paymentStatusChange": "Payment → {status}",
   "enrollments.timeline.statusChange": "Status → {status}",
   "enrollments.toast.bulkDeleted": "{count} enrollments archived",
   "enrollments.toast.bulkPartial": "{succeeded} succeeded; {failed} failed",

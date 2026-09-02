@@ -1,6 +1,6 @@
 import React from "react";
 import {
-  User, BookOpen, Layers, DollarSign, Clock, ArrowRight,
+  User, BookOpen, Layers, DollarSign, Clock, ArrowRight, CircleDollarSign,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { Enrollment } from '@/lib/data/enrollmentData';
@@ -8,7 +8,7 @@ import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { formatDate, formatDateTime } from "@mms/shared";
+import { ENROLLMENT_PAYMENT_STATUSES, formatDate, formatDateTime } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EnrollmentArchivedBanner } from "@/tenant/features/enrollments/components/EnrollmentArchivedBanner";
@@ -20,6 +20,7 @@ export interface EnrollmentDetailProps {
   enrollment: Enrollment | null | undefined;
   onClose: () => void;
   onStatusChange: (id: string, newStatus: Enrollment["status"]) => void;
+  onPaymentStatusChange: (id: string, newStatus: Enrollment["paymentStatus"]) => void;
   canWrite: boolean;
 }
 
@@ -27,6 +28,7 @@ export const EnrollmentDetail = (function EnrollmentDetail({
   enrollment,
   onClose,
   onStatusChange,
+  onPaymentStatusChange,
   canWrite,
 }: EnrollmentDetailProps): React.JSX.Element | null {
   const { t } = useTranslation();
@@ -71,6 +73,9 @@ export const EnrollmentDetail = (function EnrollmentDetail({
     enrollment.status === "confirmed" ? ["completed", "cancelled"] :
     []
   ) as Enrollment["status"][];
+  const nextPaymentStatuses = ENROLLMENT_PAYMENT_STATUSES.filter(
+    (paymentStatus) => paymentStatus !== enrollment.paymentStatus,
+  );
 
   return (
     <DetailDrawerShell
@@ -158,27 +163,53 @@ export const EnrollmentDetail = (function EnrollmentDetail({
           </div>
         )}
 
-        {canWrite && nextStatuses.length > 0 && (
-          <div className="flex items-center gap-2 flex-wrap pt-1">
-            <p className="text-xs font-semibold text-muted-foreground">{t("enrollments.detail.moveTo")}</p>
-            {nextStatuses.map((nextStatus) => {
-              const isCancel = nextStatus === "cancelled";
-              return (
+        {canWrite && (
+          <div className="space-y-3 pt-1">
+            {nextStatuses.length > 0 && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-xs font-semibold text-muted-foreground">{t("enrollments.detail.moveTo")}</p>
+                {nextStatuses.map((nextStatus) => {
+                  const isCancel = nextStatus === "cancelled";
+                  return (
+                    <Button
+                      key={nextStatus}
+                      variant="ghost"
+                      onClick={() => onStatusChange(enrollment.id, nextStatus)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-bold border transition-colors h-auto ${
+                        isCancel
+                          ? "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/15 hover:text-destructive"
+                          : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 hover:text-primary"
+                      }`}
+                    >
+                      <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+                      {statusConfig[nextStatus]?.label || nextStatus}
+                    </Button>
+                  );
+                })}
+              </div>
+            )}
+
+            <div
+              className="flex items-center gap-2 flex-wrap"
+              role="group"
+              aria-label={t("enrollments.detail.paymentStatus")}
+            >
+              <p className="text-xs font-semibold text-muted-foreground">
+                {t("enrollments.detail.paymentStatus")}:
+              </p>
+              {nextPaymentStatuses.map((nextPaymentStatus) => (
                 <Button
-                  key={nextStatus}
-                  variant="ghost"
-                  onClick={() => onStatusChange(enrollment.id, nextStatus)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors h-auto ${
-                    isCancel
-                      ? "bg-destructive/10 text-destructive border-destructive/30 hover:bg-destructive/15 hover:text-destructive"
-                      : "bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 hover:text-primary"
-                  }`}
+                  key={nextPaymentStatus}
+                  variant={nextPaymentStatus === "paid" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => onPaymentStatusChange(enrollment.id, nextPaymentStatus)}
+                  className="h-8 gap-1.5 text-xs"
                 >
-                  <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-                  {statusConfig[nextStatus]?.label || nextStatus}
+                  <CircleDollarSign className="w-3.5 h-3.5" aria-hidden="true" />
+                  {paymentConfig[nextPaymentStatus]?.label || nextPaymentStatus}
                 </Button>
-              );
-            })}
+              ))}
+            </div>
           </div>
         )}
         {enrollment.notes && (
@@ -188,4 +219,3 @@ export const EnrollmentDetail = (function EnrollmentDetail({
     </DetailDrawerShell>
   );
 });
-

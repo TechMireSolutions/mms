@@ -2415,6 +2415,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "enrollments.table.selectEnrollment": "{name} کا اندراج منتخب کریں",
   "enrollments.table.viewProfile": "تفصیلات دیکھیں",
   "enrollments.timeline.cancelled": "داخلہ منسوخ",
+  "enrollments.timeline.paymentStatusChange": "ادائیگی → {status}",
   "enrollments.timeline.statusChange": "حیثیت → {status}",
   "enrollments.toast.bulkDeleted": "{count} اندراجات محفوظ ہو گئے",
   "enrollments.toast.bulkPartial": "{succeeded} کامیاب؛ {failed} ناکام",

@@ -37,6 +37,7 @@ describe("EnrollmentsModalLayer Component", () => {
         wizardTitle="New Enrollment"
         onCloseViewing={vi.fn()}
         onStatusChange={vi.fn()}
+        onPaymentStatusChange={vi.fn()}
         onCloseWizard={vi.fn()}
         onCompleteWizard={vi.fn()}
         onPendingDeleteChange={vi.fn()}

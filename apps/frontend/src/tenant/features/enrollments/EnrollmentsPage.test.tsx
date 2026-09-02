@@ -68,6 +68,7 @@ vi.mock("@/tenant/features/enrollments/hooks/useEnrollmentsPageState", () => ({
       handleDelete: vi.fn(),
       handleRestore: vi.fn(),
       handleStatusChange: vi.fn(),
+      handlePaymentStatusChange: vi.fn(),
       handleBulkDelete: vi.fn(),
       handleBulkRestore: vi.fn(),
       handleBulkCancel: vi.fn(),

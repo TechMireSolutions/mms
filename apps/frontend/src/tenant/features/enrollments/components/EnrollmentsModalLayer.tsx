@@ -16,6 +16,7 @@ export interface EnrollmentsModalLayerProps {
   wizardTitle: string;
   onCloseViewing: () => void;
   onStatusChange: (id: string, newStatus: Enrollment["status"]) => void;
+  onPaymentStatusChange: (id: string, newStatus: Enrollment["paymentStatus"]) => void;
   onCloseWizard: () => void;
   onCompleteWizard: (enrollment: Enrollment) => Promise<void>;
   onPendingDeleteChange: (id: string | null) => void;
@@ -38,6 +39,7 @@ export function EnrollmentsModalLayer({
   wizardTitle,
   onCloseViewing,
   onStatusChange,
+  onPaymentStatusChange,
   onCloseWizard,
   onCompleteWizard,
   onPendingDeleteChange,
@@ -60,6 +62,7 @@ export function EnrollmentsModalLayer({
               canWrite={canWrite && !showDeleted}
               onClose={onCloseViewing}
               onStatusChange={onStatusChange}
+              onPaymentStatusChange={onPaymentStatusChange}
             />
           </ErrorBoundary>
         )}

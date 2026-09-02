@@ -2419,6 +2419,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "enrollments.table.selectEnrollment": "انتخاب ثبت‌نام برای {name}",
   "enrollments.table.viewProfile": "مشاهده جزئیات",
   "enrollments.timeline.cancelled": "ثبت‌نام لغو شد",
+  "enrollments.timeline.paymentStatusChange": "پرداخت → {status}",
   "enrollments.timeline.statusChange": "وضعیت → {status}",
   "enrollments.toast.bulkDeleted": "{count} ثبت‌نام بایگانی شد",
   "enrollments.toast.bulkPartial": "{succeeded} موفق؛ {failed} ناموفق",

@@ -174,12 +174,45 @@ export function useEnrollmentsPageActions({
     });
   };
 
+  const handlePaymentStatusChange = (
+    id: string,
+    newPaymentStatus: Enrollment["paymentStatus"],
+  ) => {
+    const enrollment = enrollments.find((candidate) => candidate.id === id);
+    if (!enrollment) return;
+    const updated: Enrollment = {
+      ...enrollment,
+      paymentStatus: newPaymentStatus,
+      timeline: [
+        ...(enrollment.timeline || []),
+        {
+          ts: new Date().toISOString(),
+          event: t("enrollments.timeline.paymentStatusChange", { status: newPaymentStatus }),
+          by: role,
+        },
+      ],
+    };
+    updateEnrollment.mutate({
+      id,
+      enrollment: updated,
+    }, {
+      onSuccess: () => {
+        if (viewing?.id === id) onViewingChange(updated);
+        notify.success(t("enrollments.toast.updated"));
+      },
+      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
+        description: err instanceof Error ? err.message : String(err),
+      }),
+    });
+  };
+
   return {
     handleComplete,
     handleCancel,
     handleDelete,
     handleRestore,
     handleStatusChange,
+    handlePaymentStatusChange,
     handleBulkDelete,
     handleBulkRestore,
     handleBulkCancel,

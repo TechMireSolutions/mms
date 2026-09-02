@@ -12,6 +12,7 @@ import {
   attendanceRowsFromRecords,
   buildDefaultRows,
   enrolledStudentsForClass,
+  isEnrollmentInAttendanceRoster,
 } from "@/tenant/features/attendance/components/markAttendanceRowUtils";
 import {
   loadQueue,
@@ -37,11 +38,7 @@ export function useMarkAttendanceController({
   const studentIds = (() => {
     if (!filters.classId) return [];
     return enrollments
-      .filter((enrollment) =>
-        enrollment.classId === filters.classId &&
-        enrollment.status !== "cancelled" &&
-        enrollment.status !== "completed"
-      )
+      .filter((enrollment) => isEnrollmentInAttendanceRoster(enrollment, filters.classId))
       .map((enrollment) => enrollment.studentId);
   })();
 

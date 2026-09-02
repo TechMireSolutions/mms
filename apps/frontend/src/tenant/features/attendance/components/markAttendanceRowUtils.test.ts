@@ -57,14 +57,20 @@ describe("markAttendanceRowUtils utilities", () => {
   it("finds enrolledStudentsForClass correctly", () => {
     const enrollments: Enrollment[] = [
       { id: "enr-1", studentId: "std-1", classId: "cls-1", status: "confirmed" } as any,
+      { id: "enr-2", studentId: "std-2", classId: "cls-1", status: "completed" } as any,
+      { id: "enr-3", studentId: "std-3", classId: "cls-1", status: "cancelled" } as any,
     ];
     const students: Student[] = [
       { id: "std-1", name: "Bilal", gender: "male", grNumber: "GR-01" } as any,
+      { id: "std-2", name: "Hamza", gender: "male", grNumber: "GR-02" } as any,
+      { id: "std-3", name: "Usman", gender: "male", grNumber: "GR-03" } as any,
     ];
 
     const list = enrolledStudentsForClass("cls-1", enrollments, students, "Unnamed");
-    expect(list.length).toBe(1);
+    expect(list).toHaveLength(2);
     expect(list[0].name).toBe("Bilal");
     expect(list[0].rollNo).toBe("GR-01");
+    expect(list[1].name).toBe("Hamza");
+    expect(list.map((student) => student.id)).not.toContain("std-3");
   });
 });

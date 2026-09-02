@@ -2415,6 +2415,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "enrollments.table.selectEnrollment": "تحديد تسجيل لـ {name}",
   "enrollments.table.viewProfile": "عرض التفاصيل",
   "enrollments.timeline.cancelled": "تم إلغاء التسجيل",
+  "enrollments.timeline.paymentStatusChange": "الدفع → {status}",
   "enrollments.timeline.statusChange": "الحالة → {status}",
   "enrollments.toast.bulkDeleted": "تمت أرشفة {count} تسجيل",
   "enrollments.toast.bulkPartial": "نجح {succeeded}؛ فشل {failed}",

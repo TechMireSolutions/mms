@@ -79,6 +79,7 @@ export default function EnrollmentsPage() {
     handleDelete,
     handleRestore,
     handleStatusChange,
+    handlePaymentStatusChange,
     handleBulkDelete,
     handleBulkRestore,
     handleBulkCancel,
@@ -201,6 +202,7 @@ export default function EnrollmentsPage() {
         wizardTitle={t("enrollments.new")}
         onCloseViewing={() => setViewing(null)}
         onStatusChange={handleStatusChange}
+        onPaymentStatusChange={handlePaymentStatusChange}
         onCloseWizard={() => setShowWizard(false)}
         onCompleteWizard={handleComplete}
         onPendingDeleteChange={setPendingDeleteId}

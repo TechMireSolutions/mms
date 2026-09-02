@@ -90,6 +90,13 @@ export function studentRollNo(student: Student | undefined, studentId: string): 
   return numeric ? `STU-${numeric.padStart(3, "0")}` : studentId;
 }
 
+export function isEnrollmentInAttendanceRoster(
+  enrollment: Enrollment,
+  classId: string,
+): boolean {
+  return enrollment.classId === classId && enrollment.status !== "cancelled";
+}
+
 export function enrolledStudentsForClass(
   classId: string,
   enrollments: Enrollment[],
@@ -102,11 +109,7 @@ export function enrolledStudentsForClass(
   const seen = new Set<string>();
 
   return enrollments
-    .filter((enrollment) =>
-      enrollment.classId === classId &&
-      enrollment.status !== "cancelled" &&
-      enrollment.status !== "completed"
-    )
+    .filter((enrollment) => isEnrollmentInAttendanceRoster(enrollment, classId))
     .flatMap((enrollment) => {
       const studentId = String(enrollment.studentId || "");
       if (!studentId || seen.has(studentId)) return [];
