@@ -17,11 +17,7 @@ export default defineConfig({
     },
     include: ['src/__tests__/**/*.{test,spec}.ts'],
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        isolate: false,
-      },
-    },
+    maxWorkers: 4,
     fileParallelism: true,
     clearMocks: true,
     restoreMocks: true,
