@@ -185,7 +185,7 @@ export function StudentsBulkEnrollModal({
                         {session.name}
                       </p>
                       {session.type && (
-                        <p className="text-[11px] text-muted-foreground truncate capitalize">
+                        <p className="text-3xs text-muted-foreground truncate capitalize">
                           {session.type}
                         </p>
                       )}

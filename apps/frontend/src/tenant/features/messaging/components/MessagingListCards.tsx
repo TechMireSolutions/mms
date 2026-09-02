@@ -135,7 +135,7 @@ export const MessagingListCards = (function MessagingListCards({
                       <p className="text-xs font-mono text-muted-foreground">{formatDateTime(log.sentAt)}</p>
                     )}
                     {categoryKey && (
-                      <span className="text-[10px] px-1.5 py-0.5 bg-muted/60 text-muted-foreground rounded-md font-medium">
+                      <span className="text-2xs px-1.5 py-0.5 bg-muted/60 text-muted-foreground rounded-md font-medium">
                         {t(categoryKey)}
                       </span>
                     )}
@@ -149,7 +149,7 @@ export const MessagingListCards = (function MessagingListCards({
                     <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                       <ChannelBadge channel={log.channel} />
                       {smsSegments && (
-                        <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-1 py-0.5 rounded-md">
+                        <span className="text-2xs font-mono text-muted-foreground bg-muted/60 px-1 py-0.5 rounded-md">
                           {smsSegments.totalSegments} {smsSegments.totalSegments === 1 ? 'seg' : 'segs'}
                         </span>
                       )}
@@ -188,7 +188,7 @@ export const MessagingListCards = (function MessagingListCards({
               </DirectoryCardMetaGrid>
 
               {isFailed && (
-                <div className={`flex items-center gap-1.5 text-[11px] font-medium ${SEMANTIC_TEXT.destructive}`}>
+                <div className={`flex items-center gap-1.5 text-3xs font-medium ${SEMANTIC_TEXT.destructive}`}>
                   <AlertCircle className="h-3 w-3 shrink-0" />
                   <span className="truncate">{t('messaging.loadFailedHint')}</span>
                 </div>

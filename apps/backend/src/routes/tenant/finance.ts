@@ -1,7 +1,7 @@
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { FINANCE_MODULE_MANIFEST, type User, type WidgetQuery, rootContract } from '@mms/shared';
+import { FINANCE_MODULE_MANIFEST, type User, type WidgetQuery, financeContract } from '@mms/shared';
 import { registerStandardExtendedRoutes } from '../../lib/crudStandardRoutes.js';
 
 import { financeUseCases } from '../../finance/use-cases/financeUseCases.js';
@@ -9,6 +9,7 @@ import { canDeleteCollection, canWriteCollection, canReadCollection } from '../.
 import { financeReportRoutes } from './finance/financeReportRoutes.js';
 import { financeSetupConfigRoutes } from './finance/financeSetupConfigRoutes.js';
 import { initServer } from '@ts-rest/fastify';
+import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
 
 const FINANCE_COLLECTION = FINANCE_MODULE_MANIFEST.collectionKey;
@@ -85,20 +86,20 @@ export default async function financeRoutes(
     { prefix: '/api/finance' },
   );
 
-  const router = s.router(rootContract.finance, {
-    listInvoices: async ({ query, request }: any) => {
+  const router = s.router(financeContract, {
+    listInvoices: async ({ query, request }: ContractRouteArgs<typeof financeContract['listInvoices']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true ? true : (query?.includeDeleted === 'false' || query?.includeDeleted === false ? false : undefined);
       if (includeDeleted && !canDeleteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadInvoicesPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadInvoicesPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) } as Parameters<typeof financeUseCases.loadInvoicesPage>[0]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list invoices' } };
       }
     },
-    getInvoice: async ({ params: { id }, request }: any) => {
+    getInvoice: async ({ params: { id }, request }: ContractRouteArgs<typeof financeContract['getInvoice']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -109,7 +110,7 @@ export default async function financeRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load invoice' } };
       }
     },
-    createInvoice: async ({ body, request }: any) => {
+    createInvoice: async ({ body, request }: ContractRouteArgs<typeof financeContract['createInvoice']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -119,18 +120,18 @@ export default async function financeRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create invoice' } };
       }
     },
-    updateInvoice: async ({ params: { id }, body, request }: any) => {
+    updateInvoice: async ({ params: { id }, body, request }: ContractRouteArgs<typeof financeContract['updateInvoice']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.updateInvoiceById(id, body), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.updateInvoiceById(id, body as Parameters<typeof financeUseCases.updateInvoiceById>[1]), { readOnly: false });
         if (!result) return { status: 404 as const, body: { type: 'not_found', message: 'Invoice not found' } };
         return { status: 200 as const, body: { invoice: result } };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update invoice' } };
       }
     },
-    deleteInvoice: async ({ params: { id }, body, request }: any) => {
+    deleteInvoice: async ({ params: { id }, body, request }: ContractRouteArgs<typeof financeContract['deleteInvoice']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -141,19 +142,19 @@ export default async function financeRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete invoice' } };
       }
     },
-    listPayments: async ({ query, request }: any) => {
+    listPayments: async ({ query, request }: ContractRouteArgs<typeof financeContract['listPayments']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true ? true : (query?.includeDeleted === 'false' || query?.includeDeleted === false ? false : undefined);
       if (includeDeleted && !canDeleteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadPaymentsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadPaymentsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) } as Parameters<typeof financeUseCases.loadPaymentsPage>[0]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list payments' } };
       }
     },
-    getPayment: async ({ params: { id }, request }: any) => {
+    getPayment: async ({ params: { id }, request }: ContractRouteArgs<typeof financeContract['getPayment']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -164,7 +165,7 @@ export default async function financeRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load payment' } };
       }
     },
-    createPayment: async ({ body, request }: any) => {
+    createPayment: async ({ body, request }: ContractRouteArgs<typeof financeContract['createPayment']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -174,18 +175,18 @@ export default async function financeRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create payment' } };
       }
     },
-    updatePayment: async ({ params: { id }, body, request }: any) => {
+    updatePayment: async ({ params: { id }, body, request }: ContractRouteArgs<typeof financeContract['updatePayment']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.updatePaymentById(id, body), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.updatePaymentById(id, body as Parameters<typeof financeUseCases.updatePaymentById>[1]), { readOnly: false });
         if (!result) return { status: 404 as const, body: { type: 'not_found', message: 'Payment not found' } };
         return { status: 200 as const, body: { payment: result } };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update payment' } };
       }
     },
-    deletePayment: async ({ params: { id }, body, request }: any) => {
+    deletePayment: async ({ params: { id }, body, request }: ContractRouteArgs<typeof financeContract['deletePayment']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -197,7 +198,7 @@ export default async function financeRoutes(
       }
     },
 
-    bulkDeleteInvoices: async ({ body, request }: any) => {
+    bulkDeleteInvoices: async ({ body, request }: ContractRouteArgs<typeof financeContract['bulkDeleteInvoices']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -209,7 +210,7 @@ export default async function financeRoutes(
       }
     },
 
-    bulkRestoreInvoices: async ({ body, request }: any) => {
+    bulkRestoreInvoices: async ({ body, request }: ContractRouteArgs<typeof financeContract['bulkRestoreInvoices']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -221,7 +222,7 @@ export default async function financeRoutes(
       }
     },
 
-    bulkStatusInvoices: async ({ body, request }: any) => {
+    bulkStatusInvoices: async ({ body, request }: ContractRouteArgs<typeof financeContract['bulkStatusInvoices']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -233,7 +234,7 @@ export default async function financeRoutes(
       }
     },
 
-    bulkDeletePayments: async ({ body, request }: any) => {
+    bulkDeletePayments: async ({ body, request }: ContractRouteArgs<typeof financeContract['bulkDeletePayments']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -245,7 +246,7 @@ export default async function financeRoutes(
       }
     },
 
-    bulkRestorePayments: async ({ body, request }: any) => {
+    bulkRestorePayments: async ({ body, request }: ContractRouteArgs<typeof financeContract['bulkRestorePayments']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -257,7 +258,7 @@ export default async function financeRoutes(
       }
     },
 
-    getMetrics: async ({ request }: any) => {
+    getMetrics: async ({ request }: ContractRouteArgs<typeof financeContract['getMetrics']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -266,7 +267,7 @@ export default async function financeRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load finance metrics' } };
       }
     },
-    widgetAggregates: async ({ body, request }: any) => {
+    widgetAggregates: async ({ body, request }: ContractRouteArgs<typeof financeContract['widgetAggregates']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
@@ -277,9 +278,7 @@ export default async function financeRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
-    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
-    //  tracked by the separate contract-router signature refactor)
-  } as any);
+  } as unknown as Parameters<typeof s.router>[1]);
 
   await fastify.register(s.plugin(router));
 }

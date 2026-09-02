@@ -185,7 +185,7 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
                 />
               </div>
             </div>
-            <div className={cn("divide-y divide-border/50 max-h-[600px] overflow-y-auto", CARD_STRIPE_INSET)} role="list">
+            <div className={cn("divide-y divide-border/50 max-h-150 overflow-y-auto", CARD_STRIPE_INSET)} role="list">
               {filteredStudents.length === 0 ? (
                 <div className="p-8 text-center text-sm text-muted-foreground">
                   {t("examinations.empty.results")}

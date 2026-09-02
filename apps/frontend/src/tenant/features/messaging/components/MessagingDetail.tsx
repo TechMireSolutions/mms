@@ -107,7 +107,7 @@ export const MessagingDetail = (function MessagingDetail({
       size="md"
       footer={
         <div className="flex w-full items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-mono">
+          <div className="flex items-center gap-1.5 text-3xs text-muted-foreground font-mono">
             <span>#{String(log.id).slice(0, 10)}</span>
             <Button
               variant="ghost"
@@ -209,7 +209,7 @@ export const MessagingDetail = (function MessagingDetail({
             )}
             <div className="p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-[11px] font-mono text-muted-foreground">
+                <span className="text-3xs font-mono text-muted-foreground">
                   {smsStats
                     ? t('messaging.smsSegmentStats', {
                       segments: smsStats.totalSegments,

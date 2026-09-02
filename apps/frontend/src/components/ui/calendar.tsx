@@ -35,7 +35,7 @@ function Calendar({
         ),
         month_grid: "w-full border-collapse space-y-1",
         weekdays: "flex justify-around border-b border-border/40 pb-1.5 mb-1",
-        weekday: "text-muted-foreground/70 font-semibold text-[11px] uppercase tracking-wider w-8 text-center select-none",
+        weekday: "text-muted-foreground/70 font-semibold text-3xs uppercase tracking-wider w-8 text-center select-none",
         week: "flex w-full mt-1 justify-around",
         day: cn(
           "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",

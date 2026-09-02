@@ -181,12 +181,12 @@ export const MessagingListDesktopTable = (function MessagingListDesktopTable({
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <ChannelBadge channel={log.channel} />
                         {categoryKey && (
-                          <span className="text-[10px] px-1.5 py-0.5 bg-muted/60 text-muted-foreground rounded-md font-medium">
+                          <span className="text-2xs px-1.5 py-0.5 bg-muted/60 text-muted-foreground rounded-md font-medium">
                             {t(categoryKey)}
                           </span>
                         )}
                         {smsSegments && (
-                          <span className="text-[10px] font-mono text-muted-foreground bg-muted/60 px-1 py-0.5 rounded-md">
+                          <span className="text-2xs font-mono text-muted-foreground bg-muted/60 px-1 py-0.5 rounded-md">
                             {smsSegments.totalSegments} {smsSegments.totalSegments === 1 ? 'seg' : 'segs'}
                           </span>
                         )}

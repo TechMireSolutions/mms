@@ -6,11 +6,12 @@ import {
   roleHasPermission,
   type User,
   type Student,
-  rootContract,
+  studentContract,
 } from '@mms/shared';
 import { validateStudentDynamic } from '../../../services/studentValidationService.js';
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
 import { initServer } from '@ts-rest/fastify';
+import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
 import { StudentPermissionError } from '../../../students/use-cases/studentNormalizeUseCases.js';
 import {
   auditStudent,
@@ -22,8 +23,8 @@ const s = initServer();
 
 /** Main student CRUD — @ts-rest contract router. */
 export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
-  const router = s.router(rootContract.students, {
-    list: async ({ query, request }: any) => {
+  const router = s.router(studentContract, {
+    list: async ({ query, request }: ContractRouteArgs<typeof studentContract['list']>): Promise<unknown> => {
       const user = request.user as User;
 
       if (!canReadCollection(user, 'students')) {
@@ -39,7 +40,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const result = await withTenant(String(request.tenant?.id), () => studentUseCases.loadStudentsPage({
         ...query,
         includeDeleted,
-      }), { readOnly: true });
+      } as Parameters<typeof studentUseCases.loadStudentsPage>[0]), { readOnly: true });
 
       return {
         status: 200 as const,
@@ -50,7 +51,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       };
     },
 
-    get: async ({ params: { id }, query, request }: any) => {
+    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof studentContract['get']>): Promise<unknown> => {
       const user = request.user as User;
 
       if (!canReadCollection(user, 'students')) {
@@ -58,7 +59,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const includeDeleted = query.includeDeleted === true || query.includeDeleted === 'true';
+        const includeDeleted = (query as { includeDeleted?: boolean | 'true' | 'false' }).includeDeleted === true || (query as { includeDeleted?: boolean | 'true' | 'false' }).includeDeleted === 'true';
         if (includeDeleted && !canDeleteCollection(user, 'students')) {
           return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
         }
@@ -73,7 +74,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    create: async ({ body, request }: any) => {
+    create: async ({ body, request }: ContractRouteArgs<typeof studentContract['create']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -100,7 +101,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         const result = await withTenant(String(tenant), () => studentUseCases.createStudent(
           // (typed as User & { workspaceId? } because the legacy JWT payload may carry workspaceId;
           //  it is not on the shared User type)
-          { ...body, workspaceId: (user as User & { workspaceId?: string }).workspaceId } as never,
+          { ...(body as Record<string, unknown>), workspaceId: (user as User & { workspaceId?: string }).workspaceId } as unknown as Parameters<typeof studentUseCases.createStudent>[0],
           user,
         ), { readOnly: false });
 
@@ -132,7 +133,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    update: async ({ params: { id }, body, request }: any) => {
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentContract['update']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -156,9 +157,9 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const updated = await withTenant(String(tenant), () => studentUseCases.updateStudentById(id, {
-          ...body,
+          ...(body as Record<string, unknown>),
           id,
-        } as never), { readOnly: false });
+        } as unknown as Parameters<typeof studentUseCases.updateStudentById>[1]), { readOnly: false });
 
         if (!updated) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Student not found' } };
@@ -172,7 +173,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    delete: async ({ params: { id }, body, request }: any) => {
+    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentContract['delete']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -194,21 +195,22 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    bulkStatus: async ({ body, request }: any) => {
+    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkStatus']>): Promise<unknown> => {
       const user = request.user as User;
+      const { ids, status } = body as { ids: (string | number)[]; status: string };
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           studentUseCases.bulkUpdateStudentStatus(
-            body.ids.map(String),
-            body.status,
+            ids.map(String),
+            status,
           ), { readOnly: false });
         await auditStudent(
           user,
           'student.bulk_status',
-          `Updated status to ${body.status} for ${result.succeeded} student(s); ${result.failed} failed`,
+          `Updated status to ${status} for ${result.succeeded} student(s); ${result.failed} failed`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -216,22 +218,23 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    bulkEnroll: async ({ body, request }: any) => {
+    bulkEnroll: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkEnroll']>): Promise<unknown> => {
       const user = request.user as User;
+      const { studentIds, sessionIds, mode } = body as { studentIds: (string | number)[]; sessionIds: (string | number)[]; mode: string };
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           studentUseCases.bulkEnrollStudents({
-            studentIds: body.studentIds.map(String),
-            sessionIds: body.sessionIds.map(String),
-            mode: body.mode,
+            studentIds: studentIds.map(String),
+            sessionIds: sessionIds.map(String),
+            mode: mode as 'add' | 'remove' | 'replace',
           }), { readOnly: false });
         await auditStudent(
           user,
           'student.bulk_enroll',
-          `Updated session enrollments (${body.mode}) for ${result.succeeded} student(s)`,
+          `Updated session enrollments (${mode}) for ${result.succeeded} student(s)`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -239,7 +242,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    nextGrNumber: async ({ query, request }: any) => {
+    nextGrNumber: async ({ query, request }: ContractRouteArgs<typeof studentContract['nextGrNumber']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -257,21 +260,21 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    duplicateCheck: async ({ body, request }: any) => {
+    duplicateCheck: async ({ body, request }: ContractRouteArgs<typeof studentContract['duplicateCheck']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          studentUseCases.checkStudentRegistrationDuplicate(body as never), { readOnly: false });
+          studentUseCases.checkStudentRegistrationDuplicate(body as Parameters<typeof studentUseCases.checkStudentRegistrationDuplicate>[0]), { readOnly: false });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to check duplicate' } };
       }
     },
 
-    migrateGrNumbers: async ({ request }: any) => {
+    migrateGrNumbers: async ({ request }: ContractRouteArgs<typeof studentContract['migrateGrNumbers']>): Promise<unknown> => {
       const user = request.user as User;
       if (!roleHasPermission(user.role, STUDENTS_MODULE_MANIFEST.permissions.setupWrite)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -284,9 +287,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate GR numbers' } };
       }
     },
-    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
-    //  tracked by the separate contract-router signature refactor)
-  } as any);
+  } as unknown as Parameters<typeof s.router>[1]);
 
   await fastify.register(s.plugin(router));
 };

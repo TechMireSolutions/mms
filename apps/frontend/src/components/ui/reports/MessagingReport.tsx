@@ -215,7 +215,7 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
                     </div>
                     <div className="text-end">
                       <span className={`font-bold text-sm ${SEMANTIC_TEXT[config.themeAccent as keyof typeof SEMANTIC_TEXT]}`}>{count}</span>
-                      <span className="text-[11px] font-mono text-muted-foreground ms-1.5">({calcPercentage(count)})</span>
+                      <span className="text-3xs font-mono text-muted-foreground ms-1.5">({calcPercentage(count)})</span>
                     </div>
                   </div>
                 );

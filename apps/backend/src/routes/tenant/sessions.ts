@@ -1,7 +1,8 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { initServer } from '@ts-rest/fastify';
+import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
-import { rootContract } from '@mms/shared';
+import { sessionContract } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../services/rbacService.js';
@@ -57,8 +58,8 @@ export default async function sessionsRoutes(
   );
 
   const s = initServer();
-  const sessionsBulkRouter = s.router(rootContract.sessions, {
-    list: async ({ query, request }: any) => {
+  const sessionsBulkRouter = s.router(sessionContract, {
+    list: async ({ query, request }: ContractRouteArgs<typeof sessionContract['list']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -67,13 +68,13 @@ export default async function sessionsRoutes(
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) } as Parameters<typeof sessionsUseCases.loadSessionsPage>[0]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list sessions' } };
       }
     },
-    create: async ({ body, request }: any) => {
+    create: async ({ body, request }: ContractRouteArgs<typeof sessionContract['create']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -85,7 +86,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create session' } };
       }
     },
-    bulkDelete: async ({ body, request }: any) => {
+    bulkDelete: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkDelete']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -96,7 +97,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete sessions' } };
       }
     },
-    bulkStatus: async ({ body, request }: any) => {
+    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkStatus']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -107,7 +108,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update session status' } };
       }
     },
-    bulkRestore: async ({ body, request }: any) => {
+    bulkRestore: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkRestore']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -118,9 +119,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore sessions' } };
       }
     },
-    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
-    //  tracked by the separate contract-router signature refactor)
-  } as any);
+  } as unknown as Parameters<typeof s.router>[1]);
 
   await fastify.register(s.plugin(sessionsBulkRouter));
 }

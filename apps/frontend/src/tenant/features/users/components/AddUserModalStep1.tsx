@@ -115,7 +115,7 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
                   onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                   className="h-8 text-xs bg-background"
                 />
-                <p className="text-[11px] text-muted-foreground">{t("users.addErrorContactEmail")}</p>
+                <p className="text-3xs text-muted-foreground">{t("users.addErrorContactEmail")}</p>
                 <FieldError msg={errors.email} />
               </div>
             )}

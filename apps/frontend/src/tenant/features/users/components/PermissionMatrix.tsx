@@ -130,7 +130,7 @@ export function PermissionMatrix({
     <div className={WORK_SURFACE}>
       {/* Top Toolbar with Search & Metrics */}
       <div className="flex flex-wrap items-center justify-between gap-2.5 p-3 border-b border-border/40">
-        <div className="relative flex-1 min-w-[180px] max-w-xs">
+        <div className="relative flex-1 min-w-search max-w-xs">
           <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" aria-hidden />
           <Input
             type="search"

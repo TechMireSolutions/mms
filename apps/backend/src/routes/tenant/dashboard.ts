@@ -2,13 +2,14 @@ import type { FastifyPluginAsync } from 'fastify';
 import {
   DASHBOARD_MODULE_MANIFEST,
   roleHasPermission,
-  rootContract,
+  dashboardContract,
   normalizeDashboardPreferences,
   type DashboardPreferences,
   type DashboardWidgetDto,
   type User,
 } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
+import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { withTenant } from '../../db/tenant-context.js';
 import { requireTenant } from '../../lib/tenantContext.js';
@@ -80,7 +81,7 @@ async function handleDashboardWrite<T>(
   return { ok: true, data };
 }
 
-const dashboardRouter = s.router(rootContract.dashboard, {
+const dashboardRouter = s.router(dashboardContract, {
   getPreferences: async () =>
     handleDashboardRead(
       async () => {
@@ -90,7 +91,7 @@ const dashboardRouter = s.router(rootContract.dashboard, {
       'Failed to load dashboard preferences',
     ),
 
-  putPreferences: async ({ body, request }: any) => {
+  putPreferences: async ({ body, request }: ContractRouteArgs<typeof dashboardContract['putPreferences']>): Promise<unknown> => {
     try {
       const result = await handleDashboardWrite(request, async (user) => {
         const saved = await saveDashboardPreferences(
@@ -120,7 +121,7 @@ const dashboardRouter = s.router(rootContract.dashboard, {
       'Failed to load dashboard widgets',
     ),
 
-  putWidgets: async ({ body, request }: any) => {
+  putWidgets: async ({ body, request }: ContractRouteArgs<typeof dashboardContract['putWidgets']>): Promise<unknown> => {
     try {
       const result = await handleDashboardWrite(request, async (user) => {
         const widgets = await upsertDashboardWidgets(body as DashboardWidgetDto[]);
@@ -139,8 +140,8 @@ const dashboardRouter = s.router(rootContract.dashboard, {
     }
   },
 
-  deleteWidget: async ({ params: { id }, request }: any) => {
-    if (!id?.trim()) {
+  deleteWidget: async ({ params: { id }, request }: ContractRouteArgs<typeof dashboardContract['deleteWidget']>): Promise<unknown> => {
+    if (!(id as string)?.trim()) {
       return {
         status: 400 as const,
         body: { type: 'validation_error', message: 'Widget id is required' },
@@ -163,7 +164,7 @@ const dashboardRouter = s.router(rootContract.dashboard, {
     }
   },
 
-  reorderWidgets: async ({ body, request }: any) => {
+  reorderWidgets: async ({ body, request }: ContractRouteArgs<typeof dashboardContract['reorderWidgets']>): Promise<unknown> => {
     try {
       const result = await handleDashboardWrite(request, async () => {
         await reorderDashboardWidgets(body.order);
@@ -186,9 +187,7 @@ const dashboardRouter = s.router(rootContract.dashboard, {
       },
       'Failed to load dashboard summary',
     ),
-  // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
-  //  tracked by the separate contract-router signature refactor)
-} as any);
+} as unknown as Parameters<typeof s.router>[1]);
 
 /**
  * Server-authoritative dashboard layout/preferences + pinned widgets REST.

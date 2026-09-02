@@ -104,6 +104,14 @@ export default tseslint.config(
           selector: "Literal[value=/#ef4444|#047857|#f59e0b/]",
           message: "Use branding palette or semanticTone tokens instead of hardcoded hex.",
         },
+        {
+          selector: "Literal[value=/\\btext-\\[1[01]px\\]/]",
+          message: "Use text-2xs (10px) or text-3xs (11px) micro-typography tokens.",
+        },
+        {
+          selector: "Literal[value=/\\bmin-h-\\[44px\\]/]",
+          message: "Use min-h-11 for 44px touch floor target.",
+        },
       ],
     },
   },

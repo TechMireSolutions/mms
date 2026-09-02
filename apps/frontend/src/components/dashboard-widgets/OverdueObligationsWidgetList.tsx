@@ -135,7 +135,7 @@ export function OverdueObligationsWidgetList({
                     <TableCell className="px-3 py-3">
                       <div className="flex items-center gap-1.5 min-w-0">
                         <Scale className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-                        <span className="text-xs text-foreground font-medium truncate max-w-[140px]">{overdueStudent.obligationType}</span>
+                        <span className="text-xs text-foreground font-medium truncate max-w-36">{overdueStudent.obligationType}</span>
                       </div>
                     </TableCell>
                     <TableCell className="px-3 py-3">

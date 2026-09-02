@@ -45,7 +45,7 @@ export function StatisticsGrid({
         {Array.from({ length: 4 }).map((_, idx) => (
           <div
             key={`stat-skeleton-${idx}`}
-            className="rounded-2xl border border-border/40 bg-card/20 p-5 min-h-[130px] flex flex-col justify-between animate-pulse select-none"
+            className="rounded-2xl border border-border/40 bg-card/20 p-5 min-h-32 flex flex-col justify-between animate-pulse select-none"
           >
             <div className="flex items-center justify-between">
               <div className="w-8 h-8 rounded-lg bg-muted/60" />

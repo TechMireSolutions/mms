@@ -36,12 +36,12 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
   return (
     <div className="max-h-72 overflow-y-auto pe-1 space-y-3">
       {!isSearching && (showAll || hideAll) && (hasNonFixedHidden || hasNonFixedVisible) && (
-        <div className="flex items-center justify-between gap-1 pb-1 border-b border-border/40 text-[11px]">
+        <div className="flex items-center justify-between gap-1 pb-1 border-b border-border/40 text-3xs">
           {showAll && hasNonFixedHidden ? (
             <button
               type="button"
               onClick={showAll}
-              className="text-[11px] font-medium text-primary hover:underline transition-colors cursor-pointer"
+              className="text-3xs font-medium text-primary hover:underline transition-colors cursor-pointer"
             >
               {labels.showAll || 'Show all'}
             </button>
@@ -52,7 +52,7 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
             <button
               type="button"
               onClick={hideAll}
-              className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="text-3xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               {labels.hideAll || 'Hide all'}
             </button>
@@ -62,7 +62,7 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
 
       {visibleColumns.length > 0 && (
         <div className="space-y-1">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-3xs font-bold text-muted-foreground uppercase tracking-wider block">
             {labels.visibleAndOrder}
           </span>
           {visibleColumns.map((col) => (
@@ -99,7 +99,7 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
               />
               <span className="flex-1 text-xs font-medium text-foreground text-start truncate">{col.label}</span>
               {col.fixed ? (
-                <span className="text-[10px] uppercase font-bold text-muted-foreground bg-muted/80 px-1.5 py-0.5 rounded tracking-wider">{labels.fixed}</span>
+                <span className="text-2xs uppercase font-bold text-muted-foreground bg-muted/80 px-1.5 py-0.5 rounded tracking-wider">{labels.fixed}</span>
               ) : (
                 <button
                   type="button"
@@ -121,7 +121,7 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
 
       {hiddenColumns.length > 0 && (
         <div className="space-y-1 pt-1 border-t border-border/50">
-          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-3xs font-bold text-muted-foreground uppercase tracking-wider block">
             {labels.hidden}
           </span>
           {hiddenColumns.map((col) => (

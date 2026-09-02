@@ -1,7 +1,8 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import type { User, UsersListQuery, WorkspaceUser } from '@mms/shared';
-import { rootContract } from '@mms/shared';
+import { userContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
+import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { usersUseCases } from '../../../users/use-cases/usersUseCases.js';
 import { AUTH_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
@@ -75,8 +76,8 @@ function handleUserRouterError(
 
 export const userContractRouter: FastifyPluginAsync = async (fastify) => {
   const resetPasswordRateLimit = fastify.rateLimit(AUTH_RATE_LIMIT);
-  const router = s.router(rootContract.users, {
-    list: async ({ query, request }: any) => {
+  const router = s.router(userContract, {
+    list: async ({ query, request }: ContractRouteArgs<typeof userContract['list']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -92,7 +93,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleUserRouterError(err, request, 'Failed to list users');
       }
     },
-    create: async ({ body, request }: any) => {
+    create: async ({ body, request }: ContractRouteArgs<typeof userContract['create']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -104,7 +105,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleUserRouterError(err, request, 'Failed to create workspace user');
       }
     },
-    update: async ({ params: { id }, body, request }: any) => {
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof userContract['update']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -116,7 +117,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleUserRouterError(err, request, 'Failed to update workspace user');
       }
     },
-    invite: async ({ body, request }: any) => {
+    invite: async ({ body, request }: ContractRouteArgs<typeof userContract['invite']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -128,7 +129,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleUserRouterError(err, request, 'Failed to invite workspace user');
       }
     },
-    bulkUpdate: async ({ body, request }: any) => {
+    bulkUpdate: async ({ body, request }: ContractRouteArgs<typeof userContract['bulkUpdate']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -140,7 +141,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleUserRouterError(err, request, 'Failed to update workspace users');
       }
     },
-    bulkDelete: async ({ body, request }: any) => {
+    bulkDelete: async ({ body, request }: ContractRouteArgs<typeof userContract['bulkDelete']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -152,7 +153,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleUserRouterError(err, request, 'Failed to bulk delete users');
       }
     },
-    bulkRestore: async ({ body, request }: any) => {
+    bulkRestore: async ({ body, request }: ContractRouteArgs<typeof userContract['bulkRestore']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -164,7 +165,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleUserRouterError(err, request, 'Failed to bulk restore users');
       }
     },
-    delete: async ({ params: { id }, request }: any) => {
+    delete: async ({ params: { id }, request }: ContractRouteArgs<typeof userContract['delete']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -177,7 +178,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleUserRouterError(error, request, 'Failed to delete user');
       }
     },
-    restore: async ({ params: { id }, request }: any) => {
+    restore: async ({ params: { id }, request }: ContractRouteArgs<typeof userContract['restore']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -190,7 +191,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleUserRouterError(err, request, 'Failed to restore user');
       }
     },
-    verifyEmail: async ({ params: { id }, request }: any) => {
+    verifyEmail: async ({ params: { id }, request }: ContractRouteArgs<typeof userContract['verifyEmail']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -213,7 +214,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
           await resetPasswordRateLimit.call(fastify, request, reply);
         },
       },
-      handler: async ({ params: { id }, body, request }: any) => {
+      handler: async ({ params: { id }, body, request }: ContractRouteArgs<typeof userContract['resetPassword']>): Promise<unknown> => {
         let actorUserId = 'unknown';
         try {
           markRequestDiagnosticStage(request, 'authorization');
@@ -265,7 +266,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         }
       },
     },
-  } as any);
+  } as unknown as Parameters<typeof s.router>[1]);
 
   await fastify.register(s.plugin(router));
 };

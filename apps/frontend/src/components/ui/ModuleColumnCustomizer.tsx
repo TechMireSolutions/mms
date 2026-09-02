@@ -162,7 +162,7 @@ export const ModuleColumnCustomizer = (function ModuleColumnCustomizer({
           <Columns3 className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{resolvedLabels.trigger}</span>
           {hiddenCount > 0 && (
-            <span className="ms-0.5 px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-primary/10 text-primary border border-primary/20">
+            <span className="ms-0.5 px-1.5 py-0.2 rounded-full text-2xs font-semibold bg-primary/10 text-primary border border-primary/20">
               {columnRegistry.length - hiddenCount}/{columnRegistry.length}
             </span>
           )}
@@ -174,7 +174,7 @@ export const ModuleColumnCustomizer = (function ModuleColumnCustomizer({
             <h4 className="min-w-0 text-xs font-bold text-foreground uppercase tracking-wide">
               {resolvedLabels.title}
             </h4>
-            <span className="text-[11px] text-muted-foreground font-medium">
+            <span className="text-3xs text-muted-foreground font-medium">
               ({resolvedLabels.visibleCount ? resolvedLabels.visibleCount(columnRegistry.length - hiddenCount, columnRegistry.length) : `${columnRegistry.length - hiddenCount}/${columnRegistry.length}`})
             </span>
           </div>
@@ -184,7 +184,7 @@ export const ModuleColumnCustomizer = (function ModuleColumnCustomizer({
               variant="ghost"
               size="sm"
               onClick={onResetLayout}
-              className="h-7 px-2 text-[11px] text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1"
+              className="px-2 text-3xs text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1"
               title={resolvedLabels.reset}
             >
               <RotateCcw className="w-3 h-3" />

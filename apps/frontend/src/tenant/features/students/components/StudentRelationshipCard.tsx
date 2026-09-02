@@ -102,11 +102,11 @@ export function StudentRelationshipCard({
           />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider", badgeTone)}>
+              <span className={cn("inline-flex items-center px-1.5 py-0.5 rounded text-2xs font-bold uppercase tracking-wider", badgeTone)}>
                 {badgeCode || relationshipLabel}
               </span>
               {inferred && (
-                <span className="text-[10px] font-medium text-muted-foreground bg-muted/80 px-1.5 py-0.5 rounded">
+                <span className="text-2xs font-medium text-muted-foreground bg-muted/80 px-1.5 py-0.5 rounded">
                   {t("students.detail.inferred")}
                 </span>
               )}
@@ -147,7 +147,7 @@ export function StudentRelationshipCard({
                 <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
                 <span className="font-mono text-foreground truncate" title={phone.number}>{phone.number}</span>
                 {phone.label && (
-                  <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                  <span className="text-2xs text-muted-foreground font-medium uppercase tracking-tight">
                     {phone.label}
                   </span>
                 )}
@@ -184,7 +184,7 @@ export function StudentRelationshipCard({
                 <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
                 <span className="text-foreground truncate" title={email.address}>{email.address}</span>
                 {email.label && (
-                  <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                  <span className="text-2xs text-muted-foreground font-medium uppercase tracking-tight">
                     {email.label}
                   </span>
                 )}

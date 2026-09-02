@@ -83,7 +83,7 @@ export function OutstandingFeesTableDesktopBody({
                     <span className="text-sm font-semibold text-foreground truncate">{outstandingFee.student}</span>
                   </div>
                 </TableCell>
-                <TableCell className="px-3 py-3 text-sm text-muted-foreground/80 font-medium hidden sm:table-cell truncate max-w-[140px]">
+                <TableCell className="px-3 py-3 text-sm text-muted-foreground/80 font-medium hidden sm:table-cell truncate max-w-36">
                   {outstandingFee.class}
                 </TableCell>
                 <TableCell className="px-3 py-3">

@@ -51,7 +51,7 @@ export function YearPickerGrid({
   })()
 
   return (
-    <div className={cn("w-[270px] sm:w-[280px] p-3 select-none", className)}>
+    <div className={cn("w-68 sm:w-72 p-3 select-none", className)}>
       {/* Header with Decade Range and Navigation */}
       <div className="flex items-center justify-between pb-2 border-b border-border/40 mb-2">
         <button

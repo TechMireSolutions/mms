@@ -90,7 +90,7 @@ export function TeacherDetailSessionsSection({
                   </h5>
                 </div>
                 {typeLabel ? (
-                  <FormFooterBadge tone="primary" className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider shrink-0">
+                  <FormFooterBadge tone="primary" className="px-2 py-0.5 rounded-full text-2xs font-bold uppercase tracking-wider shrink-0">
                     {typeLabel}
                   </FormFooterBadge>
                 ) : null}
@@ -102,13 +102,13 @@ export function TeacherDetailSessionsSection({
                     {item.sessionName}
                   </span>
                   {item.sessionStatus && (
-                    <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
+                    <span className="text-2xs uppercase font-bold text-muted-foreground tracking-wider">
                       {item.sessionStatus}
                     </span>
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px] text-muted-foreground border-t border-border/40">
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-3xs text-muted-foreground border-t border-border/40">
                   {item.room ? (
                     <div className="flex items-center gap-1">
                       <DoorOpen className="w-3.5 h-3.5 text-primary/70" aria-hidden />

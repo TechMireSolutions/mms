@@ -86,7 +86,7 @@ export function StudentDetailSiblingsSection({
                       )}
                     </div>
                     {sibling.sessionNames.length > 0 && (
-                      <p className="text-[11px] text-muted-foreground truncate mt-0.5" title={sibling.sessionNames.join(", ")}>
+                      <p className="text-3xs text-muted-foreground truncate mt-0.5" title={sibling.sessionNames.join(", ")}>
                         {sibling.sessionNames.join(", ")}
                       </p>
                     )}

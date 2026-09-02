@@ -93,13 +93,13 @@ export function MessagingFiltersMenuButton({
         <div className="flex items-center justify-between">
           <span className="text-xs font-semibold text-muted-foreground">{t('messaging.dateSent')}</span>
         </div>
-        <div className="flex flex-wrap gap-1">
+        <div className="flex flex-wrap gap-1.5">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={() => handlePresetDate(0)}
-            className="h-6 px-2 text-[11px]"
+            className="min-h-11 px-3 text-3xs font-medium"
           >
             {t('datePicker.today')}
           </Button>
@@ -108,7 +108,7 @@ export function MessagingFiltersMenuButton({
             variant="outline"
             size="sm"
             onClick={() => handlePresetDate(7)}
-            className="h-6 px-2 text-[11px]"
+            className="min-h-11 px-3 text-3xs font-medium"
           >
             {t('messaging.datePreset7d')}
           </Button>
@@ -117,7 +117,7 @@ export function MessagingFiltersMenuButton({
             variant="outline"
             size="sm"
             onClick={() => handlePresetDate(30)}
-            className="h-6 px-2 text-[11px]"
+            className="min-h-11 px-3 text-3xs font-medium"
           >
             {t('messaging.datePreset30d')}
           </Button>
@@ -127,7 +127,7 @@ export function MessagingFiltersMenuButton({
               variant="ghost"
               size="sm"
               onClick={clearDates}
-              className="h-6 px-2 text-[11px] text-muted-foreground hover:text-foreground"
+              className="min-h-11 px-3 text-3xs font-medium text-muted-foreground hover:text-foreground"
             >
               {t('datePicker.clear')}
             </Button>

@@ -76,15 +76,15 @@ export function StudentIdCardModal({
           {items.map(({ student, sessionNames, guardianName, emergencyPhone, bloodGroup }) => (
             <div
               key={student.id}
-              className="id-card-preview relative border border-border/80 rounded-2xl p-4 bg-gradient-to-br from-card via-card/95 to-muted/30 shadow-sm overflow-hidden flex flex-col justify-between min-h-[220px]"
+              className="id-card-preview relative border border-border/80 rounded-2xl p-4 bg-gradient-to-br from-card via-card/95 to-muted/30 shadow-sm overflow-hidden flex flex-col justify-between min-h-panel-sm"
             >
               {/* Header */}
               <div className="flex items-center justify-between border-b border-border/40 pb-2.5 mb-3">
                 <div className="min-w-0">
-                  <h4 className="text-[13px] font-bold text-foreground truncate tracking-tight">
+                  <h4 className="text-xs font-bold text-foreground truncate tracking-tight">
                     {madrasaName}
                   </h4>
-                  <p className="text-[10px] uppercase font-semibold text-primary tracking-wider">
+                  <p className="text-2xs uppercase font-semibold text-primary tracking-wider">
                     {t("students.idCard.title")}
                   </p>
                 </div>
@@ -102,7 +102,7 @@ export function StudentIdCardModal({
                     className="w-16 h-16 rounded-xl border-2 border-primary/30 shadow-inner font-bold text-sm"
                   />
                   {bloodGroup && (
-                    <span className="mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20">
+                    <span className="mt-1.5 text-4xs font-bold px-1.5 py-0.5 rounded bg-destructive/10 text-destructive border border-destructive/20">
                       {bloodGroup}
                     </span>
                   )}
@@ -114,13 +114,13 @@ export function StudentIdCardModal({
                   </h3>
 
                   {sessionNames.length > 0 && (
-                    <p className="text-[11px] font-medium text-primary truncate">
+                    <p className="text-3xs font-medium text-primary truncate">
                       {sessionNames.join(", ")}
                     </p>
                   )}
 
                   {(guardianName || student.fatherName) && (
-                    <div className="text-[11px] text-muted-foreground truncate">
+                    <div className="text-3xs text-muted-foreground truncate">
                       <span className="font-semibold text-foreground/80">
                         {t("students.idCard.guardian")}:{" "}
                       </span>
@@ -129,7 +129,7 @@ export function StudentIdCardModal({
                   )}
 
                   {(emergencyPhone || student.phone) && (
-                    <div className="text-[11px] text-muted-foreground truncate">
+                    <div className="text-3xs text-muted-foreground truncate">
                       <span className="font-semibold text-foreground/80">
                         {t("students.idCard.emergencyContact")}:{" "}
                       </span>
@@ -138,7 +138,7 @@ export function StudentIdCardModal({
                   )}
 
                   {student.dob && (
-                    <div className="text-[10px] text-muted-foreground truncate">
+                    <div className="text-2xs text-muted-foreground truncate">
                       <span>{t("students.columns.dob")}: {student.dob}</span>
                     </div>
                   )}
@@ -146,8 +146,8 @@ export function StudentIdCardModal({
               </div>
 
               {/* Footer / Barcode & Issue Date */}
-              <div className="flex items-center justify-between border-t border-border/40 pt-2 mt-3 text-[9px] text-muted-foreground">
-                <div className="flex items-center gap-1 font-mono tracking-widest text-[9px] uppercase">
+              <div className="flex items-center justify-between border-t border-border/40 pt-2 mt-3 text-4xs text-muted-foreground">
+                <div className="flex items-center gap-1 font-mono tracking-widest text-4xs uppercase">
                   <span>ID: {String(student.id).slice(0, 10)}</span>
                 </div>
                 <div>

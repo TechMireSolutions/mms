@@ -61,7 +61,7 @@ export const ModuleFiltersMenuTrigger = (forwardRef<HTMLButtonElement, ModuleFil
           <Icon className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{label}</span>
           {isActive ? (
-            <Badge className="min-w-4 h-4 px-1 text-[10px] font-bold inline-flex items-center justify-center">
+            <Badge className="min-w-4 h-4 px-1 text-2xs font-bold inline-flex items-center justify-center">
               {activeCount}
             </Badge>
           ) : null}

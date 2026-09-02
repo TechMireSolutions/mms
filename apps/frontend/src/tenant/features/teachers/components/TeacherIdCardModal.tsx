@@ -78,15 +78,15 @@ export function TeacherIdCardModal({
             return (
               <div
                 key={teacher.id}
-                className="id-card-preview relative border border-border/80 rounded-2xl p-4 bg-gradient-to-br from-card via-card/95 to-muted/30 shadow-sm overflow-hidden flex flex-col justify-between min-h-[220px]"
+                className="id-card-preview relative border border-border/80 rounded-2xl p-4 bg-gradient-to-br from-card via-card/95 to-muted/30 shadow-sm overflow-hidden flex flex-col justify-between min-h-panel-sm"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border/40 pb-2.5 mb-3">
                   <div className="min-w-0">
-                    <h4 className="text-[13px] font-bold text-foreground truncate tracking-tight">
+                    <h4 className="text-xs font-bold text-foreground truncate tracking-tight">
                       {madrasaName}
                     </h4>
-                    <p className="text-[10px] uppercase font-semibold text-primary tracking-wider">
+                    <p className="text-2xs uppercase font-semibold text-primary tracking-wider">
                       {t("teachers.idCard.title")}
                     </p>
                   </div>
@@ -104,7 +104,7 @@ export function TeacherIdCardModal({
                       className="w-16 h-16 rounded-xl border-2 border-primary/30 shadow-inner font-bold text-sm"
                     />
                     {teacher.specialization && (
-                      <span className="mt-1.5 text-[9px] font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 max-w-[80px] truncate text-center">
+                      <span className="mt-1.5 text-4xs font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 max-w-20 truncate text-center">
                         {teacher.specialization}
                       </span>
                     )}
@@ -116,13 +116,13 @@ export function TeacherIdCardModal({
                     </h3>
 
                     {assignedClasses.length > 0 && (
-                      <p className="text-[11px] font-medium text-primary truncate">
+                      <p className="text-3xs font-medium text-primary truncate">
                         {assignedClasses.join(", ")}
                       </p>
                     )}
 
                     {(qualification || teacher.qualification) && (
-                      <div className="text-[11px] text-muted-foreground truncate">
+                      <div className="text-3xs text-muted-foreground truncate">
                         <span className="font-semibold text-foreground/80">
                           {t(teacherFieldLabelKey("qualification"))}:{" "}
                         </span>
@@ -131,7 +131,7 @@ export function TeacherIdCardModal({
                     )}
 
                     {displayPhone && (
-                      <div className="text-[11px] text-muted-foreground truncate">
+                      <div className="text-3xs text-muted-foreground truncate">
                         <span className="font-semibold text-foreground/80">
                           {t(teacherFieldLabelKey("phone"))}:{" "}
                         </span>
@@ -140,7 +140,7 @@ export function TeacherIdCardModal({
                     )}
 
                     {teacher.joinDate && (
-                      <div className="text-[10px] text-muted-foreground truncate">
+                      <div className="text-2xs text-muted-foreground truncate">
                         <span>{t(teacherFieldLabelKey("joinDate"))}: {teacher.joinDate}</span>
                       </div>
                     )}
@@ -148,8 +148,8 @@ export function TeacherIdCardModal({
                 </div>
 
                 {/* Footer */}
-                <div className="flex items-center justify-between border-t border-border/40 pt-2 mt-3 text-[9px] text-muted-foreground">
-                  <div className="flex items-center gap-1 font-mono tracking-widest text-[9px] uppercase">
+                <div className="flex items-center justify-between border-t border-border/40 pt-2 mt-3 text-4xs text-muted-foreground">
+                  <div className="flex items-center gap-1 font-mono tracking-widest text-4xs uppercase">
                     <span>ID: {String(teacher.id).slice(0, 10)}</span>
                   </div>
                   <div>

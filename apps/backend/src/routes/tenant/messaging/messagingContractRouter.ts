@@ -1,7 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { User } from '@mms/shared';
-import { rootContract, messagingRecipientsQuerySchema } from '@mms/shared';
+import { messagingContract, messagingRecipientsQuerySchema } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
+import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
 import { canReadMessaging } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
@@ -19,8 +20,8 @@ function requireMessagingTenant(request: any): { id: string; subdomain: string }
 }
 
 export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
-  const router = s.router(rootContract.messaging, {
-    listLogs: async ({ query, request }: any) => {
+  const router = s.router(messagingContract, {
+    listLogs: async ({ query, request }: ContractRouteArgs<typeof messagingContract['listLogs']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadMessaging(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -28,7 +29,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const tenant = requireMessagingTenant(request);
         const result = await withTenant(tenant.id, () =>
-          messagingUseCases.loadFilteredMessageLogs(tenant.subdomain, query),
+          messagingUseCases.loadFilteredMessageLogs(tenant.subdomain, query as Parameters<typeof messagingUseCases.loadFilteredMessageLogs>[1]),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };
@@ -36,7 +37,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list message logs' } };
       }
     },
-    listTemplates: async ({ request }: any) => {
+    listTemplates: async ({ request }: ContractRouteArgs<typeof messagingContract['listTemplates']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadMessaging(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -48,7 +49,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list messaging templates' } };
       }
     },
-    listRecipients: async ({ query, request }: any) => {
+    listRecipients: async ({ query, request }: ContractRouteArgs<typeof messagingContract['listRecipients']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadMessaging(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -58,7 +59,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         const effectiveQuery = parsed.success ? parsed.data : query;
         const tenant = requireMessagingTenant(request);
         const result = await withTenant(tenant.id, () =>
-          messagingUseCases.loadMessagingRecipients(tenant.subdomain, effectiveQuery),
+          messagingUseCases.loadMessagingRecipients(tenant.subdomain, effectiveQuery as Parameters<typeof messagingUseCases.loadMessagingRecipients>[1]),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };
@@ -66,9 +67,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list recipients' } };
       }
     },
-    // (typed as any because handler impls take loosely-typed ({ query, body, request }: any);
-    //  tracked by the separate contract-router signature refactor)
-  } as any);
+  } as unknown as Parameters<typeof s.router>[1]);
 
   await fastify.register(s.plugin(router));
 };

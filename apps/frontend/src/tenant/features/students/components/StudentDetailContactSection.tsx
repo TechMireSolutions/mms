@@ -117,7 +117,7 @@ export function StudentDetailContactSection({
       <Card accentColor="primary" className="p-3.5 space-y-3">
         {phones.length > 0 && (
           <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+            <span className="text-3xs font-semibold text-muted-foreground uppercase tracking-wider block">
               {t("students.detail.phonesLabel")}
             </span>
             {phones.map((phone, idx) => (
@@ -129,12 +129,12 @@ export function StudentDetailContactSection({
                   <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
                   <span className="font-mono text-foreground truncate">{phone.number}</span>
                   {phone.label && (
-                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                    <span className="text-2xs text-muted-foreground font-medium uppercase tracking-tight">
                       {phone.label}
                     </span>
                   )}
                   {phone.isPrimary && (
-                    <span className="text-[10px] text-primary font-bold uppercase tracking-tight">
+                    <span className="text-2xs text-primary font-bold uppercase tracking-tight">
                       ★ {t("theme.tokenPrimary")}
                     </span>
                   )}
@@ -162,7 +162,7 @@ export function StudentDetailContactSection({
 
         {emails.length > 0 && (
           <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+            <span className="text-3xs font-semibold text-muted-foreground uppercase tracking-wider block">
               {t("students.detail.emailsLabel")}
             </span>
             {emails.map((email, idx) => (
@@ -174,12 +174,12 @@ export function StudentDetailContactSection({
                   <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
                   <span className="text-foreground truncate">{email.address}</span>
                   {email.label && (
-                    <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-tight">
+                    <span className="text-2xs text-muted-foreground font-medium uppercase tracking-tight">
                       {email.label}
                     </span>
                   )}
                   {email.isPrimary && (
-                    <span className="text-[10px] text-primary font-bold uppercase tracking-tight">
+                    <span className="text-2xs text-primary font-bold uppercase tracking-tight">
                       ★ {t("theme.tokenPrimary")}
                     </span>
                   )}
@@ -200,7 +200,7 @@ export function StudentDetailContactSection({
 
         {addresses.length > 0 && (
           <div className="space-y-1.5">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider block">
+            <span className="text-3xs font-semibold text-muted-foreground uppercase tracking-wider block">
               {t("students.detail.addressesLabel")}
             </span>
             {addresses.map((addr, idx) => {
@@ -216,7 +216,7 @@ export function StudentDetailContactSection({
                   <MapPin className="w-3.5 h-3.5 text-muted-foreground shrink-0 mt-0.5" aria-hidden />
                   <span className="truncate flex-1">{formatted}</span>
                   {addr.label && (
-                    <span className="text-[10px] uppercase tracking-tight font-medium shrink-0">
+                    <span className="text-2xs uppercase tracking-tight font-medium shrink-0">
                       {addr.label}
                     </span>
                   )}
@@ -244,7 +244,7 @@ export function StudentDetailContactSection({
               <div className="flex items-center gap-1.5 text-muted-foreground col-span-full flex-wrap">
                 <Tag className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
                 {tags.map((tag) => (
-                  <span key={tag} className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-medium text-foreground">
+                  <span key={tag} className="bg-muted px-1.5 py-0.5 rounded text-2xs font-medium text-foreground">
                     {tag}
                   </span>
                 ))}

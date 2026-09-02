@@ -119,7 +119,7 @@ export const ModuleWorkToolbar = (function ModuleWorkToolbar({
               aria-hidden="true"
               className="absolute end-3 top-1/2 hidden -translate-y-1/2 items-center gap-1 md:flex cursor-pointer select-none"
             >
-              <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-[11px] font-medium text-muted-foreground shadow-2xs">
+              <kbd className="rounded border border-border/60 bg-muted/60 px-1.5 py-0.5 font-mono text-3xs font-medium text-muted-foreground shadow-2xs">
                 /
               </kbd>
             </button>

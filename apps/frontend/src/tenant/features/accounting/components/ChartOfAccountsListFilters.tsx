@@ -69,7 +69,7 @@ export function ChartOfAccountsListFilters({
         labels: columnCustomizer.labels,
       } : undefined}
     >
-      <div className="flex-shrink-0 min-w-[150px]">
+      <div className="flex-shrink-0 min-w-filter-xl">
         <FormSelect
           aria-label={t("accounting.coa.filterTypeAria")}
           value={typeFilter}

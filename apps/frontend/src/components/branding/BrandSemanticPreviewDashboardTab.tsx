@@ -78,7 +78,7 @@ export function BrandSemanticPreviewDashboardTab({
             { label: "Sat", h1: "70%", h2: "50%" },
           ].map((item) => (
             <div key={item.label} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
-              <div className="w-full max-w-[20px] flex items-end gap-0.5 h-full">
+              <div className="w-full max-w-5 flex items-end gap-0.5 h-full">
                 <div
                   className="flex-1 rounded-t-sm transition-all duration-300"
                   style={{ height: item.h1, backgroundColor: activeOnPrimaryBg }}

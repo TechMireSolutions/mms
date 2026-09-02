@@ -103,7 +103,7 @@ export function MessageComposerRecipientPicker({
   const noop = () => {};
 
   return (
-    <div className="flex flex-col gap-3 min-h-[500px]">
+    <div className="flex flex-col gap-3 min-h-125">
       <div className="flex items-center gap-2">
         <SearchBar
           placeholder={t('messaging.searchRecipients')}

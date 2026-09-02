@@ -7,7 +7,7 @@
  * text-end, border-s-*, border-e-*, rounded-s-*, rounded-e-*).
  */
 const PHYSICAL_DIRECTIONAL_PATTERN =
-  /\b(?:(?:after:|before:)?(left|right)-\d+(?:\/\d+)?|(text-(?:left|right))|((?:p|m)[lr]-\d+(?:\.\d+)?)|((?:border|rounded)-[lr](?:-[a-zA-Z0-9_/]+)?))\b/g;
+  /\b(?:(?:after:|before:)?(left|right)-(?:\d+(?:\/\d+)?|full|auto|px)|(text-(?:left|right))|((?:p|m)[lr]-(?:\d+(?:\.\d+)?|auto|px))|((?:border|rounded)-[lr](?:-[a-zA-Z0-9_/]+)?))\b/g;
 
 module.exports = {
   meta: {
