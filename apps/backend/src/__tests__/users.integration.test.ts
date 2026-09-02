@@ -268,7 +268,41 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true });
-    expect(mockResetUserPasswordById).toHaveBeenCalledWith('u-1', 'TemporaryPass1!', 'admin');
+    expect(mockResetUserPasswordById).toHaveBeenCalledWith(
+      'u-1',
+      'TemporaryPass1!',
+      'admin',
+      'u-admin',
+      '127.0.0.1',
+      expect.any(Function),
+    );
+    await app.close();
+  });
+
+  it('POST /api/users/:id/reset-password returns a traceable server failure', async () => {
+    const resetError = Object.assign(new Error('database write failed'), {
+      type: 'password_reset_failed',
+      passwordResetStage: 'credential_persistence',
+    });
+    mockResetUserPasswordById.mockRejectedValueOnce(resetError);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/u-1/reset-password',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({ temporaryPassword: 'TemporaryPass1!' }),
+    });
+
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toMatchObject({
+      type: 'password_reset_failed',
+      stage: 'credential_persistence',
+    });
+    expect(res.json().message).toContain('Reference:');
     await app.close();
   });
 

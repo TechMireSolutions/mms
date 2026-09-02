@@ -45,6 +45,7 @@ import { assertPasswordMeetsPolicy } from './globalSettingsService.js';
 import { revokeAllUserSessions } from './session.service.js';
 import { defineTenantBulkCollectionService } from './tenantBulkService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { withTenant } from '../db/tenant-context.js';
 import { broadcastCollection } from './websocketService.js';
 import type { ContactLike } from '@mms/shared';
 import { hydrateWorkspaceUserProfile } from '@mms/shared';
@@ -55,6 +56,54 @@ function createHttpError(statusCode: number, type: string, message: string): Err
   err.statusCode = statusCode;
   err.type = type;
   return err;
+}
+
+export type UserPasswordResetFailureStage =
+  | 'load_user'
+  | 'password_hash'
+  | 'credential_persistence'
+  | 'session_revocation';
+
+export type UserPasswordResetAuxiliaryStage = 'users_broadcast' | 'activity_log';
+
+type UserPasswordResetAuxiliaryErrorHandler = (
+  stage: UserPasswordResetAuxiliaryStage,
+  error: unknown,
+) => void;
+
+class UserPasswordResetError extends Error {
+  readonly type = 'password_reset_failed';
+
+  constructor(
+    readonly passwordResetStage: UserPasswordResetFailureStage,
+    cause: unknown,
+  ) {
+    super(`Password reset failed during ${passwordResetStage}`, { cause });
+    this.name = 'UserPasswordResetError';
+  }
+}
+
+async function runPasswordResetStage<T>(
+  stage: UserPasswordResetFailureStage,
+  operation: () => Promise<T>,
+): Promise<T> {
+  try {
+    return await operation();
+  } catch (error: unknown) {
+    throw new UserPasswordResetError(stage, error);
+  }
+}
+
+async function runPasswordResetAuxiliaryStep(
+  stage: UserPasswordResetAuxiliaryStage,
+  operation: () => Promise<void>,
+  onError?: UserPasswordResetAuxiliaryErrorHandler,
+): Promise<void> {
+  try {
+    await operation();
+  } catch (error: unknown) {
+    onError?.(stage, error);
+  }
 }
 
 async function recordUserActivityLog(
@@ -442,33 +491,60 @@ export async function resetUserPasswordById(
   actorRole?: string,
   actorId = 'system',
   ip = '127.0.0.1',
+  onAuxiliaryError?: UserPasswordResetAuxiliaryErrorHandler,
 ): Promise<boolean> {
-  const existing = await findTenantUserRowById(id);
-  if (!existing || existing.deletedAt) return false;
+  const tenant = getRequestTenant()?.trim().toLowerCase();
+  if (!tenant) {
+    throw createHttpError(400, 'tenant_context_required', 'Tenant context required');
+  }
+
+  const existing = await runPasswordResetStage('load_user', () => findTenantUserRowById(id));
+  if (
+    !existing ||
+    existing.deletedAt ||
+    String(existing.workspaceSubdomain).trim().toLowerCase() !== tenant
+  ) {
+    return false;
+  }
 
   if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
     throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot reset password of a Super Admin user account');
   }
 
   await assertPasswordMeetsPolicy(temporaryPassword);
-  const passwordHash = await hashPassword(temporaryPassword);
-  const updated = await resetTenantUserPasswordRow(id, passwordHash);
+  const passwordHash = await runPasswordResetStage('password_hash', () =>
+    hashPassword(temporaryPassword),
+  );
+  const updated = await runPasswordResetStage('credential_persistence', () =>
+    withTenant(tenant, async () => {
+      const passwordUpdated = await resetTenantUserPasswordRow(id, passwordHash);
+      if (!passwordUpdated) return false;
+
+      // Keep the credential update and persistent refresh-token revocation atomic.
+      await deleteRefreshTokensForUser(id);
+      return true;
+    }),
+  );
   if (!updated) return false;
 
-  await deleteRefreshTokensForUser(id);
-  await revokeAllUserSessions(id);
-  await broadcastCollection('users');
+  await runPasswordResetStage('session_revocation', () => revokeAllUserSessions(id));
+  await runPasswordResetAuxiliaryStep(
+    'users_broadcast',
+    () => broadcastCollection('users'),
+    onAuxiliaryError,
+  );
 
-  const tenant = getRequestTenant();
-  if (tenant) {
-    await recordUserActivityLog(
+  await runPasswordResetAuxiliaryStep(
+    'activity_log',
+    () => recordUserActivityLog(
       tenant,
       actorId,
       'update',
       `Reset password for user ${existing.name || id}`,
       ip,
-    );
-  }
+    ),
+    onAuxiliaryError,
+  );
   return true;
 }
 

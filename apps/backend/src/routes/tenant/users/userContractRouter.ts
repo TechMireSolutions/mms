@@ -1,4 +1,4 @@
-import type { FastifyPluginAsync } from 'fastify';
+import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import type { User, UsersListQuery, WorkspaceUser } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
@@ -25,10 +25,15 @@ const s = initServer();
 
 function handleUserRouterError(
   err: unknown,
-  request: { log: { error: (err: unknown, msg: string) => void } },
+  request: FastifyRequest,
   fallbackMessage: string,
+  context: Record<string, string> = {},
 ) {
-  const error = err as Error & { statusCode?: number; type?: string };
+  const error = err as Error & {
+    statusCode?: number;
+    type?: string;
+    passwordResetStage?: string;
+  };
   if (error.statusCode === 404) {
     return { status: 404 as const, body: { type: 'not_found', message: error.message || 'User not found' } };
   }
@@ -38,8 +43,30 @@ function handleUserRouterError(
   if (error.statusCode === 400) {
     return { status: 400 as const, body: { type: error.type ?? 'validation_error', message: error.message } };
   }
-  request.log.error(err, fallbackMessage);
-  return { status: 500 as const, body: { type: 'database_error', message: fallbackMessage } };
+  request.log.error(
+    {
+      err,
+      requestId: request.id,
+      method: request.method,
+      url: request.url,
+      failureStage: error.passwordResetStage,
+      ...context,
+    },
+    fallbackMessage,
+  );
+
+  const stageMessage = error.passwordResetStage
+    ? ` during ${error.passwordResetStage.replaceAll('_', ' ')}`
+    : '';
+  return {
+    status: 500 as const,
+    body: {
+      type: error.type === 'password_reset_failed' ? error.type : 'database_error',
+      message: `${fallbackMessage}${stageMessage}. Reference: ${request.id}`,
+      requestId: request.id,
+      ...(error.passwordResetStage ? { stage: error.passwordResetStage } : {}),
+    },
+  };
 }
 
 export const userContractRouter: FastifyPluginAsync = async (fastify) => {
@@ -188,11 +215,34 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
           };
         }
         try {
-          const ok = await resetUserPasswordById(id, body.temporaryPassword, user.role);
+          const ok = await resetUserPasswordById(
+            id,
+            body.temporaryPassword,
+            user.role,
+            String(user.id),
+            request.ip,
+            (stage, error) => {
+              request.log.warn(
+                {
+                  err: error,
+                  requestId: request.id,
+                  operation: 'users.reset_password',
+                  failureStage: stage,
+                  targetUserId: id,
+                  actorUserId: String(user.id),
+                },
+                'Password reset completed but an auxiliary step failed',
+              );
+            },
+          );
           if (!ok) return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
           return { status: 200 as const, body: { success: true as const } };
         } catch (error: unknown) {
-          return handleUserRouterError(error, request, 'Failed to reset user password');
+          return handleUserRouterError(error, request, 'Failed to reset user password', {
+            operation: 'users.reset_password',
+            targetUserId: id,
+            actorUserId: String(user.id),
+          });
         }
       },
     },

@@ -25,7 +25,8 @@ export function registerErrorHandlers(app: FastifyInstance, isProd: boolean): vo
     if (statusCode >= 500 && isProd) {
       return reply.status(500).send({
         type: 'server_error',
-        message: 'Internal server error',
+        message: `Internal server error. Reference: ${request.id}`,
+        requestId: request.id,
       });
     }
 
