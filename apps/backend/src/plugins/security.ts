@@ -3,7 +3,6 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import type { ServerConfig } from '../config/serverConfig.js';
-import { getRedisClient } from '../lib/redis.js';
 
 /**
  * Per-request CSP nonce store. The nonce is generated in `onRequest` and
@@ -114,11 +113,9 @@ export async function registerSecurityPlugins(
     return payload;
   });
 
-  const redisClient = getRedisClient();
-
+  // Keep the limiter independent of Redis so auth routes remain protected during outages.
   await app.register(rateLimit, {
     global: false,
-    redis: redisClient ?? undefined,
     addHeadersOnExceeding: {
       'x-ratelimit-limit': true,
       'x-ratelimit-remaining': true,
