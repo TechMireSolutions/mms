@@ -33,15 +33,16 @@ export async function assertModuleTierSmoke(
     await expect(tab).toBeVisible();
   }
 
-  await desktopNav
+  const workTab = desktopNav
     .getByRole('tab', { name: 'Work', exact: true })
-    .or(desktopNav.getByRole('button', { name: 'Work', exact: true }))
-    .click();
+    .or(desktopNav.getByRole('button', { name: 'Work', exact: true }));
+  await workTab.click();
+  await page.waitForLoadState('domcontentloaded');
 }
 
 export async function completeInstitutionSetupIfPresent(page: Page): Promise<void> {
-  const institutionHeading = page.locator('h1', { hasText: /Institution Profile|Complete Institution/i });
-  const dashboardHeading = page.locator('h1', { hasText: 'Assalamu Alaikum' });
+  const institutionHeading = page.getByRole('heading', { name: /Institution Profile|Complete Institution/i });
+  const dashboardHeading = page.getByRole('heading', { name: /Assalamu Alaikum/i });
 
   // Wait for either the dashboard or the setup page to appear after login
   const isSetup = await institutionHeading
@@ -52,37 +53,27 @@ export async function completeInstitutionSetupIfPresent(page: Page): Promise<voi
     .catch(() => false);
 
   if (isSetup) {
-    const taglineInput = page.locator('#setup-tagline');
-    await taglineInput.waitFor({ state: 'visible', timeout: 10_000 });
+    const defaultSetupFields: Array<{ selector: string; defaultValue: string }> = [
+      { selector: '#setup-madrasaName', defaultValue: 'Responsive Shell Madrasa' },
+      { selector: '#setup-tagline', defaultValue: 'Excellence in Islamic Education' },
+      { selector: '#setup-email', defaultValue: 'admin@madrasa.org' },
+      { selector: '#setup-phone', defaultValue: '03001234567' },
+      { selector: '#setup-addressLine1', defaultValue: '123 Madrasa Street' },
+      { selector: '#setup-city', defaultValue: 'London' },
+      { selector: '#setup-postalCode', defaultValue: 'E1 6AN' },
+      { selector: '#setup-country', defaultValue: 'United Kingdom' },
+    ];
 
-    if (!(await taglineInput.inputValue())) {
-      await taglineInput.fill('Excellence in Islamic Education');
+    for (const { selector, defaultValue } of defaultSetupFields) {
+      const fieldInput = page.locator(selector);
+      if (await fieldInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+        if (!(await fieldInput.inputValue())) {
+          await fieldInput.fill(defaultValue);
+        }
+      }
     }
-    const emailInput = page.locator('#setup-email');
-    if (!(await emailInput.inputValue())) {
-      await emailInput.fill('admin@madrasa.org');
-    }
-    const phoneInput = page.locator('#setup-phone');
-    if (!(await phoneInput.inputValue())) {
-      await phoneInput.fill('03001234567');
-    }
-    const addressInput = page.locator('#setup-addressLine1');
-    if (!(await addressInput.inputValue())) {
-      await addressInput.fill('123 Madrasa Street');
-    }
-    const cityInput = page.locator('#setup-city');
-    if (!(await cityInput.inputValue())) {
-      await cityInput.fill('London');
-    }
-    const postalCodeInput = page.locator('#setup-postalCode');
-    if (!(await postalCodeInput.inputValue())) {
-      await postalCodeInput.fill('E1 6AN');
-    }
-    const countryInput = page.locator('#setup-country');
-    if (!(await countryInput.inputValue())) {
-      await countryInput.fill('United Kingdom');
-    }
-    await page.click('button[type="submit"]');
+
+    await page.getByRole('button', { name: /Save|Complete|Submit/i }).click();
     await expect(dashboardHeading).toBeVisible({ timeout: 30_000 });
     await page.waitForLoadState('domcontentloaded');
   }
@@ -102,7 +93,7 @@ export async function loginTenant(
   await page.waitForLoadState('domcontentloaded');
 
   const emailInput = page.locator('input[name="email"]');
-  const dashboardHeading = page.locator('h1', { hasText: 'Assalamu Alaikum' });
+  const dashboardHeading = page.getByRole('heading', { name: /Assalamu Alaikum/i });
 
   const isLoginForm = await emailInput
     .or(dashboardHeading)
@@ -119,7 +110,16 @@ export async function loginTenant(
 
   await emailInput.fill(email);
   await page.fill('input[name="password"]', password);
+
+  const loginResponse = page
+    .waitForResponse(
+      (res) => res.url().includes('/api/auth/login') && res.request().method() === 'POST',
+      { timeout: 20_000 },
+    )
+    .catch(() => null);
+
   await page.click('button[type="submit"]');
+  await loginResponse;
 
   await completeInstitutionSetupIfPresent(page);
 

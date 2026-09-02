@@ -189,63 +189,69 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
     // ------------------------------------------------------------------
     // 1. Platform admin signs into the apex console.
     // ------------------------------------------------------------------
-    await page.goto('/platform/login');
-    await page.waitForLoadState('domcontentloaded');
-    const platformEmailInput = page.locator('#platform-email');
-    await expect(platformEmailInput).toBeVisible({ timeout: 30_000 });
-    await platformEmailInput.fill(e2ePlatformEmail);
-    await page.fill('#platform-password', e2ePlatformPassword);
-    await page.click('button[type="submit"]');
-    await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });
+    await test.step('1. Platform admin signs in to apex console', async () => {
+      await page.goto('/platform/login');
+      await page.waitForLoadState('domcontentloaded');
+      const platformEmailInput = page.locator('#platform-email');
+      await expect(platformEmailInput).toBeVisible({ timeout: 30_000 });
+      await platformEmailInput.fill(e2ePlatformEmail);
+      await page.locator('#platform-password').fill(e2ePlatformPassword);
+      await page.locator('button[type="submit"]').click();
+      await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });
+    });
 
     // ------------------------------------------------------------------
     // 2. Bootstrap an ephemeral workspace via the onboarding wizard.
     // ------------------------------------------------------------------
-    await page.click('a[href="/onboarding"]');
-    await page.waitForURL('**/onboarding');
-    await expect(page.locator('#wizard-step-title')).toBeVisible({ timeout: 30_000 });
+    await test.step('2. Bootstrap ephemeral workspace via onboarding wizard', async () => {
+      await page.locator('a[href="/onboarding"]').click();
+      await page.waitForURL('**/onboarding');
+      await expect(page.locator('#wizard-step-title')).toBeVisible({ timeout: 30_000 });
 
-    await page.fill('#onboarding-name', madrasaName);
-    await page.fill('#onboarding-subdomain', subdomain);
-    await expect(page.locator('text=Your URL:')).toBeVisible();
-    await page.click('button:has-text("Continue")');
-    await expect(page.locator('#firstName')).toBeVisible({ timeout: 30_000 });
+      await page.locator('#onboarding-name').fill(madrasaName);
+      await page.locator('#onboarding-subdomain').fill(subdomain);
+      await expect(page.locator('text=Your URL:')).toBeVisible();
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.locator('#firstName')).toBeVisible({ timeout: 30_000 });
 
-    await page.fill('#firstName', 'Platform');
-    await page.fill('#lastName', 'E2E');
-    await page.fill('#email', tenantOwnerEmail);
-    await page.fill('#password', tenantOwnerTempPassword);
-    await page.fill('#confirmPassword', tenantOwnerTempPassword);
-    await page.check('#terms');
-    await page.click('button:has-text("Create workspace")');
-    await page.waitForURL((url) => !url.pathname.includes('/onboarding'), { timeout: 45_000 });
-    await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });
+      await page.locator('#firstName').fill('Platform');
+      await page.locator('#lastName').fill('E2E');
+      await page.locator('#email').fill(tenantOwnerEmail);
+      await page.locator('#password').fill(tenantOwnerTempPassword);
+      await page.locator('#confirmPassword').fill(tenantOwnerTempPassword);
+      await page.locator('#terms').check();
+      await page.getByRole('button', { name: 'Create workspace' }).click();
+      await page.waitForURL((url) => !url.pathname.includes('/onboarding'), { timeout: 45_000 });
+      await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });
+    });
 
     // ------------------------------------------------------------------
     // 3. Prove the workspace is active: tenant owner can sign in.
     // ------------------------------------------------------------------
-    await page.goto(`${tenantOrigin}/login`);
-    await page.waitForLoadState('domcontentloaded');
-    await page.fill('input[name="email"]', tenantOwnerEmail);
-    await page.fill('input[name="password"]', tenantOwnerTempPassword);
-    await page.click('button[type="submit"]');
+    await test.step('3. Tenant owner signs in and completes mandatory password change', async () => {
+      await page.goto(`${tenantOrigin}/login`);
+      await page.waitForLoadState('domcontentloaded');
+      await page.locator('input[name="email"]').fill(tenantOwnerEmail);
+      await page.locator('input[name="password"]').fill(tenantOwnerTempPassword);
+      await page.locator('button[type="submit"]').click();
 
-    await page.waitForURL(`${tenantOrigin}/force-password-change`);
-    await expect(page.locator('h1')).toContainText(/temporary password|Change your/i, {
-      timeout: 20_000,
+      await page.waitForURL(`${tenantOrigin}/force-password-change`);
+      await expect(page.locator('h1')).toContainText(/temporary password|Change your/i, {
+        timeout: 20_000,
+      });
+      await page.locator('#current-password').fill(tenantOwnerTempPassword);
+      await page.locator('#new-password').fill(tenantOwnerPassword);
+      await page.locator('#confirm-password').fill(tenantOwnerPassword);
+      await page.locator('button[type="submit"]').click();
+
+      await page.waitForURL(`${tenantOrigin}/login`);
+      await page.locator('input[name="email"]').fill(tenantOwnerEmail);
+      await page.locator('input[name="password"]').fill(tenantOwnerPassword);
+      await page.locator('button[type="submit"]').click();
+      await expect(
+        page.locator('h1').filter({ hasText: /Assalamu Alaikum|Institution Profile|Complete Institution/i }).first(),
+      ).toBeVisible({ timeout: 30_000 });
     });
-    await page.fill('#current-password', tenantOwnerTempPassword);
-    await page.fill('#new-password', tenantOwnerPassword);
-    await page.fill('#confirm-password', tenantOwnerPassword);
-    await page.click('button[type="submit"]');
-
-    await page.waitForURL(`${tenantOrigin}/login`);
-    await page.fill('input[name="email"]', tenantOwnerEmail);
-    await page.fill('input[name="password"]', tenantOwnerPassword);
-    await page.click('button[type="submit"]');
-    await expect(
-      page.locator('h1').filter({ hasText: /Assalamu Alaikum|Institution Profile|Complete Institution/i }).first(),
-    ).toBeVisible({ timeout: 30_000 });
 
     // Re-disable safety: whatever happens below, restore via UI, then the
     // afterAll hook re-enables at the DB level as a net for hard failures.
@@ -254,61 +260,82 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
       // 4. Find the workspace row in the apex console (cards view hosts
       //    the enable/disable switch; table rows only show links).
       // ----------------------------------------------------------------
-      const workspaceToggle = await openWorkspaceCard(page, subdomain);
-      await expect(page.getByRole('heading', { name: madrasaName, exact: true }).first()).toBeVisible();
-      await expect(workspaceToggle).toBeChecked({ checked: true });
+      await test.step('4. Verify workspace is active in apex console cards view', async () => {
+        const workspaceToggle = await openWorkspaceCard(page, subdomain);
+        await expect(page.getByRole('heading', { name: madrasaName, exact: true }).first()).toBeVisible();
+        await expect(workspaceToggle).toBeChecked({ checked: true });
+      });
 
       // ----------------------------------------------------------------
       // 5. Toggle the workspace disabled.
       // ----------------------------------------------------------------
-      await toggleWorkspace(page, subdomain, false);
+      await test.step('5. Disable workspace from apex console', async () => {
+        await toggleWorkspace(page, subdomain, false);
+      });
 
       // ----------------------------------------------------------------
       // 6. Tenant host now serves the WorkspaceDisabledScreen. The workspace
       //    lookup response is captured on the first navigation (armed before
       //    goto, read before any later navigation can discard the body).
       // ----------------------------------------------------------------
-      const workspaceLookup = page.waitForResponse(
-        (resp) =>
-          resp.request().method() === 'GET' &&
-          resp.url().includes(`/api/workspace/by-subdomain/${subdomain}`),
-        { timeout: 30_000 },
-      );
-      await page.goto(`${tenantOrigin}/login`);
-      const lookupResponse = await workspaceLookup;
-      const lookupBody = (await lookupResponse.json()) as {
-        workspace?: { enabled?: boolean; subdomain?: string };
-      };
-      expect(lookupBody.workspace?.subdomain).toBe(subdomain);
-      expect(lookupBody.workspace?.enabled).toBe(false);
+      await test.step('6. Verify WorkspaceDisabledScreen and API 403 protection', async () => {
+        const workspaceLookup = page.waitForResponse(
+          (resp) =>
+            resp.request().method() === 'GET' &&
+            resp.url().includes(`/api/workspace/by-subdomain/${subdomain}`),
+          { timeout: 30_000 },
+        );
+        await page.goto(`${tenantOrigin}/login`);
+        const lookupResponse = await workspaceLookup;
+        const lookupBody = (await lookupResponse.json()) as {
+          workspace?: { enabled?: boolean; subdomain?: string };
+        };
+        expect(lookupBody.workspace?.subdomain).toBe(subdomain);
+        expect(lookupBody.workspace?.enabled).toBe(false);
 
-      await expect(
-        page.getByRole('heading', { name: /Madrasa Temporarily Unavailable/i }),
-      ).toBeVisible({ timeout: 20_000 });
-      await expect(page.getByText('Contact Platform Administrator')).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: /Madrasa Temporarily Unavailable/i }),
+        ).toBeVisible({ timeout: 20_000 });
+        await expect(page.getByText('Contact Platform Administrator')).toBeVisible();
+
+        // Verify backend authenticateTenant middleware blocks protected tenant traffic with 403
+        const apiCheck = await page.request.get(`${tenantOrigin}/api/contacts`);
+        expect(apiCheck.status()).toBe(403);
+        const errBody = (await apiCheck.json().catch(() => ({}))) as { type?: string };
+        expect(errBody.type).toBe('workspace_disabled');
+      });
     } finally {
       // ----------------------------------------------------------------
       // 6. Always re-enable via the console so the local DB stays clean.
       // ----------------------------------------------------------------
-      await openWorkspaceCard(page, subdomain);
-      await toggleWorkspace(page, subdomain, true);
-      await waitForToastOverlayToClear(page, 'after re-enabling workspace');
+      await test.step('Re-enable workspace via console UI (safety net)', async () => {
+        try {
+          await openWorkspaceCard(page, subdomain);
+          await toggleWorkspace(page, subdomain, true);
+          await waitForToastOverlayToClear(page, 'after re-enabling workspace');
+        } catch (cleanupErr) {
+          console.warn('[E2E] UI workspace re-enable fallback to afterAll DB hook:', cleanupErr);
+        }
+      });
     }
 
     // ------------------------------------------------------------------
     // 7. Re-enabled workspace: tenant login works again.
     // ------------------------------------------------------------------
-    await page.goto(`${tenantOrigin}/login`);
-    await page.waitForLoadState('domcontentloaded');
-    const tenantEmailInput = page.locator('input[name="email"]');
-    await expect(tenantEmailInput).toBeVisible({ timeout: 30_000 });
-    await page.fill('input[name="email"]', tenantOwnerEmail);
-    await page.fill('input[name="password"]', tenantOwnerPassword);
-    await page.click('button[type="submit"]');
-    await expect(
-      page.locator('h1').filter({ hasText: /Assalamu Alaikum|Institution Profile|Complete Institution/i }).first(),
-    ).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByRole('main')).not.toContainText('Madrasa Temporarily Unavailable');
+    await test.step('7. Re-enabled workspace allows tenant login and access restoration', async () => {
+      await page.context().clearCookies();
+      await page.goto(`${tenantOrigin}/login`);
+      await page.waitForLoadState('domcontentloaded');
+      const tenantEmailInput = page.locator('input[name="email"]');
+      await expect(tenantEmailInput).toBeVisible({ timeout: 30_000 });
+      await tenantEmailInput.fill(tenantOwnerEmail);
+      await page.locator('input[name="password"]').fill(tenantOwnerPassword);
+      await page.locator('button[type="submit"]').click();
+      await expect(
+        page.locator('h1').filter({ hasText: /Assalamu Alaikum|Institution Profile|Complete Institution/i }).first(),
+      ).toBeVisible({ timeout: 30_000 });
+      await expect(page.getByRole('main')).not.toContainText('Madrasa Temporarily Unavailable');
+    });
   });
 });
 

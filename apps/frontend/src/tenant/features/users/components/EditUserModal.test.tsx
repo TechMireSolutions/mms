@@ -103,7 +103,7 @@ describe('EditUserModal', () => {
       root.render(<EditUserModal user={user} onClose={onClose} onSave={onSave} />);
     });
 
-    expect(container.textContent).toContain('Existing User');
+    expect(container.textContent).toContain('Updated Contact Name');
     expect(container.querySelector('[data-testid="contact-picker"]')).not.toBeNull();
     expect(container.querySelector('input[id="custom-field-department"]')).not.toBeNull();
 
@@ -170,7 +170,6 @@ describe('EditUserModal', () => {
         id: 'u1',
         name: 'Updated Contact Name',
         email: 'contact@example.com',
-        phone: '+1234567890',
         contactId: 'c1',
       }),
     );

@@ -27,15 +27,21 @@ export function resetPlatformUsers(): void {
     console.warn('[E2E SAFEGUARD] Skipping platform users reset on production environment.');
     return;
   }
-  execSync('pnpm exec tsx src/scripts/reset-platform-users.ts', {
-    cwd: backendDir,
-    encoding: 'utf8',
-    env: {
-      ...process.env,
-      NODE_ENV: process.env.NODE_ENV || 'test',
-      JWT_SECRET: process.env.JWT_SECRET || 'e2e-test-jwt-secret-key-at-least-32-chars-long',
-    },
-  });
+  try {
+    execSync('pnpm exec tsx src/scripts/reset-platform-users.ts', {
+      cwd: backendDir,
+      encoding: 'utf8',
+      env: {
+        ...process.env,
+        NODE_ENV: process.env.NODE_ENV || 'test',
+        JWT_SECRET: process.env.JWT_SECRET || 'e2e-test-jwt-secret-key-at-least-32-chars-long',
+      },
+    });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error('[E2E] Failed to reset platform users:', message);
+    throw err;
+  }
 }
 
 /**
@@ -43,7 +49,7 @@ export function resetPlatformUsers(): void {
  */
 export async function completePlatformSetupOtp(page: Page): Promise<void> {
   const otpInputs = page.locator('[id^="platform-otp-"]');
-  if (await otpInputs.first().isVisible().catch(() => false)) {
+  if (await otpInputs.first().isVisible({ timeout: 1500 }).catch(() => false)) {
     const devHint = page.getByRole('status').filter({ hasText: /\b\d{6}\b/ });
     await expect(devHint).toBeVisible({ timeout: 10_000 });
     const devHintText = await devHint.textContent();
@@ -77,15 +83,26 @@ export async function bootstrapAuthenticatedTenant(
 
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');
-  await page.waitForSelector('#platform-setup-email');
 
-  await page.fill('#platform-setup-name', 'Platform Admin');
-  await page.fill('#platform-setup-email', platformEmail);
-  await page.fill('#platform-setup-password', platformPassword);
-  await page.click('button[type="submit"]');
-
-  const platformLanding = page.getByRole('heading', { name: /Dashboard|Welcome back/i }).or(page.locator('a[href="/onboarding"]'));
+  const setupEmailInput = page.locator('#platform-setup-email');
   const signInEmailInput = page.locator('#platform-email');
+  const platformLanding = page
+    .getByRole('heading', { name: /Dashboard|Welcome back/i })
+    .or(page.locator('a[href="/onboarding"]'));
+
+  await setupEmailInput
+    .or(signInEmailInput)
+    .or(platformLanding)
+    .first()
+    .waitFor({ state: 'visible', timeout: 25_000 });
+
+  if (await setupEmailInput.isVisible()) {
+    await page.fill('#platform-setup-name', 'Platform Admin');
+    await setupEmailInput.fill(platformEmail);
+    await page.fill('#platform-setup-password', platformPassword);
+    await page.click('button[type="submit"]');
+  }
+
   await platformLanding.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
 
   if (await signInEmailInput.isVisible()) {
@@ -103,7 +120,7 @@ export async function bootstrapAuthenticatedTenant(
   await page.fill('#onboarding-name', 'Responsive Shell Madrasa');
   await page.fill('#onboarding-subdomain', subdomain);
   await expect(page.locator('text=Your URL:')).toBeVisible();
-  await page.click('button:has-text("Continue")');
+  await page.getByRole('button', { name: /Continue/i }).click();
   await page.waitForSelector('#firstName');
 
   await page.fill('#firstName', 'Resp');
@@ -112,7 +129,17 @@ export async function bootstrapAuthenticatedTenant(
   await page.fill('#password', adminPassword);
   await page.fill('#confirmPassword', adminPassword);
   await page.check('#terms');
-  await page.click('button:has-text("Create workspace")');
+
+  const createWorkspaceResponse = page
+    .waitForResponse(
+      (res) =>
+        res.url().includes('/api/platform/workspaces') && res.request().method() === 'POST',
+      { timeout: 30_000 },
+    )
+    .catch(() => null);
+
+  await page.getByRole('button', { name: /Create workspace/i }).click();
+  await createWorkspaceResponse;
 
   await page.waitForURL((url) => !url.pathname.includes('/onboarding'), { timeout: 45_000 });
   await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });

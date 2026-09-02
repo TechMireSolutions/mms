@@ -55,51 +55,47 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
   const initialContactId = user.contactId ?? '';
   const [submitting, setSubmitting] = useState(false);
 
+  const buildDefaultValues = () => ({
+    contactId: user.contactId ?? '',
+    role: user.role,
+    status: user.status,
+    twoFactorEnabled: user.twoFactorEnabled,
+    ...Object.fromEntries(
+      customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
+    ),
+  });
+
   const form = useForm<EditWorkspaceUserInput & Record<string, unknown>>({
     resolver: zodResolver(editWorkspaceUserSchema),
-    defaultValues: {
-      contactId: initialContactId,
-      role: user.role,
-      status: user.status,
-      twoFactorEnabled: user.twoFactorEnabled,
-      ...Object.fromEntries(
-        customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
-      ),
-    },
+    defaultValues: buildDefaultValues(),
   });
 
   useEffect(() => {
-    form.reset({
-      contactId: user.contactId ?? '',
-      role: user.role,
-      status: user.status,
-      twoFactorEnabled: user.twoFactorEnabled,
-      ...Object.fromEntries(
-        customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
-      ),
-    });
-  }, [user, customFields, form]);
+    form.reset(buildDefaultValues());
+  }, [user.id, user.contactId, user.role, user.status, user.twoFactorEnabled, customFields, form]);
 
   const watchedContactId = form.watch('contactId');
-  const { data: selectedContact } = useContactById(
+  const { data: selectedContact, isLoading: isLoadingContact } = useContactById(
     watchedContactId ? String(watchedContactId) : undefined,
     Boolean(watchedContactId),
   );
 
   const handleSave = form.handleSubmit(async (values) => {
     const contact = selectedContact;
-    if (!contact) return;
-    const name = toTitleCase(contact.name.trim()) as string;
-    const email = (getPrimaryEmail(contact) || '').toLowerCase();
-    const phone = getPrimaryPhone(contact) || '';
+    if (!contact && watchedContactId) return;
+
+    const name = contact ? (toTitleCase(contact.name.trim()) as string) : user.name;
+    const email = contact ? (getPrimaryEmail(contact) || '').toLowerCase() : user.email;
+    const phone = contact ? (getPrimaryPhone(contact) || '') : (user.phone || '');
     const customFieldValues = Object.fromEntries(
       customFields.map((cf) => [cf.id, values[cf.id] ?? (user as unknown as Record<string, unknown>)[cf.id] ?? '']),
     );
+
     setSubmitting(true);
     try {
       await onSave({
         ...user,
-        contactId: contact.id,
+        contactId: contact?.id || user.contactId,
         name,
         email,
         phone,
@@ -131,7 +127,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
       saveLabel={t('users.saveChanges')}
       onSave={() => { void handleSave(); }}
       saving={submitting}
-      saveDisabled={!canManageThisUser || !watchedContactId || !form.formState.isDirty}
+      saveDisabled={!canManageThisUser || !watchedContactId || isLoadingContact || !form.formState.isDirty}
     >
       <Form {...form}>
         <form className="space-y-4" onSubmit={handleSave}>
@@ -169,13 +165,14 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
             render={({ field }) => (
               <FormItem>
                 <FormLabel>{t('users.fieldRole')}</FormLabel>
-                <div className="mt-1.5 flex flex-wrap gap-2">
+                <div role="group" aria-label={t('users.fieldRole')} className="mt-1.5 flex flex-wrap gap-2">
                   {assignableRoles.map((workspaceRole) => (
                     <Button
                       key={workspaceRole.id}
                       type="button"
                       size="sm"
                       disabled={!canManageThisUser}
+                      aria-pressed={field.value === workspaceRole.id}
                       variant={field.value === workspaceRole.id ? 'default' : 'outline'}
                       onClick={() => field.onChange(workspaceRole.id)}
                     >
@@ -212,16 +209,18 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
             control={form.control}
             name="twoFactorEnabled"
             render={({ field }) => (
-              <FormItem>
-                <label htmlFor={field.name} className="flex cursor-pointer items-center gap-2">
+              <FormItem className="flex flex-row items-center gap-2 space-y-0">
+                <FormControl>
                   <Checkbox
                     id={field.name}
                     name={field.name}
                     checked={field.value}
                     onCheckedChange={field.onChange}
                   />
-                  <span className="text-xs font-medium text-foreground">{t('users.field2fa')}</span>
-                </label>
+                </FormControl>
+                <FormLabel htmlFor={field.name} className="cursor-pointer text-xs font-medium text-foreground">
+                  {t('users.field2fa')}
+                </FormLabel>
               </FormItem>
             )}
           />
