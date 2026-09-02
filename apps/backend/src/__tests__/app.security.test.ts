@@ -252,6 +252,12 @@ describe('tenant JWT binding', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.headers['x-content-type-options']).toBe('nosniff');
+    expect(res.headers['cross-origin-opener-policy']).toBe('same-origin-allow-popups');
+    expect(res.headers['referrer-policy']).toBe('strict-origin-when-cross-origin');
+    const csp = String(res.headers['content-security-policy'] ?? '');
+    expect(csp).toContain("media-src 'self' data: blob:");
+    expect(csp).toContain("worker-src 'self' blob:");
+    expect(csp).toContain("manifest-src 'self'");
     expect(typeof res.headers['x-request-id']).toBe('string');
     expect(res.headers['x-request-id']).toMatch(/^[0-9a-zA-Z_-]+$/);
     await app.close();

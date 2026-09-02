@@ -1,6 +1,10 @@
-import type { BackgroundJobRecord, Contact, ContactsSavedReportViewer, User } from '@mms/shared';
+import { randomUUID } from 'node:crypto';
 import type { FastifyReply } from 'fastify';
 import {
+  type BackgroundJobRecord,
+  type Contact,
+  type ContactsSavedReportViewer,
+  type User,
   CONTACTS_MODULE_MANIFEST,
   roleHasPermission,
   sanitizeContactForViewer,
@@ -21,6 +25,35 @@ import { ContactPermissionError, ContactUniqueFieldError } from '../../../servic
 
 export type ContactPermission = 'read' | 'write' | 'delete';
 
+export interface ParsedUniqueConstraintError {
+  fieldId: string;
+  tabId: string;
+  message: string;
+}
+
+/**
+ * Extracts fieldId, tabId, and localized message from Postgres 23505 unique constraint errors.
+ */
+export function parsePostgresUniqueError(error: unknown): ParsedUniqueConstraintError | null {
+  const pgCode = (error as { code?: string })?.code;
+  if (pgCode !== '23505') return null;
+
+  const pgDetail = (error as { detail?: string })?.detail || '';
+  const constraintName = (error as { constraint?: string })?.constraint || '';
+
+  if (constraintName.includes('cnic') || pgDetail.includes('cnic')) {
+    return { fieldId: 'cnic', tabId: 'basic', message: 'CNIC must be unique per contact' };
+  }
+  if (constraintName.includes('phone') || pgDetail.includes('phone')) {
+    return { fieldId: 'number', tabId: 'phones', message: 'Phone number must be unique per contact' };
+  }
+  if (constraintName.includes('email') || pgDetail.includes('email')) {
+    return { fieldId: 'address', tabId: 'emails', message: 'Email address must be unique per contact' };
+  }
+
+  return { fieldId: 'cnic', tabId: 'basic', message: 'Value must be unique per contact' };
+}
+
 export function handleContactWriteError(
   reply: FastifyReply,
   error: unknown,
@@ -33,28 +66,10 @@ export function handleContactWriteError(
     return replyValidationError(reply, error.message, { errors: error.errors });
   }
 
-  const pgCode = (error as { code?: string })?.code;
-  const pgDetail = (error as { detail?: string })?.detail || '';
-  const constraintName = (error as { constraint?: string })?.constraint || '';
-  if (pgCode === '23505') {
-    let fieldId = 'cnic';
-    let tabId = 'basic';
-    let message = 'Value must be unique per contact';
-    if (constraintName.includes('cnic') || pgDetail.includes('cnic')) {
-      fieldId = 'cnic';
-      tabId = 'basic';
-      message = 'CNIC must be unique per contact';
-    } else if (constraintName.includes('phone') || pgDetail.includes('phone')) {
-      fieldId = 'number';
-      tabId = 'phones';
-      message = 'Phone number must be unique per contact';
-    } else if (constraintName.includes('email') || pgDetail.includes('email')) {
-      fieldId = 'address';
-      tabId = 'emails';
-      message = 'Email address must be unique per contact';
-    }
-    return replyValidationError(reply, message, {
-      errors: [{ fieldId, tabId, message }],
+  const uniqueError = parsePostgresUniqueError(error);
+  if (uniqueError) {
+    return replyValidationError(reply, uniqueError.message, {
+      errors: [uniqueError],
     });
   }
 
@@ -62,6 +77,13 @@ export function handleContactWriteError(
 }
 
 export function formatContactWriteError(error: unknown, fallbackMessage: string) {
+  if (error instanceof ContactPermissionError) {
+    return {
+      status: 403 as const,
+      body: { type: 'forbidden' as const, message: error.message },
+    };
+  }
+
   if (
     error instanceof ContactUniqueFieldError ||
     (error && typeof error === 'object' && 'errors' in error && Array.isArray((error as { errors?: unknown[] }).errors))
@@ -72,6 +94,19 @@ export function formatContactWriteError(error: unknown, fallbackMessage: string)
       body: { type: 'validation_error' as const, message: errWithErrors.message, errors: errWithErrors.errors },
     };
   }
+
+  const uniqueError = parsePostgresUniqueError(error);
+  if (uniqueError) {
+    return {
+      status: 400 as const,
+      body: {
+        type: 'validation_error' as const,
+        message: uniqueError.message,
+        errors: [uniqueError],
+      },
+    };
+  }
+
   const errObj = error as { message?: string; statusCode?: number; errors?: Record<string, unknown>[] };
   const msg = errObj?.message || fallbackMessage;
   const isValidation = errObj?.statusCode === 400 || /unique|conflict|already exists|validation/i.test(msg);
@@ -85,7 +120,8 @@ export function formatContactWriteError(error: unknown, fallbackMessage: string)
       },
     };
   }
-  return { status: 500 as const, body: { type: 'database_error' as const, message: msg } };
+
+  return { status: 500 as const, body: { type: 'database_error' as const, message: fallbackMessage } };
 }
 
 /** Contacts permission gate: sends a 403 reply and returns false when not granted. */
@@ -116,11 +152,16 @@ export async function enqueueContactBackgroundJob(options: {
   idempotencyKey?: string | null;
   user: User;
 }): Promise<BackgroundJobRecord> {
-  const tenant = getRequestTenant()!;
+  const tenant = getRequestTenant();
+  if (!tenant) {
+    throw new Error('Tenant context is required to enqueue contact background job');
+  }
+
   const userId = String(options.user.id);
-  const jobId = options.idempotencyKey?.trim() || crypto.randomUUID();
+  const jobId = options.idempotencyKey?.trim() || randomUUID();
   const existing = await getUserBackgroundJob(userId, jobId);
   if (existing) return existing;
+
   const runningJob: BackgroundJobRecord = {
     id: jobId,
     moduleId: options.moduleId,
@@ -148,7 +189,6 @@ async function getFieldConfigViewerOptions() {
     tabs: fieldConfig.formTabs ?? [],
   };
 }
-
 
 export async function sanitizeForUser(contacts: Contact[], user: User): Promise<Contact[]> {
   const options = await getFieldConfigViewerOptions();

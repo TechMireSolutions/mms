@@ -1,30 +1,76 @@
+import { timingSafeEqual } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { isOriginAllowedForAppDomain, isTrustedWorkspaceOrigin } from '@mms/shared';
 import type { ServerConfig } from '../config/serverConfig.js';
 import { requestHostname } from '../lib/requestHost.js';
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+const BODY_MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH']);
+
+function getHeaderString(value: string | string[] | undefined): string | undefined {
+  if (!value) return undefined;
+  const raw = Array.isArray(value) ? value[0] : value;
+  const trimmed = raw?.trim();
+  return trimmed || undefined;
+}
+
+/** Parses Cookie header once into a key-value record with safe URI decoding. */
+function parseCookies(cookieHeader: string | undefined): Record<string, string> {
+  if (!cookieHeader) return {};
+  const cookies: Record<string, string> = {};
+  const pairs = cookieHeader.split(';');
+
+  for (const pair of pairs) {
+    const eqIdx = pair.indexOf('=');
+    if (eqIdx === -1) continue;
+    const key = pair.slice(0, eqIdx).trim();
+    let val = pair.slice(eqIdx + 1).trim();
+    if (val.startsWith('"') && val.endsWith('"')) {
+      val = val.slice(1, -1);
+    }
+    try {
+      cookies[key] = decodeURIComponent(val);
+    } catch {
+      cookies[key] = val;
+    }
+  }
+  return cookies;
+}
+
+/** Constant-time string comparison to mitigate timing side-channels. */
+function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
 
 function isOriginAllowed(origin: string, requestHost: string, config: ServerConfig): boolean {
   try {
     const originUrl = new URL(origin);
     const originHost = originUrl.hostname.toLowerCase();
 
+    // In production, reject unencrypted HTTP origins (except localhost/127.0.0.1)
+    if (config.isProd && originUrl.protocol !== 'https:' && originHost !== 'localhost' && originHost !== '127.0.0.1') {
+      return false;
+    }
+
     // 1. Direct match with current request host
     if (originHost === requestHost) {
       return true;
     }
 
-    // 2. Explicit config.allowedOrigin
-    if (config.allowedOrigin && origin === config.allowedOrigin) {
-      return true;
+    // 2. Explicit config.allowedOrigin (supports comma-delimited list)
+    if (config.allowedOrigin) {
+      const allowed = config.allowedOrigin.split(',').map((o) => o.trim());
+      if (allowed.includes(origin)) {
+        return true;
+      }
     }
 
     const appDomain = process.env.MMS_APP_DOMAIN?.trim();
-    if (appDomain) {
-      if (isOriginAllowedForAppDomain(origin, appDomain)) {
-        return true;
-      }
+    if (appDomain && isOriginAllowedForAppDomain(origin, appDomain)) {
+      return true;
     }
 
     // 3. Local dev origins
@@ -52,15 +98,16 @@ export function registerCsrfOriginGuard(
   config: ServerConfig,
 ): void {
   app.addHook('onRequest', async (request: FastifyRequest, reply: FastifyReply) => {
-    if (!MUTATION_METHODS.has(request.method.toUpperCase())) {
+    const method = request.method.toUpperCase();
+    if (!MUTATION_METHODS.has(method)) {
       return;
     }
 
     // 1. Sec-Fetch-Site browser header defense
-    const secFetchSite = request.headers['sec-fetch-site'];
-    if (typeof secFetchSite === 'string') {
-      const normalizedSite = secFetchSite.trim().toLowerCase();
-      if (normalizedSite === 'cross-site') {
+    const secFetchSiteHeader = getHeaderString(request.headers['sec-fetch-site']);
+    if (secFetchSiteHeader) {
+      const sites = secFetchSiteHeader.toLowerCase().split(',').map((s) => s.trim());
+      if (sites.includes('cross-site')) {
         reply.status(403).send({
           type: 'forbidden',
           message: 'Cross-site mutation blocked',
@@ -69,9 +116,11 @@ export function registerCsrfOriginGuard(
       }
     }
 
-    // 2. Origin / Referer validation
-    const origin = typeof request.headers.origin === 'string' ? request.headers.origin.trim() : undefined;
+    // 2. Origin / Referer validation. Track whether any positive origin signal
+    // was present so we can fail closed below for silent cookie-auth clients.
+    const origin = getHeaderString(request.headers.origin);
     const requestHost = requestHostname(request);
+    const hadOriginSignal = Boolean(origin) || Boolean(request.headers.referer) || Boolean(secFetchSiteHeader);
 
     if (origin) {
       if (!isOriginAllowed(origin, requestHost, config)) {
@@ -82,7 +131,7 @@ export function registerCsrfOriginGuard(
         return reply;
       }
     } else {
-      const referer = typeof request.headers.referer === 'string' ? request.headers.referer.trim() : undefined;
+      const referer = getHeaderString(request.headers.referer);
       if (referer) {
         try {
           const refererOrigin = new URL(referer).origin;
@@ -105,24 +154,56 @@ export function registerCsrfOriginGuard(
 
     // 3. JSON Content-Type check on API mutations
     const pathname = request.url.split('?')[0] ?? '';
-    const contentType = typeof request.headers['content-type'] === 'string' ? request.headers['content-type'].toLowerCase() : '';
+    const contentType = getHeaderString(request.headers['content-type'])?.toLowerCase() ?? '';
     const isUploadPath = pathname.startsWith('/uploads') || pathname.includes('/upload') || pathname.includes('/import');
+    const isApiMutation = pathname.startsWith('/api') && MUTATION_METHODS.has(method);
 
-    if (
-      pathname.startsWith('/api') &&
-      !isUploadPath &&
-      ['POST', 'PUT', 'PATCH'].includes(request.method.toUpperCase()) &&
-      contentType
-    ) {
-      const isJson = contentType.includes('application/json') || contentType.includes('application/problem+json');
-      const isMultipart = contentType.includes('multipart/form-data');
+    // 4. Double-submit CSRF token for cookie-auth API mutations, plus a
+    // fail-closed guard for cookie-auth mutations with no browser origin
+    // signal at all (e.g. non-browser or header-stripped clients).
+    const cookies = parseCookies(getHeaderString(request.headers.cookie));
+    const csrfCookieValue = cookies['csrf_token'];
+    const hasCsrfCookie = Boolean(csrfCookieValue);
+    const hasSessionCookie = Boolean(cookies['mms_access']);
 
-      if (!isJson && !isMultipart) {
-        reply.status(415).send({
-          type: 'unsupported_media_type',
-          message: 'Content-Type must be application/json',
+    if (isApiMutation) {
+      if (hasCsrfCookie) {
+        const headerToken = getHeaderString(request.headers['x-csrf-token']);
+        if (!headerToken || !safeEqual(headerToken, csrfCookieValue)) {
+          reply.status(403).send({
+            type: 'forbidden',
+            message: 'Invalid or missing CSRF token',
+          });
+          return reply;
+        }
+      } else if (hasSessionCookie && !hadOriginSignal) {
+        // Cookie-session mutation carrying no Origin / Referer / Sec-Fetch-Site
+        // and no double-submit token: fail closed rather than accept silently.
+        reply.status(403).send({
+          type: 'forbidden',
+          message: 'Missing origin or CSRF token',
         });
         return reply;
+      }
+    }
+
+    // 5. JSON media-type enforcement on API mutations
+    if (isApiMutation && !isUploadPath && BODY_MUTATION_METHODS.has(method)) {
+      const contentLength = getHeaderString(request.headers['content-length']);
+      const isChunked = getHeaderString(request.headers['transfer-encoding'])?.includes('chunked');
+      const hasBody = (contentLength !== undefined && contentLength !== '0') || isChunked;
+
+      if (hasBody || contentType) {
+        const isJson = contentType.includes('application/json') || contentType.includes('application/problem+json');
+        const isMultipart = contentType.includes('multipart/form-data');
+
+        if (!isJson && !isMultipart) {
+          reply.status(415).send({
+            type: 'unsupported_media_type',
+            message: 'Content-Type must be application/json',
+          });
+          return reply;
+        }
       }
     }
   });

@@ -628,6 +628,20 @@ Sprint 4: UI/UX Consistency & Localization
 
 ---
 
+---
+
+## Security hardening follow-ups (applied 2026-09)
+
+| Item | Status | File(s) |
+|---|---|---|
+| WebSocket upgrade auth mirrors `authenticateTenant` (2FA, token/session revocation, tenant blocklist); token read from cookie only (query token removed) | Done | `apps/backend/src/routes/common/websocket.ts` |
+| CSRF: double-submit `X-CSRF-Token` validated server-side for cookie-auth `/api` mutations; fail-closed when a cookie session presents no Origin/Referer/Sec-Fetch-Site | Done | `apps/backend/src/plugins/csrfOriginGuard.ts` |
+| Contract routers no longer echo raw `error.message` in 500 bodies | Done | `attendanceContractRouter.ts`, `sessions.ts`, `contactRouteHelpers.ts` |
+| CSP enabled + CORP tightened to `same-site` | Done | `apps/backend/src/plugins/security.ts` |
+| SPA CSP nonce upgrade (replace `script-src 'unsafe-inline'` with a per-request nonce on the inline theme-flash script) | **Follow-up** | `frontendSpa.ts` + `security.ts` |
+
+---
+
 ## 9. Verification & Smoke Test Protocols
 
 ### Multi-Tenant RLS Concurrency Test

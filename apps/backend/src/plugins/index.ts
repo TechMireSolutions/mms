@@ -15,7 +15,7 @@ export async function registerPlugins(
 ): Promise<void> {
   registerTelemetryPlugin(app);
   registerErrorHandlers(app, config.isProd);
-  await registerSecurityPlugins(app);
+  await registerSecurityPlugins(app, config);
   registerCsrfOriginGuard(app, config);
   await registerHttpPlugins(app, config);
   registerProductionHostGuard(app, config);

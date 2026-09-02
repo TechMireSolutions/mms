@@ -85,6 +85,9 @@ export function registerConnection(subdomain: string, socket: MinimalWebSocket, 
     isAlive = false;
     socket.ping();
   }, 30000);
+  if (typeof pingInterval.unref === 'function') {
+    pingInterval.unref();
+  }
 
   const cleanup = () => {
     clearInterval(pingInterval);

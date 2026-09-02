@@ -136,13 +136,39 @@ describe('formatContactWriteError', () => {
     });
   });
 
-  it('formats database / unexpected error into 500 database_error response', () => {
+  it('formats ContactPermissionError into 403 forbidden response', () => {
+    const error = new ContactPermissionError('Permission denied');
+    const res = formatContactWriteError(error, 'Fallback message');
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({
+      type: 'forbidden',
+      message: 'Permission denied',
+    });
+  });
+
+  it('formats Postgres 23505 unique constraint violations with structured field/tab attribution', () => {
+    const pgError = {
+      code: '23505',
+      constraint: 'contacts_workspace_phone_active_uidx',
+      detail: 'Key ((regexp_replace(phone, ...)))=(923001234567) already exists.',
+    };
+    const res = formatContactWriteError(pgError, 'Fallback message');
+    expect(res.status).toBe(400);
+    expect(res.body).toEqual({
+      type: 'validation_error',
+      message: 'Phone number must be unique per contact',
+      errors: [{ fieldId: 'number', tabId: 'phones', message: 'Phone number must be unique per contact' }],
+    });
+  });
+
+  it('formats database / unexpected error into 500 database_error response without leaking the raw message', () => {
     const error = new Error('Database disconnected');
     const res = formatContactWriteError(error, 'Fallback message');
     expect(res.status).toBe(500);
     expect(res.body).toEqual({
       type: 'database_error',
-      message: 'Database disconnected',
+      message: 'Fallback message',
     });
   });
 });
+

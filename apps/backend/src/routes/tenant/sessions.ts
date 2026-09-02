@@ -93,8 +93,8 @@ export default async function sessionsRoutes(
         const item = await withTenant(String(request.tenant?.id), () => createSession(body as Parameters<typeof createSession>[0]), { readOnly: false });
         return { status: 201 as const, body: { session: item } };
       } catch (error: unknown) {
-        const message = error instanceof Error ? error.message : 'Failed to create session';
-        return { status: 500 as const, body: { type: 'database_error', message } };
+        request.log.error(error, 'Failed to create session');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create session' } };
       }
     },
     bulkDelete: async ({ body, request }: any) => {

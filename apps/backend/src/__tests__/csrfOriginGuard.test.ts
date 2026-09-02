@@ -201,18 +201,143 @@ describe('CSRF & Origin Gate Guard', () => {
     });
   });
 
-  it('exempts upload endpoints from JSON Content-Type enforcement', async () => {
+  it('rejects a cookie-auth API mutation with a missing X-CSRF-Token header', async () => {
     const app = await buildTestApp(createMockConfig());
     const res = await app.inject({
       method: 'POST',
-      url: '/uploads/image',
+      url: '/api/test',
       headers: {
-        'content-type': 'multipart/form-data; boundary=---boundary',
-        host: 'localhost:3000',
+        'content-type': 'application/json',
+        cookie: 'csrf_token=valid-token; mms_access=abc',
+        origin: 'http://localhost:3000',
       },
-      payload: '---boundary\r\nContent-Disposition: form-data; name="file"\r\n\r\ndata\r\n---boundary--',
+      payload: { data: 'test' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({
+      type: 'forbidden',
+      message: 'Invalid or missing CSRF token',
+    });
+  });
+
+  it('allows a cookie-auth API mutation with a matching X-CSRF-Token header', async () => {
+    const app = await buildTestApp(createMockConfig());
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/test',
+      headers: {
+        'content-type': 'application/json',
+        cookie: 'csrf_token=valid-token',
+        'x-csrf-token': 'valid-token',
+        origin: 'http://localhost:3000',
+      },
+      payload: { data: 'test' },
     });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toEqual({ uploaded: true });
+  });
+
+  it('rejects a cookie-session API mutation that carries no origin signal and no CSRF token', async () => {
+    const app = await buildTestApp(createMockConfig());
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/test',
+      headers: {
+        'content-type': 'application/json',
+        cookie: 'mms_access=abc',
+      },
+      payload: { data: 'test' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({
+      type: 'forbidden',
+      message: 'Missing origin or CSRF token',
+    });
+  });
+
+
+  it('handles array headers safely for Sec-Fetch-Site and Origin', async () => {
+    const app = await buildTestApp(createMockConfig());
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/test',
+      headers: {
+        'content-type': 'application/json',
+        'sec-fetch-site': ['cross-site', 'same-origin'] as unknown as string,
+      },
+      payload: { data: 'test' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({
+      type: 'forbidden',
+      message: 'Cross-site mutation blocked',
+    });
+  });
+
+  it('supports comma-separated allowedOrigin configurations', async () => {
+    const app = await buildTestApp(
+      createMockConfig({
+        allowedOrigin: 'https://mms-app.org, https://admin.mms-app.org',
+      }),
+    );
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/test',
+      headers: {
+        'content-type': 'application/json',
+        origin: 'https://admin.mms-app.org',
+        host: 'api.mms-app.org',
+      },
+      payload: { data: 'test' },
+    });
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('rejects unencrypted HTTP origins in production mode', async () => {
+    process.env.MMS_APP_DOMAIN = 'madrasa.org';
+    const app = await buildTestApp(createMockConfig({ isProd: true }));
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/test',
+      headers: {
+        'content-type': 'application/json',
+        host: 'demo.madrasa.org',
+        origin: 'http://demo.madrasa.org',
+      },
+      payload: { data: 'test' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({
+      type: 'forbidden',
+      message: 'Untrusted origin blocked',
+    });
+  });
+
+  it('rejects API mutation with body when Content-Type is completely omitted', async () => {
+    const app = await buildTestApp(createMockConfig());
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/test',
+      headers: {
+        host: 'localhost:3000',
+        'content-length': '15',
+      },
+      payload: '{"data":"test"}',
+    });
+    expect(res.statusCode).toBe(415);
+    expect(res.json()).toMatchObject({
+      type: 'unsupported_media_type',
+      message: 'Content-Type must be application/json',
+    });
+  });
+
+  it('allows requests without session cookies (no CSRF/Origin check)', async () => {
+    const app = await buildTestApp(createMockConfig());
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/test',
+      headers: { 'content-type': 'application/json' },
+      payload: { data: 'test' },
+    });
+    expect(res.statusCode).toBe(200);
   });
 });
