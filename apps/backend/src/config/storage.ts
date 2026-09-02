@@ -1,6 +1,6 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
-import { Readable, PassThrough } from 'node:stream';
+import { type Readable, type PassThrough } from 'node:stream';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { createWriteStream } from 'node:fs';
@@ -43,7 +43,7 @@ export function resolveLocalArtifactPath(s3Key: string): string {
 }
 
 export async function uploadStreamToStorage(
-  tenantId: string,
+  _tenantId: string,
   key: string,
   stream: Readable | PassThrough,
   contentType = 'application/octet-stream'
@@ -81,7 +81,7 @@ export async function uploadStreamToStorage(
 }
 
 export async function uploadBufferToStorage(
-  tenantId: string,
+  _tenantId: string,
   key: string,
   buffer: Buffer,
   contentType = 'application/octet-stream'

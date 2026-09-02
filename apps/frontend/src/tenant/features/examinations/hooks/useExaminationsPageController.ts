@@ -6,7 +6,7 @@ import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { BookOpen, FileText } from 'lucide-react';
 import { EXAMINATIONS_MODULE_MANIFEST, resolveModuleTierTab, type ExamResult } from '@mms/shared';
-import { Exam } from '@/lib/data/examinationData';
+import { type Exam } from '@/lib/data/examinationData';
 import { useExaminationExamColumnLayout } from '@/tenant/features/examinations/hooks/useExaminationExamColumnLayout';
 import { useExaminationResultsColumnLayout } from '@/tenant/features/examinations/hooks/useExaminationResultsColumnLayout';
 import {

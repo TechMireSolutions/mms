@@ -1,6 +1,6 @@
 import React from "react";
 import { BookOpen, Calendar, Users, DollarSign } from "lucide-react";
-import { Session } from '@/lib/data/sessionsData';
+import { type Session } from '@/lib/data/sessionsData';
 import { SEMANTIC_BADGE, WIZARD_SELECTION_DOT } from "@/lib/semanticTone";
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from "@/hooks/useTranslation";

@@ -1,7 +1,7 @@
 import { and, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgTable } from 'drizzle-orm/pg-core';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
-import * as schema from '../schema.js';
+import type * as schema from '../schema.js';
 
 type AppDb = NodePgDatabase<typeof schema>;
 

@@ -12,6 +12,8 @@ export default tseslint.config(
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: "module",
+        project: "./tsconfig.json",
+        tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
@@ -28,6 +30,17 @@ export default tseslint.config(
         "error",
         { "ts-expect-error": "allow-with-description" },
       ],
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        {
+          "prefer": "type-imports",
+          "fixStyle": "inline-type-imports",
+          "disallowTypeAnnotations": false,
+        },
+      ],
+      // Type-aware rules: catch unhandled/misused promises (real bug sources).
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": "error",
     },
   },
 );

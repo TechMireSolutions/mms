@@ -13,18 +13,18 @@ import {
   type ContactAttachment,
 } from '@mms/shared';
 import {
-  contacts,
-  contactTags,
-  contactPhones,
-  contactEmails,
-  contactAddresses,
-  contactSocials,
-  contactEducations,
-  contactExperiences,
-  contactSkills,
-  contactRelationships,
-  contactActivities,
-  contactAttachments,
+  type contacts,
+  type contactTags,
+  type contactPhones,
+  type contactEmails,
+  type contactAddresses,
+  type contactSocials,
+  type contactEducations,
+  type contactExperiences,
+  type contactSkills,
+  type contactRelationships,
+  type contactActivities,
+  type contactAttachments,
 } from '../schema.js';
 
 type ContactRow = typeof contacts.$inferSelect;

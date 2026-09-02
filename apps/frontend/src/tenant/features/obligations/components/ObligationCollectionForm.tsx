@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Receipt } from "lucide-react";
 import {
   generateReceiptNo,
-  ObligationCollection, ObligationType, WakalaType, MujtahidRep, Mujtahid
+  type ObligationCollection, type ObligationType, type WakalaType, type MujtahidRep, type Mujtahid
 } from "@/lib/data/obligationsData";
 import { todayISO, type AppTranslationKey } from "@mms/shared";
 import { FormModal } from "@/components/ui/FormModal";

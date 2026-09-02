@@ -1,6 +1,6 @@
 import React, { useState, lazy, Suspense } from "react";
 import { Receipt, Printer } from "lucide-react";
-import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid, WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
+import { type ObligationCollection, type ObligationType, type MujtahidRep, type Mujtahid, type WakalaType, type ObligationDistribution } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES, formatMoney, formatDate } from '@mms/shared';
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";

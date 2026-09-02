@@ -1,4 +1,4 @@
-import React, { ElementType, ReactNode, useEffect } from "react";
+import React, { type ElementType, type ReactNode, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";

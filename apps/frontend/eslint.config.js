@@ -60,6 +60,14 @@ export default tseslint.config(
         "error",
         { "ts-expect-error": "allow-with-description" },
       ],
+      "@typescript-eslint/consistent-type-imports": [
+        "error",
+        {
+          "prefer": "type-imports",
+          "fixStyle": "inline-type-imports",
+          "disallowTypeAnnotations": false,
+        },
+      ],
       "mms-boundary/no-cross-feature-imports": "error",
       "mms-bidi/no-physical-directional-classes": "error",
       "react/jsx-uses-vars": "error",

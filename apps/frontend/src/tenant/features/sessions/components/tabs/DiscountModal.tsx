@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Tag } from "lucide-react";
-import { Discount } from '@/lib/data/sessionsData';
+import { type Discount } from '@/lib/data/sessionsData';
 import { FormModal } from "@/components/ui/FormModal";
 import { RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_LABEL } from "@/components/ui/formStyles";

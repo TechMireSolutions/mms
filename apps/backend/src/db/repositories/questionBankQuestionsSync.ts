@@ -1,13 +1,13 @@
 import { and, eq } from 'drizzle-orm';
 import { type QuestionBankQuestion } from '@mms/shared';
 import {
-  questions,
+  type questions,
   questionCategories,
   questionOptions,
   questionTags,
   questionCitations,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { type withTenant } from '../tenant-context.js';
 
 type QuestionRow = typeof questions.$inferSelect;
 type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];

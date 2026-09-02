@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { type z } from "zod";
 import { translateAppParams, type AppTranslationKey } from "./appTranslations.js";
 import { isContactCustomCollectionTab } from "./contactEnabledTabs.js";
 import type { FieldDefinition } from "./contactTypes.js";

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Edit2, Tag, ToggleLeft, ToggleRight } from "lucide-react";
-import { Session, Discount } from '@/lib/data/sessionsData';
+import { type Session, type Discount } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHeader } from "@/components/ui/SectionHeader";

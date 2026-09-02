@@ -1,5 +1,5 @@
 import type { AppTranslationKey } from '@mms/shared';
-import React from "react";
+import type React from "react";
 import {
   GraduationCap, CalendarCheck, BookOpen, UserCheck, DollarSign, AlertCircle, Star, TrendingUp, Receipt,
   Users, Target, ShieldCheck, Award, Clock, Heart, Briefcase, Activity, CheckCircle2, PieChart, Zap, BarChart2,

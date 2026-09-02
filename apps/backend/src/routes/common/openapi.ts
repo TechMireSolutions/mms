@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { type FastifyInstance } from 'fastify';
 import { generateOpenApi } from '@ts-rest/open-api';
 import { rootContract } from '@mms/shared';
 

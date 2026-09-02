@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { dbSyncRoutes } from './db/dbSyncRoutes.js';
 import { dbCollectionRoutes } from './db/dbCollectionRoutes.js';

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Receipt, Coins, DollarSign, Users } from 'lucide-react';
-import { PAYMENT_MODES, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
+import { PAYMENT_MODES, type ObligationType, type MujtahidRep, type Mujtahid } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES, type AppTranslationKey } from '@mms/shared';
 import ContactPicker from '@/components/contactLink/ContactPicker';
 import { useTranslation } from '@/hooks/useTranslation';

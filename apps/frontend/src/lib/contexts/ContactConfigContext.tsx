@@ -13,7 +13,7 @@
  *   const columns = useContactColumns();         // dynamic table columns
  *   const schema  = useContactValidation();     // dynamic Zod-like validation
  */
-import React, { ReactNode, useContext } from "react";
+import React, { type ReactNode, useContext } from "react";
 import {
   ContactConfigContext,
   type ContactConfigContextType,

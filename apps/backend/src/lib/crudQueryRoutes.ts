@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyRequest } from 'fastify';
+import { type FastifyInstance, type FastifyRequest } from 'fastify';
 import { z } from 'zod';
 import type { ZodType } from 'zod';
 
@@ -9,7 +9,7 @@ import { parseRequest, replyValidationError } from './zodRequest.js';
 import {
   entityResolveBodySchema,
   widgetAggregatesBodySchema,
-  widgetQuerySchema,
+  type widgetQuerySchema,
 } from '../validation/commonSchemas.js';
 
 type WidgetQuery = z.infer<typeof widgetQuerySchema>;

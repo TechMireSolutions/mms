@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { LayoutDashboard, Building2, BarChart3, Users, User, Server, Activity } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
 import type { AppTranslationKey } from "@mms/shared";

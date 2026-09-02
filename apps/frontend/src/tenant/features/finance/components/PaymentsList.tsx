@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Payment } from '@/lib/data/financeData';
+import { type Payment } from '@/lib/data/financeData';
 import { PAYMENT_METHOD_BADGE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";

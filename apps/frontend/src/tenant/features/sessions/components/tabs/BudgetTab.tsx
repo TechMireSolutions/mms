@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, Trash2, TrendingUp, TrendingDown, DollarSign } from "lucide-react";
-import { Session, BudgetIncome, BudgetExpense } from '@/lib/data/sessionsData';
+import { type Session, type BudgetIncome, type BudgetExpense } from '@/lib/data/sessionsData';
 import { formatMoney, formatDate } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";

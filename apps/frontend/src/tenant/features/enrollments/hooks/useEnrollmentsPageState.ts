@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { ClipboardList, UserCheck } from "lucide-react";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { Enrollment } from "@/lib/data/enrollmentData";
+import { type Enrollment } from "@/lib/data/enrollmentData";
 import {
   useEnrollmentMutations,
   useEnrollmentsPaginated,

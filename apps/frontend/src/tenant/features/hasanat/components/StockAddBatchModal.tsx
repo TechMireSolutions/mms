@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Package } from 'lucide-react';
-import { Denomination, StockBatch } from '@/lib/data/hasanatData';
+import { type Denomination, type StockBatch } from '@/lib/data/hasanatData';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { FormModal } from '@/components/ui/FormModal';
 import { RequiredMark } from '@/components/ui/FormPrimitives';

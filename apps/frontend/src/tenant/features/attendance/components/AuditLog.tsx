@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { getAuditLog } from "@/tenant/features/attendance/components/MarkAttendance";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
+import { type AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";

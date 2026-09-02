@@ -1,6 +1,6 @@
 import React from 'react';
 import { User } from 'lucide-react';
-import { Mujtahid, MujtahidRep, ObligationType } from '@/lib/data/obligationsData';
+import { type Mujtahid, type MujtahidRep, type ObligationType } from '@/lib/data/obligationsData';
 import { type AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormSelect } from '@/components/ui/FormSelect';

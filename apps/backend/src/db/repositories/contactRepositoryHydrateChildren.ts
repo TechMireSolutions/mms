@@ -12,7 +12,7 @@ import {
   contactActivities,
   contactAttachments,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { type withTenant } from '../tenant-context.js';
 
 type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
 type PhoneRow = typeof contactPhones.$inferSelect;

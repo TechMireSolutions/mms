@@ -2,7 +2,7 @@ import {
   CONFIG_VERSION,
   DEFAULT_ENABLED_TABS,
   DEFAULT_REQUIRED_TABS,
-  FieldConfig,
+  type FieldConfig,
   type FieldDefinition,
   INITIAL_FIELD_SEED,
   DEFAULT_PAGE_TABS,

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Gift } from "lucide-react";
-import { Redemption, Distribution } from "@/lib/data/hasanatData";
+import { type Redemption, type Distribution } from "@/lib/data/hasanatData";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
 import { RequiredMark } from "@/components/ui/FormPrimitives";

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Dropdown } from "react-day-picker"
+import { type Dropdown } from "react-day-picker"
 import {
   Select,
   SelectContent,

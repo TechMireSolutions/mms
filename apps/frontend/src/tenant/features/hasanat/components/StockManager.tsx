@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Package } from 'lucide-react';
-import { Denomination, StockBatch } from '@/lib/data/hasanatData';
+import { type Denomination, type StockBatch } from '@/lib/data/hasanatData';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/EmptyState';

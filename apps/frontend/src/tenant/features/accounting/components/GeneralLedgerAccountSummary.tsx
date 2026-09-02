@@ -1,7 +1,7 @@
 import React from "react";
 import type { AppTranslationKey } from "@mms/shared";
 import { Download } from "lucide-react";
-import { ACCOUNT_TYPE_META, Account } from '@/lib/data/accountingData';
+import { ACCOUNT_TYPE_META, type Account } from '@/lib/data/accountingData';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";

@@ -1,6 +1,6 @@
 import { type Student, type StudentsBulkEnrollBody } from "@mms/shared";
 import {
-  useStudentMutations,
+  type useStudentMutations,
   type StudentRecord,
 } from "@/tenant/features/students/hooks/useStudents";
 import { useStudentsBulkEnrollMutation } from "@/tenant/features/students/hooks/useStudentMutations";

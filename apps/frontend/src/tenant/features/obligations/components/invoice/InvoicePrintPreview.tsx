@@ -4,8 +4,8 @@
  * Used both in the editor (live preview) and in the print/PDF modal.
  */
 import React from "react";
-import { PAGE_SIZES, resolveField, InvoiceTemplate, TemplateElement, FieldLookupInfo } from "@/lib/invoiceTemplateStore";
-import { ObligationCollection } from '@/lib/data/obligationsData';
+import { PAGE_SIZES, resolveField, type InvoiceTemplate, type TemplateElement, type FieldLookupInfo } from "@/lib/invoiceTemplateStore";
+import { type ObligationCollection } from '@/lib/data/obligationsData';
 import { useBranding } from "@/tenant/hooks/useBranding";
 import { getPrintBrandingTokens, PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 

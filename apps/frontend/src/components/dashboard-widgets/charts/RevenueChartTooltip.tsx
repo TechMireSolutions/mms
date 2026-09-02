@@ -1,4 +1,4 @@
-import { TooltipContentProps, TooltipPayloadEntry } from "recharts";
+import { type TooltipContentProps, type TooltipPayloadEntry } from "recharts";
 import { ChartTooltip, ChartTooltipRow } from "@/components/ui/ChartTooltip";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceCurrency } from "@/hooks/useCurrency";

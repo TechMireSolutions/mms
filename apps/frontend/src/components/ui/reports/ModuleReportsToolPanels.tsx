@@ -7,7 +7,7 @@ import DynamicCardBuilder from "@/components/ui/reports/DynamicCardBuilder";
 import SavedReports from "@/components/ui/reports/SavedReports";
 import ContactsSavedReports from "@/components/ui/reports/ContactsSavedReports";
 import { getObject, saveObject } from "@/lib/db";
-import { VisualizerConfig } from "@/lib/reports/reportMetadata";
+import { type VisualizerConfig } from "@/lib/reports/reportMetadata";
 import { useGenericSavedReportsSource } from "@/hooks/useSavedReportsSource";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";

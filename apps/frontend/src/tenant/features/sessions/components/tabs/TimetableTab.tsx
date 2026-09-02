@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { Plus, Clock } from "lucide-react";
-import { DAYS, Session, TimetableItem } from '@/lib/data/sessionsData';
+import { DAYS, type Session, type TimetableItem } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LegendChip } from "@/components/ui/LegendChip";

@@ -7,7 +7,7 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notify } from "@/lib/notify";
-import { PAYMENT_METHODS, Invoice } from '@/lib/data/financeData';
+import { PAYMENT_METHODS, type Invoice } from '@/lib/data/financeData';
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";

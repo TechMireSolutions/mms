@@ -1,4 +1,4 @@
-import { PAYMENT_METHODS } from '@/lib/data/financeData';
+import { type PAYMENT_METHODS } from '@/lib/data/financeData';
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { type AppTranslationKey, todayISO, type PaymentCreateInput } from "@mms/shared";
 

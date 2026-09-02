@@ -1,4 +1,5 @@
-import React, { lazy, type LazyExoticComponent } from 'react';
+import type React from 'react';
+import { lazy, type LazyExoticComponent } from 'react';
 import type { SettingsSection } from '@/lib/config/routes';
 
 const GlobalSettings = lazy(() => import('@/tenant/features/settings/components/GlobalSettings'));

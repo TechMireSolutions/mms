@@ -5,7 +5,7 @@ import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Invoice } from '@/lib/data/financeData';
+import { type Invoice } from '@/lib/data/financeData';
 import { FINANCE_MODULE_MANIFEST, type InvoiceCreateInput, type Payment, type PaymentCreateInput } from "@mms/shared";
 import {
   useFinanceInvoicesPaginated,

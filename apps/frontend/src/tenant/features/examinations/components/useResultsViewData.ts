@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Exam, ExamResult } from '@/lib/data/examinationData';
+import { type Exam, type ExamResult } from '@/lib/data/examinationData';
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import type { Student } from "@/lib/data/studentsData";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { notify } from "@/lib/notify";
-import { Exam } from '@/lib/data/examinationData';
+import { type Exam } from '@/lib/data/examinationData';
 import { toTitleCase } from "@mms/shared";
 import { EXAMINATION_FORM_EMPTY } from "./examinationFormConstants";
 

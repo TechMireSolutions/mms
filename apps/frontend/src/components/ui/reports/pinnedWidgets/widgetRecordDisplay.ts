@@ -1,5 +1,5 @@
 import { formatMoney } from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
+import { type useTranslation } from "@/hooks/useTranslation";
 import { getFieldLabel } from "@/lib/reports/reportMetadata";
 import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 

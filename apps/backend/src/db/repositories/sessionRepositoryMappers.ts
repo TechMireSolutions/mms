@@ -9,14 +9,14 @@ import {
   type TabarrukItem,
 } from '@mms/shared';
 import {
-  sessions,
-  sessionClasses,
-  sessionTimetable,
-  sessionDiscounts,
-  sessionBudgetExpenses,
-  sessionBudgetIncomes,
-  sessionEvents,
-  sessionTabarruk,
+  type sessions,
+  type sessionClasses,
+  type sessionTimetable,
+  type sessionDiscounts,
+  type sessionBudgetExpenses,
+  type sessionBudgetIncomes,
+  type sessionEvents,
+  type sessionTabarruk,
 } from '../schema.js';
 
 type SessionRow = typeof sessions.$inferSelect;

@@ -61,10 +61,12 @@ export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData>
     console.log(`[BullMQ Worker] Job ${job.id} completed on queue "${queueName}"`);
   });
 
-  worker.on('failed', async (job, err) => {
+  worker.on('failed', (job, err) => {
     console.error(`[BullMQ Worker] Job ${job?.id} failed on queue "${queueName}":`, err.message);
     if (job && job.attemptsMade >= (job.opts.attempts || 3)) {
-      await handleDeadLetterJob(queueName, job.data, err.message);
+      void handleDeadLetterJob(queueName, job.data, err.message).catch((deadLetterErr) => {
+        console.error(`[BullMQ Worker] Dead-letter handling failed for job ${job.id}:`, deadLetterErr);
+      });
     }
   });
 

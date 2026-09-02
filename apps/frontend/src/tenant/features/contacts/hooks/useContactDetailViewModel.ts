@@ -1,7 +1,7 @@
 import { useEffect, useId, useState } from "react";
 import { LayoutDashboard } from "lucide-react";
 import {
-  Contact,
+  type Contact,
   getPrimaryPhone,
   getPrimaryEmail,
   isContactCustomCollectionTab,

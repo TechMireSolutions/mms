@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { AttendanceRecord, type ClassStudent } from '@/lib/data/attendanceData';
+import { type AttendanceRecord, type ClassStudent } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";

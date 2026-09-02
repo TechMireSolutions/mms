@@ -83,7 +83,7 @@ export default function ThemeModeSelector({ value, onChange }: ThemeModeSelector
                 // eslint-disable-next-line no-restricted-syntax -- theme preview swatch intentionally renders literal light window
                 mode === 'light' && 'bg-white border-zinc-200 text-zinc-800',
                 mode === 'dark' && 'bg-zinc-950 border-zinc-800 text-zinc-200',
-                // eslint-disable-next-line no-restricted-syntax -- theme preview swatch intentionally renders literal gradient
+                 
                 mode === 'system' && 'bg-gradient-to-r from-white via-zinc-200 to-zinc-950 border-zinc-400/50 text-zinc-600 dark:text-zinc-300',
                 isSelected && 'ring-2 ring-primary/40 border-primary/60 shadow-sm'
               )}

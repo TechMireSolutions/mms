@@ -1,22 +1,22 @@
-import { exams, examClasses, examResults } from "./examinationExamTables.js";
+import { type exams, type examClasses, type examResults } from "./examinationExamTables.js";
 import {
-  questions,
-  questionCategories,
-  questionOptions,
-  questionTags,
-  questionCitations,
-  tests,
-  testQuestions,
-  testSections,
-  testSectionQuestions,
-  assessmentResults,
-  assessmentAnswers,
+  type questions,
+  type questionCategories,
+  type questionOptions,
+  type questionTags,
+  type questionCitations,
+  type tests,
+  type testQuestions,
+  type testSections,
+  type testSectionQuestions,
+  type assessmentResults,
+  type assessmentAnswers,
 } from "./examinationQuestionBankTables.js";
 import {
-  examinationsFieldConfigs,
-  examinationsModulePreferences,
-  questionBankFieldConfigs,
-  questionBankModulePreferences,
+  type examinationsFieldConfigs,
+  type examinationsModulePreferences,
+  type questionBankFieldConfigs,
+  type questionBankModulePreferences,
 } from "./examinationSetupTables.js";
 
 export type ExamRow = typeof exams.$inferSelect;

@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus, Pencil, Trash2 } from "lucide-react";
-import { WakalaType, ObligationDistribution } from '@/lib/data/obligationsData';
+import { type WakalaType, type ObligationDistribution } from '@/lib/data/obligationsData';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";

@@ -1,5 +1,5 @@
 import { Pencil, Trash2 } from "lucide-react";
-import { ObligationType } from '@/lib/data/obligationsData';
+import { type ObligationType } from '@/lib/data/obligationsData';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";

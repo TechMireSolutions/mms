@@ -3,7 +3,7 @@ import {
   User, BookOpen, Layers, DollarSign, Clock, ArrowRight, CircleDollarSign,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import { Enrollment } from '@/lib/data/enrollmentData';
+import { type Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { Button } from "@/components/ui/button";
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';

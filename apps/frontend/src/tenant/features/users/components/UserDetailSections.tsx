@@ -1,8 +1,8 @@
 import React from 'react';
 import { Shield, AlertTriangle, CheckCircle2, Lock, Phone, Mail, Send } from 'lucide-react';
 import {
-  filterRbacModulesForSettings,
-  resolveWorkspaceRole,
+  type filterRbacModulesForSettings,
+  type resolveWorkspaceRole,
   workspaceRoleDescription,
   type PermissionAction,
   type SystemUser,

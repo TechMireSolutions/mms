@@ -1,4 +1,4 @@
-import { WakalaType, ObligationDistribution, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
+import { type WakalaType, type ObligationDistribution, type ObligationType, type MujtahidRep, type Mujtahid } from '@/lib/data/obligationsData';
 
 export type DistributionType = "Income" | "Liability";
 

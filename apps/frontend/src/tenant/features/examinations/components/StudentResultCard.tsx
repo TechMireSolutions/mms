@@ -1,7 +1,7 @@
 import React from "react";
 import { Award, Printer } from "lucide-react";
-import { getRankSuffix, GradeInfo } from "@/tenant/features/examinations/components/gradeUtils";
-import { Exam } from '@/lib/data/examinationData';
+import { getRankSuffix, type GradeInfo } from "@/tenant/features/examinations/components/gradeUtils";
+import { type Exam } from '@/lib/data/examinationData';
 import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";

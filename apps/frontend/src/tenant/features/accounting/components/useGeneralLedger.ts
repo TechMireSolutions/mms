@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { computeLedger, Account, JournalEntry, AccountType } from '@/lib/data/accountingData';
+import { computeLedger, type Account, type JournalEntry, type AccountType } from '@/lib/data/accountingData';
 
 export interface GeneralLedgerLineWithRunning {
   date: string;

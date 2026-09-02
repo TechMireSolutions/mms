@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
 import { SearchBar } from "@/components/ui/SearchBar";
-import { JournalEntry, Account } from '@/lib/data/accountingData';
+import { type JournalEntry, type Account } from '@/lib/data/accountingData';
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { useTranslation } from "@/hooks/useTranslation";

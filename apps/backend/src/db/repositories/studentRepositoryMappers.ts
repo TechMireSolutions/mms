@@ -1,5 +1,5 @@
 import { type Student, type StudentStatus } from '@mms/shared';
-import { students, studentEnrolledSessions } from '../schema.js';
+import { type students, type studentEnrolledSessions } from '../schema.js';
 
 export function studentRowToRecord(
   row: typeof students.$inferSelect,

@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { Printer, FileDown, Settings } from "lucide-react";
-import { loadTemplate, PAGE_SIZES, InvoiceTemplate } from "@/lib/invoiceTemplateStore";
-import { ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from '@/lib/data/obligationsData';
+import { loadTemplate, PAGE_SIZES, type InvoiceTemplate } from "@/lib/invoiceTemplateStore";
+import { type ObligationCollection, type ObligationType, type MujtahidRep, type Mujtahid } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES } from '@mms/shared';
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
 import { InvoicePrintPreview } from "@/tenant/features/obligations/components/invoice/InvoicePrintPreview";

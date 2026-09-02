@@ -5,7 +5,7 @@ import { FormModal } from "@/components/ui/FormModal";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { Denomination, Distribution, StockBatch } from "@/lib/data/hasanatData";
+import { type Denomination, type Distribution, type StockBatch } from "@/lib/data/hasanatData";
 import { todayISO } from "@mms/shared";
 import { DistributeModalFields } from "@/tenant/features/hasanat/components/DistributeModalFields";
 

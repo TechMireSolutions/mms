@@ -16,7 +16,7 @@ import { PaymentDetail } from "@/tenant/features/finance/components/PaymentDetai
 import { FinanceSetupTier } from "@/tenant/features/finance/components/FinanceSetupTier";
 import { FinanceReportsTier } from "@/tenant/features/finance/components/FinanceReportsTier";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
-import { Invoice } from '@/lib/data/financeData';
+import { type Invoice } from '@/lib/data/financeData';
 import { FinanceCommandMetrics } from "@/tenant/features/finance/components/FinanceCommandMetrics";
 import { notify } from "@/lib/notify";
 

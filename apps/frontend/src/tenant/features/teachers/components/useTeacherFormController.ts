@@ -7,9 +7,9 @@ import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { teacherStatusOptions } from "@/lib/teachers/teacherStatusUi";
 import { useTeacherStatusConfig, useTeacherLookupOptions } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
 import {
-  Teacher,
+  type Teacher,
   DEFAULT_TEACHERS_SETTINGS,
-  TeacherDuplicateReason,
+  type TeacherDuplicateReason,
   resolveTeacherEnabledTabIds,
   resolveTeacherFieldsMapForColumnSync,
 } from "@mms/shared";

@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell } from "@/components/ui/table";
 import { getDisplayName, type Contact, type ContactPreferences } from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
+import { type useTranslation } from "@/hooks/useTranslation";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { ContactsRowActions } from "@/tenant/features/contacts/components/ContactsRowActions";
 import { renderContactTableCell } from "@/tenant/features/contacts/components/ContactTableCells";

@@ -1,12 +1,12 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { type QuestionBankTest } from '@mms/shared';
 import {
-  tests,
+  type tests,
   testQuestions,
   testSections,
   testSectionQuestions,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { type withTenant } from '../tenant-context.js';
 
 type TestRow = typeof tests.$inferSelect;
 type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];

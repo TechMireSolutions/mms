@@ -1,6 +1,6 @@
 import React from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
+import { type OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import { useCreateMadrasaController } from "@/platform/pages/onboarding/steps/useCreateMadrasaController";
 import { CreateMadrasaIdentitySection } from "@/platform/pages/onboarding/steps/CreateMadrasaIdentitySection";
 import { CreateMadrasaModulesSection } from "@/platform/pages/onboarding/steps/CreateMadrasaModulesSection";

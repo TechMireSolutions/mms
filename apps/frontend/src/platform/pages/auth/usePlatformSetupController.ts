@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import { getPlatformRegisterError } from "@/platform/lib/platformValidation";
 import { formatEntryTitle } from "@/components/entry";
 import { useTranslation } from "@/hooks/useTranslation";

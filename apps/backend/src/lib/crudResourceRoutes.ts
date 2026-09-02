@@ -1,4 +1,4 @@
-import { FastifyInstance } from 'fastify';
+import { type FastifyInstance } from 'fastify';
 import { z, type ZodType } from 'zod';
 
 import type { User } from '@mms/shared';

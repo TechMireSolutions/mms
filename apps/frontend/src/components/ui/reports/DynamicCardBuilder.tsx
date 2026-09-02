@@ -1,6 +1,6 @@
 import React from "react";
-import { WidgetBuilder, CustomWidget } from "@/components/ui/reports/PinnedWidgets";
-import { CustomCard } from "@/lib/reports/reportMetadata";
+import { WidgetBuilder, type CustomWidget } from "@/components/ui/reports/PinnedWidgets";
+import { type CustomCard } from "@/lib/reports/reportMetadata";
 import { getObject, saveObject } from "@/lib/db";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 

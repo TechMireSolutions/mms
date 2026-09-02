@@ -1,5 +1,5 @@
 import {
-  Contact,
+  type Contact,
   PuppeteerWhatsAppProvider,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";

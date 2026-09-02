@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Layers, Users, CheckCircle2 } from "lucide-react";
-import { Session, Class } from '@/lib/data/sessionsData';
-import { Student } from '@/lib/data/studentsData';
+import { type Session, type Class } from '@/lib/data/sessionsData';
+import { type Student } from '@/lib/data/studentsData';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";

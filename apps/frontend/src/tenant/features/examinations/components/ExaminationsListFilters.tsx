@@ -7,7 +7,7 @@ import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   ExaminationsFiltersMenuButton,
-  EXAM_STATUSES,
+  type EXAM_STATUSES,
 } from '@/tenant/features/examinations/components/ExaminationsFiltersMenuButton';
 
 export const EXAMINATIONS_WORK_SEARCH_INPUT_ID = 'examinations-work-search';

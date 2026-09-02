@@ -3,7 +3,7 @@ import { MessageCircle, Send } from "lucide-react";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { Button } from "@/components/ui/button";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+import { type useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { TableRow } from "@/components/ui/table";
 

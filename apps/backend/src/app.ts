@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { misconfiguredAppDomainHint } from '@mms/shared';
-import fastify, { FastifyInstance } from 'fastify';
+import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { loadBackendEnv } from './config/loadEnv.js';
 import { loadServerConfig } from './config/serverConfig.js';

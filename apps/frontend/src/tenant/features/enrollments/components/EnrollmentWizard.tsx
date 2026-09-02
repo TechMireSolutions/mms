@@ -3,16 +3,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   User, BookOpen, CheckCircle2, Layers, DollarSign, ClipboardCheck,
 } from "lucide-react";
-import { StepIndicator, Step } from "@/tenant/features/enrollments/components/wizard/StepIndicator";
+import { StepIndicator, type Step } from "@/tenant/features/enrollments/components/wizard/StepIndicator";
 import { Step1SelectStudent } from "@/tenant/features/enrollments/components/wizard/Step1SelectStudent";
 import { Step2SelectSession } from "@/tenant/features/enrollments/components/wizard/Step2SelectSession";
 import { Step3Eligibility } from "@/tenant/features/enrollments/components/wizard/Step3Eligibility";
 import { Step4ClassAssignment } from "@/tenant/features/enrollments/components/wizard/Step4ClassAssignment";
 import { Step5FeeCalculation } from "@/tenant/features/enrollments/components/wizard/Step5FeeCalculation";
 import { Step6Confirmation } from "@/tenant/features/enrollments/components/wizard/Step6Confirmation";
-import { suggestClass, runFullEligibility, Enrollment, CalculatedFee } from '@/lib/data/enrollmentData';
-import { Student } from '@/lib/data/studentsData';
-import { Session, Class } from '@/lib/data/sessionsData';
+import { suggestClass, runFullEligibility, type Enrollment, type CalculatedFee } from '@/lib/data/enrollmentData';
+import { type Student } from '@/lib/data/studentsData';
+import { type Session, type Class } from '@/lib/data/sessionsData';
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";

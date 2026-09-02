@@ -1,9 +1,9 @@
 import React from 'react';
 import { User, BookOpen, Layers, DollarSign, CheckCircle2 } from 'lucide-react';
 import { formatDate } from '@mms/shared';
-import { calcAge, Student } from '@/lib/data/studentsData';
-import { Session, Class } from '@/lib/data/sessionsData';
-import { CalculatedFee } from '@/lib/data/enrollmentData';
+import { calcAge, type Student } from '@/lib/data/studentsData';
+import { type Session, type Class } from '@/lib/data/sessionsData';
+import { type CalculatedFee } from '@/lib/data/enrollmentData';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Step6ConfirmationRow, Step6ConfirmationSection } from '@/tenant/features/enrollments/components/wizard/step6ConfirmationLayout';

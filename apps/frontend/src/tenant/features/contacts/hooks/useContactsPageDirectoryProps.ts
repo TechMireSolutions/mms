@@ -1,7 +1,7 @@
 import { type ComponentProps } from "react";
 import type { Contact } from "@mms/shared";
-import ContactsListCards from "@/tenant/features/contacts/components/ContactsListCards";
-import ContactsListDesktopTable from "@/tenant/features/contacts/components/ContactsListDesktopTable";
+import type ContactsListCards from "@/tenant/features/contacts/components/ContactsListCards";
+import type ContactsListDesktopTable from "@/tenant/features/contacts/components/ContactsListDesktopTable";
 import { getDirectoryPageSelection } from "@/lib/directorySelection";
 import type { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
 import type { useContactsMessagingActions } from "@/tenant/features/contacts/hooks/useContactsMessagingActions";

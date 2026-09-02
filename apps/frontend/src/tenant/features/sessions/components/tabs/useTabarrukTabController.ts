@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Session, TabarrukItem } from '@/lib/data/sessionsData';
+import { type Session, type TabarrukItem } from '@/lib/data/sessionsData';
 
 interface UseTabarrukTabControllerOptions {
   session: Session;

@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
-import { Account } from '@/lib/data/accountingData';
+import { type Account } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import type { GeneralLedgerLineWithRunning } from "./useGeneralLedger";

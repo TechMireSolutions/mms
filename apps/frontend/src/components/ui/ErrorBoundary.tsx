@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from "react";
+import React, { Component, type ErrorInfo, type ReactNode } from "react";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { reportClientError } from "@/lib/clientErrorReporting";

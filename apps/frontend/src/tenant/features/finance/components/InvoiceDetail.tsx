@@ -1,6 +1,6 @@
 import React from "react";
 import { ReceiptText, User, Calendar, CreditCard, Printer } from "lucide-react";
-import { Invoice } from '@/lib/data/financeData';
+import { type Invoice } from '@/lib/data/financeData';
 import { Button } from "@/components/ui/button";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';

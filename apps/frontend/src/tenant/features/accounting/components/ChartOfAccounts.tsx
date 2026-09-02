@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { AnimatePresence } from "framer-motion";
-import { ACCOUNT_TYPE_META, Account, AccountType } from '@/lib/data/accountingData';
+import { ACCOUNT_TYPE_META, type Account, type AccountType } from '@/lib/data/accountingData';
 import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
 import { ChartOfAccountsListFilters } from "@/tenant/features/accounting/components/ChartOfAccountsListFilters";
 import { ChartOfAccountsListDesktopTable } from "@/tenant/features/accounting/components/ChartOfAccountsListDesktopTable";

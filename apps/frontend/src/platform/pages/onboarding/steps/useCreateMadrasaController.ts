@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
+import { type OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
 import { slugifySubdomain } from "@mms/shared";
 import { getAppDomain } from "@/lib/config/tenantConfig";
 import { useTranslation } from "@/hooks/useTranslation";

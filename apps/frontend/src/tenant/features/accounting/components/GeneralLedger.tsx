@@ -1,6 +1,6 @@
 import React from "react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Account, JournalEntry } from '@/lib/data/accountingData';
+import { type Account, type JournalEntry } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGeneralLedger } from "@/tenant/features/accounting/components/useGeneralLedger";
 import { exportGeneralLedgerCsv } from "@/tenant/features/accounting/components/generalLedgerExport";

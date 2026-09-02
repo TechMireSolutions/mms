@@ -1,4 +1,4 @@
-import { groupTimezoneOptions, type AppTranslationKey } from '@mms/shared';
+import { type groupTimezoneOptions, type AppTranslationKey } from '@mms/shared';
 
 export function filterGroupedTimezones(
   grouped: ReturnType<typeof groupTimezoneOptions>,

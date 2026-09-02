@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { softDeleteBodySchema, bulkIdsBodySchema } from './schemas/api.dto.js';
+import { type softDeleteBodySchema, type bulkIdsBodySchema } from './schemas/api.dto.js';
 
 /** Shared page/search/sort query fields used by REST list endpoints. */
 export const baseListQueryFields = {

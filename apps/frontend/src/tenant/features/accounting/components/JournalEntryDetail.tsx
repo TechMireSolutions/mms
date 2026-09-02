@@ -4,7 +4,7 @@ import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
-import { ACCOUNT_TYPE_META, Account, JournalEntry } from '@/lib/data/accountingData';
+import { ACCOUNT_TYPE_META, type Account, type JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE, balanceToneClass } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";

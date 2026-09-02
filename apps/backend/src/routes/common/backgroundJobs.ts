@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import type { User } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';

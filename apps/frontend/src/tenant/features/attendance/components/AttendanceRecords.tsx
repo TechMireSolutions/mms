@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useDeferredValue } from "react";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { AttendanceRecord } from '@/lib/data/attendanceData';
+import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -9,7 +9,7 @@ import { ATTENDANCE_MODULE_MANIFEST, type AppTranslationKey } from "@mms/shared"
 import { useTranslation } from "@/hooks/useTranslation";
 import { useDebounce } from "@/hooks/useDebounce";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
+import { type AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { notify } from "@/lib/notify";
 import { AttendanceRecordRowActions } from "./AttendanceRecordRowActions";
 import { AttendanceListDesktopTable } from "./AttendanceListDesktopTable";

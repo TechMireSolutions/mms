@@ -1,8 +1,8 @@
 import {
   DEFAULT_PAGE_TABS,
   DEFAULT_SETTINGS_SUB_TABS,
-  FieldConfig,
-  FieldDefinition,
+  type FieldConfig,
+  type FieldDefinition,
   REMOVED_FORM_FIELD_KEYS,
   isContactRetiredClassificationKey,
 } from "@mms/shared";

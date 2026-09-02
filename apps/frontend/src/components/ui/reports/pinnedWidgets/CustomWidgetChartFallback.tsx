@@ -6,7 +6,7 @@ import { chartAxisTick } from "@/components/ui/ChartGrid";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveWidgetChartHex } from "@/lib/brandingChartPalette";
-import { computeWidgetChartData, getWidgetCollections } from "@/lib/reports/widgetDataUtils";
+import { computeWidgetChartData, type getWidgetCollections } from "@/lib/reports/widgetDataUtils";
 import { THEME_PALETTES, type CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 
 export default function CustomWidgetChartFallback({

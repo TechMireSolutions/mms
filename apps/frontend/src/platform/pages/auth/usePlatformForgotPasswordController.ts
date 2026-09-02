@@ -1,4 +1,5 @@
-import React, { useEffect, useId, useState } from "react";
+import type React from "react";
+import { useEffect, useId, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   getPlatformPasswordError,

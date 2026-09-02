@@ -68,7 +68,7 @@ export function translateAppParams<K extends AppTranslationKey>(
   if (!params) return text;
   
   // Format simple ICU plural select formatting: {count, select, one {record} other {records}}
-  text = text.replace(ICU_SELECT_REGEX, (match, varName, singular, plural) => {
+  text = text.replace(ICU_SELECT_REGEX, (_match, varName, singular, plural) => {
     const val = Number(params[varName]);
     return val === 1 ? singular : plural;
   });

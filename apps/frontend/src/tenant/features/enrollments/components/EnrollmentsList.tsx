@@ -1,5 +1,5 @@
 import React from "react";
-import { Enrollment } from '@/lib/data/enrollmentData';
+import { type Enrollment } from '@/lib/data/enrollmentData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";

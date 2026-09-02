@@ -1,8 +1,8 @@
 import React from "react";
 import { DollarSign, Tag, Info } from "lucide-react";
-import { calcFee, CalculatedFee } from '@/lib/data/enrollmentData';
-import { Student } from '@/lib/data/studentsData';
-import { Session } from '@/lib/data/sessionsData';
+import { calcFee, type CalculatedFee } from '@/lib/data/enrollmentData';
+import { type Student } from '@/lib/data/studentsData';
+import { type Session } from '@/lib/data/sessionsData';
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { WORK_SURFACE } from "@/components/ui/formStyles";

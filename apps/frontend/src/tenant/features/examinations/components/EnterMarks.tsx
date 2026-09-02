@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { motion } from "framer-motion";
 import { Save, CheckCircle2, Users, Search, Loader2 } from "lucide-react";
-import { Exam, ExamResult } from "@/lib/data/examinationData";
+import { type Exam, type ExamResult } from "@/lib/data/examinationData";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import type { Student } from "@/lib/data/studentsData";
 import { uniqueRegistryIds } from "@/lib/registryResolve";

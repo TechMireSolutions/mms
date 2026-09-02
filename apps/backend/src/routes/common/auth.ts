@@ -1,4 +1,4 @@
-import { FastifyInstance, FastifyPluginOptions } from 'fastify';
+import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authLoginRoutes } from './auth/authLoginRoutes.js';
 import { authProfileRoutes } from './auth/authProfileRoutes.js';
 import { authSessionRoutes } from './auth/authSessionRoutes.js';

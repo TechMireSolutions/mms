@@ -1,6 +1,6 @@
 import React from "react";
 import type { AppTranslationKey } from "@mms/shared";
-import { ACCOUNT_TYPES, AccountType, Account } from '@/lib/data/accountingData';
+import { ACCOUNT_TYPES, type AccountType, type Account } from '@/lib/data/accountingData';
 import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";

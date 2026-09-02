@@ -34,7 +34,7 @@ export default async function platformWorkspaceRoutes(
   fastify.addHook('preHandler', authenticatePlatform);
   fastify.addHook('preHandler', requirePlatformPermission('workspaces'));
 
-  fastify.get('/', async (request, reply) => {
+  fastify.get('/', async (_request, reply) => {
     const workspaces = await listPlatformWorkspaces();
     return reply.send({ workspaces });
   });

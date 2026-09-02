@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CreditCard } from 'lucide-react';
-import { Denomination } from '@/lib/data/hasanatData';
+import { type Denomination } from '@/lib/data/hasanatData';
 import { FormModal } from '@/components/ui/FormModal';
 import { RequiredMark } from '@/components/ui/FormPrimitives';
 import { FORM_LABEL } from '@/components/ui/formStyles';

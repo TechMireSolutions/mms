@@ -35,7 +35,7 @@ export default async function platformUsersRoutes(
   fastify.addHook('preHandler', authenticatePlatform);
   fastify.addHook('preHandler', requirePlatformPermission('admins'));
 
-  fastify.get('/', async (request, reply) => {
+  fastify.get('/', async (_request, reply) => {
     const storedUsers = await listPlatformUsers();
     const users = storedUsers.map(toPlatformUserProfile);
     return reply.send({ users });

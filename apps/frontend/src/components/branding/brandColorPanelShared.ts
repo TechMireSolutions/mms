@@ -2,7 +2,7 @@ import {
   brandingTokenToHex,
   buildBrandingCssVariables,
   getContrastRatio,
-  resolveBrandingChartPaletteHex,
+  type resolveBrandingChartPaletteHex,
   type AppTranslationKey,
   type BrandingThemeMode,
 } from "@mms/shared";

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
 import {
-  ObligationCollection, ObligationType, MujtahidRep, Mujtahid
+  type ObligationCollection, type ObligationType, type MujtahidRep, type Mujtahid
 } from '@/lib/data/obligationsData';
 import { useDebounce } from "@/hooks/useDebounce";
 import { useMergedObligationContacts } from "@/tenant/features/obligations/hooks/useObligationLookups";

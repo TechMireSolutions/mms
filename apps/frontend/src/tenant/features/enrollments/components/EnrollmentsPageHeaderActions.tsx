@@ -2,7 +2,7 @@ import React from "react";
 import { Download, Plus } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 
-import { useTranslation } from "@/hooks/useTranslation";
+import { type useTranslation } from "@/hooks/useTranslation";
 
 export interface EnrollmentsPageHeaderActionsProps {
   canExport: boolean;

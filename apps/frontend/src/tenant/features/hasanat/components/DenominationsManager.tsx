@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Edit2, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
-import { Denomination } from '@/lib/data/hasanatData';
+import { type Denomination } from '@/lib/data/hasanatData';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { SectionHeader } from '@/components/ui/SectionHeader';

@@ -1,5 +1,5 @@
 import React from 'react';
-import { toTitleCase, AppTranslationKey } from '@mms/shared';
+import { toTitleCase, type AppTranslationKey } from '@mms/shared';
 import {
   FormFooterBadge,
   FormFooterEntityChip,

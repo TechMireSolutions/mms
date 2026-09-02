@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus, Trash2, Calendar, Clock, MapPin, Edit2 } from 'lucide-react';
-import { Session, SessionEvent } from '@/lib/data/sessionsData';
+import { type Session, type SessionEvent } from '@/lib/data/sessionsData';
 import { formatDate } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';

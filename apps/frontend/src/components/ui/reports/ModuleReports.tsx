@@ -7,7 +7,7 @@ import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { type SubTab, SubTabBar } from '@/components/ui/SubTabBar';
 import { scrollDocumentToTop } from "@/lib/routing/scrollDocumentToTop";
 import ReportFilters, { type ReportFilterFields } from "@/components/ui/reports/ReportFilters";
-import { VisualizerConfig } from "@/lib/reports/reportMetadata";
+import { type VisualizerConfig } from "@/lib/reports/reportMetadata";
 import {
   ModuleReportsToolPanels,
   getInitialReportCollection,

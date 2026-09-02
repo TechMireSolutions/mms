@@ -6,8 +6,8 @@ import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { useSessionConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
-import { Session, SESSION_TYPES } from '@/lib/data/sessionsData';
-import { SessionSchema, toTitleCase, AppTranslationKey } from '@mms/shared';
+import { type Session, SESSION_TYPES } from '@/lib/data/sessionsData';
+import { SessionSchema, toTitleCase, type AppTranslationKey } from '@mms/shared';
 import {
   SessionDetailsSection,
   SessionFinancialSection,

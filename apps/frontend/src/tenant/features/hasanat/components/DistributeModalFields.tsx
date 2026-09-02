@@ -11,7 +11,7 @@ import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { Button } from "@/components/ui/button";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Denomination, Distribution } from "@/lib/data/hasanatData";
+import { type Denomination, type Distribution } from "@/lib/data/hasanatData";
 
 
 interface DistributeModalFieldsProps {

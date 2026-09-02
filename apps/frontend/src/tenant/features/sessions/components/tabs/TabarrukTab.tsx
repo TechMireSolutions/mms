@@ -1,6 +1,6 @@
 import React from "react";
 import { Plus, Gift } from "lucide-react";
-import { Session } from '@/lib/data/sessionsData';
+import { type Session } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHeader } from "@/components/ui/SectionHeader";

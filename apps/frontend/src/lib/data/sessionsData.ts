@@ -56,8 +56,6 @@ export function validateSessions(sessionInput: unknown): Session[] {
   return valid;
 }
 
-export const SESSIONS_DATA: Session[] = [];
-
 export const EVENT_TYPES = ["ceremony", "assessment", "meeting", "trip", "other"] as const;
 export const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 export const ACTIVITY_TYPES = ["class", "lecture", "assessment", "spiritual", "activity", "break"] as const;

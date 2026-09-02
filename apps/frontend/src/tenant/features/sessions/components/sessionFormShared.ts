@@ -1,4 +1,4 @@
-import { AppTranslationKey, DEFAULT_CURRENCIES, todayISO } from '@mms/shared';
+import { type AppTranslationKey, DEFAULT_CURRENCIES, todayISO } from '@mms/shared';
 import type { Session } from '@/lib/data/sessionsData';
 
 export const SESSION_STATUSES = ['active', 'upcoming', 'completed', 'cancelled'] as const;

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { QueryClient, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { connectTenantDatabaseSocket } from '@/lib/tenantWebSocket';
 import type { BackgroundJobEventMessage } from '@mms/shared';

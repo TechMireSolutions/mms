@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Gift, Plus, Star } from "lucide-react";
-import { Redemption, Distribution } from "@/lib/data/hasanatData";
+import { type Redemption, type Distribution } from "@/lib/data/hasanatData";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";

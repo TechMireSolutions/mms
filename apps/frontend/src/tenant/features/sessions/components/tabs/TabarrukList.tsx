@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Edit2, Trash2 } from "lucide-react";
-import { TabarrukItem } from '@/lib/data/sessionsData';
+import { type TabarrukItem } from '@/lib/data/sessionsData';
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@mms/shared";
 import { useListRowMotion } from "@/hooks/useListRowMotion";

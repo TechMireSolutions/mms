@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Plus, GraduationCap } from "lucide-react";
-import { Session, Class } from '@/lib/data/sessionsData';
+import { type Session, type Class } from '@/lib/data/sessionsData';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTeachersByIds } from '@/tenant/hooks/collections/teachers';
 import { collectTeacherIdsFromClasses } from '@/lib/registryResolve';

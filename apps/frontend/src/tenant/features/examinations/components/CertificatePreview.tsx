@@ -1,8 +1,8 @@
 import React, { useRef } from "react";
 import { Printer } from "lucide-react";
 import { getRankSuffix } from "@/tenant/features/examinations/components/gradeUtils";
-import { StudentResultItem } from "@/tenant/features/examinations/components/StudentResultCard";
-import { Exam } from '@/lib/data/examinationData';
+import { type StudentResultItem } from "@/tenant/features/examinations/components/StudentResultCard";
+import { type Exam } from '@/lib/data/examinationData';
 import { formatDate } from "@mms/shared";
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";

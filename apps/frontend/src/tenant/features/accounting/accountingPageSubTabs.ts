@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import {
   TrendingUp, List, BookMarked, Scale,
   BookOpen, LayoutDashboard,

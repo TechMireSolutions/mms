@@ -1,6 +1,6 @@
 import {
   Calendar, MessageCircle, MessageSquare, Phone,
-  LucideIcon, LayoutDashboard, History, FileText, Zap, User,
+  type LucideIcon, LayoutDashboard, History, FileText, Zap, User,
 } from "lucide-react";
 import { DEFAULT_DETAIL_TABS } from "@mms/shared";
 
