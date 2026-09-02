@@ -1,5 +1,10 @@
 import type { FastifyError, FastifyInstance } from 'fastify';
 import { PlatformError } from '../services/platform/platformErrorService.js';
+import {
+  dependencyForDiagnosticStage,
+  getRequestDiagnosticContext,
+  getRuntimeDependencySnapshot,
+} from './requestDiagnostics.js';
 
 export function registerErrorHandlers(app: FastifyInstance, isProd: boolean): void {
   app.setErrorHandler((error: FastifyError, request, reply) => {
@@ -18,15 +23,37 @@ export function registerErrorHandlers(app: FastifyInstance, isProd: boolean): vo
     }
 
     const statusCode = error.statusCode ?? 500;
+    const diagnostic = getRequestDiagnosticContext(request);
+    const dependency = dependencyForDiagnosticStage(diagnostic?.stage);
     if (statusCode >= 500) {
-      request.log.error({ err: error, statusCode }, 'unhandled server error');
+      request.log.error(
+        {
+          err: error,
+          statusCode,
+          requestId: request.id,
+          operation: diagnostic?.operation,
+          failureStage: diagnostic?.stage,
+          dependency,
+          ...(diagnostic ? { runtimeDependencies: getRuntimeDependencySnapshot() } : {}),
+        },
+        'unhandled server error',
+      );
     }
 
     if (statusCode >= 500 && isProd) {
       return reply.status(500).send({
         type: 'server_error',
-        message: `Internal server error. Reference: ${request.id}`,
+        message: diagnostic?.stage
+          ? `Internal server error during ${diagnostic.stage.replaceAll('_', ' ')}. Reference: ${request.id}`
+          : `Internal server error. Reference: ${request.id}`,
         requestId: request.id,
+        ...(diagnostic
+          ? {
+              operation: diagnostic.operation,
+              stage: diagnostic.stage,
+              ...(dependency ? { dependency } : {}),
+            }
+          : {}),
       });
     }
 

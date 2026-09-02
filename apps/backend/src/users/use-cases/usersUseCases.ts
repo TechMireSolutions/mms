@@ -44,8 +44,11 @@ function createHttpError(statusCode: number, type: string, message: string): Err
 
 export type UserPasswordResetFailureStage =
   | 'load_user'
+  | 'password_policy'
   | 'password_hash'
-  | 'credential_persistence'
+  | 'credential_transaction'
+  | 'credential_update'
+  | 'refresh_token_revocation'
   | 'session_revocation';
 
 export type UserPasswordResetAuxiliaryStage = 'users_broadcast' | 'activity_log';
@@ -74,6 +77,9 @@ async function runPasswordResetStage<T>(
   try {
     return await operation();
   } catch (error: unknown) {
+    if (error instanceof UserPasswordResetError) throw error;
+    const statusCode = (error as { statusCode?: number })?.statusCode;
+    if (typeof statusCode === 'number' && statusCode < 500) throw error;
     throw new UserPasswordResetError(stage, error);
   }
 }
@@ -511,16 +517,23 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
         throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot reset password of a Super Admin user account');
       }
 
-      await assertPasswordMeetsPolicy(temporaryPassword);
+      await runPasswordResetStage('password_policy', () =>
+        assertPasswordMeetsPolicy(temporaryPassword),
+      );
       const passwordHash = await runPasswordResetStage('password_hash', () =>
         hashPassword(temporaryPassword),
       );
-      const updated = await runPasswordResetStage('credential_persistence', () =>
+      const updated = await runPasswordResetStage('credential_transaction', () =>
         withTenant(tenant, async () => {
-          const passwordUpdated = await repo.resetTenantUserPasswordRow(id, passwordHash);
+          const passwordUpdated = await runPasswordResetStage('credential_update', () =>
+            repo.resetTenantUserPasswordRow(id, passwordHash),
+          );
           if (!passwordUpdated) return false;
 
-          await deleteRefreshTokensForUser(id);
+          // Keep the credential update and persistent refresh-token revocation atomic.
+          await runPasswordResetStage('refresh_token_revocation', () =>
+            deleteRefreshTokensForUser(id),
+          );
           return true;
         }),
       );

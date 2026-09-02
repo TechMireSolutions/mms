@@ -5,6 +5,7 @@ import { bindRequestTenant, bindRequestUserId, getRequestTenant, resolveSubdomai
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
 import { isTenantBlocked, isTokenRevoked, isUserSessionRevoked } from '../services/session.service.js';
+import { markRequestDiagnosticStage } from '../lib/requestDiagnostics.js';
 
 export interface AuthenticatedRequest extends FastifyRequest {
   user: User & { twoFactorVerified?: boolean; tokenType?: string; jti?: string; iat?: number; exp?: number };
@@ -26,6 +27,7 @@ export async function authenticateTenant(
   request: FastifyRequest,
   reply: FastifyReply,
 ): Promise<void> {
+  markRequestDiagnosticStage(request, 'authentication_jwt');
   try {
     await request.jwtVerify();
   } catch {
@@ -34,6 +36,7 @@ export async function authenticateTenant(
   }
 
   const user = request.user as User & { twoFactorVerified?: boolean; tokenType?: string; jti?: string; iat?: number };
+  markRequestDiagnosticStage(request, 'authentication_tenant_context');
   let tenant = getRequestTenant();
   if (!tenant) {
     tenant = resolveSubdomainFromRequest(request.headers.host, request.headers['x-forwarded-host'] as string | string[] | undefined);
@@ -48,6 +51,7 @@ export async function authenticateTenant(
   }
 
   // Fast-path Redis tenant blocklist check
+  markRequestDiagnosticStage(request, 'authentication_tenant_blocklist');
   const isBlocked = await isTenantBlocked(tenant);
   if (isBlocked) {
     await reply.status(403).send({
@@ -58,16 +62,19 @@ export async function authenticateTenant(
   }
 
   // Redis-backed token and session revocation checks
+  markRequestDiagnosticStage(request, 'authentication_token_revocation');
   if (user.jti && (await isTokenRevoked(user.jti))) {
     await sendUnauthorized(reply, 'Session revoked');
     return;
   }
 
+  markRequestDiagnosticStage(request, 'authentication_user_session_revocation');
   if (user.id && user.iat && (await isUserSessionRevoked(user.id, user.iat * 1000))) {
     await sendUnauthorized(reply, 'Session revoked');
     return;
   }
 
+  markRequestDiagnosticStage(request, 'authentication_workspace_lookup');
   const workspace = await getWorkspaceBySubdomain(tenant);
   if (!workspace || !isWorkspaceEnabled(workspace)) {
     await reply.status(403).send({
@@ -77,6 +84,7 @@ export async function authenticateTenant(
     return;
   }
 
+  markRequestDiagnosticStage(request, 'authentication_claims');
   if (user.workspaceSubdomain?.toLowerCase() !== tenant.toLowerCase()) {
     await sendForbidden(reply, 'Token is not valid for this workspace');
     return;
@@ -109,4 +117,3 @@ export async function authenticateTenant(
 
   bindRequestUserId(user.id ? String(user.id) : null);
 }
-

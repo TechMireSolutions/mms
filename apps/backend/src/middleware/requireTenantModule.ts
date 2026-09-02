@@ -6,6 +6,7 @@ import {
   getWorkspaceGrantedModulesRepo,
 } from '../db/repositories/workspaceRepository.js';
 import { normalizeEnabledModules } from '@mms/shared';
+import { markRequestDiagnosticStage } from '../lib/requestDiagnostics.js';
 
 /**
  * Creates a Fastify preHandler middleware that restricts access to a route
@@ -13,6 +14,7 @@ import { normalizeEnabledModules } from '@mms/shared';
  */
 export function requireTenantModule(moduleId: string) {
   return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
+    markRequestDiagnosticStage(request, 'module_access');
     try {
       const tenant = getRequestTenant();
       if (!tenant) {

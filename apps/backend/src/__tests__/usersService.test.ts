@@ -170,7 +170,7 @@ describe('usersService activity log upsert', () => {
     expect(onAuxiliaryError).toHaveBeenCalledWith('activity_log', auxiliaryError);
   });
 
-  it('labels persistent credential or refresh-token failures for server diagnostics', async () => {
+  it('labels refresh-token revocation failures separately from credential updates', async () => {
     const { resetUserPasswordById } = await import('../services/usersService.js');
     const { findTenantUserRowById, resetTenantUserPasswordRow } = await import(
       '../db/repositories/tenantUserRepository.js'
@@ -197,7 +197,67 @@ describe('usersService activity log upsert', () => {
       ),
     ).rejects.toMatchObject({
       type: 'password_reset_failed',
-      passwordResetStage: 'credential_persistence',
+      passwordResetStage: 'refresh_token_revocation',
+    });
+  });
+
+  it('labels credential update failures for server diagnostics', async () => {
+    const { resetUserPasswordById } = await import('../services/usersService.js');
+    const { findTenantUserRowById, resetTenantUserPasswordRow } = await import(
+      '../db/repositories/tenantUserRepository.js'
+    );
+
+    vi.mocked(findTenantUserRowById).mockResolvedValue({
+      id: 'u-123',
+      workspaceSubdomain: 'demo',
+      passwordHash: 'old-hash',
+      loginEmail: 'user@demo.local',
+      name: 'Demo User',
+      role: 'teacher',
+      deletedAt: null,
+    });
+    vi.mocked(resetTenantUserPasswordRow).mockRejectedValueOnce(
+      new Error('credential update failed'),
+    );
+
+    await expect(
+      runWithTenant('demo', () =>
+        resetUserPasswordById('u-123', 'TemporaryPass1!', 'admin', 'u-admin'),
+      ),
+    ).rejects.toMatchObject({
+      type: 'password_reset_failed',
+      passwordResetStage: 'credential_update',
+    });
+  });
+
+  it('labels Redis session revocation failures for server diagnostics', async () => {
+    const { resetUserPasswordById } = await import('../services/usersService.js');
+    const { findTenantUserRowById, resetTenantUserPasswordRow } = await import(
+      '../db/repositories/tenantUserRepository.js'
+    );
+    const { revokeAllUserSessions } = await import('../services/session.service.js');
+
+    vi.mocked(findTenantUserRowById).mockResolvedValue({
+      id: 'u-123',
+      workspaceSubdomain: 'demo',
+      passwordHash: 'old-hash',
+      loginEmail: 'user@demo.local',
+      name: 'Demo User',
+      role: 'teacher',
+      deletedAt: null,
+    });
+    vi.mocked(resetTenantUserPasswordRow).mockResolvedValue(true);
+    vi.mocked(revokeAllUserSessions).mockRejectedValueOnce(
+      new Error('session store unavailable'),
+    );
+
+    await expect(
+      runWithTenant('demo', () =>
+        resetUserPasswordById('u-123', 'TemporaryPass1!', 'admin', 'u-admin'),
+      ),
+    ).rejects.toMatchObject({
+      type: 'password_reset_failed',
+      passwordResetStage: 'session_revocation',
     });
   });
 

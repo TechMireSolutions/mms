@@ -1,4 +1,4 @@
-import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
+import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import type { User, UsersListQuery, WorkspaceUser } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
@@ -8,6 +8,13 @@ import { AUTH_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
 
 import { parseRequest } from '../../../lib/zodRequest.js';
 import { usersListQuerySchema } from '../../../validation/userSchemas.js';
+import {
+  dependencyForDiagnosticStage,
+  getRequestDiagnosticContext,
+  getRuntimeDependencySnapshot,
+  markRequestDiagnosticStage,
+  startRequestDiagnostics,
+} from '../../../lib/requestDiagnostics.js';
 
 const s = initServer();
 
@@ -31,20 +38,28 @@ function handleUserRouterError(
   if (error.statusCode === 400) {
     return { status: 400 as const, body: { type: error.type ?? 'validation_error', message: error.message } };
   }
+  const diagnostic = getRequestDiagnosticContext(request);
+  const failureStage = error.passwordResetStage ?? diagnostic?.stage;
+  const dependency = dependencyForDiagnosticStage(failureStage);
+  if (error.passwordResetStage) {
+    markRequestDiagnosticStage(request, error.passwordResetStage);
+  }
   request.log.error(
     {
       err,
       requestId: request.id,
       method: request.method,
       url: request.url,
-      failureStage: error.passwordResetStage,
+      failureStage,
+      dependency,
+      ...(diagnostic ? { runtimeDependencies: getRuntimeDependencySnapshot() } : {}),
       ...context,
     },
     fallbackMessage,
   );
 
-  const stageMessage = error.passwordResetStage
-    ? ` during ${error.passwordResetStage.replaceAll('_', ' ')}`
+  const stageMessage = failureStage
+    ? ` during ${failureStage.replaceAll('_', ' ')}`
     : '';
   return {
     status: 500 as const,
@@ -52,12 +67,14 @@ function handleUserRouterError(
       type: error.type === 'password_reset_failed' ? error.type : 'database_error',
       message: `${fallbackMessage}${stageMessage}. Reference: ${request.id}`,
       requestId: request.id,
-      ...(error.passwordResetStage ? { stage: error.passwordResetStage } : {}),
+      ...(failureStage ? { stage: failureStage } : {}),
+      ...(dependency ? { dependency } : {}),
     },
   };
 }
 
 export const userContractRouter: FastifyPluginAsync = async (fastify) => {
+  const resetPasswordRateLimit = fastify.rateLimit(AUTH_RATE_LIMIT);
   const router = s.router(rootContract.users, {
     list: async ({ query, request }: any) => {
       const user = request.user as User;
@@ -187,27 +204,39 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
     resetPassword: {
-      hooks: { preHandler: fastify.rateLimit(AUTH_RATE_LIMIT) },
+      hooks: {
+        onRequest: async (request: FastifyRequest) => {
+          startRequestDiagnostics(request, 'users.reset_password');
+        },
+        preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+          markRequestDiagnosticStage(request, 'rate_limit');
+          await resetPasswordRateLimit.call(fastify, request, reply);
+        },
+      },
       handler: async ({ params: { id }, body, request }: any) => {
-        const user = request.user as User;
-        if (!canWriteCollection(user, 'users')) {
-          return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-        }
-        if (String(user.id) === id) {
-          return {
-            status: 400 as const,
-            body: {
-              type: 'self_password_reset',
-              message: 'Use profile security settings to change your own password',
-            },
-          };
-        }
+        let actorUserId = 'unknown';
         try {
+          markRequestDiagnosticStage(request, 'authorization');
+          const user = request.user as User;
+          actorUserId = user?.id == null ? 'unknown' : String(user.id);
+          if (!canWriteCollection(user, 'users')) {
+            return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+          }
+          if (actorUserId === id) {
+            return {
+              status: 400 as const,
+              body: {
+                type: 'self_password_reset',
+                message: 'Use profile security settings to change your own password',
+              },
+            };
+          }
+          markRequestDiagnosticStage(request, 'password_reset');
           const ok = await usersUseCases.resetUserPasswordById(
             id,
             body.temporaryPassword,
             user.role,
-            String(user.id),
+            actorUserId,
             request.ip,
             (stage, error) => {
               request.log.warn(
@@ -217,19 +246,21 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
                   operation: 'users.reset_password',
                   failureStage: stage,
                   targetUserId: id,
-                  actorUserId: String(user.id),
+                  actorUserId,
+                  runtimeDependencies: getRuntimeDependencySnapshot(),
                 },
                 'Password reset completed but an auxiliary step failed',
               );
             },
           );
           if (!ok) return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
+          markRequestDiagnosticStage(request, 'response_serialization');
           return { status: 200 as const, body: { success: true as const } };
         } catch (error: unknown) {
           return handleUserRouterError(error, request, 'Failed to reset user password', {
             operation: 'users.reset_password',
             targetUserId: id,
-            actorUserId: String(user.id),
+            actorUserId,
           });
         }
       },

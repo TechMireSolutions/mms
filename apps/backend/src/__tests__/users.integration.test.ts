@@ -287,7 +287,7 @@ describe('users REST routes', () => {
   it('POST /api/users/:id/reset-password returns a traceable server failure', async () => {
     const resetError = Object.assign(new Error('database write failed'), {
       type: 'password_reset_failed',
-      passwordResetStage: 'credential_persistence',
+      passwordResetStage: 'credential_update',
     });
     mockResetUserPasswordById.mockRejectedValueOnce(resetError);
     const app = await buildApp();
@@ -305,7 +305,8 @@ describe('users REST routes', () => {
     expect(res.statusCode).toBe(500);
     expect(res.json()).toMatchObject({
       type: 'password_reset_failed',
-      stage: 'credential_persistence',
+      stage: 'credential_update',
+      dependency: 'database',
     });
     expect(res.json().message).toContain('Reference:');
     await app.close();
