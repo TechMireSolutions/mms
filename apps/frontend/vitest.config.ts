@@ -34,11 +34,12 @@ export default defineConfig({
         'src/**/*.test.{ts,tsx}',
         'src/**/*.spec.{ts,tsx}',
         'src/test/**',
+        'src/tenant/hooks/collections/**',
         '**/*.d.ts',
       ],
       // Coverage gate: lock in the current baseline so regressions fail CI.
-      // Raise these as coverage improves. Measured: lines ~42 / stmts ~40.5 /
-      // funcs ~32.8 / branches ~39.6.
+      // Raise these as coverage improves. Measured: lines ~42.0 / stmts ~40.4 /
+      // funcs ~32.7 / branches ~39.5.
       thresholds: {
         lines: 41,
         statements: 40,

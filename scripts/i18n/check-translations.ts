@@ -29,14 +29,83 @@ const ar = extractTranslations(path.join(sharedSrc, 'appTranslationsAr.ts'));
 const ur = extractTranslations(path.join(sharedSrc, 'appTranslationsUr.ts'));
 const fa = extractTranslations(path.join(sharedSrc, 'appTranslationsFa.ts'));
 
+function isInvariantValue(key: string, value: string): boolean {
+  if (value === '—' || value === '%') return true;
+  if (value.endsWith('.csv') || value.endsWith('.vcf')) return true;
+  if (/^https?:\/\//.test(value)) return true;
+  if (/^[\d\s+\-•#]+$/.test(value)) return true;
+  if (value.includes('@') && !value.includes(' ')) return true;
+  if (/^\{[a-zA-Z]+\}$/.test(value)) return true;
+  if (/^[a-zA-Z0-9_-]+\.[a-zA-Z0-9_.-]+$/.test(value)) return true;
+  if (
+    [
+      'WhatsApp',
+      'SMS',
+      'IP',
+      '2FA',
+      'GR',
+      'ISBN',
+      'URL',
+      'MCQ',
+      'PDF',
+      'ISO 8601',
+      'GSM 7-bit',
+      'Arial',
+      'Georgia',
+      'Monospace',
+      'Serif',
+      'AsyncLocalStorage',
+      'Fastify WebSocket',
+      'PostgreSQL 16 (RLS)',
+      'Node.js RSS',
+      'RLS 100%',
+      'Madrasa MS',
+      'Apple Contacts',
+      'Google Contacts',
+      'Gmail / Google Workspace',
+      'iCloud Mail',
+      'Microsoft 365',
+      'Outlook.com / Hotmail',
+      'Yahoo Mail',
+      'Zoho Mail',
+      'Client ID',
+      'Client Secret',
+      'Top P',
+      'Facebook',
+      'KB',
+      'syed, syeda',
+      '(vCard / .vcf)',
+      'al-noor',
+      '09:00 - 11:00',
+    ].includes(value)
+  ) {
+    return true;
+  }
+  if (
+    value.startsWith('SMS (') ||
+    value.startsWith('WhatsApp (') ||
+    value.startsWith('ISBN {') ||
+    value.startsWith('¶ {') ||
+    value.startsWith('{prefix}-') ||
+    value.startsWith(' · ') ||
+    value.includes('{quote}') ||
+    value.includes('{className}') ||
+    value.includes('{stage}')
+  ) {
+    return true;
+  }
+  return false;
+}
+
 let arMissing = 0;
 let urMissing = 0;
 let faMissing = 0;
 
 for (const [key, enValue] of Object.entries(en)) {
-  if (ar[key] === enValue || !ar[key]) arMissing++;
-  if (ur[key] === enValue || !ur[key]) urMissing++;
-  if (fa[key] === enValue || !fa[key]) faMissing++;
+  const invariant = isInvariantValue(key, enValue);
+  if (!ar[key] || (!invariant && ar[key] === enValue)) arMissing++;
+  if (!ur[key] || (!invariant && ur[key] === enValue)) urMissing++;
+  if (!fa[key] || (!invariant && fa[key] === enValue)) faMissing++;
 }
 
 console.log('=== MMS Translation Completeness Report ===');

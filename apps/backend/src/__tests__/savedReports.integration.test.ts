@@ -56,13 +56,14 @@ const REPORT = {
 
 describe('generic saved-reports REST routes', () => {
   let app: FastifyInstance;
-
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';
     app = await buildApp();
   });
 
   beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     mockListSavedReports.mockReset().mockResolvedValue([REPORT]);
     mockCreateSavedReport.mockReset().mockResolvedValue(REPORT);
     mockDeleteSavedReport.mockReset().mockResolvedValue(true);

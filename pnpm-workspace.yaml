@@ -3,6 +3,8 @@ packages:
   - 'packages/*'
   - 'e2e'
 
+confirmModulesPurge: false
+
 allowBuilds:
   better-sqlite3: true
   core-js: true
@@ -12,7 +14,7 @@ allowBuilds:
 
 catalog:
   zod: "^4.4.3"
-  fastify: "^5.11.3"
+  fastify: "^5.12.1"
   drizzle-orm: "^0.45.2"
   react: "^19.2.8"
   react-dom: "^19.2.8"
@@ -49,3 +51,4 @@ overrides:
   #   (ts-deepmerge was NOT overridden: @anatine/zod-openapi calls `.default()` which
   #   ts-deepmerge@8's CJS build no longer exports — the override broke /api/openapi.json.)
   uuid: "^11.1.1"
+  fast-uri: "^4.1.3"
