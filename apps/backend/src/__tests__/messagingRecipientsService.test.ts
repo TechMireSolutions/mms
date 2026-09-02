@@ -49,7 +49,9 @@ describe('messaging recipient resolvers (contacts use-case seam)', () => {
 
   it('resolveMessagingRecipients converts survivors via the tenant read use case', async () => {
     mockLoadContactsByIdsForTenant.mockResolvedValue([
-      fakeContact('a', { phones: [{ label: 'Mobile', number: '3001234567', isPrimary: true }] }),
+      fakeContact('a', {
+        phones: [{ label: 'Mobile', countryCode: '+92', number: '3001234567', isPrimary: true }],
+      }),
       fakeContact('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }),
       fakeContact('b', { emails: [{ label: 'Primary', address: 'b@example.com' }] }),
     ]);
