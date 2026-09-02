@@ -638,7 +638,7 @@ Sprint 4: UI/UX Consistency & Localization
 | CSRF: double-submit `X-CSRF-Token` validated server-side for cookie-auth `/api` mutations; fail-closed when a cookie session presents no Origin/Referer/Sec-Fetch-Site | Done | `apps/backend/src/plugins/csrfOriginGuard.ts` |
 | Contract routers no longer echo raw `error.message` in 500 bodies | Done | `attendanceContractRouter.ts`, `sessions.ts`, `contactRouteHelpers.ts` |
 | CSP enabled + CORP tightened to `same-site` | Done | `apps/backend/src/plugins/security.ts` |
-| SPA CSP nonce upgrade (replace `script-src 'unsafe-inline'` with a per-request nonce on the inline theme-flash script) | **Follow-up** | `frontendSpa.ts` + `security.ts` |
+| SPA CSP nonce upgrade (replace `script-src 'unsafe-inline'` with a per-request nonce on the inline theme-flash script) | Done | `security.ts` (per-request nonce in `onSend`, stamped onto inline scripts) |
 
 ---
 

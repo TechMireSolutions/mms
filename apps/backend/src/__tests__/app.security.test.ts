@@ -258,8 +258,32 @@ describe('tenant JWT binding', () => {
     expect(csp).toContain("media-src 'self' data: blob:");
     expect(csp).toContain("worker-src 'self' blob:");
     expect(csp).toContain("manifest-src 'self'");
+    // Per-request nonce replaces 'unsafe-inline' for inline scripts.
+    const scriptSrc = csp.match(/script-src [^;]+/)?.[0] ?? '';
+    expect(scriptSrc).toMatch(/script-src 'self' 'nonce-[A-Za-z0-9+/=]+'/);
+    expect(scriptSrc).not.toContain("'unsafe-inline'");
     expect(typeof res.headers['x-request-id']).toBe('string');
     expect(res.headers['x-request-id']).toMatch(/^[0-9a-zA-Z_-]+$/);
+    await app.close();
+  });
+
+  it('stamps the CSP nonce onto inline scripts in HTML responses', async () => {
+    const app = await buildApp();
+    app.get('/html-test', async (_req, reply) => {
+      reply.type('text/html');
+      return '<html><head><script>window.__theme = 1;</script></head><body></body></html>';
+    });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/html-test',
+      headers: { host: 'localhost' },
+    });
+    expect(res.statusCode).toBe(200);
+    const csp = String(res.headers['content-security-policy'] ?? '');
+    const nonceMatch = csp.match(/script-src 'self' 'nonce-([A-Za-z0-9+/=]+)'/);
+    expect(nonceMatch).not.toBeNull();
+    const nonce = nonceMatch![1];
+    expect(res.body).toContain(`<script nonce="${nonce}">`);
     await app.close();
   });
 

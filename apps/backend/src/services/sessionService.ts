@@ -1,17 +1,4 @@
-import {
-  listSessionsByWorkspace,
-  findSessionById,
-  findSessionsByIds,
-  saveSession,
-} from '../db/repositories/sessionRepository.js';
-import {
-  listSessionsPage,
-  countSessionsActive,
-  aggregateSessionsCommandMetrics,
-  bulkUpdateSessionsStatusSql,
-} from '../db/repositories/sessionRepositoryList.js';
-import { aggregateSessionsWidgetQueries } from '../db/repositories/sessionRepositoryWidgets.js';
-import { loadSessionsReportAggregatesSql } from '../db/repositories/sessionRepositoryReport.js';
+import { sessionsRepository } from '../sessions/repository/sessionsRepositoryAdapter.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import {
   sessionRecordSchema,
@@ -28,9 +15,9 @@ import {
 
 const crud = createGenericRelationalService<SessionRecord>({
   repo: {
-    listByWorkspace: listSessionsByWorkspace,
-    findById: findSessionById,
-    save: saveSession,
+    listByWorkspace: sessionsRepository.listSessionsByWorkspace,
+    findById: sessionsRepository.findSessionById,
+    save: sessionsRepository.saveSession,
   },
   schema: sessionRecordSchema,
   websocketCollection: 'sessions',
@@ -52,7 +39,7 @@ export async function bulkUpdateSessionsStatus(
 ): Promise<{ succeeded: number; failed: number }> {
   const tenant = getRequestTenant();
   if (!tenant) return { succeeded: 0, failed: ids.length };
-  const result = await bulkUpdateSessionsStatusSql(tenant, ids, status);
+  const result = await sessionsRepository.bulkUpdateSessionsStatus(tenant, ids, status);
   if (result.succeeded > 0) {
     const { broadcastTenantUpdate } = await import('./websocketService.js');
     broadcastTenantUpdate(tenant, 'collection', 'sessions');
@@ -71,20 +58,20 @@ export async function loadSessionsPage(query: SessionsListQuery & { includeDelet
       hasMore: false,
     };
   }
-  return listSessionsPage(tenant, query);
+  return sessionsRepository.listSessionsPage(tenant, query);
 }
 
 export async function loadSessionsByIds(ids: string[]): Promise<Session[]> {
   const tenant = getRequestTenant();
   if (!tenant || ids.length === 0) return [];
-  const rows = await findSessionsByIds(tenant, ids);
+  const rows = await sessionsRepository.findSessionsByIds(tenant, ids);
   return rows as Session[];
 }
 
 export async function countSessions(): Promise<number> {
   const tenant = getRequestTenant();
   if (!tenant) return 0;
-  return countSessionsActive(tenant);
+  return sessionsRepository.countSessionsActive(tenant);
 }
 
 export async function loadSessionsCommandMetrics() {
@@ -103,7 +90,7 @@ export async function loadSessionsCommandMetrics() {
       sessionsLastWeek: 0,
     };
   }
-  return aggregateSessionsCommandMetrics(tenant);
+  return sessionsRepository.aggregateSessionsCommandMetrics(tenant);
 }
 
 export async function loadSessionsWidgetAggregates(
@@ -111,7 +98,7 @@ export async function loadSessionsWidgetAggregates(
 ): Promise<Record<string, import('@mms/shared').SessionsWidgetAggregateResult>> {
   const tenant = getRequestTenant();
   if (!tenant) return {};
-  return aggregateSessionsWidgetQueries(tenant, queries);
+  return sessionsRepository.aggregateSessionsWidgetQueries(tenant, queries);
 }
 
 export async function loadSessionsReportAggregates(): Promise<SessionsReportAggregates> {
@@ -119,5 +106,5 @@ export async function loadSessionsReportAggregates(): Promise<SessionsReportAggr
   if (!tenant) {
     return { capacity: [], enrollmentTrends: [], todaysSessions: [] };
   }
-  return loadSessionsReportAggregatesSql(tenant);
+  return sessionsRepository.loadSessionsReportAggregates(tenant);
 }

@@ -25,6 +25,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 
 const mockLoadAttendanceRecords = vi.fn();
 const mockLoadAttendancePage = vi.fn();
+const mockCreateAttendanceRecord = vi.fn();
 const mockUpsertAttendanceRecords = vi.fn();
 const mockDeleteAttendanceRecordById = vi.fn();
 const mockRestoreAttendanceRecordById = vi.fn();
@@ -37,7 +38,7 @@ vi.mock('../services/attendanceService.js', () => ({
   loadAttendanceRecords: (...args: unknown[]) => mockLoadAttendanceRecords(...args),
   loadAttendancePage: (...args: unknown[]) => mockLoadAttendancePage(...args),
   countAttendanceRecords: vi.fn().mockResolvedValue(0),
-  createAttendanceRecord: vi.fn(),
+  createAttendanceRecord: (...args: unknown[]) => mockCreateAttendanceRecord(...args),
   updateAttendanceRecordById: vi.fn(),
   deleteAttendanceRecordById: (...args: unknown[]) => mockDeleteAttendanceRecordById(...args),
   restoreAttendanceRecordById: (...args: unknown[]) => mockRestoreAttendanceRecordById(...args),
@@ -73,6 +74,7 @@ describe('attendance REST routes integration', () => {
       limit: 15,
       hasMore: false,
     });
+    mockCreateAttendanceRecord.mockReset();
     mockUpsertAttendanceRecords.mockReset();
     mockDeleteAttendanceRecordById.mockReset();
     mockRestoreAttendanceRecordById.mockReset();
@@ -146,6 +148,47 @@ describe('attendance REST routes integration', () => {
       sessionId: 'session-1',
       teacherId: 'teacher-1',
     }));
+    await app.close();
+  });
+
+  it('does not leak internal error messages in 500 list responses', async () => {
+    mockLoadAttendancePage.mockRejectedValueOnce(new Error('SENSITIVE_INTERNAL_DETAILS: db password=secret'));
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/attendance',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toEqual({
+      type: 'database_error',
+      message: 'Failed to list attendance',
+    });
+    expect(JSON.stringify(res.json())).not.toContain('SENSITIVE_INTERNAL_DETAILS');
+    await app.close();
+  });
+
+  it('does not leak internal error messages in 500 create responses', async () => {
+    mockCreateAttendanceRecord.mockRejectedValueOnce(new Error('SENSITIVE_INTERNAL_DETAILS: db password=secret'));
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/attendance',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: attendanceRecord,
+    });
+    expect(res.statusCode).toBe(500);
+    expect(res.json()).toEqual({
+      type: 'database_error',
+      message: 'Failed to create attendance',
+    });
+    expect(JSON.stringify(res.json())).not.toContain('SENSITIVE_INTERNAL_DETAILS');
     await app.close();
   });
 

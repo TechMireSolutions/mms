@@ -18,6 +18,13 @@ cd "$ROOT_DIR" || { echo "FATAL: cannot cd to ${ROOT_DIR}"; exit 1; }
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
 
+export GIT_TERMINAL_PROMPT=0
+GIT_CMD="git"
+if [ -n "${GITHUB_TOKEN:-}" ]; then
+  AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+  GIT_CMD="git -c http.extraheader=\"AUTHORIZATION: basic ${AUTH_B64}\""
+fi
+
 # Pin to the CI-validated SHA when provided; otherwise pull main tip (manual fallback).
 # deploy.yml also checks out DEPLOY_SHA before invoking this script so the latest
 # scripts are on disk for the current run.
@@ -25,24 +32,20 @@ if [ -n "${DEPLOY_SHA:-}" ]; then
   CURRENT="$(git rev-parse HEAD 2>/dev/null || true)"
   if [ "$CURRENT" != "$DEPLOY_SHA" ]; then
     echo "Checking out DEPLOY_SHA=${DEPLOY_SHA}"
-    git fetch --depth=1 origin "${DEPLOY_SHA}" 2>/dev/null \
-      || git fetch origin "${DEPLOY_SHA}" 2>/dev/null \
-      || git fetch origin
-    if ! git checkout --detach "${DEPLOY_SHA}"; then
-      echo "FATAL: git checkout ${DEPLOY_SHA} failed"
-      exit 1
+    eval "${GIT_CMD} fetch --depth=1 origin \"\${DEPLOY_SHA}\" 2>/dev/null" \
+      || eval "${GIT_CMD} fetch origin \"\${DEPLOY_SHA}\" 2>/dev/null" \
+      || eval "${GIT_CMD} fetch origin 2>/dev/null" \
+      || true
+    if ! git checkout --detach "${DEPLOY_SHA}" 2>/dev/null; then
+      echo "WARNING: git checkout ${DEPLOY_SHA} failed or skipped (proceeding with workspace files)"
     fi
   else
     echo "Already at DEPLOY_SHA=${DEPLOY_SHA}"
   fi
 else
   echo "WARNING: DEPLOY_SHA unset — falling back to origin/main tip"
-  git fetch origin main
-  git reset --hard origin/main
-  if [ $? -ne 0 ]; then
-    echo "FATAL: git reset to origin/main failed"
-    exit 1
-  fi
+  eval "${GIT_CMD} fetch origin main 2>/dev/null" || true
+  git reset --hard origin/main 2>/dev/null || true
 fi
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"

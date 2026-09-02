@@ -255,6 +255,25 @@ describe('CSRF & Origin Gate Guard', () => {
   });
 
 
+  it('rejects a cookie-session mutation carrying only Sec-Fetch-Site (no Origin/Referer) and no CSRF token', async () => {
+    const app = await buildTestApp(createMockConfig());
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/test',
+      headers: {
+        'content-type': 'application/json',
+        'sec-fetch-site': 'same-origin',
+        cookie: 'mms_access=abc',
+      },
+      payload: { data: 'test' },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({
+      type: 'forbidden',
+      message: 'Missing origin or CSRF token',
+    });
+  });
+
   it('handles array headers safely for Sec-Fetch-Site and Origin', async () => {
     const app = await buildTestApp(createMockConfig());
     const res = await app.inject({

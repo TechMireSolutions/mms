@@ -134,6 +134,7 @@ jobs:
           PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME }}
           MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
           DEPLOY_SHA: ${{ env.DEPLOY_SHA }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MMS_DEPLOY_SKIP_PUBLIC_VERIFY: '1'
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -141,16 +142,26 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           command_timeout: 20m
-          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,DEPLOY_SHA,MMS_DEPLOY_SKIP_PUBLIC_VERIFY
+          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,DEPLOY_SHA,GITHUB_TOKEN,MMS_DEPLOY_SKIP_PUBLIC_VERIFY
           script: |
             set -e
             cd /var/www/mmsv2
+            export GIT_TERMINAL_PROMPT=0
+
+            # Configure ephemeral Git auth token if available to fetch private repo commits over HTTPS
+            GIT_CMD="git"
+            if [ -n "${GITHUB_TOKEN:-}" ]; then
+              AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
+              GIT_CMD="git -c http.extraheader=\"AUTHORIZATION: basic ${AUTH_B64}\""
+            fi
+
             # Pin tree to CI SHA before invoking deploy script (so updated scripts are used).
             if [ -n "${DEPLOY_SHA:-}" ]; then
-              git fetch --depth=1 origin "${DEPLOY_SHA}" 2>/dev/null \
-                || git fetch origin "${DEPLOY_SHA}" 2>/dev/null \
-                || git fetch origin
-              git checkout --detach "${DEPLOY_SHA}"
+              eval "${GIT_CMD} fetch --depth=1 origin \"\${DEPLOY_SHA}\" 2>/dev/null" \
+                || eval "${GIT_CMD} fetch origin \"\${DEPLOY_SHA}\" 2>/dev/null" \
+                || eval "${GIT_CMD} fetch origin 2>/dev/null" \
+                || true
+              git checkout --detach "${DEPLOY_SHA}" 2>/dev/null || echo "Notice: git checkout ${DEPLOY_SHA} skipped (using current workspace state)"
             fi
 
             # Extract pre-compiled dist files over the tree if tarball exists

@@ -118,9 +118,13 @@ export function registerCsrfOriginGuard(
 
     // 2. Origin / Referer validation. Track whether any positive origin signal
     // was present so we can fail closed below for silent cookie-auth clients.
+    // Note: Sec-Fetch-Site is deliberately NOT counted as a positive origin
+    // signal — it is trivially spoofable by non-browser clients, so a cookie-auth
+    // mutation carrying only Sec-Fetch-Site (no Origin/Referer) and no CSRF token
+    // must still fail closed.
     const origin = getHeaderString(request.headers.origin);
     const requestHost = requestHostname(request);
-    const hadOriginSignal = Boolean(origin) || Boolean(request.headers.referer) || Boolean(secFetchSiteHeader);
+    const hadOriginSignal = Boolean(origin) || Boolean(request.headers.referer);
 
     if (origin) {
       if (!isOriginAllowed(origin, requestHost, config)) {

@@ -35,7 +35,7 @@ export async function syncPlatformSuperUserToTenant(
   if (!superUser) return false;
 
   const normalizedEmail = superUser.email.trim().toLowerCase();
-  const superUserId = `pu_${superUser.id}`;
+  const superUserId = `pu_${subdomain}_${superUser.id}`;
 
   return withTenant(subdomain, async (tx) => {
     const existingRows = await tx

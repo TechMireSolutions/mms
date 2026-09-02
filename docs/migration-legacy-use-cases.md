@@ -93,7 +93,7 @@ rewired to the facade, and green unit + inject tests. No behavior change.
 
 ## Checklist tracking
 
-- [ ] sessions
+- [x] sessions — repository interface + adapter created (`sessions/repository/`); `sessionService` wired to the adapter as the sole storage gateway. Remaining: use-cases facade with DI factory + route rewiring.
 - [ ] enrollments
 - [ ] finance
 - [ ] attendance
