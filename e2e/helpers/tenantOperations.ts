@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 import { execSync } from 'node:child_process';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -21,226 +21,237 @@ export async function selectOptionByMatchingText(select: Locator, text: string |
   await select.selectOption(optValue);
 }
 
-export async function waitForToastOverlayToClear(page: Page, context: string): Promise<void> {
-  await page
-    .waitForFunction(() => !document.querySelector('.z-toast [data-state="open"]'), null, { timeout: 10_000 })
-    .catch(() => console.log(`Toast overlay still visible ${context}.`));
+export async function waitForToastOverlayToClear(page: Page, _context = ''): Promise<void> {
+  const toast = page.locator('.z-toast [data-state="open"]');
+  await toast.waitFor({ state: 'hidden', timeout: 10_000 }).catch(() => {
+    // Toast overlay unmounted or already hidden
+  });
 }
 
-/**
- * Creates Jane Doe (Female contact with phone)
- */
-export async function createTestContactJaneDoe(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Add Contact' }).first().click();
-  const janeDialog = page.getByRole('dialog', { name: /(Add New Contact|Edit Jane Doe|Edit Contact)/i });
-  await expect(janeDialog).toBeVisible({ timeout: 15_000 });
-  
-  await janeDialog.locator('input[name="firstName"]').fill('Jane');
-  await janeDialog.locator('input[name="lastName"]').fill('Doe');
+/** Form data payload for parameterized contact creation */
+export interface ContactFormData {
+  firstName: string;
+  lastName: string;
+  gender?: 'Male' | 'Female' | 'Other' | 'male' | 'female' | 'other';
+  dob?: string;
+  phone?: string;
+  email?: string;
+}
 
-  const janeGender = janeDialog.locator('[id$="-gender"]');
-  if (await janeGender.isVisible({ timeout: 2000 }).catch(() => false)) {
-    const isNativeSelect = await janeGender.evaluate((el) => el.tagName.toLowerCase() === 'select').catch(() => false);
+/** Sets gender on a contact FormModal (supports both native select and Radix dropdowns) */
+async function fillContactGender(dialog: Locator, page: Page, gender: string): Promise<void> {
+  const genderInput = dialog.locator('[id$="-gender"]');
+  if (await genderInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+    const isNativeSelect = await genderInput.evaluate((el) => el.tagName.toLowerCase() === 'select').catch(() => false);
+    const normalized = gender.toLowerCase();
+    const label = normalized.charAt(0).toUpperCase() + normalized.slice(1);
     if (isNativeSelect) {
-      await janeGender.selectOption('female').catch(async () => {
-        await janeGender.selectOption({ label: 'Female' });
+      await genderInput.selectOption(normalized).catch(async () => {
+        await genderInput.selectOption({ label });
       });
     } else {
-      await janeGender.click();
-      await page.locator('[role="option"]').filter({ hasText: /^Female$/i }).click();
+      await genderInput.click();
+      await page.locator('[role="option"]').filter({ hasText: new RegExp(`^${label}$`, 'i') }).click();
     }
   }
+}
 
-  const dobInput = janeDialog.locator('[id$="-dob"], input[name="dob"]').first();
-  await expect(dobInput).toBeVisible({ timeout: 5000 });
-  await dobInput.fill('2015-05-15');
-  await dobInput.blur();
-
-  await janeDialog.getByRole('tab', { name: 'Phones' }).click();
-  const phoneInput = janeDialog.locator('[id$="-phone-number-0"]');
-  const phoneInputVisible = await phoneInput.isVisible({ timeout: 2000 }).catch(() => false);
-  if (!phoneInputVisible) {
-    const addPhoneBtn = janeDialog.getByRole('button', { name: /Add phone number|Add/i });
+/** Adds and fills phone number on a contact FormModal */
+async function fillContactPhone(dialog: Locator, phone: string): Promise<void> {
+  await dialog.getByRole('tab', { name: 'Phones' }).click();
+  const phoneInput = dialog.locator('[id$="-phone-number-0"]');
+  const isInputVisible = await phoneInput.isVisible({ timeout: 2000 }).catch(() => false);
+  if (!isInputVisible) {
+    const addPhoneBtn = dialog.getByRole('button', { name: /Add phone number|Add/i });
     if (await addPhoneBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await addPhoneBtn.click();
     }
   }
   await expect(phoneInput).toBeVisible({ timeout: 5000 });
-  await phoneInput.fill('03001234567');
+  await phoneInput.fill(phone);
   await phoneInput.blur();
-  await janeDialog.getByRole('tab', { name: 'Basic' }).click();
-
-  await waitForToastOverlayToClear(page, 'before saving Jane Doe');
-  const contactSave = page.waitForResponse(
-    (res) => res.url().includes('/api/contacts') && (res.request().method() === 'POST' || res.request().method() === 'PUT'),
-    { timeout: 15_000 },
-  );
-  await janeDialog.getByRole('button', { name: /Save Contact|Save/i }).click();
-  const resp = await contactSave;
-  if (!resp.ok()) {
-    const text = await resp.text();
-    throw new Error(`Contact POST /api/contacts failed with status ${resp.status()}: ${text}`);
-  }
-  await expect(janeDialog).toBeHidden({ timeout: 15_000 });
-  await expect(
-    page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
-  ).toBeVisible({ timeout: 15_000 });
-  await waitForToastOverlayToClear(page, 'after creating Jane Doe');
 }
 
-/**
- * Creates John Doe (Male contact with email)
- */
-export async function createTestContactJohnDoe(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Add Contact' }).first().click();
-  const johnDialog = page.getByRole('dialog', { name: /(Add New Contact|Edit John Doe|Edit Contact)/i });
-  await expect(johnDialog).toBeVisible({ timeout: 15_000 });
-  await johnDialog.locator('input[name="firstName"]').fill('John');
-  await johnDialog.locator('input[name="lastName"]').fill('Doe');
-  
-  const johnGender = johnDialog.locator('[id$="-gender"]');
-  if (await johnGender.isVisible({ timeout: 2000 }).catch(() => false)) {
-    const isNativeSelect = await johnGender.evaluate((el) => el.tagName.toLowerCase() === 'select').catch(() => false);
-    if (isNativeSelect) {
-      await johnGender.selectOption('male').catch(async () => {
-        await johnGender.selectOption({ label: 'Male' });
-      });
-    } else {
-      await johnGender.click();
-      await page.locator('[role="option"]').filter({ hasText: /^Male$/i }).click();
-    }
-  }
-  await johnDialog.getByRole('tab', { name: 'Phones' }).click();
-  const phoneInput = johnDialog.locator('[id$="-phone-number-0"]');
-  if (!(await phoneInput.isVisible({ timeout: 1500 }).catch(() => false))) {
-    const addPhoneBtn = johnDialog.getByRole('button', { name: /Add phone number|Add/i });
-    if (await addPhoneBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
-      await addPhoneBtn.click();
-    }
-  }
-  await expect(phoneInput).toBeVisible({ timeout: 5000 });
-  await phoneInput.fill('03009876543');
-  await phoneInput.blur();
-
-  await johnDialog.getByRole('tab', { name: 'Emails' }).click();
-  const addEmailBtn = johnDialog.getByRole('button', { name: /Add (Email|email)/i }).first();
+/** Adds and fills email address on a contact FormModal */
+async function fillContactEmail(dialog: Locator, email: string): Promise<void> {
+  await dialog.getByRole('tab', { name: 'Emails' }).click();
+  const addEmailBtn = dialog.getByRole('button', { name: /Add (Email|email)/i }).first();
   if (await addEmailBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
     await addEmailBtn.click();
   }
-  const emailInput = johnDialog.locator('[id$="-email-address-0"]');
+  const emailInput = dialog.locator('[id$="-email-address-0"]');
   await expect(emailInput).toBeVisible({ timeout: 5000 });
-  await emailInput.fill('john.doe.e2e@example.com');
+  await emailInput.fill(email);
   await emailInput.dispatchEvent('change');
   await emailInput.blur();
-  await expect(emailInput).toHaveValue('john.doe.e2e@example.com');
-  await johnDialog.getByRole('tab', { name: 'Basic' }).click();
-  await waitForToastOverlayToClear(page, 'before saving John Doe');
-  const johnSave = page.waitForResponse(
-    (res) => res.url().includes('/api/contacts') && (res.request().method() === 'POST' || res.request().method() === 'PUT'),
-    { timeout: 15_000 },
-  );
-  await johnDialog.getByRole('button', { name: /Save Contact|Save/i }).click();
-  const resp = await johnSave;
-  if (!resp.ok()) {
-    const text = await resp.text();
-    throw new Error(`Contact POST /api/contacts failed with status ${resp.status()}: ${text}`);
-  }
-  await expect(johnDialog).toBeHidden({ timeout: 15_000 });
-  await expect(
-    page.locator('table:visible tbody tr').filter({ hasText: 'John Doe' }).first(),
-  ).toBeVisible({ timeout: 15_000 });
-  await waitForToastOverlayToClear(page, 'after creating John Doe');
+  await expect(emailInput).toHaveValue(email);
+}
+
+/** Parameterized contact creation in Contacts module */
+export async function createContact(page: Page, data: ContactFormData): Promise<void> {
+  const fullName = `${data.firstName} ${data.lastName}`.trim();
+  await test.step(`Create contact: ${fullName}`, async () => {
+    await page.getByRole('button', { name: 'Add Contact' }).first().click();
+    const dialog = page.getByRole('dialog', { name: new RegExp(`(Add New Contact|Edit ${fullName}|Edit Contact)`, 'i') });
+    await expect(dialog).toBeVisible({ timeout: 15_000 });
+
+    await dialog.locator('input[name="firstName"]').fill(data.firstName);
+    await dialog.locator('input[name="lastName"]').fill(data.lastName);
+
+    if (data.gender) {
+      await fillContactGender(dialog, page, data.gender);
+    }
+
+    if (data.dob) {
+      const dobInput = dialog.locator('[id$="-dob"], input[name="dob"]').first();
+      await expect(dobInput).toBeVisible({ timeout: 5000 });
+      await dobInput.fill(data.dob);
+      await dobInput.blur();
+    }
+
+    if (data.phone) {
+      await fillContactPhone(dialog, data.phone);
+    }
+
+    if (data.email) {
+      await fillContactEmail(dialog, data.email);
+    }
+
+    await dialog.getByRole('tab', { name: 'Basic' }).click();
+    await waitForToastOverlayToClear(page, `before saving ${fullName}`);
+
+    const saveResponsePromise = page.waitForResponse(
+      (res) => res.url().includes('/api/contacts') && (res.request().method() === 'POST' || res.request().method() === 'PUT'),
+      { timeout: 15_000 },
+    );
+
+    await dialog.getByRole('button', { name: /Save Contact|Save/i }).click();
+    const resp = await saveResponsePromise;
+    if (!resp.ok()) {
+      const errorText = await resp.text();
+      throw new Error(`Contact save /api/contacts failed with status ${resp.status()}: ${errorText}`);
+    }
+
+    await expect(dialog).toBeHidden({ timeout: 15_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: fullName }).first(),
+    ).toBeVisible({ timeout: 15_000 });
+    await waitForToastOverlayToClear(page, `after creating ${fullName}`);
+  });
+}
+
+/** Creates Jane Doe (Female contact with phone) */
+export async function createTestContactJaneDoe(page: Page): Promise<void> {
+  await createContact(page, {
+    firstName: 'Jane',
+    lastName: 'Doe',
+    gender: 'Female',
+    dob: '2015-05-15',
+    phone: '03001234567',
+  });
+}
+
+/** Creates John Doe (Male contact with email and phone) */
+export async function createTestContactJohnDoe(page: Page): Promise<void> {
+  await createContact(page, {
+    firstName: 'John',
+    lastName: 'Doe',
+    gender: 'Male',
+    phone: '03009876543',
+    email: 'john.doe.e2e@example.com',
+  });
 }
 
 /**
  * Registers student Jane Doe and links John Doe as Parent
  */
 export async function registerStudentJaneDoe(page: Page): Promise<void> {
-  await page.getByRole('button', { name: 'Add Student' }).first().click();
-  const registerDialog = page.getByRole('dialog', { name: /(Register student|Edit student)/i });
-  await expect(registerDialog).toBeVisible();
+  await test.step('Register student Jane Doe & link John Doe as Parent', async () => {
+    await page.getByRole('button', { name: 'Add Student' }).first().click();
+    const registerDialog = page.getByRole('dialog', { name: /(Register student|Edit student)/i });
+    await expect(registerDialog).toBeVisible();
 
-  const studentContactSearch = registerDialog.getByLabel('Student contact');
-  await studentContactSearch.fill('Jane Doe');
-  await page.waitForTimeout(300);
-  const janeOption = page.getByRole('option', { name: /Jane Doe/ }).first();
-  await expect(janeOption).toBeVisible({ timeout: 15_000 });
-  await janeOption.click({ force: true });
+    const studentContactSearch = registerDialog.getByLabel('Student contact');
+    await studentContactSearch.fill('Jane Doe');
+    const janeOption = page.getByRole('option', { name: /Jane Doe/ }).first();
+    await expect(janeOption).toBeVisible({ timeout: 15_000 });
+    await janeOption.click({ force: true });
 
-  const editRelationshipsCta = registerDialog.getByRole('button', { name: /Edit contact relationships/i });
-  // Wait for the linked contact to load before the guardian section renders the button.
-  // The button depends on linkedContact?.id being truthy (fetched via useContactById after contact selection).
-  await expect(editRelationshipsCta).toBeVisible({ timeout: 45_000 });
-  await editRelationshipsCta.click();
+    const editRelationshipsCta = registerDialog.getByRole('button', { name: /Edit contact relationships/i });
+    // Wait for the linked contact to load before the guardian section renders the button.
+    // The button depends on linkedContact?.id being truthy (fetched via useContactById after contact selection).
+    await expect(editRelationshipsCta).toBeVisible({ timeout: 45_000 });
+    await editRelationshipsCta.click();
 
-  const editJaneDialog = page.getByRole('dialog', { name: /Edit Contact/i });
-  await expect(editJaneDialog).toBeVisible({ timeout: 15_000 });
-  await editJaneDialog.getByRole('tab', { name: 'Relationship' }).click();
+    const editJaneDialog = page.getByRole('dialog', { name: /Edit Contact/i });
+    await expect(editJaneDialog).toBeVisible({ timeout: 15_000 });
+    await editJaneDialog.getByRole('tab', { name: 'Relationship' }).click();
 
-  // Auto-save on tab switch may have already linked John Doe — check first.
-  const alreadyLinked = await editJaneDialog.getByText('John Doe').first().isVisible({ timeout: 2000 }).catch(() => false);
-  if (!alreadyLinked) {
-    await editJaneDialog.getByRole('button', { name: /Add relationship/i }).click();
-    // Fill John Doe in the last (newly added) contact picker row
-    const relContactPicker = editJaneDialog.getByRole('combobox', { name: /Link contact/i }).last();
-    await relContactPicker.fill('John Doe');
-    const johnRelOption = page.getByRole('option', { name: /John Doe/ }).first();
-    await expect(johnRelOption).toBeVisible({ timeout: 15_000 });
-    await johnRelOption.click({ force: true });
-  }
+    // Auto-save on tab switch may have already linked John Doe — check first.
+    const alreadyLinked = await editJaneDialog.getByText('John Doe').first().isVisible({ timeout: 2000 }).catch(() => false);
+    if (!alreadyLinked) {
+      await editJaneDialog.getByRole('button', { name: /Add relationship/i }).click();
+      // Fill John Doe in the last (newly added) contact picker row
+      const relContactPicker = editJaneDialog.getByRole('combobox', { name: /Link contact/i }).last();
+      await relContactPicker.fill('John Doe');
+      const johnRelOption = page.getByRole('option', { name: /John Doe/ }).first();
+      await expect(johnRelOption).toBeVisible({ timeout: 15_000 });
+      await johnRelOption.click({ force: true });
+    }
 
-  // After John Doe is linked, ensure the "Relationship type" is set to "Parent".
-  await expect(editJaneDialog.getByText('John Doe').first()).toBeVisible({ timeout: 10_000 });
+    // After John Doe is linked, ensure the "Relationship type" is set to "Parent".
+    await expect(editJaneDialog.getByText('John Doe').first()).toBeVisible({ timeout: 10_000 });
 
-  const targetBtn = await findRelationshipTypeButton(editJaneDialog, 'John Doe');
-  const currentType = (await targetBtn.textContent().catch(() => '')) ?? '';
-  if (!currentType.toLowerCase().includes('parent')) {
-    await targetBtn.click();
-    await page.locator('[role="option"]').filter({ hasText: /^Parent$/i }).click();
-  }
+    const targetBtn = await findRelationshipTypeButton(editJaneDialog, 'John Doe');
+    const currentType = (await targetBtn.textContent().catch(() => '')) ?? '';
+    if (!currentType.toLowerCase().includes('parent')) {
+      await targetBtn.click();
+      await page.locator('[role="option"]').filter({ hasText: /^Parent$/i }).click();
+    }
 
-  await waitForToastOverlayToClear(page, 'before saving Jane relationship');
+    await waitForToastOverlayToClear(page, 'before saving Jane relationship');
 
-  const savePromise = page
-    .waitForResponse(
+    const savePromise = page
+      .waitForResponse(
+        (response) =>
+          response.url().includes('/api/contacts') &&
+          (response.request().method() === 'PUT' || response.request().method() === 'POST'),
+        { timeout: 15_000 },
+      )
+      .catch(() => null);
+
+    await editJaneDialog.getByRole('button', { name: /Save/i }).click({ force: true });
+    await savePromise;
+    await expect(editJaneDialog).toBeHidden({ timeout: 15_000 });
+    await expect(registerDialog.getByText(/John Doe/i).first()).toBeVisible({ timeout: 25_000 });
+
+    await waitForToastOverlayToClear(page, 'before registering student Jane Doe');
+
+    const saveButton = registerDialog.getByRole('button', { name: /Register student|Save/i }).first();
+    await expect(saveButton).toBeEnabled({ timeout: 15_000 });
+
+    const studentCreatePromise = page.waitForResponse(
       (response) =>
-        response.url().includes('/api/contacts') &&
-        (response.request().method() === 'PUT' || response.request().method() === 'POST'),
-      { timeout: 15_000 },
-    )
-    .catch(() => null);
+        response.url().includes('/api/students') &&
+        response.request().method() === 'POST' &&
+        !response.url().includes('/duplicate-check') &&
+        !response.url().includes('/bulk'),
+      { timeout: 30_000 },
+    ).catch(() => null);
 
-  await editJaneDialog.getByRole('button', { name: /Save/i }).click({ force: true });
-  await savePromise;
-  await expect(editJaneDialog).toBeHidden({ timeout: 15_000 });
-  await expect(registerDialog.getByText(/John Doe/i).first()).toBeVisible({ timeout: 25_000 });
+    await saveButton.click();
 
-  await waitForToastOverlayToClear(page, 'before registering student Jane Doe');
+    const saveAnywayButton = page.getByRole('button', { name: /Save anyway/i });
+    if (await saveAnywayButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await saveAnywayButton.click();
+    }
 
-  const saveButton = registerDialog.getByRole('button', { name: /Register student|Save/i }).first();
-  await expect(saveButton).toBeEnabled({ timeout: 15_000 });
-
-  const studentCreatePromise = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/students') &&
-      response.request().method() === 'POST' &&
-      !response.url().includes('/duplicate-check') &&
-      !response.url().includes('/bulk'),
-    { timeout: 30_000 },
-  ).catch(() => null);
-
-  await saveButton.click();
-
-  const saveAnywayButton = page.getByRole('button', { name: /Save anyway/i });
-  if (await saveAnywayButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await saveAnywayButton.click();
-  }
-
-  await studentCreatePromise;
-  await expect(registerDialog).toBeHidden({ timeout: 20_000 });
-  await expect(
-    page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
-  ).toBeVisible({ timeout: 20_000 });
+    await studentCreatePromise;
+    await expect(registerDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
+    ).toBeVisible({ timeout: 20_000 });
+  });
 }
 
 /**
@@ -293,472 +304,487 @@ export function seedTestClassAndEnrollment(subdomain: string): void {
  * Creates Teacher record for existing John Doe contact
  */
 export async function createTeacherFromContact(page: Page): Promise<void> {
-  await ensureWorkTierActive(page);
-  await page.getByRole('button', { name: 'Add Teacher' }).first().click();
-  const teacherDialog = page.getByRole('dialog');
-  await expect(teacherDialog).toBeVisible({ timeout: 15_000 });
+  await test.step('Create Teacher record from John Doe contact', async () => {
+    await ensureWorkTierActive(page);
+    await page.getByRole('button', { name: 'Add Teacher' }).first().click();
+    const teacherDialog = page.getByRole('dialog');
+    await expect(teacherDialog).toBeVisible({ timeout: 15_000 });
 
-  const teacherContactSearch = teacherDialog.locator('input[role="combobox"]').first();
-  await teacherContactSearch.fill('John Doe');
-  await page.waitForTimeout(300);
-  const johnTeacherOption = page.getByRole('option', { name: /John Doe/ }).first();
-  await expect(johnTeacherOption).toBeVisible({ timeout: 15_000 });
-  await johnTeacherOption.click({ force: true });
+    const teacherContactSearch = teacherDialog.locator('input[role="combobox"]').first();
+    await teacherContactSearch.fill('John Doe');
+    const johnTeacherOption = page.getByRole('option', { name: /John Doe/ }).first();
+    await expect(johnTeacherOption).toBeVisible({ timeout: 15_000 });
+    await johnTeacherOption.click({ force: true });
 
-  await waitForToastOverlayToClear(page, 'before creating teacher');
+    await waitForToastOverlayToClear(page, 'before creating teacher');
 
-  const saveBtn = teacherDialog.locator('button').filter({ hasText: /^Add Teacher$/i }).last();
-  await expect(saveBtn).toBeEnabled({ timeout: 15_000 });
+    const saveBtn = teacherDialog.locator('button').filter({ hasText: /^Add Teacher$/i }).last();
+    await expect(saveBtn).toBeEnabled({ timeout: 15_000 });
 
-  const teacherCreate = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/teachers') &&
-      response.request().method() === 'POST' &&
-      !response.url().includes('/bulk'),
-    { timeout: 30_000 },
-  );
+    const teacherCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/teachers') &&
+        response.request().method() === 'POST' &&
+        !response.url().includes('/bulk'),
+      { timeout: 30_000 },
+    );
 
-  await saveBtn.click();
+    await saveBtn.click();
 
-  const saveAnywayButton = page.getByRole('button', { name: /Save anyway|Confirm/i });
-  if (await saveAnywayButton.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await saveAnywayButton.click({ force: true });
-  }
+    const saveAnywayButton = page.getByRole('button', { name: /Save anyway|Confirm/i });
+    if (await saveAnywayButton.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await saveAnywayButton.click({ force: true });
+    }
 
-  const teacherResponse = await teacherCreate;
-  if (!teacherResponse.ok()) {
-    throw new Error(`Teacher create failed: HTTP ${teacherResponse.status()} ${await teacherResponse.text()}`);
-  }
-  await expect(teacherDialog).toBeHidden({ timeout: 20_000 });
-  await expect(
-    page.locator('table:visible tbody tr, [data-testid="teacher-card"]').filter({ hasText: 'John Doe' }).first(),
-  ).toBeVisible({ timeout: 20_000 });
+    const teacherResponse = await teacherCreate;
+    if (!teacherResponse.ok()) {
+      throw new Error(`Teacher create failed: HTTP ${teacherResponse.status()} ${await teacherResponse.text()}`);
+    }
+    await expect(teacherDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr, [data-testid="teacher-card"]').filter({ hasText: 'John Doe' }).first(),
+    ).toBeVisible({ timeout: 20_000 });
+  });
 }
 
 /**
  * Creates Finance Invoice for Jane Doe
  */
 export async function createFinanceInvoice(page: Page): Promise<void> {
-  await ensureWorkTierActive(page);
-  await page.getByRole('button', { name: 'New Invoice' }).first().click();
-  const invoiceDialog = page.getByRole('dialog', { name: 'New Invoice' });
-  await expect(invoiceDialog).toBeVisible();
+  await test.step('Create Finance Invoice for Jane Doe', async () => {
+    await ensureWorkTierActive(page);
+    await page.getByRole('button', { name: 'New Invoice' }).first().click();
+    const invoiceDialog = page.getByRole('dialog', { name: 'New Invoice' });
+    await expect(invoiceDialog).toBeVisible();
 
-  await invoiceDialog.locator('#invoice-student-name').fill('Jane Doe');
-  await invoiceDialog.locator('#invoice-student-id').fill('0001-2026');
-  await invoiceDialog.locator('#invoice-class').fill('Morning Quran Class');
-  await invoiceDialog.locator('#invoice-session').fill('Hifz 2026');
-  await invoiceDialog.locator('#invoice-base-fee').fill('1500');
+    await invoiceDialog.locator('#invoice-student-name').fill('Jane Doe');
+    await invoiceDialog.locator('#invoice-student-id').fill('0001-2026');
+    await invoiceDialog.locator('#invoice-class').fill('Morning Quran Class');
+    await invoiceDialog.locator('#invoice-session').fill('Hifz 2026');
+    await invoiceDialog.locator('#invoice-base-fee').fill('1500');
 
-  const invoiceCreate = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/finance/invoices') &&
-      response.request().method() === 'POST',
-    { timeout: 30_000 },
-  );
-  await invoiceDialog.getByRole('button', { name: 'Create Invoice' }).click();
-  const invoiceResponse = await invoiceCreate;
-  if (!invoiceResponse.ok()) {
-    throw new Error(`Invoice create failed: HTTP ${invoiceResponse.status()} ${await invoiceResponse.text()}`);
-  }
-  await expect(invoiceDialog).toBeHidden({ timeout: 20_000 });
-  await expect(
-    page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }),
-  ).toBeVisible({ timeout: 20_000 });
+    const invoiceCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/finance/invoices') &&
+        response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await invoiceDialog.getByRole('button', { name: 'Create Invoice' }).click();
+    const invoiceResponse = await invoiceCreate;
+    if (!invoiceResponse.ok()) {
+      throw new Error(`Invoice create failed: HTTP ${invoiceResponse.status()} ${await invoiceResponse.text()}`);
+    }
+    await expect(invoiceDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }),
+    ).toBeVisible({ timeout: 20_000 });
+  });
 }
 
 /**
  * Creates Session and adds a Class ('Tajweed A') assigned to John Doe
  */
 export async function createSessionAndClass(page: Page): Promise<void> {
-  await ensureWorkTierActive(page);
-  await page.getByRole('button', { name: 'New session' }).first().click();
-  const sessionDialog = page.getByRole('dialog', { name: 'New session' });
-  await expect(sessionDialog).toBeVisible();
+  await test.step('Create Session and assign Tajweed Class to John Doe', async () => {
+    await ensureWorkTierActive(page);
+    await page.getByRole('button', { name: 'New session' }).first().click();
+    const sessionDialog = page.getByRole('dialog', { name: 'New session' });
+    await expect(sessionDialog).toBeVisible();
 
-  await sessionDialog.getByLabel('Session name').fill('Afternoon Tajweed 2026');
-  const endDate = sessionDialog.getByLabel(/Enter date in/).nth(1);
-  await endDate.fill('2026-12-31');
-  await endDate.blur();
+    await sessionDialog.getByLabel('Session name').fill('Afternoon Tajweed 2026');
+    const endDate = sessionDialog.getByLabel(/Enter date in/).nth(1);
+    await endDate.fill('2026-12-31');
+    await endDate.blur();
 
-  const sessionCreate = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/sessions') &&
-      response.request().method() === 'POST' &&
-      !response.url().includes('/bulk'),
-    { timeout: 30_000 },
-  );
-  await sessionDialog.getByRole('button', { name: 'Create session' }).click();
-  const sessionResponse = await sessionCreate;
-  if (!sessionResponse.ok()) {
-    throw new Error(`Session create failed: HTTP ${sessionResponse.status()} ${await sessionResponse.text()}`);
-  }
-  await expect(sessionDialog).toBeHidden({ timeout: 20_000 });
-  const sessionItem = page.getByRole('button', { name: /Afternoon Tajweed 2026/i }).first();
-  await expect(sessionItem).toBeVisible({ timeout: 20_000 });
-  await sessionItem.click();
-
-  await expect(
-    page.getByRole('heading', { name: 'Afternoon Tajweed 2026' }).first(),
-  ).toBeVisible({ timeout: 20_000 });
-
-  await page.getByRole('button', { name: 'Add class' }).first().click();
-  const classDialog = page.getByRole('dialog', { name: 'Add class' });
-  await expect(classDialog).toBeVisible();
-
-  await expect(classDialog.locator('#class-teacher')).toContainText('John Doe', { timeout: 15_000 });
-  const className = classDialog.getByRole('textbox', { name: /Class name/ });
-  await className.fill('Tajweed A');
-  await expect(className).toHaveValue('Tajweed A');
-  await expect(classDialog.getByRole('button', { name: 'Save' })).toBeEnabled();
-
-  const sessionUpdate = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/sessions/') &&
-      response.request().method() === 'PUT',
-    { timeout: 30_000 },
-  );
-  await classDialog.getByRole('button', { name: 'Save' }).click();
-  const sessionUpdateResponse = await sessionUpdate;
-  if (!sessionUpdateResponse.ok()) {
-    throw new Error(
-      `Session class save failed: HTTP ${sessionUpdateResponse.status()} ${await sessionUpdateResponse.text()}`,
+    const sessionCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/sessions') &&
+        response.request().method() === 'POST' &&
+        !response.url().includes('/bulk'),
+      { timeout: 30_000 },
     );
-  }
-  await expect(classDialog).toBeHidden({ timeout: 20_000 });
-  await page.waitForLoadState('domcontentloaded');
-  await page.getByRole('button', { name: 'Close' }).click();
+    await sessionDialog.getByRole('button', { name: 'Create session' }).click();
+    const sessionResponse = await sessionCreate;
+    if (!sessionResponse.ok()) {
+      throw new Error(`Session create failed: HTTP ${sessionResponse.status()} ${await sessionResponse.text()}`);
+    }
+    await expect(sessionDialog).toBeHidden({ timeout: 20_000 });
+    const sessionItem = page.getByRole('button', { name: /Afternoon Tajweed 2026/i }).first();
+    await expect(sessionItem).toBeVisible({ timeout: 20_000 });
+    await sessionItem.click();
+
+    await expect(
+      page.getByRole('heading', { name: 'Afternoon Tajweed 2026' }).first(),
+    ).toBeVisible({ timeout: 20_000 });
+
+    await page.getByRole('button', { name: 'Add class' }).first().click();
+    const classDialog = page.getByRole('dialog', { name: 'Add class' });
+    await expect(classDialog).toBeVisible();
+
+    await expect(classDialog.locator('#class-teacher')).toContainText('John Doe', { timeout: 15_000 });
+    const className = classDialog.getByRole('textbox', { name: /Class name/ });
+    await className.fill('Tajweed A');
+    await expect(className).toHaveValue('Tajweed A');
+    await expect(classDialog.getByRole('button', { name: 'Save' })).toBeEnabled();
+
+    const sessionUpdate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/sessions/') &&
+        response.request().method() === 'PUT',
+      { timeout: 30_000 },
+    );
+    await classDialog.getByRole('button', { name: 'Save' }).click();
+    const sessionUpdateResponse = await sessionUpdate;
+    if (!sessionUpdateResponse.ok()) {
+      throw new Error(
+        `Session class save failed: HTTP ${sessionUpdateResponse.status()} ${await sessionUpdateResponse.text()}`,
+      );
+    }
+    await expect(classDialog).toBeHidden({ timeout: 20_000 });
+    await page.waitForLoadState('domcontentloaded');
+    await page.getByRole('button', { name: 'Close' }).click();
+  });
 }
 
 /**
  * Completes Enrollment wizard for Jane Doe -> Afternoon Tajweed 2026
  */
 export async function createStudentEnrollment(page: Page): Promise<void> {
-  await ensureWorkTierActive(page);
-  await page.getByRole('button', { name: 'New Enrollment' }).first().click();
-  const enrollmentDialog = page.getByRole('dialog', { name: 'New Enrollment' });
-  await expect(enrollmentDialog).toBeVisible();
+  await test.step('Enroll student Jane Doe into Afternoon Tajweed', async () => {
+    await ensureWorkTierActive(page);
+    await page.getByRole('button', { name: 'New Enrollment' }).first().click();
+    const enrollmentDialog = page.getByRole('dialog', { name: 'New Enrollment' });
+    await expect(enrollmentDialog).toBeVisible();
 
-  await enrollmentDialog.getByPlaceholder('Search students by name…').fill('Jane Doe');
-  const janeStudent = enrollmentDialog.getByRole('radio', { name: /Jane Doe/ }).first();
-  await expect(janeStudent).toBeVisible({ timeout: 15_000 });
-  await janeStudent.click();
-  await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+    await enrollmentDialog.getByPlaceholder('Search students by name…').fill('Jane Doe');
+    const janeStudent = enrollmentDialog.getByRole('radio', { name: /Jane Doe/ }).first();
+    await expect(janeStudent).toBeVisible({ timeout: 15_000 });
+    await janeStudent.click();
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
 
-  const afternoonSession = enrollmentDialog.getByRole('radio', { name: /Afternoon Tajweed 2026/ }).first();
-  await expect(afternoonSession).toBeVisible({ timeout: 15_000 });
-  await afternoonSession.click();
-  await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+    const afternoonSession = enrollmentDialog.getByRole('radio', { name: /Afternoon Tajweed 2026/ }).first();
+    await expect(afternoonSession).toBeVisible({ timeout: 15_000 });
+    await afternoonSession.click();
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
 
-  await expect(
-    enrollmentDialog.getByText('Student is eligible — you may proceed to class assignment.'),
-  ).toBeVisible({ timeout: 10_000 });
-  await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+    await expect(
+      enrollmentDialog.getByText('Student is eligible — you may proceed to class assignment.'),
+    ).toBeVisible({ timeout: 10_000 });
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
 
-  await expect(enrollmentDialog.getByRole('radio', { name: /Tajweed a/i }).first()).toBeVisible({
-    timeout: 10_000,
-  });
-  await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
-  await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+    await expect(enrollmentDialog.getByRole('radio', { name: /Tajweed a/i }).first()).toBeVisible({
+      timeout: 10_000,
+    });
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
+    await enrollmentDialog.getByRole('button', { name: 'Next' }).click();
 
-  const enrollmentCreate = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/enrollments') &&
-      response.request().method() === 'POST' &&
-      !response.url().includes('/bulk'),
-    { timeout: 30_000 },
-  );
-  await enrollmentDialog.getByRole('button', { name: 'New Enrollment' }).click();
-  const enrollmentResponse = await enrollmentCreate;
-  if (!enrollmentResponse.ok()) {
-    throw new Error(
-      `Enrollment create failed: HTTP ${enrollmentResponse.status()} ${await enrollmentResponse.text()}`,
+    const enrollmentCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/enrollments') &&
+        response.request().method() === 'POST' &&
+        !response.url().includes('/bulk'),
+      { timeout: 30_000 },
     );
-  }
-  await expect(enrollmentDialog).toBeHidden({ timeout: 20_000 });
-  await expect(
-    page.locator('table:visible tbody tr').filter({ hasText: 'Afternoon Tajweed 2026' }),
-  ).toBeVisible({ timeout: 20_000 });
-  await expect(
-    page.locator('table:visible tbody tr').filter({ hasText: 'Afternoon Tajweed 2026' }).filter({
-      hasText: 'Jane Doe',
-    }),
-  ).toBeVisible({ timeout: 20_000 });
+    await enrollmentDialog.getByRole('button', { name: 'New Enrollment' }).click();
+    const enrollmentResponse = await enrollmentCreate;
+    if (!enrollmentResponse.ok()) {
+      throw new Error(
+        `Enrollment create failed: HTTP ${enrollmentResponse.status()} ${await enrollmentResponse.text()}`,
+      );
+    }
+    await expect(enrollmentDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'Afternoon Tajweed 2026' }),
+    ).toBeVisible({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'Afternoon Tajweed 2026' }).filter({
+        hasText: 'Jane Doe',
+      }),
+    ).toBeVisible({ timeout: 20_000 });
+  });
 }
 
 /**
  * Records payment for invoice
  */
 export async function recordInvoicePayment(page: Page): Promise<void> {
-  await ensureWorkTierActive(page);
-  const row = page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first();
-  await expect(row).toBeVisible({ timeout: 20_000 });
-  await row.getByRole('button', { name: /Actions/i }).click();
-  await page.getByRole('menuitem', { name: /Record payment/i }).click();
-  const paymentDialog = page.getByRole('dialog', { name: 'Record payment' });
-  await expect(paymentDialog).toBeVisible();
-  await expect(paymentDialog.locator('#payment-amount-input')).not.toHaveValue('', { timeout: 10_000 });
-  await expect(paymentDialog.locator('#payment-amount-input')).not.toHaveValue('0');
+  await test.step('Record invoice payment for Jane Doe', async () => {
+    await ensureWorkTierActive(page);
+    const row = page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first();
+    await expect(row).toBeVisible({ timeout: 20_000 });
+    await row.getByRole('button', { name: /Actions/i }).click();
+    await page.getByRole('menuitem', { name: /Record payment/i }).click();
+    const paymentDialog = page.getByRole('dialog', { name: 'Record payment' });
+    await expect(paymentDialog).toBeVisible();
+    await expect(paymentDialog.locator('#payment-amount-input')).not.toHaveValue('', { timeout: 10_000 });
+    await expect(paymentDialog.locator('#payment-amount-input')).not.toHaveValue('0');
 
-  const paymentCreate = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/finance/payments') &&
-      response.request().method() === 'POST',
-    { timeout: 30_000 },
-  );
-  await paymentDialog.getByRole('button', { name: 'Record payment' }).click();
-  const paymentResponse = await paymentCreate;
-  if (!paymentResponse.ok()) {
-    throw new Error(`Payment create failed: HTTP ${paymentResponse.status()} ${await paymentResponse.text()}`);
-  }
-  await expect(paymentDialog).toBeHidden({ timeout: 20_000 });
-  await expect(page.getByText('Paid', { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+    const paymentCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/finance/payments') &&
+        response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await paymentDialog.getByRole('button', { name: 'Record payment' }).click();
+    const paymentResponse = await paymentCreate;
+    if (!paymentResponse.ok()) {
+      throw new Error(`Payment create failed: HTTP ${paymentResponse.status()} ${await paymentResponse.text()}`);
+    }
+    await expect(paymentDialog).toBeHidden({ timeout: 20_000 });
+    await expect(page.getByText('Paid', { exact: true }).first()).toBeVisible({ timeout: 20_000 });
+  });
 }
 
 /**
  * Creates Messaging Preset Template & dispatches SMS Campaign
  */
 export async function createMessagingTemplateAndCampaign(page: Page): Promise<void> {
-  const setupTab = page.getByRole('tab', { name: 'Setup', exact: true }).first();
-  await setupTab.click();
-  await expect(page.getByRole('heading', { name: 'Create Preset Template' })).toBeVisible({
-    timeout: 15_000,
-  });
+  await test.step('Create messaging template & dispatch SMS campaign', async () => {
+    const setupTab = page.getByRole('tab', { name: 'Setup', exact: true }).first();
+    await setupTab.click();
+    await expect(page.getByRole('heading', { name: 'Create Preset Template' })).toBeVisible({
+      timeout: 15_000,
+    });
 
-  await page.locator('#tplLabel').locator('visible=true').fill('E2E Fee Reminder');
-  await page.locator('#tplBody').locator('visible=true').fill(
-    'Assalamu Alaikum {name}, your fee balance is due. JazakAllah Khair.',
-  );
-
-  const templateCreate = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/messaging/templates') &&
-      response.request().method() === 'POST',
-    { timeout: 30_000 },
-  );
-  await page.getByRole('button', { name: 'Save New Template' }).locator('visible=true').click();
-  const templateResponse = await templateCreate;
-  if (!templateResponse.ok()) {
-    throw new Error(
-      `Messaging template create failed: HTTP ${templateResponse.status()} ${await templateResponse.text()}`,
+    await page.locator('#tplLabel').locator('visible=true').fill('E2E Fee Reminder');
+    await page.locator('#tplBody').locator('visible=true').fill(
+      'Assalamu Alaikum {name}, your fee balance is due. JazakAllah Khair.',
     );
-  }
-  await expect(page.getByText('E2e Fee Reminder').locator('visible=true').first()).toBeVisible({
-    timeout: 20_000,
-  });
 
-  // Navigate back to Work tab so the header "New Campaign" button is visible
-  await ensureWorkTierActive(page);
-
-  // Click "New Campaign" dropdown trigger
-  const newCampaignBtn = page.getByRole('button', { name: /New Campaign/i });
-  await expect(newCampaignBtn).toBeVisible({ timeout: 10_000 });
-  await newCampaignBtn.click();
-
-  // Pick SMS from the channel dropdown
-  const smsMenuItem = page.getByRole('menuitem', { name: /SMS/i }).or(
-    page.getByRole('option', { name: /SMS/i })
-  );
-  await expect(smsMenuItem.first()).toBeVisible({ timeout: 5_000 });
-  await smsMenuItem.first().click();
-
-  // Composer opens in 'pick' step — FormModal titled "Select Recipients"
-  const composerDialog = page.getByRole('dialog').filter({ hasText: /Select Recipients/i });
-  await expect(composerDialog).toBeVisible({ timeout: 15_000 });
-
-  // Search for Jane Doe in the recipient picker
-  const recipientSearch = composerDialog.getByPlaceholder(/Search recipients/i);
-  await expect(recipientSearch).toBeVisible({ timeout: 5_000 });
-  await recipientSearch.fill('Jane Doe');
-
-  // Wait for Jane Doe to appear in the contacts table and select her
-  const janeDoeRow = composerDialog.getByRole('row', { name: /Jane Doe/i }).first();
-  await expect(janeDoeRow).toBeVisible({ timeout: 15_000 });
-  // Click the checkbox in Jane's row (ContactsTable renders a checkbox per row)
-  const janeCheckbox = janeDoeRow.getByRole('checkbox').first();
-  const janeCheckboxVisible = await janeCheckbox.isVisible({ timeout: 2000 }).catch(() => false);
-  if (janeCheckboxVisible) {
-    await janeCheckbox.click();
-  } else {
-    // Fallback: click the row itself to toggle selection
-    await janeDoeRow.click();
-  }
-
-  // Click "Next" to advance to compose step
-  await composerDialog.getByRole('button', { name: /^Next$/i }).last().click();
-
-  // Compose step — select the template we created
-  const smsDialog = page.getByRole('dialog').last();
-  const templateSelect = smsDialog.locator('#messageTemplate');
-  const templateSelectVisible = await templateSelect.isVisible({ timeout: 5_000 }).catch(() => false);
-  if (templateSelectVisible) {
-    const targetOption = templateSelect.locator('option', { hasText: /E2e Fee Reminder/i });
-    const hasOption = await targetOption.isVisible({ timeout: 5_000 }).catch(() => false);
-    if (hasOption) {
-      const feeTemplateValue = await targetOption.getAttribute('value');
-      if (feeTemplateValue) await templateSelect.selectOption(feeTemplateValue);
+    const templateCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/messaging/templates') &&
+        response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await page.getByRole('button', { name: 'Save New Template' }).locator('visible=true').click();
+    const templateResponse = await templateCreate;
+    if (!templateResponse.ok()) {
+      throw new Error(
+        `Messaging template create failed: HTTP ${templateResponse.status()} ${await templateResponse.text()}`,
+      );
     }
-  }
-  await expect(smsDialog.locator('#messageBody')).not.toHaveValue('', { timeout: 10_000 });
+    await expect(page.getByText('E2e Fee Reminder').locator('visible=true').first()).toBeVisible({
+      timeout: 20_000,
+    });
 
-  const debugAttr = await smsDialog.locator('#debug-saveDisabled').getAttribute('data-debug').catch(() => null);
-  console.log("DEBUG_ATTR:", debugAttr);
+    // Navigate back to Work tab so the header "New Campaign" button is visible
+    await ensureWorkTierActive(page);
 
-  const logCreate = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/messaging/logs') &&
-      response.request().method() === 'POST',
-    { timeout: 30_000 },
-  ).catch(() => null);
-  await smsDialog.getByRole('button', { name: 'Open Messages' }).last().click({ timeout: 10_000 });
-  await logCreate;
-  await expect(smsDialog).toBeHidden({ timeout: 20_000 });
+    // Click "New Campaign" dropdown trigger
+    const newCampaignBtn = page.getByRole('button', { name: /New Campaign/i });
+    await expect(newCampaignBtn).toBeVisible({ timeout: 10_000 });
+    await newCampaignBtn.click();
 
+    // Pick SMS from the channel dropdown
+    const smsMenuItem = page.getByRole('menuitem', { name: /SMS/i }).or(
+      page.getByRole('option', { name: /SMS/i })
+    );
+    await expect(smsMenuItem.first()).toBeVisible({ timeout: 5_000 });
+    await smsMenuItem.first().click();
 
-  await expect(
-    page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
-  ).toBeVisible({ timeout: 20_000 });
+    // Composer opens in 'pick' step — FormModal titled "Select Recipients"
+    const composerDialog = page.getByRole('dialog').filter({ hasText: /Select Recipients/i });
+    await expect(composerDialog).toBeVisible({ timeout: 15_000 });
+
+    // Search for Jane Doe in the recipient picker
+    const recipientSearch = composerDialog.getByPlaceholder(/Search recipients/i);
+    await expect(recipientSearch).toBeVisible({ timeout: 5_000 });
+    await recipientSearch.fill('Jane Doe');
+
+    // Wait for Jane Doe to appear in the contacts table and select her
+    const janeDoeRow = composerDialog.getByRole('row', { name: /Jane Doe/i }).first();
+    await expect(janeDoeRow).toBeVisible({ timeout: 15_000 });
+    // Click the checkbox in Jane's row (ContactsTable renders a checkbox per row)
+    const janeCheckbox = janeDoeRow.getByRole('checkbox').first();
+    const janeCheckboxVisible = await janeCheckbox.isVisible({ timeout: 2000 }).catch(() => false);
+    if (janeCheckboxVisible) {
+      await janeCheckbox.click();
+    } else {
+      // Fallback: click the row itself to toggle selection
+      await janeDoeRow.click();
+    }
+
+    // Click "Next" to advance to compose step
+    await composerDialog.getByRole('button', { name: /^Next$/i }).last().click();
+
+    // Compose step — select the template we created
+    const smsDialog = page.getByRole('dialog').last();
+    const templateSelect = smsDialog.locator('#messageTemplate');
+    const templateSelectVisible = await templateSelect.isVisible({ timeout: 5_000 }).catch(() => false);
+    if (templateSelectVisible) {
+      const targetOption = templateSelect.locator('option', { hasText: /E2e Fee Reminder/i });
+      const hasOption = await targetOption.isVisible({ timeout: 5_000 }).catch(() => false);
+      if (hasOption) {
+        const feeTemplateValue = await targetOption.getAttribute('value');
+        if (feeTemplateValue) await templateSelect.selectOption(feeTemplateValue);
+      }
+    }
+    await expect(smsDialog.locator('#messageBody')).not.toHaveValue('', { timeout: 10_000 });
+
+    const logCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/messaging/logs') &&
+        response.request().method() === 'POST',
+      { timeout: 30_000 },
+    );
+    await smsDialog.getByRole('button', { name: 'Open Messages' }).last().click({ timeout: 10_000 });
+    const logResponse = await logCreate;
+    if (!logResponse.ok()) {
+      throw new Error(
+        `Messaging dispatch failed: HTTP ${logResponse.status()} ${await logResponse.text()}`,
+      );
+    }
+    await expect(smsDialog).toBeHidden({ timeout: 20_000 });
+
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'Jane Doe' }).first(),
+    ).toBeVisible({ timeout: 20_000 });
+  });
 }
 
 /**
  * Creates Chart of Accounts accounts & balanced journal entry
  */
 export async function createAccountsAndJournalEntry(page: Page): Promise<void> {
-  await ensureWorkTierActive(page);
-  const coaTab = page.getByRole('tab', { name: /Chart of Accounts/i }).first();
-  await expect(coaTab).toBeVisible({ timeout: 15_000 });
-  await coaTab.click();
-  await expect(page.getByRole('region', { name: 'Chart of Accounts' })).toBeVisible({
-    timeout: 15_000,
-  });
+  await test.step('Create Chart of Accounts & post balanced journal entry', async () => {
+    await ensureWorkTierActive(page);
+    const coaTab = page.getByRole('tab', { name: /Chart of Accounts/i }).first();
+    await expect(coaTab).toBeVisible({ timeout: 15_000 });
+    await coaTab.click();
+    await expect(page.getByRole('region', { name: 'Chart of Accounts' })).toBeVisible({
+      timeout: 15_000,
+    });
 
-  for (const account of [
-    { code: '1100', name: 'E2E Cash', type: 'Asset' },
-    { code: '4100', name: 'E2E Tuition Income', type: 'Revenue' },
-  ] as const) {
-    await page.getByRole('button', { name: 'Add Account' }).first().click();
-    const accountDialog = page.getByRole('dialog', { name: 'Add Account' });
-    await expect(accountDialog).toBeVisible();
-    await accountDialog.locator('#account-type').selectOption(account.type);
-    await accountDialog.locator('#account-code').fill(account.code);
-    await accountDialog.locator('#account-name').fill(account.name);
-    await expect(accountDialog.locator('#account-code')).toHaveValue(account.code);
+    for (const account of [
+      { code: '1100', name: 'E2E Cash', type: 'Asset' },
+      { code: '4100', name: 'E2E Tuition Income', type: 'Revenue' },
+    ] as const) {
+      await page.getByRole('button', { name: 'Add Account' }).first().click();
+      const accountDialog = page.getByRole('dialog', { name: 'Add Account' });
+      await expect(accountDialog).toBeVisible();
+      await accountDialog.locator('#account-type').selectOption(account.type);
+      await accountDialog.locator('#account-code').fill(account.code);
+      await accountDialog.locator('#account-name').fill(account.name);
+      await expect(accountDialog.locator('#account-code')).toHaveValue(account.code);
 
-    const accountSave = page.waitForResponse(
+      const accountSave = page.waitForResponse(
+        (response) =>
+          response.url().includes('/api/accounting/accounts/bulk') &&
+          response.request().method() === 'PUT',
+        { timeout: 30_000 },
+      );
+      await accountDialog.getByRole('button', { name: 'Save' }).click();
+      const accountResponse = await accountSave;
+      if (!accountResponse.ok()) {
+        throw new Error(
+          `Accounting account save failed: HTTP ${accountResponse.status()} ${await accountResponse.text()}`,
+        );
+      }
+      await expect(accountDialog).toBeHidden({ timeout: 20_000 });
+      await expect(page.getByText(account.name).locator('visible=true').first()).toBeVisible({
+        timeout: 20_000,
+      });
+    }
+
+    const journalTab = page.getByRole('tab', { name: /Journal Entries/i }).first();
+    await expect(journalTab).toBeVisible({ timeout: 15_000 });
+    await journalTab.click();
+    const advancedTab = page.getByRole('tab', { name: /Advanced/i }).first();
+    await expect(advancedTab).toBeVisible({ timeout: 15_000 });
+    await advancedTab.click();
+    await expect(page.getByRole('region', { name: 'Advanced Journal Entries' })).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole('region', { name: 'Advanced Journal Entries' }).getByRole('button', { name: 'New Entry' }).click();
+    const entryDialog = page.getByRole('dialog', { name: 'New Journal Entry' });
+    await expect(entryDialog).toBeVisible();
+    await entryDialog.locator('#journal-entry-description').fill('E2E fee collection journal');
+
+    const line1Select = entryDialog.locator('select[aria-label="Account for line 1"]:visible');
+    await selectOptionByMatchingText(line1Select, '1100');
+    await entryDialog.locator('[aria-label="Debit amount for line 1"]:visible').fill('2500');
+
+    const line2Select = entryDialog.locator('select[aria-label="Account for line 2"]:visible');
+    await selectOptionByMatchingText(line2Select, '4100');
+    await entryDialog.locator('[aria-label="Credit amount for line 2"]:visible').fill('2500');
+
+    const entrySave = page.waitForResponse(
       (response) =>
-        response.url().includes('/api/accounting/accounts/bulk') &&
+        response.url().includes('/api/accounting/entries/bulk') &&
         response.request().method() === 'PUT',
       { timeout: 30_000 },
     );
-    await accountDialog.getByRole('button', { name: 'Save' }).click();
-    const accountResponse = await accountSave;
-    if (!accountResponse.ok()) {
+    await entryDialog.getByRole('button', { name: 'Post Entry' }).click();
+    const entryResponse = await entrySave;
+    if (!entryResponse.ok()) {
       throw new Error(
-        `Accounting account save failed: HTTP ${accountResponse.status()} ${await accountResponse.text()}`,
+        `Accounting entry save failed: HTTP ${entryResponse.status()} ${await entryResponse.text()}`,
       );
     }
-    await expect(accountDialog).toBeHidden({ timeout: 20_000 });
-    await expect(page.getByText(account.name).locator('visible=true').first()).toBeVisible({
-      timeout: 20_000,
-    });
-  }
-
-  const journalTab = page.getByRole('tab', { name: /Journal Entries/i }).first();
-  await expect(journalTab).toBeVisible({ timeout: 15_000 });
-  await journalTab.click();
-  const advancedTab = page.getByRole('tab', { name: /Advanced/i }).first();
-  await expect(advancedTab).toBeVisible({ timeout: 15_000 });
-  await advancedTab.click();
-  await expect(page.getByRole('region', { name: 'Advanced Journal Entries' })).toBeVisible({
-    timeout: 15_000,
+    await expect(entryDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.getByText('E2e Fee Collection Journal').locator('visible=true').first(),
+    ).toBeVisible({ timeout: 20_000 });
   });
-
-  await page.getByRole('region', { name: 'Advanced Journal Entries' }).getByRole('button', { name: 'New Entry' }).click();
-  const entryDialog = page.getByRole('dialog', { name: 'New Journal Entry' });
-  await expect(entryDialog).toBeVisible();
-  await entryDialog.locator('#journal-entry-description').fill('E2E fee collection journal');
-
-  const line1Select = entryDialog.locator('select[aria-label="Account for line 1"]:visible');
-  await selectOptionByMatchingText(line1Select, '1100');
-  await entryDialog.locator('[aria-label="Debit amount for line 1"]:visible').fill('2500');
-
-  const line2Select = entryDialog.locator('select[aria-label="Account for line 2"]:visible');
-  await selectOptionByMatchingText(line2Select, '4100');
-  await entryDialog.locator('[aria-label="Credit amount for line 2"]:visible').fill('2500');
-
-  const entrySave = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/accounting/entries/bulk') &&
-      response.request().method() === 'PUT',
-    { timeout: 30_000 },
-  );
-  await entryDialog.getByRole('button', { name: 'Post Entry' }).click();
-  const entryResponse = await entrySave;
-  if (!entryResponse.ok()) {
-    throw new Error(
-      `Accounting entry save failed: HTTP ${entryResponse.status()} ${await entryResponse.text()}`,
-    );
-  }
-  await expect(entryDialog).toBeHidden({ timeout: 20_000 });
-  await expect(
-    page.getByText('E2e Fee Collection Journal').locator('visible=true').first(),
-  ).toBeVisible({ timeout: 20_000 });
 }
 
 /**
  * Creates User record from John Doe contact with Teacher role
  */
 export async function createUserFromContact(page: Page): Promise<void> {
-  await ensureWorkTierActive(page);
-  await page.getByRole('button', { name: 'Add User' }).first().click();
-  const userDialog = page.getByRole('dialog', { name: /Add New User/i });
-  await expect(userDialog).toBeVisible({ timeout: 15_000 });
+  await test.step('Create User from John Doe contact with Teacher role', async () => {
+    await ensureWorkTierActive(page);
+    await page.getByRole('button', { name: 'Add User' }).first().click();
+    const userDialog = page.getByRole('dialog', { name: /Add New User/i });
+    await expect(userDialog).toBeVisible({ timeout: 15_000 });
 
-  const userContactSearch = userDialog.locator('input[role="combobox"]').first();
-  await userContactSearch.fill('John Doe');
-  await page.waitForTimeout(300);
-  const johnUserOption = page.getByRole('option', { name: /John Doe/ }).first();
-  await expect(johnUserOption).toBeVisible({ timeout: 15_000 });
-  await johnUserOption.click({ force: true });
+    const userContactSearch = userDialog.locator('input[role="combobox"]').first();
+    await userContactSearch.fill('John Doe');
+    const johnUserOption = page.getByRole('option', { name: /John Doe/ }).first();
+    await expect(johnUserOption).toBeVisible({ timeout: 15_000 });
+    await johnUserOption.click({ force: true });
 
-  await expect(userDialog.getByText('John Doe').first()).toBeVisible({
-    timeout: 10_000,
-  });
+    await expect(userDialog.getByText('John Doe').first()).toBeVisible({
+      timeout: 10_000,
+    });
 
-  const emailField = userDialog.locator('input[type="email"]');
-  if (await emailField.isVisible({ timeout: 1000 }).catch(() => false)) {
-    await emailField.fill('john.doe.e2e@example.com');
-  }
+    const emailField = userDialog.locator('input[type="email"]');
+    if (await emailField.isVisible({ timeout: 1000 }).catch(() => false)) {
+      await emailField.fill('john.doe.e2e@example.com');
+    }
 
-  await userDialog.getByRole('button', { name: /Next/i }).click();
-  const teacherRole = userDialog.getByText(/^Teacher$/i).first();
-  await expect(teacherRole).toBeVisible({ timeout: 10_000 });
-  await teacherRole.click();
-  await userDialog.getByRole('button', { name: /Next/i }).click();
+    await userDialog.getByRole('button', { name: /Next/i }).click();
+    const teacherRole = userDialog.getByText(/^Teacher$/i).first();
+    await expect(teacherRole).toBeVisible({ timeout: 10_000 });
+    await teacherRole.click();
+    await userDialog.getByRole('button', { name: /Next/i }).click();
 
-  const createBtn = userDialog.getByRole('button', { name: /Create User/i });
-  await expect(createBtn).toBeVisible({ timeout: 10_000 });
+    const createBtn = userDialog.getByRole('button', { name: /Create User/i });
+    await expect(createBtn).toBeVisible({ timeout: 10_000 });
 
-  const userCreate = page.waitForResponse(
-    (response) =>
-      response.url().includes('/api/users') &&
-      response.request().method() === 'POST' &&
-      !response.url().includes('/activity'),
-    { timeout: 30_000 },
-  );
-  await createBtn.click();
-  const userResponse = await userCreate;
-  if (!userResponse.ok()) {
-    throw new Error(
-      `User create failed: HTTP ${userResponse.status()} ${await userResponse.text()}`,
+    const userCreate = page.waitForResponse(
+      (response) =>
+        response.url().includes('/api/users') &&
+        response.request().method() === 'POST' &&
+        !response.url().includes('/activity'),
+      { timeout: 30_000 },
     );
-  }
-  const closeBtn = userDialog.getByRole('button', { name: /Close/i }).first();
-  if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await closeBtn.click({ force: true });
-  }
-  await expect(userDialog).toBeHidden({ timeout: 20_000 });
-  await expect(
-    page.locator('table:visible tbody tr').filter({ hasText: 'John Doe' }).first(),
-  ).toBeVisible({ timeout: 20_000 });
+    await createBtn.click();
+    const userResponse = await userCreate;
+    if (!userResponse.ok()) {
+      throw new Error(
+        `User create failed: HTTP ${userResponse.status()} ${await userResponse.text()}`,
+      );
+    }
+    const closeBtn = userDialog.getByRole('button', { name: /Close/i }).first();
+    if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await closeBtn.click({ force: true });
+    }
+    await expect(userDialog).toBeHidden({ timeout: 20_000 });
+    await expect(
+      page.locator('table:visible tbody tr').filter({ hasText: 'John Doe' }).first(),
+    ).toBeVisible({ timeout: 20_000 });
+  });
 }

@@ -1,60 +1,99 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { closeDatabase, initDb } from '../db/database.js';
 import { buildApp } from '../app.js';
-import {
-  findPlatformUserRowByEmail,
-  listPlatformUsers,
-} from '../db/repositories/platformUserRepository.js';
+
+const { mockUsers } = vi.hoisted(() => {
+  const superUser = {
+    id: 'p-super',
+    email: 'admin@platform.com',
+    name: 'Super Admin',
+    passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
+    role: 'super_user' as const,
+    permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+    sessionVersion: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+
+  const mockUsers: Array<{
+    id: string;
+    email: string;
+    name: string;
+    passwordHash: string;
+    role: 'super_user' | 'admin';
+    permissions: Record<string, boolean>;
+    sessionVersion: number;
+    disabledAt?: string | null;
+    createdAt: string;
+  }> = [superUser];
+
+  return { mockUsers };
+});
+
+vi.mock('../db/database.js', () => ({
+  initDb: vi.fn().mockResolvedValue(undefined),
+  pingDatabase: vi.fn().mockResolvedValue(true),
+  closeDatabase: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../db/repositories/platformUserRepository.js', () => ({
+  findPlatformUserRowById: vi.fn().mockImplementation(async (id: string) => {
+    return mockUsers.find((u) => u.id === id) ?? null;
+  }),
+  findPlatformUserRowByEmail: vi.fn().mockImplementation(async (email: string) => {
+    return mockUsers.find((u) => u.email === email) ?? null;
+  }),
+  listPlatformUsers: vi.fn().mockImplementation(async () => [...mockUsers]),
+  countPlatformUserRows: vi.fn().mockImplementation(async () => mockUsers.length),
+  insertPlatformUser: vi.fn().mockImplementation(async (u: (typeof mockUsers)[number]) => {
+    mockUsers.push(u);
+    return u;
+  }),
+  deletePlatformUserRow: vi.fn().mockImplementation(async (id: string) => {
+    const idx = mockUsers.findIndex((u) => u.id === id);
+    if (idx >= 0) mockUsers.splice(idx, 1);
+  }),
+  updatePlatformUserRow: vi.fn().mockImplementation(async (id: string, patch: Partial<(typeof mockUsers)[number]>) => {
+    const user = mockUsers.find((u) => u.id === id);
+    if (user) Object.assign(user, patch);
+    return user ?? null;
+  }),
+}));
+
+vi.mock('../services/platform/platformUserService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/platform/platformUserService.js')>();
+  return {
+    ...actual,
+    verifyPlatformUserPassword: vi.fn().mockResolvedValue(true),
+  };
+});
+
+vi.mock('../db/repositories/platformActivityLogsRepository.js', () => ({
+  insertPlatformActivityLog: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe('platformUsers REST API integration routes', () => {
-  let isDbAvailable = false;
   let app: FastifyInstance;
-  let superUserId = '';
-  let superSessionVersion = 0;
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';
-    try {
-      await initDb();
-      isDbAvailable = true;
-      app = await buildApp();
-
-      const existingSuper =
-        (await listPlatformUsers()).find((user) => user.role === 'super_user')
-        ?? (await findPlatformUserRowByEmail('admin@platform.com'));
-
-      if (existingSuper) {
-        superUserId = existingSuper.id;
-        superSessionVersion = existingSuper.sessionVersion;
-      }
-    } catch {
-      console.warn('[PlatformUsers Test] Postgres unavailable. Skipping live DB integration test.');
-    }
+    app = await buildApp();
+    await app.ready();
   });
 
   afterAll(async () => {
-    if (!isDbAvailable) return;
-    // Delete any test admin users created during this test run (non-super_user @platform.com emails)
-    try {
-      const { getPool } = await import('../db/database.js');
-      await getPool().query(
-        "DELETE FROM platform_users WHERE email LIKE '%@platform.com' AND role != 'super_user'",
-      );
-    } catch { /* best-effort */ }
-    await closeDatabase().catch(() => {});
+    await app.close();
   });
 
-  function signPlatformToken(id = superUserId, sessionVersion = superSessionVersion): string {
+  function signPlatformToken(id = 'p-super', sessionVersion = 0): string {
     return app.jwt.sign({
       id,
       tokenType: 'platform_access',
       sessionVersion,
+      permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
     });
   }
 
   it('rejects unauthenticated GET /api/platform/users with 401', async () => {
-    if (!isDbAvailable || !superUserId) return;
     const res = await app.inject({
       method: 'GET',
       url: '/api/platform/users',
@@ -63,8 +102,7 @@ describe('platformUsers REST API integration routes', () => {
   });
 
   it('returns platform users list for super_user session', async () => {
-    if (!isDbAvailable || !superUserId) return;
-    const token = signPlatformToken(superUserId, superSessionVersion);
+    const token = signPlatformToken('p-super', 0);
     const res = await app.inject({
       method: 'GET',
       url: '/api/platform/users',
@@ -76,11 +114,10 @@ describe('platformUsers REST API integration routes', () => {
   });
 
   it('prevents self-disable on PATCH /api/platform/users/:id/disabled with 403', async () => {
-    if (!isDbAvailable || !superUserId) return;
-    const token = signPlatformToken(superUserId, superSessionVersion);
+    const token = signPlatformToken('p-super', 0);
     const res = await app.inject({
       method: 'PATCH',
-      url: `/api/platform/users/${superUserId}/disabled`,
+      url: '/api/platform/users/p-super/disabled',
       cookies: { mms_platform_access: token },
       payload: {
         disabled: true,
@@ -93,11 +130,10 @@ describe('platformUsers REST API integration routes', () => {
   });
 
   it('prevents self-delete on DELETE /api/platform/users/:id with 403', async () => {
-    if (!isDbAvailable || !superUserId) return;
-    const token = signPlatformToken(superUserId, superSessionVersion);
+    const token = signPlatformToken('p-super', 0);
     const res = await app.inject({
       method: 'DELETE',
-      url: `/api/platform/users/${superUserId}`,
+      url: '/api/platform/users/p-super',
       cookies: { mms_platform_access: token },
       payload: {
         password: 'Password123!',
@@ -109,8 +145,7 @@ describe('platformUsers REST API integration routes', () => {
   });
 
   it('persists and updates all 5 granular permission keys for a platform admin', async () => {
-    if (!isDbAvailable || !superUserId) return;
-    const token = signPlatformToken(superUserId, superSessionVersion);
+    const token = signPlatformToken('p-super', 0);
 
     // 1. Create a platform admin with settings, admins, and system permissions enabled
     const email = `test-admin-${Date.now()}@platform.com`;

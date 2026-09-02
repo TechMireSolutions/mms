@@ -1,16 +1,24 @@
-export {
+import {
   closeDatabase,
   getPool,
   getPoolMetrics,
+  getReadReplicaDb,
+  getRootDb,
   initializeDatabaseConnection,
   pingDatabase,
   runInReadSnapshotTransaction,
   runInTransaction,
+  type DbClient,
   type PoolMetrics,
 } from './dbConnection.js';
+import { getDb, setDb } from './dbClient.js';
 
-export async function getDatabaseHealth() {
-  const { pingDatabase, getPoolMetrics } = await import('./dbConnection.js');
+export interface DatabaseHealth {
+  status: 'healthy' | 'unhealthy';
+  pool: PoolMetrics | null;
+}
+
+export async function getDatabaseHealth(): Promise<DatabaseHealth> {
   const isConnected = await pingDatabase();
   const poolMetrics = getPoolMetrics();
   return {
@@ -18,6 +26,23 @@ export async function getDatabaseHealth() {
     pool: poolMetrics,
   };
 }
+
+export {
+  closeDatabase,
+  getDb,
+  getPool,
+  getPoolMetrics,
+  getReadReplicaDb,
+  getRootDb,
+  initializeDatabaseConnection,
+  pingDatabase,
+  runInReadSnapshotTransaction,
+  runInTransaction,
+  setDb,
+  type DbClient,
+  type PoolMetrics,
+};
+
 export {
   deleteCollectionByStorageName,
   deleteCollection,
@@ -37,7 +62,7 @@ export {
   saveObject,
   type SaveCollectionOptions,
 } from './documentStore.js';
-export { initDb, seedDatabase } from './dbInit.js';
+export { initDb, resetDbInitStateForTesting, seedDatabase } from './dbInit.js';
 export {
   purgeTenantDataBySubdomain,
   resetDatabase,

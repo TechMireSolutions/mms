@@ -103,17 +103,17 @@ describe('userRbacDefaults', () => {
       expect(DEFAULT_WORKSPACE_ROLES.length).toBe(9);
       for (const roleId of ALL_SYSTEM_ROLE_IDS) {
         expect(isSystemRole(roleId)).toBe(true);
-        expect(getDefaultRole(roleId)).toBeDefined();
+        expect(getDefaultRole(roleId)?.id).toBe(roleId);
       }
       expect(isSystemRole('custom_role')).toBe(false);
       expect(getDefaultRole('custom_role')).toBeUndefined();
     });
 
     it('provides fast O(1) role lookup and is frozen', () => {
-      expect(DEFAULT_WORKSPACE_ROLES_MAP.super_admin).toBeDefined();
-      expect(DEFAULT_WORKSPACE_ROLES_MAP.admin).toBeDefined();
-      expect(DEFAULT_WORKSPACE_ROLES_MAP.principal).toBeDefined();
-      expect(DEFAULT_WORKSPACE_ROLES_MAP.registrar).toBeDefined();
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.super_admin.id).toBe('super_admin');
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.admin.id).toBe('admin');
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.principal.id).toBe('principal');
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.registrar.id).toBe('registrar');
       expect(DEFAULT_WORKSPACE_ROLES_MAP.teacher.permissions.students).toContain('read');
       expect(DEFAULT_WORKSPACE_ROLES_MAP.auditor.permissions.finance).toEqual(['read']);
       expect(Object.isFrozen(DEFAULT_WORKSPACE_ROLES_MAP)).toBe(true);
@@ -122,8 +122,8 @@ describe('userRbacDefaults', () => {
     it('super_admin and admin roles contain full permissions for all modules', () => {
       const superAdmin = DEFAULT_WORKSPACE_ROLES.find((r) => r.id === 'super_admin');
       const admin = DEFAULT_WORKSPACE_ROLES.find((r) => r.id === 'admin');
-      expect(superAdmin).toBeDefined();
-      expect(admin).toBeDefined();
+      expect(superAdmin?.id).toBe('super_admin');
+      expect(admin?.id).toBe('admin');
       for (const modId of ALL_RBAC_MODULE_IDS) {
         expect(superAdmin?.permissions[modId]).toEqual([...PERMISSION_ACTIONS]);
         expect(admin?.permissions[modId]).toEqual([...PERMISSION_ACTIONS]);

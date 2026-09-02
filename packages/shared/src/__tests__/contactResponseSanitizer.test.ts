@@ -37,7 +37,7 @@ describe('contactResponseSanitizer', () => {
       const sanitized = sanitizeContactForViewer(sampleContact, 'admin', mockConfig);
       expect(sanitized.firstName).toBe('Jane');
       expect(sanitized.lastName).toBe('Doe');
-      expect(sanitized.phones).toBeDefined();
+      expect(sanitized.phones).toEqual([{ label: 'Mobile', number: '+123456789' }]);
     });
 
     it('batch sanitizes contacts array for a viewer role', () => {

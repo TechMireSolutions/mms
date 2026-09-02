@@ -116,7 +116,7 @@ describe('ModuleColumnCustomizer Component', () => {
     const resetButton = Array.from(document.querySelectorAll('button')).find((btn) =>
       btn.textContent?.includes('Reset layout'),
     );
-    expect(resetButton).toBeDefined();
+    expect(resetButton).toBeInstanceOf(HTMLButtonElement);
 
     await act(async () => {
       resetButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
@@ -127,7 +127,7 @@ describe('ModuleColumnCustomizer Component', () => {
     const emailToggleButton = Array.from(document.querySelectorAll('button')).find((btn) =>
       btn.textContent?.includes('Email Address'),
     );
-    expect(emailToggleButton).toBeDefined();
+    expect(emailToggleButton).toBeInstanceOf(HTMLButtonElement);
 
     await act(async () => {
       emailToggleButton?.dispatchEvent(new MouseEvent('click', { bubbles: true }));

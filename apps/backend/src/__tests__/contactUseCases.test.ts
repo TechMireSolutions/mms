@@ -301,7 +301,7 @@ describe('createContactsUseCases (DI composition root)', () => {
     const ok = await useCases.softDeleteContactById('a', 'u-admin', 'Duplicate');
     expect(ok).toBe(true);
     const saved = store.get('a');
-    expect(saved?.deletedAt).toBeDefined();
+    expect(saved?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(saved?.deletedBy).toBe('u-admin');
     expect(saved?.deletionReason).toBe('Duplicate');
   });
@@ -611,7 +611,7 @@ describe('createContactsUseCases (DI composition root)', () => {
       expect(merged.deletedBy).toBeUndefined();
       expect(merged.deletionReason).toBeUndefined();
       const other = store.get('c2');
-      expect(other?.deletedAt).toBeDefined();
+      expect(other?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
       expect(other?.deletedBy).toBe('u-admin');
       expect(other?.deletionReason).toBe('Merged into c1');
       expect(repo.save).toHaveBeenCalledTimes(2);

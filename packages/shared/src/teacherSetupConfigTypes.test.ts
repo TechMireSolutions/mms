@@ -41,6 +41,7 @@ describe('teacherSetupConfigTypes prefs SSOT', () => {
       customFields: [{ id: 'house', label: 'House' }],
     });
     expect('customFields' in settings).toBe(false);
-    expect(settings.fields).toBeDefined();
+    expect(typeof settings.fields).toBe('object');
+    expect(Array.isArray(settings.fields?.basic)).toBe(true);
   });
 });

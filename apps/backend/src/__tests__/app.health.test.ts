@@ -47,9 +47,11 @@ describe("health routes", () => {
     const res = await app.inject({ method: "GET", url: "/api/openapi.json" });
     expect(res.statusCode).toBe(200);
     const json = res.json();
-    expect(json.openapi).toBeDefined();
-    expect(json.info.title).toBe("MMS API");
-    expect(json.paths).toBeDefined();
+    expect(typeof json.openapi).toBe('string');
+    expect(json.openapi).toMatch(/^3\./);
+    expect(json.info.title).toBe('MMS API');
+    expect(typeof json.paths).toBe('object');
+    expect(Object.keys(json.paths).length).toBeGreaterThan(0);
     await app.close();
   });
 });

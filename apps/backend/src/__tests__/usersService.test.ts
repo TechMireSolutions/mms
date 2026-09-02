@@ -117,7 +117,9 @@ describe('usersService activity log upsert', () => {
     expect(result).toBe(true);
     expect(assertPasswordMeetsPolicy).toHaveBeenCalledWith('TemporaryPass1!');
     const passwordHash = vi.mocked(resetTenantUserPasswordRow).mock.calls[0]?.[1];
-    expect(passwordHash).toBeTruthy();
+    expect(typeof passwordHash).toBe('string');
+    expect(passwordHash).not.toBe('old-hash');
+    expect(passwordHash!.length).toBeGreaterThan(20);
     await expect(verifyPassword('TemporaryPass1!', passwordHash!)).resolves.toBe(true);
     expect(deleteRefreshTokensForUser).toHaveBeenCalledWith('u-123');
     expect(revokeAllUserSessions).toHaveBeenCalledWith('u-123');

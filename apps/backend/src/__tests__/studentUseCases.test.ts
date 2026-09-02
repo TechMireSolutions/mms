@@ -139,7 +139,8 @@ describe('createStudentsUseCases (DI composition root)', () => {
     });
 
     expect(restored).toBe(false);
-    expect(record.id).toBeDefined();
+    expect(typeof record.id).toBe('string');
+    expect(String(record.id).length).toBeGreaterThan(0);
     expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ grNumber: 'GR-1' }));
     expect(mockBroadcastCollection).toHaveBeenCalledTimes(1);
     expect(mockBroadcastCollection).toHaveBeenCalledWith('students');
@@ -248,7 +249,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     expect(await useCases.softDeleteStudentById('gone', 'u-admin')).toBe(false);
 
     const saved = store.get('a');
-    expect(saved?.deletedAt).toBeDefined();
+    expect(saved?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(saved?.deletedBy).toBe('u-admin');
     expect(saved?.deletionReason).toBe('Duplicate');
   });
@@ -335,7 +336,7 @@ describe('createStudentsUseCases (DI composition root)', () => {
     expect(result.conflicts).toEqual([
       { id: 'a', errors: [{ field: 'grNumber', message: 'A student with this GR number already exists' }] },
     ]);
-    expect(store.get('a')?.deletedAt).toBeDefined();
+    expect(store.get('a')?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(store.get('ok')?.deletedAt).toBeUndefined();
   });
 
@@ -540,8 +541,8 @@ describe('createStudentsUseCases (DI composition root)', () => {
     const result = await useCases.migrateStudentsMissingGrNumbers();
 
     expect(result).toEqual({ updated: 2 });
-    expect(store.get('m1')?.grNumber).toBeDefined();
-    expect(store.get('m2')?.grNumber).toBeDefined();
+    expect(typeof store.get('m1')?.grNumber).toBe('string');
+    expect(typeof store.get('m2')?.grNumber).toBe('string');
     expect(store.get('m2')?.grNumber).not.toBe(store.get('m1')?.grNumber);
     expect(mockBroadcastCollection).toHaveBeenCalledWith('students');
   });

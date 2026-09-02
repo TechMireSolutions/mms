@@ -5,6 +5,8 @@ import type { ServerConfig } from '../config/serverConfig.js';
 
 function createMockConfig(overrides: Partial<ServerConfig> = {}): ServerConfig {
   return {
+    port: 3000,
+    host: '0.0.0.0',
     isProd: false,
     readReplicaDatabaseUrl: 'postgres://localhost',
     databaseUrl: 'postgres://localhost/test',

@@ -151,7 +151,8 @@ describe('examinations exams pagination', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockLoadExamsPage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
-    expect(res.json().exams[0]?.deletedAt).toBeTruthy();
+    expect(typeof res.json().exams[0]?.deletedAt).toBe('string');
+    expect(res.json().exams[0]?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     await app.close();
   });
 

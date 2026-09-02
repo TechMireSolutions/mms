@@ -1004,7 +1004,8 @@ describe('contacts REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockTouchContactsSavedReportRun).toHaveBeenCalledWith('csr_test', expect.objectContaining({ id: 'u-accountant', role: 'accountant' }));
-    expect(res.json().report.lastRunAt).toBeTruthy();
+    expect(typeof res.json().report.lastRunAt).toBe('string');
+    expect(res.json().report.lastRunAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     await app.close();
   });
 

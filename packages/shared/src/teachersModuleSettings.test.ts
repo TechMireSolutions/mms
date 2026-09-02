@@ -62,9 +62,10 @@ describe('getSortedTeacherFields', () => {
 describe('normalizeTeachersSettings', () => {
   it('falls back to default seed fields when raw.fields is an empty object', () => {
     const normalized = normalizeTeachersSettings({ fields: {} });
-    expect(normalized.fields).toBeDefined();
+    expect(typeof normalized.fields).toBe('object');
     expect(Object.keys(normalized.fields as Record<string, unknown>).length).toBeGreaterThan(0);
-    expect((normalized.fields as any).basic).toBeDefined();
+    expect(Array.isArray((normalized.fields as any).basic)).toBe(true);
+    expect((normalized.fields as any).basic.length).toBeGreaterThan(0);
   });
 });
 

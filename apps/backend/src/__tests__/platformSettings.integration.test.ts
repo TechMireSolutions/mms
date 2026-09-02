@@ -1,93 +1,98 @@
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { initDb } from '../db/database.js';
 import { buildApp } from '../app.js';
-import {
-  deletePlatformUserRow,
-  findPlatformUserRowByEmail,
-  findPlatformUserRowById,
-  insertPlatformUser,
-  listPlatformUsers,
-} from '../db/repositories/platformUserRepository.js';
-import { hashPassword } from '../services/auth/passwordService.js';
+
+const { mockSuperUser, mockAdminUser } = vi.hoisted(() => {
+  const mockSuperUser = {
+    id: 'p-super',
+    email: 'admin@platform.com',
+    name: 'Super Admin',
+    passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
+    role: 'super_user' as const,
+    permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+    sessionVersion: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+
+  const mockAdminUser = {
+    id: 'p-admin',
+    email: 'normal-settings-test@platform.com',
+    name: 'Normal Admin',
+    passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
+    role: 'admin' as const,
+    permissions: { workspaces: false, onboard: false, settings: false, admins: false, system: false },
+    sessionVersion: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+
+  return { mockSuperUser, mockAdminUser };
+});
+
+vi.mock('../db/database.js', () => ({
+  initDb: vi.fn().mockResolvedValue(undefined),
+  pingDatabase: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('../db/repositories/platformUserRepository.js', () => ({
+  findPlatformUserRowById: vi.fn().mockImplementation(async (id: string) => {
+    if (id === 'p-super') return mockSuperUser;
+    if (id === 'p-admin') return mockAdminUser;
+    return null;
+  }),
+  findPlatformUserRowByEmail: vi.fn().mockImplementation(async (email: string) => {
+    if (email === 'admin@platform.com') return mockSuperUser;
+    if (email === 'normal-settings-test@platform.com') return mockAdminUser;
+    return null;
+  }),
+  listPlatformUsers: vi.fn().mockResolvedValue([mockSuperUser, mockAdminUser]),
+  insertPlatformUser: vi.fn().mockResolvedValue(undefined),
+  deletePlatformUserRow: vi.fn().mockResolvedValue(undefined),
+}));
+
+let currentSettings: Record<string, unknown> = {
+  id: 'global',
+  certbotEmail: 'admin@madrasa.com',
+  syncTlsOnCreate: false,
+  updatedAt: '2026-01-01T00:00:00.000Z',
+};
+
+vi.mock('../services/platform/platformSettingsService.js', () => ({
+  getPlatformSettings: vi.fn().mockImplementation(() => currentSettings),
+  updatePlatformSettings: vi.fn().mockImplementation(async (data: unknown) => {
+    currentSettings = { ...currentSettings, ...(data as Record<string, unknown>) };
+    return currentSettings;
+  }),
+}));
+
+vi.mock('../services/platform/platformUserService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/platform/platformUserService.js')>();
+  return {
+    ...actual,
+    verifyPlatformUserPassword: vi.fn().mockImplementation(async (_id: string, password: string) => {
+      return password === 'correct-password' || password === 'TestPassword123!';
+    }),
+  };
+});
 
 vi.mock('../services/platform/platformDatabaseService.js', () => ({
   resetAndReseedDatabase: vi.fn().mockResolvedValue(undefined),
 }));
 
-describe('platformSettings REST API routes', () => {
-  let isDbAvailable = false;
-  let app: FastifyInstance;
-  let superUserId = 'p-super';
-  let superSessionVersion = 0;
-  let adminUserId = 'p-admin';
-  let adminSessionVersion = 0;
+vi.mock('../db/repositories/platformActivityLogsRepository.js', () => ({
+  insertPlatformActivityLog: vi.fn().mockResolvedValue(undefined),
+}));
 
-  afterAll(async () => {
-    if (!isDbAvailable) return;
-    try {
-      await deletePlatformUserRow('p-super');
-      await deletePlatformUserRow('p-admin');
-    } catch {
-      // Ignore cleanup errors
-    }
-  });
+describe('platformSettings REST API routes', () => {
+  let app: FastifyInstance;
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';
-    try {
-      await initDb();
-      isDbAvailable = true;
-      app = await buildApp();
+    app = await buildApp();
+    await app.ready();
+  });
 
-      const passwordHash = await hashPassword('TestPassword123!');
-
-      const existingSuper =
-        (await listPlatformUsers()).find((user) => user.role === 'super_user')
-        ?? (await findPlatformUserRowById('p-super'));
-
-      if (existingSuper) {
-        superUserId = existingSuper.id;
-        superSessionVersion = existingSuper.sessionVersion;
-      } else {
-        await insertPlatformUser({
-          id: 'p-super',
-          email: 'admin@platform.com',
-          name: 'Super Admin',
-          passwordHash,
-          role: 'super_user',
-          permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
-          sessionVersion: 0,
-          createdAt: new Date().toISOString(),
-        });
-        superUserId = 'p-super';
-        superSessionVersion = 0;
-      }
-
-      const existingAdmin =
-        (await findPlatformUserRowById('p-admin'))
-        ?? (await findPlatformUserRowByEmail('normal@platform.com'));
-
-      if (existingAdmin && existingAdmin.role !== 'super_user') {
-        adminUserId = existingAdmin.id;
-        adminSessionVersion = existingAdmin.sessionVersion;
-      } else {
-        await insertPlatformUser({
-          id: 'p-admin',
-          email: 'normal-settings-test@platform.com',
-          name: 'Normal Admin',
-          passwordHash,
-          role: 'admin',
-          permissions: { workspaces: false, onboard: false, settings: false, admins: false, system: false },
-          sessionVersion: 0,
-          createdAt: new Date().toISOString(),
-        });
-        adminUserId = 'p-admin';
-        adminSessionVersion = 0;
-      }
-    } catch {
-      console.warn('[PlatformSettings Test] Postgres connection unavailable. Skipping live DB integration test.');
-    }
+  afterAll(async () => {
+    await app.close();
   });
 
   function signPlatformToken(input: {
@@ -100,14 +105,13 @@ describe('platformSettings REST API routes', () => {
     return app.jwt.sign({
       ...input,
       permissions: input.role === 'super_user'
-        ? { workspaces: true, onboard: true }
-        : { workspaces: false, onboard: false },
+        ? { workspaces: true, onboard: true, settings: true, admins: true, system: true }
+        : { workspaces: false, onboard: false, settings: false, admins: false, system: false },
       tokenType: 'platform_access',
     });
   }
 
   it('rejects unauthenticated GET /api/platform/settings with 401', async () => {
-    if (!isDbAvailable) return;
     const res = await app.inject({
       method: 'GET',
       url: '/api/platform/settings',
@@ -116,14 +120,12 @@ describe('platformSettings REST API routes', () => {
   });
 
   it('returns platform settings for super_user session', async () => {
-    if (!isDbAvailable) return;
-
     const token = signPlatformToken({
-      id: superUserId,
+      id: 'p-super',
       email: 'admin@platform.com',
       name: 'Super Admin',
       role: 'super_user',
-      sessionVersion: superSessionVersion,
+      sessionVersion: 0,
     });
 
     const res = await app.inject({
@@ -139,14 +141,12 @@ describe('platformSettings REST API routes', () => {
   });
 
   it('rejects non-super_user from reading platform settings with 403', async () => {
-    if (!isDbAvailable) return;
-
     const token = signPlatformToken({
-      id: adminUserId,
+      id: 'p-admin',
       email: 'normal-settings-test@platform.com',
       name: 'Normal Admin',
       role: 'admin',
-      sessionVersion: adminSessionVersion,
+      sessionVersion: 0,
     });
 
     const res = await app.inject({
@@ -159,14 +159,12 @@ describe('platformSettings REST API routes', () => {
   });
 
   it('allows platform super_user to update settings via PUT /api/platform/settings', async () => {
-    if (!isDbAvailable) return;
-
     const token = signPlatformToken({
-      id: superUserId,
+      id: 'p-super',
       email: 'admin@platform.com',
       name: 'Super Admin',
       role: 'super_user',
-      sessionVersion: superSessionVersion,
+      sessionVersion: 0,
     });
 
     const res = await app.inject({
@@ -186,14 +184,12 @@ describe('platformSettings REST API routes', () => {
   });
 
   it('rejects non-super_user role from updating platform settings with 403', async () => {
-    if (!isDbAvailable) return;
-
     const token = signPlatformToken({
-      id: adminUserId,
+      id: 'p-admin',
       email: 'normal-settings-test@platform.com',
       name: 'Normal Admin',
       role: 'admin',
-      sessionVersion: adminSessionVersion,
+      sessionVersion: 0,
     });
 
     const res = await app.inject({
@@ -209,14 +205,12 @@ describe('platformSettings REST API routes', () => {
   });
 
   it('validates database reset payload on POST /api/platform/settings/reset-database', async () => {
-    if (!isDbAvailable) return;
-
     const token = signPlatformToken({
-      id: superUserId,
+      id: 'p-super',
       email: 'admin@platform.com',
       name: 'Super Admin',
       role: 'super_user',
-      sessionVersion: superSessionVersion,
+      sessionVersion: 0,
     });
 
     const badRes = await app.inject({
@@ -245,14 +239,12 @@ describe('platformSettings REST API routes', () => {
   });
 
   it('rejects non-super_user from resetting database with 403', async () => {
-    if (!isDbAvailable) return;
-
     const token = signPlatformToken({
-      id: adminUserId,
+      id: 'p-admin',
       email: 'normal-settings-test@platform.com',
       name: 'Normal Admin',
       role: 'admin',
-      sessionVersion: adminSessionVersion,
+      sessionVersion: 0,
     });
 
     const res = await app.inject({

@@ -252,7 +252,8 @@ describe('tenant JWT binding', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.headers['x-content-type-options']).toBe('nosniff');
-    expect(res.headers['x-request-id']).toBeTruthy();
+    expect(typeof res.headers['x-request-id']).toBe('string');
+    expect(res.headers['x-request-id']).toMatch(/^[0-9a-zA-Z_-]+$/);
     await app.close();
   });
 

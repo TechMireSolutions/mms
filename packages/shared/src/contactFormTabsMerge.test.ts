@@ -69,7 +69,7 @@ describe('mergeContactsFormTabsFromApi', () => {
     const merged = mergeContactsFormTabsFromApi(undefined, apiTabs);
 
     const relationshipTab = merged.find((tab) => tab.key === 'relationship');
-    expect(relationshipTab).toBeDefined();
+    expect(relationshipTab?.key).toBe('relationship');
     expect(relationshipTab?.label).toBe('Relationship');
     // Relationship seed only appears once after normalization/dedup.
     expect(merged.filter((tab) => tab.key === 'relationship')).toHaveLength(1);
@@ -88,7 +88,7 @@ describe('mergeContactsFormTabsFromApi', () => {
     const merged = mergeContactsFormTabsFromApi(undefined, apiTabs, { [tabId]: [field] });
 
     const customTab = merged.find((tab) => tab.key === 'custom');
-    expect(customTab).toBeDefined();
+    expect(customTab?.key).toBe('custom');
     expect(customTab?.label).toBe(CONTACT_LEGACY_CUSTOM_FORM_TAB.label);
     expect(customTab?.isSystem).toBe(true);
   });

@@ -16,7 +16,7 @@ describe('userRbacPermissionNav', () => {
     expect(firstGroup?.modules[0]?.id).toBe('dashboard');
 
     const academicsGroup = groups.find((g) => g.groupId === 'group-academics');
-    expect(academicsGroup).toBeDefined();
+    expect(academicsGroup?.groupId).toBe('group-academics');
     expect(academicsGroup?.labelKey).toBe('nav.academics');
     expect(academicsGroup?.modules.some((m) => m.id === 'students')).toBe(true);
     expect(academicsGroup?.modules.some((m) => m.id === 'examinations')).toBe(true);
@@ -54,7 +54,7 @@ describe('userRbacPermissionNav', () => {
     ];
     const groups = groupRbacModulesForPermissionsNav(customModules);
     const customGroup = groups.find((g) => g.groupId === 'module-custom_reports');
-    expect(customGroup).toBeDefined();
+    expect(customGroup?.groupId).toBe('module-custom_reports');
     expect(customGroup?.modules[0]?.id).toBe('custom_reports');
   });
 });

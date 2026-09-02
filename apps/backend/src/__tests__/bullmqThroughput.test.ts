@@ -55,6 +55,8 @@ describe('BullMQ 50 Concurrent Jobs Throughput Verification (Phase 5)', () => {
     // 50 enqueues in memory/mock should be well under 500ms
     expect(durationMs).toBeLessThan(500);
 
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     await closeAllQueues();
+    logSpy.mockRestore();
   });
 });

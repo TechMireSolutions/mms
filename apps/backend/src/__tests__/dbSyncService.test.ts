@@ -74,7 +74,7 @@ describe('dbSyncService collection persistence', () => {
     await persistCollection('students', [{ id: 's-1' }]);
     expect(dbSaveCollection).toHaveBeenCalledWith('students', [{ id: 's-1' }], undefined);
     const options = dbSaveCollection.mock.calls[0]?.[2] as { mirrorRelationalReplace?: boolean } | undefined;
-    expect(options?.mirrorRelationalReplace).toBeFalsy();
+    expect(options?.mirrorRelationalReplace).toBeUndefined();
   });
 
   it('synchronizeData mirrors relational replace for admin restore', async () => {

@@ -1,10 +1,17 @@
+import { resolveBackendListenPort } from '@mms/shared';
+
+export type LogLevel = 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace' | 'silent';
+
 export interface ServerConfig {
+  port: number;
+  host: string;
+  appDomain?: string;
   isProd: boolean;
   jwtSecret: string;
   databaseUrl: string;
   readReplicaDatabaseUrl: string;
   trustProxy: boolean | string[];
-  logLevel: string;
+  logLevel: LogLevel;
   allowedOrigin: string;
   bodyLimit: number;
   requestTimeoutMs: number;
@@ -15,9 +22,42 @@ export interface ServerConfig {
   pgIdleInTxTimeoutMs: number;
 }
 
+const VALID_LOG_LEVELS = new Set<LogLevel>(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']);
+
+function parsePositiveInt(
+  val: string | undefined,
+  defaultVal: number,
+  min = 1,
+  max = Number.MAX_SAFE_INTEGER,
+): number {
+  if (!val) return defaultVal;
+  const num = Number(val);
+  if (!Number.isFinite(num) || num < min) return defaultVal;
+  return Math.min(num, max);
+}
+
+function validatePostgresUrl(url: string, envVarName: string): void {
+  if (!url.startsWith('postgres://') && !url.startsWith('postgresql://')) {
+    throw new Error(`${envVarName} must start with postgres:// or postgresql://`);
+  }
+}
+
 export function loadServerConfig(): ServerConfig {
   const isProd = process.env.NODE_ENV === 'production';
-  const isTest = process.env.NODE_ENV === 'test';
+  const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+
+  let port: number;
+  try {
+    port = resolveBackendListenPort(process.env);
+  } catch (err) {
+    if (isTest) {
+      port = isProd ? 5002 : 3000;
+    } else {
+      throw err;
+    }
+  }
+  const host = process.env.HOST || '0.0.0.0';
+  const appDomain = process.env.MMS_APP_DOMAIN?.trim() || undefined;
 
   let jwtSecret = process.env.JWT_SECRET;
   if (!jwtSecret) {
@@ -51,8 +91,10 @@ export function loadServerConfig(): ServerConfig {
       );
     }
   }
+  validatePostgresUrl(databaseUrl, 'DATABASE_URL');
 
   const readReplicaDatabaseUrl = process.env.READ_REPLICA_DATABASE_URL || databaseUrl;
+  validatePostgresUrl(readReplicaDatabaseUrl, 'READ_REPLICA_DATABASE_URL');
 
   const trustProxyValue = process.env.TRUST_PROXY?.trim();
   if (trustProxyValue === 'true') {
@@ -64,27 +106,35 @@ export function loadServerConfig(): ServerConfig {
     ? trustProxyValue.split(',').map((entry) => entry.trim()).filter(Boolean)
     : [];
 
-  const requestTimeoutMs = Number(process.env.REQUEST_TIMEOUT_MS) || 120_000;
+  const rawLogLevel = process.env.LOG_LEVEL as LogLevel | undefined;
+  const logLevel: LogLevel = rawLogLevel && VALID_LOG_LEVELS.has(rawLogLevel)
+    ? rawLogLevel
+    : (isTest ? 'warn' : 'info');
+
+  const requestTimeoutMs = parsePositiveInt(process.env.REQUEST_TIMEOUT_MS, 120_000, 1_000, 600_000);
   const pgStatementTimeoutMs = Math.min(
-    Math.max(Number(process.env.PG_STATEMENT_TIMEOUT_MS) || 30_000, 1),
+    parsePositiveInt(process.env.PG_STATEMENT_TIMEOUT_MS, 30_000, 1, 600_000),
     requestTimeoutMs,
   );
   const pgIdleInTxTimeoutMs = Math.min(
-    Math.max(Number(process.env.PG_IDLE_IN_TX_TIMEOUT_MS) || 15_000, 1),
+    parsePositiveInt(process.env.PG_IDLE_IN_TX_TIMEOUT_MS, 15_000, 1, 600_000),
     pgStatementTimeoutMs,
   );
 
   return {
+    port,
+    host,
+    appDomain,
     isProd,
     jwtSecret,
     databaseUrl,
     readReplicaDatabaseUrl,
     trustProxy: trustedProxies.length > 0 ? trustedProxies : false,
-    logLevel: process.env.LOG_LEVEL || 'info',
+    logLevel,
     allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
-    bodyLimit: Number(process.env.REQUEST_BODY_LIMIT_BYTES) || 1024 * 1024,
+    bodyLimit: parsePositiveInt(process.env.REQUEST_BODY_LIMIT_BYTES, 1024 * 1024, 1024, 50 * 1024 * 1024),
     requestTimeoutMs,
-    pgPoolMax: Number(process.env.PG_POOL_MAX) || 20,
+    pgPoolMax: parsePositiveInt(process.env.PG_POOL_MAX, 20, 1, 100),
     pgStatementTimeoutMs,
     pgIdleInTxTimeoutMs,
   };

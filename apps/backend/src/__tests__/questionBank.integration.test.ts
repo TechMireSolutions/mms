@@ -455,7 +455,8 @@ describe('question bank questions pagination', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockLoadQuestionsPage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
-    expect(res.json().questions[0]?.deletedAt).toBeTruthy();
+    expect(typeof res.json().questions[0]?.deletedAt).toBe('string');
+    expect(res.json().questions[0]?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     await app.close();
   });
 

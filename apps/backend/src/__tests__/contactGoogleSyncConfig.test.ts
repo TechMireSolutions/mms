@@ -62,7 +62,8 @@ describe('contactGoogleSyncConfig', () => {
       'u1',
       expect.objectContaining({ clientId: 'client-1', updatedAt: expect.any(String) }),
     );
-    expect(saved.updatedAt).toBeTruthy();
+    expect(typeof saved.updatedAt).toBe('string');
+    expect(saved.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
   it('delegates clear', async () => {

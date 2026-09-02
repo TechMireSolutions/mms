@@ -241,7 +241,8 @@ describe('attendance REST routes integration', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(mockLoadAttendancePage).toHaveBeenCalledWith(expect.objectContaining({ includeDeleted: true }));
-    expect(res.json().records[0].deletedAt).toBeTruthy();
+    expect(typeof res.json().records[0].deletedAt).toBe('string');
+    expect(res.json().records[0].deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     await app.close();
   });
 

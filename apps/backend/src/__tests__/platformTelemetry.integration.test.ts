@@ -1,84 +1,84 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { initDb } from '../db/database.js';
 import { buildApp } from '../app.js';
-import {
-  deletePlatformUserRow,
-  findPlatformUserRowById,
-  insertPlatformUser,
-  listPlatformUsers,
-} from '../db/repositories/platformUserRepository.js';
-import { hashPassword } from '../services/auth/passwordService.js';
 import {
   getPlatformTelemetry,
   getPlatformActivityTrend,
 } from '../services/platform/platformTelemetryService.js';
 
-describe('Platform Telemetry & Activity Trend API', () => {
-  let isDbAvailable = false;
-  let app: FastifyInstance;
-  let superUserId = 'p-super-telem';
-  let superSessionVersion = 0;
-  let adminUserId = 'p-admin-no-sys';
-  let adminSessionVersion = 0;
-  const superPassword = 'TestPassword123!';
+const { mockSuperUser, mockAdminUser } = vi.hoisted(() => {
+  const mockSuperUser = {
+    id: 'p-super-telem',
+    email: 'telem-super@platform.com',
+    name: 'Telem Super',
+    passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
+    role: 'super_user' as const,
+    permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+    sessionVersion: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
 
-  afterAll(async () => {
-    if (!isDbAvailable) return;
-    try {
-      await deletePlatformUserRow('p-super-telem');
-      await deletePlatformUserRow('p-admin-no-sys');
-    } catch {
-      // Ignore cleanup errors
-    }
-  });
+  const mockAdminUser = {
+    id: 'p-admin-no-sys',
+    email: 'telem-admin-nosys@platform.com',
+    name: 'Telem Admin NoSys',
+    passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
+    role: 'admin' as const,
+    permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false },
+    sessionVersion: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+
+  return { mockSuperUser, mockAdminUser };
+});
+
+vi.mock('../db/database.js', () => ({
+  initDb: vi.fn().mockResolvedValue(undefined),
+  pingDatabase: vi.fn().mockResolvedValue(true),
+  getPool: () => ({
+    totalCount: 10,
+    idleCount: 8,
+    waitingCount: 0,
+  }),
+}));
+
+vi.mock('../db/repositories/platformUserRepository.js', () => ({
+  findPlatformUserRowById: vi.fn().mockImplementation(async (id: string) => {
+    if (id === 'p-super-telem') return mockSuperUser;
+    if (id === 'p-admin-no-sys') return mockAdminUser;
+    return null;
+  }),
+  findPlatformUserRowByEmail: vi.fn().mockImplementation(async (email: string) => {
+    if (email === 'telem-super@platform.com') return mockSuperUser;
+    if (email === 'telem-admin-nosys@platform.com') return mockAdminUser;
+    return null;
+  }),
+  listPlatformUsers: vi.fn().mockResolvedValue([mockSuperUser, mockAdminUser]),
+}));
+
+vi.mock('../db/repositories/platformActivityLogsRepository.js', () => ({
+  getPlatformMonthlyActivityTrend: vi.fn().mockResolvedValue([
+    { month: 'Jan', yearMonth: '2026-01', tenants: 5, ops: 20 },
+    { month: 'Feb', yearMonth: '2026-02', tenants: 6, ops: 25 },
+    { month: 'Mar', yearMonth: '2026-03', tenants: 7, ops: 30 },
+    { month: 'Apr', yearMonth: '2026-04', tenants: 8, ops: 35 },
+    { month: 'May', yearMonth: '2026-05', tenants: 9, ops: 40 },
+    { month: 'Jun', yearMonth: '2026-06', tenants: 10, ops: 45 },
+  ]),
+  insertPlatformActivityLog: vi.fn().mockResolvedValue(undefined),
+}));
+
+describe('Platform Telemetry & Activity Trend API', () => {
+  let app: FastifyInstance;
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';
-    try {
-      await initDb();
-      isDbAvailable = true;
-      app = await buildApp();
+    app = await buildApp();
+    await app.ready();
+  });
 
-      const passwordHash = await hashPassword(superPassword);
-
-      const existingSuper =
-        (await listPlatformUsers()).find((user) => user.role === 'super_user') ??
-        (await findPlatformUserRowById('p-super-telem'));
-
-      if (existingSuper) {
-        superUserId = existingSuper.id;
-        superSessionVersion = existingSuper.sessionVersion;
-      } else {
-        await insertPlatformUser({
-          id: 'p-super-telem',
-          email: 'telem-super@platform.com',
-          name: 'Telem Super',
-          passwordHash,
-          role: 'super_user',
-          permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
-          sessionVersion: 0,
-          createdAt: new Date().toISOString(),
-        });
-        superUserId = 'p-super-telem';
-        superSessionVersion = 0;
-      }
-
-      await insertPlatformUser({
-        id: 'p-admin-no-sys',
-        email: 'telem-admin-nosys@platform.com',
-        name: 'Telem Admin NoSys',
-        passwordHash,
-        role: 'admin',
-        permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false },
-        sessionVersion: 0,
-        createdAt: new Date().toISOString(),
-      });
-      adminUserId = 'p-admin-no-sys';
-      adminSessionVersion = 0;
-    } catch {
-      console.warn('[PlatformTelemetry Test] Postgres unavailable. Skipping live DB integration test.');
-    }
+  afterAll(async () => {
+    await app.close();
   });
 
   function signPlatformToken(input: {
@@ -101,11 +101,11 @@ describe('Platform Telemetry & Activity Trend API', () => {
   describe('Service unit checks', () => {
     it('returns valid telemetry shape from getPlatformTelemetry()', async () => {
       const telemetry = await getPlatformTelemetry();
-      expect(telemetry).toBeDefined();
-      expect(telemetry.dbPool).toBeDefined();
+      expect(typeof telemetry).toBe('object');
+      expect(typeof telemetry.dbPool).toBe('object');
       expect(typeof telemetry.dbPool.totalCount).toBe('number');
       expect(typeof telemetry.dbPool.utilizationRate).toBe('number');
-      expect(telemetry.memory).toBeDefined();
+      expect(typeof telemetry.memory).toBe('object');
       expect(typeof telemetry.memory.rssMb).toBe('number');
       expect(typeof telemetry.latencyMs).toBe('number');
       expect(typeof telemetry.uptimeSeconds).toBe('number');
@@ -124,7 +124,6 @@ describe('Platform Telemetry & Activity Trend API', () => {
 
   describe('HTTP endpoint checks', () => {
     it('rejects unauthenticated requests to /telemetry with 401', async () => {
-      if (!isDbAvailable) return;
       const res = await app.inject({
         method: 'GET',
         url: '/api/platform/admin/system/telemetry',
@@ -133,14 +132,13 @@ describe('Platform Telemetry & Activity Trend API', () => {
     });
 
     it('rejects users without system permission with 403', async () => {
-      if (!isDbAvailable) return;
       const token = signPlatformToken({
-        id: adminUserId,
+        id: 'p-admin-no-sys',
         email: 'telem-admin-nosys@platform.com',
         name: 'Telem Admin NoSys',
         role: 'admin',
-        sessionVersion: adminSessionVersion,
-        permissions: { system: false },
+        sessionVersion: 0,
+        permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false },
       });
 
       const res = await app.inject({
@@ -152,13 +150,12 @@ describe('Platform Telemetry & Activity Trend API', () => {
     });
 
     it('returns telemetry data for authorized platform super user', async () => {
-      if (!isDbAvailable) return;
       const token = signPlatformToken({
-        id: superUserId,
+        id: 'p-super-telem',
         email: 'telem-super@platform.com',
         name: 'Telem Super',
         role: 'super_user',
-        sessionVersion: superSessionVersion,
+        sessionVersion: 0,
       });
 
       const res = await app.inject({
@@ -175,13 +172,12 @@ describe('Platform Telemetry & Activity Trend API', () => {
     });
 
     it('returns activity trend data for authorized platform super user', async () => {
-      if (!isDbAvailable) return;
       const token = signPlatformToken({
-        id: superUserId,
+        id: 'p-super-telem',
         email: 'telem-super@platform.com',
         name: 'Telem Super',
         role: 'super_user',
-        sessionVersion: superSessionVersion,
+        sessionVersion: 0,
       });
 
       const res = await app.inject({

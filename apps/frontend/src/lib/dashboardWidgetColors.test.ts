@@ -18,8 +18,9 @@ describe('dashboardWidgetColors', () => {
 
   it('retrieves widget color themes', () => {
     const theme = getWidgetColorTheme('emerald');
-    expect(theme).toBeDefined();
-    expect(theme.bg).toBeDefined();
+    expect(typeof theme).toBe('object');
+    expect(typeof theme.bg).toBe('string');
+    expect(theme.bg.length).toBeGreaterThan(0);
   });
 
   it('builds quick action icon classes for slate and custom colors', () => {
@@ -31,6 +32,7 @@ describe('dashboardWidgetColors', () => {
   it('builds quick action glow classes', () => {
     expect(getQuickActionGlowClass('slate')).toBe('bg-muted-foreground/15');
     const glow = getQuickActionGlowClass('emerald');
-    expect(glow).toBeDefined();
+    expect(typeof glow).toBe('string');
+    expect(glow.length).toBeGreaterThan(0);
   });
 });

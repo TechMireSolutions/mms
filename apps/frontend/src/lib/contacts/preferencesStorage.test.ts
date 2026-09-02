@@ -14,8 +14,8 @@ describe("preferencesStorage", () => {
 
   it("loads normalized contact preferences", () => {
     const prefs = loadPreferences();
-    expect(prefs).toBeDefined();
-    expect(prefs.defaultCountry).toBeDefined();
+    expect(typeof prefs).toBe("object");
+    expect(typeof prefs.defaultCountry).toBe("string");
   });
 
   it("updates preferences in memory and clears legacy localStorage key", () => {

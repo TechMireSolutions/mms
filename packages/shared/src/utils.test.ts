@@ -362,7 +362,8 @@ describe("formatTimeHHmm / normalizeTimeHHmm", () => {
 describe("splitIsoDateTime / combineIsoDateAndTime", () => {
   it("round-trips local date and time through ISO", () => {
     const combined = combineIsoDateAndTime("2026-01-05", "14:30");
-    expect(combined).toBeTruthy();
+    expect(typeof combined).toBe("string");
+    expect(combined).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
     const parts = splitIsoDateTime(combined!);
     expect(parts).toEqual({ date: "2026-01-05", time: "14:30" });
   });
@@ -376,7 +377,8 @@ describe("splitIsoDateTime / combineIsoDateAndTime", () => {
 
   it("defaults missing time to midnight when combining", () => {
     const combined = combineIsoDateAndTime("2026-01-05", "");
-    expect(combined).toBeTruthy();
+    expect(typeof combined).toBe("string");
+    expect(combined).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/);
     expect(splitIsoDateTime(combined!)).toEqual({ date: "2026-01-05", time: "00:00" });
   });
 });
@@ -437,8 +439,9 @@ describe("calculateDetailedSolarAge", () => {
 describe("getLunarDateString", () => {
   it("converts Gregorian date to localized Hijri string", () => {
     const result = getLunarDateString("2000-01-01");
-    expect(result).toBeTruthy();
-    expect(result).toBeTypeOf("string");
+    expect(typeof result).toBe("string");
+    expect(result.length).toBeGreaterThan(0);
+    expect(result).not.toBe("—");
   });
 
   it.each([
@@ -452,13 +455,15 @@ describe("getLunarDateString", () => {
 describe("formatHijriDate", () => {
   it("formats date into Hijri calendar string", () => {
     const result = formatHijriDate("2026-03-20");
-    expect(result).toBeTruthy();
+    expect(typeof result).toBe("string");
+    expect(result.length).toBeGreaterThan(0);
     expect(result).not.toBe("—");
   });
 
   it("supports explicit Umm al-Qura calendar option", () => {
     const umAlQura = formatHijriDate("2026-03-20", { calendar: "islamic-umalqura" });
-    expect(umAlQura).toBeTruthy();
+    expect(typeof umAlQura).toBe("string");
+    expect(umAlQura.length).toBeGreaterThan(0);
     expect(umAlQura).not.toBe("—");
   });
 
@@ -478,13 +483,15 @@ describe("formatHijriDate", () => {
 describe("formatSolarHijriDate", () => {
   it("formats date into Solar Hijri (Persian / Shamsi) calendar string", () => {
     const result = formatSolarHijriDate("2026-03-20");
-    expect(result).toBeTruthy();
+    expect(typeof result).toBe("string");
+    expect(result.length).toBeGreaterThan(0);
     expect(result).not.toBe("—");
   });
 
   it("supports locale override for Persian Solar calendar", () => {
     const resultFa = formatSolarHijriDate("2026-03-20", "fa-IR");
-    expect(resultFa).toBeTruthy();
+    expect(typeof resultFa).toBe("string");
+    expect(resultFa.length).toBeGreaterThan(0);
   });
 
   it.each([
@@ -860,7 +867,7 @@ describe("syncContactScalarFields", () => {
       emails: [{ label: "Home", address: "a@example.com", isPrimary: true }],
       addresses: [{ label: "Home", line1: "1 Main", city: "Lahore", state: "Punjab", country: "PK", isPrimary: true }],
     } as Partial<Contact>);
-    expect(synced.phone).toBeTruthy();
+    expect(synced.phone).toBe("+92 3001234567");
     expect(synced.email).toBe("a@example.com");
     expect(synced.line1).toBe("1 Main");
     expect(synced.city).toBe("Lahore");

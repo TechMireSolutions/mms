@@ -1,48 +1,93 @@
-import { beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { initDb } from '../db/database.js';
 import { buildApp } from '../app.js';
-import {
-  findPlatformUserRowByEmail,
-  listPlatformUsers,
-} from '../db/repositories/platformUserRepository.js';
+
+const { mockSuperUser, mockWorkspaces } = vi.hoisted(() => {
+  const mockSuperUser = {
+    id: 'p-super',
+    email: 'admin@platform.com',
+    name: 'Super Admin',
+    passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
+    role: 'super_user' as const,
+    permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+    sessionVersion: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+
+  const mockWorkspaces = [
+    {
+      id: 'ws-1',
+      subdomain: 'demo',
+      name: 'Demo Workspace',
+      enabled: true,
+      requireEmailVerification: true,
+      createdAt: '2026-01-01T00:00:00.000Z',
+    },
+  ];
+
+  return { mockSuperUser, mockWorkspaces };
+});
+
+vi.mock('../db/database.js', () => ({
+  initDb: vi.fn().mockResolvedValue(undefined),
+  pingDatabase: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('../db/repositories/platformUserRepository.js', () => ({
+  findPlatformUserRowById: vi.fn().mockImplementation(async (id: string) => {
+    if (id === 'p-super') return mockSuperUser;
+    return null;
+  }),
+  findPlatformUserRowByEmail: vi.fn().mockImplementation(async (email: string) => {
+    if (email === 'admin@platform.com') return mockSuperUser;
+    return null;
+  }),
+  listPlatformUsers: vi.fn().mockResolvedValue([mockSuperUser]),
+}));
+
+vi.mock('../services/workspaceService.js', () => ({
+  listPlatformWorkspaces: vi.fn().mockImplementation(async () => mockWorkspaces),
+  setWorkspaceEmailVerification: vi.fn().mockImplementation(async (subdomain: string, requireEmailVerification: boolean) => {
+    const ws = mockWorkspaces.find((w) => w.subdomain === subdomain);
+    if (ws) ws.requireEmailVerification = requireEmailVerification;
+    return ws ?? null;
+  }),
+  setWorkspaceEnabled: vi.fn().mockImplementation(async (subdomain: string, enabled: boolean) => {
+    const ws = mockWorkspaces.find((w) => w.subdomain === subdomain);
+    if (ws) ws.enabled = enabled;
+    return ws ?? null;
+  }),
+  getWorkspaceGrantedModules: vi.fn().mockResolvedValue([]),
+  updateWorkspaceModules: vi.fn().mockResolvedValue([]),
+  deleteWorkspace: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('../db/repositories/platformActivityLogsRepository.js', () => ({
+  insertPlatformActivityLog: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe('platformWorkspaces REST API integration routes', () => {
-  let isDbAvailable = false;
   let app: FastifyInstance;
-  let superUserId = '';
-  let superSessionVersion = 0;
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';
-    try {
-      await initDb();
-      isDbAvailable = true;
-      app = await buildApp();
+    app = await buildApp();
+    await app.ready();
+  });
 
-      const existingSuper =
-        (await listPlatformUsers()).find((user) => user.role === 'super_user')
-        ?? (await findPlatformUserRowByEmail('admin@platform.com'));
-
-      if (existingSuper) {
-        superUserId = existingSuper.id;
-        superSessionVersion = existingSuper.sessionVersion;
-      }
-    } catch {
-      console.warn('[PlatformWorkspaces Test] Postgres unavailable. Skipping live DB integration test.');
-    }
+  afterAll(async () => {
+    await app.close();
   });
 
   function signPlatformToken(): string {
     return app.jwt.sign({
-      id: superUserId,
+      id: 'p-super',
       tokenType: 'platform_access',
-      sessionVersion: superSessionVersion,
+      sessionVersion: 0,
     });
   }
 
   it('rejects unauthenticated GET /api/platform/workspaces with 401', async () => {
-    if (!isDbAvailable || !superUserId) return;
     const res = await app.inject({
       method: 'GET',
       url: '/api/platform/workspaces',
@@ -51,7 +96,6 @@ describe('platformWorkspaces REST API integration routes', () => {
   });
 
   it('rejects unauthenticated PATCH /api/platform/workspaces/:subdomain/email-verification with 401', async () => {
-    if (!isDbAvailable || !superUserId) return;
     const res = await app.inject({
       method: 'PATCH',
       url: '/api/platform/workspaces/test-workspace/email-verification',
@@ -61,7 +105,6 @@ describe('platformWorkspaces REST API integration routes', () => {
   });
 
   it('returns workspace array for authenticated super-user session', async () => {
-    if (!isDbAvailable || !superUserId) return;
     const token = signPlatformToken();
     const res = await app.inject({
       method: 'GET',
@@ -74,20 +117,10 @@ describe('platformWorkspaces REST API integration routes', () => {
   });
 
   it('updates email verification for authenticated super-user session', async () => {
-    if (!isDbAvailable || !superUserId) return;
     const token = signPlatformToken();
-    const listRes = await app.inject({
-      method: 'GET',
-      url: '/api/platform/workspaces',
-      cookies: { mms_platform_access: token },
-    });
-    const workspaces = listRes.json().workspaces;
-    if (!workspaces || workspaces.length === 0) return;
-    const target = workspaces[0].subdomain;
-
     const res = await app.inject({
       method: 'PATCH',
-      url: `/api/platform/workspaces/${target}/email-verification`,
+      url: '/api/platform/workspaces/demo/email-verification',
       payload: { requireEmailVerification: false },
       cookies: { mms_platform_access: token },
     });
@@ -98,40 +131,30 @@ describe('platformWorkspaces REST API integration routes', () => {
   });
 
   it('toggles workspace enabled status for authenticated super-user session', async () => {
-    if (!isDbAvailable || !superUserId) return;
     const token = signPlatformToken();
-    const listRes = await app.inject({
-      method: 'GET',
-      url: '/api/platform/workspaces',
-      cookies: { mms_platform_access: token },
-    });
-    const workspaces = listRes.json().workspaces;
-    if (!workspaces || workspaces.length === 0) return;
-    const target = workspaces[0].subdomain;
-    const currentEnabled = workspaces[0].enabled;
 
     // Toggle off
     const resOff = await app.inject({
       method: 'PATCH',
-      url: `/api/platform/workspaces/${target}`,
-      payload: { enabled: !currentEnabled },
+      url: '/api/platform/workspaces/demo',
+      payload: { enabled: false },
       cookies: { mms_platform_access: token },
     });
     expect(resOff.statusCode).toBe(200);
     const bodyOff = resOff.json();
     expect(bodyOff.workspace).toBeDefined();
-    expect(bodyOff.workspace.enabled).toBe(!currentEnabled);
+    expect(bodyOff.workspace.enabled).toBe(false);
 
     // Revert back
     const resOn = await app.inject({
       method: 'PATCH',
-      url: `/api/platform/workspaces/${target}`,
-      payload: { enabled: currentEnabled },
+      url: '/api/platform/workspaces/demo',
+      payload: { enabled: true },
       cookies: { mms_platform_access: token },
     });
     expect(resOn.statusCode).toBe(200);
     const bodyOn = resOn.json();
     expect(bodyOn.workspace).toBeDefined();
-    expect(bodyOn.workspace.enabled).toBe(currentEnabled);
+    expect(bodyOn.workspace.enabled).toBe(true);
   });
 });

@@ -72,14 +72,14 @@ describe('DatePicker Component', () => {
       name: 'birthDate',
     });
 
-    expect(input).toBeTruthy();
+    expect(input).toBeInstanceOf(HTMLInputElement);
     expect(input.value).toBe('21/07/2026');
     expect(input.id).toBe('custom-date-id');
     expect(input.name).toBe('birthDate');
     expect(input.placeholder).toBe('Select a date');
 
     const hiddenInput = container.querySelector('input[name="birthDate_hidden"]') as HTMLInputElement;
-    expect(hiddenInput).toBeTruthy();
+    expect(hiddenInput).toBeInstanceOf(HTMLInputElement);
     expect(hiddenInput.value).toBe('2026-07-21');
   });
 
@@ -141,7 +141,7 @@ describe('DatePicker Component', () => {
     await renderDatePicker({ value: '2026-07-21', onChange });
 
     const clearButton = container.querySelector('button[aria-label="Clear date"]') as HTMLButtonElement;
-    expect(clearButton).toBeTruthy();
+    expect(clearButton).toBeInstanceOf(HTMLButtonElement);
 
     await act(async () => {
       clearButton.click();
@@ -175,7 +175,7 @@ describe('DatePicker Component', () => {
     });
 
     const helper = container.querySelector('input[id="test-req-required-helper"]') as HTMLInputElement;
-    expect(helper).toBeTruthy();
+    expect(helper).toBeInstanceOf(HTMLInputElement);
     expect(helper.required).toBe(true);
   });
 
@@ -188,7 +188,7 @@ describe('DatePicker Component', () => {
       max: null,
     });
 
-    expect(input).toBeTruthy();
+    expect(input).toBeInstanceOf(HTMLInputElement);
     expect(input.value).toBe('');
   });
 
@@ -197,7 +197,7 @@ describe('DatePicker Component', () => {
     await renderDatePicker({ value: '2026-07-21', onChange });
 
     const triggerButton = container.querySelector('button[aria-label="Open calendar"]') as HTMLButtonElement;
-    expect(triggerButton).toBeTruthy();
+    expect(triggerButton).toBeInstanceOf(HTMLButtonElement);
 
     await act(async () => {
       triggerButton.click();
@@ -290,7 +290,7 @@ describe('DatePicker Component', () => {
     const todayButton = Array.from(document.body.querySelectorAll('button')).find(
       (btn) => btn.textContent === 'Today',
     );
-    expect(todayButton).toBeTruthy();
+    expect(todayButton).toBeInstanceOf(HTMLButtonElement);
 
     await act(async () => {
       todayButton?.click();
@@ -312,7 +312,7 @@ describe('DatePicker Component', () => {
     const footerClearButton = Array.from(document.body.querySelectorAll('button')).find(
       (btn) => btn.textContent === 'Clear',
     );
-    expect(footerClearButton).toBeTruthy();
+    expect(footerClearButton).toBeInstanceOf(HTMLButtonElement);
 
     await act(async () => {
       footerClearButton?.click();
@@ -385,7 +385,7 @@ describe('DatePicker Component', () => {
       expect(input.maxLength).toBe(4);
 
       const hiddenInput = container.querySelector('input[name="academicYear_hidden"]') as HTMLInputElement;
-      expect(hiddenInput).toBeTruthy();
+      expect(hiddenInput).toBeInstanceOf(HTMLInputElement);
       expect(hiddenInput.value).toBe('2026');
 
       // Test with yearOnly boolean alias
@@ -458,7 +458,7 @@ describe('DatePicker Component', () => {
       await renderDatePicker({ mode: 'year', value: '2026', onChange });
 
       const triggerButton = container.querySelector('button[aria-label="Open year selector"]') as HTMLButtonElement;
-      expect(triggerButton).toBeTruthy();
+      expect(triggerButton).toBeInstanceOf(HTMLButtonElement);
 
       await act(async () => {
         triggerButton.click();
@@ -466,7 +466,7 @@ describe('DatePicker Component', () => {
 
       // Year grid is visible
       const yearGrid = document.body.querySelector('[role="grid"]');
-      expect(yearGrid).toBeTruthy();
+      expect(yearGrid).not.toBeNull();
 
       // Decade range header
       expect(document.body.textContent).toContain('2020 – 2031');
@@ -475,7 +475,7 @@ describe('DatePicker Component', () => {
       const year2028Button = Array.from(document.body.querySelectorAll('[role="gridcell"]')).find(
         (el) => el.textContent?.trim() === '2028',
       ) as HTMLButtonElement;
-      expect(year2028Button).toBeTruthy();
+      expect(year2028Button).toBeInstanceOf(HTMLButtonElement);
 
       await act(async () => {
         year2028Button.click();
@@ -499,7 +499,7 @@ describe('DatePicker Component', () => {
 
       // Click Next decade
       const nextButton = document.body.querySelector('button[aria-label="Next years"]') as HTMLButtonElement;
-      expect(nextButton).toBeTruthy();
+      expect(nextButton).toBeInstanceOf(HTMLButtonElement);
 
       await act(async () => {
         nextButton.click();
@@ -508,7 +508,7 @@ describe('DatePicker Component', () => {
 
       // Click Previous decade
       const prevButton = document.body.querySelector('button[aria-label="Previous years"]') as HTMLButtonElement;
-      expect(prevButton).toBeTruthy();
+      expect(prevButton).toBeInstanceOf(HTMLButtonElement);
 
       await act(async () => {
         prevButton.click();
@@ -534,12 +534,13 @@ describe('DatePicker Component', () => {
       const year2022Button = Array.from(document.body.querySelectorAll('[role="gridcell"]')).find(
         (el) => el.textContent?.trim() === '2022',
       ) as HTMLButtonElement;
-      expect(year2022Button).toBeTruthy();
+      expect(year2022Button).toBeInstanceOf(HTMLButtonElement);
       expect(year2022Button.disabled).toBe(true);
 
       const year2026Button = Array.from(document.body.querySelectorAll('[role="gridcell"]')).find(
         (el) => el.textContent?.trim() === '2026',
       ) as HTMLButtonElement;
+      expect(year2026Button).toBeInstanceOf(HTMLButtonElement);
       expect(year2026Button.disabled).toBe(false);
     });
 
@@ -555,7 +556,7 @@ describe('DatePicker Component', () => {
       const thisYearButton = Array.from(document.body.querySelectorAll('button')).find(
         (btn) => btn.textContent === 'This Year',
       );
-      expect(thisYearButton).toBeTruthy();
+      expect(thisYearButton).toBeInstanceOf(HTMLButtonElement);
 
       await act(async () => {
         thisYearButton?.click();
@@ -576,7 +577,7 @@ describe('DatePicker Component', () => {
       const clearButton = Array.from(document.body.querySelectorAll('button')).find(
         (btn) => btn.textContent === 'Clear',
       );
-      expect(clearButton).toBeTruthy();
+      expect(clearButton).toBeInstanceOf(HTMLButtonElement);
 
       await act(async () => {
         clearButton?.click();

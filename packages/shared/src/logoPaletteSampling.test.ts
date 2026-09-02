@@ -46,8 +46,8 @@ describe('extractDominantSwatchesFromRgba', () => {
     expect(swatches.length).toBeGreaterThan(0);
     expect(swatches[0]).toMatch(/^#[0-9a-f]{6}$/);
     const derived = deriveBrandColorsFromPalette(swatches);
-    expect(derived?.primaryColor).toBeDefined();
-    expect(derived?.secondaryColor).toBeDefined();
+    expect(derived?.primaryColor).toMatch(/^#[0-9a-f]{6}$/i);
+    expect(derived?.secondaryColor).toMatch(/^#[0-9a-f]{6}$/i);
   });
 
   it('prefers the centre disc over a white margin', () => {

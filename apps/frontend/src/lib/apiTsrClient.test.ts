@@ -40,7 +40,7 @@ describe('tsrClient & contract integration (Phase 7)', () => {
       });
 
       expect(response.status).toBe(200);
-      expect(response.body).toBeDefined();
+      expect(typeof response.body).toBe('object');
       expect(requestedUrl).toContain('/api/students');
       expect(requestedUrl).toContain('search=Ahmad');
     } finally {
@@ -112,22 +112,21 @@ describe('tsrClient & contract integration (Phase 7)', () => {
   });
 
   it('exposes tsrClient with rootContract endpoint router methods', () => {
-    expect(tsrClient.students).toBeDefined();
-    expect(tsrClient.students.list).toBeDefined();
-    expect(tsrClient.students.create).toBeDefined();
-    expect(tsrClient.contacts).toBeDefined();
-    expect(tsrClient.finance).toBeDefined();
-    expect(tsrClient.attendance).toBeDefined();
-    expect(tsrClient.teachers).toBeDefined();
-    expect(tsrClient.dashboard).toBeDefined();
-    expect(tsrClient.sessions).toBeDefined();
-    expect(tsrClient.enrollments).toBeDefined();
-    expect(tsrClient.accounting).toBeDefined();
-    expect(tsrClient.obligations).toBeDefined();
-    expect(tsrClient.hasanat).toBeDefined();
-    expect(tsrClient.messaging).toBeDefined();
-    expect(tsrClient.examinations).toBeDefined();
-    expect(tsrClient.questionBank).toBeDefined();
+    expect(typeof tsrClient.students.list).toBe('object');
+    expect(typeof tsrClient.students.create).toBe('object');
+    expect(typeof tsrClient.contacts.list).toBe('object');
+    expect(typeof tsrClient.finance.listInvoices).toBe('object');
+    expect(typeof tsrClient.attendance.list).toBe('object');
+    expect(typeof tsrClient.teachers.list).toBe('object');
+    expect(typeof tsrClient.dashboard.getSummary).toBe('object');
+    expect(typeof tsrClient.sessions.list).toBe('object');
+    expect(typeof tsrClient.enrollments.list).toBe('object');
+    expect(typeof tsrClient.accounting.listAccounts).toBe('object');
+    expect(typeof tsrClient.obligations.listCollections).toBe('object');
+    expect(typeof tsrClient.hasanat.listDistributions).toBe('object');
+    expect(typeof tsrClient.messaging.listLogs).toBe('object');
+    expect(typeof tsrClient.examinations.listExams).toBe('object');
+    expect(typeof tsrClient.questionBank.listQuestions).toBe('object');
   });
 
   it('transports contract GET queries for teachers and contacts', async () => {

@@ -629,7 +629,9 @@ describe('platform auth routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ user: { email: 'platform@test.com' } });
     const platformCookie = res.cookies.find((c) => c.name === PLATFORM_ACCESS_COOKIE);
-    expect(platformCookie).toBeTruthy();
+    expect(platformCookie).toBeDefined();
+    expect(typeof platformCookie?.value).toBe('string');
+    expect(platformCookie!.value.length).toBeGreaterThan(0);
     expect(platformCookie?.maxAge).toBeUndefined();
     await app.close();
   });

@@ -18,6 +18,9 @@ vi.mock('../config/loadEnv.js', () => ({
 describe('platformAdminService', () => {
   beforeEach(() => {
     vi.resetModules();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     initDb.mockReset().mockResolvedValue(undefined);
     execFileMock.mockReset().mockImplementation((_file, _args, _opts, cb) => {
       if (typeof cb === 'function') {

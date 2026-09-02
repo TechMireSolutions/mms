@@ -263,7 +263,8 @@ describe('dateFormatUtils', () => {
       const sampleDate = new Date(Date.UTC(2026, 6, 21));
       const options = getDateFormatOptions('en', sampleDate);
       expect(options.length).toBe(DATE_FORMAT_PRESET_IDS.length);
-      expect(options[0]?.sample).toBeTruthy();
+      expect(typeof options[0]?.sample).toBe('string');
+      expect(options[0]!.sample.length).toBeGreaterThan(0);
     });
   });
 

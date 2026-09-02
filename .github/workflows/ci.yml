@@ -3,8 +3,20 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.agent/**'
+      - '.cursor/**'
+      - '.claude/**'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.agent/**'
+      - '.cursor/**'
+      - '.claude/**'
   workflow_dispatch:
 
 permissions:
@@ -24,7 +36,9 @@ jobs:
       - name: Cache Turbo (incremental state)
         uses: actions/cache@v6
         with:
-          path: .turbo
+          path: |
+            .turbo
+            node_modules/.cache/turbo
           key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             turbo-${{ runner.os }}-
@@ -53,7 +67,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -62,18 +76,32 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
+          --health-interval 5s
           --health-timeout 5s
           --health-retries 5
+          -c fsync=off
+          -c synchronous_commit=off
+          -c full_page_writes=off
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
       DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/mms'
       NODE_ENV: 'test'
+      LOG_LEVEL: 'warn'
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
+
+      - name: Cache Turbo (incremental state)
+        uses: actions/cache@v6
+        with:
+          path: |
+            .turbo
+            node_modules/.cache/turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -105,7 +133,7 @@ jobs:
         shardTotal: [2]
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16-alpine
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -114,18 +142,32 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
+          --health-interval 5s
           --health-timeout 5s
           --health-retries 5
+          -c fsync=off
+          -c synchronous_commit=off
+          -c full_page_writes=off
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
       DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/mms'
       NODE_ENV: 'test'
+      LOG_LEVEL: 'warn'
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
+
+      - name: Cache Turbo (incremental state)
+        uses: actions/cache@v6
+        with:
+          path: |
+            .turbo
+            node_modules/.cache/turbo
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -140,10 +182,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Fast Build Apps
-        run: |
-          pnpm --filter @mms/shared build
-          pnpm --filter mms-backend build
-          pnpm --filter mms-frontend build
+        run: pnpm build
 
       - name: Run DB Migrations
         run: pnpm --filter mms-backend run db:migrate
@@ -217,7 +256,7 @@ jobs:
           retention-days: 7
 
   build-dist:
-    needs: [typecheck-lint]
+    needs: [typecheck-lint, unit]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -226,7 +265,9 @@ jobs:
       - name: Cache Turbo (incremental state)
         uses: actions/cache@v6
         with:
-          path: .turbo
+          path: |
+            .turbo
+            node_modules/.cache/turbo
           key: turbo-${{ runner.os }}-${{ github.sha }}
           restore-keys: |
             turbo-${{ runner.os }}-

@@ -105,8 +105,9 @@ describe("Translation System Enhancements", () => {
     ];
 
     for (const roleKey of roleKeys) {
-      expect(APP_TRANSLATIONS_EN[roleKey as keyof typeof APP_TRANSLATIONS_EN]).toBeDefined();
-      expect(typeof APP_TRANSLATIONS_EN[roleKey as keyof typeof APP_TRANSLATIONS_EN]).toBe("string");
+      const val = APP_TRANSLATIONS_EN[roleKey as keyof typeof APP_TRANSLATIONS_EN];
+      expect(typeof val).toBe("string");
+      expect(val.length).toBeGreaterThan(0);
     }
 
     // Verify well-formed placeholder braces

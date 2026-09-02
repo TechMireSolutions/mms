@@ -40,7 +40,8 @@ describe('chartPalettes', () => {
 
   it('generates a static palette map excluding dynamic brand palette', () => {
     const staticMap = getStaticChartPaletteMap();
-    expect(staticMap.accessibleColorblind).toBeDefined();
+    expect(Array.isArray(staticMap.accessibleColorblind)).toBe(true);
+    expect(staticMap.accessibleColorblind.length).toBeGreaterThan(0);
     expect(staticMap.brand).toBeUndefined();
   });
 });

@@ -26,13 +26,14 @@ describe("enqueueContactsOutbox", () => {
     expect(queue).toHaveLength(1);
     expect(queue[0]).toMatchObject({ id: "e1", kind: "upsert" });
     expect(typeof queue[0]?.createdAt).toBe("string");
-    expect(queue[0]?.createdAt).toBeTruthy();
+    expect(queue[0]?.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
   it("falls back to a generated id when none is provided", () => {
     enqueueContactsOutbox({ kind: "delete", contactId: "9" });
     const queue = getContactsOutbox();
-    expect(queue[0]?.id).toBeTruthy();
+    expect(typeof queue[0]?.id).toBe("string");
+    expect(queue[0]?.id.length).toBeGreaterThan(0);
     expect(queue[0]?.kind).toBe("delete");
   });
 });

@@ -54,7 +54,8 @@ describe("renderStudentWorkColumnValue", () => {
   it("renders registeredDate formatted", () => {
     const result = renderStudentWorkColumnValue(mockStudent, "registeredDate", baseOptions);
 
-    expect(result).toBeTruthy();
+    expect(typeof result).toBe("string");
+    expect(result).toContain("2023");
     expect(result).not.toBe("—");
   });
 

@@ -59,6 +59,7 @@ describe("AttendanceAnalytics Component", () => {
       />,
     );
 
-    expect(html).toBeTruthy();
+    expect(typeof html).toBe("string");
+    expect(html.length).toBeGreaterThan(0);
   });
 });

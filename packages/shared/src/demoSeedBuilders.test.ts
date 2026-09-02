@@ -21,12 +21,14 @@ describe('demoSeedBuilders', () => {
     expect(DEMO_TEACHER_CONTACTS).toHaveLength(DEMO_TEACHER_COUNT);
 
     for (const student of DEMO_STUDENTS) {
-      expect(student.contactId).toBeTruthy();
+      expect(typeof student.contactId).toBe('number');
+      expect(student.contactId).toBeGreaterThan(0);
       expect(student.grNumber).toMatch(/^\d{4}-\d{4}$/);
     }
 
     for (const teacher of DEMO_TEACHERS) {
-      expect(teacher.contactId).toBeTruthy();
+      expect(typeof teacher.contactId).toBe('number');
+      expect(teacher.contactId).toBeGreaterThan(0);
       expect(teacher.employeeId).toMatch(/^TCH-\d{4}$/);
     }
   });

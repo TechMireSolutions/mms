@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { FastifyReply } from 'fastify';
 import {
   handleContactWriteError,
@@ -98,6 +98,7 @@ describe('handleContactWriteError', () => {
   });
 
   it('returns 500 on unexpected errors', () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const reply = createMockReply();
     handleContactWriteError(reply, new Error('Disk failure'));
     expect(reply.statusCode).toBe(500);
@@ -105,6 +106,8 @@ describe('handleContactWriteError', () => {
       type: 'database_error',
       message: 'Failed to save contact record',
     });
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });
 

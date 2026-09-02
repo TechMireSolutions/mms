@@ -43,7 +43,7 @@ describe("recordContactsSyncConflict", () => {
     expect(conflicts).toHaveLength(1);
     expect(conflicts[0]).toMatchObject({ id: "c1", kind: "delete", contactId: "7" });
     expect(typeof conflicts[0]?.failedAt).toBe("string");
-    expect(conflicts[0]?.failedAt).toBeTruthy();
+    expect(conflicts[0]?.failedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 });
 

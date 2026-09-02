@@ -50,7 +50,7 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
   - **Native Built-Ins Over Packages:** Native `--env-file=.env` / `process.loadEnvFile()` (no `dotenv`), native global `fetch()`, `FormData`, and global `WebSocket` (no `axios`, `node-fetch`, or `ws` for standard client communication), `import { glob } from 'node:fs/promises'` (no `glob`/`fast-glob`), `crypto.hash()` from `node:crypto` (no verbose `createHash().update().digest()`), and globally available `URLPattern` API (no `path-to-regexp`).
   - **Modern ECMAScript & Protocol Imports:** Mandatory `node:` protocol imports (`node:fs`, `node:crypto`, `node:async_hooks`, etc.); WHATWG `new URL()` (never `url.parse()`); Explicit Resource Management (`using` / `await using`) for automatic cleanup of database connections and scopes without `finally` boilerplate.
   - **Async Context & Tracing:** `AsyncLocalStorage` backed by Node 24 `AsyncContextFrame` for zero-overhead request ID / trace ID propagation; structured stdout logging (Pino) without writing directly to process files.
-  - **Testing & Scripts:** `node:test` + `node:assert/strict` (auto-awaiting subtests); `--experimental-strip-types` for running `.ts` scripts and CLI tools directly.
+  - **Testing & Scripts:** Vitest (unified across workspaces) and `node:test` + `node:assert/strict` for standalone CLI scripts; `--experimental-strip-types` for running `.ts` scripts directly.
   - **Security & Lifecycle:** `--permission` model security flags; graceful termination lifecycle (`SIGTERM`/`SIGINT` with unref fallback timeout).
 - **Module Pages:** Three tiers only (Work, Reports, Setup) via `PageHeader` + `useFilteredModuleTierTabs`.
 - **Write Mechanism:** Cookie SPA + `apiClient` only (No React Server Actions).

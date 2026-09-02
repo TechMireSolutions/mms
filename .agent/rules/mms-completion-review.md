@@ -36,6 +36,9 @@ After **creating or editing code**, run a completion review **before** marking t
 | Type error | Fix and re-run typecheck |
 | ESLint error | Fix in changed files |
 | Failing test | Fix or revert — do not ship broken tests |
+| Weak assertion in tests | Replace `toBeTruthy()` / `toBeFalsy()` / generic `toBeDefined()` with strict type, regex (`/^\d{4}-\d{2}-\d{2}T/`), or DOM instance (`toBeInstanceOf(...)`) — `mms-testing-observability.md` §1 |
+| DB skip latch (`isDbAvailable`) | Replace with in-memory repository mock fixture (`vi.hoisted()`) — `mms-testing-observability.md` §1 |
+| Unspied error logs in tests | Spy on `console.error` / `console.warn` during negative tests for silent test output |
 | Hardcoded copy | Add `t()` keys — `mms-settings-i18n.md` (ban `t(key) \|\| 'English'`) |
 | Work `ErrorState` title-only | Add hint description (`loadFailedHint` pattern) — `mms-module-architecture.md` §7 |
 | Manifest `directoryViews: list` with table\|cards UI | Align to `['table','cards']` — `mms-module-architecture.md` §3 |

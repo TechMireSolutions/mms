@@ -122,25 +122,40 @@ export async function applyDrizzleMigrations(): Promise<{ migrationsFolder: stri
   return { migrationsFolder };
 }
 
-export async function initDb(): Promise<void> {
-  try {
-    await applyDrizzleMigrations();
+let initDbPromise: Promise<void> | null = null;
 
-    await runDataMigrations();
-    await purgeExpiredAuthArtifacts();
-    await ensurePlatformSuperUserFromEnv();
-    await initPlatformSettings();
+export function resetDbInitStateForTesting(): void {
+  initDbPromise = null;
+}
 
-    const results = await getRootDb().select({ count: sql<number>`count(*)` }).from(schema.collections);
-    const count = Number(results[0]?.count ?? 0);
-    if (count === 0) {
-      console.log('Database is empty. Seeding default collections and objects...');
-      await seedDatabase();
-    }
-  } catch (error) {
-    console.error('Failed to initialize the database:', error);
-    throw error;
+export function initDb(options?: { force?: boolean }): Promise<void> {
+  if (initDbPromise && !options?.force) {
+    return initDbPromise;
   }
+
+  initDbPromise = (async () => {
+    try {
+      await applyDrizzleMigrations();
+
+      await runDataMigrations();
+      await purgeExpiredAuthArtifacts();
+      await ensurePlatformSuperUserFromEnv();
+      await initPlatformSettings();
+
+      const results = await getRootDb().select({ count: sql<number>`count(*)` }).from(schema.workspaces);
+      const count = Number(results[0]?.count ?? 0);
+      if (count === 0) {
+        console.log('Database is empty. Seeding default collections and objects...');
+        await seedDatabase();
+      }
+    } catch (error) {
+      initDbPromise = null;
+      console.error('Failed to initialize the database:', error);
+      throw error;
+    }
+  })();
+
+  return initDbPromise;
 }
 
 async function runDataMigrations(): Promise<void> {

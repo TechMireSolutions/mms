@@ -20,10 +20,14 @@ import {
 describe('buildBrandingCssVariables', () => {
   it('includes semantic status tokens for tenant themes', () => {
     const vars = buildBrandingCssVariables('#047857', '#c2410c', 'light');
-    expect(vars['--success']).toBeTruthy();
-    expect(vars['--destructive']).toBeTruthy();
-    expect(vars['--warning']).toBeTruthy();
-    expect(vars['--info']).toBeTruthy();
+    expect(typeof vars['--success']).toBe('string');
+    expect(vars['--success'].length).toBeGreaterThan(0);
+    expect(typeof vars['--destructive']).toBe('string');
+    expect(vars['--destructive'].length).toBeGreaterThan(0);
+    expect(typeof vars['--warning']).toBe('string');
+    expect(vars['--warning'].length).toBeGreaterThan(0);
+    expect(typeof vars['--info']).toBe('string');
+    expect(vars['--info'].length).toBeGreaterThan(0);
   });
 
   it('picks readable primary foreground via contrast', () => {

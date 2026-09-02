@@ -149,7 +149,8 @@ describe('messagingUtils', () => {
       MESSAGING_VARIABLE_TOKENS.forEach((vt) => {
         expect(vt.token).toMatch(/^\{[a-z_]+\}$/);
         expect(vt.labelKey).toContain('messaging.token');
-        expect(vt.fallbackExample).toBeTruthy();
+        expect(typeof vt.fallbackExample).toBe('string');
+        expect(vt.fallbackExample.length).toBeGreaterThan(0);
       });
     });
   });

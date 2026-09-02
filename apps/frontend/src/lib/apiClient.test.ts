@@ -52,7 +52,7 @@ describe('apiClient', () => {
         ],
       }),
     });
-    expect(seenBody).toBeDefined();
+    expect(typeof seenBody).toBe('string');
     const parsed = JSON.parse(seenBody!);
     expect(parsed.preferences).toEqual([
       { key: 'name', enabled: true, order: 1 },
@@ -138,8 +138,9 @@ describe('apiClient', () => {
 
     const { apiFetch } = await import('@/lib/apiClient');
     await apiFetch('/api/health');
-    expect(seenHeaders?.get('X-Request-Id')).toBeDefined();
-    expect(seenHeaders?.get('X-Request-Id')?.length).toBeGreaterThan(0);
+    const reqId = seenHeaders?.get('X-Request-Id');
+    expect(typeof reqId).toBe('string');
+    expect(reqId?.length).toBeGreaterThan(0);
     globalThis.fetch = original;
   });
 

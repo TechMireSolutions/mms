@@ -1,21 +1,71 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FastifyInstance } from 'fastify';
-import { initDb } from '../db/database.js';
 import { buildApp } from '../app.js';
-import {
-  deletePlatformUserRow,
-  findPlatformUserRowByEmail,
-  findPlatformUserRowById,
-  insertPlatformUser,
-  listPlatformUsers,
-  updatePlatformUserRow,
-} from '../db/repositories/platformUserRepository.js';
-import { hashPassword } from '../services/auth/passwordService.js';
 import { MIGRATE_AND_RESTART_CONFIRM } from '@mms/shared';
 
 const scheduleMigrateAndRestart = vi.fn().mockReturnValue(true);
 const isRemoteMigrateRestartEnabled = vi.fn().mockReturnValue(true);
 const isMigrateRestartInFlight = vi.fn().mockReturnValue(false);
+
+const { mockSuperUser, mockAdminUser } = vi.hoisted(() => {
+  const mockSuperUser = {
+    id: 'p-super-migrate',
+    email: 'migrate-super@platform.com',
+    name: 'Migrate Super',
+    passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
+    role: 'super_user' as const,
+    permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+    sessionVersion: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+
+  const mockAdminUser = {
+    id: 'p-admin-migrate',
+    email: 'migrate-admin@platform.com',
+    name: 'Migrate Admin',
+    passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
+    role: 'admin' as const,
+    permissions: { workspaces: false, onboard: false, settings: false, admins: false, system: false },
+    sessionVersion: 0,
+    createdAt: '2026-01-01T00:00:00.000Z',
+  };
+
+  return { mockSuperUser, mockAdminUser };
+});
+
+vi.mock('../db/database.js', () => ({
+  initDb: vi.fn().mockResolvedValue(undefined),
+  pingDatabase: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('../db/repositories/platformUserRepository.js', () => ({
+  findPlatformUserRowById: vi.fn().mockImplementation(async (id: string) => {
+    if (id === 'p-super-migrate') return mockSuperUser;
+    if (id === 'p-admin-migrate') return mockAdminUser;
+    return null;
+  }),
+  findPlatformUserRowByEmail: vi.fn().mockImplementation(async (email: string) => {
+    if (email === 'migrate-super@platform.com') return mockSuperUser;
+    if (email === 'migrate-admin@platform.com') return mockAdminUser;
+    return null;
+  }),
+  listPlatformUsers: vi.fn().mockResolvedValue([mockSuperUser, mockAdminUser]),
+  updatePlatformUserRow: vi.fn().mockResolvedValue(mockSuperUser),
+}));
+
+vi.mock('../services/platform/platformUserService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/platform/platformUserService.js')>();
+  return {
+    ...actual,
+    verifyPlatformUserPassword: vi.fn().mockImplementation(async (_id: string, password: string) => {
+      return password === 'TestPassword123!';
+    }),
+  };
+});
+
+vi.mock('../db/repositories/platformActivityLogsRepository.js', () => ({
+  insertPlatformActivityLog: vi.fn().mockResolvedValue(undefined),
+}));
 
 vi.mock('../services/platform/platformAdminService.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/platform/platformAdminService.js')>();
@@ -28,79 +78,17 @@ vi.mock('../services/platform/platformAdminService.js', async (importOriginal) =
 });
 
 describe('platform admin system migrate-and-restart', () => {
-  let isDbAvailable = false;
   let app: FastifyInstance;
-  let superUserId = 'p-super-migrate';
-  let superSessionVersion = 0;
-  let adminUserId = 'p-admin-migrate';
-  let adminSessionVersion = 0;
   const superPassword = 'TestPassword123!';
-
-  afterAll(async () => {
-    if (!isDbAvailable) return;
-    try {
-      await deletePlatformUserRow('p-super-migrate');
-      await deletePlatformUserRow('p-admin-migrate');
-    } catch {
-      // Ignore cleanup errors
-    }
-  });
 
   beforeAll(async () => {
     process.env.JWT_SECRET = 'test-secret';
-    try {
-      await initDb();
-      isDbAvailable = true;
-      app = await buildApp();
+    app = await buildApp();
+    await app.ready();
+  });
 
-      const passwordHash = await hashPassword(superPassword);
-
-      const existingSuper =
-        (await listPlatformUsers()).find((user) => user.role === 'super_user')
-        ?? (await findPlatformUserRowById('p-super-migrate'));
-
-      if (existingSuper) {
-        superUserId = existingSuper.id;
-        superSessionVersion = existingSuper.sessionVersion;
-      } else {
-        await insertPlatformUser({
-          id: 'p-super-migrate',
-          email: 'migrate-super@platform.com',
-          name: 'Migrate Super',
-          passwordHash,
-          role: 'super_user',
-          permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
-          sessionVersion: 0,
-          createdAt: new Date().toISOString(),
-        });
-        superUserId = 'p-super-migrate';
-        superSessionVersion = 0;
-      }
-
-      const existingAdmin =
-        (await findPlatformUserRowById('p-admin-migrate'))
-        ?? (await findPlatformUserRowByEmail('migrate-admin@platform.com'));
-
-      if (existingAdmin && existingAdmin.role !== 'super_user') {
-        adminUserId = existingAdmin.id;
-        adminSessionVersion = existingAdmin.sessionVersion;
-      } else {
-        await insertPlatformUser({
-          id: 'p-admin-migrate',
-          email: 'migrate-admin@platform.com',
-          name: 'Migrate Admin',
-          passwordHash,
-          role: 'admin',
-          permissions: { workspaces: false, onboard: false, settings: false, admins: false, system: false },
-          sessionVersion: 0,
-          createdAt: new Date().toISOString(),
-        });
-        adminUserId = 'p-admin-migrate';
-        adminSessionVersion = 0;
-      }
-    } catch {
-      console.warn('[PlatformAdminSystem Test] Postgres unavailable. Skipping live DB integration test.');
-    }
+  afterAll(async () => {
+    await app.close();
   });
 
   beforeEach(() => {
@@ -119,14 +107,13 @@ describe('platform admin system migrate-and-restart', () => {
     return app.jwt.sign({
       ...input,
       permissions: input.role === 'super_user'
-        ? { workspaces: true, onboard: true }
-        : { workspaces: false, onboard: false },
+        ? { workspaces: true, onboard: true, settings: true, admins: true, system: true }
+        : { workspaces: false, onboard: false, settings: false, admins: false, system: false },
       tokenType: 'platform_access',
     });
   }
 
   it('rejects unauthenticated requests with 401', async () => {
-    if (!isDbAvailable) return;
     const res = await app.inject({
       method: 'POST',
       url: '/api/platform/admin/system/migrate-and-restart',
@@ -136,13 +123,12 @@ describe('platform admin system migrate-and-restart', () => {
   });
 
   it('rejects non-super_user with 403', async () => {
-    if (!isDbAvailable) return;
     const token = signPlatformToken({
-      id: adminUserId,
+      id: 'p-admin-migrate',
       email: 'migrate-admin@platform.com',
       name: 'Migrate Admin',
       role: 'admin',
-      sessionVersion: adminSessionVersion,
+      sessionVersion: 0,
     });
     const res = await app.inject({
       method: 'POST',
@@ -155,18 +141,12 @@ describe('platform admin system migrate-and-restart', () => {
   });
 
   it('rejects tenant subdomain host with 403', async () => {
-    if (!isDbAvailable) return;
-
-    await updatePlatformUserRow(superUserId, {
-      passwordHash: await hashPassword(superPassword),
-    });
-
     const token = signPlatformToken({
-      id: superUserId,
+      id: 'p-super-migrate',
       email: 'migrate-super@platform.com',
       name: 'Migrate Super',
       role: 'super_user',
-      sessionVersion: superSessionVersion,
+      sessionVersion: 0,
     });
 
     const res = await app.inject({
@@ -181,14 +161,13 @@ describe('platform admin system migrate-and-restart', () => {
   });
 
   it('rejects when remote migrate-restart is disabled', async () => {
-    if (!isDbAvailable) return;
     isRemoteMigrateRestartEnabled.mockReturnValue(false);
     const token = signPlatformToken({
-      id: superUserId,
+      id: 'p-super-migrate',
       email: 'migrate-super@platform.com',
       name: 'Migrate Super',
       role: 'super_user',
-      sessionVersion: superSessionVersion,
+      sessionVersion: 0,
     });
     const res = await app.inject({
       method: 'POST',
@@ -202,13 +181,12 @@ describe('platform admin system migrate-and-restart', () => {
   });
 
   it('validates confirmation and password', async () => {
-    if (!isDbAvailable) return;
     const token = signPlatformToken({
-      id: superUserId,
+      id: 'p-super-migrate',
       email: 'migrate-super@platform.com',
       name: 'Migrate Super',
       role: 'super_user',
-      sessionVersion: superSessionVersion,
+      sessionVersion: 0,
     });
 
     const badConfirm = await app.inject({
@@ -230,18 +208,12 @@ describe('platform admin system migrate-and-restart', () => {
   });
 
   it('accepts migrate-and-restart for super_user and schedules work', async () => {
-    if (!isDbAvailable) return;
-
-    await updatePlatformUserRow(superUserId, {
-      passwordHash: await hashPassword(superPassword),
-    });
-
     const token = signPlatformToken({
-      id: superUserId,
+      id: 'p-super-migrate',
       email: 'migrate-super@platform.com',
       name: 'Migrate Super',
       role: 'super_user',
-      sessionVersion: superSessionVersion,
+      sessionVersion: 0,
     });
 
     const res = await app.inject({
@@ -258,24 +230,19 @@ describe('platform admin system migrate-and-restart', () => {
     expect(typeof body.delayMs).toBe('number');
     expect(scheduleMigrateAndRestart).toHaveBeenCalledTimes(1);
     expect(scheduleMigrateAndRestart.mock.calls[0]?.[0]).toMatchObject({
-      userId: superUserId,
+      userId: 'p-super-migrate',
     });
   });
 
   it('returns 409 when a migrate-and-restart is already in flight', async () => {
-    if (!isDbAvailable) return;
     scheduleMigrateAndRestart.mockReturnValue(false);
 
-    await updatePlatformUserRow(superUserId, {
-      passwordHash: await hashPassword(superPassword),
-    });
-
     const token = signPlatformToken({
-      id: superUserId,
+      id: 'p-super-migrate',
       email: 'migrate-super@platform.com',
       name: 'Migrate Super',
       role: 'super_user',
-      sessionVersion: superSessionVersion,
+      sessionVersion: 0,
     });
 
     const res = await app.inject({

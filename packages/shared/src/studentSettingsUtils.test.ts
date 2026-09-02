@@ -26,7 +26,7 @@ describe('normalizeStudentsSettings', () => {
     expect(fields.basic.find((field) => field.key === 'gender')?.required).toBe(false);
     expect(fields.basic.find((field) => field.key === 'fatherLink')).toBeUndefined();
     expect(fields.basic.find((field) => field.key === 'contactRelationships')?.enabled).toBe(false);
-    expect(fields.basic.find((field) => field.key === 'contactId')).toBeDefined();
+    expect(fields.basic.find((field) => field.key === 'contactId')?.key).toBe('contactId');
     expect(fields.registration.map((field) => field.key)).toEqual(
       expect.arrayContaining(['grNumber', 'status', 'registeredDate', 'notes']),
     );
@@ -54,11 +54,11 @@ describe('normalizeStudentsSettings', () => {
     expect(settings.version).toBe(5);
     expect(fields.basic.map((field) => field.key)).toContain('studentCode');
     expect(fields.basic.find((field) => field.key === 'studentCode')?.required).toBe(true);
-    expect(fields.basic.find((field) => field.key === 'contactRelationships')).toBeDefined();
-    expect(fields.basic.find((field) => field.key === 'contactId')).toBeDefined();
-    expect(fields.registration.find((field) => field.key === 'grNumber')).toBeDefined();
-    expect(fields.registration.find((field) => field.key === 'status')).toBeDefined();
-    expect(fields.registration.find((field) => field.key === 'notes')).toBeDefined();
+    expect(fields.basic.find((field) => field.key === 'contactRelationships')?.key).toBe('contactRelationships');
+    expect(fields.basic.find((field) => field.key === 'contactId')?.key).toBe('contactId');
+    expect(fields.registration.find((field) => field.key === 'grNumber')?.key).toBe('grNumber');
+    expect(fields.registration.find((field) => field.key === 'status')?.key).toBe('status');
+    expect(fields.registration.find((field) => field.key === 'notes')?.key).toBe('notes');
   });
 
   it('merges guardian into basic and replaces triad with contactRelationships at v4', () => {
@@ -244,8 +244,9 @@ describe('normalizeStudentsSettings', () => {
 
   it('falls back to default seed fields when raw.fields is an empty object', () => {
     const settings = normalizeStudentsSettings({ fields: {} });
-    expect(settings.fields).toBeDefined();
+    expect(typeof settings.fields).toBe('object');
     expect(Object.keys(settings.fields as Record<string, unknown>).length).toBeGreaterThan(0);
-    expect((settings.fields as any).basic).toBeDefined();
+    expect(Array.isArray((settings.fields as any).basic)).toBe(true);
+    expect((settings.fields as any).basic.length).toBeGreaterThan(0);
   });
 });

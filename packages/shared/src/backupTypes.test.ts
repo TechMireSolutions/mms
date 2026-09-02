@@ -585,7 +585,7 @@ describe('backupTypes', () => {
           students: 2,
           contacts: 1,
         });
-        expect(summaryResult.summary.checksum).toBeDefined();
+        expect(summaryResult.summary.checksum).toMatch(/^[a-f0-9]{64}$/i);
         expect(summaryResult.summary.version).toBe(1);
       }
     });

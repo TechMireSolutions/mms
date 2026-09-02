@@ -91,10 +91,14 @@ describe('FormPrimitives', () => {
 
   describe('Design System Constants', () => {
     it('exports non-empty CSS utility strings', () => {
-      expect(INPUT).toBeDefined();
-      expect(SELECT).toBeDefined();
-      expect(TEXTAREA).toBeDefined();
-      expect(LABEL).toBeDefined();
+      expect(typeof INPUT).toBe('string');
+      expect(INPUT.length).toBeGreaterThan(0);
+      expect(typeof SELECT).toBe('string');
+      expect(SELECT.length).toBeGreaterThan(0);
+      expect(typeof TEXTAREA).toBe('string');
+      expect(TEXTAREA.length).toBeGreaterThan(0);
+      expect(typeof LABEL).toBe('string');
+      expect(LABEL.length).toBeGreaterThan(0);
       expect(COLLECTION_CARD).toContain('rounded-xl');
       expect(COLLECTION_BODY).toBe('space-y-3');
       expect(TYPE_SELECT_WIDTH).toBe('w-32');

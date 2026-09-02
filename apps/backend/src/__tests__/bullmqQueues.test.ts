@@ -78,10 +78,12 @@ describe('BullMQ Queue Architecture (Phase 5)', () => {
   });
 
   it('allows creating queues and closing them cleanly', async () => {
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     const queue = getQueue(QUEUE_BULK_EXPORT);
     expect(queue).toBeDefined();
     expect(queue.name).toBe(QUEUE_BULK_EXPORT);
 
     await closeAllQueues();
+    logSpy.mockRestore();
   });
 });

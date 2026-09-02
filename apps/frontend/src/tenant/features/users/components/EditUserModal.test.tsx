@@ -28,11 +28,13 @@ vi.mock('@/tenant/hooks/useWorkspaceRoles', () => ({
   ],
 }));
 
+const mockCustomFields = [
+  { id: 'department', label: 'Department', defaultValue: 'General' },
+];
+
 vi.mock('@/hooks/useStandardModuleConfig', () => ({
   useUsersConfig: () => ({
-    customFields: [
-      { id: 'department', label: 'Department', defaultValue: 'General' },
-    ],
+    customFields: mockCustomFields,
   }),
 }));
 

@@ -138,7 +138,8 @@ describe('createTeachersUseCases (DI composition root)', () => {
     });
 
     expect(restored).toBe(false);
-    expect(record.id).toBeDefined();
+    expect(typeof record.id).toBe('string');
+    expect(String(record.id).length).toBeGreaterThan(0);
     expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ specialization: 'Qaidah' }));
     expect(mockBroadcastCollection).toHaveBeenCalledTimes(1);
     expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
@@ -226,7 +227,7 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(await useCases.softDeleteTeacherById('gone', 'u-admin')).toBe(false);
 
     const saved = store.get('a');
-    expect(saved?.deletedAt).toBeDefined();
+    expect(saved?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(saved?.deletedBy).toBe('u-admin');
     expect(saved?.deletionReason).toBe('Left faculty');
   });
@@ -256,9 +257,9 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(restored?.deletedAt).toBeUndefined();
     expect(restored?.deletedBy).toBeUndefined();
     expect(restored?.deletionReason).toBeUndefined();
-    expect(restored?.updatedAt).toBeDefined();
+    expect(restored?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(store.get('a')?.deletedAt).toBeUndefined();
-    expect(store.get('a')?.updatedAt).toBeDefined();
+    expect(store.get('a')?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
   it('restoreTeacherById returns an active record unchanged without saving', async () => {
@@ -282,7 +283,7 @@ describe('createTeachersUseCases (DI composition root)', () => {
 
     expect(result).toEqual({ succeeded: 1, failed: 1 });
     expect(store.get('a')?.deletedAt).toBeUndefined();
-    expect(store.get('a')?.updatedAt).toBeDefined();
+    expect(store.get('a')?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(repo.bulkSave).toHaveBeenCalledWith('demo', [expect.objectContaining({ id: 'a' })]);
     expect(mockBroadcastCollection).toHaveBeenCalledTimes(1);
   });
@@ -441,8 +442,8 @@ describe('createTeachersUseCases (DI composition root)', () => {
     const result = await useCases.migrateTeachersMissingEmployeeIds();
 
     expect(result).toEqual({ updated: 2 });
-    expect(store.get('m1')?.employeeId).toBeDefined();
-    expect(store.get('m2')?.employeeId).toBeDefined();
+    expect(typeof store.get('m1')?.employeeId).toBe('string');
+    expect(typeof store.get('m2')?.employeeId).toBe('string');
     expect(store.get('m2')?.employeeId).not.toBe(store.get('m1')?.employeeId);
     expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
   });

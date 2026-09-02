@@ -9,6 +9,7 @@ import {
 describe('Worker Redis Pub/Sub & WebSocket Hub Integration (Phase 5)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
   });
 
   it('delivers job-progress and job-completed events to connected tenant client sockets', () => {
@@ -117,7 +118,7 @@ describe('Worker Redis Pub/Sub & WebSocket Hub Integration (Phase 5)', () => {
 
     expect(mockSubscriber.subscribe).toHaveBeenCalledWith('mms:ws-invalidation');
     expect(mockSubscriber.subscribe).toHaveBeenCalledWith('mms:job-event');
-    expect(messageListener).toBeDefined();
+    expect(typeof messageListener).toBe('function');
 
     const socketMessages: string[] = [];
     const socket: MinimalWebSocket = {

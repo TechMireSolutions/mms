@@ -55,24 +55,32 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
   const initialContactId = user.contactId ?? '';
   const [submitting, setSubmitting] = useState(false);
 
-  const buildDefaultValues = () => ({
-    contactId: user.contactId ?? '',
-    role: user.role,
-    status: user.status,
-    twoFactorEnabled: user.twoFactorEnabled,
-    ...Object.fromEntries(
-      customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
-    ),
-  });
-
   const form = useForm<EditWorkspaceUserInput & Record<string, unknown>>({
     resolver: zodResolver(editWorkspaceUserSchema),
-    defaultValues: buildDefaultValues(),
+    defaultValues: {
+      contactId: user.contactId ?? '',
+      role: user.role,
+      status: user.status,
+      twoFactorEnabled: user.twoFactorEnabled,
+      ...Object.fromEntries(
+        customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
+      ),
+    },
   });
 
+  const customFieldsKey = customFields.map((cf) => `${cf.id}:${cf.defaultValue ?? ''}`).join(',');
+
   useEffect(() => {
-    form.reset(buildDefaultValues());
-  }, [user.id, user.contactId, user.role, user.status, user.twoFactorEnabled, customFields, form]);
+    form.reset({
+      contactId: user.contactId ?? '',
+      role: user.role,
+      status: user.status,
+      twoFactorEnabled: user.twoFactorEnabled,
+      ...Object.fromEntries(
+        customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
+      ),
+    });
+  }, [user.id, user.contactId, user.role, user.status, user.twoFactorEnabled, customFieldsKey]);
 
   const watchedContactId = form.watch('contactId');
   const { data: selectedContact, isLoading: isLoadingContact } = useContactById(

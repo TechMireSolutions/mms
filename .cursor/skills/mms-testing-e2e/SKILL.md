@@ -15,23 +15,47 @@ Comprehensive testing standard across unit, integration, network mocking, and Pl
 
 | Layer | Framework & Tools | Scope & Target Files | Command |
 |---|---|---|---|
-| **Unit & Pure Helpers** | `node:test` + `node:assert/strict` | `@mms/shared` utils, formatters, validation schemas (`packages/shared/**/*.test.ts`). The runner automatically awaits subtests. Do not use `jest` or `mocha`. | `pnpm test` |
-| **Backend Integration** | `node:test` + Fastify `inject()` | Route schemas, `authenticateTenant`, RLS isolation, RBAC allow/deny tests (`apps/backend/**/*.test.ts`). The runner automatically awaits subtests. Do not use `jest` or `mocha`. | `cd apps/backend && pnpm test` |
-| **Frontend Component & Hooks** | Vitest + React Testing Library + MSW | TanStack Query hooks, complex modals, state facades, form validation errors (`apps/frontend/**/*.test.tsx`). | `cd apps/frontend && pnpm test` |
-| **Lightweight Scripts / CLIs** | `node --experimental-strip-types` | Standalone test/utility scripts without upfront compilation. | `node --experimental-strip-types script.ts` |
+| **Unit & Pure Helpers** | Vitest | `@mms/shared` utils, formatters, validation schemas (`packages/shared/**/*.test.ts`). | `pnpm --filter @mms/shared test` |
+| **Backend Integration** | Vitest + Fastify `inject()` | Route schemas, `authenticateTenant`, in-memory mock repositories (`vi.hoisted()`), RBAC allow/deny tests (`apps/backend/**/*.test.ts`). | `pnpm --filter mms-backend test` |
+| **Frontend Component & Hooks** | Vitest + React Testing Library + MSW | TanStack Query hooks, complex modals, state facades, form validation errors (`apps/frontend/**/*.test.tsx`). | `pnpm --filter mms-frontend test` |
+| **Lightweight Scripts / CLIs** | `node:test` + `--experimental-strip-types` | Standalone test/utility scripts without upfront compilation. | `node --experimental-strip-types script.ts` |
 | **End-to-End (E2E)** | Playwright | Full browser flows: auth, responsive shell (375/768/1440), RTL mirroring, navigation, directory CRUD. | `pnpm test:e2e` |
 | **Accessibility Smoke** | axe-core via Playwright / Vitest | Serious and critical WCAG 2.1 AA violations on shells, dialogs, and tables. | `pnpm test:e2e tests/responsive-shell.spec.ts` |
 
 ---
 
-## 2. Unit & Integration Testing (node:test & Vitest)
+## 2. Test Architecture & Quality Invariants
 
-### Pure Utilities (`@mms/shared`) (node:test)
+1. **Deterministic Execution (Zero Skip Latches)**:
+   - ❌ Banned: `if (!isDbAvailable) return;` or conditional database checks in test suites.
+   - ✅ Required: Backend integration tests must run deterministically via `vi.hoisted()` repository mocks and Fastify `inject()` without requiring a live PostgreSQL database connection.
+
+2. **Assertion Specificity & Precision**:
+   - ❌ Banned: `toBeTruthy()`, `toBeFalsy()`, or loose `toBeDefined()` on primitive values or DOM elements.
+   - ✅ Required: Strict type checks (`typeof === 'string' | 'number'`), ISO timestamp regexes (`/^\d{4}-\d{2}-\d{2}T/`), and typed DOM node instances (`toBeInstanceOf(HTMLInputElement)`, `toBeInstanceOf(HTMLButtonElement)`).
+
+3. **Clean & Silent Terminal Output**:
+   - Spying on `console.error` / `console.warn` / `console.log` during expected 4xx/5xx or process error simulations to keep stdout clean.
+   - Configure `LOG_LEVEL = 'silent'` in test setups.
+
+4. **Worker Thread Isolation Hygiene**:
+   - Non-isolated worker threads (`poolOptions: { threads: { isolate: false } }`) are used for fast execution.
+   - Always specify `clearMocks: true`, `restoreMocks: true`, and clean up DOM containers / local storage in `afterEach()`.
+
+---
+
+## 3. Unit & Integration Testing (Vitest)
+
+### Pure Utilities (`@mms/shared`) (Vitest)
 - Every exported helper (`formatDate`, `formatMoney`, `parsePhoneNumber`, `buildWorkspaceBackupEnvelope`) must have exhaustive unit tests covering happy paths, null/undefined inputs, and boundary values.
 
-### Backend Route Testing (Fastify `inject`)
+### Backend Route Testing (Fastify `inject` & `vi.hoisted`)
 ```typescript
+import { describe, expect, it, vi } from 'vitest';
+import { createServer } from '../server.js';
+
 test('POST /api/contacts rejects unauthenticated tenant', async () => {
+  const app = await createServer();
   const res = await app.inject({
     method: 'POST',
     url: '/api/contacts',
