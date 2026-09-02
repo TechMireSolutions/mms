@@ -3,7 +3,7 @@ import pluginJs from "@eslint/js";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist/**", "src/services/whatsapp/whatsAppProvider.ts", "src/services/whatsapp/whatsAppQueue.ts"] },
+  { ignores: ["dist/**"] },
   {
     files: ["src/**/*.ts"],
     extends: [pluginJs.configs.recommended, ...tseslint.configs.recommended],
@@ -24,7 +24,10 @@ export default tseslint.config(
         },
       ],
       "@typescript-eslint/no-explicit-any": "warn",
-      "@typescript-eslint/ban-ts-comment": "off",
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        { "ts-expect-error": "allow-with-description" },
+      ],
     },
   },
 );

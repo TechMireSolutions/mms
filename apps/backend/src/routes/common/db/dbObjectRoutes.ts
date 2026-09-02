@@ -21,7 +21,11 @@ import {
   upsertWorkspaceBranding,
 } from '../../../services/workspaceService.js';
 import { getWorkspaceBranding } from '../../../db/repositories/workspaceRepository.js';
-import { loadGlobalSettings, saveGlobalSettings } from '../../../services/globalSettingsService.js';
+import {
+  loadGlobalSettings,
+  saveGlobalSettings,
+  maskGlobalSettingsForClient,
+} from '../../../services/globalSettingsService.js';
 import {
   recordAudit,
   AUDITED_OBJECTS,
@@ -54,7 +58,10 @@ export const dbObjectRoutes: FastifyPluginAsync = async (fastify) => {
       } else if (key === 'global_settings') {
         const tenant = getRequestTenant()!;
         const globalSettings = await loadGlobalSettings(tenant);
-        if (globalSettings) return reply.send(globalSettings);
+        if (globalSettings) {
+          // Never return full LLM secrets to the client — only masked hints.
+          return reply.send(maskGlobalSettingsForClient(globalSettings));
+        }
       }
 
       const objectValue = await fetchObject(key);

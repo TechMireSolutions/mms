@@ -37,5 +37,15 @@ peerDependencyRules:
 
 overrides:
   esbuild: "^0.25.0"
+  # Supply-chain note: SheetJS removed `xlsx` from the npm registry, so the
+  # frontend's client-side Excel export (dynamic `import("xlsx")`) must pull the
+  # pinned 0.20.3 tarball from the official SheetJS CDN. The version is fixed
+  # (no floating range) for reproducibility. If this becomes a blocker, replace
+  # the frontend export with `exceljs` (already a backend dep) and drop this override.
   xlsx: "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
   nanoid: "^3.3.18"
+  # Security: bump transitive dep flagged by `pnpm audit`.
+  # - uuid: exceljs pulls uuid@8 (deprecated + missing buffer bounds check); 11.x is CJS-compatible.
+  #   (ts-deepmerge was NOT overridden: @anatine/zod-openapi calls `.default()` which
+  #   ts-deepmerge@8's CJS build no longer exports — the override broke /api/openapi.json.)
+  uuid: "^11.1.1"

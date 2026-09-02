@@ -25,6 +25,9 @@ let redisSubscriber: {
   on: (event: string, listener: (...args: any[]) => void) => void;
 } | null = null;
 
+const WS_INVALIDATION_CHANNEL = 'mms:ws-invalidation';
+const JOB_EVENT_CHANNEL = 'mms:job-event';
+
 export function configureRedisPubSub(
   publisher: { publish: (channel: string, message: string) => Promise<unknown> },
   subscriber?: {
@@ -35,16 +38,34 @@ export function configureRedisPubSub(
   redisPublisher = publisher;
   if (subscriber) {
     redisSubscriber = subscriber;
-    redisSubscriber.subscribe('mms:ws-invalidation').catch((err) => {
-      console.warn('[WS PubSub] Failed to subscribe to mms:ws-invalidation:', err);
-    });
-    redisSubscriber.subscribe('mms:job-event').catch((err) => {
-      console.warn('[WS PubSub] Failed to subscribe to mms:job-event:', err);
-    });
+
+    // The Redis subscriber client is created with `lazyConnect: true` and
+    // `enableOfflineQueue: false`, so an immediate `subscribe()` at startup
+    // can fail if the connection has not finished establishing yet. Subscribing
+    // on the `ready` event (plus an immediate best-effort attempt) guarantees
+    // the channels are eventually subscribed without a permanent silent gap in
+    // cross-node WS invalidation. `subscribed` guards against double-subscribing
+    // when both the immediate attempt and the `ready` event fire.
+    let subscribed = false;
+    const subscribeChannels = (): void => {
+      if (subscribed || !redisSubscriber) return;
+      subscribed = true;
+      redisSubscriber.subscribe(WS_INVALIDATION_CHANNEL).catch((err) => {
+        subscribed = false; // allow a later retry (e.g. on `ready`)
+        console.warn('[WS PubSub] Failed to subscribe to mms:ws-invalidation:', err);
+      });
+      redisSubscriber.subscribe(JOB_EVENT_CHANNEL).catch((err) => {
+        subscribed = false; // allow a later retry (e.g. on `ready`)
+        console.warn('[WS PubSub] Failed to subscribe to mms:job-event:', err);
+      });
+    };
+
+    subscriber.on('ready', subscribeChannels);
+    subscribeChannels();
 
     redisSubscriber.on('message', (channel: string, message: string) => {
       try {
-        if (channel === 'mms:ws-invalidation') {
+        if (channel === WS_INVALIDATION_CHANNEL) {
           const { subdomain, type, key } = JSON.parse(message);
           if (subdomain && type && key) {
             broadcastLocalTenantUpdate(subdomain, type, key);

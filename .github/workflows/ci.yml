@@ -121,6 +121,11 @@ jobs:
       - name: Run Test Suite
         run: pnpm test
 
+      # Enforce coverage thresholds (configured in each vitest.config.ts).
+      # Runs the suite again with --coverage so a coverage regression fails CI.
+      - name: Run Coverage (enforce thresholds)
+        run: pnpm test:coverage
+
   e2e:
     runs-on: ubuntu-latest
     strategy:

@@ -71,6 +71,7 @@ playwright/.cache/
 # 7. Local Uploads & Media Storage
 /apps/backend/uploads/
 /apps/backend/src/db/seeds.json
+/apps/backend/src/db/seeds.json.gz
 
 # 8. Tool, Agent & Model Overrides
 .claude/settings.local.json

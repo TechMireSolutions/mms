@@ -15,8 +15,6 @@ export const ATTENDANCE_STATUSES = [
   { id: "excused", label: "Excused", short: "E", color: "blue",    bg: "bg-info/10",    text: "text-info",    border: "border-info/30",    dot: "bg-info" },
 ];
 
-export const ATTENDANCE_RECORDS: AttendanceRecord[] = [];
-
 export interface ClassStudent {
   id: string;
   name: string;

@@ -229,6 +229,30 @@ wait_for_port() {
   return 1
 }
 
+# Waits (bounded) for a port to be released. Prevents a lingering process from
+# a previous run causing a doomed start (EADDRINUSE) right after stop_servers.
+wait_for_port_free() {
+  local port="$1" label="$2" max="${3:-10}" i=1
+  while [ "$i" -le "$max" ]; do
+    if ! port_in_use "$port"; then
+      return 0
+    fi
+    sleep 0.5
+    i=$((i + 1))
+  done
+  warn "$label port $port still in use after ${max} waits — aborting start"
+  return 1
+}
+
+# Ensures the backend/frontend ports are actually free before launching, so a
+# stale listener cannot cause EADDRINUSE. Aborts with a clear message otherwise.
+ensure_ports_free() {
+  local ok=true
+  wait_for_port_free "$BACKEND_PORT" "Backend" || ok=false
+  wait_for_port_free "$FRONTEND_PORT" "Frontend" || ok=false
+  [ "$ok" = true ] || die "Ports not free — run: lsof -iTCP:$BACKEND_PORT,$FRONTEND_PORT -sTCP:LISTEN"
+}
+
 wait_for_http() {
   local url="$1" label="$2" max="${3:-45}" i=1
   while [ "$i" -le "$max" ]; do
@@ -315,6 +339,7 @@ start_servers_turbo() {
   mkdir -p "$LOG_DIR"
   rotate_logs_if_huge
   stop_servers true
+  ensure_ports_free
   maybe_clear_vite_cache
   warn "Turbo detached mode is fragile — prefer default screen mode"
   log "Starting dev stack (pnpm dev / turbo) → $LOG_DIR/dev.log"
@@ -337,6 +362,7 @@ start_servers_screen() {
   mkdir -p "$LOG_DIR"
   rotate_logs_if_huge
   stop_servers true
+  ensure_ports_free
   maybe_clear_vite_cache
   check_prerequisites
 
@@ -354,6 +380,7 @@ start_servers_foreground() {
   mkdir -p "$LOG_DIR"
   rotate_logs_if_huge
   stop_servers true
+  ensure_ports_free
   maybe_clear_vite_cache
   check_prerequisites
   run_dev_foreground

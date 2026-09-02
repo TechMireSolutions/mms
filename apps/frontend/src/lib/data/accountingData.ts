@@ -38,9 +38,7 @@ export interface Currency {
   symbol: string;
 }
 
-export const CHART_OF_ACCOUNTS: Account[] = [];
 export const JOURNAL_TAGS = ["Payroll", "Fees", "Donation", "Obligation", "Utilities", "Rent", "Capital", "Adjustment", "Reversal", "Opening"];
-export const JOURNAL_ENTRIES: JournalEntry[] = [];
 
 export function computeLedger(
   accountId: string,

@@ -16,7 +16,8 @@
     "db:migrate": "tsx src/scripts/migrateDb.ts",
     "typecheck": "tsc --noEmit",
     "lint": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint src --quiet",
-    "test": "vitest run"
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1115.0",
@@ -48,10 +49,10 @@
     "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.21.0",
     "@types/ws": "^8.18.1",
+    "@vitest/coverage-v8": "^4.1.11",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.8.1",
     "globals": "^17.11.0",
-    "mysql2": "^3.24.2",
     "tsx": "^4.23.12",
     "typescript": "~7.0.2",
     "typescript-eslint": "^8.67.0",

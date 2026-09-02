@@ -55,7 +55,11 @@ export default tseslint.config(
       "no-useless-assignment": "off",
       "no-unused-vars": "off",
       "@typescript-eslint/no-unused-vars": "off",
-      "@typescript-eslint/no-explicit-any": "off",
+      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/ban-ts-comment": [
+        "error",
+        { "ts-expect-error": "allow-with-description" },
+      ],
       "mms-boundary/no-cross-feature-imports": "error",
       "mms-bidi/no-physical-directional-classes": "error",
       "react/jsx-uses-vars": "error",

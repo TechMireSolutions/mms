@@ -32,6 +32,7 @@ import {
   TEACHERS_LEGACY_SETUP_OBJECT_KEYS,
 } from '../db/hydrateTeachersSetupFromLegacyBackup.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { maskGlobalSettingsForClient } from './globalSettingsService.js';
 import { throwIfSyncAborted } from '../lib/syncLimits.js';
 import { acquireTenantRestoreLock, RestoreInProgressError } from '../lib/restoreLock.js';
 import { clearTenantBackgroundJobs } from './backgroundJobService.js';
@@ -57,7 +58,11 @@ export async function fetchDatabaseSnapshot(): Promise<TenantDatabaseSnapshot> {
     objects: {
       ...(snapshot.objects ?? {}),
       ...(branding ? { branding } : {}),
-      ...(globalSettings ? { global_settings: globalSettings } : {}),
+      // Live sync snapshot is client-facing: mask LLM secrets. (The backup
+      // snapshot keeps the full keys so a restore can recover them.)
+      ...(globalSettings
+        ? { global_settings: maskGlobalSettingsForClient(globalSettings) }
+        : {}),
     },
   };
 }

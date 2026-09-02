@@ -10,6 +10,7 @@
     "lint:fix": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint . --fix",
     "typecheck": "tsc -p ./tsconfig.json",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -47,7 +48,7 @@
     "react-router-dom": "catalog:",
     "recharts": "^3.10.1",
     "tailwind-merge": "^3.6.0",
-    "xlsx": "*",
+    "xlsx": "0.20.3",
     "zod": "catalog:",
     "zustand": "^5.0.15"
   },
@@ -59,6 +60,7 @@
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
     "@vitejs/plugin-react": "^6.0.5",
+    "@vitest/coverage-v8": "^4.1.11",
     "eslint": "^10.8.1",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^7.1.1",
