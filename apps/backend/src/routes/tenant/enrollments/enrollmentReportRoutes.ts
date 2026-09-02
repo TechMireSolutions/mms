@@ -7,7 +7,7 @@ import {
   type User,
 } from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
-import { loadEnrollmentsReportAggregates } from '../../../services/enrollmentService.js';
+import { enrollmentsUseCases } from '../../../enrollments/use-cases/enrollmentsUseCases.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 
@@ -25,7 +25,7 @@ export async function enrollmentReportRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const comparisonQuery = normalizeEnrollmentsReportComparisonQuery(parseComparisonQueryParams(parsed.data));
     try {
-      const aggregates = await loadEnrollmentsReportAggregates(comparisonQuery);
+      const aggregates = await enrollmentsUseCases.loadEnrollmentsReportAggregates(comparisonQuery);
       return reply.send(aggregates);
     } catch {
       return sendDatabaseError(reply, 'Failed to load enrollments report aggregates');

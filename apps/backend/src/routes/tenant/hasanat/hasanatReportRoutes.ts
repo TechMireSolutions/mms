@@ -7,7 +7,7 @@ import {
   type User,
 } from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
-import { loadHasanatReportAggregates } from '../../../services/hasanatService.js';
+import { hasanatUseCases } from '../../../hasanat/use-cases/hasanatUseCases.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 
@@ -25,7 +25,7 @@ export async function hasanatReportRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const comparisonQuery = normalizeHasanatReportComparisonQuery(parseComparisonQueryParams(parsed.data));
     try {
-      const aggregates = await loadHasanatReportAggregates(comparisonQuery);
+      const aggregates = await hasanatUseCases.loadHasanatReportAggregates(comparisonQuery);
       return reply.send(aggregates);
     } catch {
       return sendDatabaseError(reply, 'Failed to load hasanat report aggregates');

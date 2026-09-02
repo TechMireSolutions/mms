@@ -7,7 +7,7 @@ import {
   type User,
 } from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
-import { loadAttendanceReportAggregates } from '../../../services/attendanceService.js';
+import { attendanceUseCases } from '../../../attendance/use-cases/attendanceUseCases.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 
@@ -25,7 +25,7 @@ export async function attendanceReportRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const comparisonQuery = normalizeAttendanceReportComparisonQuery(parseComparisonQueryParams(parsed.data));
     try {
-      const aggregates = await loadAttendanceReportAggregates({
+      const aggregates = await attendanceUseCases.loadAttendanceReportAggregates({
         ...comparisonQuery,
         ...(parsed.data.classId?.trim() ? { classId: parsed.data.classId.trim() } : {}),
       });

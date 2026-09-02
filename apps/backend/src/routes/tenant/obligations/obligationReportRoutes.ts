@@ -5,7 +5,7 @@ import {
   type User,
 } from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
-import { loadObligationsReportAggregates } from '../../../services/obligationService.js';
+import { obligationsUseCases } from '../../../obligations/use-cases/obligationsUseCases.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 
@@ -22,7 +22,7 @@ export async function obligationReportRoutes(
     const parsed = parseRequest(obligationsReportQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const aggregates = await loadObligationsReportAggregates({
+      const aggregates = await obligationsUseCases.loadObligationsReportAggregates({
         dateFrom: parsed.data.dateFrom?.trim() || undefined,
         dateTo: parsed.data.dateTo?.trim() || undefined,
         typeId: parsed.data.typeId?.trim() || undefined,

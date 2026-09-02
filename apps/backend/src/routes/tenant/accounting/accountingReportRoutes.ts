@@ -5,7 +5,7 @@ import {
   type User,
 } from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
-import { loadAccountingReportAggregates } from '../../../services/accountingService.js';
+import { accountingUseCases } from '../../../accounting/use-cases/accountingUseCases.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 
@@ -22,7 +22,7 @@ export async function accountingReportRoutes(
     const parsed = parseRequest(accountingReportQuerySchema, request.query);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const aggregates = await loadAccountingReportAggregates(parsed.data);
+      const aggregates = await accountingUseCases.loadAccountingReportAggregates(parsed.data);
       return reply.send(aggregates);
     } catch {
       return sendDatabaseError(reply, 'Failed to load accounting report aggregates');

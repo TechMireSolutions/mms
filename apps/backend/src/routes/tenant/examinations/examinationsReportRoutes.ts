@@ -7,7 +7,7 @@ import {
   type User,
 } from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
-import { loadExaminationsReportAggregates } from '../../../services/examinationService.js';
+import { examinationsUseCases } from '../../../examinations/use-cases/examinationsUseCases.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 
@@ -25,7 +25,7 @@ export async function examinationsReportRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const comparisonQuery = normalizeExaminationsReportComparisonQuery(parseComparisonQueryParams(parsed.data));
     try {
-      const aggregates = await loadExaminationsReportAggregates(comparisonQuery);
+      const aggregates = await examinationsUseCases.loadExaminationsReportAggregates(comparisonQuery);
       return reply.send(aggregates);
     } catch (e) {
       request.log.error(e, 'Failed to load examinations report aggregates');

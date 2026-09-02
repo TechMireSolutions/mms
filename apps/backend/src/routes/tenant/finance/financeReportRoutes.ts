@@ -7,7 +7,7 @@ import {
   type User,
 } from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
-import { loadFinanceReportAggregates } from '../../../services/financeService.js';
+import { financeUseCases } from '../../../finance/use-cases/financeUseCases.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 
@@ -25,7 +25,7 @@ export async function financeReportRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const comparisonQuery = normalizeFinanceReportComparisonQuery(parseComparisonQueryParams(parsed.data));
     try {
-      const aggregates = await loadFinanceReportAggregates(comparisonQuery);
+      const aggregates = await financeUseCases.loadFinanceReportAggregates(comparisonQuery);
       return reply.send(aggregates);
     } catch {
       return sendDatabaseError(reply, 'Failed to load finance report aggregates');

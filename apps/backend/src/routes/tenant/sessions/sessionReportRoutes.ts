@@ -2,7 +2,7 @@ import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import type { User } from '@mms/shared';
 import { SESSIONS_MODULE_MANIFEST } from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
-import { loadSessionsReportAggregates } from '../../../services/sessionService.js';
+import { sessionsUseCases } from '../../../sessions/use-cases/sessionsUseCases.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 
 const COLLECTION = SESSIONS_MODULE_MANIFEST.collectionKey;
@@ -16,7 +16,7 @@ export async function sessionReportRoutes(
     const user = request.user as User;
     if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
     try {
-      const aggregates = await loadSessionsReportAggregates();
+      const aggregates = await sessionsUseCases.loadSessionsReportAggregates();
       return reply.send(aggregates);
     } catch {
       return sendDatabaseError(reply, 'Failed to load sessions report aggregates');
