@@ -4,14 +4,7 @@ import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
-import {
-  loadExams,
-  loadExamsPage,
-  loadExamResults,
-  bulkSoftDeleteExams,
-  bulkRestoreExams,
-  loadExaminationsWidgetAggregates,
-} from '../../../services/examinationService.js';
+import { examinationsUseCases } from '../../../examinations/use-cases/examinationsUseCases.js';
 
 const s = initServer();
 
@@ -28,10 +21,10 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
       }
       try {
         if (query?.page !== undefined || query?.limit !== undefined || query?.search !== undefined || query?.status !== undefined) {
-          const result = await withTenant(String(request.tenant?.id), () => loadExamsPage({ ...query, includeDeleted }), { readOnly: true });
+          const result = await withTenant(String(request.tenant?.id), () => examinationsUseCases.loadExamsPage({ ...query, includeDeleted }), { readOnly: true });
           return { status: 200 as const, body: result };
         }
-        const exams = await withTenant(String(request.tenant?.id), () => loadExams({ includeDeleted }), { readOnly: true });
+        const exams = await withTenant(String(request.tenant?.id), () => examinationsUseCases.loadExams({ includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: { exams } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list exams' } };
@@ -44,7 +37,7 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          bulkSoftDeleteExams(body.ids.map(String), String(user.id), body.deletionReason),
+          examinationsUseCases.bulkSoftDeleteExams(body.ids.map(String), String(user.id), body.deletionReason),
           { readOnly: false },
         );
         return { status: 200 as const, body: { success: true, ...result } };
@@ -59,7 +52,7 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          bulkRestoreExams(body.ids.map(String)),
+          examinationsUseCases.bulkRestoreExams(body.ids.map(String)),
           { readOnly: false },
         );
         return { status: 200 as const, body: { success: true, ...result } };
@@ -73,7 +66,7 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadExamResults(), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => examinationsUseCases.loadExamResults(), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list exam results' } };
@@ -85,7 +78,7 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadExaminationsWidgetAggregates(body.widgets as WidgetQuery[]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => examinationsUseCases.loadExaminationsWidgetAggregates(body.widgets as WidgetQuery[]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };

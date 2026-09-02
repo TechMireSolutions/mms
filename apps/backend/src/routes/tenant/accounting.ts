@@ -14,17 +14,7 @@ import {
   registerSoftDeletableBulkRoutes,
 } from '../../lib/crudRouter.js';
 
-import {
-  upsertAccounts,
-  loadEntries,
-  upsertEntries,
-  upsertFiscalYears,
-  deleteJournalEntryById,
-  restoreJournalEntryById,
-  bulkSoftDeleteJournalEntries,
-  bulkRestoreJournalEntries,
-  loadAccountingCommandMetrics,
-} from '../../services/accountingService.js';
+import { accountingUseCases } from '../../accounting/use-cases/accountingUseCases.js';
 import { accountingSetupConfigRoutes } from './accountingSetupConfigRoutes.js';
 import { accountingContractRouter } from './accounting/accountingContractRouter.js';
 import { accountingReportRoutes } from './accounting/accountingReportRoutes.js';
@@ -51,7 +41,7 @@ export default async function accountingRoutes(
         path: '/accounts',
         collection: ACCOUNTING_ACCOUNTS_COLLECTION,
         schema: accountListSchema,
-        saveFn: upsertAccounts,
+        saveFn: accountingUseCases.upsertAccounts,
         responseKey: 'accounts',
         errorMessagePrefix: 'accounts',
 
@@ -62,12 +52,12 @@ export default async function accountingRoutes(
         path: '/entries',
         collection: ACCOUNTING_ENTRIES_COLLECTION,
         schema: journalEntryListSchema,
-        loadFn: loadEntries,
-        saveFn: upsertEntries,
-        deleteFn: deleteJournalEntryById,
-        restoreFn: restoreJournalEntryById,
-        bulkDeleteFn: bulkSoftDeleteJournalEntries,
-        bulkRestoreFn: bulkRestoreJournalEntries,
+        loadFn: accountingUseCases.loadEntries,
+        saveFn: accountingUseCases.upsertEntries,
+        deleteFn: accountingUseCases.deleteJournalEntryById,
+        restoreFn: accountingUseCases.restoreJournalEntryById,
+        bulkDeleteFn: accountingUseCases.bulkSoftDeleteJournalEntries,
+        bulkRestoreFn: accountingUseCases.bulkRestoreJournalEntries,
         responseKey: 'entries',
         errorMessagePrefix: 'entries',
         nameSingular: 'Journal entry',
@@ -86,7 +76,7 @@ export default async function accountingRoutes(
         path: '/fiscal-years',
         collection: ACCOUNTING_FISCAL_YEARS_COLLECTION,
         schema: fiscalYearListSchema,
-        saveFn: upsertFiscalYears,
+        saveFn: accountingUseCases.upsertFiscalYears,
         responseKey: 'fiscalYears',
         errorMessagePrefix: 'fiscal years',
         customGetRoute: true,
@@ -94,7 +84,7 @@ export default async function accountingRoutes(
 
       registerMetricsRoute(sub, {
         collection: ACCOUNTING_ENTRIES_COLLECTION,
-        loadMetricsFn: loadAccountingCommandMetrics,
+        loadMetricsFn: accountingUseCases.loadAccountingCommandMetrics,
         errorMessagePrefix: 'accounting',
       });
 

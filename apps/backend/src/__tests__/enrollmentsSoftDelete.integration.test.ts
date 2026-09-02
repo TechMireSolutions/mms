@@ -36,17 +36,22 @@ const mockRestoreEnrollmentById = vi.fn();
 const mockBulkSoftDeleteEnrollments = vi.fn();
 const mockBulkRestoreEnrollments = vi.fn();
 
-vi.mock('../services/enrollmentService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/enrollmentService.js')>();
-  return {
-    ...actual,
+vi.mock('../enrollments/use-cases/enrollmentsUseCases.js', () => ({
+  enrollmentsUseCases: {
     loadEnrollmentsPage: (...args: unknown[]) => mockLoadEnrollmentsPage(...args),
     deleteEnrollmentById: (...args: unknown[]) => mockDeleteEnrollmentById(...args),
     restoreEnrollmentById: (...args: unknown[]) => mockRestoreEnrollmentById(...args),
     bulkSoftDeleteEnrollments: (...args: unknown[]) => mockBulkSoftDeleteEnrollments(...args),
     bulkRestoreEnrollments: (...args: unknown[]) => mockBulkRestoreEnrollments(...args),
-  };
-});
+    countEnrollments: vi.fn().mockResolvedValue(0),
+    loadEnrollmentsCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadEnrollmentsWidgetAggregates: vi.fn().mockResolvedValue({}),
+    loadEnrollmentsReportAggregates: vi.fn().mockResolvedValue({}),
+    createEnrollment: vi.fn(),
+    updateEnrollmentById: vi.fn(),
+    loadEnrollmentsByIds: vi.fn().mockResolvedValue([]),
+  },
+}));
 
 describe('enrollments soft delete routes', () => {
   beforeEach(() => {

@@ -33,25 +33,31 @@ const mockBulkRestorePayments = vi.fn();
 const mockLoadFinanceReportAggregates = vi.fn();
 const mockLoadFinanceCommandMetrics = vi.fn();
 
-vi.mock('../services/financeService.js', () => ({
-  loadInvoices: (...args: unknown[]) => mockLoadInvoices(...args),
-  loadInvoicesPage: (...args: unknown[]) => mockLoadInvoicesPage(...args),
-  createInvoice: vi.fn(),
-  updateInvoiceById: vi.fn(),
-  deleteInvoiceById: vi.fn(),
-  restoreInvoiceById: vi.fn(),
-  bulkSoftDeleteInvoices: (...args: unknown[]) => mockBulkDeleteInvoices(...args),
-  bulkRestoreInvoices: (...args: unknown[]) => mockBulkRestoreInvoices(...args),
-  loadPayments: vi.fn().mockResolvedValue([]),
-  loadPaymentsPage: (...args: unknown[]) => mockLoadPaymentsPage(...args),
-  createPayment: vi.fn(),
-  updatePaymentById: vi.fn(),
-  deletePaymentById: vi.fn(),
-  restorePaymentById: vi.fn(),
-  bulkSoftDeletePayments: (...args: unknown[]) => mockBulkDeletePayments(...args),
-  bulkRestorePayments: (...args: unknown[]) => mockBulkRestorePayments(...args),
-  loadFinanceReportAggregates: (...args: unknown[]) => mockLoadFinanceReportAggregates(...args),
-  loadFinanceCommandMetrics: (...args: unknown[]) => mockLoadFinanceCommandMetrics(...args),
+vi.mock('../finance/use-cases/financeUseCases.js', () => ({
+  financeUseCases: {
+    loadInvoices: (...args: unknown[]) => mockLoadInvoices(...args),
+    loadInvoicesPage: (...args: unknown[]) => mockLoadInvoicesPage(...args),
+    createInvoice: vi.fn(),
+    updateInvoiceById: vi.fn(),
+    deleteInvoiceById: vi.fn(),
+    restoreInvoiceById: vi.fn(),
+    bulkSoftDeleteInvoices: (...args: unknown[]) => mockBulkDeleteInvoices(...args),
+    bulkRestoreInvoices: (...args: unknown[]) => mockBulkRestoreInvoices(...args),
+    getInvoiceById: vi.fn(),
+    bulkUpdateInvoicesStatus: vi.fn(),
+    loadPayments: vi.fn().mockResolvedValue([]),
+    loadPaymentsPage: (...args: unknown[]) => mockLoadPaymentsPage(...args),
+    createPayment: vi.fn(),
+    updatePaymentById: vi.fn(),
+    deletePaymentById: vi.fn(),
+    restorePaymentById: vi.fn(),
+    bulkSoftDeletePayments: (...args: unknown[]) => mockBulkDeletePayments(...args),
+    bulkRestorePayments: (...args: unknown[]) => mockBulkRestorePayments(...args),
+    getPaymentById: vi.fn(),
+    loadFinanceReportAggregates: (...args: unknown[]) => mockLoadFinanceReportAggregates(...args),
+    loadFinanceCommandMetrics: (...args: unknown[]) => mockLoadFinanceCommandMetrics(...args),
+    loadFinanceWidgetAggregates: vi.fn().mockResolvedValue({}),
+  },
 }));
 
 describe('finance REST routes integration', () => {

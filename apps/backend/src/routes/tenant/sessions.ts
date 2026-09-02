@@ -5,19 +5,7 @@ import { rootContract } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../services/rbacService.js';
-import {
-  createSession,
-  deleteSessionById,
-  restoreSessionById,
-  bulkSoftDeleteSessions,
-  bulkRestoreSessions,
-  bulkUpdateSessionsStatus,
-  loadSessionsPage,
-  countSessions,
-  loadSessionsCommandMetrics,
-  loadSessionsWidgetAggregates,
-  updateSessionById,
-} from '../../services/sessionService.js';
+import { sessionsUseCases } from '../../sessions/use-cases/sessionsUseCases.js';
 import type { User } from '@mms/shared';
 import { SESSIONS_MODULE_MANIFEST } from '@mms/shared';
 
@@ -55,12 +43,12 @@ export default async function sessionsRoutes(
         errorMessagePrefix: 'sessions',
         nameSingular: 'session',
         namePlural: 'sessions',
-        loadCountFn: countSessions,
-        loadMetricsFn: loadSessionsCommandMetrics,
-        loadWidgetAggregatesFn: loadSessionsWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
-        updateFn: updateSessionById,
-        deleteFn: deleteSessionById,
-        restoreFn: restoreSessionById,
+        loadCountFn: sessionsUseCases.countSessions,
+        loadMetricsFn: sessionsUseCases.loadSessionsCommandMetrics,
+        loadWidgetAggregatesFn: sessionsUseCases.loadSessionsWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
+        updateFn: sessionsUseCases.updateSessionById,
+        deleteFn: sessionsUseCases.deleteSessionById,
+        restoreFn: sessionsUseCases.restoreSessionById,
 
         customPostRoute: true,
       });
@@ -79,7 +67,7 @@ export default async function sessionsRoutes(
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadSessionsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list sessions' } };
@@ -90,7 +78,7 @@ export default async function sessionsRoutes(
       if (!canWriteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const item = await withTenant(String(request.tenant?.id), () => createSession(body as Parameters<typeof createSession>[0]), { readOnly: false });
+        const item = await withTenant(String(request.tenant?.id), () => sessionsUseCases.createSession(body as Parameters<typeof sessionsUseCases.createSession>[0]), { readOnly: false });
         return { status: 201 as const, body: { session: item } };
       } catch (error: unknown) {
         request.log.error(error, 'Failed to create session');
@@ -102,7 +90,7 @@ export default async function sessionsRoutes(
       if (!canDeleteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => bulkSoftDeleteSessions(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.bulkSoftDeleteSessions(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete sessions' } };
@@ -113,7 +101,7 @@ export default async function sessionsRoutes(
       if (!canWriteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => bulkUpdateSessionsStatus(body.ids.map(String), body.status), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.bulkUpdateSessionsStatus(body.ids.map(String), body.status), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update session status' } };
@@ -124,7 +112,7 @@ export default async function sessionsRoutes(
       if (!canDeleteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => bulkRestoreSessions(body.ids.map(String)), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.bulkRestoreSessions(body.ids.map(String)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore sessions' } };

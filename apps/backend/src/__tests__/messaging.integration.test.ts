@@ -48,19 +48,23 @@ const mockRecordAudit = vi.fn();
 const mockGetUserColumnPreferencesForModule = vi.fn();
 const mockSetUserColumnPreferencesForModule = vi.fn();
 
-vi.mock('../services/messagingService.js', () => ({
-  loadMessageTemplates: (...args: unknown[]) => mockLoadMessageTemplates(...args),
-  getMessageTemplateById: (...args: unknown[]) => mockFindMessageTemplateById(...args),
-  saveMessageTemplate: (...args: unknown[]) => mockSaveMessageTemplate(...args),
-  removeMessageTemplate: (...args: unknown[]) => mockRemoveMessageTemplate(...args),
-  loadMessageLogs: vi.fn().mockResolvedValue([]),
-  loadFilteredMessageLogs: (...args: unknown[]) => mockLoadFilteredMessageLogs(...args),
-  recordMessageLogs: (...args: unknown[]) => mockRecordMessageLogs(...args),
-  clearAllMessageLogs: (...args: unknown[]) => mockClearAllMessageLogs(...args),
-  computeMessagingMetrics: (...args: unknown[]) => mockComputeMessagingMetrics(...args),
-  loadMessagingRecipients: (...args: unknown[]) => mockLoadMessagingRecipients(...args),
-  matchMessagingRecipients: (...args: unknown[]) => mockMatchMessagingRecipients(...args),
-  resolveMessagingRecipients: (...args: unknown[]) => mockResolveMessagingRecipients(...args),
+vi.mock('../messaging/use-cases/messagingUseCases.js', () => ({
+  messagingUseCases: {
+    loadMessageTemplates: (...args: unknown[]) => mockLoadMessageTemplates(...args),
+    getMessageTemplateById: (...args: unknown[]) => mockFindMessageTemplateById(...args),
+    saveMessageTemplate: (...args: unknown[]) => mockSaveMessageTemplate(...args),
+    removeMessageTemplate: (...args: unknown[]) => mockRemoveMessageTemplate(...args),
+    loadMessageLogs: vi.fn().mockResolvedValue([]),
+    loadFilteredMessageLogs: (...args: unknown[]) => mockLoadFilteredMessageLogs(...args),
+    recordMessageLogs: (...args: unknown[]) => mockRecordMessageLogs(...args),
+    clearAllMessageLogs: (...args: unknown[]) => mockClearAllMessageLogs(...args),
+    computeMessagingMetrics: (...args: unknown[]) => mockComputeMessagingMetrics(...args),
+    loadMessagingRecipients: (...args: unknown[]) => mockLoadMessagingRecipients(...args),
+    matchMessagingRecipients: (...args: unknown[]) => mockMatchMessagingRecipients(...args),
+    resolveMessagingRecipients: (...args: unknown[]) => mockResolveMessagingRecipients(...args),
+    replaceMessageTemplates: vi.fn(),
+    replaceMessageLogs: vi.fn(),
+  },
 }));
 
 vi.mock('../services/auditService.js', () => ({

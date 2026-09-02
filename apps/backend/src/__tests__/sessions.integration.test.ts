@@ -28,16 +28,23 @@ const mockLoadSessionsPage = vi.fn();
 const mockLoadSessionsWidgetAggregates = vi.fn();
 const mockLoadSessionsReportAggregates = vi.fn();
 
-vi.mock('../services/sessionService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/sessionService.js')>();
-  return {
-    ...actual,
+vi.mock('../sessions/use-cases/sessionsUseCases.js', () => ({
+  sessionsUseCases: {
     loadSessions: (...args: unknown[]) => mockLoadSessions(...args),
     loadSessionsPage: (...args: unknown[]) => mockLoadSessionsPage(...args),
     loadSessionsWidgetAggregates: (...args: unknown[]) => mockLoadSessionsWidgetAggregates(...args),
     loadSessionsReportAggregates: (...args: unknown[]) => mockLoadSessionsReportAggregates(...args),
-  };
-});
+    countSessions: vi.fn().mockResolvedValue(0),
+    loadSessionsCommandMetrics: vi.fn().mockResolvedValue({}),
+    updateSessionById: vi.fn(),
+    deleteSessionById: vi.fn(),
+    restoreSessionById: vi.fn(),
+    createSession: vi.fn(),
+    bulkSoftDeleteSessions: vi.fn(),
+    bulkUpdateSessionsStatus: vi.fn(),
+    bulkRestoreSessions: vi.fn(),
+  },
+}));
 
 describe('sessions REST routes integration', () => {
   beforeEach(() => {

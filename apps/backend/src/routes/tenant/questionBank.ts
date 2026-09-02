@@ -14,17 +14,7 @@ import {
 } from '../../lib/crudRouter.js';
 
 
-import { loadQuestionBankCommandMetrics } from '../../services/questionBankMetricsService.js';
-import {
-  loadQuestions,
-  upsertQuestions,
-  upsertTests,
-  upsertResults,
-  deleteQuestionById,
-  restoreQuestionById,
-  bulkSoftDeleteQuestions,
-  bulkRestoreQuestions,
-} from '../../services/questionBankService.js';
+import { questionBankUseCases } from '../../questionBank/use-cases/questionBankUseCases.js';
 
 import { questionBankSetupConfigRoutes } from './questionBankSetupConfigRoutes.js';
 import { questionBankContractRouter } from './questionBank/questionBankContractRouter.js';
@@ -49,7 +39,7 @@ export default async function questionBankRoutes(
 
       registerMetricsRoute(sub, {
         collection: QUESTIONS_COLLECTION,
-        loadMetricsFn: loadQuestionBankCommandMetrics,
+        loadMetricsFn: questionBankUseCases.loadQuestionBankCommandMetrics,
         errorMessagePrefix: 'question bank',
       });
 
@@ -57,12 +47,12 @@ export default async function questionBankRoutes(
         path: '/questions',
         collection: QUESTIONS_COLLECTION,
         schema: questionBankQuestionListSchema,
-        loadFn: loadQuestions,
-        saveFn: upsertQuestions,
-        deleteFn: deleteQuestionById,
-        restoreFn: restoreQuestionById,
-        bulkDeleteFn: bulkSoftDeleteQuestions,
-        bulkRestoreFn: bulkRestoreQuestions,
+        loadFn: questionBankUseCases.loadQuestions,
+        saveFn: questionBankUseCases.upsertQuestions,
+        deleteFn: questionBankUseCases.deleteQuestionById,
+        restoreFn: questionBankUseCases.restoreQuestionById,
+        bulkDeleteFn: questionBankUseCases.bulkSoftDeleteQuestions,
+        bulkRestoreFn: questionBankUseCases.bulkRestoreQuestions,
         responseKey: 'questions',
         errorMessagePrefix: 'questions',
         nameSingular: 'Question',
@@ -74,7 +64,7 @@ export default async function questionBankRoutes(
         path: '/tests',
         collection: TESTS_COLLECTION,
         schema: questionBankTestListSchema,
-        saveFn: upsertTests,
+        saveFn: questionBankUseCases.upsertTests,
         responseKey: 'tests',
         errorMessagePrefix: 'tests',
         customGetRoute: true,
@@ -84,7 +74,7 @@ export default async function questionBankRoutes(
         path: '/assessment-results',
         collection: RESULTS_COLLECTION,
         schema: questionBankResultListSchema,
-        saveFn: upsertResults,
+        saveFn: questionBankUseCases.upsertResults,
         responseKey: 'results',
         errorMessagePrefix: 'assessment results',
         customGetRoute: true,

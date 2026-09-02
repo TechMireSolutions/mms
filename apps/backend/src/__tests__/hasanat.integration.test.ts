@@ -29,24 +29,31 @@ const mockLoadHasanatCommandMetrics = vi.fn();
 const mockCreateDistribution = vi.fn();
 const mockUpdateDistributionById = vi.fn();
 
-vi.mock('../services/hasanatService.js', () => ({
-  loadDenoms: vi.fn().mockResolvedValue([]),
-  upsertDenoms: vi.fn(),
-  loadBatches: vi.fn().mockResolvedValue([]),
-  upsertBatches: vi.fn(),
-  loadDistributions: vi.fn().mockResolvedValue([]),
-  upsertDistributions: vi.fn(),
-  loadRedemptions: vi.fn().mockResolvedValue([]),
-  upsertRedemptions: vi.fn(),
-  deleteDistributionById: vi.fn(),
-  restoreDistributionById: vi.fn(),
-  bulkSoftDeleteDistributions: vi.fn(),
-  bulkRestoreDistributions: vi.fn(),
-  loadDistributionsPage: (...args: unknown[]) => mockLoadDistributionsPage(...args),
-  createDistribution: (...args: unknown[]) => mockCreateDistribution(...args),
-  updateDistributionById: (...args: unknown[]) => mockUpdateDistributionById(...args),
-  loadHasanatReportAggregates: (...args: unknown[]) => mockLoadHasanatReportAggregates(...args),
-  loadHasanatCommandMetrics: (...args: unknown[]) => mockLoadHasanatCommandMetrics(...args),
+vi.mock('../hasanat/use-cases/hasanatUseCases.js', () => ({
+  hasanatUseCases: {
+    loadDenoms: vi.fn().mockResolvedValue([]),
+    upsertDenoms: vi.fn(),
+    loadBatches: vi.fn().mockResolvedValue([]),
+    upsertBatches: vi.fn(),
+    loadDistributions: vi.fn().mockResolvedValue([]),
+    upsertDistributions: vi.fn(),
+    loadRedemptions: vi.fn().mockResolvedValue([]),
+    upsertRedemptions: vi.fn(),
+    deleteDistributionById: vi.fn(),
+    restoreDistributionById: vi.fn(),
+    bulkSoftDeleteDistributions: vi.fn(),
+    bulkRestoreDistributions: vi.fn(),
+    loadDistributionsPage: (...args: unknown[]) => mockLoadDistributionsPage(...args),
+    createDistribution: (...args: unknown[]) => mockCreateDistribution(...args),
+    updateDistributionById: (...args: unknown[]) => mockUpdateDistributionById(...args),
+    loadHasanatReportAggregates: (...args: unknown[]) => mockLoadHasanatReportAggregates(...args),
+    loadHasanatCommandMetrics: (...args: unknown[]) => mockLoadHasanatCommandMetrics(...args),
+    loadHasanatWidgetAggregates: vi.fn().mockResolvedValue({}),
+    replaceDenoms: vi.fn(),
+    replaceBatches: vi.fn(),
+    replaceDistributions: vi.fn(),
+    replaceRedemptions: vi.fn(),
+  },
 }));
 
 describe('hasanat report-aggregates REST', () => {

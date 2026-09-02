@@ -27,6 +27,7 @@ vi.mock('../db/repositories/tenantUserRepository.js', () => ({
   verifyTenantUserEmailRow: vi.fn().mockResolvedValue(true),
   findTenantUserRowById: vi.fn(),
   resetTenantUserPasswordRow: vi.fn(),
+  listTenantUsersByIds: vi.fn().mockResolvedValue([]),
 }));
 
 vi.mock('../services/auth/authArtifactService.js', () => ({

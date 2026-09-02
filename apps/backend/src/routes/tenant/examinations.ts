@@ -11,16 +11,7 @@ import {
   registerMetricsRoute,
   registerSoftDeletableBulkRoutes,
 } from '../../lib/crudRouter.js';
-import {
-  loadExams,
-  upsertExams,
-  upsertExamResults,
-  deleteExamById,
-  restoreExamById,
-  bulkSoftDeleteExams,
-  bulkRestoreExams,
-  loadExaminationsCommandMetrics,
-} from '../../services/examinationService.js';
+import { examinationsUseCases } from '../../examinations/use-cases/examinationsUseCases.js';
 
 import { examinationSetupConfigRoutes } from './examinationSetupConfigRoutes.js';
 import { examinationsReportRoutes } from './examinations/examinationsReportRoutes.js';
@@ -46,7 +37,7 @@ export default async function examinationsRoutes(
 
       registerMetricsRoute(sub, {
         collection: EXAMS_COLLECTION,
-        loadMetricsFn: loadExaminationsCommandMetrics,
+        loadMetricsFn: examinationsUseCases.loadExaminationsCommandMetrics,
         errorMessagePrefix: 'examination',
       });
 
@@ -54,12 +45,12 @@ export default async function examinationsRoutes(
         path: '/exams',
         collection: EXAMS_COLLECTION,
         schema: examListSchema,
-        loadFn: loadExams,
-        saveFn: upsertExams,
-        deleteFn: deleteExamById,
-        restoreFn: restoreExamById,
-        bulkDeleteFn: bulkSoftDeleteExams,
-        bulkRestoreFn: bulkRestoreExams,
+        loadFn: examinationsUseCases.loadExams,
+        saveFn: examinationsUseCases.upsertExams,
+        deleteFn: examinationsUseCases.deleteExamById,
+        restoreFn: examinationsUseCases.restoreExamById,
+        bulkDeleteFn: examinationsUseCases.bulkSoftDeleteExams,
+        bulkRestoreFn: examinationsUseCases.bulkRestoreExams,
         responseKey: 'exams',
         errorMessagePrefix: 'exams',
         nameSingular: 'Exam',
@@ -72,7 +63,7 @@ export default async function examinationsRoutes(
         path: '/results',
         collection: RESULTS_COLLECTION,
         schema: examResultListSchema,
-        saveFn: upsertExamResults,
+        saveFn: examinationsUseCases.upsertExamResults,
         responseKey: 'results',
         errorMessagePrefix: 'exam results',
 

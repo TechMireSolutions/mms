@@ -39,10 +39,8 @@ const mockBulkSoftDeleteSessions = vi.fn();
 const mockBulkRestoreSessions = vi.fn();
 const mockLoadSessionsPage = vi.fn();
 
-vi.mock('../services/sessionService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/sessionService.js')>();
-  return {
-    ...actual,
+vi.mock('../sessions/use-cases/sessionsUseCases.js', () => ({
+  sessionsUseCases: {
     bulkUpdateSessionsStatus: (...args: unknown[]) => mockBulkUpdateSessionsStatus(...args),
     createSession: (...args: unknown[]) => mockCreateSession(...args),
     updateSessionById: (...args: unknown[]) => mockUpdateSessionById(...args),
@@ -51,8 +49,13 @@ vi.mock('../services/sessionService.js', async (importOriginal) => {
     bulkSoftDeleteSessions: (...args: unknown[]) => mockBulkSoftDeleteSessions(...args),
     bulkRestoreSessions: (...args: unknown[]) => mockBulkRestoreSessions(...args),
     loadSessionsPage: (...args: unknown[]) => mockLoadSessionsPage(...args),
-  };
-});
+    countSessions: vi.fn().mockResolvedValue(0),
+    loadSessionsCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadSessionsWidgetAggregates: vi.fn().mockResolvedValue({}),
+    loadSessionsReportAggregates: vi.fn().mockResolvedValue({ capacity: [], enrollmentTrends: [], todaysSessions: [] }),
+    loadSessions: vi.fn().mockResolvedValue([]),
+  },
+}));
 
 describe('sessions API & bulk status write integration tests', () => {
   beforeEach(() => {

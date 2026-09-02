@@ -7,6 +7,7 @@ const replaceAttendanceRecordsForWorkspace = vi.fn();
 vi.mock('../db/repositories/attendanceRepository.js', () => ({
   listAttendanceRecordsByWorkspace: vi.fn().mockResolvedValue([]),
   findAttendanceRecordById: vi.fn(),
+  findAttendanceRecordsByIds: vi.fn().mockResolvedValue([]),
   saveAttendanceRecord: vi.fn(),
   bulkSaveAttendanceRecords,
   replaceAttendanceRecordsForWorkspace,

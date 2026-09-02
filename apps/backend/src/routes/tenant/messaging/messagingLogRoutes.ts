@@ -25,12 +25,7 @@ import {
   tryClaimAuthArtifactByLookupKey,
   updateAuthArtifactPayload,
 } from '../../../services/auth/authArtifactService.js';
-import {
-  clearAllMessageLogs,
-  computeMessagingMetrics,
-  loadFilteredMessageLogs,
-  recordMessageLogs,
-} from '../../../services/messagingService.js';
+import { messagingUseCases } from '../../../messaging/use-cases/messagingUseCases.js';
 
 const MESSAGING_IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
 const IDEMPOTENCY_PENDING_POLL_MS = 25;
@@ -142,7 +137,7 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
     }
     try {
-      const page = await loadFilteredMessageLogs(tenantSubdomain, parsedQuery.data);
+      const page = await messagingUseCases.loadFilteredMessageLogs(tenantSubdomain, parsedQuery.data);
       return reply.send(page);
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to load message logs', err);
@@ -213,7 +208,7 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
 
           try {
             const normalized = normalizeDispatchLogs(user, parsed.data.logs);
-            const recorded = await recordMessageLogs(tenantSubdomain, normalized);
+            const recorded = await messagingUseCases.recordMessageLogs(tenantSubdomain, normalized);
             const payload: MessagingIdempotencyPayload = { recorded: recorded.length, bodyDigest };
             await updateAuthArtifactPayload(claim.id, payload);
             return reply.send({ recorded: recorded.length });
@@ -224,7 +219,7 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         const normalized = normalizeDispatchLogs(user, parsed.data.logs);
-        const recorded = await recordMessageLogs(tenantSubdomain, normalized);
+        const recorded = await messagingUseCases.recordMessageLogs(tenantSubdomain, normalized);
         return reply.send({ recorded: recorded.length });
       } catch (err) {
         return sendDatabaseError(reply, 'Failed to record message logs', err);
@@ -240,7 +235,7 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
         return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
       }
     try {
-      await clearAllMessageLogs(tenantSubdomain);
+      await messagingUseCases.clearAllMessageLogs(tenantSubdomain);
       await recordAudit({
         userId: user.id,
         userEmail: user.email,
@@ -265,7 +260,7 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
     }
     try {
-      const metrics = await computeMessagingMetrics(tenantSubdomain, {
+      const metrics = await messagingUseCases.computeMessagingMetrics(tenantSubdomain, {
         startDate: parsedQuery.data.startDate,
         endDate: parsedQuery.data.endDate,
       });

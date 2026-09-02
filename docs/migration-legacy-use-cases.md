@@ -16,9 +16,8 @@ is fake-injectable for tests.
 
 ## Current state
 
-**Migrated (reference):** `contacts`, `students`, `teachers`.
-**Legacy (~10 modules):** `hasanat`, `obligations`, `messaging`, `attendance`, `examinations`,
-`questionBank`, `enrollments`, `sessions`, `accounting`, `finance`, `users`.
+**Migrated (reference):** `contacts`, `students`, `teachers`, `sessions`, `enrollments`, `finance`, `attendance`, `hasanat`, `questionBank`, `examinations`, `obligations`, `accounting`, `messaging`, `users`.
+**Legacy (0 modules):** none — all tenant modules migrated.
 
 Today these legacy modules route → `services/<module>Service.ts` → concrete functions in
 `db/repositories/<module>Repository.ts`. There is **no** repository interface and **no** use-case DI
@@ -93,14 +92,15 @@ rewired to the facade, and green unit + inject tests. No behavior change.
 
 ## Checklist tracking
 
-- [x] sessions — repository interface + adapter created (`sessions/repository/`); `sessionService` wired to the adapter as the sole storage gateway. Remaining: use-cases facade with DI factory + route rewiring.
-- [ ] enrollments
-- [ ] finance
-- [ ] attendance
-- [ ] hasanat
-- [ ] questionBank
-- [ ] examinations
-- [ ] obligations
-- [ ] accounting
-- [ ] messaging
+- [x] sessions — repository interface + adapter (`sessions/repository/`), use-cases facade with DI factory (`sessions/use-cases/sessionsUseCases.ts`), route rewired to the facade, `sessionService` reduced to a thin re-export, and a fake-repo unit test (`sessionsUseCases.test.ts`).
+- [x] enrollments — repository interface + adapter (`enrollments/repository/`), use-cases facade with DI factory (`enrollments/use-cases/enrollmentsUseCases.ts`), route rewired to the facade, `enrollmentService` reduced to a thin re-export, and a fake-repo unit test (`enrollmentsUseCases.test.ts`).
+- [x] finance — repository interface + adapter (`finance/repository/`), use-cases facade with DI factory (`finance/use-cases/financeUseCases.ts`, incl. transactional `createPayment`), route rewired to the facade, `financeService` reduced to a thin re-export, and a fake-repo unit test (`financeUseCases.test.ts`).
+- [x] attendance — repository interface + adapter (`attendance/repository/`), use-cases facade with DI factory (`attendance/use-cases/attendanceUseCases.ts`, incl. bulk upsert/replace), route + contract router rewired to the facade, `attendanceService` reduced to a thin re-export, and a fake-repo unit test (`attendanceUseCases.test.ts`).
+- [x] hasanat — repository interface + adapter (`hasanat/repository/`, denoms/batches/distributions/redemptions), use-cases facade with DI factory (`hasanat/use-cases/hasanatUseCases.ts`, incl. bulk upsert/replace), route + contract router rewired to the facade, `hasanatService` reduced to a thin re-export, and a fake-repo unit test (`hasanatUseCases.test.ts`).
+- [x] questionBank — repository interface + adapter (`questionBank/repository/`, questions/tests/results), use-cases facade with DI factory (`questionBank/use-cases/questionBankUseCases.ts`, incl. command metrics + bulk upsert/replace), route + contract router rewired to the facade, `questionBankService`/`questionBankMetricsService` reduced to thin re-exports, and a fake-repo unit test (`questionBankUseCases.test.ts`).
+- [x] examinations — repository interface + adapter (`examinations/repository/`, exams/results), use-cases facade with DI factory (`examinations/use-cases/examinationsUseCases.ts`, incl. bulk upsert/replace), route + contract router rewired to the facade, `examinationService` reduced to a thin re-export, and a fake-repo unit test (`examinationsUseCases.test.ts`).
+- [x] obligations — repository interface + adapter (`obligations/repository/`, types/mujtahids/reps/wakala/distributions/collections), use-cases facade with DI factory (`obligations/use-cases/obligationsUseCases.ts`, incl. bulk upsert/replace), route + contract router rewired to the facade, `obligationService` reduced to a thin re-export, and a fake-repo unit test (`obligationsUseCases.test.ts`).
+- [x] accounting — repository interface + adapter (`accounting/repository/`, accounts/entries/fiscal-years), use-cases facade with DI factory (`accounting/use-cases/accountingUseCases.ts`, incl. posted-entry delete guard + bulk upsert/replace), route + contract router rewired to the facade, `accountingService` reduced to a thin re-export, and a fake-repo unit test (`accountingUseCases.test.ts`).
+- [x] messaging — repository interface + adapter (`messaging/repository/`, templates/logs), use-cases facade with DI factory (`messaging/use-cases/messagingUseCases.ts`, incl. recipients resolution + metrics), contract/log/recipient/template routes rewired to the facade, `messagingService` reduced to a thin re-export, and a fake-repo unit test (`messagingUseCases.test.ts`).
+- [x] users — repository interface + adapter (`users/repository/`, tenant users + activity logs), use-cases facade with DI factory (`users/use-cases/usersUseCases.ts`, incl. RBAC guards, password reset, bulk ops), route + contract router rewired to the facade, `usersService` reduced to a thin re-export, and a fake-repo unit test (`usersUseCases.test.ts`).
 - [ ] users

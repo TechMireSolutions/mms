@@ -31,16 +31,22 @@ const mockEnqueueBackgroundJob = vi.fn();
 const mockGetUserBackgroundJob = vi.fn();
 const mockRecordAudit = vi.fn();
 
-vi.mock('../services/enrollmentService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/enrollmentService.js')>();
-  return {
-    ...actual,
+vi.mock('../enrollments/use-cases/enrollmentsUseCases.js', () => ({
+  enrollmentsUseCases: {
     loadEnrollmentsPage: (...args: unknown[]) => mockLoadEnrollmentsPage(...args),
     loadEnrollmentsCommandMetrics: (...args: unknown[]) => mockLoadEnrollmentsCommandMetrics(...args),
     loadEnrollmentsReportAggregates: (...args: unknown[]) => mockLoadEnrollmentsReportAggregates(...args),
     loadEnrollmentsWidgetAggregates: (...args: unknown[]) => mockLoadEnrollmentsWidgetAggregates(...args),
-  };
-});
+    countEnrollments: vi.fn().mockResolvedValue(0),
+    createEnrollment: vi.fn(),
+    updateEnrollmentById: vi.fn(),
+    deleteEnrollmentById: vi.fn(),
+    restoreEnrollmentById: vi.fn(),
+    bulkSoftDeleteEnrollments: vi.fn(),
+    bulkRestoreEnrollments: vi.fn(),
+    loadEnrollmentsByIds: vi.fn().mockResolvedValue([]),
+  },
+}));
 
 vi.mock('../services/auditService.js', () => ({
   recordAudit: (...args: unknown[]) => mockRecordAudit(...args),

@@ -8,10 +8,7 @@ import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { entityResolveBodySchema } from '../../../validation/commonSchemas.js';
 import { canReadMessaging } from '../../../services/rbacService.js';
-import {
-  matchMessagingRecipients,
-  resolveMessagingRecipients,
-} from '../../../services/messagingService.js';
+import { messagingUseCases } from '../../../messaging/use-cases/messagingUseCases.js';
 
 /** Messaging recipient directory and contact resolve routes. */
 export const messagingRecipientRoutes: FastifyPluginAsync = async (fastify) => {
@@ -25,7 +22,7 @@ export const messagingRecipientRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
     }
     try {
-      const result = await matchMessagingRecipients(tenantSubdomain, parsedQuery.data);
+      const result = await messagingUseCases.matchMessagingRecipients(tenantSubdomain, parsedQuery.data);
       return reply.send(result);
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to match messaging recipients', err);
@@ -42,7 +39,7 @@ export const messagingRecipientRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
     }
     try {
-      const recipients = await resolveMessagingRecipients(tenantSubdomain, parsed.data.ids);
+      const recipients = await messagingUseCases.resolveMessagingRecipients(tenantSubdomain, parsed.data.ids);
       return reply.send({ recipients });
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to resolve messaging contacts', err);

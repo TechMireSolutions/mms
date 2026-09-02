@@ -5,11 +5,7 @@ import { initServer } from '@ts-rest/fastify';
 import { canReadMessaging } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
-import {
-  loadFilteredMessageLogs,
-  loadMessageTemplates,
-  loadMessagingRecipients,
-} from '../../../services/messagingService.js';
+import { messagingUseCases } from '../../../messaging/use-cases/messagingUseCases.js';
 
 const s = initServer();
 
@@ -32,7 +28,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const tenant = requireMessagingTenant(request);
         const result = await withTenant(tenant.id, () =>
-          loadFilteredMessageLogs(tenant.subdomain, query),
+          messagingUseCases.loadFilteredMessageLogs(tenant.subdomain, query),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };
@@ -46,7 +42,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const templates = await withTenant(String(request.tenant?.id), () => loadMessageTemplates(), { readOnly: true });
+        const templates = await withTenant(String(request.tenant?.id), () => messagingUseCases.loadMessageTemplates(), { readOnly: true });
         return { status: 200 as const, body: { templates } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list messaging templates' } };
@@ -62,7 +58,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         const effectiveQuery = parsed.success ? parsed.data : query;
         const tenant = requireMessagingTenant(request);
         const result = await withTenant(tenant.id, () =>
-          loadMessagingRecipients(tenant.subdomain, effectiveQuery),
+          messagingUseCases.loadMessagingRecipients(tenant.subdomain, effectiveQuery),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };

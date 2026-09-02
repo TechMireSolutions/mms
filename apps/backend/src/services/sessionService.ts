@@ -1,110 +1,22 @@
-import { sessionsRepository } from '../sessions/repository/sessionsRepositoryAdapter.js';
-import { getRequestTenant } from '../lib/tenantContext.js';
-import {
-  sessionRecordSchema,
-  type SessionRecord,
-} from '../validation/sessionSchemas.js';
-import { createGenericRelationalService } from './genericRelationalService.js';
-import {
-  normalizeStoredSession,
-  type SessionsListQuery,
-  type Session,
-  type SessionsWidgetQuery,
-  type SessionsReportAggregates,
-} from '@mms/shared';
+import { sessionsUseCases } from '../sessions/use-cases/sessionsUseCases.js';
 
-const crud = createGenericRelationalService<SessionRecord>({
-  repo: {
-    listByWorkspace: sessionsRepository.listSessionsByWorkspace,
-    findById: sessionsRepository.findSessionById,
-    save: sessionsRepository.saveSession,
-  },
-  schema: sessionRecordSchema,
-  websocketCollection: 'sessions',
-  idPrefix: 'sess',
-  normalizeFn: normalizeStoredSession as (record: SessionRecord) => SessionRecord,
-});
-
-export const loadSessions = crud.loadAll;
-export const createSession = crud.create;
-export const updateSessionById = crud.updateById;
-export const deleteSessionById = crud.deleteById;
-export const restoreSessionById = crud.restoreById;
-export const bulkSoftDeleteSessions = crud.bulkDeleteByIds;
-export const bulkRestoreSessions = crud.bulkRestoreByIds;
-
-export async function bulkUpdateSessionsStatus(
-  ids: string[],
-  status: string,
-): Promise<{ succeeded: number; failed: number }> {
-  const tenant = getRequestTenant();
-  if (!tenant) return { succeeded: 0, failed: ids.length };
-  const result = await sessionsRepository.bulkUpdateSessionsStatus(tenant, ids, status);
-  if (result.succeeded > 0) {
-    const { broadcastTenantUpdate } = await import('./websocketService.js');
-    broadcastTenantUpdate(tenant, 'collection', 'sessions');
-  }
-  return result;
-}
-
-export async function loadSessionsPage(query: SessionsListQuery & { includeDeleted?: boolean }) {
-  const tenant = getRequestTenant();
-  if (!tenant) {
-    return {
-      sessions: [],
-      total: 0,
-      page: query.page ?? 1,
-      limit: query.limit ?? 12,
-      hasMore: false,
-    };
-  }
-  return sessionsRepository.listSessionsPage(tenant, query);
-}
-
-export async function loadSessionsByIds(ids: string[]): Promise<Session[]> {
-  const tenant = getRequestTenant();
-  if (!tenant || ids.length === 0) return [];
-  const rows = await sessionsRepository.findSessionsByIds(tenant, ids);
-  return rows as Session[];
-}
-
-export async function countSessions(): Promise<number> {
-  const tenant = getRequestTenant();
-  if (!tenant) return 0;
-  return sessionsRepository.countSessionsActive(tenant);
-}
-
-export async function loadSessionsCommandMetrics() {
-  const tenant = getRequestTenant();
-  if (!tenant) {
-    return {
-      total: 0,
-      active: 0,
-      upcoming: 0,
-      completed: 0,
-      cancelled: 0,
-      totalEnrolled: 0,
-      totalCapacity: 0,
-      totalClasses: 0,
-      sessionsThisWeek: 0,
-      sessionsLastWeek: 0,
-    };
-  }
-  return sessionsRepository.aggregateSessionsCommandMetrics(tenant);
-}
-
-export async function loadSessionsWidgetAggregates(
-  queries: SessionsWidgetQuery[],
-): Promise<Record<string, import('@mms/shared').SessionsWidgetAggregateResult>> {
-  const tenant = getRequestTenant();
-  if (!tenant) return {};
-  return sessionsRepository.aggregateSessionsWidgetQueries(tenant, queries);
-}
-
-export async function loadSessionsReportAggregates(): Promise<SessionsReportAggregates> {
-  const tenant = getRequestTenant();
-  if (!tenant) {
-    return { capacity: [], enrollmentTrends: [], todaysSessions: [] };
-  }
-  return sessionsRepository.loadSessionsReportAggregates(tenant);
-}
+/**
+ * Thin re-export of the sessions use-cases facade.
+ *
+ * Kept for backward compatibility with existing importers (report routes, tests).
+ * New code should depend on `sessions/use-cases/sessionsUseCases.js` directly.
+ */
+export const loadSessions = sessionsUseCases.loadSessions;
+export const createSession = sessionsUseCases.createSession;
+export const updateSessionById = sessionsUseCases.updateSessionById;
+export const deleteSessionById = sessionsUseCases.deleteSessionById;
+export const restoreSessionById = sessionsUseCases.restoreSessionById;
+export const bulkSoftDeleteSessions = sessionsUseCases.bulkSoftDeleteSessions;
+export const bulkRestoreSessions = sessionsUseCases.bulkRestoreSessions;
+export const bulkUpdateSessionsStatus = sessionsUseCases.bulkUpdateSessionsStatus;
+export const loadSessionsPage = sessionsUseCases.loadSessionsPage;
+export const loadSessionsByIds = sessionsUseCases.loadSessionsByIds;
+export const countSessions = sessionsUseCases.countSessions;
+export const loadSessionsCommandMetrics = sessionsUseCases.loadSessionsCommandMetrics;
+export const loadSessionsWidgetAggregates = sessionsUseCases.loadSessionsWidgetAggregates;
+export const loadSessionsReportAggregates = sessionsUseCases.loadSessionsReportAggregates;

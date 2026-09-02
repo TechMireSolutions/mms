@@ -13,18 +13,7 @@ import {
   registerMetricsRoute,
   registerSoftDeletableBulkRoutes,
 } from '../../lib/crudRouter.js';
-import {
-  upsertDenoms,
-  upsertBatches,
-  loadDistributions,
-  upsertDistributions,
-  upsertRedemptions,
-  deleteDistributionById,
-  restoreDistributionById,
-  bulkSoftDeleteDistributions,
-  bulkRestoreDistributions,
-  loadHasanatCommandMetrics,
-} from '../../services/hasanatService.js';
+import { hasanatUseCases } from '../../hasanat/use-cases/hasanatUseCases.js';
 import { hasanatReportRoutes } from './hasanat/hasanatReportRoutes.js';
 import { hasanatSetupConfigRoutes } from './hasanatSetupConfigRoutes.js';
 import { hasanatContractRouter } from './hasanat/hasanatContractRouter.js';
@@ -51,7 +40,7 @@ export default async function hasanatRoutes(
 
       registerMetricsRoute(sub, {
         collection: HASANAT_DISTRIBUTIONS_COLLECTION,
-        loadMetricsFn: loadHasanatCommandMetrics,
+        loadMetricsFn: hasanatUseCases.loadHasanatCommandMetrics,
         errorMessagePrefix: 'hasanat',
       });
 
@@ -59,7 +48,7 @@ export default async function hasanatRoutes(
         path: '/denoms',
         collection: HASANAT_DENOMS_COLLECTION,
         schema: denomListSchema,
-        saveFn: upsertDenoms,
+        saveFn: hasanatUseCases.upsertDenoms,
         responseKey: 'denoms',
         errorMessagePrefix: 'denominations',
         customGetRoute: true,
@@ -69,7 +58,7 @@ export default async function hasanatRoutes(
         path: '/batches',
         collection: HASANAT_BATCHES_COLLECTION,
         schema: batchListSchema,
-        saveFn: upsertBatches,
+        saveFn: hasanatUseCases.upsertBatches,
         responseKey: 'batches',
         errorMessagePrefix: 'batches',
         customGetRoute: true,
@@ -79,12 +68,12 @@ export default async function hasanatRoutes(
         path: '/distributions',
         collection: HASANAT_DISTRIBUTIONS_COLLECTION,
         schema: distributionListSchema,
-        loadFn: loadDistributions,
-        saveFn: upsertDistributions,
-        deleteFn: deleteDistributionById,
-        restoreFn: restoreDistributionById,
-        bulkDeleteFn: bulkSoftDeleteDistributions,
-        bulkRestoreFn: bulkRestoreDistributions,
+        loadFn: hasanatUseCases.loadDistributions,
+        saveFn: hasanatUseCases.upsertDistributions,
+        deleteFn: hasanatUseCases.deleteDistributionById,
+        restoreFn: hasanatUseCases.restoreDistributionById,
+        bulkDeleteFn: hasanatUseCases.bulkSoftDeleteDistributions,
+        bulkRestoreFn: hasanatUseCases.bulkRestoreDistributions,
         responseKey: 'distributions',
         errorMessagePrefix: 'distributions',
         nameSingular: 'Distribution',
@@ -97,7 +86,7 @@ export default async function hasanatRoutes(
         path: '/redemptions',
         collection: HASANAT_REDEMPTIONS_COLLECTION,
         schema: redemptionListSchema,
-        saveFn: upsertRedemptions,
+        saveFn: hasanatUseCases.upsertRedemptions,
         responseKey: 'redemptions',
         errorMessagePrefix: 'redemptions',
 

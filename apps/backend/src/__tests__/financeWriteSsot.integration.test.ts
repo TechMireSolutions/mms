@@ -33,14 +33,32 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 const mockBulkUpdateInvoicesStatus = vi.fn();
 const mockLoadInvoicesPage = vi.fn();
 
-vi.mock('../services/financeService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/financeService.js')>();
-  return {
-    ...actual,
+vi.mock('../finance/use-cases/financeUseCases.js', () => ({
+  financeUseCases: {
     bulkUpdateInvoicesStatus: (...args: unknown[]) => mockBulkUpdateInvoicesStatus(...args),
     loadInvoicesPage: (...args: unknown[]) => mockLoadInvoicesPage(...args),
-  };
-});
+    loadInvoices: vi.fn().mockResolvedValue([]),
+    createInvoice: vi.fn(),
+    updateInvoiceById: vi.fn(),
+    deleteInvoiceById: vi.fn(),
+    restoreInvoiceById: vi.fn(),
+    bulkSoftDeleteInvoices: vi.fn(),
+    bulkRestoreInvoices: vi.fn(),
+    getInvoiceById: vi.fn(),
+    loadPayments: vi.fn().mockResolvedValue([]),
+    loadPaymentsPage: vi.fn().mockResolvedValue({ payments: [], total: 0, page: 1, limit: 12, hasMore: false }),
+    createPayment: vi.fn(),
+    updatePaymentById: vi.fn(),
+    deletePaymentById: vi.fn(),
+    restorePaymentById: vi.fn(),
+    bulkSoftDeletePayments: vi.fn(),
+    bulkRestorePayments: vi.fn(),
+    getPaymentById: vi.fn(),
+    loadFinanceReportAggregates: vi.fn().mockResolvedValue({}),
+    loadFinanceCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadFinanceWidgetAggregates: vi.fn().mockResolvedValue({}),
+  },
+}));
 
 describe('finance API & bulk invoice status write integration tests', () => {
   beforeEach(() => {

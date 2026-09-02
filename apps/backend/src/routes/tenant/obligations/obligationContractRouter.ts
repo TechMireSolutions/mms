@@ -4,12 +4,7 @@ import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { canReadCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
-import {
-  loadObligationCollections,
-  loadObligationTypes,
-  loadMujtahids,
-  loadObligationDistributions,
-} from '../../../services/obligationService.js';
+import { obligationsUseCases } from '../../../obligations/use-cases/obligationsUseCases.js';
 
 const s = initServer();
 
@@ -21,7 +16,7 @@ export const obligationContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadObligationCollections(query), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => obligationsUseCases.loadObligationCollections(query), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list collections' } };
@@ -33,7 +28,7 @@ export const obligationContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadObligationTypes(), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => obligationsUseCases.loadObligationTypes(), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list obligation types' } };
@@ -45,7 +40,7 @@ export const obligationContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadMujtahids(), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => obligationsUseCases.loadMujtahids(), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list mujtahids' } };
@@ -57,7 +52,7 @@ export const obligationContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadObligationDistributions(), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => obligationsUseCases.loadObligationDistributions(), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list distributions' } };

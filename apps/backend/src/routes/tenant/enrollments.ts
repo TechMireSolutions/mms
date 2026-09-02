@@ -11,18 +11,7 @@ import { initServer } from '@ts-rest/fastify';
 import { withTenant } from '../../db/tenant-context.js';
 import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 
-import {
-  loadEnrollmentsPage,
-  countEnrollments,
-  loadEnrollmentsCommandMetrics,
-  loadEnrollmentsWidgetAggregates,
-  createEnrollment,
-  updateEnrollmentById,
-  deleteEnrollmentById,
-  restoreEnrollmentById,
-  bulkSoftDeleteEnrollments,
-  bulkRestoreEnrollments,
-} from '../../services/enrollmentService.js';
+import { enrollmentsUseCases } from '../../enrollments/use-cases/enrollmentsUseCases.js';
 import { enrollmentExportRoutes } from './enrollments/enrollmentExportRoutes.js';
 import { enrollmentReportRoutes } from './enrollments/enrollmentReportRoutes.js';
 import { enrollmentSetupConfigRoutes } from './enrollments/enrollmentSetupConfigRoutes.js';
@@ -47,19 +36,19 @@ export default async function enrollmentsRoutes(
 
       registerCountRoute(sub, {
         collection: ENROLLMENTS_COLLECTION,
-        loadCountFn: countEnrollments,
+        loadCountFn: enrollmentsUseCases.countEnrollments,
         errorMessagePrefix: 'enrollments',
       });
 
       registerMetricsRoute(sub, {
         collection: ENROLLMENTS_COLLECTION,
-        loadMetricsFn: loadEnrollmentsCommandMetrics,
+        loadMetricsFn: enrollmentsUseCases.loadEnrollmentsCommandMetrics,
         errorMessagePrefix: 'enrollment',
       });
 
       registerWidgetAggregatesRoute(sub, {
         collection: ENROLLMENTS_COLLECTION,
-        loadAggregatesFn: loadEnrollmentsWidgetAggregates as unknown as (
+        loadAggregatesFn: enrollmentsUseCases.loadEnrollmentsWidgetAggregates as unknown as (
           queries: unknown[],
         ) => Promise<unknown>,
         errorMessagePrefix: 'enrollment',
@@ -72,7 +61,7 @@ export default async function enrollmentsRoutes(
         }
         const { id } = request.params;
         try {
-          const restored = await withTenant(String(request.tenant?.id), () => restoreEnrollmentById(id, String(user.id)), { readOnly: false });
+          const restored = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.restoreEnrollmentById(id, String(user.id)), { readOnly: false });
           if (!restored) {
             return reply.status(404).send({ type: 'not_found', message: 'Enrollment not found or not deleted' });
           }
@@ -93,7 +82,7 @@ export default async function enrollmentsRoutes(
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true ? true : (query?.includeDeleted === 'false' || query?.includeDeleted === false ? false : undefined);
-        const result = await withTenant(String(request.tenant?.id), () => loadEnrollmentsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.loadEnrollmentsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list enrollments' } };
@@ -105,7 +94,7 @@ export default async function enrollmentsRoutes(
       if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const item = await withTenant(String(request.tenant?.id), () => createEnrollment(body), { readOnly: false });
+        const item = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.createEnrollment(body), { readOnly: false });
         return { status: 201 as const, body: item };
       } catch (error: unknown) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create enrollment' } };
@@ -116,7 +105,7 @@ export default async function enrollmentsRoutes(
       if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const updated = await withTenant(String(request.tenant?.id), () => updateEnrollmentById(id, body), { readOnly: false });
+        const updated = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.updateEnrollmentById(id, body), { readOnly: false });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } };
         return { status: 200 as const, body: updated };
       } catch (error: unknown) {
@@ -128,7 +117,7 @@ export default async function enrollmentsRoutes(
       if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const deleted = await withTenant(String(request.tenant?.id), () => deleteEnrollmentById(id, String(user.id), body?.deletionReason), { readOnly: false });
+        const deleted = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.deleteEnrollmentById(id, String(user.id), body?.deletionReason), { readOnly: false });
         if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } };
         return { status: 200 as const, body: { success: true } };
       } catch (error: unknown) {
@@ -140,7 +129,7 @@ export default async function enrollmentsRoutes(
       if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => bulkSoftDeleteEnrollments(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.bulkSoftDeleteEnrollments(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch (error: unknown) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete enrollments' } };
@@ -151,7 +140,7 @@ export default async function enrollmentsRoutes(
       if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => bulkRestoreEnrollments(body.ids.map(String)), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.bulkRestoreEnrollments(body.ids.map(String)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch (error: unknown) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore enrollments' } };

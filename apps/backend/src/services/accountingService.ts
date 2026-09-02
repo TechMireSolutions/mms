@@ -1,207 +1,33 @@
-import { listAccountsPage, listEntriesPage, listFiscalYearsPage } from "../db/repositories/accountingRepositoryList.js";
-import { aggregateAccountingCommandMetrics } from "../db/repositories/accountingRepositoryMetrics.js";
-import { aggregateAccountingReport, type AccountingReportQuery } from "../db/repositories/accountingRepositoryReport.js";
-import type { AccountingListQuery, AccountingReportAggregates } from "@mms/shared";
-import {
-  EMPTY_ACCOUNTING_REPORT_AGGREGATES,
-  type Account,
-  type JournalEntry,
-  type FiscalYear,
-  type AccountingCommandMetricsSnapshot,
-  accountListSchema,
-  journalEntryListSchema,
-  fiscalYearListSchema,
-  journalEntryRecordSchema,
-  accountRecordSchema,
-} from '@mms/shared';
-import {
-  listAccountsByWorkspace,
-  findAccountById,
-  saveAccount,
-  bulkSaveAccounts,
-  replaceAccountsForWorkspace,
-  listEntriesByWorkspace,
-  findEntryById,
-  saveEntry,
-  bulkSaveEntries,
-  replaceEntriesForWorkspace,
-  listFiscalYearsByWorkspace,
-  bulkSaveFiscalYears,
-  replaceFiscalYearsForWorkspace,
-} from '../db/repositories/accountingRepository.js';
-import {
-  defineTenantBulkCollectionService,
-  scopeDeleted,
-  upsertWithBroadcast,
-} from './tenantBulkService.js';
-import { createGenericRelationalService } from './genericRelationalService.js';
-import { getRequestTenant } from '../lib/tenantContext.js';
+import { accountingUseCases } from '../accounting/use-cases/accountingUseCases.js';
 
-const accountService = defineTenantBulkCollectionService<Account>(
-  { listByWorkspace: listAccountsByWorkspace, replaceForWorkspace: replaceAccountsForWorkspace },
-  accountListSchema,
-  'accounting_accounts',
-);
-
-const entryBulkService = defineTenantBulkCollectionService<JournalEntry>(
-  { listByWorkspace: listEntriesByWorkspace, replaceForWorkspace: replaceEntriesForWorkspace },
-  journalEntryListSchema,
-  'accounting_entries',
-);
-
-const fiscalYearService = defineTenantBulkCollectionService<FiscalYear>(
-  { listByWorkspace: listFiscalYearsByWorkspace, replaceForWorkspace: replaceFiscalYearsForWorkspace },
-  fiscalYearListSchema,
-  'accounting_fiscal_years',
-);
-
-/** Full-collection replace retained for internal/admin tools only — routes must use upsert. */
-export const replaceAccounts = accountService.replace;
-export const replaceEntries = entryBulkService.replace;
-export const replaceFiscalYears = fiscalYearService.replace;
-
-const entryCrud = createGenericRelationalService<JournalEntry>({
-  repo: {
-    listByWorkspace: listEntriesByWorkspace,
-    findById: findEntryById,
-    save: saveEntry,
-  },
-  schema: journalEntryRecordSchema,
-  websocketCollection: 'accounting_entries',
-  idPrefix: 'je',
-});
-
-const accountCrud = createGenericRelationalService<Account>({
-  repo: {
-    listByWorkspace: listAccountsByWorkspace,
-    findById: findAccountById,
-    save: saveAccount,
-  },
-  schema: accountRecordSchema,
-  websocketCollection: 'accounting_accounts',
-  idPrefix: 'acc',
-});
-
-export async function loadAccounts(options?: { includeDeleted?: boolean }): Promise<Account[]> {
-  const rows = await accountCrud.loadAll({ includeDeleted: true });
-  return scopeDeleted(rows, options?.includeDeleted);
-}
-
-export async function loadEntries(options?: { includeDeleted?: boolean }): Promise<JournalEntry[]> {
-  const rows = await entryCrud.loadAll({ includeDeleted: true });
-  return scopeDeleted(rows, options?.includeDeleted);
-}
-
-export const loadFiscalYears = fiscalYearService.load;
-
-/** Upserts accounts without removing unrelated rows. */
-export const upsertAccounts = (accounts: Account[]) =>
-  upsertWithBroadcast(accountListSchema, accounts, bulkSaveAccounts, 'accounting_accounts');
-
-/** Upserts journal entries without removing unrelated rows. */
-export const upsertEntries = (entries: JournalEntry[]) =>
-  upsertWithBroadcast(journalEntryListSchema, entries, bulkSaveEntries, 'accounting_entries');
-
-/** Upserts fiscal years without removing unrelated rows. */
-export const upsertFiscalYears = (fiscalYears: FiscalYear[]) =>
-  upsertWithBroadcast(fiscalYearListSchema, fiscalYears, bulkSaveFiscalYears, 'accounting_fiscal_years');
-
-export const createJournalEntry = entryCrud.create;
-export const updateJournalEntryById = entryCrud.updateById;
-export const restoreJournalEntryById = entryCrud.restoreById;
-export const bulkRestoreJournalEntries = entryCrud.bulkRestoreByIds;
-
-export async function deleteJournalEntryById(
-  id: string,
-  deletedBy: string,
-  deletionReason?: string,
-): Promise<boolean> {
-  const tenant = getRequestTenant();
-  if (!tenant) return false;
-  const existing = await findEntryById(tenant, id);
-  if (!existing || existing.deletedAt) return false;
-  if (existing.status === 'posted') {
-    throw new Error('Posted journal entries cannot be deleted');
-  }
-  return entryCrud.deleteById(id, deletedBy, deletionReason);
-}
-
-export async function bulkSoftDeleteJournalEntries(
-  ids: string[],
-  deletedBy: string,
-  deletionReason?: string,
-): Promise<{ succeeded: number; failed: number }> {
-  let succeeded = 0;
-  let failed = 0;
-  for (const id of ids) {
-    try {
-      const ok = await deleteJournalEntryById(id, deletedBy, deletionReason);
-      if (ok) succeeded += 1;
-      else failed += 1;
-    } catch {
-      failed += 1;
-    }
-  }
-  return { succeeded, failed };
-}
-
-export const deleteAccountById = accountCrud.deleteById;
-export const restoreAccountById = accountCrud.restoreById;
-export const bulkSoftDeleteAccounts = accountCrud.bulkDeleteByIds;
-export const bulkRestoreAccounts = accountCrud.bulkRestoreByIds;
-
-export async function loadAccountsPage(query: AccountingListQuery & { includeDeleted?: boolean }) {
-  const tenant = getRequestTenant();
-  if (!tenant) {
-    return { accounts: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 12, hasMore: false };
-  }
-  return listAccountsPage(tenant, query);
-}
-
-export async function loadEntriesPage(query: AccountingListQuery & { includeDeleted?: boolean }) {
-  const tenant = getRequestTenant();
-  if (!tenant) {
-    return { entries: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 12, hasMore: false };
-  }
-  return listEntriesPage(tenant, query);
-}
-
-export async function loadFiscalYearsPage(query: AccountingListQuery & { includeDeleted?: boolean }) {
-  const tenant = getRequestTenant();
-  if (!tenant) {
-    return { fiscalYears: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 12, hasMore: false };
-  }
-  return listFiscalYearsPage(tenant, query);
-}
-
-const EMPTY_ACCOUNTING_METRICS: AccountingCommandMetricsSnapshot = {
-  totalEntries: 0,
-  posted: 0,
-  draft: 0,
-  activeAccounts: 0,
-  inactiveAccounts: 0,
-  newThisPeriod: 0,
-  postedVolume: 0,
-  revenue: 0,
-  expenses: 0,
-  surplus: 0,
-  assets: 0,
-  liabilities: 0,
-};
-
-/** Command-centre accounting metrics via SQL aggregates (no full-row load). */
-export async function loadAccountingCommandMetrics(): Promise<AccountingCommandMetricsSnapshot> {
-  const tenant = getRequestTenant();
-  if (!tenant) return EMPTY_ACCOUNTING_METRICS;
-  return aggregateAccountingCommandMetrics(tenant);
-}
-
-/** Accounting financial report SQL aggregates (Trial Balance, Income Statement, Balance Sheet, Cash Flow). */
-export async function loadAccountingReportAggregates(
-  query: AccountingReportQuery = {},
-): Promise<AccountingReportAggregates> {
-  const tenant = getRequestTenant();
-  if (!tenant) return EMPTY_ACCOUNTING_REPORT_AGGREGATES;
-  return aggregateAccountingReport(tenant, query);
-}
-
+/**
+ * Thin re-export of the accounting use-cases facade.
+ *
+ * Kept for backward compatibility with existing importers (report routes,
+ * dashboard summary, tests). New code should depend on
+ * `accounting/use-cases/accountingUseCases.js` directly.
+ */
+export const replaceAccounts = accountingUseCases.replaceAccounts;
+export const replaceEntries = accountingUseCases.replaceEntries;
+export const replaceFiscalYears = accountingUseCases.replaceFiscalYears;
+export const loadAccounts = accountingUseCases.loadAccounts;
+export const loadEntries = accountingUseCases.loadEntries;
+export const loadFiscalYears = accountingUseCases.loadFiscalYears;
+export const upsertAccounts = accountingUseCases.upsertAccounts;
+export const upsertEntries = accountingUseCases.upsertEntries;
+export const upsertFiscalYears = accountingUseCases.upsertFiscalYears;
+export const createJournalEntry = accountingUseCases.createJournalEntry;
+export const updateJournalEntryById = accountingUseCases.updateJournalEntryById;
+export const restoreJournalEntryById = accountingUseCases.restoreJournalEntryById;
+export const bulkRestoreJournalEntries = accountingUseCases.bulkRestoreJournalEntries;
+export const deleteJournalEntryById = accountingUseCases.deleteJournalEntryById;
+export const bulkSoftDeleteJournalEntries = accountingUseCases.bulkSoftDeleteJournalEntries;
+export const deleteAccountById = accountingUseCases.deleteAccountById;
+export const restoreAccountById = accountingUseCases.restoreAccountById;
+export const bulkSoftDeleteAccounts = accountingUseCases.bulkSoftDeleteAccounts;
+export const bulkRestoreAccounts = accountingUseCases.bulkRestoreAccounts;
+export const loadAccountsPage = accountingUseCases.loadAccountsPage;
+export const loadEntriesPage = accountingUseCases.loadEntriesPage;
+export const loadFiscalYearsPage = accountingUseCases.loadFiscalYearsPage;
+export const loadAccountingCommandMetrics = accountingUseCases.loadAccountingCommandMetrics;
+export const loadAccountingReportAggregates = accountingUseCases.loadAccountingReportAggregates;

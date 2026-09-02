@@ -11,12 +11,7 @@ import {
   registerMetricsRoute,
 } from '../../lib/crudRouter.js';
 
-import {
-  loadLogs,
-  upsertLogs,
-  countUsers,
-  loadUsersCommandMetrics,
-} from '../../services/usersService.js';
+import { usersUseCases } from '../../users/use-cases/usersUseCases.js';
 import { userExportRoutes } from './users/userExportRoutes.js';
 import { userSetupConfigRoutes } from './users/userSetupConfigRoutes.js';
 import { userContractRouter } from './users/userContractRouter.js';
@@ -42,13 +37,13 @@ export default async function usersRoutes(
       registerMetricsRoute(sub, {
         collection: USERS_COLLECTION,
         errorMessagePrefix: 'workspace users',
-        loadMetricsFn: loadUsersCommandMetrics,
+        loadMetricsFn: usersUseCases.loadUsersCommandMetrics,
       });
 
       registerCountRoute(sub, {
         path: '/count',
         collection: USERS_COLLECTION,
-        loadCountFn: countUsers,
+        loadCountFn: usersUseCases.countUsers,
         errorMessagePrefix: 'workspace users',
       });
 
@@ -56,8 +51,8 @@ export default async function usersRoutes(
         path: '/activity',
         collection: LOGS_COLLECTION,
         schema: activityLogListSchema,
-        loadFn: loadLogs,
-        saveFn: upsertLogs,
+        loadFn: usersUseCases.loadLogs,
+        saveFn: usersUseCases.upsertLogs,
         responseKey: 'logs',
         errorMessagePrefix: 'activity logs',
       });

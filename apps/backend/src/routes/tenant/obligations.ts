@@ -18,22 +18,7 @@ import {
 
 import { obligationContractRouter } from './obligations/obligationContractRouter.js';
 import { obligationReportRoutes } from './obligations/obligationReportRoutes.js';
-import {
-  upsertObligationTypes,
-  upsertMujtahids,
-  loadMujtahidReps,
-  upsertMujtahidReps,
-  loadWakalaTypes,
-  upsertWakalaTypes,
-  upsertObligationDistributions,
-  loadObligationCollections,
-  upsertObligationCollections,
-  deleteObligationCollectionById,
-  restoreObligationCollectionById,
-  bulkSoftDeleteObligationCollections,
-  bulkRestoreObligationCollections,
-  loadObligationsCommandMetrics,
-} from '../../services/obligationService.js';
+import { obligationsUseCases } from '../../obligations/use-cases/obligationsUseCases.js';
 
 const OBLIGATIONS_COLLECTION = OBLIGATIONS_MODULE_MANIFEST.collectionKey;
 
@@ -52,7 +37,7 @@ export default async function obligationsRoutes(
         path: '/types',
         collection: OBLIGATIONS_COLLECTION,
         schema: obligationTypeListSchema,
-        saveFn: upsertObligationTypes,
+        saveFn: obligationsUseCases.upsertObligationTypes,
         responseKey: 'types',
         errorMessagePrefix: 'obligation types',
         customGetRoute: true,
@@ -62,7 +47,7 @@ export default async function obligationsRoutes(
         path: '/mujtahids',
         collection: OBLIGATIONS_COLLECTION,
         schema: mujtahidListSchema,
-        saveFn: upsertMujtahids,
+        saveFn: obligationsUseCases.upsertMujtahids,
         responseKey: 'mujtahids',
         errorMessagePrefix: 'mujtahids',
         customGetRoute: true,
@@ -72,8 +57,8 @@ export default async function obligationsRoutes(
         path: '/reps',
         collection: OBLIGATIONS_COLLECTION,
         schema: mujtahidRepListSchema,
-        loadFn: loadMujtahidReps,
-        saveFn: upsertMujtahidReps,
+        loadFn: obligationsUseCases.loadMujtahidReps,
+        saveFn: obligationsUseCases.upsertMujtahidReps,
         responseKey: 'reps',
         errorMessagePrefix: 'mujtahid reps',
       });
@@ -82,8 +67,8 @@ export default async function obligationsRoutes(
         path: '/wakala',
         collection: OBLIGATIONS_COLLECTION,
         schema: wakalaTypeListSchema,
-        loadFn: loadWakalaTypes,
-        saveFn: upsertWakalaTypes,
+        loadFn: obligationsUseCases.loadWakalaTypes,
+        saveFn: obligationsUseCases.upsertWakalaTypes,
         responseKey: 'wakalaTypes',
         errorMessagePrefix: 'wakala types',
       });
@@ -92,7 +77,7 @@ export default async function obligationsRoutes(
         path: '/distributions',
         collection: OBLIGATIONS_COLLECTION,
         schema: obligationDistributionListSchema,
-        saveFn: upsertObligationDistributions,
+        saveFn: obligationsUseCases.upsertObligationDistributions,
         responseKey: 'distributions',
         errorMessagePrefix: 'obligation distributions',
         customGetRoute: true,
@@ -102,12 +87,12 @@ export default async function obligationsRoutes(
         path: '/collections',
         collection: OBLIGATIONS_COLLECTION,
         schema: obligationCollectionListSchema,
-        loadFn: loadObligationCollections,
-        saveFn: upsertObligationCollections,
-        deleteFn: deleteObligationCollectionById,
-        restoreFn: restoreObligationCollectionById,
-        bulkDeleteFn: bulkSoftDeleteObligationCollections,
-        bulkRestoreFn: bulkRestoreObligationCollections,
+        loadFn: obligationsUseCases.loadObligationCollections,
+        saveFn: obligationsUseCases.upsertObligationCollections,
+        deleteFn: obligationsUseCases.deleteObligationCollectionById,
+        restoreFn: obligationsUseCases.restoreObligationCollectionById,
+        bulkDeleteFn: obligationsUseCases.bulkSoftDeleteObligationCollections,
+        bulkRestoreFn: obligationsUseCases.bulkRestoreObligationCollections,
         responseKey: 'collections',
         errorMessagePrefix: 'obligation collections',
         nameSingular: 'Obligation collection',
@@ -116,7 +101,7 @@ export default async function obligationsRoutes(
 
       registerMetricsRoute(sub, {
         collection: OBLIGATIONS_COLLECTION,
-        loadMetricsFn: loadObligationsCommandMetrics,
+        loadMetricsFn: obligationsUseCases.loadObligationsCommandMetrics,
         errorMessagePrefix: 'obligation',
       });
 

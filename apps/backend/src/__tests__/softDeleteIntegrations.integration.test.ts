@@ -39,50 +39,67 @@ const mockRestoreInvoiceById = vi.fn();
 const mockDeletePaymentById = vi.fn();
 const mockRestorePaymentById = vi.fn();
 
-vi.mock('../services/enrollmentService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/enrollmentService.js')>();
-  return {
-    ...actual,
+vi.mock('../enrollments/use-cases/enrollmentsUseCases.js', () => ({
+  enrollmentsUseCases: {
     createEnrollment: vi.fn(),
     updateEnrollmentById: vi.fn(),
     deleteEnrollmentById: (...args: unknown[]) => mockDeleteEnrollmentById(...args),
     restoreEnrollmentById: (...args: unknown[]) => mockRestoreEnrollmentById(...args),
-  };
-});
-
-vi.mock('../services/attendanceService.js', () => ({
-  loadAttendanceRecords: vi.fn().mockResolvedValue([]),
-  loadAttendancePage: vi.fn().mockResolvedValue({ records: [], total: 0, page: 1, limit: 15, hasMore: false }),
-  countAttendanceRecords: vi.fn().mockResolvedValue(0),
-  loadAttendanceCommandMetrics: vi.fn().mockResolvedValue({}),
-  createAttendanceRecord: vi.fn(),
-  updateAttendanceRecordById: vi.fn(),
-  replaceAttendanceRecords: vi.fn(),
-  upsertAttendanceRecords: vi.fn(),
-  bulkSoftDeleteAttendance: vi.fn(),
-  bulkRestoreAttendance: vi.fn(),
-  deleteAttendanceRecordById: (...args: unknown[]) => mockDeleteAttendanceRecordById(...args),
-  restoreAttendanceRecordById: (...args: unknown[]) => mockRestoreAttendanceRecordById(...args),
+    countEnrollments: vi.fn().mockResolvedValue(0),
+    loadEnrollmentsPage: vi.fn().mockResolvedValue({ enrollments: [], total: 0, page: 1, limit: 12, hasMore: false }),
+    loadEnrollmentsCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadEnrollmentsWidgetAggregates: vi.fn().mockResolvedValue({}),
+    loadEnrollmentsReportAggregates: vi.fn().mockResolvedValue({}),
+    bulkSoftDeleteEnrollments: vi.fn(),
+    bulkRestoreEnrollments: vi.fn(),
+    loadEnrollmentsByIds: vi.fn().mockResolvedValue([]),
+  },
 }));
 
-vi.mock('../services/financeService.js', () => ({
-  loadInvoices: vi.fn().mockResolvedValue([]),
-  loadInvoicesPage: vi.fn().mockResolvedValue({ invoices: [], total: 0, page: 1, limit: 10, hasMore: false }),
-  createInvoice: vi.fn(),
-  updateInvoiceById: vi.fn(),
-  deleteInvoiceById: (...args: unknown[]) => mockDeleteInvoiceById(...args),
-  restoreInvoiceById: (...args: unknown[]) => mockRestoreInvoiceById(...args),
-  bulkSoftDeleteInvoices: vi.fn(),
-  bulkRestoreInvoices: vi.fn(),
-  loadPayments: vi.fn().mockResolvedValue([]),
-  loadPaymentsPage: vi.fn().mockResolvedValue({ payments: [], total: 0, page: 1, limit: 10, hasMore: false }),
-  createPayment: vi.fn(),
-  updatePaymentById: vi.fn(),
-  deletePaymentById: (...args: unknown[]) => mockDeletePaymentById(...args),
-  restorePaymentById: (...args: unknown[]) => mockRestorePaymentById(...args),
-  bulkSoftDeletePayments: vi.fn(),
-  bulkRestorePayments: vi.fn(),
-  loadFinanceCommandMetrics: vi.fn().mockResolvedValue({}),
+vi.mock('../attendance/use-cases/attendanceUseCases.js', () => ({
+  attendanceUseCases: {
+    loadAttendanceRecords: vi.fn().mockResolvedValue([]),
+    loadAttendancePage: vi.fn().mockResolvedValue({ records: [], total: 0, page: 1, limit: 15, hasMore: false }),
+    countAttendanceRecords: vi.fn().mockResolvedValue(0),
+    loadAttendanceCommandMetrics: vi.fn().mockResolvedValue({}),
+    createAttendanceRecord: vi.fn(),
+    updateAttendanceRecordById: vi.fn(),
+    replaceAttendanceRecords: vi.fn(),
+    upsertAttendanceRecords: vi.fn(),
+    bulkSoftDeleteAttendance: vi.fn(),
+    bulkRestoreAttendance: vi.fn(),
+    deleteAttendanceRecordById: (...args: unknown[]) => mockDeleteAttendanceRecordById(...args),
+    restoreAttendanceRecordById: (...args: unknown[]) => mockRestoreAttendanceRecordById(...args),
+    loadAttendanceWidgetAggregates: vi.fn().mockResolvedValue({}),
+    loadAttendanceReportAggregates: vi.fn().mockResolvedValue({}),
+  },
+}));
+
+vi.mock('../finance/use-cases/financeUseCases.js', () => ({
+  financeUseCases: {
+    loadInvoices: vi.fn().mockResolvedValue([]),
+    loadInvoicesPage: vi.fn().mockResolvedValue({ invoices: [], total: 0, page: 1, limit: 10, hasMore: false }),
+    createInvoice: vi.fn(),
+    updateInvoiceById: vi.fn(),
+    deleteInvoiceById: (...args: unknown[]) => mockDeleteInvoiceById(...args),
+    restoreInvoiceById: (...args: unknown[]) => mockRestoreInvoiceById(...args),
+    bulkSoftDeleteInvoices: vi.fn(),
+    bulkRestoreInvoices: vi.fn(),
+    getInvoiceById: vi.fn(),
+    bulkUpdateInvoicesStatus: vi.fn(),
+    loadPayments: vi.fn().mockResolvedValue([]),
+    loadPaymentsPage: vi.fn().mockResolvedValue({ payments: [], total: 0, page: 1, limit: 10, hasMore: false }),
+    createPayment: vi.fn(),
+    updatePaymentById: vi.fn(),
+    deletePaymentById: (...args: unknown[]) => mockDeletePaymentById(...args),
+    restorePaymentById: (...args: unknown[]) => mockRestorePaymentById(...args),
+    bulkSoftDeletePayments: vi.fn(),
+    bulkRestorePayments: vi.fn(),
+    getPaymentById: vi.fn(),
+    loadFinanceCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadFinanceWidgetAggregates: vi.fn().mockResolvedValue({}),
+    loadFinanceReportAggregates: vi.fn().mockResolvedValue({}),
+  },
 }));
 
 const mockDeleteObligationCollectionById = vi.fn();
@@ -90,69 +107,91 @@ const mockRestoreObligationCollectionById = vi.fn();
 const mockDeleteHasanatDistributionById = vi.fn();
 const mockRestoreHasanatDistributionById = vi.fn();
 
-vi.mock('../services/obligationService.js', () => ({
-  loadObligationTypes: vi.fn().mockResolvedValue([]),
-  upsertObligationTypes: vi.fn(),
-  loadMujtahids: vi.fn().mockResolvedValue([]),
-  upsertMujtahids: vi.fn(),
-  loadMujtahidReps: vi.fn().mockResolvedValue([]),
-  upsertMujtahidReps: vi.fn(),
-  loadWakalaTypes: vi.fn().mockResolvedValue([]),
-  upsertWakalaTypes: vi.fn(),
-  loadObligationDistributions: vi.fn().mockResolvedValue([]),
-  upsertObligationDistributions: vi.fn(),
-  loadObligationCollections: vi.fn().mockResolvedValue([]),
-  upsertObligationCollections: vi.fn(),
-  deleteObligationCollectionById: (...args: unknown[]) => mockDeleteObligationCollectionById(...args),
-  restoreObligationCollectionById: (...args: unknown[]) => mockRestoreObligationCollectionById(...args),
-  bulkSoftDeleteObligationCollections: vi.fn(),
-  bulkRestoreObligationCollections: vi.fn(),
-  loadObligationsCommandMetrics: vi.fn().mockResolvedValue({}),
+vi.mock('../obligations/use-cases/obligationsUseCases.js', () => ({
+  obligationsUseCases: {
+    loadObligationTypes: vi.fn().mockResolvedValue([]),
+    upsertObligationTypes: vi.fn(),
+    loadMujtahids: vi.fn().mockResolvedValue([]),
+    upsertMujtahids: vi.fn(),
+    loadMujtahidReps: vi.fn().mockResolvedValue([]),
+    upsertMujtahidReps: vi.fn(),
+    loadWakalaTypes: vi.fn().mockResolvedValue([]),
+    upsertWakalaTypes: vi.fn(),
+    loadObligationDistributions: vi.fn().mockResolvedValue([]),
+    upsertObligationDistributions: vi.fn(),
+    loadObligationCollections: vi.fn().mockResolvedValue([]),
+    upsertObligationCollections: vi.fn(),
+    deleteObligationCollectionById: (...args: unknown[]) => mockDeleteObligationCollectionById(...args),
+    restoreObligationCollectionById: (...args: unknown[]) => mockRestoreObligationCollectionById(...args),
+    bulkSoftDeleteObligationCollections: vi.fn(),
+    bulkRestoreObligationCollections: vi.fn(),
+    loadObligationsCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadObligationsReportAggregates: vi.fn().mockResolvedValue({}),
+    replaceObligationTypes: vi.fn(),
+    replaceMujtahids: vi.fn(),
+    replaceMujtahidReps: vi.fn(),
+    replaceWakalaTypes: vi.fn(),
+    replaceObligationDistributions: vi.fn(),
+    replaceObligationCollections: vi.fn(),
+  },
 }));
 
-vi.mock('../services/hasanatService.js', () => ({
-  loadDenoms: vi.fn().mockResolvedValue([]),
-  upsertDenoms: vi.fn(),
-  loadBatches: vi.fn().mockResolvedValue([]),
-  upsertBatches: vi.fn(),
-  loadDistributions: vi.fn().mockResolvedValue([]),
-  loadDistributionsPage: vi.fn().mockResolvedValue({ distributions: [], total: 0, page: 1, limit: 15, hasMore: false }),
-  upsertDistributions: vi.fn(),
-  loadRedemptions: vi.fn().mockResolvedValue([]),
-  upsertRedemptions: vi.fn(),
-  deleteDistributionById: (...args: unknown[]) => mockDeleteHasanatDistributionById(...args),
-  restoreDistributionById: (...args: unknown[]) => mockRestoreHasanatDistributionById(...args),
-  bulkSoftDeleteDistributions: vi.fn(),
-  bulkRestoreDistributions: vi.fn(),
-  loadHasanatReportAggregates: vi.fn().mockResolvedValue({
-    comparison: { sessions: [], monthly: { a: [], b: [] } },
-  }),
-  loadHasanatCommandMetrics: vi.fn().mockResolvedValue({}),
+vi.mock('../hasanat/use-cases/hasanatUseCases.js', () => ({
+  hasanatUseCases: {
+    loadDenoms: vi.fn().mockResolvedValue([]),
+    upsertDenoms: vi.fn(),
+    loadBatches: vi.fn().mockResolvedValue([]),
+    upsertBatches: vi.fn(),
+    loadDistributions: vi.fn().mockResolvedValue([]),
+    loadDistributionsPage: vi.fn().mockResolvedValue({ distributions: [], total: 0, page: 1, limit: 15, hasMore: false }),
+    upsertDistributions: vi.fn(),
+    loadRedemptions: vi.fn().mockResolvedValue([]),
+    upsertRedemptions: vi.fn(),
+    deleteDistributionById: (...args: unknown[]) => mockDeleteHasanatDistributionById(...args),
+    restoreDistributionById: (...args: unknown[]) => mockRestoreHasanatDistributionById(...args),
+    bulkSoftDeleteDistributions: vi.fn(),
+    bulkRestoreDistributions: vi.fn(),
+    loadHasanatReportAggregates: vi.fn().mockResolvedValue({
+      comparison: { sessions: [], monthly: { a: [], b: [] } },
+    }),
+    loadHasanatCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadHasanatWidgetAggregates: vi.fn().mockResolvedValue({}),
+    createDistribution: vi.fn(),
+    updateDistributionById: vi.fn(),
+    replaceDenoms: vi.fn(),
+    replaceBatches: vi.fn(),
+    replaceDistributions: vi.fn(),
+    replaceRedemptions: vi.fn(),
+  },
 }));
 
 const mockDeleteExamById = vi.fn();
 const mockRestoreExamById = vi.fn();
 
-vi.mock('../services/examinationService.js', () => ({
-  loadExams: vi.fn().mockResolvedValue([]),
-  loadExamsPage: vi.fn().mockResolvedValue({ exams: [], total: 0, page: 1, limit: 12, hasMore: false }),
-  upsertExams: vi.fn(),
-  loadExamResults: vi.fn().mockResolvedValue([]),
-  upsertExamResults: vi.fn(),
-  deleteExamById: (...args: unknown[]) => mockDeleteExamById(...args),
-  restoreExamById: (...args: unknown[]) => mockRestoreExamById(...args),
-  bulkSoftDeleteExams: vi.fn(),
-  bulkRestoreExams: vi.fn(),
-  loadExaminationsCommandMetrics: vi.fn().mockResolvedValue({}),
+vi.mock('../examinations/use-cases/examinationsUseCases.js', () => ({
+  examinationsUseCases: {
+    loadExams: vi.fn().mockResolvedValue([]),
+    loadExamsPage: vi.fn().mockResolvedValue({ exams: [], total: 0, page: 1, limit: 12, hasMore: false }),
+    upsertExams: vi.fn(),
+    loadExamResults: vi.fn().mockResolvedValue([]),
+    upsertExamResults: vi.fn(),
+    deleteExamById: (...args: unknown[]) => mockDeleteExamById(...args),
+    restoreExamById: (...args: unknown[]) => mockRestoreExamById(...args),
+    bulkSoftDeleteExams: vi.fn(),
+    bulkRestoreExams: vi.fn(),
+    loadExaminationsCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadExaminationsWidgetAggregates: vi.fn().mockResolvedValue({}),
+    loadExaminationsReportAggregates: vi.fn().mockResolvedValue({}),
+    replaceExams: vi.fn(),
+    replaceExamResults: vi.fn(),
+  },
 }));
 
 const mockDeleteUserById = vi.fn();
 const mockRestoreUserById = vi.fn();
 
-vi.mock('../services/usersService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/usersService.js')>();
-  return {
-    ...actual,
+vi.mock('../users/use-cases/usersUseCases.js', () => ({
+  usersUseCases: {
     loadWorkspaceUsers: vi.fn().mockResolvedValue([]),
     upsertWorkspaceUsers: vi.fn(),
     loadLogs: vi.fn().mockResolvedValue([]),
@@ -161,8 +200,17 @@ vi.mock('../services/usersService.js', async (importOriginal) => {
     restoreUserById: (...args: unknown[]) => mockRestoreUserById(...args),
     bulkSoftDeleteUsers: vi.fn(),
     bulkRestoreUsers: vi.fn(),
-  };
-});
+    countUsers: vi.fn().mockResolvedValue(0),
+    loadUsersCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadUsersPage: vi.fn().mockResolvedValue({ users: [], total: 0, page: 1, limit: 50, hasMore: false }),
+    loadUsersByIds: vi.fn().mockResolvedValue([]),
+    createWorkspaceUser: vi.fn(),
+    updateWorkspaceUser: vi.fn(),
+    inviteWorkspaceUser: vi.fn(),
+    verifyUserEmailById: vi.fn(),
+    resetUserPasswordById: vi.fn(),
+  },
+}));
 
 describe('soft deletion and restore integrations', () => {
   beforeEach(() => {

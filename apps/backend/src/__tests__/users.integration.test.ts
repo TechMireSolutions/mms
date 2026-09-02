@@ -45,10 +45,8 @@ const mockBulkSoftDeleteUsers = vi.fn();
 const mockBulkRestoreUsers = vi.fn();
 const mockResetUserPasswordById = vi.fn();
 
-vi.mock('../services/usersService.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../services/usersService.js')>();
-  return {
-    ...actual,
+vi.mock('../users/use-cases/usersUseCases.js', () => ({
+  usersUseCases: {
     loadUsersPage: vi.fn().mockImplementation(async (query: { includeDeleted?: boolean }) => {
       const users = await mockLoadWorkspaceUsers(query);
       return { users, total: users.length, page: 1, limit: 50, hasMore: false };
@@ -62,8 +60,15 @@ vi.mock('../services/usersService.js', async (importOriginal) => {
     bulkSoftDeleteUsers: (...args: unknown[]) => mockBulkSoftDeleteUsers(...args),
     bulkRestoreUsers: (...args: unknown[]) => mockBulkRestoreUsers(...args),
     resetUserPasswordById: (...args: unknown[]) => mockResetUserPasswordById(...args),
-  };
-});
+    countUsers: vi.fn().mockResolvedValue(0),
+    loadUsersCommandMetrics: vi.fn().mockResolvedValue({}),
+    loadUsersByIds: vi.fn().mockResolvedValue([]),
+    createWorkspaceUser: vi.fn(),
+    updateWorkspaceUser: vi.fn(),
+    inviteWorkspaceUser: vi.fn(),
+    verifyUserEmailById: vi.fn(),
+  },
+}));
 
 const mockGetUserColumnPreferencesForModule = vi.fn();
 const mockSetUserColumnPreferencesForModule = vi.fn();

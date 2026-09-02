@@ -4,17 +4,7 @@ import { initServer } from '@ts-rest/fastify';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
-import {
-  createAttendanceRecord,
-  loadAttendancePage,
-  upsertAttendanceRecords,
-  bulkSoftDeleteAttendance,
-  bulkRestoreAttendance,
-  updateAttendanceRecordById,
-  deleteAttendanceRecordById,
-  restoreAttendanceRecordById,
-  loadAttendanceWidgetAggregates,
-} from '../../../services/attendanceService.js';
+import { attendanceUseCases } from '../../../attendance/use-cases/attendanceUseCases.js';
 
 const COLLECTION = ATTENDANCE_MODULE_MANIFEST.collectionKey;
 const s = initServer();
@@ -51,7 +41,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(
           tenantId,
-          () => loadAttendancePage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }),
+          () => attendanceUseCases.loadAttendancePage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };
@@ -74,7 +64,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const item = await withTenant(tenantId, () => createAttendanceRecord(body), { readOnly: false });
+        const item = await withTenant(tenantId, () => attendanceUseCases.createAttendanceRecord(body), { readOnly: false });
         return { status: 201 as const, body: item };
       } catch (error: unknown) {
         request.log?.error(error, 'Failed to create attendance record');
@@ -95,7 +85,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const records = await withTenant(tenantId, () => upsertAttendanceRecords(body.records), { readOnly: false });
+        const records = await withTenant(tenantId, () => attendanceUseCases.upsertAttendanceRecords(body.records), { readOnly: false });
         return { status: 200 as const, body: { records } };
       } catch (error: unknown) {
         request.log?.error(error, 'Failed to update attendance records');
@@ -118,7 +108,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(
           tenantId,
-          () => bulkSoftDeleteAttendance(body.ids.map(String), String(user.id), body.deletionReason),
+          () => attendanceUseCases.bulkSoftDeleteAttendance(body.ids.map(String), String(user.id), body.deletionReason),
           { readOnly: false },
         );
         return { status: 200 as const, body: { success: true, ...result } };
@@ -141,7 +131,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const result = await withTenant(tenantId, () => bulkRestoreAttendance(body.ids.map(String)), { readOnly: false });
+        const result = await withTenant(tenantId, () => attendanceUseCases.bulkRestoreAttendance(body.ids.map(String)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch (error: unknown) {
         request.log?.error(error, 'Failed to bulk restore attendance records');
@@ -164,7 +154,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const updated = await withTenant(
           tenantId,
-          () => updateAttendanceRecordById(id, { ...body, id: body?.id ?? id }),
+          () => attendanceUseCases.updateAttendanceRecordById(id, { ...body, id: body?.id ?? id }),
           { readOnly: false },
         );
         if (!updated) {
@@ -192,7 +182,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const deleted = await withTenant(
           tenantId,
-          () => deleteAttendanceRecordById(id, String(user.id), body?.deletionReason),
+          () => attendanceUseCases.deleteAttendanceRecordById(id, String(user.id), body?.deletionReason),
           { readOnly: false },
         );
         if (!deleted) {
@@ -220,7 +210,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const restored = await withTenant(
           tenantId,
-          () => restoreAttendanceRecordById(id, String(user.id)),
+          () => attendanceUseCases.restoreAttendanceRecordById(id, String(user.id)),
           { readOnly: false },
         );
         if (!restored) {
@@ -248,7 +238,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(
           tenantId,
-          () => loadAttendanceWidgetAggregates(body.widgets as WidgetQuery[]),
+          () => attendanceUseCases.loadAttendanceWidgetAggregates(body.widgets as WidgetQuery[]),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };

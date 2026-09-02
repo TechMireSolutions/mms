@@ -27,19 +27,23 @@ const mockLoadExams = vi.fn();
 const mockLoadExamsPage = vi.fn();
 const mockLoadExaminationsCommandMetrics = vi.fn();
 
-vi.mock('../services/examinationService.js', () => ({
-  loadExams: (...args: unknown[]) => mockLoadExams(...args),
-  loadExamsPage: (...args: unknown[]) => mockLoadExamsPage(...args),
-  upsertExams: vi.fn().mockResolvedValue([]),
-  replaceExams: vi.fn(),
-  loadExamResults: vi.fn().mockResolvedValue([]),
-  upsertExamResults: vi.fn().mockResolvedValue([]),
-  replaceExamResults: vi.fn(),
-  deleteExamById: vi.fn(),
-  restoreExamById: vi.fn(),
-  bulkSoftDeleteExams: vi.fn(),
-  bulkRestoreExams: vi.fn(),
-  loadExaminationsCommandMetrics: (...args: unknown[]) => mockLoadExaminationsCommandMetrics(...args),
+vi.mock('../examinations/use-cases/examinationsUseCases.js', () => ({
+  examinationsUseCases: {
+    loadExams: (...args: unknown[]) => mockLoadExams(...args),
+    loadExamsPage: (...args: unknown[]) => mockLoadExamsPage(...args),
+    upsertExams: vi.fn().mockResolvedValue([]),
+    replaceExams: vi.fn(),
+    loadExamResults: vi.fn().mockResolvedValue([]),
+    upsertExamResults: vi.fn().mockResolvedValue([]),
+    replaceExamResults: vi.fn(),
+    deleteExamById: vi.fn(),
+    restoreExamById: vi.fn(),
+    bulkSoftDeleteExams: vi.fn(),
+    bulkRestoreExams: vi.fn(),
+    loadExaminationsCommandMetrics: (...args: unknown[]) => mockLoadExaminationsCommandMetrics(...args),
+    loadExaminationsWidgetAggregates: vi.fn().mockResolvedValue({}),
+    loadExaminationsReportAggregates: vi.fn().mockResolvedValue({}),
+  },
 }));
 
 describe('examinations REST routes integration', () => {

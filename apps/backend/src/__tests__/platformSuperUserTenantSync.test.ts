@@ -179,6 +179,7 @@ vi.mock('../db/repositories/tenantUserRepository.js', () => ({
     return false;
   }),
   verifyTenantUserEmailRow: vi.fn().mockResolvedValue(true),
+  restoreTenantUserRow: vi.fn().mockResolvedValue(true),
   listTenantUsersByIds: vi.fn().mockImplementation(async (ids: string[]) => {
     return mockTenantUsers.filter((u) => ids.includes(u.id));
   }),

@@ -4,16 +4,7 @@ import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
-import {
-  loadQuestions,
-  loadQuestionsPage,
-  loadTests,
-  loadResults,
-  bulkSoftDeleteQuestions,
-  bulkRestoreQuestions,
-  loadQuestionBankWidgetAggregates,
-  loadQuestionBankReportAggregates,
-} from '../../../services/questionBankService.js';
+import { questionBankUseCases } from '../../../questionBank/use-cases/questionBankUseCases.js';
 
 const s = initServer();
 
@@ -27,7 +18,7 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
       try {
         const aggregates = await withTenant(
           String(request.tenant?.id),
-          () => loadQuestionBankReportAggregates(query || {}),
+          () => questionBankUseCases.loadQuestionBankReportAggregates(query || {}),
           { readOnly: true },
         );
         return { status: 200 as const, body: aggregates };
@@ -46,10 +37,10 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
       }
       try {
         if (query?.page !== undefined || query?.limit !== undefined || query?.search !== undefined || query?.categoryId !== undefined || query?.difficulty !== undefined) {
-          const result = await withTenant(String(request.tenant?.id), () => loadQuestionsPage({ ...query, includeDeleted }), { readOnly: true });
+          const result = await withTenant(String(request.tenant?.id), () => questionBankUseCases.loadQuestionsPage({ ...query, includeDeleted }), { readOnly: true });
           return { status: 200 as const, body: result };
         }
-        const questions = await withTenant(String(request.tenant?.id), () => loadQuestions({ includeDeleted }), { readOnly: true });
+        const questions = await withTenant(String(request.tenant?.id), () => questionBankUseCases.loadQuestions({ includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: { questions } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list questions' } };
@@ -62,7 +53,7 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          bulkSoftDeleteQuestions(body.ids.map(String), String(user.id), body.deletionReason),
+          questionBankUseCases.bulkSoftDeleteQuestions(body.ids.map(String), String(user.id), body.deletionReason),
           { readOnly: false },
         );
         return { status: 200 as const, body: { success: true, ...result } };
@@ -77,7 +68,7 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          bulkRestoreQuestions(body.ids.map(String)),
+          questionBankUseCases.bulkRestoreQuestions(body.ids.map(String)),
           { readOnly: false },
         );
         return { status: 200 as const, body: { success: true, ...result } };
@@ -91,7 +82,7 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const tests = await withTenant(String(request.tenant?.id), () => loadTests(), { readOnly: true });
+        const tests = await withTenant(String(request.tenant?.id), () => questionBankUseCases.loadTests(), { readOnly: true });
         return { status: 200 as const, body: { tests } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list tests' } };
@@ -103,7 +94,7 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const results = await withTenant(String(request.tenant?.id), () => loadResults(), { readOnly: true });
+        const results = await withTenant(String(request.tenant?.id), () => questionBankUseCases.loadResults(), { readOnly: true });
         return { status: 200 as const, body: { results } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list assessment results' } };
@@ -115,7 +106,7 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => loadQuestionBankWidgetAggregates(body.widgets as WidgetQuery[]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => questionBankUseCases.loadQuestionBankWidgetAggregates(body.widgets as WidgetQuery[]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };

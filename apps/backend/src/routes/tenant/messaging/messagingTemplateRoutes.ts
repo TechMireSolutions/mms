@@ -6,11 +6,7 @@ import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { canWriteMessaging } from '../../../services/rbacService.js';
-import {
-  getMessageTemplateById,
-  removeMessageTemplate,
-  saveMessageTemplate,
-} from '../../../services/messagingService.js';
+import { messagingUseCases } from '../../../messaging/use-cases/messagingUseCases.js';
 
 /** Messaging template list/create/delete routes. */
 export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
@@ -35,7 +31,7 @@ export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
       });
     } else {
       try {
-        const existing = await getMessageTemplateById(tenantSubdomain, requestedId);
+        const existing = await messagingUseCases.getMessageTemplateById(tenantSubdomain, requestedId);
         if (!existing) {
           return sendNotFound(reply, 'Template not found');
         }
@@ -55,7 +51,7 @@ export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
     };
 
     try {
-      const saved = await saveMessageTemplate(tenantSubdomain, template);
+      const saved = await messagingUseCases.saveMessageTemplate(tenantSubdomain, template);
       return reply.send({ template: saved });
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to save message template', err);
@@ -77,7 +73,7 @@ export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
     try {
-      await removeMessageTemplate(tenantSubdomain, id);
+      await messagingUseCases.removeMessageTemplate(tenantSubdomain, id);
       return reply.send({ success: true });
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to delete message template', err);

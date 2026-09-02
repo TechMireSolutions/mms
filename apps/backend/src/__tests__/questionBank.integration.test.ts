@@ -42,19 +42,28 @@ const mockDeleteQuestionById = vi.fn();
 const mockRestoreQuestionById = vi.fn();
 const mockBulkSoftDeleteQuestions = vi.fn();
 const mockBulkRestoreQuestions = vi.fn();
+const mockLoadQuestionBankCommandMetrics = vi.fn();
 
-vi.mock('../services/questionBankService.js', () => ({
-  loadQuestions: (...args: unknown[]) => mockLoadQuestions(...args),
-  loadQuestionsPage: (...args: unknown[]) => mockLoadQuestionsPage(...args),
-  upsertQuestions: (...args: unknown[]) => mockUpsertQuestions(...args),
-  loadTests: (...args: unknown[]) => mockLoadTests(...args),
-  upsertTests: (...args: unknown[]) => mockUpsertTests(...args),
-  loadResults: (...args: unknown[]) => mockLoadResults(...args),
-  upsertResults: (...args: unknown[]) => mockUpsertResults(...args),
-  deleteQuestionById: (...args: unknown[]) => mockDeleteQuestionById(...args),
-  restoreQuestionById: (...args: unknown[]) => mockRestoreQuestionById(...args),
-  bulkSoftDeleteQuestions: (...args: unknown[]) => mockBulkSoftDeleteQuestions(...args),
-  bulkRestoreQuestions: (...args: unknown[]) => mockBulkRestoreQuestions(...args),
+vi.mock('../questionBank/use-cases/questionBankUseCases.js', () => ({
+  questionBankUseCases: {
+    loadQuestions: (...args: unknown[]) => mockLoadQuestions(...args),
+    loadQuestionsPage: (...args: unknown[]) => mockLoadQuestionsPage(...args),
+    upsertQuestions: (...args: unknown[]) => mockUpsertQuestions(...args),
+    loadTests: (...args: unknown[]) => mockLoadTests(...args),
+    upsertTests: (...args: unknown[]) => mockUpsertTests(...args),
+    loadResults: (...args: unknown[]) => mockLoadResults(...args),
+    upsertResults: (...args: unknown[]) => mockUpsertResults(...args),
+    deleteQuestionById: (...args: unknown[]) => mockDeleteQuestionById(...args),
+    restoreQuestionById: (...args: unknown[]) => mockRestoreQuestionById(...args),
+    bulkSoftDeleteQuestions: (...args: unknown[]) => mockBulkSoftDeleteQuestions(...args),
+    bulkRestoreQuestions: (...args: unknown[]) => mockBulkRestoreQuestions(...args),
+    loadQuestionBankCommandMetrics: (...args: unknown[]) => mockLoadQuestionBankCommandMetrics(...args),
+    loadQuestionBankWidgetAggregates: vi.fn().mockResolvedValue({}),
+    loadQuestionBankReportAggregates: vi.fn().mockResolvedValue({}),
+    replaceQuestions: vi.fn(),
+    replaceTests: vi.fn(),
+    replaceResults: vi.fn(),
+  },
 }));
 
 const mockGetUserColumnPreferencesForModule = vi.fn();
@@ -63,11 +72,6 @@ const mockSetUserColumnPreferencesForModule = vi.fn();
 vi.mock('../services/userColumnPreferencesService.js', () => ({
   getUserColumnPreferencesForModule: (...args: unknown[]) => mockGetUserColumnPreferencesForModule(...args),
   setUserColumnPreferencesForModule: (...args: unknown[]) => mockSetUserColumnPreferencesForModule(...args),
-}));
-
-const mockLoadQuestionBankCommandMetrics = vi.fn();
-vi.mock('../services/questionBankMetricsService.js', () => ({
-  loadQuestionBankCommandMetrics: (...args: unknown[]) => mockLoadQuestionBankCommandMetrics(...args),
 }));
 
 const sampleQuestion: QuestionBankQuestion = {

@@ -34,20 +34,23 @@ const mockBulkRestoreAttendance = vi.fn();
 const mockLoadAttendanceReportAggregates = vi.fn();
 const mockLoadAttendanceCommandMetrics = vi.fn();
 
-vi.mock('../services/attendanceService.js', () => ({
-  loadAttendanceRecords: (...args: unknown[]) => mockLoadAttendanceRecords(...args),
-  loadAttendancePage: (...args: unknown[]) => mockLoadAttendancePage(...args),
-  countAttendanceRecords: vi.fn().mockResolvedValue(0),
-  createAttendanceRecord: (...args: unknown[]) => mockCreateAttendanceRecord(...args),
-  updateAttendanceRecordById: vi.fn(),
-  deleteAttendanceRecordById: (...args: unknown[]) => mockDeleteAttendanceRecordById(...args),
-  restoreAttendanceRecordById: (...args: unknown[]) => mockRestoreAttendanceRecordById(...args),
-  bulkSoftDeleteAttendance: (...args: unknown[]) => mockBulkSoftDeleteAttendance(...args),
-  bulkRestoreAttendance: (...args: unknown[]) => mockBulkRestoreAttendance(...args),
-  upsertAttendanceRecords: (...args: unknown[]) => mockUpsertAttendanceRecords(...args),
-  replaceAttendanceRecords: vi.fn(),
-  loadAttendanceReportAggregates: (...args: unknown[]) => mockLoadAttendanceReportAggregates(...args),
-  loadAttendanceCommandMetrics: (...args: unknown[]) => mockLoadAttendanceCommandMetrics(...args),
+vi.mock('../attendance/use-cases/attendanceUseCases.js', () => ({
+  attendanceUseCases: {
+    loadAttendanceRecords: (...args: unknown[]) => mockLoadAttendanceRecords(...args),
+    loadAttendancePage: (...args: unknown[]) => mockLoadAttendancePage(...args),
+    countAttendanceRecords: vi.fn().mockResolvedValue(0),
+    createAttendanceRecord: (...args: unknown[]) => mockCreateAttendanceRecord(...args),
+    updateAttendanceRecordById: vi.fn(),
+    deleteAttendanceRecordById: (...args: unknown[]) => mockDeleteAttendanceRecordById(...args),
+    restoreAttendanceRecordById: (...args: unknown[]) => mockRestoreAttendanceRecordById(...args),
+    bulkSoftDeleteAttendance: (...args: unknown[]) => mockBulkSoftDeleteAttendance(...args),
+    bulkRestoreAttendance: (...args: unknown[]) => mockBulkRestoreAttendance(...args),
+    upsertAttendanceRecords: (...args: unknown[]) => mockUpsertAttendanceRecords(...args),
+    replaceAttendanceRecords: vi.fn(),
+    loadAttendanceReportAggregates: (...args: unknown[]) => mockLoadAttendanceReportAggregates(...args),
+    loadAttendanceCommandMetrics: (...args: unknown[]) => mockLoadAttendanceCommandMetrics(...args),
+    loadAttendanceWidgetAggregates: vi.fn().mockResolvedValue({}),
+  },
 }));
 
 const attendanceRecord = {

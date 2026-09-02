@@ -25,24 +25,33 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 
 const mockLoadObligationsCommandMetrics = vi.fn();
 
-vi.mock('../services/obligationService.js', () => ({
-  loadObligationTypes: vi.fn().mockResolvedValue([]),
-  upsertObligationTypes: vi.fn(),
-  loadMujtahids: vi.fn().mockResolvedValue([]),
-  upsertMujtahids: vi.fn(),
-  loadMujtahidReps: vi.fn().mockResolvedValue([]),
-  upsertMujtahidReps: vi.fn(),
-  loadWakalaTypes: vi.fn().mockResolvedValue([]),
-  upsertWakalaTypes: vi.fn(),
-  loadObligationDistributions: vi.fn().mockResolvedValue([]),
-  upsertObligationDistributions: vi.fn(),
-  loadObligationCollections: vi.fn().mockResolvedValue([]),
-  upsertObligationCollections: vi.fn(),
-  deleteObligationCollectionById: vi.fn(),
-  restoreObligationCollectionById: vi.fn(),
-  bulkSoftDeleteObligationCollections: vi.fn(),
-  bulkRestoreObligationCollections: vi.fn(),
-  loadObligationsCommandMetrics: (...args: unknown[]) => mockLoadObligationsCommandMetrics(...args),
+vi.mock('../obligations/use-cases/obligationsUseCases.js', () => ({
+  obligationsUseCases: {
+    loadObligationTypes: vi.fn().mockResolvedValue([]),
+    upsertObligationTypes: vi.fn(),
+    loadMujtahids: vi.fn().mockResolvedValue([]),
+    upsertMujtahids: vi.fn(),
+    loadMujtahidReps: vi.fn().mockResolvedValue([]),
+    upsertMujtahidReps: vi.fn(),
+    loadWakalaTypes: vi.fn().mockResolvedValue([]),
+    upsertWakalaTypes: vi.fn(),
+    loadObligationDistributions: vi.fn().mockResolvedValue([]),
+    upsertObligationDistributions: vi.fn(),
+    loadObligationCollections: vi.fn().mockResolvedValue([]),
+    upsertObligationCollections: vi.fn(),
+    deleteObligationCollectionById: vi.fn(),
+    restoreObligationCollectionById: vi.fn(),
+    bulkSoftDeleteObligationCollections: vi.fn(),
+    bulkRestoreObligationCollections: vi.fn(),
+    loadObligationsCommandMetrics: (...args: unknown[]) => mockLoadObligationsCommandMetrics(...args),
+    loadObligationsReportAggregates: vi.fn().mockResolvedValue({}),
+    replaceObligationTypes: vi.fn(),
+    replaceMujtahids: vi.fn(),
+    replaceMujtahidReps: vi.fn(),
+    replaceWakalaTypes: vi.fn(),
+    replaceObligationDistributions: vi.fn(),
+    replaceObligationCollections: vi.fn(),
+  },
 }));
 
 describe('obligations metrics REST', () => {
