@@ -151,7 +151,8 @@ export function activityActionMeta(action: ActivityAction): (typeof ACTIVITY_ACT
 
 /** Whether the given role ID corresponds to Super Admin. */
 export function isSuperAdminRole(role: string | undefined): boolean {
-  return (role ?? '').trim().toLowerCase() === 'super_admin';
+  const normalized = (role ?? '').trim().toLowerCase();
+  return normalized === 'super_admin' || normalized === 'super_user';
 }
 
 /** Whether the given role ID corresponds to standard Admin. */
@@ -165,7 +166,7 @@ export function isAdminRole(role: string | undefined): boolean {
  */
 export function canAccessRolesAndPermissions(actorRole: string | undefined): boolean {
   const normalized = (actorRole ?? '').trim().toLowerCase();
-  return normalized === 'super_admin' || normalized === 'admin';
+  return normalized === 'super_admin' || normalized === 'super_user' || normalized === 'admin';
 }
 
 /**

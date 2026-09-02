@@ -67,6 +67,10 @@ export async function createVerifiedPlatformUser(input: {
 
   try {
     await insertPlatformUser(user);
+    if (role === 'super_user') {
+      const { syncPlatformSuperUserToTenants } = await import('./platformSuperUserTenantSyncService.js');
+      await syncPlatformSuperUserToTenants(user);
+    }
   } catch (error: unknown) {
     if (isUniqueViolation(error) && role === 'super_user') {
       throw new PlatformError('setup_not_needed', 'Platform administrator already exists');

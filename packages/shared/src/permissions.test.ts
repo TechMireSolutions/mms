@@ -192,9 +192,10 @@ describe("hasAnyPermission & hasAllPermissions", () => {
 });
 
 describe("getPermissionsForRole", () => {
-  it("returns all permissions for admin and super_admin", () => {
+  it("returns all permissions for admin, super_admin, and super_user", () => {
     expect(getPermissionsForRole("admin")).toEqual(ALL_PERMISSIONS);
     expect(getPermissionsForRole("super_admin")).toEqual(ALL_PERMISSIONS);
+    expect(getPermissionsForRole("super_user")).toEqual(ALL_PERMISSIONS);
   });
 
   it("returns configured permission list for teacher and accountant", () => {

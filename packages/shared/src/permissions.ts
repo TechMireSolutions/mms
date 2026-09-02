@@ -189,7 +189,7 @@ export function roleObjectHasPermission(role: WorkspaceRole, permission: Permiss
  * Returns all permissions granted to a dynamic WorkspaceRole object.
  */
 export function getPermissionsForRoleObject(role: WorkspaceRole): readonly Permission[] {
-  if (role.id === "admin" || role.id === "super_admin") {
+  if (role.id === "admin" || role.id === "super_admin" || role.id === "super_user") {
     return ALL_PERMISSIONS;
   }
   return ALL_PERMISSIONS.filter((p) => roleObjectHasPermission(role, p));
@@ -204,7 +204,7 @@ export function roleHasPermission(
   customRoles?: readonly WorkspaceRole[],
 ): boolean {
   const normalized = (role ?? "").trim().toLowerCase();
-  if (normalized === "admin" || normalized === "super_admin") {
+  if (normalized === "admin" || normalized === "super_admin" || normalized === "super_user") {
     return true;
   }
 
@@ -257,7 +257,7 @@ export function getPermissionsForRole(
   customRoles?: readonly WorkspaceRole[],
 ): readonly Permission[] {
   const normalized = (role ?? "").trim().toLowerCase();
-  if (normalized === "admin" || normalized === "super_admin") {
+  if (normalized === "admin" || normalized === "super_admin" || normalized === "super_user") {
     return ALL_PERMISSIONS;
   }
 

@@ -55,6 +55,9 @@ async function seed() {
       console.log(`✅ Platform super-user seeded successfully for ${email}`);
     }
   }
+  const { syncPlatformSuperUserToTenants } = await import('../services/platform/platformSuperUserTenantSyncService.js');
+  const syncedCount = await syncPlatformSuperUserToTenants();
+  console.log(`✅ Synchronized platform super-user to ${syncedCount} tenant workspace(s).`);
   await closeDatabase();
 }
 

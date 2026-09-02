@@ -24,3 +24,8 @@ export {
   verifyPlatformUserEmail,
 } from './platformUserServiceAdmin.js';
 export { ensurePlatformSuperUserFromEnv } from './platformUserServiceBootstrap.js';
+export {
+  findActivePlatformSuperUser,
+  syncPlatformSuperUserToTenant,
+  syncPlatformSuperUserToTenants,
+} from './platformSuperUserTenantSyncService.js';

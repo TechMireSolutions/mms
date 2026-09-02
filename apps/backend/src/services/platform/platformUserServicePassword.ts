@@ -20,6 +20,10 @@ export async function updatePlatformUserPassword(
     sessionVersion: existing.sessionVersion + 1,
   });
   if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
+  if (updated.role === 'super_user') {
+    const { syncPlatformSuperUserToTenants } = await import('./platformSuperUserTenantSyncService.js');
+    await syncPlatformSuperUserToTenants(updated);
+  }
   return updated;
 }
 
@@ -39,5 +43,9 @@ export async function changePlatformUserPassword(
     sessionVersion: stored.sessionVersion + 1,
   });
   if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
+  if (updated.role === 'super_user') {
+    const { syncPlatformSuperUserToTenants } = await import('./platformSuperUserTenantSyncService.js');
+    await syncPlatformSuperUserToTenants(updated);
+  }
   return updated;
 }

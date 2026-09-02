@@ -140,6 +140,8 @@ describe('userRoleUtils', () => {
     it('isSuperAdminRole checks correctly', () => {
       expect(isSuperAdminRole('super_admin')).toBe(true);
       expect(isSuperAdminRole('SUPER_ADMIN')).toBe(true);
+      expect(isSuperAdminRole('super_user')).toBe(true);
+      expect(isSuperAdminRole('SUPER_USER')).toBe(true);
       expect(isSuperAdminRole('admin')).toBe(false);
       expect(isSuperAdminRole('teacher')).toBe(false);
       expect(isSuperAdminRole(undefined)).toBe(false);
@@ -149,11 +151,13 @@ describe('userRoleUtils', () => {
       expect(isAdminRole('admin')).toBe(true);
       expect(isAdminRole('ADMIN')).toBe(true);
       expect(isAdminRole('super_admin')).toBe(false);
+      expect(isAdminRole('super_user')).toBe(false);
       expect(isAdminRole('principal')).toBe(false);
     });
 
     it('canAccessRolesAndPermissions only grants access to super_admin and admin', () => {
       expect(canAccessRolesAndPermissions('super_admin')).toBe(true);
+      expect(canAccessRolesAndPermissions('super_user')).toBe(true);
       expect(canAccessRolesAndPermissions('admin')).toBe(true);
       expect(canAccessRolesAndPermissions('principal')).toBe(false);
       expect(canAccessRolesAndPermissions('teacher')).toBe(false);

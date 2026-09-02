@@ -8,6 +8,7 @@ import {
   updatePlatformUserRow,
 } from '../../db/repositories/platformUserRepository.js';
 import { hashPassword, verifyPassword } from '../auth/passwordService.js';
+import { syncPlatformSuperUserToTenants } from './platformSuperUserTenantSyncService.js';
 
 /**
  * Dev/staging bootstrap from env when PLATFORM_ALLOW_ENV_BOOTSTRAP=true.
@@ -41,6 +42,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
       });
       console.log('[MMS] Updated platform super-user password from env');
     }
+    await syncPlatformSuperUserToTenants();
     return;
   }
 
@@ -53,6 +55,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
       name,
     });
     console.log('[MMS] Updated existing super-user email from env');
+    await syncPlatformSuperUserToTenants();
     return;
   }
 
@@ -69,4 +72,5 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
   };
   await insertPlatformUser(user);
   console.log('[MMS] Platform super-user seeded from env');
+  await syncPlatformSuperUserToTenants();
 }

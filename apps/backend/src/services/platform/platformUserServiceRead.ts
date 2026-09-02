@@ -30,6 +30,10 @@ export async function updatePlatformUserName(
   if (!trimmedName) throw new PlatformError('invalid_name', 'Name cannot be empty');
   const updated = await updatePlatformUserRow(userId, { name: trimmedName });
   if (!updated) throw new PlatformError('user_not_found', 'Platform user not found');
+  if (updated.role === 'super_user') {
+    const { syncPlatformSuperUserToTenants } = await import('./platformSuperUserTenantSyncService.js');
+    await syncPlatformSuperUserToTenants(updated);
+  }
   return updated;
 }
 

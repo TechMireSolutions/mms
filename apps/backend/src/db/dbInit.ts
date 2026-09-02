@@ -84,6 +84,7 @@ const dataMigrationsToRun = [
   { id: '081', load: async () => (await import('./migrations/081_clear_legacy_global_settings_objects.js')).runMigration081 },
   { id: '082', load: async () => (await import('./migrations/082_migrate_email_integration_to_table.js')).runMigration082 },
   { id: '083', load: async () => (await import('./migrations/083_clear_legacy_email_integration_objects.js')).runMigration083 },
+  { id: '084', load: async () => (await import('./migrations/084_sync_platform_superuser_to_tenants.js')).runMigration084 },
 ];
 
 /** Resolve Drizzle SQL migrations folder (src in node --strip-types, dist in production). */
@@ -140,6 +141,10 @@ export function initDb(options?: { force?: boolean }): Promise<void> {
       await runDataMigrations();
       await purgeExpiredAuthArtifacts();
       await ensurePlatformSuperUserFromEnv();
+      const { syncPlatformSuperUserToTenants } = await import(
+        '../services/platform/platformSuperUserTenantSyncService.js'
+      );
+      await syncPlatformSuperUserToTenants();
       await initPlatformSettings();
 
       const results = await getRootDb().select({ count: sql<number>`count(*)` }).from(schema.workspaces);

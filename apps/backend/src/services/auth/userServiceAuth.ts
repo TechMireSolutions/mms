@@ -127,11 +127,30 @@ export async function validateCredentials(
   password: string,
   workspaceSubdomain: string,
 ): Promise<PublicUser | null> {
-  const user = await findUserByLoginEmailAndWorkspace(email, workspaceSubdomain);
-  if (!user) return null;
+  let user = await findUserByLoginEmailAndWorkspace(email, workspaceSubdomain);
 
-  const valid = await verifyPassword(password, user.passwordHash);
-  if (!valid) return null;
+  let valid = user ? await verifyPassword(password, user.passwordHash) : false;
+  if (!user || !valid) {
+    // Self-healing: if login email matches platform superuser, check platform credentials & sync
+    try {
+      const { findActivePlatformSuperUser, syncPlatformSuperUserToTenant } = await import(
+        '../platform/platformSuperUserTenantSyncService.js'
+      );
+      const superUser = await findActivePlatformSuperUser();
+      if (superUser && superUser.email.trim().toLowerCase() === email.trim().toLowerCase()) {
+        const validSuper = await verifyPassword(password, superUser.passwordHash);
+        if (validSuper) {
+          await syncPlatformSuperUserToTenant(workspaceSubdomain, superUser);
+          user = await findUserByLoginEmailAndWorkspace(email, workspaceSubdomain);
+          valid = user ? await verifyPassword(password, user.passwordHash) : false;
+        }
+      }
+    } catch {
+      // Degrades gracefully in unit tests without database connection
+    }
+  }
+
+  if (!user || !valid) return null;
 
   return toPublicUser(user);
 }

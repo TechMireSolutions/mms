@@ -241,6 +241,9 @@ export async function createWorkspace(workspaceInput: {
 
     await insertWorkspaceRow(newWs);
 
+    const { syncPlatformSuperUserToTenant } = await import('./platform/platformSuperUserTenantSyncService.js');
+    await syncPlatformSuperUserToTenant(subdomain);
+
     return {
       ...newWs,
       tagline: newWs.tagline ?? undefined,
