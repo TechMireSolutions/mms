@@ -1,5 +1,6 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
+import { getRootDb } from '../database.js';
 import { withTenant } from '../tenant-context.js';
 
 type WorkspaceCol = PgColumn;
@@ -25,7 +26,9 @@ export function createWorkspaceSingletonJsonRepo(options: {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     return withTenant(subdomain, async (tx) => {
       const rows = await tx
-        .select()
+        .select({
+          [jsonColumn]: table[jsonColumn],
+        })
         .from(table)
         .where(eq(table.workspaceSubdomain, subdomain))
         .limit(1);
@@ -35,6 +38,31 @@ export function createWorkspaceSingletonJsonRepo(options: {
         ? (value as Record<string, unknown>)
         : null;
     });
+  }
+
+  async function getByWorkspaces(
+    workspaceSubdomains: string[],
+  ): Promise<Map<string, Record<string, unknown>>> {
+    const subdomains = workspaceSubdomains.map((s) => s.trim().toLowerCase()).filter(Boolean);
+    const result = new Map<string, Record<string, unknown>>();
+    if (subdomains.length === 0) return result;
+
+    const db = getRootDb();
+    const rows = await db
+      .select({
+        workspaceSubdomain: table.workspaceSubdomain,
+        [jsonColumn]: table[jsonColumn],
+      })
+      .from(table)
+      .where(inArray(table.workspaceSubdomain, subdomains));
+    for (const row of rows as Record<string, unknown>[]) {
+      const sub = typeof row?.workspaceSubdomain === 'string' ? row.workspaceSubdomain.toLowerCase() : '';
+      const value = row?.[jsonColumn];
+      if (sub && value && typeof value === 'object' && !Array.isArray(value)) {
+        result.set(sub, value as Record<string, unknown>);
+      }
+    }
+    return result;
   }
 
   async function upsert(
@@ -62,7 +90,11 @@ export function createWorkspaceSingletonJsonRepo(options: {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     return withTenant(subdomain, async (tx) => {
       return tx
-        .select()
+        .select({
+          workspaceSubdomain: table.workspaceSubdomain,
+          [jsonColumn]: table[jsonColumn],
+          updatedAt: table.updatedAt,
+        })
         .from(table)
         .where(eq(table.workspaceSubdomain, subdomain));
     });
@@ -91,5 +123,5 @@ export function createWorkspaceSingletonJsonRepo(options: {
     });
   }
 
-  return { getByWorkspace, upsert, listAllByWorkspace, replaceForWorkspace };
+  return { getByWorkspace, getByWorkspaces, upsert, listAllByWorkspace, replaceForWorkspace };
 }

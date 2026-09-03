@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { resolveTenantLoginEmail, applyTitleCaseRecursive } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
 import { tenantUsers } from '../schema.js';
@@ -181,6 +181,57 @@ export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
 
   await withTenant(columns.workspaceSubdomain, async (tx) => {
     await tx.insert(tenantUsers).values(omitUndefinedColumns(columns) as typeof columns);
+  });
+}
+
+export async function upsertTenantUsersBatch(users: TenantUserRow[]): Promise<void> {
+  if (users.length === 0) return;
+  const processedUsers = users.map((u) => applyTitleCaseRecursive(u) as TenantUserRow);
+  const userIds = processedUsers.map((u) => String(u.id));
+  const subdomain = (users[0]?.workspaceSubdomain as string)?.trim().toLowerCase() || '';
+
+  await withTenant(subdomain, async (tx) => {
+    const existingRows = await tx
+      .select({
+        id: tenantUsers.id,
+        workspaceSubdomain: tenantUsers.workspaceSubdomain,
+        name: tenantUsers.name,
+        loginEmail: tenantUsers.loginEmail,
+        passwordHash: tenantUsers.passwordHash,
+      })
+      .from(tenantUsers)
+      .where(inArray(tenantUsers.id, userIds));
+    const existingById = new Map(existingRows.map((r) => [String(r.id), r]));
+
+    const toInsert: Array<typeof tenantUsers.$inferInsert> = [];
+    const updateOps: Promise<unknown>[] = [];
+
+    for (const user of processedUsers) {
+      const { columns } = splitProfileFields(user);
+      const existing = existingById.get(columns.id);
+      if (existing) {
+        const existingWorkspace =
+          typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : subdomain;
+        const merged = {
+          ...omitUndefinedColumns(columns),
+          workspaceSubdomain: existingWorkspace,
+          name: nonEmptyString(columns.name) || existing.name || '',
+          loginEmail: nonEmptyString(columns.loginEmail) || existing.loginEmail || '',
+          passwordHash: nonEmptyString(columns.passwordHash) || existing.passwordHash || '',
+          updatedAt: new Date(),
+        };
+        updateOps.push(tx.update(tenantUsers).set(merged).where(tenantUserIdWhere(columns.id, existingWorkspace)));
+      } else {
+        toInsert.push(omitUndefinedColumns(columns) as typeof columns);
+      }
+    }
+
+    if (toInsert.length > 0) {
+      await tx.insert(tenantUsers).values(toInsert);
+    }
+    if (updateOps.length > 0) {
+      await Promise.all(updateOps);
+    }
   });
 }
 

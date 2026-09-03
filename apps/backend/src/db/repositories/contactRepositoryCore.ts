@@ -2,6 +2,7 @@ export { contactRowToRecord } from './contactRepositoryMappers.js';
 export {
   hydrateContact,
   hydrateContactsList,
+  hydrateContactsSummaryList,
   type ListByWorkspaceOptions,
   listContactsByWorkspace,
   countContactsByWorkspace,

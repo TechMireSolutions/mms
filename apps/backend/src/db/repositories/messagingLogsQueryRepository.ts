@@ -87,7 +87,24 @@ export async function queryFilteredMessageLogs(
     const total = Number(countRows[0]?.count ?? 0);
 
     const rows = await tx
-      .select()
+      .select({
+        id: messageLogs.id,
+        workspaceSubdomain: messageLogs.workspaceSubdomain,
+        userId: messageLogs.userId,
+        contactId: messageLogs.contactId,
+        channel: messageLogs.channel,
+        body: messageLogs.body,
+        sentAt: messageLogs.sentAt,
+        status: messageLogs.status,
+        subject: messageLogs.subject,
+        category: messageLogs.category,
+        errorMessage: messageLogs.errorMessage,
+        deletedAt: messageLogs.deletedAt,
+        deletedBy: messageLogs.deletedBy,
+        deletionReason: messageLogs.deletionReason,
+        createdAt: messageLogs.createdAt,
+        updatedAt: messageLogs.updatedAt,
+      })
       .from(messageLogs)
       .where(whereClause)
       .orderBy(desc(messageLogs.sentAt), desc(messageLogs.id))

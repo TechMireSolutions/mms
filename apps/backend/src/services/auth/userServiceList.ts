@@ -1,7 +1,7 @@
 import { hydrateWorkspaceUserProfile, resolveTenantLoginEmail } from '@mms/shared';
 import {
   findTenantUserRowById,
-  upsertTenantUserRow,
+  upsertTenantUsersBatch,
 } from '../../db/repositories/tenantUserRepository.js';
 import { hashPassword } from './passwordService.js';
 import {
@@ -56,9 +56,7 @@ export async function saveUsers(next: PersistedUser[]): Promise<void> {
     }),
   );
   // Upsert-only: never wipe soft-deleted (or other) rows missing from the payload.
-  for (const user of prepared) {
-    await upsertTenantUserRow(user as TenantUserRow);
-  }
+  await upsertTenantUsersBatch(prepared as TenantUserRow[]);
 }
 
 export async function getWorkspaceUserRow(userId: string): Promise<PersistedUser | undefined> {

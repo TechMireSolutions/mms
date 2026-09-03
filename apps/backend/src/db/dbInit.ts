@@ -176,7 +176,7 @@ async function runDataMigrations(): Promise<void> {
   await migrationLockClient.query('select pg_advisory_lock($1::integer)', [DATA_MIGRATION_LOCK_KEY]);
   await migrationLockClient.query('CREATE TABLE IF NOT EXISTS data_migrations (id text PRIMARY KEY, applied_at timestamp default now() NOT NULL);');
 
-  const applied = await getRootDb().select().from(schema.dataMigrations);
+  const applied = await getRootDb().select({ id: schema.dataMigrations.id }).from(schema.dataMigrations);
   const appliedSet = new Set(applied.map((migration) => migration.id));
   for (const migration of dataMigrationsToRun) {
     if (!appliedSet.has(migration.id)) {

@@ -44,6 +44,9 @@ export const students = pgTable('students', {
   index('students_workspace_contact_active_idx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),
+  index('students_workspace_father_contact_idx').on(table.workspaceSubdomain, table.fatherContactId),
+  index('students_workspace_mother_contact_idx').on(table.workspaceSubdomain, table.motherContactId),
+  index('students_workspace_guardian_contact_idx').on(table.workspaceSubdomain, table.guardianContactId),
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],

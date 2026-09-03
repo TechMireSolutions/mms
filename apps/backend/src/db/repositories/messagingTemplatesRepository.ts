@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { messageTemplates } from '../schema.js';
 import type { MessageTemplate } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
@@ -18,13 +18,27 @@ export function templateRowToRecord(row: TemplateRow): MessageTemplate {
   };
 }
 
-export async function listMessageTemplatesByWorkspace(tenant: string): Promise<MessageTemplate[]> {
+export async function listMessageTemplatesByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<MessageTemplate[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
+  const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: messageTemplates.id,
+        workspaceSubdomain: messageTemplates.workspaceSubdomain,
+        label: messageTemplates.label,
+        labelKey: messageTemplates.labelKey,
+        body: messageTemplates.body,
+        category: messageTemplates.category,
+        channel: messageTemplates.channel,
+        createdAt: messageTemplates.createdAt,
+        updatedAt: messageTemplates.updatedAt,
+      })
       .from(messageTemplates)
-      .where(eq(messageTemplates.workspaceSubdomain, subdomain));
+      .where(eq(messageTemplates.workspaceSubdomain, subdomain))
+      .limit(limit)
+      .offset(offset);
     return rows.map(templateRowToRecord);
   });
 }
@@ -33,9 +47,20 @@ export async function findMessageTemplateById(tenant: string, id: string): Promi
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: messageTemplates.id,
+        workspaceSubdomain: messageTemplates.workspaceSubdomain,
+        label: messageTemplates.label,
+        labelKey: messageTemplates.labelKey,
+        body: messageTemplates.body,
+        category: messageTemplates.category,
+        channel: messageTemplates.channel,
+        createdAt: messageTemplates.createdAt,
+        updatedAt: messageTemplates.updatedAt,
+      })
       .from(messageTemplates)
-      .where(and(eq(messageTemplates.workspaceSubdomain, subdomain), eq(messageTemplates.id, id)));
+      .where(and(eq(messageTemplates.workspaceSubdomain, subdomain), eq(messageTemplates.id, id)))
+      .limit(1);
     const row = rows[0];
     return row ? templateRowToRecord(row) : null;
   });
@@ -45,10 +70,10 @@ export async function bulkSaveMessageTemplates(tenant: string, records: MessageT
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const record of records) {
-      await tx
-        .insert(messageTemplates)
-        .values({
+    await tx
+      .insert(messageTemplates)
+      .values(
+        records.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           label: record.label,
@@ -58,19 +83,19 @@ export async function bulkSaveMessageTemplates(tenant: string, records: MessageT
           channel: record.channel ?? 'all',
           createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
           updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [messageTemplates.workspaceSubdomain, messageTemplates.id],
-          set: {
-            label: record.label,
-            labelKey: record.labelKey ?? null,
-            body: record.body,
-            category: record.category ?? 'general',
-            channel: record.channel ?? 'all',
-            updatedAt: new Date(),
-          },
-        });
-    }
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [messageTemplates.workspaceSubdomain, messageTemplates.id],
+        set: {
+          label: sql`excluded.label`,
+          labelKey: sql`excluded.label_key`,
+          body: sql`excluded.body`,
+          category: sql`excluded.category`,
+          channel: sql`excluded.channel`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -81,18 +106,20 @@ export async function replaceMessageTemplatesForWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(messageTemplates).where(eq(messageTemplates.workspaceSubdomain, subdomain));
-    for (const record of records) {
-      await tx.insert(messageTemplates).values({
-        id: record.id,
-        workspaceSubdomain: subdomain,
-        label: record.label,
-        labelKey: record.labelKey ?? null,
-        body: record.body,
-        category: record.category ?? 'general',
-        channel: record.channel ?? 'all',
-        createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-        updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-      });
+    if (records.length > 0) {
+      await tx.insert(messageTemplates).values(
+        records.map((record) => ({
+          id: record.id,
+          workspaceSubdomain: subdomain,
+          label: record.label,
+          labelKey: record.labelKey ?? null,
+          body: record.body,
+          category: record.category ?? 'general',
+          channel: record.channel ?? 'all',
+          createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
+          updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
+        })),
+      );
     }
   });
 }

@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { withTenant } from '../tenant-context.js';
 import * as schema from '../schema.js';
 import { type EmailIntegrationRow } from '../schema/messaging.js';
@@ -9,9 +10,26 @@ export async function getEmailIntegrationRow(workspaceSubdomain: string): Promis
     return await withTenant(workspaceSubdomain, async (tx) => {
       if (!tx || typeof tx.select !== 'function') return null;
       const rows = await tx
-      .select()
-      .from(schema.emailIntegrations)
-      .limit(1);
+        .select({
+          workspaceSubdomain: schema.emailIntegrations.workspaceSubdomain,
+          providerId: schema.emailIntegrations.providerId,
+          fromAddress: schema.emailIntegrations.fromAddress,
+          fromName: schema.emailIntegrations.fromName,
+          smtpUsername: schema.emailIntegrations.smtpUsername,
+          smtpHost: schema.emailIntegrations.smtpHost,
+          smtpPort: schema.emailIntegrations.smtpPort,
+          smtpSecure: schema.emailIntegrations.smtpSecure,
+          smtpPassword: schema.emailIntegrations.smtpPassword,
+          connected: schema.emailIntegrations.connected,
+          hasCredentials: schema.emailIntegrations.hasCredentials,
+          lastTestAt: schema.emailIntegrations.lastTestAt,
+          lastTestOk: schema.emailIntegrations.lastTestOk,
+          lastError: schema.emailIntegrations.lastError,
+          updatedAt: schema.emailIntegrations.updatedAt,
+        })
+        .from(schema.emailIntegrations)
+        .where(eq(schema.emailIntegrations.workspaceSubdomain, workspaceSubdomain))
+        .limit(1);
       return rows[0] ?? null;
     });
   } catch (err) {

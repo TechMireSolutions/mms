@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { type FiscalYear } from '@mms/shared';
 import { accountingFiscalYears } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -24,7 +24,19 @@ export async function listFiscalYearsByWorkspace(tenant: string): Promise<Fiscal
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: accountingFiscalYears.id,
+        workspaceSubdomain: accountingFiscalYears.workspaceSubdomain,
+        label: accountingFiscalYears.label,
+        startDate: accountingFiscalYears.startDate,
+        endDate: accountingFiscalYears.endDate,
+        status: accountingFiscalYears.status,
+        deletedAt: accountingFiscalYears.deletedAt,
+        deletedBy: accountingFiscalYears.deletedBy,
+        deletionReason: accountingFiscalYears.deletionReason,
+        createdAt: accountingFiscalYears.createdAt,
+        updatedAt: accountingFiscalYears.updatedAt,
+      })
       .from(accountingFiscalYears)
       .where(and(eq(accountingFiscalYears.workspaceSubdomain, subdomain), isNull(accountingFiscalYears.deletedAt)));
     return rows.map(fiscalYearRowToRecord);
@@ -35,9 +47,22 @@ export async function findFiscalYearById(tenant: string, id: string): Promise<Fi
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: accountingFiscalYears.id,
+        workspaceSubdomain: accountingFiscalYears.workspaceSubdomain,
+        label: accountingFiscalYears.label,
+        startDate: accountingFiscalYears.startDate,
+        endDate: accountingFiscalYears.endDate,
+        status: accountingFiscalYears.status,
+        deletedAt: accountingFiscalYears.deletedAt,
+        deletedBy: accountingFiscalYears.deletedBy,
+        deletionReason: accountingFiscalYears.deletionReason,
+        createdAt: accountingFiscalYears.createdAt,
+        updatedAt: accountingFiscalYears.updatedAt,
+      })
       .from(accountingFiscalYears)
-      .where(and(eq(accountingFiscalYears.workspaceSubdomain, subdomain), eq(accountingFiscalYears.id, id)));
+      .where(and(eq(accountingFiscalYears.workspaceSubdomain, subdomain), eq(accountingFiscalYears.id, id)))
+      .limit(1);
     const row = rows[0];
     return row ? fiscalYearRowToRecord(row) : null;
   });
@@ -80,10 +105,10 @@ export async function bulkSaveFiscalYears(tenant: string, records: FiscalYear[])
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const r of records) {
-      await tx
-        .insert(accountingFiscalYears)
-        .values({
+    await tx
+      .insert(accountingFiscalYears)
+      .values(
+        records.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           label: r.label,
@@ -94,21 +119,21 @@ export async function bulkSaveFiscalYears(tenant: string, records: FiscalYear[])
           deletedBy: r.deletedBy ?? null,
           deletionReason: r.deletionReason ?? null,
           updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [accountingFiscalYears.workspaceSubdomain, accountingFiscalYears.id],
-          set: {
-            label: r.label,
-            startDate: r.startDate,
-            endDate: r.endDate,
-            status: r.status ?? 'upcoming',
-            deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-            deletedBy: r.deletedBy ?? null,
-            deletionReason: r.deletionReason ?? null,
-            updatedAt: new Date(),
-          },
-        });
-    }
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [accountingFiscalYears.workspaceSubdomain, accountingFiscalYears.id],
+        set: {
+          label: sql`excluded.label`,
+          startDate: sql`excluded.start_date`,
+          endDate: sql`excluded.end_date`,
+          status: sql`excluded.status`,
+          deletedAt: sql`excluded.deleted_at`,
+          deletedBy: sql`excluded.deleted_by`,
+          deletionReason: sql`excluded.deletion_reason`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -116,19 +141,21 @@ export async function replaceFiscalYearsForWorkspace(tenant: string, records: Fi
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(accountingFiscalYears).where(eq(accountingFiscalYears.workspaceSubdomain, subdomain));
-    for (const r of records) {
-      await tx.insert(accountingFiscalYears).values({
-        id: r.id,
-        workspaceSubdomain: subdomain,
-        label: r.label,
-        startDate: r.startDate,
-        endDate: r.endDate,
-        status: r.status ?? 'upcoming',
-        deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-        deletedBy: r.deletedBy ?? null,
-        deletionReason: r.deletionReason ?? null,
-        updatedAt: new Date(),
-      });
+    if (records.length > 0) {
+      await tx.insert(accountingFiscalYears).values(
+        records.map((r) => ({
+          id: r.id,
+          workspaceSubdomain: subdomain,
+          label: r.label,
+          startDate: r.startDate,
+          endDate: r.endDate,
+          status: r.status ?? 'upcoming',
+          deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
+          deletedBy: r.deletedBy ?? null,
+          deletionReason: r.deletionReason ?? null,
+          updatedAt: new Date(),
+        })),
+      );
     }
   });
 }

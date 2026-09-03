@@ -1,9 +1,9 @@
 import { type Student, type StudentStatus } from '@mms/shared';
-import { type students, type studentEnrolledSessions } from '../schema.js';
+import { type students } from '../schema.js';
 
 export function studentRowToRecord(
   row: typeof students.$inferSelect,
-  enrolledSessionRows: (typeof studentEnrolledSessions.$inferSelect)[] = [],
+  enrolledSessionRows: Array<{ sessionId: string; sortOrder: number }> = [],
 ): Student {
   const enrolledSessions = enrolledSessionRows
     .slice()

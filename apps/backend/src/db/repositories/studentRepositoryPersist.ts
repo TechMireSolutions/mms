@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { type Student } from '@mms/shared';
 import { students, studentEnrolledSessions } from '../schema.js';
 import { withTenant, type AppDb } from '../tenant-context.js';
@@ -100,8 +100,88 @@ export async function bulkSaveStudents(tenant: string, items: Student[]): Promis
   const subdomain = tenant.trim().toLowerCase();
   if (items.length === 0) return;
   return withTenant(subdomain, async (tx) => {
-    for (const item of items) {
-      await persistStudentTx(tx, subdomain, item);
+    const studentIds = items.map((s) => String(s.id));
+
+    await tx
+      .insert(students)
+      .values(
+        items.map((student) => ({
+          id: String(student.id),
+          workspaceSubdomain: subdomain,
+          contactId: student.contactId ? String(student.contactId) : null,
+          fatherContactId: student.fatherContactId ? String(student.fatherContactId) : null,
+          motherContactId: student.motherContactId ? String(student.motherContactId) : null,
+          guardianContactId: student.guardianContactId ? String(student.guardianContactId) : null,
+          fatherName: student.fatherName ?? null,
+          motherName: student.motherName ?? null,
+          guardianName: student.guardianName ?? null,
+          grNumber: student.grNumber ?? null,
+          studentId: student.studentId ?? null,
+          status: student.status ?? 'active',
+          registeredDate: student.registeredDate ?? null,
+          enrollmentDate: student.enrollmentDate ?? null,
+          discountType: student.discountType ?? null,
+          discountPct: student.discountPct != null ? String(student.discountPct) : null,
+          registrationType: student.registrationType ?? null,
+          notes: student.notes ?? null,
+          deletedAt: student.deletedAt ? new Date(student.deletedAt) : null,
+          deletedBy: student.deletedBy ?? null,
+          deletionReason: student.deletionReason ?? null,
+          createdAt: student.createdAt ? new Date(student.createdAt) : new Date(),
+          updatedAt: new Date(),
+          createdBy: student.createdBy ?? null,
+          updatedBy: student.updatedBy ?? null,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [students.workspaceSubdomain, students.id],
+        set: {
+          contactId: sql`excluded.contact_id`,
+          fatherContactId: sql`excluded.father_contact_id`,
+          motherContactId: sql`excluded.mother_contact_id`,
+          guardianContactId: sql`excluded.guardian_contact_id`,
+          fatherName: sql`excluded.father_name`,
+          motherName: sql`excluded.mother_name`,
+          guardianName: sql`excluded.guardian_name`,
+          grNumber: sql`excluded.gr_number`,
+          studentId: sql`excluded.student_id`,
+          status: sql`excluded.status`,
+          registeredDate: sql`excluded.registered_date`,
+          enrollmentDate: sql`excluded.enrollment_date`,
+          discountType: sql`excluded.discount_type`,
+          discountPct: sql`excluded.discount_pct`,
+          registrationType: sql`excluded.registration_type`,
+          notes: sql`excluded.notes`,
+          deletedAt: sql`excluded.deleted_at`,
+          deletedBy: sql`excluded.deleted_by`,
+          deletionReason: sql`excluded.deletion_reason`,
+          updatedAt: new Date(),
+          updatedBy: sql`excluded.updated_by`,
+        },
+      });
+
+    await tx
+      .delete(studentEnrolledSessions)
+      .where(
+        and(
+          eq(studentEnrolledSessions.workspaceSubdomain, subdomain),
+          inArray(studentEnrolledSessions.studentId, studentIds),
+        ),
+      );
+
+    const allSessions = items.flatMap((student) => {
+      const sessions = Array.isArray(student.enrolledSessions) ? student.enrolledSessions : [];
+      return sessions.map((sessionId, idx) => ({
+        id: `${student.id}_sess_${idx}_${String(sessionId).slice(0, 30)}`,
+        workspaceSubdomain: subdomain,
+        studentId: String(student.id),
+        sessionId: String(sessionId),
+        sortOrder: idx,
+      }));
+    });
+
+    if (allSessions.length > 0) {
+      await tx.insert(studentEnrolledSessions).values(allSessions);
     }
   });
 }
@@ -111,8 +191,51 @@ export async function replaceStudentsForWorkspace(tenant: string, items: Student
   return withTenant(subdomain, async (tx) => {
     await tx.delete(studentEnrolledSessions).where(eq(studentEnrolledSessions.workspaceSubdomain, subdomain));
     await tx.delete(students).where(eq(students.workspaceSubdomain, subdomain));
-    for (const item of items) {
-      await persistStudentTx(tx, subdomain, item);
+    if (items.length === 0) return;
+
+    await tx.insert(students).values(
+      items.map((student) => ({
+        id: student.id,
+        workspaceSubdomain: subdomain,
+        contactId: student.contactId ? String(student.contactId) : null,
+        fatherContactId: student.fatherContactId ? String(student.fatherContactId) : null,
+        motherContactId: student.motherContactId ? String(student.motherContactId) : null,
+        guardianContactId: student.guardianContactId ? String(student.guardianContactId) : null,
+        fatherName: student.fatherName ?? null,
+        motherName: student.motherName ?? null,
+        guardianName: student.guardianName ?? null,
+        grNumber: student.grNumber ?? null,
+        studentId: student.studentId ?? null,
+        status: student.status ?? 'active',
+        registeredDate: student.registeredDate ?? null,
+        enrollmentDate: student.enrollmentDate ?? null,
+        discountType: student.discountType ?? null,
+        discountPct: student.discountPct != null ? String(student.discountPct) : null,
+        registrationType: student.registrationType ?? null,
+        notes: student.notes ?? null,
+        deletedAt: student.deletedAt ? new Date(student.deletedAt) : null,
+        deletedBy: student.deletedBy ?? null,
+        deletionReason: student.deletionReason ?? null,
+        createdAt: student.createdAt ? new Date(student.createdAt) : new Date(),
+        updatedAt: new Date(),
+        createdBy: student.createdBy ?? null,
+        updatedBy: student.updatedBy ?? null,
+      })),
+    );
+
+    const allSessions = items.flatMap((student) => {
+      const sessions = Array.isArray(student.enrolledSessions) ? student.enrolledSessions : [];
+      return sessions.map((sessionId, idx) => ({
+        id: `${student.id}_sess_${idx}_${String(sessionId).slice(0, 30)}`,
+        workspaceSubdomain: subdomain,
+        studentId: student.id,
+        sessionId: String(sessionId),
+        sortOrder: idx,
+      }));
+    });
+
+    if (allSessions.length > 0) {
+      await tx.insert(studentEnrolledSessions).values(allSessions);
     }
   });
 }
@@ -129,7 +252,10 @@ export async function bulkEnrollStudentsTx(
   }
 
   const existingRows = await tx
-    .select()
+    .select({
+      studentId: studentEnrolledSessions.studentId,
+      sessionId: studentEnrolledSessions.sessionId,
+    })
     .from(studentEnrolledSessions)
     .where(
       and(

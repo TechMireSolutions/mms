@@ -43,8 +43,8 @@ async function syncEntryChildren(
   ]);
 
   if (entry.lines && entry.lines.length > 0) {
-    for (const l of entry.lines) {
-      await tx.insert(accountingJournalLines).values({
+    await tx.insert(accountingJournalLines).values(
+      entry.lines.map((l) => ({
         id: l.id,
         workspaceSubdomain: subdomain,
         entryId: entry.id,
@@ -52,28 +52,28 @@ async function syncEntryChildren(
         debit: String(l.debit ?? 0),
         credit: String(l.credit ?? 0),
         description: l.description ?? '',
-      });
-    }
+      })),
+    );
   }
 
   if (entry.tags && entry.tags.length > 0) {
-    for (const tag of entry.tags) {
-      await tx.insert(accountingEntryTags).values({
+    await tx.insert(accountingEntryTags).values(
+      entry.tags.map((tag) => ({
         workspaceSubdomain: subdomain,
         entryId: entry.id,
         tag,
-      });
-    }
+      })),
+    );
   }
 
   if (entry.attachments && entry.attachments.length > 0) {
-    for (const url of entry.attachments) {
-      await tx.insert(accountingEntryAttachments).values({
+    await tx.insert(accountingEntryAttachments).values(
+      entry.attachments.map((url) => ({
         workspaceSubdomain: subdomain,
         entryId: entry.id,
         url,
-      });
-    }
+      })),
+    );
   }
 }
 
@@ -178,8 +178,10 @@ export async function replaceEntriesForWorkspace(tenant: string, records: Journa
     await tx.delete(accountingJournalLines).where(eq(accountingJournalLines.workspaceSubdomain, subdomain));
     await tx.delete(accountingEntries).where(eq(accountingEntries.workspaceSubdomain, subdomain));
 
-    for (const record of records) {
-      await tx.insert(accountingEntries).values({
+    if (records.length === 0) return;
+
+    await tx.insert(accountingEntries).values(
+      records.map((record) => ({
         id: record.id,
         workspaceSubdomain: subdomain,
         date: record.date,
@@ -195,9 +197,44 @@ export async function replaceEntriesForWorkspace(tenant: string, records: Journa
         deletedBy: record.deletedBy ?? null,
         deletionReason: record.deletionReason ?? null,
         updatedAt: new Date(),
-      });
+      })),
+    );
 
-      await syncEntryChildren(tx, subdomain, record);
+    const allLines = records.flatMap((record) =>
+      (record.lines ?? []).map((l) => ({
+        id: l.id,
+        workspaceSubdomain: subdomain,
+        entryId: record.id,
+        accountId: l.account_id,
+        debit: String(l.debit ?? 0),
+        credit: String(l.credit ?? 0),
+        description: l.description ?? '',
+      })),
+    );
+    if (allLines.length > 0) {
+      await tx.insert(accountingJournalLines).values(allLines);
+    }
+
+    const allTags = records.flatMap((record) =>
+      (record.tags ?? []).map((tag) => ({
+        workspaceSubdomain: subdomain,
+        entryId: record.id,
+        tag,
+      })),
+    );
+    if (allTags.length > 0) {
+      await tx.insert(accountingEntryTags).values(allTags);
+    }
+
+    const allAttachments = records.flatMap((record) =>
+      (record.attachments ?? []).map((url) => ({
+        workspaceSubdomain: subdomain,
+        entryId: record.id,
+        url,
+      })),
+    );
+    if (allAttachments.length > 0) {
+      await tx.insert(accountingEntryAttachments).values(allAttachments);
     }
   });
 }

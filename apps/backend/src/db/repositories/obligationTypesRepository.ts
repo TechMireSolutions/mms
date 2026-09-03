@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { type ObligationType } from '@mms/shared';
 import { obligationTypes } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -20,7 +20,15 @@ export async function listObligationTypesByWorkspace(tenant: string): Promise<Ob
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: obligationTypes.id,
+        workspaceSubdomain: obligationTypes.workspaceSubdomain,
+        name: obligationTypes.name,
+        quantityBased: obligationTypes.quantityBased,
+        designatedFor: obligationTypes.designatedFor,
+        createdAt: obligationTypes.createdAt,
+        updatedAt: obligationTypes.updatedAt,
+      })
       .from(obligationTypes)
       .where(eq(obligationTypes.workspaceSubdomain, subdomain));
     return rows.map(obligationTypeRowToRecord);
@@ -31,10 +39,10 @@ export async function bulkSaveObligationTypes(tenant: string, records: Obligatio
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const record of records) {
-      await tx
-        .insert(obligationTypes)
-        .values({
+    await tx
+      .insert(obligationTypes)
+      .values(
+        records.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           name: record.name,
@@ -42,17 +50,17 @@ export async function bulkSaveObligationTypes(tenant: string, records: Obligatio
           designatedFor: record.designated_for ?? 'Both',
           createdAt: record.created_at ? new Date(record.created_at) : new Date(),
           updatedAt: record.updated_at ? new Date(record.updated_at) : new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [obligationTypes.workspaceSubdomain, obligationTypes.id],
-          set: {
-            name: record.name,
-            quantityBased: Boolean(record.quantity_based),
-            designatedFor: record.designated_for ?? 'Both',
-            updatedAt: new Date(),
-          },
-        });
-    }
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [obligationTypes.workspaceSubdomain, obligationTypes.id],
+        set: {
+          name: sql`excluded.name`,
+          quantityBased: sql`excluded.quantity_based`,
+          designatedFor: sql`excluded.designated_for`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -63,16 +71,18 @@ export async function replaceObligationTypesForWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(obligationTypes).where(eq(obligationTypes.workspaceSubdomain, subdomain));
-    for (const record of records) {
-      await tx.insert(obligationTypes).values({
-        id: record.id,
-        workspaceSubdomain: subdomain,
-        name: record.name,
-        quantityBased: Boolean(record.quantity_based),
-        designatedFor: record.designated_for ?? 'Both',
-        createdAt: record.created_at ? new Date(record.created_at) : new Date(),
-        updatedAt: record.updated_at ? new Date(record.updated_at) : new Date(),
-      });
+    if (records.length > 0) {
+      await tx.insert(obligationTypes).values(
+        records.map((record) => ({
+          id: record.id,
+          workspaceSubdomain: subdomain,
+          name: record.name,
+          quantityBased: Boolean(record.quantity_based),
+          designatedFor: record.designated_for ?? 'Both',
+          createdAt: record.created_at ? new Date(record.created_at) : new Date(),
+          updatedAt: record.updated_at ? new Date(record.updated_at) : new Date(),
+        })),
+      );
     }
   });
 }

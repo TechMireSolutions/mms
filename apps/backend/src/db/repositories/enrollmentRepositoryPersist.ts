@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import type { Enrollment, EnrollmentTimelineItem } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -49,15 +49,15 @@ async function writeTimelineEvents(
       ),
     );
 
-  for (const item of timeline) {
-    await tx.insert(enrollmentTimelineEvents).values({
+  await tx.insert(enrollmentTimelineEvents).values(
+    timeline.map((item) => ({
       workspaceSubdomain: subdomain,
       enrollmentId,
       event: item.event,
       by: item.by,
       ts: item.ts,
-    });
-  }
+    })),
+  );
 }
 
 export async function saveEnrollment(
@@ -108,38 +108,57 @@ export async function bulkSaveEnrollments(
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const record of records) {
-      const values = recordToInsert(subdomain, record);
-      await tx
-        .insert(enrollments)
-        .values(values)
-        .onConflictDoUpdate({
-          target: [enrollments.workspaceSubdomain, enrollments.id],
-          set: {
-            studentId: values.studentId,
-            studentName: values.studentName,
-            sessionId: values.sessionId,
-            sessionName: values.sessionName,
-            classId: values.classId,
-            className: values.className,
-            enrolledDate: values.enrolledDate,
-            baseFee: values.baseFee,
-            discountType: values.discountType,
-            discountLabel: values.discountLabel,
-            discountPct: values.discountPct,
-            discountAmt: values.discountAmt,
-            finalFee: values.finalFee,
-            status: values.status,
-            invoiceId: values.invoiceId,
-            paymentStatus: values.paymentStatus,
-            notes: values.notes,
-            deletedAt: values.deletedAt,
-            deletedBy: values.deletedBy,
-            deletionReason: values.deletionReason,
-            updatedAt: new Date(),
-          },
-        });
-      await writeTimelineEvents(tx, subdomain, record.id, record.timeline);
+    const recordIds = records.map((r) => String(r.id));
+    await tx
+      .insert(enrollments)
+      .values(records.map((record) => recordToInsert(subdomain, record)))
+      .onConflictDoUpdate({
+        target: [enrollments.workspaceSubdomain, enrollments.id],
+        set: {
+          studentId: sql`excluded.student_id`,
+          studentName: sql`excluded.student_name`,
+          sessionId: sql`excluded.session_id`,
+          sessionName: sql`excluded.session_name`,
+          classId: sql`excluded.class_id`,
+          className: sql`excluded.class_name`,
+          enrolledDate: sql`excluded.enrolled_date`,
+          baseFee: sql`excluded.base_fee`,
+          discountType: sql`excluded.discount_type`,
+          discountLabel: sql`excluded.discount_label`,
+          discountPct: sql`excluded.discount_pct`,
+          discountAmt: sql`excluded.discount_amt`,
+          finalFee: sql`excluded.final_fee`,
+          status: sql`excluded.status`,
+          invoiceId: sql`excluded.invoice_id`,
+          paymentStatus: sql`excluded.payment_status`,
+          notes: sql`excluded.notes`,
+          deletedAt: sql`excluded.deleted_at`,
+          deletedBy: sql`excluded.deleted_by`,
+          deletionReason: sql`excluded.deletion_reason`,
+          updatedAt: new Date(),
+        },
+      });
+
+    await tx
+      .delete(enrollmentTimelineEvents)
+      .where(
+        and(
+          eq(enrollmentTimelineEvents.workspaceSubdomain, subdomain),
+          inArray(enrollmentTimelineEvents.enrollmentId, recordIds),
+        ),
+      );
+
+    const allEvents = records.flatMap((record) =>
+      (record.timeline ?? []).map((item) => ({
+        workspaceSubdomain: subdomain,
+        enrollmentId: String(record.id),
+        event: item.event,
+        by: item.by,
+        ts: item.ts,
+      })),
+    );
+    if (allEvents.length > 0) {
+      await tx.insert(enrollmentTimelineEvents).values(allEvents);
     }
   });
 }
@@ -153,10 +172,18 @@ export async function replaceEnrollmentsForWorkspace(
     await tx.delete(enrollmentTimelineEvents).where(eq(enrollmentTimelineEvents.workspaceSubdomain, subdomain));
     await tx.delete(enrollments).where(eq(enrollments.workspaceSubdomain, subdomain));
     if (records.length > 0) {
-      for (const record of records) {
-        const values = recordToInsert(subdomain, record);
-        await tx.insert(enrollments).values(values);
-        await writeTimelineEvents(tx, subdomain, record.id, record.timeline);
+      await tx.insert(enrollments).values(records.map((record) => recordToInsert(subdomain, record)));
+      const allEvents = records.flatMap((record) =>
+        (record.timeline ?? []).map((item) => ({
+          workspaceSubdomain: subdomain,
+          enrollmentId: record.id,
+          event: item.event,
+          by: item.by,
+          ts: item.ts,
+        })),
+      );
+      if (allEvents.length > 0) {
+        await tx.insert(enrollmentTimelineEvents).values(allEvents);
       }
     }
   });

@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { type Invoice } from '@mms/shared';
 import { financeInvoices } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -30,13 +30,42 @@ export function invoiceRowToRecord(row: InvoiceRow): Invoice {
   };
 }
 
-export async function listInvoicesByWorkspace(tenant: string): Promise<Invoice[]> {
+export async function listInvoicesByWorkspace(
+  tenant: string,
+  options?: { limit?: number; offset?: number },
+): Promise<Invoice[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
+  const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: financeInvoices.id,
+        workspaceSubdomain: financeInvoices.workspaceSubdomain,
+        studentId: financeInvoices.studentId,
+        studentName: financeInvoices.studentName,
+        class: financeInvoices.class,
+        session: financeInvoices.session,
+        baseFee: financeInvoices.baseFee,
+        discountType: financeInvoices.discountType,
+        discountValue: financeInvoices.discountValue,
+        discountAmt: financeInvoices.discountAmt,
+        finalAmt: financeInvoices.finalAmt,
+        status: financeInvoices.status,
+        dueDate: financeInvoices.dueDate,
+        paidDate: financeInvoices.paidDate,
+        method: financeInvoices.method,
+        paidAmt: financeInvoices.paidAmt,
+        deletedAt: financeInvoices.deletedAt,
+        deletedBy: financeInvoices.deletedBy,
+        deletionReason: financeInvoices.deletionReason,
+        createdAt: financeInvoices.createdAt,
+        updatedAt: financeInvoices.updatedAt,
+      })
       .from(financeInvoices)
-      .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), isNull(financeInvoices.deletedAt)));
+      .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), isNull(financeInvoices.deletedAt)))
+      .limit(limit)
+      .offset(offset);
     return rows.map(invoiceRowToRecord);
   });
 }
@@ -45,9 +74,32 @@ export async function findInvoiceById(tenant: string, id: string): Promise<Invoi
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: financeInvoices.id,
+        workspaceSubdomain: financeInvoices.workspaceSubdomain,
+        studentId: financeInvoices.studentId,
+        studentName: financeInvoices.studentName,
+        class: financeInvoices.class,
+        session: financeInvoices.session,
+        baseFee: financeInvoices.baseFee,
+        discountType: financeInvoices.discountType,
+        discountValue: financeInvoices.discountValue,
+        discountAmt: financeInvoices.discountAmt,
+        finalAmt: financeInvoices.finalAmt,
+        status: financeInvoices.status,
+        dueDate: financeInvoices.dueDate,
+        paidDate: financeInvoices.paidDate,
+        method: financeInvoices.method,
+        paidAmt: financeInvoices.paidAmt,
+        deletedAt: financeInvoices.deletedAt,
+        deletedBy: financeInvoices.deletedBy,
+        deletionReason: financeInvoices.deletionReason,
+        createdAt: financeInvoices.createdAt,
+        updatedAt: financeInvoices.updatedAt,
+      })
       .from(financeInvoices)
-      .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), eq(financeInvoices.id, id)));
+      .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), eq(financeInvoices.id, id)))
+      .limit(1);
     const row = rows[0];
     return row ? invoiceRowToRecord(row) : null;
   });
@@ -110,10 +162,10 @@ export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Prom
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const r of records) {
-      await tx
-        .insert(financeInvoices)
-        .values({
+    await tx
+      .insert(financeInvoices)
+      .values(
+        records.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           studentId: r.studentId,
@@ -134,31 +186,31 @@ export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Prom
           deletedBy: r.deletedBy ?? null,
           deletionReason: r.deletionReason ?? null,
           updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [financeInvoices.workspaceSubdomain, financeInvoices.id],
-          set: {
-            studentId: r.studentId,
-            studentName: r.studentName ?? '',
-            class: r.class ?? '',
-            session: r.session ?? '',
-            baseFee: String(r.baseFee ?? 0),
-            discountType: r.discountType ?? null,
-            discountValue: String(r.discountValue ?? 0),
-            discountAmt: String(r.discountAmt ?? 0),
-            finalAmt: String(r.finalAmt ?? 0),
-            status: r.status ?? 'pending',
-            dueDate: r.dueDate,
-            paidDate: r.paidDate ?? null,
-            method: r.method ?? null,
-            paidAmt: r.paidAmt != null ? String(r.paidAmt) : null,
-            deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-            deletedBy: r.deletedBy ?? null,
-            deletionReason: r.deletionReason ?? null,
-            updatedAt: new Date(),
-          },
-        });
-    }
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [financeInvoices.workspaceSubdomain, financeInvoices.id],
+        set: {
+          studentId: sql`excluded.student_id`,
+          studentName: sql`excluded.student_name`,
+          class: sql`excluded.class`,
+          session: sql`excluded.session`,
+          baseFee: sql`excluded.base_fee`,
+          discountType: sql`excluded.discount_type`,
+          discountValue: sql`excluded.discount_value`,
+          discountAmt: sql`excluded.discount_amt`,
+          finalAmt: sql`excluded.final_amt`,
+          status: sql`excluded.status`,
+          dueDate: sql`excluded.due_date`,
+          paidDate: sql`excluded.paid_date`,
+          method: sql`excluded.method`,
+          paidAmt: sql`excluded.paid_amt`,
+          deletedAt: sql`excluded.deleted_at`,
+          deletedBy: sql`excluded.deleted_by`,
+          deletionReason: sql`excluded.deletion_reason`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -166,29 +218,31 @@ export async function replaceInvoicesForWorkspace(tenant: string, records: Invoi
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(financeInvoices).where(eq(financeInvoices.workspaceSubdomain, subdomain));
-    for (const r of records) {
-      await tx.insert(financeInvoices).values({
-        id: r.id,
-        workspaceSubdomain: subdomain,
-        studentId: r.studentId,
-        studentName: r.studentName ?? '',
-        class: r.class ?? '',
-        session: r.session ?? '',
-        baseFee: String(r.baseFee ?? 0),
-        discountType: r.discountType ?? null,
-        discountValue: String(r.discountValue ?? 0),
-        discountAmt: String(r.discountAmt ?? 0),
-        finalAmt: String(r.finalAmt ?? 0),
-        status: r.status ?? 'pending',
-        dueDate: r.dueDate,
-        paidDate: r.paidDate ?? null,
-        method: r.method ?? null,
-        paidAmt: r.paidAmt != null ? String(r.paidAmt) : null,
-        deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-        deletedBy: r.deletedBy ?? null,
-        deletionReason: r.deletionReason ?? null,
-        updatedAt: new Date(),
-      });
+    if (records.length > 0) {
+      await tx.insert(financeInvoices).values(
+        records.map((r) => ({
+          id: r.id,
+          workspaceSubdomain: subdomain,
+          studentId: r.studentId,
+          studentName: r.studentName ?? '',
+          class: r.class ?? '',
+          session: r.session ?? '',
+          baseFee: String(r.baseFee ?? 0),
+          discountType: r.discountType ?? null,
+          discountValue: String(r.discountValue ?? 0),
+          discountAmt: String(r.discountAmt ?? 0),
+          finalAmt: String(r.finalAmt ?? 0),
+          status: r.status ?? 'pending',
+          dueDate: r.dueDate,
+          paidDate: r.paidDate ?? null,
+          method: r.method ?? null,
+          paidAmt: r.paidAmt != null ? String(r.paidAmt) : null,
+          deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
+          deletedBy: r.deletedBy ?? null,
+          deletionReason: r.deletionReason ?? null,
+          updatedAt: new Date(),
+        })),
+      );
     }
   });
 }

@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { type Payment } from '@mms/shared';
 import { financeInvoices, financePayments } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -25,13 +25,37 @@ export function paymentRowToRecord(row: PaymentRow): Payment {
   };
 }
 
-export async function listPaymentsByWorkspace(tenant: string): Promise<Payment[]> {
+export async function listPaymentsByWorkspace(
+  tenant: string,
+  options?: { limit?: number; offset?: number },
+): Promise<Payment[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
+  const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: financePayments.id,
+        workspaceSubdomain: financePayments.workspaceSubdomain,
+        invoiceId: financePayments.invoiceId,
+        studentId: financePayments.studentId,
+        studentName: financePayments.studentName,
+        amount: financePayments.amount,
+        date: financePayments.date,
+        method: financePayments.method,
+        receivedByUserId: financePayments.receivedByUserId,
+        receivedBy: financePayments.receivedBy,
+        note: financePayments.note,
+        deletedAt: financePayments.deletedAt,
+        deletedBy: financePayments.deletedBy,
+        deletionReason: financePayments.deletionReason,
+        createdAt: financePayments.createdAt,
+        updatedAt: financePayments.updatedAt,
+      })
       .from(financePayments)
-      .where(and(eq(financePayments.workspaceSubdomain, subdomain), isNull(financePayments.deletedAt)));
+      .where(and(eq(financePayments.workspaceSubdomain, subdomain), isNull(financePayments.deletedAt)))
+      .limit(limit)
+      .offset(offset);
     return rows.map(paymentRowToRecord);
   });
 }
@@ -40,9 +64,27 @@ export async function findPaymentById(tenant: string, id: string): Promise<Payme
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: financePayments.id,
+        workspaceSubdomain: financePayments.workspaceSubdomain,
+        invoiceId: financePayments.invoiceId,
+        studentId: financePayments.studentId,
+        studentName: financePayments.studentName,
+        amount: financePayments.amount,
+        date: financePayments.date,
+        method: financePayments.method,
+        receivedByUserId: financePayments.receivedByUserId,
+        receivedBy: financePayments.receivedBy,
+        note: financePayments.note,
+        deletedAt: financePayments.deletedAt,
+        deletedBy: financePayments.deletedBy,
+        deletionReason: financePayments.deletionReason,
+        createdAt: financePayments.createdAt,
+        updatedAt: financePayments.updatedAt,
+      })
       .from(financePayments)
-      .where(and(eq(financePayments.workspaceSubdomain, subdomain), eq(financePayments.id, id)));
+      .where(and(eq(financePayments.workspaceSubdomain, subdomain), eq(financePayments.id, id)))
+      .limit(1);
     const row = rows[0];
     return row ? paymentRowToRecord(row) : null;
   });
@@ -95,10 +137,10 @@ export async function bulkSavePayments(tenant: string, records: Payment[]): Prom
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const r of records) {
-      await tx
-        .insert(financePayments)
-        .values({
+    await tx
+      .insert(financePayments)
+      .values(
+        records.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           invoiceId: r.invoiceId,
@@ -114,26 +156,26 @@ export async function bulkSavePayments(tenant: string, records: Payment[]): Prom
           deletedBy: r.deletedBy ?? null,
           deletionReason: r.deletionReason ?? null,
           updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [financePayments.workspaceSubdomain, financePayments.id],
-          set: {
-            invoiceId: r.invoiceId,
-            studentId: r.studentId ?? null,
-            studentName: r.studentName ?? null,
-            amount: String(r.amount ?? 0),
-            date: r.date,
-            method: r.method ?? 'cash',
-            receivedByUserId: r.receivedByUserId ?? null,
-            receivedBy: r.receivedBy ?? null,
-            note: r.note ?? '',
-            deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-            deletedBy: r.deletedBy ?? null,
-            deletionReason: r.deletionReason ?? null,
-            updatedAt: new Date(),
-          },
-        });
-    }
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [financePayments.workspaceSubdomain, financePayments.id],
+        set: {
+          invoiceId: sql`excluded.invoice_id`,
+          studentId: sql`excluded.student_id`,
+          studentName: sql`excluded.student_name`,
+          amount: sql`excluded.amount`,
+          date: sql`excluded.date`,
+          method: sql`excluded.method`,
+          receivedByUserId: sql`excluded.received_by_user_id`,
+          receivedBy: sql`excluded.received_by`,
+          note: sql`excluded.note`,
+          deletedAt: sql`excluded.deleted_at`,
+          deletedBy: sql`excluded.deleted_by`,
+          deletionReason: sql`excluded.deletion_reason`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -141,24 +183,26 @@ export async function replacePaymentsForWorkspace(tenant: string, records: Payme
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(financePayments).where(eq(financePayments.workspaceSubdomain, subdomain));
-    for (const r of records) {
-      await tx.insert(financePayments).values({
-        id: r.id,
-        workspaceSubdomain: subdomain,
-        invoiceId: r.invoiceId,
-        studentId: r.studentId ?? null,
-        studentName: r.studentName ?? null,
-        amount: String(r.amount ?? 0),
-        date: r.date,
-        method: r.method ?? 'cash',
-        receivedByUserId: r.receivedByUserId ?? null,
-        receivedBy: r.receivedBy ?? null,
-        note: r.note ?? '',
-        deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-        deletedBy: r.deletedBy ?? null,
-        deletionReason: r.deletionReason ?? null,
-        updatedAt: new Date(),
-      });
+    if (records.length > 0) {
+      await tx.insert(financePayments).values(
+        records.map((r) => ({
+          id: r.id,
+          workspaceSubdomain: subdomain,
+          invoiceId: r.invoiceId,
+          studentId: r.studentId ?? null,
+          studentName: r.studentName ?? null,
+          amount: String(r.amount ?? 0),
+          date: r.date,
+          method: r.method ?? 'cash',
+          receivedByUserId: r.receivedByUserId ?? null,
+          receivedBy: r.receivedBy ?? null,
+          note: r.note ?? '',
+          deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
+          deletedBy: r.deletedBy ?? null,
+          deletionReason: r.deletionReason ?? null,
+          updatedAt: new Date(),
+        })),
+      );
     }
   });
 }

@@ -29,7 +29,15 @@ export async function findContactGoogleSyncCredentials(
   const tenant = workspaceSubdomain.trim().toLowerCase();
   return withTenant(tenant, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        workspaceSubdomain: contactGoogleSyncCredentials.workspaceSubdomain,
+        userId: contactGoogleSyncCredentials.userId,
+        clientId: contactGoogleSyncCredentials.clientId,
+        clientSecret: contactGoogleSyncCredentials.clientSecret,
+        accessToken: contactGoogleSyncCredentials.accessToken,
+        refreshToken: contactGoogleSyncCredentials.refreshToken,
+        updatedAt: contactGoogleSyncCredentials.updatedAt,
+      })
       .from(contactGoogleSyncCredentials)
       .where(and(
         eq(contactGoogleSyncCredentials.workspaceSubdomain, tenant),

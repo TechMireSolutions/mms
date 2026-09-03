@@ -30,14 +30,18 @@ async function run() {
 
   // Find if user already exists
   const existing = await db
-    .select()
+    .select({
+      id: tenantUsers.id,
+      loginEmail: tenantUsers.loginEmail,
+    })
     .from(tenantUsers)
     .where(
       and(
         eq(tenantUsers.workspaceSubdomain, subdomain),
         eq(tenantUsers.loginEmail, email)
       )
-    );
+    )
+    .limit(1);
 
   if (existing.length > 0) {
     const user = existing[0];

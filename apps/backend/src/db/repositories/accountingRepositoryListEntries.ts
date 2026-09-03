@@ -10,7 +10,7 @@ import {
   accountingEntryAttachments,
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
-import { entryRowToRecord } from './accountingRepository.js';
+import { entryRowToRecord, type JournalLineRow } from './accountingRepository.js';
 import { buildEntryListConditions, buildEntryOrderBy } from './accountingRepositoryListQuery.js';
 
 export async function listEntriesPage(
@@ -34,7 +34,24 @@ export async function listEntriesPage(
     const total = Number(countRows[0]?.count ?? 0);
 
     const rows = await tx
-      .select()
+      .select({
+        id: accountingEntries.id,
+        workspaceSubdomain: accountingEntries.workspaceSubdomain,
+        date: accountingEntries.date,
+        ref: accountingEntries.ref,
+        description: accountingEntries.description,
+        status: accountingEntries.status,
+        createdBy: accountingEntries.createdBy,
+        fiscalYear: accountingEntries.fiscalYear,
+        transactionType: accountingEntries.transactionType,
+        reversedRef: accountingEntries.reversedRef,
+        simpleMode: accountingEntries.simpleMode,
+        deletedAt: accountingEntries.deletedAt,
+        deletedBy: accountingEntries.deletedBy,
+        deletionReason: accountingEntries.deletionReason,
+        createdAt: accountingEntries.createdAt,
+        updatedAt: accountingEntries.updatedAt,
+      })
       .from(accountingEntries)
       .where(whereClause)
       .orderBy(orderBy)
@@ -54,7 +71,14 @@ export async function listEntriesPage(
     const entryIds = rows.map((r) => r.id);
     const [allLines, allTags, allAttachments] = await Promise.all([
       tx
-        .select()
+        .select({
+          id: accountingJournalLines.id,
+          entryId: accountingJournalLines.entryId,
+          accountId: accountingJournalLines.accountId,
+          debit: accountingJournalLines.debit,
+          credit: accountingJournalLines.credit,
+          description: accountingJournalLines.description,
+        })
         .from(accountingJournalLines)
         .where(
           and(
@@ -63,7 +87,10 @@ export async function listEntriesPage(
           ),
         ),
       tx
-        .select()
+        .select({
+          entryId: accountingEntryTags.entryId,
+          tag: accountingEntryTags.tag,
+        })
         .from(accountingEntryTags)
         .where(
           and(
@@ -72,7 +99,10 @@ export async function listEntriesPage(
           ),
         ),
       tx
-        .select()
+        .select({
+          entryId: accountingEntryAttachments.entryId,
+          url: accountingEntryAttachments.url,
+        })
         .from(accountingEntryAttachments)
         .where(
           and(
@@ -82,7 +112,7 @@ export async function listEntriesPage(
         ),
     ]);
 
-    const linesByEntry = new Map<string, Array<typeof accountingJournalLines.$inferSelect>>();
+    const linesByEntry = new Map<string, JournalLineRow[]>();
     for (const line of allLines) {
       const arr = linesByEntry.get(line.entryId) ?? [];
       arr.push(line);

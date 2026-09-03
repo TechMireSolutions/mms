@@ -27,6 +27,16 @@ export const tenantUsers = pgTable('tenant_users', {
     .on(table.workspaceSubdomain, table.loginEmail)
     .where(sql`${table.deletedAt} is null`),
   index('tenant_users_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('tenant_users_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  index('tenant_users_workspace_contact_active_idx')
+    .on(table.workspaceSubdomain, table.contactId)
+    .where(sql`${table.deletedAt} is null`),
+  index('tenant_users_workspace_role_active_idx')
+    .on(table.workspaceSubdomain, table.role)
+    .where(sql`${table.deletedAt} is null`),
+  index('tenant_users_workspace_name_active_idx')
+    .on(table.workspaceSubdomain, table.name)
+    .where(sql`${table.deletedAt} is null`),
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],

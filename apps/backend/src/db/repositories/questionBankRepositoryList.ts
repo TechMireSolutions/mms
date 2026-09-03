@@ -133,7 +133,10 @@ export async function listQuestionsPage(
     const qIds = result.items.map((r) => r.id);
     const [allCats, allOpts, allTags, allCits] = await Promise.all([
       tx
-        .select()
+        .select({
+          questionId: questionCategories.questionId,
+          categoryId: questionCategories.categoryId,
+        })
         .from(questionCategories)
         .where(
           and(
@@ -142,7 +145,11 @@ export async function listQuestionsPage(
           ),
         ),
       tx
-        .select()
+        .select({
+          questionId: questionOptions.questionId,
+          optionIndex: questionOptions.optionIndex,
+          optionText: questionOptions.optionText,
+        })
         .from(questionOptions)
         .where(
           and(
@@ -151,7 +158,10 @@ export async function listQuestionsPage(
           ),
         ),
       tx
-        .select()
+        .select({
+          questionId: questionTags.questionId,
+          tag: questionTags.tag,
+        })
         .from(questionTags)
         .where(
           and(
@@ -160,7 +170,11 @@ export async function listQuestionsPage(
           ),
         ),
       tx
-        .select()
+        .select({
+          questionId: questionCitations.questionId,
+          bookId: questionCitations.bookId,
+          citation: questionCitations.citation,
+        })
         .from(questionCitations)
         .where(
           and(

@@ -610,6 +610,34 @@
       "when": 1786770000000,
       "tag": "0086_contact_bank_details",
       "breakpoints": true
+    },
+    {
+      "idx": 87,
+      "version": "7",
+      "when": 1786773600000,
+      "tag": "0087_performance_audit_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 88,
+      "version": "7",
+      "when": 1786777200000,
+      "tag": "0088_performance_audit_indexes_and_fks",
+      "breakpoints": true
+    },
+    {
+      "idx": 89,
+      "version": "7",
+      "when": 1786780800000,
+      "tag": "0089_performance_audit_indexes_and_ordering",
+      "breakpoints": true
+    },
+    {
+      "idx": 90,
+      "version": "7",
+      "when": 1786784400000,
+      "tag": "0090_performance_audit_indexes",
+      "breakpoints": true
     }
   ]
 }

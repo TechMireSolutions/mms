@@ -158,7 +158,29 @@ export async function findActiveContactsMatchingUniqueValues(
 
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: contacts.id,
+        workspaceSubdomain: contacts.workspaceSubdomain,
+        firstName: contacts.firstName,
+        lastName: contacts.lastName,
+        name: contacts.name,
+        gender: contacts.gender,
+        dob: contacts.dob,
+        cnic: contacts.cnic,
+        isSyed: contacts.isSyed,
+        avatar: contacts.avatar,
+        notes: contacts.notes,
+        whatsappStatus: contacts.whatsappStatus,
+        lastCheckedAt: contacts.lastCheckedAt,
+        aiSummary: contacts.aiSummary,
+        deletedAt: contacts.deletedAt,
+        deletedBy: contacts.deletedBy,
+        deletionReason: contacts.deletionReason,
+        createdAt: contacts.createdAt,
+        updatedAt: contacts.updatedAt,
+        createdBy: contacts.createdBy,
+        updatedBy: contacts.updatedBy,
+      })
       .from(contacts)
       .where(and(...whereParts));
     return hydrateContactsList(tx, subdomain, rows);

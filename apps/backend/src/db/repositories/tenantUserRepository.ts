@@ -10,6 +10,7 @@ export {
 export {
   replaceTenantUsersForWorkspace,
   upsertTenantUserRow,
+  upsertTenantUsersBatch,
   softDeleteTenantUserRow,
   restoreTenantUserRow,
   verifyTenantUserEmailRow,

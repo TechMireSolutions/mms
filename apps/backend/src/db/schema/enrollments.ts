@@ -53,6 +53,7 @@ export const enrollments = pgTable('enrollments', {
   index('enrollments_workspace_class_idx').on(table.workspaceSubdomain, table.classId),
   index('enrollments_workspace_date_idx').on(table.workspaceSubdomain, table.enrolledDate),
   index('enrollments_workspace_status_idx').on(table.workspaceSubdomain, table.status),
+  index('enrollments_workspace_invoice_idx').on(table.workspaceSubdomain, table.invoiceId),
   index('enrollments_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('enrollments_workspace_active_idx')
     .on(table.workspaceSubdomain)

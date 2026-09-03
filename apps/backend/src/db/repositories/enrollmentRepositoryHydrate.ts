@@ -43,23 +43,61 @@ export function enrollmentRowToRecord(
   };
 }
 
-export async function listEnrollmentsByWorkspace(tenant: string): Promise<Enrollment[]> {
+export async function listEnrollmentsByWorkspace(
+  tenant: string,
+  options?: { limit?: number; offset?: number },
+): Promise<Enrollment[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
+  const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: enrollments.id,
+        workspaceSubdomain: enrollments.workspaceSubdomain,
+        studentId: enrollments.studentId,
+        studentName: enrollments.studentName,
+        sessionId: enrollments.sessionId,
+        sessionName: enrollments.sessionName,
+        classId: enrollments.classId,
+        className: enrollments.className,
+        enrolledDate: enrollments.enrolledDate,
+        baseFee: enrollments.baseFee,
+        discountType: enrollments.discountType,
+        discountLabel: enrollments.discountLabel,
+        discountPct: enrollments.discountPct,
+        discountAmt: enrollments.discountAmt,
+        finalFee: enrollments.finalFee,
+        status: enrollments.status,
+        invoiceId: enrollments.invoiceId,
+        paymentStatus: enrollments.paymentStatus,
+        notes: enrollments.notes,
+        deletedAt: enrollments.deletedAt,
+        deletedBy: enrollments.deletedBy,
+        deletionReason: enrollments.deletionReason,
+        createdAt: enrollments.createdAt,
+        updatedAt: enrollments.updatedAt,
+      })
       .from(enrollments)
       .where(
         and(
           eq(enrollments.workspaceSubdomain, subdomain),
           isNull(enrollments.deletedAt),
         ),
-      );
+      )
+      .limit(limit)
+      .offset(offset);
 
     if (rows.length === 0) return [];
 
     const timelineRows = await tx
-      .select()
+      .select({
+        id: enrollmentTimelineEvents.id,
+        enrollmentId: enrollmentTimelineEvents.enrollmentId,
+        ts: enrollmentTimelineEvents.ts,
+        event: enrollmentTimelineEvents.event,
+        by: enrollmentTimelineEvents.by,
+      })
       .from(enrollmentTimelineEvents)
       .where(
         and(
@@ -68,14 +106,14 @@ export async function listEnrollmentsByWorkspace(tenant: string): Promise<Enroll
         ),
       );
 
-    const timelineMap = new Map<string, TimelineEventRow[]>();
+    const timelineMap = new Map<string, Array<{ id: number; enrollmentId: string; ts: string; event: string; by: string }>>();
     for (const t of timelineRows) {
       const arr = timelineMap.get(t.enrollmentId) ?? [];
       arr.push(t);
       timelineMap.set(t.enrollmentId, arr);
     }
 
-    return rows.map((row) => enrollmentRowToRecord(row, timelineMap.get(row.id) ?? []));
+    return rows.map((row) => enrollmentRowToRecord(row, (timelineMap.get(row.id) ?? []) as unknown as TimelineEventRow[]));
   });
 }
 
@@ -86,7 +124,32 @@ export async function findEnrollmentById(
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: enrollments.id,
+        workspaceSubdomain: enrollments.workspaceSubdomain,
+        studentId: enrollments.studentId,
+        studentName: enrollments.studentName,
+        sessionId: enrollments.sessionId,
+        sessionName: enrollments.sessionName,
+        classId: enrollments.classId,
+        className: enrollments.className,
+        enrolledDate: enrollments.enrolledDate,
+        baseFee: enrollments.baseFee,
+        discountType: enrollments.discountType,
+        discountLabel: enrollments.discountLabel,
+        discountPct: enrollments.discountPct,
+        discountAmt: enrollments.discountAmt,
+        finalFee: enrollments.finalFee,
+        status: enrollments.status,
+        invoiceId: enrollments.invoiceId,
+        paymentStatus: enrollments.paymentStatus,
+        notes: enrollments.notes,
+        deletedAt: enrollments.deletedAt,
+        deletedBy: enrollments.deletedBy,
+        deletionReason: enrollments.deletionReason,
+        createdAt: enrollments.createdAt,
+        updatedAt: enrollments.updatedAt,
+      })
       .from(enrollments)
       .where(
         and(
@@ -98,7 +161,15 @@ export async function findEnrollmentById(
     if (!row) return null;
 
     const timelineRows = await tx
-      .select()
+      .select({
+        id: enrollmentTimelineEvents.id,
+        workspaceSubdomain: enrollmentTimelineEvents.workspaceSubdomain,
+        enrollmentId: enrollmentTimelineEvents.enrollmentId,
+        event: enrollmentTimelineEvents.event,
+        by: enrollmentTimelineEvents.by,
+        ts: enrollmentTimelineEvents.ts,
+        createdAt: enrollmentTimelineEvents.createdAt,
+      })
       .from(enrollmentTimelineEvents)
       .where(
         and(
@@ -119,7 +190,32 @@ export async function findEnrollmentsByIds(
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: enrollments.id,
+        workspaceSubdomain: enrollments.workspaceSubdomain,
+        studentId: enrollments.studentId,
+        studentName: enrollments.studentName,
+        sessionId: enrollments.sessionId,
+        sessionName: enrollments.sessionName,
+        classId: enrollments.classId,
+        className: enrollments.className,
+        enrolledDate: enrollments.enrolledDate,
+        baseFee: enrollments.baseFee,
+        discountType: enrollments.discountType,
+        discountLabel: enrollments.discountLabel,
+        discountPct: enrollments.discountPct,
+        discountAmt: enrollments.discountAmt,
+        finalFee: enrollments.finalFee,
+        status: enrollments.status,
+        invoiceId: enrollments.invoiceId,
+        paymentStatus: enrollments.paymentStatus,
+        notes: enrollments.notes,
+        deletedAt: enrollments.deletedAt,
+        deletedBy: enrollments.deletedBy,
+        deletionReason: enrollments.deletionReason,
+        createdAt: enrollments.createdAt,
+        updatedAt: enrollments.updatedAt,
+      })
       .from(enrollments)
       .where(
         and(
@@ -131,7 +227,15 @@ export async function findEnrollmentsByIds(
     if (rows.length === 0) return [];
 
     const timelineRows = await tx
-      .select()
+      .select({
+        id: enrollmentTimelineEvents.id,
+        workspaceSubdomain: enrollmentTimelineEvents.workspaceSubdomain,
+        enrollmentId: enrollmentTimelineEvents.enrollmentId,
+        event: enrollmentTimelineEvents.event,
+        by: enrollmentTimelineEvents.by,
+        ts: enrollmentTimelineEvents.ts,
+        createdAt: enrollmentTimelineEvents.createdAt,
+      })
       .from(enrollmentTimelineEvents)
       .where(
         and(

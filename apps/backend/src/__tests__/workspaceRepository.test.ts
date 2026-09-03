@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const mockWhere = vi.fn();
+const mockLimit = vi.fn().mockResolvedValue([]);
+const mockWhere = vi.fn().mockReturnValue({ limit: mockLimit });
 const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
 const mockSelect = vi.fn().mockReturnValue({ from: mockFrom });
 
@@ -52,6 +53,8 @@ describe('workspaceRepository', () => {
     clearWorkspaceCacheForTests();
     mockSelect.mockReturnValue({ from: mockFrom });
     mockFrom.mockReturnValue({ where: mockWhere });
+    mockWhere.mockReturnValue({ limit: mockLimit });
+    mockLimit.mockResolvedValue([]);
     mockUpdate.mockReturnValue({ set: mockSet });
     mockSet.mockReturnValue({ where: mockWhere });
     mockInsert.mockReturnValue({ values: mockInsertValues });
@@ -88,7 +91,7 @@ describe('workspaceRepository', () => {
 
   it('finds workspace row by subdomain', async () => {
     const now = new Date('2026-01-01T00:00:00.000Z');
-    mockWhere.mockResolvedValue([
+    mockLimit.mockResolvedValue([
       {
         id: 'ws-1',
         subdomain: 'demo',

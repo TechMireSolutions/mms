@@ -181,7 +181,7 @@ export function savedReportViewer(user: User): ContactsSavedReportViewer {
   };
 }
 
-async function getFieldConfigViewerOptions() {
+export async function getContactFieldConfigViewerOptions() {
   const fieldConfig = await loadContactFieldConfig();
   if (!fieldConfig) return null;
   return {
@@ -191,13 +191,13 @@ async function getFieldConfigViewerOptions() {
 }
 
 export async function sanitizeForUser(contacts: Contact[], user: User): Promise<Contact[]> {
-  const options = await getFieldConfigViewerOptions();
+  const options = await getContactFieldConfigViewerOptions();
   if (!options) return contacts;
   return sanitizeContactsForViewer(contacts, user.role, options);
 }
 
 export async function sanitizeOneForUser(contact: Contact, user: User): Promise<Contact> {
-  const options = await getFieldConfigViewerOptions();
+  const options = await getContactFieldConfigViewerOptions();
   if (!options) return contact;
   return sanitizeContactForViewer(contact, user.role, options);
 }

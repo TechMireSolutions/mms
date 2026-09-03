@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, index, primaryKey, varchar, boolean, integer } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 
 export const messageTemplates = pgTable('message_templates', {
@@ -48,6 +48,12 @@ export const messageLogs = pgTable('message_logs', {
     .where(sql`${table.deletedAt} is null`),
   index('message_logs_workspace_sent_at_active_idx')
     .on(table.workspaceSubdomain, table.sentAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('message_logs_workspace_user_sent_active_idx')
+    .on(table.workspaceSubdomain, table.userId, desc(table.sentAt))
+    .where(sql`${table.deletedAt} is null`),
+  index('message_logs_workspace_channel_status_sent_active_idx')
+    .on(table.workspaceSubdomain, table.channel, table.status, desc(table.sentAt))
     .where(sql`${table.deletedAt} is null`),
 ]);
 

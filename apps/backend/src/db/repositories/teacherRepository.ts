@@ -83,6 +83,8 @@ export async function persistTeacherTx(
 export interface ListTeachersOptions {
   includeDeleted?: boolean;
   deleted?: 'active' | 'deleted' | 'all';
+  limit?: number;
+  offset?: number;
 }
 
 function resolveDeletedCondition(options?: ListTeachersOptions) {
@@ -105,10 +107,33 @@ export async function listTeachersByWorkspace(
     const deletedCond = resolveDeletedCondition(options);
     if (deletedCond) conditions.push(deletedCond);
 
-    const rows = await tx
-      .select()
+    const baseQuery = tx
+      .select({
+        id: teachers.id,
+        workspaceSubdomain: teachers.workspaceSubdomain,
+        contactId: teachers.contactId,
+        userId: teachers.userId,
+        employeeId: teachers.employeeId,
+        status: teachers.status,
+        specialization: teachers.specialization,
+        qualification: teachers.qualification,
+        joinDate: teachers.joinDate,
+        notes: teachers.notes,
+        deletedAt: teachers.deletedAt,
+        deletedBy: teachers.deletedBy,
+        deletionReason: teachers.deletionReason,
+        createdAt: teachers.createdAt,
+        updatedAt: teachers.updatedAt,
+        createdBy: teachers.createdBy,
+        updatedBy: teachers.updatedBy,
+      })
       .from(teachers)
       .where(and(...conditions));
+    if (options?.offset) {
+      baseQuery.offset(Math.max(0, options.offset));
+    }
+    const limit = Math.min(Math.max(1, options?.limit ?? 500), 5000);
+    const rows = await baseQuery.limit(limit);
     return hydrateTeachersList(tx, subdomain, rows);
   });
 }
@@ -117,22 +142,59 @@ export async function findTeacherById(tenant: string, id: string): Promise<Teach
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: teachers.id,
+        workspaceSubdomain: teachers.workspaceSubdomain,
+        contactId: teachers.contactId,
+        userId: teachers.userId,
+        employeeId: teachers.employeeId,
+        status: teachers.status,
+        specialization: teachers.specialization,
+        qualification: teachers.qualification,
+        joinDate: teachers.joinDate,
+        notes: teachers.notes,
+        deletedAt: teachers.deletedAt,
+        deletedBy: teachers.deletedBy,
+        deletionReason: teachers.deletionReason,
+        createdAt: teachers.createdAt,
+        updatedAt: teachers.updatedAt,
+        createdBy: teachers.createdBy,
+        updatedBy: teachers.updatedBy,
+      })
       .from(teachers)
       .where(and(eq(teachers.workspaceSubdomain, subdomain), eq(teachers.id, id)))
       .limit(1);
-    if (rows.length === 0) return null;
-    const hydrated = await hydrateTeachersList(tx, subdomain, rows);
-    return hydrated[0] ?? null;
+    const row = rows[0];
+    if (!row) return null;
+    const [hydrated] = await hydrateTeachersList(tx, subdomain, [row]);
+    return hydrated ?? null;
   });
 }
 
 export async function findTeachersByIds(tenant: string, ids: string[]): Promise<Teacher[]> {
-  const subdomain = tenant.trim().toLowerCase();
   if (ids.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: teachers.id,
+        workspaceSubdomain: teachers.workspaceSubdomain,
+        contactId: teachers.contactId,
+        userId: teachers.userId,
+        employeeId: teachers.employeeId,
+        status: teachers.status,
+        specialization: teachers.specialization,
+        qualification: teachers.qualification,
+        joinDate: teachers.joinDate,
+        notes: teachers.notes,
+        deletedAt: teachers.deletedAt,
+        deletedBy: teachers.deletedBy,
+        deletionReason: teachers.deletionReason,
+        createdAt: teachers.createdAt,
+        updatedAt: teachers.updatedAt,
+        createdBy: teachers.createdBy,
+        updatedBy: teachers.updatedBy,
+      })
       .from(teachers)
       .where(and(eq(teachers.workspaceSubdomain, subdomain), inArray(teachers.id, ids)));
     return hydrateTeachersList(tx, subdomain, rows);
@@ -150,9 +212,47 @@ export async function bulkSaveTeachers(tenant: string, items: Teacher[]): Promis
   const subdomain = tenant.trim().toLowerCase();
   if (items.length === 0) return;
   return withTenant(subdomain, async (tx) => {
-    for (const item of items) {
-      await persistTeacherTx(tx, subdomain, item);
-    }
+    await tx
+      .insert(teachers)
+      .values(
+        items.map((teacher) => ({
+          id: String(teacher.id),
+          workspaceSubdomain: subdomain,
+          contactId: teacher.contactId ? String(teacher.contactId) : null,
+          userId: teacher.userId ? String(teacher.userId) : null,
+          employeeId: teacher.employeeId ?? null,
+          status: teacher.status ?? 'active',
+          specialization: teacher.specialization ?? null,
+          qualification: teacher.qualification ?? null,
+          joinDate: teacher.joinDate ?? null,
+          notes: teacher.notes ?? null,
+          deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
+          deletedBy: teacher.deletedBy ?? null,
+          deletionReason: teacher.deletionReason ?? null,
+          createdAt: teacher.createdAt ? new Date(teacher.createdAt) : new Date(),
+          updatedAt: new Date(),
+          createdBy: teacher.createdBy ?? null,
+          updatedBy: teacher.updatedBy ?? null,
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [teachers.workspaceSubdomain, teachers.id],
+        set: {
+          contactId: sql`excluded.contact_id`,
+          userId: sql`excluded.user_id`,
+          employeeId: sql`excluded.employee_id`,
+          status: sql`excluded.status`,
+          specialization: sql`excluded.specialization`,
+          qualification: sql`excluded.qualification`,
+          joinDate: sql`excluded.join_date`,
+          notes: sql`excluded.notes`,
+          deletedAt: sql`excluded.deleted_at`,
+          deletedBy: sql`excluded.deleted_by`,
+          deletionReason: sql`excluded.deletion_reason`,
+          updatedAt: new Date(),
+          updatedBy: sql`excluded.updated_by`,
+        },
+      });
   });
 }
 
@@ -160,8 +260,28 @@ export async function replaceTeachersForWorkspace(tenant: string, items: Teacher
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     await tx.delete(teachers).where(eq(teachers.workspaceSubdomain, subdomain));
-    for (const item of items) {
-      await persistTeacherTx(tx, subdomain, item);
+    if (items.length > 0) {
+      await tx.insert(teachers).values(
+        items.map((teacher) => ({
+          id: String(teacher.id),
+          workspaceSubdomain: subdomain,
+          contactId: teacher.contactId ? String(teacher.contactId) : null,
+          userId: teacher.userId ? String(teacher.userId) : null,
+          employeeId: teacher.employeeId ?? null,
+          status: teacher.status ?? 'active',
+          specialization: teacher.specialization ?? null,
+          qualification: teacher.qualification ?? null,
+          joinDate: teacher.joinDate ?? null,
+          notes: teacher.notes ?? null,
+          deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
+          deletedBy: teacher.deletedBy ?? null,
+          deletionReason: teacher.deletionReason ?? null,
+          createdAt: teacher.createdAt ? new Date(teacher.createdAt) : new Date(),
+          updatedAt: new Date(),
+          createdBy: teacher.createdBy ?? null,
+          updatedBy: teacher.updatedBy ?? null,
+        })),
+      );
     }
   });
 }

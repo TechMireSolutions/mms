@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 
 import { attendance, attendanceLeaves } from '../schema.js';
 import type { AttendanceRecord } from '@mms/shared';
@@ -47,18 +47,41 @@ function recordToInsert(tenant: string, record: AttendanceRecord): AttendanceIns
   };
 }
 
-export async function listAttendanceRecordsByWorkspace(tenant: string): Promise<AttendanceRecord[]> {
+export async function listAttendanceRecordsByWorkspace(
+  tenant: string,
+  options?: { limit?: number; offset?: number; includeDeleted?: boolean },
+): Promise<AttendanceRecord[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
+  const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
+    const conditions = [eq(attendance.workspaceSubdomain, subdomain)];
+    if (!options?.includeDeleted) {
+      conditions.push(isNull(attendance.deletedAt));
+    }
     const rows = await tx
-      .select()
+      .select({
+        id: attendance.id,
+        workspaceSubdomain: attendance.workspaceSubdomain,
+        classId: attendance.classId,
+        studentId: attendance.studentId,
+        studentName: attendance.studentName,
+        rollNo: attendance.rollNo,
+        date: attendance.date,
+        status: attendance.status,
+        timeIn: attendance.timeIn,
+        timeOut: attendance.timeOut,
+        notes: attendance.notes,
+        deletedAt: attendance.deletedAt,
+        deletedBy: attendance.deletedBy,
+        deletionReason: attendance.deletionReason,
+        createdAt: attendance.createdAt,
+        updatedAt: attendance.updatedAt,
+      })
       .from(attendance)
-      .where(
-        and(
-          eq(attendance.workspaceSubdomain, subdomain),
-          isNull(attendance.deletedAt),
-        ),
-      );
+      .where(and(...conditions))
+      .limit(limit)
+      .offset(offset);
     return rows.map(rowToRecord);
   });
 }
@@ -70,14 +93,32 @@ export async function findAttendanceRecordById(
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: attendance.id,
+        workspaceSubdomain: attendance.workspaceSubdomain,
+        classId: attendance.classId,
+        studentId: attendance.studentId,
+        studentName: attendance.studentName,
+        rollNo: attendance.rollNo,
+        date: attendance.date,
+        status: attendance.status,
+        timeIn: attendance.timeIn,
+        timeOut: attendance.timeOut,
+        notes: attendance.notes,
+        deletedAt: attendance.deletedAt,
+        deletedBy: attendance.deletedBy,
+        deletionReason: attendance.deletionReason,
+        createdAt: attendance.createdAt,
+        updatedAt: attendance.updatedAt,
+      })
       .from(attendance)
       .where(
         and(
           eq(attendance.workspaceSubdomain, subdomain),
           eq(attendance.id, id),
         ),
-      );
+      )
+      .limit(1);
     const row = rows[0];
     return row ? rowToRecord(row) : null;
   });
@@ -91,7 +132,24 @@ export async function findAttendanceRecordsByIds(
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: attendance.id,
+        workspaceSubdomain: attendance.workspaceSubdomain,
+        classId: attendance.classId,
+        studentId: attendance.studentId,
+        studentName: attendance.studentName,
+        rollNo: attendance.rollNo,
+        date: attendance.date,
+        status: attendance.status,
+        timeIn: attendance.timeIn,
+        timeOut: attendance.timeOut,
+        notes: attendance.notes,
+        deletedAt: attendance.deletedAt,
+        deletedBy: attendance.deletedBy,
+        deletionReason: attendance.deletionReason,
+        createdAt: attendance.createdAt,
+        updatedAt: attendance.updatedAt,
+      })
       .from(attendance)
       .where(
         and(
@@ -141,30 +199,27 @@ export async function bulkSaveAttendanceRecords(
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const record of records) {
-      const values = recordToInsert(subdomain, record);
-      await tx
-        .insert(attendance)
-        .values(values)
-        .onConflictDoUpdate({
-          target: [attendance.workspaceSubdomain, attendance.id],
-          set: {
-            classId: values.classId,
-            studentId: values.studentId,
-            studentName: values.studentName,
-            rollNo: values.rollNo,
-            date: values.date,
-            status: values.status,
-            timeIn: values.timeIn,
-            timeOut: values.timeOut,
-            notes: values.notes,
-            deletedAt: values.deletedAt,
-            deletedBy: values.deletedBy,
-            deletionReason: values.deletionReason,
-            updatedAt: new Date(),
-          },
-        });
-    }
+    await tx
+      .insert(attendance)
+      .values(records.map((record) => recordToInsert(subdomain, record)))
+      .onConflictDoUpdate({
+        target: [attendance.workspaceSubdomain, attendance.id],
+        set: {
+          classId: sql`excluded.class_id`,
+          studentId: sql`excluded.student_id`,
+          studentName: sql`excluded.student_name`,
+          rollNo: sql`excluded.roll_no`,
+          date: sql`excluded.date`,
+          status: sql`excluded.status`,
+          timeIn: sql`excluded.time_in`,
+          timeOut: sql`excluded.time_out`,
+          notes: sql`excluded.notes`,
+          deletedAt: sql`excluded.deleted_at`,
+          deletedBy: sql`excluded.deleted_by`,
+          deletionReason: sql`excluded.deletion_reason`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -195,10 +250,7 @@ export async function replaceAttendanceRecordsForWorkspace(
     await tx.delete(attendanceLeaves).where(eq(attendanceLeaves.workspaceSubdomain, subdomain));
     await tx.delete(attendance).where(eq(attendance.workspaceSubdomain, subdomain));
     if (records.length > 0) {
-      for (const record of records) {
-        const values = recordToInsert(subdomain, record);
-        await tx.insert(attendance).values(values);
-      }
+      await tx.insert(attendance).values(records.map((record) => recordToInsert(subdomain, record)));
     }
   });
 }

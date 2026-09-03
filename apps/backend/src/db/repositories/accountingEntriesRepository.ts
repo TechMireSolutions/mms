@@ -10,9 +10,17 @@ import { withTenant } from '../tenant-context.js';
 
 type EntryRow = typeof accountingEntries.$inferSelect;
 
+export type JournalLineRow = {
+  id: string;
+  accountId: string;
+  debit?: string | number | null;
+  credit?: string | number | null;
+  description?: string | null;
+};
+
 export function entryRowToRecord(
   row: EntryRow,
-  lines: Array<typeof accountingJournalLines.$inferSelect> = [],
+  lines: JournalLineRow[] = [],
   tags: string[] = [],
   attachments: string[] = [],
 ): JournalEntry {
@@ -32,7 +40,7 @@ export function entryRowToRecord(
       account_id: l.accountId,
       debit: Number(l.debit ?? 0),
       credit: Number(l.credit ?? 0),
-      description: l.description,
+      description: l.description ?? '',
     })),
     tags,
     attachments,
@@ -44,19 +52,50 @@ export function entryRowToRecord(
   };
 }
 
-export async function listEntriesByWorkspace(tenant: string): Promise<JournalEntry[]> {
+export async function listEntriesByWorkspace(
+  tenant: string,
+  options?: { limit?: number; offset?: number },
+): Promise<JournalEntry[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
+  const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: accountingEntries.id,
+        workspaceSubdomain: accountingEntries.workspaceSubdomain,
+        date: accountingEntries.date,
+        ref: accountingEntries.ref,
+        description: accountingEntries.description,
+        status: accountingEntries.status,
+        createdBy: accountingEntries.createdBy,
+        fiscalYear: accountingEntries.fiscalYear,
+        transactionType: accountingEntries.transactionType,
+        reversedRef: accountingEntries.reversedRef,
+        simpleMode: accountingEntries.simpleMode,
+        deletedAt: accountingEntries.deletedAt,
+        deletedBy: accountingEntries.deletedBy,
+        deletionReason: accountingEntries.deletionReason,
+        createdAt: accountingEntries.createdAt,
+        updatedAt: accountingEntries.updatedAt,
+      })
       .from(accountingEntries)
-      .where(and(eq(accountingEntries.workspaceSubdomain, subdomain), isNull(accountingEntries.deletedAt)));
+      .where(and(eq(accountingEntries.workspaceSubdomain, subdomain), isNull(accountingEntries.deletedAt)))
+      .limit(limit)
+      .offset(offset);
     if (rows.length === 0) return [];
 
     const entryIds = rows.map((r) => r.id);
     const [allLines, allTags, allAttachments] = await Promise.all([
       tx
-        .select()
+        .select({
+          id: accountingJournalLines.id,
+          entryId: accountingJournalLines.entryId,
+          accountId: accountingJournalLines.accountId,
+          debit: accountingJournalLines.debit,
+          credit: accountingJournalLines.credit,
+          description: accountingJournalLines.description,
+        })
         .from(accountingJournalLines)
         .where(
           and(
@@ -65,7 +104,10 @@ export async function listEntriesByWorkspace(tenant: string): Promise<JournalEnt
           ),
         ),
       tx
-        .select()
+        .select({
+          entryId: accountingEntryTags.entryId,
+          tag: accountingEntryTags.tag,
+        })
         .from(accountingEntryTags)
         .where(
           and(
@@ -74,7 +116,10 @@ export async function listEntriesByWorkspace(tenant: string): Promise<JournalEnt
           ),
         ),
       tx
-        .select()
+        .select({
+          entryId: accountingEntryAttachments.entryId,
+          url: accountingEntryAttachments.url,
+        })
         .from(accountingEntryAttachments)
         .where(
           and(
@@ -84,7 +129,7 @@ export async function listEntriesByWorkspace(tenant: string): Promise<JournalEnt
         ),
     ]);
 
-    const linesByEntry = new Map<string, Array<typeof accountingJournalLines.$inferSelect>>();
+    const linesByEntry = new Map<string, JournalLineRow[]>();
     for (const line of allLines) {
       const arr = linesByEntry.get(line.entryId) ?? [];
       arr.push(line);
@@ -92,17 +137,17 @@ export async function listEntriesByWorkspace(tenant: string): Promise<JournalEnt
     }
 
     const tagsByEntry = new Map<string, string[]>();
-    for (const t of allTags) {
-      const arr = tagsByEntry.get(t.entryId) ?? [];
-      arr.push(t.tag);
-      tagsByEntry.set(t.entryId, arr);
+    for (const tag of allTags) {
+      const arr = tagsByEntry.get(tag.entryId) ?? [];
+      arr.push(tag.tag);
+      tagsByEntry.set(tag.entryId, arr);
     }
 
     const attachmentsByEntry = new Map<string, string[]>();
-    for (const a of allAttachments) {
-      const arr = attachmentsByEntry.get(a.entryId) ?? [];
-      arr.push(a.url);
-      attachmentsByEntry.set(a.entryId, arr);
+    for (const att of allAttachments) {
+      const arr = attachmentsByEntry.get(att.entryId) ?? [];
+      arr.push(att.url);
+      attachmentsByEntry.set(att.entryId, arr);
     }
 
     return rows.map((r) =>
@@ -120,15 +165,40 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: accountingEntries.id,
+        workspaceSubdomain: accountingEntries.workspaceSubdomain,
+        date: accountingEntries.date,
+        ref: accountingEntries.ref,
+        description: accountingEntries.description,
+        status: accountingEntries.status,
+        createdBy: accountingEntries.createdBy,
+        fiscalYear: accountingEntries.fiscalYear,
+        transactionType: accountingEntries.transactionType,
+        reversedRef: accountingEntries.reversedRef,
+        simpleMode: accountingEntries.simpleMode,
+        deletedAt: accountingEntries.deletedAt,
+        deletedBy: accountingEntries.deletedBy,
+        deletionReason: accountingEntries.deletionReason,
+        createdAt: accountingEntries.createdAt,
+        updatedAt: accountingEntries.updatedAt,
+      })
       .from(accountingEntries)
-      .where(and(eq(accountingEntries.workspaceSubdomain, subdomain), eq(accountingEntries.id, id)));
+      .where(and(eq(accountingEntries.workspaceSubdomain, subdomain), eq(accountingEntries.id, id)))
+      .limit(1);
     const row = rows[0];
     if (!row) return null;
 
     const [lines, tags, attachments] = await Promise.all([
       tx
-        .select()
+        .select({
+          id: accountingJournalLines.id,
+          entryId: accountingJournalLines.entryId,
+          accountId: accountingJournalLines.accountId,
+          debit: accountingJournalLines.debit,
+          credit: accountingJournalLines.credit,
+          description: accountingJournalLines.description,
+        })
         .from(accountingJournalLines)
         .where(
           and(
@@ -137,7 +207,10 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
           ),
         ),
       tx
-        .select()
+        .select({
+          entryId: accountingEntryTags.entryId,
+          tag: accountingEntryTags.tag,
+        })
         .from(accountingEntryTags)
         .where(
           and(
@@ -146,7 +219,10 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
           ),
         ),
       tx
-        .select()
+        .select({
+          entryId: accountingEntryAttachments.entryId,
+          url: accountingEntryAttachments.url,
+        })
         .from(accountingEntryAttachments)
         .where(
           and(

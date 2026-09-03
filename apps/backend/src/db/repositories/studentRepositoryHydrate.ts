@@ -13,7 +13,11 @@ export async function hydrateStudentsList(
   const ids = rows.map((r) => r.id);
 
   const sessionRows = await tx
-    .select()
+    .select({
+      studentId: studentEnrolledSessions.studentId,
+      sessionId: studentEnrolledSessions.sessionId,
+      sortOrder: studentEnrolledSessions.sortOrder,
+    })
     .from(studentEnrolledSessions)
     .where(
       and(
@@ -22,7 +26,7 @@ export async function hydrateStudentsList(
       ),
     );
 
-  const sessionsByStudentId = new Map<string, (typeof studentEnrolledSessions.$inferSelect)[]>();
+  const sessionsByStudentId = new Map<string, Array<{ sessionId: string; sortOrder: number }>>();
   for (const s of sessionRows) {
     const list = sessionsByStudentId.get(s.studentId) ?? [];
     list.push(s);
@@ -35,6 +39,8 @@ export async function hydrateStudentsList(
 export interface ListStudentsOptions {
   includeDeleted?: boolean;
   deleted?: 'active' | 'deleted' | 'all';
+  limit?: number;
+  offset?: number;
 }
 
 function resolveDeletedCondition(options?: ListStudentsOptions) {
@@ -57,10 +63,42 @@ export async function listStudentsByWorkspace(
     const deletedCond = resolveDeletedCondition(options);
     if (deletedCond) conditions.push(deletedCond);
 
-    const rows = await tx
-      .select()
+    const baseQuery = tx
+      .select({
+        id: students.id,
+        workspaceSubdomain: students.workspaceSubdomain,
+        contactId: students.contactId,
+        fatherContactId: students.fatherContactId,
+        motherContactId: students.motherContactId,
+        guardianContactId: students.guardianContactId,
+        fatherName: students.fatherName,
+        motherName: students.motherName,
+        guardianName: students.guardianName,
+        grNumber: students.grNumber,
+        studentId: students.studentId,
+        status: students.status,
+        registeredDate: students.registeredDate,
+        enrollmentDate: students.enrollmentDate,
+        discountType: students.discountType,
+        discountPct: students.discountPct,
+        registrationType: students.registrationType,
+        notes: students.notes,
+        deletedAt: students.deletedAt,
+        deletedBy: students.deletedBy,
+        deletionReason: students.deletionReason,
+        createdAt: students.createdAt,
+        updatedAt: students.updatedAt,
+        createdBy: students.createdBy,
+        updatedBy: students.updatedBy,
+      })
       .from(students)
       .where(and(...conditions));
+    if (options?.offset) {
+      baseQuery.offset(Math.max(0, options.offset));
+    }
+    const rows = options?.limit
+      ? await baseQuery.limit(Math.min(Math.max(1, options.limit), 5000))
+      : await baseQuery;
     return hydrateStudentsList(tx, subdomain, rows);
   });
 }
@@ -69,7 +107,33 @@ export async function findStudentById(tenant: string, id: string): Promise<Stude
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: students.id,
+        workspaceSubdomain: students.workspaceSubdomain,
+        contactId: students.contactId,
+        fatherContactId: students.fatherContactId,
+        motherContactId: students.motherContactId,
+        guardianContactId: students.guardianContactId,
+        fatherName: students.fatherName,
+        motherName: students.motherName,
+        guardianName: students.guardianName,
+        grNumber: students.grNumber,
+        studentId: students.studentId,
+        status: students.status,
+        registeredDate: students.registeredDate,
+        enrollmentDate: students.enrollmentDate,
+        discountType: students.discountType,
+        discountPct: students.discountPct,
+        registrationType: students.registrationType,
+        notes: students.notes,
+        deletedAt: students.deletedAt,
+        deletedBy: students.deletedBy,
+        deletionReason: students.deletionReason,
+        createdAt: students.createdAt,
+        updatedAt: students.updatedAt,
+        createdBy: students.createdBy,
+        updatedBy: students.updatedBy,
+      })
       .from(students)
       .where(and(eq(students.workspaceSubdomain, subdomain), eq(students.id, id)))
       .limit(1);
@@ -84,7 +148,33 @@ export async function findStudentsByIds(tenant: string, ids: string[]): Promise<
   if (ids.length === 0) return [];
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: students.id,
+        workspaceSubdomain: students.workspaceSubdomain,
+        contactId: students.contactId,
+        fatherContactId: students.fatherContactId,
+        motherContactId: students.motherContactId,
+        guardianContactId: students.guardianContactId,
+        fatherName: students.fatherName,
+        motherName: students.motherName,
+        guardianName: students.guardianName,
+        grNumber: students.grNumber,
+        studentId: students.studentId,
+        status: students.status,
+        registeredDate: students.registeredDate,
+        enrollmentDate: students.enrollmentDate,
+        discountType: students.discountType,
+        discountPct: students.discountPct,
+        registrationType: students.registrationType,
+        notes: students.notes,
+        deletedAt: students.deletedAt,
+        deletedBy: students.deletedBy,
+        deletionReason: students.deletionReason,
+        createdAt: students.createdAt,
+        updatedAt: students.updatedAt,
+        createdBy: students.createdBy,
+        updatedBy: students.updatedBy,
+      })
       .from(students)
       .where(and(eq(students.workspaceSubdomain, subdomain), inArray(students.id, ids)));
     return hydrateStudentsList(tx, subdomain, rows);

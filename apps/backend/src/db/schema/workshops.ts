@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, numeric, varchar, integer, primaryKey, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, numeric, varchar, integer, primaryKey, foreignKey, index } from "drizzle-orm/pg-core";
 import { workspaces } from "./platform.js";
 import { contacts } from "./contacts.js";
 import { students } from "./students.js";
@@ -13,6 +13,7 @@ export const workshopEvents = pgTable('workshop_events', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('workshop_events_workspace_start_date_idx').on(table.workspaceSubdomain, table.startDate),
 ]);
 
 export const workshopParticipants = pgTable('workshop_participants', {
@@ -31,6 +32,8 @@ export const workshopParticipants = pgTable('workshop_participants', {
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
   }).onDelete('cascade'),
+  index('workshop_participants_workspace_workshop_idx').on(table.workspaceSubdomain, table.workshopId),
+  index('workshop_participants_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
 ]);
 
 export const workshopScores = pgTable('workshop_scores', {
@@ -52,6 +55,8 @@ export const workshopScores = pgTable('workshop_scores', {
     columns: [table.workspaceSubdomain, table.participantId],
     foreignColumns: [workshopParticipants.workspaceSubdomain, workshopParticipants.id],
   }).onDelete('cascade'),
+  index('workshop_scores_workspace_workshop_idx').on(table.workspaceSubdomain, table.workshopId),
+  index('workshop_scores_workspace_participant_idx').on(table.workspaceSubdomain, table.participantId),
 ]);
 
 export const competitionEvents = pgTable('competition_events', {
@@ -80,6 +85,8 @@ export const competitionParticipants = pgTable('competition_participants', {
     columns: [table.workspaceSubdomain, table.studentId],
     foreignColumns: [students.workspaceSubdomain, students.id],
   }).onDelete('cascade'),
+  index('competition_participants_workspace_comp_idx').on(table.workspaceSubdomain, table.competitionId),
+  index('competition_participants_workspace_student_idx').on(table.workspaceSubdomain, table.studentId),
 ]);
 
 export type WorkshopEvent = typeof workshopEvents.$inferSelect;

@@ -25,12 +25,21 @@ export async function listAccountsPage(
 
   return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, accountingAccounts, {
+      columns: {
+        id: accountingAccounts.id,
+        code: accountingAccounts.code,
+        name: accountingAccounts.name,
+        type: accountingAccounts.type,
+        subtype: accountingAccounts.subtype,
+        description: accountingAccounts.description,
+        isActive: accountingAccounts.isActive,
+      },
       conditions: buildAccountListConditions(subdomain, query),
       orderBy: buildAccountOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
       defaultPageSize: 12,
-      rowMapper: accountRowToRecord,
+      rowMapper: (row) => accountRowToRecord(row as typeof accountingAccounts.$inferSelect),
     });
 
     return {
@@ -51,12 +60,19 @@ export async function listFiscalYearsPage(
 
   return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, accountingFiscalYears, {
+      columns: {
+        id: accountingFiscalYears.id,
+        label: accountingFiscalYears.label,
+        startDate: accountingFiscalYears.startDate,
+        endDate: accountingFiscalYears.endDate,
+        status: accountingFiscalYears.status,
+      },
       conditions: buildFiscalYearListConditions(subdomain, query),
       orderBy: buildFiscalYearOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
       defaultPageSize: 12,
-      rowMapper: fiscalYearRowToRecord,
+      rowMapper: (row) => fiscalYearRowToRecord(row as typeof accountingFiscalYears.$inferSelect),
     });
 
     return {

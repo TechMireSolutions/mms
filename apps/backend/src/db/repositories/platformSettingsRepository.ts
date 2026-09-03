@@ -17,7 +17,13 @@ function rowToPlatformSettings(row: typeof platformSettings.$inferSelect): Platf
 
 export async function findPlatformSettingsRow(id = GLOBAL_SETTINGS_ID): Promise<PlatformSettings | null> {
   const rows = await activeDb()
-    .select()
+    .select({
+      id: platformSettings.id,
+      syncTlsOnCreate: platformSettings.syncTlsOnCreate,
+      tlsExtraSans: platformSettings.tlsExtraSans,
+      certbotEmail: platformSettings.certbotEmail,
+      updatedAt: platformSettings.updatedAt,
+    })
     .from(platformSettings)
     .where(eq(platformSettings.id, id))
     .limit(1);

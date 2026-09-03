@@ -59,7 +59,11 @@ async function runRestore() {
   console.log(`Target Tenant Subdomain: "${subdomain}"`);
 
   // Ensure workspace exists
-  const existingWs = await db.select().from(workspaces).where(eq(workspaces.subdomain, subdomain));
+  const existingWs = await db
+    .select({ id: workspaces.id })
+    .from(workspaces)
+    .where(eq(workspaces.subdomain, subdomain))
+    .limit(1);
   if (existingWs.length === 0) {
     console.log(`Creating workspace "${subdomain}"...`);
     await db.insert(workspaces).values({
@@ -86,14 +90,21 @@ async function runRestore() {
   console.log('✅ Data synchronization completed successfully!');
 
   console.log('--- Step 5: Verifying Restored Database Records ---');
-  const restoredContacts = await db.select().from(contacts).where(eq(contacts.workspaceSubdomain, subdomain));
-  const restoredPhones = await db.select().from(contactPhones).where(eq(contactPhones.workspaceSubdomain, subdomain));
-  const restoredEmails = await db.select().from(contactEmails).where(eq(contactEmails.workspaceSubdomain, subdomain));
-  const restoredAddresses = await db.select().from(contactAddresses).where(eq(contactAddresses.workspaceSubdomain, subdomain));
-  const restoredRels = await db.select().from(contactRelationships).where(eq(contactRelationships.workspaceSubdomain, subdomain));
-  const restoredStudents = await db.select().from(students).where(eq(students.workspaceSubdomain, subdomain));
-  const restoredTeachers = await db.select().from(teachers).where(eq(teachers.workspaceSubdomain, subdomain));
-  const restoredUsers = await db.select().from(tenantUsers).where(eq(tenantUsers.workspaceSubdomain, subdomain));
+  const restoredContacts = await db.select({ id: contacts.id }).from(contacts).where(eq(contacts.workspaceSubdomain, subdomain));
+  const restoredPhones = await db.select({ id: contactPhones.id }).from(contactPhones).where(eq(contactPhones.workspaceSubdomain, subdomain));
+  const restoredEmails = await db.select({ id: contactEmails.id }).from(contactEmails).where(eq(contactEmails.workspaceSubdomain, subdomain));
+  const restoredAddresses = await db.select({ id: contactAddresses.id }).from(contactAddresses).where(eq(contactAddresses.workspaceSubdomain, subdomain));
+  const restoredRels = await db.select({ id: contactRelationships.id }).from(contactRelationships).where(eq(contactRelationships.workspaceSubdomain, subdomain));
+  const restoredStudents = await db.select({ id: students.id }).from(students).where(eq(students.workspaceSubdomain, subdomain));
+  const restoredTeachers = await db.select({ id: teachers.id }).from(teachers).where(eq(teachers.workspaceSubdomain, subdomain));
+  const restoredUsers = await db
+    .select({
+      id: tenantUsers.id,
+      loginEmail: tenantUsers.loginEmail,
+      role: tenantUsers.role,
+    })
+    .from(tenantUsers)
+    .where(eq(tenantUsers.workspaceSubdomain, subdomain));
 
   const { listContactsByWorkspace } = await import('../db/repositories/contactRepository.js');
   const { listStudentsByWorkspace } = await import('../db/repositories/studentRepository.js');

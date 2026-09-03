@@ -54,7 +54,12 @@ export async function syncPlatformSuperUserToTenant(
 
   return withTenant(subdomain, async (tx) => {
     const existingRows = await tx
-      .select()
+      .select({
+        id: tenantUsers.id,
+        name: tenantUsers.name,
+        passwordHash: tenantUsers.passwordHash,
+        emailVerifiedAt: tenantUsers.emailVerifiedAt,
+      })
       .from(tenantUsers)
       .where(
         and(

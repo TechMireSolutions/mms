@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, numeric, varchar, date, boolean, primaryKey, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, numeric, varchar, date, boolean, primaryKey, foreignKey, index } from "drizzle-orm/pg-core";
 import { workspaces } from "./platform.js";
 import { contacts, tenantUsers } from "./contacts.js";
 
@@ -12,6 +12,7 @@ export const charityFidyaRecords = pgTable('charity_fidya_records', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('charity_fidya_workspace_status_idx').on(table.workspaceSubdomain, table.distributionStatus),
 ]);
 
 export const orphanProfiles = pgTable('orphan_profiles', {
@@ -30,6 +31,7 @@ export const orphanProfiles = pgTable('orphan_profiles', {
     columns: [table.workspaceSubdomain, table.sponsorContactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
   }).onDelete('set null'),
+  index('orphan_profiles_workspace_sponsor_idx').on(table.workspaceSubdomain, table.sponsorContactId),
 ]);
 
 export const fatwaTickets = pgTable('fatwa_tickets', {
@@ -48,6 +50,7 @@ export const fatwaTickets = pgTable('fatwa_tickets', {
     columns: [table.workspaceSubdomain, table.assignedMuftiId],
     foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],
   }).onDelete('set null'),
+  index('fatwa_tickets_workspace_mufti_idx').on(table.workspaceSubdomain, table.assignedMuftiId),
 ]);
 
 export const fundraisingCampaigns = pgTable('fundraising_campaigns', {
@@ -59,6 +62,7 @@ export const fundraisingCampaigns = pgTable('fundraising_campaigns', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('fundraising_campaigns_workspace_status_idx').on(table.workspaceSubdomain, table.status),
 ]);
 
 export const fundraisingCoupons = pgTable('fundraising_coupons', {
@@ -75,6 +79,7 @@ export const fundraisingCoupons = pgTable('fundraising_coupons', {
     columns: [table.workspaceSubdomain, table.campaignId],
     foreignColumns: [fundraisingCampaigns.workspaceSubdomain, fundraisingCampaigns.id],
   }).onDelete('cascade'),
+  index('fundraising_coupons_workspace_campaign_idx').on(table.workspaceSubdomain, table.campaignId),
 ]);
 
 export const esaleSawabRequests = pgTable('esale_sawab_requests', {

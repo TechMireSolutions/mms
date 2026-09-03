@@ -1,4 +1,5 @@
-import { pgTable, text, timestamp, integer, numeric, varchar, primaryKey, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, integer, numeric, varchar, primaryKey, foreignKey, index } from "drizzle-orm/pg-core";
+import { desc } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { students } from "./students.js";
 
@@ -16,6 +17,8 @@ export const inventoryItems = pgTable('inventory_items', {
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).defaultNow().notNull(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('inventory_items_workspace_type_idx').on(table.workspaceSubdomain, table.itemType),
+  index('inventory_items_workspace_name_idx').on(table.workspaceSubdomain, table.name),
 ]);
 
 export const inventorySales = pgTable('inventory_sales', {
@@ -39,6 +42,8 @@ export const inventorySales = pgTable('inventory_sales', {
     columns: [table.workspaceSubdomain, table.studentId],
     foreignColumns: [students.workspaceSubdomain, students.id],
   }).onDelete('set null'),
+  index('inventory_sales_workspace_item_idx').on(table.workspaceSubdomain, table.itemId),
+  index('inventory_sales_workspace_student_idx').on(table.workspaceSubdomain, table.studentId),
 ]);
 
 export const ecommerceOrders = pgTable('ecommerce_orders', {
@@ -51,6 +56,7 @@ export const ecommerceOrders = pgTable('ecommerce_orders', {
   status: varchar('status', { length: 30 }).default('pending').notNull(), // 'pending' | 'paid' | 'shipped'
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('ecommerce_orders_workspace_status_date_idx').on(table.workspaceSubdomain, table.status, desc(table.orderDate)),
 ]);
 
 export const ijaraOrders = pgTable('ijara_orders', {

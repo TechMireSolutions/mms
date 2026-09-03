@@ -11,7 +11,11 @@ export async function getCollection(name: string): Promise<unknown[] | null> {
     const storageName = resolveCollectionStorageName(name);
     const tenant = getRequestTenant();
     return await withTenant(tenant, async (tx) => {
-      const rows = await tx.select().from(schema.collections).where(eq(schema.collections.name, storageName));
+      const rows = await tx
+        .select({ data: schema.collections.data })
+        .from(schema.collections)
+        .where(eq(schema.collections.name, storageName))
+        .limit(1);
       const row = rows[0];
       if (!row) return null;
       return row.data;

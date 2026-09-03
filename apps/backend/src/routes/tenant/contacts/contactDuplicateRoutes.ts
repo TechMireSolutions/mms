@@ -12,11 +12,11 @@ import {
   contactsDuplicateScanBodySchema,
 } from '../../../validation/contactSchemas.js';
 import { loadContactFieldConfig } from '../../../services/contactConfigService.js';
-import { collectContactWriteExtraFieldKeys } from '@mms/shared';
+import { collectContactWriteExtraFieldKeys, sanitizeContactsForViewer } from '@mms/shared';
 import {
   enqueueContactBackgroundJob,
+  getContactFieldConfigViewerOptions,
   requireContactPermission,
-  sanitizeForUser,
 } from './contactRouteHelpers.js';
 
 /** Contact duplicate check, pairs list, and background scan routes. */
@@ -46,12 +46,13 @@ export const contactDuplicateRoutes: FastifyPluginAsync = async (fastify) => {
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const page = await contactUseCases.loadContactDuplicatePairsPage(parsed.data);
-      const pairs = await Promise.all(
-        page.pairs.map(async (pair) => ({
-          ...pair,
-          contacts: await sanitizeForUser(pair.contacts, user),
-        })),
-      );
+      const viewerOptions = await getContactFieldConfigViewerOptions();
+      const pairs = viewerOptions
+        ? page.pairs.map((pair) => ({
+            ...pair,
+            contacts: sanitizeContactsForViewer(pair.contacts, user.role, viewerOptions),
+          }))
+        : page.pairs;
       return reply.send({ ...page, pairs });
     } catch (err) {
       request.log.error(err, 'Failed to load duplicate pairs');

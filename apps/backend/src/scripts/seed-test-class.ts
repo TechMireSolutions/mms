@@ -16,7 +16,14 @@ async function main() {
   const db = getDb();
 
   // 1. Find contact Jane Doe
-  const contactRows = await db.select().from(contacts).where(eq(contacts.workspaceSubdomain, subdomain));
+  const contactRows = await db
+    .select({
+      id: contacts.id,
+      firstName: contacts.firstName,
+      name: contacts.name,
+    })
+    .from(contacts)
+    .where(eq(contacts.workspaceSubdomain, subdomain));
   console.log(`Found ${contactRows.length} contact rows in database.`);
   const janeContact = contactRows.find(r => {
     return String(r.firstName || '').toLowerCase().includes('jane') || String(r.name || '').toLowerCase().includes('jane');
@@ -28,7 +35,13 @@ async function main() {
   }
 
   // 2. Find or create student record for Jane Doe
-  const studentRows = await db.select().from(students).where(eq(students.workspaceSubdomain, subdomain));
+  const studentRows = await db
+    .select({
+      id: students.id,
+      contactId: students.contactId,
+    })
+    .from(students)
+    .where(eq(students.workspaceSubdomain, subdomain));
   // (typed as { id } because only the student id is consumed below;
   //  the non-null literal keeps the extra columns written to the DB above)
   let janeStudent: { id: string } | undefined = studentRows.find(r => r.contactId === janeContact.id);

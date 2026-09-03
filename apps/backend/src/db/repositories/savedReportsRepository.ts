@@ -26,7 +26,27 @@ export interface CreatePersistedSavedReportRecord {
   createdAt?: Date;
 }
 
-type SavedReportRow = typeof savedReports.$inferSelect;
+const SAVED_REPORT_SELECT_FIELDS = {
+  id: savedReports.id,
+  name: savedReports.name,
+  category: savedReports.category,
+  filters: savedReports.filters,
+  lastRunAt: savedReports.lastRunAt,
+  createdBy: savedReports.createdBy,
+  createdByName: savedReports.createdByName,
+  createdAt: savedReports.createdAt,
+};
+
+type SavedReportRow = {
+  id: string;
+  name: string;
+  category: string;
+  filters: Record<string, unknown>;
+  lastRunAt: Date;
+  createdBy: string;
+  createdByName: string;
+  createdAt: Date;
+};
 
 function toGenericSavedReport(row: SavedReportRow): GenericSavedReport {
   return {
@@ -45,18 +65,23 @@ export async function listSavedReportsByOwner(
   workspaceSubdomain: string,
   category: GenericSavedReportCategory,
   createdBy: string,
+  options?: { limit?: number; offset?: number },
 ): Promise<GenericSavedReport[]> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
+  const limit = Math.min(Math.max(1, options?.limit ?? 100), 500);
+  const offset = Math.max(0, options?.offset ?? 0);
   return withTenant(tenant, async (tx) => {
     const rows = await tx
-      .select()
+      .select(SAVED_REPORT_SELECT_FIELDS)
       .from(savedReports)
       .where(and(
         eq(savedReports.workspaceSubdomain, tenant),
         eq(savedReports.category, category),
         eq(savedReports.createdBy, createdBy),
       ))
-      .orderBy(desc(savedReports.createdAt));
+      .orderBy(desc(savedReports.createdAt))
+      .limit(limit)
+      .offset(offset);
     return rows.map(toGenericSavedReport);
   });
 }
@@ -64,17 +89,22 @@ export async function listSavedReportsByOwner(
 export async function listSavedReportsByCategory(
   workspaceSubdomain: string,
   category: PersistedSavedReportCategory,
+  options?: { limit?: number; offset?: number },
 ): Promise<GenericSavedReport[]> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
+  const limit = Math.min(Math.max(1, options?.limit ?? 200), 500);
+  const offset = Math.max(0, options?.offset ?? 0);
   return withTenant(tenant, async (tx) => {
     const rows = await tx
-      .select()
+      .select(SAVED_REPORT_SELECT_FIELDS)
       .from(savedReports)
       .where(and(
         eq(savedReports.workspaceSubdomain, tenant),
         eq(savedReports.category, category),
       ))
-      .orderBy(desc(savedReports.createdAt));
+      .orderBy(desc(savedReports.createdAt))
+      .limit(limit)
+      .offset(offset);
     return rows.map(toGenericSavedReport);
   });
 }
@@ -88,7 +118,7 @@ export async function findSavedReportByOwner(
   const tenant = workspaceSubdomain.trim().toLowerCase();
   return withTenant(tenant, async (tx) => {
     const rows = await tx
-      .select()
+      .select(SAVED_REPORT_SELECT_FIELDS)
       .from(savedReports)
       .where(and(
         eq(savedReports.workspaceSubdomain, tenant),
@@ -109,7 +139,7 @@ export async function findSavedReportById(
   const tenant = workspaceSubdomain.trim().toLowerCase();
   return withTenant(tenant, async (tx) => {
     const rows = await tx
-      .select()
+      .select(SAVED_REPORT_SELECT_FIELDS)
       .from(savedReports)
       .where(and(
         eq(savedReports.workspaceSubdomain, tenant),
@@ -240,14 +270,19 @@ export async function touchSavedReportRunById(
 /** Every saved-report preset for a workspace — admin backup snapshots. */
 export async function listAllSavedReportsByWorkspace(
   workspaceSubdomain: string,
+  options?: { limit?: number; offset?: number; unbounded?: boolean },
 ): Promise<GenericSavedReport[]> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
+  const limit = options?.unbounded ? undefined : Math.min(Math.max(1, options?.limit ?? 500), 5000);
+  const offset = Math.max(0, options?.offset ?? 0);
   return withTenant(tenant, async (tx) => {
-    const rows = await tx
-      .select()
+    const baseQuery = tx
+      .select(SAVED_REPORT_SELECT_FIELDS)
       .from(savedReports)
       .where(eq(savedReports.workspaceSubdomain, tenant))
-      .orderBy(desc(savedReports.createdAt));
+      .orderBy(desc(savedReports.createdAt))
+      .offset(offset);
+    const rows = limit ? await baseQuery.limit(limit) : await baseQuery;
     return rows.map(toGenericSavedReport);
   });
 }

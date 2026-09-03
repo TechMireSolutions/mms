@@ -14,7 +14,12 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
     const tenant = getRequestTenant();
     return await withTenant(tenant, async (tx) => {
       const collections: Record<string, unknown[]> = {};
-      const colRows = await tx.select().from(schema.collections);
+      const colRows = await tx
+        .select({
+          name: schema.collections.name,
+          data: schema.collections.data,
+        })
+        .from(schema.collections);
       for (const row of colRows) {
         if (row.name === WORKSPACES_COLLECTION) continue;
         const parsed = parseTenantScopedStorageKey(row.name);
@@ -27,7 +32,12 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
       }
 
       const objects: Record<string, unknown> = {};
-      const objRows = await tx.select().from(schema.objects);
+      const objRows = await tx
+        .select({
+          key: schema.objects.key,
+          data: schema.objects.data,
+        })
+        .from(schema.objects);
       for (const row of objRows) {
         const parsed = parseTenantScopedStorageKey(row.key);
         const logicalKey = parsed?.logicalKey ?? row.key;
@@ -64,7 +74,11 @@ export async function listCollectionStorageNames(): Promise<string[]> {
 export async function getCollectionByStorageName(name: string): Promise<unknown[] | null> {
   const tenant = getRequestTenant();
   return withTenant(tenant, async (tx) => {
-    const rows = await tx.select().from(schema.collections).where(eq(schema.collections.name, name));
+    const rows = await tx
+      .select({ data: schema.collections.data })
+      .from(schema.collections)
+      .where(eq(schema.collections.name, name))
+      .limit(1);
     const row = rows[0];
     if (!row) return null;
     return row.data;
@@ -143,7 +157,11 @@ export async function listTenantCollectionLogicalKeys(): Promise<string[]> {
 export async function getObjectByStorageKey(key: string): Promise<unknown | null> {
   const tenant = getRequestTenant();
   return withTenant(tenant, async (tx) => {
-    const rows = await tx.select().from(schema.objects).where(eq(schema.objects.key, key));
+    const rows = await tx
+      .select({ data: schema.objects.data })
+      .from(schema.objects)
+      .where(eq(schema.objects.key, key))
+      .limit(1);
     const row = rows[0];
     if (!row) return null;
     return row.data;

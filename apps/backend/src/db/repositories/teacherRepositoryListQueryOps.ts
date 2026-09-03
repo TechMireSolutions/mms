@@ -34,7 +34,25 @@ export async function listActiveTeachersMissingEmployeeId(
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: teachers.id,
+        workspaceSubdomain: teachers.workspaceSubdomain,
+        contactId: teachers.contactId,
+        userId: teachers.userId,
+        employeeId: teachers.employeeId,
+        status: teachers.status,
+        specialization: teachers.specialization,
+        qualification: teachers.qualification,
+        joinDate: teachers.joinDate,
+        notes: teachers.notes,
+        deletedAt: teachers.deletedAt,
+        deletedBy: teachers.deletedBy,
+        deletionReason: teachers.deletionReason,
+        createdAt: teachers.createdAt,
+        updatedAt: teachers.updatedAt,
+        createdBy: teachers.createdBy,
+        updatedBy: teachers.updatedBy,
+      })
       .from(teachers)
       .where(
         and(
@@ -88,7 +106,25 @@ export async function findSoftDeletedTeacherByContactIdSql(
   if (!trimmedContactId) return null;
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: teachers.id,
+        workspaceSubdomain: teachers.workspaceSubdomain,
+        contactId: teachers.contactId,
+        userId: teachers.userId,
+        employeeId: teachers.employeeId,
+        status: teachers.status,
+        specialization: teachers.specialization,
+        qualification: teachers.qualification,
+        joinDate: teachers.joinDate,
+        notes: teachers.notes,
+        deletedAt: teachers.deletedAt,
+        deletedBy: teachers.deletedBy,
+        deletionReason: teachers.deletionReason,
+        createdAt: teachers.createdAt,
+        updatedAt: teachers.updatedAt,
+        createdBy: teachers.createdBy,
+        updatedBy: teachers.updatedBy,
+      })
       .from(teachers)
       .where(
         and(

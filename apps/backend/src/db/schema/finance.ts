@@ -33,6 +33,9 @@ export const financeInvoices = pgTable('finance_invoices', {
   index('finance_invoices_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('finance_invoices_workspace_status_due_active_idx')
+    .on(table.workspaceSubdomain, table.status, table.dueDate)
+    .where(sql`${table.deletedAt} is null`),
 ]);
 
 export const financePayments = pgTable('finance_payments', {

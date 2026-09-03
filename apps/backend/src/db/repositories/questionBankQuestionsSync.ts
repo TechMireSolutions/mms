@@ -79,47 +79,47 @@ export async function syncQuestionChildren(
   ]);
 
   const catIds = record.categoryIds ?? (record.categoryId ? [record.categoryId] : []);
-  for (const catId of catIds) {
-    await tx.insert(questionCategories).values({
-      workspaceSubdomain: subdomain,
-      questionId: record.id,
-      categoryId: catId,
-    });
+  if (catIds.length > 0) {
+    await tx.insert(questionCategories).values(
+      catIds.map((catId) => ({
+        workspaceSubdomain: subdomain,
+        questionId: record.id,
+        categoryId: catId,
+      })),
+    );
   }
 
   if (record.options && record.options.length > 0) {
-    for (let i = 0; i < record.options.length; i++) {
-      const opt = record.options[i]!;
-      await tx.insert(questionOptions).values({
+    await tx.insert(questionOptions).values(
+      record.options.map((opt, i) => ({
         id: `${record.id}_opt_${i}`,
         workspaceSubdomain: subdomain,
         questionId: record.id,
         optionIndex: i,
         optionText: opt,
-      });
-    }
+      })),
+    );
   }
 
   if (record.tags && record.tags.length > 0) {
-    for (const tag of record.tags) {
-      await tx.insert(questionTags).values({
+    await tx.insert(questionTags).values(
+      record.tags.map((tag) => ({
         workspaceSubdomain: subdomain,
         questionId: record.id,
         tag,
-      });
-    }
+      })),
+    );
   }
 
   if (record.sourceCitations && record.sourceCitations.length > 0) {
-    for (let i = 0; i < record.sourceCitations.length; i++) {
-      const cit = record.sourceCitations[i]!;
-      await tx.insert(questionCitations).values({
+    await tx.insert(questionCitations).values(
+      record.sourceCitations.map((cit, i) => ({
         id: `${record.id}_cit_${i}`,
         workspaceSubdomain: subdomain,
         questionId: record.id,
         bookId: cit.bookId,
         citation: JSON.stringify(cit.citation ?? {}),
-      });
-    }
+      })),
+    );
   }
 }

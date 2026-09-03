@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { messageTemplates, messageLogs } from '../schema.js';
 import type { Message } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
@@ -25,14 +25,41 @@ export function logRowToRecord(row: LogRow): Message {
   };
 }
 
-export async function listMessageLogsByWorkspace(tenant: string): Promise<Message[]> {
+export interface ListMessageLogsOptions {
+  limit?: number;
+  offset?: number;
+}
+
+export async function listMessageLogsByWorkspace(
+  tenant: string,
+  options?: ListMessageLogsOptions,
+): Promise<Message[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const limit = Math.min(Math.max(1, options?.limit ?? 100), 500);
+  const offset = Math.max(0, options?.offset ?? 0);
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: messageLogs.id,
+        workspaceSubdomain: messageLogs.workspaceSubdomain,
+        userId: messageLogs.userId,
+        contactId: messageLogs.contactId,
+        channel: messageLogs.channel,
+        body: messageLogs.body,
+        sentAt: messageLogs.sentAt,
+        status: messageLogs.status,
+        subject: messageLogs.subject,
+        category: messageLogs.category,
+        errorMessage: messageLogs.errorMessage,
+        deletedAt: messageLogs.deletedAt,
+        deletedBy: messageLogs.deletedBy,
+        deletionReason: messageLogs.deletionReason,
+      })
       .from(messageLogs)
-      .where(and(eq(messageLogs.workspaceSubdomain, subdomain), isNull(messageLogs.deletedAt)));
-    return rows.map(logRowToRecord);
+      .where(and(eq(messageLogs.workspaceSubdomain, subdomain), isNull(messageLogs.deletedAt)))
+      .limit(limit)
+      .offset(offset);
+    return rows.map((r) => logRowToRecord(r as LogRow));
   });
 }
 
@@ -40,37 +67,9 @@ export async function replaceMessageLogsForWorkspace(tenant: string, records: Me
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(messageLogs).where(eq(messageLogs.workspaceSubdomain, subdomain));
-    for (const record of records) {
-      await tx.insert(messageLogs).values({
-        id: String(record.id),
-        workspaceSubdomain: subdomain,
-        userId: record.userId ?? '',
-        contactId: String(record.contactId),
-        channel: record.channel,
-        body: record.body,
-        sentAt: record.sentAt,
-        status: record.status ?? 'sent',
-        subject: record.subject ?? null,
-        category: record.category ?? 'general',
-        errorMessage: record.errorMessage ?? null,
-        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-        deletedBy: record.deletedBy ?? null,
-        deletionReason: record.deletionReason ?? null,
-        createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-        updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-      });
-    }
-  });
-}
-
-export async function bulkSaveMessageLogs(tenant: string, records: Message[]): Promise<void> {
-  if (records.length === 0) return;
-  const subdomain = tenant.trim().toLowerCase();
-  await withTenant(subdomain, async (tx) => {
-    for (const record of records) {
-      await tx
-        .insert(messageLogs)
-        .values({
+    if (records.length > 0) {
+      await tx.insert(messageLogs).values(
+        records.map((record) => ({
           id: String(record.id),
           workspaceSubdomain: subdomain,
           userId: record.userId ?? '',
@@ -87,26 +86,56 @@ export async function bulkSaveMessageLogs(tenant: string, records: Message[]): P
           deletionReason: record.deletionReason ?? null,
           createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
           updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [messageLogs.workspaceSubdomain, messageLogs.id],
-          set: {
-            userId: record.userId ?? '',
-            contactId: String(record.contactId),
-            channel: record.channel,
-            body: record.body,
-            sentAt: record.sentAt,
-            status: record.status ?? 'sent',
-            subject: record.subject ?? null,
-            category: record.category ?? 'general',
-            errorMessage: record.errorMessage ?? null,
-            deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-            deletedBy: record.deletedBy ?? null,
-            deletionReason: record.deletionReason ?? null,
-            updatedAt: new Date(),
-          },
-        });
+        })),
+      );
     }
+  });
+}
+
+export async function bulkSaveMessageLogs(tenant: string, records: Message[]): Promise<void> {
+  if (records.length === 0) return;
+  const subdomain = tenant.trim().toLowerCase();
+  await withTenant(subdomain, async (tx) => {
+    await tx
+      .insert(messageLogs)
+      .values(
+        records.map((record) => ({
+          id: String(record.id),
+          workspaceSubdomain: subdomain,
+          userId: record.userId ?? '',
+          contactId: String(record.contactId),
+          channel: record.channel,
+          body: record.body,
+          sentAt: record.sentAt,
+          status: record.status ?? 'sent',
+          subject: record.subject ?? null,
+          category: record.category ?? 'general',
+          errorMessage: record.errorMessage ?? null,
+          deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
+          deletedBy: record.deletedBy ?? null,
+          deletionReason: record.deletionReason ?? null,
+          createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
+          updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [messageLogs.workspaceSubdomain, messageLogs.id],
+        set: {
+          userId: sql`excluded.user_id`,
+          contactId: sql`excluded.contact_id`,
+          channel: sql`excluded.channel`,
+          body: sql`excluded.body`,
+          sentAt: sql`excluded.sent_at`,
+          status: sql`excluded.status`,
+          subject: sql`excluded.subject`,
+          category: sql`excluded.category`,
+          errorMessage: sql`excluded.error_message`,
+          deletedAt: sql`excluded.deleted_at`,
+          deletedBy: sql`excluded.deleted_by`,
+          deletionReason: sql`excluded.deletion_reason`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 

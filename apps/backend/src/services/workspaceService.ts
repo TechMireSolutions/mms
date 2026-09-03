@@ -36,6 +36,7 @@ import {
 } from '../db/repositories/workspaceRepository.js';
 import {
   getUserModulePreferencesByWorkspace,
+  getUserModulePreferencesByWorkspaces,
   upsertUserModulePreferences,
 } from '../db/repositories/userModulePreferencesRepository.js';
 
@@ -93,23 +94,24 @@ export async function listPublicWorkspaces(): Promise<PublicWorkspaceSummary[]> 
 /** All workspaces for platform super-user console (includes disabled). */
 export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> {
   const rows = await listWorkspaceRowsWithBranding();
-  const summaries = await Promise.all(
-    rows.map(async ({ workspace, branding }) => {
-      const publicBranding = toPublicBranding(branding);
-      const rawPrefs = await getUserModulePreferencesByWorkspace(workspace.subdomain);
-      const prefs = normalizeUserModulePreferences(rawPrefs);
-      const logoUrl = publicBranding.logoUrl?.trim();
-      return {
-        subdomain: workspace.subdomain,
-        madrasaName: publicBranding.madrasaName || workspace.madrasaName,
-        tagline: publicBranding.tagline || workspace.tagline,
-        logoUrl: logoUrl || undefined,
-        enabled: isWorkspaceEnabled(workspace),
-        createdAt: workspace.createdAt,
-        requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
-      };
-    }),
-  );
+  const subdomains = rows.map(({ workspace }) => workspace.subdomain);
+  const prefsBySubdomain = await getUserModulePreferencesByWorkspaces(subdomains);
+
+  const summaries = rows.map(({ workspace, branding }) => {
+    const publicBranding = toPublicBranding(branding);
+    const rawPrefs = prefsBySubdomain.get(workspace.subdomain.toLowerCase()) ?? null;
+    const prefs = normalizeUserModulePreferences(rawPrefs);
+    const logoUrl = publicBranding.logoUrl?.trim();
+    return {
+      subdomain: workspace.subdomain,
+      madrasaName: publicBranding.madrasaName || workspace.madrasaName,
+      tagline: publicBranding.tagline || workspace.tagline,
+      logoUrl: logoUrl || undefined,
+      enabled: isWorkspaceEnabled(workspace),
+      createdAt: workspace.createdAt,
+      requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
+    };
+  });
   return summaries.sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
 }
 

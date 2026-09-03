@@ -4,6 +4,7 @@ const mockDb = {
   select: vi.fn().mockReturnThis(),
   from: vi.fn().mockReturnThis(),
   where: vi.fn().mockReturnThis(),
+  limit: vi.fn().mockReturnThis(),
   delete: vi.fn().mockReturnThis(),
   insert: vi.fn().mockReturnThis(),
   update: vi.fn().mockReturnThis(),
@@ -60,7 +61,7 @@ describe('workspaceService', () => {
       enabled: true,
     };
     
-    vi.mocked(mockDb.where).mockResolvedValue([mockWs] as unknown as never);
+    vi.mocked(mockDb.limit).mockResolvedValue([mockWs] as unknown as never);
 
     const removed = await deleteWorkspace(' Demo ');
 

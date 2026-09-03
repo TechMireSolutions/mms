@@ -11,7 +11,11 @@ export async function getObject(key: string): Promise<unknown | null> {
     const storageKey = resolveObjectStorageKey(key);
     const tenant = getRequestTenant();
     return await withTenant(tenant, async (tx) => {
-      const rows = await tx.select().from(schema.objects).where(eq(schema.objects.key, storageKey));
+      const rows = await tx
+        .select({ data: schema.objects.data })
+        .from(schema.objects)
+        .where(eq(schema.objects.key, storageKey))
+        .limit(1);
       const row = rows[0];
       if (!row) return null;
       return row.data;

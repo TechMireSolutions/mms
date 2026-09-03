@@ -6,7 +6,20 @@ import { contacts } from '../db/schema.js';
 async function main() {
   await initDb();
   const db = getDb();
-  const rows = await db.select().from(contacts);
+  const rows = await db
+    .select({
+      id: contacts.id,
+      workspaceSubdomain: contacts.workspaceSubdomain,
+      name: contacts.name,
+      firstName: contacts.firstName,
+      lastName: contacts.lastName,
+      gender: contacts.gender,
+      dob: contacts.dob,
+      isSyed: contacts.isSyed,
+      notes: contacts.notes,
+      deletedAt: contacts.deletedAt,
+    })
+    .from(contacts);
   
   console.log('=== LOCAL DATABASE CONTACTS AUDIT REPORT ===');
   console.log(`Total Contact Records in Database: ${rows.length}\n`);

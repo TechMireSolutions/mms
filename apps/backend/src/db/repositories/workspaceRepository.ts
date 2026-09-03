@@ -121,10 +121,80 @@ function rowToGlobalSettings(ws: typeof workspacesTable.$inferSelect): GlobalSet
   });
 }
 
-export async function listWorkspaceRows(): Promise<Workspace[]> {
-  const rows = await activeDb().select().from(workspacesTable);
-  return rows.map(rowToWorkspace);
+export async function listWorkspaceRows(options?: {
+  limit?: number;
+  offset?: number;
+}): Promise<Workspace[]> {
+  const query = activeDb()
+    .select({
+      id: workspacesTable.id,
+      subdomain: workspacesTable.subdomain,
+      madrasaName: workspacesTable.madrasaName,
+      tagline: workspacesTable.tagline,
+      country: workspacesTable.country,
+      enabled: workspacesTable.enabled,
+      createdAt: workspacesTable.createdAt,
+    })
+    .from(workspacesTable);
+
+  const rows = (options?.limit !== undefined || options?.offset !== undefined)
+    ? await (query as unknown as { limit: (l: number) => { offset: (o: number) => Promise<typeof workspacesTable.$inferSelect[]> } })
+        .limit(Math.min(Math.max(options?.limit ?? 500, 1), 5000))
+        .offset(Math.max(options?.offset ?? 0, 0))
+    : await query;
+
+  return rows.map((r) => ({
+    id: r.id,
+    subdomain: r.subdomain,
+    madrasaName: r.madrasaName,
+    tagline: r.tagline ?? undefined,
+    country: r.country ?? undefined,
+    enabled: r.enabled,
+    createdAt: r.createdAt.toISOString(),
+  }));
 }
+
+const ALL_WORKSPACE_COLUMNS = {
+  id: workspacesTable.id,
+  subdomain: workspacesTable.subdomain,
+  madrasaName: workspacesTable.madrasaName,
+  tagline: workspacesTable.tagline,
+  country: workspacesTable.country,
+  enabled: workspacesTable.enabled,
+  primaryColor: workspacesTable.primaryColor,
+  secondaryColor: workspacesTable.secondaryColor,
+  cornerStyle: workspacesTable.cornerStyle,
+  logoUrl: workspacesTable.logoUrl,
+  faviconUrl: workspacesTable.faviconUrl,
+  footerText: workspacesTable.footerText,
+  email: workspacesTable.email,
+  phone: workspacesTable.phone,
+  website: workspacesTable.website,
+  legalName: workspacesTable.legalName,
+  registrationNumber: workspacesTable.registrationNumber,
+  addressLine1: workspacesTable.addressLine1,
+  addressLine2: workspacesTable.addressLine2,
+  city: workspacesTable.city,
+  region: workspacesTable.region,
+  postalCode: workspacesTable.postalCode,
+  socialLinks: workspacesTable.socialLinks,
+  language: workspacesTable.language,
+  timezone: workspacesTable.timezone,
+  dateFormat: workspacesTable.dateFormat,
+  emailNotifications: workspacesTable.emailNotifications,
+  smsNotifications: workspacesTable.smsNotifications,
+  twoFactor: workspacesTable.twoFactor,
+  sessionTimeout: workspacesTable.sessionTimeout,
+  passwordPolicy: workspacesTable.passwordPolicy,
+  theme: workspacesTable.theme,
+  enabledModules: workspacesTable.enabledModules,
+  grantedModules: workspacesTable.grantedModules,
+  llmProvider: workspacesTable.llmProvider,
+  llmApiKey: workspacesTable.llmApiKey,
+  llmConfigs: workspacesTable.llmConfigs,
+  createdAt: workspacesTable.createdAt,
+  updatedAt: workspacesTable.updatedAt,
+};
 
 /**
  * Lists all workspaces with their branding in a single query. Avoids the
@@ -134,8 +204,38 @@ export async function listWorkspaceRows(): Promise<Workspace[]> {
 export async function listWorkspaceRowsWithBranding(): Promise<
   Array<{ workspace: Workspace; branding: BrandingSettings }>
 > {
-  const rows = await activeDb().select().from(workspacesTable);
-  return rows.map((ws) => ({ workspace: rowToWorkspace(ws), branding: rowToBranding(ws) }));
+  const rows = await activeDb()
+    .select({
+      id: workspacesTable.id,
+      subdomain: workspacesTable.subdomain,
+      madrasaName: workspacesTable.madrasaName,
+      tagline: workspacesTable.tagline,
+      country: workspacesTable.country,
+      enabled: workspacesTable.enabled,
+      primaryColor: workspacesTable.primaryColor,
+      secondaryColor: workspacesTable.secondaryColor,
+      cornerStyle: workspacesTable.cornerStyle,
+      logoUrl: workspacesTable.logoUrl,
+      faviconUrl: workspacesTable.faviconUrl,
+      footerText: workspacesTable.footerText,
+      email: workspacesTable.email,
+      phone: workspacesTable.phone,
+      website: workspacesTable.website,
+      legalName: workspacesTable.legalName,
+      registrationNumber: workspacesTable.registrationNumber,
+      addressLine1: workspacesTable.addressLine1,
+      addressLine2: workspacesTable.addressLine2,
+      city: workspacesTable.city,
+      region: workspacesTable.region,
+      postalCode: workspacesTable.postalCode,
+      socialLinks: workspacesTable.socialLinks,
+      createdAt: workspacesTable.createdAt,
+    })
+    .from(workspacesTable);
+  return rows.map((ws) => ({
+    workspace: rowToWorkspace(ws as unknown as typeof workspacesTable.$inferSelect),
+    branding: rowToBranding(ws as unknown as typeof workspacesTable.$inferSelect),
+  }));
 }
 
 /**
@@ -162,9 +262,10 @@ async function loadWorkspaceRow(
   const cached = readCachedWorkspaceRow(subdomain);
   if (cached) return cached;
   const rows = await activeDb()
-    .select()
+    .select(ALL_WORKSPACE_COLUMNS)
     .from(workspacesTable)
-    .where(eq(workspacesTable.subdomain, subdomain));
+    .where(eq(workspacesTable.subdomain, subdomain))
+    .limit(1);
   const ws = rows[0] ?? null;
   writeCachedWorkspaceRow(subdomain, ws);
   return ws;

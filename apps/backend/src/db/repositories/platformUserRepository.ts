@@ -113,7 +113,21 @@ export async function countPlatformUserRows(): Promise<number> {
 }
 
 export async function listPlatformUsers(): Promise<StoredPlatformUser[]> {
-  const rows = await activeDb().select().from(platformUsers).orderBy(asc(platformUsers.createdAt));
+  const rows = await activeDb()
+    .select({
+      id: platformUsers.id,
+      email: platformUsers.email,
+      name: platformUsers.name,
+      passwordHash: platformUsers.passwordHash,
+      role: platformUsers.role,
+      sessionVersion: platformUsers.sessionVersion,
+      createdAt: platformUsers.createdAt,
+      updatedAt: platformUsers.updatedAt,
+      emailVerifiedAt: platformUsers.emailVerifiedAt,
+      disabledAt: platformUsers.disabledAt,
+    })
+    .from(platformUsers)
+    .orderBy(asc(platformUsers.createdAt));
   if (rows.length === 0) return [];
 
   const userIds = rows.map((r) => r.id);
@@ -127,9 +141,21 @@ export async function listPlatformUsers(): Promise<StoredPlatformUser[]> {
 export async function findPlatformUserRowByEmail(email: string): Promise<StoredPlatformUser | null> {
   const normalized = email.trim().toLowerCase();
   const rows = await activeDb()
-    .select()
+    .select({
+      id: platformUsers.id,
+      email: platformUsers.email,
+      name: platformUsers.name,
+      passwordHash: platformUsers.passwordHash,
+      role: platformUsers.role,
+      sessionVersion: platformUsers.sessionVersion,
+      createdAt: platformUsers.createdAt,
+      updatedAt: platformUsers.updatedAt,
+      emailVerifiedAt: platformUsers.emailVerifiedAt,
+      disabledAt: platformUsers.disabledAt,
+    })
     .from(platformUsers)
-    .where(eq(platformUsers.email, normalized));
+    .where(eq(platformUsers.email, normalized))
+    .limit(1);
   const row = rows[0];
   if (!row) return null;
   const perms = await loadPermissions(row.id);
@@ -137,7 +163,22 @@ export async function findPlatformUserRowByEmail(email: string): Promise<StoredP
 }
 
 export async function findPlatformUserRowById(id: string): Promise<StoredPlatformUser | null> {
-  const rows = await activeDb().select().from(platformUsers).where(eq(platformUsers.id, id));
+  const rows = await activeDb()
+    .select({
+      id: platformUsers.id,
+      email: platformUsers.email,
+      name: platformUsers.name,
+      passwordHash: platformUsers.passwordHash,
+      role: platformUsers.role,
+      sessionVersion: platformUsers.sessionVersion,
+      createdAt: platformUsers.createdAt,
+      updatedAt: platformUsers.updatedAt,
+      emailVerifiedAt: platformUsers.emailVerifiedAt,
+      disabledAt: platformUsers.disabledAt,
+    })
+    .from(platformUsers)
+    .where(eq(platformUsers.id, id))
+    .limit(1);
   const row = rows[0];
   if (!row) return null;
   const perms = await loadPermissions(row.id);
@@ -145,7 +186,22 @@ export async function findPlatformUserRowById(id: string): Promise<StoredPlatfor
 }
 
 export async function findPlatformUserRowByRole(role: PlatformRole): Promise<StoredPlatformUser | null> {
-  const rows = await activeDb().select().from(platformUsers).where(eq(platformUsers.role, role));
+  const rows = await activeDb()
+    .select({
+      id: platformUsers.id,
+      email: platformUsers.email,
+      name: platformUsers.name,
+      passwordHash: platformUsers.passwordHash,
+      role: platformUsers.role,
+      sessionVersion: platformUsers.sessionVersion,
+      createdAt: platformUsers.createdAt,
+      updatedAt: platformUsers.updatedAt,
+      emailVerifiedAt: platformUsers.emailVerifiedAt,
+      disabledAt: platformUsers.disabledAt,
+    })
+    .from(platformUsers)
+    .where(eq(platformUsers.role, role))
+    .limit(1);
   const row = rows[0];
   if (!row) return null;
   const perms = await loadPermissions(row.id);

@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, index, boolean, jsonb, primaryKey, varchar, numeric , foreignKey } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 
 export const accountingAccounts = pgTable('accounting_accounts', {
@@ -72,6 +72,9 @@ export const accountingEntries = pgTable('accounting_entries', {
   index('accounting_entries_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('accounting_entries_workspace_active_idx')
     .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+  index('accounting_entries_workspace_fiscal_date_active_idx')
+    .on(table.workspaceSubdomain, table.fiscalYear, desc(table.date))
     .where(sql`${table.deletedAt} is null`),
 ]);
 

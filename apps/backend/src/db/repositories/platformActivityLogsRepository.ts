@@ -44,7 +44,17 @@ export async function listPlatformActivityLogs(limit = 50, offset = 0) {
   const safeLimit = Math.min(Math.max(1, limit), 200);
   const safeOffset = Math.max(0, offset);
   const rows = await activeDb()
-    .select()
+    .select({
+      id: platformActivityLogs.id,
+      userId: platformActivityLogs.userId,
+      userEmail: platformActivityLogs.userEmail,
+      action: platformActivityLogs.action,
+      targetResource: platformActivityLogs.targetResource,
+      targetId: platformActivityLogs.targetId,
+      ipAddress: platformActivityLogs.ipAddress,
+      metadataMessage: platformActivityLogs.metadataMessage,
+      createdAt: platformActivityLogs.createdAt,
+    })
     .from(platformActivityLogs)
     .orderBy(desc(platformActivityLogs.createdAt))
     .limit(safeLimit)

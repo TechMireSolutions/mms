@@ -129,7 +129,15 @@ export async function listEnrollmentsPage(
     }
 
     const timelineRows = (await tx
-      .select()
+      .select({
+        id: enrollmentTimelineEvents.id,
+        workspaceSubdomain: enrollmentTimelineEvents.workspaceSubdomain,
+        enrollmentId: enrollmentTimelineEvents.enrollmentId,
+        event: enrollmentTimelineEvents.event,
+        by: enrollmentTimelineEvents.by,
+        ts: enrollmentTimelineEvents.ts,
+        createdAt: enrollmentTimelineEvents.createdAt,
+      })
       .from(enrollmentTimelineEvents)
       .where(
         and(

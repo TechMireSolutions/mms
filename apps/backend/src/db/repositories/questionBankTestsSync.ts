@@ -64,40 +64,38 @@ export async function syncTestChildren(
     .where(and(eq(testQuestions.workspaceSubdomain, subdomain), eq(testQuestions.testId, record.id)));
 
   if (record.questionIds && record.questionIds.length > 0) {
-    for (let i = 0; i < record.questionIds.length; i++) {
-      const qId = record.questionIds[i]!;
-      await tx.insert(testQuestions).values({
+    await tx.insert(testQuestions).values(
+      record.questionIds.map((qId, i) => ({
         workspaceSubdomain: subdomain,
         testId: record.id,
         questionId: qId,
         sortOrder: i,
-      });
-    }
+      })),
+    );
   }
 
   if (record.sections && record.sections.length > 0) {
-    for (let i = 0; i < record.sections.length; i++) {
-      const sec = record.sections[i]!;
-      await tx.insert(testSections).values({
+    await tx.insert(testSections).values(
+      record.sections.map((sec, i) => ({
         id: sec.id,
         workspaceSubdomain: subdomain,
         testId: record.id,
         title: sec.title,
         instructions: sec.instructions ?? '',
         sortOrder: i,
-      });
+      })),
+    );
 
-      if (sec.questionIds && sec.questionIds.length > 0) {
-        for (let j = 0; j < sec.questionIds.length; j++) {
-          const sqId = sec.questionIds[j]!;
-          await tx.insert(testSectionQuestions).values({
-            workspaceSubdomain: subdomain,
-            sectionId: sec.id,
-            questionId: sqId,
-            sortOrder: j,
-          });
-        }
-      }
+    const secQuestions = record.sections.flatMap((sec) =>
+      (sec.questionIds ?? []).map((sqId, j) => ({
+        workspaceSubdomain: subdomain,
+        sectionId: sec.id,
+        questionId: sqId,
+        sortOrder: j,
+      })),
+    );
+    if (secQuestions.length > 0) {
+      await tx.insert(testSectionQuestions).values(secQuestions);
     }
   }
 }

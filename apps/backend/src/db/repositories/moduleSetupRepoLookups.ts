@@ -31,7 +31,15 @@ export function createModuleLookupsRepo(options: {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     return withTenant(subdomain, async (tx) => {
       return tx
-        .select()
+        .select({
+          id: table.id,
+          workspaceSubdomain: table.workspaceSubdomain,
+          kind: table.kind,
+          label: table.label,
+          meta: table.meta,
+          sortOrder: table.sortOrder,
+          updatedAt: table.updatedAt,
+        })
         .from(table)
         .where(eq(table.workspaceSubdomain, subdomain))
         .orderBy(asc(table.kind), asc(table.sortOrder));
@@ -42,7 +50,15 @@ export function createModuleLookupsRepo(options: {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     return withTenant(subdomain, async (tx) => {
       return tx
-        .select()
+        .select({
+          id: table.id,
+          workspaceSubdomain: table.workspaceSubdomain,
+          kind: table.kind,
+          label: table.label,
+          meta: table.meta,
+          sortOrder: table.sortOrder,
+          updatedAt: table.updatedAt,
+        })
         .from(table)
         .where(
           and(

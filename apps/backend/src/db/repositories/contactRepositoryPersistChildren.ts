@@ -262,3 +262,209 @@ export async function syncContactChildrenTx(
     );
   }
 }
+
+export async function bulkInsertContactChildrenTx(
+  tx: Transaction,
+  subdomain: string,
+  rawContacts: Contact[],
+): Promise<void> {
+  const allPhones = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.phones ?? []).map((p, idx) => ({
+      id: `phone-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      number: p.number,
+      label: p.label || 'Main',
+      countryCode: p.countryCode ?? null,
+      isPrimary: p.isPrimary ?? idx === 0,
+      whatsappStatus: p.whatsappStatus ?? null,
+      sortOrder: idx,
+    }));
+  });
+  if (allPhones.length > 0) await tx.insert(contactPhones).values(allPhones);
+
+  const allTags = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    const tagsToSave = getContactTags(c);
+    const validTags = Array.from(new Set(tagsToSave.map((t) => String(t).trim()).filter(Boolean)));
+    return validTags.map((t, idx) => ({
+      id: `tag-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      name: t,
+    }));
+  });
+  if (allTags.length > 0) await tx.insert(contactTags).values(allTags);
+
+  const allEmails = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.emails ?? []).map((e, idx) => ({
+      id: `email-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      address: e.address,
+      label: e.label || 'Primary',
+      isPrimary: e.isPrimary ?? idx === 0,
+      isVerified: e.isVerified ?? false,
+      sortOrder: idx,
+    }));
+  });
+  if (allEmails.length > 0) await tx.insert(contactEmails).values(allEmails);
+
+  const allAddresses = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.addresses ?? []).map((a, idx) => ({
+      id: `addr-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      label: a.label ?? null,
+      line1: a.line1 ?? null,
+      city: a.city ?? null,
+      state: a.state ?? null,
+      country: a.country ?? null,
+      isPrimary: a.isPrimary ?? idx === 0,
+      sortOrder: idx,
+    }));
+  });
+  if (allAddresses.length > 0) await tx.insert(contactAddresses).values(allAddresses);
+
+  const allSocials = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.socials ?? []).map((s, idx) => ({
+      id: `soc-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      platform: s.platform,
+      url: s.url,
+      sortOrder: idx,
+    }));
+  });
+  if (allSocials.length > 0) await tx.insert(contactSocials).values(allSocials);
+
+  const allEducations = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.education ?? []).map((e, idx) => ({
+      id: e.id || `edu-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      degree: e.degree ?? null,
+      institution: e.institution,
+      fieldOfStudy: e.fieldOfStudy ?? null,
+      year: e.year ?? null,
+      grade: e.grade ?? null,
+      label: e.label ?? null,
+      sortOrder: e.sortOrder ?? idx,
+    }));
+  });
+  if (allEducations.length > 0) await tx.insert(contactEducations).values(allEducations);
+
+  const allExperiences = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.experience ?? []).map((exp, idx) => ({
+      id: exp.id || `exp-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      title: exp.title,
+      organization: exp.organization,
+      employmentType: exp.employmentType ?? null,
+      location: exp.location ?? null,
+      startDate: exp.startDate ?? null,
+      endDate: exp.endDate ?? null,
+      isCurrent: exp.isCurrent ?? false,
+      description: exp.description ?? null,
+      sortOrder: exp.sortOrder ?? idx,
+    }));
+  });
+  if (allExperiences.length > 0) await tx.insert(contactExperiences).values(allExperiences);
+
+  const allSkills = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.skills ?? []).map((s, idx) => ({
+      id: s.id || `skl-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      name: s.name,
+      category: s.category ?? null,
+      proficiency: s.proficiency ?? null,
+      yearsOfExperience: s.yearsOfExperience ?? null,
+      isCertified: s.isCertified ?? false,
+      issuer: s.issuer ?? null,
+      description: s.description ?? null,
+      sortOrder: s.sortOrder ?? idx,
+    }));
+  });
+  if (allSkills.length > 0) await tx.insert(contactSkills).values(allSkills);
+
+  const allRelationships = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.relationshipContacts ?? []).map((r, idx) => ({
+      id: `rel-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      relatedContactId: r.contactId ? String(r.contactId) : null,
+      name: r.name ?? null,
+      relationship: r.relationship ?? null,
+      phone: r.phone ?? null,
+      inferred: r.inferred ?? false,
+      inferredFromContactId: r.inferredFromContactId ? String(r.inferredFromContactId) : null,
+      inferenceDepth: r.inferenceDepth ?? 0,
+      sortOrder: idx,
+    }));
+  });
+  if (allRelationships.length > 0) await tx.insert(contactRelationships).values(allRelationships);
+
+  const allActivities = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.activities ?? []).map((act, idx) => ({
+      id: act.id || `act-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      type: act.type,
+      content: act.content,
+      date: act.date,
+      by: act.by ?? null,
+      sortOrder: idx,
+    }));
+  });
+  if (allActivities.length > 0) await tx.insert(contactActivities).values(allActivities);
+
+  const allAttachments = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.attachments ?? []).map((att, idx) => ({
+      id: att.id || `att-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      name: att.name,
+      type: att.type,
+      size: att.size ?? 0,
+      url: att.url,
+      date: att.date,
+      sortOrder: idx,
+    }));
+  });
+  if (allAttachments.length > 0) await tx.insert(contactAttachments).values(allAttachments);
+
+  const allBankDetails = rawContacts.flatMap((c) => {
+    const contactId = String(c.id);
+    return (c.bankDetails ?? []).map((b, idx) => ({
+      id: b.id || `bnk-${contactId}-${idx + 1}`,
+      workspaceSubdomain: subdomain,
+      contactId,
+      bankName: b.bankName,
+      accountTitle: b.accountTitle,
+      accountNumber: b.accountNumber,
+      iban: b.iban ?? null,
+      swiftCode: b.swiftCode ?? null,
+      branchName: b.branchName ?? null,
+      branchCode: b.branchCode ?? null,
+      routingNumber: b.routingNumber ?? null,
+      currency: b.currency ?? 'PKR',
+      isPrimary: b.isPrimary ?? false,
+      label: b.label ?? null,
+      sortOrder: b.sortOrder ?? idx,
+    }));
+  });
+  if (allBankDetails.length > 0) await tx.insert(contactBankDetails).values(allBankDetails);
+}
+

@@ -69,7 +69,11 @@ describe('userUiPreferencesRepository', () => {
         }),
         insert: vi.fn().mockReturnValue({
           values: vi.fn().mockImplementation((val) => {
-            insertedValues.push(val);
+            if (Array.isArray(val)) {
+              insertedValues.push(...val);
+            } else {
+              insertedValues.push(val);
+            }
             return Promise.resolve();
           }),
         }),

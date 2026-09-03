@@ -1,4 +1,4 @@
-import { and, asc, eq, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import { DASHBOARD_WIDGET_INDEXED_KEYS, type DashboardWidgetDto } from '@mms/shared';
 import { dashboardWidgets } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -73,14 +73,34 @@ function toDto(row: DashboardWidgetRow): DashboardWidgetDto {
 /** List all dashboard widgets for a workspace, ordered by pin order. */
 export async function listDashboardWidgetsByWorkspace(
   workspaceSubdomain: string,
+  options?: { limit?: number; offset?: number },
 ): Promise<DashboardWidgetDto[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const limit = Math.min(Math.max(1, options?.limit ?? 200), 500);
+  const offset = Math.max(0, options?.offset ?? 0);
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: dashboardWidgets.id,
+        workspaceSubdomain: dashboardWidgets.workspaceSubdomain,
+        widgetType: dashboardWidgets.widgetType,
+        category: dashboardWidgets.category,
+        collection: dashboardWidgets.collection,
+        role: dashboardWidgets.role,
+        isPinnedToDashboard: dashboardWidgets.isPinnedToDashboard,
+        title: dashboardWidgets.title,
+        icon: dashboardWidgets.icon,
+        color: dashboardWidgets.color,
+        operation: dashboardWidgets.operation,
+        sortOrder: dashboardWidgets.sortOrder,
+        config: dashboardWidgets.config,
+        updatedAt: dashboardWidgets.updatedAt,
+      })
       .from(dashboardWidgets)
       .where(eq(dashboardWidgets.workspaceSubdomain, subdomain))
-      .orderBy(asc(dashboardWidgets.sortOrder), asc(dashboardWidgets.id));
+      .orderBy(asc(dashboardWidgets.sortOrder), asc(dashboardWidgets.id))
+      .limit(limit)
+      .offset(offset);
     return rows.map(toDto);
   });
 }
@@ -134,27 +154,29 @@ export async function deleteDashboardWidgetById(
   });
 }
 
-/** Atomically update sort_order for a list of widget ids. */
+/** Atomically update sort_order for a list of widget ids in a single batch query. */
 export async function reorderDashboardWidgetsForWorkspace(
   workspaceSubdomain: string,
   order: Array<{ id: string; sortOrder: number }>,
 ): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   if (order.length === 0) return;
+  const now = new Date();
+  const ids = order.map((item) => item.id);
+  const caseStatements = order.map((item) => sql`WHEN ${dashboardWidgets.id} = ${item.id} THEN ${item.sortOrder}`);
   await withTenant(subdomain, async (tx) => {
-    await Promise.all(
-      order.map((item) =>
-        tx
-          .update(dashboardWidgets)
-          .set({ sortOrder: item.sortOrder, updatedAt: new Date() })
-          .where(
-            and(
-              eq(dashboardWidgets.workspaceSubdomain, subdomain),
-              eq(dashboardWidgets.id, item.id),
-            ),
-          ),
-      ),
-    );
+    await tx
+      .update(dashboardWidgets)
+      .set({
+        sortOrder: sql`CASE ${sql.join(caseStatements, sql` `)} ELSE ${dashboardWidgets.sortOrder} END`,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(dashboardWidgets.workspaceSubdomain, subdomain),
+          inArray(dashboardWidgets.id, ids),
+        ),
+      );
   });
 }
 
@@ -166,7 +188,22 @@ export async function listAllDashboardWidgetsByWorkspace(
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     return tx
-      .select()
+      .select({
+        id: dashboardWidgets.id,
+        workspaceSubdomain: dashboardWidgets.workspaceSubdomain,
+        widgetType: dashboardWidgets.widgetType,
+        category: dashboardWidgets.category,
+        collection: dashboardWidgets.collection,
+        role: dashboardWidgets.role,
+        isPinnedToDashboard: dashboardWidgets.isPinnedToDashboard,
+        title: dashboardWidgets.title,
+        icon: dashboardWidgets.icon,
+        color: dashboardWidgets.color,
+        operation: dashboardWidgets.operation,
+        sortOrder: dashboardWidgets.sortOrder,
+        config: dashboardWidgets.config,
+        updatedAt: dashboardWidgets.updatedAt,
+      })
       .from(dashboardWidgets)
       .where(eq(dashboardWidgets.workspaceSubdomain, subdomain));
   });

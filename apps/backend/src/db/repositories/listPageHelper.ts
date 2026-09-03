@@ -1,5 +1,5 @@
 import { and, sql, type SQL } from 'drizzle-orm';
-import type { AnyPgTable } from 'drizzle-orm/pg-core';
+import type { AnyPgTable, SelectedFields } from 'drizzle-orm/pg-core';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type * as schema from '../schema.js';
 
@@ -14,6 +14,8 @@ export interface RunListPageOptions<Row, Record> {
   limit?: number;
   /** Fallback page size when `limit` is omitted. */
   defaultPageSize?: number;
+  /** Explicit column projection to eliminate SELECT * wildcard fetches. */
+  columns?: SelectedFields;
   /** Maps a raw Drizzle row to the public record shape (e.g. merge `customData`). */
   rowMapper: (row: Row) => Record;
 }
@@ -49,8 +51,8 @@ export async function runListPage<Row, Record>(
     .where(whereClause);
   const total = Number(countRows[0]?.count ?? 0);
 
-  const rows = await tx
-    .select()
+  const baseQuery = options.columns ? tx.select(options.columns) : tx.select();
+  const rows = await baseQuery
     .from(table)
     .where(whereClause)
     .orderBy(options.orderBy)

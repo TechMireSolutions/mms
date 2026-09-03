@@ -84,6 +84,7 @@ export const hasanatDistributions = pgTable('hasanat_distributions', {
     foreignColumns: [teachers.workspaceSubdomain, teachers.id],
   }).onDelete('set null'),
   index('hasanat_dist_workspace_student_idx').on(table.workspaceSubdomain, table.recipientStudentId),
+  index('hasanat_dist_workspace_teacher_idx').on(table.workspaceSubdomain, table.recipientTeacherId),
   index('hasanat_dist_workspace_batch_idx').on(table.workspaceSubdomain, table.batchId),
   index('hasanat_dist_workspace_denom_idx').on(table.workspaceSubdomain, table.denominationId),
   index('hasanat_dist_workspace_issued_date_idx').on(table.workspaceSubdomain, table.issuedDate),

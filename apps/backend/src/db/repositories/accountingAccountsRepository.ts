@@ -1,4 +1,4 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 import { type Account } from '@mms/shared';
 import { accountingAccounts } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -26,7 +26,21 @@ export async function listAccountsByWorkspace(tenant: string): Promise<Account[]
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: accountingAccounts.id,
+        workspaceSubdomain: accountingAccounts.workspaceSubdomain,
+        code: accountingAccounts.code,
+        name: accountingAccounts.name,
+        type: accountingAccounts.type,
+        subtype: accountingAccounts.subtype,
+        description: accountingAccounts.description,
+        isActive: accountingAccounts.isActive,
+        deletedAt: accountingAccounts.deletedAt,
+        deletedBy: accountingAccounts.deletedBy,
+        deletionReason: accountingAccounts.deletionReason,
+        createdAt: accountingAccounts.createdAt,
+        updatedAt: accountingAccounts.updatedAt,
+      })
       .from(accountingAccounts)
       .where(and(eq(accountingAccounts.workspaceSubdomain, subdomain), isNull(accountingAccounts.deletedAt)));
     return rows.map(accountRowToRecord);
@@ -37,9 +51,24 @@ export async function findAccountById(tenant: string, id: string): Promise<Accou
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: accountingAccounts.id,
+        workspaceSubdomain: accountingAccounts.workspaceSubdomain,
+        code: accountingAccounts.code,
+        name: accountingAccounts.name,
+        type: accountingAccounts.type,
+        subtype: accountingAccounts.subtype,
+        description: accountingAccounts.description,
+        isActive: accountingAccounts.isActive,
+        deletedAt: accountingAccounts.deletedAt,
+        deletedBy: accountingAccounts.deletedBy,
+        deletionReason: accountingAccounts.deletionReason,
+        createdAt: accountingAccounts.createdAt,
+        updatedAt: accountingAccounts.updatedAt,
+      })
       .from(accountingAccounts)
-      .where(and(eq(accountingAccounts.workspaceSubdomain, subdomain), eq(accountingAccounts.id, id)));
+      .where(and(eq(accountingAccounts.workspaceSubdomain, subdomain), eq(accountingAccounts.id, id)))
+      .limit(1);
     const row = rows[0];
     return row ? accountRowToRecord(row) : null;
   });
@@ -86,10 +115,10 @@ export async function bulkSaveAccounts(tenant: string, records: Account[]): Prom
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const r of records) {
-      await tx
-        .insert(accountingAccounts)
-        .values({
+    await tx
+      .insert(accountingAccounts)
+      .values(
+        records.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           code: r.code,
@@ -102,23 +131,23 @@ export async function bulkSaveAccounts(tenant: string, records: Account[]): Prom
           deletedBy: r.deletedBy ?? null,
           deletionReason: r.deletionReason ?? null,
           updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [accountingAccounts.workspaceSubdomain, accountingAccounts.id],
-          set: {
-            code: r.code,
-            name: r.name,
-            type: r.type,
-            subtype: r.subtype ?? '',
-            description: r.description ?? '',
-            isActive: r.isActive ?? true,
-            deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-            deletedBy: r.deletedBy ?? null,
-            deletionReason: r.deletionReason ?? null,
-            updatedAt: new Date(),
-          },
-        });
-    }
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [accountingAccounts.workspaceSubdomain, accountingAccounts.id],
+        set: {
+          code: sql`excluded.code`,
+          name: sql`excluded.name`,
+          type: sql`excluded.type`,
+          subtype: sql`excluded.subtype`,
+          description: sql`excluded.description`,
+          isActive: sql`excluded.is_active`,
+          deletedAt: sql`excluded.deleted_at`,
+          deletedBy: sql`excluded.deleted_by`,
+          deletionReason: sql`excluded.deletion_reason`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -126,21 +155,23 @@ export async function replaceAccountsForWorkspace(tenant: string, records: Accou
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(accountingAccounts).where(eq(accountingAccounts.workspaceSubdomain, subdomain));
-    for (const r of records) {
-      await tx.insert(accountingAccounts).values({
-        id: r.id,
-        workspaceSubdomain: subdomain,
-        code: r.code,
-        name: r.name,
-        type: r.type,
-        subtype: r.subtype ?? '',
-        description: r.description ?? '',
-        isActive: r.isActive ?? true,
-        deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-        deletedBy: r.deletedBy ?? null,
-        deletionReason: r.deletionReason ?? null,
-        updatedAt: new Date(),
-      });
+    if (records.length > 0) {
+      await tx.insert(accountingAccounts).values(
+        records.map((r) => ({
+          id: r.id,
+          workspaceSubdomain: subdomain,
+          code: r.code,
+          name: r.name,
+          type: r.type,
+          subtype: r.subtype ?? '',
+          description: r.description ?? '',
+          isActive: r.isActive ?? true,
+          deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
+          deletedBy: r.deletedBy ?? null,
+          deletionReason: r.deletionReason ?? null,
+          updatedAt: new Date(),
+        })),
+      );
     }
   });
 }

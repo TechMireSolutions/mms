@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { type Redemption } from '@mms/shared';
 import {
   hasanatDenoms,
@@ -22,13 +22,29 @@ function redemptionRowToRecord(row: RedempRow): Redemption {
   };
 }
 
-export async function listRedemptionsByWorkspace(tenant: string): Promise<Redemption[]> {
+export async function listRedemptionsByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<Redemption[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const limit = Math.min(Math.max(options?.limit ?? 1000, 1), 10000);
+  const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: hasanatRedemptions.id,
+        workspaceSubdomain: hasanatRedemptions.workspaceSubdomain,
+        distributionId: hasanatRedemptions.distributionId,
+        studentName: hasanatRedemptions.studentName,
+        reward: hasanatRedemptions.reward,
+        pointsUsed: hasanatRedemptions.pointsUsed,
+        date: hasanatRedemptions.date,
+        approvedByUserId: hasanatRedemptions.approvedByUserId,
+        approvedBy: hasanatRedemptions.approvedBy,
+        updatedAt: hasanatRedemptions.updatedAt,
+        createdAt: hasanatRedemptions.createdAt,
+      })
       .from(hasanatRedemptions)
-      .where(eq(hasanatRedemptions.workspaceSubdomain, subdomain));
+      .where(eq(hasanatRedemptions.workspaceSubdomain, subdomain))
+      .limit(limit)
+      .offset(offset);
     return rows.map(redemptionRowToRecord);
   });
 }
@@ -37,10 +53,10 @@ export async function bulkSaveRedemptions(tenant: string, records: Redemption[])
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const r of records) {
-      await tx
-        .insert(hasanatRedemptions)
-        .values({
+    await tx
+      .insert(hasanatRedemptions)
+      .values(
+        records.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           distributionId: r.distributionId,
@@ -51,21 +67,21 @@ export async function bulkSaveRedemptions(tenant: string, records: Redemption[])
           approvedByUserId: r.approvedByUserId ?? null,
           approvedBy: r.approvedBy ?? null,
           updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [hasanatRedemptions.workspaceSubdomain, hasanatRedemptions.id],
-          set: {
-            distributionId: r.distributionId,
-            studentName: r.studentName ?? '',
-            reward: r.reward,
-            pointsUsed: r.pointsUsed ?? 0,
-            date: r.date,
-            approvedByUserId: r.approvedByUserId ?? null,
-            approvedBy: r.approvedBy ?? null,
-            updatedAt: new Date(),
-          },
-        });
-    }
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [hasanatRedemptions.workspaceSubdomain, hasanatRedemptions.id],
+        set: {
+          distributionId: sql`excluded.distribution_id`,
+          studentName: sql`excluded.student_name`,
+          reward: sql`excluded.reward`,
+          pointsUsed: sql`excluded.points_used`,
+          date: sql`excluded.date`,
+          approvedByUserId: sql`excluded.approved_by_user_id`,
+          approvedBy: sql`excluded.approved_by`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -73,19 +89,21 @@ export async function replaceRedemptionsForWorkspace(tenant: string, records: Re
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(hasanatRedemptions).where(eq(hasanatRedemptions.workspaceSubdomain, subdomain));
-    for (const r of records) {
-      await tx.insert(hasanatRedemptions).values({
-        id: r.id,
-        workspaceSubdomain: subdomain,
-        distributionId: r.distributionId,
-        studentName: r.studentName ?? '',
-        reward: r.reward,
-        pointsUsed: r.pointsUsed ?? 0,
-        date: r.date,
-        approvedByUserId: r.approvedByUserId ?? null,
-        approvedBy: r.approvedBy ?? null,
-        updatedAt: new Date(),
-      });
+    if (records.length > 0) {
+      await tx.insert(hasanatRedemptions).values(
+        records.map((r) => ({
+          id: r.id,
+          workspaceSubdomain: subdomain,
+          distributionId: r.distributionId,
+          studentName: r.studentName ?? '',
+          reward: r.reward,
+          pointsUsed: r.pointsUsed ?? 0,
+          date: r.date,
+          approvedByUserId: r.approvedByUserId ?? null,
+          approvedBy: r.approvedBy ?? null,
+          updatedAt: new Date(),
+        })),
+      );
     }
   });
 }

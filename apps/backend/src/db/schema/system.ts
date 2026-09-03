@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, primaryKey, varchar, bigint, foreignKey } from "drizzle-orm/pg-core";
-import { sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import type { PersistedSavedReportCategory } from "@mms/shared";
 import { workspaces } from "./platform.js";
 import { tenantUsers } from "./contacts.js";
@@ -60,6 +60,7 @@ export const backgroundJobs = pgTable('background_jobs', {
     foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],
   }).onDelete('cascade'),
   index('background_jobs_tenant_user_idx').on(table.tenantId, table.userId),
+  index('background_jobs_tenant_user_created_idx').on(table.tenantId, table.userId, desc(table.createdAt)),
   index('background_jobs_status_idx').on(table.status),
 ]);
 
@@ -82,6 +83,11 @@ export const savedReports = pgTable('saved_reports', {
     table.category,
     table.createdBy,
   ),
+  index('saved_reports_workspace_category_created_idx').on(
+    table.workspaceSubdomain,
+    table.category,
+    desc(table.createdAt),
+  ),
 ]);
 
 export const auditLogs = pgTable('audit_logs', {
@@ -96,6 +102,7 @@ export const auditLogs = pgTable('audit_logs', {
   changedAt: timestamp('changed_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   index('audit_logs_workspace_changed_idx').on(table.workspaceSubdomain, table.changedAt),
+  index('audit_logs_workspace_user_changed_idx').on(table.workspaceSubdomain, table.userId, desc(table.changedAt)),
   index('audit_logs_table_record_idx').on(table.tableName, table.recordId),
 ]);
 
@@ -118,6 +125,7 @@ export const auditLogEntries = pgTable('audit_log_entries', {
   index('audit_log_entries_workspace_action_idx').on(table.workspaceSubdomain, table.action),
   index('audit_log_entries_workspace_entity_type_idx').on(table.workspaceSubdomain, table.entityType),
   index('audit_log_entries_workspace_at_idx').on(table.workspaceSubdomain, table.at),
+  index('audit_log_entries_workspace_at_desc_idx').on(table.workspaceSubdomain, desc(table.at)),
 ]);
 
 export const userActivityLogs = pgTable('user_activity_logs', {
@@ -137,6 +145,7 @@ export const userActivityLogs = pgTable('user_activity_logs', {
   index('user_activity_logs_workspace_action_idx').on(table.workspaceSubdomain, table.action),
   index('user_activity_logs_workspace_module_idx').on(table.workspaceSubdomain, table.module),
   index('user_activity_logs_workspace_ts_idx').on(table.workspaceSubdomain, table.ts),
+  index('user_activity_logs_workspace_ts_desc_idx').on(table.workspaceSubdomain, desc(table.ts)),
 ]);
 
 export const userUiPreferences = pgTable('user_ui_preferences', {

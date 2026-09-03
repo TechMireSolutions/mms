@@ -24,7 +24,7 @@ export function createUserColumnPrefsRepo(options: {
     const uid = userId.trim();
     return withTenant(subdomain, async (tx) => {
       const rows = await tx
-        .select()
+        .select({ preferences: table.preferences })
         .from(table)
         .where(
           and(
@@ -66,7 +66,12 @@ export function createUserColumnPrefsRepo(options: {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     return withTenant(subdomain, async (tx) => {
       return tx
-        .select()
+        .select({
+          workspaceSubdomain: table.workspaceSubdomain,
+          userId: table.userId,
+          preferences: table.preferences,
+          updatedAt: table.updatedAt,
+        })
         .from(table)
         .where(eq(table.workspaceSubdomain, subdomain));
     });

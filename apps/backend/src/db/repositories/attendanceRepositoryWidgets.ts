@@ -62,49 +62,55 @@ export async function aggregateAttendanceWidgetQueries(
       .where(activeWorkspaceWhere(subdomain));
     const totalCount = Number(totalRows[0]?.count ?? 0);
 
-    for (const query of queries) {
-      const filterSql = widgetFilterSql(query);
-      const whereClause = filterSql
-        ? and(activeWorkspaceWhere(subdomain), filterSql)
-        : activeWorkspaceWhere(subdomain);
-      const chartLimit = Math.max(1, Math.min(query.chartLimit ?? 8, 50));
+    const queryResults = await Promise.all(
+      queries.map(async (query) => {
+        const filterSql = widgetFilterSql(query);
+        const whereClause = filterSql
+          ? and(activeWorkspaceWhere(subdomain), filterSql)
+          : activeWorkspaceWhere(subdomain);
+        const chartLimit = Math.max(1, Math.min(query.chartLimit ?? 8, 50));
 
-      let value = 0;
-      if (query.operation === 'count' || query.operation === 'percentage') {
-        const countRows = await tx
-          .select({ count: sql<number>`count(*)::int` })
+        let value = 0;
+        if (query.operation === 'count' || query.operation === 'percentage') {
+          const countRows = await tx
+            .select({ count: sql<number>`count(*)::int` })
+            .from(attendance)
+            .where(whereClause);
+          const filteredCount = Number(countRows[0]?.count ?? 0);
+          value =
+            query.operation === 'percentage'
+              ? totalCount > 0
+                ? Math.round((filteredCount / totalCount) * 100)
+                : 0
+              : filteredCount;
+        }
+
+        const xAxis = query.xAxisField?.trim() || 'status';
+        const xAxisColSql = resolveSqlColumn(xAxis);
+        const groupExpr = sql<string>`COALESCE(NULLIF(trim(${xAxisColSql}::text), ''), 'Unknown')`;
+
+        const chartRows = await tx
+          .select({
+            name: groupExpr,
+            value: sql<number>`count(*)::int`,
+          })
           .from(attendance)
-          .where(whereClause);
-        const filteredCount = Number(countRows[0]?.count ?? 0);
-        value =
-          query.operation === 'percentage'
-            ? totalCount > 0
-              ? Math.round((filteredCount / totalCount) * 100)
-              : 0
-            : filteredCount;
-      }
+          .where(whereClause)
+          .groupBy(groupExpr)
+          .orderBy(sql`count(*) desc`)
+          .limit(chartLimit);
 
-      const xAxis = query.xAxisField?.trim() || 'status';
-      const xAxisColSql = resolveSqlColumn(xAxis);
-      const groupExpr = sql<string>`COALESCE(NULLIF(trim(${xAxisColSql}::text), ''), 'Unknown')`;
+        const chartData = chartRows.map((row) => ({
+          name: row.name,
+          value: Number(row.value ?? 0),
+        }));
 
-      const chartRows = await tx
-        .select({
-          name: groupExpr,
-          value: sql<number>`count(*)::int`,
-        })
-        .from(attendance)
-        .where(whereClause)
-        .groupBy(groupExpr)
-        .orderBy(sql`count(*) desc`)
-        .limit(chartLimit);
+        return { id: query.id, result: { value, totalCount, chartData } };
+      }),
+    );
 
-      const chartData = chartRows.map((row) => ({
-        name: row.name,
-        value: Number(row.value ?? 0),
-      }));
-
-      results[query.id] = { value, totalCount, chartData };
+    for (const { id, result } of queryResults) {
+      results[id] = result;
     }
 
     return results;

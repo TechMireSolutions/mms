@@ -106,7 +106,10 @@ export async function listExamsPage(
     if (examRows.length > 0) {
       const examIds = examRows.map((e) => e.id);
       const classRows = await tx
-        .select()
+        .select({
+          examId: examClasses.examId,
+          classId: examClasses.classId,
+        })
         .from(examClasses)
         .where(
           and(

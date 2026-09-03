@@ -14,7 +14,7 @@ import {
   hasWhatsAppSql,
   primaryPhoneDigitsSql,
 } from './contactRepositorySql.js';
-import { hydrateContactsList } from './contactRepositoryCore.js';
+import { hydrateContactsSummaryList } from './contactRepositoryCore.js';
 
 const TEACHER_USER_ROLES_SQL = sql`('teacher', 'assistant_teacher')`;
 
@@ -259,7 +259,7 @@ export async function listContactsPage(
       rowMapper: (row) => row as typeof contacts.$inferSelect,
     });
 
-    const pageContacts = await hydrateContactsList(tx, subdomain, result.items);
+    const pageContacts = await hydrateContactsSummaryList(tx, subdomain, result.items);
     return {
       contacts: pageContacts,
       total: result.total,

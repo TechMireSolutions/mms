@@ -212,4 +212,5 @@ export const assessmentAnswers = pgTable('assessment_answers', {
     foreignColumns: [questions.workspaceSubdomain, questions.id],
   }).onDelete('cascade'),
   index('assessment_answers_workspace_res_idx').on(table.workspaceSubdomain, table.resultId),
+  index('assessment_answers_workspace_question_idx').on(table.workspaceSubdomain, table.questionId),
 ]);

@@ -68,7 +68,9 @@ describe('dashboard repositories', () => {
         updatedAt: new Date(),
       };
 
-      const mockOrderBy = vi.fn().mockResolvedValue([dbRow]);
+      const mockOffset = vi.fn().mockResolvedValue([dbRow]);
+      const mockLimit = vi.fn().mockReturnValue({ offset: mockOffset });
+      const mockOrderBy = vi.fn().mockReturnValue({ limit: mockLimit });
       const mockWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy });
       const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
       mockTx.select.mockReturnValue({ from: mockFrom });
@@ -124,8 +126,8 @@ describe('dashboard repositories', () => {
         { id: 'custom-2', sortOrder: 6 },
       ]);
 
-      expect(mockTx.update).toHaveBeenCalledTimes(2);
-      expect(mockSet).toHaveBeenCalledTimes(2);
+      expect(mockTx.update).toHaveBeenCalledTimes(1);
+      expect(mockSet).toHaveBeenCalledTimes(1);
     });
 
 

@@ -17,6 +17,11 @@ vi.mock('../db/repositories/tenantUserRepository.js', () => ({
   findTenantUserRowById: (...args: unknown[]) => mockFindTenantUserById(...args),
   replaceTenantUsersForWorkspace: (...args: unknown[]) => mockReplaceTenantUsers(...args),
   upsertTenantUserRow: (...args: unknown[]) => mockUpsertTenantUserRow(...args),
+  upsertTenantUsersBatch: vi.fn(async (users: unknown[]) => {
+    for (const u of users) {
+      await mockUpsertTenantUserRow(u);
+    }
+  }),
 }));
 
 vi.mock('../db/database.js', () => ({

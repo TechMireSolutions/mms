@@ -111,9 +111,15 @@ export async function takeAuthArtifact<T>(
   kind: AuthArtifactKind,
 ): Promise<AuthArtifactRecord<T> | null> {
   const rows = await db()
-    .select()
+    .select({
+      id: authArtifacts.id,
+      kind: authArtifacts.kind,
+      payload: authArtifacts.payload,
+      expiresAt: authArtifacts.expiresAt,
+    })
     .from(authArtifacts)
-    .where(eq(authArtifacts.id, id));
+    .where(eq(authArtifacts.id, id))
+    .limit(1);
   const row = rows[0];
   if (!row || row.kind !== kind) return null;
 
@@ -134,9 +140,15 @@ export async function getAuthArtifact<T>(
   kind: AuthArtifactKind,
 ): Promise<AuthArtifactRecord<T> | null> {
   const rows = await db()
-    .select()
+    .select({
+      id: authArtifacts.id,
+      kind: authArtifacts.kind,
+      payload: authArtifacts.payload,
+      expiresAt: authArtifacts.expiresAt,
+    })
     .from(authArtifacts)
-    .where(eq(authArtifacts.id, id));
+    .where(eq(authArtifacts.id, id))
+    .limit(1);
   const row = rows[0];
   if (!row || row.kind !== kind) return null;
   if (row.expiresAt.getTime() < Date.now()) {
@@ -157,7 +169,12 @@ export async function findAuthArtifactByLookupKey<T>(
   lookupKey: string,
 ): Promise<AuthArtifactRecord<T> | null> {
   const rows = await db()
-    .select()
+    .select({
+      id: authArtifacts.id,
+      kind: authArtifacts.kind,
+      payload: authArtifacts.payload,
+      expiresAt: authArtifacts.expiresAt,
+    })
     .from(authArtifacts)
     .where(and(eq(authArtifacts.kind, kind), eq(authArtifacts.lookupKey, lookupKey)))
     .limit(1);
@@ -188,7 +205,12 @@ export async function findRefreshTokenByHash<T>(
   tokenHash: string,
 ): Promise<AuthArtifactRecord<T> | null> {
   const rows = await db()
-    .select()
+    .select({
+      id: authArtifacts.id,
+      kind: authArtifacts.kind,
+      payload: authArtifacts.payload,
+      expiresAt: authArtifacts.expiresAt,
+    })
     .from(authArtifacts)
     .where(and(eq(authArtifacts.kind, 'refresh_token'), eq(authArtifacts.lookupKey, tokenHash)))
     .limit(1);
@@ -197,7 +219,12 @@ export async function findRefreshTokenByHash<T>(
   if (!row) {
     // Legacy rows written before lookup_key existed — fall back once.
     const legacy = await db()
-      .select()
+      .select({
+        id: authArtifacts.id,
+        kind: authArtifacts.kind,
+        payload: authArtifacts.payload,
+        expiresAt: authArtifacts.expiresAt,
+      })
       .from(authArtifacts)
       .where(eq(authArtifacts.kind, 'refresh_token'));
     for (const candidate of legacy) {
@@ -241,7 +268,10 @@ export async function deleteRefreshTokensForUser(userId: string): Promise<void> 
 
   // Legacy rows without scope_key.
   const legacy = await db()
-    .select()
+    .select({
+      id: authArtifacts.id,
+      payload: authArtifacts.payload,
+    })
     .from(authArtifacts)
     .where(eq(authArtifacts.kind, 'refresh_token'));
   for (const row of legacy) {
@@ -259,7 +289,12 @@ export async function deleteAuthArtifactsForWorkspace(subdomain: string): Promis
 
   // Legacy rows without scope_key.
   const normalized = subdomain.trim().toLowerCase();
-  const rows = await db().select().from(authArtifacts);
+  const rows = await db()
+    .select({
+      id: authArtifacts.id,
+      payload: authArtifacts.payload,
+    })
+    .from(authArtifacts);
   for (const row of rows) {
     try {
       const payload = row.payload as Record<string, unknown>;

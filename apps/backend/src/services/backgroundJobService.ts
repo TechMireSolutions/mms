@@ -30,7 +30,25 @@ export async function listUserBackgroundJobs(userId: string): Promise<Background
   if (!tenantId) return [];
 
   return withTenant(tenantId, async (tx) => {
-    const rows = await tx.select()
+    const rows = await tx
+      .select({
+        id: backgroundJobs.id,
+        tenantId: backgroundJobs.tenantId,
+        userId: backgroundJobs.userId,
+        moduleId: backgroundJobs.moduleId,
+        kind: backgroundJobs.kind,
+        status: backgroundJobs.status,
+        label: backgroundJobs.label,
+        payload: backgroundJobs.payload,
+        progressCurrent: backgroundJobs.progressCurrent,
+        progressTotal: backgroundJobs.progressTotal,
+        artifactId: backgroundJobs.artifactId,
+        hasDownload: backgroundJobs.hasDownload,
+        error: backgroundJobs.error,
+        completedAt: backgroundJobs.completedAt,
+        createdAt: backgroundJobs.createdAt,
+        updatedAt: backgroundJobs.updatedAt,
+      })
       .from(backgroundJobs)
       .where(and(
         eq(backgroundJobs.tenantId, tenantId),

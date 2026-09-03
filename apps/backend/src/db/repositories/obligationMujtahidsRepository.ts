@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { type Mujtahid, type MujtahidRep } from '@mms/shared';
 import { mujtahids, mujtahidReps } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -16,7 +16,13 @@ export async function listMujtahidsByWorkspace(tenant: string): Promise<Mujtahid
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: mujtahids.id,
+        workspaceSubdomain: mujtahids.workspaceSubdomain,
+        name: mujtahids.name,
+        createdAt: mujtahids.createdAt,
+        updatedAt: mujtahids.updatedAt,
+      })
       .from(mujtahids)
       .where(eq(mujtahids.workspaceSubdomain, subdomain));
     return rows.map(mujtahidRowToRecord);
@@ -27,24 +33,24 @@ export async function bulkSaveMujtahids(tenant: string, records: Mujtahid[]): Pr
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const record of records) {
-      await tx
-        .insert(mujtahids)
-        .values({
+    await tx
+      .insert(mujtahids)
+      .values(
+        records.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           name: record.name,
           createdAt: new Date(),
           updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [mujtahids.workspaceSubdomain, mujtahids.id],
-          set: {
-            name: record.name,
-            updatedAt: new Date(),
-          },
-        });
-    }
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [mujtahids.workspaceSubdomain, mujtahids.id],
+        set: {
+          name: sql`excluded.name`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -52,14 +58,16 @@ export async function replaceMujtahidsForWorkspace(tenant: string, records: Mujt
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(mujtahids).where(eq(mujtahids.workspaceSubdomain, subdomain));
-    for (const record of records) {
-      await tx.insert(mujtahids).values({
-        id: record.id,
-        workspaceSubdomain: subdomain,
-        name: record.name,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+    if (records.length > 0) {
+      await tx.insert(mujtahids).values(
+        records.map((record) => ({
+          id: record.id,
+          workspaceSubdomain: subdomain,
+          name: record.name,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })),
+      );
     }
   });
 }
@@ -78,7 +86,14 @@ export async function listMujtahidRepsByWorkspace(tenant: string): Promise<Mujta
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select({
+        id: mujtahidReps.id,
+        workspaceSubdomain: mujtahidReps.workspaceSubdomain,
+        name: mujtahidReps.name,
+        mujtahidId: mujtahidReps.mujtahidId,
+        createdAt: mujtahidReps.createdAt,
+        updatedAt: mujtahidReps.updatedAt,
+      })
       .from(mujtahidReps)
       .where(eq(mujtahidReps.workspaceSubdomain, subdomain));
     return rows.map(mujtahidRepRowToRecord);
@@ -89,26 +104,26 @@ export async function bulkSaveMujtahidReps(tenant: string, records: MujtahidRep[
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    for (const record of records) {
-      await tx
-        .insert(mujtahidReps)
-        .values({
+    await tx
+      .insert(mujtahidReps)
+      .values(
+        records.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           name: record.name,
           mujtahidId: record.mujtahid_id,
           createdAt: new Date(),
           updatedAt: new Date(),
-        })
-        .onConflictDoUpdate({
-          target: [mujtahidReps.workspaceSubdomain, mujtahidReps.id],
-          set: {
-            name: record.name,
-            mujtahidId: record.mujtahid_id,
-            updatedAt: new Date(),
-          },
-        });
-    }
+        })),
+      )
+      .onConflictDoUpdate({
+        target: [mujtahidReps.workspaceSubdomain, mujtahidReps.id],
+        set: {
+          name: sql`excluded.name`,
+          mujtahidId: sql`excluded.mujtahid_id`,
+          updatedAt: new Date(),
+        },
+      });
   });
 }
 
@@ -116,15 +131,17 @@ export async function replaceMujtahidRepsForWorkspace(tenant: string, records: M
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(mujtahidReps).where(eq(mujtahidReps.workspaceSubdomain, subdomain));
-    for (const record of records) {
-      await tx.insert(mujtahidReps).values({
-        id: record.id,
-        workspaceSubdomain: subdomain,
-        name: record.name,
-        mujtahidId: record.mujtahid_id,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      });
+    if (records.length > 0) {
+      await tx.insert(mujtahidReps).values(
+        records.map((record) => ({
+          id: record.id,
+          workspaceSubdomain: subdomain,
+          name: record.name,
+          mujtahidId: record.mujtahid_id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })),
+      );
     }
   });
 }

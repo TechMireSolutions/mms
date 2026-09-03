@@ -46,7 +46,12 @@ export async function listAllQuestionBankFieldConfigsByWorkspace(): Promise<
   Record<string, Partial<QuestionBankSettings>>
 > {
   return await withTenant(null, async (tx) => {
-    const rows = await tx.select().from(questionBankFieldConfigs);
+    const rows = await tx
+      .select({
+        workspaceSubdomain: questionBankFieldConfigs.workspaceSubdomain,
+        config: questionBankFieldConfigs.config,
+      })
+      .from(questionBankFieldConfigs);
     const result: Record<string, Partial<QuestionBankSettings>> = {};
     for (const row of rows) {
       if (row.workspaceSubdomain) {
