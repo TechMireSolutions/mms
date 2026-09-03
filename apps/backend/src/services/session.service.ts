@@ -116,7 +116,7 @@ export async function checkSessionRevocationBatch(params: {
   let i = 0;
   const tenantBlocked = tenantKey ? (results[i++] as boolean) : false;
   const tokenRevoked = jtiKey ? (results[i++] as boolean) : false;
-  const userRevokedAtStr = userKey ? (results[i++] as string | null) : null;
+  const userRevokedAtStr = userKey ? (results[i] as string | null) : null;
 
   let userSessionRevoked = false;
   if (userRevokedAtStr) {
