@@ -7,6 +7,7 @@ import {
 import {
   authenticatePlatform,
   requirePlatformPermission,
+  requirePlatformSuperUser,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import {
@@ -61,7 +62,13 @@ export default async function platformSettingsRoutes(
 
     inner.post(
       '/reset-database',
-      { preHandler: [authenticatePlatform, requirePlatformPermission('settings')] },
+      {
+        preHandler: [
+          authenticatePlatform,
+          requirePlatformPermission('settings'),
+          requirePlatformSuperUser(),
+        ],
+      },
       async (request, reply) => {
         const parsed = parseRequest(resetDatabaseSchema, request.body ?? {});
         if (!parsed.ok) return replyValidationError(reply, parsed.message);

@@ -20,7 +20,9 @@ export async function getPlatformSetupStatus(): Promise<PlatformSetupStatus> {
   const needsSetup = !(await hasPlatformUsers());
   return {
     needsSetup,
-    smtpConfigured: isPlatformSmtpConfigured(),
+    // Only reveal email configuration during the first-run setup wizard; once
+    // setup is complete this endpoint is public and should not leak it.
+    smtpConfigured: needsSetup ? isPlatformSmtpConfigured() : false,
   };
 }
 

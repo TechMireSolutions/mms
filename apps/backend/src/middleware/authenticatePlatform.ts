@@ -159,3 +159,21 @@ export function requirePlatformPermission(permission: PlatformAdminPermissionKey
     }
   };
 }
+
+/**
+ * Restricts an endpoint to the platform super-user role. Used for the most
+ * sensitive operations (admin management, DB reset, migrate-and-restart) so a
+ * grantable permission can never be escalated into full platform control.
+ */
+export function requirePlatformSuperUser() {
+  return async function requirePlatformSuperUserHook(
+    request: FastifyRequest,
+    reply: FastifyReply,
+  ): Promise<void> {
+    if (reply.sent) return;
+    const req = request as PlatformAuthenticatedRequest;
+    if (req.platformUser.role !== 'super_user') {
+      sendForbidden(reply, 'Super-user privilege required');
+    }
+  };
+}

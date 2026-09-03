@@ -1,5 +1,6 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
+import { isBlockedHostname } from '../../lib/outboundUrl.js';
 
 export interface PlatformEmailInput {
   to: string;
@@ -82,11 +83,15 @@ async function sendViaResend(input: PlatformEmailInput): Promise<PlatformEmailRe
 function createPlatformTransporter(): Transporter | null {
   if (!isPlatformSmtpTransportConfigured()) return null;
 
+  const host = readEnv('PLATFORM_SMTP_HOST');
+  // SSRF guard: never connect SMTP to private / link-local / loopback hosts.
+  if (isBlockedHostname(host)) return null;
+
   const port = Number(readEnv('PLATFORM_SMTP_PORT') || '587');
   const secure = readEnv('PLATFORM_SMTP_SECURE') === 'true';
 
   return nodemailer.createTransport({
-    host: readEnv('PLATFORM_SMTP_HOST'),
+    host,
     port: Number.isFinite(port) && port > 0 ? port : 587,
     secure,
     auth: {
@@ -128,7 +133,12 @@ export async function sendPlatformEmail(input: PlatformEmailInput): Promise<Plat
 /** Public apex URL for links in platform emails (reset password, etc.). */
 export function resolvePlatformAppOrigin(): string {
   const configured = readEnv('PLATFORM_APP_URL') || readEnv('VITE_APP_URL');
-  return (configured || 'http://localhost:5173').replace(/\/$/, '');
+  if (configured) return configured.replace(/\/$/, '');
+  if (process.env.NODE_ENV === 'production') {
+    // Fail closed rather than emailing links that point at localhost.
+    throw new Error('PLATFORM_APP_URL is required in production for platform email links');
+  }
+  return 'http://localhost:5173';
 }
 
 export interface PlatformVerificationEmailInput {

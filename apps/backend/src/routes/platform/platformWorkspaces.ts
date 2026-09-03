@@ -139,7 +139,17 @@ export default async function platformWorkspaceRoutes(
     const { subdomain, userId } = request.params as { subdomain: string; userId: string };
     if (!subdomain || !userId) return replyValidationError(reply, 'Invalid parameters');
 
-    const { verifyTenantUserEmailRow } = await import('../../db/repositories/tenantUserRepository.js');
+    const {
+      verifyTenantUserEmailRow,
+      findTenantUserRowById,
+    } = await import('../../db/repositories/tenantUserRepository.js');
+
+    // Validate the user actually belongs to the given workspace subdomain.
+    const existing = await findTenantUserRowById(userId);
+    if (!existing || existing.workspaceSubdomain !== subdomain) {
+      return sendNotFound(reply, 'User not found in workspace');
+    }
+
     const ok = await verifyTenantUserEmailRow(userId);
     if (!ok) return sendNotFound(reply, 'User not found in workspace');
 

@@ -24,7 +24,19 @@ const { mockUsers } = vi.hoisted(() => {
     sessionVersion: number;
     disabledAt?: string | null;
     createdAt: string;
-  }> = [superUser];
+  }> = [
+    superUser,
+    {
+      id: 'p-admin',
+      email: 'admin2@platform.com',
+      name: 'Regular Admin',
+      passwordHash: '$2b$10$abcdefghijklmnopqrstuvwxyz123456',
+      role: 'admin',
+      permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: false },
+      sessionVersion: 0,
+      createdAt: '2026-01-02T00:00:00.000Z',
+    },
+  ];
 
   return { mockUsers };
 });
@@ -216,6 +228,51 @@ describe('platformUsers REST API integration routes', () => {
       admins: false,
       system: false,
     });
+  });
+
+  it('forbids a non-super-user admin from creating admins (403)', async () => {
+    const token = signPlatformToken('p-admin', 0);
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/platform/users',
+      cookies: { mms_platform_access: token },
+      payload: {
+        name: 'Escalation Attempt',
+        email: 'escalate@platform.com',
+        password: 'Password123!',
+        permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().message).toContain('Super-user privilege required');
+  });
+
+  it('forbids a non-super-user admin from changing permissions (403)', async () => {
+    const token = signPlatformToken('p-admin', 0);
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/platform/users/p-super/permissions',
+      cookies: { mms_platform_access: token },
+      payload: {
+        permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().message).toContain('Super-user privilege required');
+  });
+
+  it('forbids a super-user from changing their own permissions (403)', async () => {
+    const token = signPlatformToken('p-super', 0);
+    const res = await app.inject({
+      method: 'PATCH',
+      url: '/api/platform/users/p-super/permissions',
+      cookies: { mms_platform_access: token },
+      payload: {
+        permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json().message).toContain('Cannot change your own permissions');
   });
 });
 

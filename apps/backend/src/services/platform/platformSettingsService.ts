@@ -41,9 +41,10 @@ export async function initPlatformSettings(): Promise<PlatformSettings> {
 
 /**
  * Returns in-memory cached platform settings for fast access without DB lookups.
+ * Returns a copy so callers cannot mutate the shared cache.
  */
 export function getPlatformSettings(): PlatformSettings {
-  return cachedPlatformSettings;
+  return { ...cachedPlatformSettings };
 }
 
 /**
@@ -55,5 +56,5 @@ export async function updatePlatformSettings(
   const current = getPlatformSettings();
   const next = await upsertPlatformSettingsRow(input, current);
   cachedPlatformSettings = next;
-  return cachedPlatformSettings;
+  return { ...cachedPlatformSettings };
 }

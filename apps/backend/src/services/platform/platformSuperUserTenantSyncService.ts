@@ -6,6 +6,19 @@ import { findPlatformUserRowByRole } from '../../db/repositories/platformUserRep
 import { listWorkspaceRows } from '../../db/repositories/workspaceRepository.js';
 
 /**
+ * SECURITY NOTE: syncing the platform super-user into every tenant replicates the
+ * super-user's scrypt password hash into each tenant's `tenant_users` table and
+ * grants `super_admin` access in every workspace. This is intentional (single
+ * sign-on across tenants), but it means a single tenant DB compromise exposes the
+ * platform super-user's hash and the account can sign into every tenant. Operators
+ * can disable the sync entirely with PLATFORM_SYNC_SUPERUSER_TO_TENANTS=false
+ * (default true). Keep tenant DBs strongly isolated.
+ */
+function isSuperUserTenantSyncEnabled(): boolean {
+  return process.env.PLATFORM_SYNC_SUPERUSER_TO_TENANTS !== 'false';
+}
+
+/**
  * Resolves the primary active platform super-user record.
  */
 export async function findActivePlatformSuperUser(): Promise<StoredPlatformUser | null> {
@@ -24,6 +37,8 @@ export async function syncPlatformSuperUserToTenant(
   workspaceSubdomain: string,
   explicitSuperUser?: StoredPlatformUser | null,
 ): Promise<boolean> {
+  if (!isSuperUserTenantSyncEnabled()) return false;
+
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   if (!subdomain) return false;
 

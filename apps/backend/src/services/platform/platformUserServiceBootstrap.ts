@@ -17,6 +17,13 @@ import { syncPlatformSuperUserToTenants } from './platformSuperUserTenantSyncSer
 export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
   if (process.env.PLATFORM_ALLOW_ENV_BOOTSTRAP !== 'true') return;
 
+  // Never allow env-driven credential bootstrap in production — it could silently
+  // reset the super-user password/email from environment variables.
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('[MMS] PLATFORM_ALLOW_ENV_BOOTSTRAP is ignored in production');
+    return;
+  }
+
   const email = process.env.PLATFORM_ADMIN_EMAIL?.trim();
   const password =
     process.env.PLATFORM_ADMIN_PASSWORD?.trim() ?? process.env.SEED_DEV_PASSWORD?.trim();

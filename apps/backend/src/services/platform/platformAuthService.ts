@@ -10,6 +10,10 @@ import {
   toPublicPlatformUser,
 } from './platformUserService.js';
 import { clearPlatformAccessCookie, setPlatformAccessCookie } from './platformCookieService.js';
+import {
+  createPlatformTwoFactorChallenge,
+  isPlatformTwoFactorRequired,
+} from './platformTwoFactorService.js';
 
 const PLATFORM_ACCESS_TTL = '8h';
 
@@ -21,10 +25,13 @@ export interface PlatformAccessTokenPayload {
   jti?: string;
 }
 
-export type PlatformLoginFailure = 'invalid_credentials' | 'account_disabled';
+export type PlatformLoginFailure =
+  | 'invalid_credentials'
+  | 'account_disabled'
+  | 'two_factor_unavailable';
 
 export type PlatformLoginResult =
-  | { ok: true; user: PlatformUserProfile }
+  | { ok: true; user: PlatformUserProfile; requires2FA?: boolean; challengeId?: string }
   | { ok: false; type: PlatformLoginFailure };
 
 export function issuePlatformSession(
@@ -67,6 +74,17 @@ export async function loginPlatformUser(
 
   if (stored.disabledAt) {
     return { ok: false, type: 'account_disabled' };
+  }
+
+  // Optional 2FA step (opt-in via PLATFORM_REQUIRE_2FA=true). When enabled, the
+  // session is only issued after the OTP is verified. If the code cannot be
+  // delivered, fail closed rather than bypassing 2FA.
+  if (isPlatformTwoFactorRequired()) {
+    const challengeId = await createPlatformTwoFactorChallenge(stored);
+    if (!challengeId) {
+      return { ok: false, type: 'two_factor_unavailable' };
+    }
+    return { ok: true, user: toPlatformUserProfile(stored), requires2FA: true, challengeId };
   }
 
   issuePlatformSession(toPublicPlatformUser(stored), jwtSigner, reply, stored.sessionVersion);

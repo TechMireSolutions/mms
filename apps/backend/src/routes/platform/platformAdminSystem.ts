@@ -8,6 +8,7 @@ import {
 import {
   authenticatePlatform,
   requirePlatformPermission,
+  requirePlatformSuperUser,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
@@ -42,7 +43,13 @@ export default async function platformAdminSystemRoutes(
 
     inner.post(
       '/migrate-and-restart',
-      { preHandler: [authenticatePlatform, requirePlatformPermission('system')] },
+      {
+        preHandler: [
+          authenticatePlatform,
+          requirePlatformPermission('system'),
+          requirePlatformSuperUser(),
+        ],
+      },
       async (request, reply) => {
         if (!isRemoteMigrateRestartEnabled()) {
           return reply.status(403).send({

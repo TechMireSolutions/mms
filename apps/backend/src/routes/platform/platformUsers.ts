@@ -3,6 +3,7 @@ import rateLimit from '@fastify/rate-limit';
 import {
   authenticatePlatform,
   requirePlatformPermission,
+  requirePlatformSuperUser,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import { listPlatformUsers } from '../../db/repositories/platformUserRepository.js';
@@ -41,55 +42,68 @@ export default async function platformUsersRoutes(
     return reply.send({ users });
   });
 
-  fastify.post('/', async (request, reply) => {
-    const { platformUser } = request as PlatformAuthenticatedRequest;
-    const parsed = parseRequest(platformCreateAdminBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
-    const { name, email, password, permissions } = parsed.data;
+  fastify.post(
+    '/',
+    { preHandler: requirePlatformSuperUser() },
+    async (request, reply) => {
+      const { platformUser } = request as PlatformAuthenticatedRequest;
+      const parsed = parseRequest(platformCreateAdminBodySchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      const { name, email, password, permissions } = parsed.data;
 
-    const passwordHash = await hashPassword(password);
-    const stored = await createVerifiedPlatformUser({
-      name: name.trim(),
-      email,
-      passwordHash,
-      role: 'admin',
-      permissions,
-    });
+      const passwordHash = await hashPassword(password);
+      const stored = await createVerifiedPlatformUser({
+        name: name.trim(),
+        email,
+        passwordHash,
+        role: 'admin',
+        permissions,
+      });
 
-    await insertPlatformActivityLog({
-      userId: platformUser.id,
-      userEmail: platformUser.email,
-      action: 'create_admin',
-      targetResource: 'admin',
-      targetId: stored.id,
-      metadataMessage: `Created admin ${email}`,
-      ipAddress: request.ip,
-    });
+      await insertPlatformActivityLog({
+        userId: platformUser.id,
+        userEmail: platformUser.email,
+        action: 'create_admin',
+        targetResource: 'admin',
+        targetId: stored.id,
+        metadataMessage: `Created admin ${email}`,
+        ipAddress: request.ip,
+      });
 
-    return reply.send({ user: toPlatformUserProfile(stored) });
-  });
+      return reply.send({ user: toPlatformUserProfile(stored) });
+    },
+  );
 
-  fastify.patch('/:id/permissions', async (request, reply) => {
-    const { platformUser } = request as PlatformAuthenticatedRequest;
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
-    const parsed = parseRequest(platformUpdateAdminPermissionsBodySchema, request.body);
-    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+  fastify.patch(
+    '/:id/permissions',
+    { preHandler: requirePlatformSuperUser() },
+    async (request, reply) => {
+      const { platformUser } = request as PlatformAuthenticatedRequest;
+      const params = parseRequest(resourceIdParamsSchema, request.params);
+      if (!params.ok) return replyValidationError(reply, params.message);
+      const parsed = parseRequest(platformUpdateAdminPermissionsBodySchema, request.body);
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    const user = await setPlatformAdminPermissions(params.data.id, parsed.data.permissions);
+      // Prevent an admin from escalating their own permissions.
+      if (params.data.id === platformUser.id) {
+        return sendForbidden(reply, 'Cannot change your own permissions');
+      }
 
-    await insertPlatformActivityLog({
-      userId: platformUser.id,
-      userEmail: platformUser.email,
-      action: 'update_admin_permissions',
-      targetResource: 'admin',
-      targetId: params.data.id,
-      metadataMessage: `Updated permissions for ${user.email}`,
-      ipAddress: request.ip,
-    });
+      const user = await setPlatformAdminPermissions(params.data.id, parsed.data.permissions);
 
-    return reply.send({ user });
-  });
+      await insertPlatformActivityLog({
+        userId: platformUser.id,
+        userEmail: platformUser.email,
+        action: 'update_admin_permissions',
+        targetResource: 'admin',
+        targetId: params.data.id,
+        metadataMessage: `Updated permissions for ${user.email}`,
+        ipAddress: request.ip,
+      });
+
+      return reply.send({ user });
+    },
+  );
 
   fastify.post('/:id/verify-email', async (request, reply) => {
     const { platformUser } = request as PlatformAuthenticatedRequest;

@@ -15,6 +15,10 @@ const PM2_APP_NAME = 'mmsv2-backend';
 /** Hardcoded ecosystem filename relative to monorepo root. */
 const ECOSYSTEM_FILE = 'ecosystem.config.cjs';
 
+// NOTE: this latch is per-process. In a multi-instance (PM2 cluster) deployment
+// each instance has its own latch, so two instances could each schedule a
+// migrate-and-restart. Acceptable for the current single-instance deployment;
+// if clustering is added, move this to a shared store (e.g. Redis).
 let migrateRestartInFlight = false;
 
 /** Opt-in gate — remote migrate/reload is disabled unless explicitly enabled. */

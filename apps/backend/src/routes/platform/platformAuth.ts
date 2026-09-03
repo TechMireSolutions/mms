@@ -12,6 +12,7 @@ import {
   loginPlatformUser,
   logoutPlatformUser,
 } from '../../services/platform/platformAuthService.js';
+import { verifyPlatformTwoFactorChallenge } from '../../services/platform/platformTwoFactorService.js';
 import {
   getPlatformSetupStatus,
   startPlatformSetup,
@@ -38,6 +39,7 @@ import {
   platformSetupRegisterBodySchema,
 } from '../../validation/platformSchemas.js';
 import { loginBodySchema as platformLoginBodySchema } from '../../validation/commonSchemas.js';
+import { challengeCodeBodySchema } from '../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 export default async function platformAuthRoutes(
@@ -118,12 +120,46 @@ export default async function platformAuthRoutes(
             message: 'Platform account has been disabled',
           });
         }
+        if (result.type === 'two_factor_unavailable') {
+          return reply.status(503).send({
+            type: 'two_factor_unavailable',
+            message: 'Two-factor verification is required but the code could not be sent. Check platform email configuration.',
+          });
+        }
         return reply.status(401).send({
           type: 'invalid_credentials',
           message: 'Invalid platform credentials',
         });
       }
+      if (result.requires2FA) {
+        return reply.send({
+          user: result.user,
+          requires2FA: true,
+          challengeId: result.challengeId,
+        });
+      }
       return reply.send({ user: result.user });
+    });
+
+    inner.post('/2fa/verify', async (request, reply) => {
+      const parsed = parseRequest(challengeCodeBodySchema, request.body ?? {});
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+      const { challengeId, code } = parsed.data;
+
+      const stored = await verifyPlatformTwoFactorChallenge(challengeId, code);
+      if (!stored) {
+        return reply.status(401).send({
+          type: 'invalid_credentials',
+          message: 'Invalid or expired verification code',
+        });
+      }
+      const user = issuePlatformSession(
+        toPublicPlatformUser(stored),
+        fastify.jwt,
+        reply,
+        stored.sessionVersion,
+      );
+      return reply.send({ user });
     });
   });
 
