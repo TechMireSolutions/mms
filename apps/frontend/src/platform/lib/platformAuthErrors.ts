@@ -18,6 +18,7 @@ const PLATFORM_AUTH_ERROR_KEYS = {
   invalid_current_password: 'platform.profileWrongPassword',
   invalid_credentials: 'platform.invalidCredentials',
   account_disabled: 'platform.accountDisabled',
+  two_factor_unavailable: 'platform.twoFactorUnavailable',
   setup_not_needed: 'platform.setupNotNeeded',
   user_exists: 'platform.adminAlreadyExists',
   user_not_found: 'platform.adminNotFound',

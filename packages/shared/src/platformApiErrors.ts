@@ -39,6 +39,7 @@ export const PLATFORM_HTTP_ERROR_TYPES = [
   'database_error',
   'remote_migrate_disabled',
   'migrate_restart_in_progress',
+  'two_factor_unavailable',
 ] as const;
 
 /** @see PLATFORM_HTTP_ERROR_TYPES */
