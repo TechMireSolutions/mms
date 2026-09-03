@@ -56,6 +56,7 @@ export function useWorkspaceBySubdomain(subdomain: string | null, enabled: boole
     enabled: enabled && Boolean(subdomain),
     staleTime: 60_000,
     initialData: enabled && subdomain ? getCachedWorkspaceLookup(subdomain) : undefined,
+    initialDataUpdatedAt: 0,
     retry: (failureCount: number, error: unknown) =>
       !isWorkspaceNotFoundError(error) && failureCount < 3,
   });

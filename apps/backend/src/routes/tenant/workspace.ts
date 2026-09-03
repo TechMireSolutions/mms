@@ -54,7 +54,6 @@ export default async function workspaceRoutes(
         return sendNotFound(reply, 'Workspace not found');
       }
 
-      reply.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
       return reply.send(result);
     }
   );
