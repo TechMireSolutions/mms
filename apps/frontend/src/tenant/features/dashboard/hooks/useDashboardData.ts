@@ -108,16 +108,18 @@ export function useDashboardData(
   useSessionsWidgetAggregates(collectionWidgets.sessions, { enabled: shouldLoadSessions });
 
   const { summary, isLoading, isPending } = useDashboardSummaryQuery(todayISO(), dashboardRole);
+  const summaryInFlight = isLoading || isPending;
+  const canFallback = !summaryInFlight;
 
-  const { data: individualStudentMetrics } = useStudentsMetrics({ enabled: shouldLoadStudents && !summary?.students });
-  const { data: individualTeacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers && !summary?.teachers });
-  const { data: individualContactMetrics } = useContactsMetrics({ enabled: shouldLoadContacts && !summary?.contacts });
-  const { data: individualSessionsMetrics } = useSessionsMetrics({ enabled: shouldLoadSessions && !summary?.sessions });
-  const { data: individualAttendanceMetrics } = useAttendanceMetrics(todayISO(), { enabled: shouldLoadAttendance && !summary?.attendance });
-  const { data: individualFinanceMetrics } = useFinanceMetrics({ enabled: shouldLoadFinance && !summary?.finance });
-  const { data: individualHasanatMetrics } = useHasanatMetrics({ enabled: shouldLoadHasanat && !summary?.hasanat });
-  const { data: individualQuestionBankMetrics } = useQuestionBankMetrics({ enabled: shouldLoadQuestionBank && !summary?.questionBank });
-  const { data: individualAccountingMetrics } = useAccountingMetrics({ enabled: shouldLoadAccounting && !summary?.accounting });
+  const { data: individualStudentMetrics } = useStudentsMetrics({ enabled: shouldLoadStudents && canFallback && !summary?.students });
+  const { data: individualTeacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers && canFallback && !summary?.teachers });
+  const { data: individualContactMetrics } = useContactsMetrics({ enabled: shouldLoadContacts && canFallback && !summary?.contacts });
+  const { data: individualSessionsMetrics } = useSessionsMetrics({ enabled: shouldLoadSessions && canFallback && !summary?.sessions });
+  const { data: individualAttendanceMetrics } = useAttendanceMetrics(todayISO(), { enabled: shouldLoadAttendance && canFallback && !summary?.attendance });
+  const { data: individualFinanceMetrics } = useFinanceMetrics({ enabled: shouldLoadFinance && canFallback && !summary?.finance });
+  const { data: individualHasanatMetrics } = useHasanatMetrics({ enabled: shouldLoadHasanat && canFallback && !summary?.hasanat });
+  const { data: individualQuestionBankMetrics } = useQuestionBankMetrics({ enabled: shouldLoadQuestionBank && canFallback && !summary?.questionBank });
+  const { data: individualAccountingMetrics } = useAccountingMetrics({ enabled: shouldLoadAccounting && canFallback && !summary?.accounting });
 
   const studentMetrics = (summary?.students as StudentsCommandMetricsSnapshot | undefined) ?? individualStudentMetrics;
   const teacherMetrics = (summary?.teachers as TeachersCommandMetricsSnapshot | undefined) ?? individualTeacherMetrics;

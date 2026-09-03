@@ -9,6 +9,61 @@ import {
 import { activeDb } from '../dbConnection.js';
 import { workspaces as workspacesTable } from '../schema.js';
 
+// ---------------------------------------------------------------------------
+// In-process TTL cache for workspace rows.
+//
+// The workspace registry is small (one row per madrasa) and changes rarely, but
+// it is read on EVERY authenticated request (the auth middleware resolves the
+// workspace + global settings). Caching the row for a short TTL removes up to
+// two full-table queries from the per-request hot path. Every write path below
+// invalidates the entry immediately so mutations propagate without waiting for
+// the TTL. The cache is bounded so arbitrary subdomain probes (e.g. the
+// subdomain-availability check) cannot grow it without limit.
+// ---------------------------------------------------------------------------
+const WORKSPACE_CACHE_TTL_MS = 30_000;
+const WORKSPACE_CACHE_MAX_ENTRIES = 500;
+const workspaceCache = new Map<
+  string,
+  { row: typeof workspacesTable.$inferSelect; expiresAt: number }
+>();
+
+function readCachedWorkspaceRow(
+  subdomain: string,
+): typeof workspacesTable.$inferSelect | undefined {
+  const entry = workspaceCache.get(subdomain);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expiresAt) {
+    workspaceCache.delete(subdomain);
+    return undefined;
+  }
+  return entry.row;
+}
+
+function writeCachedWorkspaceRow(
+  subdomain: string,
+  row: typeof workspacesTable.$inferSelect | null,
+): void {
+  if (row === null) {
+    workspaceCache.delete(subdomain);
+    return;
+  }
+  if (workspaceCache.size >= WORKSPACE_CACHE_MAX_ENTRIES) {
+    // Bounded memory: drop the whole cache and let it re-populate. The table is
+    // small and re-population is a single indexed query.
+    workspaceCache.clear();
+  }
+  workspaceCache.set(subdomain, { row, expiresAt: Date.now() + WORKSPACE_CACHE_TTL_MS });
+}
+
+function invalidateWorkspaceCache(subdomain: string): void {
+  workspaceCache.delete(subdomain);
+}
+
+/** Test helper — clears the in-process workspace cache. */
+export function clearWorkspaceCacheForTests(): void {
+  workspaceCache.clear();
+}
+
 function rowToWorkspace(ws: typeof workspacesTable.$inferSelect): Workspace {
   return {
     id: ws.id,
@@ -71,24 +126,77 @@ export async function listWorkspaceRows(): Promise<Workspace[]> {
   return rows.map(rowToWorkspace);
 }
 
-export async function findWorkspaceRowBySubdomain(subdomain: string): Promise<Workspace | null> {
+/**
+ * Lists all workspaces with their branding in a single query. Avoids the
+ * N+1 pattern of fetching branding per workspace (used by the apex registry
+ * and platform console listings).
+ */
+export async function listWorkspaceRowsWithBranding(): Promise<
+  Array<{ workspace: Workspace; branding: BrandingSettings }>
+> {
+  const rows = await activeDb().select().from(workspacesTable);
+  return rows.map((ws) => ({ workspace: rowToWorkspace(ws), branding: rowToBranding(ws) }));
+}
+
+/**
+ * Returns true when a workspace with the given subdomain exists. Uses a single
+ * indexed lookup instead of loading the entire workspaces table.
+ */
+export async function workspaceSubdomainExists(subdomain: string): Promise<boolean> {
+  const rows = await activeDb()
+    .select({ id: workspacesTable.id })
+    .from(workspacesTable)
+    .where(eq(workspacesTable.subdomain, subdomain))
+    .limit(1);
+  return rows.length > 0;
+}
+
+/**
+ * Loads a workspace row by subdomain, serving from the in-process TTL cache
+ * when possible. On a cache miss it runs a single indexed query and populates
+ * the cache. Returns null when the workspace does not exist.
+ */
+async function loadWorkspaceRow(
+  subdomain: string,
+): Promise<typeof workspacesTable.$inferSelect | null> {
+  const cached = readCachedWorkspaceRow(subdomain);
+  if (cached) return cached;
   const rows = await activeDb()
     .select()
     .from(workspacesTable)
     .where(eq(workspacesTable.subdomain, subdomain));
-  const ws = rows[0];
+  const ws = rows[0] ?? null;
+  writeCachedWorkspaceRow(subdomain, ws);
+  return ws;
+}
+
+export async function findWorkspaceRowBySubdomain(subdomain: string): Promise<Workspace | null> {
+  const ws = await loadWorkspaceRow(subdomain);
   return ws ? rowToWorkspace(ws) : null;
 }
 
 /** Read all branding fields for a workspace. Returns null when workspace not found. */
 export async function getWorkspaceBranding(subdomain: string): Promise<BrandingSettings | null> {
   try {
-    const rows = await activeDb()
-      .select()
-      .from(workspacesTable)
-      .where(eq(workspacesTable.subdomain, subdomain));
-    const ws = rows[0];
+    const ws = await loadWorkspaceRow(subdomain);
     return ws ? rowToBranding(ws) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Read workspace and branding together in a single query. */
+export async function getWorkspaceWithBranding(subdomain: string): Promise<{
+  workspace: Workspace;
+  branding: BrandingSettings;
+} | null> {
+  try {
+    const ws = await loadWorkspaceRow(subdomain);
+    if (!ws) return null;
+    return {
+      workspace: rowToWorkspace(ws),
+      branding: rowToBranding(ws),
+    };
   } catch {
     return null;
   }
@@ -97,11 +205,7 @@ export async function getWorkspaceBranding(subdomain: string): Promise<BrandingS
 /** Read all global settings for a workspace. Returns null when workspace not found. */
 export async function getWorkspaceGlobalSettings(subdomain: string): Promise<GlobalSettings | null> {
   try {
-    const rows = await activeDb()
-      .select()
-      .from(workspacesTable)
-      .where(eq(workspacesTable.subdomain, subdomain));
-    const ws = rows[0];
+    const ws = await loadWorkspaceRow(subdomain);
     return ws ? rowToGlobalSettings(ws) : null;
   } catch {
     return null;
@@ -124,6 +228,7 @@ export async function insertWorkspaceRow(values: {
     country: values.country || null,
     enabled: values.enabled ?? true,
   });
+  invalidateWorkspaceCache(values.subdomain);
 }
 
 export async function updateWorkspaceEnabledRow(subdomain: string, enabled: boolean): Promise<void> {
@@ -131,6 +236,7 @@ export async function updateWorkspaceEnabledRow(subdomain: string, enabled: bool
     .update(workspacesTable)
     .set({ enabled })
     .where(eq(workspacesTable.subdomain, subdomain));
+  invalidateWorkspaceCache(subdomain);
 }
 
 /** Sync name/tagline columns — used for registry display; branding save uses upsertWorkspaceBranding. */
@@ -145,6 +251,7 @@ export async function updateWorkspaceBrandingRow(
       tagline: branding.tagline?.trim() || null,
     })
     .where(eq(workspacesTable.subdomain, subdomain));
+  invalidateWorkspaceCache(subdomain);
 }
 
 /** Write the full BrandingSettings into the workspaces typed columns. */
@@ -177,6 +284,7 @@ export async function upsertWorkspaceBranding(
       socialLinks:        b.socialLinks?.length ? b.socialLinks : null,
     })
     .where(eq(workspacesTable.subdomain, subdomain));
+  invalidateWorkspaceCache(subdomain);
 }
 
 /** Write the full GlobalSettings into the workspaces typed columns. */
@@ -202,6 +310,7 @@ export async function upsertWorkspaceGlobalSettings(
       llmConfigs:         g.llmConfigs?.length ? g.llmConfigs : null,
     })
     .where(eq(workspacesTable.subdomain, subdomain));
+  invalidateWorkspaceCache(subdomain);
 }
 
 /** Returns granted module IDs for the specified workspace. */
@@ -235,9 +344,11 @@ export async function updateWorkspaceGrantedAndEnabledModulesRepo(
       enabledModules,
     })
     .where(eq(workspacesTable.subdomain, subdomain));
+  invalidateWorkspaceCache(subdomain);
 }
 
 export async function deleteWorkspaceRow(subdomain: string): Promise<void> {
   await activeDb().delete(workspacesTable).where(eq(workspacesTable.subdomain, subdomain));
+  invalidateWorkspaceCache(subdomain);
 }
 

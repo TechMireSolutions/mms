@@ -31,26 +31,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const initialUser = typeof window !== 'undefined' ? getPersistedAuthUser() : null;
   const [user, setUser] = useState<User | null>(initialUser);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(Boolean(initialUser));
-  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
-  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState<boolean>(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(!initialUser);
+  const [isLoadingPublicSettings] = useState<boolean>(false);
   const [authError, setAuthError] = useState<AuthError | null>(null);
-  const [authChecked, setAuthChecked] = useState<boolean>(false);
-  const [appPublicSettings, setAppPublicSettings] = useState<unknown | null>(null);
+  const [authChecked, setAuthChecked] = useState<boolean>(Boolean(initialUser));
+  const [appPublicSettings] = useState<unknown | null>(null);
 
-  const checkAppState = useCallback(async (signal?: AbortSignal): Promise<void> => {
-    try {
-      setIsLoadingPublicSettings(true);
-      const response = await apiFetch('/health', { signal });
-      if (response.ok) {
-        setAppPublicSettings({ id: 'app-online', public_settings: {} });
-      }
-    } catch {
-      // Ignore offline/aborted errors during public state probe
-    } finally {
-      if (!signal?.aborted) {
-        setIsLoadingPublicSettings(false);
-      }
-    }
+  const checkAppState = useCallback(async (_signal?: AbortSignal): Promise<void> => {
+    // No-op stub retained for interface backwards-compatibility without extra network latency
   }, []);
 
   const applyAuthSession = useCallback(async (authUser: User): Promise<void> => {
@@ -58,9 +46,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(true);
     setAuthChecked(true);
     persistAuthUser(authUser);
-    if (!authUser.mustChangePassword) {
-      void import('@/lib/db').then(({ syncDatabase }) => syncDatabase());
-    }
   }, []);
 
   const checkUserAuth = useCallback(async (signal?: AbortSignal): Promise<void> => {
@@ -72,7 +57,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    setIsLoadingAuth(true);
+    if (!initialUser) {
+      setIsLoadingAuth(true);
+    }
     setAuthError(null);
 
     try {
@@ -91,7 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoadingAuth(false);
       }
     }
-  }, [applyAuthSession]);
+  }, [applyAuthSession, initialUser]);
 
   const login = async (email: string, password: string): Promise<{ user: User; requires2FA: boolean; challengeId?: string }> => {
     setIsLoadingAuth(true);
@@ -220,9 +207,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const controller = new AbortController();
 
-    if (!isCurrentHostApex()) {
-      void checkAppState(controller.signal);
-    }
     void checkUserAuth(controller.signal);
 
     const handleStorage = (event: StorageEvent) => {
@@ -253,7 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       controller.abort();
       window.removeEventListener('storage', handleStorage);
     };
-  }, [checkAppState, checkUserAuth]);
+  }, [checkUserAuth]);
 
   return (
     <AuthContext.Provider value={{

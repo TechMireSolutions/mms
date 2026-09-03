@@ -49,10 +49,12 @@ vi.mock('../services/accountingService.js', () => ({
 }));
 
 import { loadDashboardSummary } from '../services/dashboardSummaryService.js';
+import { clearInMemoryRedisFallback } from '../lib/redis.js';
 
 describe('loadDashboardSummary', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearInMemoryRedisFallback();
     mocks.getRequestTenant.mockReturnValue(' DarulQuran ');
     mocks.withTenant.mockImplementation(
       async (_tenant: string, action: () => Promise<unknown>) => action(),

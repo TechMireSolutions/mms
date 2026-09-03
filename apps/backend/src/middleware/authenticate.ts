@@ -8,7 +8,7 @@ import { bindRequestTenant, bindRequestUserId, getRequestTenant, resolveSubdomai
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
 import { loadGlobalSettings } from '../services/globalSettingsService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
-import { isTenantBlocked, isTokenRevoked, isUserSessionRevoked } from '../services/session.service.js';
+import { checkSessionRevocationBatch } from '../services/session.service.js';
 import { markRequestDiagnosticStage } from '../lib/requestDiagnostics.js';
 
 export interface AuthenticatedRequest extends FastifyRequest {
@@ -54,10 +54,16 @@ export async function authenticateTenant(
     return;
   }
 
-  // Fast-path Redis tenant blocklist check
+  // Fast-path Redis tenant blocklist + token/session revocation checks, batched
+  // into a single pipelined round-trip (was three sequential round-trips).
   markRequestDiagnosticStage(request, 'authentication_tenant_blocklist');
-  const isBlocked = await isTenantBlocked(tenant);
-  if (isBlocked) {
+  const { tenantBlocked, tokenRevoked, userSessionRevoked } = await checkSessionRevocationBatch({
+    tenant,
+    jti: user.jti,
+    userId: user.id,
+    issuedAtMs: user.iat ? user.iat * 1000 : undefined,
+  });
+  if (tenantBlocked) {
     await reply.status(403).send({
       type: 'workspace_disabled',
       message: 'This madrasa workspace has been disabled by the platform administrator.',
@@ -65,15 +71,14 @@ export async function authenticateTenant(
     return;
   }
 
-  // Redis-backed token and session revocation checks
   markRequestDiagnosticStage(request, 'authentication_token_revocation');
-  if (user.jti && (await isTokenRevoked(user.jti))) {
+  if (tokenRevoked) {
     await sendUnauthorized(reply, 'Session revoked');
     return;
   }
 
   markRequestDiagnosticStage(request, 'authentication_user_session_revocation');
-  if (user.id && user.iat && (await isUserSessionRevoked(user.id, user.iat * 1000))) {
+  if (userSessionRevoked) {
     await sendUnauthorized(reply, 'Session revoked');
     return;
   }

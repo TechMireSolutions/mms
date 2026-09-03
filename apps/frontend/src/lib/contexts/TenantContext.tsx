@@ -8,10 +8,13 @@ import {
 } from "@mms/shared";
 import { getTenantUrlOptions } from "@/lib/config/tenantConfig";
 import { useDeploymentAppDomain } from "@/tenant/hooks/useDeploymentAppDomain";
+import { cachePublicBranding } from "@/lib/db";
 import {
+  cacheWorkspaceLookup,
   isWorkspaceNotFoundError,
   useWorkspaceBySubdomain,
   type PublicWorkspace,
+  type WorkspaceLookupResult,
 } from "@/tenant/hooks/useWorkspaceBySubdomain";
 
 export type { PublicWorkspace };
@@ -63,6 +66,15 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     tenantLookupEnabled && !workspaceLoading && isError && !notFound;
   // Missing tenants hard-redirect to apex Tenant Not Found — skip branding fetch.
   const publicBranding = lookupBody?.branding ?? null;
+
+  React.useEffect(() => {
+    if (subdomain && lookupBody?.workspace) {
+      cacheWorkspaceLookup(subdomain, lookupBody as WorkspaceLookupResult);
+      if (lookupBody.branding) {
+        cachePublicBranding(lookupBody.branding);
+      }
+    }
+  }, [subdomain, lookupBody]);
 
   const workspaceUrl = subdomain
     ? buildTenantUrl(subdomain, "/", getTenantUrlOptions())

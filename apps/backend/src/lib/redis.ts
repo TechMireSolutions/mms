@@ -160,6 +160,53 @@ export async function redisExists(key: string): Promise<boolean> {
   return true;
 }
 
+export type RedisBatchOp =
+  | { key: string; type: 'exists' }
+  | { key: string; type: 'get' };
+
+export type RedisBatchResult = Array<boolean | string | null>;
+
+function inMemoryBatchOp(op: RedisBatchOp): boolean | string | null {
+  const entry = inMemoryStore.get(op.key);
+  if (!entry) return op.type === 'exists' ? false : null;
+  if (entry.expiresAt && Date.now() > entry.expiresAt) {
+    inMemoryStore.delete(op.key);
+    return op.type === 'exists' ? false : null;
+  }
+  return op.type === 'exists' ? true : entry.value;
+}
+
+/**
+ * Runs a batch of independent Redis reads (EXISTS / GET) in a single
+ * round-trip via a pipeline. Falls back to the in-memory store per-op when
+ * Redis is unavailable. Results are returned in the same order as `ops`.
+ */
+export async function redisBatch(ops: RedisBatchOp[]): Promise<RedisBatchResult> {
+  if (ops.length === 0) return [];
+  const client = getRedisClient();
+  if (client && isRedisConnected) {
+    try {
+      const pipeline = client.pipeline();
+      for (const op of ops) {
+        if (op.type === 'exists') pipeline.exists(op.key);
+        else pipeline.get(op.key);
+      }
+      const results = await pipeline.exec();
+      if (results) {
+        return results.map(([err, res], i) => {
+          if (err) return inMemoryBatchOp(ops[i]);
+          const op = ops[i];
+          if (op.type === 'exists') return (res as number) > 0;
+          return res as string | null;
+        });
+      }
+    } catch {
+      // fall through to in-memory
+    }
+  }
+  return ops.map(inMemoryBatchOp);
+}
+
 export function clearInMemoryRedisFallback(): void {
   inMemoryStore.clear();
 }

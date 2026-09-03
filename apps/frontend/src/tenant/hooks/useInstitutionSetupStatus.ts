@@ -1,6 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { isInstitutionSetupComplete } from '@mms/shared';
 import { apiContract } from '@/lib/api';
 import { ApiError } from '@/lib/apiClient';
+import { getScopedBrandingSettings } from '@/lib/settingsPreviewStore';
 
 export const INSTITUTION_SETUP_STATUS_QUERY_KEY = [
   'auth',
@@ -27,8 +29,14 @@ export function useInstitutionSetupStatus(enabled: boolean) {
     queryKey: INSTITUTION_SETUP_STATUS_QUERY_KEY,
     queryFn: ({ signal }) => fetchInstitutionSetupStatus(signal),
     enabled,
-    staleTime: 0,
-    refetchOnMount: 'always',
+    staleTime: 300_000,
+    initialData: () => {
+      try {
+        return isInstitutionSetupComplete(getScopedBrandingSettings()) ? true : undefined;
+      } catch {
+        return undefined;
+      }
+    },
     retry: 2,
   });
 }

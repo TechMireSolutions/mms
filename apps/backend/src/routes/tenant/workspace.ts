@@ -1,8 +1,7 @@
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
-import { isWorkspaceEnabled } from '@mms/shared';
 import {
   getWorkspace,
-  getWorkspaceBySubdomain,
+  getWorkspaceWithPublicBranding,
   isSubdomainAvailable,
   listPublicWorkspaces,
   normalizeSubdomainInput,
@@ -50,20 +49,13 @@ export default async function workspaceRoutes(
       if (!params.ok) return replyValidationError(reply, params.message);
 
       const subdomain = normalizeSubdomainInput(params.data.subdomain);
-      const workspace = await getWorkspaceBySubdomain(subdomain);
-      if (!workspace) {
+      const result = await getWorkspaceWithPublicBranding(subdomain);
+      if (!result) {
         return sendNotFound(reply, 'Workspace not found');
       }
-      const branding = await fetchPublicBrandingForSubdomain(workspace.subdomain);
-      return reply.send({
-        workspace: {
-          subdomain: workspace.subdomain,
-          madrasaName: branding.madrasaName || workspace.madrasaName,
-          tagline: branding.tagline || workspace.tagline,
-          enabled: isWorkspaceEnabled(workspace),
-        },
-        branding,
-      });
+
+      reply.header('Cache-Control', 'public, max-age=60, stale-while-revalidate=300');
+      return reply.send(result);
     }
   );
 

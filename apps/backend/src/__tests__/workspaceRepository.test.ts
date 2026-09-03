@@ -37,6 +37,7 @@ vi.mock('../db/dbConnection.js', () => ({
 }));
 
 import {
+  clearWorkspaceCacheForTests,
   deleteWorkspaceRow,
   findWorkspaceRowBySubdomain,
   insertWorkspaceRow,
@@ -48,6 +49,7 @@ import {
 describe('workspaceRepository', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    clearWorkspaceCacheForTests();
     mockSelect.mockReturnValue({ from: mockFrom });
     mockFrom.mockReturnValue({ where: mockWhere });
     mockUpdate.mockReturnValue({ set: mockSet });

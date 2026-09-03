@@ -11,6 +11,7 @@ import type {
 } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { withTenant } from '../db/tenant-context.js';
+import { redisGet, redisSet } from '../lib/redis.js';
 import { studentUseCases } from '../students/use-cases/studentUseCases.js';
 import { teacherUseCases } from '../teachers/use-cases/teacherUseCases.js';
 import { contactUseCases } from '../contacts/use-cases/contactUseCases.js';
@@ -35,8 +36,15 @@ export interface DashboardSummaryResponse {
 
 /**
  * Aggregates high-frequency command metrics across tenant domains in a single
- * read-only transaction with statement timeout safety.
+ * read-only transaction with statement timeout safety. The result is cached in
+ * Redis (keyed by tenant + date) for a short TTL so repeated dashboard loads
+ * within the window skip the 9-way aggregation. The frontend already treats the
+ * summary as fresh for 30s, so a 30s server cache adds no additional visible
+ * staleness while cutting redundant aggregation work.
  */
+const DASHBOARD_SUMMARY_CACHE_TTL_SECONDS = 30;
+const DASHBOARD_SUMMARY_CACHE_PREFIX = 'dashboard:summary:';
+
 export async function loadDashboardSummary(
   date?: string,
   _role?: string,
@@ -45,8 +53,18 @@ export async function loadDashboardSummary(
   if (!tenant) return {};
 
   const cleanTenant = tenant.trim().toLowerCase();
+  const cacheKey = `${DASHBOARD_SUMMARY_CACHE_PREFIX}${cleanTenant}:${date ?? 'today'}`;
 
-  return withTenant(
+  const cached = await redisGet(cacheKey);
+  if (cached) {
+    try {
+      return JSON.parse(cached) as DashboardSummaryResponse;
+    } catch {
+      // Corrupt/partial cache entry — recompute below.
+    }
+  }
+
+  const result = await withTenant(
     cleanTenant,
     async () => {
       const [
@@ -85,4 +103,7 @@ export async function loadDashboardSummary(
     },
     { readOnly: true, statementTimeoutMs: 10000 },
   );
+
+  await redisSet(cacheKey, JSON.stringify(result), DASHBOARD_SUMMARY_CACHE_TTL_SECONDS);
+  return result;
 }

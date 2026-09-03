@@ -23,28 +23,43 @@ import {
   deleteWorkspaceRow,
   findWorkspaceRowBySubdomain,
   getWorkspaceBranding,
+  getWorkspaceWithBranding,
   getWorkspaceGlobalSettings,
   getWorkspaceGrantedModulesRepo,
   insertWorkspaceRow,
-  listWorkspaceRows,
+  listWorkspaceRowsWithBranding,
   updateWorkspaceBrandingRow,
   updateWorkspaceEnabledRow,
   updateWorkspaceGrantedAndEnabledModulesRepo,
   upsertWorkspaceBranding as upsertWorkspaceBrandingRepo,
+  workspaceSubdomainExists,
 } from '../db/repositories/workspaceRepository.js';
 import {
   getUserModulePreferencesByWorkspace,
   upsertUserModulePreferences,
 } from '../db/repositories/userModulePreferencesRepository.js';
 
-async function listWorkspaces(): Promise<Workspace[]> {
-  return listWorkspaceRows();
-}
-
 /** Public branding for a workspace subdomain (login shell, registry cards). */
 export async function fetchPublicBrandingForSubdomain(subdomain: string) {
   const branding = await getWorkspaceBranding(subdomain);
   return toPublicBranding(branding ? branding : mergeBrandingSettings(null));
+}
+
+/** Fetch workspace summary and public branding together in a single DB query. */
+export async function getWorkspaceWithPublicBranding(subdomain: string) {
+  const normalized = normalizeSubdomainInput(subdomain);
+  const data = await getWorkspaceWithBranding(normalized);
+  if (!data) return null;
+  const branding = toPublicBranding(data.branding ? data.branding : mergeBrandingSettings(null));
+  return {
+    workspace: {
+      subdomain: data.workspace.subdomain,
+      madrasaName: branding.madrasaName || data.workspace.madrasaName,
+      tagline: branding.tagline || data.workspace.tagline,
+      enabled: isWorkspaceEnabled(data.workspace),
+    },
+    branding,
+  };
 }
 
 /** Workspace-wide setup state derived from authoritative persisted branding. */
@@ -59,41 +74,38 @@ export function normalizeSubdomainInput(value: string): string {
 
 /** All registered workspaces for apex picker (active only; public name from branding). */
 export async function listPublicWorkspaces(): Promise<PublicWorkspaceSummary[]> {
-  const workspaces = await listWorkspaces();
-  const active = workspaces.filter(isWorkspaceEnabled);
-  const summaries = await Promise.all(
-    active.map(async (ws) => {
-      const branding = await fetchPublicBrandingForSubdomain(ws.subdomain);
-      const logoUrl = branding.logoUrl?.trim();
+  const rows = await listWorkspaceRowsWithBranding();
+  const active = rows.filter(({ workspace }) => isWorkspaceEnabled(workspace));
+  return active
+    .map(({ workspace, branding }) => {
+      const publicBranding = toPublicBranding(branding);
+      const logoUrl = publicBranding.logoUrl?.trim();
       return {
-        subdomain: ws.subdomain,
-        madrasaName: branding.madrasaName || ws.madrasaName,
-        tagline: branding.tagline || ws.tagline,
+        subdomain: workspace.subdomain,
+        madrasaName: publicBranding.madrasaName || workspace.madrasaName,
+        tagline: publicBranding.tagline || workspace.tagline,
         logoUrl: logoUrl || undefined,
       };
     })
-  );
-  return summaries.sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
+    .sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
 }
 
 /** All workspaces for platform super-user console (includes disabled). */
 export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> {
-  const workspaces = await listWorkspaces();
+  const rows = await listWorkspaceRowsWithBranding();
   const summaries = await Promise.all(
-    workspaces.map(async (ws) => {
-      const [branding, rawPrefs] = await Promise.all([
-        fetchPublicBrandingForSubdomain(ws.subdomain),
-        getUserModulePreferencesByWorkspace(ws.subdomain),
-      ]);
+    rows.map(async ({ workspace, branding }) => {
+      const publicBranding = toPublicBranding(branding);
+      const rawPrefs = await getUserModulePreferencesByWorkspace(workspace.subdomain);
       const prefs = normalizeUserModulePreferences(rawPrefs);
-      const logoUrl = branding.logoUrl?.trim();
+      const logoUrl = publicBranding.logoUrl?.trim();
       return {
-        subdomain: ws.subdomain,
-        madrasaName: branding.madrasaName || ws.madrasaName,
-        tagline: branding.tagline || ws.tagline,
+        subdomain: workspace.subdomain,
+        madrasaName: publicBranding.madrasaName || workspace.madrasaName,
+        tagline: publicBranding.tagline || workspace.tagline,
         logoUrl: logoUrl || undefined,
-        enabled: isWorkspaceEnabled(ws),
-        createdAt: ws.createdAt,
+        enabled: isWorkspaceEnabled(workspace),
+        createdAt: workspace.createdAt,
         requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
       };
     }),
@@ -173,8 +185,7 @@ export async function getWorkspace(): Promise<Workspace | null> {
 export async function isSubdomainAvailable(subdomain: string): Promise<boolean> {
   const normalized = normalizeSubdomainInput(subdomain);
   if (!isValidSubdomain(normalized)) return false;
-  const workspaces = await listWorkspaces();
-  return !workspaces.some((ws) => ws.subdomain === normalized);
+  return !(await workspaceSubdomainExists(normalized));
 }
 
 export async function assertSubdomainAvailable(subdomain: string): Promise<void> {

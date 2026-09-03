@@ -1,4 +1,4 @@
-import { redisDel, redisExists, redisGet, redisSet } from '../lib/redis.js';
+import { redisBatch, redisDel, redisExists, redisGet, redisSet, type RedisBatchOp } from '../lib/redis.js';
 
 const REVOKED_TOKEN_PREFIX = 'session:revoked:';
 const USER_REVOKED_AT_PREFIX = 'user:revoked_at:';
@@ -80,4 +80,49 @@ export async function isTenantBlocked(tenantId?: string): Promise<boolean> {
   if (!tenantId) return false;
   const key = `${TENANT_BLOCKED_PREFIX}${tenantId.toLowerCase()}`;
   return redisExists(key);
+}
+
+export interface SessionRevocationCheck {
+  tenantBlocked: boolean;
+  tokenRevoked: boolean;
+  userSessionRevoked: boolean;
+}
+
+/**
+ * Runs the three independent Redis revocation/blocklist reads used by the auth
+ * hot path (tenant blocklist, token revocation, whole-user session revocation)
+ * in a single pipelined round-trip instead of three sequential round-trips.
+ * Semantics are identical to calling isTenantBlocked / isTokenRevoked /
+ * isUserSessionRevoked individually.
+ */
+export async function checkSessionRevocationBatch(params: {
+  tenant?: string;
+  jti?: string;
+  userId?: string;
+  issuedAtMs?: number;
+}): Promise<SessionRevocationCheck> {
+  const ops: RedisBatchOp[] = [];
+  const tenantKey = params.tenant
+    ? `${TENANT_BLOCKED_PREFIX}${params.tenant.toLowerCase()}`
+    : null;
+  const jtiKey = params.jti ? `${REVOKED_TOKEN_PREFIX}${params.jti}` : null;
+  const userKey = params.userId ? `${USER_REVOKED_AT_PREFIX}${params.userId}` : null;
+
+  if (tenantKey) ops.push({ key: tenantKey, type: 'exists' });
+  if (jtiKey) ops.push({ key: jtiKey, type: 'exists' });
+  if (userKey) ops.push({ key: userKey, type: 'get' });
+
+  const results = await redisBatch(ops);
+  let i = 0;
+  const tenantBlocked = tenantKey ? (results[i++] as boolean) : false;
+  const tokenRevoked = jtiKey ? (results[i++] as boolean) : false;
+  const userRevokedAtStr = userKey ? (results[i++] as string | null) : null;
+
+  let userSessionRevoked = false;
+  if (userRevokedAtStr) {
+    const revokedAt = Number.parseInt(userRevokedAtStr, 10);
+    userSessionRevoked = !Number.isNaN(revokedAt) && (params.issuedAtMs ?? 0) < revokedAt;
+  }
+
+  return { tenantBlocked, tokenRevoked, userSessionRevoked };
 }

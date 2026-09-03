@@ -7,15 +7,17 @@ import { useIsTenantHost } from '@/lib/host/useIsTenantHost';
 import UserNotRegisteredError from '@/components/routing/UserNotRegisteredError';
 import RouterBridge from '@/components/routing/RouterBridge';
 import HostRoutes from '@/components/routing/HostRoutes';
+import { isEntryPath } from "@/lib/config/routes";
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { AppProviders } from '@/providers/AppProviders';
 
 const AuthenticatedApp = (): React.JSX.Element | null => {
   const isTenantHost = useIsTenantHost();
-  const { isLoadingAuth, authError, authChecked } = useAuth();
+  const { isLoadingAuth, authError, authChecked, user } = useAuth();
 
   if (isTenantHost) {
-    const bootLoading = isLoadingAuth && !authChecked;
+    const isEntry = typeof window !== 'undefined' && isEntryPath(window.location.pathname, { isApex: false });
+    const bootLoading = !user && !isEntry && isLoadingAuth && !authChecked;
     if (bootLoading) {
       return <RouteStatusFallback fullScreen />;
     }
