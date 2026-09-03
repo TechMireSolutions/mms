@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { SidebarNavItem } from "@/components/ui/SidebarNavItem";
 import { useTranslation } from "@/hooks/useTranslation";
 import { isNavPathActive, ROUTES } from "@/lib/config/routes";
 import { prefetchRoute } from "@/lib/routing/routePrefetch";
@@ -116,43 +117,18 @@ export function SidebarNav({
         }
 
         const isActive = isNavPathActive(locationPathname, item.path ?? ROUTES.home);
-        const Icon = item.icon;
 
         return (
-          <Link
+          <SidebarNavItem
             key={item.path}
             to={item.path!}
-            onMouseEnter={() => prefetchRoute(item.path!)}
-            onFocus={() => prefetchRoute(item.path!)}
-            className={`group flex min-h-11 items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 relative ${
-              isActive
-                ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
-                : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
-            }`}
-          >
-            {isActive && (
-              <motion.div
-                layoutId="sidebar-indicator"
-                className="absolute start-0 top-1/2 -translate-y-1/2 w-0.75 h-5 bg-sidebar-primary rounded-e-full"
-                transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              />
-            )}
-            <Icon className={`h-4.5 w-4.5 flex-shrink-0 ${
-              isActive ? "text-sidebar-primary" : ""
-            }`} />
-            <AnimatePresence>
-              {!collapsed && (
-                <motion.span
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "auto" }}
-                  exit={{ opacity: 0, width: 0 }}
-                  className="text-sm font-medium overflow-hidden whitespace-nowrap"
-                >
-                  {t(item.labelKey)}
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </Link>
+            label={t(item.labelKey)}
+            icon={item.icon}
+            active={isActive}
+            showLabel={!collapsed}
+            collapsed={collapsed}
+            layoutId="sidebar-indicator"
+          />
         );
       })}
     </nav>
