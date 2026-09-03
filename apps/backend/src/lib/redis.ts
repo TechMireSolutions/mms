@@ -14,7 +14,7 @@ export function getRedisClient(): Redis | null {
   if (redisInstance) return redisInstance;
 
   const redisUrl = process.env.REDIS_URL;
-  if (!redisUrl && process.env.NODE_ENV === 'test') {
+  if (!redisUrl && (process.env.NODE_ENV === 'test' || process.env.VITEST)) {
     return null;
   }
 
@@ -36,7 +36,7 @@ export function getRedisClient(): Redis | null {
 
     client.on('error', (err: Error) => {
       isRedisConnected = false;
-      if (process.env.NODE_ENV !== 'test') {
+      if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
         console.warn(`[Redis] Connection warning: ${err.message}`);
       }
     });
@@ -59,7 +59,7 @@ export function getRedisSubscriberClient(): Redis | null {
   if (redisSubscriberInstance) return redisSubscriberInstance;
 
   const redisUrl = process.env.REDIS_URL;
-  if (!redisUrl && process.env.NODE_ENV === 'test') {
+  if (!redisUrl && (process.env.NODE_ENV === 'test' || process.env.VITEST)) {
     return null;
   }
 
@@ -76,7 +76,7 @@ export function getRedisSubscriberClient(): Redis | null {
     });
 
     client.on('error', (err: Error) => {
-      if (process.env.NODE_ENV !== 'test') {
+      if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
         console.warn(`[Redis Subscriber] Connection warning: ${err.message}`);
       }
     });

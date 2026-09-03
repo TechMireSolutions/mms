@@ -52,11 +52,15 @@ export function configureRedisPubSub(
       subscribed = true;
       redisSubscriber.subscribe(WS_INVALIDATION_CHANNEL).catch((err) => {
         subscribed = false; // allow a later retry (e.g. on `ready`)
-        console.warn('[WS PubSub] Failed to subscribe to mms:ws-invalidation:', err);
+        if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
+          console.warn('[WS PubSub] Failed to subscribe to mms:ws-invalidation:', err);
+        }
       });
       redisSubscriber.subscribe(JOB_EVENT_CHANNEL).catch((err) => {
         subscribed = false; // allow a later retry (e.g. on `ready`)
-        console.warn('[WS PubSub] Failed to subscribe to mms:job-event:', err);
+        if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
+          console.warn('[WS PubSub] Failed to subscribe to mms:job-event:', err);
+        }
       });
     };
 

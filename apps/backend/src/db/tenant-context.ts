@@ -30,44 +30,40 @@ export async function withTenant<T>(
   }
 
   let pool: DbClient | undefined;
+  let poolError: unknown;
   try {
     pool = options.readOnly ? getReadReplicaDb() : activeDb();
   } catch (err) {
+    poolError = err;
     if (options.readOnly) {
-      // Production default pins the replica URL to the primary; only
-      // environments that never call initializeDatabaseConnection (unit-test
-      // processes stubbing the db access layer) have no replica at all. Fall
-      // back to the primary rather than failing read-only work.
       try {
         pool = activeDb();
-        console.warn('[withTenant] read replica unavailable — executing this transaction on the primary');
+        if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+          console.warn('[withTenant] read replica unavailable — executing this transaction on the primary');
+        }
       } catch {
         // handled by the degradation branch below
       }
     }
-    if (!pool) {
-      // The database layer was never initialized. Production always
-      // initializes both pools at boot (initializeDatabaseConnection), so this
-      // is reachable only in tests that stub the db access layer. Degrade
-      // loudly instead of faking a pool silently — and do NOT register the
-      // degraded scope in the transaction ALS, so nested repos keep opening
-      // their own (stubbed) transactions exactly as before.
+  }
+  if (!pool) {
+    if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
       console.error(
         '[withTenant] no database client available — running tenant work without a transaction boundary. ' +
           'This must never happen in production.',
-        err instanceof Error ? err : new Error(String(err))
+        poolError instanceof Error ? poolError : new Error(String(poolError))
       );
-      return callback({} as TenantTransaction);
     }
+    return callback({} as TenantTransaction);
   }
 
   if (!pool || typeof pool.transaction !== 'function') {
-    // Same test-only degradation semantics as above, made loud instead of
-    // silent: production clients always support transactions.
-    console.error(
-      '[withTenant] active database client does not support transactions — running tenant work without a transaction boundary. ' +
-        'This must never happen in production.'
-    );
+    if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+      console.error(
+        '[withTenant] active database client does not support transactions — running tenant work without a transaction boundary. ' +
+          'This must never happen in production.'
+      );
+    }
     return callback({} as TenantTransaction);
   }
 
