@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Code2, Check, Copy } from 'lucide-react';
+import React from 'react';
+import { Code2 } from 'lucide-react';
 import { formatDate } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Button } from '@/components/ui/button';
 import { Modal } from '@/components/ui/Modal';
+import { CopyBtn } from '@/components/ui/CopyBtn';
 import type { PlatformActivityLogItem } from '@/platform/hooks/usePlatformActivityLogs';
 
 interface ActivityLogInspectModalProps {
@@ -13,15 +13,8 @@ interface ActivityLogInspectModalProps {
 
 export function ActivityLogInspectModal({ log, onClose }: ActivityLogInspectModalProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const [copied, setCopied] = useState(false);
 
   if (!log) return null;
-
-  const handleCopy = () => {
-    void navigator.clipboard.writeText(JSON.stringify(log, null, 2));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   return (
     <Modal
@@ -39,15 +32,12 @@ export function ActivityLogInspectModal({ log, onClose }: ActivityLogInspectModa
 
         <div className="flex items-center justify-between pt-2">
           <span className="text-2xs text-muted-foreground font-mono">ID: {log.id}</span>
-          <Button
+          <CopyBtn
+            text={JSON.stringify(log, null, 2)}
+            label={t('platform.logs.copyJson')}
+            labelCopied={t('platform.logs.copied')}
             variant="outline"
-            size="sm"
-            onClick={handleCopy}
-            className="gap-1.5 text-xs font-semibold rounded-xl cursor-pointer"
-          >
-            {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
-            {copied ? t('platform.logs.copied') : t('platform.logs.copyJson')}
-          </Button>
+          />
         </div>
       </div>
     </Modal>

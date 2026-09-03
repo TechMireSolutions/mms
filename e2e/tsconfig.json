@@ -1,17 +1,10 @@
 {
+  "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "strict": true,
     "noEmit": true,
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
     "types": ["node", "@playwright/test"]
   },
   "include": ["tests/**/*", "helpers/**/*", "playwright.config.ts"]

@@ -1,0 +1,32 @@
+# Dependencies & build outputs
+node_modules/
+**/node_modules/
+.pnpm-store/
+dist/
+**/dist/
+.out/
+*.tsbuildinfo
+.turbo/
+
+# Generated / test artifacts
+coverage/
+**/coverage/
+.vitest/
+test-results/
+playwright-report/
+blob-report/
+e2e/test-results/
+
+# Runtime & env
+**/uploads/
+*.log
+pnpm-lock.yaml
+
+# Generated DB migrations SQL (hand-authored style)
+**/migrations_drizzle/**/*.sql
+
+# Doc / agent / editor dirs (not source)
+.agent/
+.cursor/
+.claude/
+docs/

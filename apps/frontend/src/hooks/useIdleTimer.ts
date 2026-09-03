@@ -51,7 +51,12 @@ export function useIdleTimer({
   };
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      deadlineRef.current = Date.now() + timeoutMs;
+      warnedRef.current = false;
+      timeoutFiredRef.current = false;
+      return;
+    }
     const handleEvent = (): void => reset();
     IDLE_EVENTS.forEach((ev) => window.addEventListener(ev, handleEvent, { passive: true }));
     reset();
@@ -64,8 +69,8 @@ export function useIdleTimer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, timeoutMs]);
 
-  const remainingMs = Math.max(0, deadlineRef.current - now);
-  const isWarning = remainingMs <= warnBeforeMs && warnBeforeMs > 0;
+  const remainingMs = enabled ? Math.max(0, deadlineRef.current - now) : timeoutMs;
+  const isWarning = enabled && remainingMs <= warnBeforeMs && warnBeforeMs > 0;
 
   useEffect(() => {
     if (!enabled) return;

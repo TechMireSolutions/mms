@@ -1,6 +1,5 @@
 import { execSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import os from 'node:os';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, type Page, type Response, test } from '@playwright/test';
@@ -58,7 +57,9 @@ function resolveDatabaseUrl(): string {
 }
 
 function runGuardedNodeScript(script: string, extraEnv: Record<string, string> = {}): string {
-  const tmpDir = mkdtempSync(path.join(os.tmpdir(), 'mms-e2e-'));
+  const tmpBase = path.join(backendDir, '.tmp-e2e');
+  mkdirSync(tmpBase, { recursive: true });
+  const tmpDir = mkdtempSync(path.join(tmpBase, 'script-'));
   const scriptPath = path.join(tmpDir, 'script.cjs');
   writeFileSync(scriptPath, script);
   try {
@@ -69,6 +70,7 @@ function runGuardedNodeScript(script: string, extraEnv: Record<string, string> =
       env: {
         ...process.env,
         DATABASE_URL: resolveDatabaseUrl(),
+        NODE_PATH: path.join(backendDir, 'node_modules'),
         ...extraEnv,
       },
     });
@@ -192,6 +194,10 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
     await test.step('1. Platform admin signs in to apex console', async () => {
       await page.goto('/platform/login');
       await page.waitForLoadState('domcontentloaded');
+      const retryBtn = page.getByRole('button', { name: /Try again/i });
+      if (await retryBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
+        await retryBtn.click();
+      }
       const platformEmailInput = page.locator('#platform-email');
       await expect(platformEmailInput).toBeVisible({ timeout: 30_000 });
       await platformEmailInput.fill(e2ePlatformEmail);

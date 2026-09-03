@@ -27,6 +27,7 @@ export function useWorkspaceBySubdomain(subdomain: string | null, enabled: boole
     queryData: { params: { subdomain: subdomain! } },
     enabled: enabled && Boolean(subdomain),
     staleTime: 60_000,
-    retry: false,
+    retry: (failureCount: number, error: unknown) =>
+      !isWorkspaceNotFoundError(error) && failureCount < 3,
   });
 }

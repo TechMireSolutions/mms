@@ -9,6 +9,7 @@ import { buildPlatformNotifications } from '@/platform/lib/buildPlatformNotifica
 import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { BackgroundJobsTray } from '@/components/ui/BackgroundJobsTray';
 import { PlatformLanguagePicker } from '@/platform/components/header/PlatformLanguagePicker';
 import { usePlatformNotificationAck } from '@/platform/hooks/usePlatformNotificationAck';
@@ -114,9 +115,11 @@ export function PlatformHeaderUserNav({
               </div>
               <div className="max-h-80 overflow-y-auto">
                 {notifications.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-xs text-muted-foreground font-semibold">
-                    {t('platform.notificationsAllCaughtUp')}
-                  </div>
+                  <EmptyState
+                    title={t('platform.notificationsAllCaughtUp')}
+                    compact
+                    className="py-6"
+                  />
                 ) : (
                   notifications.map((notification) => (
                     <button

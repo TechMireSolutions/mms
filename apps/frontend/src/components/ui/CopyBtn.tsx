@@ -14,16 +14,24 @@ interface CopyBtnProps {
   className?: string;
   variant?: "ghost" | "outline" | "default";
   showToast?: boolean;
+  /** When set, render a visible labeled button (icon + this text) instead of icon-only. */
+  label?: string;
+  /** Copied-state label shown when `label` is provided. */
+  labelCopied?: string;
 }
 
 /**
- * Reusable CopyBtn component for copying text to clipboard with feedback icon and toast.
+ * Reusable copy-to-clipboard control with feedback icon + optional toast.
+ * Icon-only by default (hover-reveal); pass `label`/`labelCopied` for a visible
+ * labeled action button (e.g. "Copy JSON" / "Copied").
  */
 export const CopyBtn = (function CopyBtn({
   text,
   className,
   variant,
   showToast = false,
+  label,
+  labelCopied,
 }: CopyBtnProps): React.JSX.Element {
   const { t } = useTranslation();
   const [copied, setCopied] = useState<boolean>(false);
@@ -42,6 +50,23 @@ export const CopyBtn = (function CopyBtn({
       })
       .catch(() => undefined);
   };
+
+  // Labeled variant: a visible action button with text feedback.
+  if (label) {
+    return (
+      <Button
+        type="button"
+        size="sm"
+        variant={variant ?? "outline"}
+        onClick={handleCopy}
+        aria-label={copied ? labelCopied ?? label : label}
+        className={cn("gap-1.5 text-xs font-semibold rounded-xl cursor-pointer", className)}
+      >
+        {copied ? <Check className="w-3.5 h-3.5 text-success" /> : <Copy className="w-3.5 h-3.5" />}
+        {copied ? labelCopied ?? label : label}
+      </Button>
+    );
+  }
 
   return (
     <Button

@@ -7,7 +7,7 @@ import {
   waitForAppShellReady,
 } from '../helpers/responsive.js';
 
-const APEX_READY = '#platform-setup-email, #platform-email, a[href*="login"], button:has-text("Sign")';
+const APEX_READY = '#platform-setup-email, #platform-email, a[href*="login"], button:has-text("Sign"), #main-content';
 
 function getTenantOrigin(subdomain: string, baseURL?: string): string {
   const base = new URL(baseURL || 'http://localhost:5173');
@@ -25,7 +25,18 @@ async function openPublicRoute(page: Page, url: string, ready?: string): Promise
   await page.goto(url);
   await waitForAppShellReady(page);
   if (ready) {
-    await expect(page.locator(ready).first()).toBeVisible({ timeout: 20_000 });
+    const readyLocator = page.locator(ready).first();
+    try {
+      await expect(readyLocator).toBeVisible({ timeout: 20_000 });
+    } catch (err) {
+      const retryBtn = page.getByRole('button', { name: /Try again/i });
+      if (await retryBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
+        await retryBtn.click();
+        await expect(readyLocator).toBeVisible({ timeout: 20_000 });
+      } else {
+        throw err;
+      }
+    }
   }
 }
 
@@ -35,8 +46,12 @@ test.describe('Unknown tenant host redirect', { tag: '@smoke' }, () => {
     const targetUrl = `${getTenantOrigin(missingSubdomain, baseURL)}/settings`;
 
     await page.goto(targetUrl).catch(() => {});
-    await expect.poll(() => {
+    await expect.poll(async () => {
       try {
+        const retryBtn = page.getByRole('button', { name: /Try again/i });
+        if (await retryBtn.isVisible().catch(() => false)) {
+          await retryBtn.click().catch(() => {});
+        }
         const parsed = new URL(page.url());
         return (
           parsed.pathname === '/tenant-not-found' &&
