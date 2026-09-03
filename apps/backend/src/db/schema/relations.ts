@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 
 import { workspaces, platformUsers, platformUserPermissions, platformActivityLogs } from "./platform.js";
 import { backgroundJobs, savedReports, auditLogEntries, userActivityLogs } from "./system.js";
-import { contacts, contactTags, contactPhones, contactEmails, contactAddresses, contactSocials, contactEducations, contactExperiences, contactSkills, contactRelationships, contactActivities, contactAttachments, tenantUsers } from "./contacts.js";
+import { contacts, contactTags, contactPhones, contactEmails, contactAddresses, contactSocials, contactEducations, contactExperiences, contactSkills, contactRelationships, contactActivities, contactAttachments, contactBankDetails, tenantUsers } from "./contacts.js";
 import { students, studentEnrolledSessions } from "./students.js";
 import { teachers } from "./teachers.js";
 import { sessions, sessionClasses, sessionTimetable, sessionDiscounts, sessionBudgetExpenses, sessionBudgetIncomes, sessionEvents, sessionTabarruk } from "./sessions.js";
@@ -501,6 +501,7 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
   relationships: many(contactRelationships),
   activities: many(contactActivities),
   attachments: many(contactAttachments),
+  bankDetails: many(contactBankDetails),
   students: many(students),
   teachers: many(teachers),
   tenantUsers: many(tenantUsers),
@@ -580,6 +581,13 @@ export const contactActivitiesRelations = relations(contactActivities, ({ one })
 export const contactAttachmentsRelations = relations(contactAttachments, ({ one }) => ({
   contact: one(contacts, {
     fields: [contactAttachments.workspaceSubdomain, contactAttachments.contactId],
+    references: [contacts.workspaceSubdomain, contacts.id],
+  }),
+}));
+
+export const contactBankDetailsRelations = relations(contactBankDetails, ({ one }) => ({
+  contact: one(contacts, {
+    fields: [contactBankDetails.workspaceSubdomain, contactBankDetails.contactId],
     references: [contacts.workspaceSubdomain, contacts.id],
   }),
 }));

@@ -12,7 +12,7 @@ function withHealedPrimary(
   fieldKey: ContactSubListKey,
   list: unknown[],
 ): unknown[] {
-  if (fieldKey !== "phones" && fieldKey !== "emails") return list;
+  if (fieldKey !== "phones" && fieldKey !== "emails" && fieldKey !== "bankDetails") return list;
   return ensureSinglePrimaryFlag(list as Array<{ isPrimary?: boolean }>);
 }
 

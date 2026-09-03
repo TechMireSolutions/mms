@@ -1,39 +1,86 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
-interface UseIdleTimerOptions {
+export interface UseIdleTimerOptions {
   enabled: boolean;
-  timeoutMinutes: number;
+  timeoutMs: number;
+  /** Show the warning and call `onWarn` this long before the deadline (ms). */
+  warnBeforeMs?: number;
+  onWarn?: () => void;
   onTimeout: () => void;
+}
+
+export interface IdleTimerState {
+  /** Milliseconds remaining until the idle deadline (0 when expired). */
+  remainingMs: number;
+  /** True once we are inside the warning window (deadline <= warnBeforeMs). */
+  isWarning: boolean;
+  /** Manually restart the idle window (used by "stay signed in"). */
+  reset: () => void;
 }
 
 const IDLE_EVENTS = ["mousedown", "keydown", "scroll", "touchstart", "click"] as const;
 
 /**
- * Hook that calls onTimeout after a period of user inactivity.
+ * Server-aware inactivity timer. Returns the remaining idle time (ticked every
+ * second) so the UI can render a countdown, and calls `onWarn` when entering the
+ * warning window and `onTimeout` when the deadline expires. Any tracked user
+ * activity restarts the idle window.
  */
-export function useIdleTimer({ enabled, timeoutMinutes, onTimeout }: UseIdleTimerOptions): void {
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+export function useIdleTimer({
+  enabled,
+  timeoutMs,
+  warnBeforeMs = 0,
+  onWarn,
+  onTimeout,
+}: UseIdleTimerOptions): IdleTimerState {
+  const [now, setNow] = useState(() => Date.now());
+  const deadlineRef = useRef<number>(Date.now() + timeoutMs);
+  const warnedRef = useRef(false);
+  const timeoutFiredRef = useRef(false);
+
+  const onTimeoutRef = useRef(onTimeout);
+  const onWarnRef = useRef(onWarn);
+  onTimeoutRef.current = onTimeout;
+  onWarnRef.current = onWarn;
+
+  const reset = (): void => {
+    deadlineRef.current = Date.now() + timeoutMs;
+    warnedRef.current = false;
+    timeoutFiredRef.current = false;
+    setNow(Date.now());
+  };
 
   useEffect(() => {
     if (!enabled) return;
-
-    const reset = (): void => {
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => {
-        onTimeout();
-      }, timeoutMinutes * 60 * 1000);
-    };
-
-    const handleEvent = (): void => {
-      reset();
-    };
-
+    const handleEvent = (): void => reset();
     IDLE_EVENTS.forEach((ev) => window.addEventListener(ev, handleEvent, { passive: true }));
     reset();
 
+    const tick = window.setInterval(() => setNow(Date.now()), 1000);
     return () => {
-      if (timerRef.current) clearTimeout(timerRef.current);
+      window.clearInterval(tick);
       IDLE_EVENTS.forEach((ev) => window.removeEventListener(ev, handleEvent));
     };
-  }, [enabled, timeoutMinutes, onTimeout]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled, timeoutMs]);
+
+  const remainingMs = Math.max(0, deadlineRef.current - now);
+  const isWarning = remainingMs <= warnBeforeMs && warnBeforeMs > 0;
+
+  useEffect(() => {
+    if (!enabled) return;
+    if (remainingMs <= 0) {
+      if (!timeoutFiredRef.current) {
+        timeoutFiredRef.current = true;
+        onTimeoutRef.current();
+      }
+      return;
+    }
+    if (isWarning && !warnedRef.current && onWarnRef.current) {
+      warnedRef.current = true;
+      onWarnRef.current();
+    }
+  }, [enabled, remainingMs, isWarning]);
+
+  return { remainingMs, isWarning, reset };
 }

@@ -55,6 +55,7 @@ export const DEFAULT_FORM_TABS: TabDefinition[] = [
   { key: "experience", label: "Experience", labelKey: "contacts.form.tabExperience", enabled: true, order: 6, isSystem: true },
   { key: "skills",    label: "Skills",     labelKey: "contacts.form.tabSkills",     enabled: true, order: 7, isSystem: true },
   { key: "relationship", label: "Relationship", labelKey: "contacts.form.tabRelationship", enabled: true, order: 8, isSystem: true },
+  { key: "bankDetails", label: "Bank Details", labelKey: "contacts.form.tabBankDetails", enabled: true, order: 9, isSystem: true },
 ];
 
 /** Seed form tab definition when present in defaults or legacy `custom`. */
@@ -151,6 +152,9 @@ export const DEFAULT_COLUMN_REGISTRY: ColumnRegistryEntry[] = [
   { key: "relationship_contact",   label: "Relationship Contact",   labelKey: "contacts.columns.relationshipContact",   enabled: false, order: 32, sortable: false, width: 150 },
   { key: "relationship_type",      label: "Relationship Type",      labelKey: "contacts.columns.relationshipType",      enabled: false, order: 33, sortable: false, width: 140 },
   { key: "notes",                  label: "Notes",                  labelKey: "contacts.columns.notes",                  enabled: false, order: 34, sortable: false, width: 180 },
+  { key: "bank_name",              label: "Bank Name",              labelKey: "contacts.columns.bankName",              enabled: false, order: 35, sortable: false, width: 140 },
+  { key: "bank_account",           label: "Account Number",         labelKey: "contacts.columns.accountNumber",         enabled: false, order: 36, sortable: false, width: 150 },
+  { key: "bank_iban",              label: "IBAN",                   labelKey: "contacts.columns.iban",                  enabled: false, order: 37, sortable: false, width: 160 },
 ];
 
 export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: string }> = {
@@ -190,4 +194,7 @@ export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: stri
   skills_issuer: { tabId: "skills", fieldId: "issuer" },
   relationship_contact: { tabId: "relationship", fieldId: "contactId" },
   relationship_type: { tabId: "relationship", fieldId: "relationship" },
+  bank_name: { tabId: "bankDetails", fieldId: "bankName" },
+  bank_account: { tabId: "bankDetails", fieldId: "accountNumber" },
+  bank_iban: { tabId: "bankDetails", fieldId: "iban" },
 };

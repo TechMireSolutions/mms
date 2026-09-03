@@ -14,6 +14,11 @@ import {
 } from '../../services/platform/platformAuthService.js';
 import { verifyPlatformTwoFactorChallenge, resendPlatformTwoFactorChallenge } from '../../services/platform/platformTwoFactorService.js';
 import {
+  platformSessionScope,
+  touchSession,
+} from '../../services/sessionClockService.js';
+import { platformSessionPolicy } from '../../services/sessionPolicyService.js';
+import {
   getPlatformSetupStatus,
   startPlatformSetup,
 } from '../../services/platform/platformSetupService.js';
@@ -193,6 +198,24 @@ export default async function platformAuthRoutes(
     }
     return reply.send({ user: profile, isAuthenticated: true });
   });
+
+  // Public — the apex app needs the configured timeout policy to arm its idle
+  // timer, and the values are non-sensitive.
+  fastify.get('/session/policy', async (_request, reply) => {
+    return reply.send(platformSessionPolicy());
+  });
+
+  // Sliding extension for the platform "stay signed in" warning action.
+  fastify.post(
+    '/session/extend',
+    { preHandler: authenticatePlatform },
+    async (request, reply) => {
+      const { platformUser } = request as PlatformAuthenticatedRequest;
+      const { idleMs } = platformSessionPolicy();
+      await touchSession(platformSessionScope(platformUser.id), idleMs, true);
+      return reply.send({ ok: true, idleMs });
+    },
+  );
 
   fastify.patch(
     '/me',

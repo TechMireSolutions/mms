@@ -53,6 +53,10 @@ export interface AuthContextType {
   login: (email: string, password: string) => Promise<{ user: User; requires2FA: boolean; challengeId?: string }>;
   verify2FA: (code: string) => Promise<{ user: User }>;
   logout: (shouldRedirect?: boolean) => void;
+  /** Sliding-extension: posts to the session extend endpoint so inactivity is reset. */
+  extendSession: () => Promise<void>;
+  /** True while an extend request is in flight. */
+  isExtendingSession: boolean;
   navigateToLogin: () => void;
   checkUserAuth: (signal?: AbortSignal) => Promise<void>;
   checkAppState: (signal?: AbortSignal) => Promise<void>;

@@ -29,6 +29,7 @@ export interface ContactDetailOverviewProps {
     education: { enabled?: boolean }[];
     experience: { enabled?: boolean }[];
     skills: { enabled?: boolean }[];
+    bankDetails?: { enabled?: boolean }[];
     relationship: { enabled?: boolean }[];
   };
   primaryPhone: string | null;

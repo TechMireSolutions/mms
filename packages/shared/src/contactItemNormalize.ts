@@ -16,6 +16,7 @@ import {
   EXPERIENCE_SYSTEM_KEYS,
   SKILL_SYSTEM_KEYS,
   RELATIONSHIP_SYSTEM_KEYS,
+  BANK_DETAIL_SYSTEM_KEYS,
 } from "./contactItemNormalizeKeys.js";
 
 /** Built-in contact array keys — never treated as tenant custom-tab collections. */
@@ -27,6 +28,7 @@ const CONTACT_ENTITY_ARRAY_KEYS = new Set([
   "education",
   "experience",
   "skills",
+  "bankDetails",
   "relationshipContacts",
   "relationships",
   "activities",
@@ -174,6 +176,31 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
         ),
     );
   }
+  if (Array.isArray(result.bankDetails)) {
+    result.bankDetails = ensureSinglePrimaryFlag(
+      result.bankDetails
+        .filter(
+          (bank) =>
+            !isBlankContactListRow(
+              bank,
+              ["bankName", "accountTitle", "accountNumber", "iban"],
+              BANK_DETAIL_SYSTEM_KEYS,
+            ),
+        )
+        .map((bank) => ({
+          ...bank,
+          bankName: (bank.bankName || "").trim(),
+          accountTitle: (bank.accountTitle || "").trim(),
+          accountNumber: (bank.accountNumber || "").trim(),
+          iban: typeof bank.iban === "string" ? bank.iban.trim().toUpperCase() : bank.iban,
+          swiftCode: typeof bank.swiftCode === "string" ? bank.swiftCode.trim().toUpperCase() : bank.swiftCode,
+          branchName: typeof bank.branchName === "string" ? bank.branchName.trim() : bank.branchName,
+          branchCode: typeof bank.branchCode === "string" ? bank.branchCode.trim() : bank.branchCode,
+          routingNumber: typeof bank.routingNumber === "string" ? bank.routingNumber.trim() : bank.routingNumber,
+          currency: typeof bank.currency === "string" ? bank.currency.trim().toUpperCase() : bank.currency,
+        })),
+    );
+  }
   if (Array.isArray(result.relationshipContacts)) {
     result.relationshipContacts = result.relationshipContacts
       .filter(
@@ -202,3 +229,4 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
 
 // Per-item row normalizers (split for file-size; same public surface as before).
 export * from './contactItemNormalizeRows.js';
+export * from './contactItemNormalizeBankRows.js';

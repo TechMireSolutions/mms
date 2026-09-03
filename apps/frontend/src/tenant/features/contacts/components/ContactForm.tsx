@@ -1,6 +1,6 @@
 import type React from "react";
 import { useState, useEffect, type ComponentType } from "react";
-import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart, Sparkles, FolderKanban } from "lucide-react";
+import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart, Sparkles, FolderKanban, Landmark } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -23,6 +23,7 @@ export interface ContactFormProps {
   initialDraft?: Partial<Contact>;
   lockGender?: boolean;
   /** Raise above other modals (e.g. create from ContactPicker inside a form). */
+  nested?: boolean;
   priority?: boolean;
 }
 
@@ -43,6 +44,7 @@ const SYSTEM_TAB_ICONS: Record<string, ComponentType> = {
   experience: Briefcase,
   skills: Award,
   relationship: Heart,
+  bankDetails: Landmark,
   custom: Sparkles,
 };
 export function ContactForm({

@@ -97,3 +97,25 @@ export const RELATIONSHIP_SYSTEM_KEYS = new Set([
   "inferredFromContactId",
   "inferenceDepth",
 ]);
+
+export const BANK_DETAIL_SYSTEM_KEYS = new Set([
+  "bankName",
+  "bank",
+  "accountTitle",
+  "title",
+  "accountNumber",
+  "accountNo",
+  "iban",
+  "swiftCode",
+  "swift",
+  "bic",
+  "branchName",
+  "branch",
+  "branchCode",
+  "routingNumber",
+  "currency",
+  "isPrimary",
+  "label",
+  "type",
+  "value",
+]);

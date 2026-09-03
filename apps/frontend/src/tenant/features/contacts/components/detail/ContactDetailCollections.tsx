@@ -9,6 +9,7 @@ import {
   ContactDetailEducationSection,
   ContactDetailExperienceSection,
   ContactDetailSkillsSection,
+  ContactDetailBankDetailsSection,
 } from "./ContactDetailChannelSections";
 import { ContactDetailCustomCollections } from "./ContactDetailCustomCollections";
 
@@ -22,6 +23,7 @@ export interface ContactDetailCollectionsProps {
     education: { enabled?: boolean }[];
     experience: { enabled?: boolean }[];
     skills: { enabled?: boolean }[];
+    bankDetails?: { enabled?: boolean }[];
   };
   onWhatsApp?: (contacts: Contact[]) => void;
   onSms?: (contacts: Contact[]) => void;
@@ -85,6 +87,10 @@ export function ContactDetailCollections({
 
       {enabledTabIds.has("skills") && visibleCollectionFields.skills.length > 0 && (
         <ContactDetailSkillsSection contact={contact} />
+      )}
+
+      {(enabledTabIds.has("bankDetails") || enabledTabIds.has("bankdetails")) && (
+        <ContactDetailBankDetailsSection contact={contact} />
       )}
 
       <ContactDetailCustomCollections

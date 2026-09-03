@@ -1,13 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { PlatformSidebarProvider, usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useGlobalShortcut } from '@/hooks/useGlobalShortcut';
+import { AppFooter } from '@/components/ui/AppFooter';
 import { cn } from '@/lib/utils';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
 import { PlatformSidebar } from '@/platform/components/PlatformSidebar';
 import { PlatformCommandPalette } from '@/platform/components/PlatformCommandPalette';
-
-const CURRENT_YEAR = new Date().getFullYear();
 
 const MAX_W: Record<NonNullable<PlatformPageShellProps['width']>, string> = {
   md: 'max-w-md',
@@ -63,16 +63,7 @@ function PlatformAuthenticatedShell({
   const { t, dir, language } = useTranslation();
   const { commandPaletteOpen, setCommandPaletteOpen } = usePlatformSidebar();
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === 'k') {
-        e.preventDefault();
-        setCommandPaletteOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setCommandPaletteOpen]);
+  useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
 
   return (
     <PlatformShellFrame dir={dir} lang={language}>
@@ -102,18 +93,11 @@ export function PlatformPageShell({
   children,
   width = 'lg',
 }: PlatformPageShellProps): React.JSX.Element {
-  const { t, dir, language } = useTranslation();
+  const { dir, language } = useTranslation();
   const { isPlatformAuthenticated } = usePlatformAuth();
   const maxClass = MAX_W[width] ?? 'max-w-7xl';
 
-  const footer = (
-    <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6 mt-auto">
-      {t('theme.footerDefault', {
-        year: String(CURRENT_YEAR),
-        name: t('entry.productName'),
-      })}
-    </footer>
-  );
+  const footer = <AppFooter className="mt-auto" />;
 
   if (isPlatformAuthenticated) {
     return (
@@ -150,16 +134,7 @@ function UnauthenticatedShell({
 }): React.JSX.Element {
   const { commandPaletteOpen, setCommandPaletteOpen } = usePlatformSidebar();
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === 'k') {
-        e.preventDefault();
-        setCommandPaletteOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [setCommandPaletteOpen]);
+  useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
 
   return (
     <div

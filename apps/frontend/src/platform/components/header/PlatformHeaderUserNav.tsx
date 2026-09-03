@@ -6,7 +6,6 @@ import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { buildPlatformNotifications } from '@/platform/lib/buildPlatformNotifications';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BackgroundJobsTray } from '@/components/ui/BackgroundJobsTray';
@@ -22,7 +21,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ROUTES } from '@/lib/config/routes';
-import { getInitials } from '@mms/shared';
 import { cn } from '@/lib/utils';
 
 export interface PlatformHeaderUserNavProps {
@@ -52,7 +50,6 @@ export function PlatformHeaderUserNav({
   })();
 
   const unreadCount = notifications.filter((n) => !ackedIds.has(n.id)).length;
-  const initials = getInitials(platformUser?.name, 2) || 'OP';
 
   return (
     <div className={cn('flex shrink-0 items-center gap-1 sm:gap-2', className)}>
@@ -186,11 +183,11 @@ export function PlatformHeaderUserNav({
               compact && 'p-1',
             )}
           >
-            <Avatar className={compact ? 'h-7 w-7' : 'h-8 w-8 border border-primary/20 shadow-xs'}>
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              name={platformUser?.name}
+              className={compact ? 'h-7 w-7' : 'h-8 w-8 border border-primary/20 shadow-xs'}
+              fallbackClassName="bg-primary/10 text-primary text-xs font-bold"
+            />
             {!compact ? (
               <>
                 <div className="hidden sm:flex flex-col text-start">

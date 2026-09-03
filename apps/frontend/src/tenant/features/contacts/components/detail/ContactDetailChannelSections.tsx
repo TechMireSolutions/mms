@@ -6,3 +6,4 @@ export { ContactDetailSocialsSection } from "./ContactDetailSocialsSection";
 export { ContactDetailEducationSection } from "./ContactDetailEducationSection";
 export { ContactDetailExperienceSection } from "./ContactDetailExperienceSection";
 export { ContactDetailSkillsSection } from "./ContactDetailSkillsSection";
+export { ContactDetailBankDetailsSection } from "./ContactDetailBankDetailsSection";

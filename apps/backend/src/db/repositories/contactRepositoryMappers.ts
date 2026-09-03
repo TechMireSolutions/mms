@@ -8,6 +8,7 @@ import {
   type ContactEducation,
   type ContactExperience,
   type ContactSkill,
+  type ContactBankDetail,
   type RelationshipContact,
   type ContactActivity,
   type ContactAttachment,
@@ -25,6 +26,7 @@ import {
   type contactRelationships,
   type contactActivities,
   type contactAttachments,
+  type contactBankDetails,
 } from '../schema.js';
 
 type ContactRow = typeof contacts.$inferSelect;
@@ -39,6 +41,7 @@ type SkillRow = typeof contactSkills.$inferSelect;
 type RelationshipRow = typeof contactRelationships.$inferSelect;
 type ActivityRow = typeof contactActivities.$inferSelect;
 type AttachmentRow = typeof contactAttachments.$inferSelect;
+type BankDetailRow = typeof contactBankDetails.$inferSelect;
 
 export function contactRowToRecord(
   row: ContactRow,
@@ -53,6 +56,7 @@ export function contactRowToRecord(
   relationships: RelationshipRow[] = [],
   activities: ActivityRow[] = [],
   attachments: AttachmentRow[] = [],
+  bankDetails: BankDetailRow[] = [],
 ): Contact {
   const mappedPhones: PhoneNumber[] = phones.map((p) => ({
     label: p.label || 'Main',
@@ -146,6 +150,22 @@ export function contactRowToRecord(
     date: att.date,
   }));
 
+  const mappedBankDetails: ContactBankDetail[] = bankDetails.map((b) => ({
+    id: b.id,
+    bankName: b.bankName,
+    accountTitle: b.accountTitle,
+    accountNumber: b.accountNumber,
+    iban: b.iban ?? undefined,
+    swiftCode: b.swiftCode ?? undefined,
+    branchName: b.branchName ?? undefined,
+    branchCode: b.branchCode ?? undefined,
+    routingNumber: b.routingNumber ?? undefined,
+    currency: b.currency ?? undefined,
+    isPrimary: b.isPrimary,
+    label: b.label ?? undefined,
+    sortOrder: b.sortOrder,
+  }));
+
   const contact: Contact = {
     id: row.id,
     firstName: row.firstName,
@@ -169,6 +189,7 @@ export function contactRowToRecord(
     education: mappedEducations,
     experience: mappedExperiences,
     skills: mappedSkills,
+    bankDetails: mappedBankDetails,
     relationshipContacts: mappedRelationships,
     activities: mappedActivities,
     attachments: mappedAttachments,

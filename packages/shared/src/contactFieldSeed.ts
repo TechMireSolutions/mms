@@ -2,6 +2,8 @@
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 import {
   DEFAULT_ADDRESS_LABELS,
+  DEFAULT_BANK_CURRENCIES,
+  DEFAULT_BANK_LABELS,
   DEFAULT_EDUCATION_DEGREE_LABELS,
   DEFAULT_EMAIL_LABELS,
   DEFAULT_EMPLOYMENT_TYPE_LABELS,
@@ -78,5 +80,16 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
   relationship: [
     { key: "contactId",    label: "Contact",      labelKey: "contacts.fields.linkedContact", type: "text",   description: "Contact picker — links an existing contact in this relationship.", descriptionKey: "contacts.fields.linkedContactDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: false },
     { key: "relationship", label: "Relationship", labelKey: "contacts.fields.relationship",  type: "select", description: "Fixed relationship type (Parent/Child, Husband/Wife, or Guardian/Dependent).", descriptionKey: "contacts.fields.relationshipDesc", options: RELATIONSHIPS, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
+  ],
+  bankDetails: [
+    { key: "bankName",      label: "Bank Name",            labelKey: "contacts.fields.bankName",      type: "text",   description: "Name of the commercial or Islamic bank.", descriptionKey: "contacts.fields.bankNameDesc", defaultValue: "", permissions: [], enabled: true, order: 0, required: true },
+    { key: "accountTitle",  label: "Account Title",        labelKey: "contacts.fields.accountTitle",  type: "text",   description: "Account holder or beneficiary title.",    descriptionKey: "contacts.fields.accountTitleDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: true },
+    { key: "accountNumber", label: "Account Number",       labelKey: "contacts.fields.accountNumber", type: "text",   description: "Bank account number.",                    descriptionKey: "contacts.fields.accountNumberDesc", defaultValue: "", permissions: [], enabled: true, order: 2, required: true },
+    { key: "iban",          label: "IBAN",                 labelKey: "contacts.fields.iban",          type: "text",   description: "International Bank Account Number.",      descriptionKey: "contacts.fields.ibanDesc", defaultValue: "", permissions: [], enabled: true, order: 3, required: false },
+    { key: "swiftCode",     label: "SWIFT / BIC Code",     labelKey: "contacts.fields.swiftCode",     type: "text",   description: "SWIFT or BIC identifier for wire transfers.", descriptionKey: "contacts.fields.swiftCodeDesc", defaultValue: "", permissions: [], enabled: true, order: 4, required: false },
+    { key: "branchName",    label: "Branch Name",          labelKey: "contacts.fields.branchName",    type: "text",   description: "Branch name or location.",                descriptionKey: "contacts.fields.branchNameDesc", defaultValue: "", permissions: [], enabled: true, order: 5, required: false },
+    { key: "branchCode",    label: "Branch Code",          labelKey: "contacts.fields.branchCode",    type: "text",   description: "Branch sort or clearing code.",           descriptionKey: "contacts.fields.branchCodeDesc", defaultValue: "", permissions: [], enabled: true, order: 6, required: false },
+    { key: "currency",      label: "Currency",             labelKey: "contacts.fields.bankCurrency",  type: "select", description: "Account currency.",                       descriptionKey: "contacts.fields.bankCurrencyDesc", options: DEFAULT_BANK_CURRENCIES, defaultValue: "PKR", permissions: [], enabled: true, order: 7, required: false },
+    { key: "label",         label: "Account Type / Label", labelKey: "contacts.fields.bankLabel",     type: "select", description: "Purpose of account (Salary, Personal, etc.).", descriptionKey: "contacts.fields.bankLabelDesc", options: DEFAULT_BANK_LABELS, defaultValue: "Primary", permissions: [], enabled: true, order: 8, required: false },
   ],
 };

@@ -8,6 +8,7 @@ export type ContactSubListKey =
   | "education"
   | "experience"
   | "skills"
+  | "bankDetails"
   | "relationshipContacts"
   | (string & {});
 

@@ -2,7 +2,7 @@
 
 export const CONFIG_VERSION = 2;
 
-export const DEFAULT_ENABLED_TABS = ["phones", "emails", "addresses", "socials", "education", "experience", "skills", "relationship"];
+export const DEFAULT_ENABLED_TABS = ["phones", "emails", "addresses", "socials", "education", "experience", "skills", "relationship", "bankDetails"];
 export const DEFAULT_REQUIRED_TABS: string[] = [];
 
 export const GENDERS = ["male", "female"];
@@ -27,6 +27,26 @@ export const COLOR_PALETTES = {
 export const DEFAULT_PHONE_LABELS = ["Mobile", "Home", "Work", "WhatsApp", "Other"];
 export const DEFAULT_EMAIL_LABELS = ["Personal", "Work", "Other"];
 export const DEFAULT_ADDRESS_LABELS = ["Home", "Work", "Billing", "Other"];
+export const DEFAULT_BANK_LABELS = [
+  "Primary",
+  "Salary",
+  "Personal",
+  "Business",
+  "Operations",
+  "Fee Collection",
+  "Zakat / Sadaqah",
+  "Other",
+];
+export const DEFAULT_BANK_CURRENCIES = [
+  "PKR",
+  "USD",
+  "EUR",
+  "GBP",
+  "SAR",
+  "AED",
+  "CAD",
+  "AUD",
+];
 export const DEFAULT_TAG_LABELS = [
   "VIP",
   "Donor",

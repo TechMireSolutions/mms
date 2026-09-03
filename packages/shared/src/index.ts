@@ -68,6 +68,7 @@ export * from './emailIntegrationTypes.js';
 export * from './emailProviderRegistry.js';
 export * from './globalSettingsTypes.js';
 export * from './globalSettingsUtils.js';
+export * from './sessionPolicy.js';
 export * from './imageOptimizationUtils.js';
 export * from './languageUtils.js';
 export * from './llmSettingsTypes.js';
@@ -134,6 +135,7 @@ export {
   validateContactsSavedReportDrillDown,
 } from './contactsSavedReportUtils.js';
 export * from './socialPlatformUtils.js';
+export * from './contactNestedSchemas.js';
 
 
 // ---------------------------------------------------------------------------

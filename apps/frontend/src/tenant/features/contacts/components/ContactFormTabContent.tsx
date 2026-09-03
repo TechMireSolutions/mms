@@ -11,6 +11,7 @@ import { ContactEducationTab } from "@/tenant/features/contacts/components/formT
 import { ContactExperienceTab } from "@/tenant/features/contacts/components/formTabs/ContactExperienceTab";
 import { ContactSkillsTab } from "@/tenant/features/contacts/components/formTabs/ContactSkillsTab";
 import { ContactRelationshipTab } from "@/tenant/features/contacts/components/formTabs/ContactRelationshipTab";
+import { ContactBankDetailsTab } from "@/tenant/features/contacts/components/formTabs/ContactBankDetailsTab";
 
 import type { ContactSubListTabBaseProps } from "@/tenant/features/contacts/components/formTabs/types";
 import type { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
@@ -158,6 +159,13 @@ export function ContactFormTabContent({
             {...listBase}
             relationshipOptions={draft.relationshipOptions}
             onUpdateRelationships={draft.updateRelationships}
+          />
+        );
+      case "bankdetails":
+      case "bankDetails":
+        return (
+          <ContactBankDetailsTab
+            {...listBase}
           />
         );
       default: {

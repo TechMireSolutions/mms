@@ -11,6 +11,7 @@ import {
   contactRelationships,
   contactActivities,
   contactAttachments,
+  contactBankDetails,
 } from '../schema.js';
 import { type withTenant } from '../tenant-context.js';
 
@@ -26,6 +27,7 @@ type SkillRow = typeof contactSkills.$inferSelect;
 type RelationshipRow = typeof contactRelationships.$inferSelect;
 type ActivityRow = typeof contactActivities.$inferSelect;
 type AttachmentRow = typeof contactAttachments.$inferSelect;
+type BankDetailRow = typeof contactBankDetails.$inferSelect;
 
 export interface ContactChildMaps {
   phonesMap: Map<string, PhoneRow[]>;
@@ -39,6 +41,7 @@ export interface ContactChildMaps {
   relationshipsMap: Map<string, RelationshipRow[]>;
   activitiesMap: Map<string, ActivityRow[]>;
   attachmentsMap: Map<string, AttachmentRow[]>;
+  bankDetailsMap: Map<string, BankDetailRow[]>;
 }
 
 function groupByContactId<T extends { contactId: string }>(rows: T[]): Map<string, T[]> {
@@ -68,6 +71,7 @@ export async function loadContactChildMaps(
     relationshipsRows,
     activitiesRows,
     attachmentsRows,
+    bankDetailsRows,
   ] = await Promise.all([
     tx
       .select()
@@ -179,6 +183,16 @@ export async function loadContactChildMaps(
         ),
       )
       .orderBy(contactAttachments.sortOrder),
+    tx
+      .select()
+      .from(contactBankDetails)
+      .where(
+        and(
+          eq(contactBankDetails.workspaceSubdomain, subdomain),
+          inArray(contactBankDetails.contactId, contactIds),
+        ),
+      )
+      .orderBy(contactBankDetails.sortOrder),
   ]);
 
   return {
@@ -193,5 +207,6 @@ export async function loadContactChildMaps(
     relationshipsMap: groupByContactId(relationshipsRows),
     activitiesMap: groupByContactId(activitiesRows),
     attachmentsMap: groupByContactId(attachmentsRows),
+    bankDetailsMap: groupByContactId(bankDetailsRows),
   };
 }

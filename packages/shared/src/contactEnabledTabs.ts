@@ -53,9 +53,14 @@ export function isContactCustomCollectionTab(tabKey: string): boolean {
  * Comparison is case-insensitive; returned ids are lowercased.
  */
 export function withContactLockedEnabledTabs(tabIds: Iterable<string>): string[] {
-  const set = new Set(
-    [...tabIds].map((tabId) => tabId.trim().toLowerCase()).filter(Boolean),
-  );
+  const set = new Set<string>();
+  for (const tabId of tabIds) {
+    const trimmed = tabId.trim();
+    if (trimmed) {
+      set.add(trimmed);
+      set.add(trimmed.toLowerCase());
+    }
+  }
   for (const locked of CONTACT_LOCKED_ENABLED_TABS) {
     set.add(locked);
   }
@@ -88,7 +93,7 @@ export function resolveContactEnabledTabIds(
         }
         return canViewContactTab(viewerRole, tab);
       })
-      .map((tab) => tab.key.toLowerCase());
+      .map((tab) => tab.key);
     return new Set(withContactLockedEnabledTabs(activeFromTabs));
   }
 

@@ -5,6 +5,8 @@ import {
   DEFAULT_PHONE_LABELS,
   DEFAULT_SKILL_CATEGORY_LABELS,
   DEFAULT_SKILL_PROFICIENCY_LABELS,
+  DEFAULT_BANK_LABELS,
+  DEFAULT_BANK_CURRENCIES,
   SOCIAL_PLATFORMS,
   type Contact,
   type PhoneNumber as ContactPhone,
@@ -14,6 +16,7 @@ import {
   type ContactEducation,
   type ContactExperience,
   type ContactSkill,
+  type ContactBankDetail,
   type RelationshipContact,
 } from "./contactTypes.js";
 import { normalizeToE164 } from "./phoneUtils.js";
@@ -23,6 +26,7 @@ import {
   normalizeEducationItem,
   normalizeExperienceItem,
   normalizeSkillItem,
+  normalizeBankDetailItem,
   normalizeEmailItem,
   normalizeRelationshipContactItem,
   normalizePhoneItem,
@@ -53,6 +57,8 @@ export function normalizeContactForEdit(
     addressLabel: optionDefaults.addressLabel || DEFAULT_ADDRESS_LABELS[0] || "Home",
     socialPlatform: optionDefaults.socialPlatform || SOCIAL_PLATFORMS[0] || "Facebook",
     relationship: optionDefaults.relationship || "Parent",
+    bankLabel: optionDefaults.bankLabel || DEFAULT_BANK_LABELS[0] || "Primary",
+    bankCurrency: optionDefaults.bankCurrency || DEFAULT_BANK_CURRENCIES[0] || "PKR",
     defaultPhoneCountryCode: optionDefaults.defaultPhoneCountryCode || "",
   };
   const dialDefault = defaults.defaultPhoneCountryCode || "";
@@ -73,6 +79,7 @@ export function normalizeContactForEdit(
     education: [],
     experience: [],
     skills: [],
+    bankDetails: [],
     relationshipContacts: [],
     relationships: [],
     ...initialDraft,
@@ -236,6 +243,26 @@ export function normalizeContactForEdit(
     }];
   }
 
+  let bankDetails: ContactBankDetail[] = Array.isArray(merged.bankDetails)
+    ? merged.bankDetails.map((item) => normalizeBankDetailItem(item, defaults))
+    : [];
+
+  if (bankDetails.length === 0) {
+    bankDetails = [{
+      bankName: "",
+      accountTitle: "",
+      accountNumber: "",
+      iban: "",
+      swiftCode: "",
+      branchName: "",
+      branchCode: "",
+      routingNumber: "",
+      currency: defaults.bankCurrency || "PKR",
+      label: defaults.bankLabel || "Primary",
+      isPrimary: true,
+    }];
+  }
+
   let relationshipContacts: RelationshipContact[] = Array.isArray(merged.relationshipContacts)
     ? merged.relationshipContacts.map((item) => normalizeRelationshipContactItem(item, defaults))
     : [];
@@ -256,6 +283,7 @@ export function normalizeContactForEdit(
     education,
     experience,
     skills,
+    bankDetails,
     relationshipContacts,
     tags: getContactTags(merged),
     tag: getContactTags(merged).join(", "),

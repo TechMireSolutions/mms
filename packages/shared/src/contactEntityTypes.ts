@@ -82,6 +82,23 @@ export interface ContactSkill {
   sortOrder?: number;
 }
 
+/** Bank account and financial routing details for contacts. */
+export interface ContactBankDetail {
+  id?: string;
+  bankName: string;
+  accountTitle: string;
+  accountNumber: string;
+  iban?: string;
+  swiftCode?: string;
+  branchName?: string;
+  branchCode?: string;
+  routingNumber?: string;
+  currency?: string;
+  isPrimary?: boolean;
+  label?: string;
+  sortOrder?: number;
+}
+
 /** Linked contact entry for the Relationship form tab (reciprocal graph). */
 export interface RelationshipContact {
   name?: string;
@@ -185,6 +202,7 @@ export interface Contact {
   education?: ContactEducation[];
   experience?: ContactExperience[];
   skills?: ContactSkill[];
+  bankDetails?: ContactBankDetail[];
   relationshipContacts?: RelationshipContact[];
   relationships?: ContactRelationship[];
   activities?: ContactActivity[];

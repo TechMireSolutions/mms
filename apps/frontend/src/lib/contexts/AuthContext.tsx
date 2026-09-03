@@ -184,6 +184,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const [isExtendingSession, setIsExtendingSession] = useState<boolean>(false);
+  const extendSession = async (): Promise<void> => {
+    if (!isAuthenticated) return;
+    setIsExtendingSession(true);
+    try {
+      await apiFetch('/api/auth/session/extend', { method: 'POST' });
+    } finally {
+      setIsExtendingSession(false);
+    }
+  };
+
   const onboard = async (onboardingPayload: OnboardPayload): Promise<OnboardResult> => {
     setAuthError(null);
     return apiJson<OnboardResult>('/api/auth/onboard', {
@@ -256,6 +267,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       login,
       verify2FA,
       logout,
+      extendSession,
+      isExtendingSession,
       navigateToLogin,
       checkUserAuth,
       checkAppState,

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppFooter } from "@/components/ui/AppFooter";
 import Sidebar from "@/tenant/components/layout/Sidebar";
 import TopBar from "@/tenant/components/layout/TopBar";
 import TopBarActions from "@/tenant/components/layout/TopBarActions";
@@ -13,6 +14,7 @@ import { useSessionTimeout } from "@/tenant/hooks/useSessionTimeout";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
+import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
 import { useInitializeUiState } from "@/tenant/hooks/useInitializeUiState";
 
 /**
@@ -25,19 +27,10 @@ export default function AppLayout(): React.JSX.Element {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(false);
   const branding = useBranding();
   const { t } = useTranslation();
-  useSessionTimeout();
+  {useSessionTimeout()}
   useInitializeUiState();
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key?.toLowerCase() === "k") {
-        e.preventDefault();
-        setCommandPaletteOpen((prev) => !prev);
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, []);
+  useGlobalShortcut("k", () => setCommandPaletteOpen((prev) => !prev));
 
   const [logoError, setLogoError] = useState<boolean>(false);
 
@@ -119,12 +112,7 @@ export default function AppLayout(): React.JSX.Element {
         <div className="min-w-0 max-w-full flex-grow p-4 md:p-6 lg:p-8">
           <Outlet />
         </div>
-        <footer className="border-t border-border/50 bg-card/20 px-4 py-3 text-center text-xs font-semibold text-muted-foreground select-none sm:px-6">
-          {branding.footerText || t("theme.footerDefault", {
-            year: String(new Date().getFullYear()),
-            name: branding.madrasaName || t("entry.productName"),
-          })}
-        </footer>
+        <AppFooter text={branding.footerText || undefined} name={branding.madrasaName || undefined} />
       </main>
     </div>
   );

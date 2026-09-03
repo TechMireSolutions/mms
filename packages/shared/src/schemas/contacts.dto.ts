@@ -11,6 +11,7 @@ import {
   contactEducationSchema,
   contactExperienceSchema,
   contactSkillSchema,
+  contactBankDetailSchema,
   emailAddressSchema,
   phoneNumberSchema,
   relationshipContactSchema,
@@ -27,6 +28,7 @@ const LIST_TAB_WRITE_KEYS: Record<string, string> = {
   education: 'education',
   experience: 'experience',
   skills: 'skills',
+  bankDetails: 'bankDetails',
   relationship: 'relationshipContacts',
 };
 
@@ -61,6 +63,7 @@ const CONTACT_WRITE_SYSTEM_KEYS = [
   'education',
   'experience',
   'skills',
+  'bankDetails',
   'relationshipContacts',
   'emergencyContacts',
   'relationships',
@@ -133,6 +136,7 @@ const contactWriteBaseObjectSchema = z
     education: z.array(contactEducationSchema).optional(),
     experience: z.array(contactExperienceSchema).optional(),
     skills: z.array(contactSkillSchema).optional(),
+    bankDetails: z.array(contactBankDetailSchema).optional(),
     relationshipContacts: z.array(relationshipContactSchema).optional(),
     emergencyContacts: z.array(relationshipContactSchema).optional(),
     relationships: z.array(relationshipSchema).optional(),

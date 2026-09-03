@@ -1,6 +1,11 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { PlatformAdminPermissionKey, PlatformUser } from '@mms/shared';
 import { platformUserCan } from '@mms/shared';
+import {
+  platformSessionScope,
+} from '../services/sessionClockService.js';
+import { enforcePlatformSessionClock, SESSION_EXPIRY_RESPONSE } from '../services/sessionGuardService.js';
+import { platformSessionPolicy } from '../services/sessionPolicyService.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { attachPlatformTokenFromCookie } from '../services/platform/platformCookieService.js';
 import type { PlatformAccessTokenPayload } from '../services/platform/platformAuthService.js';
@@ -122,6 +127,20 @@ export async function authenticatePlatform(
   if (!resolved.ok) {
     sendPlatformAuthFailure(reply, resolved.reason);
     return;
+  }
+
+  // Server-authoritative inactivity + absolute lifetime enforcement for apex sessions.
+  const sessionPolicy = platformSessionPolicy();
+  const idleScope = platformSessionScope(resolved.user.id);
+  const jti = (request.user as PlatformAccessTokenPayload | undefined)?.jti;
+  const idleOutcome = await enforcePlatformSessionClock({
+    scope: idleScope,
+    policy: sessionPolicy,
+    jti,
+  });
+  if (idleOutcome !== 'ok') {
+    const expiry = SESSION_EXPIRY_RESPONSE[idleOutcome];
+    return sendUnauthorized(reply, expiry.message, expiry.type);
   }
 
   (request as PlatformAuthenticatedRequest).platformUser = resolved.user;

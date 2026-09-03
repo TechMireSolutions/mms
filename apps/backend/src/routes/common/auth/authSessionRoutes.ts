@@ -11,7 +11,11 @@ import { getRequestTenant, runWithTenant } from '../../../lib/tenantContext.js';
 import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from '../../../services/auth/authCookieService.js';
 import { authenticateTenant } from '../../../middleware/authenticate.js';
 import { deleteAuthArtifact } from '../../../services/auth/authArtifactService.js';
-import { getJwtExpiresIn } from '../../../services/globalSettingsService.js';
+import { getJwtExpiresIn, loadGlobalSettings } from '../../../services/globalSettingsService.js';
+import { tenantSessionScope, touchSession } from '../../../services/sessionClockService.js';
+import { enforceTenantSessionClock, SESSION_EXPIRY_RESPONSE } from '../../../services/sessionGuardService.js';
+import { tenantSessionPolicy } from '../../../services/sessionPolicyService.js';
+import { parseSessionTimeoutMinutes } from '@mms/shared';
 import { getPublicUserById } from '../../../services/auth/userService.js';
 import { rotateRefreshToken, validateRefreshToken } from '../../../services/auth/twoFactorService.js';
 import { handoffBodySchema } from '../../../validation/commonSchemas.js';
@@ -92,6 +96,23 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
       return sendUnauthorized(reply, 'Invalid refresh token');
     }
 
+    // Refreshing must also respect the workspace idle + absolute windows: a
+    // session that has expired cannot be silently resurrected via refresh.
+    const sessionPolicy = tenantSessionPolicy(
+      parseSessionTimeoutMinutes((await loadGlobalSettings(subdomain)).sessionTimeout),
+    );
+    const idleScope = tenantSessionScope(subdomain, String(user.id));
+    const idleOutcome = await enforceTenantSessionClock({
+      scope: idleScope,
+      policy: sessionPolicy,
+      userId: user.id ? String(user.id) : undefined,
+    });
+    if (idleOutcome !== 'ok') {
+      const expiry = SESSION_EXPIRY_RESPONSE[idleOutcome];
+      clearAuthCookies(reply);
+      return sendUnauthorized(reply, expiry.message, expiry.type);
+    }
+
     const accessExpiresIn = await getJwtExpiresIn();
     const rotated = await rotateRefreshToken(refreshToken, user, fastify.jwt, accessExpiresIn);
     if (!rotated) {
@@ -99,9 +120,31 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
       return sendUnauthorized(reply, 'Invalid refresh token');
     }
 
+    // A successful refresh counts as activity — slide the idle window.
+    if (user.id) await touchSession(idleScope, sessionPolicy.idleMs, true);
+
     setAuthCookies(reply, rotated.accessToken, rotated.refreshToken);
     return reply.send({ user });
   });
+
+  // Sliding extension: an authenticated request that resets the idle window
+  // immediately (used by the "stay signed in" warning action).
+  fastify.post(
+    '/session/extend',
+    { preHandler: authenticateTenant },
+    async (request, reply) => {
+      const user = request.user as User;
+      const tenant = getRequestTenant();
+      if (!tenant || !user?.id) {
+        return sendForbidden(reply, 'Tenant context is required');
+      }
+      const sessionPolicy = tenantSessionPolicy(
+        parseSessionTimeoutMinutes((await loadGlobalSettings(tenant)).sessionTimeout),
+      );
+      await touchSession(tenantSessionScope(tenant, String(user.id)), sessionPolicy.idleMs, true);
+      return reply.send({ ok: true, idleMs: sessionPolicy.idleMs });
+    },
+  );
 
   fastify.get('/onboarding-status', async (_request, reply) => {
     const available = await isOnboardingAvailable();

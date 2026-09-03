@@ -96,6 +96,24 @@ export const contactSkillSchema = z
   })
   .strict();
 
+export const contactBankDetailSchema = z
+  .object({
+    id: z.string().optional(),
+    bankName: z.string(),
+    accountTitle: z.string(),
+    accountNumber: z.string(),
+    iban: z.string().optional(),
+    swiftCode: z.string().optional(),
+    branchName: z.string().optional(),
+    branchCode: z.string().optional(),
+    routingNumber: z.string().optional(),
+    currency: z.string().optional(),
+    isPrimary: z.boolean().optional(),
+    label: z.string().optional(),
+    sortOrder: z.number().optional(),
+  })
+  .strict();
+
 export const relationshipContactSchema = z
   .object({
     name: z.string().optional(),

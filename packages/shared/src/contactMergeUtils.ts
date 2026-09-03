@@ -7,6 +7,7 @@ import {
   type ContactEducation,
   type ContactExperience,
   type ContactSkill,
+  type ContactBankDetail,
   type RelationshipContact,
   type ContactActivity,
   type ContactAttachment,
@@ -192,6 +193,26 @@ export const mergeContacts = (
   (keep.skills || []).forEach(addSkill);
   (other.skills || []).forEach(addSkill);
   merged.skills = mergedSkills;
+
+  // Merge bank details: match by bankName & accountNumber / iban
+  const seenBankAccounts = new Set<string>();
+  const mergedBankDetails: ContactBankDetail[] = [];
+
+  const addBankDetail = (bank: ContactBankDetail | undefined): void => {
+    if (!bank || (!bank.accountNumber && !bank.iban)) return;
+    const key = [bank.bankName, bank.accountNumber, bank.iban]
+      .filter(Boolean)
+      .map((seg) => seg!.trim().toLowerCase())
+      .join("|");
+    if (!seenBankAccounts.has(key)) {
+      seenBankAccounts.add(key);
+      mergedBankDetails.push({ ...bank });
+    }
+  };
+
+  (keep.bankDetails || []).forEach(addBankDetail);
+  (other.bankDetails || []).forEach(addBankDetail);
+  merged.bankDetails = mergedBankDetails;
 
   // Merge relationship contacts: match by contact ID & relationship
   const seenRelationship = new Set<string>();

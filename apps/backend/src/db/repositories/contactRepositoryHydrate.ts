@@ -38,6 +38,7 @@ export async function hydrateContactsList(
       childMaps.relationshipsMap.get(row.id) ?? [],
       childMaps.activitiesMap.get(row.id) ?? [],
       childMaps.attachmentsMap.get(row.id) ?? [],
+      childMaps.bankDetailsMap.get(row.id) ?? [],
     ),
   );
 }

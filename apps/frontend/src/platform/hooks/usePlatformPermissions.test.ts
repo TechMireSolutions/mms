@@ -46,6 +46,8 @@ describe('usePlatformPermissions', () => {
       platformLogin: vi.fn(),
       platformVerify2FA: vi.fn(),
       platformResend2FA: vi.fn(),
+      extendPlatformSession: vi.fn(),
+      isExtendingPlatformSession: false,
       platformLogout: vi.fn(),
       checkPlatformAuth: vi.fn(),
     });

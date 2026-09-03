@@ -9,14 +9,14 @@ import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions'
 import { usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
 import { getVisiblePlatformNavItems, type PlatformNavSection, type PlatformNavItem } from '@/platform/lib/platformNav';
 import { useOverlayBehavior } from '@/hooks/useOverlayBehavior';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/button';
+import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/config/routes';
 import { OVERLAY_BACKDROP } from '@/components/ui/formStyles';
-import { getInitials } from '@mms/shared';
 import { PlatformSidebarNav } from '@/platform/components/PlatformSidebarNav';
 
 export function PlatformSidebar(): React.JSX.Element | null {
@@ -28,6 +28,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
   const { mobileOpen, closeMobileSidebar, collapsed, toggleCollapsed, openCommandPalette } = usePlatformSidebar();
   const [openedAt, setOpenedAt] = useState<number>(0);
   const [logoError, setLogoError] = useState<boolean>(false);
+  const [confirmSignOutOpen, setConfirmSignOutOpen] = useState<boolean>(false);
 
   useEffect(() => {
     if (mobileOpen) {
@@ -42,7 +43,6 @@ export function PlatformSidebar(): React.JSX.Element | null {
 
   if (!isPlatformAuthenticated) return null;
 
-  const initials = getInitials(platformUser?.name, 2) || 'OP';
   const navItems = getVisiblePlatformNavItems(perms);
 
   // Group items by section
@@ -180,11 +180,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
           <Button
             type="button"
             variant="ghost"
-            onClick={() => {
-              if (!window.confirm(t('platform.signOutConfirm'))) return;
-              if (isMobile) closeMobileSidebar();
-              void platformLogout();
-            }}
+            onClick={() => setConfirmSignOutOpen(true)}
             className={cn(
               'flex min-h-11 flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sidebar-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive cursor-pointer',
               !isMobile && collapsed && 'justify-center px-0 min-w-11',
@@ -259,6 +255,19 @@ export function PlatformSidebar(): React.JSX.Element | null {
       >
         {sidebarContent(false)}
       </aside>
+
+      <ConfirmAlertDialog
+        open={confirmSignOutOpen}
+        onOpenChange={setConfirmSignOutOpen}
+        title={t('platform.signOut')}
+        description={t('platform.signOutConfirm')}
+        confirmLabel={t('platform.signOut')}
+        destructive
+        onConfirm={() => {
+          closeMobileSidebar();
+          void platformLogout();
+        }}
+      />
     </>
   );
 }

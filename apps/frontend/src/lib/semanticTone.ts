@@ -258,6 +258,10 @@ export const SUB_LIST_CARD_ACCENTS = {
     accent: "bg-success/60 group-hover:bg-success",
     icon: "text-success group-hover:text-success",
   },
+  bankDetails: {
+    accent: "bg-emerald-500/70 group-hover:bg-emerald-500",
+    icon: "text-emerald-500 group-hover:text-emerald-500",
+  },
 } as const;
 
 /** Grade badge class mapping by grade tone. */

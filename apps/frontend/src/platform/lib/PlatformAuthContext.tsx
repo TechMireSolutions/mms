@@ -11,9 +11,14 @@ function PlatformSessionTimeoutWatcher({
 }: {
   enabled: boolean;
   onTimeout: () => void;
-}): null {
-  usePlatformSessionTimeout({ enabled, onTimeout });
-  return null;
+}): React.JSX.Element | null {
+  const { extendPlatformSession, isExtendingPlatformSession } = usePlatformAuth();
+  return usePlatformSessionTimeout({
+    enabled,
+    onTimeout,
+    onExtend: () => extendPlatformSession(),
+    busy: isExtendingPlatformSession,
+  });
 }
 
 function normalizeSessionUser(user: PlatformUserProfile): PlatformUserProfile {
@@ -34,6 +39,10 @@ export interface PlatformAuthContextType {
   platformLogin: (email: string, password: string) => Promise<PlatformLoginOutcome>;
   platformVerify2FA: (challengeId: string, code: string) => Promise<void>;
   platformResend2FA: (challengeId: string) => Promise<{ success: boolean }>;
+  /** Sliding-extension: posts to the platform session extend endpoint (idle reset). */
+  extendPlatformSession: () => Promise<void>;
+  /** True while an extend request is in flight. */
+  isExtendingPlatformSession: boolean;
   platformLogout: () => Promise<void>;
   checkPlatformAuth: () => Promise<void>;
 }
@@ -151,6 +160,17 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     return res;
   }, []);
 
+  const [isExtendingPlatformSession, setIsExtendingPlatformSession] = useState(false);
+  const extendPlatformSession = useCallback(async (): Promise<void> => {
+    if (!isPlatformAuthenticated) return;
+    setIsExtendingPlatformSession(true);
+    try {
+      await apiFetch('/api/platform/auth/session/extend', { method: 'POST' });
+    } finally {
+      setIsExtendingPlatformSession(false);
+    }
+  }, [isPlatformAuthenticated]);
+
   const platformLogout = useCallback(async (): Promise<void> => {
     try {
       await apiFetch('/api/platform/auth/logout', { method: 'POST' });
@@ -177,6 +197,8 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       platformLogin,
       platformVerify2FA,
       platformResend2FA,
+      extendPlatformSession,
+      isExtendingPlatformSession,
       platformLogout,
       checkPlatformAuth,
     }))();

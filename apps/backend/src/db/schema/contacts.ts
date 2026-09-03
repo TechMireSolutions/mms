@@ -267,6 +267,32 @@ export const contactAttachments = pgTable('contact_attachments', {
   }).onDelete('cascade'),
 ]);
 
+export const contactBankDetails = pgTable('contact_bank_details', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  contactId: text('contact_id').notNull(),
+  bankName: varchar('bank_name', { length: 255 }).notNull(),
+  accountTitle: varchar('account_title', { length: 255 }).notNull(),
+  accountNumber: varchar('account_number', { length: 100 }).notNull(),
+  iban: varchar('iban', { length: 100 }),
+  swiftCode: varchar('swift_code', { length: 50 }),
+  branchName: varchar('branch_name', { length: 255 }),
+  branchCode: varchar('branch_code', { length: 50 }),
+  routingNumber: varchar('routing_number', { length: 50 }),
+  currency: varchar('currency', { length: 10 }).default('PKR'),
+  isPrimary: boolean('is_primary').notNull().default(false),
+  label: varchar('label', { length: 100 }),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.contactId, table.id] }),
+  index('contact_bank_details_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.contactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('cascade'),
+]);
+
 /** Madrasa workspace auth users — isolated per subdomain. */
 export const tenantUsers = pgTable('tenant_users', {
   id: text('id').primaryKey(),
@@ -380,6 +406,8 @@ export type ContactActivityRow = typeof contactActivities.$inferSelect;
 export type InsertContactActivityRow = typeof contactActivities.$inferInsert;
 export type ContactAttachmentRow = typeof contactAttachments.$inferSelect;
 export type InsertContactAttachmentRow = typeof contactAttachments.$inferInsert;
+export type ContactBankDetailRow = typeof contactBankDetails.$inferSelect;
+export type InsertContactBankDetailRow = typeof contactBankDetails.$inferInsert;
 export type TenantUserRow = typeof tenantUsers.$inferSelect;
 export type InsertTenantUserRow = typeof tenantUsers.$inferInsert;
 export type ContactGoogleSyncCredentialRow = typeof contactGoogleSyncCredentials.$inferSelect;

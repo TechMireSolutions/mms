@@ -1,8 +1,12 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { User } from '@mms/shared';
-import { isWorkspaceEnabled } from '@mms/shared';
+import { isWorkspaceEnabled, parseSessionTimeoutMinutes } from '@mms/shared';
+import { tenantSessionScope } from '../services/sessionClockService.js';
+import { enforceTenantSessionClock, SESSION_EXPIRY_RESPONSE } from '../services/sessionGuardService.js';
+import { tenantSessionPolicy } from '../services/sessionPolicyService.js';
 import { bindRequestTenant, bindRequestUserId, getRequestTenant, resolveSubdomainFromRequest } from '../lib/tenantContext.js';
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
+import { loadGlobalSettings } from '../services/globalSettingsService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
 import { isTenantBlocked, isTokenRevoked, isUserSessionRevoked } from '../services/session.service.js';
 import { markRequestDiagnosticStage } from '../lib/requestDiagnostics.js';
@@ -71,6 +75,26 @@ export async function authenticateTenant(
   markRequestDiagnosticStage(request, 'authentication_user_session_revocation');
   if (user.id && user.iat && (await isUserSessionRevoked(user.id, user.iat * 1000))) {
     await sendUnauthorized(reply, 'Session revoked');
+    return;
+  }
+
+  // Server-authoritative inactivity + absolute lifetime enforcement via the Redis
+  // session clock for this request.
+  markRequestDiagnosticStage(request, 'authentication_idle_clock');
+  const sessionPolicy = tenantSessionPolicy(
+    parseSessionTimeoutMinutes((await loadGlobalSettings(tenant)).sessionTimeout),
+  );
+  const idleScope = user.id ? tenantSessionScope(tenant, String(user.id)) : '';
+
+  const idleOutcome = await enforceTenantSessionClock({
+    scope: idleScope,
+    policy: sessionPolicy,
+    jti: user.jti,
+    userId: user.id ? String(user.id) : undefined,
+  });
+  if (idleOutcome !== 'ok') {
+    const expiry = SESSION_EXPIRY_RESPONSE[idleOutcome];
+    await sendUnauthorized(reply, expiry.message, expiry.type);
     return;
   }
 

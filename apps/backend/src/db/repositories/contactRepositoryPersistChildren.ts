@@ -12,6 +12,7 @@ import {
   contactRelationships,
   contactActivities,
   contactAttachments,
+  contactBankDetails,
 } from '../schema.js';
 import { type withTenant } from '../tenant-context.js';
 
@@ -232,6 +233,31 @@ export async function syncContactChildrenTx(
         url: att.url,
         date: att.date,
         sortOrder: idx,
+      })),
+    );
+  }
+
+  await tx
+    .delete(contactBankDetails)
+    .where(and(eq(contactBankDetails.workspaceSubdomain, subdomain), eq(contactBankDetails.contactId, contactId)));
+  if (contact.bankDetails && contact.bankDetails.length > 0) {
+    await tx.insert(contactBankDetails).values(
+      contact.bankDetails.map((b, idx) => ({
+        id: b.id || `bnk-${idx + 1}`,
+        workspaceSubdomain: subdomain,
+        contactId,
+        bankName: b.bankName,
+        accountTitle: b.accountTitle,
+        accountNumber: b.accountNumber,
+        iban: b.iban ?? null,
+        swiftCode: b.swiftCode ?? null,
+        branchName: b.branchName ?? null,
+        branchCode: b.branchCode ?? null,
+        routingNumber: b.routingNumber ?? null,
+        currency: b.currency ?? 'PKR',
+        isPrimary: b.isPrimary ?? false,
+        label: b.label ?? null,
+        sortOrder: b.sortOrder ?? idx,
       })),
     );
   }

@@ -603,6 +603,13 @@
       "when": 1786766400000,
       "tag": "0085_repair_enrollment_session_classes",
       "breakpoints": true
+    },
+    {
+      "idx": 86,
+      "version": "7",
+      "when": 1786770000000,
+      "tag": "0086_contact_bank_details",
+      "breakpoints": true
     }
   ]
 }
