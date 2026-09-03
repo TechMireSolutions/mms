@@ -144,9 +144,8 @@ export function ObligationCollectionFormFields({
               <div className="relative flex items-center group/input w-full">
                 <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none z-10" />
                 <Input
-                  type="number"
-                  min="0.01"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   value={form.amount}
                   onChange={(event) => setForm({ ...form, amount: event.target.value })}
                   placeholder="0.00"

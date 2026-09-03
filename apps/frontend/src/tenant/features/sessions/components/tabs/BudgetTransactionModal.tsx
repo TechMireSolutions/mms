@@ -50,7 +50,7 @@ export function BudgetTransactionModal({ open, type, currency, onClose, onSave, 
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.add")}
       onSave={() => onSave({ ...transactionDraft, amount: +transactionDraft.amount, id: `tx${crypto.randomUUID()}` })}
-      saveDisabled={!transactionDraft.amount}
+      saveDisabled={!transactionDraft.amount || !/^\d+(\.\d{1,2})?$/.test(transactionDraft.amount.trim()) || Number(transactionDraft.amount) <= 0}
       saving={saving}
     >
       <div className="space-y-4">
@@ -67,7 +67,7 @@ export function BudgetTransactionModal({ open, type, currency, onClose, onSave, 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="tx-amount">{t("sessions.budget.form.amount", { currency })}<RequiredMark /></label>
-            <Input id="tx-amount" type="number" value={transactionDraft.amount} onChange={(event) => updateTransactionDraft("amount", event.target.value)} placeholder="0" min={0} required />
+            <Input id="tx-amount" name="amount" type="text" inputMode="decimal" value={transactionDraft.amount} onChange={(event) => updateTransactionDraft("amount", event.target.value)} placeholder="0.00" required />
           </div>
           <div>
             <label className={FORM_LABEL} htmlFor="tx-date">{t("sessions.budget.form.date")}</label>

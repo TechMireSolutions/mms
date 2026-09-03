@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -10,6 +10,7 @@ import { useSessionDisplayConfig } from '@/tenant/features/sessions/hooks/useSes
 import { useSessionColumnLayout } from '@/tenant/features/sessions/hooks/useSessionColumnLayout';
 import { useSessionsDirectoryFilters } from '@/tenant/features/sessions/hooks/useSessionsDirectoryFilters';
 import { useSessionsKeyboardShortcuts } from '@/tenant/features/sessions/hooks/useSessionsKeyboardShortcuts';
+import { useSessionsDialogs } from '@/tenant/features/sessions/hooks/useSessionsDialogs';
 import { useSessionConfig } from '@/hooks/useStandardModuleConfig';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { SESSIONS_MODULE_MANIFEST, type SessionsListPageResult } from '@mms/shared';
@@ -68,12 +69,7 @@ export function useSessionsPageController() {
     clearFilters,
     hasActiveFilters,
   } = useSessionsDirectoryFilters();
-  const [showForm, setShowForm] = useState(false);
-  const [editSession, setEditSession] = useState<Session | null>(null);
-  const [detailSession, setDetailSession] = useState<Session | null>(null);
-  const [confirmBulkDeleteOpen, setConfirmBulkDeleteOpen] = useState(false);
-  const [confirmBulkRestoreOpen, setConfirmBulkRestoreOpen] = useState(false);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  const dialogs = useSessionsDialogs((id, reason) => handleDelete(id, reason));
   const [activeTab, setActiveTab] = usePersistedTabState<string>('sessions_active_tab', 'work');
 
   const useServerWork = activeTab === 'work';
@@ -116,19 +112,16 @@ export function useSessionsPageController() {
     clearSelection,
     canWrite,
     showDeleted,
-    onCreate: () => {
-      setEditSession(null);
-      setShowForm(true);
-    },
+    onCreate: dialogs.openCreateForm,
   });
 
   const shownCount = pageData?.total ?? sessions.length;
 
   const mutationDeps = {
     t,
-    editSession,
-    detailSession,
-    setDetailSession,
+    editSession: dialogs.editSession,
+    detailSession: dialogs.detailSession,
+    setDetailSession: dialogs.setDetailSession,
     createSession,
     updateSession,
     deleteSession,
@@ -180,26 +173,6 @@ export function useSessionsPageController() {
 
   const canSelectSessions = canWrite || canDelete;
 
-  const openCreateForm = () => {
-    setEditSession(null);
-    setShowForm(true);
-  };
-
-  const closeForm = () => {
-    setShowForm(false);
-    setEditSession(null);
-  };
-
-  const openEditForm = (sessionToEdit: Session) => {
-    setEditSession(sessionToEdit);
-    setShowForm(true);
-  };
-
-  const confirmDelete = (deletionReason?: string) => {
-    if (pendingDeleteId) handleDelete(pendingDeleteId, deletionReason);
-    setPendingDeleteId(null);
-  };
-
   return {
     t,
     canWrite,
@@ -218,10 +191,7 @@ export function useSessionsPageController() {
     viewMode,
     setViewMode,
     columnLayout,
-    showForm,
-    editSession,
-    detailSession,
-    setDetailSession,
+    ...dialogs,
     showDeleted,
     workPageData: pageData,
     isError,
@@ -238,12 +208,6 @@ export function useSessionsPageController() {
     typeConfig,
     sessions,
     shownCount,
-    confirmBulkDeleteOpen,
-    setConfirmBulkDeleteOpen,
-    confirmBulkRestoreOpen,
-    setConfirmBulkRestoreOpen,
-    pendingDeleteId,
-    setPendingDeleteId,
     setSearch,
     toggleFilter,
     setFilterStatus,
@@ -251,7 +215,6 @@ export function useSessionsPageController() {
     setShowDeleted,
     clearFilters,
     refetch,
-    openCreateForm,
     handleSort,
     toggleSelectAll,
     toggleSelectedSession,
@@ -259,9 +222,6 @@ export function useSessionsPageController() {
     handleRestore,
     handleSave,
     handleUpdate,
-    closeForm,
-    openEditForm,
-    confirmDelete,
     handleBulkDelete,
     handleBulkRestore,
     handleBulkStatusChange,

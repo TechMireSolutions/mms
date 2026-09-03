@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useDeferredValue } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ACCOUNT_TYPE_META, type Account, type AccountType } from '@/lib/data/accountingData';
 import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
@@ -44,6 +44,7 @@ export function ChartOfAccounts({
 }: ChartOfAccountsProps) {
   const { t } = useTranslation();
   const [search,      setSearch]     = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [typeFilter,  setTypeFilter] = useState<AccountType | "all">("all");
   const [showInactive, setShowInactive] = useState(false);
   const [modal,       setModal]      = useState<Partial<Account> | null>(null);
@@ -55,7 +56,7 @@ export function ChartOfAccounts({
   const filtered = (() => accounts
     .filter((account) => typeFilter === "all" || account.type === typeFilter)
     .filter((account) => showInactive || account.isActive !== false)
-    .filter((account) => !search || account.name.toLowerCase().includes(search.toLowerCase()) || account.code.includes(search))
+    .filter((account) => !deferredSearch || account.name.toLowerCase().includes(deferredSearch.toLowerCase()) || account.code.includes(deferredSearch))
     .sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code)))();
 
   useEffect(() => {

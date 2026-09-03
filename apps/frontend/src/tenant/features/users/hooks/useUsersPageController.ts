@@ -2,14 +2,12 @@ import { useState, useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import { Users as UsersIcon, Activity } from 'lucide-react';
 import {
   canAccessRolesAndPermissions,
   canManageTargetUser,
   normalizeWorkspaceUser,
   resolveModuleTierTab,
   USERS_MODULE_MANIFEST,
-  type AppTranslationKey,
   type SystemUser,
 } from '@mms/shared';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
@@ -34,29 +32,7 @@ import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 import { notify } from '@/lib/notify';
 import { buildUsersWorkTierProps } from '@/tenant/features/users/hooks/usersPageWorkTierProps';
 import { buildUsersModalLayerProps } from '@/tenant/features/users/hooks/usersPageModalLayerProps';
-
-const SETUP_TAB_LABEL_KEYS: Record<(typeof USERS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
-  permissions: 'users.permissions',
-  preferences: 'users.setup.preferences',
-};
-
-function getUsersConfigTabs(canAccessRoles: boolean, t: (key: AppTranslationKey) => string) {
-  const tabs = canAccessRoles
-    ? USERS_MODULE_MANIFEST.setupSubTabs
-    : USERS_MODULE_MANIFEST.setupSubTabs.filter((id) => id !== 'permissions');
-
-  return tabs.map((id) => ({
-    id,
-    label: t(SETUP_TAB_LABEL_KEYS[id]),
-  }));
-}
-
-function getUsersSubTabs(t: (key: AppTranslationKey) => string) {
-  return [
-    { id: 'users', label: t('users.list'), icon: UsersIcon },
-    { id: 'activity', label: t('users.activity'), icon: Activity },
-  ];
-}
+import { getUsersConfigTabs, getUsersSubTabs } from '@/tenant/features/users/hooks/usersPageTabConfig';
 
 export function useUsersPageController() {
   const { t } = useTranslation();

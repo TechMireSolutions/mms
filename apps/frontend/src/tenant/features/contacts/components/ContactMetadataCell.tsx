@@ -22,6 +22,11 @@ import {
   renderSolarDobMetadata,
 } from "@/tenant/features/contacts/components/contactMetadataDates";
 import {
+  renderEducationSubField,
+  renderExperienceSubField,
+  renderSkillsSubField,
+} from "@/tenant/features/contacts/components/contactMetadataSubFields";
+import {
   renderAddressFieldMetadata,
   renderGenderMetadata,
   renderSyedMetadata,
@@ -148,98 +153,32 @@ export function ContactMetadataCell({
           contact,
           emptyNode: renderDash(),
         });
-      case "education_degree":
-      case "educationDegree": {
-        const degrees = (contact.education || []).map((e) => e.degree?.trim()).filter(Boolean);
-        return renderJoinedList(degrees, true);
-      }
-      case "education_institution":
-      case "educationInstitution": {
-        const institutions = (contact.education || []).map((e) => e.institution?.trim()).filter(Boolean);
-        return renderJoinedList(institutions, true);
-      }
-      case "education_fieldOfStudy":
-      case "educationFieldOfStudy": {
-        const fieldsOfStudy = (contact.education || []).map((e) => e.fieldOfStudy?.trim()).filter(Boolean);
-        return renderJoinedList(fieldsOfStudy, true);
-      }
-      case "education_year":
-      case "educationYear": {
-        const years = (contact.education || []).map((e) => e.year?.trim()).filter(Boolean);
-        return renderJoinedList(years, true);
-      }
-      case "education_grade":
-      case "educationGrade": {
-        const grades = (contact.education || []).map((e) => e.grade?.trim()).filter(Boolean);
-        return renderJoinedList(grades, true);
-      }
       case "experience":
         return renderExperienceMetadata({
           contact,
           emptyNode: renderDash(),
         });
-      case "experience_title":
-      case "experienceTitle": {
-        const titles = (contact.experience || []).map((e) => e.title?.trim()).filter(Boolean);
-        return renderJoinedList(titles, true);
-      }
-      case "experience_organization":
-      case "experienceOrganization": {
-        const orgs = (contact.experience || []).map((e) => e.organization?.trim()).filter(Boolean);
-        return renderJoinedList(orgs, true);
-      }
-      case "experience_employmentType":
-      case "experienceEmploymentType": {
-        const types = (contact.experience || []).map((e) => e.employmentType?.trim()).filter(Boolean);
-        return renderJoinedList(types, true);
-      }
-      case "experience_location":
-      case "experienceLocation": {
-        const locations = (contact.experience || []).map((e) => e.location?.trim()).filter(Boolean);
-        return renderJoinedList(locations, true);
-      }
       case "skills":
         return renderSkillsMetadata({
           contact,
           emptyNode: renderDash(),
         });
-      case "skills_name":
-      case "skillsName": {
-        const names = (contact.skills || []).map((s) => s.name?.trim()).filter(Boolean);
-        return renderJoinedList(names, true);
-      }
-      case "skills_category":
-      case "skillsCategory": {
-        const categories = (contact.skills || []).map((s) => s.category?.trim()).filter(Boolean);
-        return renderJoinedList(categories, true);
-      }
-      case "skills_proficiency":
-      case "skillsProficiency": {
-        const proficiencies = (contact.skills || []).map((s) => s.proficiency?.trim()).filter(Boolean);
-        return renderJoinedList(proficiencies, true);
-      }
-      case "skills_yearsOfExperience":
-      case "skillsYearsOfExperience": {
-        const years = (contact.skills || []).map((s) => s.yearsOfExperience?.trim()).filter(Boolean);
-        return renderJoinedList(years, true);
-      }
-      case "skills_isCertified":
-      case "skillsIsCertified": {
-        const certified = (contact.skills || []).some((s) => s.isCertified);
-        return certified ? (
-          <Badge tone="success" className="px-2 py-0.5 text-xs font-medium">
-            {t("contacts.columns.skillsIsCertified")}
-          </Badge>
-        ) : (
-          renderDash()
-        );
-      }
-      case "skills_issuer":
-      case "skillsIssuer": {
-        const issuers = (contact.skills || []).map((s) => s.issuer?.trim()).filter(Boolean);
-        return renderJoinedList(issuers, true);
-      }
       default: {
+        const eduSub = renderEducationSubField(colId, contact, renderJoinedList);
+        if (eduSub !== null) return eduSub;
+
+        const expSub = renderExperienceSubField(colId, contact, renderJoinedList);
+        if (expSub !== null) return expSub;
+
+        const skillSub = renderSkillsSubField({
+          colId,
+          contact,
+          renderJoinedList,
+          emptyNode: renderDash(),
+          t,
+        });
+        if (skillSub !== null) return skillSub;
+
         if (isRelationshipWorkColumnKey(colId)) {
           return renderRelationshipMetadata({
             contact,

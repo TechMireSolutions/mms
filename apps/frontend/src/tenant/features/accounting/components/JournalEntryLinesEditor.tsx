@@ -129,9 +129,8 @@ export function JournalEntryLinesEditor({
                       </TableCell>
                       <TableCell className="px-3 py-2">
                         <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
+                          type="text"
+                          inputMode="decimal"
                           aria-label={`Debit amount for line ${lineIndex + 1}`}
                           value={line.debit}
                           placeholder="0.00"
@@ -141,9 +140,8 @@ export function JournalEntryLinesEditor({
                       </TableCell>
                       <TableCell className="px-3 py-2">
                         <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
+                          type="text"
+                          inputMode="decimal"
                           aria-label={`Credit amount for line ${lineIndex + 1}`}
                           value={line.credit}
                           placeholder="0.00"

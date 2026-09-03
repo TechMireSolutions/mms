@@ -13,11 +13,9 @@ import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShe
 import { useTranslation } from "@/hooks/useTranslation";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { TeachersList } from "@/tenant/features/teachers/components/TeachersList";
-import { buildTeachersWorkFilterChips } from "@/tenant/features/teachers/components/buildTeachersWorkFilterChips";
 import { TeachersBulkActionBar } from "@/tenant/features/teachers/components/TeachersBulkActionBar";
 import { TeachersListFilters } from "@/tenant/features/teachers/components/TeachersListFilters";
-import { computeTeachersSelectionTargets } from "@/tenant/features/teachers/hooks/teachersSelectionTargets";
-import { useTeacherStatusConfig } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
+import { useTeachersWorkTierActions } from "@/tenant/features/teachers/hooks/useTeachersWorkTierActions";
 import type { TeachersWorkOverlayInteractions } from "@/tenant/features/teachers/hooks/teachersPageOverlaysTypes";
 
 export interface TeachersWorkTierProps {
@@ -82,48 +80,14 @@ export interface TeachersWorkTierProps {
 
 export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
-  const filterChips = buildTeachersWorkFilterChips({
-    filterStatus: props.filterStatus,
-    filterSpecialization: props.filterSpecialization,
-    filterGender: props.filterGender,
-    onToggleStatus: props.onToggleStatus,
-    onSpecializationChange: props.onSpecializationChange,
-    onGenderChange: props.onGenderChange,
-    t,
-  });
-
-  const statusConfig = useTeacherStatusConfig();
-
-  const handleBulkStatusChange = async (status: string): Promise<void> => {
-    try {
-      await props.onBulkStatusChange?.(props.selectedIds, status);
-      props.onClearSelection();
-    } catch {
-      // Toast already emitted by the crud action; keep selection for retry.
-    }
-  };
-
-  const handleBulkSpecializationChange = async (specialization: string): Promise<void> => {
-    try {
-      await props.onBulkSpecializationChange?.(props.selectedIds, specialization);
-      props.onClearSelection();
-    } catch {
-      // Toast already emitted by the crud action; keep selection for retry.
-    }
-  };
-
-  const handleSortFieldChange = (field: TeacherSortField): void => {
-    if (field === props.sortField) {
-      props.onSortChange(field, props.sortDir === "asc" ? "desc" : "asc");
-    } else {
-      props.onSortChange(field, "asc");
-    }
-  };
-
-  const selectionTargets = computeTeachersSelectionTargets({
-    selectedIds: props.selectedIds,
-    workTeachers: props.teachers,
-  });
+  const {
+    filterChips,
+    statusConfig,
+    selectionTargets,
+    handleBulkStatusChange,
+    handleBulkSpecializationChange,
+    handleSortFieldChange,
+  } = useTeachersWorkTierActions(props);
 
   return (
     <ErrorBoundary>

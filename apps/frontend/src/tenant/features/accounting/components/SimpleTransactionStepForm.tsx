@@ -53,9 +53,8 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
             <span className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground" aria-hidden="true">{currencySymbol}</span>
             <Input
               id="wizard-amount"
-              type="number"
-              min="0"
-              step="0.01"
+              type="text"
+              inputMode="decimal"
               value={form.amount}
               placeholder="0.00"
               onChange={(event) => setForm({ ...form, amount: event.target.value })}

@@ -5,7 +5,7 @@ import { useQuestionBankFilters } from '@/tenant/features/question-bank/hooks/us
 import { useQuestionBankSelection } from '@/tenant/features/question-bank/hooks/useQuestionBankSelection';
 import type { QuestionBankQuestion as Question } from '@mms/shared';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
-import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
+import { QuestionBankTrashDialogs } from '@/tenant/features/question-bank/components/QuestionBankTrashDialogs';
 import { ListPagination } from '@/components/ui/ListPagination';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { QuestionBankEmptyState } from '@/tenant/features/question-bank/components/QuestionBankEmptyState';
@@ -228,23 +228,15 @@ export function QuestionBank({
         i18nNamespace="questionBank"
       />
 
-      <ConfirmAlertDialog
-        open={pendingTrashId !== null}
-        onOpenChange={(open) => { if (!open) setPendingTrashId(null); }}
-        title={t('questionBank.trash.deleteTitle')}
-        description={t('questionBank.trash.deleteConfirm')}
-        confirmLabel={t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={confirmRowTrash}
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkOpen}
-        onOpenChange={setConfirmBulkOpen}
-        title={showDeleted ? t('questionBank.trash.restore') : t('questionBank.trash.deleteTitle')}
-        description={t(showDeleted ? 'questionBank.trash.bulkRestoreConfirm' : 'questionBank.trash.bulkDeleteConfirm', { count: selectedIds.length })}
-        confirmLabel={showDeleted ? t('questionBank.trash.restore') : t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={confirmBulkTrash}
+      <QuestionBankTrashDialogs
+        pendingTrashId={pendingTrashId}
+        onPendingTrashIdChange={setPendingTrashId}
+        confirmBulkOpen={confirmBulkOpen}
+        onConfirmBulkOpenChange={setConfirmBulkOpen}
+        showDeleted={showDeleted}
+        selectedCount={selectedIds.length}
+        onConfirmRowTrash={confirmRowTrash}
+        onConfirmBulkTrash={confirmBulkTrash}
       />
     </div>
   );

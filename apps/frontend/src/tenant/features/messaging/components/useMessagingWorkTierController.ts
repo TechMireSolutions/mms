@@ -1,11 +1,10 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
   type Message,
   type StandardMessagingRecipient as MessagingRecipient,
 } from '@mms/shared';
-import { useDebounce } from '@/hooks/useDebounce';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
@@ -14,11 +13,10 @@ import { useMessagingRecipientsByIds } from '../hooks/useMessagingContactsByIds'
 import { useMessagingHistoryColumnLayout } from '../hooks/useMessagingColumnLayouts';
 import { useMessagingPageOptions } from '../hooks/useMessagingPageOptions';
 import { buildMessagingWorkFilterChips } from './buildMessagingWorkFilterChips';
-import { messagingExportEndDateBound } from './messagingReportsExport';
+import { useMessagingWorkFilters } from './useMessagingWorkFilters';
 import { useMessagingWorkTierBulkActions } from './useMessagingWorkTierBulkActions';
 import { useMessagingWorkTierKeyboardNav } from './useMessagingWorkTierKeyboardNav';
 import { useMessagingWorkTierSelection } from './useMessagingWorkTierSelection';
-import { useMessagingWorkTierUrlSync } from './useMessagingWorkTierUrlSync';
 
 export interface MessagingWorkTierControllerProps {
   canWrite: boolean;
@@ -41,58 +39,33 @@ export function useMessagingWorkTierController({
   const { categorySelectOptions, channelSelectOptions, statusOptions, logStatusConfig } = useMessagingPageOptions();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
-  const channelParam = searchParams.get('channel') as 'all' | 'sms' | 'whatsapp' | 'email' | null;
-  const statusParam = searchParams.get('status') as 'all' | 'sent' | 'delivered' | 'failed' | 'skipped' | null;
-  const categoryParam = searchParams.get('category') || null;
-  const searchParam = searchParams.get('search') || '';
-
-  const [search, setSearch] = useState(searchParam);
-  const [logsPage, setLogsPage] = useState(1);
-  const [internalChannel, setInternalChannel] = useState<'all' | 'sms' | 'whatsapp' | 'email'>(channelParam || 'all');
-  const channel = controlledChannel !== undefined ? controlledChannel : internalChannel;
-  const setChannel = controlledOnChannelChange !== undefined ? controlledOnChannelChange : setInternalChannel;
-  const [category, setCategory] = useState(categoryParam || 'all');
-  const [status, setStatus] = useState<'all' | 'sent' | 'delivered' | 'failed' | 'skipped'>(statusParam || 'all');
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-
-  const debouncedSearch = useDebounce(search, 250);
-  const queryStartDate = startDate.trim() || undefined;
-  const queryEndDate = endDate.trim() ? messagingExportEndDateBound(endDate) : undefined;
-
-  useMessagingWorkTierUrlSync({
+  const {
+    search,
+    setSearch,
+    debouncedSearch,
+    logsPage,
+    setLogsPage,
+    channel,
+    setChannel,
+    category,
+    setCategory,
+    status,
+    setStatus,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    queryStartDate,
+    queryEndDate,
+    hasActiveFilters,
+    activeFilterCount,
+    clearFilters,
+  } = useMessagingWorkFilters({
     searchParams,
     setSearchParams,
-    channel,
-    status,
-    category,
-    debouncedSearch,
+    controlledChannel,
+    controlledOnChannelChange,
   });
-
-  const hasActiveFilters =
-    channel !== 'all' ||
-    category !== 'all' ||
-    status !== 'all' ||
-    Boolean(startDate) ||
-    Boolean(endDate) ||
-    Boolean(debouncedSearch.trim());
-
-  const activeFilterCount =
-    (channel !== 'all' ? 1 : 0) +
-    (category !== 'all' ? 1 : 0) +
-    (status !== 'all' ? 1 : 0) +
-    (startDate ? 1 : 0) +
-    (endDate ? 1 : 0);
-
-  const clearFilters = (): void => {
-    setChannel('all');
-    setCategory('all');
-    setStatus('all');
-    setStartDate('');
-    setEndDate('');
-    setSearch('');
-    setLogsPage(1);
-  };
 
   const logsQuery = useMessageLogs({
     channel,

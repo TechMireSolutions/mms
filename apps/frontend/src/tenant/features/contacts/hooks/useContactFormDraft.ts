@@ -9,7 +9,7 @@ import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useCont
 import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 import { useContactFormDraftHelpers } from "@/tenant/features/contacts/hooks/useContactFormDraftHelpers";
 import { useContactFormDraftOptions } from "@/tenant/features/contacts/hooks/useContactFormDraftOptions";
-import { apiContract } from "@/lib/api";
+import { useContactDuplicateCheck } from "@/tenant/features/contacts/hooks/useContactDuplicateCheck";
 
 export function useContactFormDraft({
   open,
@@ -144,8 +144,6 @@ export function useContactFormDraft({
     isTabFieldRequired,
   });
 
-  const [duplicateCount, setDuplicateCount] = useState(0);
-
   useEffect(() => {
     if (!open) return;
     const nextDraft = buildInitialContactDraft({
@@ -161,45 +159,14 @@ export function useContactFormDraft({
     setContactDraft(nextDraft);
     setBaselineSnapshot(contactDraftSnapshot(nextDraft));
     setValidationErrors([]);
-    setDuplicateCount(0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, contact?.id]);
 
-  useEffect(() => {
-    if (!open || contact?.id) {
-      setDuplicateCount(0);
-      return;
-    }
-    const hasCandidateKey = Boolean(
-      contactDraft.name?.trim() ||
-      contactDraft.firstName?.trim() ||
-      (contactDraft.phones && contactDraft.phones.some((p) => p.number?.trim())) ||
-      (contactDraft.emails && contactDraft.emails.some((e) => e.address?.trim())) ||
-      contactDraft.cnic?.trim()
-    );
-    if (!hasCandidateKey) {
-      setDuplicateCount(0);
-      return;
-    }
-
-    const timer = setTimeout(async () => {
-      try {
-        // The tag property is a computed frontend-only UI state added by normalization
-        const { tag: _tag, ...cleanDraft } = contactDraft as Record<string, unknown>;
-        const res = await apiContract.contacts.duplicateCheck({
-          body: { contact: cleanDraft },
-        });
-        if (res.status === 200) {
-          const body = res.body as { matchCount?: number } | undefined;
-          setDuplicateCount(body?.matchCount ?? 0);
-        }
-      } catch {
-        // Non-blocking duplicate check: ignore gracefully
-      }
-    }, 600);
-
-    return () => clearTimeout(timer);
-  }, [open, contact?.id, contactDraft]);
+  const duplicateCount = useContactDuplicateCheck({
+    open,
+    contactId: contact?.id,
+    contactDraft,
+  });
 
   return {
     formInstanceId,

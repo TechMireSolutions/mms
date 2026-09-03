@@ -1,7 +1,6 @@
 import React from "react";
-import { Copy, Edit3, Files, Trash2, Tag } from "lucide-react";
+import { Tag } from "lucide-react";
 import type { MessageTemplate } from "@mms/shared";
-import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ResizableTableHead } from "@/components/ui/ResizableTableHead";
@@ -18,7 +17,7 @@ import {
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
-import { SEMANTIC_TEXT, SEMANTIC_BG } from "@/lib/semanticTone";
+import { MessagingTemplateActionButtons } from "./MessagingTemplateActionButtons";
 
 export interface MessagingTemplateListProps {
   templates: MessageTemplate[];
@@ -103,49 +102,15 @@ export const MessagingTemplateList = (function MessagingTemplateList({
                 <p className="text-xs font-semibold text-muted-foreground">{t("messaging.templateCopy")}</p>
                 <p className="text-xs text-muted-foreground">{template.body}</p>
               </div>
-              <div className="flex flex-wrap items-center gap-1">
-                <Button
-                  variant="outline" size="icon"
-                  onClick={() => onCopy(template.body)}
-                  className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-muted-foreground/30 bg-muted-foreground/5 text-muted-foreground hover:text-foreground hover:bg-muted-foreground/15 hover:border-muted-foreground/40 shadow-none"
-                  title={t("messaging.copyTemplate")} aria-label={t("messaging.copyTemplate")}
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </Button>
-                {canWrite && (
-                  <Button
-                    variant="outline" size="icon"
-                    onClick={() => onDuplicate(template)}
-                    className={`h-8 w-8 min-h-8 min-w-8 rounded-lg border-primary/30 ${SEMANTIC_BG.primary} ${SEMANTIC_TEXT.primary} hover:bg-primary/15 hover:border-primary/40 shadow-none`}
-                    title={t("messaging.duplicateTemplate")} aria-label={t("messaging.duplicateTemplate")}
-                  >
-                    <Files className="h-3.5 w-3.5" />
-                  </Button>
-                )}
-                {canWrite && template.id.startsWith("custom_") ? (
-                  <>
-                    <Button
-                      variant="outline" size="icon"
-                      onClick={() => onEdit(template)}
-                      className={`h-8 w-8 min-h-8 min-w-8 rounded-lg border-info/30 ${SEMANTIC_BG.info} ${SEMANTIC_TEXT.info} hover:bg-info/15 hover:border-info/40 shadow-none`}
-                      title={t("common.edit")} aria-label={t("common.edit")}
-                    >
-                      <Edit3 className="h-3.5 w-3.5" />
-                    </Button>
-                    <Button
-                      variant="outline" size="icon"
-                      onClick={() => onDeleteRequest(template.id)}
-                      className={`h-8 w-8 min-h-8 min-w-8 rounded-lg border-destructive/30 ${SEMANTIC_BG.destructive} ${SEMANTIC_TEXT.destructive} hover:bg-destructive/15 hover:border-destructive/40 shadow-none`}
-                      title={t("common.delete")} aria-label={t("common.delete")}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </>
-                ) : (
-                  <span className="rounded border border-border/30 bg-muted/65 px-1.5 py-0.5 font-mono text-xs italic uppercase text-muted-foreground/60">
-                    {t("messaging.tagSystem")}
-                  </span>
-                )}
+              <div className="flex flex-wrap items-center">
+                <MessagingTemplateActionButtons
+                  template={template}
+                  canWrite={canWrite}
+                  onCopy={onCopy}
+                  onDuplicate={onDuplicate}
+                  onEdit={onEdit}
+                  onDeleteRequest={onDeleteRequest}
+                />
               </div>
             </article>
           ))}
@@ -193,50 +158,14 @@ export const MessagingTemplateList = (function MessagingTemplateList({
                     {template.body}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-center">
-                    <div className="flex items-center justify-center gap-1">
-                      <Button
-                        variant="outline" size="icon"
-                        onClick={() => onCopy(template.body)}
-                        className="h-8 w-8 min-h-8 min-w-8 rounded-lg border-muted-foreground/30 bg-muted-foreground/5 text-muted-foreground hover:text-foreground hover:bg-muted-foreground/15 hover:border-muted-foreground/40 shadow-none"
-                        title={t("messaging.copyTemplate")} aria-label={t("messaging.copyTemplate")}
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                      </Button>
-                      {canWrite && (
-                        <Button
-                          variant="outline" size="icon"
-                          onClick={() => onDuplicate(template)}
-                          className={`h-8 w-8 min-h-8 min-w-8 rounded-lg border-primary/30 ${SEMANTIC_BG.primary} ${SEMANTIC_TEXT.primary} hover:bg-primary/15 hover:border-primary/40 shadow-none`}
-                          title={t("messaging.duplicateTemplate")} aria-label={t("messaging.duplicateTemplate")}
-                        >
-                          <Files className="h-3.5 w-3.5" />
-                        </Button>
-                      )}
-                      {canWrite && template.id.startsWith("custom_") ? (
-                        <>
-                          <Button
-                            variant="outline" size="icon"
-                            onClick={() => onEdit(template)}
-                            className={`h-8 w-8 min-h-8 min-w-8 rounded-lg border-info/30 ${SEMANTIC_BG.info} ${SEMANTIC_TEXT.info} hover:bg-info/15 hover:border-info/40 shadow-none`}
-                            title={t("common.edit")} aria-label={t("common.edit")}
-                          >
-                            <Edit3 className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            variant="outline" size="icon"
-                            onClick={() => onDeleteRequest(template.id)}
-                            className={`h-8 w-8 min-h-8 min-w-8 rounded-lg border-destructive/30 ${SEMANTIC_BG.destructive} ${SEMANTIC_TEXT.destructive} hover:bg-destructive/15 hover:border-destructive/40 shadow-none`}
-                            title={t("common.delete")} aria-label={t("common.delete")}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </>
-                      ) : (
-                        <span className="rounded border border-border/30 bg-muted/65 px-1.5 py-0.5 font-mono text-xs italic uppercase text-muted-foreground/60">
-                          {t("messaging.tagSystem")}
-                        </span>
-                      )}
-                    </div>
+                    <MessagingTemplateActionButtons
+                      template={template}
+                      canWrite={canWrite}
+                      onCopy={onCopy}
+                      onDuplicate={onDuplicate}
+                      onEdit={onEdit}
+                      onDeleteRequest={onDeleteRequest}
+                    />
                   </TableCell>
                 </TableRow>
               ))}

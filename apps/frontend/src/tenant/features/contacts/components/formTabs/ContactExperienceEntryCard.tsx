@@ -1,11 +1,11 @@
 import type React from "react";
 import { Briefcase, Building2, MapPin } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { EditableSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
+import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
+import { ContactExperienceDatesSection } from "./ContactExperienceDatesSection";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactExperience } from "@mms/shared";
@@ -159,76 +159,19 @@ export function ContactExperienceEntryCard({
           </Field>
         ) : null}
 
-        <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-          {showStartDate ? (
-            <Field
-              label={t("contacts.fields.experienceStartDate")}
-              required={isFieldRequired("experience", "startDate")}
-              error={startDateError}
-              id={`cf-${formInstanceId}-experience-start-${idx}`}
-            >
-              <DatePicker
-                id={`cf-${formInstanceId}-experience-start-${idx}`}
-                name={`cf-${formInstanceId}-experience-start-${idx}`}
-                value={exp.startDate || undefined}
-                required={isFieldRequired("experience", "startDate")}
-                onChange={(dateStr) => onUpdate({ startDate: dateStr })}
-                placeholder={t("contacts.form.startDatePlaceholder")}
-                max={exp.endDate || undefined}
-                aria-invalid={Boolean(startDateError)}
-                className={cn(
-                  startDateError &&
-                    "border-destructive focus-within:border-destructive focus-within:ring-destructive",
-                )}
-              />
-            </Field>
-          ) : null}
-
-          {showEndDate ? (
-            <Field
-              label={t("contacts.fields.experienceEndDate")}
-              required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
-              error={endDateError}
-              id={`cf-${formInstanceId}-experience-end-${idx}`}
-            >
-              <DatePicker
-                id={`cf-${formInstanceId}-experience-end-${idx}`}
-                name={`cf-${formInstanceId}-experience-end-${idx}`}
-                value={exp.isCurrent ? undefined : exp.endDate || undefined}
-                disabled={Boolean(exp.isCurrent)}
-                required={!exp.isCurrent && isFieldRequired("experience", "endDate")}
-                onChange={(dateStr) => onUpdate({ endDate: dateStr })}
-                placeholder={
-                  exp.isCurrent
-                    ? t("contacts.form.present")
-                    : t("contacts.form.endDatePlaceholder")
-                }
-                min={exp.startDate || undefined}
-                aria-invalid={Boolean(endDateError)}
-                className={cn(
-                  endDateError &&
-                    "border-destructive focus-within:border-destructive focus-within:ring-destructive",
-                )}
-              />
-            </Field>
-          ) : null}
-        </div>
-
-        {showIsCurrent ? (
-          <FormCheckboxCard
-            id={`cf-${formInstanceId}-experience-current-${idx}`}
-            name={`cf-${formInstanceId}-experience-current-${idx}`}
-            checked={Boolean(exp.isCurrent)}
-            onCheckedChange={(checked) =>
-              onUpdate({
-                isCurrent: checked,
-                endDate: checked ? "" : exp.endDate,
-              })
-            }
-            label={t("contacts.form.currentlyWorkingHere")}
-            error={isCurrentError}
-          />
-        ) : null}
+        <ContactExperienceDatesSection
+          exp={exp}
+          idx={idx}
+          formInstanceId={formInstanceId}
+          showStartDate={showStartDate}
+          showEndDate={showEndDate}
+          showIsCurrent={showIsCurrent}
+          startDateError={startDateError}
+          endDateError={endDateError}
+          isCurrentError={isCurrentError}
+          isFieldRequired={isFieldRequired}
+          onUpdate={onUpdate}
+        />
 
         {showDescription ? (
           <Field

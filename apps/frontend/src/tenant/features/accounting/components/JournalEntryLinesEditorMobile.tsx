@@ -85,9 +85,8 @@ export function JournalEntryLinesEditorMobile({
               <div>
                 <label className={FORM_LABEL}>{t("accounting.ledger.columns.debit")}</label>
                 <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   aria-label={`Debit amount for line ${lineIndex + 1}`}
                   value={line.debit}
                   placeholder="0.00"
@@ -98,9 +97,8 @@ export function JournalEntryLinesEditorMobile({
               <div>
                 <label className={FORM_LABEL}>{t("accounting.ledger.columns.credit")}</label>
                 <Input
-                  type="number"
-                  min="0"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
                   aria-label={`Credit amount for line ${lineIndex + 1}`}
                   value={line.credit}
                   placeholder="0.00"

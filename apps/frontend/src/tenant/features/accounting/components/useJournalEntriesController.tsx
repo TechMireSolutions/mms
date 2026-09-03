@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { JournalEntry } from '@/lib/data/accountingData';
 import { useTranslation } from '@/hooks/useTranslation';
-import { notify } from '@/lib/notify';
 import { useAccountingCurrency } from '@/hooks/useCurrency';
 import type { JournalEntriesProps } from '@/tenant/features/accounting/components/journalEntriesTypes';
 import {
@@ -18,8 +17,8 @@ import {
   createJournalSaveHandler,
   exportJournalEntriesCsv,
   formatJournalAmount,
-  reverseJournalEntry,
 } from '@/tenant/features/accounting/components/journalEntriesControllerActions';
+import { useJournalEntriesTrashReversal } from '@/tenant/features/accounting/components/useJournalEntriesTrashReversal';
 import {
   createJournalEntryActionsRenderer,
   createJournalNlHandlers,
@@ -64,9 +63,6 @@ export function useJournalEntriesController({
   const [showFilters, setShowFilters] = useState(false);
   const [modal, setModal] = useState<'new' | 'edit' | 'view' | null>(null);
   const [selected, setSelected] = useState<JournalEntry | null>(null);
-  const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
-  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
-  const [pendingReverseEntry, setPendingReverseEntry] = useState<JournalEntry | null>(null);
 
   useEffect(() => {
     if (showDeleted) setMode('advanced');
@@ -128,50 +124,31 @@ export function useJournalEntriesController({
 
   const { grandDebit, grandCredit } = (() => computeJournalGrandTotals(filtered))();
 
-  const requestRowTrash = (id: string) => {
-    if (showDeleted) {
-      void onRestore?.(id);
-      return;
-    }
-    const entry = entries.find((journalEntry) => journalEntry.id === id);
-    if (entry?.status === 'posted') {
-      notify.warning(t('accounting.journal.alerts.cannotDeletePosted'));
-      return;
-    }
-    setPendingTrashId(id);
-  };
-
-  const confirmRowTrash = (): void => {
-    if (!pendingTrashId) return;
-    void onDelete?.(pendingTrashId);
-    setPendingTrashId(null);
-  };
-
-  const requestBulkTrash = () => {
-    if (showDeleted) {
-      void onBulkRestore?.(selectedIds);
-      setSelectedIds([]);
-      return;
-    }
-    setConfirmBulkOpen(true);
-  };
-
-  const confirmBulkTrash = (): void => {
-    if (showDeleted) void onBulkRestore?.(selectedIds);
-    else void onBulkDelete?.(selectedIds);
-    setSelectedIds([]);
-    setConfirmBulkOpen(false);
-  };
-
-  const requestReverse = (entry: JournalEntry) => {
-    setPendingReverseEntry(entry);
-  };
-
-  const confirmReverse = (): void => {
-    if (!pendingReverseEntry) return;
-    void reverseJournalEntry(pendingReverseEntry, entries, onChange);
-    setPendingReverseEntry(null);
-  };
+  const {
+    pendingTrashId,
+    setPendingTrashId,
+    requestRowTrash,
+    confirmRowTrash,
+    confirmBulkOpen,
+    setConfirmBulkOpen,
+    requestBulkTrash,
+    confirmBulkTrash,
+    pendingReverseEntry,
+    setPendingReverseEntry,
+    requestReverse,
+    confirmReverse,
+  } = useJournalEntriesTrashReversal({
+    entries,
+    showDeleted,
+    selectedIds,
+    setSelectedIds,
+    onDelete,
+    onRestore,
+    onBulkDelete,
+    onBulkRestore,
+    onChange,
+    t,
+  });
 
   const renderEntryActions = createJournalEntryActionsRenderer(
     {

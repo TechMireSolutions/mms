@@ -12,8 +12,7 @@ import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCu
 import { type AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { notify } from "@/lib/notify";
 import { AttendanceRecordRowActions } from "./AttendanceRecordRowActions";
-import { AttendanceListDesktopTable } from "./AttendanceListDesktopTable";
-import { AttendanceListCards } from "./AttendanceListCards";
+import { AttendanceListContent } from "./AttendanceListContent";
 import { AttendanceListFilters } from "./AttendanceListFilters";
 import { AttendanceBulkActionBar } from "./AttendanceBulkActionBar";
 import { AttendanceRecordsConfirmDialogs } from "./AttendanceRecordsConfirmDialogs";
@@ -232,25 +231,9 @@ export function AttendanceRecords({
           description={t("attendance.loadFailedHint")}
           onRetry={() => { void attendancePageQuery.refetch(); }}
         />
-      ) : viewMode === "cards" ? (
-        <AttendanceListCards
-          paginatedRecords={pageRecords}
-          isColumnVisible={columnVisible}
-          editingRecord={editingRecord}
-          statuses={statuses}
-          updateDraft={updateDraft}
-          classLabel={classLabel}
-          renderRowActions={renderRowActionsCards}
-          selectedIds={selectedIds}
-          canDelete={canDeleteAttendance}
-          allVisibleSelected={allVisibleSelected}
-          someVisibleSelected={someVisibleSelected}
-          onToggleSelectAll={toggleSelectAll}
-          onToggleSelectedRecord={toggleSelectedRecord}
-          t={t}
-        />
       ) : (
-        <AttendanceListDesktopTable
+        <AttendanceListContent
+          viewMode={viewMode}
           paginatedRecords={pageRecords}
           isColumnVisible={columnVisible}
           visibleColCount={visibleColCount}
@@ -259,6 +242,7 @@ export function AttendanceRecords({
           updateDraft={updateDraft}
           classLabel={classLabel}
           renderRowActions={renderRowActions}
+          renderRowActionsCards={renderRowActionsCards}
           selectedIds={selectedIds}
           canDelete={canDeleteAttendance}
           allVisibleSelected={allVisibleSelected}

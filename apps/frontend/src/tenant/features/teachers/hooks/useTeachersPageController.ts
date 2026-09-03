@@ -7,7 +7,6 @@ import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import type { Teacher } from '@mms/shared';
 import {
   resolveModuleTierTab,
-  teacherColumnLabelKey,
   TEACHERS_MODULE_MANIFEST,
 } from '@mms/shared';
 import { useTeacherMutations, useTeachersMetrics } from '@/tenant/features/teachers/hooks/useTeachers';
@@ -27,7 +26,7 @@ import {
 import { useTeacherLookupOptions } from '@/tenant/features/teachers/hooks/useTeacherStatusConfig';
 import { useTeacherConfig } from '@/hooks/useStandardModuleConfig';
 import {
-  defaultTeachersExportColumns,
+  resolveTeachersExportColumns,
   useTeachersExportActions,
 } from '@/tenant/features/teachers/hooks/useTeachersExportActions';
 
@@ -112,25 +111,11 @@ export function useTeachersPageController() {
   const mutations = useTeacherMutations();
   const pageActions = useTeachersPageActions({ editTeacher: formState.editTeacher });
 
-  const exportColumns = (() => {
-    const visible = columnLayout.columnRegistry.filter((col) =>
-      columnLayout.isColumnVisible(col.key),
-    );
-    if (visible.length === 0) return defaultTeachersExportColumns(t);
-    const columns = visible.map((col) => ({
-      id: col.key,
-      label: col.label || col.key,
-    }));
-    // CSV identity — not a Work directory column (shown under name).
-    if (!columns.some((col) => col.id === 'employeeId')) {
-      const nameIndex = columns.findIndex((col) => col.id === 'name');
-      columns.splice(nameIndex >= 0 ? nameIndex + 1 : 0, 0, {
-        id: 'employeeId',
-        label: t(teacherColumnLabelKey('employeeId')),
-      });
-    }
-    return columns;
-  })();
+  const exportColumns = resolveTeachersExportColumns(
+    columnLayout.columnRegistry,
+    columnLayout.isColumnVisible,
+    t,
+  );
 
   const { handleExportCSV, handleBulkExport } = useTeachersExportActions({
     tableColumns: exportColumns,

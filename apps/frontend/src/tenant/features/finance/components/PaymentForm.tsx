@@ -142,9 +142,9 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                   <Input
                     id="payment-amount-input"
                     name="amount"
-                    type="number"
-                    min={1}
-                    max={balance}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
                     className={`${FORM_INPUT} ps-10`}
                     value={paymentDraft.amount}
                     onChange={(event) => updateDraft({ amount: event.target.value })}

@@ -10,6 +10,8 @@ export interface PaymentFormDraft {
   note: string;
 }
 
+export const DECIMAL_MONEY_REGEX = /^\d+(\.\d{1,2})?$/;
+
 export function validatePaymentFormDraft(
   draft: PaymentFormDraft,
   balance: number,
@@ -17,9 +19,10 @@ export function validatePaymentFormDraft(
 ): Record<string, string> {
   const newErrors: Record<string, string> = {};
 
-  if (!draft.amount.trim() || Number(draft.amount) <= 0) {
+  const trimmedAmount = draft.amount.trim();
+  if (!trimmedAmount || !DECIMAL_MONEY_REGEX.test(trimmedAmount) || Number(trimmedAmount) <= 0) {
     newErrors.amount = t("finance.amountRequired");
-  } else if (Number(draft.amount) > balance) {
+  } else if (Number(trimmedAmount) > balance) {
     newErrors.amount = t("finance.amountExceedsBalance");
   }
   if (!draft.method) {

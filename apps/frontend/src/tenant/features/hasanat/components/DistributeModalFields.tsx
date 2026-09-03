@@ -148,7 +148,7 @@ export function DistributeModalFields({
           return (
             <div key="quantity">
               <label htmlFor="qty" className={FORM_LABEL}>{t("hasanat.form.quantity")}<RequiredMark /></label>
-              <Input id="qty" type="number" className={FORM_INPUT} value={data.quantity || 1} onChange={(event) => updateField("quantity", Math.min(+event.target.value, totalAvailable))} min={1} max={totalAvailable} required />
+              <Input id="qty" type="number" inputMode="numeric" className={FORM_INPUT} value={data.quantity || 1} onChange={(event) => updateField("quantity", Math.min(+event.target.value, totalAvailable))} min={1} max={totalAvailable} required />
             </div>
           );
         }

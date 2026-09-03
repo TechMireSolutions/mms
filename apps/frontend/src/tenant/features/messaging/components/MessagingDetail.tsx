@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState, type JSX } from 'react';
 import {
-  calculateSmsSegments,
   formatDateTime,
   type Message,
   type StandardMessagingRecipient as MessagingRecipient,
@@ -12,22 +11,19 @@ import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { SEMANTIC_TEXT, SEMANTIC_BG } from '@/lib/semanticTone';
-import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
-import { Card } from '@/components/ui/card';
-import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 import {
   AlertCircle,
   ArrowUpRight,
   Check,
   Copy,
-  Mail,
-  MessageCircle,
   MessageSquare,
   RotateCcw,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PersonDetailHeroCard } from '@/components/ui/PersonDetailHeroCard';
 import { EntityMessagingQuickActions } from '@/components/ui/EntityMessagingQuickActions';
+import { MessagingDetailBodyCard } from './MessagingDetailBodyCard';
+import { MessagingDetailMetadataCard } from './MessagingDetailMetadataCard';
 
 export interface MessagingDetailProps {
   log: Message | null;
@@ -47,7 +43,6 @@ export const MessagingDetail = (function MessagingDetail({
   onResend,
 }: MessagingDetailProps): JSX.Element | null {
   const { t } = useTranslation();
-  const [copiedBody, setCopiedBody] = useState(false);
   const [copiedId, setCopiedId] = useState(false);
 
   const handleResend = useCallback((): void => {
@@ -74,23 +69,13 @@ export const MessagingDetail = (function MessagingDetail({
   const recipientName = recipient?.name || t('messaging.contactFallback', { id: log.contactId });
   const isFailed = log.status === 'failed';
   const isSkipped = log.status === 'skipped';
-  const isSms = log.channel === 'sms';
-  const isWhatsapp = log.channel === 'whatsapp';
-  const isEmail = log.channel === 'email';
-
   const cleanPhone = recipient?.phone ? recipient.phone.replace(/[^0-9]/g, '') : '';
-  const smsStats = isSms ? calculateSmsSegments(log.body) : null;
 
-  const copyToClipboard = async (text: string, isId: boolean = false): Promise<void> => {
+  const copyIdToClipboard = async (text: string): Promise<void> => {
     try {
       await navigator.clipboard.writeText(text);
-      if (isId) {
-        setCopiedId(true);
-        setTimeout(() => setCopiedId(false), 2000);
-      } else {
-        setCopiedBody(true);
-        setTimeout(() => setCopiedBody(false), 2000);
-      }
+      setCopiedId(true);
+      setTimeout(() => setCopiedId(false), 2000);
       notify.success(t('contacts.table.copied'));
     } catch {
       notify.error(t('messaging.loadFailedHint'));
@@ -113,7 +98,7 @@ export const MessagingDetail = (function MessagingDetail({
               variant="ghost"
               size="icon"
               className="h-6 w-6 text-muted-foreground hover:text-foreground"
-              onClick={() => void copyToClipboard(String(log.id), true)}
+              onClick={() => void copyIdToClipboard(String(log.id))}
               aria-label={t('contacts.table.copied')}
             >
               {copiedId ? <Check className={`h-3 w-3 ${SEMANTIC_TEXT.success}`} /> : <Copy className="h-3 w-3" />}
@@ -196,73 +181,8 @@ export const MessagingDetail = (function MessagingDetail({
           />
         </div>
 
-        <div className="space-y-2">
-          <DetailSectionTitle>{t('messaging.messageBody')}</DetailSectionTitle>
-          <Card accentColor="info" className="p-0 overflow-hidden divide-y divide-border/50">
-            {log.subject && (
-              <DetailAttributeRow 
-                variant="inset"
-                icon={Mail} 
-                label={t('messaging.subjectLabel')} 
-                value={log.subject} 
-              />
-            )}
-            <div className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-3xs font-mono text-muted-foreground">
-                  {smsStats
-                    ? t('messaging.smsSegmentStats', {
-                      segments: smsStats.totalSegments,
-                      remaining: smsStats.remainingInSegment,
-                    })
-                    : `${log.body.length} chars`}
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`h-7 px-2.5 text-xs gap-1.5 ${SEMANTIC_TEXT.primary} hover:bg-primary/10`}
-                  onClick={() => void copyToClipboard(log.body)}
-                >
-                  {copiedBody ? <Check className={`h-3.5 w-3.5 ${SEMANTIC_TEXT.success}`} /> : <Copy className="h-3.5 w-3.5" />}
-                  <span>{copiedBody ? t('contacts.table.copied') : t('contacts.table.copy')}</span>
-                </Button>
-              </div>
-              <div className={`whitespace-pre-wrap rounded bg-background/80 p-3 font-sans text-xs text-foreground border border-border/40 leading-relaxed max-h-60 overflow-y-auto selection:${SEMANTIC_BG.primary}`}>
-                {log.body}
-              </div>
-            </div>
-          </Card>
-        </div>
-
-        <div className="space-y-2">
-          <DetailSectionTitle>{t('common.details')}</DetailSectionTitle>
-          <Card accentColor="secondary" className="p-0 overflow-hidden divide-y divide-border/50">
-            <DetailAttributeRow 
-              variant="inset"
-              icon={MessageCircle} 
-              label={t('messaging.channel')} 
-              value={<span className="capitalize">{log.channel}</span>} 
-            />
-            <DetailAttributeRow 
-              variant="inset"
-              icon={AlertCircle} 
-              label={t('messaging.category')} 
-              value={<span className="capitalize">{log.category || t('messaging.category.general')}</span>} 
-            />
-            <DetailAttributeRow 
-              variant="inset"
-              icon={Check} 
-              label={t('common.status')} 
-              value={<span className="capitalize">{log.status || 'sent'}</span>} 
-            />
-            <DetailAttributeRow 
-              variant="inset"
-              icon={Copy} 
-              label={t('messaging.dateSent')} 
-              value={<span className="font-mono">{formatDateTime(log.sentAt)}</span>} 
-            />
-          </Card>
-        </div>
+        <MessagingDetailBodyCard log={log} />
+        <MessagingDetailMetadataCard log={log} />
       </div>
     </DetailDrawerShell>
   );

@@ -102,9 +102,9 @@ export const InvoiceFormFieldsSection = (function InvoiceFormFieldsSection({
                   <Input
                     id="invoice-base-fee"
                     name="baseFee"
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
                     className={`${FORM_INPUT} ps-10`}
                     value={draft.baseFee}
                     onChange={(event) => onFieldChange("baseFee", event.target.value)}
@@ -151,9 +151,9 @@ export const InvoiceFormFieldsSection = (function InvoiceFormFieldsSection({
                   <Input
                     id="invoice-discount-value"
                     name="discountValue"
-                    type="number"
-                    min="0"
-                    step="0.01"
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0.00"
                     className={`${FORM_INPUT} ps-10`}
                     value={draft.discountValue}
                     onChange={(event) => onFieldChange("discountValue", event.target.value)}

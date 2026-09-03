@@ -10,8 +10,8 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("./ContactSubListCards", () => ({
-  ContactSubListShell: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="sublist-shell">{children}</div>
+  ContactSubListShell: ({ children, isEmpty, emptyMessage }: { children: React.ReactNode; isEmpty?: boolean; emptyMessage?: React.ReactNode }) => (
+    <div data-testid="sublist-shell">{isEmpty ? <div>{emptyMessage}</div> : children}</div>
   ),
   ListFieldCard: ({ children, typeSelect }: {
     children: React.ReactNode;
@@ -78,5 +78,27 @@ describe("ContactSkillsTab Component", () => {
     expect(html).toContain("Arabic Grammar");
     expect(html).toContain("Language");
     expect(html).toContain("Al-Azhar");
+  });
+
+  it("renders empty state message when skills list is empty", () => {
+    const html = renderToStaticMarkup(
+      <ContactSkillsTab
+        contactDraft={{ skills: [] }}
+        getLocalId={() => "loc-1"}
+        categoryOptions={["Language"]}
+        proficiencyOptions={["Beginner"]}
+        formInstanceId="inst-1"
+        getListItemError={() => undefined}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        fields={{}}
+        addSubListItem={vi.fn()}
+        ensureSubListItem={vi.fn()}
+        updateSubListItem={vi.fn()}
+        removeSubListItem={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("contacts.form.noSkillsYet");
   });
 });

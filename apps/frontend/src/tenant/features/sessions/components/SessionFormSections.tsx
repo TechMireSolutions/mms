@@ -137,8 +137,10 @@ export function SessionFinancialSection({
           <div className="relative flex items-center group/input">
             <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
-              type="number"
-              value={sessionDraft.baseFee}
+              type="text"
+              inputMode="decimal"
+              placeholder="0.00"
+              value={sessionDraft.baseFee || ""}
               onChange={(event) => onDraftChange({ baseFee: event.target.value })}
               className={`${FORM_INPUT} ps-10`}
             />

@@ -16,11 +16,14 @@ import {
   useAccountingFiscalYearsPaginated,
   useAccountingReportAggregates,
 } from "../hooks/useAccountingApi";
-
 import PinnedWidgets from "@/components/ui/reports/PinnedWidgets";
+import {
+  buildFinancialReportExportRows,
+  getFinancialReportExportColumns,
+  type TrialBalanceRow,
+} from "./financialReportsExportHelpers";
 
 type ViewType = "income" | "balance" | "cashflow";
-import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 /**
  * FinancialReports component.
@@ -90,7 +93,7 @@ export function FinancialReports(): React.JSX.Element {
       netCashFlow: 0,
       cashInflow: 0,
       cashOutflow: 0,
-      tb: [] as Array<{ id: string; code: string; name: string; type: string; totalDebit: number; totalCredit: number; balance: number }>,
+      tb: [] as TrialBalanceRow[],
     };
   })();
 
@@ -105,74 +108,26 @@ export function FinancialReports(): React.JSX.Element {
   const payablesRow = tb.find((trialBalanceRow) => trialBalanceRow.code === "2000");
   const payablesChange = payablesRow ? payablesRow.totalCredit - payablesRow.totalDebit : 0;
 
-  const exportColumns = (() => [
-    { header: t("accounting.reports.export.section"), key: "section" },
-    { header: t("accounting.reports.export.code"), key: "code" },
-    { header: t("accounting.reports.export.account"), key: "account" },
-    { header: t("accounting.reports.export.amount"), key: "amount" },
-  ])() as ExportColumn[];
+  const exportColumns = getFinancialReportExportColumns(t);
 
-  const exportRows = (() => {
-    const rows: Record<string, string>[] = [];
-    if (view === "income") {
-      getRowsByAccountType("Revenue").forEach((trialBalanceRow) =>
-        rows.push({
-          section: t("accounting.reports.revenue"),
-          code: trialBalanceRow.code,
-          account: trialBalanceRow.name,
-          amount: formatCurrency(trialBalanceRow.totalCredit - trialBalanceRow.totalDebit),
-        }),
-      );
-      rows.push({ section: "", code: "", account: t("accounting.reports.totalRevenue"), amount: formatCurrency(revenue) });
-      getRowsByAccountType("Expense").forEach((trialBalanceRow) =>
-        rows.push({
-          section: t("accounting.reports.expenses"),
-          code: trialBalanceRow.code,
-          account: trialBalanceRow.name,
-          amount: formatCurrency(trialBalanceRow.totalDebit - trialBalanceRow.totalCredit),
-        }),
-      );
-      rows.push({ section: "", code: "", account: t("accounting.reports.totalExpenses"), amount: formatCurrency(expenses) });
-      rows.push({
-        section: "",
-        code: "",
-        account: netSurplus >= 0 ? t("accounting.reports.netSurplus") : t("accounting.reports.netDeficit"),
-        amount: formatCurrency(Math.abs(netSurplus)),
-      });
-    } else if (view === "balance") {
-      getRowsByAccountType("Asset").forEach((trialBalanceRow) =>
-        rows.push({ section: t("accounting.reports.assets"), code: trialBalanceRow.code, account: trialBalanceRow.name, amount: formatCurrency(trialBalanceRow.balance) }),
-      );
-      rows.push({ section: "", code: "", account: t("accounting.reports.totalAssets"), amount: formatCurrency(assets) });
-      getRowsByAccountType("Liability").forEach((trialBalanceRow) =>
-        rows.push({
-          section: t("accounting.reports.liabilities"),
-          code: trialBalanceRow.code,
-          account: trialBalanceRow.name,
-          amount: formatCurrency(trialBalanceRow.totalCredit - trialBalanceRow.totalDebit),
-        }),
-      );
-      rows.push({ section: "", code: "", account: t("accounting.reports.totalLiabilities"), amount: formatCurrency(liabilities) });
-      equityRows.forEach((trialBalanceRow) =>
-        rows.push({
-          section: t("accounting.reports.equity"),
-          code: trialBalanceRow.code,
-          account: trialBalanceRow.name,
-          amount: formatCurrency(trialBalanceRow.totalCredit - trialBalanceRow.totalDebit),
-        }),
-      );
-      rows.push({ section: "", code: "", account: t("accounting.reports.totalEquity"), amount: formatCurrency(equityTotal) });
-    } else if (view === "cashflow") {
-      rows.push({ section: t("accounting.reports.views.cashflow"), code: "", account: t("accounting.reports.netSurplus"), amount: formatCurrency(netSurplus) });
-      rows.push({ section: t("accounting.reports.views.cashflow"), code: "", account: t("accounting.reports.totalRevenue"), amount: formatCurrency(depreciationAdjustment) });
-      rows.push({ section: t("accounting.reports.views.cashflow"), code: "", account: t("accounting.reports.totalAssets"), amount: formatCurrency(receivablesChange) });
-      rows.push({ section: t("accounting.reports.views.cashflow"), code: "", account: t("accounting.reports.totalLiabilities"), amount: formatCurrency(payablesChange) });
-      rows.push({ section: "", code: "", account: t("accounting.reports.views.cashflow"), amount: formatCurrency(netCashFlow) });
-      rows.push({ section: t("accounting.reports.views.cashflow"), code: "", account: t("accounting.reports.totalRevenue"), amount: formatCurrency(cashInflow) });
-      rows.push({ section: t("accounting.reports.views.cashflow"), code: "", account: t("accounting.reports.totalExpenses"), amount: formatCurrency(cashOutflow) });
-    }
-    return rows;
-  })();
+  const exportRows = buildFinancialReportExportRows({
+    view,
+    tb,
+    revenue,
+    expenses,
+    netSurplus,
+    assets,
+    liabilities,
+    equityTotal,
+    depreciationAdjustment,
+    receivablesChange,
+    payablesChange,
+    netCashFlow,
+    cashInflow,
+    cashOutflow,
+    formatCurrency,
+    t,
+  });
 
   if (isError) {
     return (

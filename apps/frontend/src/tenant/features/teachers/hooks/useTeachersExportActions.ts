@@ -96,3 +96,25 @@ export function defaultTeachersExportColumns(
     label: t(teacherColumnLabelKey(column.id)),
   }));
 }
+
+/** Resolves active export columns from column registry and visibility state. */
+export function resolveTeachersExportColumns(
+  columnRegistry: Array<{ key: string; label?: string }>,
+  isColumnVisible: (key: string) => boolean,
+  t: (key: AppTranslationKey) => string,
+): TeacherExportColumn[] {
+  const visible = columnRegistry.filter((col) => isColumnVisible(col.key));
+  if (visible.length === 0) return defaultTeachersExportColumns(t);
+  const columns = visible.map((col) => ({
+    id: col.key,
+    label: col.label || col.key,
+  }));
+  if (!columns.some((col) => col.id === 'employeeId')) {
+    const nameIndex = columns.findIndex((col) => col.id === 'name');
+    columns.splice(nameIndex >= 0 ? nameIndex + 1 : 0, 0, {
+      id: 'employeeId',
+      label: t(teacherColumnLabelKey('employeeId')),
+    });
+  }
+  return columns;
+}

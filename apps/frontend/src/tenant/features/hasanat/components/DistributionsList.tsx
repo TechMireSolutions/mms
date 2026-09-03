@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { Denomination, Distribution, StockBatch } from '@/lib/data/hasanatData';
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { HasanatTrashDialogs } from "./HasanatTrashDialogs";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -221,23 +221,15 @@ export function DistributionsList({
         />
       )}
 
-      <ConfirmAlertDialog
-        open={pendingTrashId !== null}
-        onOpenChange={(open) => { if (!open) setPendingTrashId(null); }}
-        title={t('hasanat.trash.deleteTitle')}
-        description={t('hasanat.trash.deleteConfirm')}
-        confirmLabel={t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={confirmRowTrash}
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkOpen}
-        onOpenChange={setConfirmBulkOpen}
-        title={showDeleted ? t('hasanat.trash.restore') : t('hasanat.trash.deleteTitle')}
-        description={t(showDeleted ? 'hasanat.trash.bulkRestoreConfirm' : 'hasanat.trash.bulkDeleteConfirm', { count: selectedIds.length })}
-        confirmLabel={showDeleted ? t('hasanat.trash.restore') : t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={confirmBulkTrash}
+      <HasanatTrashDialogs
+        pendingTrashId={pendingTrashId}
+        onPendingTrashIdChange={setPendingTrashId}
+        confirmBulkOpen={confirmBulkOpen}
+        onConfirmBulkOpenChange={setConfirmBulkOpen}
+        showDeleted={showDeleted}
+        selectedCount={selectedIds.length}
+        onConfirmRowTrash={confirmRowTrash}
+        onConfirmBulkTrash={confirmBulkTrash}
       />
     </section>
   );

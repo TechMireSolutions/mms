@@ -1,14 +1,14 @@
 import React from "react";
-import { ArrowUpRight, IdCard, Mail, MapPin, Phone, ShieldCheck, Tag } from "lucide-react";
+import { ArrowUpRight, IdCard, MapPin, ShieldCheck, Tag } from "lucide-react";
 import type { Address, EmailAddress, PhoneNumber, StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
 import { toMessagingRecipient } from "@mms/shared";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
-import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES } from "@/components/ui/messagingActionStyles";
+import { StudentDetailContactChannels } from "./StudentDetailContactChannels";
 
 export interface StudentContactProfileData {
   contactId?: string;
@@ -115,88 +115,15 @@ export function StudentDetailContactSection({
       </div>
 
       <Card accentColor="primary" className="p-3.5 space-y-3">
-        {phones.length > 0 && (
-          <div className="space-y-1.5">
-            <span className="text-3xs font-semibold text-muted-foreground uppercase tracking-wider block">
-              {t("students.detail.phonesLabel")}
-            </span>
-            {phones.map((phone, idx) => (
-              <div
-                key={`student-phone-${phone.number}-${idx}`}
-                className="flex items-center justify-between gap-2 py-1 px-2.5 rounded-lg bg-muted/40 text-xs"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-                  <span className="font-mono text-foreground truncate">{phone.number}</span>
-                  {phone.label && (
-                    <span className="text-2xs text-muted-foreground font-medium uppercase tracking-tight">
-                      {phone.label}
-                    </span>
-                  )}
-                  {phone.isPrimary && (
-                    <span className="text-2xs text-primary font-bold uppercase tracking-tight">
-                      ★ {t("theme.tokenPrimary")}
-                    </span>
-                  )}
-                </div>
-                {canMessage && (
-                  <EntityMessagingIconActions
-                    primaryPhone={phone.number}
-                    labels={{
-                      call: t("students.detail.call"),
-                      whatsapp: t("students.list.actionWhatsApp"),
-                      sms: t("students.list.actionSms"),
-                    }}
-                    callAriaLabel={t("students.detail.callPhone", { phone: phone.number })}
-                    whatsappAriaLabel={t("students.list.actionWhatsApp")}
-                    smsAriaLabel={t("students.list.actionSms")}
-                    onWhatsApp={() => handleWhatsApp(phone.number)}
-                    onSms={() => handleSms(phone.number)}
-                    className="shrink-0"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {emails.length > 0 && (
-          <div className="space-y-1.5">
-            <span className="text-3xs font-semibold text-muted-foreground uppercase tracking-wider block">
-              {t("students.detail.emailsLabel")}
-            </span>
-            {emails.map((email, idx) => (
-              <div
-                key={`student-email-${email.address}-${idx}`}
-                className="flex items-center justify-between gap-2 py-1 px-2.5 rounded-lg bg-muted/40 text-xs"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-                  <span className="text-foreground truncate">{email.address}</span>
-                  {email.label && (
-                    <span className="text-2xs text-muted-foreground font-medium uppercase tracking-tight">
-                      {email.label}
-                    </span>
-                  )}
-                  {email.isPrimary && (
-                    <span className="text-2xs text-primary font-bold uppercase tracking-tight">
-                      ★ {t("theme.tokenPrimary")}
-                    </span>
-                  )}
-                </div>
-                {canMessage && openComposer && (
-                  <EntityMessagingIconActions
-                    primaryEmail={email.address}
-                    labels={{ email: t("students.list.actionEmail") }}
-                    emailAriaLabel={t("students.list.actionEmail")}
-                    onEmail={() => handleEmail(email.address)}
-                    className="shrink-0"
-                  />
-                )}
-              </div>
-            ))}
-          </div>
-        )}
+        <StudentDetailContactChannels
+          phones={phones}
+          emails={emails}
+          canMessage={canMessage}
+          hasOpenComposer={Boolean(openComposer)}
+          onWhatsApp={handleWhatsApp}
+          onSms={handleSms}
+          onEmail={handleEmail}
+        />
 
         {addresses.length > 0 && (
           <div className="space-y-1.5">
