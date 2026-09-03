@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ShieldCheck } from "lucide-react";
 import PlatformAuthLayout from "@/platform/components/PlatformAuthLayout";
 import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
 import { AuthEmailField } from "@/components/entry/AuthEmailField";
 import { AuthPasswordField } from "@/components/entry/AuthPasswordField";
-import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
+import { AuthResendCodeControl, AuthSubmitButton } from "@/components/entry/AuthFormControls";
 import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
 import { AuthTextField } from "@/components/entry/AuthTextField";
 import {
@@ -26,7 +26,7 @@ type SignInStep = "credentials" | "twoFactor";
 export default function PlatformSignIn(): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const { platformLogin, platformVerify2FA, isPlatformLoginSubmitting } = usePlatformAuth();
+  const { platformLogin, platformVerify2FA, platformResend2FA, isPlatformLoginSubmitting } = usePlatformAuth();
   const emailFieldId = "platform-email";
   const passwordFieldId = "platform-password";
   const codeFieldId = "platform-2fa-code";
@@ -39,6 +39,14 @@ export default function PlatformSignIn(): React.JSX.Element {
   const [fieldErrors, setFieldErrors] = useState<SignInFieldErrors>({});
   const [codeError, setCodeError] = useState<string | undefined>();
   const [error, setError] = useState<string | null>(null);
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Countdown before the code can be resent (seconds).
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = window.setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [resendCooldown]);
 
   const pageTitle = formatEntryTitle(t("platform.signInTitle"), t("entry.productName"));
 
@@ -60,6 +68,7 @@ export default function PlatformSignIn(): React.JSX.Element {
         setCode("");
         setCodeError(undefined);
         setError(null);
+        setResendCooldown(30);
         setStep("twoFactor");
       }
     } catch (err) {
@@ -83,12 +92,24 @@ export default function PlatformSignIn(): React.JSX.Element {
     }
   };
 
+  const handleResend = async (): Promise<void> => {
+    setError(null);
+    try {
+      await platformResend2FA(challengeId);
+      setCode("");
+      setResendCooldown(30);
+    } catch (err) {
+      setError(getPlatformErrorMessage(err, t));
+    }
+  };
+
   const backToCredentials = (): void => {
     setStep("credentials");
     setChallengeId("");
     setCode("");
     setCodeError(undefined);
     setError(null);
+    setResendCooldown(0);
   };
 
   const subtitle =
@@ -189,6 +210,14 @@ export default function PlatformSignIn(): React.JSX.Element {
                 busyLabel={t("platform.twoFactorVerifying")}
                 label={t("platform.twoFactorVerify")}
                 icon={ShieldCheck}
+              />
+
+              <AuthResendCodeControl
+                countdown={resendCooldown}
+                onResend={() => void handleResend()}
+                disabled={isPlatformLoginSubmitting}
+                countdownLabel={t("auth.resendCountdown", { seconds: String(resendCooldown) })}
+                resendLabel={t("auth.resendCode")}
               />
             </fieldset>
 

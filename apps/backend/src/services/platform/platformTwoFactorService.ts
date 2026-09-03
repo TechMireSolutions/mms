@@ -1,6 +1,8 @@
 import type { StoredPlatformUser } from '@mms/shared';
 import {
   createArtifactId,
+  deleteAuthArtifact,
+  getAuthArtifact,
   putAuthArtifact,
   takeAuthArtifact,
 } from '../auth/authArtifactService.js';
@@ -62,6 +64,49 @@ export async function createPlatformTwoFactorChallenge(
   }
 
   return challengeId;
+}
+
+/**
+ * Regenerates the OTP for an existing platform 2FA challenge and re-dispatches it.
+ * Resets the attempt counter. Returns ok=false when the challenge is missing/expired
+ * or the code could not be delivered in production.
+ */
+export async function resendPlatformTwoFactorChallenge(
+  challengeId: string,
+): Promise<{ ok: boolean; devCode?: string }> {
+  const entry = await getAuthArtifact<PlatformTwoFactorChallengePayload>(
+    challengeId,
+    'platform_two_factor_challenge',
+  );
+  if (!entry) return { ok: false };
+
+  const user = await getStoredPlatformUserById(entry.payload.userId);
+  if (!user || user.disabledAt) return { ok: false };
+
+  const code = generateOtpCode();
+  const updated: PlatformTwoFactorChallengePayload = {
+    ...entry.payload,
+    codeHash: hashOtpCode(code),
+    attempts: 0,
+  };
+  await deleteAuthArtifact(challengeId);
+  await putAuthArtifact('platform_two_factor_challenge', updated, CHALLENGE_TTL_MS, challengeId);
+
+  const dispatch = await dispatchPlatformOtp({
+    email: user.email,
+    code,
+    subject: 'Your MMS platform verification code',
+    bodyLines: ['Use this verification code to finish signing in to the MMS platform:'],
+    ttlMinutes: CHALLENGE_TTL_MS / 60_000,
+    logLabel: 'Platform 2FA code',
+  });
+
+  if (!dispatch.sent && process.env.NODE_ENV === 'production') {
+    await deleteAuthArtifact(challengeId);
+    return { ok: false };
+  }
+
+  return { ok: true, devCode: dispatch.devCode };
 }
 
 /**

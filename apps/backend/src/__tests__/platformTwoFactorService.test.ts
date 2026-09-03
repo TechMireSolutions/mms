@@ -4,6 +4,8 @@ import type { StoredPlatformUser } from '@mms/shared';
 const mocks = vi.hoisted(() => ({
   putAuthArtifact: vi.fn(),
   takeAuthArtifact: vi.fn(),
+  getAuthArtifact: vi.fn(),
+  deleteAuthArtifact: vi.fn(),
   createArtifactId: vi.fn(() => 'challenge-1'),
   dispatchPlatformOtp: vi.fn(),
   getStoredPlatformUserById: vi.fn(),
@@ -14,6 +16,8 @@ const mocks = vi.hoisted(() => ({
 vi.mock('../services/auth/authArtifactService.js', () => ({
   putAuthArtifact: mocks.putAuthArtifact,
   takeAuthArtifact: mocks.takeAuthArtifact,
+  getAuthArtifact: mocks.getAuthArtifact,
+  deleteAuthArtifact: mocks.deleteAuthArtifact,
   createArtifactId: mocks.createArtifactId,
 }));
 
@@ -34,6 +38,7 @@ vi.mock('../services/auth/authCookieService.js', () => ({
 import {
   createPlatformTwoFactorChallenge,
   isPlatformTwoFactorRequired,
+  resendPlatformTwoFactorChallenge,
   verifyPlatformTwoFactorChallenge,
 } from '../services/platform/platformTwoFactorService.js';
 
@@ -136,5 +141,49 @@ describe('platformTwoFactorService', () => {
     mocks.takeAuthArtifact.mockResolvedValue(null);
     const result = await verifyPlatformTwoFactorChallenge('missing', '123456');
     expect(result).toBeNull();
+  });
+
+  it('resends a fresh code and resets attempts', async () => {
+    mocks.getAuthArtifact.mockResolvedValue({
+      id: 'challenge-1',
+      kind: 'platform_two_factor_challenge',
+      payload: { userId: user.id, codeHash: 'old-hash', attempts: 3 },
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+
+    const result = await resendPlatformTwoFactorChallenge('challenge-1');
+
+    expect(result).toEqual({ ok: true, devCode: undefined });
+    expect(mocks.deleteAuthArtifact).toHaveBeenCalledWith('challenge-1');
+    expect(mocks.putAuthArtifact).toHaveBeenCalledWith(
+      'platform_two_factor_challenge',
+      expect.objectContaining({ userId: user.id, attempts: 0, codeHash: 'hashed-code' }),
+      expect.any(Number),
+      'challenge-1',
+    );
+    expect(mocks.dispatchPlatformOtp).toHaveBeenCalledWith(
+      expect.objectContaining({ email: user.email }),
+    );
+  });
+
+  it('returns ok:false when the challenge is missing or expired', async () => {
+    mocks.getAuthArtifact.mockResolvedValue(null);
+    const result = await resendPlatformTwoFactorChallenge('missing');
+    expect(result).toEqual({ ok: false });
+  });
+
+  it('returns ok:false when resend cannot be delivered in production', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    mocks.getAuthArtifact.mockResolvedValue({
+      id: 'challenge-1',
+      kind: 'platform_two_factor_challenge',
+      payload: { userId: user.id, codeHash: 'old-hash', attempts: 0 },
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    mocks.dispatchPlatformOtp.mockResolvedValue({ sent: false });
+
+    const result = await resendPlatformTwoFactorChallenge('challenge-1');
+    expect(result).toEqual({ ok: false });
+    expect(mocks.deleteAuthArtifact).toHaveBeenCalledWith('challenge-1');
   });
 });

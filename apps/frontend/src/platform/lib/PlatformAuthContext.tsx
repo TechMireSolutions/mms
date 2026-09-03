@@ -33,6 +33,7 @@ export interface PlatformAuthContextType {
   platformAuthChecked: boolean;
   platformLogin: (email: string, password: string) => Promise<PlatformLoginOutcome>;
   platformVerify2FA: (challengeId: string, code: string) => Promise<void>;
+  platformResend2FA: (challengeId: string) => Promise<{ success: boolean }>;
   platformLogout: () => Promise<void>;
   checkPlatformAuth: () => Promise<void>;
 }
@@ -142,6 +143,14 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, []);
 
+  const platformResend2FA = useCallback(async (challengeId: string): Promise<{ success: boolean }> => {
+    const res = await apiJson<{ success: boolean }>('/api/platform/auth/2fa/resend', {
+      method: 'POST',
+      body: JSON.stringify({ challengeId }),
+    });
+    return res;
+  }, []);
+
   const platformLogout = useCallback(async (): Promise<void> => {
     try {
       await apiFetch('/api/platform/auth/logout', { method: 'POST' });
@@ -167,6 +176,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       platformAuthChecked,
       platformLogin,
       platformVerify2FA,
+      platformResend2FA,
       platformLogout,
       checkPlatformAuth,
     }))();

@@ -12,7 +12,7 @@ import {
   loginPlatformUser,
   logoutPlatformUser,
 } from '../../services/platform/platformAuthService.js';
-import { verifyPlatformTwoFactorChallenge } from '../../services/platform/platformTwoFactorService.js';
+import { verifyPlatformTwoFactorChallenge, resendPlatformTwoFactorChallenge } from '../../services/platform/platformTwoFactorService.js';
 import {
   getPlatformSetupStatus,
   startPlatformSetup,
@@ -39,7 +39,7 @@ import {
   platformSetupRegisterBodySchema,
 } from '../../validation/platformSchemas.js';
 import { loginBodySchema as platformLoginBodySchema } from '../../validation/commonSchemas.js';
-import { challengeCodeBodySchema } from '../../validation/commonSchemas.js';
+import { challengeCodeBodySchema, challengeIdBodySchema } from '../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 export default async function platformAuthRoutes(
@@ -160,6 +160,20 @@ export default async function platformAuthRoutes(
         stored.sessionVersion,
       );
       return reply.send({ user });
+    });
+
+    inner.post('/2fa/resend', async (request, reply) => {
+      const parsed = parseRequest(challengeIdBodySchema, request.body ?? {});
+      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
+      const result = await resendPlatformTwoFactorChallenge(parsed.data.challengeId);
+      if (!result.ok) {
+        return reply.status(404).send({
+          type: 'invalid_credentials',
+          message: 'Challenge not found or expired',
+        });
+      }
+      return reply.send({ success: true });
     });
   });
 
