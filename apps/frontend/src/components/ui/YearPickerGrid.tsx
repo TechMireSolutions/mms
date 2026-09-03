@@ -60,7 +60,7 @@ export function YearPickerGrid({
           disabled={!canGoPrevious || disabled}
           className={cn(
             buttonVariants({ variant: "ghost", size: "icon" }),
-            "h-8 w-8 min-h-8 min-w-8 p-0 text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed",
+            "relative h-8 w-8 min-h-8 min-w-8 p-0 text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']",
           )}
           aria-label={t("datePicker.previousYears")}
         >
@@ -77,7 +77,7 @@ export function YearPickerGrid({
           disabled={!canGoNext || disabled}
           className={cn(
             buttonVariants({ variant: "ghost", size: "icon" }),
-            "h-8 w-8 min-h-8 min-w-8 p-0 text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed",
+            "relative h-8 w-8 min-h-8 min-w-8 p-0 text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']",
           )}
           aria-label={t("datePicker.nextYears")}
         >
@@ -102,7 +102,7 @@ export function YearPickerGrid({
               aria-selected={isSelected}
               aria-label={t("datePicker.selectYearAria", { year })}
               className={cn(
-                "h-9 w-full rounded-lg text-xs font-medium transition-all duration-100 flex items-center justify-center cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                "min-h-11 h-11 sm:min-h-9 sm:h-9 w-full rounded-lg text-xs font-medium transition-all duration-100 flex items-center justify-center cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 touch-manipulation",
                 // Selected
                 isSelected &&
                   "bg-primary text-primary-foreground font-bold shadow-md shadow-primary/30 hover:bg-primary hover:text-primary-foreground",

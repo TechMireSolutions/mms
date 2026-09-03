@@ -33,7 +33,7 @@ const SIZE = {
   lg: "max-w-2xl",
   xl: "max-w-4xl",
   "2xl": "max-w-6xl",
-  "3xl": "max-w-[90vw]",
+  "3xl": "max-w-modal-3xl",
 };
 
 /**

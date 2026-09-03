@@ -1,13 +1,11 @@
 import { isIP } from 'node:net';
+import { lookup } from 'node:dns/promises';
 
-function isBlockedHostname(hostname: string): boolean {
-  const host = hostname.toLowerCase();
-  if (host === 'localhost' || host.endsWith('.localhost')) return true;
-  if (host === 'metadata.google.internal') return true;
-
-  const ipVersion = isIP(host);
+/** True when `ip` is a private / link-local / loopback / reserved address. */
+export function isBlockedIp(ip: string): boolean {
+  const ipVersion = isIP(ip);
   if (ipVersion === 4) {
-    const parts = host.split('.').map(Number);
+    const parts = ip.split('.').map(Number);
     const [a, b] = parts;
     return (
       a === 0 ||
@@ -19,9 +17,41 @@ function isBlockedHostname(hostname: string): boolean {
     );
   }
   if (ipVersion === 6) {
-    return host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80:');
+    return ip === '::1' || ip.startsWith('fc') || ip.startsWith('fd') || ip.startsWith('fe80:');
   }
   return false;
+}
+
+export function isBlockedHostname(hostname: string): boolean {
+  const host = hostname.toLowerCase();
+  if (host === 'localhost' || host.endsWith('.localhost')) return true;
+  if (host === 'metadata.google.internal') return true;
+  return isBlockedIp(host);
+}
+
+/**
+ * Defends against DNS-rebinding SSRF: resolves `hostname` and rejects it if any
+ * resolved address is private / link-local / loopback. Fail-closed on resolution
+ * errors so a rebinding target can never be reached silently.
+ */
+export async function assertSafeExternalHostname(hostname: string): Promise<void> {
+  if (isBlockedHostname(hostname)) {
+    throw new Error('host is not allowed');
+  }
+  let addresses: Array<{ address: string }>;
+  try {
+    addresses = await lookup(hostname, { all: true });
+  } catch {
+    throw new Error('host could not be resolved safely');
+  }
+  if (addresses.length === 0) {
+    throw new Error('host could not be resolved safely');
+  }
+  for (const { address } of addresses) {
+    if (isBlockedIp(address)) {
+      throw new Error('host resolves to a blocked address');
+    }
+  }
 }
 
 export function safeExternalHttpUrl(raw: string, label = 'URL'): string {
@@ -54,5 +84,14 @@ export function fetchWithTimeout(url: string, init?: RequestInit): Promise<Respo
     ...init,
     signal,
   });
+}
+
+/**
+ * SSRF-safe outbound fetch: validates the URL, resolves the hostname and rejects
+ * private / link-local targets (DNS-rebinding defense), then fetches with a timeout.
+ */
+export async function fetchSafeExternal(url: string, init?: RequestInit): Promise<Response> {
+  await assertSafeExternalHostname(new URL(url).hostname);
+  return fetchWithTimeout(url, init);
 }
 

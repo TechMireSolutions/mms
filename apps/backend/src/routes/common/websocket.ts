@@ -124,7 +124,10 @@ export default async function websocketRoutes(app: FastifyInstance): Promise<voi
       return;
     }
 
-    // Perform asynchronous revocation & workspace validation
+    // Perform asynchronous revocation & workspace validation. The socket is NOT
+    // registered (registerConnection) until these checks pass, so it cannot
+    // receive routed messages during the brief validation window — a client that
+    // sends early is simply not connected yet.
     void (async () => {
       try {
         if (decoded.jti && (await isTokenRevoked(decoded.jti))) {

@@ -1,10 +1,8 @@
-import { sql } from 'drizzle-orm';
 import { activeDb, getReadReplicaDb, hasActiveTransaction, withActiveTransaction } from './dbConnection.js';
 import type { DbClient } from './dbConnection.js';
 
-import { loadServerConfig } from '../config/serverConfig.js';
 import { tracer } from '../config/telemetry.js';
-import { getRequestUserId } from '../lib/tenantContext.js';
+import { applyTenantTransactionGuards } from './tenantTransactionGuards.js';
 
 export type TenantTransaction = Parameters<Parameters<DbClient['transaction']>[0]>[0];
 export type AppDb = TenantTransaction;
@@ -82,27 +80,10 @@ export async function withTenant<T>(
     },
     async () => {
       return pool.transaction(async (tx) => {
-        // Parameter 3 (is_local = true) ensures setting reverts when transaction completes
-        await tx.execute(
-          sql`SELECT set_config('app.current_tenant', ${resolvedTenantId}, true)`
-        );
-        await tx.execute(
-          sql`SELECT set_config('app.rls_bypass', ${resolvedTenantId ? 'off' : 'on'}, true)`
-        );
-
-        const config = loadServerConfig();
-        const statementTimeout = options.statementTimeoutMs ?? config.pgStatementTimeoutMs;
-        await tx.execute(
-          sql`SELECT set_config('statement_timeout', ${String(statementTimeout)}, true)`
-        );
-        await tx.execute(
-          sql`SELECT set_config('idle_in_transaction_session_timeout', ${String(config.pgIdleInTxTimeoutMs)}, true)`
-        );
-
-        const userId = getRequestUserId();
-        await tx.execute(
-          sql`SELECT set_config('app.current_user_id', ${userId ?? ''}, true)`
-        );
+        // Single source of truth for tenant RLS GUCs + statement/idle budgets.
+        await applyTenantTransactionGuards(tx as unknown as AppDb, resolvedTenantId, {
+          statementTimeoutMs: options.statementTimeoutMs,
+        });
 
         // Register this transaction as the active one for the callback's async
         // scope so nested runInTransaction()/activeDb() consumers join it rather

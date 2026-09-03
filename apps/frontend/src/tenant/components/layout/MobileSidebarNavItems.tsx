@@ -41,7 +41,7 @@ export function MobileSidebarNavItems({
                 aria-expanded={isMenuOpen}
                 aria-controls={subMenuId}
                 onClick={() => onToggleMenu(item.labelKey)}
-                className={`group flex min-h-11 w-full items-center justify-between rounded-lg px-3 py-2.5 transition-all duration-200 hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70 touch-manipulation active:scale-[0.99] select-none ${
+                className={`group flex min-h-11 w-full items-center justify-between rounded-lg px-3 py-2.5 transition-all duration-200 hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70 touch-manipulation active:scale-tap-subtle select-none ${
                   hasActiveSub
                     ? "bg-sidebar-accent/30 text-sidebar-foreground"
                     : "text-sidebar-muted-foreground hover:text-sidebar-foreground"
@@ -82,7 +82,7 @@ export function MobileSidebarNavItems({
                           aria-current={isSubActive ? "page" : undefined}
                           onMouseEnter={() => prefetchRoute(sub.path)}
                           onFocus={() => prefetchRoute(sub.path)}
-                          className={`group flex min-h-11 items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 touch-manipulation active:scale-[0.99] select-none relative ${
+                          className={`group flex min-h-11 items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 touch-manipulation active:scale-tap-subtle select-none relative ${
                             isSubActive
                               ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold"
                               : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70"
@@ -119,7 +119,7 @@ export function MobileSidebarNavItems({
             aria-current={isActive ? "page" : undefined}
             onMouseEnter={() => prefetchRoute(item.path!)}
             onFocus={() => prefetchRoute(item.path!)}
-            className={`group flex min-h-11 items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 touch-manipulation active:scale-[0.99] relative select-none ${
+            className={`group flex min-h-11 items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 touch-manipulation active:scale-tap-subtle relative select-none ${
               isActive
                 ? "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs"
                 : "text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/50 active:bg-sidebar-accent/70"

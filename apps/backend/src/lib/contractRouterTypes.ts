@@ -1,6 +1,6 @@
 import type { FastifyRequest } from 'fastify';
 import type { User } from '@mms/shared';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 /**
  * Typed request args for a ts-rest contract route handler.

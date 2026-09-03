@@ -169,12 +169,12 @@ export function ReportFilterFieldsPanel({
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               {t('reports.comparison.dateRanges')}
             </span>
-            <div className="flex items-center gap-1">
+            <div className="flex flex-wrap items-center gap-1">
               <Button
                 type="button"
                 variant={!filters.dateFrom && !filters.dateTo ? 'secondary' : 'ghost'}
                 size="sm"
-                className="h-6 px-1.5 text-3xs"
+                className="min-h-11 px-2.5 text-3xs font-medium"
                 onClick={() => {
                   const range = calculateReportDateRange('none');
                   onFieldChange('dateFrom', range.from);
@@ -187,7 +187,7 @@ export function ReportFilterFieldsPanel({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-6 px-1.5 text-3xs"
+                className="min-h-11 px-2.5 text-3xs font-medium"
                 onClick={() => {
                   const range = calculateReportDateRange('today');
                   onFieldChange('dateFrom', range.from);
@@ -200,7 +200,7 @@ export function ReportFilterFieldsPanel({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-6 px-1.5 text-3xs"
+                className="min-h-11 px-2.5 text-3xs font-medium"
                 onClick={() => {
                   const range = calculateReportDateRange('7d');
                   onFieldChange('dateFrom', range.from);
@@ -213,7 +213,7 @@ export function ReportFilterFieldsPanel({
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="h-6 px-1.5 text-3xs"
+                className="min-h-11 px-2.5 text-3xs font-medium"
                 onClick={() => {
                   const range = calculateReportDateRange('30d');
                   onFieldChange('dateFrom', range.from);

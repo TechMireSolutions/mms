@@ -70,7 +70,7 @@ export function TeacherIdCardModal({
         {/* Printable Cards Container */}
         <div
           ref={printAreaRef}
-          className="id-card-print-container grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-[60vh] overflow-y-auto p-2"
+          className="id-card-print-container grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-dialog-scroll overflow-y-auto p-2"
         >
           {items.map(({ teacher, assignedClasses, qualification, emergencyPhone }) => {
             const displayPhone = emergencyPhone || (teacher.phone ? String(teacher.phone) : undefined);

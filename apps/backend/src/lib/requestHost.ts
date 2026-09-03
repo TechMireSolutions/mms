@@ -2,6 +2,10 @@ function isInternalHost(host: string): boolean {
   if (!host) return true;
   if (host === 'localhost' || host.endsWith('.localhost')) return true;
   if (host === '127.0.0.1' || host.startsWith('127.')) return true;
+  // Any dotted-numeric Host is treated as internal so we fall back to
+  // X-Forwarded-Host. This is safe because TRUST_PROXY is restricted to known
+  // proxy IPs/CIDRs (serverConfig rejects TRUST_PROXY=true), so a public-IP Host
+  // header cannot be used to spoof the tenant subdomain.
   return /^\d+\.\d+\.\d+\.\d+$/.test(host);
 }
 

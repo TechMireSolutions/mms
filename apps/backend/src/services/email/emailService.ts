@@ -11,6 +11,7 @@ import {
   loadEmailIntegrationSecrets,
 } from './emailIntegrationService.js';
 import { loadGlobalSettings as loadTenantGlobalSettings } from '../globalSettingsService.js';
+import { isBlockedHostname } from '../../lib/outboundUrl.js';
 
 export interface SendEmailInput {
   to: string;
@@ -46,6 +47,9 @@ function resolveSmtpOptions(
       : preset.smtp.secure;
 
   if (!host || !Number.isFinite(port) || port < 1) return null;
+
+  // SSRF guard: never connect SMTP to private / link-local / loopback hosts.
+  if (isBlockedHostname(host)) return null;
 
   return {
     host,

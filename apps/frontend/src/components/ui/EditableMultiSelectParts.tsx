@@ -41,7 +41,7 @@ export function EditableMultiSelectChipRow({
                 onRemoveValue(val, e as unknown as React.MouseEvent);
               }
             }}
-            className="inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-primary/20 text-primary hover:text-destructive transition-colors cursor-pointer"
+            className="relative inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-primary/20 text-primary hover:text-destructive transition-colors cursor-pointer after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
             aria-label={t("contacts.form.removeTag", { tag: val })}
           >
             <X className="w-3 h-3" />
@@ -146,7 +146,7 @@ export function EditableMultiSelectOptionList({
                       : "border-muted-foreground/40 bg-background",
                   )}
                 >
-                  {isSelected && <Check className="w-3 h-3 stroke-[2.5]" />}
+                  {isSelected && <Check strokeWidth={2.5} className="w-3 h-3" />}
                 </div>
                 {canRemoveOptions && (
                   <Button
@@ -154,7 +154,7 @@ export function EditableMultiSelectOptionList({
                     variant="ghost"
                     size="icon"
                     onClick={(event) => onRemoveOption(option, event)}
-                    className={cn("h-7 w-7 rounded transition-colors", REMOVE_BTN)}
+                    className={cn("relative h-7 w-7 rounded transition-colors after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']", REMOVE_BTN)}
                     aria-label={t("contacts.form.removeOption", { option })}
                   >
                     <X className="w-3.5 h-3.5" aria-hidden />

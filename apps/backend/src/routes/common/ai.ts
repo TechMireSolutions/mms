@@ -6,7 +6,7 @@ import { authenticateTenant } from '../../middleware/authenticate.js';
 import { sendForbidden } from '../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { getLlmProviderModelsUrl, LLM_PROVIDER_KEYS, type User, type LlmTestResult } from '@mms/shared';
-import { fetchWithTimeout, safeOptionalExternalHttpUrl } from '../../lib/outboundUrl.js';
+import { fetchSafeExternal, safeOptionalExternalHttpUrl } from '../../lib/outboundUrl.js';
 
 const modelsBodySchema = z.object({
   provider: z.enum(LLM_PROVIDER_KEYS),
@@ -93,14 +93,14 @@ export default async function aiRoutes(
       if (provider === 'gemini') {
         const modelsEndpoint = getLlmProviderModelsUrl('gemini', safeBaseUrl);
         const url = `${modelsEndpoint}?key=${resolvedApiKey}`;
-        const res = await fetchWithTimeout(url);
+        const res = await fetchSafeExternal(url);
         if (res.ok) {
           const json = (await res.json()) as GeminiModelsResponse;
           models = (json.models || []).map((model) => model.name.replace('models/', ''));
         }
       } else if (provider === 'anthropic') {
         const url = getLlmProviderModelsUrl('anthropic', safeBaseUrl);
-        const res = await fetchWithTimeout(url, {
+        const res = await fetchSafeExternal(url, {
           headers: {
             'x-api-key': resolvedApiKey,
             'anthropic-version': '2023-06-01'
@@ -123,7 +123,7 @@ export default async function aiRoutes(
             headers['HTTP-Referer'] = domain ? `https://${domain}` : 'http://localhost:3000';
             headers['X-Title'] = 'MMS';
           }
-          const res = await fetchWithTimeout(url, { headers });
+          const res = await fetchSafeExternal(url, { headers });
           if (res.ok) {
             const json = (await res.json()) as OpenAiModelsResponse;
             models = (json.data || []).map((model) => model.id);

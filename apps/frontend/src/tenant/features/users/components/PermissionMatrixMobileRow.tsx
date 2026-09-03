@@ -74,7 +74,7 @@ export function PermissionMatrixMobileRow({
                 isActive
                   ? 'border-primary/40 bg-primary/10 text-foreground font-semibold shadow-xs'
                   : 'border-border/60 bg-muted/20 text-muted-foreground hover:bg-muted/40'
-              } ${readOnly ? 'cursor-default' : 'cursor-pointer hover:border-primary/40 active:scale-[0.98]'}`}
+              } ${readOnly ? 'cursor-default' : 'cursor-pointer hover:border-primary/40 active:scale-tap'}`}
             >
               <span className="truncate text-xs">
                 {t(`users.permission.${permissionAction}`)}
@@ -87,7 +87,7 @@ export function PermissionMatrixMobileRow({
                 }`}
                 aria-hidden
               >
-                <Check className="h-3 w-3 stroke-[3]" />
+                <Check strokeWidth={3} className="h-3 w-3" />
               </div>
             </button>
           );

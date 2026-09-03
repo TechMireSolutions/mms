@@ -74,9 +74,22 @@ export function clearAuthCookies(reply: FastifyReply): void {
   reply.clearCookie(CSRF_COOKIE, { path: '/', secure: base.secure, sameSite: 'lax' });
 }
 
+/**
+ * Dedicated key for OTP / refresh-token hashing, so the raw JWT signing secret
+ * is never reused as a pepper for other primitives (key separation). Prefer a
+ * dedicated `AUTH_ARTIFACT_SECRET`; otherwise derive a domain-separated key from
+ * `JWT_SECRET` so existing deployments keep working without a new env var.
+ */
+function getAuthArtifactSecret(): string {
+  const dedicated = process.env.AUTH_ARTIFACT_SECRET?.trim();
+  if (dedicated) return dedicated;
+  return createHmac('sha256', 'mms-auth-artifact-v1')
+    .update(process.env.JWT_SECRET ?? 'dev-insecure')
+    .digest('hex');
+}
+
 export function hashOtpCode(code: string): string {
-  const secret = process.env.JWT_SECRET ?? 'dev-insecure';
-  return createHmac('sha256', secret).update(code).digest('hex');
+  return createHmac('sha256', getAuthArtifactSecret()).update(code).digest('hex');
 }
 
 export function verifyOtpCode(code: string, hash: string): boolean {
@@ -93,8 +106,7 @@ export function generateOtpCode(): string {
 }
 
 export function hashRefreshToken(token: string): string {
-  const pepper = process.env.JWT_SECRET ?? 'dev-insecure';
-  return scryptSync(token, pepper, 32).toString('hex');
+  return scryptSync(token, getAuthArtifactSecret(), 32).toString('hex');
 }
 
 export function createRefreshTokenValue(): string {

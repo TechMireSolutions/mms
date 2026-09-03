@@ -109,7 +109,7 @@ const RecipientRow = (function RecipientRow({
           size="icon"
           disabled={disabled}
           onClick={() => onRemove(recipient.id)}
-          className="h-6 w-6 text-muted-foreground hover:text-destructive"
+          className="relative h-6 w-6 text-muted-foreground hover:text-destructive after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
           aria-label={removeLabel}
           title={removeLabel}
         >

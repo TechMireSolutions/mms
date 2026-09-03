@@ -167,6 +167,7 @@
   --max-height-widget-customizer: 16.25rem;
   --max-height-popover-scroll: min(50dvh, 20rem);
   --max-height-popover-scroll-sm: min(50dvh, 18rem);
+  --max-height-dialog-scroll: 60dvh;
   --height-corner-preview: 5.5rem;
   --width-corner-preview: 9rem;
   --max-width-toast: 26.25rem;
@@ -178,10 +179,14 @@
   --max-width-attendance-status: 8rem;
   --max-width-modal-mobile: calc(100% - 1rem);
   --max-width-modal-sm: calc(100% - 2rem);
+  --max-width-modal-3xl: 90vw;
   --max-width-bubble: 85%;
   --max-width-bubble-wide: 88%;
   --max-width-sheet: 85vw;
   --size-widget-compact: 6.25rem;
+  --scale-tap: 0.98;
+  --scale-tap-subtle: 0.99;
+  --scale-tap-micro: 0.995;
   --z-index-elevated: 10;
   --z-index-sticky: 20;
   --z-index-sidebar: 40;
