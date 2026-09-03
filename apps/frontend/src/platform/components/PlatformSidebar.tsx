@@ -155,11 +155,11 @@ export function PlatformSidebar(): React.JSX.Element | null {
             className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-sidebar-accent/50 transition-colors group cursor-pointer"
             aria-label={t('platform.myAccount')}
           >
-            <Avatar className="h-9 w-9 shrink-0 ring-1 ring-sidebar-border group-hover:ring-sidebar-primary/50 transition-all">
-              <AvatarFallback className="bg-sidebar-primary/20 text-sidebar-primary text-xs font-bold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              name={platformUser?.name}
+              className="h-9 w-9 ring-1 ring-sidebar-border group-hover:ring-sidebar-primary/50 transition-all"
+              fallbackClassName="bg-sidebar-primary/20 text-sidebar-primary text-xs font-bold"
+            />
             <div className="flex flex-col text-start min-w-0 flex-1">
               <span className="text-xs font-bold text-sidebar-foreground truncate group-hover:text-sidebar-primary transition-colors">{platformUser?.name}</span>
               <SectionLabel tracking="wider" className="flex items-center gap-1 mt-0.5 text-sidebar-muted-foreground truncate">

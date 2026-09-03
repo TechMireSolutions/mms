@@ -6,6 +6,7 @@ import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { buildPlatformNotifications } from '@/platform/lib/buildPlatformNotifications';
+import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { BackgroundJobsTray } from '@/components/ui/BackgroundJobsTray';
