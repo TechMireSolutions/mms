@@ -36,6 +36,25 @@ vi.mock('../services/auth/authArtifactService.js', () => ({
   takeAuthArtifact: vi.fn(),
 }));
 
+// /backup and /sync now stream via the long-lived transaction + streaming producer.
+vi.mock('../db/dbConnection.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../db/dbConnection.js')>();
+  return {
+    ...actual,
+    beginLongLivedTenantTransaction: vi.fn(),
+    enterActiveTransaction: vi.fn(),
+  };
+});
+
+vi.mock('../db/streamingSnapshotProducer.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../db/streamingSnapshotProducer.js')>();
+  return {
+    ...actual,
+    streamSyncSnapshot: vi.fn(),
+    streamBackupSnapshot: vi.fn(),
+  };
+});
+
 vi.mock('../services/workspaceService.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../services/workspaceService.js')>();
   const demoWorkspace = {
@@ -112,6 +131,29 @@ describe('tenant JWT binding', () => {
   });
 
   it('allows admin backup download of the full tenant snapshot', async () => {
+    const { beginLongLivedTenantTransaction } = await import('../db/dbConnection.js');
+    const { streamBackupSnapshot } = await import('../db/streamingSnapshotProducer.js');
+    vi.mocked(beginLongLivedTenantTransaction).mockResolvedValue({
+      tx: {},
+      commit: vi.fn().mockResolvedValue(undefined),
+      rollback: vi.fn().mockResolvedValue(undefined),
+    } as never);
+    vi.mocked(streamBackupSnapshot).mockImplementation(async function* () {
+      yield JSON.stringify({
+        collections: {
+          users: [{ id: 'u-admin', role: 'admin', email: 'admin@test.com' }],
+          contacts: [{ id: 'c-1' }],
+          students: [{ id: 's-1' }],
+          message_logs: [{ id: 'm-1', channel: 'sms', body: 'hello' }],
+          genders: [{ id: 'male' }],
+        },
+        objects: {
+          branding: { madrasaName: 'Demo Madrasa' },
+          global_settings: { language: 'en' },
+        },
+      });
+    });
+
     const app = await buildApp();
     const token = adminToken(app);
     const res = await app.inject({

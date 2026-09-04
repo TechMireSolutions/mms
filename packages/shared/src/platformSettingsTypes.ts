@@ -23,23 +23,12 @@ export const DEFAULT_PLATFORM_SETTINGS: PlatformSettings = {
   certbotEmail: '',
 };
 
-export const RESET_DATABASE_CONFIRM = 'RESET_ALL_DATABASE_DATA' as const;
-
-export const resetDatabaseSchema = z.object({
-  confirm: z.literal(RESET_DATABASE_CONFIRM, {
-    message: `Confirmation string must be "${RESET_DATABASE_CONFIRM}"`,
-  }),
-  password: z.string().min(1),
-});
-
-export type ResetDatabaseInput = z.infer<typeof resetDatabaseSchema>;
-
 /** Confirmation token for platform super-user migrate + process reload. */
 export const MIGRATE_AND_RESTART_CONFIRM = 'MIGRATE_AND_RESTART' as const;
 
 /**
  * Body for `POST /api/platform/admin/system/migrate-and-restart`.
- * Requires current platform password step-up (same pattern as database reset).
+ * Requires current platform password step-up.
  */
 export const migrateAndRestartSchema = z
   .object({

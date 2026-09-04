@@ -1,5 +1,5 @@
 import {
-  buildCsvContent,
+  escapeCsvCell,
   formatDateTime,
   MESSAGING_CSV_EXPORT_MAX_BYTES,
   MESSAGING_CSV_EXPORT_MAX_ROWS,
@@ -103,22 +103,27 @@ export async function buildMessagingCsvExport(
     }
   }
 
-  const rows: string[][] = new Array(logs.length + 1);
-  rows[0] = [...CSV_HEADERS];
+  // Build the CSV incrementally (header + one line per log) instead of
+  // materialising a full rows[][] (plus buildCsvContent's internal line array)
+  // in memory. Output is byte-identical to the previous buildCsvContent(rows).
+  const lines: string[] = new Array(logs.length + 1);
+  lines[0] = CSV_HEADERS.map((header) => escapeCsvCell(header)).join(',');
   for (let i = 0; i < logs.length; i++) {
     const log = logs[i];
     const contactKey = String(log.contactId);
     const name = nameById.get(contactKey) || `Contact #${contactKey}`;
-    rows[i + 1] = [
+    lines[i + 1] = [
       name,
       log.channel,
       log.category || 'general',
       log.body,
       formatDateTime(log.sentAt),
-    ];
+    ]
+      .map((cell) => escapeCsvCell(cell))
+      .join(',');
   }
 
-  const csv = buildCsvContent(rows);
+  const csv = lines.join('\n');
   const byteLength = Buffer.byteLength(csv, 'utf8');
   if (byteLength > MESSAGING_CSV_EXPORT_MAX_BYTES) {
     throw new MessagingCsvExportLimitError(

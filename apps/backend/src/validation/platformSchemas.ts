@@ -16,7 +16,6 @@ export {
   platformActivityLogsQuerySchema,
   migrateAndRestartSchema,
   platformSettingsUpdateSchema,
-  resetDatabaseSchema,
 } from '@mms/shared';
 
 export type {
@@ -37,5 +36,4 @@ export type {
   PlatformActivityLogsQueryInput,
   MigrateAndRestartInput,
   PlatformSettingsUpdateInput,
-  ResetDatabaseInput,
 } from '@mms/shared';

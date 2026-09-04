@@ -1,27 +1,16 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import rateLimit from '@fastify/rate-limit';
-import {
-  platformSettingsUpdateSchema,
-  resetDatabaseSchema,
-} from '../../validation/platformSchemas.js';
+import { platformSettingsUpdateSchema } from '../../validation/platformSchemas.js';
 import {
   authenticatePlatform,
   requirePlatformPermission,
-  requirePlatformSuperUser,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import {
   getPlatformSettings,
   updatePlatformSettings,
 } from '../../services/platform/platformSettingsService.js';
-import { clearPlatformAccessCookie } from '../../services/platform/platformCookieService.js';
-import { resetAndReseedDatabase } from '../../services/platform/platformDatabaseService.js';
-import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { logger } from '../../lib/logger.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
-import { sendDatabaseError, sendInvalidCurrentPassword } from '../../lib/httpErrors.js';
-import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 
 export default async function platformSettingsRoutes(
   fastify: FastifyInstance,
@@ -57,50 +46,4 @@ export default async function platformSettingsRoutes(
       return reply.send({ settings, success: true });
     },
   );
-
-  await fastify.register(async function platformResetDatabaseRateLimited(inner) {
-    await inner.register(rateLimit, AUTH_RATE_LIMIT);
-
-    inner.post(
-      '/reset-database',
-      {
-        preHandler: [
-          authenticatePlatform,
-          requirePlatformPermission('settings'),
-          requirePlatformSuperUser(),
-        ],
-      },
-      async (request, reply) => {
-        const parsed = parseRequest(resetDatabaseSchema, request.body ?? {});
-        if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-        const { platformUser } = request as PlatformAuthenticatedRequest;
-        const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
-        if (!passwordOk) {
-          return sendInvalidCurrentPassword(reply);
-        }
-
-        try {
-          // Audit outside the wiped schema — platform_activity_logs is destroyed by the reset.
-          logger.error(
-            {
-              action: 'reset_database',
-              userId: platformUser.id,
-              at: new Date().toISOString(),
-            },
-            'audit',
-          );
-
-          await resetAndReseedDatabase();
-          clearPlatformAccessCookie(reply);
-          return reply.send({
-            success: true,
-            message: 'Database wiped, migrated, and re-seeded successfully.',
-          });
-        } catch (error) {
-          return sendDatabaseError(reply, 'Failed to reset database', error);
-        }
-      },
-    );
-  });
 }

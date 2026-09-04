@@ -9,7 +9,6 @@ import { apiFetch } from "@/lib/apiClient";
 import { formatDateTime } from "@/lib/utils";
 import { containerVariantsConsole as containerVariants, itemVariants as cardVariants } from "@/platform/lib/animations";
 import { PlatformMigrateRestartCard } from "@/platform/pages/account/PlatformMigrateRestartCard";
-import { PlatformResetDatabaseCard } from "@/platform/pages/account/PlatformResetDatabaseCard";
 
 export function PlatformSystemMaintenance(): React.JSX.Element {
   const { t } = useTranslation();
@@ -116,9 +115,8 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+        <div className="grid grid-cols-1 max-w-xl gap-8 items-start">
           <PlatformMigrateRestartCard />
-          <PlatformResetDatabaseCard />
         </div>
       </motion.div>
     </motion.div>

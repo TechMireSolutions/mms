@@ -104,23 +104,6 @@ export function useUpdatePlatformSettings() {
   });
 }
 
-/** Hook for platform super-users to reset and re-seed the entire database. */
-export function useResetPlatformDatabase() {
-  const { t } = useTranslation();
-
-  return useMutation({
-    mutationFn: async (input: { confirm: string; password: string }) => {
-      const res = await apiContract.platform.resetDatabase({ body: input });
-      return res.body as { success: boolean; message: string };
-    },
-    onSuccess: () => {
-      notify.success(t('platform.profileDestroyDatabaseSuccess'));
-    },
-    onError: (err) => {
-      notify.error(getPlatformErrorMessage(err, t));
-    },
-  });
-}
 
 /** Hook for platform super-users to apply Drizzle migrations and reload the backend. */
 export function useMigrateAndRestartPlatform() {

@@ -11,6 +11,27 @@ import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { rowToTenantUser, type TenantUserRow } from './tenantUserRepository.js';
 
+// List-page projection excludes the bcrypt `passwordHash` so credential hashes
+// are never pulled off the DB (or carried/hydrated) for Work list reads. The
+// per-row mapper (rowToTenantUser) treats a missing column as `undefined`, which
+// the global preSerialization trimmer then strips from the response.
+const TENANT_USER_LIST_COLUMNS = {
+  id: tenantUsers.id,
+  workspaceSubdomain: tenantUsers.workspaceSubdomain,
+  loginEmail: tenantUsers.loginEmail,
+  name: tenantUsers.name,
+  role: tenantUsers.role,
+  contactId: tenantUsers.contactId,
+  emailVerifiedAt: tenantUsers.emailVerifiedAt,
+  pendingLoginEmail: tenantUsers.pendingLoginEmail,
+  mustChangePassword: tenantUsers.mustChangePassword,
+  createdAt: tenantUsers.createdAt,
+  updatedAt: tenantUsers.updatedAt,
+  deletedAt: tenantUsers.deletedAt,
+  deletedBy: tenantUsers.deletedBy,
+  profileJson: tenantUsers.profileJson,
+} as const;
+
 const USER_SORT_FIELDS = new Set([
   'name',
   'email',
@@ -125,6 +146,7 @@ export async function listTenantUsersPage(
       page: query.page,
       limit: query.limit,
       defaultPageSize: 50,
+      columns: TENANT_USER_LIST_COLUMNS,
       rowMapper: (row) => rowToTenantUser(row as typeof tenantUsers.$inferSelect),
     });
 

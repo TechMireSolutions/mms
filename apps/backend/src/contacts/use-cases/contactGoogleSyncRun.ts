@@ -1,5 +1,9 @@
 import type { Contact, GoogleContactsSyncRunResult } from '@mms/shared';
-import { mergeContacts } from '@mms/shared';
+import {
+  mergeContacts,
+  collectUniqueContactFieldValues,
+  listUniqueContactFieldRefs,
+} from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { fetchWithTimeout } from '../../lib/outboundUrl.js';
 import { runInTransaction } from '../../db/database.js';
@@ -16,6 +20,7 @@ import {
   ContactUniqueFieldError,
 } from './contactValidationUseCases.js';
 import { invalidateDuplicateScanCache } from './contactDuplicateScanUseCases.js';
+import { loadContactFieldConfig } from './contactConfigService.js';
 import { getContactGoogleSyncConfig, GoogleSyncError } from './contactGoogleSyncConfig.js';
 import { refreshGoogleAccessToken } from './contactGoogleSyncOAuth.js';
 import {
@@ -133,6 +138,17 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
   let skippedUnique = 0;
   const peerIndex = new PeerContactIndex(peerContacts);
 
+  // Running O(1) index of unique-field composites among inserts accepted so far,
+  // so each new insert is checked against only the handful of prior inserts that
+  // actually collide — not a full rescan of `acceptedInserts` (avoids O(n²) on
+  // large Google directories).
+  const { defaultPhoneCountryCode } = defaults;
+  const collectOptions = { defaultPhoneCountryCode };
+  // Lazily loaded on first insert (absent field config disables the in-run index).
+  let syncUniqueFields: ReturnType<typeof listUniqueContactFieldRefs> | null = null;
+  const acceptedComposites = new Map<string, string>(); // composite -> accepted contact id
+  const acceptedById = new Map<string, Contact>(); // accepted contact id -> contact
+
   await runInTransaction(async () => {
     for (const candidate of mapped) {
       const match = peerIndex.findMatch(candidate);
@@ -164,11 +180,49 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
       } else {
         try {
           const prepared = await prepareContactRecord(candidate, candidate.id);
+
+          // Load unique field refs once on first insert (absent config -> [] makes
+          // the in-run index a no-op, matching the pre-optimisation behaviour).
+          if (syncUniqueFields === null) {
+            const syncFieldConfig = await loadContactFieldConfig();
+            syncUniqueFields = syncFieldConfig?.fields
+              ? listUniqueContactFieldRefs(syncFieldConfig.fields)
+              : [];
+          }
+
+          // O(1) lookup of prior in-run inserts sharing a unique field value.
+          const candidateComposites = collectUniqueContactFieldValues(
+            prepared,
+            syncUniqueFields,
+            collectOptions,
+          ).map((value) => `${value.tabId}:${value.fieldKey}:${value.normalized}`);
+          const collidingContacts: Contact[] = [];
+          for (const composite of candidateComposites) {
+            const ownerId = acceptedComposites.get(composite);
+            if (ownerId) {
+              const existing = acceptedById.get(ownerId);
+              if (existing) collidingContacts.push(existing);
+            }
+          }
+
+          // Pass only the (tiny) colliding subset — not the whole accepted array —
+          // so `assertContactUniqueFields` still reports the identical conflicts
+          // without rescanning every previously accepted insert.
           await assertContactUniqueFields(tenant, prepared, {
             language: 'en',
-            additionalPeers: acceptedInserts,
+            additionalPeers: collidingContacts,
           });
+
           acceptedInserts.push(prepared);
+          if (candidateComposites.length > 0) {
+            const preparedId = String(prepared.id);
+            acceptedById.set(preparedId, prepared);
+            for (const composite of candidateComposites) {
+              if (!acceptedComposites.has(composite)) {
+                acceptedComposites.set(composite, preparedId);
+              }
+            }
+          }
           peerIndex.add(prepared);
         } catch (error) {
           if (error instanceof ContactUniqueFieldError) {

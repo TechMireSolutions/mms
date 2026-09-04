@@ -140,6 +140,86 @@ export async function withActiveTransaction<T>(
 }
 
 /**
+ * Binds a transaction as the active one for the current async context (and any
+ * child contexts created after this call) via `enterWith`, so nested
+ * `withTenant`/`activeDb`/`runInTransaction` calls join it without a callback
+ * boundary. Used by the streaming snapshot/backup routes to keep a long-lived
+ * transaction open across the lazy response stream. Callers must still commit or
+ * roll back the transaction (e.g. in a `finally`) to release the pooled client.
+ */
+export function enterActiveTransaction(tx: DbClient): void {
+  txStorage.enterWith(tx);
+}
+
+/**
+ * A transaction whose lifecycle is explicitly controlled by the caller, so it can
+ * remain open across an async response stream (unlike `withTenant`/`runInTransaction`,
+ * which commit when their callback resolves). This is the primitive that lets the
+ * snapshot/backup endpoints page DB reads and stream JSON while the connection stays
+ * open, and then commit or roll back once the stream has been fully consumed (or
+ * aborted). The caller MUST call `commit` or `rollback` (e.g. in a `finally`) so the
+ * underlying pg client is always released back to the pool.
+ */
+export interface LongLivedTenantTransaction {
+  /** Drizzle client bound to the open transaction — run SELECTs through this. */
+  tx: DbClient;
+  /** Commits and releases the pooled client back to the pool. Idempotent. */
+  commit(): Promise<void>;
+  /** Rolls back and releases the pooled client back to the pool. Idempotent. */
+  rollback(): Promise<void>;
+}
+
+export async function beginLongLivedTenantTransaction(
+  tenantId: string | null | undefined,
+  options?: { statementTimeoutMs?: number },
+): Promise<LongLivedTenantTransaction> {
+  const resolvedTenantId = tenantId || '';
+  if (resolvedTenantId === 'undefined' || resolvedTenantId === 'null') {
+    throw new Error(
+      `beginLongLivedTenantTransaction received the literal string "${resolvedTenantId}" as tenant id`,
+    );
+  }
+
+  const pool = getPool();
+  const client = await pool.connect();
+
+  let began = false;
+  try {
+    await client.query('BEGIN');
+    began = true;
+    // RLS guards + statement/idle timeouts are transaction-scoped (SET LOCAL), so
+    // applying them right after BEGIN scopes them to the whole open transaction.
+    const txDb = drizzle(client, { schema }) as unknown as DbClient;
+    await applyTenantTransactionGuards(txDb, resolvedTenantId, options);
+
+    let finished = false;
+    const finish = async (action: 'COMMIT' | 'ROLLBACK'): Promise<void> => {
+      if (finished) return;
+      finished = true;
+      try {
+        if (began) await client.query(action);
+      } finally {
+        client.release();
+      }
+    };
+
+    return {
+      tx: txDb,
+      commit: () => finish('COMMIT'),
+      rollback: () => finish('ROLLBACK'),
+    };
+  } catch (error) {
+    try {
+      if (began) await client.query('ROLLBACK');
+    } catch {
+      // best-effort cleanup
+    }
+    client.release();
+    throw error;
+  }
+}
+
+/**
  * Read-only variant of `runInTransaction` using REPEATABLE READ, so every statement
  * observes one consistent snapshot (backup exports must not tear across tables).
  */

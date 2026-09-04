@@ -20,7 +20,6 @@ import {
 } from '../schemas/platform.dto.js';
 import {
   platformSettingsUpdateSchema,
-  resetDatabaseSchema,
   migrateAndRestartSchema,
 } from '../platformSettingsTypes.js';
 
@@ -198,17 +197,6 @@ export const platformContract = c.router({
       403: platformErrorSchema,
     },
     summary: 'Update global platform settings',
-  },
-  resetDatabase: {
-    method: 'POST',
-    path: '/api/platform/settings/reset-database',
-    body: resetDatabaseSchema,
-    responses: {
-      200: z.object({ success: z.literal(true), message: z.string() }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'Reset and re-seed the platform database',
   },
   // System admin
   migrateAndRestart: {

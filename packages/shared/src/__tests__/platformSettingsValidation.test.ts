@@ -1,8 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   platformSettingsUpdateSchema,
-  resetDatabaseSchema,
-  RESET_DATABASE_CONFIRM,
   migrateAndRestartSchema,
   MIGRATE_AND_RESTART_CONFIRM,
 } from '../platformSettingsTypes.js';
@@ -52,26 +50,6 @@ describe('platformSettingsValidation', () => {
     it('rejects invalid email format', () => {
       const invalid = { certbotEmail: 'not-an-email' };
       const result = platformSettingsUpdateSchema.safeParse(invalid);
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe('resetDatabaseSchema', () => {
-    it('accepts exact confirmation string with password', () => {
-      const valid = { confirm: RESET_DATABASE_CONFIRM, password: 'secret' };
-      const result = resetDatabaseSchema.safeParse(valid);
-      expect(result.success).toBe(true);
-    });
-
-    it('rejects missing password', () => {
-      const invalid = { confirm: RESET_DATABASE_CONFIRM };
-      const result = resetDatabaseSchema.safeParse(invalid);
-      expect(result.success).toBe(false);
-    });
-
-    it('rejects invalid confirmation string', () => {
-      const invalid = { confirm: 'RESET', password: 'secret' };
-      const result = resetDatabaseSchema.safeParse(invalid);
       expect(result.success).toBe(false);
     });
   });

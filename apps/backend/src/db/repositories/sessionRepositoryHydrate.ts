@@ -257,6 +257,70 @@ async function hydrateSessionsList(
   );
 }
 
+/**
+ * Lean hydration for the Work list: loads only `classes` (the list UI reads
+ * enrolled/capacity/class-count). The remaining child graphs (timetable,
+ * discounts, budget expenses/incomes, events, tabarruk) are intentionally left
+ * empty — the response schema's `.default([])` fills them — so a Work page runs
+ * one child query instead of seven. Detail reads (findSessionById) still
+ * hydrate the full graph via `hydrateSessionsList`.
+ */
+async function hydrateSessionsListSummary(
+  tx: Transaction,
+  subdomain: string,
+  sessionRows: SessionRow[],
+): Promise<Session[]> {
+  if (sessionRows.length === 0) return [];
+  const sessionIds = sessionRows.map((s) => s.id);
+
+  const classesRows = await tx
+    .select({
+      id: sessionClasses.id,
+      workspaceSubdomain: sessionClasses.workspaceSubdomain,
+      sessionId: sessionClasses.sessionId,
+      name: sessionClasses.name,
+      ageMin: sessionClasses.ageMin,
+      ageMax: sessionClasses.ageMax,
+      gender: sessionClasses.gender,
+      teacherId: sessionClasses.teacherId,
+      teacherName: sessionClasses.teacherName,
+      capacity: sessionClasses.capacity,
+      enrolled: sessionClasses.enrolled,
+      room: sessionClasses.room,
+      sortOrder: sessionClasses.sortOrder,
+      createdAt: sessionClasses.createdAt,
+    })
+    .from(sessionClasses)
+    .where(
+      and(
+        eq(sessionClasses.workspaceSubdomain, subdomain),
+        inArray(sessionClasses.sessionId, sessionIds),
+      ),
+    )
+    .orderBy(sessionClasses.sortOrder);
+
+  const classesMap = new Map<string, ClassRow[]>();
+  for (const c of classesRows) {
+    const list = classesMap.get(c.sessionId) ?? [];
+    list.push(c);
+    classesMap.set(c.sessionId, list);
+  }
+
+  return sessionRows.map((row) =>
+    sessionRowToRecord(
+      row,
+      classesMap.get(row.id) ?? [],
+      // Remaining child graphs intentionally empty on the Work list.
+      [],
+      [],
+      [],
+      [],
+      [],
+      [],
+    ),
+  );
+}
+
 export async function listSessionsByWorkspace(
   tenant: string,
   options?: { limit?: number; offset?: number },
@@ -356,5 +420,42 @@ export async function findSessionsByIds(tenant: string, ids: string[]): Promise<
       .from(sessions)
       .where(and(eq(sessions.workspaceSubdomain, subdomain), inArray(sessions.id, ids)));
     return hydrateSessionsList(tx, subdomain, rows);
+  });
+}
+
+/**
+ * Lean batch read for the Work list — hydrates only `classes` and fills the
+ * other child graphs with empty arrays. See `hydrateSessionsListSummary`.
+ */
+export async function findSessionsSummaryByIds(
+  tenant: string,
+  ids: string[],
+): Promise<Session[]> {
+  if (ids.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: sessions.id,
+        workspaceSubdomain: sessions.workspaceSubdomain,
+        name: sessions.name,
+        type: sessions.type,
+        status: sessions.status,
+        startDate: sessions.startDate,
+        endDate: sessions.endDate,
+        baseFee: sessions.baseFee,
+        currency: sessions.currency,
+        description: sessions.description,
+        budgetTotalRevenue: sessions.budgetTotalRevenue,
+        budgetCollected: sessions.budgetCollected,
+        deletedAt: sessions.deletedAt,
+        deletedBy: sessions.deletedBy,
+        deletionReason: sessions.deletionReason,
+        createdAt: sessions.createdAt,
+        updatedAt: sessions.updatedAt,
+      })
+      .from(sessions)
+      .where(and(eq(sessions.workspaceSubdomain, subdomain), inArray(sessions.id, ids)));
+    return hydrateSessionsListSummary(tx, subdomain, rows);
   });
 }

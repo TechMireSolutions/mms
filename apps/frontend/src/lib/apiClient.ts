@@ -65,9 +65,20 @@ import {
 
 async function refreshSession(): Promise<boolean> {
   if (!refreshPromise) {
+    const headers = new Headers();
+    const csrf = getCsrfCookieValue();
+    if (csrf) {
+      headers.set('X-CSRF-Token', csrf);
+    }
+    const reqId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+      ? crypto.randomUUID()
+      : Math.random().toString(36).substring(2, 15);
+    headers.set('X-Request-Id', reqId);
+
     refreshPromise = fetch(resolveApiUrl(API_REFRESH_PATH), {
       method: 'POST',
       credentials: 'include',
+      headers,
     })
       .then((response) => response.ok)
       .catch(() => false)

@@ -16,6 +16,12 @@ export default defineConfig({
       PORT: '0',
     },
     include: ['src/__tests__/**/*.{test,spec}.ts'],
+    // Real-Postgres integration tests live in db-integration/ and are opt-in
+    // (run explicitly with `vitest run src/__tests__/db-integration/...` when a
+    // database is available). They are excluded from the default suite so the
+    // mocked unit suite stays green without a database and their global pool
+    // lifecycle cannot interfere with other tests.
+    exclude: ['src/__tests__/db-integration/**'],
     pool: 'threads',
     // Turbo runs backend and frontend tests together; leave capacity for both suites.
     maxWorkers: 2,

@@ -1,8 +1,6 @@
 import { Readable } from 'node:stream';
 import type { FastifyPluginAsync } from 'fastify';
 import {
-  fetchBackupSnapshot,
-  fetchDatabaseSnapshot,
   synchronizeData,
   resetToDefaults,
 } from '../../../services/dbSyncService.js';
@@ -20,12 +18,40 @@ import { syncPayloadSchema } from '../../../validation/dbSchemas.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import {
-  sanitizeSnapshot,
   stripServerOnlyObjects,
   stripUnwritableCollections,
   stripUnwritableObjects,
 } from './dbRouteHelpers.js';
-import { generateSnapshotJsonChunks } from './snapshotJsonStream.js';
+import { getRequestTenant } from '../../../lib/tenantContext.js';
+import {
+  beginLongLivedTenantTransaction,
+  enterActiveTransaction,
+  type LongLivedTenantTransaction,
+} from '../../../db/dbConnection.js';
+import { streamSyncSnapshot, streamBackupSnapshot } from '../../../db/streamingSnapshotProducer.js';
+
+/**
+ * Drives a streaming snapshot generator against a long-lived tenant transaction,
+ * committing on clean completion and rolling back+releasing on error or early
+ * client disconnect, so the pooled client is always returned.
+ */
+async function* streamSnapshotRoute(
+  txn: LongLivedTenantTransaction,
+  tenant: string | null,
+  stream: (txn: LongLivedTenantTransaction, tenant: string | null) => AsyncGenerator<string>,
+): AsyncGenerator<string> {
+  let completed = false;
+  try {
+    yield* stream(txn, tenant);
+    completed = true;
+  } finally {
+    if (completed) {
+      await txn.commit().catch(() => undefined);
+    } else {
+      await txn.rollback().catch(() => undefined);
+    }
+  }
+}
 
 /** Bulk sync download/upload and workspace reset routes. */
 export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
@@ -34,11 +60,15 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
     if (!canDownloadBulkSync(user)) {
       return sendForbidden(reply, 'Only administrators can download a database snapshot');
     }
+    const tenant = getRequestTenant();
+    let txn: LongLivedTenantTransaction | null = null;
     try {
-      const sanitized = sanitizeSnapshot(await fetchDatabaseSnapshot(), user);
+      txn = await beginLongLivedTenantTransaction(tenant);
+      enterActiveTransaction(txn.tx);
       reply.header('Content-Type', 'application/json; charset=utf-8');
-      return reply.send(Readable.from(generateSnapshotJsonChunks(sanitized)));
+      return reply.send(Readable.from(streamSnapshotRoute(txn, tenant, streamSyncSnapshot)));
     } catch (error: unknown) {
+      if (txn) await txn.rollback().catch(() => undefined);
       return sendDatabaseError(reply, 'Failed to retrieve database snapshot', error);
     }
   });
@@ -48,11 +78,15 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
     if (!canDownloadBulkSync(user)) {
       return sendForbidden(reply, 'Only administrators can download a workspace backup');
     }
+    const tenant = getRequestTenant();
+    let txn: LongLivedTenantTransaction | null = null;
     try {
-      const sanitized = sanitizeSnapshot(await fetchBackupSnapshot(), user);
+      txn = await beginLongLivedTenantTransaction(tenant);
+      enterActiveTransaction(txn.tx);
       reply.header('Content-Type', 'application/json; charset=utf-8');
-      return reply.send(Readable.from(generateSnapshotJsonChunks(sanitized)));
+      return reply.send(Readable.from(streamSnapshotRoute(txn, tenant, streamBackupSnapshot)));
     } catch (error: unknown) {
+      if (txn) await txn.rollback().catch(() => undefined);
       return sendDatabaseError(reply, 'Failed to build workspace backup snapshot', error);
     }
   });

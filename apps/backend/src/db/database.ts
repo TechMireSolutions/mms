@@ -65,6 +65,5 @@ export {
 export { initDb, resetDbInitStateForTesting, seedDatabase } from './dbInit.js';
 export {
   purgeTenantDataBySubdomain,
-  resetDatabase,
   resetTenantData,
 } from './dbPurge.js';

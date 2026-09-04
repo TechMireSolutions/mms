@@ -73,12 +73,13 @@ export async function saveGlobalSettings(
   // the masked placeholder. A genuinely new key (not masked) is stored as-is.
   const current = await getWorkspaceGlobalSettings(tenant);
   const currentConfigs = current?.llmConfigs ?? [];
+  const currentConfigById = new Map(currentConfigs.map((config) => [config.id, config]));
   if (isMaskedSecret(settings.llmApiKey) || !settings.llmApiKey) {
     settings = { ...settings, llmApiKey: current?.llmApiKey ?? '' };
   }
   const llmConfigs = (settings.llmConfigs ?? []).map((config) => {
     if (isMaskedSecret(config.apiKey) || !config.apiKey) {
-      const existing = currentConfigs.find((c) => c.id === config.id);
+      const existing = currentConfigById.get(config.id);
       return { ...config, apiKey: existing?.apiKey ?? '' };
     }
     return config;

@@ -122,6 +122,27 @@ describe('backupAssetService', () => {
       const assets = await exportBackupAssetsForSnapshot(snapshot);
       expect(Object.keys(assets)).toHaveLength(0);
     });
+
+    it('throws when the combined referenced assets exceed the total cap', async () => {
+      // 12 files at 24MB each -> 288MB combined: all under the 25MB per-file cap
+      // but over the 200MB combined cap.
+      const urls: Record<string, string> = {};
+      for (let i = 0; i < 12; i++) {
+        urls[`logoUrl${i}`] = `/uploads/branding/logo-${i}.webp`;
+      }
+      const snapshot: TenantDatabaseSnapshot = {
+        objects: { branding: urls },
+      };
+
+      vi.mocked(fsPromises.stat).mockResolvedValue({
+        isFile: () => true,
+        size: 24 * 1024 * 1024,
+      } as any);
+
+      await expect(exportBackupAssetsForSnapshot(snapshot)).rejects.toThrow(
+        /Backup asset set exceeds maximum/,
+      );
+    });
   });
 
   describe('restoreTenantAssets', () => {

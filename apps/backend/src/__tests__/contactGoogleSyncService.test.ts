@@ -30,6 +30,11 @@ vi.mock('../contacts/use-cases/contactWriteUseCases.js', () => ({
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
 }));
 
+vi.mock('../contacts/use-cases/contactConfigService.js', () => ({
+  // No unique fields configured in these tests; the in-run uniqueness index is a no-op.
+  loadContactFieldConfig: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../contacts/use-cases/contactValidationUseCases.js', () => ({
   prepareContactRecord: async (contact: unknown) => contact,
   assertContactUniqueFields: vi.fn().mockResolvedValue(undefined),

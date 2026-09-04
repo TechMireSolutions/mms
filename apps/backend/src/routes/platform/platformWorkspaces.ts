@@ -171,7 +171,7 @@ export default async function platformWorkspaceRoutes(
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
     // Permanently purges all tenant-scoped data, so it is gated on the super-user
-    // role (like reset-database / migrate-and-restart), not just the grantable
+    // role (like migrate-and-restart), not just the grantable
     // `workspaces` permission.
     inner.delete('/:subdomain', { preHandler: requirePlatformSuperUser() }, async (request, reply) => {
       const { platformUser } = request as PlatformAuthenticatedRequest;

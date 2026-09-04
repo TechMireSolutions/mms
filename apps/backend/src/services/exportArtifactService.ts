@@ -1,5 +1,6 @@
 import { USER_EXPORT_ARTIFACTS_OBJECT_KEY } from '@mms/shared';
 import { fetchObject, persistObject } from './dbSyncService.js';
+import { deleteStorageObject } from '../config/storage.js';
 
 const STORAGE_KEY = USER_EXPORT_ARTIFACTS_OBJECT_KEY;
 const ARTIFACT_TTL_MS = 24 * 60 * 60 * 1000;
@@ -8,9 +9,22 @@ const MAX_USER_ARTIFACTS = 10;
 const MAX_ARTIFACT_BYTES = 25 * 1024 * 1024;
 
 interface ExportArtifact {
-  content: string;
   filename: string;
   expiresAt: string;
+  /** Legacy inline content (buffered doc-store artifact). */
+  content?: string;
+  /** Streaming artifact stored in blob storage (S3 or local). */
+  storageType?: 's3' | 'local';
+  key?: string;
+  contentType?: string;
+}
+
+export interface ExportArtifactResult {
+  filename: string;
+  content?: string;
+  storageType?: 's3' | 'local';
+  key?: string;
+  contentType?: string;
 }
 
 type UserArtifactMap = Record<string, Record<string, ExportArtifact>>;
@@ -68,18 +82,57 @@ export async function saveExportArtifact(
 export async function getExportArtifact(
   userId: string,
   jobId: string,
-): Promise<{ content: string; filename: string } | null> {
+): Promise<ExportArtifactResult | null> {
   const artifactsByUser = pruneAllExpired(await loadUserArtifactMap());
   const userArtifacts = artifactsByUser[userId] ?? {};
   const artifact = userArtifacts[jobId];
   if (!artifact) return null;
-  return { content: artifact.content, filename: artifact.filename };
+  return {
+    filename: artifact.filename,
+    content: artifact.content,
+    storageType: artifact.storageType,
+    key: artifact.key,
+    contentType: artifact.contentType,
+  };
+}
+
+/**
+ * Stores a streamed export artifact by its blob-storage key (S3 or local) instead
+ * of buffering the full content in the doc store. Callers stream the artifact to
+ * storage (e.g. via `uploadStreamToStorage`) and persist only the reference here.
+ */
+export async function saveStreamedExportArtifact(
+  userId: string,
+  jobId: string,
+  info: {
+    key: string;
+    storageType: 's3' | 'local';
+    filename: string;
+    contentType?: string;
+  },
+): Promise<void> {
+  const artifactsByUser = pruneAllExpired(await loadUserArtifactMap());
+  const userArtifacts = artifactsByUser[userId] ?? {};
+  userArtifacts[jobId] = {
+    filename: info.filename,
+    expiresAt: new Date(Date.now() + ARTIFACT_TTL_MS).toISOString(),
+    key: info.key,
+    storageType: info.storageType,
+    ...(info.contentType ? { contentType: info.contentType } : {}),
+  };
+  artifactsByUser[userId] = userArtifacts;
+  await saveUserArtifactMap(artifactsByUser);
 }
 
 export async function deleteExportArtifact(userId: string, jobId: string): Promise<void> {
   const artifactsByUser = await loadUserArtifactMap();
   const userArtifacts = artifactsByUser[userId];
-  if (!userArtifacts?.[jobId]) return;
+  const artifact = userArtifacts?.[jobId];
+  if (!artifact) return;
+  // Best-effort: remove the streamed blob when a keyed artifact is dismissed.
+  if (artifact.key && artifact.storageType) {
+    await deleteStorageObject(artifact.key, artifact.storageType).catch(() => undefined);
+  }
   delete userArtifacts[jobId];
   artifactsByUser[userId] = userArtifacts;
   await saveUserArtifactMap(artifactsByUser);

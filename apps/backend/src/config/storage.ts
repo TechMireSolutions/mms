@@ -1,9 +1,9 @@
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, GetObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { type Readable, type PassThrough } from 'node:stream';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile, unlink } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
-import { createWriteStream } from 'node:fs';
+import { createReadStream, createWriteStream } from 'node:fs';
 import { pipeline } from 'node:stream/promises';
 import { resolveUploadsRoot } from './uploadConfig.js';
 
@@ -112,4 +112,44 @@ export async function uploadBufferToStorage(
     storageType: 'local',
     url: `/uploads/${key}`,
   };
+}
+
+/**
+ * Opens a readable stream for a previously streamed storage object (S3 body or
+ * local file). Used to serve export artifacts as true streams instead of
+ * re-buffering the whole blob in memory.
+ */
+export async function readStreamFromStorage(
+  key: string,
+  storageType: 's3' | 'local',
+): Promise<Readable> {
+  if (storageType === 's3' && isS3Configured) {
+    const data = await s3Client.send(new GetObjectCommand({ Bucket: s3Bucket, Key: key }));
+    const body = data.Body as Readable | undefined;
+    if (!body) {
+      throw new Error(`S3 object has no readable body: ${key}`);
+    }
+    return body;
+  }
+  return createReadStream(resolveLocalArtifactPath(key));
+}
+
+/**
+ * Deletes a streamed storage object (S3 object or local file). Local deletes are
+ * idempotent (missing files are ignored); S3 deletes are best-effort.
+ */
+export async function deleteStorageObject(
+  key: string,
+  storageType: 's3' | 'local',
+): Promise<void> {
+  if (storageType === 's3' && isS3Configured) {
+    await s3Client.send(new DeleteObjectCommand({ Bucket: s3Bucket, Key: key }));
+    return;
+  }
+  const localPath = resolveLocalArtifactPath(key);
+  try {
+    await unlink(localPath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
 }

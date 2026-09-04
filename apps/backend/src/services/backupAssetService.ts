@@ -11,53 +11,53 @@ const UPLOADS_PATH_REGEX = /^\/uploads\/([a-zA-Z0-9_\-/.]+)$/;
  */
 export function collectReferencedAssetUrls(snapshot: TenantDatabaseSnapshot): Set<string> {
   const urls = new Set<string>();
-
-  function scan(val: unknown): void {
-    if (!val) return;
-    if (typeof val === 'string') {
-      if (val.length >= 10 && val.includes('/uploads/')) {
-        const trimmed = val.trim();
-        if (UPLOADS_PATH_REGEX.test(trimmed)) {
-          urls.add(trimmed);
-        }
-      }
-      return;
-    }
-    if (Array.isArray(val)) {
-      for (let i = 0; i < val.length; i++) {
-        scan(val[i]);
-      }
-      return;
-    }
-    if (typeof val === 'object') {
-      const obj = val as Record<string, unknown>;
-      for (const key in obj) {
-        if (Object.prototype.hasOwnProperty.call(obj, key)) {
-          scan(obj[key]);
-        }
-      }
-    }
-  }
-
   if (snapshot.collections) {
-    const cols = snapshot.collections;
-    for (const key in cols) {
-      if (Object.prototype.hasOwnProperty.call(cols, key)) {
-        scan(cols[key]);
+    for (const key in snapshot.collections) {
+      if (Object.prototype.hasOwnProperty.call(snapshot.collections, key)) {
+        collectAssetUrlsFromValue(snapshot.collections[key], urls);
       }
     }
   }
-
   if (snapshot.objects) {
-    const objs = snapshot.objects;
-    for (const key in objs) {
-      if (Object.prototype.hasOwnProperty.call(objs, key)) {
-        scan(objs[key]);
+    for (const key in snapshot.objects) {
+      if (Object.prototype.hasOwnProperty.call(snapshot.objects, key)) {
+        collectAssetUrlsFromValue(snapshot.objects[key], urls);
       }
     }
   }
-
   return urls;
+}
+
+/**
+ * Recursively scans a single value (a collection's rows, an object, a row) for
+ * `/uploads/...` URLs, adding them to `urls`. Used by the streaming backup path
+ * to collect asset references as each collection/object is streamed.
+ */
+export function collectAssetUrlsFromValue(value: unknown, urls: Set<string>): void {
+  if (!value) return;
+  if (typeof value === 'string') {
+    if (value.length >= 10 && value.includes('/uploads/')) {
+      const trimmed = value.trim();
+      if (UPLOADS_PATH_REGEX.test(trimmed)) {
+        urls.add(trimmed);
+      }
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    for (let i = 0; i < value.length; i++) {
+      collectAssetUrlsFromValue(value[i], urls);
+    }
+    return;
+  }
+  if (typeof value === 'object') {
+    const obj = value as Record<string, unknown>;
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        collectAssetUrlsFromValue(obj[key], urls);
+      }
+    }
+  }
 }
 
 /**
@@ -80,6 +80,31 @@ export function resolveSafeUploadDiskPath(urlPath: string): string | null {
 }
 
 const MAX_BACKUP_ASSET_FILE_BYTES = 25 * 1024 * 1024; // 25MB per asset
+/** Combined cap across all referenced assets so a backup snapshot cannot grow without bound. */
+const MAX_BACKUP_TOTAL_ASSET_BYTES = 200 * 1024 * 1024; // 200MB total
+
+/**
+ * Reads a single referenced upload asset from disk and returns its base64, or
+ * `null` when the file is missing/oversized. Used by the streaming backup path to
+ * emit assets one at a time (bounded peak memory to one file) instead of buffering
+ * every asset in the snapshot.
+ */
+export async function readAssetBase64(url: string): Promise<string | null> {
+  const diskPath = resolveSafeUploadDiskPath(url);
+  if (!diskPath) return null;
+  try {
+    const fileStat = await stat(diskPath);
+    if (!fileStat.isFile()) return null;
+    if (fileStat.size > MAX_BACKUP_ASSET_FILE_BYTES) {
+      logger.warn({ url, size: fileStat.size }, 'Skipping asset exceeding 25MB limit');
+      return null;
+    }
+    const buffer = await readFile(diskPath);
+    return buffer.toString('base64');
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Exports referenced upload assets (logos, avatars, attachments, pictures) as base64 strings.
@@ -89,6 +114,7 @@ export async function exportBackupAssetsForSnapshot(
 ): Promise<Record<string, string>> {
   const urls = collectReferencedAssetUrls(snapshot);
   const assets: Record<string, string> = {};
+  let totalBytes = 0;
 
   for (const url of urls) {
     const diskPath = resolveSafeUploadDiskPath(url);
@@ -101,10 +127,19 @@ export async function exportBackupAssetsForSnapshot(
         logger.warn({ url, size: fileStat.size }, 'Skipping asset exceeding 25MB limit');
         continue;
       }
+      totalBytes += fileStat.size;
+      if (totalBytes > MAX_BACKUP_TOTAL_ASSET_BYTES) {
+        throw new Error(
+          `Backup asset set exceeds maximum of ${MAX_BACKUP_TOTAL_ASSET_BYTES} bytes combined`,
+        );
+      }
 
-      const buffer = await readFile(diskPath);
-      assets[url] = buffer.toString('base64');
-    } catch {
+      const base64 = await readAssetBase64(url);
+      if (base64 != null) assets[url] = base64;
+    } catch (error) {
+      if (error instanceof Error && error.message.startsWith('Backup asset set exceeds')) {
+        throw error;
+      }
       // Missing file on disk — skip gracefully so backup export doesn't fail
     }
   }

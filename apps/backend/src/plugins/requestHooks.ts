@@ -2,14 +2,15 @@ import type { FastifyInstance } from 'fastify';
 import { bindRequestTenant, resolveSubdomainFromRequest } from '../lib/tenantContext.js';
 import { attachAccessTokenFromCookie } from '../services/auth/authCookieService.js';
 import { attachPlatformTokenFromCookie } from '../services/platform/platformCookieService.js';
-import { requestHostname } from '../lib/requestHost.js';
 import { stripUndefinedFields } from '../lib/payloadTrimmer.js';
 
 export function registerRequestHooks(app: FastifyInstance): void {
   app.addHook('onRequest', (request, reply, done) => {
     reply.header('x-request-id', request.id);
-    const hostname = requestHostname(request);
-    const subdomain = resolveSubdomainFromRequest(hostname);
+    const subdomain = resolveSubdomainFromRequest(
+      request.headers.host,
+      request.headers['x-forwarded-host'] as string | string[] | undefined,
+    );
     bindRequestTenant(subdomain);
     if (subdomain) {
       attachAccessTokenFromCookie(request);
@@ -34,7 +35,10 @@ export function registerRequestHooks(app: FastifyInstance): void {
   app.addHook('onResponse', (request, reply, done) => {
     if (reply.statusCode >= 400) {
       const user = request.user as { id?: string } | undefined;
-      const tenant = resolveSubdomainFromRequest(requestHostname(request));
+      const tenant = resolveSubdomainFromRequest(
+        request.headers.host,
+        request.headers['x-forwarded-host'] as string | string[] | undefined,
+      );
       request.log.warn(
         {
           reqId: request.id,

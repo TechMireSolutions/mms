@@ -17,6 +17,7 @@ import {
   getExportArtifact,
 } from '../../services/exportArtifactService.js';
 import { getUserBackgroundJob } from '../../services/backgroundJobWorkerService.js';
+import { readStreamFromStorage } from '../../config/storage.js';
 
 export default async function backgroundJobRoutes(
   fastify: FastifyInstance,
@@ -38,19 +39,32 @@ export default async function backgroundJobRoutes(
     const user = request.user as User;
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
+    let stream: NodeJS.ReadableStream;
+    let contentType: string;
     try {
       const artifact = await getExportArtifact(String(user.id), params.data.id);
       if (!artifact) {
         return sendNotFound(reply, 'Export file not found or expired');
       }
-      reply.header(
-        'Content-Type',
-        artifact.filename.toLowerCase().endsWith('.vcf')
+
+      // Streamed (keyed) artifacts are served straight from blob storage without
+      // re-buffering the file in memory; legacy artifacts send the stored string.
+      if (artifact.key && artifact.storageType) {
+        stream = await readStreamFromStorage(artifact.key, artifact.storageType);
+        const defaultType = artifact.filename.toLowerCase().endsWith('.vcf')
           ? 'text/vcard; charset=utf-8'
-          : 'text/csv; charset=utf-8',
-      );
+          : 'text/csv; charset=utf-8';
+        contentType = artifact.contentType || defaultType;
+      } else {
+        stream = Readable.from([artifact.content ?? '']);
+        contentType = artifact.filename.toLowerCase().endsWith('.vcf')
+          ? 'text/vcard; charset=utf-8'
+          : 'text/csv; charset=utf-8';
+      }
+
+      reply.header('Content-Type', contentType);
       reply.header('Content-Disposition', `attachment; filename="${artifact.filename.replace(/"/g, '')}"`);
-      return reply.send(Readable.from([artifact.content]));
+      return reply.send(stream);
     } catch {
       return sendDatabaseError(reply, 'Failed to download export');
     }

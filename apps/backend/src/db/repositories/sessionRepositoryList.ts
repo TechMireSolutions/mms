@@ -9,7 +9,7 @@ import {
 import { sessions } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
-import { findSessionsByIds } from './sessionRepository.js';
+import { findSessionsSummaryByIds } from './sessionRepository.js';
 
 const SESSION_SORT_FIELDS = new Set([
   'name',
@@ -125,7 +125,7 @@ export async function listSessionsPage(
     }
 
     const ids = result.items.map((r) => r.id);
-    const hydratedSessions = await findSessionsByIds(subdomain, ids);
+    const hydratedSessions = await findSessionsSummaryByIds(subdomain, ids);
 
     // Preserve order from pagination query
     const sessionMap = new Map(hydratedSessions.map((s) => [s.id, s]));

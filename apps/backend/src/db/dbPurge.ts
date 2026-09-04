@@ -8,8 +8,6 @@ import {
   saveCollection,
   saveObject,
 } from './documentStore.js';
-import { logger } from '../lib/logger.js';
-import { initDb } from './dbInit.js';
 import { getMinimalCollectionsForSeed, getMinimalObjects } from './minimalSeeds.js';
 import * as schema from './schema.js';
 
@@ -79,31 +77,5 @@ export async function resetTenantData(): Promise<void> {
   }
   for (const [key, objectValue] of Object.entries(getMinimalObjects())) {
     await saveObject(key, objectValue);
-  }
-}
-
-/**
- * Resets the entire database schema and reseeds the default data.
- * Tables are dropped in dependency-safe order.
- */
-export async function resetDatabase(): Promise<void> {
-  try {
-    const tenant = getRequestTenant();
-    await withTenant(tenant, async (tx) => {
-      await tx.execute(sql`
-        DO $$ DECLARE
-            r RECORD;
-        BEGIN
-            FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
-                EXECUTE 'DROP TABLE IF EXISTS public.' || quote_ident(r.tablename) || ' CASCADE';
-            END LOOP;
-        END $$;
-      `);
-      await tx.execute(sql`DROP SCHEMA IF EXISTS drizzle CASCADE;`);
-    });
-    await initDb();
-  } catch (error) {
-    logger.error({ err: error }, 'Error resetting database');
-    throw error;
   }
 }

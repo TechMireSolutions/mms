@@ -74,10 +74,6 @@ vi.mock('../services/platform/platformUserService.js', async (importOriginal) =>
   };
 });
 
-vi.mock('../services/platform/platformDatabaseService.js', () => ({
-  resetAndReseedDatabase: vi.fn().mockResolvedValue(undefined),
-}));
-
 vi.mock('../db/repositories/platformActivityLogsRepository.js', () => ({
   insertPlatformActivityLog: vi.fn().mockResolvedValue(undefined),
 }));
@@ -205,62 +201,6 @@ describe('platformSettings REST API routes', () => {
       },
     });
 
-    expect(res.statusCode).toBe(403);
-  });
-
-  it('validates database reset payload on POST /api/platform/settings/reset-database', async () => {
-    const token = signPlatformToken({
-      id: 'p-super',
-      email: 'admin@platform.com',
-      name: 'Super Admin',
-      role: 'super_user',
-      sessionVersion: 0,
-    });
-
-    const badRes = await app.inject({
-      method: 'POST',
-      url: '/api/platform/settings/reset-database',
-      headers: { origin: 'http://localhost' },
-      cookies: { mms_platform_access: token },
-      payload: { confirm: 'WRONG_CONFIRMATION', password: 'any' },
-    });
-    expect(badRes.statusCode).toBe(400);
-
-    const missingPw = await app.inject({
-      method: 'POST',
-      url: '/api/platform/settings/reset-database',
-      headers: { origin: 'http://localhost' },
-      cookies: { mms_platform_access: token },
-      payload: { confirm: 'RESET_ALL_DATABASE_DATA' },
-    });
-    expect(missingPw.statusCode).toBe(400);
-
-    const wrongPw = await app.inject({
-      method: 'POST',
-      url: '/api/platform/settings/reset-database',
-      headers: { origin: 'http://localhost' },
-      cookies: { mms_platform_access: token },
-      payload: { confirm: 'RESET_ALL_DATABASE_DATA', password: 'wrong-password' },
-    });
-    expect(wrongPw.statusCode).toBe(401);
-  });
-
-  it('rejects non-super_user from resetting database with 403', async () => {
-    const token = signPlatformToken({
-      id: 'p-admin',
-      email: 'normal-settings-test@platform.com',
-      name: 'Normal Admin',
-      role: 'admin',
-      sessionVersion: 0,
-    });
-
-    const res = await app.inject({
-      method: 'POST',
-      url: '/api/platform/settings/reset-database',
-      headers: { origin: 'http://localhost' },
-      cookies: { mms_platform_access: token },
-      payload: { confirm: 'RESET_ALL_DATABASE_DATA', password: 'anything' },
-    });
     expect(res.statusCode).toBe(403);
   });
 });
