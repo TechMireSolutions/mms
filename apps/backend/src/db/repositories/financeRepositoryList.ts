@@ -1,4 +1,4 @@
-import { and, eq, ilike, or, isNull, isNotNull, type SQL, desc, asc, sql } from 'drizzle-orm';
+import { and, eq, ilike, or, isNull, isNotNull, inArray, type SQL, desc, asc, sql } from 'drizzle-orm';
 import {
   isQueryFlagTrue,
   OPEN_INVOICE_STATUSES,
@@ -258,30 +258,28 @@ export async function bulkUpdateInvoicesStatusSql(
   status: string,
 ): Promise<{ succeeded: number; failed: number }> {
   const subdomain = tenant.trim().toLowerCase();
-  let succeeded = 0;
-  let failed = 0;
+  if (ids.length === 0) return { succeeded: 0, failed: 0 };
 
-  await withTenant(subdomain, async (tx) => {
-    for (const id of ids) {
-      try {
-        const result = await tx
-          .update(financeInvoices)
-          .set({ status: status as 'paid' | 'pending' | 'overdue' | 'partial' | 'cancelled', updatedAt: sql`now()` })
-          .where(
-            and(
-              eq(financeInvoices.workspaceSubdomain, subdomain),
-              eq(financeInvoices.id, id),
-              isNull(financeInvoices.deletedAt),
-            ),
-          )
-          .returning({ id: financeInvoices.id });
-        if (result.length > 0) succeeded++;
-        else failed++;
-      } catch {
-        failed++;
-      }
-    }
+  // Single atomic UPDATE ... id IN (...) returning matched rows, instead of one
+  // round-trip per id in a loop. RLS/soft-delete rows are simply not matched, so
+  // succeeded = rows touched and failed = ids - succeeded (identical to the old
+  // per-id loop, minus per-id try/catch overhead).
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(financeInvoices)
+      .set({ status: status as 'paid' | 'pending' | 'overdue' | 'partial' | 'cancelled', updatedAt: sql`now()` })
+      .where(
+        and(
+          eq(financeInvoices.workspaceSubdomain, subdomain),
+          inArray(financeInvoices.id, ids),
+          isNull(financeInvoices.deletedAt),
+        ),
+      )
+      .returning({ id: financeInvoices.id });
+
+    return {
+      succeeded: updated.length,
+      failed: Math.max(0, ids.length - updated.length),
+    };
   });
-
-  return { succeeded, failed };
 }

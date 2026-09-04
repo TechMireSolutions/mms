@@ -111,13 +111,9 @@ describe('contactRepositoryWidgets (SQL)', () => {
       [{ count: 10 }], // total
       [{ sum: 25, count: 5 }], // aggregate
       [
-        { name: 'A', value: 5 },
-        { name: 'B', value: 4 },
-      ], // count chart (unused for sum value, but still issued)
-      [
         { name: 'A', sum: 15, count: 3 },
         { name: 'B', sum: 10, count: 2 },
-      ], // numeric chart
+      ], // numeric chart (count chart is skipped for sum/avg-with-target)
     ]);
     mockWithTenantTransaction.mockImplementation(
       async (_tenant: unknown, fn: (inner: typeof tx) => Promise<unknown>) => fn(tx),
@@ -141,19 +137,19 @@ describe('contactRepositoryWidgets (SQL)', () => {
         { name: 'B', value: 10 },
       ],
     });
-    // Both the count chart and the numeric chart must ORDER BY before LIMIT.
-    expect(callLog).toEqual(['orderBy', 'limit:8', 'orderBy', 'limit:8']);
+    // The redundant count chart is no longer issued for a sum/avg-with-target
+    // widget — only the numeric chart must ORDER BY before LIMIT.
+    expect(callLog).toEqual(['orderBy', 'limit:8']);
   });
 
   it('avg operation rounds sum/count and orders by the average', async () => {
     const { tx } = createChainableTx([
       [{ count: 10 }], // total
       [{ sum: 30, count: 4 }], // aggregate
-      [], // count chart
       [
         { name: 'A', sum: 20, count: 2 },
         { name: 'B', sum: 10, count: 2 },
-      ], // numeric chart
+      ], // numeric chart (no separate count chart)
     ]);
     mockWithTenantTransaction.mockImplementation(
       async (_tenant: unknown, fn: (inner: typeof tx) => Promise<unknown>) => fn(tx),

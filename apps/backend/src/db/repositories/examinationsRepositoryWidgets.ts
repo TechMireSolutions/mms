@@ -106,52 +106,56 @@ export async function aggregateExaminationsWidgetQueries(
         const xAxisColSql = resolveSqlColumn(xAxis);
         const groupExpr = sql<string>`COALESCE(NULLIF(trim(${xAxisColSql}::text), ''), 'Unknown')`;
 
-        const chartRows = await tx
-          .select({
-            name: groupExpr,
-            value: sql<number>`count(*)::int`,
-          })
-          .from(exams)
-          .where(whereClause)
-          .groupBy(groupExpr)
-          .orderBy(sql`count(*) desc`)
-          .limit(chartLimit);
+        // For sum/avg with a target the count-based chart is discarded by the
+        // numeric chart, so only run the count chart for the other operations.
+        const target =
+          (query.operation === 'sum' || query.operation === 'avg')
+            ? (query.targetField?.trim() || '')
+            : '';
 
-        let chartData = chartRows.map((row) => ({
-          name: row.name,
-          value: Number(row.value ?? 0),
-        }));
-
-        if (query.operation === 'sum' || query.operation === 'avg') {
-          const target = query.targetField?.trim() || '';
-          if (target) {
-            const targetColSql = resolveSqlColumn(target);
-            const sortExpr = query.operation === 'sum'
-              ? sql`coalesce(sum(${targetColSql}::numeric), 0) desc`
-              : sql`coalesce(sum(${targetColSql}::numeric), 0) / nullif(count(*) FILTER (WHERE ${targetColSql} IS NOT NULL), 0) desc`;
-            const numericChart = await tx
-              .select({
-                name: groupExpr,
-                sum: sql<number>`coalesce(sum(${targetColSql}::numeric), 0)`,
-                count: sql<number>`count(*) FILTER (WHERE ${targetColSql} IS NOT NULL)::int`,
-              })
-              .from(exams)
-              .where(whereClause)
-              .groupBy(groupExpr)
-              .orderBy(sortExpr)
-              .limit(chartLimit);
-            chartData = numericChart
-              .map((row) => {
-                const sum = Number(row.sum ?? 0);
-                const count = Number(row.count ?? 0);
-                return {
-                  name: row.name,
-                  value: query.operation === 'sum' ? sum : count > 0 ? Math.round(sum / count) : 0,
-                };
-              })
-              .sort((a, b) => b.value - a.value)
-              .slice(0, chartLimit);
-          }
+        let chartData: { name: string; value: number }[];
+        if (target) {
+          const targetColSql = resolveSqlColumn(target);
+          const sortExpr = query.operation === 'sum'
+            ? sql`coalesce(sum(${targetColSql}::numeric), 0) desc`
+            : sql`coalesce(sum(${targetColSql}::numeric), 0) / nullif(count(*) FILTER (WHERE ${targetColSql} IS NOT NULL), 0) desc`;
+          const numericChart = await tx
+            .select({
+              name: groupExpr,
+              sum: sql<number>`coalesce(sum(${targetColSql}::numeric), 0)`,
+              count: sql<number>`count(*) FILTER (WHERE ${targetColSql} IS NOT NULL)::int`,
+            })
+            .from(exams)
+            .where(whereClause)
+            .groupBy(groupExpr)
+            .orderBy(sortExpr)
+            .limit(chartLimit);
+          chartData = numericChart
+            .map((row) => {
+              const sum = Number(row.sum ?? 0);
+              const count = Number(row.count ?? 0);
+              return {
+                name: row.name,
+                value: query.operation === 'sum' ? sum : count > 0 ? Math.round(sum / count) : 0,
+              };
+            })
+            .sort((a, b) => b.value - a.value)
+            .slice(0, chartLimit);
+        } else {
+          const chartRows = await tx
+            .select({
+              name: groupExpr,
+              value: sql<number>`count(*)::int`,
+            })
+            .from(exams)
+            .where(whereClause)
+            .groupBy(groupExpr)
+            .orderBy(sql`count(*) desc`)
+            .limit(chartLimit);
+          chartData = chartRows.map((row) => ({
+            name: row.name,
+            value: Number(row.value ?? 0),
+          }));
         }
 
         return { id: query.id, result: { value, totalCount, chartData } };

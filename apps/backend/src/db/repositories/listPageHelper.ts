@@ -1,4 +1,4 @@
-import { and, sql, type SQL } from 'drizzle-orm';
+import { and, getTableColumns, sql, type SQL } from 'drizzle-orm';
 import type { AnyPgTable, SelectedFields } from 'drizzle-orm/pg-core';
 import type { NodePgDatabase } from 'drizzle-orm/node-postgres';
 import type * as schema from '../schema.js';
@@ -51,7 +51,12 @@ export async function runListPage<Row, Record>(
     .where(whereClause);
   const total = Number(countRows[0]?.count ?? 0);
 
-  const baseQuery = options.columns ? tx.select(options.columns) : tx.select();
+  // Never fall back to a bare `tx.select()` (SELECT *) wildcard. Project an
+  // explicit column object — a caller-supplied projection when provided,
+  // otherwise every table column enumerated via getTableColumns — so the SQL
+  // always lists columns explicitly and omits nothing the row mapper expects.
+  const projection: SelectedFields = options.columns ?? getTableColumns(table);
+  const baseQuery = tx.select(projection);
   const rows = await baseQuery
     .from(table)
     .where(whereClause)

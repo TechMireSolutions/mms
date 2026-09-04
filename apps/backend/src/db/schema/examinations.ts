@@ -24,6 +24,9 @@ export const exams = pgTable('exams', {
   index('exams_workspace_date_idx').on(table.workspaceSubdomain, table.date),
   index('exams_workspace_status_idx').on(table.workspaceSubdomain, table.status),
   index('exams_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('exams_workspace_updated_at_active_idx')
+    .on(table.workspaceSubdomain, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
   index('exams_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),

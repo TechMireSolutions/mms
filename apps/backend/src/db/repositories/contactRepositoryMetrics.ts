@@ -138,26 +138,43 @@ export async function aggregateContactsMonthlyCreatedCounts(
   const monthLabels = formatContactsMonthLabels(language, monthCount);
 
   return withTenant(subdomain, async (tx) => {
-    const results: ContactsMonthlyYearCounts[] = [];
-    for (const year of years) {
-      const rows = await tx
-        .select({
-          month: sql<string>`to_char(${contacts.createdAt}, 'MM')`,
-          count: sql<number>`count(*)::int`,
-        })
-        .from(contacts)
-        .where(
-          and(
-            activeWorkspaceWhere(subdomain),
-            sql`extract(year from ${contacts.createdAt}) = ${year}`,
-          ),
-        )
-        .groupBy(sql`to_char(${contacts.createdAt}, 'MM')`);
-
-      const byMonth = new Map(
-        rows.map((row) => [row.month, Number(row.count ?? 0)] as const),
+    // Single grouped query over all requested years (one scan) instead of one
+    // GROUP BY query per year inside a loop → eliminates the per-year N+1.
+    const rows = await tx
+      .select({
+        year: sql<number>`extract(year from ${contacts.createdAt})::int`,
+        month: sql<string>`to_char(${contacts.createdAt}, 'MM')`,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(contacts)
+      .where(
+        and(
+          activeWorkspaceWhere(subdomain),
+          sql`extract(year from ${contacts.createdAt}) IN (${sql.join(
+            years.map((year) => sql`${year}`),
+            sql`, `,
+          )})`,
+        ),
+      )
+      .groupBy(
+        sql`extract(year from ${contacts.createdAt})`,
+        sql`to_char(${contacts.createdAt}, 'MM')`,
       );
-      results.push({
+
+    const byYearMonth = new Map<string, Map<string, number>>();
+    for (const row of rows) {
+      const yearKey = String(row.year);
+      let monthMap = byYearMonth.get(yearKey);
+      if (!monthMap) {
+        monthMap = new Map<string, number>();
+        byYearMonth.set(yearKey, monthMap);
+      }
+      monthMap.set(row.month, Number(row.count ?? 0));
+    }
+
+    return years.map((year) => {
+      const byMonth = byYearMonth.get(String(year)) ?? new Map<string, number>();
+      return {
         year,
         months: Array.from({ length: monthCount }, (_, monthIndex) => {
           const monthStr = String(monthIndex + 1).padStart(2, '0');
@@ -166,8 +183,7 @@ export async function aggregateContactsMonthlyCreatedCounts(
             count: byMonth.get(monthStr) ?? 0,
           };
         }),
-      });
-    }
-    return results;
+      };
+    });
   });
 }

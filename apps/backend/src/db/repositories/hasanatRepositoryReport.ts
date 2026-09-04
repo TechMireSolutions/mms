@@ -123,8 +123,8 @@ export async function loadHasanatReportAggregatesSql(
           AND den.id = hd.denomination_id
         WHERE ${activeDistributionWhere(subdomain, 'hd')}
           AND hd.issued_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND left(hd.issued_date, 10) >= ${from}
-          AND left(hd.issued_date, 10) <= ${to}
+          AND hd.issued_date >= ${from}
+          AND hd.issued_date <= ${to}
         GROUP BY 1
         ORDER BY 1 ASC
       `);

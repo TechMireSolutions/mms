@@ -40,6 +40,9 @@ export const attendance = pgTable('attendance', {
   }).onDelete('cascade'),
   index('attendance_workspace_student_idx').on(table.workspaceSubdomain, table.studentId),
   index('attendance_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('attendance_workspace_updated_at_active_idx')
+    .on(table.workspaceSubdomain, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
 ]);
 
 export const attendanceLeaves = pgTable('attendance_leaves', {

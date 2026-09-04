@@ -159,8 +159,8 @@ describe('contactRepositoryMetrics (SQL)', () => {
     it('maps per-year SQL month rows onto the label window', async () => {
       const { tx } = createChainableTx([
         [
-          { month: '01', count: 2 },
-          { month: '03', count: 4 },
+          { year: 2026, month: '01', count: 2 },
+          { year: 2026, month: '03', count: 4 },
         ],
       ]);
       runWithTx(tx);

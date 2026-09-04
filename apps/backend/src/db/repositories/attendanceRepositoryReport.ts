@@ -108,30 +108,31 @@ async function loadAttendanceOverview(
     ORDER BY 1 ASC
   `);
 
-  const studentRatesSql = sql`
-    WITH student_rates AS (
-      SELECT
-        a.student_id AS "studentId",
-        COALESCE(MAX(NULLIF(btrim(a.student_name), '')), 'Unknown') AS name,
-        COUNT(*) FILTER (WHERE ${presentOrLate})::int AS "presentCount",
-        COUNT(*)::int AS total,
-        COALESCE(
-          ROUND(
-            100.0 * COUNT(*) FILTER (WHERE ${presentOrLate})
-            / NULLIF(COUNT(*), 0)
-          ),
-          0
-        )::int AS rate
-      FROM attendance a
-      WHERE a.workspace_subdomain = ${subdomain}
-        AND a.deleted_at IS NULL
-        ${attendanceClassFilter}
-      GROUP BY a.student_id
-    )
-  `;
+  // Materialize the per-student aggregation ONCE into a temp table (previously
+  // the CTE was inlined into two statements, recomputing this heavy GROUP BY
+  // twice). ON COMMIT DROP keeps it scoped to this transaction.
+  await tx.execute(sql`
+    CREATE TEMP TABLE tmp_attendance_student_rates ON COMMIT DROP AS
+    SELECT
+      a.student_id AS "studentId",
+      COALESCE(MAX(NULLIF(btrim(a.student_name), '')), 'Unknown') AS name,
+      COUNT(*) FILTER (WHERE ${presentOrLate})::int AS "presentCount",
+      COUNT(*)::int AS total,
+      COALESCE(
+        ROUND(
+          100.0 * COUNT(*) FILTER (WHERE ${presentOrLate})
+          / NULLIF(COUNT(*), 0)
+        ),
+        0
+      )::int AS rate
+    FROM attendance a
+    WHERE a.workspace_subdomain = ${subdomain}
+      AND a.deleted_at IS NULL
+      ${attendanceClassFilter}
+    GROUP BY a.student_id
+  `);
 
   const studentRateResult = await tx.execute(sql`
-    ${studentRatesSql}
     SELECT
       "studentId",
       name,
@@ -139,15 +140,14 @@ async function loadAttendanceOverview(
       total,
       rate,
       COUNT(*) FILTER (WHERE rate < 75) OVER ()::int AS "lowAttendanceCount"
-    FROM student_rates
+    FROM tmp_attendance_student_rates
     ORDER BY rate ASC, name ASC, "studentId" ASC
     LIMIT ${STUDENT_RATE_LIMIT}
   `);
 
   const topPerformerResult = await tx.execute(sql`
-    ${studentRatesSql}
     SELECT "studentId", name, "presentCount", total, rate
-    FROM student_rates
+    FROM tmp_attendance_student_rates
     ORDER BY rate DESC, total DESC, name ASC, "studentId" ASC
     LIMIT 3
   `);

@@ -72,11 +72,19 @@ export async function aggregateAttendanceWidgetQueries(
 
         let value = 0;
         if (query.operation === 'count' || query.operation === 'percentage') {
-          const countRows = await tx
-            .select({ count: sql<number>`count(*)::int` })
-            .from(attendance)
-            .where(whereClause);
-          const filteredCount = Number(countRows[0]?.count ?? 0);
+          // A no-filter widget's whereClause equals activeWorkspaceWhere, so its
+          // count is exactly totalCount (already computed above) — reuse it
+          // instead of re-running an identical aggregate.
+          const filteredCount = filterSql
+            ? Number(
+                (
+                  await tx
+                    .select({ count: sql<number>`count(*)::int` })
+                    .from(attendance)
+                    .where(whereClause)
+                )[0]?.count ?? 0,
+              )
+            : totalCount;
           value =
             query.operation === 'percentage'
               ? totalCount > 0

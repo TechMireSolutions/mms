@@ -162,7 +162,23 @@ export async function listAttendancePage(
 
     const rows = await tx
       .select({
-        attendance: attendance,
+        attendance: {
+          id: attendance.id,
+          classId: attendance.classId,
+          studentId: attendance.studentId,
+          studentName: attendance.studentName,
+          rollNo: attendance.rollNo,
+          date: attendance.date,
+          status: attendance.status,
+          timeIn: attendance.timeIn,
+          timeOut: attendance.timeOut,
+          notes: attendance.notes,
+          deletedAt: attendance.deletedAt,
+          deletedBy: attendance.deletedBy,
+          deletionReason: attendance.deletionReason,
+          createdAt: attendance.createdAt,
+          updatedAt: attendance.updatedAt,
+        },
         sessionId: sessionClasses.sessionId,
         sessionName: sessions.name,
         teacherId: sessionClasses.teacherId,
@@ -179,7 +195,7 @@ export async function listAttendancePage(
       .offset(offset);
 
     const records = rows.map((r) => {
-      const rec = rowToRecord(r.attendance);
+      const rec = rowToRecord(r.attendance as AttendanceRow);
       rec.sessionId = r.sessionId ?? '';
       rec.sessionName = r.sessionName ?? '';
       rec.teacherId = r.teacherId ?? '';

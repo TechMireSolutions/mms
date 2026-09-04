@@ -32,6 +32,12 @@ export const contacts = pgTable('contacts', {
   index('contacts_workspace_cnic_idx').on(table.workspaceSubdomain, table.cnic),
   index('contacts_workspace_gender_idx').on(table.workspaceSubdomain, table.gender),
   index('contacts_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('contacts_workspace_created_at_active_idx')
+    .on(table.workspaceSubdomain, table.createdAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_updated_at_active_idx')
+    .on(table.workspaceSubdomain, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
   index('contacts_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
