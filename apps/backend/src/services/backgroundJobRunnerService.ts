@@ -1,18 +1,18 @@
 import { CONTACTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, SESSIONS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST, TEACHERS_MODULE_MANIFEST, USERS_MODULE_MANIFEST } from '@mms/shared';
 import type { ContactExportColumn, EnrollmentExportColumn, MessagingCsvExportQueryDto, SessionExportColumn, StudentExportColumn, TeacherExportColumn } from '@mms/shared';
 import type { ContactsExportQueryInput } from './contactsExportService.js';
-import { buildContactsCsvExport } from './contactsExportService.js';
+import { buildContactsCsvExport, generateContactsCsvStreamChunks } from './contactsExportService.js';
 import { buildContactsVcfExport } from './contactsVcfExportService.js';
 import type { StudentsExportQueryInput } from './studentsExportService.js';
-import { buildStudentsCsvExport } from './studentsExportService.js';
+import { buildStudentsCsvExport, generateStudentsCsvStreamChunks } from './studentsExportService.js';
 import type { TeachersExportQueryInput } from './teachersExportService.js';
-import { buildTeachersCsvExport } from './teachersExportService.js';
+import { buildTeachersCsvExport, generateTeachersCsvStreamChunks } from './teachersExportService.js';
 import type { SessionsExportQueryInput } from './sessionsExportService.js';
-import { buildSessionsCsvExport } from './sessionsExportService.js';
+import { buildSessionsCsvExport, generateSessionsCsvStreamChunks } from './sessionsExportService.js';
 import type { EnrollmentsExportQueryInput } from './enrollmentsExportService.js';
-import { buildEnrollmentsCsvExport } from './enrollmentsExportService.js';
+import { buildEnrollmentsCsvExport, generateEnrollmentsCsvStreamChunks } from './enrollmentsExportService.js';
 import type { UsersExportQueryInput } from './usersExportService.js';
-import { buildUsersCsvExport } from './usersExportService.js';
+import { buildUsersCsvExport, generateUsersCsvStreamChunks } from './usersExportService.js';
 
 /** Cap on ledger entries carried in the `finance:export-excel` job payload. */
 const MAX_EXCEL_PAYLOAD_ENTRIES = 50_000;
@@ -96,6 +96,13 @@ export function registerDefaultBackgroundJobRunners(): void {
         viewerRole: options.viewerRole,
         allowDeleted: options.allowDeleted,
       }),
+    generateStreamChunks: (query, options) =>
+      generateContactsCsvStreamChunks(query as ContactsExportQueryInput, {
+        columns: options.columns as ContactExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted === true,
+      }),
   });
 
   registerBackgroundJobRunner(`${contactsModuleId}:export-vcf`, async (payload, ctx) => {
@@ -133,6 +140,13 @@ export function registerDefaultBackgroundJobRunners(): void {
         viewerRole: options.viewerRole,
         allowDeleted: options.allowDeleted,
       }),
+    generateStreamChunks: (query, options) =>
+      generateStudentsCsvStreamChunks(query as StudentsExportQueryInput, {
+        columns: options.columns as StudentExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted === true,
+      }),
   });
 
   registerModuleCsvExportJobRunner({
@@ -144,6 +158,13 @@ export function registerDefaultBackgroundJobRunners(): void {
         filename: options.filename,
         viewerRole: options.viewerRole,
         allowDeleted: options.allowDeleted,
+      }),
+    generateStreamChunks: (query, options) =>
+      generateSessionsCsvStreamChunks(query as SessionsExportQueryInput, {
+        columns: options.columns as SessionExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted === true,
       }),
   });
 
@@ -157,6 +178,13 @@ export function registerDefaultBackgroundJobRunners(): void {
         viewerRole: options.viewerRole,
         allowDeleted: options.allowDeleted,
       }),
+    generateStreamChunks: (query, options) =>
+      generateTeachersCsvStreamChunks(query as TeachersExportQueryInput, {
+        columns: options.columns as TeacherExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted === true,
+      }),
   });
 
   registerModuleCsvExportJobRunner({
@@ -169,6 +197,13 @@ export function registerDefaultBackgroundJobRunners(): void {
         viewerRole: options.viewerRole,
         allowDeleted: options.allowDeleted,
       }),
+    generateStreamChunks: (query, options) =>
+      generateEnrollmentsCsvStreamChunks(query as EnrollmentsExportQueryInput, {
+        columns: options.columns as EnrollmentExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted === true,
+      }),
   });
 
   registerModuleCsvExportJobRunner({
@@ -180,6 +215,13 @@ export function registerDefaultBackgroundJobRunners(): void {
         filename: options.filename,
         viewerRole: options.viewerRole,
         allowDeleted: options.allowDeleted,
+      }),
+    generateStreamChunks: (query, options) =>
+      generateUsersCsvStreamChunks(query as UsersExportQueryInput, {
+        columns: options.columns as import('@mms/shared').UserExportColumn[] | undefined,
+        filename: options.filename,
+        viewerRole: options.viewerRole,
+        allowDeleted: options.allowDeleted === true,
       }),
   });
 

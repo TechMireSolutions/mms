@@ -48,9 +48,11 @@ function writeCachedWorkspaceRow(
     return;
   }
   if (workspaceCache.size >= WORKSPACE_CACHE_MAX_ENTRIES) {
-    // Bounded memory: drop the whole cache and let it re-populate. The table is
-    // small and re-population is a single indexed query.
-    workspaceCache.clear();
+    // Bounded memory: evict the oldest entry (Map preserves insertion order)
+    // instead of clearing the whole cache, so a burst of >500 active subdomains
+    // doesn't thrash every lookup. Re-population is a single indexed query.
+    const oldestKey = workspaceCache.keys().next().value;
+    if (oldestKey !== undefined) workspaceCache.delete(oldestKey);
   }
   workspaceCache.set(subdomain, { row, expiresAt: Date.now() + WORKSPACE_CACHE_TTL_MS });
 }

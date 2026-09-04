@@ -82,6 +82,7 @@ const usersCsv = createModuleCsvExportService<
   },
 });
 
+export const generateUsersCsvStreamChunks = usersCsv.generateStreamChunks;
 export const buildUsersCsvExport = usersCsv.buildExport as (
   query: UsersExportQueryInput,
   options: UsersCsvExportOptions,

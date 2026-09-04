@@ -89,6 +89,7 @@ const teachersCsv = createModuleCsvExportService<
   },
 });
 
+export const generateTeachersCsvStreamChunks = teachersCsv.generateStreamChunks;
 export const buildTeachersCsvExport = teachersCsv.buildExport as (
   query: TeachersExportQueryInput,
   options: TeachersCsvExportOptions,

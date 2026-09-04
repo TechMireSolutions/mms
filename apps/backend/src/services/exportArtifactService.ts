@@ -41,19 +41,31 @@ async function saveUserArtifactMap(artifactsByUser: UserArtifactMap): Promise<vo
   await persistObject(STORAGE_KEY, artifactsByUser);
 }
 
-function pruneAllExpired(allArtifacts: UserArtifactMap): UserArtifactMap {
+async function pruneAllExpired(allArtifacts: UserArtifactMap): Promise<UserArtifactMap> {
   const now = Date.now();
   const cleaned: UserArtifactMap = {};
+  const droppedBlobs: Array<{ key: string; storageType: 's3' | 'local' }> = [];
   for (const [user, artifacts] of Object.entries(allArtifacts)) {
-    const activeEntries = Object.entries(artifacts)
+    const entries = Object.entries(artifacts);
+    const activeEntries = entries
       .filter(([_, artifact]) => new Date(artifact.expiresAt).getTime() > now)
       .sort((a, b) => new Date(b[1].expiresAt).getTime() - new Date(a[1].expiresAt).getTime())
       .slice(0, MAX_USER_ARTIFACTS);
-
+    const activeKeys = new Set(activeEntries.map(([key]) => key));
+    for (const [key, artifact] of entries) {
+      if (!activeKeys.has(key) && artifact.key && artifact.storageType) {
+        droppedBlobs.push({ key: artifact.key, storageType: artifact.storageType });
+      }
+    }
     if (activeEntries.length > 0) {
       cleaned[user] = Object.fromEntries(activeEntries);
     }
   }
+  // Best-effort: remove blobs for expired/evicted streamed artifacts so storage
+  // does not accumulate orphaned files.
+  await Promise.allSettled(
+    droppedBlobs.map((blob) => deleteStorageObject(blob.key, blob.storageType)),
+  );
   return cleaned;
 }
 
@@ -68,7 +80,7 @@ export async function saveExportArtifact(
       `Export artifact exceeds maximum of ${MAX_ARTIFACT_BYTES} bytes and cannot be stored.`,
     );
   }
-  const artifactsByUser = pruneAllExpired(await loadUserArtifactMap());
+  const artifactsByUser = await pruneAllExpired(await loadUserArtifactMap());
   const userArtifacts = artifactsByUser[userId] ?? {};
   userArtifacts[jobId] = {
     content,
@@ -83,7 +95,7 @@ export async function getExportArtifact(
   userId: string,
   jobId: string,
 ): Promise<ExportArtifactResult | null> {
-  const artifactsByUser = pruneAllExpired(await loadUserArtifactMap());
+  const artifactsByUser = await pruneAllExpired(await loadUserArtifactMap());
   const userArtifacts = artifactsByUser[userId] ?? {};
   const artifact = userArtifacts[jobId];
   if (!artifact) return null;
@@ -111,7 +123,7 @@ export async function saveStreamedExportArtifact(
     contentType?: string;
   },
 ): Promise<void> {
-  const artifactsByUser = pruneAllExpired(await loadUserArtifactMap());
+  const artifactsByUser = await pruneAllExpired(await loadUserArtifactMap());
   const userArtifacts = artifactsByUser[userId] ?? {};
   userArtifacts[jobId] = {
     filename: info.filename,

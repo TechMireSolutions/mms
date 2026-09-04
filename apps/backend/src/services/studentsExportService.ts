@@ -94,6 +94,7 @@ const studentsCsv = createModuleCsvExportService<
   },
 });
 
+export const generateStudentsCsvStreamChunks = studentsCsv.generateStreamChunks;
 export const buildStudentsCsvExport = studentsCsv.buildExport as (
   query: StudentsExportQueryInput,
   options: StudentsCsvExportOptions,

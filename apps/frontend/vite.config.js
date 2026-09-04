@@ -50,62 +50,95 @@ export default defineConfig({
   build: {
     target: 'es2022',
     sourcemap: false,
+    manifest: true,
     minify: 'esbuild',
     cssMinify: true,
     chunkSizeWarningLimit: 600,
-    rollupOptions: {
+    modulePreload: {
+      resolveDependencies(url, deps) {
+        return deps.filter((dep) => {
+          return (
+            dep.includes('rolldown-runtime') ||
+            dep.includes('vendor-react') ||
+            dep.includes('vendor-ui-core') ||
+            dep.includes('vendor-query') ||
+            dep.includes('mms-i18n-en')
+          );
+        });
+      },
+    },
+    rolldownOptions: {
       output: {
-        manualChunks(id) {
-          if (id.includes('/packages/shared/dist/')) {
-            // Translations: keep one chunk per language (each is loaded only
-            // when its language is selected).
-            if (id.includes('/appTranslationsEn')) return 'mms-i18n-en';
-            if (id.includes('/appTranslationsAr')) return 'mms-i18n-ar';
-            if (id.includes('/appTranslationsUr')) return 'mms-i18n-ur';
-            if (id.includes('/appTranslationsFa')) return 'mms-i18n-fa';
-            // Everything else from @mms/shared: let Rollup chunk by the real
-            // import graph instead of one forced `mms-shared` chunk, which was
-            // eagerly loaded in full on boot (all module manifests/contracts
-            // even when only one module is routed).
-            return undefined;
+        banner: (chunk) => {
+          if (chunk.name === 'vendor-validation') {
+            return 'globalThis.__zod_globalConfig = Object.assign(globalThis.__zod_globalConfig || {}, { jitless: true });';
           }
-          if (!id.includes('node_modules')) {
-            return undefined;
-          }
-          if (
-            id.includes('/react-dom/') ||
-            id.includes('/react/') ||
-            id.includes('/react@') ||
-            id.includes('/react-dom@') ||
-            id.includes('react/jsx-runtime') ||
-            id.includes('react/jsx-dev-runtime') ||
-            id.includes('/scheduler/') ||
-            id.includes('/scheduler@')
-          ) {
-            return 'vendor-react';
-          }
-          if (id.includes('@tanstack/react-query')) {
-            return 'vendor-query';
-          }
-          if (id.includes('@radix-ui') || id.includes('@floating-ui') || id.includes('react-remove-scroll') || id.includes('aria-hidden')) {
-            return 'vendor-radix';
-          }
-          if (id.includes('framer-motion')) {
-            return 'vendor-motion';
-          }
-          if (id.includes('recharts') || id.includes('victory-vendor') || id.includes('/d3-')) {
-            return 'vendor-charts';
-          }
-          if (id.includes('lucide-react')) {
-            return 'vendor-icons';
-          }
-          if (id.includes('/zod/')) {
-            return 'vendor-validation';
-          }
-          if (id.includes('react-router')) {
-            return 'vendor-react';
-          }
-          return undefined;
+          return '';
+        },
+        codeSplitting: {
+          minSize: 20000,
+          groups: [
+            {
+              name: 'vendor-react',
+              test: /node_modules[\\/](?:react|react-dom|scheduler|react-router|react-router-dom)[\\/]/,
+              priority: 50,
+            },
+            {
+              name: 'vendor-ui-core',
+              test: /node_modules[\\/](?:clsx|tailwind-merge|class-variance-authority)[\\/]/,
+              priority: 45,
+            },
+            {
+              name: 'vendor-query',
+              test: /node_modules[\\/]@tanstack[\\/]react-query[\\/]/,
+              priority: 40,
+            },
+            {
+              name: 'vendor-radix',
+              test: /node_modules[\\/](?:@radix-ui|@floating-ui|react-remove-scroll|aria-hidden)[\\/]/,
+              priority: 30,
+            },
+            {
+              name: 'vendor-motion',
+              test: /node_modules[\\/]framer-motion[\\/]/,
+              priority: 25,
+            },
+            {
+              name: 'vendor-charts',
+              test: /node_modules[\\/](?:recharts|victory-vendor|d3-|react-redux|@reduxjs[\\/]toolkit)[\\/]/,
+              priority: 20,
+            },
+            {
+              name: 'vendor-icons',
+              test: /node_modules[\\/]lucide-react[\\/]/,
+              priority: 15,
+            },
+            {
+              name: 'vendor-validation',
+              test: /node_modules[\\/]zod[\\/]/,
+              priority: 10,
+            },
+            {
+              name: 'mms-i18n-en',
+              test: /packages[\\/]shared[\\/]dist[\\/]appTranslationsEn/,
+              priority: 5,
+            },
+            {
+              name: 'mms-i18n-ar',
+              test: /packages[\\/]shared[\\/]dist[\\/]appTranslationsAr/,
+              priority: 5,
+            },
+            {
+              name: 'mms-i18n-ur',
+              test: /packages[\\/]shared[\\/]dist[\\/]appTranslationsUr/,
+              priority: 5,
+            },
+            {
+              name: 'mms-i18n-fa',
+              test: /packages[\\/]shared[\\/]dist[\\/]appTranslationsFa/,
+              priority: 5,
+            },
+          ],
         },
       },
     },

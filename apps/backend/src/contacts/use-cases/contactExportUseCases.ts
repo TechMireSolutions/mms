@@ -113,6 +113,7 @@ const contactsCsv = createModuleCsvExportService<
   },
 });
 
+export const generateContactsCsvStreamChunks = contactsCsv.generateStreamChunks;
 export const buildContactsCsvExport = contactsCsv.buildExport as (
   query: ContactsExportQueryInput,
   options: ContactsCsvExportOptions,
