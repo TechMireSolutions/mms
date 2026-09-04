@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useCallback } from "react";
 import { GraduationCap, Building2, BookOpen, Calendar, Award } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { EditableSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
@@ -45,26 +45,34 @@ export function ContactEducationTab({
   const allowAdd = resolveSubListAllowAdd([showDegree, showInstitution, showFieldOfStudy, showYear, showGrade]);
 
   const educations = contactDraft.education || [];
-  const emptyEducation = (): ContactEducation => ({
+
+  const emptyEducation = useCallback((): ContactEducation => ({
     degree: defaultDegree || degreeOptions[0] || "",
     institution: "",
     fieldOfStudy: "",
     year: "",
     grade: "",
     isCurrentlyEnrolled: false,
-  });
+  }), [defaultDegree, degreeOptions]);
 
-  const addEducation = () => {
+  const addEducation = useCallback(() => {
     addSubListItem("education", emptyEducation());
-  };
+  }, [addSubListItem, emptyEducation]);
 
-  const ensureEducation = () => {
+  const ensureEducation = useCallback(() => {
     ensureSubListItem("education", emptyEducation());
-  };
+  }, [ensureSubListItem, emptyEducation]);
 
-  const removeEducation = (idx: number) => removeSubListItem("education", idx);
-  const updateEducation = (idx: number, patch: Partial<ContactEducation> & Record<string, unknown>) =>
-    updateSubListItem("education", idx, patch);
+  const removeEducation = useCallback((idx: number) => {
+    removeSubListItem("education", idx);
+  }, [removeSubListItem]);
+
+  const updateEducation = useCallback(
+    (idx: number, patch: Partial<ContactEducation> & Record<string, unknown>) => {
+      updateSubListItem("education", idx, patch);
+    },
+    [updateSubListItem],
+  );
 
   return (
     <ContactSubListShell

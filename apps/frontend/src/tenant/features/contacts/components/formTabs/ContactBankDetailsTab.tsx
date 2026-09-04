@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useCallback } from "react";
 import { Landmark } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
@@ -61,7 +61,7 @@ export function ContactBankDetailsTab({
 
   const bankDetails = contactDraft.bankDetails || [];
 
-  const emptyBankDetail = (): ContactBankDetail => ({
+  const emptyBankDetail = useCallback((): ContactBankDetail => ({
     id: `bnk-${crypto.randomUUID()}`,
     bankName: "",
     accountTitle: (contactDraft.name || `${contactDraft.firstName || ""} ${contactDraft.lastName || ""}`).trim(),
@@ -69,21 +69,33 @@ export function ContactBankDetailsTab({
     currency: "PKR",
     isPrimary: bankDetails.length === 0,
     label: labelOptions[0] || "Primary",
-  });
+  }), [bankDetails.length, contactDraft.firstName, contactDraft.lastName, contactDraft.name, labelOptions]);
 
-  const addBankDetail = () => {
+  const addBankDetail = useCallback(() => {
     addSubListItem("bankDetails", emptyBankDetail());
-  };
+  }, [addSubListItem, emptyBankDetail]);
 
-  const ensureBankDetail = () => {
+  const ensureBankDetail = useCallback(() => {
     ensureSubListItem("bankDetails", emptyBankDetail());
-  };
+  }, [ensureSubListItem, emptyBankDetail]);
 
-  const removeBankDetail = (idx: number) => removeSubListItem("bankDetails", idx);
-  const updateBankDetail = (
-    idx: number,
-    patch: Partial<ContactBankDetail> & Record<string, unknown>,
-  ) => updateSubListItem("bankDetails", idx, patch);
+  const removeBankDetail = useCallback((idx: number) => {
+    removeSubListItem("bankDetails", idx);
+  }, [removeSubListItem]);
+
+  const handleSetPrimary = useCallback((idx: number) => {
+    setPrimarySubListItem?.("bankDetails", idx);
+  }, [setPrimarySubListItem]);
+
+  const updateBankDetail = useCallback(
+    (
+      idx: number,
+      patch: Partial<ContactBankDetail> & Record<string, unknown>,
+    ) => {
+      updateSubListItem("bankDetails", idx, patch);
+    },
+    [updateSubListItem],
+  );
 
   return (
     <ContactSubListShell
@@ -118,7 +130,7 @@ export function ContactBankDetailsTab({
             isFieldRequired={isFieldRequired}
             getListItemError={getListItemError}
             getLocalId={getLocalId}
-            onSetPrimary={() => setPrimarySubListItem?.("bankDetails", idx)}
+            onSetPrimary={() => handleSetPrimary(idx)}
             updateBankDetail={updateBankDetail}
             removeBankDetail={removeBankDetail}
           />

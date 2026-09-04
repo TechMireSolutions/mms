@@ -91,9 +91,26 @@ const mockDraft = {
   skillCategories: [],
   skillProficiencies: [],
   relationshipOptions: [],
+  lookupsLoading: false,
 } as unknown as ContactFormDraftState;
 
 describe("ContactFormTabContent Component", () => {
+  it("renders loading indicator when lookups are loading", () => {
+    const html = renderToStaticMarkup(
+      <ContactFormTabContent
+        tab="basic"
+        draft={{ ...mockDraft, lookupsLoading: true }}
+        lockGender={false}
+        defaultCountry="Pakistan"
+        defaultCity="Karachi"
+        defaultProvince="Sindh"
+      />,
+    );
+
+    expect(html).toContain("common.loading");
+    expect(html).not.toContain("Basic Tab");
+  });
+
   it("renders basic tab when tab is 'basic'", () => {
     const html = renderToStaticMarkup(
       <ContactFormTabContent

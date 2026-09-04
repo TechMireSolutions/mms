@@ -1,5 +1,5 @@
+import React, { useCallback, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { AppTranslationKey, Contact } from "@mms/shared";
 import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
@@ -102,16 +102,25 @@ export function ContactLabeledValueSubListTab({
   const allowAdd = resolveSubListAllowAdd([showLabel, showValue]);
   const items = (contactDraft[listKey] as ListItem[] | undefined) ?? [];
 
-  const makeEmpty = () => emptyItem(resolveLabel(undefined, options, t));
-  const addItem = () => {
+  const makeEmpty = useCallback(
+    () => emptyItem(resolveLabel(undefined, options, t)),
+    [emptyItem, resolveLabel, options, t],
+  );
+
+  const addItem = useCallback(() => {
     addSubListItem(listKey, makeEmpty() as unknown as NonNullable<Contact[typeof listKey]>[number]);
-  };
-  const ensureItem = () => {
+  }, [addSubListItem, listKey, makeEmpty]);
+
+  const ensureItem = useCallback(() => {
     ensureSubListItem(listKey, makeEmpty() as unknown as NonNullable<Contact[typeof listKey]>[number]);
-  };
-  const removeItem = (idx: number) => removeSubListItem(listKey, idx);
-  const updateItem = (idx: number, patch: ListItem) =>
-    updateSubListItem(listKey, idx, patch);
+  }, [ensureSubListItem, listKey, makeEmpty]);
+
+  const removeItem = useCallback((idx: number) => removeSubListItem(listKey, idx), [removeSubListItem, listKey]);
+
+  const updateItem = useCallback(
+    (idx: number, patch: ListItem) => updateSubListItem(listKey, idx, patch),
+    [updateSubListItem, listKey],
+  );
 
   return (
     <ContactSubListShell

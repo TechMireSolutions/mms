@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import type { Contact } from "@mms/shared";
 import { apiContract } from "@/lib/api";
 
@@ -14,6 +14,10 @@ export function useContactDuplicateCheck({
   contactDraft,
 }: UseContactDuplicateCheckOptions): number {
   const [duplicateCount, setDuplicateCount] = useState(0);
+  // Defer the draft so the check only re-runs once the urgent render settles,
+  // rather than on every keystroke; the 600ms timeout below still debounces the
+  // actual network request.
+  const deferredDraft = useDeferredValue(contactDraft);
 
   useEffect(() => {
     if (!open || contactId) {
@@ -21,11 +25,11 @@ export function useContactDuplicateCheck({
       return;
     }
     const hasCandidateKey = Boolean(
-      contactDraft.name?.trim() ||
-      contactDraft.firstName?.trim() ||
-      (contactDraft.phones && contactDraft.phones.some((p) => p.number?.trim())) ||
-      (contactDraft.emails && contactDraft.emails.some((e) => e.address?.trim())) ||
-      contactDraft.cnic?.trim()
+      deferredDraft.name?.trim() ||
+      deferredDraft.firstName?.trim() ||
+      (deferredDraft.phones && deferredDraft.phones.some((p) => p.number?.trim())) ||
+      (deferredDraft.emails && deferredDraft.emails.some((e) => e.address?.trim())) ||
+      deferredDraft.cnic?.trim()
     );
     if (!hasCandidateKey) {
       setDuplicateCount(0);
@@ -37,7 +41,7 @@ export function useContactDuplicateCheck({
     const timer = setTimeout(async () => {
       try {
         // The tag property is a computed frontend-only UI state added by normalization
-        const { tag: _tag, ...cleanDraft } = contactDraft as Record<string, unknown>;
+        const { tag: _tag, ...cleanDraft } = deferredDraft as Record<string, unknown>;
         const res = await apiContract.contacts.duplicateCheck({
           body: { contact: cleanDraft },
           fetchOptions: { signal: abortController.signal },
@@ -62,7 +66,7 @@ export function useContactDuplicateCheck({
       clearTimeout(timer);
       abortController.abort();
     };
-  }, [open, contactId, contactDraft]);
+  }, [open, contactId, deferredDraft]);
 
   return duplicateCount;
 }

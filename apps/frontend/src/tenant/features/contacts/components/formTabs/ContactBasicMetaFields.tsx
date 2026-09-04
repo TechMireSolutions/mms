@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { IdCard } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { EditableMultiSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
@@ -33,9 +33,10 @@ export function ContactBasicMetaFields({
   const dobError = getFieldError("dob");
   const tagError = getFieldError("tag");
 
-  const currentTags = (() => {
-    return getContactTags(contactDraft);
-  })();
+  const currentTags = useMemo(
+    () => getContactTags(contactDraft),
+    [contactDraft.tags, contactDraft.tag],
+  );
 
   return (
     <>

@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useCallback } from "react";
 import { Award } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
@@ -59,7 +59,8 @@ export function ContactSkillsTab({
   ]);
 
   const skills = contactDraft.skills || [];
-  const emptySkill = (): ContactSkill => ({
+
+  const emptySkill = useCallback((): ContactSkill => ({
     name: "",
     category: defaultCategory || categoryOptions[0] || "",
     proficiency: defaultProficiency || (proficiencyOptions ? proficiencyOptions[0] : "") || "",
@@ -67,19 +68,26 @@ export function ContactSkillsTab({
     isCertified: false,
     issuer: "",
     description: "",
-  });
+  }), [categoryOptions, defaultCategory, defaultProficiency, proficiencyOptions]);
 
-  const addSkill = () => {
+  const addSkill = useCallback(() => {
     addSubListItem("skills", emptySkill());
-  };
+  }, [addSubListItem, emptySkill]);
 
-  const ensureSkill = () => {
+  const ensureSkill = useCallback(() => {
     ensureSubListItem("skills", emptySkill());
-  };
+  }, [ensureSubListItem, emptySkill]);
 
-  const removeSkill = (idx: number) => removeSubListItem("skills", idx);
-  const updateSkill = (idx: number, patch: Partial<ContactSkill> & Record<string, unknown>) =>
-    updateSubListItem("skills", idx, patch);
+  const removeSkill = useCallback((idx: number) => {
+    removeSubListItem("skills", idx);
+  }, [removeSubListItem]);
+
+  const updateSkill = useCallback(
+    (idx: number, patch: Partial<ContactSkill> & Record<string, unknown>) => {
+      updateSubListItem("skills", idx, patch);
+    },
+    [updateSubListItem],
+  );
 
   return (
     <ContactSubListShell

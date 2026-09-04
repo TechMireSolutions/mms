@@ -61,6 +61,16 @@ export function ContactFormTabContent({
   const { t } = useTranslation();
   const normalizedTab = normalizeContactFormTabId(tab);
 
+  // Lookups (labels, platforms, country codes, etc.) are still loading — the
+  // draft was built with empty defaults, so hold rendering until they resolve.
+  if (draft.lookupsLoading) {
+    return (
+      <div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+        {t("common.loading")}
+      </div>
+    );
+  }
+
   const listBase = subListBaseProps(draft);
 
   const renderTabBody = () => {
@@ -157,8 +167,6 @@ export function ContactFormTabContent({
         return (
           <ContactRelationshipTab
             {...listBase}
-            relationshipOptions={draft.relationshipOptions}
-            onUpdateRelationships={draft.updateRelationships}
           />
         );
       case "bankDetails":

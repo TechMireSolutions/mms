@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useCallback } from "react";
 import { MapPin } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
@@ -47,22 +47,37 @@ export function ContactAddressesTab({
   const showCountry = isFieldEnabled("addresses", "country");
   const allowAdd = resolveSubListAllowAdd([showLabel, showLine1, showCity, showState, showCountry]);
   const addresses = contactDraft.addresses || [];
-  const emptyAddress = (): Address => ({
+
+  const emptyAddress = useCallback((): Address => ({
     label: resolveAddressLabel(undefined, addressLabels, t),
     line1: "",
     city: defaultCity,
     state: defaultProvince,
     country: defaultCountry,
-  });
-  const addAddress = () => {
+  }), [addressLabels, defaultCity, defaultCountry, defaultProvince, t]);
+
+  const addAddress = useCallback(() => {
     addSubListItem("addresses", emptyAddress());
-  };
-  const ensureAddress = () => {
+  }, [addSubListItem, emptyAddress]);
+
+  const ensureAddress = useCallback(() => {
     ensureSubListItem("addresses", emptyAddress());
-  };
-  const removeAddress = (idx: number) => removeSubListItem("addresses", idx);
-  const updateAddress = (idx: number, patch: Partial<Address> & Record<string, unknown>) =>
-    updateSubListItem("addresses", idx, patch);
+  }, [ensureSubListItem, emptyAddress]);
+
+  const removeAddress = useCallback((idx: number) => {
+    removeSubListItem("addresses", idx);
+  }, [removeSubListItem]);
+
+  const handleSetPrimary = useCallback((idx: number) => {
+    setPrimarySubListItem?.("addresses", idx);
+  }, [setPrimarySubListItem]);
+
+  const updateAddress = useCallback(
+    (idx: number, patch: Partial<Address> & Record<string, unknown>) => {
+      updateSubListItem("addresses", idx, patch);
+    },
+    [updateSubListItem],
+  );
 
   return (
     <ContactSubListShell
@@ -100,7 +115,7 @@ export function ContactAddressesTab({
               getListItemError={getListItemError}
               hasMultipleAddresses={addresses.length > 1}
               isOnlyAddressOrPrimary={isOnlyAddressOrPrimary}
-              onSetPrimary={() => setPrimarySubListItem?.("addresses", idx)}
+              onSetPrimary={() => handleSetPrimary(idx)}
               onUpdateAddress={(patch) => updateAddress(idx, patch)}
               onRemoveAddress={() => removeAddress(idx)}
             />

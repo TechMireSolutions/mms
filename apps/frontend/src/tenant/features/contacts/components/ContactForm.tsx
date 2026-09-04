@@ -1,5 +1,5 @@
 import type React from "react";
-import { useState, useMemo, useEffect, type ComponentType } from "react";
+import { useState, useMemo, useEffect, useCallback, type ComponentType } from "react";
 import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart, FolderKanban, Landmark } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -88,15 +88,13 @@ export function ContactForm({
     setConfirmDiscardOpen(false);
   }, [open]);
 
-  const handleRequestClose = () => {
+  const handleRequestClose = useCallback(() => {
     if (draft.isDirty) {
       setConfirmDiscardOpen(true);
       return;
     }
     onClose();
-  };
-
-
+  }, [draft.isDirty, onClose]);
 
   const tabErrorCounts = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -120,7 +118,6 @@ export function ContactForm({
       skills: draft.collectionCounts.filledSkills,
       relationship: draft.collectionCounts.filledRelationships,
       bankDetails: draft.collectionCounts.filledBankDetails,
-      ...draft.collectionCounts,
     };
 
     // System tabs from shared SSOT (DEFAULT_FORM_TABS) filtered by enabledTabIds (with basic locked on)
@@ -176,6 +173,7 @@ export function ContactForm({
         icon={User}
         tall
         priority={Boolean(priority || nested)}
+        saveOnTabChange={false}
         error={validationErrorSummary}
         tabs={visibleTabs}
         activeTab={activeTab}
@@ -189,9 +187,10 @@ export function ContactForm({
         isDirty={draft.isDirty}
         saving={draft.saving}
         saveDisabled={
-          !draft.contactDraft.firstName?.trim() || (Boolean(contact) && !draft.isDirty)
+          draft.lookupsLoading ||
+          !draft.contactDraft.firstName?.trim() ||
+          (Boolean(contact) && !draft.isDirty)
         }
-
         footerStart={
           <ContactFormFooterStart
             contactDraft={draft.contactDraft}
@@ -218,9 +217,7 @@ export function ContactForm({
         confirmLabel={t("contacts.form.discardChanges")}
         cancelLabel={t("contacts.form.keepEditing")}
         destructive
-        onConfirm={() => {
-          onClose();
-        }}
+        onConfirm={onClose}
       />
     </>
   );

@@ -70,7 +70,3 @@ export function ContactBasicTab({
     </SectionCard>
   );
 }
-
-
-
-

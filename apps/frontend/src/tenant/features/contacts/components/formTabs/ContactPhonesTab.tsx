@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useCallback } from "react";
 import { Phone, Star } from "lucide-react";
 import { EditableSelect } from "@/components/ui/FormPrimitives";
 import type { ContactSubListTabBaseProps } from "./types";
@@ -29,10 +29,13 @@ export function ContactPhonesTab({
 }: ContactPhonesTabProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const resolveDialCode = (item: Record<string, unknown>): string =>
-    typeof item.countryCode === "string" && item.countryCode
-      ? item.countryCode
-      : defaultCountryCode;
+  const resolveDialCode = useCallback(
+    (item: Record<string, unknown>): string =>
+      typeof item.countryCode === "string" && item.countryCode
+        ? item.countryCode
+        : defaultCountryCode,
+    [defaultCountryCode],
+  );
 
   return (
     <ContactLabeledValueSubListTab
@@ -76,7 +79,7 @@ export function ContactPhonesTab({
             type="button"
             onClick={() => base.setPrimarySubListItem?.("phones", index)}
             className={cn(
-              "cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-semibold transition-colors min-h-[32px] touch-manipulation select-none",
+              "cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-semibold transition-colors min-h-11 touch-manipulation select-none",
               isPrimary
                 ? "bg-primary/10 text-primary border border-primary/30"
                 : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40 border border-transparent",

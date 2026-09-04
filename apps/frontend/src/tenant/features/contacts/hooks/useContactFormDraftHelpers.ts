@@ -1,4 +1,6 @@
 import {
+  useCallback,
+  useMemo,
   useState,
   type ChangeEvent,
   type Dispatch,
@@ -34,9 +36,12 @@ export function useContactFormDraftHelpers({
   const { t } = useTranslation();
   const [cropSrc, setCropSrc] = useState<string | null>(null);
 
-  const getLocalId = ((tabName: string, idx: number): string => `${formInstanceId}-${tabName}-${idx}`);
+  const getLocalId = useCallback(
+    (tabName: string, idx: number): string => `${formInstanceId}-${tabName}-${idx}`,
+    [formInstanceId],
+  );
 
-  const collectionCounts = (() => {
+  const collectionCounts = useMemo(() => {
     const filledPhones = (contactDraft.phones || []).filter((phone) => (phone.number || "").trim()).length;
     const filledEmails = (contactDraft.emails || []).filter((email) => (email.address || "").trim()).length;
     const filledAddresses = (contactDraft.addresses || []).filter(
@@ -69,34 +74,35 @@ export function useContactFormDraftHelpers({
       filledRelationships,
       filledBankDetails,
     };
-  })();
+  }, [contactDraft]);
 
-  const isFieldEnabled = ((tabId: string, fieldId: string) => {
+  const isFieldEnabled = useCallback((tabId: string, fieldId: string) => {
       if ((REMOVED_FORM_FIELD_KEYS as readonly string[]).includes(fieldId)) return false;
       if (isTabFieldEnabled) return isTabFieldEnabled(tabId, fieldId);
       return true;
-    });
+    }, [isTabFieldEnabled]);
 
-  const isFieldRequired = ((tabId: string, fieldId: string) => {
+  const isFieldRequired = useCallback((tabId: string, fieldId: string) => {
+      if (tabId === "basic" && (fieldId === "firstName" || fieldId === "gender")) return true;
       if (isTabFieldRequired) return isTabFieldRequired(tabId, fieldId);
       return false;
-    });
+    }, [isTabFieldRequired]);
 
-  const getFieldError = ((fieldId: string) => {
+  const getFieldError = useCallback((fieldId: string) => {
       const found = validationErrors.find(
         (err) => err.fieldId === fieldId && err.index === undefined,
       );
       return found?.message;
-    });
+    }, [validationErrors]);
 
-  const getListItemError = ((tabId: string, fieldId: string, index: number) => {
+  const getListItemError = useCallback((tabId: string, fieldId: string, index: number) => {
       const found = validationErrors.find(
         (err) => err.tabId === tabId && err.fieldId === fieldId && err.index === index,
       );
       return found?.message;
-    });
+    }, [validationErrors]);
 
-  const updateDraft = ((patch: Partial<Contact>) => {
+  const updateDraft = useCallback((patch: Partial<Contact>) => {
     setContactDraft((prev) => {
       const next = { ...prev, ...patch };
       if (patch.firstName !== undefined || patch.lastName !== undefined) {
@@ -106,9 +112,9 @@ export function useContactFormDraftHelpers({
       }
       return next;
     });
-  });
+  }, [setContactDraft]);
 
-  const handleAvatarChange = (event: ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     if (!file.type.startsWith("image/")) {
@@ -129,9 +135,9 @@ export function useContactFormDraftHelpers({
     };
     reader.readAsDataURL(file);
     event.target.value = "";
-  };
+  }, [t]);
 
-  const handlePhoneBlur = (index: number) => {
+  const handlePhoneBlur = useCallback((index: number) => {
     setContactDraft((prev) => {
       const currentPhones = prev.phones || [];
       const phone = currentPhones[index];
@@ -151,7 +157,7 @@ export function useContactFormDraftHelpers({
       }
       return { ...prev, phones: updatedPhones };
     });
-  };
+  }, [defaultCountryCode, setContactDraft]);
 
   return {
     cropSrc,

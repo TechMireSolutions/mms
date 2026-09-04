@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from "react";
 import {
   mergeCountryDialCodeOptions,
   mergeCountryNameOptions,
@@ -35,7 +36,8 @@ export function useContactFormDraftOptions({
   defaultCountry: string;
   updateCountryCodes: (next: CountryCodeEntry[]) => void;
 }) {
-  const optionDefaults = (() =>
+  const optionDefaults = useMemo(
+    () =>
       buildOptionDefaults({
         phoneLabels,
         emailLabels,
@@ -47,28 +49,41 @@ export function useContactFormDraftOptions({
         skillCategories,
         skillProficiencies,
         defaultPhoneCountryCode: defaultCountryCode,
-      }))();
+      }),
+    [
+      phoneLabels,
+      emailLabels,
+      addressLabels,
+      socialPlatforms,
+      relationshipOptions,
+      educationDegrees,
+      employmentTypes,
+      skillCategories,
+      skillProficiencies,
+      defaultCountryCode,
+    ],
+  );
 
-  const countryCodeOptions = (() => {
+  const countryCodeOptions = useMemo(() => {
     const list = (countryCodes || [])
       .map((countryItem) => normalizeDialCode(countryItem.code))
       .filter(Boolean);
     const fallback = normalizeDialCode(defaultCountryCode);
     return Array.from(new Set([fallback, ...list].filter(Boolean)));
-  })();
+  }, [countryCodes, defaultCountryCode]);
 
-  const countryOptions = (() => {
+  const countryOptions = useMemo(() => {
     const names = (countryCodes || []).map((entry) => entry.country).filter(Boolean);
     return Array.from(new Set([defaultCountry, ...names].filter(Boolean)));
-  })();
+  }, [countryCodes, defaultCountry]);
 
-  const updateCountryOptions = (nextCountries: string[]) => {
+  const updateCountryOptions = useCallback((nextCountries: string[]) => {
     updateCountryCodes(mergeCountryNameOptions(countryCodes, nextCountries));
-  };
+  }, [countryCodes, updateCountryCodes]);
 
-  const updateDialCodeOptions = (nextCodes: string[]) => {
+  const updateDialCodeOptions = useCallback((nextCodes: string[]) => {
     updateCountryCodes(mergeCountryDialCodeOptions(countryCodes, nextCodes));
-  };
+  }, [countryCodes, updateCountryCodes]);
 
   return {
     optionDefaults,

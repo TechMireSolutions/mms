@@ -1,4 +1,4 @@
-import React, { useState, type ChangeEvent, type DragEvent } from "react";
+import React, { useState, useMemo, useCallback, type ChangeEvent, type DragEvent } from "react";
 import { Camera, X } from "lucide-react";
 import { AvatarCropper } from "@/components/ui/AvatarCropper";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -29,37 +29,46 @@ export function ContactBasicAvatarSection({
   const { t } = useTranslation();
   const [isDragging, setIsDragging] = useState(false);
   const avatarInputId = `cf-${formInstanceId}-avatar-file`;
-  const previewDisplayName = getDisplayName(contactDraft) || t("contacts.form.draftHeading");
+  const previewDisplayName = useMemo(
+    () => getDisplayName(contactDraft) || t("contacts.form.draftHeading"),
+    [contactDraft, t],
+  );
   const avatarGradient = genderAvatarGradient(contactDraft.gender || "neutral");
-  const initials = getInitials(getDisplayName(contactDraft), 2) || "?";
+  const initials = useMemo(
+    () => getInitials(previewDisplayName, 2) || "?",
+    [previewDisplayName],
+  );
 
-  const handleDrop = (e: DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setIsDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (!file) return;
+  const handleDrop = useCallback(
+    (e: DragEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsDragging(false);
+      const file = e.dataTransfer.files?.[0];
+      if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      notify.error(t("account.photoUploadFailed"));
-      return;
-    }
-
-    if (file.size > IMAGE_UPLOAD_MAX_INPUT_BYTES) {
-      notify.error(t("contacts.form.avatarTooLarge"));
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (readerEvent) => {
-      if (typeof readerEvent.target?.result === "string") {
-        setCropSrc(readerEvent.target.result);
+      if (!file.type.startsWith("image/")) {
+        notify.error(t("account.photoUploadFailed"));
+        return;
       }
-    };
-    reader.onerror = () => {
-      notify.error(t("account.photoUploadFailed"));
-    };
-    reader.readAsDataURL(file);
-  };
+
+      if (file.size > IMAGE_UPLOAD_MAX_INPUT_BYTES) {
+        notify.error(t("contacts.form.avatarTooLarge"));
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (readerEvent) => {
+        if (typeof readerEvent.target?.result === "string") {
+          setCropSrc(readerEvent.target.result);
+        }
+      };
+      reader.onerror = () => {
+        notify.error(t("account.photoUploadFailed"));
+      };
+      reader.readAsDataURL(file);
+    },
+    [setCropSrc, t],
+  );
 
   return (
     <div className="mb-2 flex flex-col items-center gap-6 border-b border-border/60 pb-6 @sm:flex-row">

@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect } from "react";
+import React, { lazy, Suspense, useEffect, useCallback } from "react";
 import { CONTACTS_MODULE_MANIFEST, type Contact } from "@mms/shared";
 import { getScopedBrandingSettings } from "@/lib/settingsPreviewStore";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -37,7 +37,7 @@ export default function ContactEditModal({
     onClose();
   }, [open, canWrite, onClose, t]);
 
-  const handleSave = async (contactPayload: Contact): Promise<void> => {
+  const handleSave = useCallback(async (contactPayload: Contact): Promise<void> => {
     if (!canWrite) {
       throw new Error(t("contacts.form.writeDenied"));
     }
@@ -47,7 +47,7 @@ export default function ContactEditModal({
     });
     onSaved?.(response.contact);
     onClose();
-  };
+  }, [canWrite, onClose, onSaved, t, updateContact]);
 
   if (!open || !canWrite || !contact?.id) return null;
 

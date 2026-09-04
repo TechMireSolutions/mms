@@ -10,9 +10,9 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("@/components/ui/FormPrimitives", () => ({
-  Field: ({ label, children }: { label: string; children: React.ReactNode }) => (
-    <div data-testid="form-field">
-      <label>{label}</label>
+  Field: ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
+    <div data-testid="form-field" data-required={required ? "true" : "false"}>
+      <label>{label}{required ? " *" : ""}</label>
       {children}
     </div>
   ),
@@ -32,7 +32,7 @@ describe("ContactBasicIdentityFields Component", () => {
         contactDraft={{ firstName: "Zayd", lastName: "Harith", gender: "male" }}
         formInstanceId="inst-1"
         isFieldEnabled={() => true}
-        isFieldRequired={() => false}
+        isFieldRequired={(tab, field) => field === "firstName" || field === "gender"}
         getFieldError={() => undefined}
         updateDraft={vi.fn()}
         lockGender={false}
@@ -41,7 +41,7 @@ describe("ContactBasicIdentityFields Component", () => {
 
     expect(html).toContain("contacts.fields.firstName");
     expect(html).toContain("contacts.fields.lastName");
-    expect(html).toContain("contacts.fields.gender");
+    expect(html).toContain("contacts.fields.gender *");
     expect(html).toContain("Male");
     expect(html).toContain("Female");
     expect(html).toContain("Meta Fields");

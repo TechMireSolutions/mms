@@ -42,6 +42,9 @@ export interface FormModalProps<K extends string = string> {
   builderMode?: boolean;
   onBuilderModeChange?: (active: boolean) => void;
   priority?: boolean;
+  /** Persist the current draft when switching tabs (default true). Disable for
+   *  create flows where tab navigation should not create the record early. */
+  saveOnTabChange?: boolean;
   children: React.ReactNode;
 }
 
@@ -81,6 +84,7 @@ export function FormModal<K extends string = string>({
   builderMode = false,
   onBuilderModeChange,
   priority = false,
+  saveOnTabChange = true,
   children,
 }: FormModalProps<K>): React.JSX.Element {
   const { t } = useTranslation();
@@ -91,7 +95,7 @@ export function FormModal<K extends string = string>({
 
   const handleTabChange = (async (nextTab: K) => {
       if (nextTab === activeTab) return;
-      if (isDirty && onSave && !saveDisabled && !saving) {
+      if (saveOnTabChange && isDirty && onSave && !saveDisabled && !saving) {
         try {
           const result = await onSave({ keepOpen: true });
           if (result === false) return;

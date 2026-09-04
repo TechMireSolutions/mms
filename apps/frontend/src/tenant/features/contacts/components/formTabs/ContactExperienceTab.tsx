@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useCallback } from "react";
 import { Briefcase } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
@@ -57,20 +57,29 @@ export function ContactExperienceTab({
 
   const experiences = contactDraft.experience || [];
 
-  const emptyExperience = () =>
-    createEmptyExperience(defaultEmploymentType, employmentTypeOptions);
+  const emptyExperience = useCallback(
+    () => createEmptyExperience(defaultEmploymentType, employmentTypeOptions),
+    [defaultEmploymentType, employmentTypeOptions],
+  );
 
-  const addExperience = () => {
+  const addExperience = useCallback(() => {
     addSubListItem("experience", emptyExperience());
-  };
+  }, [addSubListItem, emptyExperience]);
 
-  const ensureExperience = () => {
+  const ensureExperience = useCallback(() => {
     ensureSubListItem("experience", emptyExperience());
-  };
+  }, [ensureSubListItem, emptyExperience]);
 
-  const removeExperience = (idx: number) => removeSubListItem("experience", idx);
-  const updateExperience = (idx: number, patch: Partial<ContactExperience> & Record<string, unknown>) =>
-    updateSubListItem("experience", idx, patch);
+  const removeExperience = useCallback((idx: number) => {
+    removeSubListItem("experience", idx);
+  }, [removeSubListItem]);
+
+  const updateExperience = useCallback(
+    (idx: number, patch: Partial<ContactExperience> & Record<string, unknown>) => {
+      updateSubListItem("experience", idx, patch);
+    },
+    [updateSubListItem],
+  );
 
   return (
     <ContactSubListShell

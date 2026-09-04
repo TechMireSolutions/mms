@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
@@ -45,7 +45,7 @@ export function useContactFormSave({
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
 
-  const handleSave = (async (options?: { keepOpen?: boolean }): Promise<boolean> => {
+  const handleSave = useCallback(async (options?: { keepOpen?: boolean }): Promise<boolean> => {
       setValidationErrors([]);
 
       if (contact && isContactDeleted(contact)) {
@@ -55,6 +55,14 @@ export function useContactFormSave({
 
       const cleanedDraft = cleanContactDraft(contactDraft);
       const formErrors = validate(cleanedDraft);
+
+      if (!cleanedDraft.gender || !cleanedDraft.gender.trim()) {
+        formErrors.push({
+          fieldId: "gender",
+          tabId: "basic",
+          message: t("contacts.validation.required", { label: t("contacts.fields.gender") }),
+        });
+      }
 
       if (cleanedDraft.cnic) {
         const cleanCnic = cleanedDraft.cnic.replace(/\D/g, "");
@@ -192,7 +200,7 @@ export function useContactFormSave({
       } finally {
         setSaving(false);
       }
-    });
+    }, [contact, contactDraft, defaultCountryCode, onSave, onClose, onValidationTab, onBaselineReset, fields, language, validate, t]);
 
   return { saving, validationErrors, setValidationErrors, handleSave };
 }

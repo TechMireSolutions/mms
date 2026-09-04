@@ -72,7 +72,7 @@ export function ContactFormFooterStart({
             {collectionCounts.filledRelationships} {t("contacts.detail.relationships")}
           </FormFooterBadge>
         )}
-        {Boolean(collectionCounts.filledBankDetails && collectionCounts.filledBankDetails > 0) && (
+        {collectionCounts.filledBankDetails > 0 && (
           <FormFooterBadge tone="primary">
             {collectionCounts.filledBankDetails} {t("contacts.form.tabBankDetails")}
           </FormFooterBadge>
@@ -81,5 +81,3 @@ export function ContactFormFooterStart({
     </div>
   );
 }
-
-

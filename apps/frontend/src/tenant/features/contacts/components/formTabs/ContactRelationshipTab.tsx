@@ -1,27 +1,38 @@
-import type React from "react";
+import React, { useCallback, useMemo } from "react";
 import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { RELATIONSHIPS } from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
-import { FieldErrorMessage, EditableSelect } from "@/components/ui/FormPrimitives";
+import {
+  FieldErrorMessage,
+  FormSelect,
+  type FormSelectOption,
+} from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
+import { formatContactOptionLabel } from "@/lib/contacts/contactI18n";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 
-/** Fixed static frontend enum list for Relationship Type dropdown per requirements. */
-export const STATIC_RELATIONSHIP_OPTIONS: readonly string[] = [...RELATIONSHIPS];
+/** Fixed 6 static system relationship options aligned 1:1 with relationship inference engine. */
+export const STATIC_RELATIONSHIP_OPTIONS: readonly string[] = [
+  "Parent",
+  "Child",
+  "Husband",
+  "Wife",
+  "Guardian",
+  "Dependent",
+] as const;
 
 export interface ContactRelationshipTabProps extends ContactSubListTabBaseProps {
+  /** @deprecated Relationship options are hardcoded to the 6 system types. */
   relationshipOptions?: string[];
+  /** @deprecated Relationship types cannot be dynamically added or modified. */
   onUpdateRelationships?: (options: string[]) => void;
 }
 
 export function ContactRelationshipTab({
   contactDraft,
   formInstanceId,
-  relationshipOptions,
-  onUpdateRelationships,
   getLocalId,
   isFieldEnabled,
   isFieldRequired,
@@ -32,28 +43,40 @@ export function ContactRelationshipTab({
   removeSubListItem,
 }: ContactRelationshipTabProps): React.JSX.Element {
   const { t } = useTranslation();
-  const options = (relationshipOptions && relationshipOptions.length > 0
-    ? relationshipOptions
-    : STATIC_RELATIONSHIP_OPTIONS) as string[];
   const links = contactDraft.relationshipContacts || [];
   const showLinkedContact = isFieldEnabled("relationship", "contactId");
   const showRelationshipType = isFieldEnabled("relationship", "relationship");
   const allowAdd = resolveSubListAllowAdd([showLinkedContact, showRelationshipType]);
   const contactIdRequired = isFieldRequired("relationship", "contactId");
 
-  const emptyLink = () => ({
-    relationship: options[0] || "",
-    contactId: "",
-  });
+  const baseOptions: FormSelectOption[] = useMemo(
+    () =>
+      STATIC_RELATIONSHIP_OPTIONS.map((opt) => ({
+        value: opt,
+        label: formatContactOptionLabel(opt, t) || opt,
+      })),
+    [t],
+  );
 
-  const excludeIds = (idx: number): (string | number)[] => {
-    const linked = links
-      .filter((_, i) => i !== idx)
-      .map((link) => link.contactId)
-      .filter((cid) => cid != null && String(cid).length > 0) as (string | number)[];
-    if (contactDraft.id != null) linked.unshift(contactDraft.id);
-    return linked;
-  };
+  const emptyLink = useCallback(
+    () => ({
+      relationship: STATIC_RELATIONSHIP_OPTIONS[0],
+      contactId: "",
+    }),
+    [],
+  );
+
+  const excludeIds = useCallback(
+    (idx: number): (string | number)[] => {
+      const linked = links
+        .filter((_, i) => i !== idx)
+        .map((link) => link.contactId)
+        .filter((cid) => cid != null && String(cid).length > 0) as (string | number)[];
+      if (contactDraft.id != null) linked.unshift(contactDraft.id);
+      return linked;
+    },
+    [links, contactDraft.id],
+  );
 
   return (
     <div className="space-y-3">
@@ -72,7 +95,16 @@ export function ContactRelationshipTab({
         <AnimatePresence initial={false}>
           {links.map((link, idx) => {
             const pickerError = getListItemError("relationship", "contactId", idx);
-            const typeValue = link.relationship || options[0] || "";
+            const currentVal = link.relationship;
+            const typeValue = currentVal || STATIC_RELATIONSHIP_OPTIONS[0];
+            const isKnown = (STATIC_RELATIONSHIP_OPTIONS as readonly string[]).includes(currentVal || "");
+            const selectOptions: FormSelectOption[] = isKnown || !currentVal
+              ? baseOptions
+              : [
+                  { value: currentVal, label: currentVal },
+                  ...baseOptions,
+                ];
+
             return (
               <ListFieldCard
                 key={getLocalId("relationship", idx)}
@@ -82,17 +114,16 @@ export function ContactRelationshipTab({
                 label={showRelationshipType ? `${t("contacts.form.relationshipType")}:` : undefined}
                 typeSelect={
                   showRelationshipType ? (
-                    <EditableSelect
-                      options={options}
+                    <FormSelect
+                      options={selectOptions}
                       value={typeValue}
                       onChange={(val) =>
                         updateSubListItem("relationshipContacts", idx, { relationship: val })
                       }
-                      onUpdateOptions={onUpdateRelationships}
-                      placeholder={t("common.selectPlaceholder")}
                       className="w-40 @sm:w-52 min-w-0"
                       id={`cf-${formInstanceId}-relationship-type-${idx}`}
                       name={`cf-${formInstanceId}-relationship-type-${idx}`}
+                      aria-label={t("contacts.form.relationshipType")}
                     />
                   ) : undefined
                 }

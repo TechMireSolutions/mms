@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import {
@@ -117,7 +117,10 @@ export function useContactFormDraft({
     onBaselineReset: (finalized) => setBaselineSnapshot(contactDraftSnapshot(finalized)),
   });
 
-  const isDirty = contactDraftSnapshot(contactDraft) !== baselineSnapshot;
+  const isDirty = useMemo(
+    () => contactDraftSnapshot(contactDraft) !== baselineSnapshot,
+    [contactDraft, baselineSnapshot],
+  );
 
   const { addSubListItem, ensureSubListItem, updateSubListItem, removeSubListItem, setPrimarySubListItem } =
     useContactFormSubLists(setContactDraft);
@@ -163,6 +166,32 @@ export function useContactFormDraft({
     // Including `contact` object would re-fire on every server sync and lose in-progress edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, contact?.id]);
+
+  // If the form opened before lookups resolved, the draft was built with empty
+  // option defaults. Rebuild it once lookups finish loading — but only if the
+  // user hasn't started editing, so we never clobber in-progress changes.
+  const prevLookupsLoading = useRef(lookupsLoading);
+  useEffect(() => {
+    if (!open) return;
+    const justFinishedLoading = prevLookupsLoading.current && !lookupsLoading;
+    prevLookupsLoading.current = lookupsLoading;
+    if (!justFinishedLoading) return;
+    if (isDirty) return;
+    const nextDraft = buildInitialContactDraft({
+      contact,
+      initialDraft,
+      defaultCity,
+      defaultProvince,
+      defaultCountry,
+      optionDefaults,
+      socialPlatforms,
+      relationshipOptions,
+    });
+    setContactDraft(nextDraft);
+    setBaselineSnapshot(contactDraftSnapshot(nextDraft));
+    setValidationErrors([]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, lookupsLoading]);
 
   const duplicateCount = useContactDuplicateCheck({
     open,
