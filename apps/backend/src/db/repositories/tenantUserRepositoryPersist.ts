@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { resolveTenantLoginEmail, applyTitleCaseRecursive } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
 import { tenantUsers } from '../schema.js';
@@ -210,35 +210,63 @@ export async function upsertTenantUsersBatch(users: TenantUserRow[]): Promise<vo
       .where(inArray(tenantUsers.id, userIds));
     const existingById = new Map(existingRows.map((r) => [String(r.id), r]));
 
-    const toInsert: Array<typeof tenantUsers.$inferInsert> = [];
-    const updateOps: Promise<unknown>[] = [];
-
-    for (const user of processedUsers) {
+    // Build a single consistent value set for every row (new + existing), then
+    // upsert in one query. Semantics are identical to the previous per-user
+    // insert/update: existing rows keep their workspace and any empty auth
+    // fields fall back to the stored values; new rows are inserted.
+    const values: Array<typeof tenantUsers.$inferInsert> = processedUsers.map((user) => {
       const { columns } = splitProfileFields(user);
       const existing = existingById.get(columns.id);
-      if (existing) {
-        const existingWorkspace =
-          typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : subdomain;
-        const merged = {
-          ...omitUndefinedColumns(columns),
-          workspaceSubdomain: existingWorkspace,
-          name: nonEmptyString(columns.name) || existing.name || '',
-          loginEmail: nonEmptyString(columns.loginEmail) || existing.loginEmail || '',
-          passwordHash: nonEmptyString(columns.passwordHash) || existing.passwordHash || '',
-          updatedAt: new Date(),
-        };
-        updateOps.push(tx.update(tenantUsers).set(merged).where(tenantUserIdWhere(columns.id, existingWorkspace)));
-      } else {
-        toInsert.push(omitUndefinedColumns(columns) as typeof columns);
-      }
-    }
+      const workspaceSubdomain = existing
+        ? typeof existing.workspaceSubdomain === 'string'
+          ? existing.workspaceSubdomain
+          : subdomain
+        : columns.workspaceSubdomain;
+      return {
+        id: columns.id,
+        workspaceSubdomain,
+        loginEmail: existing
+          ? nonEmptyString(columns.loginEmail) || existing.loginEmail || ''
+          : columns.loginEmail,
+        passwordHash: existing
+          ? nonEmptyString(columns.passwordHash) || existing.passwordHash || ''
+          : columns.passwordHash,
+        name: existing
+          ? nonEmptyString(columns.name) || existing.name || ''
+          : columns.name,
+        role: columns.role,
+        contactId: columns.contactId ?? null,
+        emailVerifiedAt: columns.emailVerifiedAt ?? null,
+        pendingLoginEmail: columns.pendingLoginEmail ?? null,
+        mustChangePassword: columns.mustChangePassword ?? false,
+        createdAt: columns.createdAt ?? new Date(),
+        updatedAt: new Date(),
+        deletedAt: columns.deletedAt ?? null,
+        deletedBy: columns.deletedBy ?? null,
+        profileJson: columns.profileJson ?? null,
+      };
+    });
 
-    if (toInsert.length > 0) {
-      await tx.insert(tenantUsers).values(toInsert);
-    }
-    if (updateOps.length > 0) {
-      await Promise.all(updateOps);
-    }
+    await tx
+      .insert(tenantUsers)
+      .values(values)
+      .onConflictDoUpdate({
+        target: [tenantUsers.workspaceSubdomain, tenantUsers.id],
+        set: {
+          loginEmail: sql.raw('excluded.login_email'),
+          passwordHash: sql.raw('excluded.password_hash'),
+          name: sql.raw('excluded.name'),
+          role: sql.raw('excluded.role'),
+          contactId: sql.raw('excluded.contact_id'),
+          emailVerifiedAt: sql.raw('excluded.email_verified_at'),
+          pendingLoginEmail: sql.raw('excluded.pending_login_email'),
+          mustChangePassword: sql.raw('excluded.must_change_password'),
+          updatedAt: sql.raw('excluded.updated_at'),
+          deletedAt: sql.raw('excluded.deleted_at'),
+          deletedBy: sql.raw('excluded.deleted_by'),
+          profileJson: sql.raw('excluded.profile_json'),
+        },
+      });
   });
 }
 

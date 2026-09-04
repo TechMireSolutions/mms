@@ -156,16 +156,23 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         const response = buildSingleResponse ? await buildSingleResponse(item, user) : item;
         return reply.status(201).send({ [nameSingular]: response });
       } catch (error: unknown) {
-        const errMsg = error instanceof Error ? error.message : `Failed to create ${nameSingular}`;
-        const statusCode =
+        const isDomainError =
           typeof error === 'object' &&
           error !== null &&
           'statusCode' in error &&
-          typeof (error as { statusCode: unknown }).statusCode === 'number'
-            ? (error as { statusCode: number }).statusCode
-            : 0;
-        if (statusCode === 409) return sendConflict(reply, errMsg);
-        return sendDatabaseError(reply, errMsg);
+          typeof (error as { statusCode: unknown }).statusCode === 'number';
+        const statusCode = isDomainError ? (error as { statusCode: number }).statusCode : 0;
+        const fallbackMsg = `Failed to create ${nameSingular}`;
+        if (statusCode === 409) {
+          return sendConflict(reply, error instanceof Error ? error.message : fallbackMsg);
+        }
+        // Domain errors (which set a statusCode) keep their message; unexpected /
+        // driver errors get a generic message and are logged server-side so
+        // internal DB details are never echoed to the client.
+        if (isDomainError) {
+          return sendDatabaseError(reply, error instanceof Error ? error.message : fallbackMsg, error);
+        }
+        return sendDatabaseError(reply, fallbackMsg, error);
       }
     });
   }
@@ -207,16 +214,23 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         const response = buildSingleResponse ? await buildSingleResponse(updated, user) : updated;
         return reply.send({ [nameSingular]: response });
       } catch (error: unknown) {
-        const errMsg = error instanceof Error ? error.message : `Failed to update ${nameSingular}`;
-        const statusCode =
+        const isDomainError =
           typeof error === 'object' &&
           error !== null &&
           'statusCode' in error &&
-          typeof (error as { statusCode: unknown }).statusCode === 'number'
-            ? (error as { statusCode: number }).statusCode
-            : 0;
-        if (statusCode === 409) return sendConflict(reply, errMsg);
-        return sendDatabaseError(reply, errMsg);
+          typeof (error as { statusCode: unknown }).statusCode === 'number';
+        const statusCode = isDomainError ? (error as { statusCode: number }).statusCode : 0;
+        const fallbackMsg = `Failed to update ${nameSingular}`;
+        if (statusCode === 409) {
+          return sendConflict(reply, error instanceof Error ? error.message : fallbackMsg);
+        }
+        // Domain errors (which set a statusCode) keep their message; unexpected /
+        // driver errors get a generic message and are logged server-side so
+        // internal DB details are never echoed to the client.
+        if (isDomainError) {
+          return sendDatabaseError(reply, error instanceof Error ? error.message : fallbackMsg, error);
+        }
+        return sendDatabaseError(reply, fallbackMsg, error);
       }
     });
   }
