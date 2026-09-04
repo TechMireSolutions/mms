@@ -1,5 +1,6 @@
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import {
   OBLIGATIONS_MODULE_MANIFEST,
   obligationTypeListSchema,
@@ -30,6 +31,7 @@ export default async function obligationsRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('obligations'));
 
   await fastify.register(
     async (sub) => {

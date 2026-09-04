@@ -37,12 +37,15 @@ export async function ensureUploadsRoot(): Promise<string> {
   return root;
 }
 
-export function resolveUploadCategoryDir(category: ImageUploadCategory): string {
+export function resolveUploadCategoryDir(category: ImageUploadCategory, tenant?: string | null): string {
+  if (tenant && tenant.trim()) {
+    return join(resolveUploadsRoot(), 'tenants', tenant.trim().toLowerCase(), category);
+  }
   return join(resolveUploadsRoot(), category);
 }
 
-export async function ensureUploadCategoryDir(category: ImageUploadCategory): Promise<string> {
-  const dir = resolveUploadCategoryDir(category);
+export async function ensureUploadCategoryDir(category: ImageUploadCategory, tenant?: string | null): Promise<string> {
+  const dir = resolveUploadCategoryDir(category, tenant);
   await mkdir(dir, { recursive: true });
   return dir;
 }

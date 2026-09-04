@@ -16,6 +16,7 @@ import {
   type AppLanguageCode,
 } from '@mms/shared';
 import { ensureLocaleFontsLoaded } from '@/lib/localeFonts';
+import { reportClientError } from '@/lib/clientErrorReporting';
 
 export type TranslationFunction = <K extends AppTranslationKey>(
   key: K,
@@ -135,7 +136,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
       })
       .catch((translationError) => {
         if (!active) return;
-        console.error(`Failed to load translation for ${language}:`, translationError);
+        reportClientError(translationError, { context: 'i18n.loadLanguage', language });
         setIsLoading(false);
       });
 

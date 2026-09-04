@@ -4,6 +4,7 @@ import {
   safeSetItem,
   scopedStorageKey,
 } from '@/lib/dbStorageCore.js';
+import { reportClientError, reportClientWarn } from '@/lib/clientErrorReporting';
 
 const TITLE_CASE_EXCLUDED_KEYWORDS = [
   'settings',
@@ -32,15 +33,15 @@ export function getObject<T>(key: string, defaultData: T): T {
     if (saved !== null && saved !== 'undefined') {
       try {
         return JSON.parse(saved) as T;
-      } catch {
-        console.warn(`Failed to parse cached object "${key}", resetting to default.`);
+      } catch (error) {
+        reportClientWarn(error, { context: 'db.parseCachedObject', key });
       }
     }
     safeSetItem(scopedStorageKey(key), JSON.stringify(defaultData));
 
     return defaultData;
   } catch (error) {
-    console.error(`Error reading object "${key}" from database:`, error);
+    reportClientError(error, { context: 'db.readObject', key });
     return defaultData;
   }
 }
@@ -51,12 +52,12 @@ export function readObjectLocal<T>(key: string): T | null {
     if (saved !== null && saved !== 'undefined') {
       try {
         return JSON.parse(saved) as T;
-      } catch {
-        console.warn(`Failed to parse cached object "${key}"`);
+      } catch (error) {
+        reportClientWarn(error, { context: 'db.parseCachedObjectLocal', key });
       }
     }
   } catch (error) {
-    console.error(`Error reading object "${key}" from local cache:`, error);
+    reportClientError(error, { context: 'db.readObjectLocal', key });
   }
   return null;
 }

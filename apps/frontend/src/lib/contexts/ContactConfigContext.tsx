@@ -24,6 +24,7 @@ import { useContactLookupsQuery, useContactLookupMutation } from "@/tenant/featu
 import { useContactsContractFieldConfig, useContactsContractUpdateFieldConfig } from "@/tenant/features/contacts/hooks/useContactsTsrHooks";
 import { DEFAULT_CONTACT_PREFERENCES, type ContactPreferences, type FieldConfig } from "@mms/shared";
 import { useContactConfigProviderValue } from "@/lib/contacts/useContactConfigProviderValue";
+import { reportClientError } from "@/lib/clientErrorReporting";
 
 export { ContactConfigContext };
 export type { ContactConfigContextType, ContactsColumnConfig };
@@ -44,7 +45,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
       ...(prefsData || DEFAULT_CONTACT_PREFERENCES),
       ...newPrefs
     };
-    updatePrefsAsync(fullPrefs).catch(console.error);
+    updatePrefsAsync(fullPrefs).catch((error) => reportClientError(error, { context: 'contacts.updatePrefs' }));
   };
 
   const { data: lookupsData, isLoading: lookupsLoading, error: lookupsError } = useContactLookupsQuery();
@@ -57,7 +58,7 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     await updateFieldConfig({ body: nextConfig });
   };
   const updateConfig = (nextConfig: FieldConfig) => {
-    updateConfigAsync(nextConfig).catch(console.error);
+    updateConfigAsync(nextConfig).catch((error) => reportClientError(error, { context: 'contacts.updateConfig' }));
   };
 
   const config = {

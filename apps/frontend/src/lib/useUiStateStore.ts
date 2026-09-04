@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { UserUiState } from '@mms/shared';
 import { apiJson } from './apiClient.js';
+import { reportClientError } from './clientErrorReporting.js';
 
 interface UiStateStore {
   state: UserUiState;
@@ -49,7 +50,7 @@ export const useUiStateStore = create<UiStateStore>((set, get) => ({
           body: JSON.stringify({ state: updatesToSend }) 
         });
       } catch (error) {
-        console.error('Failed to sync UI state:', error);
+        reportClientError(error, { context: 'uiState.sync' });
         // Note: We could implement a rollback mechanism here if needed
       }
     }, 500); // 500ms debounce

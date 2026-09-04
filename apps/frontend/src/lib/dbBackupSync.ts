@@ -1,4 +1,5 @@
 import { apiFetch } from "@/lib/apiClient";
+import { reportClientError } from "@/lib/clientErrorReporting";
 import {
   buildWorkspaceBackupEnvelopeAsync,
   buildStorageKeysFromSnapshot,
@@ -72,7 +73,7 @@ export async function syncDatabase(): Promise<void> {
     const tenantSnapshot = await fetchTenantSnapshot();
     applySnapshotToLocalCache(tenantSnapshot);
   } catch (error) {
-    console.error("Failed to sync database with backend:", error);
+    reportClientError(error, { context: 'db.syncDatabase' });
   }
 }
 
@@ -129,7 +130,7 @@ export async function importDatabase(jsonString: string): Promise<void> {
 
     dispatchLocalDatabaseUpdate();
   } catch (error) {
-    console.error("Error importing database:", error);
+    reportClientError(error, { context: 'db.importDatabase' });
     throw error;
   }
 }

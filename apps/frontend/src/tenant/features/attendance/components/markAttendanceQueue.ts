@@ -1,4 +1,5 @@
 import type { AuditEntry, OfflinePayload } from "@/tenant/features/attendance/components/markAttendanceTypes";
+import { reportClientError, reportClientWarn } from "@/lib/clientErrorReporting";
 
 export const ATTENDANCE_OFFLINE_QUEUE_KEY = "att_offline_queue";
 export const ATTENDANCE_AUDIT_KEY_PREFIX = "att_audit";
@@ -11,7 +12,7 @@ export function loadQueue(): OfflinePayload[] {
   try {
     return JSON.parse(localStorage.getItem(ATTENDANCE_OFFLINE_QUEUE_KEY) || "[]") as OfflinePayload[];
   } catch (error) {
-    console.warn("Failed to load offline queue:", error);
+    reportClientWarn(error, { context: 'attendance.loadQueue' });
     return [];
   }
 }
@@ -20,7 +21,7 @@ export function saveQueue(queue: OfflinePayload[]): void {
   try {
     localStorage.setItem(ATTENDANCE_OFFLINE_QUEUE_KEY, JSON.stringify(queue));
   } catch (error) {
-    console.error("Failed to save offline queue:", error);
+    reportClientError(error, { context: 'attendance.saveQueue' });
   }
 }
 
@@ -31,7 +32,7 @@ export function addAuditEntry(classId: string, date: string, entry: AuditEntry):
     existing.unshift({ ...entry, ts: new Date().toISOString() });
     localStorage.setItem(key, JSON.stringify(existing.slice(0, 50)));
   } catch (error) {
-    console.error("Failed to save audit entry:", error);
+    reportClientError(error, { context: 'attendance.addAuditEntry' });
   }
 }
 
@@ -43,7 +44,7 @@ export function getAuditLog(classId: string, date: string): AuditEntry[] {
     const key = auditStorageKey(classId, date);
     return JSON.parse(localStorage.getItem(key) || "[]") as AuditEntry[];
   } catch (error) {
-    console.error("Failed to read audit log:", error);
+    reportClientError(error, { context: 'attendance.getAuditLog' });
     return [];
   }
 }

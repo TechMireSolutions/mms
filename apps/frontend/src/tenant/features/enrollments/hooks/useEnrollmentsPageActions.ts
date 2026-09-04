@@ -8,6 +8,7 @@ import { useEnrollmentViewerRole } from "@/tenant/hooks/useViewerRole";
 import {
   useEnrollmentMutations,
 } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { reportClientError } from "@/lib/clientErrorReporting";
 
 export interface UseEnrollmentsPageActionsParams {
   enrollments: Enrollment[];
@@ -55,7 +56,7 @@ export function useEnrollmentsPageActions({
           }
         }
       } catch (error) {
-        console.error("Failed to update student enrolled sessions", error);
+        reportClientError(error, { context: 'enrollments.updateStudentEnrolledSessions' });
       }
       notify.success(t("enrollments.toast.created"));
       onActiveSubTabChange("directory");

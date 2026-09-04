@@ -1,6 +1,9 @@
 import { randomUUID } from 'node:crypto';
-import { writeFile } from 'node:fs/promises';
+import { createWriteStream } from 'node:fs';
+import { unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { Transform } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import {
   IMAGE_UPLOAD_MAX_BYTES,
   assertAllowedImageMime,
@@ -29,44 +32,122 @@ export function sniffImageFormat(buffer: Buffer): 'avif' | 'webp' | null {
 }
 
 /**
- * Persists a client-encoded AVIF/WebP image and returns its public URL path.
+ * Persists a client-encoded AVIF/WebP image (from Buffer or stream) and returns its public URL path.
  */
 export async function saveUploadedImage(
-  buffer: Buffer,
+  source: Buffer | NodeJS.ReadableStream,
   mimeType: string,
   purpose: ImageUploadPurpose,
+  tenant?: string | null,
 ): Promise<string> {
   assertAllowedImageMime(mimeType);
 
-  if (buffer.length === 0) {
-    throw Object.assign(new Error('Image file is empty'), {
-      statusCode: 400,
-      type: 'validation_error',
-    });
-  }
-
-  if (buffer.length > IMAGE_UPLOAD_MAX_BYTES) {
-    throw Object.assign(new Error('Image file is too large'), {
-      statusCode: 400,
-      type: 'validation_error',
-    });
-  }
-
-  // Content sniffing: reject files whose magic bytes don't match the declared type.
-  const sniffed = sniffImageFormat(buffer);
-  const expected = mimeType === 'image/avif' ? 'avif' : 'webp';
-  if (sniffed !== expected) {
-    throw Object.assign(new Error('Image content does not match the declared format'), {
-      statusCode: 400,
-      type: 'validation_error',
-    });
-  }
-
   const category = categoryForUploadPurpose(purpose);
-  const dir = await ensureUploadCategoryDir(category);
+  const cleanTenant = tenant?.trim().toLowerCase() || undefined;
+  const dir = await ensureUploadCategoryDir(category, cleanTenant);
   const ext = imageExtensionForMime(mimeType);
   const filename = `${randomUUID()}${ext}`;
-  await writeFile(join(dir, filename), buffer);
+  const filepath = join(dir, filename);
+  const expected = mimeType === 'image/avif' ? 'avif' : 'webp';
 
-  return `/uploads/${category}/${filename}`;
+  const publicUrl = cleanTenant
+    ? `/uploads/tenants/${cleanTenant}/${category}/${filename}`
+    : `/uploads/${category}/${filename}`;
+
+  if (Buffer.isBuffer(source)) {
+    if (source.length === 0) {
+      throw Object.assign(new Error('Image file is empty'), {
+        statusCode: 400,
+        type: 'validation_error',
+      });
+    }
+
+    if (source.length > IMAGE_UPLOAD_MAX_BYTES) {
+      throw Object.assign(new Error('Image file is too large'), {
+        statusCode: 400,
+        type: 'validation_error',
+      });
+    }
+
+    const sniffed = sniffImageFormat(source);
+    if (sniffed !== expected) {
+      throw Object.assign(new Error('Image content does not match the declared format'), {
+        statusCode: 400,
+        type: 'validation_error',
+      });
+    }
+
+    await writeFile(filepath, source);
+    return publicUrl;
+  }
+
+  // Stream pipeline: sniff magic bytes from first chunk and limit bytes without loading file into process memory
+  let bytesWritten = 0;
+  let headerBuffer = Buffer.alloc(0);
+  let verified = false;
+
+  const limiterAndSniffer = new Transform({
+    transform(chunk: Buffer, _encoding, callback) {
+      bytesWritten += chunk.length;
+      if (bytesWritten > IMAGE_UPLOAD_MAX_BYTES) {
+        callback(
+          Object.assign(new Error('Image file is too large'), {
+            statusCode: 400,
+            type: 'validation_error',
+          }),
+        );
+        return;
+      }
+
+      if (!verified) {
+        headerBuffer = Buffer.concat([headerBuffer, chunk]);
+        if (headerBuffer.length >= 12) {
+          const sniffed = sniffImageFormat(headerBuffer);
+          if (sniffed !== expected) {
+            callback(
+              Object.assign(new Error('Image content does not match the declared format'), {
+                statusCode: 400,
+                type: 'validation_error',
+              }),
+            );
+            return;
+          }
+          verified = true;
+        }
+      }
+      callback(null, chunk);
+    },
+    flush(callback) {
+      if (bytesWritten === 0) {
+        callback(
+          Object.assign(new Error('Image file is empty'), {
+            statusCode: 400,
+            type: 'validation_error',
+          }),
+        );
+        return;
+      }
+      if (!verified) {
+        const sniffed = sniffImageFormat(headerBuffer);
+        if (sniffed !== expected) {
+          callback(
+            Object.assign(new Error('Image content does not match the declared format'), {
+              statusCode: 400,
+              type: 'validation_error',
+            }),
+          );
+          return;
+        }
+      }
+      callback();
+    },
+  });
+
+  try {
+    await pipeline(source, limiterAndSniffer, createWriteStream(filepath));
+    return publicUrl;
+  } catch (err) {
+    await unlink(filepath).catch(() => {});
+    throw err;
+  }
 }

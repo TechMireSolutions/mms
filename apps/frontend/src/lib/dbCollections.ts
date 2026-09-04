@@ -6,6 +6,7 @@ import {
   scopedStorageKey,
   syncToServer,
 } from "@/lib/dbStorageCore.js";
+import { reportClientError, reportClientWarn } from "@/lib/clientErrorReporting";
 import {
   hydrateLinkedCollection,
   normalizeLinkedCollection,
@@ -50,7 +51,7 @@ export function saveCollectionCacheOnly<T>(key: string, collectionItems: T[]): v
     safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
     dispatchLocalDatabaseUpdate();
   } catch (error) {
-    console.error(`Error saving collection "${key}" to local cache:`, error);
+    reportClientError(error, { context: 'db.saveCollectionCache', key });
   }
 }
 
@@ -76,8 +77,8 @@ export function getCollection<T = unknown>(key: string, defaultData: T[] = [] as
           collection = hydrateLinkedCollection(key, collection);
           return collection;
         }
-      } catch {
-        console.warn(`Failed to parse cached collection "${key}", resetting to default.`);
+      } catch (error) {
+        reportClientWarn(error, { context: 'db.parseCachedCollection', key });
       }
     }
     const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
@@ -106,7 +107,7 @@ export function getCollection<T = unknown>(key: string, defaultData: T[] = [] as
     }
     return seedData;
   } catch (error) {
-    console.error(`Error reading collection "${key}" from database:`, error);
+    reportClientError(error, { context: 'db.getCollection', key });
     return defaultData;
   }
 }
@@ -133,7 +134,7 @@ export function saveCollection<T>(key: string, collectionItems: T[]): void {
     // Sync to backend asynchronously
     void syncToServer(`/api/db/collections/${key}`, dataToSave);
   } catch (error) {
-    console.error(`Error writing collection "${key}" to database:`, error);
+    reportClientError(error, { context: 'db.saveCollection', key });
   }
 }
 

@@ -22,6 +22,15 @@ export default defineConfig({
         'dist/**',
         '**/*.d.ts',
       ],
+      // Coverage gate: lock in the current baseline so regressions fail CI.
+      // Raise these as coverage improves. Measured: lines ~72.1 / stmts ~67.8 /
+      // funcs ~60.4 / branches ~51.2.
+      thresholds: {
+        lines: 68,
+        statements: 65,
+        functions: 58,
+        branches: 48,
+      },
     },
   },
 });

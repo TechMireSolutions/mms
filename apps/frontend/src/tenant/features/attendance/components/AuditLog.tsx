@@ -10,6 +10,7 @@ import { type AttendanceFilterState } from "@/tenant/features/attendance/compone
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { reportClientError } from "@/lib/clientErrorReporting";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
@@ -113,7 +114,7 @@ export function AuditLog({ filters }: AuditLogProps): React.JSX.Element {
       const result = getAuditLog(classId, date);
       setLog(Array.isArray(result) ? result : []);
     } catch (error) {
-      console.error("Failed to load audit log", error);
+      reportClientError(error, { context: 'attendance.loadAuditLog' });
       setLog([]);
     }
   }, [classId, date]);

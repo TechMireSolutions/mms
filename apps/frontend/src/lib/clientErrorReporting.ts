@@ -59,3 +59,24 @@ export function reportClientError(error: unknown, context?: Record<string, unkno
 
   console.error('[MMS]', error instanceof Error ? error.message : String(error));
 }
+
+/**
+ * Client-side non-fatal warning reporting. Mirrors `reportClientError` but
+ * captures at `warning` level so recoverable issues (quota exceeded, corrupt
+ * cache, failed background sync) are visible in production without being
+ * treated as exceptions.
+ */
+export function reportClientWarn(error: unknown, context?: Record<string, unknown>): void {
+  if (import.meta.env.DEV) {
+    console.warn('[MMS client warning]', error, context);
+    return;
+  }
+
+  void loadCore()
+    .then((core) => core.reportWarnToSentry(error, context))
+    .catch(() => {
+      // Reporting must never mask the original failure.
+    });
+
+  console.warn('[MMS]', error instanceof Error ? error.message : String(error));
+}

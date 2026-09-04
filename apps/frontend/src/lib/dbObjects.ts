@@ -17,6 +17,7 @@ import {
   readObjectLocal,
   writeObjectLocal,
 } from '@/lib/dbObjectStorage';
+import { reportClientError } from '@/lib/clientErrorReporting';
 
 export { getObject, readObjectLocal };
 
@@ -76,7 +77,7 @@ export async function saveGlobalSettingsAsync(globalSettings: GlobalSettings): P
     const processed = writeObjectLocal('global_settings', merged);
     return await syncToServer('/api/db/objects/global_settings', processed);
   } catch (error) {
-    console.error('Error writing global_settings to local database:', error);
+    reportClientError(error, { context: 'db.saveGlobalSettings' });
     return { ok: false };
   }
 }
@@ -113,7 +114,7 @@ export async function saveBrandingSettings(brandingSettings: BrandingSettings): 
     const processed = writeObjectLocal('branding', merged);
     return await syncToServer('/api/db/objects/branding', processed);
   } catch (error) {
-    console.error('Error writing branding to local database:', error);
+    reportClientError(error, { context: 'db.saveBrandingSettings' });
     return { ok: false };
   }
 }
@@ -131,7 +132,7 @@ export function saveObject<T>(key: string, objectValue: T): void {
     const processed = writeObjectLocal(key, objectValue);
     void syncToServer(`/api/db/objects/${key}`, processed);
   } catch (error) {
-    console.error(`Error writing object "${key}" to database:`, error);
+    reportClientError(error, { context: 'db.saveObject', key });
   }
 }
 
@@ -141,7 +142,7 @@ export async function saveObjectAsync<T>(key: string, objectValue: T): Promise<S
     const processed = writeObjectLocal(key, objectValue);
     return await syncToServer(`/api/db/objects/${key}`, processed);
   } catch (error) {
-    console.error(`Error writing object "${key}" to database:`, error);
+    reportClientError(error, { context: 'db.saveObjectAsync', key });
     return { ok: false };
   }
 }

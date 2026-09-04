@@ -81,6 +81,7 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
   { id: "questionBank", label: "Question Bank", description: "Question repository and test papers", icon: "Library",         category: "academic" },
   { id: "finance",     label: "Finance",        description: "Invoicing and fee management",        icon: "DollarSign",      category: "finance" },
   { id: "accounting",  label: "Accounting",     description: "General ledger and reports",          icon: "TrendingUp",      category: "finance" },
+  { id: "obligations", label: "Obligations",    description: "Religious obligations and funds",    icon: "Scale",           category: "finance" },
   { id: "users",       label: "Users",          description: "Role-based permissions and access",   icon: "UserCog",         category: "admin",    required: true },
 ];
 
@@ -121,6 +122,7 @@ export const SYSTEM_MODULE_NAV: SystemModuleNavEntry[] = [
   },
   { type: "module", moduleId: "finance" },
   { type: "module", moduleId: "accounting" },
+  { type: "module", moduleId: "obligations" },
   { type: "module", moduleId: "users" },
 ];
 
@@ -148,6 +150,7 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
     questionBank: true,
     finance: true,
     accounting: true,
+    obligations: true,
     hasanat: true,
     users: true,
   },

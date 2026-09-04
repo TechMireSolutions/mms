@@ -11,6 +11,7 @@ import {
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { withTenant } from '../../db/tenant-context.js';
 import { requireTenant } from '../../lib/tenantContext.js';
 import { createCollectionAuditHelper } from '../../lib/createCollectionAuditHelper.js';
@@ -179,7 +180,7 @@ const dashboardRouter = s.router(dashboardContract, {
     }
   },
 
-  getSummary: async ({ query }: any) =>
+  getSummary: async ({ query }: ContractRouteArgs<typeof dashboardContract['getSummary']>) =>
     handleDashboardRead(
       async () => {
         const summary = await loadDashboardSummary(query?.date, query?.role);
@@ -195,6 +196,7 @@ const dashboardRouter = s.router(dashboardContract, {
  */
 const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.addHook('preHandler', authenticateTenant);
+  fastify.addHook('preHandler', requireTenantModule('dashboard'));
   await fastify.register(s.plugin(dashboardRouter));
 };
 

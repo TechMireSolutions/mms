@@ -1,6 +1,7 @@
 import type { AuthError } from '@/lib/authErrors';
 import type { User, Workspace } from '@mms/shared';
 import { getCurrentSubdomain, isCurrentHostApex } from '@/lib/config/tenantConfig';
+import { reportClientError } from '@/lib/clientErrorReporting';
 
 export class AuthFailureError extends Error {
   constructor(readonly authError: AuthError) {
@@ -14,7 +15,7 @@ export function clearUserScopedCachesOnLogout(userId: string, prefix: string): v
     localStorage.removeItem(`${prefix}messages`);
     localStorage.removeItem(`${prefix}whatsappTemplates_u:${userId}`);
   } catch (cacheClearError) {
-    console.error('Failed to clear user-scoped caches on logout:', cacheClearError);
+    reportClientError(cacheClearError, { context: 'auth.clearUserScopedCaches' });
   }
 }
 

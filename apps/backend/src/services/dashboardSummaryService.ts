@@ -43,7 +43,6 @@ export interface DashboardSummaryResponse {
  * staleness while cutting redundant aggregation work.
  */
 const DASHBOARD_SUMMARY_CACHE_TTL_SECONDS = 30;
-const DASHBOARD_SUMMARY_CACHE_PREFIX = 'dashboard:summary:';
 
 export async function loadDashboardSummary(
   date?: string,
@@ -53,7 +52,7 @@ export async function loadDashboardSummary(
   if (!tenant) return {};
 
   const cleanTenant = tenant.trim().toLowerCase();
-  const cacheKey = `${DASHBOARD_SUMMARY_CACHE_PREFIX}${cleanTenant}:${date ?? 'today'}`;
+  const cacheKey = `mms:${cleanTenant}:dashboard:summary:${date ?? 'today'}`;
 
   const cached = await redisGet(cacheKey);
   if (cached) {

@@ -1,6 +1,7 @@
 import { apiFetch } from "@/lib/apiClient";
 import { tenantLocalStoragePrefix } from "@mms/shared";
 import { getCurrentSubdomain } from "@/lib/config/tenantConfig";
+import { reportClientError, reportClientWarn } from "@/lib/clientErrorReporting";
 
 export function getWorkspaceLocalStoragePrefix(): string {
   const subdomain = getCurrentSubdomain();
@@ -73,7 +74,7 @@ export async function syncToServer(url: string, body: unknown, method: string = 
       const expectedPreAuth =
         response.status === 401 && localStorage.getItem('mms_user') === null;
       if (!expectedPreAuth) {
-        console.warn(`Sync to server failed for ${url} (status: ${response.status})`);
+        reportClientWarn(new Error(`Sync to server failed for ${url} (status: ${response.status})`), { context: 'db.syncToServer', url, status: response.status });
       }
       setSyncStatus(expectedPreAuth ? 'idle' : 'error');
       let errorKey: string | undefined;
@@ -92,7 +93,7 @@ export async function syncToServer(url: string, body: unknown, method: string = 
     setSyncStatus('idle');
     return { ok: true };
   } catch (error) {
-    console.error(`Network error during background sync for ${url}:`, error);
+    reportClientError(error, { context: 'db.syncToServer', url });
     setSyncStatus('error');
     return { ok: false };
   }
@@ -116,7 +117,7 @@ export function safeSetItem(key: string, value: string): void {
   try {
     localStorage.setItem(key, value);
   } catch (err) {
-    console.warn(`LocalStorage quota exceeded for key "${key}", skipping local cache write.`, err);
+    reportClientWarn(err, { context: 'db.safeSetItem', key });
   }
 }
 
@@ -144,7 +145,7 @@ export function clearAllClientStorage(): void {
     localStorage.clear();
     sessionStorage.clear();
   } catch (err) {
-    console.warn("Failed to clear client storage:", err);
+    reportClientWarn(err, { context: 'db.clearClientStorage' });
   }
 }
 

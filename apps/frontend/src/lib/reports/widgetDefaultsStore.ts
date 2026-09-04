@@ -5,6 +5,7 @@ import {
 } from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
 import { getDefaultCustomWidgets, withDefaultI18nKeys } from "./widgetDefaultSeeds.js";
+import { reportClientError } from "@/lib/clientErrorReporting";
 
 const SEEDED_WIDGET_BEHAVIOR_KEYS = [
   "category",
@@ -118,7 +119,7 @@ export function getOrInitializeCustomWidgets(): CustomWidget[] {
     }
     return merged;
   } catch (error) {
-    console.error("Failed to load custom widgets", error);
+    reportClientError(error, { context: 'reports.loadCustomWidgets' });
     return [];
   }
 }

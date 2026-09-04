@@ -1,4 +1,5 @@
 import { env } from '@/lib/config/env';
+import { reportClientWarn } from '@/lib/clientErrorReporting';
 
 const REFRESH_PATH = '/api/auth/refresh';
 
@@ -88,7 +89,7 @@ export function sanitizeColumnPreferencesBody(path: string, init: RequestInit): 
 
     return { ...init, body: JSON.stringify(parsed) };
   } catch (parseError) {
-    console.warn('Failed to sanitize column preferences request body:', parseError);
+    reportClientWarn(parseError, { context: 'api.sanitizeColumnPreferences' });
     return init;
   }
 }

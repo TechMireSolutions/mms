@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
+import { reportClientError } from '@/lib/clientErrorReporting';
 import { useComposedQuestionBankSettings } from './useQuestionBankSetupConfig';
 import { STANDARD_MODULES_CONFIG_REGISTRY } from '@/hooks/standardModuleConfigRegistry';
 import {
@@ -56,7 +57,7 @@ export function useQuestionBankConfig(
 
   const updateSettings = ((settingsDraft: QuestionBankSettings) => {
       // Fire-and-forget for local updates
-      updateSettingsAsync(settingsDraft).catch(console.error);
+      updateSettingsAsync(settingsDraft).catch((error) => reportClientError(error, { context: 'questionBank.updateSettings' }));
     });
 
   const fields = (() => getFlatFieldsConfig(settings.fields))();

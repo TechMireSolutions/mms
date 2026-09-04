@@ -9,6 +9,7 @@ import {
 } from '@mms/shared';
 import { saveBrandingSettings } from '@/lib/db';
 import { getScopedBrandingSettings } from '@/lib/settingsPreviewStore';
+import { reportClientError } from '@/lib/clientErrorReporting';
 
 export const MAX_FILE_BYTES = IMAGE_UPLOAD_MAX_INPUT_BYTES;
 export const NAME_MAX = BRANDING_NAME_MAX;
@@ -30,7 +31,7 @@ export function loadBranding(): BrandingSettings {
       return migrated;
     }
   } catch (error) {
-    console.error('Failed to migrate legacy madrasa_branding key:', error);
+    reportClientError(error, { context: 'branding.migrateLegacyKey' });
   }
 
   return getScopedBrandingSettings();

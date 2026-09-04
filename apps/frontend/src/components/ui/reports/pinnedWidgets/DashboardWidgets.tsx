@@ -10,6 +10,7 @@ import type { ReportCollection } from '@/lib/reports/reportMetadata';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { WidgetDrilldownModal } from '@/components/ui/reports/pinnedWidgets/CustomWidgetRenderer';
+import { reportClientError } from '@/lib/clientErrorReporting';
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
 import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
@@ -105,7 +106,7 @@ export function DashboardWidgets({
           field: targetField,
         });
       } catch (error) {
-        console.error(error);
+        reportClientError(error, { context: 'reports.widgetToggle' });
         notify.error(t('reports.widgets.errorToggleFailed'));
       }
     })();

@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
+import { reportClientError } from '@/lib/clientErrorReporting';
 import type { WidgetQuery, WidgetAggregateResult } from '@mms/shared';
 
 export interface DynamicWidgetInput {
@@ -89,7 +90,7 @@ export function useModuleWidgetAggregates(
             });
             return data || {};
           } catch (e) {
-            console.error(`Failed to load widget aggregates from ${path}`, e);
+            reportClientError(e, { context: 'reports.widgetAggregates', path });
             return {};
           }
         })

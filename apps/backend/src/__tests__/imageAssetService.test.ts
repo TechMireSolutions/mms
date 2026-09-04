@@ -66,4 +66,20 @@ describe('saveUploadedImage', () => {
     expect(sniffImageFormat(WEBP_BYTES)).toBe('webp');
     expect(sniffImageFormat(Buffer.from('not an image'))).toBeNull();
   });
+
+  it('persists streaming image uploads without buffering', async () => {
+    const { Readable } = await import('node:stream');
+    const stream = Readable.from([AVIF_BYTES]);
+    const url = await saveUploadedImage(stream, 'image/avif', 'logo');
+    expect(url).toMatch(/^\/uploads\/branding\/[0-9a-f-]+\.avif$/);
+  });
+
+  it('partitions image uploads by tenant when tenant is provided', async () => {
+    const url = await saveUploadedImage(AVIF_BYTES, 'image/avif', 'avatar', 'demo');
+    expect(url).toMatch(/^\/uploads\/tenants\/demo\/avatars\/[0-9a-f-]+\.avif$/);
+
+    const filename = url.split('/').pop()!;
+    const saved = await readFile(join(tempDir, 'tenants', 'demo', 'avatars', filename));
+    expect(saved.equals(AVIF_BYTES)).toBe(true);
+  });
 });

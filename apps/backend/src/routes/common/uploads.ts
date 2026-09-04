@@ -8,6 +8,7 @@ import { pipeline } from 'node:stream/promises';
 import { randomUUID } from 'node:crypto';
 import { parseImageUploadPurpose, resolveUploadsRoot } from '../../config/uploadConfig.js';
 import { authenticateUploader } from '../../middleware/authenticateUploader.js';
+import { getRequestTenant } from '../../lib/tenantContext.js';
 import { saveUploadedImage } from '../../services/imageAssetService.js';
 import { replyValidationError } from '../../lib/zodRequest.js';
 
@@ -30,8 +31,8 @@ export default async function uploadRoutes(
           return replyValidationError(reply, 'Image file is required');
         }
 
-        const buffer = await file.toBuffer();
-        const url = await saveUploadedImage(buffer, file.mimetype, purpose);
+        const tenant = getRequestTenant();
+        const url = await saveUploadedImage(file.file, file.mimetype, purpose, tenant);
         return reply.send({ url, purpose });
       } catch (error: unknown) {
         const err = error as Error & { statusCode?: number; type?: string };
@@ -55,9 +56,10 @@ export default async function uploadRoutes(
           return replyValidationError(reply, 'File is required');
         }
 
+        const tenant = getRequestTenant()?.trim().toLowerCase();
         const MAX_ATTACHMENT_SIZE = 10 * 1024 * 1024; // 10 MB
         const root = resolveUploadsRoot();
-        const dir = join(root, 'attachments');
+        const dir = tenant ? join(root, 'tenants', tenant, 'attachments') : join(root, 'attachments');
         await mkdir(dir, { recursive: true });
 
         // Sanitize filename to prevent directory traversal
@@ -94,7 +96,9 @@ export default async function uploadRoutes(
           return replyValidationError(reply, 'File size exceeds limit of 10 MB');
         }
 
-        const url = `/uploads/attachments/${filename}`;
+        const url = tenant
+          ? `/uploads/tenants/${tenant}/attachments/${filename}`
+          : `/uploads/attachments/${filename}`;
         return reply.send({
           url,
           name: file.filename,
