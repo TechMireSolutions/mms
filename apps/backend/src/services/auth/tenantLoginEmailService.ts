@@ -16,6 +16,7 @@ import {
   verifyUserPassword,
 } from './userService.js';
 import { sendTenantEmail } from '../email/emailService.js';
+import { logger } from '../../lib/logger.js';
 
 const CHANGE_TTL_MS = 15 * 60 * 1000;
 
@@ -72,7 +73,7 @@ async function dispatchChangeCode(
   });
   if (result.sent) return { sent: true };
   if (process.env.NODE_ENV !== 'production') {
-    console.log(`[dev] Login email change code for ${email}: ${code}`);
+    logger.info({ email, code }, 'Login email change code generated (dev)');
     return { sent: false, devCode: code };
   }
   throw new LoginEmailChangeError('email_send_failed', 'Failed to send verification email');

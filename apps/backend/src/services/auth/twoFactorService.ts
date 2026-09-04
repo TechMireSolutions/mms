@@ -23,6 +23,7 @@ import { getPublicUserById } from './userService.js';
 import { loadGlobalSettings } from '../globalSettingsService.js';
 import { sendTenantEmail } from '../email/emailService.js';
 import { runWithTenant } from '../../lib/tenantContext.js';
+import { logger } from '../../lib/logger.js';
 
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -106,7 +107,7 @@ async function dispatchTwoFactorCode(email: string, code: string): Promise<void>
   }
 
   if (process.env.NODE_ENV !== 'production') {
-    console.info(`[MMS] 2FA code (${channel}): ${code}`);
+    logger.info({ channel, code }, '2FA code generated (dev)');
   }
 }
 

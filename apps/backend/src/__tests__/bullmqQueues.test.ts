@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import { logger } from '../lib/logger.js';
 import {
   QUEUE_PDF_RENDERING,
   QUEUE_BULK_EXPORT,
@@ -54,7 +55,7 @@ describe('BullMQ Queue Architecture (Phase 5)', () => {
   });
 
   it('handles dead-letter queue permanently failed jobs gracefully', async () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation((() => {}) as any);
 
     await handleDeadLetterJob(
       QUEUE_BULK_EXPORT,
@@ -71,7 +72,8 @@ describe('BullMQ Queue Architecture (Phase 5)', () => {
     );
 
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('[BullMQ DLQ] Job test-job-999 (contacts:export-csv) in queue "bulk-export" permanently failed'),
+      expect.objectContaining({ jobId: 'test-job-999', queue: QUEUE_BULK_EXPORT }),
+      'Job permanently failed in queue',
     );
 
     errorSpy.mockRestore();

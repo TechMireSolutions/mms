@@ -1,4 +1,5 @@
 import { Redis } from 'ioredis';
+import { logger } from './logger.js';
 
 let redisInstance: Redis | null = null;
 let isRedisConnected = false;
@@ -38,7 +39,7 @@ export function getRedisClient(): Redis | null {
     client.on('error', (err: Error) => {
       isRedisConnected = false;
       if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
-        console.warn(`[Redis] Connection warning: ${err.message}`);
+        logger.warn({ err: err.message }, 'Redis connection warning');
       }
     });
 
@@ -78,7 +79,7 @@ export function getRedisSubscriberClient(): Redis | null {
 
     client.on('error', (err: Error) => {
       if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
-        console.warn(`[Redis Subscriber] Connection warning: ${err.message}`);
+        logger.warn({ err: err.message }, 'Redis subscriber connection warning');
       }
     });
 

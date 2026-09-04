@@ -1,4 +1,5 @@
 import { getRequestTenant } from './tenantContext.js';
+import { logger } from './logger.js';
 
 export interface MinimalWebSocket {
   close(code?: number, reason?: string): void;
@@ -63,13 +64,13 @@ export function configureRedisPubSub(
       redisSubscriber.subscribe(WS_INVALIDATION_CHANNEL).catch((err) => {
         subscribed = false; // allow a later retry (e.g. on `ready`)
         if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
-          console.warn('[WS PubSub] Failed to subscribe to mms:ws-invalidation:', err);
+          logger.warn({ err }, 'Failed to subscribe to mms:ws-invalidation');
         }
       });
       redisSubscriber.subscribe(JOB_EVENT_CHANNEL).catch((err) => {
         subscribed = false; // allow a later retry (e.g. on `ready`)
         if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
-          console.warn('[WS PubSub] Failed to subscribe to mms:job-event:', err);
+          logger.warn({ err }, 'Failed to subscribe to mms:job-event');
         }
       });
     };
@@ -91,7 +92,7 @@ export function configureRedisPubSub(
           }
         }
       } catch (err) {
-        console.error('[WS PubSub] Failed to process Redis message:', err);
+        logger.error({ err }, 'Failed to process Redis message');
       }
     });
   }
@@ -144,11 +145,11 @@ export function registerConnection(subdomain: string, socket: MinimalWebSocket, 
       socket.removeListener('error', onError);
     }
 
-    console.log(`[WS] Connection closed for user "${userId}" on subdomain "${normSubdomain}"`);
+    logger.info({ userId, subdomain: normSubdomain }, 'WS connection closed');
   };
 
   const onError = (err: Error) => {
-    console.error(`[WS] Connection error for user "${userId}" on subdomain "${normSubdomain}":`, err);
+    logger.error({ userId, subdomain: normSubdomain, err }, 'WS connection error');
     cleanup();
   };
 
@@ -168,7 +169,10 @@ export function registerConnection(subdomain: string, socket: MinimalWebSocket, 
     pingInterval.unref();
   }
 
-  console.log(`[WS] Connection registered for user "${userId}" on subdomain "${normSubdomain}". Active total: ${getActiveConnectionsCount()}`);
+  logger.info(
+    { userId, subdomain: normSubdomain, active: getActiveConnectionsCount() },
+    'WS connection registered',
+  );
   return cleanup;
 }
 
@@ -196,12 +200,12 @@ export function broadcastLocalTenantUpdate(
       connection.socket.send(message);
       sentCount++;
     } catch (err) {
-      console.error(`[WS] Failed to send update to user "${connection.userId}" on subdomain "${normSubdomain}":`, err);
+      logger.error({ userId: connection.userId, subdomain: normSubdomain, err }, 'Failed to send update to user');
     }
   }
 
   if (sentCount > 0) {
-    console.log(`[WS] Broadcasted database-update (${type}: "${key}") to ${sentCount} clients in subdomain "${normSubdomain}".`);
+    logger.info({ type, key, sentCount, subdomain: normSubdomain }, 'Broadcasted database-update');
   }
 }
 
@@ -221,7 +225,7 @@ export function broadcastTenantUpdate(
   if (redisPublisher) {
     const payload = JSON.stringify({ subdomain, type, key });
     redisPublisher.publish('mms:ws-invalidation', payload).catch((err) => {
-      console.error('[WS] Failed to publish WS invalidation to Redis:', err);
+      logger.error({ err }, 'Failed to publish WS invalidation to Redis');
     });
   }
 }
@@ -254,13 +258,13 @@ export function broadcastLocalJobEvent(jobEvent: {
         connection.socket.send(message);
         sentCount++;
       } catch (err) {
-        console.error(`[WS] Failed to send job event to user "${connection.userId}":`, err);
+        logger.error({ userId: connection.userId, err }, 'Failed to send job event to user');
       }
     }
   }
 
   if (sentCount > 0) {
-    console.log(`[WS] Broadcasted job event (${jobEvent.event} for job ${jobEvent.jobId}) to ${sentCount} clients.`);
+    logger.info({ event: jobEvent.event, jobId: jobEvent.jobId, sentCount }, 'Broadcasted job event');
   }
 }
 

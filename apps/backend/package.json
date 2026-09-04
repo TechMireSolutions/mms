@@ -43,6 +43,7 @@
     "ioredis": "^6.0.0",
     "nodemailer": "^9.0.5",
     "pg": "^8.23.0",
+    "pino": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -3,6 +3,7 @@ import type { DbClient } from './dbConnection.js';
 
 import { tracer } from '../config/telemetry.js';
 import { applyTenantTransactionGuards } from './tenantTransactionGuards.js';
+import { logger } from '../lib/logger.js';
 
 export type TenantTransaction = Parameters<Parameters<DbClient['transaction']>[0]>[0];
 export type AppDb = TenantTransaction;
@@ -45,7 +46,7 @@ export async function withTenant<T>(
       try {
         pool = activeDb();
         if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
-          console.warn('[withTenant] read replica unavailable — executing this transaction on the primary');
+          logger.warn('Read replica unavailable — executing this transaction on the primary');
         }
       } catch {
         // handled by the degradation branch below

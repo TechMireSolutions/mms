@@ -5,6 +5,7 @@ import { withTenant } from './tenant-context.js';
 import * as schema from './schema.js';
 import { resolveObjectStorageKey } from './documentStoreKeys.js';
 import { deleteObjectByStorageKey } from './documentStoreAdmin.js';
+import { logger } from '../lib/logger.js';
 
 export async function getObject(key: string): Promise<unknown | null> {
   try {
@@ -21,7 +22,7 @@ export async function getObject(key: string): Promise<unknown | null> {
       return row.data;
     });
   } catch (error) {
-    console.error(`Error getting object "${key}":`, error);
+    logger.error({ key, err: error }, 'Error getting object');
     throw error;
   }
 }
@@ -46,7 +47,7 @@ export async function saveObject(key: string, data: unknown): Promise<void> {
       broadcastTenantUpdate(tenant, 'object', key);
     }
   } catch (error) {
-    console.error(`Error saving object "${key}":`, error);
+    logger.error({ key, err: error }, 'Error saving object');
     throw error;
   }
 }

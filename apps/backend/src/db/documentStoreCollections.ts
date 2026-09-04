@@ -5,6 +5,7 @@ import { withTenant } from './tenant-context.js';
 import { RELATIONAL_REPLACE_MAPPING } from './relationalReplaceMapping.js';
 import * as schema from './schema.js';
 import { getQueryRows, resolveCollectionStorageName } from './documentStoreKeys.js';
+import { logger } from '../lib/logger.js';
 
 export async function getCollection(name: string): Promise<unknown[] | null> {
   try {
@@ -21,7 +22,7 @@ export async function getCollection(name: string): Promise<unknown[] | null> {
       return row.data;
     });
   } catch (error) {
-    console.error(`Error getting collection "${name}":`, error);
+    logger.error({ name, err: error }, 'Error getting collection');
     throw error;
   }
 }
@@ -44,7 +45,7 @@ export async function getCollectionForUpdate(name: string): Promise<unknown[] | 
       return row?.data ?? null;
     });
   } catch (error) {
-    console.error(`Error locking collection "${name}":`, error);
+    logger.error({ name, err: error }, 'Error locking collection');
     throw error;
   }
 }
@@ -101,7 +102,7 @@ export async function saveCollection(
     }
   } catch (error) {
     // Log only a safe message — the raw error/row payload must not reach logs (PII).
-    console.error(`Error saving collection "${name}":`, error instanceof Error ? error.message : 'non-error');
+    logger.error({ name, err: error instanceof Error ? error.message : 'non-error' }, 'Error saving collection');
     throw error;
   }
 }

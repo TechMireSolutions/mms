@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import { isBlockedHostname } from '../../lib/outboundUrl.js';
+import { logger } from '../../lib/logger.js';
 
 export interface PlatformEmailInput {
   to: string;
@@ -184,28 +185,20 @@ export async function dispatchPlatformVerificationEmail(
 
     const detail = result.message || 'unknown';
     if (isProductionNodeEnv()) {
-      console.warn(
-        `[MMS] ${input.logLabel} email delivery failed for ${input.email} (${detail})`,
-      );
+      logger.warn({ email: input.email, detail, label: input.logLabel }, 'email delivery failed');
       return { sent: false };
     }
 
-    console.warn(
-      `[MMS] ${input.logLabel} for ${input.email}: ${input.code} (Email delivery failed: ${detail})`,
-    );
+    logger.warn({ email: input.email, code: input.code, detail, label: input.logLabel }, 'email delivery failed (dev)');
     return { sent: false, devCode: input.code };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
     if (isProductionNodeEnv()) {
-      console.warn(
-        `[MMS] ${input.logLabel} email delivery threw for ${input.email} (${detail})`,
-      );
+      logger.warn({ email: input.email, detail, label: input.logLabel }, 'email delivery threw');
       return { sent: false };
     }
 
-    console.warn(
-      `[MMS] ${input.logLabel} for ${input.email}: ${input.code} (Email delivery threw: ${detail})`,
-    );
+    logger.warn({ email: input.email, code: input.code, detail, label: input.logLabel }, 'email delivery threw (dev)');
     return { sent: false, devCode: input.code };
   }
 }

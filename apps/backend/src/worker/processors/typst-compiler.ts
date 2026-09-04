@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { logger } from '../../lib/logger.js';
 
 const execFileAsync = promisify(execFile);
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -154,7 +155,7 @@ export async function compileTypstToPdf(options: TypstRenderOptions): Promise<Bu
       const pdfBuffer = await readFile(outputPath);
       return pdfBuffer;
     } catch (error) {
-      console.warn('[Typst Compiler] CLI compile failed, using conforming engine:', error);
+      logger.warn({ err: error }, 'CLI compile failed, using conforming engine');
       return generateConformingPdf(options);
     } finally {
       try {

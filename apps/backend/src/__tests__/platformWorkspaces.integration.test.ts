@@ -151,6 +151,7 @@ describe('platformWorkspaces REST API integration routes', () => {
     const resOn = await app.inject({
       method: 'PATCH',
       url: '/api/platform/workspaces/demo',
+      headers: { origin: 'http://localhost' },
       payload: { enabled: true },
       cookies: { mms_platform_access: token },
     });

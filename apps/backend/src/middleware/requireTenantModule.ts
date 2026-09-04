@@ -7,6 +7,7 @@ import {
 } from '../db/repositories/workspaceRepository.js';
 import { normalizeEnabledModules } from '@mms/shared';
 import { markRequestDiagnosticStage } from '../lib/requestDiagnostics.js';
+import { logger } from '../lib/logger.js';
 
 /**
  * Creates a Fastify preHandler middleware that restricts access to a route
@@ -45,8 +46,7 @@ export function requireTenantModule(moduleId: string) {
         return;
       }
     } catch (error) {
-      console.error('requireTenantModule error:', error);
-      request.log.error(error, `Failed to check module access for ${moduleId}`);
+      logger.error({ err: error, moduleId }, 'Failed to check module access');
       await sendForbidden(reply, 'Failed to verify module access');
     }
   };

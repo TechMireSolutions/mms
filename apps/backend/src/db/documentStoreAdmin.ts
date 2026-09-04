@@ -8,6 +8,7 @@ import { eq } from 'drizzle-orm';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { withTenant } from './tenant-context.js';
 import * as schema from './schema.js';
+import { logger } from '../lib/logger.js';
 
 export async function getAllData(): Promise<{ collections: Record<string, unknown[]>; objects: Record<string, unknown> }> {
   try {
@@ -56,7 +57,7 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
       return { collections, objects };
     });
   } catch (error) {
-    console.error('Error retrieving all database data:', error);
+    logger.error({ err: error }, 'Error retrieving all database data');
     throw error;
   }
 }

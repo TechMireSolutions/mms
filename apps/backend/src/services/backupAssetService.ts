@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir, stat } from 'node:fs/promises';
 import { join, normalize, relative, dirname } from 'node:path';
 import { resolveUploadsRoot } from '../config/uploadConfig.js';
 import type { TenantDatabaseSnapshot } from '@mms/shared';
+import { logger } from '../lib/logger.js';
 
 const UPLOADS_PATH_REGEX = /^\/uploads\/([a-zA-Z0-9_\-/.]+)$/;
 
@@ -97,7 +98,7 @@ export async function exportBackupAssetsForSnapshot(
       const fileStat = await stat(diskPath);
       if (!fileStat.isFile()) continue;
       if (fileStat.size > MAX_BACKUP_ASSET_FILE_BYTES) {
-        console.warn(`[Backup] Skipping asset ${url} exceeding 25MB limit (${fileStat.size} bytes)`);
+        logger.warn({ url, size: fileStat.size }, 'Skipping asset exceeding 25MB limit');
         continue;
       }
 
@@ -134,7 +135,7 @@ export async function restoreTenantAssets(assets: Record<string, string>): Promi
       await mkdir(dirname(diskPath), { recursive: true });
       await writeFile(diskPath, buffer);
     } catch (err) {
-      console.error(`[BackupRestore] Failed to restore asset "${urlPath}":`, err instanceof Error ? err.message : 'error');
+      logger.error({ urlPath, err: err instanceof Error ? err.message : 'error' }, 'Failed to restore asset');
     }
   }
 }

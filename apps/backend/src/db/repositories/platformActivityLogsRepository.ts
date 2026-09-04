@@ -1,6 +1,7 @@
 import { desc, gte, sql } from 'drizzle-orm';
 import { activeDb } from '../dbConnection.js';
 import { platformActivityLogs, workspaces } from '../schema.js';
+import { logger } from '../../lib/logger.js';
 
 export interface InsertPlatformActivityLog {
   userId?: string | null;
@@ -35,7 +36,7 @@ export async function insertPlatformActivityLog(log: InsertPlatformActivityLog):
         metadataMessage: log.metadataMessage || null,
       });
     } catch (innerError) {
-      console.warn('[PlatformActivityLogs] Failed to insert activity log:', innerError);
+      logger.warn({ err: innerError }, 'Failed to insert activity log');
     }
   }
 }
@@ -148,7 +149,7 @@ export async function getPlatformMonthlyActivityTrend(
       };
     });
   } catch (error) {
-    console.warn('[PlatformActivityLogs] Failed to compute activity trend:', error);
+    logger.warn({ err: error }, 'Failed to compute activity trend');
     return monthBuckets.map((bucket) => ({
       month: bucket.label,
       yearMonth: bucket.yearMonth,

@@ -3,6 +3,7 @@ import { AUDIT_LOG_COLLECTION, type AuditLogEntry } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { saveAuditLogEntry } from '../db/repositories/logsRepository.js';
 import { broadcastCollection } from './websocketService.js';
+import { logger } from '../lib/logger.js';
 
 export interface RecordAuditInput {
   userId: string;
@@ -37,7 +38,7 @@ export async function recordAudit(input: RecordAuditInput): Promise<void> {
     await broadcastCollection(AUDIT_LOG_COLLECTION);
   } catch (error) {
     if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
-      console.error('audit_log append failed:', error instanceof Error ? error.message : 'non-error');
+      logger.error({ err: error instanceof Error ? error.message : 'non-error' }, 'audit_log append failed');
     }
   }
 }

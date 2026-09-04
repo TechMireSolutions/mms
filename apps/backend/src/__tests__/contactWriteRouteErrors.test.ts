@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { FastifyReply } from 'fastify';
+import { logger } from '../lib/logger.js';
 import {
   handleContactWriteError,
   formatContactWriteError,
@@ -98,7 +99,7 @@ describe('handleContactWriteError', () => {
   });
 
   it('returns 500 on unexpected errors', () => {
-    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const errorSpy = vi.spyOn(logger, 'error').mockImplementation((() => {}) as any);
     const reply = createMockReply();
     handleContactWriteError(reply, new Error('Disk failure'));
     expect(reply.statusCode).toBe(500);

@@ -133,6 +133,7 @@ describe('platform admin system migrate-and-restart', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/platform/admin/system/migrate-and-restart',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: MIGRATE_AND_RESTART_CONFIRM, password: superPassword },
     });
@@ -152,7 +153,7 @@ describe('platform admin system migrate-and-restart', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/platform/admin/system/migrate-and-restart',
-      headers: { host: 'demo.localhost' },
+      headers: { origin: 'http://localhost', host: 'demo.localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: MIGRATE_AND_RESTART_CONFIRM, password: superPassword },
     });
@@ -172,6 +173,7 @@ describe('platform admin system migrate-and-restart', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/platform/admin/system/migrate-and-restart',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: MIGRATE_AND_RESTART_CONFIRM, password: superPassword },
     });
@@ -192,6 +194,7 @@ describe('platform admin system migrate-and-restart', () => {
     const badConfirm = await app.inject({
       method: 'POST',
       url: '/api/platform/admin/system/migrate-and-restart',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: 'WRONG', password: superPassword },
     });
@@ -200,6 +203,7 @@ describe('platform admin system migrate-and-restart', () => {
     const wrongPw = await app.inject({
       method: 'POST',
       url: '/api/platform/admin/system/migrate-and-restart',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: MIGRATE_AND_RESTART_CONFIRM, password: 'wrong-password' },
     });
@@ -219,6 +223,7 @@ describe('platform admin system migrate-and-restart', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/platform/admin/system/migrate-and-restart',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: MIGRATE_AND_RESTART_CONFIRM, password: superPassword },
     });
@@ -248,6 +253,7 @@ describe('platform admin system migrate-and-restart', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/platform/admin/system/migrate-and-restart',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: MIGRATE_AND_RESTART_CONFIRM, password: superPassword },
     });

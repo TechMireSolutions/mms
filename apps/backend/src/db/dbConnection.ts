@@ -7,6 +7,7 @@ import { getRequestTenant } from '../lib/tenantContext.js';
 import { getDb, setDb } from './dbClient.js';
 import * as schema from './schema.js';
 import { applyTenantTransactionGuards } from './tenantTransactionGuards.js';
+import { logger } from '../lib/logger.js';
 
 export type DbClient = NodePgDatabase<typeof schema>;
 
@@ -27,7 +28,7 @@ export function initializeDatabaseConnection(): void {
   });
   pool.on('error', (error) => {
     // Idle clients can be terminated during platform DB reset; log and continue.
-    console.error('Unexpected database pool client error:', error);
+    logger.error({ err: error }, 'Unexpected database pool client error');
   });
 
   readReplicaPool = new pg.Pool({
@@ -36,7 +37,7 @@ export function initializeDatabaseConnection(): void {
     connectionTimeoutMillis: 10_000,
   });
   readReplicaPool.on('error', (error) => {
-    console.error('Unexpected read-replica database pool client error:', error);
+    logger.error({ err: error }, 'Unexpected read-replica database pool client error');
   });
 
   rootDb = drizzle(pool, { schema });
@@ -109,7 +110,7 @@ export async function closeDatabase(): Promise<void> {
     if (endingReplica) promises.push(endingReplica.end());
     await Promise.all(promises);
   } catch (error) {
-    console.error('Error closing database pool:', error);
+    logger.error({ err: error }, 'Error closing database pool');
   }
 }
 
@@ -166,8 +167,9 @@ async function runTransaction<T>(
     [Symbol.asyncDispose]: async () => {
       const duration = Date.now() - startTime;
       if (duration > SLOW_QUERY_THRESHOLD_MS) {
-        console.warn(
-          `[SLOW DB TX] Transaction for tenant "${tenant || 'none'}" took ${duration}ms (threshold: ${SLOW_QUERY_THRESHOLD_MS}ms)`,
+        logger.warn(
+          { tenant: tenant || 'none', durationMs: duration, thresholdMs: SLOW_QUERY_THRESHOLD_MS },
+          'Slow DB transaction',
         );
       }
     },

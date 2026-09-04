@@ -18,6 +18,7 @@ import {
 import { saveCollection, saveObject } from './documentStore.js';
 import { getMinimalCollectionsForSeed, getMinimalObjects } from './minimalSeeds.js';
 import * as schema from './schema.js';
+import { logger } from '../lib/logger.js';
 
 const DATA_MIGRATION_LOCK_KEY = 2145836401;
 
@@ -150,12 +151,12 @@ export function initDb(options?: { force?: boolean }): Promise<void> {
       const results = await getRootDb().select({ count: sql<number>`count(*)` }).from(schema.workspaces);
       const count = Number(results[0]?.count ?? 0);
       if (count === 0) {
-        console.log('Database is empty. Seeding default collections and objects...');
+        logger.info('Database is empty. Seeding default collections and objects...');
         await seedDatabase();
       }
     } catch (error) {
       initDbPromise = null;
-      console.error('Failed to initialize the database:', error);
+      logger.error({ err: error }, 'Failed to initialize the database');
       throw error;
     }
   })();
@@ -180,7 +181,7 @@ async function runDataMigrations(): Promise<void> {
   const appliedSet = new Set(applied.map((migration) => migration.id));
   for (const migration of dataMigrationsToRun) {
     if (!appliedSet.has(migration.id)) {
-      console.log(`[Data Migration] Running pending data migration ${migration.id}...`);
+      logger.info({ migration: migration.id }, 'Running pending data migration');
       const run = await migration.load();
       await run();
       await getRootDb().insert(schema.dataMigrations).values({ id: migration.id }).onConflictDoNothing();
@@ -199,9 +200,9 @@ export async function seedDatabase(): Promise<void> {
         await saveObject(key, objectValue);
       }
     });
-    console.log('Database seeding completed successfully.');
+    logger.info('Database seeding completed successfully.');
   } catch (error) {
-    console.error('Failed to seed the database:', error);
+    logger.error({ err: error }, 'Failed to seed the database');
     throw error;
   }
 }

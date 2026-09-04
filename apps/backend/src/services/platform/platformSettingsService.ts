@@ -5,6 +5,7 @@ import {
   insertPlatformSettingsDefaultRow,
   upsertPlatformSettingsRow,
 } from '../../db/repositories/platformSettingsRepository.js';
+import { logger } from '../../lib/logger.js';
 
 let cachedPlatformSettings: PlatformSettings = { ...DEFAULT_PLATFORM_SETTINGS };
 
@@ -33,7 +34,7 @@ export async function initPlatformSettings(): Promise<PlatformSettings> {
       }
     }
   } catch (error) {
-    console.warn('Failed to initialize platform settings from database; using defaults:', error);
+    logger.warn({ err: error }, 'Failed to initialize platform settings from database; using defaults');
   }
 
   return cachedPlatformSettings;

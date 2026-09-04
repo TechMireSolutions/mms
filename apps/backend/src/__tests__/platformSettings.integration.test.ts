@@ -131,6 +131,7 @@ describe('platformSettings REST API routes', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/platform/settings',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
     });
 
@@ -152,6 +153,7 @@ describe('platformSettings REST API routes', () => {
     const res = await app.inject({
       method: 'GET',
       url: '/api/platform/settings',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
     });
 
@@ -170,6 +172,7 @@ describe('platformSettings REST API routes', () => {
     const res = await app.inject({
       method: 'PUT',
       url: '/api/platform/settings',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: {
         certbotEmail: 'ssl@madrasa.com',
@@ -195,6 +198,7 @@ describe('platformSettings REST API routes', () => {
     const res = await app.inject({
       method: 'PUT',
       url: '/api/platform/settings',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: {
         certbotEmail: 'hacker@example.com',
@@ -216,6 +220,7 @@ describe('platformSettings REST API routes', () => {
     const badRes = await app.inject({
       method: 'POST',
       url: '/api/platform/settings/reset-database',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: 'WRONG_CONFIRMATION', password: 'any' },
     });
@@ -224,6 +229,7 @@ describe('platformSettings REST API routes', () => {
     const missingPw = await app.inject({
       method: 'POST',
       url: '/api/platform/settings/reset-database',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: 'RESET_ALL_DATABASE_DATA' },
     });
@@ -232,6 +238,7 @@ describe('platformSettings REST API routes', () => {
     const wrongPw = await app.inject({
       method: 'POST',
       url: '/api/platform/settings/reset-database',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: 'RESET_ALL_DATABASE_DATA', password: 'wrong-password' },
     });
@@ -250,6 +257,7 @@ describe('platformSettings REST API routes', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/platform/settings/reset-database',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: { confirm: 'RESET_ALL_DATABASE_DATA', password: 'anything' },
     });

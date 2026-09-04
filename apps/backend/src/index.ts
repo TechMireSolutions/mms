@@ -6,6 +6,7 @@ import { startAuthArtifactPurgeScheduler } from './services/auth/authArtifactPur
 import { closeAllQueues } from './worker/queues/index.js';
 import { disconnectRedis } from './lib/redis.js';
 import { closeAllConnections } from './lib/livePush.js';
+import { logger } from './lib/logger.js';
 
 const FORCE_SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -76,6 +77,6 @@ async function startServer(): Promise<void> {
 
 startServer().catch((error) => {
   const errDetails = error instanceof Error ? error.stack || error.message : String(error);
-  console.error('Fatal error starting backend server:\n', errDetails);
+  logger.fatal({ err: errDetails }, 'Fatal error starting backend server');
   process.exit(1);
 });

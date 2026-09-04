@@ -9,6 +9,7 @@ import {
   getBullMQConnectionOptions,
 } from './queueConfig.js';
 import { markJobPermanentlyFailed } from '../../services/backgroundJobWorkerService.js';
+import { logger } from '../../lib/logger.js';
 
 export interface EnqueuedJobData {
   jobId: string;
@@ -97,7 +98,7 @@ export async function dispatchJobToQueue(
       clearTimeout(timeoutId!);
     }
   } catch (error) {
-    console.warn(`[BullMQ] Failed to enqueue job ${job.id} to ${queueName}:`, error);
+    logger.warn({ jobId: job.id, queue: queueName, err: error }, 'Failed to enqueue job');
     return false;
   }
 }
@@ -110,8 +111,9 @@ export async function handleDeadLetterJob(
   jobData: EnqueuedJobData,
   failedReason: string,
 ): Promise<void> {
-  console.error(
-    `[BullMQ DLQ] Job ${jobData.jobId} (${jobData.moduleId}:${jobData.kind}) in queue "${queueName}" permanently failed: ${failedReason}`,
+  logger.error(
+    { jobId: jobData.jobId, moduleId: jobData.moduleId, kind: jobData.kind, queue: queueName, reason: failedReason },
+    'Job permanently failed in queue',
   );
   
   await markJobPermanentlyFailed(
@@ -122,7 +124,7 @@ export async function handleDeadLetterJob(
     jobData.kind,
     `Job failed permanently in queue: ${failedReason}`
   ).catch(err => {
-    console.error(`[BullMQ DLQ] Failed to record dead-letter job in DB for ${jobData.jobId}:`, err);
+    logger.error({ jobId: jobData.jobId, err }, 'Failed to record dead-letter job in DB');
   });
 }
 
@@ -133,9 +135,9 @@ export async function closeAllQueues(): Promise<void> {
   for (const [name, queue] of queues.entries()) {
     try {
       await queue.close();
-      console.log(`[BullMQ] Queue "${name}" closed.`);
+      logger.info({ queue: name }, 'Queue closed');
     } catch (err) {
-      console.error(`[BullMQ] Error closing queue "${name}":`, err);
+      logger.error({ queue: name, err }, 'Error closing queue');
     }
   }
   queues.clear();

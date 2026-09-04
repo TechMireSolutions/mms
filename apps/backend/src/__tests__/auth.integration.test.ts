@@ -860,7 +860,7 @@ describe('platform auth routes', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: '/api/platform/users/p-target/permissions',
-      headers: { host: 'localhost' },
+      headers: { host: 'localhost', origin: 'http://localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
       payload: { permissions: { workspaces: true, onboard: false, settings: false, admins: false, system: false } },
     });
@@ -1144,7 +1144,7 @@ describe('platform auth routes', () => {
     const badConfirm = await app.inject({
       method: 'DELETE',
       url: '/api/platform/workspaces/demo',
-      headers: { host: 'localhost' },
+      headers: { host: 'localhost', origin: 'http://localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
       payload: { password: 'TestPassword123!', confirmSubdomain: 'other' },
     });
@@ -1155,7 +1155,7 @@ describe('platform auth routes', () => {
     const badPassword = await app.inject({
       method: 'DELETE',
       url: '/api/platform/workspaces/demo',
-      headers: { host: 'localhost' },
+      headers: { host: 'localhost', origin: 'http://localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
       payload: { password: 'wrong', confirmSubdomain: 'demo' },
     });
@@ -1166,7 +1166,7 @@ describe('platform auth routes', () => {
     const ok = await app.inject({
       method: 'DELETE',
       url: '/api/platform/workspaces/demo',
-      headers: { host: 'localhost' },
+      headers: { host: 'localhost', origin: 'http://localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
       payload: { password: 'TestPassword123!', confirmSubdomain: 'demo' },
     });
@@ -1197,7 +1197,7 @@ describe('platform auth routes', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: '/api/platform/users/p-target',
-      headers: { host: 'localhost' },
+      headers: { host: 'localhost', origin: 'http://localhost' },
       cookies: { [PLATFORM_ACCESS_COOKIE]: token },
       payload: { password: 'TestPassword123!' },
     });

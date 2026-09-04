@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { logger } from '../lib/logger.js';
 
 export interface SpanAttributes {
   [key: string]: string | number | boolean | undefined | null;
@@ -96,8 +97,14 @@ export class TelemetryTracer {
       }
 
       if (this.isEnabled && process.env.DEBUG_OTEL === 'true') {
-        console.log(
-          `[Trace] ${span.name} (traceId: ${span.context.traceId}, spanId: ${span.context.spanId}, duration: ${span.durationMs}ms, status: ${span.status})`,
+        logger.debug(
+          {
+            traceId: span.context.traceId,
+            spanId: span.context.spanId,
+            durationMs: span.durationMs,
+            status: span.status,
+          },
+          `[Trace] ${span.name}`,
         );
       }
     };

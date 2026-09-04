@@ -8,6 +8,7 @@ import {
   saveCollection,
   saveObject,
 } from './documentStore.js';
+import { logger } from '../lib/logger.js';
 import { initDb } from './dbInit.js';
 import { getMinimalCollectionsForSeed, getMinimalObjects } from './minimalSeeds.js';
 import * as schema from './schema.js';
@@ -102,7 +103,7 @@ export async function resetDatabase(): Promise<void> {
     });
     await initDb();
   } catch (error) {
-    console.error('Error resetting database:', error);
+    logger.error({ err: error }, 'Error resetting database');
     throw error;
   }
 }

@@ -15,6 +15,7 @@ allowBuilds:
 catalog:
   zod: "^4.4.3"
   fastify: "^5.12.1"
+  pino: "^10.3.1"
   drizzle-orm: "^0.45.2"
   react: "^19.2.8"
   react-dom: "^19.2.8"

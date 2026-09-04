@@ -3,6 +3,7 @@ import { join, resolve } from 'node:path';
 import { promisify } from 'node:util';
 import { resolveBackendRoot } from '../../config/loadEnv.js';
 import { initDb } from '../../db/dbInit.js';
+import { logger } from '../../lib/logger.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -50,9 +51,9 @@ export interface ReloadBackendResult {
  * Command paths/args are hardcoded — never interpolate request data.
  */
 export async function runMigrateAndReload(): Promise<{ ok: true }> {
-  console.log('[PlatformAdmin] Applying pending database migrations via initDb...');
+  logger.info('Applying pending database migrations via initDb...');
   await initDb();
-  console.log('[PlatformAdmin] Database migrations applied');
+  logger.info('Database migrations applied');
   const { reloaded } = await reloadBackendProcess();
   if (!reloaded) {
     // Process survived (local/dev) — allow another attempt after manual restart.
@@ -71,37 +72,37 @@ export function scheduleMigrateAndRestart(meta: MigrateRestartAuditMeta): boolea
   }
   migrateRestartInFlight = true;
 
-  console.error(
-    JSON.stringify({
-      level: 'audit',
+  logger.error(
+    {
       action: 'migrate_and_restart_scheduled',
       userId: meta.userId,
       delayMs: MIGRATE_RESTART_DELAY_MS,
       at: new Date().toISOString(),
-    }),
+    },
+    'audit',
   );
 
   const timer = setTimeout(() => {
     void (async () => {
       try {
         await runMigrateAndReload();
-        console.error(
-          JSON.stringify({
-            level: 'audit',
+        logger.error(
+          {
             action: 'migrate_and_restart_completed',
             userId: meta.userId,
             at: new Date().toISOString(),
-          }),
+          },
+          'audit',
         );
       } catch (error) {
-        console.error('[PlatformAdmin] migrate-and-restart failed:', error);
-        console.error(
-          JSON.stringify({
-            level: 'audit',
+        logger.error({ err: error }, 'migrate-and-restart failed');
+        logger.error(
+          {
             action: 'migrate_and_restart_failed',
             userId: meta.userId,
             at: new Date().toISOString(),
-          }),
+          },
+          'audit',
         );
         migrateRestartInFlight = false;
       }
@@ -122,9 +123,7 @@ export async function reloadBackendProcess(): Promise<ReloadBackendResult> {
   const ecosystemPath = join(repoRoot, ECOSYSTEM_FILE);
 
   try {
-    console.log(
-      `[PlatformAdmin] Reloading PM2 app ${PM2_APP_NAME} via ${ecosystemPath}`,
-    );
+    logger.info({ app: PM2_APP_NAME, ecosystem: ecosystemPath }, 'Reloading PM2 app');
     await execFileAsync(
       'pm2',
       ['reload', ecosystemPath, '--only', PM2_APP_NAME, '--update-env'],
@@ -137,10 +136,7 @@ export async function reloadBackendProcess(): Promise<ReloadBackendResult> {
     );
     return { reloaded: true };
   } catch (error) {
-    console.warn(
-      '[PlatformAdmin] pm2 reload failed; considering process.exit fallback:',
-      error,
-    );
+    logger.warn({ err: error }, 'pm2 reload failed; considering process.exit fallback');
   }
 
   if (shouldExitProcessForReloadFallback()) {
@@ -151,9 +147,7 @@ export async function reloadBackendProcess(): Promise<ReloadBackendResult> {
     return { reloaded: true };
   }
 
-  console.warn(
-    '[PlatformAdmin] Migrations applied but process reload skipped (not production/PM2). Restart the backend manually.',
-  );
+  logger.warn('Migrations applied but process reload skipped (not production/PM2). Restart the backend manually.');
   return { reloaded: false };
 }
 

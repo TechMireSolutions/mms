@@ -6,6 +6,7 @@ import {
   initDb,
   resetDbInitStateForTesting,
 } from '../../db/database.js';
+import { logger } from '../../lib/logger.js';
 
 /**
  * Wipes the entire PostgreSQL database schema and re-executes migrations,
@@ -16,7 +17,7 @@ import {
  */
 export async function resetAndReseedDatabase(): Promise<void> {
   const { databaseUrl } = loadServerConfig();
-  console.log('[Platform Database Reset] Super-user requested full database reset. Closing app pool...');
+  logger.info('Super-user requested full database reset. Closing app pool...');
 
   await closeDatabase();
 
@@ -46,9 +47,9 @@ export async function resetAndReseedDatabase(): Promise<void> {
           AND backend_type = 'client backend';
       `);
     } catch (err) {
-      console.warn(
-        '[Platform Database Reset] Warning: Could not terminate other active backend connections (insufficient privileges):',
-        err,
+      logger.warn(
+        { err },
+        'Warning: Could not terminate other active backend connections (insufficient privileges)',
       );
     }
 
@@ -85,12 +86,12 @@ export async function resetAndReseedDatabase(): Promise<void> {
       END $$;
     `);
     await client.query('DROP SCHEMA IF EXISTS drizzle CASCADE;');
-    console.log('[Platform Database Reset] Tables cleared. Re-running database initialization and migrations...');
+    logger.info('Tables cleared. Re-running database initialization and migrations...');
   } finally {
     initializeDatabaseConnection();
   }
 
   resetDbInitStateForTesting();
   await initDb({ force: true });
-  console.log('[Platform Database Reset] Database successfully reset and re-seeded!');
+  logger.info('Database successfully reset and re-seeded!');
 }

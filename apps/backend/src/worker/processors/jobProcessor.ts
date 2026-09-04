@@ -2,11 +2,15 @@ import type { Job } from 'bullmq';
 import type { EnqueuedJobData } from '../queues/index.js';
 import { executeJob } from '../../services/backgroundJobWorkerService.js';
 import { tracer } from '../../config/telemetry.js';
+import { logger } from '../../lib/logger.js';
 
 export async function processBackgroundJob(job: Job<EnqueuedJobData>): Promise<void> {
   const { tenantId, userId, jobId, moduleId, kind, payload } = job.data;
 
-  console.log(`[Worker Processor] Processing job ${jobId} (${moduleId}:${kind}) on queue "${job.queueName}" (Attempt ${job.attemptsMade + 1})`);
+  logger.info(
+    { jobId, moduleId, kind, queue: job.queueName, attempt: job.attemptsMade + 1 },
+    'Processing job',
+  );
 
   await tracer.withSpan(
     `bullmq.job ${moduleId}:${kind}`,

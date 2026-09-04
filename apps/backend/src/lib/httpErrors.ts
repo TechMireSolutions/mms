@@ -1,4 +1,5 @@
 import type { FastifyReply } from 'fastify';
+import { logger } from './logger.js';
 
 export function sendForbidden(
   reply: FastifyReply,
@@ -36,7 +37,7 @@ export function sendDatabaseError(
 ): FastifyReply {
   if (cause !== undefined) {
     // Log full cause server-side only — never echo DB internals to the client.
-    console.error('[database_error]', message, cause);
+    logger.error({ err: cause }, message);
   }
   return reply.status(500).send({
     type: 'database_error',

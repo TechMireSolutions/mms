@@ -9,6 +9,7 @@ import {
 } from '../../db/repositories/platformUserRepository.js';
 import { hashPassword, verifyPassword } from '../auth/passwordService.js';
 import { syncPlatformSuperUserToTenants } from './platformSuperUserTenantSyncService.js';
+import { logger } from '../../lib/logger.js';
 
 /**
  * Dev/staging bootstrap from env when PLATFORM_ALLOW_ENV_BOOTSTRAP=true.
@@ -20,7 +21,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
   // Never allow env-driven credential bootstrap in production — it could silently
   // reset the super-user password/email from environment variables.
   if (process.env.NODE_ENV === 'production') {
-    console.warn('[MMS] PLATFORM_ALLOW_ENV_BOOTSTRAP is ignored in production');
+    logger.warn('PLATFORM_ALLOW_ENV_BOOTSTRAP is ignored in production');
     return;
   }
 
@@ -30,9 +31,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
   const name = process.env.PLATFORM_ADMIN_NAME?.trim() || 'Platform Admin';
 
   if (!email || !password) {
-    console.warn(
-      '[MMS] PLATFORM_ALLOW_ENV_BOOTSTRAP=true but credentials missing — skipping bootstrap',
-    );
+    logger.warn('PLATFORM_ALLOW_ENV_BOOTSTRAP=true but credentials missing — skipping bootstrap');
     return;
   }
 
@@ -47,7 +46,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
         passwordHash: newHash,
         name: name || existing.name,
       });
-      console.log('[MMS] Updated platform super-user password from env');
+      logger.info('Updated platform super-user password from env');
     }
     await syncPlatformSuperUserToTenants();
     return;
@@ -61,7 +60,7 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
       passwordHash: newHash,
       name,
     });
-    console.log('[MMS] Updated existing super-user email from env');
+    logger.info('Updated existing super-user email from env');
     await syncPlatformSuperUserToTenants();
     return;
   }
@@ -78,6 +77,6 @@ export async function ensurePlatformSuperUserFromEnv(): Promise<void> {
     emailVerifiedAt: new Date().toISOString(),
   };
   await insertPlatformUser(user);
-  console.log('[MMS] Platform super-user seeded from env');
+  logger.info('Platform super-user seeded from env');
   await syncPlatformSuperUserToTenants();
 }

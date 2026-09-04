@@ -16,6 +16,7 @@ import {
 } from './queues/index.js';
 import { processBackgroundJob } from './processors/jobProcessor.js';
 import { registerDefaultBackgroundJobRunners } from '../services/backgroundJobRunnerService.js';
+import { logger } from '../lib/logger.js';
 
 /** A 'pending' job older than this is assumed to have never been dispatched. */
 const STALE_PENDING_MS = 10 * 60 * 1000;
@@ -35,7 +36,7 @@ export async function cleanupOrphanedJobs(): Promise<void> {
         .returning({ id: backgroundJobs.id });
 
       if (running.length > 0) {
-        console.log(`[BullMQ Worker] Cleaned up ${running.length} orphaned running jobs.`);
+        logger.info({ count: running.length }, 'Cleaned up orphaned running jobs');
       }
 
       // Jobs stuck in 'pending' for a long time were likely inserted but never
@@ -56,11 +57,11 @@ export async function cleanupOrphanedJobs(): Promise<void> {
         .returning({ id: backgroundJobs.id });
 
       if (pending.length > 0) {
-        console.log(`[BullMQ Worker] Cleaned up ${pending.length} stale pending jobs.`);
+        logger.info({ count: pending.length }, 'Cleaned up stale pending jobs');
       }
     });
   } catch (error) {
-    console.error('[BullMQ Worker] Failed to cleanup orphaned jobs:', error);
+    logger.error({ err: error }, 'Failed to cleanup orphaned jobs');
   }
 }
 
@@ -84,27 +85,27 @@ export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData>
   );
 
   worker.on('completed', (job) => {
-    console.log(`[BullMQ Worker] Job ${job.id} completed on queue "${queueName}"`);
+    logger.info({ jobId: job.id, queue: queueName }, 'Job completed');
   });
 
   worker.on('failed', (job, err) => {
-    console.error(`[BullMQ Worker] Job ${job?.id} failed on queue "${queueName}":`, err.message);
+    logger.error({ jobId: job?.id, queue: queueName, err: err.message }, 'Job failed');
     if (job && job.attemptsMade >= (job.opts.attempts || 3)) {
       void handleDeadLetterJob(queueName, job.data, err.message).catch((deadLetterErr) => {
-        console.error(`[BullMQ Worker] Dead-letter handling failed for job ${job.id}:`, deadLetterErr);
+        logger.error({ jobId: job.id, err: deadLetterErr }, 'Dead-letter handling failed');
       });
     }
   });
 
   worker.on('error', (err) => {
-    console.error(`[BullMQ Worker] Error on queue "${queueName}":`, err);
+    logger.error({ queue: queueName, err }, 'Worker error');
   });
 
   return worker;
 }
 
 export async function startWorkerDaemon(): Promise<void> {
-  console.log('[BullMQ Worker] Initializing Worker Daemon...');
+  logger.info('Initializing Worker Daemon...');
   if (process.env.NODE_ENV !== 'production') {
     try {
       process.loadEnvFile();
@@ -124,21 +125,21 @@ export async function startWorkerDaemon(): Promise<void> {
   for (const queueName of queueNames) {
     const worker = createWorkerForQueue(queueName);
     activeWorkers.push(worker);
-    console.log(`[BullMQ Worker] Started worker for "${queueName}" with concurrency ${QUEUE_SETTINGS[queueName]?.concurrency}`);
+    logger.info({ queue: queueName, concurrency: QUEUE_SETTINGS[queueName]?.concurrency }, 'Started worker');
   }
 
-  console.log('[BullMQ Worker] All workers started and listening.');
+  logger.info('All workers started and listening.');
 
   const shutdown = async (signal: string) => {
     if (!isRunning) return;
-    console.log(`[BullMQ Worker] Received ${signal}, shutting down...`);
+    logger.info({ signal }, 'Received signal, shutting down...');
     isRunning = false;
 
     process.removeAllListeners('SIGTERM');
     process.removeAllListeners('SIGINT');
 
     const forceExitTimer = setTimeout(() => {
-      console.error('[BullMQ Worker] Graceful shutdown timed out; forcing exit');
+      logger.fatal('Graceful shutdown timed out; forcing exit');
       process.exit(1);
     }, 10_000);
     forceExitTimer.unref?.();
@@ -149,7 +150,7 @@ export async function startWorkerDaemon(): Promise<void> {
         try {
           await worker.close();
         } catch (err) {
-          console.error('[BullMQ Worker] Error closing worker:', err);
+          logger.error({ err }, 'Error closing worker');
         }
       }
 
@@ -160,12 +161,12 @@ export async function startWorkerDaemon(): Promise<void> {
       await disconnectRedis();
       await closeDatabase();
 
-      console.log('[BullMQ Worker] Gracefully shut down.');
+      logger.info('Gracefully shut down.');
       if (process.env.NODE_ENV !== 'test') {
         process.exit(0);
       }
     } catch (err) {
-      console.error('[BullMQ Worker] Shutdown failed:', err);
+      logger.error({ err }, 'Shutdown failed');
       if (process.env.NODE_ENV !== 'test') {
         process.exit(1);
       }
@@ -175,10 +176,10 @@ export async function startWorkerDaemon(): Promise<void> {
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
   process.on('SIGINT', () => void shutdown('SIGINT'));
   process.on('unhandledRejection', (reason) => {
-    console.error('[BullMQ Worker] Unhandled rejection:', reason);
+    logger.error({ reason }, 'Unhandled rejection');
   });
   process.on('uncaughtException', (error) => {
-    console.error('[BullMQ Worker] Uncaught exception:', error);
+    logger.fatal({ err: error }, 'Uncaught exception');
     void shutdown('uncaughtException');
   });
 }
@@ -187,7 +188,7 @@ export { activeWorkers };
 
 if (process.env.NODE_ENV !== 'test' && import.meta.url === `file://${process.argv[1]}`) {
   startWorkerDaemon().catch((error) => {
-    console.error('[BullMQ Worker] Fatal startup error:', error);
+    logger.fatal({ err: error }, 'Fatal startup error');
     process.exit(1);
   });
 }

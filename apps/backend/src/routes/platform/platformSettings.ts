@@ -18,6 +18,7 @@ import { clearPlatformAccessCookie } from '../../services/platform/platformCooki
 import { resetAndReseedDatabase } from '../../services/platform/platformDatabaseService.js';
 import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { logger } from '../../lib/logger.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { sendDatabaseError, sendInvalidCurrentPassword } from '../../lib/httpErrors.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
@@ -81,13 +82,13 @@ export default async function platformSettingsRoutes(
 
         try {
           // Audit outside the wiped schema — platform_activity_logs is destroyed by the reset.
-          console.error(
-            JSON.stringify({
-              level: 'audit',
+          logger.error(
+            {
               action: 'reset_database',
               userId: platformUser.id,
               at: new Date().toISOString(),
-            }),
+            },
+            'audit',
           );
 
           await resetAndReseedDatabase();
