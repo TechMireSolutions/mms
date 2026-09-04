@@ -1,6 +1,7 @@
 import type React from "react";
 import { Building2, CreditCard, Globe, MapPin, User, Star, Landmark, Hash } from "lucide-react";
 import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -10,6 +11,7 @@ import {
   DEFAULT_BANK_CURRENCIES,
 } from "@mms/shared";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 export interface ContactBankDetailCardProps {
   bankDetail: ContactBankDetail;
@@ -31,6 +33,7 @@ export interface ContactBankDetailCardProps {
   isFieldRequired: (group: string, field: string) => boolean;
   getListItemError: (group: string, field: string, index: number) => string | undefined;
   getLocalId: (group: string, index: number) => string;
+  onSetPrimary?: () => void;
   updateBankDetail: (idx: number, patch: Partial<ContactBankDetail> & Record<string, unknown>) => void;
   removeBankDetail: (idx: number) => void;
 }
@@ -55,6 +58,7 @@ export function ContactBankDetailCard({
   isFieldRequired,
   getListItemError,
   getLocalId,
+  onSetPrimary,
   updateBankDetail,
   removeBankDetail,
 }: ContactBankDetailCardProps): React.JSX.Element {
@@ -81,11 +85,10 @@ export function ContactBankDetailCard({
 
   return (
     <ListFieldCard
-      key={getLocalId("bankDetails", idx)}
       id={getLocalId("bankDetails", idx)}
       index={idx}
       accentClass={SUB_LIST_CARD_ACCENTS.bankDetails.accent}
-      label={`${t("contacts.fields.bankDetailsLabel") || "Account Type"}:`}
+      label={`${t("contacts.fields.bankDetailsLabel")}:`}
       typeSelect={
         <EditableSelect
           options={labelOptions}
@@ -95,35 +98,37 @@ export function ContactBankDetailCard({
           className="w-36 @sm:w-44 min-w-0"
           id={`cf-${formInstanceId}-bank-label-${idx}`}
           name={`cf-${formInstanceId}-bank-label-${idx}`}
-          placeholder={t("contacts.fields.bankLabel") || "Account Label"}
+          placeholder={t("contacts.fields.bankLabel")}
         />
       }
       headerExtras={
         showIsPrimary ? (
           <button
             type="button"
-            onClick={() => updateBankDetail(idx, { isPrimary: !bankDetail.isPrimary })}
-            className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors min-h-[36px] touch-manipulation ${
+            onClick={onSetPrimary}
+            className={cn(
+              "cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-colors min-h-11 touch-manipulation select-none",
               bankDetail.isPrimary
-                ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-                : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-            }`}
-            title={t("contacts.fields.bankIsPrimary") || "Primary Account"}
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40 border border-transparent",
+            )}
+            title={t("contacts.fields.bankIsPrimary")}
+            aria-label={t("contacts.fields.bankIsPrimary")}
           >
-            <Star className={`w-3.5 h-3.5 ${bankDetail.isPrimary ? "fill-emerald-500 text-emerald-500" : ""}`} />
+            <Star className={cn("w-3.5 h-3.5", bankDetail.isPrimary && "fill-primary text-primary")} aria-hidden />
             <span>{bankDetail.isPrimary ? t("contacts.form.primary") : t("contacts.form.setPrimary")}</span>
           </button>
         ) : undefined
       }
       onRemove={() => removeBankDetail(idx)}
-      removeLabel={t("contacts.form.removeBankDetail", { index: idx + 1 }) || `Remove bank account ${idx + 1}`}
+      removeLabel={t("contacts.form.removeBankDetail", { index: idx + 1 })}
     >
       <div className="space-y-3">
         {/* Row 1: Bank Name & Account Title */}
         <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
           {showBankName && (
             <Field
-              label={t("contacts.fields.bankName") || "Bank Name"}
+              label={t("contacts.fields.bankName")}
               required={isFieldRequired("bankDetails", "bankName")}
               error={bankNameError}
               id={`cf-${formInstanceId}-bank-name-${idx}`}
@@ -132,16 +137,20 @@ export function ContactBankDetailCard({
                 icon={Landmark}
                 id={`cf-${formInstanceId}-bank-name-${idx}`}
                 name={`cf-${formInstanceId}-bank-name-${idx}`}
+                autoCapitalize="words"
+                enterKeyHint="next"
+                aria-invalid={Boolean(bankNameError)}
                 value={bankDetail.bankName || ""}
                 onChange={(e) => updateBankDetail(idx, { bankName: e.target.value })}
-                placeholder={t("contacts.fields.bankNamePlaceholder") || "e.g. Meezan Bank, HBL"}
+                placeholder={t("contacts.fields.bankNamePlaceholder")}
+                className={cn(bankNameError && "border-destructive focus-visible:ring-destructive")}
               />
             </Field>
           )}
 
           {showAccountTitle && (
             <Field
-              label={t("contacts.fields.bankAccountTitle") || "Account Title"}
+              label={t("contacts.fields.bankAccountTitle")}
               required={isFieldRequired("bankDetails", "accountTitle")}
               error={accountTitleError}
               id={`cf-${formInstanceId}-bank-title-${idx}`}
@@ -150,9 +159,13 @@ export function ContactBankDetailCard({
                 icon={User}
                 id={`cf-${formInstanceId}-bank-title-${idx}`}
                 name={`cf-${formInstanceId}-bank-title-${idx}`}
+                autoCapitalize="words"
+                enterKeyHint="next"
+                aria-invalid={Boolean(accountTitleError)}
                 value={bankDetail.accountTitle || ""}
                 onChange={(e) => updateBankDetail(idx, { accountTitle: e.target.value })}
-                placeholder={t("contacts.fields.bankAccountTitlePlaceholder") || "Beneficiary name"}
+                placeholder={t("contacts.fields.bankAccountTitlePlaceholder")}
+                className={cn(accountTitleError && "border-destructive focus-visible:ring-destructive")}
               />
             </Field>
           )}
@@ -163,7 +176,7 @@ export function ContactBankDetailCard({
           {showAccountNumber && (
             <div className="@sm:col-span-2">
               <Field
-                label={t("contacts.fields.bankAccountNumber") || "Account Number"}
+                label={t("contacts.fields.bankAccountNumber")}
                 required={isFieldRequired("bankDetails", "accountNumber")}
                 error={accountNumberError}
                 id={`cf-${formInstanceId}-bank-acc-no-${idx}`}
@@ -173,10 +186,13 @@ export function ContactBankDetailCard({
                   id={`cf-${formInstanceId}-bank-acc-no-${idx}`}
                   name={`cf-${formInstanceId}-bank-acc-no-${idx}`}
                   inputMode="numeric"
-                  className="font-mono"
+                  spellCheck={false}
+                  enterKeyHint="next"
+                  aria-invalid={Boolean(accountNumberError)}
+                  className={cn("font-mono", accountNumberError && "border-destructive focus-visible:ring-destructive")}
                   value={bankDetail.accountNumber || ""}
                   onChange={(e) => updateBankDetail(idx, { accountNumber: e.target.value })}
-                  placeholder={t("contacts.fields.bankAccountNumberPlaceholder") || "01234567890123"}
+                  placeholder={t("contacts.fields.bankAccountNumberPlaceholder")}
                 />
               </Field>
             </div>
@@ -184,21 +200,18 @@ export function ContactBankDetailCard({
 
           {showCurrency && (
             <Field
-              label={t("contacts.fields.bankCurrency") || "Currency"}
+              label={t("contacts.fields.bankCurrency")}
               id={`cf-${formInstanceId}-bank-currency-${idx}`}
             >
-              <select
+              <FormSelect
                 id={`cf-${formInstanceId}-bank-currency-${idx}`}
                 name={`cf-${formInstanceId}-bank-currency-${idx}`}
                 value={bankDetail.currency || "PKR"}
-                onChange={(e) => updateBankDetail(idx, { currency: e.target.value })}
-                aria-label={t("contacts.fields.bankCurrency") || "Currency"}
-                className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary/40 min-h-[44px]"
-              >
-                {currencyOptions.map((c) => (
-                  <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
+                onChange={(val) => updateBankDetail(idx, { currency: val })}
+                options={currencyOptions}
+                aria-label={t("contacts.fields.bankCurrency")}
+                className="w-full"
+              />
             </Field>
           )}
         </div>
@@ -207,7 +220,7 @@ export function ContactBankDetailCard({
         <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
           {showIban && (
             <Field
-              label={t("contacts.fields.bankIban") || "IBAN"}
+              label={t("contacts.fields.bankIban")}
               required={isFieldRequired("bankDetails", "iban")}
               error={ibanError}
               id={`cf-${formInstanceId}-bank-iban-${idx}`}
@@ -216,17 +229,20 @@ export function ContactBankDetailCard({
                 icon={Globe}
                 id={`cf-${formInstanceId}-bank-iban-${idx}`}
                 name={`cf-${formInstanceId}-bank-iban-${idx}`}
-                className="font-mono uppercase tracking-wider"
+                spellCheck={false}
+                enterKeyHint="next"
+                aria-invalid={Boolean(ibanError)}
+                className={cn("font-mono uppercase tracking-wider", ibanError && "border-destructive focus-visible:ring-destructive")}
                 value={bankDetail.iban || ""}
                 onChange={handleIbanChange}
-                placeholder={t("contacts.fields.bankIbanPlaceholder") || "PK36MEZN00012345678901"}
+                placeholder={t("contacts.fields.bankIbanPlaceholder")}
               />
             </Field>
           )}
 
           {showSwiftCode && (
             <Field
-              label={t("contacts.fields.bankSwiftCode") || "SWIFT / BIC Code"}
+              label={t("contacts.fields.bankSwiftCode")}
               required={isFieldRequired("bankDetails", "swiftCode")}
               error={swiftCodeError}
               id={`cf-${formInstanceId}-bank-swift-${idx}`}
@@ -235,10 +251,13 @@ export function ContactBankDetailCard({
                 icon={Building2}
                 id={`cf-${formInstanceId}-bank-swift-${idx}`}
                 name={`cf-${formInstanceId}-bank-swift-${idx}`}
-                className="font-mono uppercase tracking-wider"
+                spellCheck={false}
+                enterKeyHint="next"
+                aria-invalid={Boolean(swiftCodeError)}
+                className={cn("font-mono uppercase tracking-wider", swiftCodeError && "border-destructive focus-visible:ring-destructive")}
                 value={bankDetail.swiftCode || ""}
                 onChange={handleSwiftChange}
-                placeholder={t("contacts.fields.bankSwiftPlaceholder") || "MEZNPKKA"}
+                placeholder={t("contacts.fields.bankSwiftPlaceholder")}
               />
             </Field>
           )}
@@ -248,7 +267,7 @@ export function ContactBankDetailCard({
         <div className="grid grid-cols-1 gap-3 @sm:grid-cols-3">
           {showBranchName && (
             <Field
-              label={t("contacts.fields.bankBranchName") || "Branch Name"}
+              label={t("contacts.fields.bankBranchName")}
               required={isFieldRequired("bankDetails", "branchName")}
               error={branchNameError}
               id={`cf-${formInstanceId}-bank-branch-name-${idx}`}
@@ -257,16 +276,20 @@ export function ContactBankDetailCard({
                 icon={MapPin}
                 id={`cf-${formInstanceId}-bank-branch-name-${idx}`}
                 name={`cf-${formInstanceId}-bank-branch-name-${idx}`}
+                autoCapitalize="words"
+                enterKeyHint="next"
+                aria-invalid={Boolean(branchNameError)}
                 value={bankDetail.branchName || ""}
                 onChange={(e) => updateBankDetail(idx, { branchName: e.target.value })}
-                placeholder={t("contacts.fields.bankBranchNamePlaceholder") || "Main Branch"}
+                placeholder={t("contacts.fields.bankBranchNamePlaceholder")}
+                className={cn(branchNameError && "border-destructive focus-visible:ring-destructive")}
               />
             </Field>
           )}
 
           {showBranchCode && (
             <Field
-              label={t("contacts.fields.bankBranchCode") || "Branch Code"}
+              label={t("contacts.fields.bankBranchCode")}
               required={isFieldRequired("bankDetails", "branchCode")}
               error={branchCodeError}
               id={`cf-${formInstanceId}-bank-branch-code-${idx}`}
@@ -275,17 +298,20 @@ export function ContactBankDetailCard({
                 icon={Hash}
                 id={`cf-${formInstanceId}-bank-branch-code-${idx}`}
                 name={`cf-${formInstanceId}-bank-branch-code-${idx}`}
-                className="font-mono"
+                spellCheck={false}
+                enterKeyHint="next"
+                aria-invalid={Boolean(branchCodeError)}
+                className={cn("font-mono", branchCodeError && "border-destructive focus-visible:ring-destructive")}
                 value={bankDetail.branchCode || ""}
                 onChange={(e) => updateBankDetail(idx, { branchCode: e.target.value })}
-                placeholder="0123"
+                placeholder={t("contacts.fields.bankBranchCodePlaceholder")}
               />
             </Field>
           )}
 
           {showRoutingNumber && (
             <Field
-              label={t("contacts.fields.bankRoutingNumber") || "Routing Number"}
+              label={t("contacts.fields.bankRoutingNumber")}
               required={isFieldRequired("bankDetails", "routingNumber")}
               error={routingNumberError}
               id={`cf-${formInstanceId}-bank-routing-${idx}`}
@@ -294,10 +320,13 @@ export function ContactBankDetailCard({
                 icon={Hash}
                 id={`cf-${formInstanceId}-bank-routing-${idx}`}
                 name={`cf-${formInstanceId}-bank-routing-${idx}`}
-                className="font-mono"
+                spellCheck={false}
+                enterKeyHint="done"
+                aria-invalid={Boolean(routingNumberError)}
+                className={cn("font-mono", routingNumberError && "border-destructive focus-visible:ring-destructive")}
                 value={bankDetail.routingNumber || ""}
                 onChange={(e) => updateBankDetail(idx, { routingNumber: e.target.value })}
-                placeholder="123456789"
+                placeholder={t("contacts.fields.bankRoutingNumberPlaceholder")}
               />
             </Field>
           )}

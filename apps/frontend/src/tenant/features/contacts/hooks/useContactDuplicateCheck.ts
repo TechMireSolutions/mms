@@ -32,23 +32,36 @@ export function useContactDuplicateCheck({
       return;
     }
 
+    const abortController = new AbortController();
+
     const timer = setTimeout(async () => {
       try {
         // The tag property is a computed frontend-only UI state added by normalization
         const { tag: _tag, ...cleanDraft } = contactDraft as Record<string, unknown>;
         const res = await apiContract.contacts.duplicateCheck({
           body: { contact: cleanDraft },
+          fetchOptions: { signal: abortController.signal },
+          signal: abortController.signal,
         });
+        if (abortController.signal.aborted) {
+          return;
+        }
         if (res.status === 200) {
           const body = res.body as { matchCount?: number } | undefined;
           setDuplicateCount(body?.matchCount ?? 0);
         }
-      } catch {
+      } catch (err: unknown) {
+        if (err instanceof DOMException && err.name === "AbortError") {
+          return;
+        }
         // Non-blocking duplicate check: ignore gracefully
       }
     }, 600);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      abortController.abort();
+    };
   }, [open, contactId, contactDraft]);
 
   return duplicateCount;

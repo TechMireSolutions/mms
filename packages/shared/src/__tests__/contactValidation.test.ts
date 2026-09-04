@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildDynamicContactSchema, isUrlOrSocialHandle } from '../contactValidation.js';
+import { formatZodIssues } from '../contactValidationErrors.js';
+import { contactWriteSchema } from '../schemas/contacts.dto.js';
 import type { FieldConfig } from '../contactTypes.js';
 
 describe('buildDynamicContactSchema', () => {
@@ -280,5 +282,31 @@ describe('buildDynamicContactSchema Setup Fields round-trip', () => {
         hiddenRequired: '',
       }).success,
     ).toBe(true);
+  });
+
+  describe('formatZodIssues tab mapping', () => {
+    it('correctly maps bankDetails, education, experience, skills, and relationships errors to their respective tabs', () => {
+      const invalidPayload = {
+        firstName: 'John',
+        bankDetails: [{ bankName: 123 as unknown as string }],
+        education: [{ institution: 123 as unknown as string }],
+        experience: [{ title: 123 as unknown as string }],
+        skills: [{ name: 123 as unknown as string }],
+        relationships: [{ relatedContactId: 123 as unknown as string }],
+      };
+
+      const result = contactWriteSchema.safeParse(invalidPayload);
+      expect(result.success).toBe(false);
+      if (!result.success) {
+        const errors = formatZodIssues(result.error, invalidPayload, {}, 'en');
+        const tabIds = new Set(errors.map((e) => e.tabId));
+        expect(tabIds.has('bankDetails')).toBe(true);
+        expect(tabIds.has('education')).toBe(true);
+        expect(tabIds.has('experience')).toBe(true);
+        expect(tabIds.has('skills')).toBe(true);
+        expect(tabIds.has('relationship')).toBe(true);
+        expect(tabIds.has('basic')).toBe(false);
+      }
+    });
   });
 });

@@ -62,6 +62,7 @@ export function mergeContactEditSavePayload(
     education: draft.education ?? [],
     experience: draft.experience ?? [],
     skills: draft.skills ?? [],
+    bankDetails: draft.bankDetails ?? [],
     relationshipContacts: draft.relationshipContacts ?? [],
   };
   const synced = syncContactScalarFields(withCollections);

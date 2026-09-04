@@ -10,7 +10,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   IMAGE_UPLOAD_MAX_INPUT_BYTES,
   REMOVED_FORM_FIELD_KEYS,
-  isContactCustomCollectionTab,
   type Contact,
   type ValidationError,
 } from "@mms/shared";
@@ -56,12 +55,9 @@ export function useContactFormDraftHelpers({
     const filledRelationships = (contactDraft.relationshipContacts || []).filter(
       (link) => link.contactId,
     ).length;
-    const customCounts: Record<string, number> = {};
-    for (const [key, value] of Object.entries(contactDraft)) {
-      if (isContactCustomCollectionTab(key) && Array.isArray(value)) {
-        customCounts[key] = value.length;
-      }
-    }
+    const filledBankDetails = (contactDraft.bankDetails || []).filter(
+      (b) => (b.accountNumber || b.iban || b.bankName || "").trim(),
+    ).length;
     return {
       filledPhones,
       filledEmails,
@@ -71,7 +67,7 @@ export function useContactFormDraftHelpers({
       filledExperience,
       filledSkills,
       filledRelationships,
-      ...customCounts,
+      filledBankDetails,
     };
   })();
 

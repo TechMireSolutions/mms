@@ -972,7 +972,7 @@ describe("cleanContactDraft", () => {
       ],
     });
     expect(cleaned.addresses).toEqual([
-      { label: "Work", line1: "", city: "Karachi", state: "", country: "" },
+      { label: "Work", line1: "", city: "Karachi", state: "", country: "", isPrimary: true },
     ]);
   });
 

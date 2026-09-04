@@ -3,12 +3,9 @@ import type { ChangeEvent, FormEvent, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { DETAIL_SYSTEM_TAB_KEYS } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
 import { ContactDetailOverview } from "@/tenant/features/contacts/components/detail/ContactDetailOverview";
 import { ContactDetailTimeline } from "@/tenant/features/contacts/components/detail/ContactDetailTimeline";
 import { ContactDetailFiles } from "@/tenant/features/contacts/components/detail/ContactDetailFiles";
-import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
-import { ContactDetailCustomCollections } from "@/tenant/features/contacts/components/detail/ContactDetailCustomCollections";
 import type { DetailFieldView } from "@/tenant/features/contacts/hooks/useContactDetailViewModel";
 
 export interface ContactDetailDrawerContentProps {
@@ -77,9 +74,6 @@ export function ContactDetailDrawerContent({
   onRequestDelete,
 }: ContactDetailDrawerContentProps): React.JSX.Element {
   const reducedMotion = useReducedMotion();
-  const isSystemTab = DETAIL_SYSTEM_TAB_KEYS.has(activeTab);
-
-  const { fields, enabledTabIds, formTabs } = useContactConfig();
 
   return (
     <AnimatePresence mode="wait">
@@ -135,17 +129,7 @@ export function ContactDetailDrawerContent({
           />
         )}
 
-        {!isSystemTab && (
-          <div className="space-y-4">
-            <ContactDetailCustomCollections
-              contact={contactState}
-              fields={fields}
-              enabledTabIds={enabledTabIds}
-              formTabs={formTabs}
-              onlyTabId={activeTab}
-            />
-          </div>
-        )}
+
       </motion.div>
     </AnimatePresence>
   );

@@ -132,13 +132,15 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
     );
   }
   if (Array.isArray(result.addresses)) {
-    result.addresses = result.addresses.filter(
-      (address) =>
-        !isBlankContactListRow(
-          address,
-          ["line1", "city", "state"],
-          ADDRESS_SYSTEM_KEYS,
-        ),
+    result.addresses = ensureSinglePrimaryFlag(
+      result.addresses.filter(
+        (address) =>
+          !isBlankContactListRow(
+            address,
+            ["line1", "city", "state"],
+            ADDRESS_SYSTEM_KEYS,
+          ),
+      ),
     );
   }
   if (Array.isArray(result.socials)) {

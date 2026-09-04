@@ -128,7 +128,46 @@ describe("useContactDuplicateCheck", () => {
       vi.advanceTimersByTime(650);
     });
 
-    expect(apiContract.contacts.duplicateCheck).toHaveBeenCalled();
+    expect(apiContract.contacts.duplicateCheck).toHaveBeenCalledWith(
+      expect.objectContaining({
+        body: { contact: { name: "Ali Raza" } },
+        signal: expect.any(AbortSignal),
+        fetchOptions: expect.objectContaining({
+          signal: expect.any(AbortSignal),
+        }),
+      }),
+    );
     expect(observedCount).toBe(3);
+  });
+
+  it("aborts in-flight duplicateCheck on unmount", async () => {
+    let capturedSignal: AbortSignal | undefined;
+    vi.mocked(apiContract.contacts.duplicateCheck).mockImplementation(async (args) => {
+      capturedSignal = (args as { signal?: AbortSignal })?.signal;
+      return new Promise(() => {}); // never resolves
+    });
+
+    await act(async () => {
+      root.render(
+        <TestHarness
+          open={true}
+          contactDraft={{ name: "Fatima Noor" }}
+          onValue={() => {}}
+        />,
+      );
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(650);
+    });
+
+    expect(capturedSignal).toBeDefined();
+    expect(capturedSignal?.aborted).toBe(false);
+
+    await act(async () => {
+      root.unmount();
+    });
+
+    expect(capturedSignal?.aborted).toBe(true);
   });
 });

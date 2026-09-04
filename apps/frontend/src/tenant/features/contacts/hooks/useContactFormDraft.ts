@@ -99,7 +99,7 @@ export function useContactFormDraft({
       defaultProvince,
       defaultCountry,
       optionDefaults,
-        socialPlatforms,
+      socialPlatforms,
       relationshipOptions,
     }),
   );
@@ -119,7 +119,7 @@ export function useContactFormDraft({
 
   const isDirty = contactDraftSnapshot(contactDraft) !== baselineSnapshot;
 
-  const { addSubListItem, ensureSubListItem, updateSubListItem, removeSubListItem } =
+  const { addSubListItem, ensureSubListItem, updateSubListItem, removeSubListItem, setPrimarySubListItem } =
     useContactFormSubLists(setContactDraft);
 
   const {
@@ -153,12 +153,14 @@ export function useContactFormDraft({
       defaultProvince,
       defaultCountry,
       optionDefaults,
-        socialPlatforms,
+      socialPlatforms,
       relationshipOptions,
     });
     setContactDraft(nextDraft);
     setBaselineSnapshot(contactDraftSnapshot(nextDraft));
     setValidationErrors([]);
+    // Intentional dep-array: only reset when the modal opens or the contact identity changes.
+    // Including `contact` object would re-fire on every server sync and lose in-progress edits.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, contact?.id]);
 
@@ -218,6 +220,7 @@ export function useContactFormDraft({
     ensureSubListItem,
     updateSubListItem,
     removeSubListItem,
+    setPrimarySubListItem,
     handleSave,
     validationErrors,
     fields,

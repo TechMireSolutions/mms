@@ -53,22 +53,18 @@ export function ContactEmailsTab({
         return (
           <button
             type="button"
-            onClick={() => {
-              emails.forEach((_, i) => {
-                base.updateSubListItem("emails", i, { isPrimary: i === index });
-              });
-            }}
+            onClick={() => base.setPrimarySubListItem?.("emails", index)}
             className={cn(
-              "cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-semibold transition-colors select-none",
+              "cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-semibold transition-colors min-h-11 touch-manipulation select-none",
               isPrimary
                 ? "bg-primary/10 text-primary border border-primary/30"
                 : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40 border border-transparent",
             )}
-            title={isPrimary ? t("contacts.form.primaryEmail") : t("contacts.form.primaryEmail")}
-            aria-label={t("contacts.form.primaryEmail")}
+            title={isPrimary ? t("contacts.form.primaryEmail") : t("contacts.form.setPrimary")}
+            aria-label={isPrimary ? t("contacts.form.primaryEmail") : t("contacts.form.setPrimary")}
           >
             <Star className={cn("w-3 h-3", isPrimary && "fill-primary text-primary")} aria-hidden />
-            <span>{t("contacts.form.primaryEmail")}</span>
+            <span>{isPrimary ? t("contacts.form.primary") : t("contacts.form.setPrimary")}</span>
           </button>
         );
       }}

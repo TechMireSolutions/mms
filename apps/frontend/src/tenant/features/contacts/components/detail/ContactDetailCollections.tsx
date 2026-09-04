@@ -11,7 +11,6 @@ import {
   ContactDetailSkillsSection,
   ContactDetailBankDetailsSection,
 } from "./ContactDetailChannelSections";
-import { ContactDetailCustomCollections } from "./ContactDetailCustomCollections";
 
 export interface ContactDetailCollectionsProps {
   contact: Contact;
@@ -39,7 +38,6 @@ export function ContactDetailCollections({
 }: ContactDetailCollectionsProps): React.JSX.Element {
   const {
     enabledTabIds,
-    fields,
     phoneLabels,
     emailLabels,
     addressLabels,
@@ -92,12 +90,6 @@ export function ContactDetailCollections({
       {(enabledTabIds.has("bankDetails") || enabledTabIds.has("bankdetails")) && (
         <ContactDetailBankDetailsSection contact={contact} />
       )}
-
-      <ContactDetailCustomCollections
-        contact={contact}
-        fields={fields}
-        enabledTabIds={enabledTabIds}
-      />
     </>
   );
 }

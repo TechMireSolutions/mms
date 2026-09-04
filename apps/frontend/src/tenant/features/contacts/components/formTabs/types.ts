@@ -31,11 +31,14 @@ export type UpdateSubListItem = <T extends object = Record<string, unknown>>(
 
 export type RemoveSubListItem = (fieldKey: ContactSubListKey, idx: number) => void;
 
+export type SetPrimarySubListItem = (fieldKey: ContactSubListKey, idx: number) => void;
+
 interface ContactSubListMutationProps {
   addSubListItem: AddSubListItem;
   ensureSubListItem: EnsureSubListItem;
   updateSubListItem: UpdateSubListItem;
   removeSubListItem: RemoveSubListItem;
+  setPrimarySubListItem?: SetPrimarySubListItem;
 }
 
 export interface ContactSubListTabBaseProps extends ContactSubListMutationProps {

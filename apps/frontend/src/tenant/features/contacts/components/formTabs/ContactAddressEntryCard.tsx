@@ -89,13 +89,13 @@ export function ContactAddressEntryCard({
             type="button"
             onClick={onSetPrimary}
             className={cn(
-              "cursor-pointer inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-2xs font-semibold transition-colors select-none",
+              "cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-semibold transition-colors min-h-11 touch-manipulation select-none",
               isOnlyAddressOrPrimary
                 ? "bg-primary/10 text-primary border border-primary/30"
                 : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40 border border-transparent",
             )}
-            title={t("contacts.form.primaryAddress")}
-            aria-label={t("contacts.form.primaryAddress")}
+            title={isOnlyAddressOrPrimary ? t("contacts.form.primaryAddress") : t("contacts.form.setPrimary")}
+            aria-label={isOnlyAddressOrPrimary ? t("contacts.form.primaryAddress") : t("contacts.form.setPrimary")}
           >
             <Star
               className={cn(
@@ -104,7 +104,7 @@ export function ContactAddressEntryCard({
               )}
               aria-hidden
             />
-            <span>{t("contacts.form.primaryAddress")}</span>
+            <span>{isOnlyAddressOrPrimary ? t("contacts.form.primary") : t("contacts.form.setPrimary")}</span>
           </button>
         ) : undefined
       }
@@ -119,7 +119,7 @@ export function ContactAddressEntryCard({
             error={line1Error}
             id={`cf-${formInstanceId}-address-line1-${idx}`}
           >
-            <LeadingIconInput
+        <LeadingIconInput
               icon={MapPin}
               id={`cf-${formInstanceId}-address-line1-${idx}`}
               name={`cf-${formInstanceId}-address-line1-${idx}`}
@@ -128,7 +128,6 @@ export function ContactAddressEntryCard({
               enterKeyHint="next"
               aria-invalid={Boolean(line1Error)}
               value={addr.line1 || ""}
-              required={isFieldRequired("addresses", "line1")}
               onChange={(e) => onUpdateAddress({ line1: e.target.value })}
               placeholder={t("contacts.fields.streetAddress")}
               className={cn(line1Error && "border-destructive focus-visible:ring-destructive")}
@@ -153,7 +152,6 @@ export function ContactAddressEntryCard({
                   enterKeyHint="next"
                   aria-invalid={Boolean(cityError)}
                   value={addr.city || ""}
-                  required={isFieldRequired("addresses", "city")}
                   onChange={(e) => onUpdateAddress({ city: e.target.value })}
                   placeholder={t("contacts.fields.city")}
                   className={cn(
@@ -178,7 +176,6 @@ export function ContactAddressEntryCard({
                   enterKeyHint="next"
                   aria-invalid={Boolean(stateError)}
                   value={addr.state || ""}
-                  required={isFieldRequired("addresses", "state")}
                   onChange={(e) => onUpdateAddress({ state: e.target.value })}
                   placeholder={t("contacts.fields.state")}
                   className={cn(

@@ -37,6 +37,7 @@ export function ContactAddressesTab({
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
+  setPrimarySubListItem,
 }: ContactAddressesTabProps): React.JSX.Element {
   const { t } = useTranslation();
   const showLabel = isFieldEnabled("addresses", "label");
@@ -99,11 +100,7 @@ export function ContactAddressesTab({
               getListItemError={getListItemError}
               hasMultipleAddresses={addresses.length > 1}
               isOnlyAddressOrPrimary={isOnlyAddressOrPrimary}
-              onSetPrimary={() => {
-                addresses.forEach((_, i) => {
-                  updateAddress(i, { isPrimary: i === idx });
-                });
-              }}
+              onSetPrimary={() => setPrimarySubListItem?.("addresses", idx)}
               onUpdateAddress={(patch) => updateAddress(idx, patch)}
               onRemoveAddress={() => removeAddress(idx)}
             />

@@ -4,6 +4,7 @@ import type { Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DetailSection } from "./DetailSection";
 import { CopyBtn } from "@/components/ui/CopyBtn";
+import { EmptyState } from "@/components/ui/EmptyState";
 
 export interface ContactDetailBankDetailsSectionProps {
   contact: Contact;
@@ -17,22 +18,20 @@ export function ContactDetailBankDetailsSection({
 
   if (bankDetails.length === 0) {
     return (
-      <DetailSection title={t("contacts.detail.bankDetails") || "Bank Details"}>
-        <div className="p-3 text-xs text-muted-foreground italic">
-          {t("contacts.detail.emptyBankDetails") || "No bank accounts recorded."}
-        </div>
+      <DetailSection title={t("contacts.detail.bankDetails")}>
+        <EmptyState compact icon={Landmark} title={t("contacts.detail.emptyBankDetails")} />
       </DetailSection>
     );
   }
 
   return (
-    <DetailSection title={t("contacts.detail.bankDetails") || "Bank Details"}>
+    <DetailSection title={t("contacts.detail.bankDetails")}>
       {bankDetails.map((bank, idx) => {
         const copySummary = [
           bank.bankName,
           bank.accountTitle,
           bank.accountNumber,
-          bank.iban ? `IBAN: ${bank.iban}` : null,
+          bank.iban ? `${t("contacts.fields.bankIban")}: ${bank.iban}` : null,
         ]
           .filter(Boolean)
           .join(" · ");
@@ -51,26 +50,26 @@ export function ContactDetailBankDetailsSection({
                     {bank.bankName}
                   </span>
                   {bank.label ? (
-                    <span className="px-1.5 py-0.5 rounded text-[11px] font-medium bg-muted text-muted-foreground border border-border">
+                    <span className="px-1.5 py-0.5 rounded text-3xs font-medium bg-muted text-muted-foreground border border-border">
                       {bank.label}
                     </span>
                   ) : null}
                   {bank.currency ? (
-                    <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-primary/10 text-primary border border-primary/20">
+                    <span className="px-1.5 py-0.5 rounded text-3xs font-bold bg-primary/10 text-primary border border-primary/20">
                       {bank.currency}
                     </span>
                   ) : null}
                   {bank.isPrimary ? (
-                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[11px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
-                      <Star className="h-3 w-3 fill-emerald-500 text-emerald-500" />
-                      {t("contacts.form.primary") || "Primary"}
+                    <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-3xs font-medium bg-primary/10 text-primary border border-primary/20">
+                      <Star className="h-3 w-3 fill-primary text-primary" />
+                      {t("contacts.form.primary")}
                     </span>
                   ) : null}
                 </div>
 
                 {bank.accountTitle ? (
                   <div className="text-muted-foreground font-medium">
-                    {t("contacts.fields.bankAccountTitle") || "Account Title"}:{" "}
+                    {t("contacts.fields.bankAccountTitle")}:{" "}
                     <span className="text-foreground">{bank.accountTitle}</span>
                   </div>
                 ) : null}
@@ -84,7 +83,7 @@ export function ContactDetailBankDetailsSection({
               <div className="flex items-center justify-between gap-2">
                 <span className="text-muted-foreground inline-flex items-center gap-1">
                   <CreditCard className="h-3 w-3" />
-                  {t("contacts.fields.bankAccountNumber") || "Account"}:
+                  {t("contacts.fields.bankAccountNumber")}:
                 </span>
                 <span className="font-semibold tracking-wider text-foreground select-all">
                   {bank.accountNumber}
@@ -95,7 +94,7 @@ export function ContactDetailBankDetailsSection({
                 <div className="flex items-center justify-between gap-2 border-t border-border/30 pt-1">
                   <span className="text-muted-foreground inline-flex items-center gap-1">
                     <Globe className="h-3 w-3" />
-                    {t("contacts.fields.bankIban") || "IBAN"}:
+                    {t("contacts.fields.bankIban")}:
                   </span>
                   <span className="tracking-wider text-foreground uppercase select-all">
                     {bank.iban}
@@ -106,23 +105,23 @@ export function ContactDetailBankDetailsSection({
 
             {/* Branch & SWIFT info */}
             {(bank.swiftCode || bank.branchName || bank.branchCode || bank.routingNumber) && (
-              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-[11px]">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-muted-foreground text-3xs">
                 {bank.swiftCode ? (
                   <span className="inline-flex items-center gap-1">
                     <Building2 className="h-3 w-3" />
-                    SWIFT: <span className="font-mono text-foreground">{bank.swiftCode}</span>
+                    {t("contacts.fields.bankSwiftCode")}: <span className="font-mono text-foreground">{bank.swiftCode}</span>
                   </span>
                 ) : null}
                 {bank.branchName ? (
                   <span>
-                    {t("contacts.fields.bankBranchName") || "Branch"}:{" "}
+                    {t("contacts.fields.bankBranchName")}:{" "}
                     <span className="text-foreground">{bank.branchName}</span>
                     {bank.branchCode ? ` (${bank.branchCode})` : ""}
                   </span>
                 ) : null}
                 {bank.routingNumber ? (
                   <span>
-                    Routing: <span className="font-mono text-foreground">{bank.routingNumber}</span>
+                    {t("contacts.fields.bankRoutingNumber")}: <span className="font-mono text-foreground">{bank.routingNumber}</span>
                   </span>
                 ) : null}
               </div>

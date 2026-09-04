@@ -1,6 +1,6 @@
 import type React from "react";
-import { useState, useEffect, type ComponentType } from "react";
-import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart, Sparkles, FolderKanban, Landmark } from "lucide-react";
+import { useState, useMemo, useEffect, type ComponentType } from "react";
+import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart, FolderKanban, Landmark } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -45,7 +45,6 @@ const SYSTEM_TAB_ICONS: Record<string, ComponentType> = {
   skills: Award,
   relationship: Heart,
   bankDetails: Landmark,
-  custom: Sparkles,
 };
 export function ContactForm({
   open = true,
@@ -57,6 +56,7 @@ export function ContactForm({
   defaultProvince = "",
   initialDraft,
   lockGender = false,
+  nested = false,
   priority = false,
 }: ContactFormProps): React.JSX.Element {
   const { t, dir } = useTranslation();
@@ -96,25 +96,9 @@ export function ContactForm({
     onClose();
   };
 
-  useEffect(() => {
-    if (!open) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-        e.preventDefault();
-        const canSave =
-          Boolean(draft.contactDraft.firstName?.trim()) &&
-          (!contact || draft.isDirty) &&
-          !draft.saving;
-        if (canSave) {
-          draft.handleSave();
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [open, draft, contact]);
 
-  const tabErrorCounts = (() => {
+
+  const tabErrorCounts = useMemo(() => {
     const counts: Record<string, number> = {};
     if (!draft.validationErrors || draft.validationErrors.length === 0) return counts;
     for (const err of draft.validationErrors) {
@@ -122,9 +106,9 @@ export function ContactForm({
       counts[tabId] = (counts[tabId] || 0) + 1;
     }
     return counts;
-  })();
+  }, [draft.validationErrors]);
 
-  const visibleTabs = (() => {
+  const visibleTabs = useMemo(() => {
     const countMap: Record<string, number> = {
       phones: draft.collectionCounts.filledPhones,
       emails: draft.collectionCounts.filledEmails,
@@ -135,13 +119,12 @@ export function ContactForm({
       experience: draft.collectionCounts.filledExperience,
       skills: draft.collectionCounts.filledSkills,
       relationship: draft.collectionCounts.filledRelationships,
+      bankDetails: draft.collectionCounts.filledBankDetails,
       ...draft.collectionCounts,
     };
 
     // System tabs from shared SSOT (DEFAULT_FORM_TABS) filtered by enabledTabIds (with basic locked on)
-    const baseTabs = DEFAULT_FORM_TABS;
-
-    return baseTabs
+    return DEFAULT_FORM_TABS
       .filter((sys) => enabledTabIds.has(sys.key))
       .map((sys) => {
         const count = countMap[sys.key];
@@ -156,22 +139,28 @@ export function ContactForm({
           tone: hasErrors ? ("destructive" as const) : undefined,
         };
       });
-  })();
+  }, [draft.collectionCounts, tabErrorCounts, enabledTabIds, t]);
 
-  useEffect(() => {
-    if (!visibleTabs.some((tabItem) => tabItem.key === tab)) {
-      setTab(visibleTabs[0]?.key ?? "basic");
-    }
-  }, [tab, visibleTabs]);
+  // Synchronously guard active tab — avoids the post-render useEffect extra paint
+  const activeTab = visibleTabs.some((tabItem) => tabItem.key === tab)
+    ? tab
+    : (visibleTabs[0]?.key ?? "basic");
 
-  const validationErrorSummary = (() => {
+  const validationErrorSummary = useMemo(() => {
     if (draft.lookupsError) return t("contacts.form.lookupsLoadFailed");
     if (!draft.validationErrors || draft.validationErrors.length === 0) return undefined;
-    const messages = draft.validationErrors
-      .map((err) => err.message)
-      .filter((msg): msg is string => Boolean(msg));
-    return messages.length > 0 ? Array.from(new Set(messages)) : undefined;
-  })();
+    const seen = new Set<string>();
+    const messages: string[] = [];
+    for (const err of draft.validationErrors) {
+      if (!err.message) continue;
+      // Dedup by fieldId+message so two different fields with identical text both surface
+      const key = `${err.fieldId ?? ""}|${err.message}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      messages.push(err.message);
+    }
+    return messages.length > 0 ? messages : undefined;
+  }, [draft.lookupsError, draft.validationErrors, t]);
 
   return (
     <>
@@ -186,10 +175,10 @@ export function ContactForm({
         }
         icon={User}
         tall
-        priority={priority}
+        priority={Boolean(priority || nested)}
         error={validationErrorSummary}
         tabs={visibleTabs}
-        activeTab={tab}
+        activeTab={activeTab}
         onTabChange={setTab}
         tabPanelIdPrefix="contact-form-tab"
         lang={language}

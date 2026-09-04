@@ -31,6 +31,7 @@ export function ContactBankDetailsTab({
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
+  setPrimarySubListItem,
 }: ContactBankDetailsTabProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -61,7 +62,7 @@ export function ContactBankDetailsTab({
   const bankDetails = contactDraft.bankDetails || [];
 
   const emptyBankDetail = (): ContactBankDetail => ({
-    id: `bnk-${Date.now()}`,
+    id: `bnk-${crypto.randomUUID()}`,
     bankName: "",
     accountTitle: (contactDraft.name || `${contactDraft.firstName || ""} ${contactDraft.lastName || ""}`).trim(),
     accountNumber: "",
@@ -88,8 +89,8 @@ export function ContactBankDetailsTab({
     <ContactSubListShell
       isEmpty={bankDetails.length === 0}
       emptyIcon={Landmark}
-      emptyMessage={t("contacts.form.noBankDetailsYet") || "No bank accounts added yet"}
-      addLabel={t("contacts.form.addBankDetail") || "Add Bank Account"}
+      emptyMessage={t("contacts.form.noBankDetailsYet")}
+      addLabel={t("contacts.form.addBankDetail")}
       onAdd={addBankDetail}
       onEnsureRow={ensureBankDetail}
       allowAdd={allowAdd}
@@ -117,6 +118,7 @@ export function ContactBankDetailsTab({
             isFieldRequired={isFieldRequired}
             getListItemError={getListItemError}
             getLocalId={getLocalId}
+            onSetPrimary={() => setPrimarySubListItem?.("bankDetails", idx)}
             updateBankDetail={updateBankDetail}
             removeBankDetail={removeBankDetail}
           />

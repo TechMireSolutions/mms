@@ -20,7 +20,7 @@ export function ContactFormFooterStart({
   collectionCounts,
   t,
 }: ContactFormFooterStartProps): React.JSX.Element {
-  if (!contactDraft.firstName) {
+  if (!contactDraft.firstName?.trim()) {
     return (
       <FormFooterErrorChip>
         {t("contacts.form.firstNameRequired")}
@@ -70,6 +70,11 @@ export function ContactFormFooterStart({
         {collectionCounts.filledRelationships > 0 && (
           <FormFooterBadge tone="destructive">
             {collectionCounts.filledRelationships} {t("contacts.detail.relationships")}
+          </FormFooterBadge>
+        )}
+        {Boolean(collectionCounts.filledBankDetails && collectionCounts.filledBankDetails > 0) && (
+          <FormFooterBadge tone="primary">
+            {collectionCounts.filledBankDetails} {t("contacts.form.tabBankDetails")}
           </FormFooterBadge>
         )}
       </div>

@@ -129,4 +129,37 @@ describe("ContactBankDetailsTab Component", () => {
     expect(html).toContain("Invalid account number");
     expect(html).toContain("field-error");
   });
+
+  it("renders multiple bank cards with primary and non-primary indicators", () => {
+    const setPrimarySubListItem = vi.fn();
+    const html = renderToStaticMarkup(
+      <ContactBankDetailsTab
+        {...baseProps}
+        setPrimarySubListItem={setPrimarySubListItem}
+        contactDraft={{
+          bankDetails: [
+            {
+              id: "bnk-1",
+              bankName: "Meezan Bank",
+              accountTitle: "Muhammad Ali",
+              accountNumber: "010203040506",
+              isPrimary: true,
+            },
+            {
+              id: "bnk-2",
+              bankName: "HBL",
+              accountTitle: "Muhammad Ali",
+              accountNumber: "987654321000",
+              isPrimary: false,
+            },
+          ],
+        }}
+      />,
+    );
+
+    expect(html).toContain("Meezan Bank");
+    expect(html).toContain("HBL");
+    expect(html).toContain("contacts.form.primary");
+    expect(html).toContain("contacts.form.setPrimary");
+  });
 });

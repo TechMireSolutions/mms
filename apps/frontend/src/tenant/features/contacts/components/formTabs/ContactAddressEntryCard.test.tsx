@@ -171,7 +171,7 @@ function changeInput(input: HTMLInputElement, value: string) {
     });
 
     const primaryBtn = Array.from(container.querySelectorAll("button")).find((btn) =>
-      btn.textContent?.includes("contacts.form.primaryAddress"),
+      btn.textContent?.includes("contacts.form.setPrimary"),
     );
     expect(primaryBtn).toBeDefined();
 

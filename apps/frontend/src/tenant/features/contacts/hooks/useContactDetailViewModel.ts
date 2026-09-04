@@ -4,7 +4,6 @@ import {
   type Contact,
   getPrimaryPhone,
   getPrimaryEmail,
-  isContactCustomCollectionTab,
 } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { usePermissions } from "@/tenant/hooks/usePermissions";
@@ -29,7 +28,7 @@ export function useContactDetailViewModel({
   onUpdateContact?: (contact: Contact) => Promise<void>;
   canWrite: boolean;
 }) {
-  const { enabledTabIds, isTabFieldEnabled, fields, formTabs } = useContactConfig();
+  const { enabledTabIds, isTabFieldEnabled, fields } = useContactConfig();
   const { role } = usePermissions();
   const viewerRole = role ?? "";
   const { t } = useTranslation();
@@ -40,21 +39,11 @@ export function useContactDetailViewModel({
   const canPersistContact = canWrite && Boolean(onUpdateContact) && !isArchived;
 
   const detailTabs = (() => {
-    const systemTabs = Array.from(DEFAULT_DETAIL_TAB_BY_KEY.values()).map((tab) => ({
+    return Array.from(DEFAULT_DETAIL_TAB_BY_KEY.values()).map((tab) => ({
       key: tab.key,
       label: tab.labelKey ? t(tab.labelKey) : tab.label,
       icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
     }));
-
-    const customTabs = (formTabs || [])
-      .filter((tab) => tab.enabled !== false && isContactCustomCollectionTab(tab.key) && enabledTabIds.has(tab.key))
-      .map((tab) => ({
-        key: tab.key,
-        label: tab.labelKey ? t(tab.labelKey) : tab.label || tab.key,
-        icon: LayoutDashboard, // fallback icon for custom tabs
-      }));
-
-    return [...systemTabs, ...customTabs];
   })();
 
   const [activeTab, setActiveTab] = useState<string>(() => detailTabs[0]?.key || "");

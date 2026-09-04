@@ -5,6 +5,7 @@ import type {
   ContactSubListKey,
   EnsureSubListItem,
   RemoveSubListItem,
+  SetPrimarySubListItem,
   UpdateSubListItem,
 } from "@/tenant/features/contacts/components/formTabs/types";
 
@@ -12,7 +13,14 @@ function withHealedPrimary(
   fieldKey: ContactSubListKey,
   list: unknown[],
 ): unknown[] {
-  if (fieldKey !== "phones" && fieldKey !== "emails" && fieldKey !== "bankDetails") return list;
+  if (
+    fieldKey !== "phones" &&
+    fieldKey !== "emails" &&
+    fieldKey !== "bankDetails" &&
+    fieldKey !== "addresses"
+  ) {
+    return list;
+  }
   return ensureSinglePrimaryFlag(list as Array<{ isPrimary?: boolean }>);
 }
 
@@ -72,5 +80,17 @@ export function useContactFormSubLists(
       });
     });
 
-  return { addSubListItem, ensureSubListItem, updateSubListItem, removeSubListItem };
+  const setPrimarySubListItem: SetPrimarySubListItem = ((fieldKey: ContactSubListKey, idx: number) => {
+      setContactDraft((prev) => {
+        const rawList = (prev as Record<string, unknown>)[fieldKey];
+        const currentList = Array.isArray(rawList) ? (rawList as Record<string, unknown>[]) : [];
+        const nextList = currentList.map((item, i) => ({
+          ...item,
+          isPrimary: i === idx,
+        }));
+        return { ...prev, [fieldKey]: nextList };
+      });
+    });
+
+  return { addSubListItem, ensureSubListItem, updateSubListItem, removeSubListItem, setPrimarySubListItem };
 }

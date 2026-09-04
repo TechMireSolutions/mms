@@ -43,6 +43,7 @@ function subListBaseProps(draft: ContactFormDraftState): ContactSubListTabBasePr
     ensureSubListItem: draft.ensureSubListItem,
     updateSubListItem: draft.updateSubListItem,
     removeSubListItem: draft.removeSubListItem,
+    setPrimarySubListItem: draft.setPrimarySubListItem,
   };
 }
 
@@ -60,7 +61,7 @@ export function ContactFormTabContent({
   const { t } = useTranslation();
   const normalizedTab = normalizeContactFormTabId(tab);
 
-  const listBase = (() => subListBaseProps(draft))();
+  const listBase = subListBaseProps(draft);
 
   const renderTabBody = () => {
     if (normalizedTab === "basic") {
@@ -80,7 +81,6 @@ export function ContactFormTabContent({
           onUpdateTags={draft.updateTags}
           lockGender={lockGender}
           handleAvatarChange={draft.handleAvatarChange}
-          fields={draft.fields}
         />
       );
     }
@@ -161,7 +161,6 @@ export function ContactFormTabContent({
             onUpdateRelationships={draft.updateRelationships}
           />
         );
-      case "bankdetails":
       case "bankDetails":
         return (
           <ContactBankDetailsTab

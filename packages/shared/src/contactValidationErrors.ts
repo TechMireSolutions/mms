@@ -8,8 +8,12 @@ const LIST_TAB_TO_TAB_ID: Record<string, string> = {
   emails: "emails",
   addresses: "addresses",
   socials: "socials",
+  education: "education",
+  experience: "experience",
+  skills: "skills",
+  bankDetails: "bankDetails",
   relationshipContacts: "relationship",
-  relationships: "relationships",
+  relationships: "relationship",
 };
 
 const LIST_TAB_PREFIX_KEYS: Record<string, AppTranslationKey> = {
@@ -17,6 +21,10 @@ const LIST_TAB_PREFIX_KEYS: Record<string, AppTranslationKey> = {
   emails: "contacts.validation.itemEmail",
   addresses: "contacts.validation.itemAddress",
   socials: "contacts.validation.itemSocial",
+  education: "contacts.validation.itemEducation",
+  experience: "contacts.validation.itemExperience",
+  skills: "contacts.validation.itemSkill",
+  bankDetails: "contacts.validation.itemBankDetail",
   relationshipContacts: "contacts.validation.itemRelationship",
   relationships: "contacts.validation.itemRelationship",
 };
@@ -32,11 +40,10 @@ export interface ValidationError {
 /** Maps Zod issues to contact form fields and tabs. */
 export function formatZodIssues(
   error: z.ZodError,
-  submittedValue: unknown,
+  _submittedValue: unknown,
   fields: Record<string, FieldDefinition[]>,
   language = "en",
 ): ValidationError[] {
-  void submittedValue;
 
   return error.issues.map((issue) => {
     const [pathRoot, pathIndex, pathField] = issue.path;

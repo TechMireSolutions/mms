@@ -141,7 +141,6 @@ export function ContactLabeledValueSubListTab({
               id={`${valueInputIdPrefix}-${idx}`}
               name={`${valueInputIdPrefix}-${idx}`}
               value={stringValue}
-              required={isFieldRequired(listKey, valueFieldKey)}
               autoComplete={autoComplete}
               inputMode={inputMode}
               autoCapitalize={autoCapitalize}
