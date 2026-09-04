@@ -114,7 +114,8 @@ export function useDashboardPageController() {
       if (widget) handleEditWidget(widget);
     });
 
-  const visibleDashboardMetricCards = (() => dashboardMetricCards.filter((dashboardCard) => !disabledCardIds.includes(dashboardCard.id)))();
+  const disabledSet = new Set(disabledCardIds);
+  const visibleDashboardMetricCards = dashboardMetricCards.filter((dashboardCard) => !disabledSet.has(dashboardCard.id));
 
   const selectedDashboardCardCount = visibleDashboardMetricCards.length;
 

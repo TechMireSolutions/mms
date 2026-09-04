@@ -4,7 +4,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 
 **Architecture rules:** `mms-module-architecture.mdc`, `mms-ops-infrastructure.mdc`, `mms-ui-ux-design.mdc`, `mms-data-layer.mdc`.
 
-## Always Applied (4)
+## Always Applied (5)
 
 | Rule | Purpose |
 |------|---------|
@@ -12,6 +12,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-core.mdc` | Stack, boundaries, ownership matrix, edit discipline |
 | `mms-migration-status.mdc` | Do not reintroduce themes + short open-gaps summary (full gaps → `mms-migration-fixes` skill) |
 | `mms-completion-review.mdc` | Self-review after code edits — verify, fix bugs, then mark done |
+| `mms-performance.mdc` | Performance & resource efficiency (DB, streaming, Redis caching, bundle, virtualization) |
 
 ## Scoped Rules (16)
 

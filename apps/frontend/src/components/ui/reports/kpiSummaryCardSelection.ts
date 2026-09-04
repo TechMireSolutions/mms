@@ -29,8 +29,9 @@ export function syncSelectedCardIdsWithAvailable(
 ): void {
   const availableCards = possibleCards.filter((card) => card.isAvailable);
   const availableCardIds = availableCardIdsKey ? availableCardIdsKey.split('\u0000') : [];
+  const availableCardIdSet = new Set(availableCardIds);
   const selectedIds = normalizeStoredCardIds(selectedCardIds, availableCards);
-  let validSelectedCardIds = selectedIds.filter((cardId: string) => availableCardIds.includes(cardId));
+  let validSelectedCardIds = selectedIds.filter((cardId: string) => availableCardIdSet.has(cardId));
   if (validSelectedCardIds.length === 0 && availableCardIds.length > 0) {
     validSelectedCardIds = availableCardIds;
   }
@@ -49,7 +50,8 @@ export function syncNewCustomCardSelections(
   previousCustomIdsRef: MutableRefObject<string[]>,
 ): void {
   const currentIds = customCards.map((card) => card.id);
-  const newlyAdded = currentIds.filter((id) => !previousCustomIdsRef.current.includes(id));
+  const prevSet = new Set(previousCustomIdsRef.current);
+  const newlyAdded = currentIds.filter((id) => !prevSet.has(id));
   if (!areStringListsEqual(previousCustomIdsRef.current, currentIds)) {
     saveObject(`prev_kpi_ids_${category}`, currentIds);
   }

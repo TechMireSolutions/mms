@@ -59,8 +59,9 @@ export const StudentsPageOverlays = (function StudentsPageOverlays({
 
   const idCardItems = (() => {
     return idCardStudents.map((student) => {
+      const enrolledSet = new Set(student.enrolledSessions ?? []);
       const sessionNames = sessions
-        .filter((sess) => student.enrolledSessions?.includes(sess.id))
+        .filter((sess) => enrolledSet.has(sess.id))
         .map((sess) => sess.name);
       return {
         student,

@@ -46,8 +46,10 @@ export function filterAttendanceForQuery(
     rows = rows.filter((record) => record.date === query.date);
   }
   if (query.status?.trim()) {
-    const statuses = query.status.split(',').map((status) => status.trim()).filter(Boolean);
-    rows = rows.filter((record) => statuses.includes(record.status));
+    const statuses = new Set(query.status.split(',').map((s) => s.trim()).filter(Boolean));
+    if (statuses.size > 0) {
+      rows = rows.filter((record) => statuses.has(record.status));
+    }
   }
   if (query.search?.trim()) {
     const search = query.search.trim().toLowerCase();

@@ -9,6 +9,8 @@ import {
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
+const VALID_DIFFICULTIES_SET = new Set(['easy', 'medium', 'hard']);
+
 export type QuestionBankReportQuery = {
   dateFrom?: string;
   dateTo?: string;
@@ -172,7 +174,17 @@ export async function aggregateQuestionBankReport(
       .groupBy(sql`to_char((${assessmentResults.submittedAt})::date, 'YYYY-MM')`)
       .orderBy(sql`to_char((${assessmentResults.submittedAt})::date, 'YYYY-MM') ASC`);
 
-    const VALID_DIFFICULTIES = ['easy', 'medium', 'hard'] as const;
+    const monthlyResults: { monthKey: string; resultsCount: number; averageScore: number }[] = [];
+    for (let i = 0; i < monthlyRows.length; i++) {
+      const r = monthlyRows[i];
+      if (r.monthKey) {
+        monthlyResults.push({
+          monthKey: r.monthKey,
+          resultsCount: Number(r.resultsCount),
+          averageScore: Number(r.averageScore),
+        });
+      }
+    }
 
     return {
       totalQuestions: Number(questionsRow?.count ?? 0),
@@ -186,18 +198,12 @@ export async function aggregateQuestionBankReport(
         questionCount: Number(r.count),
       })),
       difficultyBreakdown: difficultyRows.map((r) => ({
-        difficulty: VALID_DIFFICULTIES.includes(r.difficulty as typeof VALID_DIFFICULTIES[number])
+        difficulty: VALID_DIFFICULTIES_SET.has(r.difficulty ?? '')
           ? (r.difficulty as 'easy' | 'medium' | 'hard')
           : 'unset',
         questionCount: Number(r.count),
       })),
-      monthlyResults: monthlyRows
-        .filter((r) => r.monthKey)
-        .map((r) => ({
-          monthKey: r.monthKey,
-          resultsCount: Number(r.resultsCount),
-          averageScore: Number(r.averageScore),
-        })),
+      monthlyResults,
     };
   });
 }

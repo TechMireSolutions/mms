@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type UsersCommandMetricsSnapshot,
@@ -80,7 +81,7 @@ function buildListConditions(subdomain: string, query: UsersListQuery & { includ
     conditions.push(isNull(tenantUsers.deletedAt));
   }
 
-  const ids = query.ids?.split(',').map((id) => id.trim()).filter(Boolean) ?? [];
+  const ids = dedupeTrimmedIds(query.ids);
   if (ids.length > 0) {
     conditions.push(inArray(tenantUsers.id, ids));
   }
@@ -89,17 +90,13 @@ function buildListConditions(subdomain: string, query: UsersListQuery & { includ
     conditions.push(eq(tenantUsers.role, query.role.trim()));
   }
 
-  if (query.status?.trim()) {
-    const statuses = query.status
-      .split(',')
-      .map((status) => status.trim().toLowerCase())
-      .filter(Boolean);
-    if (statuses.length > 0) {
-      conditions.push(sql`${statusExpr()} IN (${sql.join(
-        statuses.map((status) => sql`${status}`),
-        sql`, `,
-      )})`);
-    }
+  const rawStatuses = dedupeTrimmedIds(query.status);
+  if (rawStatuses.length > 0) {
+    const statuses = rawStatuses.map((status) => status.toLowerCase());
+    conditions.push(sql`${statusExpr()} IN (${sql.join(
+      statuses.map((status) => sql`${status}`),
+      sql`, `,
+    )})`);
   }
 
   const search = query.search?.trim();

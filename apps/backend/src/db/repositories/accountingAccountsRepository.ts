@@ -6,7 +6,7 @@ import { withTenant } from '../tenant-context.js';
 type AccountRow = typeof accountingAccounts.$inferSelect;
 
 export function accountRowToRecord(row: AccountRow): Account {
-  return {
+  const account: Account = {
     id: row.id,
     code: row.code,
     name: row.name,
@@ -14,12 +14,15 @@ export function accountRowToRecord(row: AccountRow): Account {
     subtype: row.subtype,
     description: row.description,
     isActive: row.isActive,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+
+  if (row.deletedAt) account.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) account.deletedBy = row.deletedBy;
+  if (row.deletionReason) account.deletionReason = row.deletionReason;
+
+  return account;
 }
 
 export async function listAccountsByWorkspace(tenant: string): Promise<Account[]> {

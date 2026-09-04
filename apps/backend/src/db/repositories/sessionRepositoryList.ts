@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   type SessionsCommandMetricsSnapshot,
   type SessionsListPageResult,
@@ -72,24 +73,16 @@ function buildListConditions(subdomain: string, query: SessionsListQuery): SQL[]
     conditions.push(isNull(sessions.deletedAt));
   }
 
-  if (query.status?.trim()) {
-    const statuses = query.status
-      .split(',')
-      .map((status) => status.trim().toLowerCase())
-      .filter(Boolean);
-    if (statuses.length > 0) {
-      conditions.push(inArray(sql`lower(${sessions.status})`, statuses));
-    }
+  const rawStatuses = dedupeTrimmedIds(query.status);
+  if (rawStatuses.length > 0) {
+    const statuses = rawStatuses.map((status) => status.toLowerCase());
+    conditions.push(inArray(sql`lower(${sessions.status})`, statuses));
   }
 
-  if (query.type?.trim()) {
-    const types = query.type
-      .split(',')
-      .map((type) => type.trim().toLowerCase())
-      .filter(Boolean);
-    if (types.length > 0) {
-      conditions.push(inArray(sql`lower(${sessions.type})`, types));
-    }
+  const rawTypes = dedupeTrimmedIds(query.type);
+  if (rawTypes.length > 0) {
+    const types = rawTypes.map((type) => type.toLowerCase());
+    conditions.push(inArray(sql`lower(${sessions.type})`, types));
   }
 
   const search = query.search?.trim();
@@ -136,9 +129,11 @@ export async function listSessionsPage(
 
     // Preserve order from pagination query
     const sessionMap = new Map(hydratedSessions.map((s) => [s.id, s]));
-    const ordered = ids
-      .map((id) => sessionMap.get(id))
-      .filter((s): s is NonNullable<typeof s> => Boolean(s));
+    const ordered: typeof hydratedSessions = [];
+    for (let i = 0; i < ids.length; i++) {
+      const s = sessionMap.get(ids[i]);
+      if (s) ordered.push(s);
+    }
 
     return {
       sessions: ordered,
@@ -231,7 +226,7 @@ export async function bulkUpdateSessionsStatusSql(
   status: string,
 ): Promise<{ succeeded: number; failed: number }> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+  const uniqueIds = dedupeTrimmedIds(ids);
   if (!subdomain || uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
   const normalizedStatus = status.trim().toLowerCase() || 'active';
 

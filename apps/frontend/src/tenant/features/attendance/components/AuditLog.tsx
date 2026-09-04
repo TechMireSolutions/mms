@@ -84,9 +84,19 @@ export function AuditLog({ filters }: AuditLogProps): React.JSX.Element {
     draft_saved: { label: t("attendance.audit.action.draftSaved"), cls: SEMANTIC_BADGE.muted },
   }))() as Record<string, StatusBadgeConfigItem>;
 
+  const studentMap = (() => {
+    const map = new Map<string, string>();
+    for (const student of students) {
+      if (student?.id != null && student.name) {
+        map.set(String(student.id), student.name);
+      }
+    }
+    return map;
+  })();
+
   const studentNameFor = (id?: string): string => {
     if (!id) return "";
-    return students.find((student) => String(student.id) === String(id))?.name ?? "";
+    return studentMap.get(String(id)) ?? "";
   };
   
   const allClasses = (() => {

@@ -40,6 +40,7 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
     openComposer,
   } = props;
   const { t } = useTranslation();
+  const selectedIdsSet = new Set(selectedIds);
 
   return (
     <Table className="table-fixed">
@@ -67,7 +68,7 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
       />
       <TableBody className="divide-y divide-border/50">
         {invoices.map((invoice) => {
-            const isSelected = selectedIds.includes(invoice.id);
+            const isSelected = selectedIdsSet.has(invoice.id);
             return (
               <TableRow
                 key={invoice.id}

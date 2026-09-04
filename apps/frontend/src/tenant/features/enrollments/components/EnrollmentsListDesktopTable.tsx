@@ -48,6 +48,13 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
   } = props;
   const { t } = useTranslation();
 
+  const studentsById = new Map<string, (typeof students)[number]>();
+  for (const s of students) {
+    studentsById.set(String(s.id), s);
+  }
+  const selectedIdsSet = new Set(selectedIds);
+  const columnOptions = { t, students: studentsById, statusConfig, paymentConfig, formatCurrency };
+
   return (
     <Table className="table-fixed">
       <ModuleWorkTableHeader
@@ -73,9 +80,8 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
       />
       <TableBody className="divide-y divide-border">
         {enrollments.map((enrollment) => {
-          const student = findEnrollmentStudent(enrollment, students);
-          const isSelected = selectedIds.includes(enrollment.id);
-          const columnOptions = { t, students, statusConfig, paymentConfig, formatCurrency };
+          const student = findEnrollmentStudent(enrollment, studentsById);
+          const isSelected = selectedIdsSet.has(enrollment.id);
 
           return (
             <TableRow

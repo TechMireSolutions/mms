@@ -17,10 +17,12 @@ export const SESSION_TIMEOUT_PRESETS: readonly {
   { value: "480", labelKey: "global.timeout480" },
 ] as const;
 
+const SESSION_TIMEOUT_VALUES_SET = new Set<string>(SESSION_TIMEOUT_VALUES);
+
 /** Coerces stored session timeout to a supported select value. */
 export function normalizeSessionTimeout(value: string | number | undefined): SessionTimeoutValue {
   const raw = String(value ?? "60");
-  return (SESSION_TIMEOUT_VALUES as readonly string[]).includes(raw)
+  return SESSION_TIMEOUT_VALUES_SET.has(raw)
     ? (raw as SessionTimeoutValue)
     : "60";
 }

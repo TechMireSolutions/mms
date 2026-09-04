@@ -19,6 +19,11 @@ export function buildStudentSiblings(
 
   if (!fatherId && !guardianId && !fatherName) return [];
 
+  const sessionNameById = new Map<string, string>();
+  for (let i = 0; i < sessions.length; i++) {
+    sessionNameById.set(sessions[i].id, sessions[i].name);
+  }
+
   const matched: SiblingStudentItem[] = [];
 
   for (const other of allStudents) {
@@ -33,9 +38,14 @@ export function buildStudentSiblings(
       (fatherName && otherFatherName && fatherName === otherFatherName);
 
     if (isMatch) {
-      const sessionNames = sessions
-        .filter((sess) => other.enrolledSessions?.includes(sess.id))
-        .map((sess) => sess.name);
+      const sessionNames: string[] = [];
+      const enrolled = other.enrolledSessions;
+      if (enrolled && enrolled.length > 0) {
+        for (let i = 0; i < enrolled.length; i++) {
+          const name = sessionNameById.get(enrolled[i]);
+          if (name) sessionNames.push(name);
+        }
+      }
 
       matched.push({
         id: String(other.id),

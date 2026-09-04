@@ -115,13 +115,18 @@ export const INITIAL_TEACHERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
   ],
 };
 
+const TEACHER_SEED_FIELDS_BY_KEY = new Map<string, FieldDefinition>();
+for (const tabFields of Object.values(INITIAL_TEACHERS_FIELD_SEED)) {
+  for (const field of tabFields) {
+    if (!TEACHER_SEED_FIELDS_BY_KEY.has(field.key)) {
+      TEACHER_SEED_FIELDS_BY_KEY.set(field.key, field);
+    }
+  }
+}
+
 /** Seeded teacher form field by key (across all seed tabs), or `undefined`. */
 export function findTeacherSeedField(fieldKey: string): FieldDefinition | undefined {
-  for (const tabFields of Object.values(INITIAL_TEACHERS_FIELD_SEED)) {
-    const field = tabFields.find((candidate) => candidate.key === fieldKey);
-    if (field) return field;
-  }
-  return undefined;
+  return TEACHER_SEED_FIELDS_BY_KEY.get(fieldKey);
 }
 
 export {

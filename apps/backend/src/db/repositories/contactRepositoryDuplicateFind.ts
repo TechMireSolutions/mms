@@ -1,5 +1,5 @@
 import { and, notInArray, sql, type SQL } from 'drizzle-orm';
-import { buildNamePrefixRegex } from '@mms/shared';
+import { buildNamePrefixRegex, dedupeTrimmedIds } from '@mms/shared';
 import {
   contacts,
   contactPhones,
@@ -32,14 +32,24 @@ export async function findContactDuplicateCandidateIds(
   keys: ContactDuplicateCandidateKeys,
   excludeIds: Array<string | number> = [],
 ): Promise<string[]> {
-  const phones = [...new Set(keys.phones.map((p) => String(p).trim()).filter(Boolean))];
-  const emails = [...new Set(keys.emails.map((e) => e.trim().toLowerCase()).filter(Boolean))];
+  const phones = dedupeTrimmedIds(keys.phones);
+  const emails: string[] = [];
+  const seenEmails = new Set<string>();
+  for (let i = 0; i < keys.emails.length; i++) {
+    const raw = keys.emails[i];
+    if (!raw) continue;
+    const lower = raw.trim().toLowerCase();
+    if (lower && !seenEmails.has(lower)) {
+      seenEmails.add(lower);
+      emails.push(lower);
+    }
+  }
   const name = keys.name?.trim() ?? '';
   const cnic = (keys.cnic ?? '').replace(/\D/g, '');
   if (phones.length === 0 && emails.length === 0 && !name && !cnic) return [];
 
   const subdomain = tenant.trim().toLowerCase();
-  const excluded = [...new Set(excludeIds.map(String).filter(Boolean))];
+  const excluded = dedupeTrimmedIds(excludeIds);
   const prefixRegex = buildNamePrefixRegex(keys.namePrefixes);
   const matchClauses: SQL[] = [];
 

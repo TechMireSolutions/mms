@@ -6,17 +6,20 @@ import { withTenant } from '../tenant-context.js';
 type BatchRow = typeof hasanatBatches.$inferSelect;
 
 export function batchRowToRecord(row: BatchRow): StockBatch {
-  return {
+  const batch: StockBatch = {
     id: row.id,
     denominationId: row.denominationId,
     denominationName: row.denominationName,
     quantity: row.quantity,
     remaining: row.remaining,
     addedDate: row.addedDate,
-    addedByUserId: row.addedByUserId ?? undefined,
-    addedBy: row.addedBy ?? undefined,
     note: row.note,
   };
+
+  if (row.addedByUserId) batch.addedByUserId = row.addedByUserId;
+  if (row.addedBy) batch.addedBy = row.addedBy;
+
+  return batch;
 }
 
 export async function listBatchesByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<StockBatch[]> {

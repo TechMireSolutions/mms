@@ -99,9 +99,11 @@ export const QUESTION_SOURCE_FIELD_TO_KEY: Record<
   sourceNotes: 'notes',
 };
 
+const QUESTION_SOURCE_FIELD_IDS_SET = new Set<string>(QUESTION_SOURCE_FIELD_IDS);
+
 /** Returns whether a field id belongs to the source reference group. */
 export function isQuestionSourceFieldId(fieldId: string): fieldId is QuestionSourceFieldId {
-  return (QUESTION_SOURCE_FIELD_IDS as readonly string[]).includes(fieldId);
+  return QUESTION_SOURCE_FIELD_IDS_SET.has(fieldId);
 }
 
 /** Add-question form / fields-settings tab ids (Categories | Question | Sources). */

@@ -50,14 +50,18 @@ export async function replaceUserUiPreferencesForWorkspace(
 
     const validUserIds = new Set(existingUsers.map((u) => u.id));
 
-    const validRecords = records
-      .filter((record) => record && typeof record === 'object' && record.userId && validUserIds.has(record.userId))
-      .map((record) => ({
-        workspaceSubdomain: subdomain,
-        userId: record.userId,
-        state: record.state ?? {},
-        updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-      }));
+    const validRecords: (typeof userUiPreferences.$inferInsert)[] = [];
+    for (let i = 0; i < records.length; i++) {
+      const record = records[i];
+      if (record && typeof record === 'object' && record.userId && validUserIds.has(record.userId)) {
+        validRecords.push({
+          workspaceSubdomain: subdomain,
+          userId: record.userId,
+          state: record.state ?? {},
+          updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
+        });
+      }
+    }
 
     if (validRecords.length > 0) {
       await tx.insert(userUiPreferences).values(validRecords);

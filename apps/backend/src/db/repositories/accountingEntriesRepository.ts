@@ -24,7 +24,7 @@ export function entryRowToRecord(
   tags: string[] = [],
   attachments: string[] = [],
 ): JournalEntry {
-  return {
+  const entry: JournalEntry = {
     id: row.id,
     date: row.date,
     ref: row.ref,
@@ -32,8 +32,6 @@ export function entryRowToRecord(
     status: row.status as JournalEntry['status'],
     created_by: row.createdBy,
     fiscal_year: row.fiscalYear,
-    transaction_type: row.transactionType ?? undefined,
-    reversed_ref: row.reversedRef ?? undefined,
     simple_mode: row.simpleMode,
     lines: lines.map((l) => ({
       id: l.id,
@@ -44,12 +42,17 @@ export function entryRowToRecord(
     })),
     tags,
     attachments,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+
+  if (row.transactionType) entry.transaction_type = row.transactionType;
+  if (row.reversedRef) entry.reversed_ref = row.reversedRef;
+  if (row.deletedAt) entry.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) entry.deletedBy = row.deletedBy;
+  if (row.deletionReason) entry.deletionReason = row.deletionReason;
+
+  return entry;
 }
 
 export async function listEntriesByWorkspace(

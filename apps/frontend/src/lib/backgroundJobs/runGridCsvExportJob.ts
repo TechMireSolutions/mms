@@ -13,10 +13,25 @@ export function runGridCsvExportJob(options: {
   columns: GridExportColumn[];
   rows: Record<string, unknown>[];
 }): void {
-  const header = options.columns.map((column) => column.header);
-  const csvRows = options.rows.map((row) =>
-    options.columns.map((column) => row[column.key] ?? ''),
-  );
+  const colCount = options.columns.length;
+  const header = new Array<string>(colCount);
+  const keys = new Array<string>(colCount);
+  for (let j = 0; j < colCount; j++) {
+    header[j] = options.columns[j].header;
+    keys[j] = options.columns[j].key;
+  }
+
+  const rowCount = options.rows.length;
+  const csvRows = new Array<unknown[]>(rowCount);
+  for (let i = 0; i < rowCount; i++) {
+    const row = options.rows[i];
+    const rowCells = new Array<unknown>(colCount);
+    for (let j = 0; j < colCount; j++) {
+      rowCells[j] = row[keys[j]] ?? '';
+    }
+    csvRows[i] = rowCells;
+  }
+
   runCsvDownloadJob({
     moduleId: options.moduleId,
     label: options.label,

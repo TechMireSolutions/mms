@@ -1,4 +1,4 @@
-import type { Contact, FieldDefinition, FieldConfig } from './contactTypes.js';
+import type { Contact, FieldConfig } from './contactTypes.js';
 import { canViewContactColumn, type ContactColumnFieldContext } from './contactColumnAccess.js';
 import { canViewContactTab } from './contactFieldAccess.js';
 import {
@@ -21,34 +21,51 @@ export interface ContactExportLabels {
   no: string;
 }
 
-function tabAllowsField(
-  viewerRole: string,
-  fieldConfig: FieldConfig,
-  tabId: string,
-): boolean {
-  if (isContactLockedEnabledTab(tabId)) return true;
-  const formTabs = fieldConfig.formTabs ?? [];
-  if (formTabs.length === 0) return true;
-  const tab = formTabs.find((candidate) => candidate.key === tabId);
-  if (!tab) return true;
-  return tab.enabled !== false && canViewContactTab(viewerRole, tab);
-}
-
 function buildColumnFieldContext(
   fieldConfig: FieldConfig,
   viewerRole: string,
 ): ContactColumnFieldContext {
   const enabledTabIds = resolveContactEnabledTabIds(fieldConfig, viewerRole);
+  const formTabs = fieldConfig.formTabs ?? [];
+  const tabMap = new Map<string, (typeof formTabs)[number]>();
+  for (const t of formTabs) {
+    if (t.key) tabMap.set(t.key.toLowerCase(), t);
+  }
+
+  const fieldEnabledMap = new Map<string, boolean>();
+  for (const [tabId, tabFields] of Object.entries(fieldConfig.fields ?? {})) {
+    for (const f of tabFields) {
+      if (f.key) {
+        fieldEnabledMap.set(`${tabId.toLowerCase()}:${f.key}`, f.enabled !== false);
+      }
+    }
+  }
+
+  const tabAllows = (tabId: string): boolean => {
+    if (isContactLockedEnabledTab(tabId)) return true;
+    if (formTabs.length === 0) return true;
+    const tab = tabMap.get(tabId.toLowerCase());
+    if (!tab) return true;
+    return tab.enabled !== false && canViewContactTab(viewerRole, tab);
+  };
+
   return {
     fields: fieldConfig.fields,
     enabledTabIds,
     isTabFieldEnabled: (tabId, fieldId) => {
-      if (!tabAllowsField(viewerRole, fieldConfig, tabId)) return false;
-      const field = (fieldConfig.fields[tabId] ?? []).find((candidate: FieldDefinition) => candidate.key === fieldId);
-      return field?.enabled !== false;
+      if (!tabAllows(tabId)) return false;
+      return fieldEnabledMap.get(`${tabId.toLowerCase()}:${fieldId}`) ?? true;
     },
   };
 }
+
+export const DEFAULT_CONTACT_EXPORT_COLUMNS: readonly ContactExportColumn[] = [
+  { id: 'name', label: 'Name' },
+  { id: 'phone', label: 'Phone' },
+  { id: 'email', label: 'Email' },
+  { id: 'gender', label: 'Gender' },
+  { id: 'city', label: 'City' },
+] as const;
 
 /** Filters export columns by the same field/tab visibility rules as Work columns. */
 export function filterContactExportColumnsForViewer(
@@ -56,56 +73,50 @@ export function filterContactExportColumnsForViewer(
   fieldConfig: FieldConfig | null | undefined,
   viewerRole: string,
 ): ContactExportColumn[] {
-  if (!fieldConfig?.fields) return columns;
+  const source = columns.length > 0 ? columns : [...DEFAULT_CONTACT_EXPORT_COLUMNS];
+  if (!fieldConfig?.fields) return source;
   const columnFieldContext = buildColumnFieldContext(fieldConfig, viewerRole);
-  return columns.filter((column) => canViewContactColumn(viewerRole, column.id, columnFieldContext));
+  return source.filter((column) => canViewContactColumn(viewerRole, column.id, columnFieldContext));
 }
 
-function cellValue(
-  contact: Contact,
+function compileContactColumnExtractor(
   columnId: string,
   labels: ContactExportLabels,
-): string {
-  if (columnId === 'name') return contact.name || '';
-  if (columnId === 'phone') return getPrimaryPhone(contact) || '';
-  if (columnId === 'email') {
-    return (contact.emails || [])[0]?.address || '';
-  }
-  if (columnId === 'whatsapp') return hasWhatsApp(contact) ? labels.yes : labels.no;
-  if (columnId === 'isSyed') return contact.isSyed ? labels.yes : labels.no;
-  if (columnId === 'line1') {
-    return (contact.addresses || [])[0]?.line1 || '';
-  }
-  if (columnId === 'city') {
-    return (contact.addresses || [])[0]?.city || '';
-  }
-  if (columnId === 'state') {
-    return (contact.addresses || [])[0]?.state || '';
-  }
-  if (columnId === 'country') {
-    return (contact.addresses || [])[0]?.country || '';
-  }
+): (contact: Contact) => string {
+  if (columnId === 'name') return (c) => c.name || '';
+  if (columnId === 'phone') return (c) => getPrimaryPhone(c) || '';
+  if (columnId === 'email') return (c) => (c.emails || [])[0]?.address || '';
+  if (columnId === 'whatsapp') return (c) => (hasWhatsApp(c) ? labels.yes : labels.no);
+  if (columnId === 'isSyed') return (c) => (c.isSyed ? labels.yes : labels.no);
+  if (columnId === 'line1') return (c) => (c.addresses || [])[0]?.line1 || '';
+  if (columnId === 'city') return (c) => (c.addresses || [])[0]?.city || '';
+  if (columnId === 'state') return (c) => (c.addresses || [])[0]?.state || '';
+  if (columnId === 'country') return (c) => (c.addresses || [])[0]?.country || '';
   if (columnId === 'socials_platform') {
-    return (contact.socials || []).map((s) => s.platform).filter(Boolean).join('; ');
+    return (c) => (c.socials || []).map((s) => s.platform).filter(Boolean).join('; ');
   }
   if (columnId === 'socials_url') {
-    return (contact.socials || []).map((s) => s.url).filter(Boolean).join('; ');
+    return (c) => (c.socials || []).map((s) => s.url).filter(Boolean).join('; ');
   }
   if (isRelationshipContactColumnKey(columnId)) {
-    return (contact.relationshipContacts || [])
-      .map((ec) => ec.name || (ec.contactId ? String(ec.contactId) : ''))
-      .filter(Boolean)
-      .join('; ');
+    return (c) =>
+      (c.relationshipContacts || [])
+        .map((ec) => ec.name || (ec.contactId ? String(ec.contactId) : ''))
+        .filter(Boolean)
+        .join('; ');
   }
   if (isRelationshipTypeColumnKey(columnId)) {
-    return (contact.relationshipContacts || [])
-      .map((ec) => ec.relationship)
-      .filter(Boolean)
-      .join('; ');
+    return (c) =>
+      (c.relationshipContacts || [])
+        .map((ec) => ec.relationship)
+        .filter(Boolean)
+        .join('; ');
   }
-  const cellVal = contact[columnId as keyof Contact];
-  if (cellVal === undefined || cellVal === null) return '';
-  return String(cellVal);
+  return (c) => {
+    const cellVal = c[columnId as keyof Contact];
+    if (cellVal === undefined || cellVal === null) return '';
+    return String(cellVal);
+  };
 }
 
 /** Builds CSV rows (header + data) for the given contacts and visible columns. */
@@ -115,8 +126,9 @@ export function buildContactsExportRows(
   labels: ContactExportLabels,
 ): unknown[][] {
   const header = columns.map((column) => column.label);
+  const extractors = columns.map(({ id }) => compileContactColumnExtractor(id, labels));
   const rows = contacts.map((contact) =>
-    columns.map(({ id }) => cellValue(contact, id, labels)),
+    extractors.map((extract) => extract(contact)),
   );
   return [header, ...rows];
 }

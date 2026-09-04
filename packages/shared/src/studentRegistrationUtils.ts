@@ -39,13 +39,15 @@ export function computeNextGrNumber(
 
   let nextSeq: number;
   if (restartAnnually) {
-    const yearlyStudents = students.filter((s) => {
+    const yearStr = String(year);
+    let count = 0;
+    for (const s of students) {
       const sDate = s.registeredDate || '';
-      if (sDate.startsWith(String(year))) return true;
-      if (s.grNumber && String(s.grNumber).includes(String(year))) return true;
-      return false;
-    });
-    nextSeq = yearlyStudents.length + 1;
+      if (sDate.startsWith(yearStr) || (s.grNumber && String(s.grNumber).includes(yearStr))) {
+        count++;
+      }
+    }
+    nextSeq = count + 1;
   } else {
     nextSeq = students.length + 1;
   }
@@ -121,28 +123,45 @@ export function backfillMissingStudentGrNumbers<T extends StudentGrBackfillRow>(
   const template = settings.grNumberTemplate || '{seq}-{year}';
   const digits = settings.grNumberDigits || 4;
   const restartAnnually = settings.grNumberRestartAnnually !== false;
+  const targetYears = new Set<string>();
+  if (restartAnnually) {
+    for (const s of working) {
+      const regDate = s.registeredDate || fallbackRegisteredDate;
+      const yr = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
+      targetYears.add(String(yr));
+    }
+  }
+
+  const yearCounts = new Map<string, number>();
 
   working.forEach((studentRecord, studentIndex) => {
-    if (studentRecord.grNumber) return;
     const registeredDate = studentRecord.registeredDate || fallbackRegisteredDate;
     const year = registeredDate ? new Date(registeredDate).getFullYear() : new Date().getFullYear();
+    const yearStr = String(year);
 
-    let nextSeq: number;
-    if (restartAnnually) {
-      const yearlyStudents = working.slice(0, studentIndex).filter((prev) => {
-        const prevDate = prev.registeredDate || '';
-        if (prevDate.startsWith(String(year))) return true;
-        if (prev.grNumber && String(prev.grNumber).includes(String(year))) return true;
-        return false;
-      });
-      nextSeq = yearlyStudents.length + 1;
-    } else {
-      nextSeq = studentIndex + 1;
+    if (!studentRecord.grNumber) {
+      let nextSeq: number;
+      if (restartAnnually) {
+        const count = yearCounts.get(yearStr) ?? 0;
+        nextSeq = count + 1;
+      } else {
+        nextSeq = studentIndex + 1;
+      }
+
+      const seqStr = String(nextSeq).padStart(digits, '0');
+      studentRecord.grNumber = template.replace('{seq}', seqStr).replace('{year}', yearStr);
+      updated.push(studentRecord);
     }
 
-    const seqStr = String(nextSeq).padStart(digits, '0');
-    studentRecord.grNumber = template.replace('{seq}', seqStr).replace('{year}', String(year));
-    updated.push(studentRecord);
+    if (restartAnnually) {
+      const rowDate = studentRecord.registeredDate || '';
+      const rowGr = studentRecord.grNumber ? String(studentRecord.grNumber) : '';
+      for (const y of targetYears) {
+        if (rowDate.startsWith(y) || (rowGr && rowGr.includes(y))) {
+          yearCounts.set(y, (yearCounts.get(y) ?? 0) + 1);
+        }
+      }
+    }
   });
 
   return updated;

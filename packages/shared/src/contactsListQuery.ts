@@ -14,9 +14,11 @@ const contactsQuickFilterSchema = z.enum(CONTACTS_QUICK_FILTERS);
 /** Work-directory quick filter preset ids. */
 export type ContactsQuickFilter = z.infer<typeof contactsQuickFilterSchema>;
 
+const CONTACTS_QUICK_FILTERS_SET = new Set<string>(CONTACTS_QUICK_FILTERS);
+
 /** Narrow a dropdown/radio string to a Contacts quick-filter preset. */
 export function isContactsQuickFilter(value: string): value is ContactsQuickFilter {
-  return (CONTACTS_QUICK_FILTERS as readonly string[]).includes(value);
+  return CONTACTS_QUICK_FILTERS_SET.has(value);
 }
 
 const CONTACTS_QUICK_FILTER_LABEL_KEYS = {
@@ -136,9 +138,8 @@ function matchesContactsQuickFilter(
     if (!contact.createdAt) return false;
     const created = new Date(contact.createdAt);
     if (Number.isNaN(created.getTime())) return false;
-    const cutoff = new Date(referenceDate);
-    cutoff.setDate(cutoff.getDate() - 30);
-    return created >= cutoff;
+    const cutoffTime = referenceDate.getTime() - 30 * 24 * 60 * 60 * 1000;
+    return created.getTime() >= cutoffTime;
   }
   return true;
 }
@@ -167,7 +168,8 @@ export function filterContactsForQuery(contacts: Contact[], query: ContactsListQ
     );
   }
   if (query.quickFilter && query.quickFilter !== 'all') {
-    rows = rows.filter((contact) => matchesContactsQuickFilter(contact, query.quickFilter));
+    const refDate = new Date();
+    rows = rows.filter((contact) => matchesContactsQuickFilter(contact, query.quickFilter, refDate));
   }
   if (query.excludeIds && query.excludeIds.length > 0) {
     const excluded = new Set(query.excludeIds.map(String));

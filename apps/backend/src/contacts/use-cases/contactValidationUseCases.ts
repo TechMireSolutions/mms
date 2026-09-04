@@ -235,12 +235,13 @@ export async function assertContactUniqueFields(
   }
 }
 
-// Cache compiled schemas by tenant and active blueprint fingerprint.
+// Cache compiled schemas by tenant, language, and active blueprint fingerprint (bounded to 100 entries).
+const SCHEMA_CACHE_MAX_ENTRIES = 100;
 const schemaCache = new Map<string, z.ZodTypeAny>();
 
-function getBlueprintCacheKey(tenant: string, fieldConfig: unknown, viewerRole?: string): string {
+function getBlueprintCacheKey(tenant: string, fieldConfig: unknown, language: string, viewerRole?: string): string {
   const fingerprint = crypto.hash('sha256', JSON.stringify(fieldConfig), 'hex');
-  return `${tenant}:${fingerprint}:${viewerRole || ''}`;
+  return `${tenant}:${language}:${fingerprint}:${viewerRole || ''}`;
 }
 
 /**
@@ -270,7 +271,7 @@ export async function validateContactDynamic(
   }
   verifyBlueprintVersion(submittedBlueprintId, fieldConfig.version);
 
-  const cacheKey = getBlueprintCacheKey(tenant, fieldConfig, viewerRole);
+  const cacheKey = getBlueprintCacheKey(tenant, fieldConfig, language, viewerRole);
   let schema = schemaCache.get(cacheKey);
 
   if (!schema) {
@@ -286,6 +287,10 @@ export async function validateContactDynamic(
       language,
       viewerRole,
     );
+    if (schemaCache.size >= SCHEMA_CACHE_MAX_ENTRIES) {
+      const firstKey = schemaCache.keys().next().value;
+      if (firstKey) schemaCache.delete(firstKey);
+    }
     schemaCache.set(cacheKey, schema);
   }
 

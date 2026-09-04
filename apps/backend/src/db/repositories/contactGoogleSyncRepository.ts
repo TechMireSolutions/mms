@@ -13,13 +13,15 @@ export interface ContactGoogleSyncCredentialRecord {
 type CredentialRow = typeof contactGoogleSyncCredentials.$inferSelect;
 
 function toRecord(row: CredentialRow): ContactGoogleSyncCredentialRecord {
-  return {
-    clientId: row.clientId ?? undefined,
-    clientSecret: row.clientSecret ?? undefined,
-    accessToken: row.accessToken ?? undefined,
-    refreshToken: row.refreshToken ?? undefined,
-    updatedAt: row.updatedAt?.toISOString(),
-  };
+  const record: ContactGoogleSyncCredentialRecord = {};
+
+  if (row.clientId) record.clientId = row.clientId;
+  if (row.clientSecret) record.clientSecret = row.clientSecret;
+  if (row.accessToken) record.accessToken = row.accessToken;
+  if (row.refreshToken) record.refreshToken = row.refreshToken;
+  if (row.updatedAt) record.updatedAt = row.updatedAt.toISOString();
+
+  return record;
 }
 
 export async function findContactGoogleSyncCredentials(

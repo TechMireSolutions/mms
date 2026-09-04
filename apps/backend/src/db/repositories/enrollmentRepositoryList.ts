@@ -1,5 +1,6 @@
 import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type EnrollmentsCommandMetricsSnapshot,
@@ -66,10 +67,7 @@ function buildListConditions(subdomain: string, query: EnrollmentsListQuery): SQ
   }
 
   if (query.status?.trim() && query.status !== 'all') {
-    const statuses = query.status
-      .split(',')
-      .map((status) => status.trim())
-      .filter(Boolean);
+    const statuses = dedupeTrimmedIds(query.status);
     if (statuses.length > 0) {
       conditions.push(inArray(enrollments.status, statuses));
     }

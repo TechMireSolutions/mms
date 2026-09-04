@@ -18,7 +18,7 @@ export type QuestionSourceCitationTranslator = (
 export function formatQuestionSourcesCitation(
   question: QuestionSourceRef,
   t: QuestionSourceCitationTranslator,
-  books?: readonly QuestionSourceBook[],
+  books?: readonly QuestionSourceBook[] | ReadonlyMap<string, QuestionSourceBook>,
 ): string | null {
   const entries = getQuestionSources(question, books);
   const lines = entries

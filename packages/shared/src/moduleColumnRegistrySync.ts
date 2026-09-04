@@ -32,9 +32,11 @@ function withLockedEnabledTabs(
   enabledTabIds: Iterable<string>,
   lockedEnabledTabs: readonly string[],
 ): Set<string> {
-  const enabled = new Set(
-    [...enabledTabIds].map((tabId) => tabId.trim().toLowerCase()).filter(Boolean),
-  );
+  const enabled = new Set<string>();
+  for (const tabId of enabledTabIds) {
+    const trimmed = tabId?.trim().toLowerCase();
+    if (trimmed) enabled.add(trimmed);
+  }
   for (const locked of lockedEnabledTabs) {
     enabled.add(locked.toLowerCase());
   }
@@ -112,15 +114,21 @@ export function syncModuleColumnRegistryWithFields(
     }
   }
 
+  const fieldLookup = new Map<string, FieldDefinition>();
+  for (const [tabId, tabFields] of Object.entries(fields)) {
+    const tabKey = tabId.toLowerCase();
+    for (const field of tabFields || []) {
+      fieldLookup.set(`${tabKey}:${field.key}`, field);
+    }
+  }
+
   return Array.from(byKey.values())
     .map((col) => {
       const mapping = columnFieldMapping[col.key];
       if (!mapping) return col;
 
       const tabOk = enabledTabs.has(mapping.tabId.toLowerCase());
-      const field = (fields[mapping.tabId] || []).find(
-        (candidate) => candidate.key === mapping.fieldId,
-      );
+      const field = fieldLookup.get(`${mapping.tabId.toLowerCase()}:${mapping.fieldId}`);
       const fieldOk = field ? field.enabled !== false : true;
       if (!tabOk || !fieldOk) {
         return { ...col, enabled: false };

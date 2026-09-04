@@ -117,8 +117,18 @@ export function computeEnrollmentsCumulativeTrends(
   monthCount = 12,
   now: Date = new Date(),
 ): EnrollmentsCumulativeTrend[] {
+  const validDates: string[] = [];
+  for (let i = 0; i < enrolledDates.length; i++) {
+    const trimmed = enrolledDates[i]?.trim();
+    if (trimmed && /^\d{4}/.test(trimmed)) {
+      validDates.push(trimmed);
+    }
+  }
+  validDates.sort();
+
   const trends: EnrollmentsCumulativeTrend[] = [];
-  const validDates = enrolledDates.filter((date) => /^\d{4}/.test(date.trim()));
+  let dateIndex = 0;
+  const validLen = validDates.length;
 
   for (let offset = monthCount - 1; offset >= 0; offset--) {
     const cursor = new Date(now.getFullYear(), now.getMonth() - offset, 1);
@@ -126,8 +136,11 @@ export function computeEnrollmentsCumulativeTrends(
     const monthNum = String(cursor.getMonth() + 1).padStart(2, '0');
     const monthKey = `${year}-${monthNum}`;
     const cutoff = `${monthKey}-31`;
-    const students = validDates.filter((date) => date.trim() <= cutoff).length;
-    trends.push({ monthKey, students });
+
+    while (dateIndex < validLen && validDates[dateIndex] <= cutoff) {
+      dateIndex++;
+    }
+    trends.push({ monthKey, students: dateIndex });
   }
 
   return trends;

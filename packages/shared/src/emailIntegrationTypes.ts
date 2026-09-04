@@ -73,8 +73,10 @@ const EMAIL_PROVIDERS = [
 
 export type EmailProviderId = typeof EMAIL_PROVIDERS[number];
 
+const EMAIL_PROVIDERS_SET = new Set<string>(EMAIL_PROVIDERS);
+
 export function isEmailProviderId(value: unknown): value is EmailProviderId {
-  return typeof value === 'string' && (EMAIL_PROVIDERS as readonly string[]).includes(value);
+  return typeof value === 'string' && EMAIL_PROVIDERS_SET.has(value);
 }
 
 

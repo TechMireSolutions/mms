@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import {
   DEFAULT_TEACHER_STATUS,
+  dedupeTrimmedIds,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   resolveTeacherStatusRoles,
   type TeachersCommandMetricsSnapshot,
@@ -19,7 +20,7 @@ export async function bulkUpdateTeachersStatusSql(
   status: string,
 ): Promise<number> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+  const uniqueIds = dedupeTrimmedIds(ids);
   if (!subdomain || uniqueIds.length === 0) return 0;
   const normalizedStatus = status.trim().toLowerCase() || DEFAULT_TEACHER_STATUS;
 
@@ -52,7 +53,7 @@ export async function bulkUpdateTeachersSpecializationSql(
   specialization: string,
 ): Promise<number> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+  const uniqueIds = dedupeTrimmedIds(ids);
   if (!subdomain || uniqueIds.length === 0) return 0;
   const normalizedSpecialization = specialization.trim();
 

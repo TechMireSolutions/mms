@@ -4,6 +4,9 @@ import type { JournalEntry } from "@/lib/data/accountingData";
 export const MONEY_IN_CREDITS = ["a4000", "a4100", "a4200", "a4300", "a4400"];
 export const MONEY_OUT_DEBITS = ["a5000", "a5100", "a5200", "a5300", "a5400", "a5500", "a5600", "a5700", "a5800"];
 
+const MONEY_IN_SET = new Set(MONEY_IN_CREDITS);
+const MONEY_OUT_SET = new Set(MONEY_OUT_DEBITS);
+
 export type EntryType = "in" | "out" | "transfer";
 
 export interface CashbookRow extends JournalEntry {
@@ -19,8 +22,8 @@ export function classifyEntry(entry: JournalEntry & { transaction_type?: string 
     if (["salary", "utilities", "supplies", "rent_payment", "other_expense"].includes(transactionType)) return "out";
     return "transfer";
   }
-  const hasRevenueCredit = entry.lines.some((journalLine) => MONEY_IN_CREDITS.includes(journalLine.account_id) && journalLine.credit > 0);
-  const hasExpenseDebit = entry.lines.some((journalLine) => MONEY_OUT_DEBITS.includes(journalLine.account_id) && journalLine.debit > 0);
+  const hasRevenueCredit = entry.lines.some((journalLine) => MONEY_IN_SET.has(journalLine.account_id) && journalLine.credit > 0);
+  const hasExpenseDebit = entry.lines.some((journalLine) => MONEY_OUT_SET.has(journalLine.account_id) && journalLine.debit > 0);
   if (hasRevenueCredit) return "in";
   if (hasExpenseDebit) return "out";
   return "transfer";
@@ -28,12 +31,12 @@ export function classifyEntry(entry: JournalEntry & { transaction_type?: string 
 
 export function getEntryAmount(entry: JournalEntry, type: EntryType): number {
   if (type === "in") {
-    const revenueLines = entry.lines.filter((journalLine) => MONEY_IN_CREDITS.includes(journalLine.account_id) && journalLine.credit > 0);
+    const revenueLines = entry.lines.filter((journalLine) => MONEY_IN_SET.has(journalLine.account_id) && journalLine.credit > 0);
     if (revenueLines.length > 0) return revenueLines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
     return entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
   }
   if (type === "out") {
-    const expenseLines = entry.lines.filter((journalLine) => MONEY_OUT_DEBITS.includes(journalLine.account_id) && journalLine.debit > 0);
+    const expenseLines = entry.lines.filter((journalLine) => MONEY_OUT_SET.has(journalLine.account_id) && journalLine.debit > 0);
     if (expenseLines.length > 0) return expenseLines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
     return entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
   }

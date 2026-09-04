@@ -46,6 +46,7 @@ export function ContactDetailNetwork({
 }: ContactDetailNetworkProps): React.JSX.Element {
   const { t } = useTranslation();
   const links = mergeStoredAndDerivedSiblingLinks(contact, allContacts);
+  const contactsById = new Map(allContacts.map((c) => [String(c.id), c]));
   const parentAllowsOutbound = !contact.deletedAt;
 
   return (
@@ -76,7 +77,7 @@ export function ContactDetailNetwork({
           <Card className="divide-y divide-border/50 p-0">
             {links.map((relationship, relationshipIndex) => {
               const target = relationship.contactId
-                ? allContacts.find((c) => String(c.id) === relationship.contactId)
+                ? contactsById.get(relationship.contactId)
                 : undefined;
               const displayName = resolveLinkedDisplayName(
                 relationship,

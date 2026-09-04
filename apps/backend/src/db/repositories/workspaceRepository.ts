@@ -64,16 +64,25 @@ export function clearWorkspaceCacheForTests(): void {
   workspaceCache.clear();
 }
 
-function rowToWorkspace(ws: typeof workspacesTable.$inferSelect): Workspace {
-  return {
+function rowToWorkspace(ws: {
+  id: string;
+  subdomain: string;
+  madrasaName: string;
+  tagline?: string | null;
+  country?: string | null;
+  enabled: boolean;
+  createdAt: Date;
+}): Workspace {
+  const item: Workspace = {
     id: ws.id,
     subdomain: ws.subdomain,
     madrasaName: ws.madrasaName,
-    tagline: ws.tagline ?? undefined,
-    country: ws.country ?? undefined,
     enabled: ws.enabled,
     createdAt: ws.createdAt.toISOString(),
   };
+  if (ws.tagline) item.tagline = ws.tagline;
+  if (ws.country) item.country = ws.country;
+  return item;
 }
 
 /** Map nullable workspace columns back to a BrandingSettings shape. */
@@ -104,21 +113,21 @@ function rowToBranding(ws: typeof workspacesTable.$inferSelect): BrandingSetting
 
 /** Map nullable workspace columns back to a GlobalSettings shape (with defaults). */
 function rowToGlobalSettings(ws: typeof workspacesTable.$inferSelect): GlobalSettings {
-  return mergeGlobalSettings({
-    language:           ws.language as GlobalSettings['language'] ?? undefined,
-    timezone:           ws.timezone ?? undefined,
-    dateFormat:         ws.dateFormat ?? undefined,
-    emailNotifications: ws.emailNotifications ?? undefined,
-    smsNotifications:   ws.smsNotifications ?? undefined,
-    twoFactor:          ws.twoFactor ?? undefined,
-    sessionTimeout:     ws.sessionTimeout ?? undefined,
-    passwordPolicy:     ws.passwordPolicy ?? undefined,
-    theme:              ws.theme as GlobalSettings['theme'] ?? undefined,
-    enabledModules:     (ws.enabledModules as Record<string, boolean>) ?? undefined,
-    llmProvider:        ws.llmProvider as GlobalSettings['llmProvider'] ?? undefined,
-    llmApiKey:          ws.llmApiKey ?? undefined,
-    llmConfigs:         (ws.llmConfigs as GlobalSettings['llmConfigs']) ?? undefined,
-  });
+  const overrides: Partial<GlobalSettings> = {};
+  if (ws.language) overrides.language = ws.language as GlobalSettings['language'];
+  if (ws.timezone) overrides.timezone = ws.timezone;
+  if (ws.dateFormat) overrides.dateFormat = ws.dateFormat;
+  if (ws.emailNotifications != null) overrides.emailNotifications = ws.emailNotifications;
+  if (ws.smsNotifications != null) overrides.smsNotifications = ws.smsNotifications;
+  if (ws.twoFactor != null) overrides.twoFactor = ws.twoFactor;
+  if (ws.sessionTimeout != null) overrides.sessionTimeout = ws.sessionTimeout;
+  if (ws.passwordPolicy) overrides.passwordPolicy = ws.passwordPolicy;
+  if (ws.theme) overrides.theme = ws.theme as GlobalSettings['theme'];
+  if (ws.enabledModules) overrides.enabledModules = ws.enabledModules as Record<string, boolean>;
+  if (ws.llmProvider) overrides.llmProvider = ws.llmProvider as GlobalSettings['llmProvider'];
+  if (ws.llmApiKey) overrides.llmApiKey = ws.llmApiKey;
+  if (ws.llmConfigs) overrides.llmConfigs = ws.llmConfigs as GlobalSettings['llmConfigs'];
+  return mergeGlobalSettings(overrides);
 }
 
 export async function listWorkspaceRows(options?: {
@@ -143,15 +152,7 @@ export async function listWorkspaceRows(options?: {
         .offset(Math.max(options?.offset ?? 0, 0))
     : await query;
 
-  return rows.map((r) => ({
-    id: r.id,
-    subdomain: r.subdomain,
-    madrasaName: r.madrasaName,
-    tagline: r.tagline ?? undefined,
-    country: r.country ?? undefined,
-    enabled: r.enabled,
-    createdAt: r.createdAt.toISOString(),
-  }));
+  return rows.map(rowToWorkspace);
 }
 
 const ALL_WORKSPACE_COLUMNS = {
@@ -427,9 +428,13 @@ export async function getWorkspaceGrantedModulesRepo(subdomain: string): Promise
   if (!ws?.grantedModules || Object.keys(granted).length === 0) {
     return SYSTEM_MODULES.map((m) => m.id);
   }
-  return Object.entries(granted)
-    .filter(([_, isGranted]) => Boolean(isGranted))
-    .map(([id]) => id);
+  const grantedIds: string[] = [];
+  for (const id in granted) {
+    if (Object.prototype.hasOwnProperty.call(granted, id) && granted[id]) {
+      grantedIds.push(id);
+    }
+  }
+  return grantedIds;
 }
 
 /** Atomically updates granted and enabled modules on the workspace. */

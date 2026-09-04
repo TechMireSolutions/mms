@@ -40,7 +40,7 @@ request → route barrel / sub-routes (routes/**) → use cases ({module}/use-ca
 - **Repository interface = sole storage gateway**: A single repository interface (Contacts: `ContactsRepository`) declares every storage operation; a Drizzle adapter (`{module}/repository/*Adapter.ts`) is the only concrete implementation. Use-case functions take the interface (testable with fakes), never raw `db` / `pg`. Keep stable re-export shims at legacy `services/*.ts` paths for backward compatibility.
 - **Plugin encapsulation**: Register domain routes as Fastify plugins (`FastifyPluginAsync`) with stable public registration paths; prefer thin barrels + colocated `*Routes.ts` — `mms-structure-naming.md`.
 - **Boot Guards**: Fail fast if `DATABASE_URL` or `JWT_SECRET` is missing.
-- **Request budgets**: Wire Fastify from `serverConfig` — `bodyLimit` (`REQUEST_BODY_LIMIT_BYTES`) and `requestTimeout` (`REQUEST_TIMEOUT_MS`). Oversized sync/upload routes may raise `bodyLimit` explicitly; do not leave unbounded bodies. PG statement budgets → `mms-data-layer.md`.
+- **Request budgets & Streaming**: Wire Fastify from `serverConfig` — `bodyLimit` (`REQUEST_BODY_LIMIT_BYTES`) and `requestTimeout` (`REQUEST_TIMEOUT_MS`). Oversized sync/upload routes may raise `bodyLimit` explicitly; do not leave unbounded bodies. NEVER buffer large file uploads or datasets into memory (`Buffer.concat` ban); stream multipart files via `@fastify/multipart` directly to storage and stream export responses via `node:stream` — `mms-performance.md`.
 - **Outbound HTTP**: Backend fetches to external providers must use `AbortSignal.timeout(...)` (see `outboundUrl.ts`) — do not hang the event loop on provider stalls. FE Query cancellation stays `mms-data-layer.md`.
 
 ## 3. Auth middleware (pointer)
@@ -83,8 +83,9 @@ Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload
 - Frontend mutations: await success before closing forms — **`mms-module-architecture.md` §7**.
 
 ## 6. Pagination, idempotency & concurrency
-- **HTTP contract**: clients **should send** `page` and `limit` (shared `baseListQuerySchema`); omit may default safely. SQL page rules, cards/table parity, and `loadAllFn` ban → **`mms-data-layer.md`**.
+- **HTTP contract**: clients **should send** `page` and `limit` (shared `baseListQuerySchema`, default 25, hard cap 100); omit may default safely. SQL page rules, cards/table parity, and `loadAllFn` ban → **`mms-data-layer.md`**.
 - **Target**: tighten schemas to required `page` (+ `limit`) when clients are all migrated — do not claim Zod already requires them.
+- **HTTP Caching Headers**: Emit `ETag` and `Cache-Control: private, no-cache` (or immutable TTL headers) on idempotent GET responses. Return `304 Not Modified` on `If-None-Match` match — `mms-performance.md`.
 - **Idempotency**: POSTs that enqueue jobs or send campaigns must accept an idempotency key (header `Idempotency-Key` or body `idempotencyKey`) when retries are likely. **Bind** the key to a cryptographic body digest (computed via `crypto.hash('sha256', normalizedPayload)` from `node:crypto`) and reject mismatched replays with `409` / `conflict` — do not accept the same key for a different payload.
 - **Optimistic concurrency**: Contested single-row PUTs should prefer `updated_at` / version checks → `409 conflict`, or document intentional last-write-wins. Write DTO fields → `mms-form-architecture.md`.
 - Production error `message` fields must stay non-sensitive; keep verbose debug messages for development only.

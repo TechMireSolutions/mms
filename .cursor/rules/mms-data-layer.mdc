@@ -32,7 +32,7 @@ Authoritative standards for backend databases, Drizzle ORM, transactions, shared
 ### 4. Indexing & Integrity Invariants
 - **Foreign Key Indexing:** Every foreign key column must have an explicit B-Tree index to prevent full table scans during joins and cascade deletes.
 - **Database-Enforced Integrity:** Never rely solely on application-layer validation. Enforce invariants with `CHECK`, `NOT NULL`, `DEFAULT`, and `FOREIGN KEY` definitions directly in DDL.
-- **Filter Predicates:** Create composite indexes matching query patterns left-to-right: `(tenant_id, status, created_at DESC)` and partial indexes `WHERE deleted_at IS NULL` for active queries.
+- **Filter & Sort Predicates:** Create composite indexes matching query patterns left-to-right: `(tenant_id, status, created_at DESC)` and partial indexes `WHERE deleted_at IS NULL` for active queries. All columns evaluated in `where()`, `leftJoin() ... on()`, and `orderBy()` clauses must be indexed — `mms-performance.mdc`.
 
 ### 5. Drizzle ORM & Migration Guidelines
 - **Bidirectional Relations:** Every `pgTable` definition must have corresponding `relations()` configured in Drizzle to support typed relational queries (`db.query`).
@@ -57,6 +57,9 @@ When generating code for any feature or entity, provide:
 |---|---|
 | **Pool Sizing & Timeouts** | Size pool via `PG_POOL_MAX` (default 20). `withTenantTransaction` applies `PG_STATEMENT_TIMEOUT_MS` (30s) and `PG_IDLE_IN_TX_TIMEOUT_MS` (15s). |
 | **Explicit Resource Management** | Use `using` / `await using` for database connections, file handles, and stream resources to auto-dispose and return clients to pool on scope exit without boilerplate `finally` blocks. |
+| **Zero Queries in Loops** | Strict ban on queries in `for`, `forEach`, `map`, or `Promise.all`. Batch via Drizzle relational `with`, `inArray` (bounded $\le 500$ via `bulkIdsBodySchema`), SQL joins, or batch `/resolve`. |
+| **Zero Wildcard Projections** | Strict ban on `SELECT *` and bare `db.select().from(table)`. Explicit column projections matching Response DTOs (`db.select({ id: table.id, ... })` or `columns: { id: true, ... }`). |
+| **Server Caching Architecture** | Redis (`apps/backend/src/lib/redis.ts`) + LRU caching. TTL 60s for metrics/KPIs, 300s for lookups/config/branding. Multi-tenant key isolation: `mms:{tenantId}:{module}:{resource}:{hash}`. Mutating ops must evict keys and broadcast via `/api/ws`. |
 | **SQL Fragment Safety** | Use parameterized `sql` tagged templates only. Strict **ban** on `sql.raw`, string concatenation, or unescaped user identifiers. |
 | **Clean Architecture** | Routes → Use Cases (`{module}/use-cases/**`) via DI → Repository Interface (`{module}/repository/**`) → Drizzle Adapter. Controllers never import raw DB pools. |
 | **Transaction RLS** | Enforce session context inside transactions via `SET LOCAL` (`app.current_tenant`, `app.rls_bypass = off`, `app.current_user_id`). Destroyed automatically on rollback/commit. |
@@ -94,5 +97,5 @@ When generating code for any feature or entity, provide:
 | **Auth Gate & Signal** | `enabled: isAuthenticated` (tenant) / `isPlatformAuthenticated` (platform). Pass Query `signal` to `apiFetch` (mandatory). |
 | **Mutations & Cache** | Call-site `notify.*` + `t()` after `mutateAsync`. Await mutation before dialog close. Invalidate specific list/count tuple keys. Ban global mutation toast buses. |
 | **Optimistic Policy** | Only for idempotent, easily-rollbackable actions. **Banned** for money, soft-delete, bulk ops, messaging sends. Always reconcile against server response. |
-| **Pagination & Lists** | Server `page` + `limit` for directories; `placeholderData: (prev) => prev` for smooth pagination. Unpaged dumps (`loadAllFn`) are strictly banned. |
+| **Pagination & Lists** | Server `page` + `limit` for directories (default 25, max 100); `placeholderData: (prev) => prev` for smooth pagination. Unpaged dumps (`loadAllFn`) are strictly banned. Virtualize rows when rendered items > 30 (`@tanstack/react-virtual` — `mms-performance.mdc`). |
 | **Live WebSocket Push** | `/api/ws` with `broadcastTenantUpdate` → FE `TenantLivePushSubscriber` invalidates Query tuple keys on server events. |

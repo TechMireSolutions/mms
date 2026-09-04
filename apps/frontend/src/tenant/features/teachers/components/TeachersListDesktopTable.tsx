@@ -69,6 +69,7 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
     singular: "teachers.form.teacher",
     plural: "teachers.table.teachers",
   });
+  const selectedSet = new Set(selectedIds);
 
   return (
     <>
@@ -96,7 +97,7 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
         <TableBody className="divide-y divide-border/50">
           <AnimatePresence>
             {teachers.map((teacher, rowIndex) => {
-              const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedIds, t);
+              const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedSet, t);
               return (
                 <motion.tr
                   key={teacher.id}

@@ -1,4 +1,5 @@
 import {
+  createNamedEntityLookupMap,
   normalizeIdLinkedName,
   resolveEntityName,
   type NamedEntity,
@@ -19,11 +20,17 @@ export function hydrateUserActorField<T extends Record<string, unknown>>(
   row: T,
   userIdField: string,
   labelField: string,
-  users: NamedEntity[],
+  users: NamedEntity[] | Map<string, NamedEntity>,
 ): T {
   if (!row || typeof row !== "object") return row;
+  const lookup = users instanceof Map
+    ? users
+    : (Array.isArray(users) && users.length > 8 ? createNamedEntityLookupMap(users) : users);
+  const current = row[labelField];
+  const resolved = resolveEntityName(row[userIdField] as string | number, lookup) || current;
+  if (resolved === current) return row;
   return {
     ...row,
-    [labelField]: resolveEntityName(row[userIdField] as string | number, users) || row[labelField],
+    [labelField]: resolved,
   };
 }

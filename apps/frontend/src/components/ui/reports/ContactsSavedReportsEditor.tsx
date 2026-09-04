@@ -25,8 +25,10 @@ function ContactsSavedReportUserPicker({
   const options = (() =>
     users.slice().sort((a, b) => (a.name ?? "").localeCompare(b.name ?? "")))();
 
+  const valueSet = new Set(value);
+
   const toggle = (userId: string) => {
-    if (value.includes(userId)) {
+    if (valueSet.has(userId)) {
       onChange(value.filter((selectedUserId) => selectedUserId !== userId));
     } else {
       onChange([...value, userId]);
@@ -49,7 +51,7 @@ function ContactsSavedReportUserPicker({
         ) : (
           options.map((user) => (
             <label key={user.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50">
-              <Checkbox checked={value.includes(String(user.id))} onCheckedChange={() => toggle(String(user.id))} />
+              <Checkbox checked={valueSet.has(String(user.id))} onCheckedChange={() => toggle(String(user.id))} />
               <span className="truncate">{user.name || user.email}</span>
             </label>
           ))

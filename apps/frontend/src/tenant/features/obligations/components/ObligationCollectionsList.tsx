@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import {
   type ObligationCollection, type ObligationType, type MujtahidRep, type Mujtahid
 } from '@/lib/data/obligationsData';
@@ -76,13 +76,42 @@ export function ObligationCollectionsList({
   const senderIds = (() => collections.map((collection) => collection.sender_id))();
   const contacts = useMergedObligationContacts(senderIds);
 
-  const getContact = useCallback((contactId?: string | number | null) => contacts.find((contact) => String(contact.id) === String(contactId)), [contacts]);
-  const getRep = (repId: string) => reps.find((rep) => rep.id === repId);
+  const contactsMap = (() => {
+    const map = new Map<string, (typeof contacts)[number]>();
+    for (const c of contacts) {
+      if (c?.id != null) map.set(String(c.id), c);
+    }
+    return map;
+  })();
+  const repsMap = (() => {
+    const map = new Map<string, (typeof reps)[number]>();
+    for (const r of reps) {
+      if (r?.id != null) map.set(String(r.id), r);
+    }
+    return map;
+  })();
+  const mujtahidsMap = (() => {
+    const map = new Map<string, (typeof mujtahids)[number]>();
+    for (const m of mujtahids) {
+      if (m?.id != null) map.set(String(m.id), m);
+    }
+    return map;
+  })();
+  const obTypesMap = (() => {
+    const map = new Map<string, (typeof obligationTypes)[number]>();
+    for (const o of obligationTypes) {
+      if (o?.id != null) map.set(String(o.id), o);
+    }
+    return map;
+  })();
+
+  const getContact = (contactId?: string | number | null) => (contactId != null ? contactsMap.get(String(contactId)) : undefined);
+  const getRep = (repId: string) => repsMap.get(repId);
   const getMujtahid = (repId: string) => {
     const rep = getRep(repId);
-    return rep ? mujtahids.find((mujtahid) => mujtahid.id === rep.mujtahid_id) : null;
+    return rep ? mujtahidsMap.get(rep.mujtahid_id) : null;
   };
-  const getObType = (obligationTypeId: string) => obligationTypes.find((obligationType) => obligationType.id === obligationTypeId);
+  const getObType = (obligationTypeId: string) => obTypesMap.get(obligationTypeId);
 
   const filtered = (() => collections.filter((collection) => {
     if (typeFilter !== "all" && collection.obligation_type_id !== typeFilter) return false;

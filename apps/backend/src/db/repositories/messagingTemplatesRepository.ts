@@ -6,16 +6,19 @@ import { withTenant } from '../tenant-context.js';
 type TemplateRow = typeof messageTemplates.$inferSelect;
 
 export function templateRowToRecord(row: TemplateRow): MessageTemplate {
-  return {
+  const template: MessageTemplate = {
     id: row.id,
     label: row.label,
-    labelKey: row.labelKey ?? undefined,
     body: row.body,
     category: row.category as MessageTemplate['category'],
     channel: row.channel as MessageTemplate['channel'],
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+
+  if (row.labelKey) template.labelKey = row.labelKey;
+
+  return template;
 }
 
 export async function listMessageTemplatesByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<MessageTemplate[]> {

@@ -45,6 +45,7 @@ export function KPISummarySettings({
   onDeleteCard,
 }: KPISummarySettingsProps): JSX.Element {
   const { t } = useTranslation();
+  const selectedCardSet = new Set(selectedCardIds);
   return (
     <>
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -106,7 +107,7 @@ export function KPISummarySettings({
                   <p className="mt-1.5 text-xs text-muted-foreground">{t('reports.kpiVisibilityDesc')}</p>
                   <div className="mt-3 max-h-scroll-lg space-y-1.5 overflow-y-auto pe-1">
                     {cards.map((kpi) => {
-                      const isSelected = selectedCardIds.includes(kpi.id);
+                      const isSelected = selectedCardSet.has(kpi.id);
                       const isCustom = customCards.some((card) => card.id === kpi.id);
                       return (
                         <div key={kpi.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-card/10 p-2.5 font-sans transition-all hover:bg-card/20">

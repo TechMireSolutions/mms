@@ -4,7 +4,7 @@ Project rules for the Madrasa Management System. Claude Code loads `.md` files f
 
 **Architecture rules:** `mms-module-architecture.md`, `mms-ops-infrastructure.md`, `mms-ui-ux-design.md`, `mms-data-layer.md`.
 
-## Always Applied (4)
+## Always Applied (5)
 
 | Rule | Purpose |
 |------|---------|
@@ -12,6 +12,7 @@ Project rules for the Madrasa Management System. Claude Code loads `.md` files f
 | `mms-core.md` | Stack, boundaries, ownership matrix, edit discipline |
 | `mms-migration-status.md` | Do not reintroduce themes + short open-gaps summary (full gaps → `mms-migration-fixes` skill) |
 | `mms-completion-review.md` | Self-review after code edits — verify, fix bugs, then mark done |
+| `mms-performance.md` | Performance & resource efficiency (DB, streaming, Redis caching, bundle, virtualization) |
 
 ## Scoped Rules (16)
 

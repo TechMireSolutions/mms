@@ -26,7 +26,7 @@ bash .agent/scripts/sync-all.sh
 
 ## Always-on rules (no `paths` — load every session)
 
-`antigravity-global`, `mms-core`, `mms-migration-status`, `mms-completion-review`
+`antigravity-global`, `mms-core`, `mms-migration-status`, `mms-completion-review`, `mms-performance`
 
 Scoped rules load when Claude reads matching paths (see each file's `paths:` frontmatter). Each rule has a **Workflow skill:** line; full rule→skill map in `mms-core` Standards index.
 

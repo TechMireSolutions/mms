@@ -6,6 +6,7 @@ import {
   hydrateContactProfile,
   hydrateParentContactNames,
   resolveEntityName,
+  createNamedEntityLookupMap,
   contactDisplayName,
   composeContactName,
 } from '../contactLinkPolicy.js';
@@ -131,6 +132,20 @@ describe('contactLinkPolicy', () => {
       expect(resolveEntityName('e1', entities)).toBe('Entity One');
       expect(resolveEntityName('e2', entities)).toBe('');
       expect(resolveEntityName(null, entities)).toBe('');
+    });
+  });
+
+  describe('createNamedEntityLookupMap', () => {
+    it('indexes entities by string ID into Map for O(1) resolution', () => {
+      const entities = [
+        { id: 'e1', name: 'Entity One' },
+        { id: 2, name: 'Entity Two' },
+      ];
+      const map = createNamedEntityLookupMap(entities);
+      expect(map.get('e1')?.name).toBe('Entity One');
+      expect(map.get('2')?.name).toBe('Entity Two');
+      expect(resolveEntityName('e1', map)).toBe('Entity One');
+      expect(resolveEntityName(2, map)).toBe('Entity Two');
     });
   });
 });

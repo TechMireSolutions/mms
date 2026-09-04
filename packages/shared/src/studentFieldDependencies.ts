@@ -3,10 +3,11 @@ import {
   STUDENT_COLUMN_FIELD_MAPPING,
 } from './moduleFieldSetupPersons.js';
 import type { ColumnRegistryEntry } from './contactTypes.js';
+import { createFieldRemovalIssuesChecker } from './createFieldRemovalIssuesChecker.js';
 
-type StudentFieldDependencyArea = 'systemField' | 'column';
+export type StudentFieldDependencyArea = 'systemField' | 'column';
 
-interface StudentFieldDependencyIssue {
+export interface StudentFieldDependencyIssue {
   area: StudentFieldDependencyArea;
   /** i18n key — FE passes to t() with optional { count }. */
   messageKey: string;
@@ -17,22 +18,18 @@ const SEED_FIELD_KEYS = new Set(
   Object.values(INITIAL_STUDENT_FIELD_SEED).flatMap((fields) => fields.map((field) => field.key)),
 );
 
-/** Work column keys that mirror a Setup field id (including renamed columns like parents). */
-function columnKeysForField(fieldKey: string): string[] {
-  const keys = new Set<string>([fieldKey, `custom:${fieldKey}`]);
-  for (const [columnKey, mapping] of Object.entries(STUDENT_COLUMN_FIELD_MAPPING)) {
-    if (mapping.fieldId === fieldKey) {
-      keys.add(columnKey);
-    }
-  }
-  return [...keys];
-}
+const checker = createFieldRemovalIssuesChecker({
+  systemFieldKeys: SEED_FIELD_KEYS,
+  columnFieldMapping: STUDENT_COLUMN_FIELD_MAPPING,
+  messageKeys: {
+    systemField: 'students.setup.cannotDeleteSystemField',
+    fieldUsedInColumn: 'students.setup.fieldUsedInColumn',
+  },
+});
 
-function isStudentSeedFieldKey(fieldKey: string): boolean {
-  return SEED_FIELD_KEYS.has(fieldKey);
-}
+export const isStudentSeedFieldKey = checker.isSeedFieldKey;
 
-interface StudentFieldDependencyInput {
+export interface StudentFieldDependencyInput {
   fieldKey: string;
   columnRegistry: ColumnRegistryEntry[];
 }
@@ -44,27 +41,5 @@ interface StudentFieldDependencyInput {
 export function getStudentFieldRemovalIssues(
   input: StudentFieldDependencyInput,
 ): StudentFieldDependencyIssue[] {
-  const { fieldKey, columnRegistry } = input;
-  const issues: StudentFieldDependencyIssue[] = [];
-
-  if (isStudentSeedFieldKey(fieldKey)) {
-    issues.push({
-      area: 'systemField',
-      messageKey: 'students.setup.cannotDeleteSystemField',
-    });
-    return issues;
-  }
-
-  const columnKeys = new Set(columnKeysForField(fieldKey));
-  const column = columnRegistry.find(
-    (col) => columnKeys.has(col.key) && col.enabled !== false,
-  );
-  if (column) {
-    issues.push({
-      area: 'column',
-      messageKey: 'students.setup.fieldUsedInColumn',
-    });
-  }
-
-  return issues;
+  return checker.getFieldRemovalIssues(input);
 }

@@ -21,14 +21,15 @@ export function resolveTeacherDisplayName(
 /** Per-row identity + selection projection shared by the cards and table Work renderers. */
 export function teacherRowIdentity(
   teacher: Teacher,
-  selectedIds: string[],
+  selectedIds: string[] | ReadonlySet<string>,
   t: TranslationFunction,
 ): { teacherIdStr: string; displayName: string; isSelected: boolean } {
   const teacherIdStr = String(teacher.id);
+  const isSelected = Array.isArray(selectedIds) ? selectedIds.includes(teacherIdStr) : selectedIds.has(teacherIdStr);
   return {
     teacherIdStr,
     displayName: resolveTeacherDisplayName(teacher, t),
-    isSelected: selectedIds.includes(teacherIdStr),
+    isSelected,
   };
 }
 

@@ -10,16 +10,19 @@ import { withTenant } from '../tenant-context.js';
 
 type RedempRow = typeof hasanatRedemptions.$inferSelect;
 function redemptionRowToRecord(row: RedempRow): Redemption {
-  return {
+  const redemption: Redemption = {
     id: row.id,
     distributionId: row.distributionId,
-    studentName: row.studentName ?? undefined,
+    studentName: row.studentName ?? '',
     reward: row.reward,
     pointsUsed: row.pointsUsed,
     date: row.date,
-    approvedByUserId: row.approvedByUserId ?? undefined,
-    approvedBy: row.approvedBy ?? undefined,
   };
+
+  if (row.approvedByUserId) redemption.approvedByUserId = row.approvedByUserId;
+  if (row.approvedBy) redemption.approvedBy = row.approvedBy;
+
+  return redemption;
 }
 
 export async function listRedemptionsByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<Redemption[]> {

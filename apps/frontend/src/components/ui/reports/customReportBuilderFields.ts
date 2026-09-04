@@ -128,10 +128,11 @@ export function buildCustomReportFieldCatalog(
   selectedFields: readonly string[],
   contactsFieldCatalog: readonly { id: string }[],
 ): string[] {
+  const selectedSet = new Set(selectedFields);
   if (source === "contacts") {
-    return contactsFieldCatalog.map((contactField) => contactField.id).filter((fieldId) => !selectedFields.includes(fieldId));
+    return contactsFieldCatalog.map((contactField) => contactField.id).filter((fieldId) => !selectedSet.has(fieldId));
   }
-  return ALL_FIELDS[source].filter((fieldName) => !selectedFields.includes(fieldName));
+  return ALL_FIELDS[source].filter((fieldName) => !selectedSet.has(fieldName));
 }
 
 export function resolveCustomReportFieldLabel(

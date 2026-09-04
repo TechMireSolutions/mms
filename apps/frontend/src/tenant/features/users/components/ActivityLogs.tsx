@@ -28,8 +28,13 @@ export function ActivityLogs({
   const [dateFrom, setFrom] = useState('');
   const [dateTo, setTo] = useState('');
 
-  const userNameFor = ((log: ActivityLog): string =>
-    log.userName ?? users.find((user) => user.id === log.userId)?.name ?? log.userId);
+  const userNamesById = new Map<string, string>();
+  for (const user of users) {
+    userNamesById.set(user.id, user.name);
+  }
+
+  const userNameFor = (log: ActivityLog): string =>
+    log.userName ?? userNamesById.get(log.userId) ?? log.userId;
 
   const baseFilteredLogs = (() => {
     return logs.filter((log) => {

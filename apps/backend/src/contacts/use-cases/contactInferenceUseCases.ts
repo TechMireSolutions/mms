@@ -59,10 +59,11 @@ export async function matchContactIdentityIndex(
   const existingNames =
     names.length > 0 ? await repo.findExistingNormalizedContactNames(tenant, names) : new Set<string>();
 
+  const namesSet = new Set(names);
   return {
     phones: [...existingPhones],
     emails: [...existingEmails],
-    names: [...existingNames].filter((name) => names.includes(name)),
+    names: [...existingNames].filter((name) => namesSet.has(name)),
   };
 }
 

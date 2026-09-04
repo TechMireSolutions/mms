@@ -72,6 +72,8 @@ export function SessionsListDesktopTable({
     isColumnVisible("status") ? { id: "status", label: t("sessions.columns.status"), sortField: "status" } : null,
   ].filter(Boolean) as { id: string; label: string; sortField?: string }[];
 
+  const selectedSet = new Set(selectedIds);
+
   return (
     <div className={cn(WORK_SURFACE, "overflow-hidden")}>
       <Table className="table-fixed">
@@ -97,7 +99,7 @@ export function SessionsListDesktopTable({
         />
         <TableBody className="divide-y divide-border/50">
           {sessions.map((sessionItem) => {
-            const isSelected = selectedIds.includes(sessionItem.id);
+            const isSelected = selectedSet.has(sessionItem.id);
             const columnOptions = { t, statusConfig, typeConfig };
             return (
               <TableRow

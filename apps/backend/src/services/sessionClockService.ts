@@ -10,6 +10,22 @@ const SESSION_ACTIVITY_PREFIX = 'session:idle:';
  */
 const touchThrottle = new Map<string, number>();
 const TOUCH_THROTTLE_MS = 60_000;
+const TOUCH_THROTTLE_MAX_ENTRIES = 5_000;
+
+function setTouchThrottle(scope: string, now: number): void {
+  if (touchThrottle.size >= TOUCH_THROTTLE_MAX_ENTRIES) {
+    const cutoff = now - TOUCH_THROTTLE_MS * 2;
+    for (const [s, ts] of touchThrottle.entries()) {
+      if (ts < cutoff) {
+        touchThrottle.delete(s);
+      }
+    }
+    if (touchThrottle.size >= TOUCH_THROTTLE_MAX_ENTRIES) {
+      touchThrottle.clear();
+    }
+  }
+  touchThrottle.set(scope, now);
+}
 
 interface SessionClockRecord {
   /** last-activity epoch ms. */
@@ -55,7 +71,7 @@ export async function touchSession(
   const now = Date.now();
   const last = touchThrottle.get(scope);
   if (!force && last !== undefined && now - last < TOUCH_THROTTLE_MS) return;
-  touchThrottle.set(scope, now);
+  setTouchThrottle(scope, now);
 
   const existing = await readClock(scope);
   const record: SessionClockRecord = {

@@ -1,4 +1,5 @@
 import {
+  DEFAULT_ENROLLMENT_EXPORT_COLUMNS,
   ENROLLMENTS_MODULE_MANIFEST,
   buildCsvContent,
   buildEnrollmentsExportRows,
@@ -11,15 +12,7 @@ import { createModuleCsvExportService } from '../lib/createModuleCsvExportServic
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadEnrollmentsByIds, loadEnrollmentsPage } from './enrollmentService.js';
 
-const DEFAULT_EXPORT_COLUMNS: EnrollmentExportColumn[] = [
-  { id: 'studentName', label: 'Student' },
-  { id: 'sessionName', label: 'Session' },
-  { id: 'className', label: 'Class' },
-  { id: 'enrolledDate', label: 'Date' },
-  { id: 'finalFee', label: 'Fee' },
-  { id: 'status', label: 'Status' },
-  { id: 'paymentStatus', label: 'Payment' },
-];
+const DEFAULT_EXPORT_COLUMNS = DEFAULT_ENROLLMENT_EXPORT_COLUMNS as EnrollmentExportColumn[];
 
 type EnrollmentsExportQueryInput = Omit<EnrollmentsListQuery, 'includeDeleted'> & {
   includeDeleted?: boolean | 'true' | 'false';

@@ -127,13 +127,22 @@ export async function loadSessionsReportAggregatesSql(
       status: String(row.status ?? ''),
     }));
 
-    const enrollmentTrends = getQueryRows<Record<string, unknown>>(trendResult)
-      .filter((row) => typeof row.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey))
-      .map((row) => ({
-        monthKey: String(row.monthKey),
-        students: Number(row.students ?? 0),
-        sessionName: row.sessionName == null || row.sessionName === '' ? null : String(row.sessionName),
-      }));
+    const trendRows = getQueryRows<Record<string, unknown>>(trendResult);
+    const enrollmentTrends: Array<{
+      monthKey: string;
+      students: number;
+      sessionName: string | null;
+    }> = [];
+    for (let i = 0; i < trendRows.length; i++) {
+      const row = trendRows[i];
+      if (typeof row?.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey)) {
+        enrollmentTrends.push({
+          monthKey: row.monthKey,
+          students: Number(row.students ?? 0),
+          sessionName: row.sessionName == null || row.sessionName === '' ? null : String(row.sessionName),
+        });
+      }
+    }
 
     const todaysSessions = getQueryRows<Record<string, unknown>>(todayResult).map((row) => ({
       id: String(row.id ?? ''),

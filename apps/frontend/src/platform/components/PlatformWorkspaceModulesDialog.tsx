@@ -70,10 +70,13 @@ export function PlatformWorkspaceModulesDialog({
 
   const toggleModule = (moduleId: string, checked: boolean) => {
     setSelectedModules((prev) => {
+      const nextSet = new Set(prev);
       if (checked) {
-        return [...prev, moduleId];
+        nextSet.add(moduleId);
+      } else {
+        nextSet.delete(moduleId);
       }
-      return prev.filter((id) => id !== moduleId);
+      return [...nextSet];
     });
   };
 
@@ -101,6 +104,8 @@ export function PlatformWorkspaceModulesDialog({
     }
     return Array.from(map.entries());
   })();
+
+  const selectedModuleSet = new Set(selectedModules);
 
   return (
     <Modal
@@ -186,7 +191,7 @@ export function PlatformWorkspaceModulesDialog({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {modules.map((module) => {
                     const Icon = MODULE_ICONS[module.id] || LayoutDashboard;
-                    const isSelected = selectedModules.includes(module.id);
+                    const isSelected = selectedModuleSet.has(module.id);
                     return (
                       <label
                         key={module.id}

@@ -36,12 +36,12 @@ export function getExamMeta(
   classes: ExamClassOption[],
   enrollments: Enrollment[],
 ): { assignedClasses: ExamClassOption[]; studentCount: number } {
-  const assignedClasses = classes.filter((sessionClass) => exam.classIds.includes(sessionClass.id));
-  const classIds = new Set(exam.classIds);
+  const classIdSet = new Set(exam.classIds);
+  const assignedClasses = classes.filter((sessionClass) => classIdSet.has(sessionClass.id));
   const studentCount = new Set(
     enrollments
       .filter((enrollment) =>
-        classIds.has(enrollment.classId) &&
+        classIdSet.has(enrollment.classId) &&
         enrollment.status !== "cancelled" &&
         enrollment.status !== "completed"
       )

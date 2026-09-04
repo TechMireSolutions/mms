@@ -1,4 +1,5 @@
 import crypto, { randomUUID } from 'node:crypto';
+import { setTimeout as sleep } from 'node:timers/promises';
 import type { FastifyPluginAsync } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
 import type { Message, MessageLogCreateDto, User } from '@mms/shared';
@@ -108,7 +109,7 @@ async function waitForCompletedIdempotency(
       const recorded = completedRecorded(existing.payload);
       if (recorded !== undefined) return { recorded };
     }
-    await new Promise((resolve) => setTimeout(resolve, IDEMPOTENCY_PENDING_POLL_MS));
+    await sleep(IDEMPOTENCY_PENDING_POLL_MS);
   }
   return undefined;
 }

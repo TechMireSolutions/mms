@@ -19,10 +19,9 @@ export function questionRowToRecord(
   tags: string[] = [],
   citations: Array<{ bookId: string; citation: Record<string, unknown> }> = [],
 ): QuestionBankQuestion {
-  return {
+  const question: QuestionBankQuestion = {
     id: row.id,
     categoryIds: categories,
-    categoryId: categories[0] ?? undefined,
     type: row.type as QuestionBankQuestion['type'],
     difficulty: row.difficulty as QuestionBankQuestion['difficulty'],
     questionLanguage: row.questionLanguage as QuestionBankQuestion['questionLanguage'],
@@ -30,12 +29,16 @@ export function questionRowToRecord(
     options,
     answer: row.answer,
     marks: row.marks,
-    tags: tags.length > 0 ? tags : undefined,
-    sourceCitations: citations.length > 0 ? citations : undefined,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
   };
+
+  if (categories[0]) question.categoryId = categories[0];
+  if (tags.length > 0) question.tags = tags;
+  if (citations.length > 0) question.sourceCitations = citations;
+  if (row.deletedAt) question.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) question.deletedBy = row.deletedBy;
+  if (row.deletionReason) question.deletionReason = row.deletionReason;
+
+  return question;
 }
 
 export async function syncQuestionChildren(

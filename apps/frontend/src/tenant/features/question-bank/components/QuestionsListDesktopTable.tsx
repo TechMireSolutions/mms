@@ -57,6 +57,7 @@ export function QuestionsListDesktopTable({
   onRowClick,
 }: QuestionsListDesktopTableProps): JSX.Element {
   const { t } = useTranslation();
+  const selectedSet = new Set(selectedIds);
 
   return (
     <div className={`${WORK_SURFACE} hidden md:block`}>
@@ -80,7 +81,7 @@ export function QuestionsListDesktopTable({
               config={config}
               difficultyConfig={difficultyConfig}
               typeConfig={typeConfig}
-              selectedIds={selectedIds}
+              selectedIds={selectedSet}
               canWrite={canWrite}
               canDelete={canDelete}
               canTrashRows={canTrashRows}

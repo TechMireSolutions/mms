@@ -33,9 +33,11 @@ export const studentLookupKindParamsSchema = z.object({
 /** Schema for validating student lookup put request body. */
 export * from './schemas/studentLookup.dto.js';
 
+const STUDENT_LOOKUP_KINDS_SET = new Set<string>(STUDENT_LOOKUP_KINDS);
+
 /** Type guard checking if a string is a valid StudentLookupKind. */
 export function isStudentLookupKind(value: string): value is StudentLookupKind {
-  return (STUDENT_LOOKUP_KINDS as readonly string[]).includes(value);
+  return STUDENT_LOOKUP_KINDS_SET.has(value);
 }
 
 /** Type guard checking if a string is a valid legacy collection key for student lookups. */

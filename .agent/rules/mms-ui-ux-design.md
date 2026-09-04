@@ -20,7 +20,7 @@ Raw HTML controls (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, c
 | `Textarea` / `Checkbox` / `Switch` | `@/components/ui/*` | Standard form primitives; never raw checkboxes/switches. |
 | `FormModal` / `Modal` | `@/components/ui/FormModal` | Dialogs with focus trap, container queries (`@container`), scroll lock, `dvh`/`svh` tall sizing. |
 | `DetailDrawerShell` | `@/components/ui/DetailDrawerShell` | Entity profile drawer. In trash: `WarningCallout` + Restore action; hide Edit/messaging. |
-| `Table` | `@/components/ui/table` | shadcn table primitives with auto `overflow-x-auto`. |
+| `Table` | `@/components/ui/table` | shadcn table primitives with auto `overflow-x-auto`. Mandate `@tanstack/react-virtual` virtualization when rendered rows > 30 (`mms-performance.md`). |
 | `StatCard` / `ModuleCommandMetricsGrid`| `@/components/ui/*` | Single metric tiles (`StatCard`); command-centre/report KPI strips (`ModuleCommandMetricsGrid`). |
 | `EmptyState` / `ErrorState` | `@/components/ui/*` | Directory empties (`title` required, `variant="dashed"`, `compact`); errors with retry + hint description. |
 | `FieldErrorMessage` | `@/components/ui/FormField` | Inline field/panel errors (`FORM_ERROR` + AlertCircle); no forked error text lines. |
@@ -69,5 +69,6 @@ Raw HTML controls (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, c
 - **Viewport Heights:** Prefer `dvh`/`svh` + `safe-area-inset-*` over raw `vh` for modals and full-height shells.
 - **Touch Target Floor:** All buttons, triggers, and links must satisfy `min-h-11 min-w-11` (44×44px).
 - **Wide Tables:** Wrap tables in `overflow-x-auto max-w-full`.
+- **List & Table Virtualization:** All directories, tables, and feeds rendering more than 30 concurrent items MUST use virtual scrolling via `@tanstack/react-virtual` (reference: `ContactsListDesktopTable.tsx`) to keep DOM nodes bounded — `mms-performance.md`.
 - **Container Queries:** FormModal tabs and inner grids follow dialog `@container` (`@md:`, `@sm:`), not viewport.
 - **Unknown Hosts:** Hard redirect unknown tenant subdomains to apex `/tenant-not-found?subdomain=…` (`mms-settings-i18n.md`).

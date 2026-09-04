@@ -55,8 +55,10 @@ export const contactLookupPutBodySchema = z.object({
   items: z.union([contactLookupStringItemsSchema, contactLookupCountryItemsSchema]),
 });
 
+const CONTACT_LOOKUP_KINDS_SET = new Set<string>(CONTACT_LOOKUP_KINDS);
+
 export function isContactLookupKind(value: string): value is ContactLookupKind {
-  return (CONTACT_LOOKUP_KINDS as readonly string[]).includes(value);
+  return CONTACT_LOOKUP_KINDS_SET.has(value);
 }
 
 export function isContactLookupCountryKind(kind: ContactLookupKind): boolean {

@@ -33,6 +33,36 @@ function isTabKeyedFieldRegistry(
 }
 
 /**
+ * Resolves student field keys that the viewer role cannot read.
+ * Precomputed once per batch to avoid O(N * T * F) iterations and repeated tab finds.
+ */
+export function resolveStudentKeysToStripForViewer(
+  viewerRole: string,
+  config: StudentsFieldConfigSnapshot,
+): string[] {
+  if (!config?.fields || !isTabKeyedFieldRegistry(config.fields)) return [];
+  const tabMap = new Map<string, TabDefinition>();
+  for (const candidate of config.tabs ?? []) {
+    if (candidate.key) {
+      tabMap.set(candidate.key.toLowerCase(), candidate);
+    }
+  }
+
+  const toStrip: string[] = [];
+  for (const [tabId, tabFields] of Object.entries(config.fields)) {
+    const tab = tabMap.get(tabId.toLowerCase());
+    const tabVisible = tab ? canViewContactTab(viewerRole, tab) : true;
+    for (const field of tabFields) {
+      if (STUDENT_ALWAYS_VISIBLE.has(field.key)) continue;
+      if (!tabVisible || field.enabled === false || !canViewContactField(viewerRole, field)) {
+        toStrip.push(field.key);
+      }
+    }
+  }
+  return toStrip;
+}
+
+/**
  * Strips student properties the viewer role cannot read (API + restore guard).
  * Mirrors `sanitizeContactForViewer`: disabled or role-hidden Setup fields are
  * removed; always-visible identity keys and unregistered custom keys survive.
@@ -42,21 +72,12 @@ export function sanitizeStudentForViewer(
   viewerRole: string,
   config: StudentsFieldConfigSnapshot,
 ): Student {
-  if (!config?.fields || !isTabKeyedFieldRegistry(config.fields)) return student;
+  const keysToStrip = resolveStudentKeysToStripForViewer(viewerRole, config);
+  if (keysToStrip.length === 0) return student;
   const sanitized: Student = { ...student };
-  const { fields, tabs } = config;
-
-  for (const [tabId, tabFields] of Object.entries(fields)) {
-    const tab = tabs.find((candidate) => (candidate.key || '').toLowerCase() === tabId.toLowerCase());
-    const tabVisible = tab ? canViewContactTab(viewerRole, tab) : true;
-    for (const field of tabFields) {
-      if (STUDENT_ALWAYS_VISIBLE.has(field.key)) continue;
-      if (!tabVisible || field.enabled === false || !canViewContactField(viewerRole, field)) {
-        delete sanitized[field.key];
-      }
-    }
+  for (const key of keysToStrip) {
+    delete sanitized[key];
   }
-
   return sanitized;
 }
 
@@ -65,5 +86,13 @@ export function sanitizeStudentsForViewer(
   viewerRole: string,
   config: StudentsFieldConfigSnapshot,
 ): Student[] {
-  return students.map((student) => sanitizeStudentForViewer(student, viewerRole, config));
+  const keysToStrip = resolveStudentKeysToStripForViewer(viewerRole, config);
+  if (keysToStrip.length === 0) return students;
+  return students.map((student) => {
+    const sanitized: Student = { ...student };
+    for (const key of keysToStrip) {
+      delete sanitized[key];
+    }
+    return sanitized;
+  });
 }

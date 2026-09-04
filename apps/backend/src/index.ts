@@ -3,6 +3,9 @@ import { resolveBackendListenPort } from '@mms/shared';
 import { buildApp } from './app.js';
 import { closeDatabase } from './db/database.js';
 import { startAuthArtifactPurgeScheduler } from './services/auth/authArtifactPurgeScheduler.js';
+import { closeAllQueues } from './worker/queues/index.js';
+import { disconnectRedis } from './lib/redis.js';
+import { closeAllConnections } from './lib/livePush.js';
 
 const FORCE_SHUTDOWN_TIMEOUT_MS = 10_000;
 
@@ -19,6 +22,9 @@ async function startServer(): Promise<void> {
   // Encapsulate all resource teardowns inside Fastify's native onClose lifecycle
   app.addHook('onClose', async () => {
     stopArtifactPurge();
+    await closeAllQueues();
+    await disconnectRedis();
+    closeAllConnections();
     await closeDatabase();
   });
 

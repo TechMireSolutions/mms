@@ -8,10 +8,12 @@ export * from './linkedActorUtils.js';
 export {
   normalizeStoredStudent,
   hydrateStudentFromContacts,
+  hydrateStudentListFromContacts,
 } from './studentUtils.js';
 export {
   normalizeStoredTeacher,
   hydrateTeacherFromContact,
+  hydrateTeacherListFromContacts,
 } from './teacherUtils.js';
 export type { Student } from './studentTypes.js';
 export type { Teacher } from './teacherTypes.js';

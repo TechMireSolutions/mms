@@ -1,5 +1,6 @@
 import { eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   DEFAULT_TEACHER_STATUS,
   TEACHER_SORT_FIELD_SET,
@@ -113,17 +114,13 @@ export function buildListConditions(subdomain: string, query: TeachersListQuery 
     conditions.push(isNull(teachers.deletedAt));
   }
 
-  if (query.status?.trim()) {
-    const statuses = query.status
-      .split(',')
-      .map((status) => status.trim().toLowerCase())
-      .filter(Boolean);
-    if (statuses.length > 0) {
-      conditions.push(sql`${teacherStatusExpr()} IN (${sql.join(
-        statuses.map((status) => sql`${status}`),
-        sql`, `,
-      )})`);
-    }
+  const rawStatuses = dedupeTrimmedIds(query.status);
+  if (rawStatuses.length > 0) {
+    const statuses = rawStatuses.map((status) => status.toLowerCase());
+    conditions.push(sql`${teacherStatusExpr()} IN (${sql.join(
+      statuses.map((status) => sql`${status}`),
+      sql`, `,
+    )})`);
   }
 
   if (query.specialization?.trim()) {

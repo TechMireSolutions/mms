@@ -38,12 +38,31 @@ export function HasanatDashboard({
   const safeDistributions = Array.isArray(distributions) ? distributions : [];
   const safeDenoms = Array.isArray(denoms) ? denoms : [];
 
-  const totalStock = safeBatches.reduce((sum: number, batch: StockBatch) => sum + batch.quantity, 0);
-  const totalRemaining = safeBatches.reduce((sum: number, batch: StockBatch) => sum + batch.remaining, 0);
-  const totalDistributed = safeDistributions.reduce((sum: number, distribution: Distribution) => sum + distribution.quantity, 0);
-  const totalRedeemed = safeDistributions.filter((distribution: Distribution) => distribution.status === "redeemed").reduce((sum: number, distribution: Distribution) => sum + distribution.quantity, 0);
-  const totalReturned = safeDistributions.filter((distribution: Distribution) => distribution.status === "returned").reduce((sum: number, distribution: Distribution) => sum + distribution.quantity, 0);
-  const totalActive = safeDistributions.filter((distribution: Distribution) => distribution.status === "active").reduce((sum: number, distribution: Distribution) => sum + distribution.quantity, 0);
+  let totalStock = 0;
+  let totalRemaining = 0;
+  const batchStatsByDenom = new Map<string, { total: number; remaining: number }>();
+  for (const batch of safeBatches) {
+    totalStock += batch.quantity;
+    totalRemaining += batch.remaining;
+    let stat = batchStatsByDenom.get(batch.denominationId);
+    if (!stat) {
+      stat = { total: 0, remaining: 0 };
+      batchStatsByDenom.set(batch.denominationId, stat);
+    }
+    stat.total += batch.quantity;
+    stat.remaining += batch.remaining;
+  }
+
+  let totalDistributed = 0;
+  let totalRedeemed = 0;
+  let totalReturned = 0;
+  let totalActive = 0;
+  for (const distribution of safeDistributions) {
+    totalDistributed += distribution.quantity;
+    if (distribution.status === "redeemed") totalRedeemed += distribution.quantity;
+    else if (distribution.status === "returned") totalReturned += distribution.quantity;
+    else if (distribution.status === "active") totalActive += distribution.quantity;
+  }
   const usedPct = totalStock > 0 ? Math.round(((totalStock - totalRemaining) / totalStock) * 100) : 0;
 
   const pieData = (() => [
@@ -59,12 +78,18 @@ export function HasanatDashboard({
     remaining: number;
     used: number;
   }
-  const denominationStock = safeDenoms.map((denomination: Denomination): DenStockEntry => {
-    const denominationBatches = safeBatches.filter((batch: StockBatch) => batch.denominationId === denomination.id);
-    const total = denominationBatches.reduce((sum: number, batch: StockBatch) => sum + batch.quantity, 0);
-    const remaining = denominationBatches.reduce((sum: number, batch: StockBatch) => sum + batch.remaining, 0);
-    return { ...denomination, total, remaining, used: total - remaining };
-  }).filter((denomination: DenStockEntry) => denomination.total > 0);
+  const denominationStock: DenStockEntry[] = [];
+  for (const denomination of safeDenoms) {
+    const stat = batchStatsByDenom.get(denomination.id);
+    if (stat && stat.total > 0) {
+      denominationStock.push({
+        ...denomination,
+        total: stat.total,
+        remaining: stat.remaining,
+        used: stat.total - stat.remaining,
+      });
+    }
+  }
 
   return (
     <div className="space-y-5">

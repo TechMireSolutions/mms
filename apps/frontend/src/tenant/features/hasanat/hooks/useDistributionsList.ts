@@ -75,7 +75,15 @@ export function useDistributionsList({
     }
   }, [createRequestKey, canWrite, showDeleted]);
 
-  const toggleStatus = (status: DistributionStatus) => setFilterStatus((selectedStatuses) => selectedStatuses.includes(status) ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status) : [...selectedStatuses, status]);
+  const toggleStatus = (status: DistributionStatus) => setFilterStatus((selectedStatuses) => {
+    const nextSet = new Set(selectedStatuses);
+    if (nextSet.has(status)) {
+      nextSet.delete(status);
+    } else {
+      nextSet.add(status);
+    }
+    return [...nextSet];
+  });
 
   const handleDistribute = async (dist: Distribution) => {
     await onCreate(dist);

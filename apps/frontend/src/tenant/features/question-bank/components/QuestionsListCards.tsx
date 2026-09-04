@@ -72,6 +72,11 @@ export function QuestionsListCards({
     plural: "questionBank.item.questions",
   });
 
+  const selectedSet = new Set(selectedIds);
+  const visibleCustomFields = config.orderedFields.filter(
+    (field) => !SYSTEM_FIELD_IDS.has(field.id) && config.isFieldEnabled(field.id) && isColumnVisible(field.id),
+  );
+
   return (
     <ModuleDirectoryCards
       items={questions}
@@ -85,7 +90,7 @@ export function QuestionsListCards({
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="question-bank-select-cards"
       renderItem={(question) => {
-        const isSelected = selectedIds.includes(question.id);
+        const isSelected = selectedSet.has(question.id);
 
         return (
           <DirectoryEntityCard 
@@ -178,11 +183,9 @@ export function QuestionsListCards({
                   </p>
                 );
               })()}
-              {config.orderedFields
-                .filter((field) => !SYSTEM_FIELD_IDS.has(field.id) && config.isFieldEnabled(field.id) && isColumnVisible(field.id))
-                .map((field) => {
-                  const fieldValue = (question as unknown as Record<string, unknown>)[field.id];
-                  if (fieldValue === undefined || fieldValue === "") return null;
+              {visibleCustomFields.map((field) => {
+                const fieldValue = (question as unknown as Record<string, unknown>)[field.id];
+                if (fieldValue === undefined || fieldValue === "") return null;
                   return (
                     <p key={field.id} className="text-xs text-muted-foreground">
                       <span className="font-semibold">{config.fieldLabel(field.id, field.label)}:</span>{" "}

@@ -11,6 +11,7 @@ import {
   sql,
 } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   type QuestionBankCommandMetricsSnapshot,
   type QuestionBankListQuery,
@@ -43,7 +44,7 @@ function buildQuestionsListConditions(subdomain: string, query: QuestionBankList
     conditions.push(ilike(questions.text, `%${search}%`));
   }
 
-  const categoryIds = query.categoryId?.split(',').map((c) => c.trim()).filter(Boolean) ?? [];
+  const categoryIds = dedupeTrimmedIds(query.categoryId);
   if (categoryIds.length) {
     conditions.push(
       sql`EXISTS (
@@ -55,7 +56,7 @@ function buildQuestionsListConditions(subdomain: string, query: QuestionBankList
     );
   }
 
-  const difficulties = query.difficulty?.split(',').map((d) => d.trim()).filter(Boolean) ?? [];
+  const difficulties = dedupeTrimmedIds(query.difficulty);
   if (difficulties.length) {
     conditions.push(inArray(questions.difficulty, difficulties));
   }

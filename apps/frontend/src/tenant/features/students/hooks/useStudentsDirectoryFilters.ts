@@ -119,11 +119,15 @@ export function useStudentsDirectoryFilters({
   const toggleStudentStatus = ((status: string) => {
     // Manual status selection supersedes any quick-filter preset.
     setQuickFilter("all");
-    setStudentFilterStatus((selectedStatuses) =>
-      selectedStatuses.includes(status)
-        ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
-        : [...selectedStatuses, status],
-    );
+    setStudentFilterStatus((selectedStatuses) => {
+      const nextSet = new Set(selectedStatuses);
+      if (nextSet.has(status)) {
+        nextSet.delete(status);
+      } else {
+        nextSet.add(status);
+      }
+      return [...nextSet];
+    });
   });
 
   const toggleViewingDeleted = (() => {

@@ -65,22 +65,31 @@ export async function loadFinanceReportAggregatesSql(
       ORDER BY 1 ASC
     `);
 
-    aggregates.monthlyFeeCollection = getQueryRows<Record<string, unknown>>(monthlyResult)
-      .filter((row) => typeof row.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey))
-      .map((row) => {
+    const monthlyRows = getQueryRows<Record<string, unknown>>(monthlyResult);
+    const monthlyFeeCollection: Array<{
+      month: string;
+      collected: number;
+      outstanding: number;
+      total: number;
+      rate: number;
+    }> = [];
+    for (let i = 0; i < monthlyRows.length; i++) {
+      const row = monthlyRows[i];
+      if (typeof row?.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey)) {
         const rowCollected = Number(row.collected ?? 0);
         const rowOutstanding = Number(row.outstanding ?? 0);
         const rowTotal = Number(row.total ?? 0);
         const rate = rowTotal > 0 ? Math.round((rowCollected / rowTotal) * 100) : 0;
-        return {
-          month: String(row.monthKey),
+        monthlyFeeCollection.push({
+          month: row.monthKey,
           collected: rowCollected,
           outstanding: rowOutstanding,
           total: rowTotal,
           rate,
-        };
-      })
-      .slice(-6);
+        });
+      }
+    }
+    aggregates.monthlyFeeCollection = monthlyFeeCollection.slice(-6);
 
     // Discount usage by type
     const discountResult = await tx.execute(sql`
@@ -179,12 +188,18 @@ export async function loadFinanceReportAggregatesSql(
         GROUP BY 1
         ORDER BY 1 ASC
       `);
-      return getQueryRows<Record<string, unknown>>(monthResult)
-        .filter((row) => typeof row.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey))
-        .map((row) => ({
-          monthKey: String(row.monthKey),
-          collected: Number(row.collected ?? 0),
-        }));
+      const rows = getQueryRows<Record<string, unknown>>(monthResult);
+      const monthly: FinanceReportComparisonMonth[] = [];
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (typeof row?.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey)) {
+          monthly.push({
+            monthKey: row.monthKey,
+            collected: Number(row.collected ?? 0),
+          });
+        }
+      }
+      return monthly;
     };
 
     comparison.monthly.a = await loadMonthlyRange(comparisonQuery.rangeAFrom, comparisonQuery.rangeATo);

@@ -38,7 +38,7 @@ export interface PdfExportOptions {
   sourceHeaders?: string[];
 }
 
-const FORMULA_PREFIXES = ["=", "+", "-", "@", "\t", "\r"];
+const FORMULA_PREFIX_REGEX = /^[=+\-@\t\r]/;
 
 /**
  * Escapes potentially unsafe formula-injection characters for CSV/Excel cells.
@@ -48,7 +48,7 @@ export function sanitizeExportValue(value: unknown): ExportCell {
   if (typeof value === "number" || typeof value === "boolean") return value;
 
   const str = String(value);
-  if (FORMULA_PREFIXES.some((prefix) => str.startsWith(prefix))) {
+  if (FORMULA_PREFIX_REGEX.test(str)) {
     return `'${str}`;
   }
   return str;
@@ -62,32 +62,57 @@ export function extractExportTable(
   rows: Record<string, unknown>[] = [],
   headers?: string[],
 ): ExportTable {
+  const rowCount = rows.length;
+
   if (columns && columns.length > 0) {
-    const tableHeaders = columns.map((col) => col.header);
-    const tableData = rows.map((row) =>
-      columns.map((col) => sanitizeExportValue(row[col.key])),
-    );
-    const mappedObjects = rows.map((row) => {
+    const colCount = columns.length;
+    const tableHeaders = new Array<string>(colCount);
+    for (let j = 0; j < colCount; j++) {
+      tableHeaders[j] = columns[j].header;
+    }
+
+    const tableData = new Array<ExportCell[]>(rowCount);
+    const mappedObjects = new Array<Record<string, unknown>>(rowCount);
+
+    for (let i = 0; i < rowCount; i++) {
+      const row = rows[i];
+      const dataRow = new Array<ExportCell>(colCount);
       const obj: Record<string, unknown> = {};
-      columns.forEach((col) => {
-        obj[col.header] = sanitizeExportValue(row[col.key]);
-      });
-      return obj;
-    });
+
+      for (let j = 0; j < colCount; j++) {
+        const col = columns[j];
+        const val = sanitizeExportValue(row[col.key]);
+        dataRow[j] = val;
+        obj[col.header] = val;
+      }
+
+      tableData[i] = dataRow;
+      mappedObjects[i] = obj;
+    }
+
     return { headers: tableHeaders, data: tableData, mappedObjects };
   }
 
-  const tableHeaders = headers || (rows.length > 0 ? Object.keys(rows[0]) : []);
-  const tableData = rows.map((row) =>
-    tableHeaders.map((header) => sanitizeExportValue(row[header])),
-  );
-  const mappedObjects = rows.map((row) => {
+  const tableHeaders = headers || (rowCount > 0 ? Object.keys(rows[0]) : []);
+  const headerCount = tableHeaders.length;
+  const tableData = new Array<ExportCell[]>(rowCount);
+  const mappedObjects = new Array<Record<string, unknown>>(rowCount);
+
+  for (let i = 0; i < rowCount; i++) {
+    const row = rows[i];
+    const dataRow = new Array<ExportCell>(headerCount);
     const obj: Record<string, unknown> = {};
-    tableHeaders.forEach((header) => {
-      obj[header] = sanitizeExportValue(row[header]);
-    });
-    return obj;
-  });
+
+    for (let j = 0; j < headerCount; j++) {
+      const header = tableHeaders[j];
+      const val = sanitizeExportValue(row[header]);
+      dataRow[j] = val;
+      obj[header] = val;
+    }
+
+    tableData[i] = dataRow;
+    mappedObjects[i] = obj;
+  }
 
   return { headers: tableHeaders, data: tableData, mappedObjects };
 }

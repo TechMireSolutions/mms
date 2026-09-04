@@ -49,6 +49,7 @@ CLAUDE.md            # Session entry (points here + sync commands)
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
 | `rules/mms-migration-status.md` | `rules/mms-migration-status.mdc` |
 | `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
+| `rules/mms-performance.md` | `rules/mms-performance.mdc` |
 
 Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker), `mms-structure-naming` (layout/size bands).
 

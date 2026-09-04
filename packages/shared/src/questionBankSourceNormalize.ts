@@ -31,12 +31,22 @@ export function compactQuestionSource(
   return Object.keys(compactSource).length > 0 ? compactSource : undefined;
 }
 
+function lookupBook(
+  books: readonly QuestionSourceBook[] | ReadonlyMap<string, QuestionSourceBook>,
+  bookId: string,
+): QuestionSourceBook | undefined {
+  if ('get' in books && typeof books.get === 'function') {
+    return books.get(bookId);
+  }
+  return (books as readonly QuestionSourceBook[]).find((entry) => entry.id === bookId);
+}
+
 /** Merges book metadata with a per-question citation. */
 export function resolveQuestionBookCitation(
   citation: QuestionBookCitation,
-  books: readonly QuestionSourceBook[],
+  books: readonly QuestionSourceBook[] | ReadonlyMap<string, QuestionSourceBook>,
 ): QuestionSourceReference | undefined {
-  const book = books.find((entry) => entry.id === citation.bookId);
+  const book = lookupBook(books, citation.bookId);
   if (!book) return compactQuestionSource(citation.citation as QuestionSourceReference);
   return compactQuestionSource({
     ...book.metadata,
@@ -61,10 +71,20 @@ export function compactQuestionBookCitations(
 /** Resolves source entries from citations, `sources`, or legacy `source`. */
 export function getQuestionSources(
   question: QuestionSourceRef,
-  books?: readonly QuestionSourceBook[],
+  books?: readonly QuestionSourceBook[] | ReadonlyMap<string, QuestionSourceBook>,
 ): QuestionSourceReference[] {
+  let bookLookup: readonly QuestionSourceBook[] | ReadonlyMap<string, QuestionSourceBook>;
+  if (!books) {
+    bookLookup = [];
+  } else if ('get' in books) {
+    bookLookup = books;
+  } else if (books.length > 3) {
+    bookLookup = new Map(books.map((b) => [b.id, b]));
+  } else {
+    bookLookup = books;
+  }
   const fromCitations = (question.sourceCitations ?? [])
-    .map((entry) => resolveQuestionBookCitation(entry, books ?? []))
+    .map((entry) => resolveQuestionBookCitation(entry, bookLookup))
     .filter((entry): entry is QuestionSourceReference => !!entry);
   if (fromCitations.length > 0) return fromCitations;
 

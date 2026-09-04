@@ -70,8 +70,9 @@ export function QuestionsListFilters({
   };
   const activeFilterCount = filterCats.length + filterDiff.length;
 
+  const categoriesById = new Map(config.categories.map((item) => [item.id, item]));
   const categoryChips = filterCats.map((categoryId) => {
-    const category = config.categories.find((item) => item.id === categoryId);
+    const category = categoriesById.get(categoryId);
     return {
       key: `category:${categoryId}`,
       label: category ? `${category.icon} ${category.name}` : categoryId,

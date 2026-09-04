@@ -50,6 +50,12 @@ export function DistributionsListCards(props: DistributionsListCardsProps): JSX.
     plural: 'hasanat.item.distributions',
   });
 
+  const denomsById = new Map<string, (typeof denoms)[number]>();
+  for (const d of denoms) {
+    denomsById.set(d.id, d);
+  }
+  const selectedIdsSet = new Set(selectedIds);
+
   return (
     <ModuleDirectoryCards
       items={distributions}
@@ -63,8 +69,8 @@ export function DistributionsListCards(props: DistributionsListCardsProps): JSX.
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="hasanat-select-cards"
       renderItem={(distribution) => {
-        const denomination = getDistributionDenomination(denoms, distribution.denominationId);
-        const isSelected = selectedIds.includes(distribution.id);
+        const denomination = getDistributionDenomination(denomsById, distribution.denominationId);
+        const isSelected = selectedIdsSet.has(distribution.id);
 
         return (
           <DirectoryEntityCard key={distribution.id} isSelected={isSelected} reducedMotion={reducedMotion}>

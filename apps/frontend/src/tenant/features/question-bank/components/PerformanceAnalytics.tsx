@@ -26,12 +26,24 @@ export function PerformanceAnalytics({
   const { t } = useTranslation();
   const qbConfig = useQuestionBankConfig(questions);
 
+  const questionsById = new Map<string, (typeof questions)[number]>();
+  for (const q of questions) {
+    questionsById.set(q.id, q);
+  }
+
+  const testsById = new Map<string, (typeof tests)[number]>();
+  const testTotalMarksById = new Map<string, number>();
+  for (const test of tests) {
+    testsById.set(test.id, test);
+    testTotalMarksById.set(test.id, testTotalMarks(test, questionsById) || 100);
+  }
+
   const studentStats = (() => {
     const statsByStudentId: Record<string, { name: string; class: string; scores: number[]; totalPts: number; maxPts: number }> = {};
-    results.forEach((result) => {
-      const test = tests.find((item) => item.id === result.testId);
-      if (!test) return;
-      const totalMarks = testTotalMarks(test, questions) || 100;
+    for (const result of results) {
+      const test = testsById.get(result.testId);
+      if (!test) continue;
+      const totalMarks = testTotalMarksById.get(result.testId) ?? 100;
       const marksObtained = sumScores(result.scores);
       const percentageScore = pct(marksObtained, totalMarks);
       if (!statsByStudentId[result.studentId]) {
@@ -46,7 +58,7 @@ export function PerformanceAnalytics({
       statsByStudentId[result.studentId].scores.push(percentageScore);
       statsByStudentId[result.studentId].totalPts += marksObtained;
       statsByStudentId[result.studentId].maxPts += totalMarks;
-    });
+    }
     return Object.values(statsByStudentId)
       .map((studentStat) => {
         const averageScore = studentStat.scores.length > 0 ? Math.round(studentStat.scores.reduce((scoreTotal, score) => scoreTotal + score, 0) / studentStat.scores.length) : 0;
@@ -56,35 +68,65 @@ export function PerformanceAnalytics({
   })() as StudentStatItem[];
 
   const catPerformance = (() => {
-    return categories
-      .map((category) => {
-        const categoryQuestionIds = questions
-          .filter((question) => getQuestionCategoryIds(question).includes(category.id))
-          .map((question) => question.id);
-        let correct = 0;
-        let total = 0;
-        results.forEach((result) => {
-          categoryQuestionIds.forEach((questionId) => {
-            if (result.answers?.[questionId] !== undefined) {
-              const question = questions.find((candidateQuestion) => candidateQuestion.id === questionId);
-              total++;
-              if (result.answers[questionId] === question?.answer) correct++;
-            }
-          });
+    const countsByCatId = new Map<string, { correct: number; total: number }>();
+    for (const category of categories) {
+      countsByCatId.set(category.id, { correct: 0, total: 0 });
+    }
+
+    for (const result of results) {
+      if (!result.answers) continue;
+      for (const questionId of Object.keys(result.answers)) {
+        const studentAns = result.answers[questionId];
+        if (studentAns === undefined) continue;
+        const question = questionsById.get(questionId);
+        if (!question) continue;
+        const isCorrect = studentAns === question.answer;
+        const catIds = getQuestionCategoryIds(question);
+        for (const catId of catIds) {
+          const counts = countsByCatId.get(catId);
+          if (counts) {
+            counts.total++;
+            if (isCorrect) counts.correct++;
+          }
+        }
+      }
+    }
+
+    const performance: CategoryPerformance[] = [];
+    for (const category of categories) {
+      const counts = countsByCatId.get(category.id);
+      if (counts && counts.total > 0) {
+        const accuracy = Math.round((counts.correct / counts.total) * 100);
+        performance.push({
+          name: category.name,
+          icon: category.icon,
+          color: category.color,
+          accuracy,
+          correct: counts.correct,
+          total: counts.total,
         });
-        const accuracy = total > 0 ? Math.round((correct / total) * 100) : 0;
-        return { name: category.name, icon: category.icon, color: category.color, accuracy, correct, total };
-      })
-      .filter((categoryResult) => categoryResult.total > 0);
-  })() as CategoryPerformance[];
+      }
+    }
+    return performance;
+  })();
 
   const weakAreas = catPerformance
     .filter((categoryResult) => categoryResult.accuracy < QUESTION_ACCURACY_WEAK_THRESHOLD)
     .sort((a, b) => a.accuracy - b.accuracy);
 
+  const resultsByTestId = new Map<string, (typeof results)[number][]>();
+  for (const result of results) {
+    let list = resultsByTestId.get(result.testId);
+    if (!list) {
+      list = [];
+      resultsByTestId.set(result.testId, list);
+    }
+    list.push(result);
+  }
+
   const trendData = tests.map((test) => {
-    const testResults = results.filter((result) => result.testId === test.id);
-    const totalMarks = testTotalMarks(test, questions) || 100;
+    const testResults = resultsByTestId.get(test.id) ?? [];
+    const totalMarks = testTotalMarksById.get(test.id) ?? 100;
     const averageScore =
       testResults.length > 0
         ? Math.round(testResults.reduce((scoreTotal, result) => scoreTotal + pct(sumScores(result.scores), totalMarks), 0) / testResults.length)
@@ -95,24 +137,37 @@ export function PerformanceAnalytics({
     };
   });
 
-  const diffData = qbConfig.enabledDifficulties.map((difficulty) => {
-    const questionIds = questions.filter((question) => question.difficulty === difficulty).map((question) => question.id);
-    let correct = 0;
-    let total = 0;
-    results.forEach((result) => {
-      questionIds.forEach((questionId) => {
-        if (result.answers?.[questionId] !== undefined) {
-          const question = questions.find((candidateQuestion) => candidateQuestion.id === questionId);
-          total++;
-          if (result.answers[questionId] === question?.answer) correct++;
+  const diffData = (() => {
+    const diffCounts = new Map<string, { correct: number; total: number }>();
+    for (const diff of qbConfig.enabledDifficulties) {
+      diffCounts.set(diff, { correct: 0, total: 0 });
+    }
+
+    for (const result of results) {
+      if (!result.answers) continue;
+      for (const questionId of Object.keys(result.answers)) {
+        const studentAns = result.answers[questionId];
+        if (studentAns === undefined) continue;
+        const question = questionsById.get(questionId);
+        if (!question || !question.difficulty) continue;
+        const counts = diffCounts.get(question.difficulty);
+        if (counts) {
+          counts.total++;
+          if (studentAns === question.answer) counts.correct++;
         }
-      });
+      }
+    }
+
+    return qbConfig.enabledDifficulties.map((difficulty) => {
+      const counts = diffCounts.get(difficulty);
+      const total = counts?.total ?? 0;
+      const correct = counts?.correct ?? 0;
+      return {
+        name: qbConfig.difficultyLabel(difficulty),
+        accuracy: total > 0 ? Math.round((correct / total) * 100) : 0,
+      };
     });
-    return {
-      name: qbConfig.difficultyLabel(difficulty),
-      accuracy: total > 0 ? Math.round((correct / total) * 100) : 0,
-    };
-  });
+  })();
 
   const radarData = catPerformance.map((categoryResult) => ({ subject: `${categoryResult.icon} ${categoryResult.name}`, accuracy: categoryResult.accuracy }));
 

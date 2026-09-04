@@ -15,15 +15,84 @@ const TAB_COLLECTION_KEYS: Record<string, (keyof Contact)[]> = {
   relationships: ['relationships'],
 };
 
-function tabEnabled(tabs: TabDefinition[], tabId: string): boolean {
-  const tab = tabs.find((t) => (t.key || '').toLowerCase() === tabId.toLowerCase());
-  return tab ? tab.enabled !== false : true;
-}
-
 function fieldVisible(viewerRole: string, field: FieldDefinition | undefined): boolean {
   if (!field) return true;
   if (!field.enabled) return false;
   return canViewContactField(viewerRole, field);
+}
+
+/**
+ * Resolves contact field keys that the viewer role cannot read.
+ * Precomputed once per batch to avoid O(N * T * F) iterations and repeated tab/field finds.
+ */
+export function resolveContactKeysToStripForViewer(
+  viewerRole: string,
+  config: ContactFieldConfigSnapshot,
+): string[] {
+  const { fields, tabs = [] } = config;
+  const tabMap = new Map<string, TabDefinition>();
+  for (const t of tabs) {
+    if (t.key) {
+      tabMap.set(t.key.toLowerCase(), t);
+    }
+  }
+
+  const toStrip = new Set<string>();
+
+  const fieldLookup = new Map<string, FieldDefinition>();
+  for (const [tabId, tabFields] of Object.entries(fields || {})) {
+    const tabKey = tabId.toLowerCase();
+    for (const field of tabFields || []) {
+      fieldLookup.set(`${tabKey}:${field.key}`, field);
+    }
+  }
+
+  for (const [tabId, keys] of Object.entries(TAB_COLLECTION_KEYS)) {
+    const tab = tabMap.get(tabId.toLowerCase());
+    const tabDef = tab ?? { key: tabId, label: tabId, enabled: true, order: 0 };
+    const isEnabled = tab ? tab.enabled !== false : true;
+    if (!isEnabled || !canViewContactTab(viewerRole, tabDef)) {
+      for (const key of keys) {
+        toStrip.add(String(key));
+      }
+      continue;
+    }
+    if (tabId === 'phones' && fields.phones?.length && !fieldVisible(viewerRole, fieldLookup.get('phones:number'))) {
+      toStrip.add('phones');
+      toStrip.add('phone');
+    }
+    if (tabId === 'emails' && fields.emails?.length && !fieldVisible(viewerRole, fieldLookup.get('emails:address'))) {
+      toStrip.add('emails');
+      toStrip.add('email');
+    }
+  }
+
+  for (const [tabId, tabFields] of Object.entries(fields)) {
+    if (TAB_COLLECTION_KEYS[tabId]) continue;
+    const tab = tabMap.get(tabId.toLowerCase());
+    const isEnabled = tab ? tab.enabled !== false : true;
+    if (!isEnabled) {
+      for (const field of tabFields) {
+        toStrip.add(field.key);
+      }
+      continue;
+    }
+    for (const field of tabFields) {
+      if (!fieldVisible(viewerRole, field)) {
+        toStrip.add(field.key);
+      }
+    }
+  }
+
+  if (!fieldVisible(viewerRole, fieldLookup.get('basic:firstName'))) {
+    toStrip.add('firstName');
+    toStrip.add('name');
+  }
+  if (!fieldVisible(viewerRole, fieldLookup.get('basic:lastName'))) {
+    toStrip.add('lastName');
+  }
+
+  return Array.from(toStrip);
 }
 
 /** Strips contact properties the viewer role cannot read (API + export guard). */
@@ -32,52 +101,12 @@ export function sanitizeContactForViewer(
   viewerRole: string,
   config: ContactFieldConfigSnapshot,
 ): Contact {
+  const keysToStrip = resolveContactKeysToStripForViewer(viewerRole, config);
+  if (keysToStrip.length === 0) return contact;
   const sanitizedContact: Contact = { ...contact };
-  const { fields, tabs } = config;
-
-  for (const [tabId, keys] of Object.entries(TAB_COLLECTION_KEYS)) {
-    const tab = tabs.find((candidateTab) => (candidateTab.key || '').toLowerCase() === tabId.toLowerCase());
-    const tabDef = tab ?? { key: tabId, label: tabId, enabled: true, order: 0 };
-    if (!tabEnabled(tabs, tabId) || !canViewContactTab(viewerRole, tabDef)) {
-      for (const key of keys) {
-        delete sanitizedContact[key];
-      }
-      continue;
-    }
-    if (tabId === 'phones' && fields.phones?.length && !fieldVisible(viewerRole, fields.phones.find((field) => field.key === 'number'))) {
-      delete sanitizedContact.phones;
-      delete sanitizedContact.phone;
-    }
-    if (tabId === 'emails' && fields.emails?.length && !fieldVisible(viewerRole, fields.emails.find((field) => field.key === 'address'))) {
-      delete sanitizedContact.emails;
-      delete sanitizedContact.email;
-    }
+  for (const key of keysToStrip) {
+    delete sanitizedContact[key as keyof Contact];
   }
-
-  for (const [tabId, tabFields] of Object.entries(fields)) {
-    if (TAB_COLLECTION_KEYS[tabId]) continue;
-    if (!tabEnabled(tabs, tabId)) {
-      for (const field of tabFields) {
-        delete sanitizedContact[field.key];
-      }
-      continue;
-    }
-    for (const field of tabFields) {
-      if (!fieldVisible(viewerRole, field)) {
-        delete sanitizedContact[field.key];
-      }
-    }
-  }
-
-  if (!fieldVisible(viewerRole, fields.basic?.find((field) => field.key === 'firstName'))) {
-    const mutableContact = sanitizedContact as Record<string, unknown>;
-    delete mutableContact.firstName;
-    delete mutableContact.name;
-  }
-  if (!fieldVisible(viewerRole, fields.basic?.find((field) => field.key === 'lastName'))) {
-    delete (sanitizedContact as Record<string, unknown>).lastName;
-  }
-
   return sanitizedContact;
 }
 
@@ -86,7 +115,15 @@ export function sanitizeContactsForViewer(
   viewerRole: string,
   config: ContactFieldConfigSnapshot,
 ): Contact[] {
-  return contacts.map((contact) => sanitizeContactForViewer(contact, viewerRole, config));
+  const keysToStrip = resolveContactKeysToStripForViewer(viewerRole, config);
+  if (keysToStrip.length === 0) return contacts;
+  return contacts.map((contact) => {
+    const sanitizedContact: Contact = { ...contact };
+    for (const key of keysToStrip) {
+      delete sanitizedContact[key as keyof Contact];
+    }
+    return sanitizedContact;
+  });
 }
 
 /** Summarises changed top-level keys for audit (globle1 §1.3). */

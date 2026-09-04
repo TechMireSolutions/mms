@@ -38,18 +38,21 @@ export function sessionRowToRecord(
   events: EventRow[] = [],
   tabarruk: TabarrukRow[] = [],
 ): Session {
-  const mappedClasses: Class[] = classes.map((c) => ({
-    id: c.id,
-    name: c.name,
-    ageMin: c.ageMin,
-    ageMax: c.ageMax,
-    gender: c.gender as Class['gender'],
-    teacherId: c.teacherId,
-    teacherName: c.teacherName ?? undefined,
-    capacity: c.capacity,
-    enrolled: c.enrolled,
-    room: c.room ?? undefined,
-  }));
+  const mappedClasses: Class[] = classes.map((c) => {
+    const item: Class = {
+      id: c.id,
+      name: c.name,
+      ageMin: c.ageMin,
+      ageMax: c.ageMax,
+      gender: c.gender as Class['gender'],
+      teacherId: c.teacherId,
+      capacity: c.capacity,
+      enrolled: c.enrolled,
+    };
+    if (c.teacherName) item.teacherName = c.teacherName;
+    if (c.room) item.room = c.room;
+    return item;
+  });
 
   const mappedTimetable: TimetableItem[] = timetable.map((t) => ({
     id: t.id,
@@ -70,42 +73,54 @@ export function sessionRowToRecord(
     active: d.active,
   }));
 
-  const mappedExpenses: BudgetExpense[] = expenses.map((e) => ({
-    id: e.id,
-    category: e.category,
-    amount: Number(e.amount) || 0,
-    date: e.date,
-    note: e.note ?? undefined,
-  }));
+  const mappedExpenses: BudgetExpense[] = expenses.map((e) => {
+    const item: BudgetExpense = {
+      id: e.id,
+      category: e.category,
+      amount: Number(e.amount) || 0,
+      date: e.date,
+    };
+    if (e.note) item.note = e.note;
+    return item;
+  });
 
-  const mappedIncomes: BudgetIncome[] = incomes.map((i) => ({
-    id: i.id,
-    category: i.category,
-    amount: Number(i.amount) || 0,
-    date: i.date,
-    note: i.note ?? undefined,
-  }));
+  const mappedIncomes: BudgetIncome[] = incomes.map((i) => {
+    const item: BudgetIncome = {
+      id: i.id,
+      category: i.category,
+      amount: Number(i.amount) || 0,
+      date: i.date,
+    };
+    if (i.note) item.note = i.note;
+    return item;
+  });
 
-  const mappedEvents: SessionEvent[] = events.map((ev) => ({
-    id: ev.id,
-    title: ev.title,
-    date: ev.date,
-    time: ev.time,
-    location: ev.location,
-    description: ev.description ?? undefined,
-    type: ev.type as SessionEvent['type'],
-  }));
+  const mappedEvents: SessionEvent[] = events.map((ev) => {
+    const item: SessionEvent = {
+      id: ev.id,
+      title: ev.title,
+      date: ev.date,
+      time: ev.time,
+      location: ev.location,
+      type: ev.type as SessionEvent['type'],
+    };
+    if (ev.description) item.description = ev.description;
+    return item;
+  });
 
-  const mappedTabarruk: TabarrukItem[] = tabarruk.map((tab) => ({
-    id: tab.id,
-    item: tab.item,
-    quantity: tab.quantity,
-    occasion: tab.occasion,
-    date: tab.date,
-    note: tab.note ?? undefined,
-  }));
+  const mappedTabarruk: TabarrukItem[] = tabarruk.map((tab) => {
+    const item: TabarrukItem = {
+      id: tab.id,
+      item: tab.item,
+      quantity: tab.quantity,
+      occasion: tab.occasion,
+      date: tab.date,
+    };
+    if (tab.note) item.note = tab.note;
+    return item;
+  });
 
-  return {
+  const session: Session = {
     id: row.id,
     name: row.name,
     type: row.type,
@@ -114,7 +129,6 @@ export function sessionRowToRecord(
     endDate: row.endDate,
     baseFee: Number(row.baseFee) || 0,
     currency: row.currency,
-    description: row.description ?? undefined,
     classes: mappedClasses,
     timetable: mappedTimetable,
     discounts: mappedDiscounts,
@@ -126,10 +140,14 @@ export function sessionRowToRecord(
     },
     events: mappedEvents,
     tabarruk: mappedTabarruk,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+
+  if (row.description) session.description = row.description;
+  if (row.deletedAt) session.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) session.deletedBy = row.deletedBy;
+  if (row.deletionReason) session.deletionReason = row.deletionReason;
+
+  return session;
 }

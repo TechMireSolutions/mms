@@ -36,8 +36,10 @@ export const teacherLookupKindParamsSchema = z.object({
 
 export * from './schemas/teacherLookup.dto.js';
 
+const TEACHER_LOOKUP_KINDS_SET = new Set<string>(TEACHER_LOOKUP_KINDS);
+
 export function isTeacherLookupKind(value: string): value is TeacherLookupKind {
-  return (TEACHER_LOOKUP_KINDS as readonly string[]).includes(value);
+  return TEACHER_LOOKUP_KINDS_SET.has(value);
 }
 
 export function isTeacherLookupLegacyCollectionKey(

@@ -54,20 +54,23 @@ function toRow(
 /** Merge a stored row back into a widget DTO (typed columns win, then jsonb `config`). */
 function toDto(row: DashboardWidgetRow): DashboardWidgetDto {
   const config = (row.config ?? {}) as Record<string, unknown>;
-  return {
+  const dto: DashboardWidgetDto = {
     ...config,
     id: row.id,
-    widgetType: (row.widgetType ?? undefined) as DashboardWidgetDto['widgetType'],
     category: row.category,
     collection: row.collection,
-    role: (row.role ?? undefined) as DashboardWidgetDto['role'],
     isPinnedToDashboard: row.isPinnedToDashboard,
     title: row.title,
-    icon: (row.icon ?? undefined) as DashboardWidgetDto['icon'],
     color: row.color,
     operation: row.operation as DashboardWidgetDto['operation'],
     sortOrder: row.sortOrder,
   } as DashboardWidgetDto;
+
+  if (row.widgetType) dto.widgetType = row.widgetType as DashboardWidgetDto['widgetType'];
+  if (row.role) dto.role = row.role as DashboardWidgetDto['role'];
+  if (row.icon) dto.icon = row.icon as DashboardWidgetDto['icon'];
+
+  return dto;
 }
 
 /** List all dashboard widgets for a workspace, ordered by pin order. */

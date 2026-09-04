@@ -3,6 +3,7 @@ import { bindRequestTenant, resolveSubdomainFromRequest } from '../lib/tenantCon
 import { attachAccessTokenFromCookie } from '../services/auth/authCookieService.js';
 import { attachPlatformTokenFromCookie } from '../services/platform/platformCookieService.js';
 import { requestHostname } from '../lib/requestHost.js';
+import { stripUndefinedFields } from '../lib/payloadTrimmer.js';
 
 export function registerRequestHooks(app: FastifyInstance): void {
   app.addHook('onRequest', (request, reply, done) => {
@@ -16,6 +17,18 @@ export function registerRequestHooks(app: FastifyInstance): void {
       attachPlatformTokenFromCookie(request);
     }
     done();
+  });
+
+  app.addHook('preSerialization', async (_request, _reply, payload) => {
+    if (
+      payload &&
+      typeof payload === 'object' &&
+      !Buffer.isBuffer(payload) &&
+      typeof (payload as { pipe?: unknown }).pipe !== 'function'
+    ) {
+      return stripUndefinedFields(payload);
+    }
+    return payload;
   });
 
   app.addHook('onResponse', (request, reply, done) => {

@@ -24,6 +24,7 @@ After **creating or editing code**, run a completion review **before** marking t
 | New `t()` keys | Add to `appTranslationsEn.ts` then ar/ur/fa packs |
 | Shell / layout / touch / RTL / tables | Spot-check 375 / 768 / 1440; run responsive specs named in `mms-ui-ux-design.md` §7 when AppLayout, PlatformPageShell, toast layer, or shared table/button primitives change |
 | AppLayout / FormModal / Table primitives | Note or run a11y axe smoke from `mms-testing-observability.md` (serious/critical) |
+| Performance refactors | Document baseline bottleneck & quantified resource saved (CPU/RAM/DB/Bundle) — `mms-performance.md` |
 
 4. **Lint diagnostics** — check edited files; fix new issues you introduced.
 5. **Cleanup** — remove unused imports, dead code, and debug logging in the change boundary.
@@ -47,6 +48,9 @@ After **creating or editing code**, run a completion review **before** marking t
 | Banned Node 24 package introduced | Replace with native built-in (`--env-file`, `fetch`, `glob`, `crypto.hash`, `URLPattern`) — `mms-dependencies.md` |
 | Unprefixed core module import | Prefix with `node:` (`node:fs`, `node:crypto`, `node:path`, `node:async_hooks`) — `mms-structure-naming.md` |
 | Deprecated Node API (`url.parse()`) | Replace with WHATWG `new URL()` — `mms-structure-naming.md` |
+| Undocumented performance refactor | Explicitly document baseline bottleneck and quantified resource saved — `mms-performance.md` |
+| Unvirtualized list/table > 30 items | Add `@tanstack/react-virtual` virtualization — `mms-performance.md` |
+| Wildcard DB query (`SELECT *` / bare select) | Replace with explicit typed column projection — `mms-performance.md` |
 | Rule violation in touched code | Fix when inside the change boundary |
 
 ## Skip verification only when

@@ -41,9 +41,12 @@ export interface DistributionsListContentProps {
 }
 
 export function getDistributionDenomination(
-  denoms: Denomination[],
+  denoms: Denomination[] | Map<string, Denomination>,
   denominationId: string,
 ): Denomination | undefined {
+  if (denoms instanceof Map) {
+    return denoms.get(denominationId);
+  }
   return denoms.find((denomination) => denomination.id === denominationId);
 }
 

@@ -16,7 +16,7 @@ export function testRowToRecord(
   questionIds: string[] = [],
   sections: Array<{ id: string; title: string; instructions: string; questionIds: string[] }> = [],
 ): QuestionBankTest {
-  return {
+  const test: QuestionBankTest = {
     id: row.id,
     name: row.name,
     categoryId: row.categoryId,
@@ -24,14 +24,17 @@ export function testRowToRecord(
     difficulty: row.difficulty as QuestionBankTest['difficulty'],
     duration: row.duration,
     createdAt: row.createdAt.toISOString(),
-    examClass: row.examClass ?? undefined,
-    totalMarks: row.totalMarks ?? undefined,
-    instructions: row.instructions ?? undefined,
-    sections: sections.length > 0 ? sections : undefined,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
   };
+
+  if (row.examClass) test.examClass = row.examClass;
+  if (row.totalMarks != null) test.totalMarks = row.totalMarks;
+  if (row.instructions) test.instructions = row.instructions;
+  if (sections.length > 0) test.sections = sections;
+  if (row.deletedAt) test.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) test.deletedBy = row.deletedBy;
+  if (row.deletionReason) test.deletionReason = row.deletionReason;
+
+  return test;
 }
 
 export async function syncTestChildren(

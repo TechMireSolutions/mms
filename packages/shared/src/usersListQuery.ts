@@ -56,13 +56,14 @@ export function filterUsersForQuery(users: WorkspaceUser[], query: UsersListQuer
     rows = rows.filter((user) => user.role === query.role);
   }
   if (query.status?.trim()) {
-    const statuses = query.status.split(',').map((status) => status.trim()).filter(Boolean);
-    if (statuses.length > 0) {
-      rows = rows.filter((user) => statuses.includes(String(user.status ?? 'active')));
+    const statuses = new Set(query.status.split(',').map((s) => s.trim()).filter(Boolean));
+    if (statuses.size > 0) {
+      rows = rows.filter((user) => statuses.has(String(user.status ?? 'active')));
     }
   }
   if (query.search?.trim()) {
-    rows = rows.filter((user) => userMatchesSearch(user, query.search!));
+    const search = query.search.trim().toLowerCase();
+    rows = rows.filter((user) => userMatchesSearch(user, search));
   }
   return rows;
 }

@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream';
 import type { FastifyPluginAsync } from 'fastify';
 import {
   fetchBackupSnapshot,
@@ -24,6 +25,7 @@ import {
   stripUnwritableCollections,
   stripUnwritableObjects,
 } from './dbRouteHelpers.js';
+import { generateSnapshotJsonChunks } from './snapshotJsonStream.js';
 
 /** Bulk sync download/upload and workspace reset routes. */
 export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
@@ -33,7 +35,9 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
       return sendForbidden(reply, 'Only administrators can download a database snapshot');
     }
     try {
-      return reply.send(sanitizeSnapshot(await fetchDatabaseSnapshot(), user));
+      const sanitized = sanitizeSnapshot(await fetchDatabaseSnapshot(), user);
+      reply.header('Content-Type', 'application/json; charset=utf-8');
+      return reply.send(Readable.from(generateSnapshotJsonChunks(sanitized)));
     } catch (error: unknown) {
       return sendDatabaseError(reply, 'Failed to retrieve database snapshot', error);
     }
@@ -45,7 +49,9 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
       return sendForbidden(reply, 'Only administrators can download a workspace backup');
     }
     try {
-      return reply.send(sanitizeSnapshot(await fetchBackupSnapshot(), user));
+      const sanitized = sanitizeSnapshot(await fetchBackupSnapshot(), user);
+      reply.header('Content-Type', 'application/json; charset=utf-8');
+      return reply.send(Readable.from(generateSnapshotJsonChunks(sanitized)));
     } catch (error: unknown) {
       return sendDatabaseError(reply, 'Failed to build workspace backup snapshot', error);
     }

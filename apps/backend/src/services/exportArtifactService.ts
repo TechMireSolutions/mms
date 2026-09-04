@@ -3,6 +3,7 @@ import { fetchObject, persistObject } from './dbSyncService.js';
 
 const STORAGE_KEY = USER_EXPORT_ARTIFACTS_OBJECT_KEY;
 const ARTIFACT_TTL_MS = 24 * 60 * 60 * 1000;
+const MAX_USER_ARTIFACTS = 10;
 
 interface ExportArtifact {
   content: string;
@@ -24,15 +25,20 @@ async function saveUserArtifactMap(artifactsByUser: UserArtifactMap): Promise<vo
   await persistObject(STORAGE_KEY, artifactsByUser);
 }
 
-function pruneExpired(userArtifacts: Record<string, ExportArtifact>): Record<string, ExportArtifact> {
+function pruneAllExpired(allArtifacts: UserArtifactMap): UserArtifactMap {
   const now = Date.now();
-  const activeArtifacts: Record<string, ExportArtifact> = {};
-  for (const [jobId, artifact] of Object.entries(userArtifacts)) {
-    if (new Date(artifact.expiresAt).getTime() > now) {
-      activeArtifacts[jobId] = artifact;
+  const cleaned: UserArtifactMap = {};
+  for (const [user, artifacts] of Object.entries(allArtifacts)) {
+    const activeEntries = Object.entries(artifacts)
+      .filter(([_, artifact]) => new Date(artifact.expiresAt).getTime() > now)
+      .sort((a, b) => new Date(b[1].expiresAt).getTime() - new Date(a[1].expiresAt).getTime())
+      .slice(0, MAX_USER_ARTIFACTS);
+
+    if (activeEntries.length > 0) {
+      cleaned[user] = Object.fromEntries(activeEntries);
     }
   }
-  return activeArtifacts;
+  return cleaned;
 }
 
 export async function saveExportArtifact(
@@ -41,8 +47,8 @@ export async function saveExportArtifact(
   content: string,
   filename: string,
 ): Promise<void> {
-  const artifactsByUser = await loadUserArtifactMap();
-  const userArtifacts = pruneExpired(artifactsByUser[userId] ?? {});
+  const artifactsByUser = pruneAllExpired(await loadUserArtifactMap());
+  const userArtifacts = artifactsByUser[userId] ?? {};
   userArtifacts[jobId] = {
     content,
     filename,
@@ -56,16 +62,10 @@ export async function getExportArtifact(
   userId: string,
   jobId: string,
 ): Promise<{ content: string; filename: string } | null> {
-  const artifactsByUser = await loadUserArtifactMap();
-  const userArtifacts = pruneExpired(artifactsByUser[userId] ?? {});
+  const artifactsByUser = pruneAllExpired(await loadUserArtifactMap());
+  const userArtifacts = artifactsByUser[userId] ?? {};
   const artifact = userArtifacts[jobId];
   if (!artifact) return null;
-  if (new Date(artifact.expiresAt).getTime() <= Date.now()) {
-    delete userArtifacts[jobId];
-    artifactsByUser[userId] = userArtifacts;
-    await saveUserArtifactMap(artifactsByUser);
-    return null;
-  }
   return { content: artifact.content, filename: artifact.filename };
 }
 

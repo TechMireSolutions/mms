@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream';
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import type { User } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
@@ -49,7 +50,7 @@ export default async function backgroundJobRoutes(
           : 'text/csv; charset=utf-8',
       );
       reply.header('Content-Disposition', `attachment; filename="${artifact.filename.replace(/"/g, '')}"`);
-      return reply.send(artifact.content);
+      return reply.send(Readable.from([artifact.content]));
     } catch {
       return sendDatabaseError(reply, 'Failed to download export');
     }

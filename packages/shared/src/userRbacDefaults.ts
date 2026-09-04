@@ -109,8 +109,8 @@ export function isFullPermissionMap(
 ): boolean {
   if (!map) return false;
   return moduleIds.every((mod) => {
-    const actions = map[mod] || [];
-    return PERMISSION_ACTIONS.every((act) => actions.includes(act));
+    const actions = map[mod];
+    return Array.isArray(actions) && actions.length >= 4 && PERMISSION_ACTIONS.every((act) => actions.includes(act));
   });
 }
 
@@ -132,8 +132,11 @@ export function diffPermissionMaps(
     const beforeActions = before[mod] ?? [];
     const afterActions = after[mod] ?? [];
 
-    const newlyAdded = afterActions.filter((a) => !beforeActions.includes(a));
-    const newlyRemoved = beforeActions.filter((a) => !afterActions.includes(a));
+    const beforeSet = new Set(beforeActions);
+    const afterSet = new Set(afterActions);
+
+    const newlyAdded = afterActions.filter((a) => !beforeSet.has(a));
+    const newlyRemoved = beforeActions.filter((a) => !afterSet.has(a));
 
     if (newlyAdded.length > 0) added[mod] = newlyAdded;
     if (newlyRemoved.length > 0) removed[mod] = newlyRemoved;

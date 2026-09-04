@@ -14,34 +14,45 @@ export function collectReferencedAssetUrls(snapshot: TenantDatabaseSnapshot): Se
   function scan(val: unknown): void {
     if (!val) return;
     if (typeof val === 'string') {
-      const trimmed = val.trim();
-      if (UPLOADS_PATH_REGEX.test(trimmed)) {
-        urls.add(trimmed);
+      if (val.length >= 10 && val.includes('/uploads/')) {
+        const trimmed = val.trim();
+        if (UPLOADS_PATH_REGEX.test(trimmed)) {
+          urls.add(trimmed);
+        }
       }
       return;
     }
     if (Array.isArray(val)) {
-      for (const item of val) {
-        scan(item);
+      for (let i = 0; i < val.length; i++) {
+        scan(val[i]);
       }
       return;
     }
     if (typeof val === 'object') {
-      for (const propValue of Object.values(val as Record<string, unknown>)) {
-        scan(propValue);
+      const obj = val as Record<string, unknown>;
+      for (const key in obj) {
+        if (Object.prototype.hasOwnProperty.call(obj, key)) {
+          scan(obj[key]);
+        }
       }
     }
   }
 
   if (snapshot.collections) {
-    for (const items of Object.values(snapshot.collections)) {
-      scan(items);
+    const cols = snapshot.collections;
+    for (const key in cols) {
+      if (Object.prototype.hasOwnProperty.call(cols, key)) {
+        scan(cols[key]);
+      }
     }
   }
 
   if (snapshot.objects) {
-    for (const obj of Object.values(snapshot.objects)) {
-      scan(obj);
+    const objs = snapshot.objects;
+    for (const key in objs) {
+      if (Object.prototype.hasOwnProperty.call(objs, key)) {
+        scan(objs[key]);
+      }
     }
   }
 
@@ -67,6 +78,8 @@ export function resolveSafeUploadDiskPath(urlPath: string): string | null {
   return target;
 }
 
+const MAX_BACKUP_ASSET_FILE_BYTES = 25 * 1024 * 1024; // 25MB per asset
+
 /**
  * Exports referenced upload assets (logos, avatars, attachments, pictures) as base64 strings.
  */
@@ -83,6 +96,10 @@ export async function exportBackupAssetsForSnapshot(
     try {
       const fileStat = await stat(diskPath);
       if (!fileStat.isFile()) continue;
+      if (fileStat.size > MAX_BACKUP_ASSET_FILE_BYTES) {
+        console.warn(`[Backup] Skipping asset ${url} exceeding 25MB limit (${fileStat.size} bytes)`);
+        continue;
+      }
 
       const buffer = await readFile(diskPath);
       assets[url] = buffer.toString('base64');
@@ -107,7 +124,8 @@ export async function restoreTenantAssets(assets: Record<string, string>): Promi
     if (!diskPath) continue;
 
     try {
-      const cleanBase64 = base64Data.includes(',') ? base64Data.split(',')[1] : base64Data;
+      const commaIdx = base64Data.indexOf(',');
+      const cleanBase64 = commaIdx >= 0 ? base64Data.slice(commaIdx + 1) : base64Data;
       if (!cleanBase64) continue;
 
       const buffer = Buffer.from(cleanBase64, 'base64');

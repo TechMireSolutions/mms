@@ -89,14 +89,35 @@ export function normalizeIdLinkedName<T extends Record<string, unknown>>(
   return stripRecordFields(record, [nameField]);
 }
 
+export function lookupContact(
+  contacts: ContactLike[] | Map<string, ContactLike>,
+  contactId: unknown,
+): ContactLike | undefined {
+  if (contactId == null || contactId === '') return undefined;
+  const strId = String(contactId);
+  if (contacts instanceof Map) {
+    return contacts.get(strId);
+  }
+  return contacts.find((candidateContact) => String(candidateContact.id) === strId);
+}
+
+/** Pre-indexes a contact collection into an O(1) lookup map for batch hydration. */
+export function createContactLookupMap<C extends ContactLike>(contacts: C[]): Map<string, C> {
+  const map = new Map<string, C>();
+  for (const c of contacts) {
+    if (c?.id != null) map.set(String(c.id), c);
+  }
+  return map;
+}
+
 export function hydrateContactProfile<T extends Record<string, unknown>>(
   record: T,
-  contacts: ContactLike[],
+  contacts: ContactLike[] | Map<string, ContactLike>,
   contactIdField = 'contactId',
 ): T {
   const contactId = record[contactIdField];
   if (contactId == null || contactId === '') return record;
-  const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(contactId));
+  const contact = lookupContact(contacts, contactId);
   if (!contact) return record;
   const contactName = contactDisplayName(contact);
   // Prefer collections; fall back to scalar mirrors for legacy/test fixtures.
@@ -123,19 +144,19 @@ export function hydrateContactProfile<T extends Record<string, unknown>>(
 
 export function hydrateParentContactNames<T extends Record<string, unknown>>(
   record: T,
-  contacts: ContactLike[],
+  contacts: ContactLike[] | Map<string, ContactLike>,
 ): T {
   let hydratedRecord = { ...record };
   if (record.fatherContactId != null && record.fatherContactId !== '') {
-    const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(record.fatherContactId));
+    const contact = lookupContact(contacts, record.fatherContactId);
     if (contact?.name) hydratedRecord = { ...hydratedRecord, fatherName: contact.name };
   }
   if (record.motherContactId != null && record.motherContactId !== '') {
-    const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(record.motherContactId));
+    const contact = lookupContact(contacts, record.motherContactId);
     if (contact?.name) hydratedRecord = { ...hydratedRecord, motherName: contact.name };
   }
   if (record.guardianContactId != null && record.guardianContactId !== '') {
-    const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(record.guardianContactId));
+    const contact = lookupContact(contacts, record.guardianContactId);
     if (contact?.name) hydratedRecord = { ...hydratedRecord, guardianName: contact.name };
   }
   return hydratedRecord;
@@ -148,8 +169,21 @@ export interface NamedEntity {
 
 export function resolveEntityName(
   id: string | number | null | undefined,
-  entities: NamedEntity[],
+  entities: NamedEntity[] | Map<string, NamedEntity>,
 ): string {
   if (id == null || id === '') return '';
-  return entities.find((entity) => String(entity.id) === String(id))?.name ?? '';
+  const strId = String(id);
+  if (entities instanceof Map) {
+    return entities.get(strId)?.name ?? '';
+  }
+  return entities.find((entity) => String(entity.id) === strId)?.name ?? '';
+}
+
+/** Pre-indexes a named entity collection into an O(1) lookup map for batch resolution. */
+export function createNamedEntityLookupMap<E extends NamedEntity>(entities: E[]): Map<string, E> {
+  const map = new Map<string, E>();
+  for (const e of entities) {
+    if (e?.id != null) map.set(String(e.id), e);
+  }
+  return map;
 }

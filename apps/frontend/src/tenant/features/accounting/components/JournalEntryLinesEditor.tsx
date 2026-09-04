@@ -53,6 +53,7 @@ export function JournalEntryLinesEditor({
   onUpdateLine,
 }: JournalEntryLinesEditorProps) {
   const { t } = useTranslation();
+  const accountMap = new Map(accounts.map((account) => [account.id, account]));
 
   return (
     <SectionCard
@@ -100,7 +101,7 @@ export function JournalEntryLinesEditor({
               </TableHeader>
               <TableBody className="divide-y divide-border">
                 {lines.map((line, lineIndex) => {
-                  const account = accounts.find((accountOption) => accountOption.id === line.account_id);
+                  const account = accountMap.get(line.account_id);
                   return (
                     <TableRow key={line.id} className="hover:bg-muted/10">
                       <TableCell className="px-3 py-2">

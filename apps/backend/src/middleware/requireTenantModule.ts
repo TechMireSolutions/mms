@@ -36,18 +36,18 @@ export function requireTenantModule(moduleId: string) {
       );
 
       if (grantedModules.length > 0 && !grantedModules.includes(moduleId)) {
-        sendForbidden(reply, `The ${moduleId} module is not permitted by the platform.`);
+        await sendForbidden(reply, `The ${moduleId} module is not permitted by the platform.`);
         return;
       }
 
       if (enabledModules[moduleId] === false) {
-        sendForbidden(reply, `The ${moduleId} module is disabled for this workspace.`);
+        await sendForbidden(reply, `The ${moduleId} module is disabled for this workspace.`);
         return;
       }
     } catch (error) {
       console.error('requireTenantModule error:', error);
       request.log.error(error, `Failed to check module access for ${moduleId}`);
-      sendForbidden(reply, 'Failed to verify module access');
+      await sendForbidden(reply, 'Failed to verify module access');
     }
   };
 }

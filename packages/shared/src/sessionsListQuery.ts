@@ -23,15 +23,15 @@ export interface SessionsListPageResult {
 export function filterSessionsForQuery(sessions: Session[], query: SessionsListQuery): Session[] {
   let rows = sessions;
   if (query.status?.trim()) {
-    const statuses = query.status.split(',').map((status) => status.trim()).filter(Boolean);
-    if (statuses.length > 0) {
-      rows = rows.filter((session) => statuses.includes(String(session.status)));
+    const statuses = new Set(query.status.split(',').map((s) => s.trim()).filter(Boolean));
+    if (statuses.size > 0) {
+      rows = rows.filter((session) => statuses.has(String(session.status)));
     }
   }
   if (query.type?.trim()) {
-    const types = query.type.split(',').map((type) => type.trim()).filter(Boolean);
-    if (types.length > 0) {
-      rows = rows.filter((session) => types.includes(String(session.type)));
+    const types = new Set(query.type.split(',').map((t) => t.trim()).filter(Boolean));
+    if (types.size > 0) {
+      rows = rows.filter((session) => types.has(String(session.type)));
     }
   }
   if (query.search?.trim()) {
@@ -46,17 +46,19 @@ export function filterSessionsForQuery(sessions: Session[], query: SessionsListQ
   return rows;
 }
 
+const NUMERIC_SORT_FIELDS = new Set(['baseFee']);
+
 /** Paginates an in-memory session list (server-side data source). */
 export function paginateSessions(sessions: Session[], query: SessionsListQuery): SessionsListPageResult {
   let rows = filterSessionsForQuery(sessions, query);
   const sortField = query.sortField?.trim();
   if (sortField) {
     const dir = query.sortDir === 'desc' ? -1 : 1;
-    const numericFields = new Set(['baseFee']);
+    const isNumeric = NUMERIC_SORT_FIELDS.has(sortField);
     rows = [...rows].sort((left, right) => {
       const leftRaw = (left as unknown as Record<string, unknown>)[sortField];
       const rightRaw = (right as unknown as Record<string, unknown>)[sortField];
-      if (numericFields.has(sortField)) {
+      if (isNumeric) {
         const leftNum = Number(leftRaw ?? 0);
         const rightNum = Number(rightRaw ?? 0);
         return (leftNum - rightNum) * dir;

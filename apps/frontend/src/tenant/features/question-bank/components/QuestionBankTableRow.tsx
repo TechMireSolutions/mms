@@ -22,7 +22,7 @@ export interface QuestionBankTableRowProps {
   config: QuestionBankConfig;
   difficultyConfig: Record<string, StatusBadgeConfigItem>;
   typeConfig: Record<string, StatusBadgeConfigItem>;
-  selectedIds: string[];
+  selectedIds: string[] | ReadonlySet<string>;
   canWrite: boolean;
   canDelete: boolean;
   canTrashRows: boolean;
@@ -52,12 +52,12 @@ export function QuestionBankTableRow({
   onRowClick,
 }: QuestionBankTableRowProps): JSX.Element {
   const { t } = useTranslation();
-  const getCategory = (id: string) => config.categories.find((category) => category.id === id);
+  const categoryMap = new Map(config.categories.map((category) => [category.id, category]));
   const showSource = isColumnVisible('source');
   const citation = showSource
     ? formatQuestionSourcesCitation(question, t, config.sourceBooks)
     : '';
-  const isSelected = selectedIds.includes(question.id);
+  const isSelected = Array.isArray(selectedIds) ? selectedIds.includes(question.id) : selectedIds.has(question.id);
 
   return (
     <motion.tr
@@ -85,7 +85,7 @@ export function QuestionBankTableRow({
         <TableCell className="px-4 py-3">
           <div className="flex flex-wrap gap-1">
             {getQuestionCategoryIds(question).map((categoryId) => {
-              const category = getCategory(categoryId);
+              const category = categoryMap.get(categoryId);
               if (!category) return null;
               return (
                 <CategoryColorChip key={categoryId} name={category.name} color={category.color} icon={category.icon} />

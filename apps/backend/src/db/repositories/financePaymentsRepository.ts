@@ -6,23 +6,26 @@ import { withTenant } from '../tenant-context.js';
 type PaymentRow = typeof financePayments.$inferSelect;
 
 export function paymentRowToRecord(row: PaymentRow): Payment {
-  return {
+  const payment: Payment = {
     id: row.id,
     invoiceId: row.invoiceId,
-    studentId: row.studentId ?? undefined,
-    studentName: row.studentName ?? undefined,
     amount: Number(row.amount ?? 0),
     date: row.date,
     method: row.method,
-    receivedByUserId: row.receivedByUserId ?? undefined,
-    receivedBy: row.receivedBy ?? undefined,
     note: row.note,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+
+  if (row.studentId) payment.studentId = row.studentId;
+  if (row.studentName) payment.studentName = row.studentName;
+  if (row.receivedByUserId) payment.receivedByUserId = row.receivedByUserId;
+  if (row.receivedBy) payment.receivedBy = row.receivedBy;
+  if (row.deletedAt) payment.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) payment.deletedBy = row.deletedBy;
+  if (row.deletionReason) payment.deletionReason = row.deletionReason;
+
+  return payment;
 }
 
 export async function listPaymentsByWorkspace(

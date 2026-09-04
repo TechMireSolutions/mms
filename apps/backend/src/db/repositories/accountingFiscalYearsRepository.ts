@@ -6,18 +6,21 @@ import { withTenant } from '../tenant-context.js';
 type FiscalYearRow = typeof accountingFiscalYears.$inferSelect;
 
 export function fiscalYearRowToRecord(row: FiscalYearRow): FiscalYear {
-  return {
+  const fiscalYear: FiscalYear = {
     id: row.id,
     label: row.label,
     startDate: row.startDate,
     endDate: row.endDate,
     status: row.status as FiscalYear['status'],
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+
+  if (row.deletedAt) fiscalYear.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) fiscalYear.deletedBy = row.deletedBy;
+  if (row.deletionReason) fiscalYear.deletionReason = row.deletionReason;
+
+  return fiscalYear;
 }
 
 export async function listFiscalYearsByWorkspace(tenant: string): Promise<FiscalYear[]> {

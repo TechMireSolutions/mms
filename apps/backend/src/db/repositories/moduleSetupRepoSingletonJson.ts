@@ -43,7 +43,17 @@ export function createWorkspaceSingletonJsonRepo(options: {
   async function getByWorkspaces(
     workspaceSubdomains: string[],
   ): Promise<Map<string, Record<string, unknown>>> {
-    const subdomains = workspaceSubdomains.map((s) => s.trim().toLowerCase()).filter(Boolean);
+    const subdomains: string[] = [];
+    const seenSubdomains = new Set<string>();
+    for (let i = 0; i < workspaceSubdomains.length; i++) {
+      const s = workspaceSubdomains[i];
+      if (!s) continue;
+      const normalized = s.trim().toLowerCase();
+      if (normalized && !seenSubdomains.has(normalized)) {
+        seenSubdomains.add(normalized);
+        subdomains.push(normalized);
+      }
+    }
     const result = new Map<string, Record<string, unknown>>();
     if (subdomains.length === 0) return result;
 

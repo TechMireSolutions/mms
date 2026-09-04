@@ -181,7 +181,8 @@ export function useStudentsPageController() {
     },
     bulkEnrollPending: workActions.bulkEnrollPending,
     handleBulkPrintIdCards: () => {
-      const selectedList = workStudents.filter((s) => directory.selectedIds.includes(String(s.id)));
+      const selectedIdSet = new Set(directory.selectedIds);
+      const selectedList = workStudents.filter((s) => selectedIdSet.has(String(s.id)));
       if (selectedList.length > 0) {
         overlays.openIdCards(selectedList);
       }

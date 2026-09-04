@@ -14,6 +14,7 @@ import {
 import { contactFieldNonEmptySql } from './contactRepositorySql.js';
 
 const COMPLETENESS_SKIP_TYPES = new Set(['boolean', 'ai_summary']);
+const CONTACT_LIST_TAB_KEYS_SET = new Set(['phones', 'emails', 'addresses', 'socials', 'relationship']);
 
 export function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(contacts.workspaceSubdomain, subdomain), isNull(contacts.deletedAt))!;
@@ -50,7 +51,7 @@ export function buildProfileIncompleteSql(fieldConfig: FieldConfig): SQL | null 
   const missingClauses: SQL[] = [];
 
   for (const tab of formTabs) {
-    if (['phones', 'emails', 'addresses', 'socials', 'relationship'].includes(tab.key)) {
+    if (CONTACT_LIST_TAB_KEYS_SET.has(tab.key)) {
       if (!requiredTabs.has(tab.key)) continue;
       missingClauses.push(sql`(NOT ${listTabHasRecordsSql(tab.key)})`);
       continue;

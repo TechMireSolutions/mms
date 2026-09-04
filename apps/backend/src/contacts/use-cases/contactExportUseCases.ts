@@ -1,5 +1,6 @@
 import {
   CONTACTS_MODULE_MANIFEST,
+  DEFAULT_CONTACT_EXPORT_COLUMNS,
   buildContactsExportRows,
   buildCsvContent,
   filterContactExportColumnsForViewer,
@@ -15,13 +16,7 @@ import { normalizeIncludeDeletedFlag } from '../../lib/csvExportStreamFactory.js
 import { loadContactsByIds, loadContactsPage } from './contactLoadUseCases.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
 
-const DEFAULT_EXPORT_COLUMNS: ContactExportColumn[] = [
-  { id: 'name', label: 'Name' },
-  { id: 'phone', label: 'Phone' },
-  { id: 'email', label: 'Email' },
-  { id: 'gender', label: 'Gender' },
-  { id: 'city', label: 'City' },
-];
+const DEFAULT_EXPORT_COLUMNS = DEFAULT_CONTACT_EXPORT_COLUMNS as ContactExportColumn[];
 
 const EXPORT_LABELS = { yes: 'Yes', no: 'No' };
 
@@ -125,10 +120,43 @@ export const buildContactsCsvExport = contactsCsv.buildExport as (
 
 const VCF_PAGE_SIZE = 500;
 
-interface ContactsVcfExportResult {
+export interface ContactsVcfExportResult {
   vcf: string;
   filename: string;
   count: number;
+}
+
+/**
+ * Streams a tenant VCF export page-by-page as chunk strings.
+ */
+export async function* generateContactsVcfStreamChunks(options?: {
+  filename?: string;
+  chunkSize?: number;
+  onProgress?: (processed: number, total: number) => void | Promise<void>;
+}): AsyncGenerator<string, { count: number; filename: string }, undefined> {
+  const filename = options?.filename?.trim() || 'contacts.vcf';
+  const limit = Math.max(1, options?.chunkSize ?? VCF_PAGE_SIZE);
+  let page = 1;
+  let count = 0;
+
+  for (;;) {
+    const pageResult = await loadContactsPage({
+      page,
+      limit,
+      includeDeleted: false,
+    } as never);
+    const contacts = pageResult.contacts as Contact[];
+    if (contacts.length > 0) {
+      const chunk = contacts.map(toVCard).join('\r\n');
+      yield count === 0 ? chunk : '\r\n' + chunk;
+      count += contacts.length;
+    }
+    await options?.onProgress?.(count, pageResult.total);
+    if (!pageResult.hasMore) {
+      return { count, filename };
+    }
+    page += 1;
+  }
 }
 
 /**
@@ -136,29 +164,20 @@ interface ContactsVcfExportResult {
  */
 export async function buildContactsVcfExport(options?: {
   filename?: string;
+  chunkSize?: number;
   onProgress?: (processed: number, total: number) => void | Promise<void>;
 }): Promise<ContactsVcfExportResult> {
-  const filename = options?.filename?.trim() || 'contacts.vcf';
-  const cards: string[] = [];
-  let page = 1;
-
-  for (;;) {
-    const pageResult = await loadContactsPage({
-      page,
-      limit: VCF_PAGE_SIZE,
-      includeDeleted: false,
-    } as never);
-    for (const contact of pageResult.contacts as Contact[]) {
-      cards.push(toVCard(contact));
-    }
-    await options?.onProgress?.(cards.length, pageResult.total);
-    if (!pageResult.hasMore) break;
-    page += 1;
+  const generator = generateContactsVcfStreamChunks(options);
+  const chunks: string[] = [];
+  let step = await generator.next();
+  while (!step.done) {
+    chunks.push(step.value);
+    step = await generator.next();
   }
-
+  const meta = step.value;
   return {
-    vcf: cards.join('\r\n'),
-    filename,
-    count: cards.length,
+    vcf: chunks.join(''),
+    filename: meta?.filename || options?.filename?.trim() || 'contacts.vcf',
+    count: meta?.count ?? 0,
   };
 }

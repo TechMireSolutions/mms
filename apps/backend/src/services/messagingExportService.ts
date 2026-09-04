@@ -88,7 +88,11 @@ export async function buildMessagingCsvExport(
     page += 1;
   }
 
-  const uniqueIds = [...new Set(logs.map((log) => String(log.contactId)))];
+  const uniqueIdSet = new Set<string>();
+  for (let i = 0; i < logs.length; i++) {
+    uniqueIdSet.add(String(logs[i].contactId));
+  }
+  const uniqueIds = [...uniqueIdSet];
   const nameById = new Map<string, string>();
 
   for (let index = 0; index < uniqueIds.length; index += RESOLVE_CHUNK_SIZE) {
@@ -99,20 +103,20 @@ export async function buildMessagingCsvExport(
     }
   }
 
-  const rows: string[][] = [
-    [...CSV_HEADERS],
-    ...logs.map((log) => {
-      const contactKey = String(log.contactId);
-      const name = nameById.get(contactKey) || `Contact #${contactKey}`;
-      return [
-        name,
-        log.channel,
-        log.category || 'general',
-        log.body,
-        formatDateTime(log.sentAt),
-      ];
-    }),
-  ];
+  const rows: string[][] = new Array(logs.length + 1);
+  rows[0] = [...CSV_HEADERS];
+  for (let i = 0; i < logs.length; i++) {
+    const log = logs[i];
+    const contactKey = String(log.contactId);
+    const name = nameById.get(contactKey) || `Contact #${contactKey}`;
+    rows[i + 1] = [
+      name,
+      log.channel,
+      log.category || 'general',
+      log.body,
+      formatDateTime(log.sentAt),
+    ];
+  }
 
   const csv = buildCsvContent(rows);
   const byteLength = Buffer.byteLength(csv, 'utf8');

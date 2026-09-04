@@ -10,6 +10,29 @@ import {
   upsertEmailIntegrationConfigRow,
   upsertEmailIntegrationSecretsRow,
 } from '../../db/repositories/emailIntegrationRepository.js';
+import { type EmailIntegrationRow } from '../../db/schema/messaging.js';
+
+function rowToConfig(row: EmailIntegrationRow): EmailIntegrationConfig {
+  const overrides: Partial<EmailIntegrationConfig> = {
+    // (typed as EmailProviderId because the column is varchar; mergeEmailIntegrationConfig
+    //  re-validates via isEmailProviderId and falls back to the default)
+    providerId: row.providerId as EmailProviderId,
+    fromAddress: row.fromAddress,
+    fromName: row.fromName,
+    smtpUsername: row.smtpUsername,
+    connected: row.connected,
+    hasCredentials: row.hasCredentials,
+  };
+
+  if (row.smtpHost) overrides.smtpHost = row.smtpHost;
+  if (row.smtpPort != null) overrides.smtpPort = row.smtpPort;
+  if (row.smtpSecure != null) overrides.smtpSecure = row.smtpSecure;
+  if (row.lastTestAt) overrides.lastTestAt = row.lastTestAt.toISOString();
+  if (row.lastTestOk != null) overrides.lastTestOk = row.lastTestOk;
+  if (row.lastError) overrides.lastError = row.lastError;
+
+  return mergeEmailIntegrationConfig(overrides);
+}
 
 export async function loadEmailIntegrationConfig(): Promise<EmailIntegrationConfig> {
   const subdomain = getRequestTenant();
@@ -17,22 +40,7 @@ export async function loadEmailIntegrationConfig(): Promise<EmailIntegrationConf
   const row = await getEmailIntegrationRow(subdomain);
   if (!row) return mergeEmailIntegrationConfig(null);
 
-  return mergeEmailIntegrationConfig({
-    // (typed as EmailProviderId because the column is varchar; mergeEmailIntegrationConfig
-    //  re-validates via isEmailProviderId and falls back to the default)
-    providerId: row.providerId as EmailProviderId,
-    fromAddress: row.fromAddress,
-    fromName: row.fromName,
-    smtpUsername: row.smtpUsername,
-    smtpHost: row.smtpHost ?? undefined,
-    smtpPort: row.smtpPort ?? undefined,
-    smtpSecure: row.smtpSecure ?? undefined,
-    connected: row.connected,
-    hasCredentials: row.hasCredentials,
-    lastTestAt: row.lastTestAt ? row.lastTestAt.toISOString() : undefined,
-    lastTestOk: row.lastTestOk ?? undefined,
-    lastError: row.lastError ?? undefined,
-  });
+  return rowToConfig(row);
 }
 
 export async function saveEmailIntegrationConfig(
@@ -51,9 +59,9 @@ export async function loadEmailIntegrationSecrets(): Promise<EmailIntegrationSec
   const row = await getEmailIntegrationRow(subdomain);
   if (!row) return {};
 
-  return {
-    smtpPassword: row.smtpPassword ?? undefined,
-  };
+  const secrets: EmailIntegrationSecrets = {};
+  if (row.smtpPassword) secrets.smtpPassword = row.smtpPassword;
+  return secrets;
 }
 
 export async function saveEmailIntegrationSecrets(

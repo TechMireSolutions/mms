@@ -63,6 +63,7 @@ export function AttendanceListDesktopTable({
     singular: 'attendance.item.record',
     plural: 'attendance.item.records',
   });
+  const selectedSet = new Set(selectedIds);
 
   return (
     <article className={WORK_SURFACE}>
@@ -96,7 +97,7 @@ export function AttendanceListDesktopTable({
               {canDelete && (
                 <TableCell className="px-3 py-2.5">
                   <Checkbox
-                    checked={selectedIds.includes(attendanceRecord.id)}
+                    checked={selectedSet.has(attendanceRecord.id)}
                     onCheckedChange={(checked) => onToggleSelectedRecord(attendanceRecord.id, checked === true)}
                     aria-label={t('attendance.trash.selectRecord', { student: attendanceRecord.studentName })}
                   />

@@ -41,6 +41,8 @@ export function SessionsListCards({
     plural: "sessions.table.sessions",
   });
 
+  const selectedSet = new Set(selectedIds);
+
   return (
     <ModuleDirectoryCards
       items={sessions}
@@ -54,7 +56,7 @@ export function SessionsListCards({
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="sessions-select-cards"
       renderItem={(sessionItem) => {
-        const isSelected = selectedIds.includes(sessionItem.id);
+        const isSelected = selectedSet.has(sessionItem.id);
         return (
           <SessionCard
             key={sessionItem.id}

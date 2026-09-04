@@ -8,6 +8,8 @@ export interface MinimalWebSocket {
   on(event: 'pong', listener: () => void): void;
   on(event: 'close', listener: () => void): void;
   on(event: 'error', listener: (err: Error) => void): void;
+  off?(event: string, listener: (...args: any[]) => void): void;
+  removeListener?(event: string, listener: (...args: any[]) => void): void;
 }
 
 interface ActiveConnection {
@@ -16,7 +18,15 @@ interface ActiveConnection {
   userId: string;
 }
 
-const activeConnections = new Set<ActiveConnection>();
+const connectionsByTenant = new Map<string, Set<ActiveConnection>>();
+
+function getActiveConnectionsCount(): number {
+  let count = 0;
+  for (const set of connectionsByTenant.values()) {
+    count += set.size;
+  }
+  return count;
+}
 
 // Redis Pub/Sub adapter for horizontal multi-node cluster scaling
 let redisPublisher: { publish: (channel: string, message: string) => Promise<unknown> } | null = null;
@@ -92,18 +102,62 @@ export function configureRedisPubSub(
  * Returns an unregister function to call when the connection closes.
  */
 export function registerConnection(subdomain: string, socket: MinimalWebSocket, userId: string): () => void {
-  const connection: ActiveConnection = { subdomain, socket, userId };
-  activeConnections.add(connection);
+  const normSubdomain = subdomain.trim().toLowerCase();
+  const connection: ActiveConnection = { subdomain: normSubdomain, socket, userId };
+
+  let tenantSet = connectionsByTenant.get(normSubdomain);
+  if (!tenantSet) {
+    tenantSet = new Set<ActiveConnection>();
+    connectionsByTenant.set(normSubdomain, tenantSet);
+  }
+  tenantSet.add(connection);
 
   // Setup heartbeat ping intervals to proactively detect dead sockets
   let isAlive = true;
-  socket.on('pong', () => {
+  const onPong = () => {
     isAlive = true;
-  });
+  };
+  socket.on('pong', onPong);
+
+  let cleanedUp = false;
+  const cleanup = () => {
+    if (cleanedUp) return;
+    cleanedUp = true;
+
+    clearInterval(pingInterval);
+
+    const currentSet = connectionsByTenant.get(normSubdomain);
+    if (currentSet) {
+      currentSet.delete(connection);
+      if (currentSet.size === 0) {
+        connectionsByTenant.delete(normSubdomain);
+      }
+    }
+
+    if (typeof socket.off === 'function') {
+      socket.off('pong', onPong);
+      socket.off('close', cleanup);
+      socket.off('error', onError);
+    } else if (typeof socket.removeListener === 'function') {
+      socket.removeListener('pong', onPong);
+      socket.removeListener('close', cleanup);
+      socket.removeListener('error', onError);
+    }
+
+    console.log(`[WS] Connection closed for user "${userId}" on subdomain "${normSubdomain}"`);
+  };
+
+  const onError = (err: Error) => {
+    console.error(`[WS] Connection error for user "${userId}" on subdomain "${normSubdomain}":`, err);
+    cleanup();
+  };
+
+  socket.on('close', cleanup);
+  socket.on('error', onError);
 
   const pingInterval = setInterval(() => {
     if (!isAlive) {
-      clearInterval(pingInterval);
+      cleanup();
       socket.terminate();
       return;
     }
@@ -114,19 +168,7 @@ export function registerConnection(subdomain: string, socket: MinimalWebSocket, 
     pingInterval.unref();
   }
 
-  const cleanup = () => {
-    clearInterval(pingInterval);
-    activeConnections.delete(connection);
-    console.log(`[WS] Connection closed for user "${userId}" on subdomain "${subdomain}"`);
-  };
-
-  socket.on('close', cleanup);
-  socket.on('error', (err: Error) => {
-    console.error(`[WS] Connection error for user "${userId}" on subdomain "${subdomain}":`, err);
-    cleanup();
-  });
-
-  console.log(`[WS] Connection registered for user "${userId}" on subdomain "${subdomain}". Active total: ${activeConnections.size}`);
+  console.log(`[WS] Connection registered for user "${userId}" on subdomain "${normSubdomain}". Active total: ${getActiveConnectionsCount()}`);
   return cleanup;
 }
 
@@ -138,6 +180,10 @@ export function broadcastLocalTenantUpdate(
   type: 'collection' | 'object',
   key: string
 ): void {
+  const normSubdomain = subdomain.trim().toLowerCase();
+  const tenantSet = connectionsByTenant.get(normSubdomain);
+  if (!tenantSet || tenantSet.size === 0) return;
+
   const message = JSON.stringify({
     event: 'database-update',
     type,
@@ -145,19 +191,17 @@ export function broadcastLocalTenantUpdate(
   });
 
   let sentCount = 0;
-  for (const connection of activeConnections) {
-    if (connection.subdomain === subdomain) {
-      try {
-        connection.socket.send(message);
-        sentCount++;
-      } catch (err) {
-        console.error(`[WS] Failed to send update to user "${connection.userId}" on subdomain "${subdomain}":`, err);
-      }
+  for (const connection of tenantSet) {
+    try {
+      connection.socket.send(message);
+      sentCount++;
+    } catch (err) {
+      console.error(`[WS] Failed to send update to user "${connection.userId}" on subdomain "${normSubdomain}":`, err);
     }
   }
 
   if (sentCount > 0) {
-    console.log(`[WS] Broadcasted database-update (${type}: "${key}") to ${sentCount} clients in subdomain "${subdomain}".`);
+    console.log(`[WS] Broadcasted database-update (${type}: "${key}") to ${sentCount} clients in subdomain "${normSubdomain}".`);
   }
 }
 
@@ -197,18 +241,20 @@ export function broadcastLocalJobEvent(jobEvent: {
   hasDownload?: boolean;
   error?: string;
 }): void {
+  const normSubdomain = jobEvent.tenantId.trim().toLowerCase();
+  const tenantSet = connectionsByTenant.get(normSubdomain);
+  if (!tenantSet || tenantSet.size === 0) return;
+
   const message = JSON.stringify(jobEvent);
 
   let sentCount = 0;
-  for (const connection of activeConnections) {
-    if (connection.subdomain === jobEvent.tenantId) {
-      if (!jobEvent.userId || connection.userId === jobEvent.userId) {
-        try {
-          connection.socket.send(message);
-          sentCount++;
-        } catch (err) {
-          console.error(`[WS] Failed to send job event to user "${connection.userId}":`, err);
-        }
+  for (const connection of tenantSet) {
+    if (!jobEvent.userId || connection.userId === jobEvent.userId) {
+      try {
+        connection.socket.send(message);
+        sentCount++;
+      } catch (err) {
+        console.error(`[WS] Failed to send job event to user "${connection.userId}":`, err);
       }
     }
   }
@@ -225,4 +271,20 @@ export function broadcastLocalJobEvent(jobEvent: {
 export async function broadcastCollection(key: string): Promise<void> {
   const tenant = getRequestTenant();
   if (tenant) broadcastTenantUpdate(tenant, 'collection', key);
+}
+
+/**
+ * Closes all active WebSocket connections across all tenants and clears the map.
+ */
+export function closeAllConnections(): void {
+  for (const set of connectionsByTenant.values()) {
+    for (const connection of set) {
+      try {
+        connection.socket.terminate();
+      } catch {
+        // ignore errors on close
+      }
+    }
+  }
+  connectionsByTenant.clear();
 }

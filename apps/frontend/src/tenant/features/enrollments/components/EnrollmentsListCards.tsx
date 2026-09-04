@@ -54,6 +54,15 @@ export function EnrollmentsListCards(props: EnrollmentListCardsProps): React.JSX
     plural: "enrollments.item.enrollments",
   });
 
+  const studentsById = new Map<string, (typeof students)[number]>();
+  for (const s of students) {
+    studentsById.set(String(s.id), s);
+  }
+  const selectedIdsSet = new Set(selectedIds);
+  const visibleColumns = getEnrollmentVisibleWorkColumns(columnRegistry, isColumnVisible, {
+    excludeFace: true,
+  });
+
   return (
     <ModuleDirectoryCards
       items={enrollments}
@@ -67,12 +76,9 @@ export function EnrollmentsListCards(props: EnrollmentListCardsProps): React.JSX
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="enrollments-cards"
       renderItem={(enrollment) => {
-        const isSelected = selectedIds.includes(enrollment.id);
-        const student = findEnrollmentStudent(enrollment, students);
-        const studentDisplayName = getEnrollmentStudentDisplayName(enrollment, students);
-        const visibleColumns = getEnrollmentVisibleWorkColumns(columnRegistry, isColumnVisible, {
-          excludeFace: true,
-        });
+        const isSelected = selectedIdsSet.has(enrollment.id);
+        const student = findEnrollmentStudent(enrollment, studentsById);
+        const studentDisplayName = getEnrollmentStudentDisplayName(enrollment, studentsById);
 
         return (
           <DirectoryEntityCard key={enrollment.id} isSelected={isSelected} reducedMotion={reducedMotion}>

@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { type StoredTenantUser } from '@mms/shared';
+import { dedupeTrimmedIds, type StoredTenantUser } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
 import { tenantUsers } from '../schema.js';
 
@@ -15,14 +15,15 @@ export function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUse
     passwordHash: row.passwordHash,
     name: row.name,
     role: row.role,
-    contactId: row.contactId ?? undefined,
-    emailVerifiedAt: row.emailVerifiedAt?.toISOString(),
-    pendingLoginEmail: row.pendingLoginEmail ?? undefined,
     createdAt: row.createdAt.toISOString(),
     mustChangePassword: row.mustChangePassword,
     deletedAt: row.deletedAt?.toISOString() ?? null,
     deletedBy: row.deletedBy ?? null,
   };
+
+  if (row.contactId) base.contactId = row.contactId;
+  if (row.emailVerifiedAt) base.emailVerifiedAt = row.emailVerifiedAt.toISOString();
+  if (row.pendingLoginEmail) base.pendingLoginEmail = row.pendingLoginEmail;
 
   if (row.profileJson) {
     const extra = row.profileJson as Record<string, unknown>;
@@ -34,7 +35,7 @@ export function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUse
 }
 
 export async function listTenantUsersByIds(ids: string[]): Promise<TenantUserRow[]> {
-  const uniqueIds = [...new Set(ids.map(String).filter(Boolean))];
+  const uniqueIds = dedupeTrimmedIds(ids);
   if (uniqueIds.length === 0) return [];
   return withTenant(null, async (tx) => {
     const rows = await tx

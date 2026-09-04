@@ -145,13 +145,14 @@ export const ModuleFilterCheckboxGroup = (function ModuleFilterCheckboxGroup({
   selected,
   onToggle,
 }: ModuleFilterCheckboxGroupProps): React.JSX.Element {
+  const selectedSet = new Set(selected);
   return (
     <>
       <DropdownMenuLabel className="text-xs text-foreground">{label}</DropdownMenuLabel>
       {options.map((option) => (
         <DropdownMenuCheckboxItem
           key={option.value}
-          checked={selected.includes(option.value)}
+          checked={selectedSet.has(option.value)}
           onCheckedChange={() => onToggle(option.value)}
         >
           {option.label}

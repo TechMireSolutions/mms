@@ -151,12 +151,13 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
       const { SYSTEM_MODULES } = await import('@mms/shared');
       const globalSettings = await loadGlobalSettings(workspace.subdomain);
       const enabledModules: Record<string, boolean> = {};
+      const inputModulesSet = new Set(input.modules);
 
       for (const mod of SYSTEM_MODULES) {
         if (mod.required) {
           enabledModules[mod.id] = true;
         } else {
-          enabledModules[mod.id] = input.modules.includes(mod.id);
+          enabledModules[mod.id] = inputModulesSet.has(mod.id);
         }
       }
 

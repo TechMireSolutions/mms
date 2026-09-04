@@ -10,7 +10,7 @@ export function enrollmentRowToRecord(
   row: EnrollmentRow,
   timelineEvents: TimelineEventRow[] = [],
 ): Enrollment {
-  return {
+  const enrollment: Enrollment = {
     id: row.id,
     studentId: row.studentId,
     studentName: row.studentName,
@@ -37,10 +37,13 @@ export function enrollmentRowToRecord(
     })),
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
   };
+
+  if (row.deletedAt) enrollment.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) enrollment.deletedBy = row.deletedBy;
+  if (row.deletionReason) enrollment.deletionReason = row.deletionReason;
+
+  return enrollment;
 }
 
 export async function listEnrollmentsByWorkspace(

@@ -72,7 +72,8 @@ export function PaymentsList({
   const visibleColCount =
     PAYMENT_TRACKER_COLUMN_KEYS.filter(columnVisible).length +
     (canDelete ? 2 : 0);
-  const allSelected = payments.length > 0 && payments.every((payment) => selectedIds.includes(payment.id));
+  const selectedSet = new Set(selectedIds);
+  const allSelected = payments.length > 0 && payments.every((payment) => selectedSet.has(payment.id));
 
   const methodConfig = (() => {
     const entries = Object.keys(PAYMENT_METHOD_BADGE).map((method) => [

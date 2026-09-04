@@ -1,5 +1,6 @@
 import {
   USERS_MODULE_MANIFEST,
+  DEFAULT_USER_EXPORT_COLUMNS,
   buildCsvContent,
   buildUsersExportRows,
   filterUserExportColumnsForViewer,
@@ -11,16 +12,7 @@ import { createModuleCsvExportService } from '../lib/createModuleCsvExportServic
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadUsersByIds, loadUsersPage } from './usersService.js';
 
-const DEFAULT_EXPORT_COLUMNS: UserExportColumn[] = [
-  { id: 'name', label: 'Name' },
-  { id: 'email', label: 'Email' },
-  { id: 'role', label: 'Role' },
-  { id: 'status', label: 'Status' },
-  { id: 'phone', label: 'Phone' },
-  { id: 'lastLogin', label: 'Last login' },
-  { id: 'createdDate', label: 'Created' },
-  { id: 'twoFactorEnabled', label: '2FA enabled' },
-];
+const DEFAULT_EXPORT_COLUMNS = DEFAULT_USER_EXPORT_COLUMNS as UserExportColumn[];
 
 type UsersExportQueryInput = Omit<UsersListQuery, 'includeDeleted'> & {
   includeDeleted?: boolean | 'true' | 'false';

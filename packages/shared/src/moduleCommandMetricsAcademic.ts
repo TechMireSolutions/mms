@@ -1,4 +1,4 @@
-import { countRecordsSinceDate, countRecordsWithStatus, MODULE_METRICS_DEFAULT_PERIOD_DAYS } from './moduleCommandMetricsCore.js';
+import { MODULE_METRICS_DEFAULT_PERIOD_DAYS } from './moduleCommandMetricsCore.js';
 
 type StatusRecord = { status?: string };
 
@@ -22,50 +22,81 @@ type SessionMetricRecord = StatusRecord & {
   createdAt?: string;
 };
 
-function countSessionsInDayWindow(
-  sessions: SessionMetricRecord[],
-  daysStart: number,
-  daysEnd: number,
-): number {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() - daysStart);
-  const end = new Date();
-  end.setHours(23, 59, 59, 999);
-  end.setDate(end.getDate() - daysEnd);
-  return sessions.filter((session) => {
-    const raw = session.startDate ?? session.createdAt;
-    if (!raw) return false;
-    const parsed = new Date(raw);
-    return !Number.isNaN(parsed.getTime()) && parsed >= start && parsed <= end;
-  }).length;
-}
-
 export function computeSessionsCommandMetrics(
   sessions: SessionMetricRecord[],
 ): SessionsCommandMetricsSnapshot {
+  const thisWeekStart = new Date();
+  thisWeekStart.setHours(0, 0, 0, 0);
+  thisWeekStart.setDate(thisWeekStart.getDate() - 6);
+  const thisWeekStartTime = thisWeekStart.getTime();
+
+  const thisWeekEnd = new Date();
+  thisWeekEnd.setHours(23, 59, 59, 999);
+  const thisWeekEndTime = thisWeekEnd.getTime();
+
+  const lastWeekStart = new Date();
+  lastWeekStart.setHours(0, 0, 0, 0);
+  lastWeekStart.setDate(lastWeekStart.getDate() - 13);
+  const lastWeekStartTime = lastWeekStart.getTime();
+
+  const lastWeekEnd = new Date();
+  lastWeekEnd.setHours(23, 59, 59, 999);
+  lastWeekEnd.setDate(lastWeekEnd.getDate() - 7);
+  const lastWeekEndTime = lastWeekEnd.getTime();
+
+  let active = 0;
+  let upcoming = 0;
+  let completed = 0;
+  let cancelled = 0;
   let totalEnrolled = 0;
   let totalCapacity = 0;
   let totalClasses = 0;
-  for (const session of sessions) {
-    const classes = session.classes ?? [];
-    totalClasses += classes.length;
-    for (const cls of classes) {
-      totalEnrolled += cls.enrolled ?? 0;
-      totalCapacity += cls.capacity ?? 0;
+  let sessionsThisWeek = 0;
+  let sessionsLastWeek = 0;
+
+  for (let i = 0; i < sessions.length; i++) {
+    const session = sessions[i];
+    const status = session.status;
+    if (status === 'active') active++;
+    else if (status === 'upcoming') upcoming++;
+    else if (status === 'completed') completed++;
+    else if (status === 'cancelled') cancelled++;
+
+    const classes = session.classes;
+    if (classes) {
+      totalClasses += classes.length;
+      for (let j = 0; j < classes.length; j++) {
+        const cls = classes[j];
+        if (cls.enrolled) totalEnrolled += cls.enrolled;
+        if (cls.capacity) totalCapacity += cls.capacity;
+      }
+    }
+
+    const raw = session.startDate ?? session.createdAt;
+    if (raw) {
+      const time = new Date(raw).getTime();
+      if (!Number.isNaN(time)) {
+        if (time >= thisWeekStartTime && time <= thisWeekEndTime) {
+          sessionsThisWeek++;
+        }
+        if (time >= lastWeekStartTime && time <= lastWeekEndTime) {
+          sessionsLastWeek++;
+        }
+      }
     }
   }
+
   return {
     total: sessions.length,
-    active: countRecordsWithStatus(sessions, 'active'),
-    upcoming: countRecordsWithStatus(sessions, 'upcoming'),
-    completed: countRecordsWithStatus(sessions, 'completed'),
-    cancelled: countRecordsWithStatus(sessions, 'cancelled'),
+    active,
+    upcoming,
+    completed,
+    cancelled,
     totalEnrolled,
     totalCapacity,
     totalClasses,
-    sessionsThisWeek: countSessionsInDayWindow(sessions, 6, 0),
-    sessionsLastWeek: countSessionsInDayWindow(sessions, 13, 7),
+    sessionsThisWeek,
+    sessionsLastWeek,
   };
 }
 
@@ -85,17 +116,46 @@ export function computeEnrollmentsCommandMetrics(
   enrollments: EnrollmentMetricRecord[],
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): EnrollmentsCommandMetricsSnapshot {
-  const revenue = enrollments
-    .filter((record) => record.status !== 'cancelled')
-    .reduce((sum, record) => sum + (record.finalFee ?? 0), 0);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - periodDays);
+  const cutoffTime = cutoff.getTime();
+
+  let confirmed = 0;
+  let pending = 0;
+  let cancelled = 0;
+  let completed = 0;
+  let revenue = 0;
+  let newThisPeriod = 0;
+
+  for (let i = 0; i < enrollments.length; i++) {
+    const record = enrollments[i];
+    const status = record.status;
+    if (status === 'confirmed') confirmed++;
+    else if (status === 'pending') pending++;
+    else if (status === 'cancelled') cancelled++;
+    else if (status === 'completed') completed++;
+
+    if (status !== 'cancelled' && record.finalFee) {
+      revenue += record.finalFee;
+    }
+
+    const raw = record.enrolledDate;
+    if (raw) {
+      const time = new Date(raw).getTime();
+      if (!Number.isNaN(time) && time >= cutoffTime) {
+        newThisPeriod++;
+      }
+    }
+  }
+
   return {
     total: enrollments.length,
-    confirmed: countRecordsWithStatus(enrollments, 'confirmed'),
-    pending: countRecordsWithStatus(enrollments, 'pending'),
-    cancelled: countRecordsWithStatus(enrollments, 'cancelled'),
-    completed: countRecordsWithStatus(enrollments, 'completed'),
+    confirmed,
+    pending,
+    cancelled,
+    completed,
     revenue,
-    newThisPeriod: countRecordsSinceDate(enrollments, (record) => record.enrolledDate, periodDays),
+    newThisPeriod,
   };
 }
 

@@ -1,5 +1,6 @@
 import { and, eq, ilike, inArray, isNotNull, isNull, or, type SQL, asc, desc, sql } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type AttendanceCommandMetricsSnapshot,
@@ -68,7 +69,7 @@ function buildAttendanceListConditions(subdomain: string, query: AttendanceListQ
   if (query.dateTo?.trim()) {
     conditions.push(sql`${attendance.date} <= ${query.dateTo.trim()}`);
   }
-  const statuses = query.status?.split(',').map((s) => s.trim()).filter(Boolean) ?? [];
+  const statuses = dedupeTrimmedIds(query.status);
   if (statuses.length) {
     conditions.push(inArray(attendance.status, statuses));
   }

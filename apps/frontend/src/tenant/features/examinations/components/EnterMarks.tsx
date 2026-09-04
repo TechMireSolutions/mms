@@ -4,7 +4,6 @@ import { Save, CheckCircle2, Users, Search, Loader2 } from "lucide-react";
 import { type Exam, type ExamResult } from "@/lib/data/examinationData";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import type { Student } from "@/lib/data/studentsData";
-import { uniqueRegistryIds } from "@/lib/registryResolve";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsCollection } from "@/tenant/hooks/collections/enrollments";
 import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
@@ -42,40 +41,58 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
 
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
-  const classNamesById = (() => new Map(
-      sessions.flatMap((session) =>
-        (session.classes || []).map((sessionClass) => [sessionClass.id, `${session.name} - ${sessionClass.name}`] as const),
-      ),
-    ))();
+  const classNamesById = (() => {
+    const map = new Map<string, string>();
+    for (const session of sessions) {
+      if (session.classes) {
+        for (const sessionClass of session.classes) {
+          map.set(sessionClass.id, `${session.name} - ${sessionClass.name}`);
+        }
+      }
+    }
+    return map;
+  })();
 
   const studentIds = (() => {
-    if (!exam) return [];
+    if (!exam?.classIds || exam.classIds.length === 0) return [];
     const classIds = new Set(exam.classIds);
-    return uniqueRegistryIds(
-      enrollments.filter((enrollment) => classIds.has(enrollment.classId)).map((enrollment) => enrollment.studentId),
-    );
+    const seen = new Set<string>();
+    const ids: string[] = [];
+    for (const enrollment of enrollments) {
+      if (classIds.has(enrollment.classId)) {
+        const idStr = String(enrollment.studentId);
+        if (!seen.has(idStr)) {
+          seen.add(idStr);
+          ids.push(idStr);
+        }
+      }
+    }
+    return ids;
   })();
 
   const { data: resolvedStudents = [] } = useStudentsByIds(studentIds);
 
   const students = ((): Array<Student & { classId: string; rollNo: string }> => {
-    if (!exam) return [];
+    if (!exam?.classIds || exam.classIds.length === 0) return [];
     const classIds = new Set(exam.classIds);
-    const enrollmentByStudent = new Map(
-      enrollments
-         .filter((enrollment) => classIds.has(enrollment.classId))
-         .map((enrollment) => [String(enrollment.studentId), enrollment]),
-    );
-    return (resolvedStudents as Student[])
-      .filter((student) => enrollmentByStudent.has(String(student.id)))
-      .map((student) => {
-        const enrollment = enrollmentByStudent.get(String(student.id))!;
-        return {
+    const enrollmentByStudent = new Map<string, (typeof enrollments)[number]>();
+    for (const enrollment of enrollments) {
+      if (classIds.has(enrollment.classId)) {
+        enrollmentByStudent.set(String(enrollment.studentId), enrollment);
+      }
+    }
+    const result: Array<Student & { classId: string; rollNo: string }> = [];
+    for (const student of (resolvedStudents as Student[])) {
+      const enrollment = enrollmentByStudent.get(String(student.id));
+      if (enrollment) {
+        result.push({
           ...student,
           classId: enrollment.classId,
           rollNo: student.grNumber ?? "",
-        };
-      });
+        });
+      }
+    }
+    return result;
   })();
 
   const filteredStudents = (() => {

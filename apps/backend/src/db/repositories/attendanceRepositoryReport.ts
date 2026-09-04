@@ -281,13 +281,19 @@ export async function loadAttendanceReportAggregatesSql(
         GROUP BY 1
         ORDER BY 1 ASC
       `);
-      return getQueryRows<Record<string, unknown>>(monthResult)
-        .filter((row) => typeof row.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey))
-        .map((row) => ({
-          monthKey: String(row.monthKey),
-          presentCount: Number(row.presentCount ?? 0),
-          total: Number(row.total ?? 0),
-        }));
+      const rows = getQueryRows<Record<string, unknown>>(monthResult);
+      const monthly: AttendanceReportComparisonMonth[] = [];
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (typeof row?.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey)) {
+          monthly.push({
+            monthKey: row.monthKey,
+            presentCount: Number(row.presentCount ?? 0),
+            total: Number(row.total ?? 0),
+          });
+        }
+      }
+      return monthly;
     };
 
     comparison.monthly.a = await loadMonthlyRange(query.rangeAFrom, query.rangeATo);

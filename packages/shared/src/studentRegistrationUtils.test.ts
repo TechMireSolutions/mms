@@ -78,4 +78,35 @@ describe('backfillMissingStudentGrNumbers', () => {
     expect(updated[0]?.id).toBe('s2');
     expect(updated[0]?.grNumber).toBe('0002-2026');
   });
+
+  it('handles multiple interleaved years and sequential numbering correctly', () => {
+    const updated = backfillMissingStudentGrNumbers(
+      [
+        { id: 's1', registeredDate: '2025-01-01', grNumber: '0001-2025' },
+        { id: 's2', registeredDate: '2026-01-01' },
+        { id: 's3', registeredDate: '2025-06-01' },
+        { id: 's4', registeredDate: '2026-03-01' },
+      ],
+      settings,
+      '2026-01-01',
+    );
+    expect(updated).toHaveLength(3);
+    expect(updated.find((s) => s.id === 's2')?.grNumber).toBe('0001-2026');
+    expect(updated.find((s) => s.id === 's3')?.grNumber).toBe('0002-2025');
+    expect(updated.find((s) => s.id === 's4')?.grNumber).toBe('0002-2026');
+  });
+
+  it('numbers sequentially without year restart when restartAnnually is false', () => {
+    const updated = backfillMissingStudentGrNumbers(
+      [
+        { id: 's1', registeredDate: '2025-01-01', grNumber: undefined },
+        { id: 's2', registeredDate: '2026-01-01', grNumber: undefined },
+      ],
+      { ...settings, grNumberRestartAnnually: false },
+      '2026-01-01',
+    );
+    expect(updated).toHaveLength(2);
+    expect(updated[0]?.grNumber).toBe('0001-2025');
+    expect(updated[1]?.grNumber).toBe('0002-2026');
+  });
 });

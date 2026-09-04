@@ -143,7 +143,8 @@ export function useKPISummaryModel({ category, role }: KPISummaryProps): KPISumm
 
   const categoryLabelKey = getCategoryLabelKey(category);
   const moduleLabel = categoryLabelKey ? t(categoryLabelKey) : category;
-  const visibleCards = possibleCards.filter((card) => selectedCardIds.includes(card.id));
+  const selectedCardSet = new Set(selectedCardIds);
+  const visibleCards = possibleCards.filter((card) => selectedCardSet.has(card.id));
 
   return {
     moduleLabel,

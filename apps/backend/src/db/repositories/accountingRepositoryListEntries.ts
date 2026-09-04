@@ -113,24 +113,36 @@ export async function listEntriesPage(
     ]);
 
     const linesByEntry = new Map<string, JournalLineRow[]>();
-    for (const line of allLines) {
-      const arr = linesByEntry.get(line.entryId) ?? [];
-      arr.push(line);
-      linesByEntry.set(line.entryId, arr);
+    for (let i = 0; i < allLines.length; i++) {
+      const line = allLines[i];
+      const arr = linesByEntry.get(line.entryId);
+      if (arr) {
+        arr.push(line);
+      } else {
+        linesByEntry.set(line.entryId, [line]);
+      }
     }
 
     const tagsByEntry = new Map<string, string[]>();
-    for (const t of allTags) {
-      const arr = tagsByEntry.get(t.entryId) ?? [];
-      arr.push(t.tag);
-      tagsByEntry.set(t.entryId, arr);
+    for (let i = 0; i < allTags.length; i++) {
+      const t = allTags[i];
+      const arr = tagsByEntry.get(t.entryId);
+      if (arr) {
+        arr.push(t.tag);
+      } else {
+        tagsByEntry.set(t.entryId, [t.tag]);
+      }
     }
 
     const attachmentsByEntry = new Map<string, string[]>();
-    for (const a of allAttachments) {
-      const arr = attachmentsByEntry.get(a.entryId) ?? [];
-      arr.push(a.url);
-      attachmentsByEntry.set(a.entryId, arr);
+    for (let i = 0; i < allAttachments.length; i++) {
+      const a = allAttachments[i];
+      const arr = attachmentsByEntry.get(a.entryId);
+      if (arr) {
+        arr.push(a.url);
+      } else {
+        attachmentsByEntry.set(a.entryId, [a.url]);
+      }
     }
 
     const items = rows.map((r) =>

@@ -131,8 +131,16 @@ export function AttendanceRecords({
     clearSelection();
   }, [showDeleted, listPage, debouncedSearch, statusFilter, dateFrom, dateTo, filters.sessionId, filters.classId, filters.teacherId, filters.date, clearSelection]);
 
+  const statusMap = (() => {
+    const map = new Map<string, (typeof statuses)[number]>();
+    for (const s of statuses) {
+      if (s?.id != null) map.set(s.id, s);
+    }
+    return map;
+  })();
+
   const statusLabel = (statusId: string) => {
-    const found = statuses.find((status) => status.id === statusId);
+    const found = statusMap.get(statusId);
     if (found) return found.label;
     const key = `attendance.status.${statusId}` as AppTranslationKey;
     return t(key);
@@ -158,7 +166,15 @@ export function AttendanceRecords({
     }
   };
 
-  const classLabel = (classId: string) => allClasses.find((sessionClass) => sessionClass.id === classId)?.name || classId;
+  const classMap = (() => {
+    const map = new Map<string, string>();
+    for (const c of allClasses) {
+      if (c?.id != null && c.name) map.set(c.id, c.name);
+    }
+    return map;
+  })();
+
+  const classLabel = (classId: string) => classMap.get(classId) || classId;
 
   const handleSearchChange = (query: string) => {
     setSearchInput(query);

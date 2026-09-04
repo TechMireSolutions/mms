@@ -6,7 +6,7 @@ import { withTenant } from '../tenant-context.js';
 type ExamRow = typeof exams.$inferSelect;
 
 export function examRowToRecord(row: ExamRow, classIds: string[] = []): Exam {
-  return {
+  const exam: Exam = {
     id: row.id,
     name: row.name,
     subject: row.subject,
@@ -17,10 +17,13 @@ export function examRowToRecord(row: ExamRow, classIds: string[] = []): Exam {
     classIds,
     status: row.status as Exam['status'],
     description: row.description,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
   };
+
+  if (row.deletedAt) exam.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) exam.deletedBy = row.deletedBy;
+  if (row.deletionReason) exam.deletionReason = row.deletionReason;
+
+  return exam;
 }
 
 export async function listExamsByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<Exam[]> {
@@ -239,13 +242,27 @@ export async function bulkSaveExams(tenant: string, records: Exam[]): Promise<vo
         ),
       );
 
-    const classPairs = records.flatMap((r) =>
-      (r.classIds ?? []).filter(Boolean).map((classId) => ({
-        workspaceSubdomain: subdomain,
-        examId: r.id,
-        classId,
-      })),
-    );
+    const classPairs: Array<{
+      workspaceSubdomain: string;
+      examId: string;
+      classId: string;
+    }> = [];
+    for (let i = 0; i < records.length; i++) {
+      const r = records[i];
+      const classIds = r?.classIds;
+      if (classIds) {
+        for (let j = 0; j < classIds.length; j++) {
+          const classId = classIds[j];
+          if (classId) {
+            classPairs.push({
+              workspaceSubdomain: subdomain,
+              examId: r.id,
+              classId,
+            });
+          }
+        }
+      }
+    }
     if (classPairs.length > 0) {
       await tx.insert(examClasses).values(classPairs);
     }
@@ -277,13 +294,27 @@ export async function replaceExamsForWorkspace(tenant: string, records: Exam[]):
         })),
       );
 
-      const classPairs = records.flatMap((r) =>
-        (r.classIds ?? []).filter(Boolean).map((classId) => ({
-          workspaceSubdomain: subdomain,
-          examId: r.id,
-          classId,
-        })),
-      );
+      const classPairs: Array<{
+        workspaceSubdomain: string;
+        examId: string;
+        classId: string;
+      }> = [];
+      for (let i = 0; i < records.length; i++) {
+        const r = records[i];
+        const classIds = r?.classIds;
+        if (classIds) {
+          for (let j = 0; j < classIds.length; j++) {
+            const classId = classIds[j];
+            if (classId) {
+              classPairs.push({
+                workspaceSubdomain: subdomain,
+                examId: r.id,
+                classId,
+              });
+            }
+          }
+        }
+      }
       if (classPairs.length > 0) {
         await tx.insert(examClasses).values(classPairs);
       }

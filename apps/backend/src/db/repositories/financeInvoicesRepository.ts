@@ -6,7 +6,7 @@ import { withTenant } from '../tenant-context.js';
 type InvoiceRow = typeof financeInvoices.$inferSelect;
 
 export function invoiceRowToRecord(row: InvoiceRow): Invoice {
-  return {
+  const invoice: Invoice = {
     id: row.id,
     studentId: row.studentId,
     studentName: row.studentName,
@@ -21,13 +21,16 @@ export function invoiceRowToRecord(row: InvoiceRow): Invoice {
     dueDate: row.dueDate,
     paidDate: row.paidDate,
     method: row.method,
-    paidAmt: row.paidAmt != null ? Number(row.paidAmt) : undefined,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+
+  if (row.paidAmt != null) invoice.paidAmt = Number(row.paidAmt);
+  if (row.deletedAt) invoice.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) invoice.deletedBy = row.deletedBy;
+  if (row.deletionReason) invoice.deletionReason = row.deletionReason;
+
+  return invoice;
 }
 
 export async function listInvoicesByWorkspace(

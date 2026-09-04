@@ -13,7 +13,7 @@ import { withTenant } from '../tenant-context.js';
 type ObligationCollectionRow = typeof obligationCollections.$inferSelect;
 
 export function obligationCollectionRowToRecord(row: ObligationCollectionRow): ObligationCollection {
-  return {
+  const collection: ObligationCollection = {
     id: row.id,
     receipt_no: row.receiptNo,
     received_date: row.receivedDate,
@@ -27,10 +27,13 @@ export function obligationCollectionRowToRecord(row: ObligationCollectionRow): O
     received_by: row.receivedBy,
     created_at: row.createdAt.toISOString(),
     updated_at: row.updatedAt.toISOString(),
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
   };
+
+  if (row.deletedAt) collection.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) collection.deletedBy = row.deletedBy;
+  if (row.deletionReason) collection.deletionReason = row.deletionReason;
+
+  return collection;
 }
 
 export async function listObligationCollectionsByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<ObligationCollection[]> {

@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { getContactTags, type Contact } from '@mms/shared';
+import { dedupeTrimmedIds, getContactTags, type Contact } from '@mms/shared';
 import {
   contactTags,
   contactPhones,
@@ -48,7 +48,7 @@ export async function syncContactChildrenTx(
     .where(and(eq(contactTags.workspaceSubdomain, subdomain), eq(contactTags.contactId, contactId)));
   const tagsToSave = getContactTags(contact);
   if (tagsToSave.length > 0) {
-    const validTags = Array.from(new Set(tagsToSave.map((t) => String(t).trim()).filter(Boolean)));
+    const validTags = dedupeTrimmedIds(tagsToSave);
     if (validTags.length > 0) {
       await tx.insert(contactTags).values(
         validTags.map((t, idx) => ({
@@ -284,17 +284,25 @@ export async function bulkInsertContactChildrenTx(
   });
   if (allPhones.length > 0) await tx.insert(contactPhones).values(allPhones);
 
-  const allTags = rawContacts.flatMap((c) => {
+  const allTags: Array<{
+    id: string;
+    workspaceSubdomain: string;
+    contactId: string;
+    name: string;
+  }> = [];
+  for (let i = 0; i < rawContacts.length; i++) {
+    const c = rawContacts[i];
     const contactId = String(c.id);
-    const tagsToSave = getContactTags(c);
-    const validTags = Array.from(new Set(tagsToSave.map((t) => String(t).trim()).filter(Boolean)));
-    return validTags.map((t, idx) => ({
-      id: `tag-${contactId}-${idx + 1}`,
-      workspaceSubdomain: subdomain,
-      contactId,
-      name: t,
-    }));
-  });
+    const validTags = dedupeTrimmedIds(getContactTags(c));
+    for (let idx = 0; idx < validTags.length; idx++) {
+      allTags.push({
+        id: `tag-${contactId}-${idx + 1}`,
+        workspaceSubdomain: subdomain,
+        contactId,
+        name: validTags[idx],
+      });
+    }
+  }
   if (allTags.length > 0) await tx.insert(contactTags).values(allTags);
 
   const allEmails = rawContacts.flatMap((c) => {

@@ -19,7 +19,7 @@ trigger: always_on
 - **Style:** Terse, functional code. No boilerplate or filler comments.
 - **Precision:** Prefer targeted patches — altered functions/blocks, not whole files unless requested.
 - **Names:** Semantic identifiers — `mms-structure-naming.md`.
-- **Memo hygiene (Compiler-ready):** Do not add `useMemo` / `useCallback` / `React.memo` by default — React Compiler is not enabled yet. Prefer `startTransition`, `useDeferredValue`, and `useEffectEvent` when appropriate — `mms-hooks.md`, `mms-dependencies.md`.
+- **Memoization & Rendering Hygiene:** Memoize non-trivial calculations (`useMemo`) and callback/object references passed to dependencies or memoized components (`useCallback`) to prevent render churn; avoid premature memoization on trivial primitive operations. Complement with React 19 `startTransition`, `useDeferredValue`, and `useEffectEvent` — always-on `mms-performance.md`, `mms-hooks.md`.
 
 ## Communication (two modes)
 

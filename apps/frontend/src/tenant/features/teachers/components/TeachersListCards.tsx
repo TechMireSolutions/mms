@@ -57,6 +57,7 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
     singular: "teachers.form.teacher",
     plural: "teachers.table.teachers",
   });
+  const selectedSet = new Set(selectedIds);
 
   return (
     <ModuleDirectoryCards
@@ -71,7 +72,7 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="teachers-cards"
       renderItem={(teacher) => {
-        const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedIds, t);
+        const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedSet, t);
         const { phone, email } = resolveTeacherPrimaryChannels(teacher);
 
         return (

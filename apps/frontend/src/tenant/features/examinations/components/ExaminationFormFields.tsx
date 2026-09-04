@@ -141,30 +141,34 @@ export const ExaminationFormFields = (function ExaminationFormFields({
               <div className="sm:col-span-2">
                 <Field label={t("examinations.form.fields.assignClasses")} required error={errors.classIds}>
                   <div className="flex flex-wrap gap-2" role="group" aria-label={t("examinations.form.aria.assignClassesList")}>
-                    {classes.map((sessionClass) => {
-                      const active = !!(examDraft.classIds && examDraft.classIds.includes(sessionClass.id));
-                      return (
-                        <Button
-                          key={sessionClass.id}
-                          type="button"
-                          onClick={() => {
-                            const classIds = examDraft.classIds ? [...examDraft.classIds] : [];
-                            const updatedClassIds = classIds.includes(sessionClass.id) ? classIds.filter((classId) => classId !== sessionClass.id) : [...classIds, sessionClass.id];
-                            updateDraft({ classIds: updatedClassIds });
-                          }}
-                          className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all ${
-                            active
-                              ? "bg-primary text-primary-foreground border-primary"
-                              : "border-border bg-muted hover:bg-muted/80 text-foreground"
-                          }`}
-                        >
-                          {sessionClass.name}
-                        </Button>
-                      );
-                    })}
+                    {(() => {
+                      const classIdSet = new Set(examDraft.classIds ?? []);
+                      return classes.map((sessionClass) => {
+                        const active = classIdSet.has(sessionClass.id);
+                        return (
+                          <Button
+                            key={sessionClass.id}
+                            type="button"
+                            onClick={() => {
+                              const next = new Set(examDraft.classIds ?? []);
+                              if (next.has(sessionClass.id)) { next.delete(sessionClass.id); } else { next.add(sessionClass.id); }
+                              updateDraft({ classIds: [...next] });
+                            }}
+                            className={`px-3 py-1.5 rounded-lg border text-sm font-semibold transition-all ${
+                              active
+                                ? "bg-primary text-primary-foreground border-primary"
+                                : "border-border bg-muted hover:bg-muted/80 text-foreground"
+                            }`}
+                          >
+                            {sessionClass.name}
+                          </Button>
+                        );
+                      });
+                    })()}
                   </div>
                 </Field>
               </div>
+
 
               <div className="sm:col-span-2">
                 <Field label={t("examinations.form.fields.description")}>

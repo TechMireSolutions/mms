@@ -92,7 +92,9 @@ export function useStudentDetailModel(student: Student) {
   });
 
   const age = calcAge(student.dob || studentContact?.dob);
-  const enrolledSessionDetails = sessions.filter((session) => student.enrolledSessions?.includes(session.id));
+  const enrolledSet = new Set(student.enrolledSessions ?? []);
+  const enrolledSessionDetails = sessions.filter((session) => enrolledSet.has(session.id));
+
 
   const primaryPhone = (studentContact ? getPrimaryPhone(studentContact) : null) || student.phone;
   const primaryEmail = (studentContact ? getPrimaryEmail(studentContact) : null) || student.email;

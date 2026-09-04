@@ -1,4 +1,5 @@
 import {
+  createNamedEntityLookupMap,
   normalizeIdLinkedName,
   resolveEntityName,
   type NamedEntity,
@@ -24,16 +25,25 @@ export function normalizeSessionClasses(classes: SessionClassLike[]): SessionCla
 
 export function hydrateSessionClasses(
   classes: SessionClassLike[],
-  teachers: NamedEntity[],
+  teachers: NamedEntity[] | Map<string, NamedEntity>,
 ): SessionClassLike[] {
   if (!classes || !Array.isArray(classes)) return [];
-  return classes.map((cls) => {
+  const lookup = teachers instanceof Map
+    ? teachers
+    : (teachers.length > 8 ? createNamedEntityLookupMap(teachers) : teachers);
+  let hasChanges = false;
+  const mapped = classes.map((cls) => {
     if (!cls || typeof cls !== "object") return cls;
+    const current = cls.teacherName;
+    const resolved = resolveEntityName(cls.teacherId, lookup) || current;
+    if (resolved === current) return cls;
+    hasChanges = true;
     return {
       ...cls,
-      teacherName: resolveEntityName(cls.teacherId, teachers) || cls.teacherName,
+      teacherName: resolved,
     };
   });
+  return hasChanges ? mapped : classes;
 }
 
 export function normalizeSessionsCollection(sessions: SessionLike[]): SessionLike[] {
@@ -47,12 +57,17 @@ export function normalizeSessionsCollection(sessions: SessionLike[]): SessionLik
 
 export function hydrateSessionsCollection(
   sessions: SessionLike[],
-  teachers: NamedEntity[],
+  teachers: NamedEntity[] | Map<string, NamedEntity>,
 ): SessionLike[] {
   if (!sessions || !Array.isArray(sessions)) return [];
+  const lookup = teachers instanceof Map
+    ? teachers
+    : (teachers.length > 8 ? createNamedEntityLookupMap(teachers) : teachers);
   return sessions.map((session) => {
     if (!session || typeof session !== "object") return session;
     if (!Array.isArray(session.classes)) return session;
-    return { ...session, classes: hydrateSessionClasses(session.classes, teachers) };
+    const nextClasses = hydrateSessionClasses(session.classes, lookup);
+    if (nextClasses === session.classes) return session;
+    return { ...session, classes: nextClasses };
   });
 }

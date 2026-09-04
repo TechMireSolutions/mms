@@ -49,10 +49,14 @@ const AcademicReport = (function AcademicReport({ filters }: AcademicReportProps
 
   const academicResultsData = (() => {
     let academicResults: AcademicResultItem[] = [];
+    const examsById = new Map(exams.map((exam) => [exam.id, exam]));
+    const studentsById = new Map(
+      students.map((student: { id?: string | number; name?: string }) => [String(student.id), student]),
+    );
 
     examResults.forEach((examResult) => {
-      const exam = exams.find((examOption) => examOption.id === examResult.examId);
-      const student = students.find((studentOption: { id?: string | number; name?: string }) => String(studentOption.id) === String(examResult.studentId));
+      const exam = examsById.get(examResult.examId);
+      const student = studentsById.get(String(examResult.studentId));
       if (!exam || !student) return;
 
       const percentage = Math.round((examResult.marksObtained / exam.totalMarks) * 100);
@@ -85,9 +89,13 @@ const AcademicReport = (function AcademicReport({ filters }: AcademicReportProps
 
   const classRankings = (() => {
     const resultsByClass: Record<string, { class: string; studentName: string; marks: number }[]> = {};
+    const examsById = new Map(exams.map((exam) => [exam.id, exam]));
+    const studentsById = new Map(
+      students.map((student: { id?: string | number; name?: string }) => [String(student.id), student]),
+    );
     const rankingSourceResults = examResults.map((examResult) => {
-      const exam = exams.find((examOption) => examOption.id === examResult.examId);
-      const student = students.find((studentOption: { id?: string | number; name?: string }) => String(studentOption.id) === String(examResult.studentId));
+      const exam = examsById.get(examResult.examId);
+      const student = studentsById.get(String(examResult.studentId));
       if (!exam || !student) return null;
       return {
         class: exam.name,

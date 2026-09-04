@@ -125,20 +125,28 @@ export function listStudentContactRelationships(
 
 /** True when the contact has a Parent or Guardian link (responsible adult). */
 export function hasResponsibleAdultLink(contact?: ContactWithRelationships | null): boolean {
-  return listStudentContactRelationships(contact).some((link) =>
-    RESPONSIBLE_ADULT_LABELS.has(normalizeRelationshipTerm(link.relationship)),
-  );
+  if (!contact) return false;
+  const links = collectContactRelationshipLinks(contact);
+  for (let i = 0; i < links.length; i++) {
+    const rel = (links[i].relationship || '').trim();
+    if (rel && isAllowedRelationshipLabel(rel) && RESPONSIBLE_ADULT_LABELS.has(normalizeRelationshipTerm(rel))) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /** First Parent link, else first Guardian link — for list/detail primary display. */
 export function pickPrimaryResponsibleAdult(
   links: readonly StudentContactRelationshipLink[],
 ): StudentContactRelationshipLink | undefined {
-  const parent = links.find(
-    (link) => normalizeRelationshipTerm(link.relationship) === 'parent',
-  );
-  if (parent) return parent;
-  return links.find((link) => normalizeRelationshipTerm(link.relationship) === 'guardian');
+  let guardian: StudentContactRelationshipLink | undefined;
+  for (let i = 0; i < links.length; i++) {
+    const term = normalizeRelationshipTerm(links[i].relationship);
+    if (term === 'parent') return links[i];
+    if (!guardian && term === 'guardian') guardian = links[i];
+  }
+  return guardian;
 }
 
 /** Display name for list/export: Father, else Mother, else Guardian. */
@@ -169,12 +177,25 @@ export function resolveStudentGuardianLinks(
   primaryContact?: ContactWithRelationships | null,
 ): DerivedStudentGuardianLinks {
   const links = listStudentContactRelationships(primaryContact);
-  const parentLinks = links.filter(
-    (link) => normalizeRelationshipTerm(link.relationship) === 'parent',
-  );
-  const guardian = links.find(
-    (link) => normalizeRelationshipTerm(link.relationship) === 'guardian',
-  );
+  const parentLinks: StudentContactRelationshipLink[] = [];
+  let guardian: StudentContactRelationshipLink | undefined;
+  let explicitFatherLink: StudentContactRelationshipLink | undefined;
+  let explicitMotherLink: StudentContactRelationshipLink | undefined;
+
+  for (let i = 0; i < links.length; i++) {
+    const link = links[i];
+    const relTerm = normalizeRelationshipTerm(link.relationship);
+    if (relTerm === 'parent') {
+      parentLinks.push(link);
+      if (!explicitFatherLink && link.gender === 'male') {
+        explicitFatherLink = link;
+      } else if (!explicitMotherLink && link.gender === 'female') {
+        explicitMotherLink = link;
+      }
+    } else if (!guardian && relTerm === 'guardian') {
+      guardian = link;
+    }
+  }
 
   const legacyFatherId =
     student.fatherContactId != null && String(student.fatherContactId).trim()
@@ -189,9 +210,6 @@ export function resolveStudentGuardianLinks(
       ? String(student.guardianContactId)
       : undefined;
 
-  const explicitFatherLink = parentLinks.find((l) => l.gender === 'male');
-  const explicitMotherLink = parentLinks.find((l) => l.gender === 'female');
-
   let fatherLink: StudentContactRelationshipLink | undefined;
   let motherLink: StudentContactRelationshipLink | undefined;
 
@@ -199,10 +217,22 @@ export function resolveStudentGuardianLinks(
     fatherLink = explicitFatherLink;
     motherLink = explicitMotherLink;
     if (!fatherLink) {
-      fatherLink = parentLinks.find((l) => l !== motherLink && l.gender !== 'female');
+      for (let i = 0; i < parentLinks.length; i++) {
+        const l = parentLinks[i];
+        if (l !== motherLink && l.gender !== 'female') {
+          fatherLink = l;
+          break;
+        }
+      }
     }
     if (!motherLink) {
-      motherLink = parentLinks.find((l) => l !== fatherLink && l.gender !== 'male');
+      for (let i = 0; i < parentLinks.length; i++) {
+        const l = parentLinks[i];
+        if (l !== fatherLink && l.gender !== 'male') {
+          motherLink = l;
+          break;
+        }
+      }
     }
   } else {
     fatherLink = parentLinks[0];

@@ -32,6 +32,7 @@ import {
   getPrimaryPhone,
   todayISO,
   computeUserInitials,
+  createContactLookupMap,
   hydrateWorkspaceUserProfile,
 } from '@mms/shared';
 
@@ -139,9 +140,10 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     ];
     const contacts =
       contactIds.length > 0 ? (await loadContactsByIds(contactIds)) as ContactLike[] : [];
+    const contactMap = createContactLookupMap(contacts);
     return rows.map((row) =>
       normalizeWorkspaceUser(
-        hydrateWorkspaceUserProfile(row, contacts) as Partial<WorkspaceUser>,
+        hydrateWorkspaceUserProfile(row, contactMap) as Partial<WorkspaceUser>,
       ),
     );
   }

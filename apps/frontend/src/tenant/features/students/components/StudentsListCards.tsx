@@ -42,6 +42,7 @@ export function StudentsListCards({
     singular: "students.form.student",
     plural: "students.table.students",
   });
+  const selectedSet = new Set(selectedIds);
 
   return (
     <ModuleDirectoryCards
@@ -57,7 +58,7 @@ export function StudentsListCards({
       checkboxIdPrefix="students"
       renderItem={(studentCard) => {
         const studentIdStr = String(studentCard.id);
-        const isSelected = selectedIds.includes(studentIdStr);
+        const isSelected = selectedSet.has(studentIdStr);
         const displayName = studentCard.name || "";
         const phone = studentCard.phone?.trim() || null;
         const email = studentCard.email?.trim() || null;

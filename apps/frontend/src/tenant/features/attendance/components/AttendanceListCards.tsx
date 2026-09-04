@@ -64,6 +64,8 @@ export function AttendanceListCards({
     );
   }
 
+  const selectedSet = new Set(selectedIds);
+
   return (
     <div className="space-y-4">
       <ModuleDirectoryCards
@@ -78,7 +80,7 @@ export function AttendanceListCards({
         pageCountLabel={pageCountLabel}
         checkboxIdPrefix="attendance-select-cards"
         renderItem={(attendanceRecord) => {
-          const isSelected = selectedIds.includes(attendanceRecord.id);
+          const isSelected = selectedSet.has(attendanceRecord.id);
           return (
             <DirectoryEntityCard key={attendanceRecord.id} isSelected={isSelected} reducedMotion={reducedMotion}>
               <DirectoryCardHeader

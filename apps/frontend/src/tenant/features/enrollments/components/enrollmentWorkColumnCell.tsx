@@ -15,7 +15,7 @@ export function renderEnrollmentWorkColumnValue(
   columnKey: string,
   options: {
     t: TranslationFunction;
-    students: Student[];
+    students: Student[] | Map<string, Student>;
     statusConfig: Record<string, StatusBadgeConfigItem>;
     paymentConfig: Record<string, StatusBadgeConfigItem>;
     formatCurrency: (value: number) => string;

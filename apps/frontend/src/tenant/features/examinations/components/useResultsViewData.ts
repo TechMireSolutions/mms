@@ -37,19 +37,37 @@ export function useResultsViewData({
   const sessions = useSessionsCollection();
   const enrollments = useEnrollmentsCollection();
 
-  const studentsById = (() => new Map(students.map((student: Student) => [String(student.id), student])))();
-  const classNamesById = (() => new Map(
-      sessions.flatMap((session) =>
-        (session.classes || []).map((sessionClass) => [sessionClass.id, `${session.name} - ${sessionClass.name}`] as const),
-      ),
-    ))();
+  const studentsById = (() => {
+    const map = new Map<string, Student>();
+    for (const student of students) {
+      map.set(String(student.id), student);
+    }
+    return map;
+  })();
+
+  const classNamesById = (() => {
+    const map = new Map<string, string>();
+    for (const session of sessions) {
+      if (session.classes) {
+        for (const sessionClass of session.classes) {
+          map.set(sessionClass.id, `${session.name} - ${sessionClass.name}`);
+        }
+      }
+    }
+    return map;
+  })();
+
   const classByStudentId = (() => {
-    const classIds = new Set(exam?.classIds || []);
-    return new Map(
-      enrollments
-        .filter((enrollment) => classIds.has(enrollment.classId))
-        .map((enrollment) => [String(enrollment.studentId), enrollment.classId] as const),
-    );
+    const map = new Map<string, string>();
+    if (exam?.classIds && exam.classIds.length > 0) {
+      const classIds = new Set(exam.classIds);
+      for (const enrollment of enrollments) {
+        if (classIds.has(enrollment.classId)) {
+          map.set(String(enrollment.studentId), enrollment.classId);
+        }
+      }
+    }
+    return map;
   })();
 
   const rankedResults = (() => {
@@ -79,8 +97,13 @@ export function useResultsViewData({
 
   const stats = (() => {
     if (rankedResults.length === 0) return null;
-    const average = Math.round(rankedResults.reduce((sum, rankedResult) => sum + rankedResult.pct, 0) / rankedResults.length);
-    const passed = rankedResults.filter((rankedResult) => rankedResult.passed).length;
+    let sumPct = 0;
+    let passed = 0;
+    for (const rankedResult of rankedResults) {
+      sumPct += rankedResult.pct;
+      if (rankedResult.passed) passed++;
+    }
+    const average = Math.round(sumPct / rankedResults.length);
     return { average, passed, failed: rankedResults.length - passed, total: rankedResults.length };
   })() as ResultsViewStatsData | null;
 

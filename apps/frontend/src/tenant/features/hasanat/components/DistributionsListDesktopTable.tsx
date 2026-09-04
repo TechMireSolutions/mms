@@ -46,6 +46,11 @@ export function DistributionsListDesktopTable(props: DistributionsListDesktopTab
   const { t } = useTranslation();
   const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
   const statuses = getDistributionStatuses(statusConfig);
+  const denomsById = new Map<string, (typeof denoms)[number]>();
+  for (const d of denoms) {
+    denomsById.set(d.id, d);
+  }
+  const selectedIdsSet = new Set(selectedIds);
 
   return (
     <Table className="table-fixed">
@@ -73,7 +78,7 @@ export function DistributionsListDesktopTable(props: DistributionsListDesktopTab
       />
       <TableBody className="divide-y divide-border/50">
         {distributions.map((distribution, index) => {
-          const denomination = getDistributionDenomination(denoms, distribution.denominationId);
+          const denomination = getDistributionDenomination(denomsById, distribution.denominationId);
           return (
             <motion.tr key={distribution.id} {...rowMotion(index * 0.03)} className="hover:bg-muted/20 transition-colors group">
               {canDelete && (
@@ -81,7 +86,7 @@ export function DistributionsListDesktopTable(props: DistributionsListDesktopTab
                   <div className="flex justify-center">
                     <input 
                       type="checkbox"
-                      checked={selectedIds.includes(distribution.id)}
+                      checked={selectedIdsSet.has(distribution.id)}
                       onChange={(e) => onToggleSelectedDistribution(distribution.id, e.target.checked)}
                       aria-label={t("hasanat.trash.selectDistribution", { name: distribution.recipientName || distribution.id })}
                       className="cursor-pointer"

@@ -44,6 +44,7 @@ export function PaymentsListCards({
 }: PaymentsListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
+  const selectedSet = new Set(selectedIds);
 
   return (
     <ModuleDirectoryCards
@@ -57,7 +58,7 @@ export function PaymentsListCards({
       selectedCountLabel={t("finance.trash.selected", { count: selectedIds.length })}
       checkboxIdPrefix="finance-payments"
       renderItem={(payment) => {
-        const isSelected = selectedIds.includes(payment.id);
+        const isSelected = selectedSet.has(payment.id);
         
         const metadataColumns = [];
         if (isColumnVisible("amount")) metadataColumns.push({ key: "amount", label: t('finance.columns.amount') });

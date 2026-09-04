@@ -58,13 +58,16 @@ export function contactRowToRecord(
   attachments: AttachmentRow[] = [],
   bankDetails: BankDetailRow[] = [],
 ): Contact {
-  const mappedPhones: PhoneNumber[] = phones.map((p) => ({
-    label: p.label || 'Main',
-    number: p.number,
-    countryCode: p.countryCode ?? undefined,
-    isPrimary: p.isPrimary,
-    whatsappStatus: (p.whatsappStatus as PhoneNumber['whatsappStatus']) ?? undefined,
-  }));
+  const mappedPhones: PhoneNumber[] = phones.map((p) => {
+    const phone: PhoneNumber = {
+      label: p.label || 'Main',
+      number: p.number,
+      isPrimary: p.isPrimary,
+    };
+    if (p.countryCode) phone.countryCode = p.countryCode;
+    if (p.whatsappStatus) phone.whatsappStatus = p.whatsappStatus as PhoneNumber['whatsappStatus'];
+    return phone;
+  });
 
   const mappedEmails: EmailAddress[] = emails.map((e) => ({
     label: e.label || 'Primary',
@@ -73,73 +76,91 @@ export function contactRowToRecord(
     isVerified: e.isVerified,
   }));
 
-  const mappedAddresses: Address[] = addresses.map((a) => ({
-    label: a.label ?? undefined,
-    line1: a.line1 ?? undefined,
-    city: a.city ?? undefined,
-    state: a.state ?? undefined,
-    country: a.country ?? undefined,
-    isPrimary: a.isPrimary,
-  }));
+  const mappedAddresses: Address[] = addresses.map((a) => {
+    const addr: Address = {
+      isPrimary: a.isPrimary,
+    };
+    if (a.label) addr.label = a.label;
+    if (a.line1) addr.line1 = a.line1;
+    if (a.city) addr.city = a.city;
+    if (a.state) addr.state = a.state;
+    if (a.country) addr.country = a.country;
+    return addr;
+  });
 
   const mappedSocials: SocialLink[] = socials.map((s) => ({
     platform: s.platform,
     url: s.url,
   }));
 
-  const mappedEducations: ContactEducation[] = educations.map((edu) => ({
-    id: edu.id,
-    degree: edu.degree ?? undefined,
-    institution: edu.institution,
-    fieldOfStudy: edu.fieldOfStudy ?? undefined,
-    year: edu.year ?? undefined,
-    grade: edu.grade ?? undefined,
-    label: edu.label ?? undefined,
-    sortOrder: edu.sortOrder,
-  }));
+  const mappedEducations: ContactEducation[] = educations.map((edu) => {
+    const item: ContactEducation = {
+      id: edu.id,
+      institution: edu.institution,
+      sortOrder: edu.sortOrder,
+    };
+    if (edu.degree) item.degree = edu.degree;
+    if (edu.fieldOfStudy) item.fieldOfStudy = edu.fieldOfStudy;
+    if (edu.year) item.year = edu.year;
+    if (edu.grade) item.grade = edu.grade;
+    if (edu.label) item.label = edu.label;
+    return item;
+  });
 
-  const mappedExperiences: ContactExperience[] = experiences.map((exp) => ({
-    id: exp.id,
-    title: exp.title,
-    organization: exp.organization,
-    employmentType: exp.employmentType ?? undefined,
-    location: exp.location ?? undefined,
-    startDate: exp.startDate ?? undefined,
-    endDate: exp.endDate ?? undefined,
-    isCurrent: exp.isCurrent,
-    description: exp.description ?? undefined,
-    sortOrder: exp.sortOrder,
-  }));
+  const mappedExperiences: ContactExperience[] = experiences.map((exp) => {
+    const item: ContactExperience = {
+      id: exp.id,
+      title: exp.title,
+      organization: exp.organization,
+      isCurrent: exp.isCurrent,
+      sortOrder: exp.sortOrder,
+    };
+    if (exp.employmentType) item.employmentType = exp.employmentType;
+    if (exp.location) item.location = exp.location;
+    if (exp.startDate) item.startDate = exp.startDate;
+    if (exp.endDate) item.endDate = exp.endDate;
+    if (exp.description) item.description = exp.description;
+    return item;
+  });
 
-  const mappedSkills: ContactSkill[] = skills.map((s) => ({
-    id: s.id,
-    name: s.name,
-    category: s.category ?? undefined,
-    proficiency: s.proficiency ?? undefined,
-    yearsOfExperience: s.yearsOfExperience ?? undefined,
-    isCertified: s.isCertified,
-    issuer: s.issuer ?? undefined,
-    description: s.description ?? undefined,
-    sortOrder: s.sortOrder,
-  }));
+  const mappedSkills: ContactSkill[] = skills.map((s) => {
+    const item: ContactSkill = {
+      id: s.id,
+      name: s.name,
+      isCertified: s.isCertified,
+      sortOrder: s.sortOrder,
+    };
+    if (s.category) item.category = s.category;
+    if (s.proficiency) item.proficiency = s.proficiency;
+    if (s.yearsOfExperience) item.yearsOfExperience = s.yearsOfExperience;
+    if (s.issuer) item.issuer = s.issuer;
+    if (s.description) item.description = s.description;
+    return item;
+  });
 
-  const mappedRelationships: RelationshipContact[] = relationships.map((r) => ({
-    name: r.name ?? undefined,
-    relationship: r.relationship ?? undefined,
-    phone: r.phone ?? undefined,
-    contactId: r.relatedContactId ?? undefined,
-    inferred: r.inferred,
-    inferredFromContactId: r.inferredFromContactId ?? undefined,
-    inferenceDepth: r.inferenceDepth,
-  }));
+  const mappedRelationships: RelationshipContact[] = relationships.map((r) => {
+    const item: RelationshipContact = {
+      inferred: r.inferred,
+      inferenceDepth: r.inferenceDepth,
+    };
+    if (r.name) item.name = r.name;
+    if (r.relationship) item.relationship = r.relationship;
+    if (r.phone) item.phone = r.phone;
+    if (r.relatedContactId) item.contactId = r.relatedContactId;
+    if (r.inferredFromContactId) item.inferredFromContactId = r.inferredFromContactId;
+    return item;
+  });
 
-  const mappedActivities: ContactActivity[] = activities.map((act) => ({
-    id: act.id,
-    type: act.type as ContactActivity['type'],
-    content: act.content,
-    date: act.date,
-    by: act.by ?? undefined,
-  }));
+  const mappedActivities: ContactActivity[] = activities.map((act) => {
+    const item: ContactActivity = {
+      id: act.id,
+      type: act.type as ContactActivity['type'],
+      content: act.content,
+      date: act.date,
+    };
+    if (act.by) item.by = act.by;
+    return item;
+  });
 
   const mappedAttachments: ContactAttachment[] = attachments.map((att) => ({
     id: att.id,
@@ -150,38 +171,33 @@ export function contactRowToRecord(
     date: att.date,
   }));
 
-  const mappedBankDetails: ContactBankDetail[] = bankDetails.map((b) => ({
-    id: b.id,
-    bankName: b.bankName,
-    accountTitle: b.accountTitle,
-    accountNumber: b.accountNumber,
-    iban: b.iban ?? undefined,
-    swiftCode: b.swiftCode ?? undefined,
-    branchName: b.branchName ?? undefined,
-    branchCode: b.branchCode ?? undefined,
-    routingNumber: b.routingNumber ?? undefined,
-    currency: b.currency ?? undefined,
-    isPrimary: b.isPrimary,
-    label: b.label ?? undefined,
-    sortOrder: b.sortOrder,
-  }));
+  const mappedBankDetails: ContactBankDetail[] = bankDetails.map((b) => {
+    const item: ContactBankDetail = {
+      id: b.id,
+      bankName: b.bankName,
+      accountTitle: b.accountTitle,
+      accountNumber: b.accountNumber,
+      isPrimary: b.isPrimary,
+      sortOrder: b.sortOrder,
+    };
+    if (b.iban) item.iban = b.iban;
+    if (b.swiftCode) item.swiftCode = b.swiftCode;
+    if (b.branchName) item.branchName = b.branchName;
+    if (b.branchCode) item.branchCode = b.branchCode;
+    if (b.routingNumber) item.routingNumber = b.routingNumber;
+    if (b.currency) item.currency = b.currency;
+    if (b.label) item.label = b.label;
+    return item;
+  });
 
   const contact: Contact = {
     id: row.id,
     firstName: row.firstName,
-    lastName: row.lastName ?? undefined,
     name: row.name,
-    gender: (row.gender as Contact['gender']) ?? undefined,
-    dob: row.dob ?? undefined,
-    cnic: row.cnic ?? undefined,
     isSyed: row.isSyed,
     tags: tagsRows.map((t) => t.name),
     tag: tagsRows.map((t) => t.name).join(', '),
-    avatar: row.avatar ?? undefined,
-    notes: row.notes ?? undefined,
     whatsappStatus: (row.whatsappStatus as Contact['whatsappStatus']) ?? 'unknown',
-    lastCheckedAt: row.lastCheckedAt ?? undefined,
-    aiSummary: row.aiSummary ?? undefined,
     phones: mappedPhones,
     emails: mappedEmails,
     addresses: mappedAddresses,
@@ -193,14 +209,23 @@ export function contactRowToRecord(
     relationshipContacts: mappedRelationships,
     activities: mappedActivities,
     attachments: mappedAttachments,
-    deletedAt: row.deletedAt ? new Date(row.deletedAt).toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
     createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : new Date().toISOString(),
     updatedAt: row.updatedAt ? new Date(row.updatedAt).toISOString() : new Date().toISOString(),
-    createdBy: row.createdBy ?? undefined,
-    updatedBy: row.updatedBy ?? undefined,
   };
+
+  if (row.lastName) contact.lastName = row.lastName;
+  if (row.gender) contact.gender = row.gender as Contact['gender'];
+  if (row.dob) contact.dob = row.dob;
+  if (row.cnic) contact.cnic = row.cnic;
+  if (row.avatar) contact.avatar = row.avatar;
+  if (row.notes) contact.notes = row.notes;
+  if (row.lastCheckedAt) contact.lastCheckedAt = row.lastCheckedAt;
+  if (row.aiSummary) contact.aiSummary = row.aiSummary;
+  if (row.deletedAt) contact.deletedAt = new Date(row.deletedAt).toISOString();
+  if (row.deletedBy) contact.deletedBy = row.deletedBy;
+  if (row.deletionReason) contact.deletionReason = row.deletionReason;
+  if (row.createdBy) contact.createdBy = row.createdBy;
+  if (row.updatedBy) contact.updatedBy = row.updatedBy;
 
   return hydrateContactRelationshipFields(contact);
 }

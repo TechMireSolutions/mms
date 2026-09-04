@@ -47,39 +47,56 @@ function aggregateNumericField(
 ): number {
   let sum = 0;
   let count = 0;
-  items.forEach((item) => {
-    const numericFieldValue = Number(teacherFieldValue(item, targetField));
+  for (let i = 0; i < items.length; i++) {
+    const numericFieldValue = Number(teacherFieldValue(items[i], targetField));
     if (!Number.isNaN(numericFieldValue)) {
       sum += numericFieldValue;
       count += 1;
     }
-  });
+  }
   if (operation === 'sum') return sum;
   return count > 0 ? Math.round(sum / count) : 0;
 }
 
 function buildChartData(items: TeacherRow[], query: TeachersWidgetQuery): { name: string; value: number }[] {
   const xAxisField = query.xAxisField || 'status';
-  const groups: Record<string, TeacherRow[]> = {};
+  const isNumeric = query.operation === 'sum' || query.operation === 'avg';
+  const targetField = query.targetField || '';
+  const groupStats = new Map<string, { sum: number; count: number }>();
 
-  items.forEach((item) => {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
     const groupValue = teacherFieldValue(item, xAxisField);
     const groupKey = groupValue === undefined || groupValue === null || groupValue === '' ? 'Unknown' : String(groupValue);
-    if (!groups[groupKey]) groups[groupKey] = [];
-    groups[groupKey].push(item);
-  });
-
-  const chartData = Object.entries(groups).map(([groupName, groupItems]) => {
-    let aggregateValue = 0;
-    if (query.operation === 'count' || query.operation === 'percentage') {
-      aggregateValue = groupItems.length;
-    } else if (query.operation === 'sum' || query.operation === 'avg') {
-      aggregateValue = aggregateNumericField(groupItems, query.operation, query.targetField || '');
+    let stat = groupStats.get(groupKey);
+    if (!stat) {
+      stat = { sum: 0, count: 0 };
+      groupStats.set(groupKey, stat);
     }
-    return { name: groupName, value: aggregateValue };
-  });
+    if (isNumeric) {
+      const numericVal = Number(teacherFieldValue(item, targetField));
+      if (!Number.isNaN(numericVal)) {
+        stat.sum += numericVal;
+        stat.count += 1;
+      }
+    } else {
+      stat.count += 1;
+    }
+  }
 
-  return chartData.sort((leftPoint, rightPoint) => rightPoint.value - leftPoint.value).slice(0, 8);
+  const chartData: { name: string; value: number }[] = [];
+  for (const [groupName, stat] of groupStats) {
+    let aggregateValue = 0;
+    if (isNumeric) {
+      aggregateValue = query.operation === 'sum' ? stat.sum : (stat.count > 0 ? Math.round(stat.sum / stat.count) : 0);
+    } else {
+      aggregateValue = stat.count;
+    }
+    chartData.push({ name: groupName, value: aggregateValue });
+  }
+
+  const limit = Math.max(1, query.chartLimit ?? 8);
+  return chartData.sort((leftPoint, rightPoint) => rightPoint.value - leftPoint.value).slice(0, limit);
 }
 
 /**

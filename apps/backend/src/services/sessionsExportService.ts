@@ -1,4 +1,5 @@
 import {
+  DEFAULT_SESSION_EXPORT_COLUMNS,
   SESSIONS_MODULE_MANIFEST,
   buildCsvContent,
   buildSessionsExportRows,
@@ -13,15 +14,7 @@ import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadSessionsSettingsCombined } from './sessionConfigService.js';
 import { loadSessionsByIds, loadSessionsPage } from './sessionService.js';
 
-const DEFAULT_EXPORT_COLUMNS: SessionExportColumn[] = [
-  { id: 'name', label: 'Session Name' },
-  { id: 'type', label: 'Type' },
-  { id: 'status', label: 'Status' },
-  { id: 'startDate', label: 'Start Date' },
-  { id: 'endDate', label: 'End Date' },
-  { id: 'baseFee', label: 'Base Fee' },
-  { id: 'currency', label: 'Currency' },
-];
+const DEFAULT_EXPORT_COLUMNS = DEFAULT_SESSION_EXPORT_COLUMNS as SessionExportColumn[];
 
 type SessionsExportQueryInput = Omit<SessionsListQuery, 'includeDeleted'> & {
   includeDeleted?: SessionsListQuery['includeDeleted'] | 'true' | 'false';

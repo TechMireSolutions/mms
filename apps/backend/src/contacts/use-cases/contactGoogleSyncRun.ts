@@ -23,8 +23,8 @@ import {
   mapGoogleConnectionToContact,
   extractPhoneKeys,
   extractEmails,
-  findMatchingPeer,
   hasMeaningfulChanges,
+  PeerContactIndex,
 } from './contactGoogleSyncMapping.js';
 
 export type { GoogleContactsSyncRunResult };
@@ -131,11 +131,11 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
   const acceptedUpdates: Contact[] = [];
   let skippedName = 0;
   let skippedUnique = 0;
-  const currentPeers = [...peerContacts];
+  const peerIndex = new PeerContactIndex(peerContacts);
 
   await runInTransaction(async () => {
     for (const candidate of mapped) {
-      const match = findMatchingPeer(candidate, currentPeers);
+      const match = peerIndex.findMatch(candidate);
       const isExistingNameOnly = !match && existingNames.has(candidate.name.trim().toLowerCase());
 
       if (match) {
@@ -148,8 +148,7 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
               excludeContactIds: [match.id],
             });
             acceptedUpdates.push(prepared);
-            const idx = currentPeers.findIndex((p) => p.id === match.id);
-            if (idx !== -1) currentPeers[idx] = prepared;
+            peerIndex.update(match, prepared);
           } catch (error) {
             if (error instanceof ContactUniqueFieldError) {
               skippedUnique += 1;
@@ -170,7 +169,7 @@ export async function runGoogleContactsSync(userId: string): Promise<GoogleConta
             additionalPeers: acceptedInserts,
           });
           acceptedInserts.push(prepared);
-          currentPeers.push(prepared);
+          peerIndex.add(prepared);
         } catch (error) {
           if (error instanceof ContactUniqueFieldError) {
             skippedUnique += 1;

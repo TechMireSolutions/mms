@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isQueryFlagTrue, paginateArray } from '../paginationUtils.js';
+import { dedupeTrimmedIds, isQueryFlagTrue, paginateArray } from '../paginationUtils.js';
 
 describe('isQueryFlagTrue', () => {
   it('returns true for boolean true and numeric 1', () => {
@@ -43,3 +43,28 @@ describe('paginateArray', () => {
     expect(page3.hasMore).toBe(false);
   });
 });
+
+describe('dedupeTrimmedIds', () => {
+  it('dedupes and trims identifiers while discarding empty strings and nullish values', () => {
+    const input = ['id-1', '  id-2  ', '', 'id-1', 'id-3', '   ', null as unknown as string, 'id-2'];
+    expect(dedupeTrimmedIds(input)).toEqual(['id-1', 'id-2', 'id-3']);
+  });
+
+  it('handles numbers correctly', () => {
+    expect(dedupeTrimmedIds([101, 102, 101, 103])).toEqual(['101', '102', '103']);
+  });
+
+  it('handles comma-delimited strings directly without prior array splitting', () => {
+    expect(dedupeTrimmedIds('id-1, id-2,  id-1, id-3 , , ')).toEqual(['id-1', 'id-2', 'id-3']);
+    expect(dedupeTrimmedIds('val1;val2;val1', ';')).toEqual(['val1', 'val2']);
+    expect(dedupeTrimmedIds('')).toEqual([]);
+    expect(dedupeTrimmedIds('   ')).toEqual([]);
+  });
+
+  it('returns empty array for empty or falsy inputs', () => {
+    expect(dedupeTrimmedIds([])).toEqual([]);
+    expect(dedupeTrimmedIds(null)).toEqual([]);
+    expect(dedupeTrimmedIds(undefined)).toEqual([]);
+  });
+});
+

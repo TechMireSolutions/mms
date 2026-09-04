@@ -19,11 +19,15 @@ export const CONTACT_RETIRED_OBJECT_KEYS = [
 export type ContactRetiredClassificationKey =
   (typeof CONTACT_RETIRED_CLASSIFICATION_KEYS)[number];
 
+const CONTACT_RETIRED_CLASSIFICATION_KEY_SET = new Set<string>(
+  CONTACT_RETIRED_CLASSIFICATION_KEYS,
+);
+
 /** True when `key` is a retired contact classification field. */
 export function isContactRetiredClassificationKey(
   key: string,
 ): key is ContactRetiredClassificationKey {
-  return (CONTACT_RETIRED_CLASSIFICATION_KEYS as readonly string[]).includes(key);
+  return CONTACT_RETIRED_CLASSIFICATION_KEY_SET.has(key);
 }
 
 /** Strip retired classification keys from a contact-shaped record (seed/save sanitizer). */

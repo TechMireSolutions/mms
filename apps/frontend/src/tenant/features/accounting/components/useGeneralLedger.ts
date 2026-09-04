@@ -25,15 +25,18 @@ export function useGeneralLedger(accounts: Account[], entries: JournalEntry[]) {
   const activeAccount = accounts.find((account) => account.id === selectedAccount);
   const lines = (() => selectedAccount ? computeLedger(selectedAccount, entries, dateFrom || undefined, dateTo || undefined) : [])();
 
-  const totalDebit = lines.reduce((sum, ledgerLine) => sum + ledgerLine.debit, 0);
-  const totalCredit = lines.reduce((sum, ledgerLine) => sum + ledgerLine.credit, 0);
-  const balance = totalDebit - totalCredit;
-
+  let totalDebit = 0;
+  let totalCredit = 0;
   let running = 0;
-  const linesWithRunning: GeneralLedgerLineWithRunning[] = lines.map((ledgerLine) => {
+  const linesWithRunning: GeneralLedgerLineWithRunning[] = new Array(lines.length);
+  for (let i = 0; i < lines.length; i++) {
+    const ledgerLine = lines[i];
+    totalDebit += ledgerLine.debit;
+    totalCredit += ledgerLine.credit;
     running += ledgerLine.debit - ledgerLine.credit;
-    return { ...ledgerLine, running };
-  });
+    linesWithRunning[i] = { ...ledgerLine, running };
+  }
+  const balance = totalDebit - totalCredit;
 
   return {
     selectedAccount,

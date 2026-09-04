@@ -283,11 +283,16 @@ export const DEFAULT_STUDENT_EXPORT_COLUMNS = STUDENT_DIRECTORY_COLUMN_SURFACES
     label: surface.exportLabel,
   }));
 
+const STUDENT_DIRECTORY_COLUMN_SURFACES_BY_KEY = new Map<
+  string,
+  (typeof STUDENT_DIRECTORY_COLUMN_SURFACES)[number]
+>(STUDENT_DIRECTORY_COLUMN_SURFACES.map((item) => [item.key, item]));
+
 export function studentFieldLabelKey(fieldKey: string): AppTranslationKey {
   return `students.field.${fieldKey}` as AppTranslationKey;
 }
 
 export function studentColumnLabelKey(columnKey: string): AppTranslationKey {
-  const surface = STUDENT_DIRECTORY_COLUMN_SURFACES.find((item) => item.key === columnKey);
+  const surface = STUDENT_DIRECTORY_COLUMN_SURFACES_BY_KEY.get(columnKey);
   return surface?.labelKey ?? studentFieldLabelKey(columnKey);
 }

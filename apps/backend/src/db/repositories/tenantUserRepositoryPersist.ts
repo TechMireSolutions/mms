@@ -76,9 +76,16 @@ function splitProfileFields(user: TenantUserRow): {
 }
 
 function omitUndefinedColumns<T extends Record<string, unknown>>(columns: T): Partial<T> {
-  return Object.fromEntries(
-    Object.entries(columns).filter(([, value]) => value !== undefined),
-  ) as Partial<T>;
+  const result: Partial<T> = {};
+  for (const key in columns) {
+    if (Object.prototype.hasOwnProperty.call(columns, key)) {
+      const val = columns[key];
+      if (val !== undefined) {
+        result[key] = val;
+      }
+    }
+  }
+  return result;
 }
 
 function nonEmptyString(value: unknown): string {

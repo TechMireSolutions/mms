@@ -49,6 +49,7 @@ export function ObligationCollectionsListDesktopTable(props: ObligationCollectio
   } = props;
   const { t } = useTranslation();
   const helpers = { getContact, getRep, getMujtahid, getObligationType };
+  const selectedSet = new Set(selectedIds);
 
   return (
     <Table className="table-fixed">
@@ -84,7 +85,7 @@ export function ObligationCollectionsListDesktopTable(props: ObligationCollectio
                   <div className="flex justify-center">
                     <input 
                       type="checkbox"
-                      checked={selectedIds.includes(collection.id)}
+                      checked={selectedSet.has(collection.id)}
                       onChange={(e) => onToggleSelectedCollection(collection.id, e.target.checked)}
                       aria-label={t("obligations.trash.selectCollection", { receipt: collection.receipt_no })}
                       className="cursor-pointer"

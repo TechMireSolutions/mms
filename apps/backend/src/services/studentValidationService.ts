@@ -12,8 +12,9 @@ import { loadStudentsSettingsCombined } from './studentConfigService.js';
 import { loadContactsByIds } from './contactService.js';
 import { validateOrThrow } from '../lib/zodRequest.js';
 
-// Cache compiled schema by tenant and config version: `${tenant}:${configVersion}`
+// Cache compiled schema by tenant and config version: `${tenant}:${configVersion}:${language}`
 const schemaCache = new Map<string, z.ZodTypeAny>();
+const SCHEMA_CACHE_MAX_ENTRIES = 100;
 
 function getSubmittedBlueprintId(student: unknown): unknown {
   if (!student || typeof student !== 'object' || Array.isArray(student)) {
@@ -24,7 +25,7 @@ function getSubmittedBlueprintId(student: unknown): unknown {
 
 async function hydrateStudentValidationSubject(
   student: unknown,
-  getContacts: () => Promise<Contact[]>,
+  getContactMap: () => Promise<Map<string, Contact>>,
 ): Promise<unknown> {
   if (!student || typeof student !== 'object' || Array.isArray(student)) {
     return student;
@@ -36,8 +37,8 @@ async function hydrateStudentValidationSubject(
     return studentRecord;
   }
 
-  const contacts = await getContacts();
-  const contact = contacts.find((candidateContact) => String(candidateContact.id) === String(contactId));
+  const contactMap = await getContactMap();
+  const contact = contactMap.get(String(contactId));
   if (!contact) {
     return studentRecord;
   }
@@ -80,7 +81,7 @@ export async function validateStudentDynamic(
   const submittedBlueprintId = getSubmittedBlueprintId(student);
   verifyBlueprintVersion(submittedBlueprintId, settings.version || 0);
 
-  const cacheKey = `${tenant}:${settings.version || 0}`;
+  const cacheKey = `${tenant}:${settings.version || 0}:${language}`;
   let schema = schemaCache.get(cacheKey);
 
   if (!schema) {
@@ -95,12 +96,16 @@ export async function validateStudentDynamic(
       fields,
       language,
     );
+    if (schemaCache.size >= SCHEMA_CACHE_MAX_ENTRIES) {
+      const oldestKey = schemaCache.keys().next().value;
+      if (oldestKey) schemaCache.delete(oldestKey);
+    }
     schemaCache.set(cacheKey, schema);
   }
 
-  let cachedContacts: Contact[] | undefined;
-  const getContacts = async () => {
-    if (!cachedContacts) {
+  let cachedContactMap: Map<string, Contact> | undefined;
+  const getContactMap = async (): Promise<Map<string, Contact>> => {
+    if (!cachedContactMap) {
       const subjects = Array.isArray(student) ? student : [student];
       const ids = [
         ...new Set(
@@ -114,14 +119,15 @@ export async function validateStudentDynamic(
             .map(String),
         ),
       ];
-      cachedContacts = ids.length === 0 ? [] : await loadContactsByIds(ids);
+      const contacts = ids.length === 0 ? [] : await loadContactsByIds(ids);
+      cachedContactMap = new Map(contacts.map((c) => [String(c.id), c]));
     }
-    return cachedContacts;
+    return cachedContactMap;
   };
 
   const validationSubject = Array.isArray(student)
-    ? await Promise.all(student.map((item) => hydrateStudentValidationSubject(item, getContacts)))
-    : await hydrateStudentValidationSubject(student, getContacts);
+    ? await Promise.all(student.map((item) => hydrateStudentValidationSubject(item, getContactMap)))
+    : await hydrateStudentValidationSubject(student, getContactMap);
 
   validateOrThrow(schema, validationSubject);
 }

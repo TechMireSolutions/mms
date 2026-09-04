@@ -113,7 +113,8 @@ export function UsersList({
     return formatDate(ts, globalSettings.dateFormat, false);
   };
 
-  const selectedUsers = (() => users.filter((user) => selectedIds.includes(user.id)))();
+  const selectedSet = new Set(selectedIds);
+  const selectedUsers = (() => users.filter((user) => selectedSet.has(user.id)))();
 
   const pageData = workPageData
     ? {

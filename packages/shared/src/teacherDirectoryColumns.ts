@@ -219,6 +219,11 @@ export const DEFAULT_TEACHER_EXPORT_COLUMNS = TEACHER_DIRECTORY_COLUMN_SURFACES
     label: surface.exportLabel,
   }));
 
+const TEACHER_DIRECTORY_COLUMN_SURFACES_BY_KEY = new Map<
+  string,
+  (typeof TEACHER_DIRECTORY_COLUMN_SURFACES)[number]
+>(TEACHER_DIRECTORY_COLUMN_SURFACES.map((item) => [item.key, item]));
+
 /** Translation key for a Teachers field label (`teachers.field.${fieldKey}` fallback). */
 export function teacherFieldLabelKey(fieldKey: string): AppTranslationKey {
   return `teachers.field.${fieldKey}` as AppTranslationKey;
@@ -226,6 +231,6 @@ export function teacherFieldLabelKey(fieldKey: string): AppTranslationKey {
 
 /** Translation key for a Teachers column label (surface `labelKey`, else {@link teacherFieldLabelKey}). */
 export function teacherColumnLabelKey(columnKey: string): AppTranslationKey {
-  const surface = TEACHER_DIRECTORY_COLUMN_SURFACES.find((item) => item.key === columnKey);
+  const surface = TEACHER_DIRECTORY_COLUMN_SURFACES_BY_KEY.get(columnKey);
   return surface?.labelKey ?? teacherFieldLabelKey(columnKey);
 }

@@ -14,7 +14,6 @@ import type { StudentsListContentTableProps } from "@/tenant/features/students/c
 export type StudentsListDesktopTableRowProps = Pick<
   StudentsListContentTableProps,
   | "sessions"
-  | "selectedIds"
   | "viewingDeleted"
   | "canWrite"
   | "canDelete"
@@ -28,6 +27,7 @@ export type StudentsListDesktopTableRowProps = Pick<
   | "onRestore"
   | "onOpenComposer"
 > & {
+  selectedIds: string[] | ReadonlySet<string>;
   studentRow: Student;
   rowIndex: number;
   visibleColumns: ModuleColumnRegistryEntry[];
@@ -56,7 +56,7 @@ export function StudentsListDesktopTableRow({
   const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
   const emptyDash = t("students.table.emptyDash");
   const studentIdStr = String(studentRow.id);
-  const isSelected = selectedIds.includes(studentIdStr);
+  const isSelected = Array.isArray(selectedIds) ? selectedIds.includes(studentIdStr) : selectedIds.has(studentIdStr);
   const displayName = studentRow.name || "";
 
   return (

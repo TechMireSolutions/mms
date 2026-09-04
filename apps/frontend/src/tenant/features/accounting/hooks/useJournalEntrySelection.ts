@@ -5,15 +5,17 @@ import type { JournalEntry } from '@/lib/data/accountingData';
 export function useJournalEntrySelection(entries: JournalEntry[]) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  const selectedSet = new Set(selectedIds);
   const allVisibleSelected = entries.length > 0
-    && entries.every((entry) => selectedIds.includes(entry.id));
-  const someVisibleSelected = entries.some((entry) => selectedIds.includes(entry.id));
+    && entries.every((entry) => selectedSet.has(entry.id));
+  const someVisibleSelected = selectedSet.size > 0 && entries.some((entry) => selectedSet.has(entry.id));
 
   const toggleSelectAll = ((checked: boolean) => {
     const visibleIds = entries.map((entry) => entry.id);
+    const visibleSet = new Set(visibleIds);
     setSelectedIds((currentIds) => checked
       ? [...new Set([...currentIds, ...visibleIds])]
-      : currentIds.filter((id) => !visibleIds.includes(id)));
+      : currentIds.filter((id) => !visibleSet.has(id)));
   });
 
   const toggleSelectedEntry = ((id: string, checked: boolean) => {

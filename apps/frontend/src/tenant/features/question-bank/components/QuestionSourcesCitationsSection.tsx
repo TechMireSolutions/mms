@@ -41,6 +41,8 @@ export function QuestionSourcesCitationsSection({
   onAddCitation,
   onRemoveCitation,
 }: QuestionSourcesCitationsSectionProps): React.JSX.Element {
+  const sourceBooksById = new Map(sourceBooks.map((sourceBook) => [sourceBook.id, sourceBook]));
+
   return (
     <section className="space-y-3">
       <p className="text-xs text-muted-foreground">{t('questionBank.citationsForQuestionHint')}</p>
@@ -48,7 +50,7 @@ export function QuestionSourcesCitationsSection({
         <p className="text-sm text-muted-foreground">{t('questionBank.addBookBeforeCitation')}</p>
       ) : (
         citationEntries.map((entry, index) => {
-          const book = sourceBooks.find((sourceBook) => sourceBook.id === entry.bookId);
+          const book = sourceBooksById.get(entry.bookId);
           const citationFieldIds = book ? getBookCitationFieldIds(book) : [];
 
           return (

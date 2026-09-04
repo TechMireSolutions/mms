@@ -12,6 +12,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   type Exam,
   type ExaminationsCommandMetricsSnapshot,
@@ -44,7 +45,7 @@ function buildExamsListConditions(subdomain: string, query: ExaminationsListQuer
     );
   }
 
-  const statuses = query.status?.split(',').map((s) => s.trim()).filter(Boolean) ?? [];
+  const statuses = dedupeTrimmedIds(query.status);
   if (statuses.length) {
     conditions.push(inArray(exams.status, statuses));
   }

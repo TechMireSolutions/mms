@@ -14,7 +14,26 @@ import {
   getContactTags,
 } from "./contactTypes.js";
 
-// ── Merging Logic ──────────────────────────────────────────────────────────
+const EXCLUDED_MERGE_KEYS = new Set([
+  "id",
+  "name",
+  "phones",
+  "emails",
+  "addresses",
+  "socials",
+  "education",
+  "experience",
+  "skills",
+  "relationshipContacts",
+  "relationships",
+  "activities",
+  "attachments",
+  "tag",
+  "tags",
+  "notes",
+  "createdAt",
+  "updatedAt",
+]);
 
 export const mergeContacts = (
   keep: Contact,
@@ -23,33 +42,12 @@ export const mergeContacts = (
   const merged: Contact = { ...keep };
 
   // Merge all basic properties dynamically
-  Object.keys(other).forEach((key) => {
-    if (
-      key === "id" ||
-      key === "name" ||
-      key === "phones" ||
-      key === "emails" ||
-      key === "addresses" ||
-      key === "socials" ||
-      key === "education" ||
-      key === "experience" ||
-      key === "skills" ||
-      key === "relationshipContacts" ||
-      key === "relationships" ||
-      key === "activities" ||
-      key === "attachments" ||
-      key === "tag" ||
-      key === "tags" ||
-      key === "notes" ||
-      key === "createdAt" ||
-      key === "updatedAt"
-    ) {
-      return;
-    }
+  for (const key of Object.keys(other)) {
+    if (EXCLUDED_MERGE_KEYS.has(key)) continue;
     if (merged[key] === undefined || merged[key] === null || merged[key] === "") {
       merged[key] = other[key];
     }
-  });
+  }
 
   // Recalculate full name if firstName or lastName was merged/changed
   const first = (merged.firstName as string | undefined) || "";

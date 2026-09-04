@@ -25,14 +25,29 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
   const test = tests.find((item) => item.id === selectedTest);
   const testResults = results.filter((result) => result.testId === selectedTest);
 
+  const questionsById = new Map<string, Question>();
+  for (const q of questions) {
+    questionsById.set(q.id, q);
+  }
+
+  const resultsCountByTestId = new Map<string, number>();
+  for (const r of results) {
+    resultsCountByTestId.set(r.testId, (resultsCountByTestId.get(r.testId) ?? 0) + 1);
+  }
+
   const stats = (() => {
     if (!test || testResults.length === 0) return null;
-    const totalMarks = testTotalMarks(test, questions) || 100;
-    const averageScore = Math.round(
-      testResults.reduce((scoreTotal, result) => scoreTotal + pct(sumScores(result.scores), totalMarks), 0) / testResults.length,
-    );
-    const highest = Math.max(...testResults.map((result) => sumScores(result.scores)));
-    const lowest = Math.min(...testResults.map((result) => sumScores(result.scores)));
+    const totalMarks = testTotalMarks(test, questionsById) || 100;
+    let totalPct = 0;
+    let highest = -Infinity;
+    let lowest = Infinity;
+    for (const result of testResults) {
+      const score = sumScores(result.scores);
+      totalPct += pct(score, totalMarks);
+      if (score > highest) highest = score;
+      if (score < lowest) lowest = score;
+    }
+    const averageScore = Math.round(totalPct / testResults.length);
     return { avg: averageScore, highest, lowest };
   })() as StatsSummary | null;
 
@@ -45,7 +60,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
         <div className="flex flex-wrap gap-2" role="radiogroup" aria-label={t("questionBank.grading.selectTestAria")}>
           {tests.map((item) => {
             const isSelected = selectedTest === item.id;
-            const count = results.filter((result) => result.testId === item.id).length;
+            const count = resultsCountByTestId.get(item.id) ?? 0;
             return (
               <Button
                 key={item.id}
@@ -79,16 +94,18 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
               { key: "score", header: t("examinations.report.colMarks") },
               { key: "percentage", header: t("examinations.report.colGrade") },
             ]}
-            rows={testResults.map((result) => {
-              const totalMarks = testTotalMarks(test, questions) || 100;
-              const marksObtained = sumScores(result.scores);
-              return {
-                studentName: result.studentName,
-                testName: test.name,
-                score: `${marksObtained}/${totalMarks}`,
-                percentage: `${pct(marksObtained, totalMarks)}%`,
-              };
-            })}
+            rows={(() => {
+              const totalMarks = testTotalMarks(test, questionsById) || 100;
+              return testResults.map((result) => {
+                const marksObtained = sumScores(result.scores);
+                return {
+                  studentName: result.studentName,
+                  testName: test.name,
+                  score: `${marksObtained}/${totalMarks}`,
+                  percentage: `${pct(marksObtained, totalMarks)}%`,
+                };
+              });
+            })()}
             moduleId="question-bank"
             filename={`grading_${test.name.toLowerCase().replace(/\s+/g, "_")}`}
             empty={testResults.length === 0}
@@ -98,7 +115,7 @@ export function AutoGrading({ tests, results, questions }: AutoGradingProps): Re
               {testResults
                 .sort((a, b) => sumScores(b.scores) - sumScores(a.scores))
                 .map((result) => (
-                  <AutoGradingResultRow key={result.id} result={result} test={test} questions={questions} />
+                  <AutoGradingResultRow key={result.id} result={result} test={test} questions={questionsById} />
                 ))}
             </div>
           </ReportDataGridContainer>

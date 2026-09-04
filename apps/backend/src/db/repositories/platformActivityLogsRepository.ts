@@ -122,14 +122,28 @@ export async function getPlatformMonthlyActivityTrend(
       })
       .from(workspaces);
 
+    const enabledWsTimestamps: number[] = [];
+    for (let i = 0; i < wsRows.length; i++) {
+      if (wsRows[i].enabled && wsRows[i].createdAt) {
+        enabledWsTimestamps.push(wsRows[i].createdAt.getTime());
+      }
+    }
+    enabledWsTimestamps.sort((a, b) => a - b);
+
+    let wsIndex = 0;
+    const wsLen = enabledWsTimestamps.length;
+
     return monthBuckets.map((bucket) => {
       const ops = opsMap.get(bucket.yearMonth) ?? 0;
-      const tenants = wsRows.filter((w) => w.createdAt <= bucket.end && w.enabled).length;
+      const endTime = bucket.end.getTime();
+      while (wsIndex < wsLen && enabledWsTimestamps[wsIndex] <= endTime) {
+        wsIndex++;
+      }
 
       return {
         month: bucket.label,
         yearMonth: bucket.yearMonth,
-        tenants: Math.max(0, tenants),
+        tenants: wsIndex,
         ops,
       };
     });

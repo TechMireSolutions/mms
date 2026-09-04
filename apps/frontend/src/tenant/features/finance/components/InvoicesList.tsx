@@ -147,7 +147,14 @@ export function InvoicesList({
           onRequestBulkRestore={() => setConfirmBulkOpen(true)}
           onClearSelection={clearSelection}
           onBulkStatusChange={onBulkStatusChange ? (status) => onBulkStatusChange(selectedIds, status) : undefined}
-          onBulkPrintReceipts={onBulkPrintReceipts ? () => onBulkPrintReceipts(filtered.filter((inv) => selectedIds.includes(inv.id))) : undefined}
+          onBulkPrintReceipts={
+            onBulkPrintReceipts
+              ? () => {
+                  const selSet = new Set(selectedIds);
+                  return onBulkPrintReceipts(filtered.filter((inv) => selSet.has(inv.id)));
+                }
+              : undefined
+          }
           isBulkStatusPending={isBulkStatusPending}
           statusBadgeConfig={statusConfig}
         />

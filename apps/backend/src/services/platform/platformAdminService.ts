@@ -81,7 +81,7 @@ export function scheduleMigrateAndRestart(meta: MigrateRestartAuditMeta): boolea
     }),
   );
 
-  setTimeout(() => {
+  const timer = setTimeout(() => {
     void (async () => {
       try {
         await runMigrateAndReload();
@@ -107,6 +107,7 @@ export function scheduleMigrateAndRestart(meta: MigrateRestartAuditMeta): boolea
       }
     })();
   }, MIGRATE_RESTART_DELAY_MS);
+  timer.unref?.();
 
   return true;
 }
@@ -143,9 +144,10 @@ export async function reloadBackendProcess(): Promise<ReloadBackendResult> {
   }
 
   if (shouldExitProcessForReloadFallback()) {
-    setTimeout(() => {
+    const exitTimer = setTimeout(() => {
       process.exit(0);
     }, 250);
+    exitTimer.unref?.();
     return { reloaded: true };
   }
 

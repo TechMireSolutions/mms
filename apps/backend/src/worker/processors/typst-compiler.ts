@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, unlink, mkdtemp } from 'node:fs/promises';
+import { readFile, unlink, mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { existsSync } from 'node:fs';
@@ -159,6 +159,11 @@ export async function compileTypstToPdf(options: TypstRenderOptions): Promise<Bu
     } finally {
       try {
         if (existsSync(outputPath)) await unlink(outputPath);
+      } catch {
+        // Cleanup ignore
+      }
+      try {
+        await rm(tempDir, { recursive: true, force: true });
       } catch {
         // Cleanup ignore
       }

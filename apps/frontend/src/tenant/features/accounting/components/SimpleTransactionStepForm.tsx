@@ -8,6 +8,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { Account } from "@/lib/data/accountingData";
 import { getTransactionGroupColorClasses, type QuickActionType, type WizardFormState } from "./simpleTransactionWizardTypes";
 
+const CASH_ACCOUNT_IDS = new Set(["a1000", "a1010", "a1020"]);
+
 interface StepTransactionFormProps {
   type: QuickActionType;
   form: WizardFormState;
@@ -20,7 +22,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
   const { t } = useTranslation();
   const isMoneyIn = type.groupKey === "accounting.journal.dashboard.group.moneyIn";
   const isTransfer = type.groupKey === "accounting.journal.dashboard.group.transfers";
-  const cashAccounts = accounts.filter((account) => ["a1000", "a1010", "a1020"].includes(account.id));
+  const cashAccounts = accounts.filter((account) => CASH_ACCOUNT_IDS.has(account.id));
   const cashAccountOptions = cashAccounts.map((account) => ({ value: account.id, label: account.name }));
 
   return (

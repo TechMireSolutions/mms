@@ -23,7 +23,7 @@ import {
 interface ResultRowProps {
   result: QuestionBankResult;
   test: QuestionBankTest;
-  questions: Question[];
+  questions: Question[] | Map<string, Question>;
 }
 
 export function AutoGradingResultRow({ result, test, questions }: ResultRowProps): React.ReactElement {
@@ -33,6 +33,11 @@ export function AutoGradingResultRow({ result, test, questions }: ResultRowProps
   const marksObtained = sumScores(result.scores);
   const percentageScore = pct(marksObtained, totalMarks);
   const gradeLabel = grade(percentageScore);
+
+  const getQuestion = (qid: string): Question | undefined => {
+    if (questions instanceof Map) return questions.get(qid);
+    return questions.find((candidateQuestion) => candidateQuestion.id === qid);
+  };
 
   return (
     <div className="border-b border-border/50 last:border-0">
@@ -77,7 +82,7 @@ export function AutoGradingResultRow({ result, test, questions }: ResultRowProps
           >
             <div className="space-y-2 px-4 pb-3" role="list">
               {test.questionIds.map((qid, questionIndex) => {
-                const question = questions.find((candidateQuestion) => candidateQuestion.id === qid);
+                const question = getQuestion(qid);
                 if (!question) return null;
                 const studentAns = result.answers?.[qid];
                 const correct =

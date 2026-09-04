@@ -63,11 +63,15 @@ export function useTeachersDirectoryFilters({
   const toggleStatus = ((status: string) => {
     // Manual status selection supersedes any quick-filter preset.
     setQuickFilter('all');
-    setFilterStatus((selectedStatuses) =>
-      selectedStatuses.includes(status)
-        ? selectedStatuses.filter((selectedStatus) => selectedStatus !== status)
-        : [...selectedStatuses, status],
-    );
+    setFilterStatus((selectedStatuses) => {
+      const nextSet = new Set(selectedStatuses);
+      if (nextSet.has(status)) {
+        nextSet.delete(status);
+      } else {
+        nextSet.add(status);
+      }
+      return [...nextSet];
+    });
   });
 
   const applyDrillDown = useCallback(

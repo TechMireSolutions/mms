@@ -7,7 +7,8 @@ export function checkIsRedisConnected(): boolean {
   return isRedisConnected;
 }
 
-// In-memory fallback map when Redis is not reachable or in non-Redis test runs
+// In-memory fallback map when Redis is not reachable or in non-Redis test runs (bounded to 5000 entries)
+const IN_MEMORY_STORE_MAX_ENTRIES = 5000;
 const inMemoryStore = new Map<string, { value: string; expiresAt?: number }>();
 
 export function getRedisClient(): Redis | null {
@@ -125,6 +126,18 @@ export async function redisSet(key: string, value: string, ttlSeconds?: number):
   }
 
   const expiresAt = ttlSeconds && ttlSeconds > 0 ? Date.now() + ttlSeconds * 1000 : undefined;
+  if (inMemoryStore.size >= IN_MEMORY_STORE_MAX_ENTRIES) {
+    const now = Date.now();
+    for (const [k, entry] of inMemoryStore.entries()) {
+      if (entry.expiresAt && now > entry.expiresAt) {
+        inMemoryStore.delete(k);
+      }
+    }
+    if (inMemoryStore.size >= IN_MEMORY_STORE_MAX_ENTRIES) {
+      const oldestKey = inMemoryStore.keys().next().value;
+      if (oldestKey) inMemoryStore.delete(oldestKey);
+    }
+  }
   inMemoryStore.set(key, { value, expiresAt });
 }
 
@@ -208,5 +221,29 @@ export async function redisBatch(ops: RedisBatchOp[]): Promise<RedisBatchResult>
 }
 
 export function clearInMemoryRedisFallback(): void {
+  inMemoryStore.clear();
+}
+
+/**
+ * Gracefully disconnects all active Redis client connections.
+ */
+export async function disconnectRedis(): Promise<void> {
+  if (redisInstance) {
+    try {
+      await redisInstance.quit();
+    } catch {
+      redisInstance.disconnect();
+    }
+    redisInstance = null;
+  }
+  if (redisSubscriberInstance) {
+    try {
+      await redisSubscriberInstance.quit();
+    } catch {
+      redisSubscriberInstance.disconnect();
+    }
+    redisSubscriberInstance = null;
+  }
+  isRedisConnected = false;
   inMemoryStore.clear();
 }

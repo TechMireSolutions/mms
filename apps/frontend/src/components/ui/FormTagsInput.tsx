@@ -20,9 +20,10 @@ export function TagsInput({ selected = [], predefined = [], onChange, id, name }
   const fallbackId = React.useId();
   const resolvedId = id || fallbackId;
   const resolvedName = name || fallbackId;
+  const selectedSet = new Set(selected);
 
   const toggle = (tag: string): void => {
-    if (selected.includes(tag)) {
+    if (selectedSet.has(tag)) {
       onChange(selected.filter((selectedTag) => selectedTag !== tag));
     } else {
       onChange([...selected, tag]);
@@ -31,7 +32,7 @@ export function TagsInput({ selected = [], predefined = [], onChange, id, name }
 
   const addCustom = (raw: string): void => {
     const tag = raw.trim();
-    if (!tag || selected.includes(tag)) return;
+    if (!tag || selectedSet.has(tag)) return;
     onChange([...selected, tag]);
     setInputVal("");
   };
@@ -75,7 +76,7 @@ export function TagsInput({ selected = [], predefined = [], onChange, id, name }
 
       {predefined.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {predefined.filter((predefinedTag) => !selected.includes(predefinedTag)).map((tag) => (
+          {predefined.filter((predefinedTag) => !selectedSet.has(predefinedTag)).map((tag) => (
             <Button
               key={tag}
               type="button"

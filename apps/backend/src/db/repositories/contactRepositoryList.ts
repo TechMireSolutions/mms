@@ -1,5 +1,6 @@
 import { desc, asc, eq, inArray, isNotNull, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   normalizeSearchString,
   type ContactsListPageResult,
@@ -237,11 +238,11 @@ export async function listContactsPage(
   query: ContactsListQuery,
 ): Promise<ContactsListPageResult> {
   const subdomain = tenant.trim().toLowerCase();
-  const excludeIds = (query.excludeIds ?? []).map(String).filter(Boolean);
+  const excludeIds = dedupeTrimmedIds(query.excludeIds ?? []);
   const includeIds =
     query.includeIds === undefined
       ? undefined
-      : [...new Set(query.includeIds.map(String).filter(Boolean))];
+      : dedupeTrimmedIds(query.includeIds);
 
   if (includeIds && includeIds.length === 0) {
     const page = Math.max(1, query.page ?? 1);

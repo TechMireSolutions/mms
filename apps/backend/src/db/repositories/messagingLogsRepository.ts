@@ -6,7 +6,7 @@ import { withTenant } from '../tenant-context.js';
 type LogRow = typeof messageLogs.$inferSelect;
 
 export function logRowToRecord(row: LogRow): Message {
-  return {
+  const message: Message = {
     id: row.id,
     userId: row.userId,
     contactId: row.contactId,
@@ -14,15 +14,18 @@ export function logRowToRecord(row: LogRow): Message {
     body: row.body,
     sentAt: row.sentAt,
     status: row.status as Message['status'],
-    subject: row.subject ?? undefined,
     category: row.category as Message['category'],
-    errorMessage: row.errorMessage ?? undefined,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
     createdAt: row.createdAt.toISOString(),
     updatedAt: row.updatedAt.toISOString(),
   };
+
+  if (row.subject) message.subject = row.subject;
+  if (row.errorMessage) message.errorMessage = row.errorMessage;
+  if (row.deletedAt) message.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) message.deletedBy = row.deletedBy;
+  if (row.deletionReason) message.deletionReason = row.deletionReason;
+
+  return message;
 }
 
 export interface ListMessageLogsOptions {

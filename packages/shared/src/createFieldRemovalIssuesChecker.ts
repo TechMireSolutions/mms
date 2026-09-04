@@ -26,15 +26,17 @@ export interface ModuleFieldDependencyIssue {
  * Teachers/Students adapters pass their seed keys, column↔field mapping, and message keys.
  */
 export function createFieldRemovalIssuesChecker(options: ModuleFieldRemovalIssuesOptions) {
+  const columnKeysByField = new Map<string, string[]>();
+  for (const [columnKey, mapping] of Object.entries(options.columnFieldMapping)) {
+    const list = columnKeysByField.get(mapping.fieldId) ?? [];
+    list.push(columnKey);
+    columnKeysByField.set(mapping.fieldId, list);
+  }
+
   /** Work column keys that mirror a Setup field id (including mapped columns). */
   function columnKeysForField(fieldKey: string): string[] {
-    const keys = new Set<string>([fieldKey, `custom:${fieldKey}`]);
-    for (const [columnKey, mapping] of Object.entries(options.columnFieldMapping)) {
-      if (mapping.fieldId === fieldKey) {
-        keys.add(columnKey);
-      }
-    }
-    return [...keys];
+    const mapped = columnKeysByField.get(fieldKey) ?? [];
+    return [fieldKey, `custom:${fieldKey}`, ...mapped];
   }
 
   function isSeedFieldKey(fieldKey: string): boolean {

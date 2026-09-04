@@ -66,6 +66,7 @@ export function DashboardCustomizePanel({
 }: DashboardCustomizePanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const widgetScope = resolveDefaultDashboardWidgetScope(can);
+  const disabledSet = new Set(disabledCardIds);
 
   return (
     <div className="space-y-5 pb-1">
@@ -99,7 +100,7 @@ export function DashboardCustomizePanel({
             <CustomizeItemRow
               key={dashboardCard.id}
               id={`card-vis-${dashboardCard.id}`}
-              checked={!disabledCardIds.includes(dashboardCard.id)}
+              checked={!disabledSet.has(dashboardCard.id)}
               onToggle={() => toggleCardVisibility(dashboardCard.id)}
               title={dashboardCard.title}
             />

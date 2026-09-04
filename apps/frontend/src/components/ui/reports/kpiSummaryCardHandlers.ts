@@ -14,6 +14,10 @@ import {
 } from './kpiSummaryFormatters';
 import type { AggregateCardValue, CategorizedKPIItem, KPIItem } from './kpiSummaryTypes';
 
+const KPI_ROLE_ATTENDANCE_ONLY_SET = new Set(KPI_ROLE_ATTENDANCE_ONLY_IDS);
+const KPI_ROLE_FINANCE_ONLY_SET = new Set(KPI_ROLE_FINANCE_ONLY_IDS);
+
+
 export function filterStandardPossibleCards(
   standardCards: CategorizedKPIItem[],
   category: string,
@@ -22,10 +26,10 @@ export function filterStandardPossibleCards(
   return standardCards.filter((card) => {
     if (!card.categories.includes(category)) return false;
     if (can('attendance.write') && !can('finance.write')) {
-      return KPI_ROLE_ATTENDANCE_ONLY_IDS.includes(card.id);
+      return KPI_ROLE_ATTENDANCE_ONLY_SET.has(card.id);
     }
     if (can('finance.write') && !can('attendance.write')) {
-      return KPI_ROLE_FINANCE_ONLY_IDS.includes(card.id);
+      return KPI_ROLE_FINANCE_ONLY_SET.has(card.id);
     }
     return true;
   });
@@ -68,9 +72,9 @@ export function createKpiCardHandlers(
 ) {
   const handleToggleCard = (cardId: string) => {
     setSelectedCardIds((previousCardIds) => {
-      const nextCardIds = previousCardIds.includes(cardId)
-        ? previousCardIds.filter((selectedCardId) => selectedCardId !== cardId)
-        : [...previousCardIds, cardId];
+      const s = new Set(previousCardIds);
+      if (s.has(cardId)) { s.delete(cardId); } else { s.add(cardId); }
+      const nextCardIds = [...s];
       saveObject(`kpi_config_${category}_${role || 'all'}`, nextCardIds);
       return nextCardIds;
     });

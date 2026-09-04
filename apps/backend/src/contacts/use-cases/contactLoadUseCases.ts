@@ -175,23 +175,29 @@ function firstCollectionString(rows: unknown[] | null): string {
   return firstString(rows?.[0]);
 }
 
-function resolveDefaultPhoneCountryCode(
-  countryCodes: unknown[] | null,
+export function resolveDefaultPhoneCountryCode(
+  countryCodes: unknown,
   defaultCountry: string,
 ): string {
   if (!countryCodes || !Array.isArray(countryCodes)) return '';
-  const entries = countryCodes.filter(
-    (entry): entry is { country: string; code: string } =>
-      Boolean(entry) &&
+  let fallbackCode = '';
+  for (const entry of countryCodes) {
+    if (
+      entry &&
       typeof entry === 'object' &&
       typeof (entry as { country?: unknown }).country === 'string' &&
-      typeof (entry as { code?: unknown }).code === 'string',
-  );
-  if (defaultCountry) {
-    const matched = entries.find((entry) => entry.country === defaultCountry && entry.code);
-    if (matched?.code) return matched.code;
+      typeof (entry as { code?: unknown }).code === 'string' &&
+      (entry as { code: string }).code
+    ) {
+      if (defaultCountry && (entry as { country: string }).country === defaultCountry) {
+        return (entry as { code: string }).code;
+      }
+      if (!fallbackCode) {
+        fallbackCode = (entry as { code: string }).code;
+      }
+    }
   }
-  return entries.find((entry) => entry.code)?.code ?? '';
+  return fallbackCode;
 }
 
 export async function loadContactRuntimeDefaults(): Promise<ContactRuntimeDefaults> {

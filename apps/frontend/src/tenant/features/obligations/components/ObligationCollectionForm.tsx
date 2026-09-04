@@ -56,10 +56,12 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
   const eligibleRepIds = wakalaTypes
     .filter((wakalaType) => wakalaType.obligation_type_id === form.obligation_type_id)
     .map((wakalaType) => wakalaType.mujtahid_representative_id);
+  const eligibleRepSet = new Set(eligibleRepIds);
 
   const eligibleReps = form.obligation_type_id
-    ? reps.filter((rep) => eligibleRepIds.includes(rep.id))
+    ? reps.filter((rep) => eligibleRepSet.has(rep.id))
     : reps;
+
 
   useEffect(() => {
     if (form.obligation_type_id) {

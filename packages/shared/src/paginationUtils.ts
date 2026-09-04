@@ -59,3 +59,30 @@ export function isQueryFlagTrue(value: unknown): boolean {
   }
   return false;
 }
+
+/**
+ * Normalizes and dedupes a collection of identifiers, trimming whitespace and dropping empties.
+ * Accepts an array of ids, or a delimited string (e.g. comma-separated query param).
+ * Avoids intermediate array allocations from repeated .map().filter() chaining.
+ */
+export function dedupeTrimmedIds(
+  ids: string | readonly (string | number)[] | undefined | null,
+  delimiter = ',',
+): string[] {
+  if (!ids) return [];
+  const list = typeof ids === 'string' ? ids.split(delimiter) : ids;
+  if (list.length === 0) return [];
+  const result: string[] = [];
+  const seen = new Set<string>();
+  for (let i = 0; i < list.length; i++) {
+    const raw = list[i];
+    if (raw == null) continue;
+    const trimmed = String(raw).trim();
+    if (trimmed.length > 0 && !seen.has(trimmed)) {
+      seen.add(trimmed);
+      result.push(trimmed);
+    }
+  }
+  return result;
+}
+

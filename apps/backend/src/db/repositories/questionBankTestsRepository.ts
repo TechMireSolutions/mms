@@ -367,11 +367,27 @@ export async function bulkSaveTests(tenant: string, records: QuestionBankTest[])
         },
       });
 
-    await Promise.all([
-      tx.delete(testSectionQuestions).where(and(eq(testSectionQuestions.workspaceSubdomain, subdomain), inArray(testSectionQuestions.sectionId, records.flatMap((r) => (r.sections ?? []).map((s) => s.id)).filter(Boolean)))),
+    const sectionIds: string[] = [];
+    for (let i = 0; i < records.length; i++) {
+      const sections = records[i]?.sections;
+      if (sections) {
+        for (let j = 0; j < sections.length; j++) {
+          const sid = sections[j]?.id;
+          if (sid) sectionIds.push(sid);
+        }
+      }
+    }
+
+    const deleteOps: Promise<unknown>[] = [
       tx.delete(testSections).where(and(eq(testSections.workspaceSubdomain, subdomain), inArray(testSections.testId, testIds))),
       tx.delete(testQuestions).where(and(eq(testQuestions.workspaceSubdomain, subdomain), inArray(testQuestions.testId, testIds))),
-    ]);
+    ];
+    if (sectionIds.length > 0) {
+      deleteOps.push(
+        tx.delete(testSectionQuestions).where(and(eq(testSectionQuestions.workspaceSubdomain, subdomain), inArray(testSectionQuestions.sectionId, sectionIds))),
+      );
+    }
+    await Promise.all(deleteOps);
 
     await insertTestChildrenTx(tx, subdomain, records);
   });

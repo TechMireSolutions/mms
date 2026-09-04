@@ -19,17 +19,20 @@ function activityLogRowToRecord(row: ActivityLogRow): ActivityLog {
 }
 
 function auditLogRowToRecord(row: AuditLogRow): AuditLogEntry {
-  return {
+  const entry: AuditLogEntry = {
     id: row.id,
     at: row.at,
     userId: row.userId,
-    userEmail: row.userEmail ?? undefined,
-    tenant: row.tenant ?? undefined,
     action: row.action,
     entityType: row.entityType as AuditLogEntry['entityType'],
     entityId: row.entityId,
-    summary: row.summary ?? undefined,
   };
+
+  if (row.userEmail) entry.userEmail = row.userEmail;
+  if (row.tenant) entry.tenant = row.tenant;
+  if (row.summary) entry.summary = row.summary;
+
+  return entry;
 }
 
 export interface ListLogsOptions {

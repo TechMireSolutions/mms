@@ -83,6 +83,10 @@ export function findContactUniqueFieldConflicts(
   );
   if (candidateId) excludedIds.add(candidateId);
 
+  const candidateCompositeSet = new Set(
+    candidateValues.map((v) => `${v.tabId}:${v.fieldKey}:${v.normalized}`),
+  );
+
   const peerValues = new Map<string, string>(); // composite → peer id
 
   for (const peer of peers) {
@@ -92,28 +96,24 @@ export function findContactUniqueFieldConflicts(
 
     for (const value of collectUniqueContactFieldValues(peer, uniqueFields, collectOptions)) {
       const composite = `${value.tabId}:${value.fieldKey}:${value.normalized}`;
-      if (!peerValues.has(composite)) {
+      if (candidateCompositeSet.has(composite) && !peerValues.has(composite)) {
         peerValues.set(composite, peerId);
       }
     }
   }
+
+  const reportedErrorKeys = new Set<string>(
+    errors.map((e) => `${e.tabId}:${e.fieldId}:${e.index ?? ""}`),
+  );
 
   for (const value of candidateValues) {
     const composite = `${value.tabId}:${value.fieldKey}:${value.normalized}`;
     if (!peerValues.has(composite)) continue;
     const field = fieldByKey.get(`${value.tabId}:${value.fieldKey}`);
     if (!field) continue;
-    // Avoid duplicate error for the same field/index from intra + peer.
-    if (
-      errors.some(
-        (error) =>
-          error.tabId === value.tabId &&
-          error.fieldId === value.fieldKey &&
-          error.index === value.index,
-      )
-    ) {
-      continue;
-    }
+    const errorKey = `${value.tabId}:${value.fieldKey}:${value.index ?? ""}`;
+    if (reportedErrorKeys.has(errorKey)) continue;
+    reportedErrorKeys.add(errorKey);
     errors.push({
       fieldId: value.fieldKey,
       tabId: value.tabId,

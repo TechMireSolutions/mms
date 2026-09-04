@@ -43,7 +43,7 @@ export async function requireMainDomain(
   reply: FastifyReply,
 ): Promise<void> {
   if (getRequestTenant()) {
-    sendForbidden(reply, 'Platform actions are only available on the main domain');
+    await sendForbidden(reply, 'Platform actions are only available on the main domain');
     return;
   }
 }
@@ -89,26 +89,26 @@ export async function resolvePlatformUser(
   return { ok: true, user: toPublicPlatformUser(stored) };
 }
 
-function sendPlatformAuthFailure(
+async function sendPlatformAuthFailure(
   reply: FastifyReply,
   reason: PlatformAuthFailureReason,
-): void {
+): Promise<void> {
   switch (reason) {
     case 'account_disabled':
-      sendUnauthorized(reply, 'Platform account has been disabled', 'account_disabled');
+      await sendUnauthorized(reply, 'Platform account has been disabled', 'account_disabled');
       return;
     case 'session_revoked':
-      sendUnauthorized(reply, 'Platform session has been revoked', 'session_revoked');
+      await sendUnauthorized(reply, 'Platform session has been revoked', 'session_revoked');
       return;
     case 'user_missing':
-      sendUnauthorized(reply, 'User no longer exists');
+      await sendUnauthorized(reply, 'User no longer exists');
       return;
     case 'invalid_session':
-      sendUnauthorized(reply, 'Invalid platform session');
+      await sendUnauthorized(reply, 'Invalid platform session');
       return;
     case 'auth_required':
     default:
-      sendUnauthorized(reply, 'Platform authentication is required');
+      await sendUnauthorized(reply, 'Platform authentication is required');
   }
 }
 
@@ -125,7 +125,7 @@ export async function authenticatePlatform(
 
   const resolved = await resolvePlatformUser(request);
   if (!resolved.ok) {
-    sendPlatformAuthFailure(reply, resolved.reason);
+    await sendPlatformAuthFailure(reply, resolved.reason);
     return;
   }
 
@@ -174,7 +174,7 @@ export function requirePlatformPermission(permission: PlatformAdminPermissionKey
     if (reply.sent) return;
     const req = request as PlatformAuthenticatedRequest;
     if (!platformUserCan(req.platformUser, permission)) {
-      sendForbidden(reply, `Missing platform permission: ${permission}`);
+      await sendForbidden(reply, `Missing platform permission: ${permission}`);
     }
   };
 }
@@ -192,7 +192,7 @@ export function requirePlatformSuperUser() {
     if (reply.sent) return;
     const req = request as PlatformAuthenticatedRequest;
     if (req.platformUser.role !== 'super_user') {
-      sendForbidden(reply, 'Super-user privilege required');
+      await sendForbidden(reply, 'Super-user privilege required');
     }
   };
 }

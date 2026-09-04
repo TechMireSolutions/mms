@@ -48,15 +48,17 @@ type DuplicatePreferences = Pick<
   | 'duplicateDetectionScoreName'
 >;
 
-function addToIndex(map: Map<string, Contact[]>, key: string, contact: Contact): void {
+function addToIndex<T>(map: Map<string, T[]>, key: string, item: T): void {
   if (!key) return;
   const bucket = map.get(key);
-  if (bucket) bucket.push(contact);
-  else map.set(key, [contact]);
+  if (bucket) bucket.push(item);
+  else map.set(key, [item]);
 }
 
 function pairKey(contactA: Contact, contactB: Contact): string {
-  return [String(contactA.id), String(contactB.id)].sort().join('-');
+  const idA = String(contactA.id);
+  const idB = String(contactB.id);
+  return idA < idB ? `${idA}-${idB}` : `${idB}-${idA}`;
 }
 
 function getContactCleanName(contact: Contact, namePrefixesToIgnore?: string[]): string {
@@ -89,6 +91,10 @@ export function getContactDuplicateCandidateKeys(
 
 function hasOverlap(listA: string[], listB: string[]): boolean {
   if (listA.length === 0 || listB.length === 0) return false;
+  if (listA.length > 3 || listB.length > 3) {
+    const setB = new Set(listB);
+    return listA.some((val) => setB.has(val));
+  }
   return listA.some((val) => listB.includes(val));
 }
 
@@ -130,20 +136,16 @@ function evaluatePair(
   contact1: Contact,
   contact2: Contact,
   preferences: DuplicatePreferences,
+  keys1?: { phones: string[]; emails: string[]; name: string; cnic: string },
+  keys2?: { phones: string[]; emails: string[]; name: string; cnic: string },
 ): ContactDuplicatePair | null {
-  const name1 = getContactCleanName(contact1, preferences.namePrefixesToIgnore);
-  const name2 = getContactCleanName(contact2, preferences.namePrefixesToIgnore);
-  const phones1 = getPhoneNumbers(contact1);
-  const phones2 = getPhoneNumbers(contact2);
-  const emails1 = getEmails(contact1);
-  const emails2 = getEmails(contact2);
-  const cnic1 = getContactCleanCnic(contact1);
-  const cnic2 = getContactCleanCnic(contact2);
+  const k1 = keys1 ?? getContactDuplicateCandidateKeys(contact1, preferences);
+  const k2 = keys2 ?? getContactDuplicateCandidateKeys(contact2, preferences);
 
-  const phoneMatch = hasOverlap(phones1, phones2);
-  const emailMatch = hasOverlap(emails1, emails2);
-  const nameMatch = Boolean(name1 && name2 && name1 === name2);
-  const cnicMatch = Boolean(cnic1 && cnic2 && cnic1 === cnic2);
+  const phoneMatch = hasOverlap(k1.phones, k2.phones);
+  const emailMatch = hasOverlap(k1.emails, k2.emails);
+  const nameMatch = Boolean(k1.name && k2.name && k1.name === k2.name);
+  const cnicMatch = Boolean(k1.cnic && k2.cnic && k1.cnic === k2.cnic);
 
   if (!phoneMatch && !emailMatch && !nameMatch && !cnicMatch) return null;
 
@@ -162,17 +164,24 @@ function evaluatePair(
   };
 }
 
+interface ContactIndexEntry {
+  contact: Contact;
+  keys: { phones: string[]; emails: string[]; name: string; cnic: string };
+}
+
 function collectCandidatesFromKeys(
-  indexMap: Map<string, Contact[]>,
+  indexMap: Map<string, ContactIndexEntry[]>,
   keys: string[],
-  targetCandidates: Map<string, Contact>,
+  targetCandidates: Map<string, ContactIndexEntry>,
 ): void {
-  for (const key of keys) {
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
     if (!key) continue;
     const matches = indexMap.get(key);
     if (matches) {
-      for (const match of matches) {
-        targetCandidates.set(String(match.id), match);
+      for (let j = 0; j < matches.length; j++) {
+        const match = matches[j];
+        targetCandidates.set(String(match.contact.id), match);
       }
     }
   }
@@ -185,40 +194,45 @@ export function findContactDuplicatePairs(
   options?: { includeDeleted?: boolean },
 ): ContactDuplicatePair[] {
   const pool = options?.includeDeleted ? contacts : filterActiveContacts(contacts);
-  const phoneIndex = new Map<string, Contact[]>();
-  const emailIndex = new Map<string, Contact[]>();
-  const nameIndex = new Map<string, Contact[]>();
-  const cnicIndex = new Map<string, Contact[]>();
+  const entries: ContactIndexEntry[] = pool.map((contact) => ({
+    contact,
+    keys: getContactDuplicateCandidateKeys(contact, preferences),
+  }));
 
-  for (const contact of pool) {
-    const keys = getContactDuplicateCandidateKeys(contact, preferences);
-    for (const phone of keys.phones) addToIndex(phoneIndex, phone, contact);
-    for (const email of keys.emails) addToIndex(emailIndex, email, contact);
-    if (keys.name) addToIndex(nameIndex, keys.name, contact);
-    if (keys.cnic) addToIndex(cnicIndex, keys.cnic, contact);
+  const phoneIndex = new Map<string, ContactIndexEntry[]>();
+  const emailIndex = new Map<string, ContactIndexEntry[]>();
+  const nameIndex = new Map<string, ContactIndexEntry[]>();
+  const cnicIndex = new Map<string, ContactIndexEntry[]>();
+
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    for (let j = 0; j < entry.keys.phones.length; j++) addToIndex(phoneIndex, entry.keys.phones[j], entry);
+    for (let j = 0; j < entry.keys.emails.length; j++) addToIndex(emailIndex, entry.keys.emails[j], entry);
+    if (entry.keys.name) addToIndex(nameIndex, entry.keys.name, entry);
+    if (entry.keys.cnic) addToIndex(cnicIndex, entry.keys.cnic, entry);
   }
 
   const matchedPairs = new Set<string>();
   const list: ContactDuplicatePair[] = [];
 
-  for (const contact1 of pool) {
-    const keys = getContactDuplicateCandidateKeys(contact1, preferences);
-    const candidates = new Map<string, Contact>();
-    collectCandidatesFromKeys(phoneIndex, keys.phones, candidates);
-    collectCandidatesFromKeys(emailIndex, keys.emails, candidates);
-    if (keys.name) {
-      collectCandidatesFromKeys(nameIndex, [keys.name], candidates);
+  for (let i = 0; i < entries.length; i++) {
+    const entry1 = entries[i];
+    const candidates = new Map<string, ContactIndexEntry>();
+    collectCandidatesFromKeys(phoneIndex, entry1.keys.phones, candidates);
+    collectCandidatesFromKeys(emailIndex, entry1.keys.emails, candidates);
+    if (entry1.keys.name) {
+      collectCandidatesFromKeys(nameIndex, [entry1.keys.name], candidates);
     }
-    if (keys.cnic) {
-      collectCandidatesFromKeys(cnicIndex, [keys.cnic], candidates);
+    if (entry1.keys.cnic) {
+      collectCandidatesFromKeys(cnicIndex, [entry1.keys.cnic], candidates);
     }
 
-    for (const contact2 of candidates.values()) {
-      if (String(contact1.id) === String(contact2.id)) continue;
-      const key = pairKey(contact1, contact2);
+    for (const entry2 of candidates.values()) {
+      if (String(entry1.contact.id) === String(entry2.contact.id)) continue;
+      const key = pairKey(entry1.contact, entry2.contact);
       if (matchedPairs.has(key)) continue;
 
-      const pair = evaluatePair(contact1, contact2, preferences);
+      const pair = evaluatePair(entry1.contact, entry2.contact, preferences, entry1.keys, entry2.keys);
       if (!pair) continue;
 
       matchedPairs.add(key);

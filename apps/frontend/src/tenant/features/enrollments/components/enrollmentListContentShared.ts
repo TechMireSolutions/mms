@@ -37,17 +37,20 @@ export interface EnrollmentListContentProps {
   openComposer: (channel: EnrollmentMessageChannel, recipients: ReturnType<typeof toMessagingRecipient>[]) => void;
 }
 
-export function getEnrollmentStudentDisplayName(
-  enrollment: Enrollment,
-  students: Student[],
-): string {
-  const student = students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
-  return enrollment.studentName?.trim() || student?.name || "";
-}
-
 export function findEnrollmentStudent(
   enrollment: Enrollment,
-  students: Student[],
+  students: Student[] | Map<string, Student>,
 ): Student | undefined {
+  if (students instanceof Map) {
+    return students.get(String(enrollment.studentId));
+  }
   return students.find((candidate) => String(candidate.id) === String(enrollment.studentId));
+}
+
+export function getEnrollmentStudentDisplayName(
+  enrollment: Enrollment,
+  students: Student[] | Map<string, Student>,
+): string {
+  const student = findEnrollmentStudent(enrollment, students);
+  return enrollment.studentName?.trim() || student?.name || "";
 }

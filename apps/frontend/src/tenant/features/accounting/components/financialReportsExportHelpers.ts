@@ -59,7 +59,16 @@ export function buildFinancialReportExportRows({
   formatCurrency,
   t,
 }: BuildFinancialReportExportRowsOptions): Record<string, string>[] {
-  const getRowsByAccountType = (type: string) => tb.filter((row) => row.type === type);
+  const rowsByType = new Map<string, TrialBalanceRow[]>();
+  for (const row of tb) {
+    let list = rowsByType.get(row.type);
+    if (!list) {
+      list = [];
+      rowsByType.set(row.type, list);
+    }
+    list.push(row);
+  }
+  const getRowsByAccountType = (type: string): TrialBalanceRow[] => rowsByType.get(type) ?? [];
   const rows: Record<string, string>[] = [];
 
   if (view === "income") {

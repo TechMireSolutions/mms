@@ -1,6 +1,8 @@
 import {
+  createContactLookupMap,
   hydrateContactProfile,
   hydrateParentContactNames,
+  lookupContact,
   normalizeContactLinkedRecord,
   stripRecordFields,
   type ContactLike,
@@ -41,13 +43,17 @@ export function normalizeStoredStudent<T extends Record<string, unknown>>(record
 }
 
 export type { ContactWithRelationships };
+export { createContactLookupMap };
 
 /** Hydrates student + parent display fields from contacts (relationships preferred). */
 export function hydrateStudentFromContacts<T extends Student>(
   student: T,
-  contacts: (ContactLike | ContactWithRelationships)[],
+  contacts: (ContactLike | ContactWithRelationships)[] | Map<string, ContactLike | ContactWithRelationships>,
 ): T {
-  const primary = contacts.find((contact) => String(contact.id) === String(student.contactId));
+  const contactLookup = contacts instanceof Map
+    ? (contacts as unknown as Map<string, ContactLike>)
+    : (Array.isArray(contacts) && contacts.length > 8 ? createContactLookupMap(contacts as ContactLike[]) : (contacts as ContactLike[]));
+  const primary = lookupContact(contactLookup, student.contactId);
   const guardians = resolveStudentGuardianLinks(student, (primary as ContactWithRelationships) ?? null);
   const withGuardians = {
     ...student,
@@ -60,9 +66,21 @@ export function hydrateStudentFromContacts<T extends Student>(
   } as T;
 
   return hydrateParentContactNames(
-    hydrateContactProfile(withGuardians, contacts as ContactLike[]),
-    contacts as ContactLike[],
+    hydrateContactProfile(withGuardians, contactLookup),
+    contactLookup,
   ) as T;
+}
+
+/** Batch hydrates students + parent display fields from contacts with O(1) indexed lookup. */
+export function hydrateStudentListFromContacts<T extends Student>(
+  students: T[],
+  contacts: (ContactLike | ContactWithRelationships)[] | Map<string, ContactLike | ContactWithRelationships>,
+): T[] {
+  if (!Array.isArray(students) || students.length === 0) return [];
+  const contactLookup = contacts instanceof Map
+    ? (contacts as unknown as Map<string, ContactLike>)
+    : createContactLookupMap(contacts as ContactLike[]);
+  return students.map((student) => hydrateStudentFromContacts(student, contactLookup));
 }
 
 export interface StudentNameParentLabels {

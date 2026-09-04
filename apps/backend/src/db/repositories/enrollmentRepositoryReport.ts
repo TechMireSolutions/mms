@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   enrollmentsReportComparisonQueryActive,
   ensureAllSessionsInComparison,
   type EnrollmentsReportAggregates,
@@ -58,12 +59,17 @@ export async function loadEnrollmentsReportAggregatesSql(
       ORDER BY m."monthKey" ASC
     `);
 
-    const cumulativeTrends = getQueryRows<Record<string, unknown>>(trendsResult)
-      .filter((row) => typeof row.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey))
-      .map((row) => ({
-        monthKey: String(row.monthKey),
-        students: Number(row.students ?? 0),
-      }));
+    const trendRows = getQueryRows<Record<string, unknown>>(trendsResult);
+    const cumulativeTrends: Array<{ monthKey: string; students: number }> = [];
+    for (let i = 0; i < trendRows.length; i++) {
+      const row = trendRows[i];
+      if (typeof row?.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey)) {
+        cumulativeTrends.push({
+          monthKey: row.monthKey,
+          students: Number(row.students ?? 0),
+        });
+      }
+    }
 
     const statusResult = await tx.execute(sql`
       SELECT
@@ -194,11 +200,13 @@ export async function loadEnrollmentsReportAggregatesSql(
         comparison.sessions = ensureAllSessionsInComparison(
           getQueryRows<Record<string, unknown>>(compareSessionResult).map((row) => {
             const rawIds = row.studentIds;
-            const studentIds = Array.isArray(rawIds)
-              ? rawIds.map(String).filter(Boolean)
-              : typeof rawIds === 'string'
-                ? rawIds.replace(/[{}]/g, '').split(',').map((id) => id.trim()).filter(Boolean)
-                : [];
+            const studentIds = dedupeTrimmedIds(
+              Array.isArray(rawIds)
+                ? rawIds
+                : typeof rawIds === 'string'
+                  ? rawIds.replace(/[{}]/g, '')
+                  : [],
+            );
             return {
               sessionId: String(row.sessionId ?? ''),
               enrollmentCount: Number(row.enrollmentCount ?? 0),
@@ -229,12 +237,18 @@ export async function loadEnrollmentsReportAggregatesSql(
           GROUP BY 1
           ORDER BY 1 ASC
         `);
-        return getQueryRows<Record<string, unknown>>(monthResult)
-          .filter((row) => typeof row.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey))
-          .map((row) => ({
-            monthKey: String(row.monthKey),
-            count: Number(row.count ?? 0),
-          }));
+        const rows = getQueryRows<Record<string, unknown>>(monthResult);
+        const monthly: EnrollmentsReportComparisonMonth[] = [];
+        for (let i = 0; i < rows.length; i++) {
+          const row = rows[i];
+          if (typeof row?.monthKey === 'string' && /^\d{4}-\d{2}$/.test(row.monthKey)) {
+            monthly.push({
+              monthKey: row.monthKey,
+              count: Number(row.count ?? 0),
+            });
+          }
+        }
+        return monthly;
       };
 
       comparison.monthly.a = await loadMonthlyRange(comparisonQuery.rangeAFrom, comparisonQuery.rangeATo);

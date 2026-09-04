@@ -5,15 +5,17 @@ import type { ObligationCollection } from '@/lib/data/obligationsData';
 export function useObligationSelection(collections: ObligationCollection[]) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  const selectedSet = new Set(selectedIds);
   const allVisibleSelected = collections.length > 0
-    && collections.every((collection) => selectedIds.includes(collection.id));
-  const someVisibleSelected = collections.some((collection) => selectedIds.includes(collection.id));
+    && collections.every((collection) => selectedSet.has(collection.id));
+  const someVisibleSelected = selectedSet.size > 0 && collections.some((collection) => selectedSet.has(collection.id));
 
   const toggleSelectAll = ((checked: boolean) => {
     const visibleIds = collections.map((collection) => collection.id);
+    const visibleSet = new Set(visibleIds);
     setSelectedIds((currentIds) => checked
       ? [...new Set([...currentIds, ...visibleIds])]
-      : currentIds.filter((id) => !visibleIds.includes(id)));
+      : currentIds.filter((id) => !visibleSet.has(id)));
   });
 
   const toggleSelectedCollection = ((id: string, checked: boolean) => {

@@ -4,24 +4,27 @@ import { teachers } from '../schema.js';
 import { withTenant, type AppDb } from '../tenant-context.js';
 
 export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
-  return {
+  const teacher: Teacher = {
     id: row.id,
     contactId: row.contactId ?? '',
     userId: row.userId ?? null,
-    employeeId: row.employeeId ?? undefined,
     status: row.status ?? 'active',
-    specialization: row.specialization ?? undefined,
-    qualification: row.qualification ?? undefined,
-    joinDate: row.joinDate ?? undefined,
-    notes: row.notes ?? undefined,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
-    createdAt: row.createdAt ? row.createdAt.toISOString() : undefined,
-    updatedAt: row.updatedAt ? row.updatedAt.toISOString() : undefined,
-    createdBy: row.createdBy ?? undefined,
-    updatedBy: row.updatedBy ?? undefined,
   };
+
+  if (row.employeeId) teacher.employeeId = row.employeeId;
+  if (row.specialization) teacher.specialization = row.specialization;
+  if (row.qualification) teacher.qualification = row.qualification;
+  if (row.joinDate) teacher.joinDate = row.joinDate;
+  if (row.notes) teacher.notes = row.notes;
+  if (row.deletedAt) teacher.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) teacher.deletedBy = row.deletedBy;
+  if (row.deletionReason) teacher.deletionReason = row.deletionReason;
+  if (row.createdAt) teacher.createdAt = row.createdAt.toISOString();
+  if (row.updatedAt) teacher.updatedAt = row.updatedAt.toISOString();
+  if (row.createdBy) teacher.createdBy = row.createdBy;
+  if (row.updatedBy) teacher.updatedBy = row.updatedBy;
+
+  return teacher;
 }
 
 export async function hydrateTeachersList(

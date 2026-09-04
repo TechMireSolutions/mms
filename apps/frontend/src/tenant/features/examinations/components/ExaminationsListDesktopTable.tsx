@@ -41,6 +41,7 @@ export function ExaminationsListDesktopTable(props: ExaminationsListDesktopTable
     onTrashAction,
   } = props;
   const { t } = useTranslation();
+  const selectedSet = new Set(selectedIds);
 
   return (
     <Table className="table-fixed">
@@ -69,7 +70,7 @@ export function ExaminationsListDesktopTable(props: ExaminationsListDesktopTable
       <TableBody className="divide-y divide-border/50">
         {exams.map((exam, index) => {
           const { assignedClasses } = getExamMeta(exam, classes, enrollments);
-          const isSelected = selectedIds.includes(exam.id);
+          const isSelected = selectedSet.has(exam.id);
 
           return (
             <motion.tr 

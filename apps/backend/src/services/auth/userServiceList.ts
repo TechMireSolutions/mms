@@ -1,4 +1,4 @@
-import { hydrateWorkspaceUserProfile, resolveTenantLoginEmail } from '@mms/shared';
+import { createContactLookupMap, hydrateWorkspaceUserProfile, resolveTenantLoginEmail } from '@mms/shared';
 import {
   findTenantUserRowById,
   upsertTenantUsersBatch,
@@ -18,8 +18,9 @@ export async function getHydratedUsers(options?: {
 }): Promise<PersistedUser[]> {
   const users = await getRawUsers(options);
   const contacts = await getContactsForUsers(users);
+  const contactMap = createContactLookupMap(contacts);
   return users.map((user) =>
-    hydrateWorkspaceUserProfile(user, contacts) as PersistedUser,
+    hydrateWorkspaceUserProfile(user, contactMap) as PersistedUser,
   );
 }
 

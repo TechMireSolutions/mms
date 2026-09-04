@@ -27,9 +27,13 @@ export function toggleIdInSelection<T extends string | number>(
   selected: readonly T[],
   id: T,
 ): T[] {
-  return selected.includes(id)
-    ? selected.filter((selectedId) => selectedId !== id)
-    : [...selected, id];
+  const index = selected.indexOf(id);
+  if (index >= 0) {
+    const next = [...selected];
+    next.splice(index, 1);
+    return next;
+  }
+  return [...selected, id];
 }
 
 /** Toggle current-page ids into/out of selection (keeps other pages). */

@@ -85,11 +85,14 @@ export function ensureAllSessionsInComparison<T extends { sessionId: string }>(
   sessionIds: string[],
   fallbackFactory: (sessionId: string) => T,
 ): T[] {
+  const presentIds = new Set(items.map((r) => r.sessionId));
   const result = [...items];
   for (const id of sessionIds) {
-    if (!result.some((r) => r.sessionId === id)) {
+    if (!presentIds.has(id)) {
+      presentIds.add(id);
       result.push(fallbackFactory(id));
     }
   }
   return result;
 }
+

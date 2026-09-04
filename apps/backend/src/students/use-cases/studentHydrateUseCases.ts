@@ -1,4 +1,5 @@
 import {
+  createContactLookupMap,
   hydrateStudentFromContacts,
   resolveStudentGuardianLinks,
   type Contact,
@@ -68,5 +69,6 @@ export async function hydrateStudentsFromContacts(
     contacts = [...contacts, ...more];
   }
 
-  return withDerived.map((row) => hydrateStudentFromContacts(row, contacts as never));
+  const contactMap = createContactLookupMap(contacts as never);
+  return withDerived.map((row) => hydrateStudentFromContacts(row, contactMap as never));
 }

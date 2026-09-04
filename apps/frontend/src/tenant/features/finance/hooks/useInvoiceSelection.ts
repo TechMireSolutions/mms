@@ -5,15 +5,17 @@ import type { Invoice } from '@/lib/data/financeData';
 export function useInvoiceSelection(invoices: Invoice[]) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  const selectedSet = new Set(selectedIds);
   const allVisibleSelected = invoices.length > 0
-    && invoices.every((invoice) => selectedIds.includes(invoice.id));
-  const someVisibleSelected = invoices.some((invoice) => selectedIds.includes(invoice.id));
+    && invoices.every((invoice) => selectedSet.has(invoice.id));
+  const someVisibleSelected = selectedSet.size > 0 && invoices.some((invoice) => selectedSet.has(invoice.id));
 
   const toggleSelectAll = (checked: boolean) => {
     const visibleIds = invoices.map((invoice) => invoice.id);
+    const visibleSet = new Set(visibleIds);
     setSelectedIds((currentIds) => checked
       ? [...new Set([...currentIds, ...visibleIds])]
-      : currentIds.filter((id) => !visibleIds.includes(id)));
+      : currentIds.filter((id) => !visibleSet.has(id)));
   };
 
   const toggleSelectedInvoice = (id: string, checked: boolean) => {

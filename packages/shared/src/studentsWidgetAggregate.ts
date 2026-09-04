@@ -47,39 +47,56 @@ function aggregateNumericField(
 ): number {
   let sum = 0;
   let count = 0;
-  items.forEach((item) => {
-    const numericFieldValue = Number(studentFieldValue(item, targetField));
+  for (let i = 0; i < items.length; i++) {
+    const numericFieldValue = Number(studentFieldValue(items[i], targetField));
     if (!Number.isNaN(numericFieldValue)) {
       sum += numericFieldValue;
       count += 1;
     }
-  });
+  }
   if (operation === 'sum') return sum;
   return count > 0 ? Math.round(sum / count) : 0;
 }
 
 function buildChartData(items: StudentRow[], query: StudentsWidgetQuery): { name: string; value: number }[] {
   const xAxis = query.xAxisField || 'status';
-  const groups: Record<string, StudentRow[]> = {};
+  const isNumeric = query.operation === 'sum' || query.operation === 'avg';
+  const targetField = query.targetField || '';
+  const groupStats = new Map<string, { sum: number; count: number }>();
 
-  items.forEach((item) => {
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
     const keyVal = studentFieldValue(item, xAxis);
     const key = keyVal === undefined || keyVal === null || keyVal === '' ? 'Unknown' : String(keyVal);
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(item);
-  });
-
-  const chartRows = Object.entries(groups).map(([groupName, groupItems]) => {
-    let finalVal = 0;
-    if (query.operation === 'count' || query.operation === 'percentage') {
-      finalVal = groupItems.length;
-    } else if (query.operation === 'sum' || query.operation === 'avg') {
-      finalVal = aggregateNumericField(groupItems, query.operation, query.targetField || '');
+    let stat = groupStats.get(key);
+    if (!stat) {
+      stat = { sum: 0, count: 0 };
+      groupStats.set(key, stat);
     }
-    return { name: groupName, value: finalVal };
-  });
+    if (isNumeric) {
+      const numericVal = Number(studentFieldValue(item, targetField));
+      if (!Number.isNaN(numericVal)) {
+        stat.sum += numericVal;
+        stat.count += 1;
+      }
+    } else {
+      stat.count += 1;
+    }
+  }
 
-  return chartRows.sort((a, b) => b.value - a.value).slice(0, 8);
+  const chartRows: { name: string; value: number }[] = [];
+  for (const [groupName, stat] of groupStats) {
+    let finalVal = 0;
+    if (isNumeric) {
+      finalVal = query.operation === 'sum' ? stat.sum : (stat.count > 0 ? Math.round(stat.sum / stat.count) : 0);
+    } else {
+      finalVal = stat.count;
+    }
+    chartRows.push({ name: groupName, value: finalVal });
+  }
+
+  const limit = Math.max(1, query.chartLimit ?? 8);
+  return chartRows.sort((a, b) => b.value - a.value).slice(0, limit);
 }
 
 /** Server/client widget aggregate for students collection (globle2 §10). */

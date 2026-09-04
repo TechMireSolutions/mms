@@ -49,8 +49,10 @@ export function resolveModuleTierTab(
   return visibleTabIds.includes(activeTab) ? activeTab : MODULE_TIER_TAB_CLOSED;
 }
 
+const MODULE_TIER_TAB_ID_SET = new Set<string>(MODULE_TIER_TAB_IDS);
+
 export function isModuleTierTabId(key: string): key is ModuleTierTabId {
-  return (MODULE_TIER_TAB_IDS as readonly string[]).includes(key);
+  return MODULE_TIER_TAB_ID_SET.has(key);
 }
 
 /** Upgrades persisted system tier tab keys from legacy ids. */

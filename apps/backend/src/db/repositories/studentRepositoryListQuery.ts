@@ -1,5 +1,6 @@
 import { eq, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type StudentsListQuery,
@@ -140,17 +141,13 @@ export function buildListConditions(
     conditions.push(isNull(students.deletedAt));
   }
 
-  if (query.status?.trim()) {
-    const statuses = query.status
-      .split(',')
-      .map((status) => status.trim().toLowerCase())
-      .filter(Boolean);
-    if (statuses.length > 0) {
-      conditions.push(sql`${statusExpr()} IN (${sql.join(
-        statuses.map((status) => sql`${status}`),
-        sql`, `,
-      )})`);
-    }
+  const rawStatuses = dedupeTrimmedIds(query.status);
+  if (rawStatuses.length > 0) {
+    const statuses = rawStatuses.map((status) => status.toLowerCase());
+    conditions.push(sql`${statusExpr()} IN (${sql.join(
+      statuses.map((status) => sql`${status}`),
+      sql`, `,
+    )})`);
   }
 
   if (query.gender?.trim()) {
@@ -201,10 +198,7 @@ export function buildListConditions(
     )`);
   }
 
-  const relatedContactIds = query.relatedContactIds
-    ?.split(',')
-    .map((id) => id.trim())
-    .filter(Boolean) ?? [];
+  const relatedContactIds = dedupeTrimmedIds(query.relatedContactIds);
   const fatherName = query.fatherName?.trim().toLowerCase();
   const relationshipConditions: SQL[] = [];
   if (relatedContactIds.length > 0) {

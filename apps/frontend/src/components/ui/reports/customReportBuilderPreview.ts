@@ -1,5 +1,6 @@
 import type { AppTranslationKey } from "@mms/shared";
 import {
+  compileContactReportCellExtractor,
   getContactReportCellValue,
   isContactsReportFieldId,
 } from "@mms/shared";
@@ -94,6 +95,152 @@ function getSourceRows(
   });
 }
 
+function compilePreviewFieldExtractor(
+  selectedField: string,
+  source: DataSource,
+  cellLabels: { yes: string; no: string },
+  currencyCode: string,
+  resolveFieldLabel: (field: string) => string,
+): { label: string; extract: (sourceRow: Record<string, unknown>) => string | number } {
+  const label = resolveFieldLabel(selectedField);
+
+  if (source === "contacts" && isContactsReportFieldId(selectedField)) {
+    const contactExtractor = compileContactReportCellExtractor(selectedField, cellLabels);
+    return {
+      label,
+      extract: contactExtractor,
+    };
+  }
+
+  if (
+    selectedField === "Name" ||
+    selectedField === "Student Name" ||
+    selectedField === "Faculty Name" ||
+    selectedField === "Faculty"
+  ) {
+    return {
+      label,
+      extract: (sourceRow) =>
+        String(sourceRow.name || sourceRow.studentName || sourceRow.facultyName || sourceRow.faculty || "—"),
+    };
+  }
+  if (selectedField === "Status") {
+    return {
+      label,
+      extract: (sourceRow) => String(sourceRow.status || "—"),
+    };
+  }
+  if (selectedField === "Class") {
+    return {
+      label,
+      extract: (sourceRow) =>
+        String(
+          sourceRow.class ||
+            sourceRow.className ||
+            (sourceRow.classes as { name: string }[] | undefined)?.[0]?.name ||
+            "—",
+        ),
+    };
+  }
+  if (selectedField === "Session") {
+    return {
+      label,
+      extract: (sourceRow) => String(sourceRow.session || "—"),
+    };
+  }
+  if (selectedField === "Teacher") {
+    return {
+      label,
+      extract: (sourceRow) => String(sourceRow.teacher || sourceRow.teacherName || "—"),
+    };
+  }
+  if (selectedField === "Room") {
+    return {
+      label,
+      extract: (sourceRow) => String(sourceRow.room || "—"),
+    };
+  }
+  if (selectedField === "Time") {
+    return {
+      label,
+      extract: (sourceRow) => String(sourceRow.time || "—"),
+    };
+  }
+  if (selectedField === "Days") {
+    return {
+      label,
+      extract: (sourceRow) =>
+        Array.isArray(sourceRow.days) ? sourceRow.days.join(", ") : String(sourceRow.days || "—"),
+    };
+  }
+  if (selectedField === "Discount Type") {
+    return {
+      label,
+      extract: (sourceRow) => String(sourceRow.discountType || "None"),
+    };
+  }
+  if (selectedField === "Discount %" || selectedField === "Discount") {
+    return {
+      label,
+      extract: (sourceRow) =>
+        sourceRow.discountPct !== undefined
+          ? `${sourceRow.discountPct}%`
+          : sourceRow.discountAmt
+          ? `${currencyCode} ${sourceRow.discountAmt}`
+          : "0",
+    };
+  }
+  if (selectedField === "Final Amount") {
+    return {
+      label,
+      extract: (sourceRow) => (sourceRow.finalAmt ? `${currencyCode} ${sourceRow.finalAmt}` : "0"),
+    };
+  }
+  if (selectedField === "Utilisation %" || selectedField === "Rate %") {
+    return {
+      label,
+      extract: (sourceRow) =>
+        Number(sourceRow.capacity || 0) > 0
+          ? `${Math.round((Number(sourceRow.enrolled || 0) / Number(sourceRow.capacity || 1)) * 100)}%`
+          : sourceRow.rate
+          ? `${sourceRow.rate}%`
+          : "100%",
+    };
+  }
+  if (
+    selectedField === "Registration Date" ||
+    selectedField === "Issued Date" ||
+    selectedField === "Due Date" ||
+    selectedField === "Date" ||
+    selectedField === "Last Marked" ||
+    selectedField === "Last Awarded"
+  ) {
+    return {
+      label,
+      extract: (sourceRow) =>
+        String(
+          sourceRow.registeredDate ||
+            sourceRow.issuedDate ||
+            sourceRow.dueDate ||
+            sourceRow.date ||
+            sourceRow.lastMarked ||
+            sourceRow.lastAwarded ||
+            "—",
+        ),
+    };
+  }
+
+  const camel = toCamelCase(selectedField);
+  const fallbackKey = selectedField.toLowerCase().replace(/ /g, "");
+  return {
+    label,
+    extract: (sourceRow) => {
+      const rawValue = sourceRow[camel] !== undefined ? sourceRow[camel] : sourceRow[fallbackKey];
+      return rawValue !== undefined ? String(rawValue) : "—";
+    },
+  };
+}
+
 function buildFlatPreviewRows({
   source,
   selectedFields,
@@ -104,44 +251,23 @@ function buildFlatPreviewRows({
 }: BuildPreviewRowsParams): PreviewRow[] {
   const sourceRows = getSourceRows(source, collections, translate);
   const cellLabels = { yes: translate("common.yes"), no: translate("common.no") };
+  const extractors = selectedFields.map((field) =>
+    compilePreviewFieldExtractor(field, source, cellLabels, currencyCode, resolveFieldLabel),
+  );
+  const extractorCount = extractors.length;
+  const rowCount = sourceRows.length;
+  const rows: PreviewRow[] = new Array(rowCount);
 
-  return sourceRows.map((sourceRow) => {
+  for (let i = 0; i < rowCount; i++) {
+    const sourceRow = sourceRows[i];
     const row: PreviewRow = {};
-    selectedFields.forEach((selectedField) => {
-      const label = resolveFieldLabel(selectedField);
-      if (source === "contacts" && isContactsReportFieldId(selectedField)) {
-        row[label] = getContactReportCellValue(sourceRow, selectedField, cellLabels);
-        return;
-      }
-      const camel = toCamelCase(selectedField);
-      if (selectedField === "Name" || selectedField === "Student Name" || selectedField === "Faculty Name" || selectedField === "Faculty") {
-        row[label] = String(sourceRow.name || sourceRow.studentName || sourceRow.facultyName || sourceRow.faculty || "—");
-      }
-      else if (selectedField === "Status") row[label] = String(sourceRow.status || "—");
-      else if (selectedField === "Class") row[label] = String(sourceRow.class || sourceRow.className || (sourceRow.classes as { name: string }[] | undefined)?.[0]?.name || "—");
-      else if (selectedField === "Session") row[label] = String(sourceRow.session || "—");
-      else if (selectedField === "Teacher") row[label] = String(sourceRow.teacher || sourceRow.teacherName || "—");
-      else if (selectedField === "Room") row[label] = String(sourceRow.room || "—");
-      else if (selectedField === "Time") row[label] = String(sourceRow.time || "—");
-      else if (selectedField === "Days") row[label] = Array.isArray(sourceRow.days) ? sourceRow.days.join(", ") : String(sourceRow.days || "—");
-      else if (selectedField === "Discount Type") row[label] = String(sourceRow.discountType || "None");
-      else if (selectedField === "Discount %" || selectedField === "Discount") {
-        row[label] = sourceRow.discountPct !== undefined ? `${sourceRow.discountPct}%` : (sourceRow.discountAmt ? `${currencyCode} ${sourceRow.discountAmt}` : "0");
-      }
-      else if (selectedField === "Final Amount") row[label] = sourceRow.finalAmt ? `${currencyCode} ${sourceRow.finalAmt}` : "0";
-      else if (selectedField === "Utilisation %" || selectedField === "Rate %") {
-        row[label] = (Number(sourceRow.capacity || 0) > 0 ? `${Math.round((Number(sourceRow.enrolled || 0) / Number(sourceRow.capacity || 1)) * 100)}%` : (sourceRow.rate ? `${sourceRow.rate}%` : "100%"));
-      }
-      else if (selectedField === "Registration Date" || selectedField === "Issued Date" || selectedField === "Due Date" || selectedField === "Date" || selectedField === "Last Marked" || selectedField === "Last Awarded") {
-        row[label] = String(sourceRow.registeredDate || sourceRow.issuedDate || sourceRow.dueDate || sourceRow.date || sourceRow.lastMarked || sourceRow.lastAwarded || "—");
-      }
-      else {
-        const rawValue = sourceRow[camel] !== undefined ? sourceRow[camel] : sourceRow[selectedField.toLowerCase().replace(/ /g, "")];
-        row[label] = rawValue !== undefined ? String(rawValue) : "—";
-      }
-    });
-    return row;
-  });
+    for (let j = 0; j < extractorCount; j++) {
+      const item = extractors[j];
+      row[item.label] = item.extract(sourceRow);
+    }
+    rows[i] = row;
+  }
+  return rows;
 }
 
 function applyPreviewAggregates(
@@ -156,25 +282,39 @@ function applyPreviewAggregates(
   }
 
   const groupByLabel = resolveFieldLabel(groupBy);
-  const groups: Record<string, PreviewRow[]> = {};
-  rows.forEach((row) => {
+  const groups = new Map<string, PreviewRow[]>();
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
     const groupValue = String(row[groupByLabel] || "Unspecified");
-    if (!groups[groupValue]) groups[groupValue] = [];
-    groups[groupValue].push(row);
-  });
+    let group = groups.get(groupValue);
+    if (!group) {
+      group = [];
+      groups.set(groupValue, group);
+    }
+    group.push(row);
+  }
 
-  return Object.entries(groups).map(([groupName, groupRows]) => {
+  const nonGroupFields = selectedFields
+    .filter((selectedField) => selectedField !== groupBy)
+    .map((selectedField) => resolveFieldLabel(selectedField));
+
+  const result: PreviewRow[] = [];
+  for (const [groupName, groupRows] of groups) {
     const summaryRow: PreviewRow = { [groupByLabel]: groupName };
-    selectedFields.forEach((selectedField) => {
-      if (selectedField === groupBy) return;
-      const fieldLabel = resolveFieldLabel(selectedField);
-      const values = groupRows
-        .map((row) => Number(String(row[fieldLabel]).replace(/[^0-9.-]/g, "")))
-        .filter((value) => !isNaN(value));
-
+    for (let j = 0; j < nonGroupFields.length; j++) {
+      const fieldLabel = nonGroupFields[j];
       if (aggregate === "Count") {
         summaryRow[fieldLabel] = groupRows.length;
-      } else if (values.length === 0) {
+        continue;
+      }
+
+      const values: number[] = [];
+      for (let k = 0; k < groupRows.length; k++) {
+        const num = Number(String(groupRows[k][fieldLabel]).replace(/[^0-9.-]/g, ""));
+        if (!isNaN(num)) values.push(num);
+      }
+
+      if (values.length === 0) {
         summaryRow[fieldLabel] = "—";
       } else {
         switch (aggregate) {
@@ -194,9 +334,11 @@ function applyPreviewAggregates(
             summaryRow[fieldLabel] = "—";
         }
       }
-    });
-    return summaryRow;
-  });
+    }
+    result.push(summaryRow);
+  }
+
+  return result;
 }
 
 export function buildCustomReportPreviewRows(params: BuildPreviewRowsParams): PreviewRow[] {

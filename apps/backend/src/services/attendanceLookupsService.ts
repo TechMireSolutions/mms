@@ -22,16 +22,20 @@ type LookupDbRow = {
 };
 
 function rowsToAttendanceStatuses(rows: LookupDbRow[]): AttendanceStatus[] {
-  return rows.map((row) => ({
-    id: row.id.split(':').pop() ?? row.id,
-    label: row.label,
-    short: typeof row.meta?.short === 'string' ? row.meta.short : row.label.charAt(0).toUpperCase(),
-    color: typeof row.meta?.color === 'string' ? row.meta.color : 'muted',
-    bg: typeof row.meta?.bg === 'string' ? row.meta.bg : 'bg-muted',
-    text: typeof row.meta?.text === 'string' ? row.meta.text : 'text-muted-foreground',
-    border: typeof row.meta?.border === 'string' ? row.meta.border : 'border-border',
-    dot: typeof row.meta?.dot === 'string' ? row.meta.dot : 'bg-muted-foreground',
-  }));
+  return rows.map((row) => {
+    const lastColon = row.id.lastIndexOf(':');
+    const id = lastColon >= 0 ? row.id.slice(lastColon + 1) : row.id;
+    return {
+      id,
+      label: row.label,
+      short: typeof row.meta?.short === 'string' ? row.meta.short : row.label.charAt(0).toUpperCase(),
+      color: typeof row.meta?.color === 'string' ? row.meta.color : 'muted',
+      bg: typeof row.meta?.bg === 'string' ? row.meta.bg : 'bg-muted',
+      text: typeof row.meta?.text === 'string' ? row.meta.text : 'text-muted-foreground',
+      border: typeof row.meta?.border === 'string' ? row.meta.border : 'border-border',
+      dot: typeof row.meta?.dot === 'string' ? row.meta.dot : 'bg-muted-foreground',
+    };
+  });
 }
 
 export async function loadAttendanceLookupsMap(tenant = getRequestTenant()): Promise<AttendanceLookupsMap> {
@@ -40,10 +44,14 @@ export async function loadAttendanceLookupsMap(tenant = getRequestTenant()): Pro
 
   const rows = await listAttendanceLookupsByWorkspace(tenant);
   const byKind = new Map<string, LookupDbRow[]>();
-  for (const row of rows) {
-    const list = byKind.get(row.kind) ?? [];
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    let list = byKind.get(row.kind);
+    if (!list) {
+      list = [];
+      byKind.set(row.kind, list);
+    }
     list.push(row);
-    byKind.set(row.kind, list);
   }
 
   const result = { ...empty };

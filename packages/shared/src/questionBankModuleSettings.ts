@@ -247,7 +247,8 @@ export function normalizeQuestionBankSettings(
   const defaultOrder = DEFAULT_QUESTION_BANK_SETTINGS.fieldOrder ?? [];
   const storedOrder =
     stored?.fieldOrder && stored.fieldOrder.length > 0 ? stored.fieldOrder : defaultOrder;
-  const missingSource = QUESTION_SOURCE_FIELD_IDS.filter((sourceFieldId) => !storedOrder.includes(sourceFieldId));
+  const storedOrderSet = new Set(storedOrder);
+  const missingSource = QUESTION_SOURCE_FIELD_IDS.filter((sourceFieldId) => !storedOrderSet.has(sourceFieldId));
   merged.fieldOrder = [...storedOrder, ...missingSource];
 
   return merged;

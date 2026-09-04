@@ -4,21 +4,33 @@ import { computeFinancials, type Account, type JournalEntry } from '@/lib/data/a
 export function useAccountingDashboardModel(accounts: Account[], entries: JournalEntry[]) {
   const financials = (() => computeFinancials(accounts, entries))();
 
-  const postedEntries = (() => entries.filter((journalEntry) => journalEntry.status === 'posted'))();
-
-  const draftEntries = (() => entries.filter((journalEntry) => journalEntry.status === 'draft'))();
+  const { postedEntries, draftEntries } = (() => {
+    const posted: JournalEntry[] = [];
+    const draft: JournalEntry[] = [];
+    for (const journalEntry of entries) {
+      if (journalEntry.status === 'posted') posted.push(journalEntry);
+      else if (journalEntry.status === 'draft') draft.push(journalEntry);
+    }
+    return { postedEntries: posted, draftEntries: draft };
+  })();
 
   const monthlyData = (() => {
+    const accountTypeById = new Map<string, string>();
+    for (const account of accounts) {
+      accountTypeById.set(account.id, account.type);
+    }
+
     const totalsByMonth: Record<string, { month: string; revenue: number; expenses: number }> = {};
-    postedEntries.forEach((journalEntry) => {
+    for (const journalEntry of postedEntries) {
       const monthKey = journalEntry.date.slice(0, 7);
       if (!totalsByMonth[monthKey]) totalsByMonth[monthKey] = { month: monthKey, revenue: 0, expenses: 0 };
-      journalEntry.lines.forEach((journalLine) => {
-        const account = accounts.find((accountOption) => accountOption.id === journalLine.account_id);
-        if (account?.type === 'Revenue') totalsByMonth[monthKey].revenue += journalLine.credit - journalLine.debit;
-        if (account?.type === 'Expense') totalsByMonth[monthKey].expenses += journalLine.debit - journalLine.credit;
-      });
-    });
+      const monthRecord = totalsByMonth[monthKey];
+      for (const journalLine of journalEntry.lines) {
+        const type = accountTypeById.get(journalLine.account_id);
+        if (type === 'Revenue') monthRecord.revenue += journalLine.credit - journalLine.debit;
+        else if (type === 'Expense') monthRecord.expenses += journalLine.debit - journalLine.credit;
+      }
+    }
     return Object.values(totalsByMonth).sort((firstMonth, secondMonth) => firstMonth.month.localeCompare(secondMonth.month)).slice(-6).map((monthTotal) => ({
       ...monthTotal,
       month: formatMonthName(`${monthTotal.month}-01`),

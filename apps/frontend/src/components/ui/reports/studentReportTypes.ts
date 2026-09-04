@@ -51,7 +51,8 @@ export function resolveStudentSessionLabels(
   sessions: Session[],
 ): { sessionLabel: string; classLabel: string } {
   const enrolledIds = student.enrolledSessions ?? [];
-  const matchedSessions = sessions.filter((session) => enrolledIds.includes(session.id));
+  const enrolledIdSet = new Set(enrolledIds);
+  const matchedSessions = sessions.filter((session) => enrolledIdSet.has(session.id));
   const sessionLabel = matchedSessions.map((session) => session.name).filter(Boolean).join(", ") || "—";
   const classNames = new Set<string>();
   for (const session of matchedSessions) {

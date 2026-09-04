@@ -87,7 +87,7 @@ Target: `noUncheckedIndexedAccess`; prefer `import type` / `verbatimModuleSyntax
 
 ## React Compiler (when enabling)
 
-React Compiler is **not** enabled today — do not add `useMemo` / `useCallback` / `React.memo` by default (`antigravity-global.md`).
+React Compiler is **not** enabled today — memoize non-trivial calculations and object dependencies explicitly per `mms-performance.md`, while avoiding premature memoization on simple primitives.
 
 When enabling in a dedicated PR:
 1. Add the official Babel/Vite plugin **only in `apps/frontend` Vite config** (not root); keep React major current.

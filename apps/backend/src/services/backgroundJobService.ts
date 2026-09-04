@@ -9,20 +9,23 @@ import { withTenant } from '../db/tenant-context.js';
 import { backgroundJobs } from '../db/schema.js';
 
 export function rowToJobRecord(row: typeof backgroundJobs.$inferSelect): BackgroundJobRecord {
-  return {
+  const record: BackgroundJobRecord = {
     id: row.id,
     moduleId: row.moduleId,
     kind: row.kind,
     status: row.status as BackgroundJobStatus,
     label: row.label,
-    progress: (row.progressCurrent !== null && row.progressTotal !== null)
-      ? { current: row.progressCurrent, total: row.progressTotal }
-      : undefined,
-    error: row.error ?? undefined,
     hasDownload: row.hasDownload,
     createdAt: row.createdAt.toISOString(),
-    completedAt: row.completedAt ? row.completedAt.toISOString() : undefined,
   };
+
+  if (row.progressCurrent !== null && row.progressTotal !== null) {
+    record.progress = { current: row.progressCurrent, total: row.progressTotal };
+  }
+  if (row.error) record.error = row.error;
+  if (row.completedAt) record.completedAt = row.completedAt.toISOString();
+
+  return record;
 }
 
 export async function listUserBackgroundJobs(userId: string): Promise<BackgroundJobRecord[]> {

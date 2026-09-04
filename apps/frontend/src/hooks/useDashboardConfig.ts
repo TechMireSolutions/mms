@@ -82,11 +82,11 @@ export function useDashboardConfig() {
 
   const toggleCardVisibility = (cardId: string) => {
     const disabledCardIds = prefs.disabledCardIds;
-    const updated = disabledCardIds.includes(cardId)
-      ? disabledCardIds.filter((id) => id !== cardId)
-      : [...disabledCardIds, cardId];
-    updatePref('disabledCardIds', updated);
+    const s = new Set(disabledCardIds);
+    if (s.has(cardId)) { s.delete(cardId); } else { s.add(cardId); }
+    updatePref('disabledCardIds', [...s]);
   };
+
 
   /** Upsert only the affected widget (inserts new, updates existing; leaves others untouched). Resolves on success so builder flows can await before closing (§7). */
   const saveWidget = (savedWidget: CustomWidget) =>

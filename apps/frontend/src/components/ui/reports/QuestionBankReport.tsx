@@ -93,9 +93,15 @@ const QuestionBankReport = (function QuestionBankReport({
   })();
 
   const categoryData = (() => {
+    const categoryCountMap = new Map<string, number>();
+    for (const question of questions) {
+      for (const catId of getQuestionCategoryIds(question)) {
+        categoryCountMap.set(catId, (categoryCountMap.get(catId) ?? 0) + 1);
+      }
+    }
     return categories.map((category) => ({
       name: category.name,
-      questions: questions.filter((question) => getQuestionCategoryIds(question).includes(category.id)).length,
+      questions: categoryCountMap.get(category.id) ?? 0,
     }));
   })();
 

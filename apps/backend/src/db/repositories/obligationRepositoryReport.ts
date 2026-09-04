@@ -101,6 +101,18 @@ export async function aggregateObligationsReport(
       .where(baseWhere)
       .groupBy(obligationCollections.mujtahidRepresentativeId, mujtahidReps.name);
 
+    const monthlyTrend: Array<{ monthKey: string; count: number; amount: number }> = [];
+    for (let i = 0; i < monthlyTrendRows.length; i++) {
+      const r = monthlyTrendRows[i];
+      if (r?.monthKey) {
+        monthlyTrend.push({
+          monthKey: r.monthKey,
+          count: Number(r.count),
+          amount: Number(r.amount),
+        });
+      }
+    }
+
     return {
       totalCollections: Number(totalsRow?.total ?? 0),
       totalAmount: Number(totalsRow?.totalAmount ?? 0),
@@ -111,13 +123,7 @@ export async function aggregateObligationsReport(
         count: Number(r.count),
         amount: Number(r.amount),
       })),
-      monthlyTrend: monthlyTrendRows
-        .filter((r) => r.monthKey)
-        .map((r) => ({
-          monthKey: r.monthKey,
-          count: Number(r.count),
-          amount: Number(r.amount),
-        })),
+      monthlyTrend,
       // wakalaSummary requires joining via distributions — omitted at tier-1;
       // distributions carry wakala breakdown and are already available client-side.
       wakalaSummary: [],

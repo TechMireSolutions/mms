@@ -78,13 +78,14 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
 | Testing, Observability & ErrorBoundary | `mms-testing-observability.md` | `mms-code-review` · `mms-a11y-smoke` |
 | Reports, Analytics & Exports | `mms-reports.md` | `mms-reports-export` |
 | Messaging Campaigns & Logs | `mms-messaging.md` | `mms-messaging` |
+| Performance, Efficiency, Caching & Virtualization | `mms-performance.md` | `mms-code-review` · `mms-backend-api` · `mms-frontend` |
 | Migration Debt Register | `mms-migration-status.md` | `mms-migration-fixes` |
 | Post-Edit Verification Checklist | `mms-completion-review.md` | `mms-code-review` |
 
 ## Performance & Edit Discipline
 
 1. **Route-Lazy Heavy Deps:** Split charts, PDF, Excel, code editors into deferred chunks. Declare explicit dimensions on media/charts for zero CLS.
-2. **React 19 Hygiene:** Route-level `lazy` + `Suspense`. Avoid premature `useMemo`/`useCallback` (React Compiler ready). Prefer `startTransition` / `useDeferredValue` / `useEffectEvent`.
+2. **Rendering & Memoization:** Route-level `lazy` + `Suspense`. Memoize non-trivial calculations (`useMemo`) and callback/object references passed as dependencies (`useCallback`) to prevent render churn; avoid premature memoization on primitive operations. Leverage `startTransition` / `useDeferredValue` / `useEffectEvent` — always-on `mms-performance.md`.
 3. **File Sizing:** Hard ceiling ~300 lines / soft target ~220 lines. Split by concern behind stable barrels (`mms-structure-naming.md`).
 4. **Clean Boundary:** Remove dead code, unused imports, and debug logs. Run `pnpm typecheck` after non-trivial changes.
 5. **Git Safety:** Conventional Commits (`feat`/`fix`/`chore`). Never commit or push unless explicitly requested. Never commit `.env` or credentials.

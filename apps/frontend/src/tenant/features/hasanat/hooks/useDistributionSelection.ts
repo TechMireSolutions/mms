@@ -5,15 +5,17 @@ import type { Distribution } from '@/lib/data/hasanatData';
 export function useDistributionSelection(distributions: Distribution[]) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
+  const selectedSet = new Set(selectedIds);
   const allVisibleSelected = distributions.length > 0
-    && distributions.every((distribution) => selectedIds.includes(distribution.id));
-  const someVisibleSelected = distributions.some((distribution) => selectedIds.includes(distribution.id));
+    && distributions.every((distribution) => selectedSet.has(distribution.id));
+  const someVisibleSelected = selectedSet.size > 0 && distributions.some((distribution) => selectedSet.has(distribution.id));
 
   const toggleSelectAll = (checked: boolean) => {
     const visibleIds = distributions.map((distribution) => distribution.id);
+    const visibleSet = new Set(visibleIds);
     setSelectedIds((currentIds) => checked
       ? [...new Set([...currentIds, ...visibleIds])]
-      : currentIds.filter((id) => !visibleIds.includes(id)));
+      : currentIds.filter((id) => !visibleSet.has(id)));
   };
 
   const toggleSelectedDistribution = (id: string, checked: boolean) => {

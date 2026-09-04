@@ -33,9 +33,15 @@ export function StudentsBulkEnrollModal({
   if (!open) return null;
 
   const toggleSession = (id: string) => {
-    setSelectedSessionIds((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
-    );
+    setSelectedSessionIds((prev) => {
+      const nextSet = new Set(prev);
+      if (nextSet.has(id)) {
+        nextSet.delete(id);
+      } else {
+        nextSet.add(id);
+      }
+      return [...nextSet];
+    });
   };
 
   const handleSelectAll = () => {
@@ -53,6 +59,8 @@ export function StudentsBulkEnrollModal({
     setSelectedSessionIds([]);
     onClose();
   };
+
+  const selectedSessionSet = new Set(selectedSessionIds);
 
   return (
     <Modal
@@ -167,7 +175,7 @@ export function StudentsBulkEnrollModal({
           ) : (
             <div className="max-h-56 overflow-y-auto space-y-1.5 pe-1 border border-border/40 rounded-xl p-2 bg-muted/20">
               {sessions.map((session) => {
-                const isChecked = selectedSessionIds.includes(String(session.id));
+                const isChecked = selectedSessionSet.has(String(session.id));
                 return (
                   <button
                     key={session.id}

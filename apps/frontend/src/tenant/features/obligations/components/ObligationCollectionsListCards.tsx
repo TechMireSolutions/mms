@@ -55,6 +55,8 @@ export function ObligationCollectionsListCards(props: ObligationCollectionListCa
     plural: "obligations.item.collections",
   });
 
+  const selectedSet = new Set(selectedIds);
+
   return (
     <ModuleDirectoryCards
       items={collections}
@@ -69,7 +71,7 @@ export function ObligationCollectionsListCards(props: ObligationCollectionListCa
       checkboxIdPrefix="obligations-select-cards"
       renderItem={(collection) => {
         const { sender, obligationType, rep, mujtahid } = getObligationCollectionResolvedFields(collection, helpers);
-        const isSelected = selectedIds.includes(collection.id);
+        const isSelected = selectedSet.has(collection.id);
 
         return (
           <DirectoryEntityCard key={collection.id} isSelected={isSelected} reducedMotion={reducedMotion}>

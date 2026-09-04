@@ -5,26 +5,29 @@ import { withTenant } from '../tenant-context.js';
 
 type DistRow = typeof hasanatDistributions.$inferSelect;
 export function distributionRowToRecord(row: DistRow): Distribution {
-  return {
+  const dist: Distribution = {
     id: row.id,
     batchId: row.batchId,
     denominationId: row.denominationId,
     denominationName: row.denominationName,
     recipientType: row.recipientType as Distribution['recipientType'],
-    recipientStudentId: row.recipientStudentId ?? undefined,
-    recipientTeacherId: row.recipientTeacherId ?? undefined,
-    recipientName: row.recipientName ?? undefined,
+    recipientName: row.recipientName ?? '',
     recipientClass: row.recipientClass,
     quantity: row.quantity,
     reason: row.reason,
     issuedDate: row.issuedDate,
-    issuedByUserId: row.issuedByUserId ?? undefined,
-    issuedBy: row.issuedBy ?? undefined,
     status: row.status as Distribution['status'],
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
   };
+
+  if (row.recipientStudentId) dist.recipientStudentId = row.recipientStudentId;
+  if (row.recipientTeacherId) dist.recipientTeacherId = row.recipientTeacherId;
+  if (row.issuedByUserId) dist.issuedByUserId = row.issuedByUserId;
+  if (row.issuedBy) dist.issuedBy = row.issuedBy;
+  if (row.deletedAt) dist.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) dist.deletedBy = row.deletedBy;
+  if (row.deletionReason) dist.deletionReason = row.deletionReason;
+
+  return dist;
 }
 
 export async function listDistributionsByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<Distribution[]> {

@@ -35,11 +35,12 @@ export function JournalEntryLinesEditorMobile({
   onUpdateLine,
 }: JournalEntryLinesEditorMobileProps) {
   const { t } = useTranslation();
+  const accountMap = new Map(accounts.map((account) => [account.id, account]));
 
   return (
     <div className="space-y-3 p-3 md:hidden">
       {lines.map((line, lineIndex) => {
-        const account = accounts.find((accountOption) => accountOption.id === line.account_id);
+        const account = accountMap.get(line.account_id);
         return (
           <article key={line.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
             <div className="flex items-center justify-end">

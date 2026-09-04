@@ -22,7 +22,7 @@ export function resultRowToRecord(
   answers: Record<string, string> = {},
   scores: Record<string, number> = {},
 ): QuestionBankResult {
-  return {
+  const result: QuestionBankResult = {
     id: row.id,
     testId: row.testId,
     studentId: row.studentId,
@@ -30,10 +30,13 @@ export function resultRowToRecord(
     submittedAt: row.submittedAt,
     answers,
     scores,
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : undefined,
-    deletedBy: row.deletedBy ?? undefined,
-    deletionReason: row.deletionReason ?? undefined,
   };
+
+  if (row.deletedAt) result.deletedAt = row.deletedAt.toISOString();
+  if (row.deletedBy) result.deletedBy = row.deletedBy;
+  if (row.deletionReason) result.deletionReason = row.deletionReason;
+
+  return result;
 }
 
 async function syncResultChildren(

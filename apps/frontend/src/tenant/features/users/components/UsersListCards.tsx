@@ -54,6 +54,8 @@ export function UsersListCards({
     plural: "users.table.users",
   });
 
+  const selectedSet = new Set(selectedIds);
+
   return (
     <ModuleDirectoryCards
       items={users}
@@ -67,7 +69,7 @@ export function UsersListCards({
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="users-cards"
       renderItem={(user) => {
-        const isSelected = selectedIds.includes(user.id);
+        const isSelected = selectedSet.has(user.id);
         return (
           <DirectoryEntityCard
             key={user.id}

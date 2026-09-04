@@ -49,6 +49,7 @@ export function JournalEntriesListDesktopTable(props: JournalEntriesListDesktopT
     plural: "accounting.item.entries",
   });
   const balanced = isJournalBalanced(grandDebit, grandCredit);
+  const selectedSet = new Set(selectedIds);
 
   return (
     <Table className="table-fixed">
@@ -81,7 +82,7 @@ export function JournalEntriesListDesktopTable(props: JournalEntriesListDesktopT
               {canDelete && (
                 <TableCell className="px-3 py-2.5">
                   <Checkbox
-                    checked={selectedIds.includes(entry.id)}
+                    checked={selectedSet.has(entry.id)}
                     onCheckedChange={(checked) => onToggleSelectedEntry(entry.id, checked === true)}
                     aria-label={t("accounting.trash.selectEntry", { ref: entry.ref })}
                   />

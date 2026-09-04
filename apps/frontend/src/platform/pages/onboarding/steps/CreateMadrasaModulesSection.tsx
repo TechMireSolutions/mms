@@ -93,14 +93,16 @@ export function CreateMadrasaModulesSection({ controller }: CreateMadrasaModules
 
         {/* Module Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
-          {SYSTEM_MODULES.map((module) => (
+          {(() => {
+            const moduleSet = new Set(data.modules);
+            return SYSTEM_MODULES.map((module) => (
             <div
               key={module.id}
               className="flex items-start gap-3 rounded-xl border border-border/60 p-3.5 bg-card/50 hover:bg-card transition-colors shadow-2xs"
             >
               <Checkbox
                 id={`module-${module.id}`}
-                checked={data.modules.includes(module.id)}
+                checked={moduleSet.has(module.id)}
                 disabled={module.required}
                 onCheckedChange={(checked) => toggleModule(module.id, checked as boolean)}
                 className="mt-0.5"
@@ -120,9 +122,11 @@ export function CreateMadrasaModulesSection({ controller }: CreateMadrasaModules
                 <p className="text-xs text-muted-foreground leading-relaxed pt-1">{module.description}</p>
               </div>
             </div>
-          ))}
+            ))
+          })()}
         </div>
       </div>
     </SectionCard>
+
   );
 }

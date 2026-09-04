@@ -35,9 +35,9 @@ export function filterEnrollmentsForQuery(
 ): Enrollment[] {
   let rows = enrollments;
   if (query.status?.trim() && query.status !== 'all') {
-    const statuses = query.status.split(',').map((status) => status.trim()).filter(Boolean);
-    if (statuses.length > 0) {
-      rows = rows.filter((enrollment) => statuses.includes(String(enrollment.status)));
+    const statuses = new Set(query.status.split(',').map((s) => s.trim()).filter(Boolean));
+    if (statuses.size > 0) {
+      rows = rows.filter((enrollment) => statuses.has(String(enrollment.status)));
     }
   }
   if (query.sessionId?.trim() && query.sessionId !== 'all') {

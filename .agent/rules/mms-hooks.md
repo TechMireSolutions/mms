@@ -70,7 +70,7 @@ Large feature pages and settings panels should keep JSX thin:
 | Panel / form state | `use{Thing}State` / `use{Thing}Draft` | Local draft + derived options |
 | Action clusters | `use{Thing}Actions` / `*ActionHandlers` | Save, restore, bulk, decrypt — called from the orchestrator |
 
-Return a flat object the shell destructures; keep public page/component export paths unchanged (`mms-structure-naming.md`). Do not add `useMemo` / `useCallback` by default — `antigravity-global.md`. Prefer React 19 `useEffectEvent` / `startTransition` / `useDeferredValue` when the repo pattern already fits (e.g. event handlers that read latest props without re-subscribing effects).
+Return a flat object the shell destructures; keep public page/component export paths unchanged (`mms-structure-naming.md`). Memoize non-trivial calculations (`useMemo`) and callback/object references passed to child components or effects (`useCallback`) to prevent render churn; avoid premature memoization on trivial primitive operations (`mms-performance.md`). Prefer React 19 `useEffectEvent` / `startTransition` / `useDeferredValue` when the repo pattern fits (e.g. event handlers that read latest props without re-subscribing effects).
 
 ## Work directory layout
 

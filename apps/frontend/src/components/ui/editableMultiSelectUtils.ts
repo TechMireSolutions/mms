@@ -66,23 +66,33 @@ export function buildAddedTags(
     .map((p) => p.trim())
     .filter(Boolean);
 
-  let nextValues = [...values];
-  let nextOptions = [...options];
+  const nextValues = [...values];
+  const nextOptions = [...options];
   let optionsChanged = false;
+
+  const normalizedOptionsMap = new Map<string, string>(
+    options.map((opt) => [normalizeOption(opt), opt]),
+  );
+  const normalizedValuesSet = new Set<string>(
+    values.map((val) => normalizeOption(val)),
+  );
 
   for (const part of parts) {
     const text = titleCaseSegment(part);
     const normalized = normalizeOption(text);
 
-    const existingInOptions = nextOptions.find((opt) => normalizeOption(opt) === normalized);
-    const existingInValues = nextValues.some((val) => normalizeOption(val) === normalized);
+    const existingInOptions = normalizedOptionsMap.get(normalized);
+    const existingInValues = normalizedValuesSet.has(normalized);
 
     if (!existingInOptions && canUpdateOptions) {
-      nextOptions = [...nextOptions, text];
+      nextOptions.push(text);
+      normalizedOptionsMap.set(normalized, text);
       optionsChanged = true;
     }
     if (!existingInValues) {
-      nextValues = [...nextValues, existingInOptions || text];
+      const chosen = existingInOptions || text;
+      nextValues.push(chosen);
+      normalizedValuesSet.add(normalized);
     }
   }
 

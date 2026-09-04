@@ -1,4 +1,9 @@
-import { hydrateTeacherFromContact, type Contact, type Teacher } from '@mms/shared';
+import {
+  createContactLookupMap,
+  hydrateTeacherFromContact,
+  type Contact,
+  type Teacher,
+} from '@mms/shared';
 import { loadContactsByIdsForTenant } from '../../services/contactService.js';
 
 /**
@@ -20,5 +25,6 @@ export async function hydrateTeachersFromContacts(
   if (ids.size === 0) return rows;
 
   const contacts = (await loadContactsByIdsForTenant(tenant, [...ids])) as Contact[];
-  return rows.map((row) => hydrateTeacherFromContact(row, contacts as never));
+  const contactMap = createContactLookupMap(contacts as never);
+  return rows.map((row) => hydrateTeacherFromContact(row, contactMap as never));
 }

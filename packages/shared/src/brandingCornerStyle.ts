@@ -46,13 +46,15 @@ export const BRANDING_CORNER_STYLE_OPTIONS: readonly BrandingCornerStyleOption[]
   },
 ] as const;
 
+const BRANDING_CORNER_STYLE_VALUES_SET = new Set<string>(BRANDING_CORNER_STYLE_VALUES);
+
 /**
  * Coerces stored branding values to a supported corner style.
  */
 export function normalizeBrandingCornerStyle(value: unknown): BrandingCornerStyle {
   if (typeof value === 'string') {
     const trimmed = value.trim();
-    if ((BRANDING_CORNER_STYLE_VALUES as readonly string[]).includes(trimmed)) {
+    if (BRANDING_CORNER_STYLE_VALUES_SET.has(trimmed)) {
       return trimmed;
     }
     if (/^\d+(\.\d+)?(px|rem|em|%)?$/.test(trimmed)) {

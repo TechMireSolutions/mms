@@ -211,17 +211,25 @@ export async function bulkTagContacts(
       if (c.deletedAt) continue;
       const currentTags = getContactTags(c);
       const tagSet = new Set(currentTags);
+      let changed = false;
 
-      for (const tag of toAdd) {
-        tagSet.add(tag);
+      for (let i = 0; i < toAdd.length; i++) {
+        const tag = toAdd[i];
+        if (!tagSet.has(tag)) {
+          tagSet.add(tag);
+          changed = true;
+        }
       }
-      for (const tag of Array.from(tagSet)) {
+      for (const tag of tagSet) {
         if (toRemove.has(tag.toLowerCase())) {
           tagSet.delete(tag);
+          changed = true;
         }
       }
 
-      const nextTags = Array.from(tagSet);
+      if (!changed) continue;
+
+      const nextTags = [...tagSet];
       const tagStr = nextTags.length > 0 ? nextTags.join(', ') : undefined;
       const next: Contact = {
         ...c,

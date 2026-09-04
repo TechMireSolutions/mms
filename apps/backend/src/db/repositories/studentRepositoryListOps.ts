@@ -1,5 +1,5 @@
 import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
-import type { Student } from '@mms/shared';
+import { dedupeTrimmedIds, type Student } from '@mms/shared';
 import { students } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import { hydrateStudentsList } from './studentRepository.js';
@@ -61,7 +61,7 @@ export async function bulkUpdateStudentsStatusSql(
   status: string,
 ): Promise<number> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const uniqueIds = [...new Set(ids.map((id) => String(id).trim()).filter(Boolean))];
+  const uniqueIds = dedupeTrimmedIds(ids);
   if (!subdomain || uniqueIds.length === 0) return 0;
   const normalizedStatus = status.trim().toLowerCase() || 'active';
 

@@ -44,14 +44,22 @@ export function useMarkAttendanceController({
 
   const { data: enrolledStudents = [] } = useStudentsByIds(studentIds);
 
-  const allClasses = (() => {
-    return sessions.flatMap((session) =>
-      (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
-    );
+  const { classInfo, sessionInfo } = (() => {
+    if (!filters.classId) return { classInfo: undefined, sessionInfo: null };
+    for (const session of sessions) {
+      if (session.classes) {
+        for (const sessionClass of session.classes) {
+          if (sessionClass.id === filters.classId) {
+            return {
+              classInfo: { ...sessionClass, sessionId: session.id, sessionName: session.name },
+              sessionInfo: session,
+            };
+          }
+        }
+      }
+    }
+    return { classInfo: undefined, sessionInfo: null };
   })();
-
-  const classInfo = (() => allClasses.find((sessionClass) => sessionClass.id === filters.classId))();
-  const sessionInfo = (() => classInfo ? sessions.find((session) => session.id === classInfo.sessionId) : null)();
   const students: ClassStudent[] = (() => {
     if (!filters.classId) return [];
     return enrolledStudentsForClass(

@@ -70,8 +70,10 @@ export type InvoicesBulkStatusBody = z.infer<typeof invoicesBulkStatusSchema>;
 export const OPEN_INVOICE_STATUSES = ['pending', 'overdue', 'partial'] as const;
 export type OpenInvoiceStatus = (typeof OPEN_INVOICE_STATUSES)[number];
 
+const OPEN_INVOICE_STATUS_SET = new Set<string>(OPEN_INVOICE_STATUSES);
+
 export function isOpenInvoiceStatus(status: string | undefined | null): boolean {
-  return status != null && (OPEN_INVOICE_STATUSES as readonly string[]).includes(status);
+  return status != null && OPEN_INVOICE_STATUS_SET.has(status);
 }
 
 export const paymentRecordSchema = z

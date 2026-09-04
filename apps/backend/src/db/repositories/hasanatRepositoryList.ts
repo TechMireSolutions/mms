@@ -12,6 +12,7 @@ import {
   type SQL,
 } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   type Distribution,
   type HasanatCommandMetricsSnapshot,
@@ -48,7 +49,7 @@ function buildDistributionsListConditions(
     );
   }
 
-  const statuses = query.status?.split(',').map((s) => s.trim()).filter(Boolean) ?? [];
+  const statuses = dedupeTrimmedIds(query.status);
   if (statuses.length) {
     conditions.push(inArray(hasanatDistributions.status, statuses));
   }

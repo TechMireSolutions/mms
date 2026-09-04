@@ -45,6 +45,7 @@ export function CategorySelector({
   const [newName, setNewName] = useState('');
   const [showCreate, setShowCreate] = useState(false);
   const selectedIds = toSelectedIds(value);
+  const selectedSet = new Set(selectedIds);
 
   const filtered = (() => {
     const searchQuery = search.trim().toLowerCase();
@@ -67,10 +68,13 @@ export function CategorySelector({
       applySelection([categoryId]);
       return;
     }
-    const selectedCategoryIds = selectedIds.includes(categoryId)
-      ? selectedIds.filter((selectedId) => selectedId !== categoryId)
-      : [...selectedIds, categoryId];
-    applySelection(selectedCategoryIds);
+    const nextSet = new Set(selectedIds);
+    if (nextSet.has(categoryId)) {
+      nextSet.delete(categoryId);
+    } else {
+      nextSet.add(categoryId);
+    }
+    applySelection([...nextSet]);
   };
 
   const handleCreate = async (): Promise<void> => {
@@ -128,7 +132,7 @@ export function CategorySelector({
           aria-multiselectable={multiple}
         >
           {filtered.map((cat) => {
-            const selected = selectedIds.includes(cat.id);
+            const selected = selectedSet.has(cat.id);
             return (
               <Button
                 key={cat.id}

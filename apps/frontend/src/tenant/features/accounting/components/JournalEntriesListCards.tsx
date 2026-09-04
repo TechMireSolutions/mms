@@ -51,6 +51,7 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
     singular: "accounting.item.entry",
     plural: "accounting.item.entries",
   });
+  const selectedSet = new Set(selectedIds);
 
   return (
     <div className="space-y-4">
@@ -66,7 +67,7 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
         pageCountLabel={pageCountLabel}
         checkboxIdPrefix="accounting-select-cards"
         renderItem={(entry) => {
-          const isSelected = selectedIds.includes(entry.id);
+          const isSelected = selectedSet.has(entry.id);
           const { totalDebit, totalCredit } = getJournalEntryLineTotals(entry);
           return (
             <DirectoryEntityCard key={entry.id} isSelected={isSelected} reducedMotion={reducedMotion}>

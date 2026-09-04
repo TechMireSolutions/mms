@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
-import type { Contact } from '@mms/shared';
+import { dedupeTrimmedIds, type Contact } from '@mms/shared';
 import { contacts, contactPhones, contactEmails, contactAddresses } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import { hydrateContactsList } from './contactRepositoryCore.js';
@@ -21,9 +21,17 @@ export async function findExistingNormalizedContactNames(
   tenant: string,
   names: string[],
 ): Promise<Set<string>> {
-  const normalized = [
-    ...new Set(names.map((name) => name.trim().toLowerCase()).filter(Boolean)),
-  ];
+  const normalized: string[] = [];
+  const seen = new Set<string>();
+  for (let i = 0; i < names.length; i++) {
+    const raw = names[i];
+    if (!raw) continue;
+    const lower = raw.trim().toLowerCase();
+    if (lower && !seen.has(lower)) {
+      seen.add(lower);
+      normalized.push(lower);
+    }
+  }
   if (normalized.length === 0) return new Set();
 
   const subdomain = tenant.trim().toLowerCase();
@@ -40,7 +48,11 @@ export async function findExistingNormalizedContactNames(
           inArray(sql`lower(trim(${contacts.name}))`, normalized),
         ),
       );
-    return new Set(rows.map((row) => row.name).filter(Boolean));
+    const result = new Set<string>();
+    for (let i = 0; i < rows.length; i++) {
+      if (rows[i].name) result.add(rows[i].name);
+    }
+    return result;
   });
 }
 
@@ -92,17 +104,31 @@ export async function findActiveContactsMatchingUniqueValues(
   values: ContactUniqueLookupValues,
   excludeIds: Array<string | number> = [],
 ): Promise<Contact[]> {
-  const phoneDigits = [...new Set(values.phoneDigits.map((v) => v.trim()).filter(Boolean))];
-  const emails = [...new Set(values.emails.map((v) => v.trim().toLowerCase()).filter(Boolean))];
-  const scalars = values.scalars.filter(
-    (entry) => entry.fieldKey.trim() && entry.normalized.trim(),
-  );
+  const phoneDigits = dedupeTrimmedIds(values.phoneDigits);
+  const emails: string[] = [];
+  const seenEmails = new Set<string>();
+  for (let i = 0; i < values.emails.length; i++) {
+    const raw = values.emails[i];
+    if (!raw) continue;
+    const lower = raw.trim().toLowerCase();
+    if (lower && !seenEmails.has(lower)) {
+      seenEmails.add(lower);
+      emails.push(lower);
+    }
+  }
+  const scalars: Array<{ fieldKey: string; normalized: string }> = [];
+  for (let i = 0; i < values.scalars.length; i++) {
+    const entry = values.scalars[i];
+    if (entry && entry.fieldKey.trim() && entry.normalized.trim()) {
+      scalars.push(entry);
+    }
+  }
   if (phoneDigits.length === 0 && emails.length === 0 && scalars.length === 0) {
     return [];
   }
 
   const subdomain = tenant.trim().toLowerCase();
-  const excluded = [...new Set(excludeIds.map(String).filter(Boolean))];
+  const excluded = dedupeTrimmedIds(excludeIds);
   const matchClauses: SQL[] = [];
 
   if (phoneDigits.length > 0) {

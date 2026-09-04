@@ -257,12 +257,16 @@ export async function createWorkspace(workspaceInput: {
     const { syncPlatformSuperUserToTenant } = await import('./platform/platformSuperUserTenantSyncService.js');
     await syncPlatformSuperUserToTenant(subdomain);
 
-    return {
-      ...newWs,
-      tagline: newWs.tagline ?? undefined,
-      country: newWs.country ?? undefined,
+    const created: Workspace = {
+      id: newWs.id,
+      subdomain: newWs.subdomain,
+      madrasaName: newWs.madrasaName,
+      enabled: newWs.enabled,
       createdAt: new Date().toISOString(),
     };
+    if (newWs.tagline) created.tagline = newWs.tagline;
+    if (newWs.country) created.country = newWs.country;
+    return created;
   });
 }
 
@@ -289,13 +293,14 @@ export async function updateWorkspaceModules(
 
   const grantedModules: Record<string, boolean> = {};
   const enabledModules: Record<string, boolean> = { ...prevEnabled };
+  const modulesSet = new Set(modules);
 
   for (const mod of SYSTEM_MODULES) {
     if (mod.required) {
       grantedModules[mod.id] = true;
       enabledModules[mod.id] = true;
     } else {
-      const isGranted = modules.includes(mod.id);
+      const isGranted = modulesSet.has(mod.id);
       const wasGranted = prevGranted[mod.id] === true;
       grantedModules[mod.id] = isGranted;
 

@@ -51,6 +51,7 @@ export function PaymentsListDesktopTable({
   onRestore,
 }: PaymentsListDesktopTableProps): React.JSX.Element {
   const { t } = useTranslation();
+  const selectedSet = new Set(selectedIds);
 
   const renderRowAction = (paymentId: string) => (
     <Button
@@ -102,7 +103,7 @@ export function PaymentsListDesktopTable({
               {canDelete && (
                 <TableCell className="px-3 py-2.5">
                   <Checkbox
-                    checked={selectedIds.includes(payment.id)}
+                    checked={selectedSet.has(payment.id)}
                     onCheckedChange={(checked) => onTogglePayment(payment.id, checked === true)}
                     aria-label={t('finance.trash.selectPayment', { id: payment.id })}
                   />

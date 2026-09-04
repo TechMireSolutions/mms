@@ -17,8 +17,9 @@ export interface TeacherAssignedClassItem {
 }
 
 /** Resolves a teacher display name from the faculty registry. */
-export function teacherNameById(teachers: Teacher[], id: string): string {
+export function teacherNameById(teachers: Teacher[] | Map<string, Teacher>, id: string): string {
   if (!id) return '';
+  if (teachers instanceof Map) return teachers.get(id)?.name ?? '';
   return teachers.find((teacher) => String(teacher.id) === id)?.name ?? '';
 }
 

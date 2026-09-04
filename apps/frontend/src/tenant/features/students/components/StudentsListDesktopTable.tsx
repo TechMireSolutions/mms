@@ -78,6 +78,7 @@ export function StudentsListDesktopTable({
     singular: "students.form.student",
     plural: "students.table.students",
   });
+  const selectedSet = new Set(selectedIds);
 
   return (
     <>
@@ -106,7 +107,7 @@ export function StudentsListDesktopTable({
               studentRow={studentRow}
               rowIndex={rowIndex}
               sessions={sessions}
-              selectedIds={selectedIds}
+              selectedIds={selectedSet}
               viewingDeleted={viewingDeleted}
               canWrite={canWrite}
               canDelete={canDelete}

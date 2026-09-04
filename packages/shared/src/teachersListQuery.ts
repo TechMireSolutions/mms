@@ -25,9 +25,11 @@ const teachersQuickFilterSchema = z.enum(TEACHERS_QUICK_FILTERS);
 /** Work-directory quick filter preset ids. */
 export type TeachersQuickFilter = z.infer<typeof teachersQuickFilterSchema>;
 
+const TEACHERS_QUICK_FILTERS_SET = new Set<string>(TEACHERS_QUICK_FILTERS);
+
 /** Narrow a dropdown/radio string to a Teachers quick-filter preset. */
 export function isTeachersQuickFilter(value: string): value is TeachersQuickFilter {
-  return (TEACHERS_QUICK_FILTERS as readonly string[]).includes(value);
+  return TEACHERS_QUICK_FILTERS_SET.has(value);
 }
 
 const TEACHERS_QUICK_FILTER_LABEL_KEYS = {

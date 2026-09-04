@@ -44,6 +44,7 @@ export function InvoicesListCards(props: InvoicesListCardsProps): React.JSX.Elem
   } = props;
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
+  const selectedSet = new Set(selectedIds);
   const pageCountLabel = formatDirectoryPageCountLabel(invoices.length, t, {
     singular: "finance.item.invoice",
     plural: "finance.item.invoices",
@@ -62,7 +63,7 @@ export function InvoicesListCards(props: InvoicesListCardsProps): React.JSX.Elem
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="finance-invoices"
       renderItem={(invoice) => {
-        const isSelected = selectedIds.includes(invoice.id);
+        const isSelected = selectedSet.has(invoice.id);
         const visibleColumns = getInvoiceVisibleWorkColumns(columnRegistry, isColumnVisible, {
           excludeFace: true,
         });

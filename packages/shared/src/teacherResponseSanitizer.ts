@@ -32,6 +32,36 @@ function isTabKeyedFieldRegistry(
 }
 
 /**
+ * Resolves teacher field keys that the viewer role cannot read.
+ * Precomputed once per batch to avoid O(N * T * F) iterations and repeated tab finds.
+ */
+export function resolveTeacherKeysToStripForViewer(
+  viewerRole: string,
+  config: TeachersFieldConfigSnapshot,
+): string[] {
+  if (!config?.fields || !isTabKeyedFieldRegistry(config.fields)) return [];
+  const tabMap = new Map<string, TabDefinition>();
+  for (const candidate of config.tabs ?? []) {
+    if (candidate.key) {
+      tabMap.set(candidate.key.toLowerCase(), candidate);
+    }
+  }
+
+  const toStrip: string[] = [];
+  for (const [tabId, tabFields] of Object.entries(config.fields)) {
+    const tab = tabMap.get(tabId.toLowerCase());
+    const tabVisible = tab ? canViewContactTab(viewerRole, tab) : true;
+    for (const field of tabFields) {
+      if (TEACHER_ALWAYS_VISIBLE.has(field.key)) continue;
+      if (!tabVisible || field.enabled === false || !canViewContactField(viewerRole, field)) {
+        toStrip.push(field.key);
+      }
+    }
+  }
+  return toStrip;
+}
+
+/**
  * Strips teacher properties the viewer role cannot read (API + restore guard).
  * Mirrors `sanitizeStudentForViewer`: disabled or role-hidden Setup fields are
  * removed; always-visible identity keys and unregistered custom keys survive.
@@ -41,21 +71,12 @@ export function sanitizeTeacherForViewer(
   viewerRole: string,
   config: TeachersFieldConfigSnapshot,
 ): Teacher {
-  if (!config?.fields || !isTabKeyedFieldRegistry(config.fields)) return teacher;
+  const keysToStrip = resolveTeacherKeysToStripForViewer(viewerRole, config);
+  if (keysToStrip.length === 0) return teacher;
   const sanitized: Teacher = { ...teacher };
-  const { fields, tabs } = config;
-
-  for (const [tabId, tabFields] of Object.entries(fields)) {
-    const tab = tabs.find((candidate) => (candidate.key || '').toLowerCase() === tabId.toLowerCase());
-    const tabVisible = tab ? canViewContactTab(viewerRole, tab) : true;
-    for (const field of tabFields) {
-      if (TEACHER_ALWAYS_VISIBLE.has(field.key)) continue;
-      if (!tabVisible || field.enabled === false || !canViewContactField(viewerRole, field)) {
-        delete sanitized[field.key];
-      }
-    }
+  for (const key of keysToStrip) {
+    delete sanitized[key];
   }
-
   return sanitized;
 }
 
@@ -64,5 +85,13 @@ export function sanitizeTeachersForViewer(
   viewerRole: string,
   config: TeachersFieldConfigSnapshot,
 ): Teacher[] {
-  return teachers.map((teacher) => sanitizeTeacherForViewer(teacher, viewerRole, config));
+  const keysToStrip = resolveTeacherKeysToStripForViewer(viewerRole, config);
+  if (keysToStrip.length === 0) return teachers;
+  return teachers.map((teacher) => {
+    const sanitized: Teacher = { ...teacher };
+    for (const key of keysToStrip) {
+      delete sanitized[key];
+    }
+    return sanitized;
+  });
 }

@@ -58,6 +58,7 @@ export function UsersListDesktopTable({
   const { t } = useTranslation();
   const rowMotion = useListRowMotion({ layout: true });
   const visible = isColumnVisible ?? (() => true);
+  const selectedSet = new Set(selectedIds);
 
   return (
     <Table className="table-fixed">
@@ -90,7 +91,7 @@ export function UsersListDesktopTable({
             {canDelete && (
               <TableCell className="px-3 py-2.5">
                 <Checkbox
-                  checked={selectedIds.includes(user.id)}
+                  checked={selectedSet.has(user.id)}
                   onCheckedChange={() => onToggleSelect(user.id)}
                   aria-label={t('users.selectRow', { name: user.name })}
                 />
