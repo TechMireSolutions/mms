@@ -4,6 +4,8 @@ import { fetchObject, persistObject } from './dbSyncService.js';
 const STORAGE_KEY = USER_EXPORT_ARTIFACTS_OBJECT_KEY;
 const ARTIFACT_TTL_MS = 24 * 60 * 60 * 1000;
 const MAX_USER_ARTIFACTS = 10;
+/** Per-artifact content cap so a single cross-user document cannot grow unbounded. */
+const MAX_ARTIFACT_BYTES = 25 * 1024 * 1024;
 
 interface ExportArtifact {
   content: string;
@@ -47,6 +49,11 @@ export async function saveExportArtifact(
   content: string,
   filename: string,
 ): Promise<void> {
+  if (Buffer.byteLength(content, 'utf8') > MAX_ARTIFACT_BYTES) {
+    throw new Error(
+      `Export artifact exceeds maximum of ${MAX_ARTIFACT_BYTES} bytes and cannot be stored.`,
+    );
+  }
   const artifactsByUser = pruneAllExpired(await loadUserArtifactMap());
   const userArtifacts = artifactsByUser[userId] ?? {};
   userArtifacts[jobId] = {

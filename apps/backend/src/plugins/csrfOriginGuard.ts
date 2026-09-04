@@ -3,6 +3,7 @@ import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { isOriginAllowedForAppDomain, isTrustedWorkspaceOrigin } from '@mms/shared';
 import type { ServerConfig } from '../config/serverConfig.js';
 import { requestHostname } from '../lib/requestHost.js';
+import { PLATFORM_ACCESS_COOKIE } from '../services/platform/platformCookieService.js';
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 const BODY_MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH']);
@@ -168,7 +169,11 @@ export function registerCsrfOriginGuard(
     const cookies = parseCookies(getHeaderString(request.headers.cookie));
     const csrfCookieValue = cookies['csrf_token'];
     const hasCsrfCookie = Boolean(csrfCookieValue);
-    const hasSessionCookie = Boolean(cookies['mms_access']);
+    // Both the tenant session cookie and the apex platform session cookie are
+    // trusted cookie-auth signals, so the double-submit and fail-closed paths
+    // cover platform mutations too.
+    const hasSessionCookie =
+      Boolean(cookies['mms_access']) || Boolean(cookies[PLATFORM_ACCESS_COOKIE]);
 
     if (isApiMutation) {
       if (hasCsrfCookie) {

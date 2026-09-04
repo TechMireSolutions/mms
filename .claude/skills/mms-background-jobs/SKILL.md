@@ -5,7 +5,7 @@ description: Implements or reviews MMS background jobs and queued processing —
 
 # MMS Background Jobs Workflow
 
-Source: `mms-module-architecture.md` §5. Rules: `mms-module-architecture.md`, `mms-auth-security.md`.
+Source: `mms-module-architecture.md` §5. Rules: `mms-module-architecture.md`, `mms-auth-security.md`, `mms-performance.md` §2 (Zero Memory Buffering & Streaming Background Workers).
 
 Use this skill when adding or changing background processing, export/download artifacts, bulk operation progress, job tray UX, or queued sync recovery.
 
@@ -46,6 +46,7 @@ Use this skill when adding or changing background processing, export/download ar
 - [ ] Download requires current user ownership
 - [ ] Export respects field visibility and soft-delete policy
 - [ ] Sensitive job is audited
+- [ ] Datasets exceeding interactive threshold (>500 rows) offloaded to background worker jobs with streaming pipelines
 - [ ] Jobs use BullMQ + Redis 7+ for durable queuing
 - [ ] Tests cover success, forbidden, and failure paths
 ```

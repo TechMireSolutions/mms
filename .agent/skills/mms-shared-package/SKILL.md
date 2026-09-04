@@ -5,7 +5,7 @@ description: Extends @mms/shared with types, settings defaults, module manifests
 
 # @mms/shared Package Workflow
 
-**Rules (norms SSOT):** `mms-dry.md` · formatters / `t()` keys → `mms-settings-i18n.md`. Pure helpers only — no React/Fastify/DB/DOM.
+**Rules (norms SSOT):** `mms-dry.md` · `mms-performance.md` §4 (Client Bundle & Modular Utilities) · formatters / `t()` keys → `mms-settings-i18n.md`. Pure helpers only — no React/Fastify/DB/DOM.
 
 ## Structure (typical)
 

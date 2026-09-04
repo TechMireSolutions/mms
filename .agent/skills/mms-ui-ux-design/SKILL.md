@@ -5,7 +5,7 @@ description: Covers the Master Module Scaffold Layout, Tailwind CSS v4 BiDi Desi
 
 # MMS UI/UX Design System & BiDi Layout Contract
 
-**Rules (norms SSOT):** `mms-ui-ux-design.md` · `mms-structure-naming.md`
+**Rules (norms SSOT):** `mms-ui-ux-design.md` · `mms-structure-naming.md` · `mms-performance.md`
 
 Use this skill when designing UI/UX components, enforcing logical CSS properties for BiDi layouts, or adhering to the master layout contract.
 
@@ -110,6 +110,8 @@ Enforce logical CSS properties across all shared UI primitives. **Do not use phy
 - [ ] No physical positioning classes are used (e.g., used `inset-inline-start-` instead of `left-`)
 - [ ] Typography follows language-aware overrides (Geist vs Readex Pro vs Noto Nastaliq Urdu)
 - [ ] E2E tests include testing the UI on both LTR (English) and RTL (Urdu/Arabic) modes
+- [ ] Tables, lists, and card feeds > 30 items use `@tanstack/react-virtual` virtualization — `mms-performance.md`
+- [ ] Images and charts have explicit width/height dimensions for CLS = 0 — `mms-performance.md`
 ```
 
 ## Done

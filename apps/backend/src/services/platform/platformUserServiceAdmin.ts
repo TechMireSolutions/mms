@@ -72,8 +72,14 @@ export async function createVerifiedPlatformUser(input: {
       await syncPlatformSuperUserToTenants(user);
     }
   } catch (error: unknown) {
-    if (isUniqueViolation(error) && role === 'super_user') {
-      throw new PlatformError('setup_not_needed', 'Platform administrator already exists');
+    // Concurrent duplicate inserts (setup super-user or admin create) hit the
+    // unique constraints — map them to the same user-facing errors as the
+    // pre-insert existence checks instead of leaking a raw 500.
+    if (isUniqueViolation(error)) {
+      if (role === 'super_user') {
+        throw new PlatformError('setup_not_needed', 'Platform administrator already exists');
+      }
+      throw new PlatformError('user_exists', 'Platform user already exists');
     }
     throw error;
   }

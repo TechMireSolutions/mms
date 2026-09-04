@@ -5,7 +5,7 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 
 # MMS Module Page Pattern
 
-**Rule (norms SSOT):** `mms-module-architecture.mdc` — this skill is workflow + checklist only.
+**Rules (norms SSOT):** `mms-module-architecture.mdc` · `mms-performance.mdc` — this skill is workflow + checklist only.
 
 ## Section map
 
@@ -45,6 +45,8 @@ Reference: Contacts (full), Students/Teachers (soft-delete Work). Before buildin
 - [ ] ErrorState + retry + hint on list query failure
 - [ ] Cmd/Ctrl+N create when canWrite and not in trash
 - [ ] Person-directory: directoryViews ['table','cards']; cards share server page API
+- [ ] Work directory virtualization via @tanstack/react-virtual for lists/tables > 30 items
+- [ ] Route lazy loaded with Suspense in AppRoutes.tsx / PlatformRoutes.tsx
 - [ ] useModulePermissions(manifest); omit forbidden CTAs
 - [ ] i18n via t() (en/ar/ur/fa)
 ```

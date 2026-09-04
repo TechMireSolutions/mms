@@ -46,4 +46,25 @@ describe('snapshotJsonStream', () => {
     const parsed = JSON.parse(chunks.join(''));
     expect(parsed).toEqual({});
   });
+
+  it('streams custom top-level metadata properties correctly', async () => {
+    const snapshot = {
+      version: 2,
+      exportedAt: '2026-09-04T00:00:00.000Z',
+      ignoredUndefined: undefined,
+      collections: { users: [{ id: '1' }] },
+    } as unknown as TenantDatabaseSnapshot;
+
+    const stream = Readable.from(generateSnapshotJsonChunks(snapshot));
+    const chunks: string[] = [];
+    for await (const chunk of stream) {
+      chunks.push(String(chunk));
+    }
+    const parsed = JSON.parse(chunks.join(''));
+    expect(parsed).toEqual({
+      version: 2,
+      exportedAt: '2026-09-04T00:00:00.000Z',
+      collections: { users: [{ id: '1' }] },
+    });
+  });
 });

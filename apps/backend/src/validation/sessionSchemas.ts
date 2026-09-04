@@ -9,7 +9,7 @@ import {
   type SessionsBulkStatusBody,
 } from '@mms/shared';
 
-export const sessionRecordSchema = SessionSchema.passthrough();
+export const sessionRecordSchema = SessionSchema.strict();
 
 export {
   sessionCreateBodySchema,

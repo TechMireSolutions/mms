@@ -13,6 +13,9 @@ import type { EnrollmentsExportQueryInput } from './enrollmentsExportService.js'
 import { buildEnrollmentsCsvExport } from './enrollmentsExportService.js';
 import type { UsersExportQueryInput } from './usersExportService.js';
 import { buildUsersCsvExport } from './usersExportService.js';
+
+/** Cap on ledger entries carried in the `finance:export-excel` job payload. */
+const MAX_EXCEL_PAYLOAD_ENTRIES = 50_000;
 import { buildMessagingCsvExport } from './messagingExportService.js';
 import { saveExportArtifact } from './exportArtifactService.js';
 import { runContactsDuplicateScan } from './contactDuplicateScanService.js';
@@ -269,6 +272,13 @@ export function registerDefaultBackgroundJobRunners(): void {
       filename?: string;
       entries?: Record<string, unknown>[];
     };
+
+    // Guard against unbounded payloads being carried in the job data / DB row.
+    if (entries.length > MAX_EXCEL_PAYLOAD_ENTRIES) {
+      throw new Error(
+        `Ledger export exceeds maximum of ${MAX_EXCEL_PAYLOAD_ENTRIES} entries carried in the job payload.`,
+      );
+    }
 
     async function* generateRows() {
       for (const entry of entries) {

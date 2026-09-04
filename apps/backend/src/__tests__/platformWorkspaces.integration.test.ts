@@ -121,6 +121,7 @@ describe('platformWorkspaces REST API integration routes', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: '/api/platform/workspaces/demo/email-verification',
+      headers: { origin: 'http://localhost' },
       payload: { requireEmailVerification: false },
       cookies: { mms_platform_access: token },
     });
@@ -137,6 +138,7 @@ describe('platformWorkspaces REST API integration routes', () => {
     const resOff = await app.inject({
       method: 'PATCH',
       url: '/api/platform/workspaces/demo',
+      headers: { origin: 'http://localhost' },
       payload: { enabled: false },
       cookies: { mms_platform_access: token },
     });

@@ -86,12 +86,9 @@ function buildChartData(items: StudentRow[], query: StudentsWidgetQuery): { name
 
   const chartRows: { name: string; value: number }[] = [];
   for (const [groupName, stat] of groupStats) {
-    let finalVal = 0;
-    if (isNumeric) {
-      finalVal = query.operation === 'sum' ? stat.sum : (stat.count > 0 ? Math.round(stat.sum / stat.count) : 0);
-    } else {
-      finalVal = stat.count;
-    }
+    const finalVal = isNumeric
+      ? (query.operation === 'sum' ? stat.sum : (stat.count > 0 ? Math.round(stat.sum / stat.count) : 0))
+      : stat.count;
     chartRows.push({ name: groupName, value: finalVal });
   }
 

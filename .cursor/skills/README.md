@@ -44,7 +44,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | **Rules** | `.cursor/rules/*.mdc` | Auto-applied (always or by glob) — norms/SSOT |
 | **Skills** | `.cursor/skills/*/SKILL.md` | Invoked when description matches — workflows/checklists that **point** at rules |
 
-Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-completion-review`. Scoped examples: `mms-dry`, `mms-dependencies`, `mms-structure-naming`.
+Always-on rules: `antigravity-global`, `mms-core`, `mms-migration-status`, `mms-completion-review`, `mms-performance`. Scoped examples: `mms-dry`, `mms-dependencies`, `mms-structure-naming`.
 
 ## Verify setup
 

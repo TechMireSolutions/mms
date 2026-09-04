@@ -1,7 +1,6 @@
 import type { AppTranslationKey } from "@mms/shared";
 import {
   compileContactReportCellExtractor,
-  getContactReportCellValue,
   isContactsReportFieldId,
 } from "@mms/shared";
 import type { AggregateFn, DataSource, PreviewRow } from "./customReportBuilderFields";

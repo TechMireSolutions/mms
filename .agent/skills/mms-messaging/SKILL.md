@@ -5,7 +5,7 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 
 # MMS Messaging Workflow
 
-**Rule (norms SSOT):** `mms-messaging.md`. Also `mms-module-architecture.md` §7, `mms-auth-security.md`, `mms-data-layer.md`.
+**Rule (norms SSOT):** `mms-messaging.md`. Also `mms-module-architecture.md` §7, `mms-auth-security.md`, `mms-data-layer.md`, `mms-performance.md` §2 (Lean Payloads, Streaming / Background CSV Jobs).
 
 ## Layout (entry points)
 

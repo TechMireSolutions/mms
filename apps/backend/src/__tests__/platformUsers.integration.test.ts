@@ -130,6 +130,7 @@ describe('platformUsers REST API integration routes', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: '/api/platform/users/p-super/disabled',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: {
         disabled: true,
@@ -146,6 +147,7 @@ describe('platformUsers REST API integration routes', () => {
     const res = await app.inject({
       method: 'DELETE',
       url: '/api/platform/users/p-super',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: {
         password: 'Password123!',
@@ -164,6 +166,7 @@ describe('platformUsers REST API integration routes', () => {
     const createRes = await app.inject({
       method: 'POST',
       url: '/api/platform/users',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: {
         name: 'Perm Test Admin',
@@ -209,6 +212,7 @@ describe('platformUsers REST API integration routes', () => {
     const updateRes = await app.inject({
       method: 'PATCH',
       url: `/api/platform/users/${createdUser.id}/permissions`,
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: {
         permissions: {
@@ -235,6 +239,7 @@ describe('platformUsers REST API integration routes', () => {
     const res = await app.inject({
       method: 'POST',
       url: '/api/platform/users',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: {
         name: 'Escalation Attempt',
@@ -252,6 +257,7 @@ describe('platformUsers REST API integration routes', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: '/api/platform/users/p-super/permissions',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: {
         permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
@@ -266,6 +272,7 @@ describe('platformUsers REST API integration routes', () => {
     const res = await app.inject({
       method: 'PATCH',
       url: '/api/platform/users/p-super/permissions',
+      headers: { origin: 'http://localhost' },
       cookies: { mms_platform_access: token },
       payload: {
         permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },

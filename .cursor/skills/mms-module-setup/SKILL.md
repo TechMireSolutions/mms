@@ -5,7 +5,7 @@ description: Implements or modifies module Setup tier per mms-module-architectur
 
 # MMS Module Setup Workflow
 
-**Source:** Rules: `mms-module-architecture.mdc`, `mms-settings-i18n.mdc`
+**Source:** Rules: `mms-module-architecture.mdc`, `mms-settings-i18n.mdc`, `mms-performance.mdc` §3 (300s TTL for static configs/lookups, invalidation on mutations).
 
 ## When to use
 

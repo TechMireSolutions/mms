@@ -1,6 +1,6 @@
 import type { FastifyInstance } from 'fastify';
-import authRoutes from "./common/auth.js";
-import { contactRoutes } from "./tenant/contacts.js";
+import authRoutes from './common/auth.js';
+import { contactRoutes } from './tenant/contacts.js';
 import dbRoutes from "./common/db.js";
 import emailRoutes from "./common/email.js";
 import healthRoutes from "./common/health.js";
@@ -42,7 +42,6 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(platformUsersRoutes, { prefix: '/api/platform/users' });
   await app.register(platformSettingsRoutes, { prefix: '/api/platform/settings' });
   await app.register(platformAdminSystemRoutes, { prefix: '/api/platform/admin/system' });
-  await app.register(platformAdminSystemRoutes, { prefix: '/api/platform/system' });
   await app.register(workspaceRoutes, { prefix: '/api/workspace' });
   await app.register(uploadRoutes, { prefix: '/api/uploads' });
   await app.register(dbRoutes, { prefix: '/api/db' });

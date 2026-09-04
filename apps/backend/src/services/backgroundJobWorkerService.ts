@@ -165,6 +165,10 @@ export async function executeJob(
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Background job failed';
     await runContext.fail(message);
+    // Re-throw so BullMQ applies its retry/backoff policy and the DLQ handler
+    // fires on the final attempt. Without this, BullMQ records the job as
+    // "completed" even though the DB row says "failed", so retries never run.
+    throw error;
   }
 }
 

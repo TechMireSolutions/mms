@@ -5,7 +5,7 @@ description: Forward-only Drizzle migrations with journal/meta, expand/contract 
 
 # MMS Schema & Drizzle Migration Workflow
 
-**Rules (norms SSOT):** `mms-data-layer.md` · `mms-ops-infrastructure.md` · `mms-structure-naming.md` · `mms-api-interface.md` · `mms-form-architecture.md`.
+**Rules (norms SSOT):** `mms-data-layer.md` · `mms-performance.md` §1 · `mms-ops-infrastructure.md` · `mms-structure-naming.md` · `mms-api-interface.md` · `mms-form-architecture.md`.
 
 Use when designing and implementing PostgreSQL database schemas, Drizzle ORM models, relations, forward-only SQL migrations, and matching `@mms/shared` Zod contracts.
 
@@ -51,9 +51,10 @@ Use when designing and implementing PostgreSQL database schemas, Drizzle ORM mod
 - **State Machines:** Use PostgreSQL native `pgEnum` for fixed domain statuses (e.g., `enrollment_status`, `payment_status`) to prevent invalid string writes.
 
 ## 4. Indexing & Integrity Invariants
+- **Mandatory Indexing for Query Predicates (`mms-performance.md`):** Every column used in `where()` filters, `leftJoin() ... on()` foreign keys, and `orderBy()` sorting clauses must have an explicit B-Tree index. Prefix multi-tenant compound indexes with tenant scope (`(tenant_id, status, created_at DESC)`).
 - **Foreign Key Indexing:** Every foreign key column must have an explicit B-Tree index to prevent full table scans during joins and cascade deletes.
 - **Database-Enforced Integrity:** Never rely solely on application-layer validation. Enforce invariants with `CHECK`, `NOT NULL`, `DEFAULT`, and `FOREIGN KEY` definitions directly in DDL.
-- **Filter Predicates:** Create composite indexes matching query patterns left-to-right:
+- **Filter Predicates & Partial Indexes:** Create composite indexes matching query patterns left-to-right, and partial indexes `WHERE deleted_at IS NULL` for active queries on soft-deleted tables:
   ```ts
   (table) => [
     uniqueIndex('entity_tenant_code_uidx').on(table.tenantId, table.code),
@@ -61,6 +62,7 @@ Use when designing and implementing PostgreSQL database schemas, Drizzle ORM mod
     index('entity_deleted_at_idx').on(table.tenantId, table.deletedAt).where(sql`${table.deletedAt} is null`),
   ]
   ```
+- **Zero Wildcard Projections (`SELECT *` Strict Ban):** Query surfaces must explicitly project only required columns matching `@mms/shared` Response DTOs. Never emit unconstrained `db.select().from(table)` across network boundaries. Strip heavy blobs/notes from list queries.
 
 ## 5. Drizzle ORM & Migration Guidelines
 - **Bidirectional Relations:** Every `pgTable` definition must have corresponding `relations()` configured in Drizzle to support typed relational queries (`db.query`):
@@ -109,7 +111,8 @@ When generating code for any feature or entity, provide:
 - [ ] Multi-tenancy tenantId / workspaceSubdomain with cascade FK
 - [ ] Identifiers: bigint identity or uuid PK
 - [ ] Bounded varchar(N), timestamp with timezone, pgEnum
-- [ ] Composite uniqueIndex and B-Tree indexes on join/filter columns
+- [ ] Composite uniqueIndex and B-Tree indexes on join/filter/order columns
+- [ ] Explicit typed column projections (no SELECT * / bare table select)
 - [ ] Bidirectional relations(...) defined
 - [ ] $inferSelect and $inferInsert types exported
 - [ ] @mms/shared Zod schemas with .strict() and matching DTO types

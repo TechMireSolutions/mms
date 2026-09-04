@@ -5,7 +5,7 @@ description: Upgrades MMS workspace dependencies with pnpm catalogs, Dependabot/
 
 # MMS Dependency Upgrade Workflow
 
-**Rule (norms SSOT):** `mms-dependencies.mdc`. Also `mms-ops-infrastructure.mdc` (CI), `antigravity-global.mdc` (memo hygiene), `mms-completion-review.mdc`.
+**Rule (norms SSOT):** `mms-dependencies.mdc`. Also `mms-performance.mdc` §4 (Client Bundle & Asset Optimization), `mms-ops-infrastructure.mdc` (CI), `antigravity-global.mdc` (memo hygiene), `mms-completion-review.mdc`.
 
 Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use for prod host deploy → `mms-ops-deploy`.
 
@@ -17,9 +17,10 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 4. `pnpm install` then `pnpm audit` (or OSV) — fix/document high+ findings. Prefer `onlyBuiltDependencies` allowlist so arbitrary postinstall scripts stay off.
 5. Read upstream major migration guides before landing breaking API changes.
 6. `pnpm typecheck && pnpm test` + FE/BE lint when those apps changed.
-7. **React Compiler** (only if enabling): Babel/Vite plugin in `apps/frontend` Vite config only → add `eslint-plugin-react-compiler` → delete redundant `useMemo`/`useCallback`/`React.memo` in **both tenant and platform** code → update stack note in `mms-core.mdc` / this rule.
-8. Keep GitHub `dependency-review` green on the PR.
-9. Do not enable `exactOptionalPropertyTypes` mid-feature — dedicated TS-strictness PR only (`mms-dependencies.mdc`).
+7. **Tree-Shaking & Bundle Review**: Verify tree-shaking compatibility before introducing any new dependency. Ban monolithic utility libraries (`lodash`, `moment`, `ramda`) in favor of native JS and `@mms/shared`. Ban CommonJS-only packages that break Vite tree-shaking (`mms-performance.mdc`).
+8. **React Compiler** (only if enabling): Babel/Vite plugin in `apps/frontend` Vite config only → add `eslint-plugin-react-compiler` → delete redundant `useMemo`/`useCallback`/`React.memo` in **both tenant and platform** code → update stack note in `mms-core.mdc` / this rule.
+9. Keep GitHub `dependency-review` green on the PR.
+10. Do not enable `exactOptionalPropertyTypes` mid-feature — dedicated TS-strictness PR only (`mms-dependencies.mdc`).
 
 ## Checklist
 
@@ -32,6 +33,7 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 - [ ] typecheck + test + lint green
 - [ ] Compiler not half-enabled (plugin + eslint + memo cleanup together)
 - [ ] Banned Node 24 dependencies (dotenv, axios, node-fetch, ws, glob, fast-glob, path-to-regexp) are not reintroduced
+- [ ] Tree-shaking verified; no banned monolithic libraries (lodash, moment, ramda) or CJS-only packages added
 ```
 
 ## Done

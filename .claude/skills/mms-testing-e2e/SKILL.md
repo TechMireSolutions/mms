@@ -5,7 +5,7 @@ description: Automated testing guide for MMS — Vitest unit/integration tests, 
 
 # MMS Testing & E2E Workflow
 
-**Rules (norms SSOT):** `mms-testing-observability.md` · `mms-ui-ux-design.md` §7 · `mms-completion-review.md`
+**Rules (norms SSOT):** `mms-testing-observability.md` · `mms-ui-ux-design.md` §7 · `mms-performance.md` §6 (Safety & Verification) · `mms-completion-review.md`
 
 Comprehensive testing standard across unit, integration, network mocking, and Playwright E2E suites.
 
@@ -151,4 +151,6 @@ test('verifies bidirectional layout and Nastaliq rendering parity', async ({ pag
 - [ ] All new pure utility functions in `@mms/shared` have corresponding `node:test` unit tests.
 - [ ] Backend route changes include `inject()` test cases for authentication (`401`), authorization (`403`), and validation failure (`422`/`400`).
 - [ ] Form submission error states and touch targets are verified at 375px, 768px, and 1440px.
+- [ ] Performance refactors guarantee 100% backward compatibility for API contracts, schemas, and props (`mms-performance.md`).
+- [ ] Performance refactors explicitly document baseline bottleneck and quantified resource saved (CPU/RAM/DB/Bundle/DOM).
 - [ ] `pnpm test` runs with 100% pass rate.

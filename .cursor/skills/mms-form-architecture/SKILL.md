@@ -5,7 +5,7 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 
 # MMS Form Architecture Skill
 
-**Rule (norms SSOT):** `mms-form-architecture.mdc` — shell, Zod, collection clears, uploads.
+**Rule (norms SSOT):** `mms-form-architecture.mdc` — shell, Zod, collection clears, uploads. Also `mms-performance.mdc` §2 (streaming uploads, zero memory buffering).
 
 Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mms-data-layer.mdc`, `mms-settings-i18n.mdc`.
 
@@ -16,7 +16,7 @@ Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mm
 3. Init fields safely; money as strings; phones via `parsePhoneNumber` + E.164. **Ban** Server Actions / `useActionState` / form `action=` for all MMS writes (tenant and platform).
 4. Collection tabs: `cleanContactDraft` / `mergeContactEditSavePayload` — empty arrays clear scalars (rule §3).
 5. Persist with `mutateAsync`; soft-delete only via DELETE/restore routes.
-6. Uploads: authenticated multipart `/api/uploads/*` + `resolveApiUrl`; magic-byte + size + dimension/page caps; auth (or short-TTL) to read.
+6. Uploads: authenticated multipart `/api/uploads/*` + `resolveApiUrl`; stream chunks directly to disk/storage via Fastify `@fastify/multipart` — never buffer files into process memory (`Buffer.concat`, `file.toBuffer()`) (`mms-performance.mdc`); magic-byte + size + dimension/page caps; auth (or short-TTL) to read.
 7. Tall FormModal: prefer `dvh`/`svh` + safe-area when touching chrome.
 8. On close: **focus-return** to the control that opened the dialog.
 
@@ -31,7 +31,7 @@ Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mm
 - [ ] formStyles + DatePicker / TimePicker / DateTimePicker; name + id on controls; field errors via `FieldErrorMessage` / `FORM_ERROR`
 - [ ] Empty collection arrays persist; no scalar resurrection
 - [ ] canWrite gates; no fire-and-forget mutate close
-- [ ] Upload sniff + size + dimension/page caps
+- [ ] Upload stream chunks directly to storage (no memory buffering) + sniff + size + dimension/page caps
 - [ ] Copy via t() / labelKey; no hardcoded labels (en/ar/ur/fa + RTL)
 ```
 

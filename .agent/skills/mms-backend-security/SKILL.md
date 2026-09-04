@@ -5,7 +5,7 @@ description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, CSRF/Ori
 
 # MMS Backend Security Workflow
 
-**Rule (norms SSOT):** `mms-auth-security.md`. Route/service wiring → **`mms-backend-api`**.
+**Rule (norms SSOT):** `mms-auth-security.md`. Also `mms-performance.md` §3 (Cache Namespacing & Tenant Isolation). Route/service wiring → **`mms-backend-api`**.
 
 ## When to use
 
@@ -103,6 +103,7 @@ Security Invariants:
 - [ ] Apex routes do not expose other tenants' data
 - [ ] Tests use `host: '{subdomain}.localhost'` in `inject()`
 - [ ] Typed REST routes use repositories + `withTenantTransaction` / SET LOCAL RLS (not `dbSyncService`); `dbSyncService` only for `/api/db` JSON documents
+- [ ] Redis cache keys strictly isolate by tenant and context (`mms:{tenantId}:{module}:{resource}:{hash(queryParams)}`) with viewer role scope when permissions alter payload (`mms-performance.md`)
 
 ## Secrets & logging
 

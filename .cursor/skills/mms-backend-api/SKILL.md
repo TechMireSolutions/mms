@@ -5,7 +5,7 @@ description: Adds or modifies Fastify routes, middleware (authenticateTenant), s
 
 # MMS Backend API Workflow
 
-**Rules (norms SSOT):** `mms-api-interface.mdc` · `mms-data-layer.mdc` · `mms-auth-security.mdc` · `mms-testing-observability.mdc` · `mms-form-architecture.mdc`
+**Rules (norms SSOT):** `mms-api-interface.mdc` · `mms-data-layer.mdc` · `mms-performance.mdc` · `mms-auth-security.mdc` · `mms-testing-observability.mdc` · `mms-form-architecture.mdc`
 
 ## When to use
 
@@ -91,6 +91,12 @@ Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.t
 - [ ] Prefer SET LOCAL statement_timeout / idle_in_transaction_session_timeout on tenant write txs — mms-data-layer
 - [ ] Parameterized sql only — ban user/tenant input → sql.raw
 - [ ] Large/hot list APIs: prefer keyset/cursor; OFFSET OK for small Work pages — mms-data-layer
+- [ ] Zero queries inside loops (N+1); batch via Drizzle relational `with`, `inArray` ($\le 500$), SQL joins, or `/resolve` — `mms-performance.mdc`
+- [ ] Zero wildcard projections (`SELECT *` or bare select); use explicit column projection objects matching Response DTOs — `mms-performance.mdc`
+- [ ] Mandatory pagination with hard caps: default 25, max 100 via `baseListQuerySchema` — `mms-performance.mdc`
+- [ ] Large file uploads stream via `@fastify/multipart` (no memory buffering); exports stream via `node:stream` / async generators; datasets $> 500$ rows offloaded to background jobs — `mms-performance.mdc`
+- [ ] Redis caching: tenant-scoped key `mms:{tenantId}:{module}:{resource}:{hash}`; mutations trigger cache eviction + `/api/ws` invalidation — `mms-performance.mdc`
+- [ ] HTTP caching headers: emit `ETag` and `Cache-Control: private, no-cache` on idempotent GET responses (`304 Not Modified` on match) — `mms-performance.mdc`
 - [ ] Contested PUT: updated_at/version → 409 conflict, or document LWW — mms-api-interface §6
 - [ ] bodyLimit / requestTimeout from serverConfig (or explicit raise for sync/upload)
 - [ ] Outbound provider fetch uses native `fetch()` + `AbortSignal.timeout` (no `axios`/`node-fetch`/`ws` for client comms)

@@ -26,6 +26,12 @@ export async function withTenant<T>(
 
   if (typeof hasActiveTransaction === 'function' && hasActiveTransaction()) {
     const active = activeDb();
+    // Re-apply tenant RLS guards so a nested `withTenant` runs under its own
+    // requested tenant rather than silently inheriting the outer transaction's
+    // context. Idempotent when the tenant matches; correct when it differs.
+    await applyTenantTransactionGuards(active as unknown as AppDb, resolvedTenantId, {
+      statementTimeoutMs: options.statementTimeoutMs,
+    });
     return callback(active as unknown as TenantTransaction);
   }
 
@@ -47,24 +53,25 @@ export async function withTenant<T>(
     }
   }
   if (!pool) {
-    if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
-      console.error(
-        '[withTenant] no database client available — running tenant work without a transaction boundary. ' +
-          'This must never happen in production.',
-        poolError instanceof Error ? poolError : new Error(String(poolError))
-      );
+    // Fail closed in production: running tenant work without a transaction/RLS
+    // boundary is a correctness and isolation hazard. Tests mock use cases but
+    // not the DB connection layer, so keep a no-op boundary there.
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+      return callback({} as TenantTransaction);
     }
-    return callback({} as TenantTransaction);
+    throw new Error(
+      '[withTenant] no database client available — cannot run tenant work without a transaction boundary.',
+      { cause: poolError },
+    );
   }
 
-  if (!pool || typeof pool.transaction !== 'function') {
-    if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
-      console.error(
-        '[withTenant] active database client does not support transactions — running tenant work without a transaction boundary. ' +
-          'This must never happen in production.'
-      );
+  if (typeof pool.transaction !== 'function') {
+    if (process.env.NODE_ENV === 'test' || process.env.VITEST) {
+      return callback({} as TenantTransaction);
     }
-    return callback({} as TenantTransaction);
+    throw new Error(
+      '[withTenant] active database client does not support transactions — cannot run tenant work without a transaction boundary.',
+    );
   }
 
   return tracer.withSpan(

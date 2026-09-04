@@ -75,13 +75,32 @@ export function streamCsvExportFromGenerator(
   return Readable.from(generator);
 }
 
+/** Thrown when a buffered CSV export would exceed the memory-safe byte cap. */
+export class CsvExportLimitError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'CsvExportLimitError';
+  }
+}
+
+/** Memory-safe cap for buffered (non-streamed) CSV exports. */
+export const MODULE_CSV_EXPORT_MAX_BYTES = 25 * 1024 * 1024;
+
 export async function buildCsvExportFromGenerator(
   generator: AsyncGenerator<string, CsvExportMeta, undefined>,
   fallbackFilename: string,
+  maxBytes: number = MODULE_CSV_EXPORT_MAX_BYTES,
 ): Promise<{ csv: string; filename: string; count: number }> {
   const chunks: string[] = [];
+  let totalBytes = 0;
   let step = await generator.next();
   while (!step.done) {
+    totalBytes += Buffer.byteLength(step.value, 'utf8');
+    if (totalBytes > maxBytes) {
+      throw new CsvExportLimitError(
+        `Export exceeds maximum of ${maxBytes} bytes. Use the streaming download instead.`,
+      );
+    }
     chunks.push(step.value);
     step = await generator.next();
   }

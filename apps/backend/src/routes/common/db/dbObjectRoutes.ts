@@ -90,6 +90,15 @@ export const dbObjectRoutes: FastifyPluginAsync = async (fastify) => {
     }
     try {
       const raw = request.body;
+      // The KV object store persists arbitrary JSON documents. Reject
+      // non-object payloads (null, arrays, primitives) so a malformed write
+      // cannot corrupt a stored document.
+      if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
+        return reply.status(400).send({
+          type: 'validation_error',
+          message: 'Object body must be a JSON object',
+        });
+      }
       const objectValueToSave =
         key === 'branding'
           ? mergeBrandingSettings(raw as Partial<BrandingSettings>)

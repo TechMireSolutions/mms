@@ -5,7 +5,7 @@ description: Implements or audits MMS finance and accounting workflows — invoi
 
 # MMS Finance & Accounting Workflow
 
-**Rules (norms SSOT):** `mms-core.mdc` · `mms-data-layer.mdc` · `mms-form-architecture.mdc` · `mms-reports.mdc` · `mms-structure-naming.mdc`
+**Rules (norms SSOT):** `mms-core.mdc` · `mms-data-layer.mdc` · `mms-performance.mdc` §1-2 · `mms-form-architecture.mdc` · `mms-reports.mdc` · `mms-structure-naming.mdc`
 
 Architecture standards for Madrasa financial management, student billing/invoices, payments, and double-entry accounting ledgers.
 

@@ -1,8 +1,9 @@
 import { Worker } from 'bullmq';
-import { initDb } from '../db/database.js';
-import { eq } from 'drizzle-orm';
+import { initDb, closeDatabase } from '../db/database.js';
+import { and, eq, lt } from 'drizzle-orm';
 import { withTenant } from '../db/tenant-context.js';
 import { backgroundJobs } from '../db/schema.js';
+import { disconnectRedis } from '../lib/redis.js';
 import {
   QUEUE_PDF_RENDERING,
   QUEUE_BULK_EXPORT,
@@ -16,10 +17,14 @@ import {
 import { processBackgroundJob } from './processors/jobProcessor.js';
 import { registerDefaultBackgroundJobRunners } from '../services/backgroundJobRunnerService.js';
 
+/** A 'pending' job older than this is assumed to have never been dispatched. */
+const STALE_PENDING_MS = 10 * 60 * 1000;
+
 export async function cleanupOrphanedJobs(): Promise<void> {
   try {
     await withTenant(null, async (tx) => {
-      const updated = await tx.update(backgroundJobs)
+      // Jobs that were running when the worker restarted are orphaned.
+      const running = await tx.update(backgroundJobs)
         .set({
           status: 'failed',
           error: 'Worker process restarted while job was running',
@@ -29,12 +34,33 @@ export async function cleanupOrphanedJobs(): Promise<void> {
         .where(eq(backgroundJobs.status, 'running'))
         .returning({ id: backgroundJobs.id });
 
-      if (updated.length > 0) {
-        console.log(`[BullMQ Worker] Cleaned up ${updated.length} orphaned running jobs.`);
+      if (running.length > 0) {
+        console.log(`[BullMQ Worker] Cleaned up ${running.length} orphaned running jobs.`);
+      }
+
+      // Jobs stuck in 'pending' for a long time were likely inserted but never
+      // dispatched (crash between DB insert and queue.add). Fail them so they
+      // do not sit forever.
+      const stalePendingCutoff = new Date(Date.now() - STALE_PENDING_MS);
+      const pending = await tx.update(backgroundJobs)
+        .set({
+          status: 'failed',
+          error: 'Job was never dispatched to the queue',
+          completedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(and(
+          eq(backgroundJobs.status, 'pending'),
+          lt(backgroundJobs.createdAt, stalePendingCutoff),
+        ))
+        .returning({ id: backgroundJobs.id });
+
+      if (pending.length > 0) {
+        console.log(`[BullMQ Worker] Cleaned up ${pending.length} stale pending jobs.`);
       }
     });
   } catch (error) {
-    console.error('[BullMQ Worker] Failed to cleanup orphaned running jobs:', error);
+    console.error('[BullMQ Worker] Failed to cleanup orphaned jobs:', error);
   }
 }
 
@@ -108,26 +134,53 @@ export async function startWorkerDaemon(): Promise<void> {
     console.log(`[BullMQ Worker] Received ${signal}, shutting down...`);
     isRunning = false;
 
-    // Close all workers
-    for (const worker of activeWorkers) {
-      try {
-        await worker.close();
-      } catch (err) {
-        console.error('[BullMQ Worker] Error closing worker:', err);
+    process.removeAllListeners('SIGTERM');
+    process.removeAllListeners('SIGINT');
+
+    const forceExitTimer = setTimeout(() => {
+      console.error('[BullMQ Worker] Graceful shutdown timed out; forcing exit');
+      process.exit(1);
+    }, 10_000);
+    forceExitTimer.unref?.();
+
+    try {
+      // Close all workers
+      for (const worker of activeWorkers) {
+        try {
+          await worker.close();
+        } catch (err) {
+          console.error('[BullMQ Worker] Error closing worker:', err);
+        }
       }
-    }
 
-    // Close queue clients
-    await closeAllQueues();
+      // Close queue clients
+      await closeAllQueues();
 
-    console.log('[BullMQ Worker] Gracefully shut down.');
-    if (process.env.NODE_ENV !== 'test') {
-      process.exit(0);
+      // Release DB pool and Redis connections so the process can exit cleanly.
+      await disconnectRedis();
+      await closeDatabase();
+
+      console.log('[BullMQ Worker] Gracefully shut down.');
+      if (process.env.NODE_ENV !== 'test') {
+        process.exit(0);
+      }
+    } catch (err) {
+      console.error('[BullMQ Worker] Shutdown failed:', err);
+      if (process.env.NODE_ENV !== 'test') {
+        process.exit(1);
+      }
     }
   };
 
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
   process.on('SIGINT', () => void shutdown('SIGINT'));
+  process.on('unhandledRejection', (reason) => {
+    console.error('[BullMQ Worker] Unhandled rejection:', reason);
+  });
+  process.on('uncaughtException', (error) => {
+    console.error('[BullMQ Worker] Uncaught exception:', error);
+    void shutdown('uncaughtException');
+  });
 }
 
 export { activeWorkers };

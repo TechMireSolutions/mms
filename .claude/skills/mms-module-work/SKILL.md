@@ -5,7 +5,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 
 # MMS Module Work Workflow
 
-**Rule (norms SSOT):** `mms-module-architecture.md` §2–§3, §6–§7. Also `mms-auth-security.md`, `mms-data-layer.md`.
+**Rule (norms SSOT):** `mms-module-architecture.md` §2–§3, §6–§7. Also `mms-auth-security.md`, `mms-data-layer.md`, `mms-performance.md`.
 
 ## Reference
 
@@ -28,7 +28,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** `WarningCallout` archive chrome + Restore + `DrawerSyncStatusFooter` (shared synced/archived footer); hide Call/WA/SMS/Email when `deletedAt`.
 9. §7: `ErrorState`+retry+hint on list `isError`; directory empties via `ModuleWorkDirectoryEmpty` (`title` via `t()`; `compact` when dense; Clear Filters / Show Active CTAs — Teachers uses `teachers.noTeachersMatchFilters` / `teachers.noDeletedTeachers` / `teachers.tryAdjustingFilters` / `teachers.clickAddTeacher` / `teachers.emptyDirectoryReadOnly` / `teachers.clearFilters`); Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via floating/inline `BulkSelectionBar` + `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` (not toolbar-inline trash); column gates via `isColumnVisible` into table/cards.
 10. **Column layout**: `useModuleColumnLayout` — merge/local-width rules in rule §3 (do not restate). Pass `isColumnVisible` through content — ban `visibleColumns` boolean object fans.
-11. Dense Work tables: prefer `@tanstack/react-virtual` (or named shared wrapper) — ban one-off virtualization libs — `mms-ui-ux-design.md`.
+11. **Mandatory Work table & list virtualization**: always virtualize DOM rows when rendered items > 30 using `@tanstack/react-virtual` (following `ContactsListDesktopTable.tsx`) — ban unvirtualized rendering of long collections — `mms-performance.md`.
 12. Command/report KPI **StatCard strips** → `ModuleCommandMetricsGrid` when adding metrics — `mms-ui-ux-design.md`.
 13. Contacts report KPIs: `activeCount` = soft-delete-filtered roster length (form never writes `isActive`).
 14. Contacts mutations invalidate messaging resolve Query keys when person data changes.
@@ -54,7 +54,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 - [ ] Directory viewMode SSOT — cards default `< md`, table `md+`; toggle overrides without CSS dual-render
 - [ ] Column widths persist — local + `/column-preferences`; merge preserves device widths
 - [ ] Copy via t(); no raw fetch('/api/...')
-- [ ] Dense lists: `@tanstack/react-virtual` when virtualizing; card rows `< md` and/or `overflow-x-auto` tables; touch ≥ 44px (`mms-ui-ux-design.md` §7)
+- [ ] Mandatory virtualization: `@tanstack/react-virtual` for tables/lists/cards > 30 items (`mms-performance.md`); card rows `< md` and/or `overflow-x-auto` tables; touch ≥ 44px (`mms-ui-ux-design.md` §7)
 ```
 
 ## Do Not

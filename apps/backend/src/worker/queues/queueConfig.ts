@@ -36,6 +36,10 @@ export function getBullMQConnectionOptions(): ConnectionOptions {
       username: url.username || undefined,
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
+      // Do not buffer commands while Redis is down. This makes `queue.add`
+      // fail fast when Redis is unreachable so a timed-out dispatch cannot
+      // silently enqueue the job later (after the DB row was marked failed).
+      enableOfflineQueue: false,
     };
   } catch {
     return {
@@ -43,6 +47,7 @@ export function getBullMQConnectionOptions(): ConnectionOptions {
       port: 6379,
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
+      enableOfflineQueue: false,
     };
   }
 }

@@ -27,6 +27,7 @@ Keep in sync when editing: `bash .agent/scripts/sync-all.sh`
 | `rules/mms-core.md` | MMS stack, boundaries, ownership matrix |
 | `rules/mms-migration-status.md` | Do not reintroduce + short open-gaps summary |
 | `rules/mms-completion-review.md` | Self-review after code edits — verify, then mark done |
+| `rules/mms-performance.md` | Performance, query optimization, streaming, Redis caching & virtualization |
 
 Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker), `mms-structure-naming` (file-size bands + barrels), `mms-hooks` (page controllers).
 

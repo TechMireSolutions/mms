@@ -5,7 +5,7 @@ description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboar
 
 # MMS Reports & Export Workflow
 
-**Rules:** `mms-reports.mdc`, `mms-data-layer.mdc` (Query-first policy), `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`.
+**Rules:** `mms-reports.mdc`, `mms-data-layer.mdc` (Query-first policy), `mms-performance.mdc` §1-2 (Server Aggregates, Streaming & Heavy Exports), `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`.
 
 ## Placement
 

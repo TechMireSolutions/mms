@@ -113,12 +113,13 @@ export async function countPlatformUserRows(): Promise<number> {
 }
 
 export async function listPlatformUsers(): Promise<StoredPlatformUser[]> {
+  // List/directory reads never need the scrypt hash — it is projected out and
+  // stubbed in the returned row (no real hash is loaded into memory or returned).
   const rows = await activeDb()
     .select({
       id: platformUsers.id,
       email: platformUsers.email,
       name: platformUsers.name,
-      passwordHash: platformUsers.passwordHash,
       role: platformUsers.role,
       sessionVersion: platformUsers.sessionVersion,
       createdAt: platformUsers.createdAt,
@@ -134,7 +135,10 @@ export async function listPlatformUsers(): Promise<StoredPlatformUser[]> {
   const permsMap = await loadPermissionsForUsers(userIds);
 
   return rows.map((row) =>
-    rowToStored(row, permsMap.get(row.id) ?? normalizePlatformAdminPermissions({})),
+    rowToStored(
+      { ...row, passwordHash: '' },
+      permsMap.get(row.id) ?? normalizePlatformAdminPermissions({}),
+    ),
   );
 }
 

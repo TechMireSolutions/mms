@@ -3,6 +3,7 @@ import rateLimit from '@fastify/rate-limit';
 import {
   authenticatePlatform,
   requirePlatformPermission,
+  requirePlatformSuperUser,
   type PlatformAuthenticatedRequest,
 } from '../../middleware/authenticatePlatform.js';
 import {
@@ -169,7 +170,10 @@ export default async function platformWorkspaceRoutes(
   await fastify.register(async function platformWorkspaceDeleteRateLimited(inner) {
     await inner.register(rateLimit, AUTH_RATE_LIMIT);
 
-    inner.delete('/:subdomain', async (request, reply) => {
+    // Permanently purges all tenant-scoped data, so it is gated on the super-user
+    // role (like reset-database / migrate-and-restart), not just the grantable
+    // `workspaces` permission.
+    inner.delete('/:subdomain', { preHandler: requirePlatformSuperUser() }, async (request, reply) => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
       const params = parseRequest(subdomainParamsSchema, request.params);
       if (!params.ok) return replyValidationError(reply, params.message);

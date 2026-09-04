@@ -77,12 +77,9 @@ function buildChartData(items: SessionRow[], query: SessionsWidgetQuery): { name
 
   const chartData: { name: string; value: number }[] = [];
   for (const [groupName, stat] of groupStats) {
-    let aggregateValue = 0;
-    if (isNumeric) {
-      aggregateValue = query.operation === 'sum' ? stat.sum : (stat.count > 0 ? Math.round(stat.sum / stat.count) : 0);
-    } else {
-      aggregateValue = stat.count;
-    }
+    const aggregateValue = isNumeric
+      ? (query.operation === 'sum' ? stat.sum : (stat.count > 0 ? Math.round(stat.sum / stat.count) : 0))
+      : stat.count;
     chartData.push({ name: groupName, value: aggregateValue });
   }
 

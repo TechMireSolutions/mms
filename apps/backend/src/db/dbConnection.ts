@@ -23,6 +23,7 @@ export function initializeDatabaseConnection(): void {
   pool = new pg.Pool({
     connectionString: config.databaseUrl,
     max: config.pgPoolMax,
+    connectionTimeoutMillis: 10_000,
   });
   pool.on('error', (error) => {
     // Idle clients can be terminated during platform DB reset; log and continue.
@@ -32,6 +33,7 @@ export function initializeDatabaseConnection(): void {
   readReplicaPool = new pg.Pool({
     connectionString: config.readReplicaDatabaseUrl,
     max: config.pgPoolMax,
+    connectionTimeoutMillis: 10_000,
   });
   readReplicaPool.on('error', (error) => {
     console.error('Unexpected read-replica database pool client error:', error);

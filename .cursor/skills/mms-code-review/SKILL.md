@@ -16,9 +16,13 @@ Agent self-review after edits → also follow always-on `mms-completion-review.m
 | Keyset/cursor vs OFFSET lists | `mms-data-layer.mdc` · **`mms-backend-api`** / **`mms-query-factories`** |
 | Contested PUT / `updated_at` → 409 | `mms-api-interface.mdc` §6 · **`mms-backend-api`** |
 | `sql.raw` / statement_timeout | `mms-data-layer.mdc` · **`mms-schema-migrate`** / **`mms-backend-api`** |
-| Dense table virtualization | `@tanstack/react-virtual` — `mms-ui-ux-design.mdc` · **`mms-module-work`** |
+| Dense table virtualization | `@tanstack/react-virtual` — `mms-ui-ux-design.mdc` · **`mms-module-work`** · `mms-performance.mdc` |
 | List pending a11y (`aria-busy`) | `mms-ui-ux-design.mdc` · **`mms-a11y-smoke`** |
 | Query `placeholderData: (prev) => prev` | `mms-data-layer.mdc` · **`mms-query-factories`** |
+| Zero queries in loops (N+1) | `mms-performance.mdc` · **`mms-backend-api`** |
+| Zero wildcard projections (`SELECT *`) | `mms-performance.mdc` · **`mms-data-layer.mdc`** |
+| Redis multi-tier caching & invalidation | `mms-performance.mdc` · **`mms-backend-api`** |
+| Performance savings documentation | `mms-performance.mdc` · **`mms-code-review`** |
 | bodyLimit / outbound `AbortSignal.timeout` / idempotency↔body | `mms-api-interface.mdc` · **`mms-backend-api`** |
 | Title Case skip ar/ur/fa / RTL prose | `mms-structure-naming.mdc` · **`mms-shared-package`** |
 | Messaging send idempotency digest | `mms-api-interface.mdc` §6 · **`mms-messaging`** |
@@ -148,7 +152,14 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 
 ### Performance / deps / React 19
 - [ ] Export artifacts generated via backend BullMQ + Typst/ExcelJS; no client-side DOM canvas/jspdf injection
-- [ ] React 19: Prefer `useEffectEvent`, `startTransition`, `useDeferredValue` over `useMemo`/`useCallback` unless referential equality is strictly required.
+- [ ] Targeted memoization: memoize non-trivial calculations (`useMemo`) and callback/object references passed to dependencies or memoized components (`useCallback`) to avoid render churn; avoid premature memoization on primitives — `mms-performance.mdc`
+- [ ] React 19: leverage `startTransition`, `useDeferredValue`, and `useEffectEvent` alongside targeted memoization — `mms-performance.mdc`
+- [ ] Zero queries inside loops (N+1); batch via Drizzle relational `with`, `inArray` ($\le 500$), SQL joins, or `/resolve` — `mms-performance.mdc`
+- [ ] Zero wildcard projections (`SELECT *` or bare `db.select().from(table)`); use explicit column projection objects matching Response DTOs — `mms-performance.mdc`
+- [ ] Virtualize DOM lists, tables, and feeds > 30 items with `@tanstack/react-virtual` — `mms-performance.mdc`
+- [ ] Large uploads stream via `@fastify/multipart`; large exports stream via `node:stream` / async generators; datasets $> 500$ rows offloaded to background jobs — `mms-performance.mdc`
+- [ ] Redis caching: tenant-scoped key `mms:{tenantId}:{module}:{resource}:{hash}`; mutations trigger write invalidation — `mms-performance.mdc`
+- [ ] Performance refactor documentation: baseline bottleneck + quantified resource saved (CPU/RAM/DB/Bundle) — `mms-performance.mdc`
 - [ ] Dependency bumps → skill **`mms-dependency-upgrade`**
 
 ### Scope
@@ -163,5 +174,5 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 
 ## References
 
-- Rules: `mms-api-interface.mdc`, `mms-data-layer.mdc`, `mms-hooks.mdc`, `mms-ui-ux-design.mdc`, `mms-auth-security.mdc`, `mms-form-architecture.mdc`, `mms-messaging.mdc`, `mms-migration-status.mdc`
+- Rules: `mms-api-interface.mdc`, `mms-data-layer.mdc`, `mms-hooks.mdc`, `mms-ui-ux-design.mdc`, `mms-auth-security.mdc`, `mms-form-architecture.mdc`, `mms-messaging.mdc`, `mms-migration-status.mdc`, `mms-performance.mdc`
 - Skills: `mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`

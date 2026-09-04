@@ -99,6 +99,7 @@ App-wide only — not module Fields/Preferences. Workflow → **`mms-settings-i1
 | i18n / settings panels | `mms-settings-i18n.md` |
 | RBAC UI / apex-tenant | `mms-auth-security.md` |
 | Tests | `mms-testing-observability.md` |
+| Performance, Caching & Virtualization | `mms-performance.md` |
 | Debt register | `mms-migration-status.md` · **`mms-migration-fixes`** |
 
 ## Related skills
@@ -107,4 +108,4 @@ App-wide only — not module Fields/Preferences. Workflow → **`mms-settings-i1
 
 ## Done
 
-`mms-completion-review.md` — typecheck → FE lint → tests if hooks touched. Layout: spot-check 375 / 768 / 1440. Prefer Query `signal`; no new `useMemo`/`useCallback` by default (React 19: prefer `useEffectEvent`, `startTransition`, `useDeferredValue`).
+`mms-completion-review.md` — typecheck → FE lint → tests if hooks touched. Layout: spot-check 375 / 768 / 1440. Pass Query `signal`. Memoize non-trivial calculations (`useMemo`) and callback/object references passed as dependencies (`useCallback`) to avoid render churn; avoid premature memoization on primitives (`mms-performance.md`). Virtualize tables and lists > 30 items via `@tanstack/react-virtual`. Complement with React 19 `useEffectEvent`, `startTransition`, and `useDeferredValue`.

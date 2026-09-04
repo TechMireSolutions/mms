@@ -40,35 +40,41 @@ export async function streamTableToExcel(
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
   );
 
-  const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
-    stream: passThrough,
-    useStyles: true,
-    useSharedStrings: true,
-  });
+  try {
+    const workbook = new ExcelJS.stream.xlsx.WorkbookWriter({
+      stream: passThrough,
+      useStyles: true,
+      useSharedStrings: true,
+    });
 
-  const worksheet = workbook.addWorksheet(worksheetName);
-  worksheet.columns = columns.map((col) => ({
-    header: col.header,
-    key: col.key,
-    width: col.width ?? 18,
-  }));
+    const worksheet = workbook.addWorksheet(worksheetName);
+    worksheet.columns = columns.map((col) => ({
+      header: col.header,
+      key: col.key,
+      width: col.width ?? 18,
+    }));
 
-  let processedCount = 0;
-  for await (const row of rowGenerator as AsyncIterable<Record<string, unknown>>) {
-    worksheet.addRow(row).commit();
-    processedCount += 1;
+    let processedCount = 0;
+    for await (const row of rowGenerator as AsyncIterable<Record<string, unknown>>) {
+      worksheet.addRow(row).commit();
+      processedCount += 1;
 
-    if (onProgress && processedCount % 500 === 0) {
-      await onProgress(processedCount);
+      if (onProgress && processedCount % 500 === 0) {
+        await onProgress(processedCount);
+      }
     }
+
+    worksheet.commit();
+    await workbook.commit();
+    passThrough.end();
+
+    return await uploadPromise;
+  } catch (error) {
+    // Ensure the stream and upload settle so no handle leaks on error.
+    passThrough.destroy(error instanceof Error ? error : new Error(String(error)));
+    await uploadPromise.catch(() => {});
+    throw error;
   }
-
-  worksheet.commit();
-  await workbook.commit();
-  passThrough.end();
-
-  const result = await uploadPromise;
-  return result;
 }
 
 /**
