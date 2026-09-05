@@ -133,13 +133,17 @@ export function normalizeStudentsSettings(config: unknown): StudentsSettings {
     draft.formTabs = refreshModuleTierTabLabels(
       refreshModuleTierTabKeys(normalizeTabs(draft.formTabs) ?? defaults.formTabs ?? STUDENT_TAB_REGISTRY),
     );
-    draft.enabledTabs = draft.enabledTabs ?? defaults.enabledTabs ?? DEFAULT_STUDENT_ENABLED_TABS;
+    draft.enabledTabs = Array.isArray(draft.enabledTabs) ? draft.enabledTabs
+      : Array.isArray(defaults.enabledTabs) ? defaults.enabledTabs
+      : DEFAULT_STUDENT_ENABLED_TABS;
     draft.requiredTabs = draft.requiredTabs ?? defaults.requiredTabs ?? DEFAULT_STUDENT_REQUIRED_TABS;
     draft.fields =
       draft.fields && typeof draft.fields === 'object' && Object.keys(draft.fields).length > 0
         ? draft.fields
         : defaults.fields;
-    draft.columnRegistry = draft.columnRegistry ?? defaults.columnRegistry ?? DEFAULT_STUDENT_COLUMN_REGISTRY;
+    draft.columnRegistry = Array.isArray(draft.columnRegistry) ? draft.columnRegistry
+      : Array.isArray(defaults.columnRegistry) ? defaults.columnRegistry
+      : DEFAULT_STUDENT_COLUMN_REGISTRY;
   }
 
   applyStudentSetupVersionMigrate(draft);

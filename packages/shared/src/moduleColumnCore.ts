@@ -141,9 +141,10 @@ export function buildStudentWorkColumnRegistry(
   labels: StudentWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
   const fields = (settings.fields ?? {}) as Record<string, FieldDefinition[]>;
-  const enabledTabs = settings.enabledTabs ?? ['registration'];
+  const enabledTabs = Array.isArray(settings.enabledTabs) ? settings.enabledTabs : ['registration'];
+  const storedRegistry = Array.isArray(settings.columnRegistry) ? settings.columnRegistry : undefined;
   const synced = syncStudentColumnRegistryWithFields(
-    settings.columnRegistry ?? DEFAULT_STUDENT_COLUMN_REGISTRY,
+    storedRegistry ?? DEFAULT_STUDENT_COLUMN_REGISTRY,
     fields,
     enabledTabs,
   );
