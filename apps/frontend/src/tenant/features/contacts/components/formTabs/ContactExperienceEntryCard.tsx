@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactExperience } from "@mms/shared";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
+import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 
 export interface ContactExperienceEntryCardProps
   extends Pick<
@@ -106,7 +107,7 @@ export function ContactExperienceEntryCard({
                 required={isFieldRequired("experience", "title")}
                 onChange={(e) => onUpdate({ title: e.target.value })}
                 placeholder={t("contacts.form.jobTitlePlaceholder")}
-                className={cn(titleError && "border-destructive focus-visible:ring-destructive")}
+                className={cn(titleError && FORM_INPUT_ERROR)}
               />
             </Field>
           ) : null}
@@ -130,7 +131,7 @@ export function ContactExperienceEntryCard({
                 required={isFieldRequired("experience", "organization")}
                 onChange={(e) => onUpdate({ organization: e.target.value })}
                 placeholder={t("contacts.form.organizationPlaceholder")}
-                className={cn(orgError && "border-destructive focus-visible:ring-destructive")}
+                className={cn(orgError && FORM_INPUT_ERROR)}
               />
             </Field>
           ) : null}
@@ -154,7 +155,7 @@ export function ContactExperienceEntryCard({
               required={isFieldRequired("experience", "location")}
               onChange={(e) => onUpdate({ location: e.target.value })}
               placeholder={t("contacts.form.locationPlaceholder")}
-              className={cn(locationError && "border-destructive focus-visible:ring-destructive")}
+              className={cn(locationError && FORM_INPUT_ERROR)}
             />
           </Field>
         ) : null}
@@ -188,7 +189,7 @@ export function ContactExperienceEntryCard({
               required={isFieldRequired("experience", "description")}
               onChange={(e) => onUpdate({ description: e.target.value })}
               placeholder={t("contacts.form.jobDescriptionPlaceholder")}
-              className={cn("text-xs resize-y min-h-16", descriptionError && "border-destructive focus-visible:ring-destructive")}
+              className={cn("text-xs resize-y min-h-16", descriptionError && FORM_INPUT_ERROR)}
             />
           </Field>
         ) : null}

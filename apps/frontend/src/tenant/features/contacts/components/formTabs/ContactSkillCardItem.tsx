@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactSkill } from "@mms/shared";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
+import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 
 export interface ContactSkillCardItemProps {
   skill: ContactSkill;
@@ -106,7 +107,7 @@ export function ContactSkillCardItem({
                 required={isFieldRequired("skills", "name")}
                 onChange={(e) => updateSkill(idx, { name: e.target.value })}
                 placeholder={t("contacts.form.skillNamePlaceholder")}
-                className={cn(nameError && "border-destructive focus-visible:ring-destructive")}
+                className={cn(nameError && FORM_INPUT_ERROR)}
               />
             </Field>
           ) : null}
@@ -153,7 +154,7 @@ export function ContactSkillCardItem({
                 required={isFieldRequired("skills", "yearsOfExperience")}
                 onChange={(e) => updateSkill(idx, { yearsOfExperience: e.target.value })}
                 placeholder={t("contacts.form.skillYearsPlaceholder")}
-                className={cn(yearsError && "border-destructive focus-visible:ring-destructive")}
+                className={cn(yearsError && FORM_INPUT_ERROR)}
               />
             </Field>
           ) : null}
@@ -176,7 +177,7 @@ export function ContactSkillCardItem({
                 required={isFieldRequired("skills", "issuer")}
                 onChange={(e) => updateSkill(idx, { issuer: e.target.value })}
                 placeholder={t("contacts.form.skillIssuerPlaceholder")}
-                className={cn(issuerError && "border-destructive focus-visible:ring-destructive")}
+                className={cn(issuerError && FORM_INPUT_ERROR)}
               />
             </Field>
           ) : null}
@@ -214,7 +215,7 @@ export function ContactSkillCardItem({
               required={isFieldRequired("skills", "description")}
               onChange={(e) => updateSkill(idx, { description: e.target.value })}
               placeholder={t("contacts.form.skillDescriptionPlaceholder")}
-              className={cn("text-xs resize-y min-h-16", descriptionError && "border-destructive focus-visible:ring-destructive")}
+              className={cn("text-xs resize-y min-h-16", descriptionError && FORM_INPUT_ERROR)}
             />
           </Field>
         ) : null}

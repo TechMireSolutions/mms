@@ -5,6 +5,10 @@ export const FORM_ERROR = 'text-xs text-destructive mt-1';
 export const FORM_ERROR_BOX =
   'mt-0 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2';
 
+/** Shared input error border and focus ring classes. */
+export const FORM_INPUT_ERROR =
+  'border-destructive focus-visible:ring-destructive focus-visible:border-destructive';
+
 /** Shared label class for modal / registry-driven forms. */
 export const FORM_LABEL =
   'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground';

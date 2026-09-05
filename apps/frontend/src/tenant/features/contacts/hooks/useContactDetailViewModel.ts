@@ -14,6 +14,7 @@ import {
 } from "@/tenant/features/contacts/components/detail/contactDetailStyles";
 import { useContactDetailActions } from "@/tenant/features/contacts/hooks/useContactDetailActions";
 import { useContactDetailFields } from "@/tenant/features/contacts/hooks/useContactDetailFields";
+import { useContactById } from "@/tenant/hooks/collections/contacts";
 
 export type { DetailFieldView } from "@/tenant/features/contacts/hooks/useContactDetailFields";
 
@@ -33,6 +34,8 @@ export function useContactDetailViewModel({
   const viewerRole = role ?? "";
   const { t } = useTranslation();
   const noteInputId = useId();
+  const contactId = initialContact?.id != null ? String(initialContact.id) : undefined;
+  const { data: fullContact } = useContactById(contactId);
   const [contactState, setContactState] = useState<Contact>(initialContact);
   const [noteText, setNoteText] = useState("");
   const isArchived = Boolean(contactState.deletedAt ?? initialContact.deletedAt);
@@ -49,8 +52,12 @@ export function useContactDetailViewModel({
   const [activeTab, setActiveTab] = useState<string>(() => detailTabs[0]?.key || "");
 
   useEffect(() => {
-    setContactState(initialContact);
-  }, [initialContact]);
+    if (fullContact) {
+      setContactState(fullContact);
+    } else {
+      setContactState(initialContact);
+    }
+  }, [initialContact, fullContact]);
 
   useEffect(() => {
     setActiveTab((currentTab) => {

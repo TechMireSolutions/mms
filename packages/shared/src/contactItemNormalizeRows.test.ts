@@ -168,4 +168,26 @@ describe('normalizeRelationshipContactItem', () => {
       normalizeRelationshipContactItem({ contactId: 'c-2', relationship: 'Guardian' }),
     ).toEqual({ relationship: 'Guardian', contactId: 'c-2' });
   });
+
+  it('preserves name, phone, and inferred metadata', () => {
+    expect(
+      normalizeRelationshipContactItem({
+        contactId: 'c-3',
+        relationship: 'Parent',
+        name: 'Fatima',
+        phone: '+923001234567',
+        inferred: true,
+        inferredFromContactId: 'c-1',
+        inferenceDepth: 1,
+      }),
+    ).toEqual({
+      relationship: 'Parent',
+      contactId: 'c-3',
+      name: 'Fatima',
+      phone: '+923001234567',
+      inferred: true,
+      inferredFromContactId: 'c-1',
+      inferenceDepth: 1,
+    });
+  });
 });

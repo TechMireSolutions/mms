@@ -7,6 +7,7 @@ import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListKey, ContactSubListTabBaseProps } from "./types";
 import { cn } from "@/lib/utils";
+import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export type ListItem = Record<string, unknown>;
@@ -167,7 +168,7 @@ export function ContactLabeledValueSubListTab({
               onBlur={onValueBlur ? () => onValueBlur(idx) : undefined}
               placeholder={valuePlaceholder}
               wrapperClassName="flex-1 min-w-0"
-              className={cn(valueError && "border-destructive focus-visible:ring-destructive")}
+              className={cn(valueError && FORM_INPUT_ERROR)}
             />
           );
           return (

@@ -3,6 +3,7 @@ import { combineIsoDateAndTime, splitIsoDateTime } from "@mms/shared";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { TimePicker } from "@/components/ui/TimePicker";
 import { useTranslation } from "@/hooks/useTranslation";
+import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 export interface DateTimePickerProps {
@@ -46,9 +47,7 @@ export function DateTimePicker({
   const dateErrorClass = error
     ? "border-destructive focus-within:border-destructive focus-within:ring-destructive"
     : undefined;
-  const timeErrorClass = error
-    ? "border-destructive focus-visible:ring-destructive"
-    : undefined;
+  const timeErrorClass = error ? FORM_INPUT_ERROR : undefined;
 
   const emit = (nextDate: string, nextTime: string): void => {
     if (!nextDate.trim()) {

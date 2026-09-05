@@ -1,9 +1,10 @@
 import type React from "react";
-import { MapPin, Building, Landmark, Star } from "lucide-react";
-import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
+import { MapPin, Building, Landmark } from "lucide-react";
+import { CardPrimaryButton, EditableSelect, Field } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
 import { cn } from "@/lib/utils";
+import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
@@ -85,27 +86,14 @@ export function ContactAddressEntryCard({
       }
       headerExtras={
         hasMultipleAddresses ? (
-          <button
-            type="button"
+          <CardPrimaryButton
+            isPrimary={isOnlyAddressOrPrimary}
             onClick={onSetPrimary}
-            className={cn(
-              "cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-semibold transition-colors min-h-11 touch-manipulation select-none",
-              isOnlyAddressOrPrimary
-                ? "bg-primary/10 text-primary border border-primary/30"
-                : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40 border border-transparent",
-            )}
             title={isOnlyAddressOrPrimary ? t("contacts.form.primaryAddress") : t("contacts.form.setPrimary")}
-            aria-label={isOnlyAddressOrPrimary ? t("contacts.form.primaryAddress") : t("contacts.form.setPrimary")}
-          >
-            <Star
-              className={cn(
-                "w-3 h-3",
-                isOnlyAddressOrPrimary && "fill-primary text-primary",
-              )}
-              aria-hidden
-            />
-            <span>{isOnlyAddressOrPrimary ? t("contacts.form.primary") : t("contacts.form.setPrimary")}</span>
-          </button>
+            ariaLabel={isOnlyAddressOrPrimary ? t("contacts.form.primaryAddress") : t("contacts.form.setPrimary")}
+            primaryLabel={t("contacts.form.primary")}
+            setPrimaryLabel={t("contacts.form.setPrimary")}
+          />
         ) : undefined
       }
       onRemove={onRemoveAddress}
@@ -130,7 +118,7 @@ export function ContactAddressEntryCard({
               value={addr.line1 || ""}
               onChange={(e) => onUpdateAddress({ line1: e.target.value })}
               placeholder={t("contacts.fields.streetAddress")}
-              className={cn(line1Error && "border-destructive focus-visible:ring-destructive")}
+              className={cn(line1Error && FORM_INPUT_ERROR)}
             />
           </Field>
         ) : null}
@@ -154,9 +142,7 @@ export function ContactAddressEntryCard({
                   value={addr.city || ""}
                   onChange={(e) => onUpdateAddress({ city: e.target.value })}
                   placeholder={t("contacts.fields.city")}
-                  className={cn(
-                    cityError && "border-destructive focus-visible:ring-destructive",
-                  )}
+                  className={cn(cityError && FORM_INPUT_ERROR)}
                 />
               </Field>
             ) : null}
@@ -178,9 +164,7 @@ export function ContactAddressEntryCard({
                   value={addr.state || ""}
                   onChange={(e) => onUpdateAddress({ state: e.target.value })}
                   placeholder={t("contacts.fields.state")}
-                  className={cn(
-                    stateError && "border-destructive focus-visible:ring-destructive",
-                  )}
+                  className={cn(stateError && FORM_INPUT_ERROR)}
                 />
               </Field>
             ) : null}

@@ -51,10 +51,25 @@ export function normalizeRelationshipContactItem(
     const relationship =
       String(obj.relationship || obj.relation || obj.type || defaultRelationship).trim() ||
       defaultRelationship;
+    const name = typeof obj.name === "string" && obj.name.trim().length > 0 ? obj.name.trim() : undefined;
+    const phone = typeof obj.phone === "string" && obj.phone.trim().length > 0 ? obj.phone.trim() : undefined;
+    const inferred = typeof obj.inferred === "boolean" ? obj.inferred : undefined;
+    const inferredFromContactId =
+      obj.inferredFromContactId != null && String(obj.inferredFromContactId).trim().length > 0
+        ? String(obj.inferredFromContactId).trim()
+        : undefined;
+    const inferenceDepth =
+      typeof obj.inferenceDepth === "number" ? obj.inferenceDepth : undefined;
+
     return {
       ...retainExtraKeys(obj, RELATIONSHIP_SYSTEM_KEYS),
       relationship,
       contactId,
+      ...(name ? { name } : {}),
+      ...(phone ? { phone } : {}),
+      ...(inferred !== undefined ? { inferred } : {}),
+      ...(inferredFromContactId ? { inferredFromContactId } : {}),
+      ...(inferenceDepth !== undefined ? { inferenceDepth } : {}),
     };
   }
   return { relationship: defaultRelationship, contactId: "" };

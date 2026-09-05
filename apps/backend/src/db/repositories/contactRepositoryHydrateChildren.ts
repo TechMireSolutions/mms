@@ -357,7 +357,7 @@ export async function loadContactSummaryChildMaps(
   subdomain: string,
   contactIds: string[],
 ): Promise<ContactChildMaps> {
-  const [phonesRows, emailsRows, addressesRows, tagsRows] = await Promise.all([
+  const [phonesRows, emailsRows, addressesRows, tagsRows, socialsRows, relationshipsRows] = await Promise.all([
     tx
       .select({
         id: contactPhones.id,
@@ -429,6 +429,45 @@ export async function loadContactSummaryChildMaps(
         ),
       )
       .orderBy(contactTags.createdAt),
+    tx
+      .select({
+        id: contactSocials.id,
+        contactId: contactSocials.contactId,
+        platform: contactSocials.platform,
+        url: contactSocials.url,
+        sortOrder: contactSocials.sortOrder,
+      })
+      .from(contactSocials)
+      .where(
+        and(
+          eq(contactSocials.workspaceSubdomain, subdomain),
+          inArray(contactSocials.contactId, contactIds),
+        ),
+      )
+      .orderBy(contactSocials.sortOrder),
+    tx
+      .select({
+        id: contactRelationships.id,
+        contactId: contactRelationships.contactId,
+        workspaceSubdomain: contactRelationships.workspaceSubdomain,
+        relatedContactId: contactRelationships.relatedContactId,
+        name: contactRelationships.name,
+        relationship: contactRelationships.relationship,
+        phone: contactRelationships.phone,
+        inferred: contactRelationships.inferred,
+        inferredFromContactId: contactRelationships.inferredFromContactId,
+        inferenceDepth: contactRelationships.inferenceDepth,
+        sortOrder: contactRelationships.sortOrder,
+        createdAt: contactRelationships.createdAt,
+      })
+      .from(contactRelationships)
+      .where(
+        and(
+          eq(contactRelationships.workspaceSubdomain, subdomain),
+          inArray(contactRelationships.contactId, contactIds),
+        ),
+      )
+      .orderBy(contactRelationships.sortOrder),
   ]);
 
   const emptyMap = new Map();
@@ -437,11 +476,11 @@ export async function loadContactSummaryChildMaps(
     emailsMap: groupByContactId(emailsRows as unknown as EmailRow[]),
     addressesMap: groupByContactId(addressesRows as unknown as AddressRow[]),
     tagsMap: groupByContactId(tagsRows as unknown as TagRow[]),
-    socialsMap: emptyMap,
+    socialsMap: groupByContactId(socialsRows as unknown as SocialRow[]),
     educationsMap: emptyMap,
     experiencesMap: emptyMap,
     skillsMap: emptyMap,
-    relationshipsMap: emptyMap,
+    relationshipsMap: groupByContactId(relationshipsRows as unknown as RelationshipRow[]),
     activitiesMap: emptyMap,
     attachmentsMap: emptyMap,
     bankDetailsMap: emptyMap,

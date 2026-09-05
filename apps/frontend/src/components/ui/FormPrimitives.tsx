@@ -7,7 +7,12 @@ export {
   TEXTAREA,
   TYPE_SELECT_WIDTH,
 } from "@/components/ui/formPrimitiveStyles";
-export { CardRemoveButton, CardTypeLabel } from "@/components/ui/FormCardChrome";
+export {
+  CardRemoveButton,
+  CardPrimaryButton,
+  type CardPrimaryButtonProps,
+  CardTypeLabel,
+} from "@/components/ui/FormCardChrome";
 export { EditableSelect } from "@/components/ui/EditableSelect";
 export { EditableMultiSelect, type EditableMultiSelectProps } from "@/components/ui/EditableMultiSelect";
 export { Field, FieldErrorMessage, RequiredMark } from "@/components/ui/FormField";

@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { Heart } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { getDisplayName, getPrimaryPhone } from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import {
   FieldErrorMessage,
@@ -137,9 +138,11 @@ export function ContactRelationshipTab({
                         label={t("contacts.form.linkContact")}
                         required={contactIdRequired}
                         value={link.contactId ?? null}
-                        onChange={(id) => {
+                        onChange={(id, selectedContact) => {
                           updateSubListItem("relationshipContacts", idx, {
                             contactId: id != null ? String(id) : "",
+                            name: selectedContact ? getDisplayName(selectedContact) : undefined,
+                            phone: selectedContact ? getPrimaryPhone(selectedContact) || undefined : undefined,
                           });
                         }}
                         excludeIds={excludeIds(idx)}

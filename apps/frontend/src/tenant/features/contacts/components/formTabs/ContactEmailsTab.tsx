@@ -1,11 +1,12 @@
 import type React from "react";
-import { Mail, Star } from "lucide-react";
+import { Mail } from "lucide-react";
+import { CardPrimaryButton } from "@/components/ui/FormPrimitives";
 import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveEmailLabel } from "@/lib/contacts/contactI18n";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
-import { cn } from "@/lib/utils";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
+import { isSubListItemPrimary } from "./ContactSubListCards";
 
 export interface ContactEmailsTabProps extends ContactSubListTabBaseProps {
   emailLabels: string[];
@@ -48,24 +49,16 @@ export function ContactEmailsTab({
       headerExtras={({ item, index }) => {
         const emails = base.contactDraft.emails || [];
         if (emails.length <= 1) return null;
-        const hasExplicitPrimary = emails.some((e) => e.isPrimary);
-        const isPrimary = Boolean(item.isPrimary || (!hasExplicitPrimary && index === 0));
+        const isPrimary = isSubListItemPrimary(emails, item, index);
         return (
-          <button
-            type="button"
+          <CardPrimaryButton
+            isPrimary={isPrimary}
             onClick={() => base.setPrimarySubListItem?.("emails", index)}
-            className={cn(
-              "cursor-pointer inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-2xs font-semibold transition-colors min-h-11 touch-manipulation select-none",
-              isPrimary
-                ? "bg-primary/10 text-primary border border-primary/30"
-                : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40 border border-transparent",
-            )}
             title={isPrimary ? t("contacts.form.primaryEmail") : t("contacts.form.setPrimary")}
-            aria-label={isPrimary ? t("contacts.form.primaryEmail") : t("contacts.form.setPrimary")}
-          >
-            <Star className={cn("w-3 h-3", isPrimary && "fill-primary text-primary")} aria-hidden />
-            <span>{isPrimary ? t("contacts.form.primary") : t("contacts.form.setPrimary")}</span>
-          </button>
+            ariaLabel={isPrimary ? t("contacts.form.primaryEmail") : t("contacts.form.setPrimary")}
+            primaryLabel={t("contacts.form.primary")}
+            setPrimaryLabel={t("contacts.form.setPrimary")}
+          />
         );
       }}
     />

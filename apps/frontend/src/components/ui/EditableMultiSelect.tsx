@@ -3,7 +3,7 @@ import { ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FORM_INPUT_COMPACT } from "@/components/ui/formStyles";
+import { FORM_INPUT_COMPACT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import {
@@ -123,7 +123,7 @@ export function EditableMultiSelect({
         aria-controls={listboxId}
         className={cn(
           "min-h-11 w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 transition-all text-start cursor-pointer touch-manipulation",
-          error && "border-destructive focus-visible:ring-destructive focus-visible:border-destructive",
+          error && FORM_INPUT_ERROR,
           className,
         )}
       >

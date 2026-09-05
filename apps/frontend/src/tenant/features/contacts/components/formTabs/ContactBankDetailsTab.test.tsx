@@ -38,6 +38,19 @@ vi.mock("@/components/ui/FormPrimitives", () => ({
   EditableSelect: ({ value }: { value?: string }) => (
     <div data-testid="editable-select">{value}</div>
   ),
+  CardPrimaryButton: ({
+    isPrimary,
+    primaryLabel = "Primary",
+    setPrimaryLabel = "Set Primary",
+  }: {
+    isPrimary: boolean;
+    primaryLabel?: string;
+    setPrimaryLabel?: string;
+  }) => (
+    <button type="button" data-testid="card-primary-btn">
+      {isPrimary ? primaryLabel : setPrimaryLabel}
+    </button>
+  ),
 }));
 
 vi.mock("@/components/ui/LeadingIconInput", () => ({

@@ -1,7 +1,7 @@
 import React from "react";
 import { Search, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { RequiredMark } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -88,7 +88,7 @@ export function ContactPickerSearchInput({
           className={cn(
             "ps-9.5",
             allowCreate ? (query ? "pe-16" : "pe-10") : (query ? "pe-9" : "pe-3"),
-            error && "border-destructive focus-visible:ring-destructive",
+            error && FORM_INPUT_ERROR,
           )}
           placeholder={searchPlaceholder ?? t("contacts.searchPlaceholder")}
           value={query}

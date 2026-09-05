@@ -1,6 +1,6 @@
 import type React from "react";
-import { Building2, CreditCard, Globe, MapPin, User, Star, Landmark, Hash } from "lucide-react";
-import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
+import { Building2, CreditCard, Globe, MapPin, User, Landmark, Hash } from "lucide-react";
+import { CardPrimaryButton, EditableSelect, Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
@@ -11,6 +11,7 @@ import {
   DEFAULT_BANK_CURRENCIES,
 } from "@mms/shared";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
+import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
 export interface ContactBankDetailCardProps {
@@ -103,21 +104,14 @@ export function ContactBankDetailCard({
       }
       headerExtras={
         showIsPrimary ? (
-          <button
-            type="button"
-            onClick={onSetPrimary}
-            className={cn(
-              "cursor-pointer inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-md transition-colors min-h-11 touch-manipulation select-none",
-              bankDetail.isPrimary
-                ? "bg-primary/10 text-primary border border-primary/30"
-                : "text-muted-foreground/60 hover:text-muted-foreground hover:bg-muted/40 border border-transparent",
-            )}
+          <CardPrimaryButton
+            isPrimary={Boolean(bankDetail.isPrimary)}
+            onClick={() => onSetPrimary?.()}
             title={t("contacts.fields.bankIsPrimary")}
-            aria-label={t("contacts.fields.bankIsPrimary")}
-          >
-            <Star className={cn("w-3.5 h-3.5", bankDetail.isPrimary && "fill-primary text-primary")} aria-hidden />
-            <span>{bankDetail.isPrimary ? t("contacts.form.primary") : t("contacts.form.setPrimary")}</span>
-          </button>
+            ariaLabel={t("contacts.fields.bankIsPrimary")}
+            primaryLabel={t("contacts.form.primary")}
+            setPrimaryLabel={t("contacts.form.setPrimary")}
+          />
         ) : undefined
       }
       onRemove={() => removeBankDetail(idx)}
@@ -143,7 +137,7 @@ export function ContactBankDetailCard({
                 value={bankDetail.bankName || ""}
                 onChange={(e) => updateBankDetail(idx, { bankName: e.target.value })}
                 placeholder={t("contacts.fields.bankNamePlaceholder")}
-                className={cn(bankNameError && "border-destructive focus-visible:ring-destructive")}
+                className={cn(bankNameError && FORM_INPUT_ERROR)}
               />
             </Field>
           )}
@@ -165,7 +159,7 @@ export function ContactBankDetailCard({
                 value={bankDetail.accountTitle || ""}
                 onChange={(e) => updateBankDetail(idx, { accountTitle: e.target.value })}
                 placeholder={t("contacts.fields.bankAccountTitlePlaceholder")}
-                className={cn(accountTitleError && "border-destructive focus-visible:ring-destructive")}
+                className={cn(accountTitleError && FORM_INPUT_ERROR)}
               />
             </Field>
           )}
@@ -189,7 +183,7 @@ export function ContactBankDetailCard({
                   spellCheck={false}
                   enterKeyHint="next"
                   aria-invalid={Boolean(accountNumberError)}
-                  className={cn("font-mono", accountNumberError && "border-destructive focus-visible:ring-destructive")}
+                  className={cn("font-mono", accountNumberError && FORM_INPUT_ERROR)}
                   value={bankDetail.accountNumber || ""}
                   onChange={(e) => updateBankDetail(idx, { accountNumber: e.target.value })}
                   placeholder={t("contacts.fields.bankAccountNumberPlaceholder")}
@@ -232,7 +226,7 @@ export function ContactBankDetailCard({
                 spellCheck={false}
                 enterKeyHint="next"
                 aria-invalid={Boolean(ibanError)}
-                className={cn("font-mono uppercase tracking-wider", ibanError && "border-destructive focus-visible:ring-destructive")}
+                className={cn("font-mono uppercase tracking-wider", ibanError && FORM_INPUT_ERROR)}
                 value={bankDetail.iban || ""}
                 onChange={handleIbanChange}
                 placeholder={t("contacts.fields.bankIbanPlaceholder")}
@@ -254,7 +248,7 @@ export function ContactBankDetailCard({
                 spellCheck={false}
                 enterKeyHint="next"
                 aria-invalid={Boolean(swiftCodeError)}
-                className={cn("font-mono uppercase tracking-wider", swiftCodeError && "border-destructive focus-visible:ring-destructive")}
+                className={cn("font-mono uppercase tracking-wider", swiftCodeError && FORM_INPUT_ERROR)}
                 value={bankDetail.swiftCode || ""}
                 onChange={handleSwiftChange}
                 placeholder={t("contacts.fields.bankSwiftPlaceholder")}
@@ -282,7 +276,7 @@ export function ContactBankDetailCard({
                 value={bankDetail.branchName || ""}
                 onChange={(e) => updateBankDetail(idx, { branchName: e.target.value })}
                 placeholder={t("contacts.fields.bankBranchNamePlaceholder")}
-                className={cn(branchNameError && "border-destructive focus-visible:ring-destructive")}
+                className={cn(branchNameError && FORM_INPUT_ERROR)}
               />
             </Field>
           )}
@@ -301,7 +295,7 @@ export function ContactBankDetailCard({
                 spellCheck={false}
                 enterKeyHint="next"
                 aria-invalid={Boolean(branchCodeError)}
-                className={cn("font-mono", branchCodeError && "border-destructive focus-visible:ring-destructive")}
+                className={cn("font-mono", branchCodeError && FORM_INPUT_ERROR)}
                 value={bankDetail.branchCode || ""}
                 onChange={(e) => updateBankDetail(idx, { branchCode: e.target.value })}
                 placeholder={t("contacts.fields.bankBranchCodePlaceholder")}
@@ -323,7 +317,7 @@ export function ContactBankDetailCard({
                 spellCheck={false}
                 enterKeyHint="done"
                 aria-invalid={Boolean(routingNumberError)}
-                className={cn("font-mono", routingNumberError && "border-destructive focus-visible:ring-destructive")}
+                className={cn("font-mono", routingNumberError && FORM_INPUT_ERROR)}
                 value={bankDetail.routingNumber || ""}
                 onChange={(e) => updateBankDetail(idx, { routingNumber: e.target.value })}
                 placeholder={t("contacts.fields.bankRoutingNumberPlaceholder")}

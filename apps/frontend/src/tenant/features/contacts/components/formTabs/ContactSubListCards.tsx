@@ -84,6 +84,17 @@ export function resolveSubListAllowAdd(
   return enabledFieldFlags.some(Boolean) || customFieldsLength > 0;
 }
 
+/** True when the item is explicitly primary or the default first item in a non-empty list. */
+export function isSubListItemPrimary<T extends { isPrimary?: boolean }>(
+  items: readonly T[],
+  item: { isPrimary?: boolean } | Record<string, unknown>,
+  index: number,
+): boolean {
+  if (items.length <= 1) return true;
+  const hasExplicitPrimary = items.some((i) => i.isPrimary);
+  return Boolean(item.isPrimary || (!hasExplicitPrimary && index === 0));
+}
+
 export interface ContactSubListShellProps {
   isEmpty: boolean;
   emptyIcon: React.ComponentType<{ className?: string }>;

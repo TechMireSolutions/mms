@@ -44,8 +44,13 @@ vi.mock("@/components/ui/FormPrimitives", () => ({
   FieldErrorMessage: () => null,
 }));
 
+let capturedPickerProps: { label: string; onChange: (id: string | number | null, contact?: unknown) => void } | null = null;
+
 vi.mock("@/components/contactLink/ContactPicker", () => ({
-  default: ({ label }: { label: string }) => <div data-testid="contact-picker">{label}</div>,
+  default: (props: { label: string; onChange: (id: string | number | null, contact?: unknown) => void }) => {
+    capturedPickerProps = props;
+    return <div data-testid="contact-picker">{props.label}</div>;
+  },
 }));
 
 describe("ContactRelationshipTab Component", () => {
@@ -89,6 +94,42 @@ describe("ContactRelationshipTab Component", () => {
     expect(html).toContain("Dependent");
     expect(html).toContain("Brother");
     expect(html).toContain("contacts.form.linkContact");
+  });
+
+  it("updates contactId, name, and phone when a contact is selected in ContactPicker", () => {
+    const updateSubListItem = vi.fn();
+    renderToStaticMarkup(
+      <ContactRelationshipTab
+        contactDraft={{
+          relationshipContacts: [{ contactId: "", relationship: "Parent" }],
+        }}
+        formInstanceId="inst-1"
+        getLocalId={() => "loc-1"}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        getListItemError={() => undefined}
+        fields={{}}
+        addSubListItem={vi.fn()}
+        ensureSubListItem={vi.fn()}
+        updateSubListItem={updateSubListItem}
+        removeSubListItem={vi.fn()}
+      />,
+    );
+
+    expect(capturedPickerProps).not.toBeNull();
+    capturedPickerProps?.onChange("cnt-99", {
+      id: "cnt-99",
+      name: "Ali Khan",
+      firstName: "Ali",
+      lastName: "Khan",
+      phones: [{ number: "+923001234567", isPrimary: true }],
+    });
+
+    expect(updateSubListItem).toHaveBeenCalledWith("relationshipContacts", 0, {
+      contactId: "cnt-99",
+      name: "Ali Khan",
+      phone: "+92 3001234567",
+    });
   });
 });
 
