@@ -12,7 +12,15 @@ import { ERD_DOMAIN_CONTACTS, ERD_DOMAIN_STUDENTS, ERD_DOMAIN_TEACHERS } from '.
 import { ERD_DOMAIN_PLATFORM, ERD_DOMAIN_SYSTEM } from './erdDomainsPlatform.js';
 import type { ErdDomain, ErdDomainId } from './erdCatalogTypes.js';
 
-export type { ErdColumn, ErdColumnKind, ErdDomain, ErdDomainId, ErdRelationship, ErdTable } from './erdCatalogTypes.js';
+export type {
+  ErdColumn,
+  ErdColumnKind,
+  ErdDomain,
+  ErdDomainId,
+  ErdRelationship,
+  ErdTable,
+  PlatformErdResponse,
+} from './erdCatalogTypes.js';
 export { ERD_DOMAIN_IDS } from './erdCatalogTypes.js';
 export {
   buildErdMermaid,

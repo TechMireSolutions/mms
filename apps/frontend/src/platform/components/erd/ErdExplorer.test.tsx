@@ -2,6 +2,7 @@ import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErdExplorer } from './ErdExplorer';
 
 vi.mock('@/hooks/useTranslation', () => ({
@@ -23,9 +24,22 @@ vi.mock('@/hooks/useTranslation', () => ({
   }),
 }));
 
+function renderWithClient(ui: React.ReactElement) {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+  return renderToStaticMarkup(
+    <QueryClientProvider client={queryClient}>
+      {ui}
+    </QueryClientProvider>,
+  );
+}
+
 describe('ErdExplorer', () => {
   it('renders the accounting ERD by default', () => {
-    const html = renderToStaticMarkup(
+    const html = renderWithClient(
       <MemoryRouter initialEntries={['/platform/erd']}>
         <ErdExplorer />
       </MemoryRouter>,
@@ -37,7 +51,7 @@ describe('ErdExplorer', () => {
   });
 
   it('filters to a table and its neighbors from the query string', () => {
-    const html = renderToStaticMarkup(
+    const html = renderWithClient(
       <MemoryRouter initialEntries={['/platform/erd?domain=attendance&table=attendance']}>
         <ErdExplorer />
       </MemoryRouter>,

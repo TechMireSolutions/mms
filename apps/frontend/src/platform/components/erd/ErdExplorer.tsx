@@ -4,7 +4,7 @@ import { FormSelect } from '@/components/ui/FormSelect';
 import { FORM_LABEL, WORK_SURFACE } from '@/components/ui/formStyles';
 import { ErdMermaidDiagram } from '@/platform/components/erd/ErdMermaidDiagram';
 import { ErdRelationshipList } from '@/platform/components/erd/ErdRelationshipList';
-import { ERD_DOMAIN_OPTIONS, useErdPageController } from '@/platform/hooks/useErdPageController';
+import { useErdPageController } from '@/platform/hooks/useErdPageController';
 
 export function ErdExplorer(): React.JSX.Element {
   const { t } = useTranslation();
@@ -13,11 +13,13 @@ export function ErdExplorer(): React.JSX.Element {
     focusTable,
     visible,
     tableNames,
+    domainOptions,
+    isLive,
     setDomainId,
     setFocusTable,
   } = useErdPageController();
 
-  const domainOptions = ERD_DOMAIN_OPTIONS.map((option) => ({
+  const formattedDomainOptions = domainOptions.map((option) => ({
     value: option.value,
     label: t(option.labelKey),
   }));
@@ -36,7 +38,7 @@ export function ErdExplorer(): React.JSX.Element {
             aria-label={t('platform.erdDomainLabel')}
             value={domainId}
             onChange={setDomainId}
-            options={domainOptions}
+            options={formattedDomainOptions}
           />
         </label>
         <label className="block min-w-0">
@@ -51,9 +53,17 @@ export function ErdExplorer(): React.JSX.Element {
         </label>
       </div>
 
-      <p className="text-sm text-muted-foreground">
-        {t('platform.erdTableCount', { count: visible.tables.length })}
-      </p>
+      <div className="flex items-center justify-between text-sm text-muted-foreground">
+        <p>
+          {t('platform.erdTableCount', { count: visible.tables.length })}
+        </p>
+        {isLive && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            Live Schema
+          </span>
+        )}
+      </div>
 
       <ErdMermaidDiagram key={`${domainId}:${focusTable}`} domain={visible} />
 

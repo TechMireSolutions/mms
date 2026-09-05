@@ -58,3 +58,11 @@ export interface ErdDomain {
   tables: readonly ErdTable[];
   relationships: readonly ErdRelationship[];
 }
+
+/** Dynamic ERD response payload returned by the live backend schema introspection API. */
+export interface PlatformErdResponse {
+  success: boolean;
+  domains: readonly ErdDomain[];
+  totalTables: number;
+  generatedAt: string;
+}
