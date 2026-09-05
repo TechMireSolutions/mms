@@ -207,4 +207,37 @@ describe('AuthContext', () => {
       root.unmount();
     });
   });
+
+  it('does not repeatedly call /api/auth/me on re-renders when a user is already persisted', async () => {
+    localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(mockUser));
+    let renderCount = 0;
+    function Consumer() {
+      const { user } = useAuth();
+      renderCount++;
+      return <div>{user?.name}</div>;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <AuthProvider>
+          <Consumer />
+        </AuthProvider>,
+      );
+    });
+
+    // Wait a tick for effects
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    // Should only call /api/auth/me once on initial mount
+    const authMeCalls = vi.mocked(apiJson).mock.calls.filter(([url]) => url === '/api/auth/me');
+    expect(authMeCalls.length).toBe(1);
+
+    act(() => {
+      root.unmount();
+    });
+  });
 });

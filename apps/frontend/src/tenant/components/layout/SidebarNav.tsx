@@ -120,7 +120,7 @@ export function SidebarNav({
 
         return (
           <SidebarNavItem
-            key={item.path}
+            key={item.path || item.labelKey}
             to={item.path!}
             label={t(item.labelKey)}
             icon={item.icon}

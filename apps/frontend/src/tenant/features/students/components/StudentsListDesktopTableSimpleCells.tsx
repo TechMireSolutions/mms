@@ -40,9 +40,9 @@ export function renderStudentSessionsCell({
           {t("students.list.notEnrolled")}
         </span>
       ) : (
-        sessionNames.map((sessionName) => (
+        sessionNames.map((sessionName, idx) => (
           <FormFooterBadge
-            key={sessionName}
+            key={`${sessionName}-${idx}`}
             tone="primary"
             className="px-1.5 py-0.5 rounded-full font-medium"
           >

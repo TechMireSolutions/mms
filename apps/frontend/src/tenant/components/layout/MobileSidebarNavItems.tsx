@@ -113,7 +113,7 @@ export function MobileSidebarNavItems({
         const Icon = item.icon;
         return (
           <Link
-            key={item.path}
+            key={item.path || item.labelKey}
             to={item.path!}
             onClick={onClose}
             aria-current={isActive ? "page" : undefined}

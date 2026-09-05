@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback, useRef, useMemo } from 'react';
 import { clear2FAState, getPendingChallengeId, mark2FAVerified, setPendingChallengeId } from '@/lib/twoFactor';
 import { type User } from '@mms/shared';
 import { appNavigate } from '@/lib/routing/appNavigate';
@@ -28,7 +28,7 @@ export type { AuthContextType, OnboardResult, OnboardPayload } from '@/lib/conte
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const initialUser = typeof window !== 'undefined' ? getPersistedAuthUser() : null;
+  const [initialUser] = useState<User | null>(() => (typeof window !== 'undefined' ? getPersistedAuthUser() : null));
   const [user, setUser] = useState<User | null>(initialUser);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(Boolean(initialUser));
   const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(!initialUser);
@@ -36,6 +36,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [authError, setAuthError] = useState<AuthError | null>(null);
   const [authChecked, setAuthChecked] = useState<boolean>(Boolean(initialUser));
   const [appPublicSettings] = useState<unknown | null>(null);
+
+  const userRef = useRef<User | null>(initialUser);
+  userRef.current = user;
 
   const checkAppState = useCallback(async (_signal?: AbortSignal): Promise<void> => {
     // No-op stub retained for interface backwards-compatibility without extra network latency
@@ -57,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    if (!initialUser) {
+    if (!userRef.current) {
       setIsLoadingAuth(true);
     }
     setAuthError(null);
@@ -78,7 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoadingAuth(false);
       }
     }
-  }, [applyAuthSession, initialUser]);
+  }, [applyAuthSession]);
 
   const login = async (email: string, password: string): Promise<{ user: User; requires2FA: boolean; challengeId?: string }> => {
     setIsLoadingAuth(true);
@@ -239,26 +242,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [checkUserAuth]);
 
+  const contextValue = useMemo<AuthContextType>(() => ({
+    user,
+    isAuthenticated,
+    isLoadingAuth,
+    isLoadingPublicSettings,
+    authError,
+    appPublicSettings,
+    authChecked,
+    login,
+    verify2FA,
+    logout,
+    extendSession,
+    isExtendingSession,
+    navigateToLogin,
+    checkUserAuth,
+    checkAppState,
+    onboard,
+    exchangeHandoff,
+  }), [
+    user,
+    isAuthenticated,
+    isLoadingAuth,
+    isLoadingPublicSettings,
+    authError,
+    appPublicSettings,
+    authChecked,
+    isExtendingSession,
+    checkUserAuth,
+    checkAppState,
+  ]);
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      isAuthenticated,
-      isLoadingAuth,
-      isLoadingPublicSettings,
-      authError,
-      appPublicSettings,
-      authChecked,
-      login,
-      verify2FA,
-      logout,
-      extendSession,
-      isExtendingSession,
-      navigateToLogin,
-      checkUserAuth,
-      checkAppState,
-      onboard,
-      exchangeHandoff,
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );
