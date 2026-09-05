@@ -1,7 +1,7 @@
 import { and, eq, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import { students, contacts, contactEmails } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
-import { studentRowToRecord } from './studentRepository.js';
+import { studentRowToRecord } from './studentRepositoryMappers.js';
 
 export async function listStudentLinkedContactIdsSql(
   tenant: string,
@@ -102,14 +102,10 @@ export async function findStudentRegistrationConflictSql(
           and(
             ...baseConditions,
             sql`EXISTS (
-              SELECT 1 FROM ${contacts} c
-              LEFT JOIN ${contactEmails} ce ON ce.workspace_subdomain = c.workspace_subdomain AND ce.contact_id = c.id
-              WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
-                AND c.id = ${students.contactId}
-                AND (
-                  lower(trim(COALESCE(c.email, ''))) = ${email}
-                  OR lower(trim(COALESCE(ce.address, ''))) = ${email}
-                )
+              SELECT 1 FROM ${contactEmails} ce
+              WHERE ce.workspace_subdomain = ${students.workspaceSubdomain}
+                AND ce.contact_id = ${students.contactId}
+                AND lower(trim(COALESCE(ce.address, ''))) = ${email}
             )`,
           ),
         )

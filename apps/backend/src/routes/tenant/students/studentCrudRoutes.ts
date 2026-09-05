@@ -129,6 +129,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
             },
           };
         }
+        request.log.error(error, 'Failed to create student');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create student' } };
       }
     },
@@ -269,7 +270,8 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         const result = await withTenant(String(request.tenant?.id), () =>
           studentUseCases.checkStudentRegistrationDuplicate(body as Parameters<typeof studentUseCases.checkStudentRegistrationDuplicate>[0]), { readOnly: false });
         return { status: 200 as const, body: result };
-      } catch {
+      } catch (error: unknown) {
+        request.log.error(error, 'Failed to check student duplicate');
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to check duplicate' } };
       }
     },
