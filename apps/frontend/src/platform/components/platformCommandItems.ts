@@ -1,5 +1,5 @@
 import type React from 'react';
-import { LayoutDashboard, Building2, BarChart3, Activity, Server, ShieldCheck, User, PlusCircle } from 'lucide-react';
+import { LayoutDashboard, Building2, BarChart3, Activity, Server, ShieldCheck, User, PlusCircle, Waypoints } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
 import { ROUTES } from '@/lib/config/routes';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
@@ -59,6 +59,15 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     path: ROUTES.platformSystem,
     icon: Server,
     keywords: ['system', 'health', 'database', 'postgres', 'rls', 'maintenance'],
+    requiredPermission: 'system',
+  },
+  {
+    id: 'erd',
+    labelKey: 'platform.erdTitle',
+    category: 'platform.commandCategory.navigation',
+    path: ROUTES.platformErd,
+    icon: Waypoints,
+    keywords: ['erd', 'schema', 'diagram', 'tables', 'relations', 'accounting', 'attendance'],
     requiredPermission: 'system',
   },
   {

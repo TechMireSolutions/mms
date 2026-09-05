@@ -24,6 +24,7 @@ vi.mock('@/hooks/useTranslation', () => ({
         'module.reports': 'Reports',
         'platform.activityLogsTitle': 'Activity Logs',
         'platform.systemMaintenance': 'System Maintenance',
+        'platform.erdTitle': 'Schema ERD',
         'platform.adminsTitle': 'Administrators',
         'platform.myAccount': 'My Account',
         'auth.createMadrasa': 'Create Madrasa',
@@ -102,6 +103,7 @@ describe('PlatformCommandPalette Component', () => {
     expect(html).not.toContain('Administrators');
     expect(html).not.toContain('Activity Logs');
     expect(html).not.toContain('System Maintenance');
+    expect(html).not.toContain('Schema ERD');
     expect(html).not.toContain('Create Madrasa');
     expect(html).toContain('Dashboard');
     expect(html).toContain('My Account');

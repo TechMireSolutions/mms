@@ -14,6 +14,7 @@ const PlatformAdmins = React.lazy(() => import('@/platform/pages/PlatformAdmins'
 const PlatformForgotPassword = React.lazy(() => import('@/platform/pages/auth/PlatformForgotPassword'));
 const PlatformLoginPage = React.lazy(() => import('@/platform/pages/auth/PlatformLoginPage'));
 const PlatformConsole = React.lazy(() => import('@/platform/pages/PlatformConsole'));
+const PlatformErdPage = React.lazy(() => import('@/platform/pages/PlatformErdPage'));
 
 const apexTenantGate = (
   <ApexWorkspaceGate variant="tenantOnly" showWorkspaceList />
@@ -63,6 +64,7 @@ export default function ApexRoutes(): React.JSX.Element {
       <Route element={<PlatformBootGate requireAuth requirePermission="system" />}>
         <Route path={ROUTES.platformActivityLogs} element={<PlatformConsole />} />
         <Route path={ROUTES.platformSystem} element={<PlatformConsole />} />
+        <Route path={ROUTES.platformErd} element={<PlatformErdPage />} />
       </Route>
 
       <Route path="*" element={<PlatformFallbackRoute />} />

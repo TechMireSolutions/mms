@@ -1,5 +1,5 @@
 import type React from "react";
-import { LayoutDashboard, Building2, BarChart3, Users, User, Server, Activity } from "lucide-react";
+import { LayoutDashboard, Building2, BarChart3, Users, User, Server, Activity, Waypoints } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
 import type { AppTranslationKey } from "@mms/shared";
 import type { PlatformPermissionsState } from "@/platform/hooks/usePlatformPermissions";
@@ -65,6 +65,14 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     path: ROUTES.platformSystem,
     labelKey: "platform.systemMaintenance",
     icon: Server,
+    section: "ops",
+    isVisible: (perms) => perms.canSystem,
+  },
+  {
+    id: "erd",
+    path: ROUTES.platformErd,
+    labelKey: "platform.erdTitle",
+    icon: Waypoints,
     section: "ops",
     isVisible: (perms) => perms.canSystem,
   },

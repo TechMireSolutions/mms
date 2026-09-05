@@ -46,6 +46,7 @@ export * from './platformSchemas.js';
 export * from './platformSettingsTypes.js';
 export * from './platformSetupValidation.js';
 export * from './platformTypes.js';
+export * from './erdCatalog.js';
 export * from './serverPorts.js';
 export * from './schemas/uiState.dto.js';
 
