@@ -10,8 +10,9 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatDate } from "@mms/shared";
+import { formatDate, getOutstandingAmountForInvoice } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { InvoiceCorrectionActions } from "@/tenant/features/finance/components/InvoiceCorrectionActions";
 
 export interface InvoiceDetailProps {
   invoice: Invoice;
@@ -48,12 +49,15 @@ export const InvoiceDetail = (function InvoiceDetail({
     cancelled: { label: t("finance.invoiceStatus.cancelled"), cls: SEMANTIC_BADGE.muted },
   }))() as Record<string, StatusBadgeConfigItem>;
 
+  const outstanding = getOutstandingAmountForInvoice(invoice);
   const rows = (() => [
     { label: t("finance.columns.baseFee"), value: formatCurrency(invoice.baseFee), highlight: false, neg: false },
     ...(invoice.discountAmt > 0 ? [{ label: t("finance.detail.discount", { type: invoice.discountType ?? t("common.none"), value: invoice.discountValue }), value: `– ${formatCurrency(invoice.discountAmt)}`, highlight: false, neg: true }] : []),
     { label: t("finance.form.finalAmount"), value: formatCurrency(invoice.finalAmt), highlight: true, neg: false },
     ...(invoice.paidAmt ? [{ label: t("finance.detail.amountPaid"), value: formatCurrency(invoice.paidAmt), highlight: false, neg: false }] : []),
-    ...(invoice.paidAmt && invoice.paidAmt < invoice.finalAmt ? [{ label: t("finance.balanceDue"), value: formatCurrency(invoice.finalAmt - invoice.paidAmt), highlight: false, neg: true }] : []),
+    ...(invoice.lateFeeAmt ? [{ label: t("finance.collect.lateFee"), value: formatCurrency(invoice.lateFeeAmt), highlight: false, neg: false }] : []),
+    ...(invoice.creditedAmt ? [{ label: t("finance.collect.credited"), value: `– ${formatCurrency(invoice.creditedAmt)}`, highlight: false, neg: true }] : []),
+    ...(outstanding > 0 ? [{ label: t("finance.balanceDue"), value: formatCurrency(outstanding), highlight: false, neg: true }] : []),
   ])();
 
   const footerNode = (() => (
@@ -74,6 +78,9 @@ export const InvoiceDetail = (function InvoiceDetail({
         >
           <Printer className="w-4 h-4" aria-hidden="true" /> {t("finance.printReceipt")}
         </Button>
+      )}
+      {canWrite && (
+        <InvoiceCorrectionActions invoice={invoice} onCancelled={onClose} />
       )}
     </div>
   ))();

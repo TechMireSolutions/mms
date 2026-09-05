@@ -27,6 +27,7 @@ function buildInvoiceListConditions(subdomain: string, query: FinanceListQuery):
     conditions.push(
       or(
         ilike(financeInvoices.id, searchPattern),
+        ilike(financeInvoices.invoiceNumber, searchPattern),
         ilike(financeInvoices.studentName, searchPattern),
         ilike(financeInvoices.class, searchPattern),
         ilike(financeInvoices.session, searchPattern),

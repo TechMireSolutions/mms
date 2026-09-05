@@ -308,6 +308,16 @@ export function registerDefaultBackgroundJobRunners(): void {
     });
   });
 
+  registerBackgroundJobRunner('finance:collect', async (_payload, ctx) => {
+    const { collectOverdueInvoices } = await import('../finance/use-cases/financeCollectUseCases.js');
+    await ctx.updateProgress(0, 1);
+    const result = await collectOverdueInvoices({ applyLateFee: true });
+    await ctx.complete({
+      label: `Marked ${result.markedOverdue} overdue; applied ${result.lateFeesApplied} late fees`,
+      progress: { current: 1, total: 1 },
+    });
+  });
+
   registerBackgroundJobRunner('finance:export-excel', async (payload, ctx) => {
     const { streamLedgerToS3 } = await import('../worker/processors/excel-export.js');
     const { filename = 'ledger-export.xlsx', entries = [] } = payload as {

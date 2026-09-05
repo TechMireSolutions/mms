@@ -9,7 +9,16 @@ import { sessions, sessionClasses, sessionTimetable, sessionDiscounts, sessionBu
 import { attendance, attendanceLeaves } from "./attendance.js";
 import { enrollments, enrollmentTimelineEvents } from "./enrollments.js";
 import { financeInvoices, financePayments } from "./finance.js";
+import { financeFeeStructures, financeFeeItems, financeInvoiceLines, financePaymentAllocations } from "./financeBilling.js";
+import { financeCreditNotes } from "./financeCollect.js";
 import { accountingAccounts, accountingFiscalYears, accountingEntries, accountingJournalLines, accountingEntryTags, accountingEntryAttachments } from "./accounting.js";
+import {
+  accountingPostingRules,
+  accountingOpeningBalances,
+  accountingBankStatements,
+  accountingBankStatementLines,
+  accountingBankReconciliations,
+} from "./accountingLedgerOps.js";
 import { exams, examClasses, examResults, questions, questionCategories, questionOptions, questionTags, questionCitations, tests, testQuestions, testSections, testSectionQuestions, assessmentResults, assessmentAnswers } from "./examinations.js";
 import { obligationTypes, mujtahids, mujtahidReps, wakalaTypes, obligationDistributions, obligationCollections } from "./obligations.js";
 import { hasanatDenoms, hasanatBatches, hasanatDistributions, hasanatRedemptions } from "./hasanat.js";
@@ -77,6 +86,7 @@ export const enrollmentsRelations = relations(enrollments, ({ one, many }) => ({
     ],
   }),
   timelineEvents: many(enrollmentTimelineEvents),
+  invoices: many(financeInvoices),
 }));
 
 export const enrollmentTimelineEventsRelations = relations(enrollmentTimelineEvents, ({ one }) => ({
@@ -96,15 +106,72 @@ export const financeInvoicesRelations = relations(financeInvoices, ({ one, many 
     references: [students.workspaceSubdomain, students.id],
   }),
   payments: many(financePayments),
+  lines: many(financeInvoiceLines),
+  allocations: many(financePaymentAllocations),
+  feeStructure: one(financeFeeStructures, {
+    fields: [financeInvoices.workspaceSubdomain, financeInvoices.feeStructureId],
+    references: [financeFeeStructures.workspaceSubdomain, financeFeeStructures.id],
+  }),
+  enrollment: one(enrollments, {
+    fields: [financeInvoices.workspaceSubdomain, financeInvoices.enrollmentId],
+    references: [enrollments.workspaceSubdomain, enrollments.id],
+  }),
+  creditNotes: many(financeCreditNotes),
 }));
 
-export const financePaymentsRelations = relations(financePayments, ({ one }) => ({
+export const financePaymentsRelations = relations(financePayments, ({ one, many }) => ({
   workspace: one(workspaces, {
     fields: [financePayments.workspaceSubdomain],
     references: [workspaces.subdomain],
   }),
   invoice: one(financeInvoices, {
     fields: [financePayments.workspaceSubdomain, financePayments.invoiceId],
+    references: [financeInvoices.workspaceSubdomain, financeInvoices.id],
+  }),
+  allocations: many(financePaymentAllocations),
+}));
+
+export const financeCreditNotesRelations = relations(financeCreditNotes, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [financeCreditNotes.workspaceSubdomain],
+    references: [workspaces.subdomain],
+  }),
+  invoice: one(financeInvoices, {
+    fields: [financeCreditNotes.workspaceSubdomain, financeCreditNotes.invoiceId],
+    references: [financeInvoices.workspaceSubdomain, financeInvoices.id],
+  }),
+}));
+
+export const financeFeeStructuresRelations = relations(financeFeeStructures, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [financeFeeStructures.workspaceSubdomain],
+    references: [workspaces.subdomain],
+  }),
+  items: many(financeFeeItems),
+  invoices: many(financeInvoices),
+}));
+
+export const financeFeeItemsRelations = relations(financeFeeItems, ({ one }) => ({
+  structure: one(financeFeeStructures, {
+    fields: [financeFeeItems.workspaceSubdomain, financeFeeItems.structureId],
+    references: [financeFeeStructures.workspaceSubdomain, financeFeeStructures.id],
+  }),
+}));
+
+export const financeInvoiceLinesRelations = relations(financeInvoiceLines, ({ one }) => ({
+  invoice: one(financeInvoices, {
+    fields: [financeInvoiceLines.workspaceSubdomain, financeInvoiceLines.invoiceId],
+    references: [financeInvoices.workspaceSubdomain, financeInvoices.id],
+  }),
+}));
+
+export const financePaymentAllocationsRelations = relations(financePaymentAllocations, ({ one }) => ({
+  payment: one(financePayments, {
+    fields: [financePaymentAllocations.workspaceSubdomain, financePaymentAllocations.paymentId],
+    references: [financePayments.workspaceSubdomain, financePayments.id],
+  }),
+  invoice: one(financeInvoices, {
+    fields: [financePaymentAllocations.workspaceSubdomain, financePaymentAllocations.invoiceId],
     references: [financeInvoices.workspaceSubdomain, financeInvoices.id],
   }),
 }));
@@ -208,11 +275,13 @@ export const accountingAccountsRelations = relations(accountingAccounts, ({ one,
   lines: many(accountingJournalLines),
 }));
 
-export const accountingFiscalYearsRelations = relations(accountingFiscalYears, ({ one }) => ({
+export const accountingFiscalYearsRelations = relations(accountingFiscalYears, ({ one, many }) => ({
   workspace: one(workspaces, {
     fields: [accountingFiscalYears.workspaceSubdomain],
     references: [workspaces.subdomain],
   }),
+  entries: many(accountingEntries),
+  openingBalances: many(accountingOpeningBalances),
 }));
 
 export const accountingEntriesRelations = relations(accountingEntries, ({ one, many }) => ({
@@ -220,9 +289,14 @@ export const accountingEntriesRelations = relations(accountingEntries, ({ one, m
     fields: [accountingEntries.workspaceSubdomain],
     references: [workspaces.subdomain],
   }),
+  fiscalYearRow: one(accountingFiscalYears, {
+    fields: [accountingEntries.workspaceSubdomain, accountingEntries.fiscalYearId],
+    references: [accountingFiscalYears.workspaceSubdomain, accountingFiscalYears.id],
+  }),
   lines: many(accountingJournalLines),
   tags: many(accountingEntryTags),
   attachments: many(accountingEntryAttachments),
+  bankMatches: many(accountingBankReconciliations),
 }));
 
 export const accountingJournalLinesRelations = relations(accountingJournalLines, ({ one }) => ({
@@ -258,6 +332,50 @@ export const accountingEntryAttachmentsRelations = relations(accountingEntryAtta
   }),
   entry: one(accountingEntries, {
     fields: [accountingEntryAttachments.workspaceSubdomain, accountingEntryAttachments.entryId],
+    references: [accountingEntries.workspaceSubdomain, accountingEntries.id],
+  }),
+}));
+
+export const accountingPostingRulesRelations = relations(accountingPostingRules, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [accountingPostingRules.workspaceSubdomain],
+    references: [workspaces.subdomain],
+  }),
+}));
+
+export const accountingOpeningBalancesRelations = relations(accountingOpeningBalances, ({ one }) => ({
+  fiscalYear: one(accountingFiscalYears, {
+    fields: [accountingOpeningBalances.workspaceSubdomain, accountingOpeningBalances.fiscalYearId],
+    references: [accountingFiscalYears.workspaceSubdomain, accountingFiscalYears.id],
+  }),
+  account: one(accountingAccounts, {
+    fields: [accountingOpeningBalances.workspaceSubdomain, accountingOpeningBalances.accountId],
+    references: [accountingAccounts.workspaceSubdomain, accountingAccounts.id],
+  }),
+}));
+
+export const accountingBankStatementsRelations = relations(accountingBankStatements, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [accountingBankStatements.workspaceSubdomain],
+    references: [workspaces.subdomain],
+  }),
+  account: one(accountingAccounts, {
+    fields: [accountingBankStatements.workspaceSubdomain, accountingBankStatements.accountId],
+    references: [accountingAccounts.workspaceSubdomain, accountingAccounts.id],
+  }),
+  lines: many(accountingBankStatementLines),
+}));
+
+export const accountingBankStatementLinesRelations = relations(accountingBankStatementLines, ({ one }) => ({
+  statement: one(accountingBankStatements, {
+    fields: [accountingBankStatementLines.workspaceSubdomain, accountingBankStatementLines.statementId],
+    references: [accountingBankStatements.workspaceSubdomain, accountingBankStatements.id],
+  }),
+}));
+
+export const accountingBankReconciliationsRelations = relations(accountingBankReconciliations, ({ one }) => ({
+  entry: one(accountingEntries, {
+    fields: [accountingBankReconciliations.workspaceSubdomain, accountingBankReconciliations.journalEntryId],
     references: [accountingEntries.workspaceSubdomain, accountingEntries.id],
   }),
 }));

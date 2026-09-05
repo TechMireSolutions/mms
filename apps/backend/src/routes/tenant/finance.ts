@@ -8,6 +8,8 @@ import { financeUseCases } from '../../finance/use-cases/financeUseCases.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../services/rbacService.js';
 import { financeReportRoutes } from './finance/financeReportRoutes.js';
 import { financeSetupConfigRoutes } from './finance/financeSetupConfigRoutes.js';
+import { financeBillingRoutes } from './finance/financeBillingRoutes.js';
+import { financeCollectRoutes } from './finance/financeCollectRoutes.js';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
@@ -28,6 +30,8 @@ export default async function financeRoutes(
 
   await fastify.register(financeReportRoutes, { prefix: '/api/finance' });
   await fastify.register(financeSetupConfigRoutes, { prefix: '/api/finance' });
+  await fastify.register(financeBillingRoutes, { prefix: '/api/finance' });
+  await fastify.register(financeCollectRoutes, { prefix: '/api/finance' });
 
   await fastify.register(
     async (sub) => {

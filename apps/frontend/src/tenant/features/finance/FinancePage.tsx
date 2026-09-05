@@ -1,7 +1,7 @@
 import React from "react";
 import { useFinancePageController } from "@/tenant/features/finance/hooks/useFinancePageController";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, DollarSign } from "lucide-react";
+import { Plus, DollarSign, CalendarRange, Bell, AlarmClock } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
@@ -10,6 +10,7 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { InvoicesList } from "@/tenant/features/finance/components/InvoicesList";
 import { InvoiceDetail } from "@/tenant/features/finance/components/InvoiceDetail";
 import { InvoiceForm } from "@/tenant/features/finance/components/InvoiceForm";
+import { FinanceGenerateInvoicesDialog } from "@/tenant/features/finance/components/FinanceGenerateInvoicesDialog";
 import { PaymentForm } from "@/tenant/features/finance/components/PaymentForm";
 import { PaymentsList } from "@/tenant/features/finance/components/PaymentsList";
 import { PaymentDetail } from "@/tenant/features/finance/components/PaymentDetail";
@@ -25,6 +26,7 @@ const InvoiceReceiptModal = React.lazy(() =>
     default: m.InvoiceReceiptModal,
   }))
 );
+const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 /**
  * Finance — invoices and payments. Work | Reports | Setup.
@@ -43,9 +45,30 @@ export default function Finance(): React.JSX.Element {
       headerSubtitle={c.t("page.finance.subtitle")}
       headerActions={
         c.canWrite && !c.showDeleted ? (
-          <ActionButton variant="primary" icon={Plus} onClick={c.openCreateInvoice}>
-            {c.t("finance.newInvoice")}
-          </ActionButton>
+          <div className="flex flex-wrap items-center gap-2">
+            <ActionButton
+              variant="secondary"
+              icon={AlarmClock}
+              loading={c.collectPending}
+              onClick={() => void c.handleCollectOverdue()}
+            >
+              {c.t("finance.collect.action")}
+            </ActionButton>
+            <ActionButton
+              variant="secondary"
+              icon={Bell}
+              loading={c.remindPending}
+              onClick={() => void c.handleRemindInvoices()}
+            >
+              {c.t("finance.collect.remindAction")}
+            </ActionButton>
+            <ActionButton variant="secondary" icon={CalendarRange} onClick={() => c.setGeneratingInvoices(true)}>
+              {c.t("finance.generate.action")}
+            </ActionButton>
+            <ActionButton variant="primary" icon={Plus} onClick={c.openCreateInvoice}>
+              {c.t("finance.newInvoice")}
+            </ActionButton>
+          </div>
         ) : undefined
       }
       metricsStrip={<FinanceCommandMetrics invoiceTotal={c.invoices.length} />}
@@ -140,6 +163,12 @@ export default function Finance(): React.JSX.Element {
       </ResponsiveAccordionTabs>
 
       <AnimatePresence>
+        {c.generatingInvoices && c.canWrite && !c.showDeleted && (
+          <FinanceGenerateInvoicesDialog
+            open={c.generatingInvoices}
+            onClose={() => c.setGeneratingInvoices(false)}
+          />
+        )}
         {c.creatingInvoice && c.canWrite && !c.showDeleted && (
           <InvoiceForm
             open={c.creatingInvoice}
@@ -167,6 +196,16 @@ export default function Finance(): React.JSX.Element {
           <InvoiceReceiptModal
             invoices={receiptInvoices}
             onClose={() => setReceiptInvoices([])}
+          />
+        </React.Suspense>
+      )}
+      {c.messagingTarget && (
+        <React.Suspense fallback={null}>
+          <MessageComposer
+            channel={c.messagingTarget.channel}
+            recipients={c.messagingTarget.recipients}
+            initialMessage={c.messagingTarget.initialMessage}
+            onClose={c.closeComposer}
           />
         </React.Suspense>
       )}

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { ReceiptText } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import { type InvoiceCreateInput } from "@mms/shared";
+import { invoiceTotalsFromLines, type InvoiceCreateInput } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { useFinanceConfig } from "@/hooks/useStandardModuleConfig";
@@ -16,6 +16,7 @@ import {
   nextInvoiceId,
   type InvoiceDraft,
 } from "@/tenant/features/finance/components/invoiceFormDraft";
+import { useFinanceFeeStructures } from "@/tenant/features/finance/hooks/useFinanceFeeStructures";
 
 export interface InvoiceFormProps {
   open: boolean;
@@ -33,6 +34,7 @@ export const InvoiceForm = (function InvoiceForm({
   const { t } = useTranslation();
   const { settings } = useFinanceConfig();
   const { formatCurrency } = useFinanceCurrency();
+  const { data: feeStructures = [] } = useFinanceFeeStructures(open);
 
       const [draft, setDraft] = useState<InvoiceDraft>(() => createInitialDraft(settings.dueDays));
       const [submitting, setSubmitting] = useState(false);
@@ -48,6 +50,24 @@ export const InvoiceForm = (function InvoiceForm({
 
       const setField = (key: keyof InvoiceDraft, value: string): void => {
         setDraft((currentDraft) => ({ ...currentDraft, [key]: value }));
+      };
+
+      const applyFeeStructure = (structureId: string): void => {
+        const structure = feeStructures.find((item) => item.id === structureId);
+        const totals = structure
+          ? invoiceTotalsFromLines(structure.items.map((item) => ({
+              quantity: 1,
+              amount: item.amount,
+              discountAmt: 0,
+            })))
+          : null;
+        setDraft((currentDraft) => ({
+          ...currentDraft,
+          feeStructureId: structureId,
+          class: structure?.className || currentDraft.class,
+          session: structure?.session || currentDraft.session,
+          baseFee: totals ? String(totals.baseFee) : currentDraft.baseFee,
+        }));
       };
 
       const resetAndClose = (): void => {
@@ -76,6 +96,19 @@ export const InvoiceForm = (function InvoiceForm({
             paidDate: null,
             method: null,
             paidAmt: 0,
+            feeStructureId: draft.feeStructureId || null,
+            lines: (() => {
+              const structure = feeStructures.find((item) => item.id === draft.feeStructureId);
+              if (!structure || structure.items.length === 0) return undefined;
+              return structure.items.map((item, index) => ({
+                id: `il-${index + 1}`,
+                feeItemId: item.id,
+                description: item.name,
+                quantity: 1,
+                amount: item.amount,
+                discountAmt: 0,
+              }));
+            })(),
           });
           notify.success(t("finance.invoiceSaved"));
           resetAndClose();
@@ -108,6 +141,8 @@ export const InvoiceForm = (function InvoiceForm({
               t={t}
               draft={draft}
               onFieldChange={setField}
+              feeStructures={feeStructures}
+              onApplyFeeStructure={applyFeeStructure}
             />
             <InvoiceFormSummarySection
               t={t}

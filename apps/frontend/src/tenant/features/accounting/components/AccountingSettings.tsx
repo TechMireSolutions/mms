@@ -6,6 +6,8 @@ import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { AccountingFiscalYearModal } from "./AccountingFiscalYearModal";
 import { AccountingSettingsPreferences } from "./AccountingSettingsPreferences";
 import { useAccountingSetupPanelState } from "@/tenant/features/accounting/hooks/useAccountingSetupPanelState";
+import { useCloseFiscalYear } from "@/tenant/features/accounting/hooks/useAccountingLedgerOps";
+import { notify } from "@/lib/notify";
 
 export interface AccountingSettingsProps {
   accounts: Account[];
@@ -47,6 +49,21 @@ export const AccountingSettings = (function AccountingSettings({
     fiscalYears,
     onSaveFiscalYears,
   });
+  const closeFiscalYear = useCloseFiscalYear();
+
+  const handleCloseFiscalYear = async (fiscalYearId: string): Promise<void> => {
+    try {
+      const result = await closeFiscalYear.mutateAsync(fiscalYearId);
+      await onSaveFiscalYears((prev) =>
+        prev.map((year) => (year.id === result.fiscalYear.id ? result.fiscalYear : year)),
+      );
+      notify.success(t("accounting.settings.fy.closed"));
+    } catch (error) {
+      notify.error(t("accounting.settings.fy.closeFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
 
   useEffect(() => {
     onPrefsDirtyChange?.(isPrefsDirty);
@@ -70,6 +87,7 @@ export const AccountingSettings = (function AccountingSettings({
         canEditSetup={true}
         onEditFiscalYear={setFyModal}
         onDeleteFiscalYear={handleRequestDeleteFY}
+        onCloseFiscalYear={handleCloseFiscalYear}
       />
 
       <ModuleSetupSaveFooter

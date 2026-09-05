@@ -43,10 +43,22 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
             <label htmlFor="journal-entry-financial-year" className={FORM_LABEL}>{t("accounting.journal.form.financialYear")}</label>
             <FormSelect
               id="journal-entry-financial-year"
-              value={form.fiscal_year || ""}
-              onChange={(fiscalYearValue) => setForm({ ...form, fiscal_year: fiscalYearValue })}
+              value={form.fiscal_year_id || form.fiscal_year || ""}
+              onChange={(fiscalYearValue) => {
+                const selected = (fiscalYears || []).find(
+                  (fiscalYear) => fiscalYear.id === fiscalYearValue || fiscalYear.label === fiscalYearValue,
+                );
+                setForm({
+                  ...form,
+                  fiscal_year_id: selected?.id,
+                  fiscal_year: selected?.label ?? fiscalYearValue,
+                });
+              }}
               placeholder={t("accounting.journal.form.none")}
-              options={(fiscalYears || []).map((fiscalYear) => fiscalYear.label)}
+              options={(fiscalYears || []).map((fiscalYear) => ({
+                value: fiscalYear.id,
+                label: fiscalYear.label,
+              }))}
             />
           </div>
           <div className="sm:col-span-2">

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar, numeric , foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar, numeric, integer, foreignKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 
@@ -19,6 +19,15 @@ export const financeInvoices = pgTable('finance_invoices', {
   paidDate: varchar('paid_date', { length: 10 }),
   method: varchar('method', { length: 50 }),
   paidAmt: numeric('paid_amt', { precision: 12, scale: 2 }),
+  invoiceNumber: varchar('invoice_number', { length: 40 }),
+  feeStructureId: text('fee_structure_id'),
+  billingPeriod: varchar('billing_period', { length: 7 }),
+  enrollmentId: varchar('enrollment_id', { length: 64 }),
+  familyContactId: varchar('family_contact_id', { length: 64 }),
+  lateFeeAmt: numeric('late_fee_amt', { precision: 12, scale: 2 }).notNull().default('0'),
+  creditedAmt: numeric('credited_amt', { precision: 12, scale: 2 }).notNull().default('0'),
+  lastRemindedAt: timestamp('last_reminded_at', { withTimezone: true, mode: 'date' }),
+  reminderCount: integer('reminder_count').notNull().default(0),
   deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
   deletedBy: text('deleted_by'),
   deletionReason: text('deletion_reason'),
@@ -35,6 +44,21 @@ export const financeInvoices = pgTable('finance_invoices', {
     .where(sql`${table.deletedAt} is null`),
   index('finance_invoices_workspace_status_due_active_idx')
     .on(table.workspaceSubdomain, table.status, table.dueDate)
+    .where(sql`${table.deletedAt} is null`),
+  uniqueIndex('finance_invoices_workspace_number_uidx')
+    .on(table.workspaceSubdomain, table.invoiceNumber)
+    .where(sql`${table.deletedAt} is null and ${table.invoiceNumber} is not null`),
+  uniqueIndex('finance_invoices_workspace_enrollment_period_uidx')
+    .on(table.workspaceSubdomain, table.enrollmentId, table.billingPeriod)
+    .where(sql`${table.deletedAt} is null and ${table.enrollmentId} is not null and ${table.billingPeriod} is not null`),
+  index('finance_invoices_workspace_period_idx')
+    .on(table.workspaceSubdomain, table.billingPeriod)
+    .where(sql`${table.deletedAt} is null`),
+  index('finance_invoices_workspace_enrollment_idx')
+    .on(table.workspaceSubdomain, table.enrollmentId)
+    .where(sql`${table.deletedAt} is null`),
+  index('finance_invoices_workspace_family_idx')
+    .on(table.workspaceSubdomain, table.familyContactId)
     .where(sql`${table.deletedAt} is null`),
 ]);
 

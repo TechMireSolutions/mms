@@ -5,7 +5,10 @@ import { invoiceRecordSchema, paymentRecordSchema } from '../../validation/finan
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import { runInTransaction } from '../../db/database.js';
 import {
+  getOutstandingAmountForInvoice,
+  invoiceTotalsFromLines,
   normalizeFinanceReportComparisonQuery,
+  resolveFamilyContactId,
   type FinanceCommandMetricsSnapshot,
   type FinanceListQuery,
   type FinanceReportComparisonQuery,
@@ -14,6 +17,9 @@ import {
   type Payment,
   type PaymentCreateInput,
 } from '@mms/shared';
+import { allocateNextInvoiceNumber, replacePaymentAllocations } from '../../db/repositories/financeBillingRepository.js';
+import { tryPostInvoiceJournal, tryPostPaymentJournal } from '../../accounting/ledgerPosting/ledgerPostingService.js';
+import { loadFinanceModulePreferences } from '../../services/financePreferencesService.js';
 
 const EMPTY_FINANCE_METRICS: FinanceCommandMetricsSnapshot = {
   totalInvoices: 0,
@@ -62,8 +68,36 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
   return {
     // --- Invoices ---
     loadInvoices: invoiceCrud.loadAll,
-    createInvoice: (record: InvoiceCreateInput): Promise<Invoice> =>
-      invoiceCrud.create(record as Invoice),
+    createInvoice: async (record: InvoiceCreateInput): Promise<Invoice> => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      const year = Number((record.dueDate ?? '').slice(0, 4)) || new Date().getFullYear();
+      let prefix = 'INV';
+      try {
+        const prefs = await loadFinanceModulePreferences();
+        prefix = prefs?.invoicePrefix?.trim() || 'INV';
+      } catch {
+        // Keep default prefix when preferences are unavailable.
+      }
+      const lines = (record.lines ?? []).map((line, index) => ({
+        ...line,
+        id: line.id ?? `il-${index + 1}`,
+      }));
+      const totals = lines.length > 0 ? invoiceTotalsFromLines(lines) : null;
+      const { findStudentsByIds } = await import('../../db/repositories/studentRepository.js');
+      const students = record.studentId ? await findStudentsByIds(tenant, [record.studentId]) : [];
+      const created = await invoiceCrud.create({
+        ...record,
+        familyContactId: record.familyContactId ?? resolveFamilyContactId(students[0]),
+        invoiceNumber: record.invoiceNumber || (await allocateNextInvoiceNumber(tenant, year, prefix)),
+        ...(totals
+          ? { baseFee: totals.baseFee, discountAmt: totals.discountAmt, finalAmt: totals.finalAmt }
+          : {}),
+        ...(lines.length > 0 ? { lines } : {}),
+      } as Invoice);
+      await tryPostInvoiceJournal(tenant, created);
+      return created;
+    },
     updateInvoiceById: invoiceCrud.updateById,
     deleteInvoiceById: invoiceCrud.deleteById,
     restoreInvoiceById: invoiceCrud.restoreById,
@@ -148,7 +182,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
         if (!invoice || invoice.deletedAt) throw new Error('Invoice not found or deleted');
 
         const paidAmount = invoice.paidAmt ?? 0;
-        const remainingBalance = Math.max(0, invoice.finalAmt - paidAmount);
+        const remainingBalance = getOutstandingAmountForInvoice(invoice);
         if (normalizedPayment.amount > remainingBalance) {
           throw new Error('Payment amount exceeds the remaining invoice balance');
         }
@@ -156,7 +190,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
         const newPaid = paidAmount + normalizedPayment.amount;
         await repo.saveInvoice(tenant, {
           ...invoice,
-          status: newPaid >= invoice.finalAmt ? 'paid' : 'partial',
+          status: remainingBalance - normalizedPayment.amount <= 0 ? 'paid' : 'partial',
           paidAmt: newPaid,
           paidDate: normalizedPayment.date,
           method: normalizedPayment.method,
@@ -164,6 +198,19 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
         await repo.savePayment(tenant, normalizedPayment);
         return normalizedPayment;
       });
+
+      const allocations = (record.allocations ?? []).map((allocation, index) => ({
+        ...allocation,
+        id: allocation.id ?? `alloc-${index + 1}`,
+      }));
+      await replacePaymentAllocations(
+        tenant,
+        savedPayment.id,
+        allocations.length > 0
+          ? allocations
+          : [{ id: `alloc-${savedPayment.id}`, invoiceId: savedPayment.invoiceId, amount: savedPayment.amount }],
+      );
+      await tryPostPaymentJournal(tenant, savedPayment);
 
       const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
       broadcastTenantUpdate(tenant, 'collection', 'finance_invoices');

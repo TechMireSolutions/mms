@@ -20,7 +20,7 @@ export function renderInvoiceWorkColumnValue(
 
   switch (columnKey) {
     case "invoice":
-      return <span className="text-xs font-mono font-semibold text-muted-foreground">{invoice.id}</span>;
+      return <span className="text-xs font-mono font-semibold text-muted-foreground">{invoice.invoiceNumber ?? invoice.id}</span>;
     case "student":
       return <span className="text-sm font-semibold text-foreground">{invoice.studentName}</span>;
     case "sessionClass":

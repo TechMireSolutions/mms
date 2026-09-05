@@ -5,6 +5,7 @@ import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { FinancePreferencesSection } from "@/tenant/features/finance/components/FinancePreferencesSection";
+import { FinanceFeeStructuresSection } from "@/tenant/features/finance/components/FinanceFeeStructuresSection";
 import { useFinanceSetupPanelState } from "@/tenant/features/finance/hooks/useFinanceSetupPanelState";
 
 export interface FinanceSettingsProps {
@@ -48,6 +49,8 @@ export const FinanceSettings = (function FinanceSettings({
           upd={upd}
         />
       </SectionCard>
+
+      <FinanceFeeStructuresSection />
 
       <ModuleSetupSaveFooter
         dirty={isPrefsDirty}

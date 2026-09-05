@@ -75,6 +75,12 @@ vi.mock("./FinancePreferencesSection", () => ({
   ),
 }));
 
+vi.mock("./FinanceFeeStructuresSection", () => ({
+  FinanceFeeStructuresSection: () => (
+    <div data-testid="finance-fee-structures-section">Fee Structures</div>
+  ),
+}));
+
 vi.mock("@/components/ui/ModuleSetupSaveFooter", () => ({
   ModuleSetupSaveFooter: () => <div data-testid="save-footer">Save Footer</div>,
 }));

@@ -1,5 +1,5 @@
 import { type AccountingSettings, type FiscalYear, formatDate } from "@mms/shared";
-import { Calendar, Pencil, Plus, Trash2 } from "lucide-react";
+import { Calendar, Lock, Pencil, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -26,6 +26,7 @@ interface AccountingSettingsFiscalYearsSectionProps {
   canEditSetup: boolean;
   onEditFiscalYear: (fiscalYear: Partial<FiscalYear>) => void;
   onDeleteFiscalYear: (fiscalYearId: string) => void;
+  onCloseFiscalYear?: (fiscalYearId: string) => void;
 }
 
 export function AccountingSettingsFiscalYearsSection({
@@ -36,6 +37,7 @@ export function AccountingSettingsFiscalYearsSection({
   canEditSetup,
   onEditFiscalYear,
   onDeleteFiscalYear,
+  onCloseFiscalYear,
 }: AccountingSettingsFiscalYearsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const sortedYears = [...fiscalYears].sort((firstYear, secondYear) => secondYear.startDate.localeCompare(firstYear.startDate));
@@ -91,6 +93,18 @@ export function AccountingSettingsFiscalYearsSection({
                 </div>
                 {canEditSetup && (
                   <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
+                    {onCloseFiscalYear && fiscalYear.status !== "closed" && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onCloseFiscalYear(fiscalYear.id)}
+                        className="min-h-11 min-w-11 text-xs"
+                        aria-label={`${t("accounting.settings.fy.close")} ${fiscalYear.label}`}
+                      >
+                        <Lock className="w-3.5 h-3.5" aria-hidden="true" />
+                      </Button>
+                    )}
                     <Button
                       type="button"
                       variant="ghost"
@@ -143,6 +157,18 @@ export function AccountingSettingsFiscalYearsSection({
                     {canEditSetup && (
                       <TableCell className="text-end">
                         <div className="flex items-center justify-end gap-1">
+                          {onCloseFiscalYear && fiscalYear.status !== "closed" && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onCloseFiscalYear(fiscalYear.id)}
+                              className="min-h-11 min-w-11"
+                              aria-label={`${t("accounting.settings.fy.close")} ${fiscalYear.label}`}
+                            >
+                              <Lock className="w-3.5 h-3.5" aria-hidden="true" />
+                            </Button>
+                          )}
                           <Button
                             type="button"
                             variant="ghost"

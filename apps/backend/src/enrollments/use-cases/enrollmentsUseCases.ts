@@ -32,7 +32,13 @@ export function createEnrollmentsUseCases(repo: EnrollmentsRepository = enrollme
   });
 
   return {
-    createEnrollment: crud.create,
+    createEnrollment: async (record: EnrollmentRecord) => {
+      const created = await crud.create(record);
+      const { maybeGenerateInvoiceForEnrollment } = await import(
+        '../../finance/use-cases/financeInvoiceGenerationUseCases.js'
+      );
+      return maybeGenerateInvoiceForEnrollment(created);
+    },
     updateEnrollmentById: crud.updateById,
     deleteEnrollmentById: crud.deleteById,
     restoreEnrollmentById: crud.restoreById,

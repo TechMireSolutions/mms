@@ -17,6 +17,7 @@ import { useFinanceInvoiceColumnLayout } from "@/tenant/features/finance/hooks/u
 import { useFinancePaymentColumnLayout } from "@/tenant/features/finance/hooks/useFinancePaymentColumnLayout";
 import { notify } from "@/lib/notify";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+import { useFinanceCollectMutations } from "@/tenant/features/finance/hooks/useFinanceCollect";
 
 export function useFinancePageController() {
   const { t } = useTranslation();
@@ -52,10 +53,12 @@ export function useFinancePageController() {
     bulkDeletePayments,
     bulkRestorePayments,
   } = useFinanceMutations();
-  const { canWriteMessaging } = useMessageComposerState();
+  const { canWriteMessaging, messagingTarget, openComposer, closeComposer } = useMessageComposerState();
+  const { collect, remind } = useFinanceCollectMutations();
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [recordInvoice, setRecordInvoice] = useState<Invoice | null>(null);
   const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const [generatingInvoices, setGeneratingInvoices] = useState(false);
 
   const invoiceColumnLayout = useFinanceInvoiceColumnLayout();
   const paymentColumnLayout = useFinancePaymentColumnLayout();
@@ -131,6 +134,44 @@ export function useFinancePageController() {
     }
   };
 
+  const handleCollectOverdue = async (): Promise<void> => {
+    try {
+      const result = await collect.mutateAsync({ applyLateFee: true });
+      notify.success(t("finance.collect.success", { overdue: result.markedOverdue, lateFees: result.lateFeesApplied }));
+    } catch (error) {
+      notify.error(t("finance.collect.failed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+
+  const handleRemindInvoices = async (): Promise<void> => {
+    try {
+      const result = await remind.mutateAsync({});
+      if (result.recipients.length === 0) {
+        notify.info(t("finance.collect.remindNone"));
+        return;
+      }
+      notify.success(t("finance.collect.reminded", { count: result.reminded }));
+      if (!canWriteMessaging) return;
+      const hasPhone = result.recipients.some((recipient) => recipient.phone);
+      openComposer(
+        hasPhone ? "whatsapp" : "email",
+        result.recipients.map((recipient) => ({
+          id: recipient.id,
+          name: recipient.name,
+          phone: recipient.phone,
+          email: recipient.email,
+        })),
+        { initialMessage: t("finance.collect.remindMessage") },
+      );
+    } catch (error) {
+      notify.error(t("finance.collect.remindFailed"), {
+        description: error instanceof Error ? error.message : String(error),
+      });
+    }
+  };
+
   const openCreateInvoice = () => {
     setActiveTab("work");
     setActiveSubTab("invoices");
@@ -178,6 +219,8 @@ export function useFinancePageController() {
     setRecordInvoice,
     creatingInvoice,
     setCreatingInvoice,
+    generatingInvoices,
+    setGeneratingInvoices,
     invoiceColumnLayout,
     paymentColumnLayout,
     handleRecordPayment,
@@ -185,6 +228,12 @@ export function useFinancePageController() {
     mutationError,
     handleBulkResult,
     openCreateInvoice,
+    handleCollectOverdue,
+    handleRemindInvoices,
+    collectPending: collect.isPending,
+    remindPending: remind.isPending,
+    messagingTarget,
+    closeComposer,
     deleteInvoice,
     restoreInvoice,
     bulkDeleteInvoices,

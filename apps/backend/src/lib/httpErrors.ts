@@ -30,6 +30,27 @@ export function sendBadRequest(
   return reply.status(400).send({ type: 'bad_request', message });
 }
 
+/** Domain errors thrown from use-cases with an explicit HTTP status + type. */
+export function sendIfHttpDomainError(
+  reply: FastifyReply,
+  error: unknown,
+): FastifyReply | null {
+  if (
+    error instanceof Error &&
+    'statusCode' in error &&
+    typeof (error as { statusCode?: unknown }).statusCode === 'number' &&
+    'type' in error &&
+    typeof (error as { type?: unknown }).type === 'string'
+  ) {
+    const domainError = error as Error & { statusCode: number; type: string };
+    return reply.status(domainError.statusCode).send({
+      type: domainError.type,
+      message: domainError.message,
+    });
+  }
+  return null;
+}
+
 export function sendDatabaseError(
   reply: FastifyReply,
   message = 'Database error occurred',

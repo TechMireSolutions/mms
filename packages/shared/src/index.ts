@@ -240,6 +240,9 @@ export * from './sessionsWidgetAggregate.js';
 // ---------------------------------------------------------------------------
 // 9. Attendance, Finance, Accounting & Obligations
 // ---------------------------------------------------------------------------
+export * from './accountingLedgerInvariants.js';
+export * from './accountingLedgerOps.js';
+export * from './accountingLedgerPosting.js';
 export * from './accountingListQuery.js';
 export * from './accountingModuleManifest.js';
 export * from './accountingModuleSettings.js';
@@ -251,6 +254,9 @@ export * from './attendanceModuleManifest.js';
 export * from './attendanceModuleSettings.js';
 export * from './attendanceReportAggregates.js';
 export * from './attendanceSetupConfigTypes.js';
+export * from './financeBilling.js';
+export * from './financeInvoiceGeneration.js';
+export * from './financeCollect.js';
 export * from './financeListQuery.js';
 export * from './financeModuleManifest.js';
 export * from './financeModuleSettings.js';

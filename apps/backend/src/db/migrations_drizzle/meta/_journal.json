@@ -645,6 +645,34 @@
       "when": 1786788000000,
       "tag": "0091_perf_list_order_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 92,
+      "version": "7",
+      "when": 1786791600000,
+      "tag": "0092_accounting_ledger_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 93,
+      "version": "7",
+      "when": 1786795200000,
+      "tag": "0093_finance_accounting_complete",
+      "breakpoints": true
+    },
+    {
+      "idx": 94,
+      "version": "7",
+      "when": 1786798800000,
+      "tag": "0094_finance_invoice_generation",
+      "breakpoints": true
+    },
+    {
+      "idx": 95,
+      "version": "7",
+      "when": 1786802400000,
+      "tag": "0095_finance_collect_corrections",
+      "breakpoints": true
     }
   ]
 }

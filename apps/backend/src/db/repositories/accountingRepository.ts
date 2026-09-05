@@ -19,6 +19,7 @@ export {
   entryRowToRecord,
   listEntriesByWorkspace,
   findEntryById,
+  findEntryIdBySource,
   type JournalLineRow,
 } from './accountingEntriesRepository.js';
 export {

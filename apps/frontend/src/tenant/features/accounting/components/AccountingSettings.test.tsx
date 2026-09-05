@@ -3,6 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { AccountingSettings } from "./AccountingSettings";
 
+vi.mock("@/lib/notify", () => ({
+  notify: { success: vi.fn(), error: vi.fn() },
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
@@ -52,6 +56,10 @@ vi.mock("@/tenant/features/accounting/hooks/useAccountingSetupPanelState", () =>
     handleRequestDeleteFY: vi.fn(),
     handleConfirmDeleteFY: vi.fn(),
   }),
+}));
+
+vi.mock("@/tenant/features/accounting/hooks/useAccountingLedgerOps", () => ({
+  useCloseFiscalYear: () => ({ mutateAsync: vi.fn() }),
 }));
 
 vi.mock("./AccountingSettingsPreferences", () => ({

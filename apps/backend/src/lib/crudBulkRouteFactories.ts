@@ -3,7 +3,7 @@ import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
 import { canDeleteCollection, canWriteCollection } from './rbacCanHelpers.js';
-import { sendForbidden, sendDatabaseError, sendNotFound } from './httpErrors.js';
+import { sendForbidden, sendDatabaseError, sendIfHttpDomainError, sendNotFound } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import { bulkIdsBodySchema } from '../validation/commonSchemas.js';
 import {
@@ -55,8 +55,10 @@ export function registerBulkRoutes<T>(
     try {
       const updated = await saveFn(parsed.data);
       return reply.send({ [responseKey]: updated });
-    } catch {
-      return sendDatabaseError(reply, `Failed to update ${errorMessagePrefix}`);
+    } catch (error: unknown) {
+      const mapped = sendIfHttpDomainError(reply, error);
+      if (mapped) return mapped;
+      return sendDatabaseError(reply, `Failed to update ${errorMessagePrefix}`, error);
     }
   });
 }
@@ -122,6 +124,8 @@ export function registerIncludableBulkRoutes<T>(
       const updated = await saveFn(parsed.data);
       return reply.send({ [responseKey]: updated });
     } catch (error: unknown) {
+      const mapped = sendIfHttpDomainError(reply, error);
+      if (mapped) return mapped;
       return sendDatabaseError(reply, `Failed to update ${errorMessagePrefix}`, error);
     }
   });

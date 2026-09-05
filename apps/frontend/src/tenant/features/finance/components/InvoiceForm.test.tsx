@@ -29,6 +29,14 @@ vi.mock("@/hooks/useStandardModuleConfig", () => ({
   }),
 }));
 
+vi.mock("@/tenant/features/finance/hooks/useFinanceFeeStructures", () => ({
+  useFinanceFeeStructures: () => ({ data: [] }),
+}));
+
+vi.mock("@/tenant/hooks/collections/students", () => ({
+  useStudentsContractList: () => ({ data: undefined }),
+}));
+
 vi.mock("@/components/ui/DatePicker", () => ({
   DatePicker: ({
     id,

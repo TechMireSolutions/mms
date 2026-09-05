@@ -1,7 +1,9 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { type Invoice } from '@mms/shared';
-import { financeInvoices } from '../schema.js';
+import { financeInvoiceLines, financeInvoices } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { invoiceWriteValues } from './financeInvoiceValues.js';
+import { invoiceLineRowToRecord, replaceInvoiceLines } from './financeBillingRepository.js';
 
 type InvoiceRow = typeof financeInvoices.$inferSelect;
 
@@ -26,6 +28,15 @@ export function invoiceRowToRecord(row: InvoiceRow): Invoice {
   };
 
   if (row.paidAmt != null) invoice.paidAmt = Number(row.paidAmt);
+  if (row.invoiceNumber) invoice.invoiceNumber = row.invoiceNumber;
+  if (row.feeStructureId) invoice.feeStructureId = row.feeStructureId;
+  if (row.billingPeriod) invoice.billingPeriod = row.billingPeriod;
+  if (row.enrollmentId) invoice.enrollmentId = row.enrollmentId;
+  if (row.familyContactId) invoice.familyContactId = row.familyContactId;
+  if (Number(row.lateFeeAmt ?? 0) > 0) invoice.lateFeeAmt = Number(row.lateFeeAmt);
+  if (Number(row.creditedAmt ?? 0) > 0) invoice.creditedAmt = Number(row.creditedAmt);
+  if (row.lastRemindedAt) invoice.lastRemindedAt = row.lastRemindedAt.toISOString();
+  if (row.reminderCount) invoice.reminderCount = row.reminderCount;
   if (row.deletedAt) invoice.deletedAt = row.deletedAt.toISOString();
   if (row.deletedBy) invoice.deletedBy = row.deletedBy;
   if (row.deletionReason) invoice.deletionReason = row.deletionReason;
@@ -59,6 +70,15 @@ export async function listInvoicesByWorkspace(
         paidDate: financeInvoices.paidDate,
         method: financeInvoices.method,
         paidAmt: financeInvoices.paidAmt,
+        invoiceNumber: financeInvoices.invoiceNumber,
+        feeStructureId: financeInvoices.feeStructureId,
+        billingPeriod: financeInvoices.billingPeriod,
+        enrollmentId: financeInvoices.enrollmentId,
+        familyContactId: financeInvoices.familyContactId,
+        lateFeeAmt: financeInvoices.lateFeeAmt,
+        creditedAmt: financeInvoices.creditedAmt,
+        lastRemindedAt: financeInvoices.lastRemindedAt,
+        reminderCount: financeInvoices.reminderCount,
         deletedAt: financeInvoices.deletedAt,
         deletedBy: financeInvoices.deletedBy,
         deletionReason: financeInvoices.deletionReason,
@@ -94,6 +114,15 @@ export async function findInvoiceById(tenant: string, id: string): Promise<Invoi
         paidDate: financeInvoices.paidDate,
         method: financeInvoices.method,
         paidAmt: financeInvoices.paidAmt,
+        invoiceNumber: financeInvoices.invoiceNumber,
+        feeStructureId: financeInvoices.feeStructureId,
+        billingPeriod: financeInvoices.billingPeriod,
+        enrollmentId: financeInvoices.enrollmentId,
+        familyContactId: financeInvoices.familyContactId,
+        lateFeeAmt: financeInvoices.lateFeeAmt,
+        creditedAmt: financeInvoices.creditedAmt,
+        lastRemindedAt: financeInvoices.lastRemindedAt,
+        reminderCount: financeInvoices.reminderCount,
         deletedAt: financeInvoices.deletedAt,
         deletedBy: financeInvoices.deletedBy,
         deletionReason: financeInvoices.deletionReason,
@@ -104,61 +133,70 @@ export async function findInvoiceById(tenant: string, id: string): Promise<Invoi
       .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), eq(financeInvoices.id, id)))
       .limit(1);
     const row = rows[0];
-    return row ? invoiceRowToRecord(row) : null;
+    if (!row) return null;
+    const lineRows = await tx
+      .select({
+        id: financeInvoiceLines.id,
+        workspaceSubdomain: financeInvoiceLines.workspaceSubdomain,
+        invoiceId: financeInvoiceLines.invoiceId,
+        feeItemId: financeInvoiceLines.feeItemId,
+        description: financeInvoiceLines.description,
+        quantity: financeInvoiceLines.quantity,
+        amount: financeInvoiceLines.amount,
+        discountAmt: financeInvoiceLines.discountAmt,
+        createdAt: financeInvoiceLines.createdAt,
+      })
+      .from(financeInvoiceLines)
+      .where(
+        and(eq(financeInvoiceLines.workspaceSubdomain, subdomain), eq(financeInvoiceLines.invoiceId, id)),
+      );
+    return { ...invoiceRowToRecord(row), lines: lineRows.map(invoiceLineRowToRecord) };
   });
 }
 
 export async function saveInvoice(tenant: string, record: Invoice): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const values = invoiceWriteValues(subdomain, record);
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(financeInvoices)
-      .values({
-        id: record.id,
-        workspaceSubdomain: subdomain,
-        studentId: record.studentId,
-        studentName: record.studentName ?? '',
-        class: record.class ?? '',
-        session: record.session ?? '',
-        baseFee: String(record.baseFee ?? 0),
-        discountType: record.discountType ?? null,
-        discountValue: String(record.discountValue ?? 0),
-        discountAmt: String(record.discountAmt ?? 0),
-        finalAmt: String(record.finalAmt ?? 0),
-        status: record.status ?? 'pending',
-        dueDate: record.dueDate,
-        paidDate: record.paidDate ?? null,
-        method: record.method ?? null,
-        paidAmt: record.paidAmt != null ? String(record.paidAmt) : null,
-        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-        deletedBy: record.deletedBy ?? null,
-        deletionReason: record.deletionReason ?? null,
-        updatedAt: new Date(),
-      })
+      .values(values)
       .onConflictDoUpdate({
         target: [financeInvoices.workspaceSubdomain, financeInvoices.id],
         set: {
-          studentId: record.studentId,
-          studentName: record.studentName ?? '',
-          class: record.class ?? '',
-          session: record.session ?? '',
-          baseFee: String(record.baseFee ?? 0),
-          discountType: record.discountType ?? null,
-          discountValue: String(record.discountValue ?? 0),
-          discountAmt: String(record.discountAmt ?? 0),
-          finalAmt: String(record.finalAmt ?? 0),
-          status: record.status ?? 'pending',
-          dueDate: record.dueDate,
-          paidDate: record.paidDate ?? null,
-          method: record.method ?? null,
-          paidAmt: record.paidAmt != null ? String(record.paidAmt) : null,
-          deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-          deletedBy: record.deletedBy ?? null,
-          deletionReason: record.deletionReason ?? null,
-          updatedAt: new Date(),
+          studentId: values.studentId,
+          studentName: values.studentName,
+          class: values.class,
+          session: values.session,
+          baseFee: values.baseFee,
+          discountType: values.discountType,
+          discountValue: values.discountValue,
+          discountAmt: values.discountAmt,
+          finalAmt: values.finalAmt,
+          status: values.status,
+          dueDate: values.dueDate,
+          paidDate: values.paidDate,
+          method: values.method,
+          paidAmt: values.paidAmt,
+          invoiceNumber: values.invoiceNumber,
+          feeStructureId: values.feeStructureId,
+          billingPeriod: values.billingPeriod,
+          enrollmentId: values.enrollmentId,
+          familyContactId: values.familyContactId,
+          lateFeeAmt: values.lateFeeAmt,
+          creditedAmt: values.creditedAmt,
+          lastRemindedAt: values.lastRemindedAt,
+          reminderCount: values.reminderCount,
+          deletedAt: values.deletedAt,
+          deletedBy: values.deletedBy,
+          deletionReason: values.deletionReason,
+          updatedAt: values.updatedAt,
         },
       });
   });
+  if (record.lines) {
+    await replaceInvoiceLines(tenant, record.id, record.lines);
+  }
 }
 
 export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Promise<void> {
@@ -168,28 +206,7 @@ export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Prom
     await tx
       .insert(financeInvoices)
       .values(
-        records.map((r) => ({
-          id: r.id,
-          workspaceSubdomain: subdomain,
-          studentId: r.studentId,
-          studentName: r.studentName ?? '',
-          class: r.class ?? '',
-          session: r.session ?? '',
-          baseFee: String(r.baseFee ?? 0),
-          discountType: r.discountType ?? null,
-          discountValue: String(r.discountValue ?? 0),
-          discountAmt: String(r.discountAmt ?? 0),
-          finalAmt: String(r.finalAmt ?? 0),
-          status: r.status ?? 'pending',
-          dueDate: r.dueDate,
-          paidDate: r.paidDate ?? null,
-          method: r.method ?? null,
-          paidAmt: r.paidAmt != null ? String(r.paidAmt) : null,
-          deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-          deletedBy: r.deletedBy ?? null,
-          deletionReason: r.deletionReason ?? null,
-          updatedAt: new Date(),
-        })),
+        records.map((r) => invoiceWriteValues(subdomain, r)),
       )
       .onConflictDoUpdate({
         target: [financeInvoices.workspaceSubdomain, financeInvoices.id],
@@ -208,6 +225,15 @@ export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Prom
           paidDate: sql`excluded.paid_date`,
           method: sql`excluded.method`,
           paidAmt: sql`excluded.paid_amt`,
+          invoiceNumber: sql`excluded.invoice_number`,
+          feeStructureId: sql`excluded.fee_structure_id`,
+          billingPeriod: sql`excluded.billing_period`,
+          enrollmentId: sql`excluded.enrollment_id`,
+          familyContactId: sql`excluded.family_contact_id`,
+          lateFeeAmt: sql`excluded.late_fee_amt`,
+          creditedAmt: sql`excluded.credited_amt`,
+          lastRemindedAt: sql`excluded.last_reminded_at`,
+          reminderCount: sql`excluded.reminder_count`,
           deletedAt: sql`excluded.deleted_at`,
           deletedBy: sql`excluded.deleted_by`,
           deletionReason: sql`excluded.deletion_reason`,
@@ -222,30 +248,7 @@ export async function replaceInvoicesForWorkspace(tenant: string, records: Invoi
   await withTenant(subdomain, async (tx) => {
     await tx.delete(financeInvoices).where(eq(financeInvoices.workspaceSubdomain, subdomain));
     if (records.length > 0) {
-      await tx.insert(financeInvoices).values(
-        records.map((r) => ({
-          id: r.id,
-          workspaceSubdomain: subdomain,
-          studentId: r.studentId,
-          studentName: r.studentName ?? '',
-          class: r.class ?? '',
-          session: r.session ?? '',
-          baseFee: String(r.baseFee ?? 0),
-          discountType: r.discountType ?? null,
-          discountValue: String(r.discountValue ?? 0),
-          discountAmt: String(r.discountAmt ?? 0),
-          finalAmt: String(r.finalAmt ?? 0),
-          status: r.status ?? 'pending',
-          dueDate: r.dueDate,
-          paidDate: r.paidDate ?? null,
-          method: r.method ?? null,
-          paidAmt: r.paidAmt != null ? String(r.paidAmt) : null,
-          deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
-          deletedBy: r.deletedBy ?? null,
-          deletionReason: r.deletionReason ?? null,
-          updatedAt: new Date(),
-        })),
-      );
+      await tx.insert(financeInvoices).values(records.map((r) => invoiceWriteValues(subdomain, r)));
     }
   });
 }

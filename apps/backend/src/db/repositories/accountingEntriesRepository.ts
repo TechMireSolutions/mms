@@ -46,6 +46,9 @@ export function entryRowToRecord(
     updatedAt: row.updatedAt.toISOString(),
   };
 
+  if (row.fiscalYearId) entry.fiscal_year_id = row.fiscalYearId;
+  if (row.sourceType) entry.source_type = row.sourceType as JournalEntry['source_type'];
+  if (row.sourceId) entry.source_id = row.sourceId;
   if (row.transactionType) entry.transaction_type = row.transactionType;
   if (row.reversedRef) entry.reversed_ref = row.reversedRef;
   if (row.deletedAt) entry.deletedAt = row.deletedAt.toISOString();
@@ -73,6 +76,9 @@ export async function listEntriesByWorkspace(
         status: accountingEntries.status,
         createdBy: accountingEntries.createdBy,
         fiscalYear: accountingEntries.fiscalYear,
+        fiscalYearId: accountingEntries.fiscalYearId,
+        sourceType: accountingEntries.sourceType,
+        sourceId: accountingEntries.sourceId,
         transactionType: accountingEntries.transactionType,
         reversedRef: accountingEntries.reversedRef,
         simpleMode: accountingEntries.simpleMode,
@@ -177,6 +183,9 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
         status: accountingEntries.status,
         createdBy: accountingEntries.createdBy,
         fiscalYear: accountingEntries.fiscalYear,
+        fiscalYearId: accountingEntries.fiscalYearId,
+        sourceType: accountingEntries.sourceType,
+        sourceId: accountingEntries.sourceId,
         transactionType: accountingEntries.transactionType,
         reversedRef: accountingEntries.reversedRef,
         simpleMode: accountingEntries.simpleMode,
@@ -241,5 +250,28 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
       tags.map((t) => t.tag),
       attachments.map((a) => a.url),
     );
+  });
+}
+
+export async function findEntryIdBySource(
+  tenant: string,
+  sourceType: string,
+  sourceId: string,
+): Promise<string | null> {
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({ id: accountingEntries.id })
+      .from(accountingEntries)
+      .where(
+        and(
+          eq(accountingEntries.workspaceSubdomain, subdomain),
+          eq(accountingEntries.sourceType, sourceType),
+          eq(accountingEntries.sourceId, sourceId),
+          isNull(accountingEntries.deletedAt),
+        ),
+      )
+      .limit(1);
+    return rows[0]?.id ?? null;
   });
 }

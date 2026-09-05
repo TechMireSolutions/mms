@@ -1,5 +1,11 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
+import {
+  invoiceLineInsertSchema,
+  invoiceLineRecordSchema,
+  paymentAllocationInsertSchema,
+  paymentAllocationRecordSchema,
+} from './financeBilling.js';
 
 export const invoiceRecordSchema = z
   .object({
@@ -18,6 +24,16 @@ export const invoiceRecordSchema = z
     paidDate: z.string().nullable().optional(),
     method: z.string().nullable().optional(),
     paidAmt: z.number().nonnegative().optional(),
+    invoiceNumber: z.string().optional(),
+    feeStructureId: z.string().nullable().optional(),
+    billingPeriod: z.string().nullable().optional(),
+    enrollmentId: z.string().nullable().optional(),
+    familyContactId: z.string().nullable().optional(),
+    lateFeeAmt: z.number().nonnegative().optional(),
+    creditedAmt: z.number().nonnegative().optional(),
+    lastRemindedAt: z.string().nullable().optional(),
+    reminderCount: z.number().int().nonnegative().optional(),
+    lines: z.array(invoiceLineRecordSchema).optional(),
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
@@ -46,6 +62,16 @@ export const invoiceRecordInsertSchema = z
     paidDate: z.string().nullable().optional(),
     method: z.string().nullable().optional(),
     paidAmt: z.number().nonnegative().optional(),
+    invoiceNumber: z.string().optional(),
+    feeStructureId: z.string().nullable().optional(),
+    billingPeriod: z.string().nullable().optional(),
+    enrollmentId: z.string().nullable().optional(),
+    familyContactId: z.string().nullable().optional(),
+    lateFeeAmt: z.number().nonnegative().optional(),
+    creditedAmt: z.number().nonnegative().optional(),
+    lastRemindedAt: z.string().nullable().optional(),
+    reminderCount: z.number().int().nonnegative().optional(),
+    lines: z.array(invoiceLineInsertSchema).optional(),
   })
   .strict();
 
@@ -88,6 +114,7 @@ export const paymentRecordSchema = z
     receivedByUserId: z.string().nullable().optional(),
     receivedBy: z.string().nullable().optional(),
     note: z.string().default(''),
+    allocations: z.array(paymentAllocationRecordSchema).optional(),
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
@@ -108,6 +135,7 @@ export const paymentRecordInsertSchema = z
     receivedByUserId: z.string().nullable().optional(),
     receivedBy: z.string().nullable().optional(),
     note: z.string().optional().default(''),
+    allocations: z.array(paymentAllocationInsertSchema).optional(),
   })
   .strict();
 
@@ -185,11 +213,10 @@ export function getOutstandingAmountForInvoice(invoice: Invoice): number {
   if (invoice.status === "cancelled" || invoice.status === "paid") {
     return 0;
   }
-  if (invoice.status === "partial") {
-    const paid = invoice.paidAmt !== undefined && invoice.paidAmt !== null ? invoice.paidAmt : 0;
-    return Math.max(0, invoice.finalAmt - paid);
-  }
-  return invoice.finalAmt;
+  const paid = invoice.paidAmt ?? 0;
+  const late = invoice.lateFeeAmt ?? 0;
+  const credited = invoice.creditedAmt ?? 0;
+  return Math.max(0, invoice.finalAmt + late - credited - paid);
 }
 
 /**

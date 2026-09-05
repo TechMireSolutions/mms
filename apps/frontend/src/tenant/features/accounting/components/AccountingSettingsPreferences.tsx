@@ -9,6 +9,9 @@ import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles
 import { AccountingSettingsCurrencySection } from "./AccountingSettingsCurrencySection";
 import { AccountingSettingsFiscalYearsSection } from "./AccountingSettingsFiscalYearsSection";
 import { AccountingSettingsRulesSection } from "./AccountingSettingsRulesSection";
+import { AccountingSettingsPostingSection } from "./AccountingSettingsPostingSection";
+import { AccountingSettingsOpeningSection } from "./AccountingSettingsOpeningSection";
+import { AccountingSettingsBankRecSection } from "./AccountingSettingsBankRecSection";
 
 type CurrencyOption = {
   code: string;
@@ -28,6 +31,7 @@ interface AccountingSettingsPreferencesProps {
   canEditSetup: boolean;
   onEditFiscalYear: (fiscalYear: Partial<FiscalYear>) => void;
   onDeleteFiscalYear: (fiscalYearId: string) => void;
+  onCloseFiscalYear?: (fiscalYearId: string) => void;
 }
 
 export function AccountingSettingsPreferences({
@@ -42,6 +46,7 @@ export function AccountingSettingsPreferences({
   canEditSetup,
   onEditFiscalYear,
   onDeleteFiscalYear,
+  onCloseFiscalYear,
 }: AccountingSettingsPreferencesProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -83,6 +88,7 @@ export function AccountingSettingsPreferences({
         canEditSetup={canEditSetup}
         onEditFiscalYear={onEditFiscalYear}
         onDeleteFiscalYear={onDeleteFiscalYear}
+        onCloseFiscalYear={onCloseFiscalYear}
       />
 
       <AccountingSettingsRulesSection
@@ -90,6 +96,10 @@ export function AccountingSettingsPreferences({
         settingsDraft={settingsDraft}
         upd={upd}
       />
+
+      <AccountingSettingsPostingSection accounts={accounts} />
+      <AccountingSettingsOpeningSection accounts={accounts} fiscalYears={fiscalYears} />
+      <AccountingSettingsBankRecSection accounts={accounts} />
     </div>
   );
 }

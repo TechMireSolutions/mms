@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, index, boolean, jsonb, primaryKey, varchar, numeric , foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index, boolean, jsonb, primaryKey, varchar, numeric, foreignKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { desc, sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 
@@ -33,6 +33,8 @@ export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
   startDate: varchar('start_date', { length: 10 }).notNull(),
   endDate: varchar('end_date', { length: 10 }).notNull(),
   status: varchar('status', { length: 20 }).notNull().default('upcoming'),
+  closedAt: timestamp('closed_at', { withTimezone: true, mode: 'date' }),
+  closedBy: text('closed_by'),
   deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
   deletedBy: text('deleted_by'),
   deletionReason: text('deletion_reason'),
@@ -56,6 +58,9 @@ export const accountingEntries = pgTable('accounting_entries', {
   status: varchar('status', { length: 20 }).notNull().default('posted'),
   createdBy: varchar('created_by', { length: 120 }).notNull().default(''),
   fiscalYear: varchar('fiscal_year', { length: 64 }).notNull().default(''),
+  fiscalYearId: text('fiscal_year_id'),
+  sourceType: varchar('source_type', { length: 20 }),
+  sourceId: varchar('source_id', { length: 64 }),
   transactionType: varchar('transaction_type', { length: 50 }),
   reversedRef: varchar('reversed_ref', { length: 100 }),
   simpleMode: boolean('simple_mode').notNull().default(false),
@@ -69,6 +74,14 @@ export const accountingEntries = pgTable('accounting_entries', {
   index('accounting_entries_workspace_date_idx').on(table.workspaceSubdomain, table.date),
   index('accounting_entries_workspace_status_idx').on(table.workspaceSubdomain, table.status),
   index('accounting_entries_workspace_fiscal_idx').on(table.workspaceSubdomain, table.fiscalYear),
+  index('accounting_entries_workspace_fiscal_id_idx').on(table.workspaceSubdomain, table.fiscalYearId),
+  uniqueIndex('accounting_entries_workspace_source_uidx')
+    .on(table.workspaceSubdomain, table.sourceType, table.sourceId)
+    .where(sql`${table.sourceType} is not null and ${table.sourceId} is not null and ${table.deletedAt} is null`),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.fiscalYearId],
+    foreignColumns: [accountingFiscalYears.workspaceSubdomain, accountingFiscalYears.id],
+  }),
   index('accounting_entries_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('accounting_entries_workspace_active_idx')
     .on(table.workspaceSubdomain)
@@ -89,6 +102,14 @@ export const accountingJournalLines = pgTable('accounting_journal_lines', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.entryId, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.entryId],
+    foreignColumns: [accountingEntries.workspaceSubdomain, accountingEntries.id],
+  }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.accountId],
+    foreignColumns: [accountingAccounts.workspaceSubdomain, accountingAccounts.id],
+  }),
   index('accounting_lines_workspace_entry_idx').on(table.workspaceSubdomain, table.entryId),
   index('accounting_lines_workspace_account_idx').on(table.workspaceSubdomain, table.accountId),
 ]);

@@ -80,6 +80,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       tags: [selectedType!.tag],
       attachments: [],
       fiscal_year: form.fiscal_year,
+      fiscal_year_id: (fiscalYears || []).find((year) => year.label === form.fiscal_year || year.id === form.fiscal_year)?.id,
       simple_mode: true,
       transaction_type: selectedType!.id,
       lines: [

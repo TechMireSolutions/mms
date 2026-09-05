@@ -6,18 +6,24 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { SectionCard } from "@/components/ui/SectionCard";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import type { FeeStructure } from "@mms/shared";
 import type { InvoiceDraft } from "@/tenant/features/finance/components/invoiceFormDraft";
+import { InvoiceFormStudentPicker } from "@/tenant/features/finance/components/InvoiceFormStudentPicker";
 
 export interface InvoiceFormFieldsSectionProps {
   t: TranslationFunction;
   draft: InvoiceDraft;
   onFieldChange: (key: keyof InvoiceDraft, value: string) => void;
+  feeStructures?: FeeStructure[];
+  onApplyFeeStructure?: (structureId: string) => void;
 }
 
 export const InvoiceFormFieldsSection = (function InvoiceFormFieldsSection({
   t,
   draft,
   onFieldChange,
+  feeStructures = [],
+  onApplyFeeStructure,
 }: InvoiceFormFieldsSectionProps): React.JSX.Element {
 
       return (
@@ -30,6 +36,34 @@ export const InvoiceFormFieldsSection = (function InvoiceFormFieldsSection({
           >
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {feeStructures.length > 0 && (
+                <div className="sm:col-span-2">
+                  <label className={FORM_LABEL} htmlFor="invoice-fee-structure">
+                    {t("finance.form.feeStructure")}
+                  </label>
+                  <FormSelect
+                    id="invoice-fee-structure"
+                    name="feeStructureId"
+                    value={draft.feeStructureId}
+                    onChange={(value) => onApplyFeeStructure?.(value)}
+                    options={[
+                      { value: "", label: t("common.none") },
+                      ...feeStructures.map((structure) => ({
+                        value: structure.id,
+                        label: structure.name,
+                      })),
+                    ]}
+                  />
+                </div>
+              )}
+              <InvoiceFormStudentPicker
+                t={t}
+                studentId={draft.studentId}
+                onPick={(id, name) => {
+                  onFieldChange("studentId", id);
+                  if (name) onFieldChange("studentName", name);
+                }}
+              />
               <div>
                 <label className={FORM_LABEL} htmlFor="invoice-student-name">
                   {t("finance.form.studentName")}

@@ -28,6 +28,16 @@ vi.mock('../services/websocketService.js', () => ({
   broadcastTenantUpdate: vi.fn(),
 }));
 
+vi.mock('../db/repositories/financeBillingRepository.js', () => ({
+  allocateNextInvoiceNumber: vi.fn().mockResolvedValue('INV-2026-0001'),
+  replacePaymentAllocations: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../accounting/ledgerPosting/ledgerPostingService.js', () => ({
+  tryPostInvoiceJournal: vi.fn().mockResolvedValue(undefined),
+  tryPostPaymentJournal: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { createPayment } from '../services/financeService.js';
 
 const invoice: Invoice = {

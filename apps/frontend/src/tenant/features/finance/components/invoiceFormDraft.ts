@@ -9,6 +9,7 @@ export interface InvoiceDraft {
   discountType: string;
   discountValue: string;
   dueDate: string;
+  feeStructureId: string;
 }
 
 export function nextInvoiceId(prefix: string): string {
@@ -28,6 +29,7 @@ export function createInitialDraft(dueDays: string): InvoiceDraft {
     discountType: "",
     discountValue: "0",
     dueDate: dueDate.toISOString().slice(0, 10) || todayISO(),
+    feeStructureId: "",
   };
 }
 
@@ -41,6 +43,7 @@ export function computeInvoiceAmounts(baseFeeRaw: string, discountValueRaw: stri
 
 export function canSaveInvoiceDraft(draft: InvoiceDraft, baseFee: number): boolean {
   return (
+    draft.studentId.trim().length > 0 &&
     draft.studentName.trim().length > 0 &&
     draft.class.trim().length > 0 &&
     draft.session.trim().length > 0 &&

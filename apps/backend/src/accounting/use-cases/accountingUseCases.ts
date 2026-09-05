@@ -22,6 +22,7 @@ import {
   journalEntryRecordSchema,
   accountRecordSchema,
 } from '@mms/shared';
+import { prepareJournalEntryForPersist } from './accountingLedgerGuards.js';
 
 const EMPTY_ACCOUNTING_METRICS: AccountingCommandMetricsSnapshot = {
   totalEntries: 0,
@@ -120,13 +121,22 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
 
     upsertAccounts: (accounts: Account[]) =>
       upsertWithBroadcast(accountListSchema, accounts, repo.bulkSaveAccounts, 'accounting_accounts'),
-    upsertEntries: (entries: JournalEntry[]) =>
-      upsertWithBroadcast(journalEntryListSchema, entries, repo.bulkSaveEntries, 'accounting_entries'),
+    upsertEntries: async (entries: JournalEntry[]) => {
+      const fiscalYears = await fiscalYearService.load();
+      const prepared = entries.map((entry) => prepareJournalEntryForPersist(entry, fiscalYears));
+      return upsertWithBroadcast(journalEntryListSchema, prepared, repo.bulkSaveEntries, 'accounting_entries');
+    },
     upsertFiscalYears: (fiscalYears: FiscalYear[]) =>
       upsertWithBroadcast(fiscalYearListSchema, fiscalYears, repo.bulkSaveFiscalYears, 'accounting_fiscal_years'),
 
-    createJournalEntry: entryCrud.create,
-    updateJournalEntryById: entryCrud.updateById,
+    createJournalEntry: async (record: JournalEntry) => {
+      const fiscalYears = await fiscalYearService.load();
+      return entryCrud.create(prepareJournalEntryForPersist(record, fiscalYears));
+    },
+    updateJournalEntryById: async (id: string, record: JournalEntry) => {
+      const fiscalYears = await fiscalYearService.load();
+      return entryCrud.updateById(id, prepareJournalEntryForPersist(record, fiscalYears));
+    },
     restoreJournalEntryById: entryCrud.restoreById,
     bulkRestoreJournalEntries: entryCrud.bulkRestoreByIds,
 

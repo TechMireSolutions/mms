@@ -20,7 +20,8 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
   const { t } = useTranslation();
   const { user } = useAuth();
   const isEdit = !!initial?.id;
-  const activeFiscalYear = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
+  const activeFiscalYearRecord = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active");
+  const activeFiscalYear = activeFiscalYearRecord?.id || "";
 
   const [form, setForm] = useState<DraftForm>(() => {
     return initial
@@ -36,7 +37,8 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
           status: "draft",
           tags: [],
           attachments: [],
-          fiscal_year: activeFiscalYear,
+          fiscal_year: activeFiscalYearRecord?.label || "",
+          fiscal_year_id: activeFiscalYear,
           lines: [EMPTY_LINE(), EMPTY_LINE()],
           created_by: user?.name ?? ""
         };
@@ -58,13 +60,14 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
           status: "draft",
           tags: [],
           attachments: [],
-          fiscal_year: activeFiscalYear,
+          fiscal_year: activeFiscalYearRecord?.label || "",
+          fiscal_year_id: activeFiscalYear,
           lines: [EMPTY_LINE(), EMPTY_LINE()],
           created_by: user?.name ?? ""
         };
     setForm(base);
     setErrors({});
-  }, [initial, activeFiscalYear, user?.name]);
+  }, [initial, activeFiscalYear, activeFiscalYearRecord?.label, user?.name]);
 
   const totalDebit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.debit) || 0), 0);
   const totalCredit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.credit) || 0), 0);

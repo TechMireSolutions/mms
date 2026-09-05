@@ -2,11 +2,16 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { type JournalEntry } from '@mms/shared';
 import {
   accountingAccounts,
+  accountingBankReconciliations,
+  accountingBankStatementLines,
+  accountingBankStatements,
   accountingEntries,
   accountingFiscalYears,
   accountingJournalLines,
   accountingEntryTags,
   accountingEntryAttachments,
+  accountingOpeningBalances,
+  accountingPostingRules,
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -82,23 +87,7 @@ export async function saveEntry(tenant: string, record: JournalEntry): Promise<v
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(accountingEntries)
-      .values({
-        id: record.id,
-        workspaceSubdomain: subdomain,
-        date: record.date,
-        ref: record.ref ?? '',
-        description: record.description ?? '',
-        status: record.status ?? 'posted',
-        createdBy: record.created_by ?? '',
-        fiscalYear: record.fiscal_year ?? '',
-        transactionType: record.transaction_type ?? null,
-        reversedRef: record.reversed_ref ?? null,
-        simpleMode: record.simple_mode ?? false,
-        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-        deletedBy: record.deletedBy ?? null,
-        deletionReason: record.deletionReason ?? null,
-        updatedAt: new Date(),
-      })
+      .values(entryInsertValues(subdomain, record))
       .onConflictDoUpdate({
         target: [accountingEntries.workspaceSubdomain, accountingEntries.id],
         set: {
@@ -108,6 +97,9 @@ export async function saveEntry(tenant: string, record: JournalEntry): Promise<v
           status: record.status ?? 'posted',
           createdBy: record.created_by ?? '',
           fiscalYear: record.fiscal_year ?? '',
+          fiscalYearId: record.fiscal_year_id || null,
+          sourceType: record.source_type ?? null,
+          sourceId: record.source_id || null,
           transactionType: record.transaction_type ?? null,
           reversedRef: record.reversed_ref ?? null,
           simpleMode: record.simple_mode ?? false,
@@ -133,6 +125,9 @@ function entryInsertValues(subdomain: string, record: JournalEntry) {
     status: record.status ?? 'posted',
     createdBy: record.created_by ?? '',
     fiscalYear: record.fiscal_year ?? '',
+    fiscalYearId: record.fiscal_year_id || null,
+    sourceType: record.source_type ?? null,
+    sourceId: record.source_id || null,
     transactionType: record.transaction_type ?? null,
     reversedRef: record.reversed_ref ?? null,
     simpleMode: record.simple_mode ?? false,
@@ -163,6 +158,9 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
           status: sql.raw('excluded.status'),
           createdBy: sql.raw('excluded.created_by'),
           fiscalYear: sql.raw('excluded.fiscal_year'),
+          fiscalYearId: sql.raw('excluded.fiscal_year_id'),
+          sourceType: sql.raw('excluded.source_type'),
+          sourceId: sql.raw('excluded.source_id'),
           transactionType: sql.raw('excluded.transaction_type'),
           reversedRef: sql.raw('excluded.reversed_ref'),
           simpleMode: sql.raw('excluded.simple_mode'),
@@ -252,25 +250,7 @@ export async function replaceEntriesForWorkspace(tenant: string, records: Journa
 
     if (records.length === 0) return;
 
-    await tx.insert(accountingEntries).values(
-      records.map((record) => ({
-        id: record.id,
-        workspaceSubdomain: subdomain,
-        date: record.date,
-        ref: record.ref ?? '',
-        description: record.description ?? '',
-        status: record.status ?? 'posted',
-        createdBy: record.created_by ?? '',
-        fiscalYear: record.fiscal_year ?? '',
-        transactionType: record.transaction_type ?? null,
-        reversedRef: record.reversed_ref ?? null,
-        simpleMode: record.simple_mode ?? false,
-        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-        deletedBy: record.deletedBy ?? null,
-        deletionReason: record.deletionReason ?? null,
-        updatedAt: new Date(),
-      })),
-    );
+    await tx.insert(accountingEntries).values(records.map((record) => entryInsertValues(subdomain, record)));
 
     const allLines = records.flatMap((record) =>
       (record.lines ?? []).map((l) => ({
@@ -314,6 +294,11 @@ export async function replaceEntriesForWorkspace(tenant: string, records: Journa
 export async function deleteAccountingByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
+    await tx.delete(accountingBankReconciliations).where(eq(accountingBankReconciliations.workspaceSubdomain, subdomain));
+    await tx.delete(accountingBankStatementLines).where(eq(accountingBankStatementLines.workspaceSubdomain, subdomain));
+    await tx.delete(accountingBankStatements).where(eq(accountingBankStatements.workspaceSubdomain, subdomain));
+    await tx.delete(accountingOpeningBalances).where(eq(accountingOpeningBalances.workspaceSubdomain, subdomain));
+    await tx.delete(accountingPostingRules).where(eq(accountingPostingRules.workspaceSubdomain, subdomain));
     await tx.delete(accountingEntryAttachments).where(eq(accountingEntryAttachments.workspaceSubdomain, subdomain));
     await tx.delete(accountingEntryTags).where(eq(accountingEntryTags.workspaceSubdomain, subdomain));
     await tx.delete(accountingJournalLines).where(eq(accountingJournalLines.workspaceSubdomain, subdomain));

@@ -16,6 +16,8 @@ export function fiscalYearRowToRecord(row: FiscalYearRow): FiscalYear {
     updatedAt: row.updatedAt.toISOString(),
   };
 
+  if (row.closedAt) fiscalYear.closedAt = row.closedAt.toISOString();
+  if (row.closedBy) fiscalYear.closedBy = row.closedBy;
   if (row.deletedAt) fiscalYear.deletedAt = row.deletedAt.toISOString();
   if (row.deletedBy) fiscalYear.deletedBy = row.deletedBy;
   if (row.deletionReason) fiscalYear.deletionReason = row.deletionReason;
@@ -34,6 +36,8 @@ export async function listFiscalYearsByWorkspace(tenant: string): Promise<Fiscal
         startDate: accountingFiscalYears.startDate,
         endDate: accountingFiscalYears.endDate,
         status: accountingFiscalYears.status,
+        closedAt: accountingFiscalYears.closedAt,
+        closedBy: accountingFiscalYears.closedBy,
         deletedAt: accountingFiscalYears.deletedAt,
         deletedBy: accountingFiscalYears.deletedBy,
         deletionReason: accountingFiscalYears.deletionReason,
@@ -57,6 +61,8 @@ export async function findFiscalYearById(tenant: string, id: string): Promise<Fi
         startDate: accountingFiscalYears.startDate,
         endDate: accountingFiscalYears.endDate,
         status: accountingFiscalYears.status,
+        closedAt: accountingFiscalYears.closedAt,
+        closedBy: accountingFiscalYears.closedBy,
         deletedAt: accountingFiscalYears.deletedAt,
         deletedBy: accountingFiscalYears.deletedBy,
         deletionReason: accountingFiscalYears.deletionReason,
@@ -83,6 +89,8 @@ export async function saveFiscalYear(tenant: string, record: FiscalYear): Promis
         startDate: record.startDate,
         endDate: record.endDate,
         status: record.status ?? 'upcoming',
+        closedAt: record.closedAt ? new Date(record.closedAt) : null,
+        closedBy: record.closedBy ?? null,
         deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
         deletedBy: record.deletedBy ?? null,
         deletionReason: record.deletionReason ?? null,
@@ -95,6 +103,8 @@ export async function saveFiscalYear(tenant: string, record: FiscalYear): Promis
           startDate: record.startDate,
           endDate: record.endDate,
           status: record.status ?? 'upcoming',
+          closedAt: record.closedAt ? new Date(record.closedAt) : null,
+          closedBy: record.closedBy ?? null,
           deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
           deletedBy: record.deletedBy ?? null,
           deletionReason: record.deletionReason ?? null,
@@ -118,6 +128,8 @@ export async function bulkSaveFiscalYears(tenant: string, records: FiscalYear[])
           startDate: r.startDate,
           endDate: r.endDate,
           status: r.status ?? 'upcoming',
+          closedAt: r.closedAt ? new Date(r.closedAt) : null,
+          closedBy: r.closedBy ?? null,
           deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
           deletedBy: r.deletedBy ?? null,
           deletionReason: r.deletionReason ?? null,
@@ -131,6 +143,8 @@ export async function bulkSaveFiscalYears(tenant: string, records: FiscalYear[])
           startDate: sql`excluded.start_date`,
           endDate: sql`excluded.end_date`,
           status: sql`excluded.status`,
+          closedAt: sql`excluded.closed_at`,
+          closedBy: sql`excluded.closed_by`,
           deletedAt: sql`excluded.deleted_at`,
           deletedBy: sql`excluded.deleted_by`,
           deletionReason: sql`excluded.deletion_reason`,
@@ -153,6 +167,8 @@ export async function replaceFiscalYearsForWorkspace(tenant: string, records: Fi
           startDate: r.startDate,
           endDate: r.endDate,
           status: r.status ?? 'upcoming',
+          closedAt: r.closedAt ? new Date(r.closedAt) : null,
+          closedBy: r.closedBy ?? null,
           deletedAt: r.deletedAt ? new Date(r.deletedAt) : null,
           deletedBy: r.deletedBy ?? null,
           deletionReason: r.deletionReason ?? null,

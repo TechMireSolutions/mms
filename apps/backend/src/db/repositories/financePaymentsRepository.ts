@@ -1,6 +1,13 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import { type Payment } from '@mms/shared';
-import { financeInvoices, financePayments } from '../schema.js';
+import {
+  financeFeeItems,
+  financeFeeStructures,
+  financeInvoiceLines,
+  financeInvoices,
+  financePaymentAllocations,
+  financePayments,
+} from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
 type PaymentRow = typeof financePayments.$inferSelect;
@@ -222,7 +229,11 @@ export async function deletePayment(tenant: string, id: string): Promise<void> {
 export async function deleteFinanceByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
+    await tx.delete(financePaymentAllocations).where(eq(financePaymentAllocations.workspaceSubdomain, subdomain));
+    await tx.delete(financeInvoiceLines).where(eq(financeInvoiceLines.workspaceSubdomain, subdomain));
     await tx.delete(financePayments).where(eq(financePayments.workspaceSubdomain, subdomain));
     await tx.delete(financeInvoices).where(eq(financeInvoices.workspaceSubdomain, subdomain));
+    await tx.delete(financeFeeItems).where(eq(financeFeeItems.workspaceSubdomain, subdomain));
+    await tx.delete(financeFeeStructures).where(eq(financeFeeStructures.workspaceSubdomain, subdomain));
   });
 }

@@ -22,11 +22,16 @@ describe('erdCatalog', () => {
     const accounting = getErdDomain('accounting');
     expect(listErdTableNames(accounting.tables)).toEqual([
       'accounting_accounts',
+      'accounting_bank_reconciliations',
+      'accounting_bank_statement_lines',
+      'accounting_bank_statements',
       'accounting_entries',
       'accounting_entry_attachments',
       'accounting_entry_tags',
       'accounting_fiscal_years',
       'accounting_journal_lines',
+      'accounting_opening_balances',
+      'accounting_posting_rules',
     ]);
   });
 
@@ -43,9 +48,11 @@ describe('erdCatalog', () => {
   it('filters a domain ERD to a table and its one-hop neighbors', () => {
     const filtered = filterErdDomainByTable(getErdDomain('accounting'), 'accounting_entries');
     expect(listErdTableNames(filtered.tables)).toEqual([
+      'accounting_bank_reconciliations',
       'accounting_entries',
       'accounting_entry_attachments',
       'accounting_entry_tags',
+      'accounting_fiscal_years',
       'accounting_journal_lines',
     ]);
     expect(filtered.relationships.every((rel) => rel.fromTable === 'accounting_entries' || rel.toTable === 'accounting_entries')).toBe(true);
@@ -83,5 +90,6 @@ describe('erdCatalog', () => {
     expect(source).toContain('text account_id FK');
     expect(source).toMatch(/accounting_journal_lines \}o--\|\| accounting_entries : entry_id/);
     expect(source).toMatch(/accounting_journal_lines \}o--\|\| accounting_accounts : account_id/);
+    expect(source).toMatch(/accounting_entries \}o--\|\| accounting_fiscal_years : fiscal_year_id/);
   });
 });

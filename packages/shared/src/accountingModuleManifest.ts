@@ -1,5 +1,6 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
+import { JOURNAL_SOURCE_TYPES } from './accountingLedgerInvariants.js';
 
 export const accountRecordSchema = z
   .object({
@@ -60,6 +61,9 @@ export const journalEntryRecordSchema = z
     tags: z.array(z.string()).default([]),
     attachments: z.array(z.string()).default([]),
     fiscal_year: z.string().default(''),
+    fiscal_year_id: z.string().optional(),
+    source_type: z.enum(JOURNAL_SOURCE_TYPES).optional(),
+    source_id: z.string().optional(),
     lines: z.array(journalLineRecordSchema).default([]),
     transaction_type: z.string().optional(),
     reversed_ref: z.string().nullable().optional(),
@@ -83,6 +87,9 @@ export const journalEntryRecordInsertSchema = z
     tags: z.array(z.string()).optional().default([]),
     attachments: z.array(z.string()).optional().default([]),
     fiscal_year: z.string().optional().default(''),
+    fiscal_year_id: z.string().optional(),
+    source_type: z.enum(JOURNAL_SOURCE_TYPES).optional(),
+    source_id: z.string().optional(),
     lines: z.array(journalLineRecordSchema).optional().default([]),
     transaction_type: z.string().nullable().optional(),
     reversed_ref: z.string().nullable().optional(),
@@ -104,6 +111,8 @@ export const fiscalYearRecordSchema = z
     startDate: z.string(),
     endDate: z.string(),
     status: z.enum(['active', 'closed', 'upcoming']).default('upcoming'),
+    closedAt: z.string().nullable().optional(),
+    closedBy: z.string().nullable().optional(),
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
