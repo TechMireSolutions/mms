@@ -6,6 +6,7 @@ import { INITIAL_STUDENT_FIELD_SEED } from './moduleFieldSetupPersons.js';
 import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
 import type { Student } from './studentTypes.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
+import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 
 const helpers = createFormCustomFieldHelpers(INITIAL_STUDENT_FIELD_SEED);
 
@@ -14,6 +15,49 @@ const helpers = createFormCustomFieldHelpers(INITIAL_STUDENT_FIELD_SEED);
  */
 export function listStudentSystemFormFieldKeys(): ReadonlySet<string> {
   return helpers.listSystemFormFieldKeys();
+}
+
+/**
+ * Deep-clone {@link INITIAL_STUDENT_FIELD_SEED} for defaults and Setup overlays.
+ */
+export function cloneStudentFieldSeed(): Record<string, FieldDefinition[]> {
+  const next: Record<string, FieldDefinition[]> = {};
+  for (const [tabId, fields] of Object.entries(INITIAL_STUDENT_FIELD_SEED)) {
+    next[tabId] = fields.map((field) => ({ ...field }));
+  }
+  return next;
+}
+
+/**
+ * Normalize Students `settings.fields` to a tabbed Setup Fields map for column sync.
+ * Flat legacy `{ fieldId: { enabled } }` overlays onto {@link INITIAL_STUDENT_FIELD_SEED}.
+ */
+export function resolveStudentFieldsMapForColumnSync(
+  fields: Record<string, unknown> | undefined,
+): Readonly<Record<string, FieldDefinition[]>> {
+  if (!fields || typeof fields !== 'object') {
+    return cloneStudentFieldSeed();
+  }
+  const entries = Object.entries(fields);
+  if (entries.length > 0 && entries.every(([, value]) => Array.isArray(value))) {
+    return fields as Record<string, FieldDefinition[]>;
+  }
+
+  const flat = getFlatFieldsConfig(fields);
+  const tabbed = cloneStudentFieldSeed();
+  for (const tabFields of Object.values(tabbed)) {
+    for (let index = 0; index < tabFields.length; index += 1) {
+      const field = tabFields[index];
+      const flags = flat[field.key];
+      if (!flags) continue;
+      tabFields[index] = {
+        ...field,
+        enabled: flags.enabled,
+        required: flags.required || field.required,
+      };
+    }
+  }
+  return tabbed;
 }
 
 /**

@@ -28,6 +28,27 @@ export function getFlatFieldsConfig(
 ): Record<string, { enabled: boolean; required: boolean }> {
   const result: Record<string, { enabled: boolean; required: boolean }> = {};
   if (!fields) return result;
+
+  const isDirectFlat = Object.values(fields).some(
+    (val) =>
+      val &&
+      typeof val === "object" &&
+      !Array.isArray(val) &&
+      ("enabled" in val || "required" in val),
+  );
+  if (isDirectFlat) {
+    for (const [key, config] of Object.entries(fields)) {
+      if (config && typeof config === "object" && !Array.isArray(config)) {
+        const c = config as { enabled?: boolean; required?: boolean };
+        result[key] = {
+          enabled: c.enabled !== false,
+          required: Boolean(c.required),
+        };
+      }
+    }
+    return result;
+  }
+
   for (const list of Object.values(fields)) {
     if (Array.isArray(list)) {
       for (const field of list) {

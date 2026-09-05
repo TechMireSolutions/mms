@@ -253,10 +253,19 @@ ensure_ports_free() {
   [ "$ok" = true ] || die "Ports not free — run: lsof -iTCP:$BACKEND_PORT,$FRONTEND_PORT -sTCP:LISTEN"
 }
 
+http_check_ok() {
+  local url="$1"
+  if command -v curl &>/dev/null; then
+    curl -sf --max-time 3 "$url" >/dev/null 2>&1
+  else
+    node -e "fetch(process.argv[1], { signal: AbortSignal.timeout(3000) }).then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))" "$url" >/dev/null 2>&1
+  fi
+}
+
 wait_for_http() {
   local url="$1" label="$2" max="${3:-45}" i=1
   while [ "$i" -le "$max" ]; do
-    if curl -sf --max-time 3 "$url" >/dev/null 2>&1; then
+    if http_check_ok "$url"; then
       ok "$label healthy ($url)"
       return 0
     fi
@@ -430,13 +439,13 @@ show_status() {
 
   if [ -n "$be" ]; then
     ok "Backend:  pid $be  http://localhost:$BACKEND_PORT/health"
-    curl -sf --max-time 3 "http://localhost:$BACKEND_PORT/health" 2>/dev/null && echo "" || warn "Backend health check failed"
+    http_check_ok "http://localhost:$BACKEND_PORT/health" && echo "" || warn "Backend health check failed"
   else
     warn "Backend:  not listening on port $BACKEND_PORT"
   fi
   if [ -n "$fe" ]; then
     ok "Frontend: pid $fe  http://localhost:$FRONTEND_PORT"
-    curl -sf --max-time 3 -o /dev/null "http://localhost:$FRONTEND_PORT/" 2>/dev/null \
+    http_check_ok "http://localhost:$FRONTEND_PORT/" \
       && ok "Frontend HTTP check passed" \
       || warn "Frontend port open but HTTP check failed"
   else

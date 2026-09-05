@@ -2,8 +2,10 @@ import {
   type StudentsSettings,
   type TeachersSettings,
 } from './settingsTypes.js';
-import type { FieldDefinition } from './contactTypes.js';
-import { listEnabledCustomStudentFormFields } from './studentFormCustomFields.js';
+import {
+  listEnabledCustomStudentFormFields,
+  resolveStudentFieldsMapForColumnSync,
+} from './studentFormCustomFields.js';
 import { syncStudentColumnRegistryWithFields } from './studentColumnRegistrySync.js';
 import { syncTeacherColumnRegistryWithFields } from './teacherColumnRegistrySync.js';
 import {
@@ -11,6 +13,7 @@ import {
   resolveTeacherFieldsMapForColumnSync,
 } from './teacherFormCustomFields.js';
 import { resolveTeacherEnabledTabIds } from './teacherEnabledTabs.js';
+import { resolveStudentEnabledTabIds } from './studentSetupConfigTypes.js';
 import {
   DEFAULT_STUDENT_COLUMN_REGISTRY,
   DEFAULT_TEACHER_COLUMN_REGISTRY,
@@ -140,9 +143,9 @@ export function buildStudentWorkColumnRegistry(
   settings: StudentsSettings,
   labels: StudentWorkColumnLabels,
 ): ModuleColumnRegistryEntry[] {
-  const fields = (settings.fields ?? {}) as Record<string, FieldDefinition[]>;
-  const enabledTabs = Array.isArray(settings.enabledTabs) ? settings.enabledTabs : ['registration'];
-  const storedRegistry = Array.isArray(settings.columnRegistry) ? settings.columnRegistry : undefined;
+  const fields = resolveStudentFieldsMapForColumnSync(settings?.fields);
+  const enabledTabs = resolveStudentEnabledTabIds(settings);
+  const storedRegistry = Array.isArray(settings?.columnRegistry) ? settings.columnRegistry : undefined;
   const synced = syncStudentColumnRegistryWithFields(
     storedRegistry ?? DEFAULT_STUDENT_COLUMN_REGISTRY,
     fields,

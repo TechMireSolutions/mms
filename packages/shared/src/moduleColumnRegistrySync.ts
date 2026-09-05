@@ -115,10 +115,13 @@ export function syncModuleColumnRegistryWithFields(
   }
 
   const fieldLookup = new Map<string, FieldDefinition>();
-  for (const [tabId, tabFields] of Object.entries(fields)) {
-    const tabKey = tabId.toLowerCase();
-    for (const field of tabFields || []) {
-      fieldLookup.set(`${tabKey}:${field.key}`, field);
+  if (fields && typeof fields === 'object') {
+    for (const [tabId, tabFields] of Object.entries(fields)) {
+      if (!Array.isArray(tabFields)) continue;
+      const tabKey = tabId.toLowerCase();
+      for (const field of tabFields) {
+        fieldLookup.set(`${tabKey}:${field.key}`, field);
+      }
     }
   }
 

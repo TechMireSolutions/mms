@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { syncStudentColumnRegistryWithFields } from './studentColumnRegistrySync.js';
+import { buildStudentWorkColumnRegistry } from './moduleColumnCore.js';
 import { DEFAULT_STUDENT_COLUMN_REGISTRY } from './moduleFieldSetupPersons.js';
 import type { FieldDefinition } from './contactTypes.js';
+import type { StudentsSettings } from './settingsTypes.js';
 
 const baseFields: Record<string, FieldDefinition[]> = {
   basic: [
@@ -50,5 +52,38 @@ describe('syncStudentColumnRegistryWithFields', () => {
       ['registration'],
     );
     expect(withoutCustom.find((col) => col.key === 'custom:scholarship')).toBeUndefined();
+  });
+
+  it('builds student work column registry with flat legacy settings without throwing', () => {
+    const flatSettings: StudentsSettings = {
+      autoGenerateId: true,
+      grNumberTemplate: '{seq}-{year}',
+      grNumberDigits: 4,
+      grNumberRestartAnnually: true,
+      fields: {
+        gender: { enabled: true, required: true },
+        dob: { enabled: false, required: false },
+        contactRelationships: { enabled: true, required: false },
+        registeredDate: { enabled: true, required: true },
+      },
+    };
+    const labels = {
+      name: 'Name',
+      grNumber: 'GR #',
+      gender: 'Gender',
+      phone: 'Phone',
+      email: 'Email',
+      dob: 'DOB',
+      parents: 'Parents',
+      status: 'Status',
+      registeredDate: 'Reg Date',
+      notes: 'Notes',
+    };
+    const cols = buildStudentWorkColumnRegistry(flatSettings, labels);
+    expect(cols.length).toBeGreaterThan(0);
+    const dobCol = cols.find((c) => c.key === 'dob');
+    expect(dobCol?.enabled).toBe(false);
+    const nameCol = cols.find((c) => c.key === 'name');
+    expect(nameCol?.fixed).toBe(true);
   });
 });
