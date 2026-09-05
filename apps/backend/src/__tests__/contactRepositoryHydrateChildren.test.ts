@@ -73,26 +73,35 @@ describe('contactRepositoryHydrateChildren', () => {
     expect(result.bankDetailsMap.get('c1')).toEqual([mockBankDetails[0]]);
   });
 
-  it('loadContactSummaryChildMaps queries only 4 collections and returns empty maps for remaining', async () => {
+  it('loadContactSummaryChildMaps queries only 6 collections and returns empty maps for remaining', async () => {
     const mockPhones = [{ id: 'p1', contactId: 'c1', number: '+1234567890' }];
     const mockEmails = [{ id: 'e1', contactId: 'c1', address: 'c1@test.com' }];
     const mockAddresses = [{ id: 'a1', contactId: 'c1', line1: '456 Side St' }];
     const mockTags = [{ id: 't1', contactId: 'c1', name: 'Staff' }];
+    const mockSocials = [{ id: 's1', contactId: 'c1', platform: 'twitter' }];
+    const mockRelationships = [{ id: 'r1', contactId: 'c1', relationship: 'Parent' }];
 
-    const tx = createMockTx([mockPhones, mockEmails, mockAddresses, mockTags]);
+    const tx = createMockTx([
+      mockPhones,
+      mockEmails,
+      mockAddresses,
+      mockTags,
+      mockSocials,
+      mockRelationships,
+    ]);
 
     const result = await loadContactSummaryChildMaps(tx, 'test-subdomain', ['c1']);
 
-    expect(tx.select).toHaveBeenCalledTimes(4);
+    expect(tx.select).toHaveBeenCalledTimes(6);
     expect(result.phonesMap.get('c1')).toEqual([mockPhones[0]]);
     expect(result.emailsMap.get('c1')).toEqual([mockEmails[0]]);
     expect(result.addressesMap.get('c1')).toEqual([mockAddresses[0]]);
     expect(result.tagsMap.get('c1')).toEqual([mockTags[0]]);
-    expect(result.socialsMap.size).toBe(0);
+    expect(result.socialsMap.get('c1')).toEqual([mockSocials[0]]);
+    expect(result.relationshipsMap.get('c1')).toEqual([mockRelationships[0]]);
     expect(result.educationsMap.size).toBe(0);
     expect(result.experiencesMap.size).toBe(0);
     expect(result.skillsMap.size).toBe(0);
-    expect(result.relationshipsMap.size).toBe(0);
     expect(result.activitiesMap.size).toBe(0);
     expect(result.attachmentsMap.size).toBe(0);
     expect(result.bankDetailsMap.size).toBe(0);

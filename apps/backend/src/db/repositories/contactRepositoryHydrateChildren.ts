@@ -350,7 +350,7 @@ export async function loadContactChildMaps(
 
 /**
  * Lean child maps for contact directory listings (table/card views).
- * Queries only phones, emails, addresses, and tags (4 queries instead of 12).
+ * Queries only phones, emails, addresses, tags, socials, and relationships (6 queries instead of 12).
  */
 export async function loadContactSummaryChildMaps(
   tx: Transaction,
