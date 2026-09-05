@@ -1,5 +1,5 @@
 import React from "react";
-import type { ChangeEvent, FormEvent, RefObject } from "react";
+import type { ChangeEvent, RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -32,11 +32,8 @@ export interface ContactDetailDrawerContentProps {
   onEmail?: (contacts: Contact[]) => void;
   onNavigateToContact: (targetId: string | number) => void;
   activities: Contact["activities"];
-  noteText: string;
-  noteInputId: string;
   canPersistContact: boolean;
-  onNoteTextChange: (value: string) => void;
-  onAddNote: (event: FormEvent) => Promise<void>;
+  onAddNote: (content: string) => Promise<boolean | void>;
   isDragging: boolean;
   isUploading: boolean;
   fileInputRef: RefObject<HTMLInputElement | null>;
@@ -60,10 +57,7 @@ export function ContactDetailDrawerContent({
   onEmail,
   onNavigateToContact,
   activities,
-  noteText,
-  noteInputId,
   canPersistContact,
-  onNoteTextChange,
   onAddNote,
   isDragging,
   isUploading,
@@ -107,10 +101,7 @@ export function ContactDetailDrawerContent({
         {activeTab === "timeline" && (
           <ContactDetailTimeline
             activities={activities || []}
-            noteText={noteText}
-            noteInputId={noteInputId}
             canPersistContact={canPersistContact}
-            onNoteTextChange={onNoteTextChange}
             onAddNote={onAddNote}
           />
         )}

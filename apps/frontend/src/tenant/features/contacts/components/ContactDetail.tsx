@@ -25,6 +25,7 @@ export interface ContactDetailProps {
   canWrite?: boolean;
   canDelete?: boolean;
   onRestore?: (contactId: string | number) => void | Promise<void>;
+  onNavigateToContact?: (contactId: string | number) => void;
 }
 
 /**
@@ -43,15 +44,13 @@ export function ContactDetail({
   canWrite = false,
   canDelete = false,
   onRestore,
+  onNavigateToContact,
 }: ContactDetailProps): React.JSX.Element {
   const { t } = useTranslation();
 
   const {
     contactState,
     setContactState,
-    noteText,
-    setNoteText,
-    noteInputId,
     canPersistContact,
     detailTabs,
     activeTab,
@@ -69,6 +68,7 @@ export function ContactDetail({
     allContacts,
     onUpdateContact,
     canWrite,
+    onNavigateToContact,
   });
 
   const displayName = getDisplayName(contactState);
@@ -139,10 +139,7 @@ export function ContactDetail({
         onEmail={onEmail}
         onNavigateToContact={handleNavigateToContact}
         activities={combinedActivities}
-        noteText={noteText}
-        noteInputId={noteInputId}
         canPersistContact={canPersistContact}
-        onNoteTextChange={setNoteText}
         onAddNote={handleAddNote}
         isDragging={isDragging}
         isUploading={isUploading}

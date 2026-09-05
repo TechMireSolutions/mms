@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useMemo } from "react";
 import { Users as UsersIcon } from "lucide-react";
 import {
   getDisplayName,
@@ -45,8 +45,14 @@ export function ContactDetailNetwork({
   onEmail,
 }: ContactDetailNetworkProps): React.JSX.Element {
   const { t } = useTranslation();
-  const links = mergeStoredAndDerivedSiblingLinks(contact, allContacts);
-  const contactsById = new Map(allContacts.map((c) => [String(c.id), c]));
+  const links = useMemo(
+    () => mergeStoredAndDerivedSiblingLinks(contact, allContacts),
+    [contact, allContacts],
+  );
+  const contactsById = useMemo(
+    () => new Map(allContacts.map((c) => [String(c.id), c])),
+    [allContacts],
+  );
   const parentAllowsOutbound = !contact.deletedAt;
 
   return (

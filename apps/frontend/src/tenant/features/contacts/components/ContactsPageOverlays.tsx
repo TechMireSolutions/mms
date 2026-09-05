@@ -34,6 +34,7 @@ export interface ContactsPageOverlaysProps {
   viewContact: Contact | null;
   onCloseView: () => void;
   onEditFromDrawer: (contact: Contact) => void;
+  onNavigateToContactFromDrawer?: (contactId: string | number) => void;
   onRestoreFromDrawer?: (contactId: string | number) => void;
   onWhatsApp?: (contacts: Contact[]) => void;
   onSms?: (contacts: Contact[]) => void;
@@ -70,6 +71,7 @@ export function ContactsPageOverlays({
   viewContact,
   onCloseView,
   onEditFromDrawer,
+  onNavigateToContactFromDrawer,
   onRestoreFromDrawer,
   onWhatsApp,
   onSms,
@@ -140,6 +142,7 @@ export function ContactsPageOverlays({
               canWrite={canWrite}
               canDelete={canDelete}
               onRestore={onRestoreFromDrawer}
+              onNavigateToContact={onNavigateToContactFromDrawer}
             />
           ) : null}
         </AnimatePresence>

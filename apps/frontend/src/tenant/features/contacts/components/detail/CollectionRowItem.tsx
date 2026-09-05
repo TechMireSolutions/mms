@@ -70,7 +70,7 @@ export function CollectionRowItem({
   value,
   copyable = true,
   actions,
-}: CollectionRowItemProps): JSX.Element {
+}: CollectionRowItemProps): React.JSX.Element {
   return (
     <div className="p-3 border-b border-border/50 last:border-b-0 flex items-center justify-between gap-3">
       <div className="min-w-0">

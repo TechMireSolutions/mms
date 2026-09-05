@@ -1,3 +1,4 @@
+import { useCallback, useMemo } from "react";
 import {
   canViewContactField,
   CONTACTS_MODULE_MANIFEST,
@@ -23,6 +24,8 @@ export type DetailFieldView = {
   description: string;
 };
 
+const HERO_FIELD_SET = new Set<string>(CONTACTS_MODULE_MANIFEST.heroFieldKeys);
+
 function filterVisibleCollection(
   tabFields: FieldDefinition[] | undefined,
   viewerRole: string,
@@ -45,9 +48,7 @@ export function useContactDetailFields({
   isTabFieldEnabled: (tabId: string, fieldId: string) => boolean;
   t: TranslationFunction;
 }) {
-  const heroFieldSet = (() => new Set<string>(CONTACTS_MODULE_MANIFEST.heroFieldKeys))();
-
-  const allFields = ((): DetailFieldView[] => {
+  const allFields = useMemo((): DetailFieldView[] => {
     return Object.entries(fields).flatMap(([tabId, tabFields]) =>
       (tabFields || [])
         .filter((field) => canViewContactField(viewerRole, field))
@@ -60,9 +61,9 @@ export function useContactDetailFields({
           description: resolveRegistryDescription(field, t),
         })),
     );
-  })();
+  }, [fields, viewerRole, t]);
 
-  const visibleCollectionFields = (() => {
+  const visibleCollectionFields = useMemo(() => {
     const relationshipTabId = resolveRelationshipFieldsTabId(fields) ?? "relationship";
     return {
       phones: filterVisibleCollection(fields.phones, viewerRole),
@@ -75,23 +76,25 @@ export function useContactDetailFields({
       bankDetails: filterVisibleCollection(fields.bankDetails, viewerRole),
       relationship: filterVisibleCollection(fields[relationshipTabId], viewerRole),
     };
-  })();
+  }, [fields, viewerRole]);
 
-  const fieldsToRender = allFields.filter(
-    (field) =>
-      !heroFieldSet.has(field.key) &&
-      isTabFieldEnabled(field.tab, field.key) &&
-      !isEmptyValue(contactState[field.key]),
-  );
+  const grouped = useMemo(() => {
+    const fieldsToRender = allFields.filter(
+      (field) =>
+        !HERO_FIELD_SET.has(field.key) &&
+        isTabFieldEnabled(field.tab, field.key) &&
+        !isEmptyValue(contactState[field.key]),
+    );
+    return fieldsToRender.reduce<Record<string, DetailFieldView[]>>((acc, field) => {
+      const group = field.group || t("contacts.detail.otherGroup");
+      if (!acc[group]) acc[group] = [];
+      acc[group].push(field);
+      return acc;
+    }, {});
+  }, [allFields, isTabFieldEnabled, contactState, t]);
 
-  const grouped = fieldsToRender.reduce<Record<string, DetailFieldView[]>>((acc, field) => {
-    const group = field.group || t("contacts.detail.otherGroup");
-    if (!acc[group]) acc[group] = [];
-    acc[group].push(field);
-    return acc;
-  }, {});
-
-  const formatFieldValue = ((field: { key: string; type: string }): string | null => {
+  const formatFieldValue = useCallback(
+    (field: { key: string; type: string }): string | null => {
       const fieldValue = (contactState as Record<string, unknown>)[field.key];
       if (isEmptyValue(fieldValue)) return null;
       if (Array.isArray(fieldValue)) return fieldValue.join(", ");
@@ -105,7 +108,9 @@ export function useContactDetailFields({
         return fieldValue ? t("common.yes") : t("common.no");
       }
       return String(fieldValue);
-    });
+    },
+    [contactState, t],
+  );
 
   return {
     grouped,

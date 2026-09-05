@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useMemo } from "react";
 import { isContactRelationshipTabEnabled, type Contact } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { FieldGroupCard } from "./ContactDetailShared";
@@ -6,6 +6,20 @@ import { ContactDetailCollections } from "./ContactDetailCollections";
 import { ContactDetailNetwork } from "./ContactDetailNetwork";
 import { ContactDetailOverviewHero } from "./ContactDetailOverviewHero";
 import { ContactDetailOverviewQuickActions } from "./ContactDetailOverviewQuickActions";
+
+const ACCENT_COLORS = [
+  "info",
+  "warning",
+  "success",
+  "primary",
+  "secondary",
+  "purple",
+  "amber",
+  "rose",
+  "teal",
+  "indigo",
+  "pink",
+] as const;
 
 export interface ContactDetailOverviewField {
   key: string;
@@ -63,12 +77,16 @@ export function ContactDetailOverview({
     enabledTabIds.has("emails") && visibleCollectionFields.emails.length > 0;
   // Per-row channel actions cover Call/WA/SMS/Email when those sections render.
   const showQuickActions = !showPhoneSection && !showEmailSection;
-  const basicGroups = Object.entries(grouped)
-    .map(([groupName, fieldsList]) => ({
-      groupName,
-      fields: fieldsList,
-    }))
-    .filter((entry) => entry.fields.length > 0);
+  const basicGroups = useMemo(
+    () =>
+      Object.entries(grouped)
+        .map(([groupName, fieldsList]) => ({
+          groupName,
+          fields: fieldsList,
+        }))
+        .filter((entry) => entry.fields.length > 0),
+    [grouped],
+  );
 
   return (
     <>
@@ -86,19 +104,16 @@ export function ContactDetailOverview({
       ) : null}
 
       <div className="space-y-4">
-        {basicGroups.map(({ groupName, fields }, index) => {
-          const ACCENT_COLORS = ["info", "warning", "success", "primary", "secondary", "purple", "amber", "rose", "teal", "indigo", "pink"] as const;
-          return (
-            <FieldGroupCard
-              key={groupName}
-              group={groupName}
-              fields={fields}
-              formatValue={formatFieldValue}
-              getRawValue={(key) => (contact as Record<string, unknown>)[key]}
-              accentColor={ACCENT_COLORS[index % ACCENT_COLORS.length]}
-            />
-          );
-        })}
+        {basicGroups.map(({ groupName, fields }, index) => (
+          <FieldGroupCard
+            key={groupName}
+            group={groupName}
+            fields={fields}
+            formatValue={formatFieldValue}
+            getRawValue={(key) => (contact as Record<string, unknown>)[key]}
+            accentColor={ACCENT_COLORS[index % ACCENT_COLORS.length]}
+          />
+        ))}
 
         <ContactDetailCollections
           contact={contact}

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LayoutDashboard } from "lucide-react";
 import {
   type Contact,
@@ -23,45 +23,47 @@ export function useContactDetailViewModel({
   allContacts,
   onUpdateContact,
   canWrite,
+  onNavigateToContact,
 }: {
   initialContact: Contact;
   allContacts: Contact[];
   onUpdateContact?: (contact: Contact) => Promise<void>;
   canWrite: boolean;
+  onNavigateToContact?: (targetId: string | number) => void;
 }) {
   const { enabledTabIds, isTabFieldEnabled, fields } = useContactConfig();
   const { role } = usePermissions();
   const viewerRole = role ?? "";
   const { t } = useTranslation();
-  const noteInputId = useId();
-  const contactId = initialContact?.id != null ? String(initialContact.id) : undefined;
-  const { data: fullContact } = useContactById(contactId);
   const [contactState, setContactState] = useState<Contact>(initialContact);
-  const [noteText, setNoteText] = useState("");
+  const activeContactId = contactState?.id != null ? String(contactState.id) : undefined;
+  const { data: fullContact } = useContactById(activeContactId);
   const isArchived = Boolean(contactState.deletedAt ?? initialContact.deletedAt);
   const canPersistContact = canWrite && Boolean(onUpdateContact) && !isArchived;
 
-  const detailTabs = (() => {
+  const detailTabs = useMemo(() => {
     return Array.from(DEFAULT_DETAIL_TAB_BY_KEY.values()).map((tab) => ({
       key: tab.key,
       label: tab.labelKey ? t(tab.labelKey) : tab.label,
       icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
     }));
-  })();
+  }, [t]);
 
   const [activeTab, setActiveTab] = useState<string>(() => detailTabs[0]?.key || "");
 
   useEffect(() => {
-    if (fullContact) {
+    setContactState(initialContact);
+  }, [initialContact]);
+
+  useEffect(() => {
+    if (fullContact && String(fullContact.id) === String(contactState.id)) {
       setContactState(fullContact);
-    } else {
-      setContactState(initialContact);
     }
-  }, [initialContact, fullContact]);
+  }, [fullContact, contactState.id]);
 
   useEffect(() => {
     setActiveTab((currentTab) => {
-      const tabExists = detailTabs.some((t) => t.key === currentTab);
+      const tabExists = detailTabs.some((tab) => tab.key === currentTab);
       if (!currentTab || !tabExists) {
         return detailTabs[0]?.key || "";
       }
@@ -69,12 +71,12 @@ export function useContactDetailViewModel({
     });
   }, [initialContact.id, detailTabs]);
 
-  const combinedActivities = (() => {
+  const combinedActivities = useMemo(() => {
     const noteActs = contactState.activities || [];
     return [...noteActs].sort(
       (a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime(),
     );
-  })();
+  }, [contactState.activities]);
 
   const { grouped, formatFieldValue, visibleCollectionFields } = useContactDetailFields({
     fields,
@@ -91,18 +93,14 @@ export function useContactDetailViewModel({
     allContacts,
     contactState,
     setContactState,
-    noteText,
-    setNoteText,
     canPersistContact,
     onUpdateContact,
+    onNavigateToContact,
   });
 
   return {
     contactState,
     setContactState,
-    noteText,
-    setNoteText,
-    noteInputId,
     canPersistContact,
     detailTabs,
     activeTab,

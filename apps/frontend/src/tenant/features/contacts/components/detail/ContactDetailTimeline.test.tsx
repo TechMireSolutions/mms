@@ -22,15 +22,24 @@ describe("ContactDetailTimeline Component", () => {
             by: "Admin",
           },
         ]}
-        noteText=""
-        noteInputId="note-id"
         canPersistContact={true}
-        onNoteTextChange={vi.fn()}
-        onAddNote={vi.fn()}
+        onAddNote={vi.fn().mockResolvedValue(true)}
       />,
     );
 
     expect(html).toContain("Called contact regarding admission");
     expect(html).toContain("Admin");
+  });
+
+  it("renders empty timeline state when activities are empty", () => {
+    const html = renderToStaticMarkup(
+      <ContactDetailTimeline
+        activities={[]}
+        canPersistContact={false}
+        onAddNote={vi.fn().mockResolvedValue(true)}
+      />,
+    );
+
+    expect(html).toContain("contacts.detail.quietTimeline");
   });
 });

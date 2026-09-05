@@ -24,9 +24,6 @@ vi.mock("@/tenant/features/contacts/hooks/useContactDetailViewModel", () => ({
   useContactDetailViewModel: ({ initialContact }: { initialContact: Contact }) => ({
     contactState: initialContact,
     setContactState: vi.fn(),
-    noteText: "",
-    setNoteText: vi.fn(),
-    noteInputId: "note-input",
     canPersistContact: true,
     detailTabs: [{ id: "overview", label: "Overview", count: 0 }],
     activeTab: "overview",

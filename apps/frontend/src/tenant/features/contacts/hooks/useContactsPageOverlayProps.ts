@@ -76,6 +76,14 @@ export function useContactsPageOverlayProps({
         overlay.setViewContact(null);
         actions.handleEdit(contactToEdit);
       },
+      onNavigateToContactFromDrawer: (targetId: string | number) => {
+        const found = allContactsForLinks.find((c) => String(c.id) === String(targetId));
+        if (found) {
+          overlay.setViewContact(found);
+        } else {
+          overlay.setViewContact({ id: targetId, firstName: "", name: "" } as Contact);
+        }
+      },
       onRestoreFromDrawer: canDelete
         ? async (contactId: string | number) => {
             try {
