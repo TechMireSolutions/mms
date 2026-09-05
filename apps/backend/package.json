@@ -9,11 +9,11 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "worker": "tsx watch src/worker/index.ts",
-    "build": "tsc && cp -r src/db/migrations_drizzle dist/db/migrations_drizzle && mkdir -p dist/worker/templates && cp -r src/worker/templates/. dist/worker/templates/",
+    "build": "tsc && rm -rf dist/db/migrations_drizzle && mkdir -p dist/db/migrations_drizzle && cp -r src/db/migrations_drizzle/. dist/db/migrations_drizzle/ && mkdir -p dist/worker/templates && cp -r src/worker/templates/. dist/worker/templates/",
     "start": "node dist/index.js",
     "worker:start": "node dist/worker/index.js",
     "db:reset": "tsx src/scripts/resetDb.ts",
-    "db:migrate": "tsx src/scripts/migrateDb.ts",
+    "db:migrate": "node dist/scripts/migrateDb.js 2>/dev/null || tsx src/scripts/migrateDb.ts",
     "typecheck": "tsc --noEmit",
     "lint": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint src --quiet",
     "test": "vitest run",
