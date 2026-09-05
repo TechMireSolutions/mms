@@ -48,19 +48,19 @@ export function useContactDetailAttachments({
     if (!canPersistContact || !filesList || filesList.length === 0) return;
     setIsUploading(true);
     try {
-      const newAttachments = [...(contactState.attachments || [])];
-      for (let i = 0; i < filesList.length; i++) {
-        const file = filesList[i];
-        const res = await uploadAttachmentFile(file);
-        newAttachments.push({
+      const files = Array.from(filesList);
+      const results = await Promise.all(files.map((file) => uploadAttachmentFile(file)));
+      const newAttachments = [
+        ...(contactState.attachments || []),
+        ...results.map((res) => ({
           id: crypto.randomUUID(),
           name: res.name,
           type: res.type,
           size: res.size,
           url: res.url,
           date: todayISO(),
-        });
-      }
+        })),
+      ];
       await updateContactAttachments(newAttachments, "contacts.detail.uploadSuccess", "contacts.detail.uploadFailed");
     } catch {
       notify.error(t("contacts.detail.uploadFailed"));

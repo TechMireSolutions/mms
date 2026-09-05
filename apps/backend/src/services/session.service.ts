@@ -52,7 +52,7 @@ export async function isUserSessionRevoked(
   const revokedAtStr = await redisGet(key);
   if (!revokedAtStr) return false;
   const revokedAt = Number.parseInt(revokedAtStr, 10);
-  return !Number.isNaN(revokedAt) && issuedAtMs < revokedAt;
+  return !Number.isNaN(revokedAt) && issuedAtMs <= revokedAt;
 }
 
 /**
@@ -121,7 +121,7 @@ export async function checkSessionRevocationBatch(params: {
   let userSessionRevoked = false;
   if (userRevokedAtStr) {
     const revokedAt = Number.parseInt(userRevokedAtStr, 10);
-    userSessionRevoked = !Number.isNaN(revokedAt) && (params.issuedAtMs ?? 0) < revokedAt;
+    userSessionRevoked = !Number.isNaN(revokedAt) && (params.issuedAtMs ?? 0) <= revokedAt;
   }
 
   return { tenantBlocked, tokenRevoked, userSessionRevoked };

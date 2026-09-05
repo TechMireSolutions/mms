@@ -119,8 +119,6 @@ export function ContactDetailDrawerContent({
             onRequestDelete={onRequestDelete}
           />
         )}
-
-
       </motion.div>
     </AnimatePresence>
   );

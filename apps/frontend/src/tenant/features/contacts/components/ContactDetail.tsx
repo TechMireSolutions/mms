@@ -92,28 +92,28 @@ export function ContactDetail({
     onUpdateContact,
   });
 
-  const headerActionsNode = (() => (
-      <ContactDetailDrawerHeaderActions
-        canWrite={canWrite}
-        canDelete={canDelete}
-        contact={contactState}
-        onEdit={onEdit}
-        onRestore={onRestore}
+  const headerActionsNode = (
+    <ContactDetailDrawerHeaderActions
+      canWrite={canWrite}
+      canDelete={canDelete}
+      contact={contactState}
+      onEdit={onEdit}
+      onRestore={onRestore}
+    />
+  );
+
+  const headerExtraNode = (
+    <div className="space-y-2">
+      <ContactDetailDrawerArchivedBanner contact={contactState} />
+      <ContactDetailDrawerTabBar
+        detailTabs={detailTabs}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
       />
-    ))();
+    </div>
+  );
 
-  const headerExtraNode = (() => (
-      <div className="space-y-2">
-        <ContactDetailDrawerArchivedBanner contact={contactState} />
-        <ContactDetailDrawerTabBar
-          detailTabs={detailTabs}
-          activeTab={activeTab}
-          onTabChange={setActiveTab}
-        />
-      </div>
-    ))();
-
-  const footerNode = (() => (hasFooterStamp ? <ContactDetailDrawerFooter contact={contactState} /> : null))();
+  const footerNode = hasFooterStamp ? <ContactDetailDrawerFooter contact={contactState} /> : null;
 
   return (
     <DetailDrawerShell

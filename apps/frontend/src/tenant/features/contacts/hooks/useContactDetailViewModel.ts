@@ -33,6 +33,7 @@ export function useContactDetailViewModel({
 }) {
   const { enabledTabIds, isTabFieldEnabled, fields } = useContactConfig();
   const { role } = usePermissions();
+  // role is string|undefined from usePermissions; "" maps to no-permission baseline in canViewContactField.
   const viewerRole = role ?? "";
   const { t } = useTranslation();
   const [contactState, setContactState] = useState<Contact>(initialContact);
@@ -41,12 +42,15 @@ export function useContactDetailViewModel({
   const isArchived = Boolean(contactState.deletedAt ?? initialContact.deletedAt);
   const canPersistContact = canWrite && Boolean(onUpdateContact) && !isArchived;
 
+  // DEFAULT_DETAIL_TABS is a static constant — tabs are not driven by enabledTabIds.
+  // If that changes, add enabledTabIds to deps and audit callers.
   const detailTabs = useMemo(() => {
     return Array.from(DEFAULT_DETAIL_TAB_BY_KEY.values()).map((tab) => ({
       key: tab.key,
       label: tab.labelKey ? t(tab.labelKey) : tab.label,
       icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
     }));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t]);
 
   const [activeTab, setActiveTab] = useState<string>(() => detailTabs[0]?.key || "");

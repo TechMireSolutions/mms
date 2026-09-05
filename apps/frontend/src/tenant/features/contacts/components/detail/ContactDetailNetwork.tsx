@@ -113,7 +113,7 @@ export function ContactDetailNetwork({
 
               return (
                 <ContactNetworkLinkCard
-                  key={`${relationship.contactId || relationship.name || "link"}-${relationshipIndex}`}
+                  key={relationship.contactId || relationship.name || `link-${relationshipIndex}`}
                   displayName={displayName}
                   relationshipLabel={relationshipLabel}
                   avatarId={target?.id ?? (relationship.contactId || relationship.name || relationshipIndex)}

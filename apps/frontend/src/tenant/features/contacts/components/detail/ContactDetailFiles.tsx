@@ -76,7 +76,7 @@ export function ContactDetailFiles({
                   <div className="min-w-0">
                     <h5 className="text-xs font-bold text-foreground truncate">{file.name}</h5>
                     <p className="text-xs text-muted-foreground mt-1">
-                      {(file.size / 1024).toFixed(1)} {t("contacts.detail.kbLabel")} · {formatDate(file.date)}
+                      {new Intl.NumberFormat(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(file.size / 1024)} {t("contacts.detail.kbLabel")} · {formatDate(file.date)}
                     </p>
                   </div>
                 </div>

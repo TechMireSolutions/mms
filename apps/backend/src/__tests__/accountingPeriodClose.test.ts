@@ -1,0 +1,92 @@
+import { describe, expect, it, vi, beforeEach } from 'vitest';
+
+const mockAccountingRepo = vi.hoisted(() => ({
+  findEntryIdBySource: vi.fn(),
+  saveEntry: vi.fn(),
+}));
+
+const mockFiscalYearsRepo = vi.hoisted(() => ({
+  listFiscalYearsByWorkspace: vi.fn(),
+  saveFiscalYear: vi.fn(),
+}));
+
+const mockReportRepo = vi.hoisted(() => ({
+  aggregateAccountingReport: vi.fn(),
+}));
+
+const mockPrefs = vi.hoisted(() => ({
+  getAccountingPreferencesService: vi.fn(),
+}));
+
+vi.mock('../db/repositories/accountingRepository.js', () => mockAccountingRepo);
+vi.mock('../db/repositories/accountingFiscalYearsRepository.js', () => mockFiscalYearsRepo);
+vi.mock('../db/repositories/accountingRepositoryReport.js', () => mockReportRepo);
+vi.mock('../services/accountingPreferencesService.js', () => mockPrefs);
+
+import { closeFiscalYearForTenant } from '../accounting/use-cases/accountingPeriodClose.js';
+
+describe('accountingPeriodClose', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('throws 404 if fiscal year is not found', async () => {
+    mockFiscalYearsRepo.listFiscalYearsByWorkspace.mockResolvedValue([]);
+
+    await expect(closeFiscalYearForTenant('t-1', 'fy-missing', 'admin')).rejects.toThrow(/Fiscal year not found/);
+  });
+
+  it('throws 422 if fiscal year is already closed', async () => {
+    mockFiscalYearsRepo.listFiscalYearsByWorkspace.mockResolvedValue([
+      { id: 'fy-1', label: '2025-2026', status: 'closed' },
+    ]);
+
+    await expect(closeFiscalYearForTenant('t-1', 'fy-1', 'admin')).rejects.toThrow(/Fiscal year is already closed/);
+  });
+
+  it('throws 422 if retained earnings account is not specified or configured', async () => {
+    mockFiscalYearsRepo.listFiscalYearsByWorkspace.mockResolvedValue([
+      { id: 'fy-1', label: '2025-2026', status: 'open' },
+    ]);
+    mockPrefs.getAccountingPreferencesService.mockResolvedValue(null);
+
+    await expect(closeFiscalYearForTenant('t-1', 'fy-1', 'admin')).rejects.toThrow(
+      /Retained earnings account is required/,
+    );
+  });
+
+  it('closes fiscal year, generates closing entry, and marks year closed', async () => {
+    const year = {
+      id: 'fy-1',
+      label: '2025-2026',
+      status: 'open',
+      startDate: '2025-01-01',
+      endDate: '2025-12-31',
+    };
+    mockFiscalYearsRepo.listFiscalYearsByWorkspace.mockResolvedValue([year]);
+    mockPrefs.getAccountingPreferencesService.mockResolvedValue({ retainedEarningsAccount: 'acc-re' });
+    mockReportRepo.aggregateAccountingReport.mockResolvedValue({
+      trialBalance: [
+        { id: 'acc-rev', type: 'Revenue', balance: 1000 },
+        { id: 'acc-exp', type: 'Expense', balance: 600 },
+      ],
+    });
+    mockAccountingRepo.findEntryIdBySource.mockResolvedValue(null);
+    mockAccountingRepo.saveEntry.mockResolvedValue(undefined);
+    mockFiscalYearsRepo.saveFiscalYear.mockResolvedValue(undefined);
+
+    const result = await closeFiscalYearForTenant('t-1', 'fy-1', 'admin-user');
+
+    expect(result.status).toBe('closed');
+    expect(result.closedBy).toBe('admin-user');
+    expect(mockAccountingRepo.saveEntry).toHaveBeenCalledWith('t-1', expect.objectContaining({
+      source_type: 'closing',
+      source_id: 'fy-1',
+      status: 'posted',
+    }));
+    expect(mockFiscalYearsRepo.saveFiscalYear).toHaveBeenCalledWith('t-1', expect.objectContaining({
+      id: 'fy-1',
+      status: 'closed',
+    }));
+  });
+});
