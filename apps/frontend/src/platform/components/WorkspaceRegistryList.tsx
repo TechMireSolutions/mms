@@ -8,7 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useWorkspaceRegistry } from "@/platform/hooks/useWorkspaceRegistry";
 import WorkspaceLogo from "@/platform/components/WorkspaceLogo";
-import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
+import { CardSkeleton } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -38,7 +38,7 @@ export default function WorkspaceRegistryList({
   const { data: workspaces, isLoading, isError, refetch } = useWorkspaceRegistry();
 
   if (isLoading) {
-    return <RouteStatusFallback />;
+    return <CardSkeleton count={2} className="grid-cols-1 sm:grid-cols-2" />;
   }
 
   if (isError) {

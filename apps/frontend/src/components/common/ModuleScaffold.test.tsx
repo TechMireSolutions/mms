@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, it, expect } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ModuleScaffold } from "@/components/common/ModuleScaffold";
+import { ModuleScaffold, ModuleScaffoldSkeleton } from "@/components/common/ModuleScaffold";
 import { TranslationContext, type TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 const mockContext = {
@@ -69,5 +69,35 @@ describe("ModuleScaffold", () => {
     expect(html).toContain("Analytics");
     expect(html).toContain("Settings");
     expect(html).toContain("Tab Content");
+  });
+
+  it("renders ModuleScaffoldSkeleton with accessible role and pulse animations", () => {
+    const html = renderToStaticMarkup(
+      <TestWrapper>
+        <ModuleScaffoldSkeleton />
+      </TestWrapper>
+    );
+
+    expect(html).toContain('role="status"');
+    expect(html).toContain('aria-live="polite"');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain("Loading module content...");
+    expect(html).toContain("animate-pulse");
+  });
+
+  it("renders ModuleScaffoldSkeleton without optional elements when configured", () => {
+    const html = renderToStaticMarkup(
+      <TestWrapper>
+        <ModuleScaffoldSkeleton
+          showHeader={false}
+          showMetrics={false}
+          showTabs={false}
+          showFilterBar={false}
+        />
+      </TestWrapper>
+    );
+
+    expect(html).toContain('role="status"');
+    expect(html).not.toContain("w-44"); // title skeleton omitted
   });
 });

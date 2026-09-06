@@ -30,7 +30,7 @@ const AuthenticatedApp = (): React.JSX.Element | null => {
   return (
     <>
       <RouterBridge />
-      <Suspense fallback={<RouteStatusFallback />}>
+      <Suspense fallback={<RouteStatusFallback fullScreen />}>
         <HostRoutes />
       </Suspense>
     </>

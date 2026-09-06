@@ -9,7 +9,7 @@ interface RouteStatusFallbackProps {
 
 /** Accessible loading state for route boot gates and redirects. */
 export default function RouteStatusFallback({
-  fullScreen = false,
+  fullScreen = true,
 }: RouteStatusFallbackProps): React.JSX.Element {
   const { t } = useTranslation();
 

@@ -1,5 +1,10 @@
 import React from "react";
-import { ModuleScaffold, type ModuleScaffoldProps } from "@/components/common/ModuleScaffold";
+import {
+  ModuleScaffold,
+  ModuleScaffoldSkeleton,
+  type ModuleScaffoldProps,
+  type ModuleScaffoldSkeletonProps,
+} from "@/components/common/ModuleScaffold";
 
 export type ModulePageShellProps = ModuleScaffoldProps;
 
@@ -11,5 +16,6 @@ export function ModulePageShell(props: ModulePageShellProps): React.JSX.Element 
   return <ModuleScaffold {...props} />;
 }
 
-export type { ModuleScaffoldProps };
+export { ModuleScaffoldSkeleton };
+export type { ModuleScaffoldProps, ModuleScaffoldSkeletonProps };
 

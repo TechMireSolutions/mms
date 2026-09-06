@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { Outlet } from "react-router-dom";
+import { ModuleScaffoldSkeleton } from "@/components/common/ModuleScaffold";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppFooter } from "@/components/ui/AppFooter";
@@ -110,7 +111,9 @@ export default function AppLayout(): React.JSX.Element {
         )}
       >
         <div className="min-w-0 max-w-full flex-grow p-4 md:p-6 lg:p-8">
-          <Outlet />
+          <Suspense fallback={<ModuleScaffoldSkeleton />}>
+            <Outlet />
+          </Suspense>
         </div>
         <AppFooter text={branding.footerText || undefined} name={branding.madrasaName || undefined} />
       </main>

@@ -3,7 +3,7 @@ import { User } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { AvatarCropper } from '@/components/ui/AvatarCropper';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { PageLoader } from '@/components/ui/LoadingState';
+import { Skeleton } from '@/components/ui/skeleton';
 import { AccountProfileHeaderCard } from '@/tenant/features/profile/AccountProfileHeaderCard';
 import { AccountProfileSettingsTabs } from '@/tenant/features/profile/AccountProfileSettingsTabs';
 import { useAccountProfilePageController } from '@/tenant/features/profile/hooks/useAccountProfilePageController';
@@ -20,7 +20,29 @@ export default function AccountProfile(): JSX.Element {
       headerSubtitle={c.t('account.subtitle')}
     >
       {c.isLoading ? (
-        <PageLoader />
+        <div className="space-y-6 animate-pulse" role="status" aria-live="polite" aria-busy="true">
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+            <div className="flex items-center gap-4">
+              <Skeleton className="h-16 w-16 rounded-full" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-5 w-48 rounded" />
+                <Skeleton className="h-4 w-32 rounded" />
+              </div>
+            </div>
+            <Skeleton className="h-2 w-full rounded-full" />
+          </div>
+          <div className="rounded-2xl border border-border bg-card p-6 space-y-4">
+            <div className="flex gap-2 border-b border-border pb-3">
+              <Skeleton className="h-9 w-28 rounded-lg" />
+              <Skeleton className="h-9 w-28 rounded-lg" />
+              <Skeleton className="h-9 w-28 rounded-lg" />
+            </div>
+            <div className="space-y-3 pt-2">
+              <Skeleton className="h-10 w-full rounded-xl" />
+              <Skeleton className="h-10 w-full rounded-xl" />
+            </div>
+          </div>
+        </div>
       ) : c.isError ? (
         <ErrorState
           title={c.t('account.loadFailed')}

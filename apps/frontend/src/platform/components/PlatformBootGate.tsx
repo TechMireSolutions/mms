@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import type { PlatformAdminPermissionKey } from '@mms/shared';
 import { platformUserCan } from '@mms/shared';
@@ -46,7 +46,11 @@ export default function PlatformBootGate({
     return <Navigate to={ROUTES.platformDashboard} replace />;
   }
 
-  return <Outlet />;
+  return (
+    <Suspense fallback={<RouteStatusFallback fullScreen />}>
+      <Outlet />
+    </Suspense>
+  );
 }
 
 /** Catch-all: unauthenticated users on unknown URLs return to sign-in. */
