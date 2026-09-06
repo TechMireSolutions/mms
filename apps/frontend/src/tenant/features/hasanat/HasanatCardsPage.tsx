@@ -1,7 +1,8 @@
 import React, { Suspense } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Star, Send } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { HasanatCommandMetrics } from '@/tenant/features/hasanat/components/HasanatCommandMetrics';
@@ -46,12 +47,8 @@ export default function HasanatCards() {
         panelIdPrefix="hasanat-tab"
       >
         <AnimatePresence mode="wait">
-          <motion.div
-            key={c.effectiveTab + '-' + c.effectiveSubTab + '-' + String(c.showDeleted)}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+          <ModuleTierMotion
+            tier={c.effectiveTab + '-' + c.effectiveSubTab + '-' + String(c.showDeleted)}
             className="space-y-4"
           >
             {c.effectiveTab === 'reports' && (
@@ -103,7 +100,7 @@ export default function HasanatCards() {
                 onMessage={c.handleMessageDistributions}
               />
             )}
-          </motion.div>
+          </ModuleTierMotion>
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 

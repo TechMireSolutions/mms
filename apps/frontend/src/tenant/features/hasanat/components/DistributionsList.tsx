@@ -3,8 +3,7 @@ import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { Denomination, Distribution, StockBatch } from '@/lib/data/hasanatData';
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { HasanatTrashDialogs } from "./HasanatTrashDialogs";
-import { ListPagination } from "@/components/ui/ListPagination";
-import { ErrorState } from "@/components/ui/ErrorState";
+import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DistributeModal } from "./DistributeModal";
 import { DistributionsListContent } from "./DistributionsListContent";
@@ -163,13 +162,27 @@ export function DistributionsList({
         />
       )}
 
-      {pageQuery.isError ? (
-        <ErrorState
-          title={t('hasanat.loadFailed')}
-          description={t('hasanat.loadFailedHint')}
-          onRetry={() => { void pageQuery.refetch(); }}
-        />
-      ) : pageDistributions.length > 0 && (
+      <ModuleWorkListStateShell
+        isError={pageQuery.isError}
+        isLoading={pageQuery.isLoading}
+        isFetching={pageQuery.isFetching}
+        onRetry={() => { void pageQuery.refetch(); }}
+        errorTitle={t("hasanat.loadFailed")}
+        errorHint={t("hasanat.loadFailedHint")}
+        viewMode={viewMode}
+        skeletonColumnCount={6}
+        useServerWork={true}
+        pageData={{
+          page: serverPage,
+          total: serverTotal,
+          limit: serverLimit,
+          hasMore: serverHasMore,
+        }}
+        onPageChange={setListPage}
+        i18nNamespace="hasanat"
+        showPagination={true}
+        loadingLabel={t("common.loading")}
+      >
         <DistributionsListContent
           viewMode={viewMode}
           distributions={pageDistributions}
@@ -200,16 +213,7 @@ export function DistributionsList({
           getColumnWidth={getColumnWidth}
           onColumnResize={onColumnResize}
         />
-      )}
-
-      <ListPagination
-        page={serverPage}
-        total={serverTotal}
-        limit={serverLimit}
-        hasMore={serverHasMore}
-        onPageChange={setListPage}
-        i18nNamespace="hasanat"
-      />
+      </ModuleWorkListStateShell>
 
       {canWrite && !showDeleted && (
         <DistributeModal

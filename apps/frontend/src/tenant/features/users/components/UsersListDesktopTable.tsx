@@ -1,7 +1,7 @@
 import type { JSX } from 'react';
 import { motion } from 'framer-motion';
 import type { SystemUser } from '@mms/shared';
-import { Checkbox } from '@/components/ui/checkbox';
+import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
 import {
   Table,
   TableBody,
@@ -89,13 +89,13 @@ export function UsersListDesktopTable({
         {users.map((user) => (
           <motion.tr key={user.id} {...rowMotion()} className="transition-colors hover:bg-muted/20">
             {canDelete && (
-              <TableCell className="px-3 py-2.5">
-                <Checkbox
-                  checked={selectedSet.has(user.id)}
-                  onCheckedChange={() => onToggleSelect(user.id)}
-                  aria-label={t('users.selectRow', { name: user.name })}
-                />
-              </TableCell>
+              <ModuleTableSelectionCell
+                checked={selectedSet.has(user.id)}
+                onCheckedChange={() => onToggleSelect(user.id)}
+                ariaLabel={t('users.selectRow', { name: user.name })}
+                sticky={false}
+                className="px-3 py-2.5"
+              />
             )}
             <TableCell className="px-3 py-2.5">
               <div className="flex items-center gap-2.5">

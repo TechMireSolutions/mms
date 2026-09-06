@@ -1,8 +1,7 @@
 import type { ReactElement } from 'react';
 import { BookOpenText } from 'lucide-react';
 import { ACCOUNTING_MODULE_MANIFEST } from '@mms/shared';
-import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
-import { useTranslation } from '@/hooks/useTranslation';
+import { ModuleStandardBulkActionBar } from '@/components/ui/ModuleStandardBulkActionBar';
 
 export interface AccountingBulkActionBarProps {
   selectedCount: number;
@@ -14,7 +13,7 @@ export interface AccountingBulkActionBarProps {
   bulkActions?: readonly string[];
 }
 
-/** Accounting Journal Work bulk bar — Obligations-shaped composition over shared ModuleWorkBulkActionBar. */
+/** Accounting Journal Work bulk bar — thin adapter delegating to shared ModuleStandardBulkActionBar. */
 export function AccountingBulkActionBar({
   selectedCount,
   showDeleted,
@@ -24,24 +23,17 @@ export function AccountingBulkActionBar({
   onClearSelection,
   bulkActions = ACCOUNTING_MODULE_MANIFEST.work.bulkActions,
 }: AccountingBulkActionBarProps): ReactElement {
-  const { t } = useTranslation();
-
   return (
-    <ModuleWorkBulkActionBar
+    <ModuleStandardBulkActionBar
       selectedCount={selectedCount}
-      viewingDeleted={showDeleted}
-      countLabel={t('accounting.trash.selected', { count: selectedCount })}
-      leading={<BookOpenText className="w-4 h-4 text-primary" aria-hidden />}
-      deselectLabel={t('common.deselect')}
+      showDeleted={showDeleted}
       canDelete={canDelete}
-      restoreLabel={t('accounting.trash.restore')}
+      onRequestBulkDelete={onRequestBulkDelete}
       onRequestBulkRestore={onRequestBulkRestore}
       onClearSelection={onClearSelection}
-      deleteAction={
-        bulkActions.includes('delete') && canDelete
-          ? { label: t('common.delete'), onClick: onRequestBulkDelete }
-          : undefined
-      }
+      bulkActions={bulkActions}
+      leadingIcon={BookOpenText}
+      i18nNamespace="accounting"
     />
   );
 }

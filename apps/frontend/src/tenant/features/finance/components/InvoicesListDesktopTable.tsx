@@ -1,5 +1,5 @@
 import type React from "react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import {
   Table,
@@ -75,13 +75,12 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
                 className={`group transition-colors hover:bg-muted/20 ${isSelected ? "bg-primary/5" : ""}`}
               >
                 {canSelectInvoices && (
-                  <TableCell className="px-3 py-3">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={(checked) => onToggleSelectedInvoice(invoice.id, checked === true)}
-                      aria-label={t("finance.table.selectInvoice", { id: invoice.id })}
-                    />
-                  </TableCell>
+                  <ModuleTableSelectionCell
+                    checked={isSelected}
+                    onCheckedChange={(checked) => onToggleSelectedInvoice(invoice.id, checked)}
+                    ariaLabel={t("finance.table.selectInvoice", { id: invoice.id })}
+                    sticky={false}
+                  />
                 )}
                 {isColumnVisible("invoice") && (
                   <TableCell className="px-4 py-3">

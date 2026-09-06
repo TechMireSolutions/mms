@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Users, Tag } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar";
@@ -31,7 +31,7 @@ export interface ContactsBulkActionBarProps {
   isTagPending?: boolean;
 }
 
-export function ContactsBulkActionBar({
+export const ContactsBulkActionBar = React.memo(function ContactsBulkActionBar({
   selectedCount,
   viewingDeleted,
   bulkActions,
@@ -58,11 +58,14 @@ export function ContactsBulkActionBar({
   const showEmail = bulkActions.includes("email") && canWriteMessaging;
   const showMessaging = !viewingDeleted && (showWhatsApp || showSms || showEmail);
 
-  const handleChannel = (channel: BulkSelectionMessageChannel): void => {
-    if (channel === "whatsapp") onWhatsApp(selectedTargets.waTargets);
-    else if (channel === "sms") onSms(selectedTargets.smsReady);
-    else if (channel === "email") onEmail(selectedTargets.emailReady);
-  };
+  const handleChannel = useCallback(
+    (channel: BulkSelectionMessageChannel): void => {
+      if (channel === "whatsapp") onWhatsApp(selectedTargets.waTargets);
+      else if (channel === "sms") onSms(selectedTargets.smsReady);
+      else if (channel === "email") onEmail(selectedTargets.emailReady);
+    },
+    [onWhatsApp, onSms, onEmail, selectedTargets],
+  );
 
   return (
     <>
@@ -131,4 +134,4 @@ export function ContactsBulkActionBar({
       )}
     </>
   );
-}
+});

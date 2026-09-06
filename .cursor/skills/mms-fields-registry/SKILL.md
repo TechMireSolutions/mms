@@ -1,11 +1,11 @@
 ---
 name: mms-fields-registry
-description: Adds or changes field/tab registries, CustomFieldsBuilder, DraggableFieldList, and Setup Fields UI per mms-fields.mdc. Use when working with custom fields, system tabs, field types, column registries, field delete guards, or useSortedFields.
+description: Adds or changes field/tab registries, module Setup Fields UI, and field configuration per mms-fields.mdc. Use when working with custom fields, system tabs, field types, column registries, field delete guards, or useSortedFields.
 ---
 
 # MMS Field & Tab Registry
 
-**Rule (norms SSOT):** `mms-fields.mdc`. Also `mms-module-architecture.mdc` §4. Full Setup workflow → skill **`mms-module-setup`**. FormModal / Zod / JSONB merge → **`mms-form-architecture`**.
+**Rule (norms SSOT):** `mms-fields.mdc`. Also `mms-module-architecture.mdc` §4. Full Setup workflow → skill **`mms-module-setup`**. FormModal / Zod forms → **`mms-form-architecture`**.
 
 ## Schemas (`@mms/shared/contactTypes.ts`)
 
@@ -55,8 +55,8 @@ Before merging any new/changed field, complete all layers:
 | Settings singleton | `getBrandingSettings` / `await saveBrandingSettings`, etc. |
 | Lookup option list | Contacts: `/api/contacts/lookups` (typed `contact_lookups`) — **never** `saveCollection` for genders/labels/`countryCodes` |
 | REST entity row (Contacts, Students, …) | Query mutations → `/api/{resource}` — **never** `saveCollection('contacts')` |
-| Registry definition | Contacts: `/api/contacts/field-config` (typed). Other modules may still use `saveObject('{module}_field_config', …)` until migrated |
-| Custom Tabs | Typed `custom_tabs` + `/api/custom-tabs` — Contacts closed; do not dual-write `formTabs` into field-config. Other modules may still lag |
+| Registry definition | Typed `{module}_field_configs` + REST endpoints (Contacts, Students, Teachers, Sessions, Users) — **never** `saveObject` |
+| Custom Tabs | Typed `custom_tabs` + `/api/custom-tabs` — do not dual-write `formTabs` into field-config |
 
 **Reviewer test:** grep the field key — must appear in type, merge, form, and save. Block if only in `useState`.
 

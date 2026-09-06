@@ -1,7 +1,8 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Layers } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ExaminationsCommandMetrics } from '@/tenant/features/examinations/components/ExaminationsCommandMetrics';
 import { ExaminationsModalLayer } from '@/tenant/features/examinations/components/ExaminationsModalLayer';
@@ -44,12 +45,8 @@ export default function Examinations(): React.JSX.Element {
         panelIdPrefix="examinations-tab"
       >
         <AnimatePresence mode="wait">
-          <motion.div
-            key={`${c.effectiveTab}-${c.effectiveSubTab}-${String(c.showDeleted)}`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+          <ModuleTierMotion
+            tier={`${c.effectiveTab}-${c.effectiveSubTab}-${String(c.showDeleted)}`}
             className="space-y-4"
           >
             {c.effectiveTab === 'setup' && (
@@ -93,7 +90,7 @@ export default function Examinations(): React.JSX.Element {
                 }}
               />
             )}
-          </motion.div>
+          </ModuleTierMotion>
         </AnimatePresence>
 
         <AnimatePresence>

@@ -32,6 +32,8 @@ Governs campaign composition, templates, and sent-history for the Messaging modu
 
 **Do not reintroduce** (see `mms-migration-status.md`): ungated `includeDeleted`, unbounded CSV accumulate, unaudited clear-logs, idempotency without body-digest bind.
 
+## 3. Template Tokens, Security & Delivery
+
 - Placeholders evaluate on the client; allowlist known tokens (e.g. `{name}`) — reject unknown tokens.
 - Template/body content is plain text — no executable HTML.
 - Batch WhatsApp opens: sequential with configurable delay; SMS: `openDeviceSmsComposer`.

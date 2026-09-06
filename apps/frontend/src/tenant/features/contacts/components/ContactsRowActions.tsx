@@ -1,4 +1,4 @@
-import type React from "react";
+import React from "react";
 import { type Contact, getPrimaryEmail, getPrimaryPhone, hasWhatsApp } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleRowActionsMenu } from "@/components/ui/ModuleRowActionsMenu";
@@ -29,7 +29,7 @@ export interface ContactsRowActionsProps {
  * {@link ModuleRowActionsMenu}; messaging items are injected as module extras
  * and omitted (not disabled) when handlers are undefined or the channel is unavailable.
  */
-export function ContactsRowActions({
+export const ContactsRowActions = React.memo(function ContactsRowActions({
   contact,
   onView,
   onEdit,
@@ -83,4 +83,4 @@ export function ContactsRowActions({
       }
     />
   );
-}
+});

@@ -48,7 +48,7 @@ MMS uses strict `@theme` variables for cross-language design purity:
   --font-sans: 'Geist', 'Inter', system-ui, sans-serif;
   --font-arabic: 'Readex Pro', 'Cairo', system-ui;
   --font-urdu: 'Noto Nastaliq Urdu', 'Gulzar', serif;
-  --font-farsi: 'Vazirmatn', system-ui;
+  --font-persian: 'Vazirmatn', system-ui;
 
   --radius-sm: 0.375rem;
   --radius-md: 0.5rem;
@@ -86,7 +86,7 @@ Ensure these rules apply globally to adapt font families and text rendering auto
 }
 
 [dir="rtl"][lang="fa"] {
-  font-family: var(--font-farsi);
+  font-family: var(--font-persian);
 }
 ```
 

@@ -1,6 +1,5 @@
 import React from "react";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 
 export interface QuestionBankTrashDialogsProps {
   pendingTrashId: string | null;
@@ -23,41 +22,17 @@ export function QuestionBankTrashDialogs({
   onConfirmRowTrash,
   onConfirmBulkTrash,
 }: QuestionBankTrashDialogsProps): React.JSX.Element {
-  const { t } = useTranslation();
-
   return (
-    <>
-      <ConfirmAlertDialog
-        open={pendingTrashId !== null}
-        onOpenChange={(open) => {
-          if (!open) onPendingTrashIdChange(null);
-        }}
-        title={t("questionBank.trash.deleteTitle")}
-        description={t("questionBank.trash.deleteConfirm")}
-        confirmLabel={t("common.delete")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={onConfirmRowTrash}
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkOpen}
-        onOpenChange={onConfirmBulkOpenChange}
-        title={
-          showDeleted
-            ? t("questionBank.trash.restore")
-            : t("questionBank.trash.deleteTitle")
-        }
-        description={t(
-          showDeleted
-            ? "questionBank.trash.bulkRestoreConfirm"
-            : "questionBank.trash.bulkDeleteConfirm",
-          { count: selectedCount },
-        )}
-        confirmLabel={
-          showDeleted ? t("questionBank.trash.restore") : t("common.delete")
-        }
-        cancelLabel={t("common.cancel")}
-        onConfirm={onConfirmBulkTrash}
-      />
-    </>
+    <ModuleStandardTrashDialogs
+      pendingTrashId={pendingTrashId}
+      onPendingTrashIdChange={onPendingTrashIdChange}
+      confirmBulkOpen={confirmBulkOpen}
+      onConfirmBulkOpenChange={onConfirmBulkOpenChange}
+      showDeleted={showDeleted}
+      selectedCount={selectedCount}
+      i18nNamespace="questionBank"
+      onConfirmRowTrash={onConfirmRowTrash}
+      onConfirmBulkTrash={onConfirmBulkTrash}
+    />
   );
 }

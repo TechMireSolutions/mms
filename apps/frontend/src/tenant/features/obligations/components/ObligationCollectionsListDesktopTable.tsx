@@ -3,6 +3,7 @@ import { formatDate } from "@mms/shared";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Badge } from "@/components/ui/badge";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import {
   Table,
@@ -81,17 +82,12 @@ export function ObligationCollectionsListDesktopTable(props: ObligationCollectio
           return (
             <TableRow key={collection.id} className="group hover:bg-muted/20 transition-colors">
               {canDelete && (
-                <TableCell className="px-3 py-2.5 w-10">
-                  <div className="flex justify-center">
-                    <input 
-                      type="checkbox"
-                      checked={selectedSet.has(collection.id)}
-                      onChange={(e) => onToggleSelectedCollection(collection.id, e.target.checked)}
-                      aria-label={t("obligations.trash.selectCollection", { receipt: collection.receipt_no })}
-                      className="cursor-pointer"
-                    />
-                  </div>
-                </TableCell>
+                <ModuleTableSelectionCell
+                  checked={selectedSet.has(collection.id)}
+                  onCheckedChange={(checked) => onToggleSelectedCollection(collection.id, checked)}
+                  ariaLabel={t("obligations.trash.selectCollection", { receipt: collection.receipt_no })}
+                  sticky={false}
+                />
               )}
               {isColumnVisible("receiptNo") && (
                 <TableCell className="px-3 py-2.5">

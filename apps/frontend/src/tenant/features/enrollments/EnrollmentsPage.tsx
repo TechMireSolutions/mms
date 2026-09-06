@@ -1,7 +1,8 @@
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { ClipboardList } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { EnrollmentsCommandMetrics } from "@/tenant/features/enrollments/components/EnrollmentsCommandMetrics";
 import { EnrollmentsModalLayer } from "@/tenant/features/enrollments/components/EnrollmentsModalLayer";
@@ -116,9 +117,8 @@ export default function EnrollmentsPage() {
         panelIdPrefix="enrollments-tab"
       >
       <AnimatePresence mode="wait">
-        <motion.div key={tab + "-" + activeSubTab + (showDeleted ? "-trash" : "")}
-          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
+        <ModuleTierMotion
+          tier={tab + "-" + activeSubTab + (showDeleted ? "-trash" : "")}
           className="space-y-4"
         >
           {tab === "reports" && (
@@ -189,7 +189,7 @@ export default function EnrollmentsPage() {
               <EnrollmentsSetupTier />
             </ErrorBoundary>
           )}
-        </motion.div>
+        </ModuleTierMotion>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
 

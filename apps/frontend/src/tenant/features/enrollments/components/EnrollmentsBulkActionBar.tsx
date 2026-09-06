@@ -3,7 +3,7 @@ import { ClipboardList, XCircle } from "lucide-react";
 import { ENROLLMENTS_MODULE_MANIFEST } from "@mms/shared";
 import { bulkSelectionActionClassName } from "@/components/ui/BulkSelectionBar";
 import { Button } from "@/components/ui/button";
-import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar";
+import { ModuleUniversalBulkActionBar } from "@/components/ui/ModuleUniversalBulkActionBar";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface EnrollmentsBulkActionBarProps {
@@ -20,7 +20,7 @@ export interface EnrollmentsBulkActionBarProps {
   bulkActions?: readonly string[];
 }
 
-/** Enrollments Work bulk bar — Sessions-shaped composition over shared ModuleWorkBulkActionBar. */
+/** Enrollments Work bulk bar — delegates to shared ModuleUniversalBulkActionBar. */
 export function EnrollmentsBulkActionBar({
   selectedCount,
   showDeleted,
@@ -37,21 +37,19 @@ export function EnrollmentsBulkActionBar({
   const { t } = useTranslation();
 
   return (
-    <ModuleWorkBulkActionBar
+    <ModuleUniversalBulkActionBar
       selectedCount={selectedCount}
       viewingDeleted={showDeleted}
-      countLabel={t("enrollments.selectedCount", { count: selectedCount })}
-      leading={<ClipboardList className="w-4 h-4 text-primary" aria-hidden />}
-      deselectLabel={t("common.deselect")}
       canDelete={canDelete}
-      restoreLabel={t("enrollments.restore")}
-      onRequestBulkRestore={onRequestBulkRestore}
+      canExport={canExport}
+      leadingIcon={ClipboardList}
+      i18nNamespace="enrollments"
+      bulkActions={bulkActions}
       onClearSelection={onClearSelection}
-      exportAction={
-        bulkActions.includes("export") && canExport && onBulkExport
-          ? { label: t("enrollments.bulkExport"), onClick: onBulkExport }
-          : undefined
-      }
+      onRequestBulkDelete={onRequestBulkDelete}
+      onRequestBulkRestore={onRequestBulkRestore}
+      onBulkExport={onBulkExport}
+      deleteLabel={t("enrollments.archive")}
       extraActions={
         bulkActions.includes("cancel") && canCancel ? (
           <Button
@@ -63,11 +61,6 @@ export function EnrollmentsBulkActionBar({
             <XCircle className="w-3.5 h-3.5 text-muted-foreground" aria-hidden /> {t("enrollments.bulkCancel")}
           </Button>
         ) : undefined
-      }
-      deleteAction={
-        bulkActions.includes("delete") && canDelete
-          ? { label: t("enrollments.archive"), onClick: onRequestBulkDelete }
-          : undefined
       }
     />
   );

@@ -1,5 +1,5 @@
 import React from "react";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export interface AttendanceRecordsConfirmDialogsProps {
@@ -26,34 +26,26 @@ export function AttendanceRecordsConfirmDialogs({
   t,
 }: AttendanceRecordsConfirmDialogsProps): React.JSX.Element {
   return (
-    <>
-      <ConfirmAlertDialog
-        open={pendingDeleteId != null}
-        onOpenChange={(open) => {
-          if (!open) onPendingDeleteChange(null);
-        }}
-        title={t("attendance.confirmArchiveTitle")}
-        description={t("attendance.confirmArchiveDescription")}
-        confirmLabel={t("attendance.archive")}
-        onConfirm={() => {
-          const id = pendingDeleteId;
-          onPendingDeleteChange(null);
-          if (id) onConfirmDelete(id);
-        }}
-        destructive
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkOpen}
-        onOpenChange={onConfirmBulkOpenChange}
-        title={showDeleted ? t("attendance.trash.restore") : t("attendance.confirmArchiveTitle")}
-        description={t(
-          showDeleted ? "attendance.trash.bulkRestoreConfirm" : "attendance.trash.bulkDeleteConfirm",
-          { count: selectedIdsCount }
-        )}
-        confirmLabel={showDeleted ? t("attendance.trash.restore") : t("common.delete")}
-        onConfirm={onConfirmBulkTrash}
-        destructive={!showDeleted}
-      />
-    </>
+    <ModuleStandardTrashDialogs
+      pendingTrashId={pendingDeleteId}
+      onPendingTrashIdChange={onPendingDeleteChange}
+      confirmBulkOpen={confirmBulkOpen}
+      onConfirmBulkOpenChange={onConfirmBulkOpenChange}
+      showDeleted={showDeleted}
+      selectedCount={selectedIdsCount}
+      i18nNamespace="attendance"
+      onConfirmRowTrash={() => {
+        const id = pendingDeleteId;
+        onPendingDeleteChange(null);
+        if (id) onConfirmDelete(id);
+      }}
+      onConfirmBulkTrash={onConfirmBulkTrash}
+      labels={{
+        singleTitle: t("attendance.confirmArchiveTitle"),
+        singleDescription: t("attendance.confirmArchiveDescription"),
+        singleConfirm: t("attendance.archive"),
+        bulkDeleteTitle: t("attendance.confirmArchiveTitle"),
+      }}
+    />
   );
 }

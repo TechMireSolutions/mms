@@ -1,6 +1,6 @@
 import React from "react";
 import { formatDate } from "@mms/shared";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import {
   Table,
   TableBody,
@@ -80,13 +80,12 @@ export function JournalEntriesListDesktopTable(props: JournalEntriesListDesktopT
           return (
             <TableRow key={entry.id} className="group hover:bg-muted/20 transition-colors">
               {canDelete && (
-                <TableCell className="px-3 py-2.5">
-                  <Checkbox
-                    checked={selectedSet.has(entry.id)}
-                    onCheckedChange={(checked) => onToggleSelectedEntry(entry.id, checked === true)}
-                    aria-label={t("accounting.trash.selectEntry", { ref: entry.ref })}
-                  />
-                </TableCell>
+                <ModuleTableSelectionCell
+                  checked={selectedSet.has(entry.id)}
+                  onCheckedChange={(checked) => onToggleSelectedEntry(entry.id, checked)}
+                  ariaLabel={t("accounting.trash.selectEntry", { ref: entry.ref })}
+                  sticky={false}
+                />
               )}
               {isColumnVisible("ref") && (
                 <TableCell className="px-3 py-2.5">

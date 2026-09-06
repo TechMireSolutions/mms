@@ -8,8 +8,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 export interface ContactCardActionsProps {
   contact: Contact;
   displayName: string;
-  phone: string | null;
-  email: string | null;
   showArchived: boolean;
   canWrite: boolean;
   canDelete: boolean;

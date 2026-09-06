@@ -1,6 +1,8 @@
 import type React from "react";
 import { ShieldCheck } from "lucide-react";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { SubTabBar } from "@/components/ui/SubTabBar";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { AttendanceFilters } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { AttendanceRecords } from "@/tenant/features/attendance/components/AttendanceRecords";
 import { AuditLog } from "@/tenant/features/attendance/components/AuditLog";
@@ -74,14 +76,19 @@ export function AttendanceWorkTier({
   columnProps,
 }: AttendanceWorkTierProps): React.JSX.Element {
   return (
-    <div className="space-y-5">
+    <ModuleTierMotion tier="work" className="space-y-5">
       {showRoleBanner && (
-        <div className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-medium bg-muted text-muted-foreground border border-border">
-          <ShieldCheck className="w-3.5 h-3.5" aria-hidden="true" />
-          <span className="font-bold capitalize">{roleLabel}</span>
-          {teacherRoleText}
-          {accountantRoleText}
-        </div>
+        <WarningCallout
+          tone="info"
+          density="compact"
+          icon={ShieldCheck}
+          title={<span className="font-bold capitalize">{roleLabel}</span>}
+          description={
+            (teacherRoleText || accountantRoleText) ? (
+              <span>{teacherRoleText}{accountantRoleText}</span>
+            ) : undefined
+          }
+        />
       )}
 
       <AttendanceFilters filters={filters} onChange={onFiltersChange} />
@@ -120,6 +127,6 @@ export function AttendanceWorkTier({
       )}
 
       {activeOpsTab === "audit" && <AuditLog filters={filters} />}
-    </div>
+    </ModuleTierMotion>
   );
 }

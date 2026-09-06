@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
 import { JournalEntryForm } from "@/tenant/features/accounting/components/JournalEntryForm";
@@ -175,28 +176,19 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         })()}
       </AnimatePresence>
 
-      <ConfirmAlertDialog
-        open={props.pendingTrashId !== null}
-        onOpenChange={(open) => {
-          if (!open) props.onPendingTrashIdChange(null);
+      <ModuleStandardTrashDialogs
+        pendingTrashId={props.pendingTrashId}
+        onPendingTrashIdChange={props.onPendingTrashIdChange}
+        confirmBulkOpen={props.confirmBulkOpen}
+        onConfirmBulkOpenChange={props.onConfirmBulkOpenChange}
+        showDeleted={props.showDeleted}
+        selectedCount={props.selectedIds.length}
+        i18nNamespace="accounting"
+        onConfirmRowTrash={props.onConfirmRowTrash}
+        onConfirmBulkTrash={props.onConfirmBulkTrash}
+        labels={{
+          singleDescription: t("accounting.trash.deleteEntryConfirm"),
         }}
-        title={t("accounting.trash.deleteTitle")}
-        description={t("accounting.trash.deleteEntryConfirm")}
-        confirmLabel={t("common.delete")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={props.onConfirmRowTrash}
-        destructive
-      />
-
-      <ConfirmAlertDialog
-        open={props.confirmBulkOpen}
-        onOpenChange={props.onConfirmBulkOpenChange}
-        title={t("accounting.trash.deleteTitle")}
-        description={t("accounting.trash.bulkDeleteConfirm", { count: props.selectedIds.length })}
-        confirmLabel={t("common.delete")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={props.onConfirmBulkTrash}
-        destructive
       />
 
       {props.pendingReverseEntry && (

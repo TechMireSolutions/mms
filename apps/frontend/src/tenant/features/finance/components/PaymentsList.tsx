@@ -5,7 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { type AppTranslationKey } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 import { PaymentsListContent, PAYMENT_TRACKER_COLUMN_KEYS } from "@/tenant/features/finance/components/PaymentsListContent";
 import { PaymentMethodSummary, PaymentSelectionBar } from "@/tenant/features/finance/components/PaymentsListFilters";
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
@@ -94,6 +94,7 @@ export function PaymentsList({
           selectedCount={selectedIds.length}
           showDeleted={showDeleted}
           onOpenBulkConfirm={() => setConfirmBulkOpen(true)}
+          onClearSelection={() => setSelectedIds([])}
         />
       )}
       <PaymentsListContent
@@ -115,30 +116,26 @@ export function PaymentsList({
         onRequestDelete={setPendingDeleteId}
         onRestore={onRestore}
       />
-      <ConfirmAlertDialog
-        open={pendingDeleteId !== null}
-        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
-        title={t("finance.trash.deleteTitle")}
-        description={t("finance.trash.deletePaymentConfirm")}
-        confirmLabel={t("common.delete")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={() => {
+      <ModuleStandardTrashDialogs
+        pendingTrashId={pendingDeleteId}
+        onPendingTrashIdChange={setPendingDeleteId}
+        confirmBulkOpen={confirmBulkOpen}
+        onConfirmBulkOpenChange={setConfirmBulkOpen}
+        showDeleted={showDeleted}
+        selectedCount={selectedIds.length}
+        i18nNamespace="finance"
+        onConfirmRowTrash={() => {
           if (pendingDeleteId) onDelete?.(pendingDeleteId);
           setPendingDeleteId(null);
         }}
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkOpen}
-        onOpenChange={setConfirmBulkOpen}
-        title={showDeleted ? t("finance.trash.restore") : t("finance.trash.deleteTitle")}
-        description={t(showDeleted ? "finance.trash.bulkRestoreConfirm" : "finance.trash.bulkDeleteConfirm", { count: selectedIds.length })}
-        confirmLabel={showDeleted ? t("finance.trash.restore") : t("common.delete")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={() => {
+        onConfirmBulkTrash={() => {
           if (showDeleted) onBulkRestore?.(selectedIds);
           else onBulkDelete?.(selectedIds);
           setSelectedIds([]);
           setConfirmBulkOpen(false);
+        }}
+        labels={{
+          singleDescription: t("finance.trash.deletePaymentConfirm"),
         }}
       />
     </section>

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { deriveSiblingLinks, type Contact } from "@mms/shared";
 import { collectLinkedContactIds, mergeContactLinkDirectory } from "@/lib/contacts/contactLinkIds";
 import { useContactsByIds } from "@/tenant/features/contacts/hooks/useContacts";
@@ -11,27 +12,33 @@ export function useContactsDirectoryLinks({
   editContact: Contact | null;
   viewContact: Contact | null;
 }) {
-  const linkSourceContacts = (() => {
+  const linkSourceContacts = useMemo(() => {
     const rows = [...workContacts];
     if (editContact) rows.push(editContact);
     if (viewContact) rows.push(viewContact);
     return rows;
-  })();
+  }, [workContacts, editContact, viewContact]);
 
-  const siblingSubjects = (() => {
+  const siblingSubjects = useMemo(() => {
     const subjects: Contact[] = [];
     if (viewContact) subjects.push(viewContact);
     if (editContact) subjects.push(editContact);
     return subjects;
-  })();
+  }, [editContact, viewContact]);
 
-  const linkedContactIds = (() => collectLinkedContactIds(linkSourceContacts))();
+  const linkedContactIds = useMemo(
+    () => collectLinkedContactIds(linkSourceContacts),
+    [linkSourceContacts],
+  );
 
   const { data: resolvedLinkContacts = [] } = useContactsByIds(linkedContactIds);
 
-  const partialDirectory = (() => mergeContactLinkDirectory(linkSourceContacts, resolvedLinkContacts))();
+  const partialDirectory = useMemo(
+    () => mergeContactLinkDirectory(linkSourceContacts, resolvedLinkContacts),
+    [linkSourceContacts, resolvedLinkContacts],
+  );
 
-  const siblingContactIds = (() => {
+  const siblingContactIds = useMemo(() => {
     const knownIds = new Set(
       partialDirectory
         .map((contact) => (contact.id == null ? "" : String(contact.id).trim()))
@@ -44,9 +51,12 @@ export function useContactsDirectoryLinks({
       }
     }
     return [...ids];
-  })();
+  }, [partialDirectory, siblingSubjects]);
 
   const { data: resolvedSiblingContacts = [] } = useContactsByIds(siblingContactIds);
 
-  return (() => mergeContactLinkDirectory(partialDirectory, resolvedSiblingContacts))();
+  return useMemo(
+    () => mergeContactLinkDirectory(partialDirectory, resolvedSiblingContacts),
+    [partialDirectory, resolvedSiblingContacts],
+  );
 }

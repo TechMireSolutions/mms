@@ -11,6 +11,7 @@ export function useContactsContractList(query: Record<string, unknown>, enabled 
   return tsrClient.contacts.list.useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, 'contract-list', query],
     queryData: { query: query as Record<string, unknown> },
+    placeholderData: (prev: unknown) => prev,
     staleTime: 15_000,
     enabled,
   });

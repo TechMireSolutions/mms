@@ -25,15 +25,24 @@ export function useContactsMessagingActions() {
     [],
   );
 
-  const handleWhatsApp = ((contacts: Contact[]) => {
+  const handleWhatsApp = useCallback(
+    (contacts: Contact[]) => {
       openComposer("whatsapp", toComposerRecipients(contacts));
-    });
-  const handleSms = ((contacts: Contact[]) => {
+    },
+    [openComposer, toComposerRecipients],
+  );
+  const handleSms = useCallback(
+    (contacts: Contact[]) => {
       openComposer("sms", toComposerRecipients(contacts));
-    });
-  const handleEmail = ((contacts: Contact[]) => {
+    },
+    [openComposer, toComposerRecipients],
+  );
+  const handleEmail = useCallback(
+    (contacts: Contact[]) => {
       openComposer("email", toComposerRecipients(contacts));
-    });
+    },
+    [openComposer, toComposerRecipients],
+  );
 
   return {
     messagingTarget,

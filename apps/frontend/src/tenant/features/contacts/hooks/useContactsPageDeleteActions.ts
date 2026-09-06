@@ -45,38 +45,47 @@ export function useContactsPageDeleteActions({
     bulkRestoreContactsAction,
   } = crud;
 
-  const handleDelete = ((id: string | number) => {
+  const handleDelete = useCallback(
+    (id: string | number) => {
       if (!canDelete) return;
       const selectedContact = findContactById(id);
       setDeleteTarget({ id, name: selectedContact ? getDisplayName(selectedContact) : undefined });
-    });
+    },
+    [canDelete, findContactById, setDeleteTarget],
+  );
 
-  const confirmSingleDelete = ((deletionReason?: string) => {
+  const confirmSingleDelete = useCallback(
+    (deletionReason?: string) => {
       if (!deleteTarget || !canDelete) return;
       setDeleteTarget(null);
       void removeContact(deleteTarget.id, deleteTarget.name, deletionReason);
-    });
+    },
+    [deleteTarget, canDelete, setDeleteTarget, removeContact],
+  );
 
   const checkBulkAllowed = useCallback(
     () => canDelete && selected.length > 0,
     [canDelete, selected.length],
   );
 
-  const requestBulkDelete = (() => {
+  const requestBulkDelete = useCallback(() => {
     if (checkBulkAllowed()) setBulkDeleteOpen(true);
-  });
+  }, [checkBulkAllowed, setBulkDeleteOpen]);
 
-  const confirmBulkDelete = ((deletionReason?: string) => {
+  const confirmBulkDelete = useCallback(
+    (deletionReason?: string) => {
       if (!checkBulkAllowed()) return;
       setBulkDeleteOpen(false);
       void bulkDeleteContactsAction(selected, deletionReason).then(() => setSelected([]));
-    });
+    },
+    [checkBulkAllowed, setBulkDeleteOpen, bulkDeleteContactsAction, selected, setSelected],
+  );
 
-  const requestBulkRestore = (() => {
+  const requestBulkRestore = useCallback(() => {
     if (checkBulkAllowed()) setBulkRestoreOpen(true);
-  });
+  }, [checkBulkAllowed, setBulkRestoreOpen]);
 
-  const confirmBulkRestore = (() => {
+  const confirmBulkRestore = useCallback(() => {
     if (!checkBulkAllowed()) return;
     setBulkRestoreOpen(false);
     void bulkRestoreContactsAction(selected)
@@ -94,9 +103,18 @@ export function useContactsPageDeleteActions({
       .catch((err) => {
         handleError(err, "contacts.bulk_restore", "contacts.restoreFailed");
       });
-  });
+  }, [
+    checkBulkAllowed,
+    setBulkRestoreOpen,
+    bulkRestoreContactsAction,
+    selected,
+    notifyBulkResult,
+    setSelected,
+    handleError,
+  ]);
 
-  const handleRestore = (async (id: string | number) => {
+  const handleRestore = useCallback(
+    async (id: string | number) => {
       if (!canDelete) return;
       const selectedContact = findContactById(id);
       const name = selectedContact ? getDisplayName(selectedContact) : undefined;
@@ -111,7 +129,9 @@ export function useContactsPageDeleteActions({
         handleError(err, "contacts.restore_single", "contacts.restoreFailed");
         throw err;
       }
-    });
+    },
+    [canDelete, findContactById, restoreContactAction, notify, t, handleError],
+  );
 
   return {
     handleDelete,

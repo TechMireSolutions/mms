@@ -1,3 +1,4 @@
+import React from "react";
 import {
   type Contact,
   type ContactPreferences,
@@ -44,7 +45,7 @@ export interface ContactCardItemProps {
 }
 
 /** Individual Contact Work directory card. */
-export function ContactCardItem({
+export const ContactCardItem = React.memo(function ContactCardItem({
   contact,
   isSelected,
   prefs,
@@ -131,8 +132,6 @@ export function ContactCardItem({
       <ContactCardActions
         contact={contact}
         displayName={displayName}
-        phone={phone}
-        email={email}
         showArchived={showArchived}
         canWrite={canWrite}
         canDelete={canDelete}
@@ -146,4 +145,4 @@ export function ContactCardItem({
       />
     </DirectoryEntityCard>
   );
-}
+});

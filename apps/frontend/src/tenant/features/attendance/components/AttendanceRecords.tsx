@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useDeferredValue } from "react";
-import { ListPagination } from "@/components/ui/ListPagination";
-import { ErrorState } from "@/components/ui/ErrorState";
+import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { type AttendanceRecord } from '@/lib/data/attendanceData';
 import { useAttendanceConfig } from "@/hooks/useStandardModuleConfig";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
@@ -241,13 +240,28 @@ export function AttendanceRecords({
         />
       ) : null}
 
-      {attendancePageQuery.isError ? (
-        <ErrorState
-          title={t("attendance.toast.loadFailed")}
-          description={t("attendance.loadFailedHint")}
-          onRetry={() => { void attendancePageQuery.refetch(); }}
-        />
-      ) : (
+      <ModuleWorkListStateShell
+        isError={attendancePageQuery.isError}
+        isLoading={attendancePageQuery.isPending}
+        isFetching={attendancePageQuery.isFetching}
+        onRetry={() => { void attendancePageQuery.refetch(); }}
+        errorTitle={t("attendance.toast.loadFailed")}
+        errorHint={t("attendance.loadFailedHint")}
+        viewMode={viewMode}
+        skeletonColumnCount={visibleColCount}
+        useServerWork={true}
+        pageData={{
+          page: serverPage,
+          total: serverTotal,
+          limit: serverLimit,
+          hasMore: serverHasMore,
+        }}
+        onPageChange={setListPage}
+        i18nNamespace="attendance"
+        paginationVariant="summary"
+        showPagination={true}
+        loadingLabel={t("common.loading")}
+      >
         <AttendanceListContent
           viewMode={viewMode}
           paginatedRecords={pageRecords}
@@ -269,17 +283,7 @@ export function AttendanceRecords({
           onColumnResize={onColumnResize}
           t={t}
         />
-      )}
-
-      <ListPagination
-        page={serverPage}
-        total={serverTotal}
-        limit={serverLimit}
-        hasMore={serverHasMore}
-        onPageChange={setListPage}
-        i18nNamespace="attendance"
-        variant="summary"
-      />
+      </ModuleWorkListStateShell>
       <AttendanceRecordsConfirmDialogs
         pendingDeleteId={pendingDeleteId}
         onPendingDeleteChange={setPendingDeleteId}

@@ -27,9 +27,9 @@ Architecture standards for Madrasa financial management, student billing/invoice
 
 ```
 packages/shared/src/
-  ├── financeSchemas.ts          # Zod write DTOs (invoices, payments, fee items)
-  ├── accountingSchemas.ts       # Zod DTOs (accounts, entries, fiscal years)
-  └── utils/formatters.ts        # formatMoney, formatCurrency helpers
+  ├── financeBilling.ts / financeCollect.ts / financeInvoiceGeneration.ts  # Invoices, payments, fee items
+  ├── accountingLedgerPosting.ts / accountingLedgerInvariants.ts          # Accounts, ledger entries, fiscal years
+  └── index.ts (named exports: formatMoney, formatDate)                  # Currency & date formatters
 
 apps/backend/src/
   ├── db/schema.ts               # finance_invoices, finance_payments, accounting_* tables

@@ -3,10 +3,6 @@ description: Field/tab registry, system vs custom fields, Setup Fields wiring �
 paths:
   - "apps/frontend/src/lib/contactFieldsStore.ts"
   - "apps/frontend/src/lib/contacts/useContactConfigTabFields.ts"
-  - "apps/frontend/src/components/ui/CustomFieldsBuilder.tsx"
-  - "apps/frontend/src/components/ui/CoreFieldEditorList.tsx"
-  - "apps/frontend/src/components/ui/ModuleFieldsSetup.tsx"
-  - "apps/frontend/src/components/ui/ModuleFieldsSetup*.tsx"
   - "apps/frontend/src/tenant/features/**/*Fields*"
   - "apps/frontend/src/tenant/features/**/*Setup*"
   - "apps/frontend/src/platform/**/*Fields*"
@@ -56,12 +52,12 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 - Locked always-on tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic` only). Pass a **stable** `readonly` array/const for `lockedEnabledTabs` (module-level or memoized) — never inline `[...CONST]` / new array literals each render (unstable identity → infinite rehydrate). Retired seed `custom` is not locked — omit unless field-config still has fields under `tabId: "custom"`.
 - `DEFAULT_ENABLED_TABS` is the **fallback seed** when `formTabs` are absent — not a permanent override.
 
-## 4b. Contact-linked module Identity (Students & Teachers)
+## 5. Contact-Linked Module Identity (Students & Teachers)
 
 - Identity fields (student/teacher contact link, gender, DOB, relationships) are **validation/display** registry config — person data SSOT remains Contacts.
 - Do not treat enabling those fields as permission to dual-write profile keys onto `students` or `teachers` domain rows when `contactId` is set — strip/hydrate rules → `mms-data-layer.md` / `mms-form-architecture.md`.
 
-## 5. Form & drawer render parity
+## 6. Form & Drawer Render Parity
 
 - Every system / core field that validation can require must have a control (form) and a read row (detail drawer).
 - Ban hard-coded `switch (field.key)` / allowlists that `return null` for unknown keys for active fields.

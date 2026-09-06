@@ -31,8 +31,6 @@ describe("ContactCardActions Component", () => {
       <ContactCardActions
         contact={mockContact}
         displayName="Zayd Harith"
-        phone="+1 555-0100"
-        email="zayd@example.com"
         showArchived={false}
         canWrite={true}
         canDelete={true}

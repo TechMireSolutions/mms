@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
@@ -196,30 +196,26 @@ export function InvoicesList({
           />
         </React.Suspense>
       )}
-      <ConfirmAlertDialog
-        open={pendingDeleteId !== null}
-        onOpenChange={(open) => { if (!open) setPendingDeleteId(null); }}
-        title={t("finance.trash.deleteTitle")}
-        description={t("finance.trash.deleteInvoiceConfirm")}
-        confirmLabel={t("common.delete")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={() => {
+      <ModuleStandardTrashDialogs
+        pendingTrashId={pendingDeleteId}
+        onPendingTrashIdChange={setPendingDeleteId}
+        confirmBulkOpen={confirmBulkOpen}
+        onConfirmBulkOpenChange={setConfirmBulkOpen}
+        showDeleted={showDeleted}
+        selectedCount={selectedIds.length}
+        i18nNamespace="finance"
+        onConfirmRowTrash={() => {
           if (pendingDeleteId) onDelete?.(pendingDeleteId);
           setPendingDeleteId(null);
         }}
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkOpen}
-        onOpenChange={setConfirmBulkOpen}
-        title={showDeleted ? t("finance.trash.restore") : t("finance.trash.deleteTitle")}
-        description={t(showDeleted ? "finance.trash.bulkRestoreConfirm" : "finance.trash.bulkDeleteConfirm", { count: selectedIds.length })}
-        confirmLabel={showDeleted ? t("finance.trash.restore") : t("common.delete")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={() => {
+        onConfirmBulkTrash={() => {
           if (showDeleted) onBulkRestore?.(selectedIds);
           else onBulkDelete?.(selectedIds);
           clearSelection();
           setConfirmBulkOpen(false);
+        }}
+        labels={{
+          singleDescription: t("finance.trash.deleteInvoiceConfirm"),
         }}
       />
     </section>

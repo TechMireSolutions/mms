@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useMemo } from "react";
 import {
   CONTACT_CARD_FACE_COLUMN_IDS,
   getVisibleWorkColumns,
@@ -34,7 +34,7 @@ export interface ContactsListCardsProps {
 }
 
 /** Mobile-first card directory with dynamic, config-driven preferences. */
-export function ContactsListCards({
+export const ContactsListCards = React.memo(function ContactsListCards({
   contacts,
   selected,
   onSelect,
@@ -53,7 +53,7 @@ export function ContactsListCards({
   onSelectAll,
   allSelected = false,
   someSelected = false,
-}: ContactsListCardsProps): JSX.Element {
+}: ContactsListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const {
     prefs,
@@ -63,18 +63,18 @@ export function ContactsListCards({
     isColumnVisible: isRegistryColumnVisible,
   } = useContactConfig();
 
-  const selectedSet = (() => new Set(selected))();
-  const contactsMap = (() => buildContactsMap(allContacts))();
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
+  const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
 
-  const isColumnVisible = (() => {
+  const isColumnVisible = useMemo(() => {
     if (columns.length > 0) {
       const visibleIds = new Set(columns.map((col) => col.id));
       return (id: string) => visibleIds.has(id);
     }
     return isRegistryColumnVisible;
-  })();
+  }, [columns, isRegistryColumnVisible]);
 
-  const otherColumns = (() => {
+  const otherColumns = useMemo(() => {
     const metaColumns = getVisibleWorkColumns(columnRegistry, isColumnVisible, {
       excludeFace: CONTACT_CARD_FACE_COLUMN_IDS,
     });
@@ -88,7 +88,7 @@ export function ContactsListCards({
         label: col.label,
       }),
     );
-  })();
+  }, [columnRegistry, isColumnVisible, columns]);
 
   const pageCountLabel = formatDirectoryPageCountLabel(contacts.length, t, {
     singular: "contacts.form.contact",
@@ -134,7 +134,7 @@ export function ContactsListCards({
       )}
     />
   );
-}
+});
 
 export default ContactsListCards;
 

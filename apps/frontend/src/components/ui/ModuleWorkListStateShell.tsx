@@ -28,6 +28,7 @@ export interface ModuleWorkListStateShellProps {
   onPageChange: (page: number) => void;
   /** Module id for pagination i18n keys (e.g. `contacts`, `students`). */
   i18nNamespace: string;
+  paginationVariant?: "range" | "summary";
   showPagination: boolean;
   loadingLabel: string;
   children: ReactNode;
@@ -47,6 +48,7 @@ export function ModuleWorkListStateShell({
   pageData,
   onPageChange,
   i18nNamespace,
+  paginationVariant = "range",
   showPagination,
   loadingLabel,
   children,
@@ -93,7 +95,7 @@ export function ModuleWorkListStateShell({
                 hasMore={pageData.hasMore}
                 onPageChange={onPageChange}
                 i18nNamespace={i18nNamespace}
-                variant="range"
+                variant={paginationVariant}
               />
             ) : null}
             {useServerWork && isFetching ? (

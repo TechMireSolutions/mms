@@ -8,7 +8,7 @@ trigger: model_decision
 
 Stay current. MMS targets **latest stable** releases across the monorepo — not “good enough” pins.
 
-## Baseline (root `package.json`)
+## 1. Baseline (root `package.json`)
 
 | Tool | Policy |
 |------|--------|
@@ -18,7 +18,7 @@ Stay current. MMS targets **latest stable** releases across the monorepo — not
 
 Stack majors are not frozen — upgrade React, Vite, Fastify, Drizzle, Tailwind, etc. when newer stable releases ship (`mms-core.md` lists current stack; this rule owns **version freshness**).
 
-## Upgrade workflow
+## 2. Upgrade Workflow
 
 Full checklist → skill **`mms-dependency-upgrade`**. Run only on **dedicated upgrade PRs** — not mid-feature.
 
@@ -31,7 +31,7 @@ Full checklist → skill **`mms-dependency-upgrade`**. Run only on **dedicated u
 
 Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution for native/binary deps when present (CI may still set `PUPPETEER_SKIP_DOWNLOAD`; WhatsApp helper is not a Puppeteer workspace package).
 
-## Node 24 Native Built-Ins & Banned Dependencies
+## 3. Node 24 Native Built-Ins & Banned Dependencies
 
 Developing with Node.js 24 leverages native runtime capabilities to eliminate third-party dependencies, streamline async workflows, and improve runtime security:
 
@@ -51,7 +51,7 @@ Developing with Node.js 24 leverages native runtime capabilities to eliminate th
 | **Security Controls** | `--permission` model (`--allow-fs-read`, etc.) | Unrestricted process execution in hardened environments |
 | **Process Lifecycle** | Catch `SIGTERM`/`SIGINT`, clean drain, unref fallback timeout | Ungraced process kills or hanging connection pools |
 
-## Pinning rules
+## 4. Pinning Rules
 
 | Do | Don't |
 |----|-------|
@@ -64,28 +64,28 @@ Developing with Node.js 24 leverages native runtime capabilities to eliminate th
 | Leverage Node 24 native built-ins (`fetch`, `glob`, `crypto.hash`, etc.) | Reintroduce banned packages (`dotenv`, `axios`, `glob`, `ws`, etc.) |
 | `pnpm.onlyBuiltDependencies` (or equivalent) allowlist for native/postinstall scripts | Running arbitrary package `postinstall` / build scripts unreviewed |
 
-## Scope
+## 5. Scope
 
 - **Root:** `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`
 - **Apps:** `apps/frontend/package.json`, `apps/backend/package.json`
 - **Packages:** `packages/shared/package.json`
 - **CI/Docker:** align Node/pnpm images with root engines
 
-## After upgrade
+## 6. After Upgrade
 
 - Remove deprecated API usage — do not wrap obsolete calls indefinitely
 - Update skills/rules if commands or ports change (`mms-ops-infrastructure.md`, `mms-dev-setup`)
 - Do **not** commit or push unless the user asks
 
-## Supply chain (CI)
+## 7. Supply Chain (CI)
 
 Enable Dependabot (or Renovate) + GitHub `dependency-review` on PRs for high/critical advisories; keep `pnpm audit` in upgrade PRs. Prefer `onlyBuiltDependencies` (pnpm) so only reviewed packages may run install scripts — do not silently enable every postinstall. Do not require SBOM/provenance until an ops task adds them — `mms-ops-infrastructure.md`.
 
-## TypeScript strictness (dedicated PR)
+## 8. TypeScript Strictness (Dedicated PR)
 
 Target: `noUncheckedIndexedAccess`; prefer `import type` / `verbatimModuleSyntax` (and `erasableSyntaxOnly` when on TS 5.8+). `exactOptionalPropertyTypes` is opt-in only — high churn; do not enable mid-feature. Strict mode + ban `any` already always-on (`antigravity-global.md`).
 
-## React Compiler (when enabling)
+## 9. React Compiler (When Enabling)
 
 React Compiler is **not** enabled today — memoize non-trivial calculations and object dependencies explicitly per `mms-performance.md`, while avoiding premature memoization on simple primitives.
 

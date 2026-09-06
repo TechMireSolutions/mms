@@ -1,5 +1,6 @@
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ObligationCollectionsList } from "@/tenant/features/obligations/components/ObligationCollectionsList";
 import type { useObligationColumnLayout } from "@/tenant/features/obligations/hooks/useObligationColumnLayout";
@@ -64,7 +65,7 @@ export function ObligationsWorkTier({
 
   return (
     <ErrorBoundary>
-      <div className="space-y-4">
+      <ModuleTierMotion tier="work" className="space-y-4">
         <ObligationCollectionsList
           collections={collections}
           obligationTypes={obligationTypes}
@@ -91,7 +92,7 @@ export function ObligationsWorkTier({
           }}
           onMessage={canWriteMessaging && !showDeleted ? onMessage : undefined}
         />
-      </div>
+      </ModuleTierMotion>
     </ErrorBoundary>
   );
 }

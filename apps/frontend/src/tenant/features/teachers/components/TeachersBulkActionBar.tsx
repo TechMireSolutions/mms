@@ -1,6 +1,6 @@
 import { Briefcase, ChevronDown, IdCard, Users } from 'lucide-react';
-import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
-import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
+import { TEACHERS_MODULE_MANIFEST, type Teacher } from '@mms/shared';
+import { ModuleUniversalBulkActionBar } from '@/components/ui/ModuleUniversalBulkActionBar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -8,13 +8,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  BulkSelectionStatusAction,
-  type BulkSelectionMessageChannel,
-} from '@/components/ui/BulkSelectionActions';
 import { type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { Teacher } from '@mms/shared';
 import type { TeachersSelectionTargets } from '@/tenant/features/teachers/hooks/teachersSelectionTargets';
 
 export interface TeachersBulkActionBarProps {
@@ -43,7 +38,7 @@ export interface TeachersBulkActionBarProps {
   specializationPending?: boolean;
 }
 
-/** Teachers Work bulk bar — Students-shaped composition over shared ModuleWorkBulkActionBar. */
+/** Teachers Work bulk bar — delegates core actions to ModuleUniversalBulkActionBar. */
 export function TeachersBulkActionBar({
   selectedIds,
   selectionTargets,
@@ -70,68 +65,33 @@ export function TeachersBulkActionBar({
 }: TeachersBulkActionBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const showWhatsApp = bulkActions.includes('whatsapp') && canWriteMessaging && Boolean(onWhatsApp);
-  const showSms = bulkActions.includes('sms') && canWriteMessaging && Boolean(onSms);
-  const showEmail = bulkActions.includes('email') && canWriteMessaging && Boolean(onEmail);
-  const showMessaging = !showDeleted && (showWhatsApp || showSms || showEmail);
-
-  const handleChannel = (channel: BulkSelectionMessageChannel): void => {
-    if (channel === 'whatsapp') onWhatsApp?.(selectionTargets.waTargets);
-    else if (channel === 'sms') onSms?.(selectionTargets.smsReady);
-    else onEmail?.(selectionTargets.emailReady);
-  };
-
   return (
-    <ModuleWorkBulkActionBar
+    <ModuleUniversalBulkActionBar<Teacher>
       selectedCount={selectedIds.length}
       viewingDeleted={showDeleted}
-      countLabel={t('teachers.selectedCount', { count: selectedIds.length })}
-      leading={<Users className="w-4 h-4 text-primary" aria-hidden />}
-      deselectLabel={t('common.deselect')}
+      canWrite={canWrite}
       canDelete={canDelete}
-      restoreLabel={t('teachers.bulkRestore')}
-      onRequestBulkRestore={onRequestBulkRestore}
+      canExport={canExport}
+      canWriteMessaging={canWriteMessaging}
+      leadingIcon={Users}
+      i18nNamespace="teachers"
+      bulkActions={bulkActions}
       onClearSelection={onClearSelection}
-      messaging={
-        showMessaging
-          ? {
-              onChannel: handleChannel,
-              labels: {
-                whatsapp: t('teachers.whatsappBulk', {
-                  count: selectionTargets.waTargets.length,
-                }),
-                sms: t('teachers.smsBulk', { count: selectionTargets.smsReady.length }),
-                email: t('teachers.emailBulk', { count: selectionTargets.emailReady.length }),
-              },
-              channels: {
-                whatsapp: showWhatsApp,
-                sms: showSms,
-                email: showEmail,
-              },
-            }
-          : undefined
-      }
-      exportAction={
-        bulkActions.includes('export') && canExport && onBulkExport
-          ? { label: t('teachers.bulkExport'), onClick: onBulkExport }
-          : undefined
-      }
+      onRequestBulkDelete={onRequestBulkDelete}
+      onRequestBulkRestore={onRequestBulkRestore}
+      onBulkExport={onBulkExport}
+      statusConfig={statusConfig}
+      onBulkStatusChange={onBulkStatusChange}
+      statusPending={statusPending}
+      messagingTargets={selectionTargets}
+      onWhatsApp={onWhatsApp}
+      onSms={onSms}
+      onEmail={onEmail}
       extraActions={
-        !showDeleted && (
+        !showDeleted && (onBulkSpecializationChange || onBulkPrintIdCards) ? (
           <div className="flex items-center gap-1.5 flex-wrap">
-            {bulkActions.includes('status') && canWrite && onBulkStatusChange && (
-              <BulkSelectionStatusAction
-                label={t('teachers.bulkStatus')}
-                statuses={Object.keys(statusConfig)}
-                statusBadgeConfig={statusConfig}
-                disabled={statusPending}
-                onSelectStatus={(statusVal) => {
-                  onBulkStatusChange(statusVal);
-                }}
-              />
-            )}
-            {bulkActions.includes('specialization') &&
-              canWrite &&
+            {canWrite &&
+              bulkActions.includes('specialization') &&
               onBulkSpecializationChange &&
               specializationOptions &&
               specializationOptions.length > 0 && (
@@ -140,27 +100,29 @@ export function TeachersBulkActionBar({
                     <Button
                       type="button"
                       variant="outline"
+                      size="sm"
                       disabled={specializationPending}
                       className="min-h-11 gap-1.5 px-3 font-medium text-xs border-border/60 hover:bg-muted/80"
                     >
-                      <Briefcase className="w-3.5 h-3.5 text-primary" aria-hidden />
+                      <Briefcase className="w-3.5 h-3.5" aria-hidden />
                       <span>{t('teachers.bulkSpecialization')}</span>
-                      <ChevronDown className="w-3 h-3 ms-0.5" aria-hidden />
+                      <ChevronDown className="w-3 h-3 text-muted-foreground" aria-hidden />
                     </Button>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuContent align="start" className="w-48">
                     {specializationOptions.map((spec) => (
                       <DropdownMenuItem
                         key={spec}
                         onClick={() => onBulkSpecializationChange(spec)}
+                        className="text-xs"
                       >
-                        <span className="text-xs font-medium">{spec}</span>
+                        {spec}
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               )}
-            {bulkActions.includes('idCards') && onBulkPrintIdCards && (
+            {onBulkPrintIdCards && (
               <Button
                 type="button"
                 variant="outline"
@@ -168,17 +130,12 @@ export function TeachersBulkActionBar({
                 onClick={onBulkPrintIdCards}
                 className="min-h-11 gap-1.5 px-3 font-medium text-xs border-border/60 hover:bg-muted/80"
               >
-                <IdCard className="w-3.5 h-3.5 text-primary" aria-hidden />
+                <IdCard className="w-3.5 h-3.5" aria-hidden />
                 <span>{t('teachers.idCard.print')}</span>
               </Button>
             )}
           </div>
-        )
-      }
-      deleteAction={
-        bulkActions.includes('delete') && canDelete
-          ? { label: t('teachers.bulkDelete'), onClick: onRequestBulkDelete }
-          : undefined
+        ) : undefined
       }
     />
   );

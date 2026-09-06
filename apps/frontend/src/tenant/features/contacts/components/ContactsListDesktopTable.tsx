@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { AnimatePresence } from "framer-motion";
 import type { Contact } from "@mms/shared";
@@ -40,7 +40,7 @@ export interface ContactsListDesktopTableProps {
   someSelected?: boolean;
 }
 
-export function ContactsListDesktopTable({
+export const ContactsListDesktopTable = React.memo(function ContactsListDesktopTable({
   contacts,
   selected,
   onSelect,
@@ -67,14 +67,14 @@ export function ContactsListDesktopTable({
   const { t } = useTranslation();
   const parentRef = useRef<HTMLDivElement>(null);
 
-  const contactsMap = (() => buildContactsMap(allContacts))();
-  const selectedSet = (() => new Set(selected))();
+  const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
+  const selectedSet = useMemo(() => new Set(selected), [selected]);
   const pageCountLabel = formatDirectoryPageCountLabel(contacts.length, t, {
     singular: "contacts.form.contact",
     plural: "contacts.table.contacts",
   });
 
-  const isVirtualized = contacts.length > 50;
+  const isVirtualized = contacts.length > 30;
 
   const rowVirtualizer = useVirtualizer({
     count: contacts.length,
@@ -108,7 +108,7 @@ export function ContactsListDesktopTable({
               <>
                 {rowVirtualizer.getVirtualItems().length > 0 && (
                   <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }}>
-                    <td colSpan={columns.length + 3} />
+                    <td colSpan={columns.length + 2} />
                   </tr>
                 )}
                 {rowVirtualizer.getVirtualItems().map((virtualRow) => {
@@ -149,7 +149,7 @@ export function ContactsListDesktopTable({
                       }px`,
                     }}
                   >
-                    <td colSpan={columns.length + 3} />
+                    <td colSpan={columns.length + 2} />
                   </tr>
                 )}
               </>
@@ -194,6 +194,6 @@ export function ContactsListDesktopTable({
       />
     </div>
   );
-}
+});
 
 export default ContactsListDesktopTable;

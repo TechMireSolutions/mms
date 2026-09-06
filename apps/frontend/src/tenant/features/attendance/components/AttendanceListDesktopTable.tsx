@@ -2,7 +2,7 @@ import type React from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
-import { Checkbox } from '@/components/ui/checkbox';
+import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
 import {
   Table,
   TableBody,
@@ -95,13 +95,12 @@ export function AttendanceListDesktopTable({
           ) : paginatedRecords.map((attendanceRecord) => (
             <motion.tr key={attendanceRecord.id} {...rowMotion()} className="group hover:bg-muted/20 transition-colors">
               {canDelete && (
-                <TableCell className="px-3 py-2.5">
-                  <Checkbox
-                    checked={selectedSet.has(attendanceRecord.id)}
-                    onCheckedChange={(checked) => onToggleSelectedRecord(attendanceRecord.id, checked === true)}
-                    aria-label={t('attendance.trash.selectRecord', { student: attendanceRecord.studentName })}
-                  />
-                </TableCell>
+                <ModuleTableSelectionCell
+                  checked={selectedSet.has(attendanceRecord.id)}
+                  onCheckedChange={(checked) => onToggleSelectedRecord(attendanceRecord.id, checked)}
+                  ariaLabel={t('attendance.trash.selectRecord', { student: attendanceRecord.studentName })}
+                  sticky={false}
+                />
               )}
               {isColumnVisible("date") && (
                 <TableCell className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{formatDate(attendanceRecord.date, true)}</TableCell>

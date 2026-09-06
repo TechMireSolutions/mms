@@ -1,5 +1,7 @@
+import React, { useMemo } from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FilterChips } from "@/components/ui/FilterChips";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import ContactsListFilters from "@/tenant/features/contacts/components/ContactsListFilters";
 import { ContactsBulkActionBar } from "@/tenant/features/contacts/components/ContactsBulkActionBar";
@@ -7,7 +9,7 @@ import { ContactsList } from "@/tenant/features/contacts/components/ContactsList
 import { buildContactsWorkFilterChips } from "@/tenant/features/contacts/components/buildContactsWorkFilterChips";
 import type { ContactsWorkTierProps } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 
-export function ContactsWorkTier({
+export const ContactsWorkTier = React.memo(function ContactsWorkTier({
   search,
   onSearchChange,
   filterGender,
@@ -53,16 +55,20 @@ export function ContactsWorkTier({
   onPageChange,
 }: ContactsWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
-  const filterChips = buildContactsWorkFilterChips({
-    filterGender,
-    quickFilter,
-    onGenderChange,
-    onQuickFilterChange,
-    t,
-  });
+  const filterChips = useMemo(
+    () =>
+      buildContactsWorkFilterChips({
+        filterGender,
+        quickFilter,
+        onGenderChange,
+        onQuickFilterChange,
+        t,
+      }),
+    [filterGender, quickFilter, onGenderChange, onQuickFilterChange, t],
+  );
 
   return (
-    <div className="space-y-4">
+    <ModuleTierMotion tier="work" className="space-y-4" aria-busy={isWorkFetching}>
       <ErrorBoundary fallback={<div className="p-4 text-sm text-destructive">{t('errors.toolbar.loadFailed')}</div>}>
         <ContactsListFilters
           search={search}
@@ -125,6 +131,6 @@ export function ContactsWorkTier({
         workPageData={workPageData}
         onPageChange={onPageChange}
       />
-    </div>
+    </ModuleTierMotion>
   );
-}
+});

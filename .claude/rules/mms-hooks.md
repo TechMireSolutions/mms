@@ -18,7 +18,7 @@ paths:
 
 Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), or `tenant/features/{module}/hooks/`. Pure logic used in 2+ modules → `@mms/shared`, keep the hook as a thin wrapper. Exhaustive hook catalogs go stale — follow patterns below; discover hooks via feature folders / `@/tenant/hooks/collections/*`.
 
-## Server state (TanStack Query)
+## 1. Server State (TanStack Query)
 
 **Policy owner:** `mms-data-layer.md` §3 · factories → skill **`mms-query-factories`**. This section is recipes only (facades, call-site toast, live-collection ban).
 
@@ -27,7 +27,7 @@ Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), o
 - Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY`.
 - Form close after success → **`mms-module-architecture.md` §7**.
 
-### Cross-module collection facades
+### 1.1 Cross-Module Collection Facades
 
 Hook **implementations** stay in `tenant/features/{module}/hooks/`. Cross-feature and shared UI **must** import from:
 
@@ -37,7 +37,7 @@ Same-feature files may keep direct feature-hook imports. Shared person UI: `Cont
 
 **Platform:** Platform cross-feature hooks colocate in `@/platform/hooks/` and follow the same facade pattern — implementations in `platform/pages/{page}/hooks/` or `platform/hooks/` for shared platform concerns. Platform hooks must not import tenant collection facades (and vice versa).
 
-## `useLiveCollection(key, seed?)`
+## 2. Legacy Data Layer (`useLiveCollection` Ban)
 
 Legacy localStorage reactive reads only. **Hard ban** on new use for REST-migrated entities. Contacts entity rows are REST-only (not in FE `BUSINESS_COLLECTIONS`). Contacts Setup config (field-config, preferences, lookups) uses Query via `@/tenant/hooks/collections/contacts` (`useContactFieldConfigQuery`, `useContactPreferencesQuery`, `useContactLookupsQuery`) — **never** `getObject` / `getCollection` for those keys.
 
@@ -49,28 +49,28 @@ const legacyRows = useLiveCollection('some_legacy_key');
 const [items] = useState(() => getCollection('contacts', CONTACTS));
 ```
 
-## Domain lookups & config
+## 3. Domain Lookups & Config
 
 Prefer feature hooks (`useObligationLookups`, `useQuestionBankConfig`, `useWorkspaceRoles`, …). `useSortedFields(registry, tabKey?)` for registry-driven forms — not hardcoded field lists.
 
-## Settings & branding
+## 4. Settings & Branding
 
 Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / branding / theme), and public branding queries as documented in `mms-settings-i18n.md`. One-shot outside React: `getGlobalSettings()`, `getBrandingSettings()`.
 
-## Module config (standard hook)
+## 5. Module Config (Standard Hook)
 
 Module configuration should build on the shared `createStandardModuleConfigHook` (`hooks/createStandardModuleConfigHook.ts`) — used by Teachers / Students / Sessions / Users / Enrollments via `useStandardModuleConfig` (`hooks/useStandardModuleConfig.ts`). Contacts is the richer reference: `useContactStandardConfig` (`lib/contacts/useContactStandardConfig.ts`) calls the same hook with optional params for lookups, column-layout, relationship mirrors, and custom-tab sync, surfaced through `ContactConfigContext` (`lib/contexts/ContactConfigContext.tsx` + `lib/contacts/*` slices: `useContactConfigPrefs`, `useContactsConfigEnhance`). Mount the provider once via `TenantScopedProviders` (tenant host only) — never nest on child pages. Extend the hook (optional params) instead of forking a bespoke provider per module.
 
-## RBAC & viewer
+## 6. RBAC & Viewer Permissions
 
 - Prefer `useModulePermissions(manifest)` / `can()` over `role ===` for module write gates.
 - Do **not** add new tenant-module write gates via `role ===`. Residual non-gate uses (platform `super_user`, chat `msg.role`, metrics counting, teacher→staff alias) are fine.
 
-## UI shell
+## 7. UI Shell & Modals
 
 `useFilteredModuleTierTabs` (prefer over bare `useModuleTierTabs`), `useConfigSubTabs` / `usePersistedTabState`, `useTranslation`, `useBodyScrollLock` (never set `document.body.style.overflow` manually), `useSessionTimeout`, `useDebounce`, `useMediaQuery`.
 
-## Page / panel controllers
+## 8. Page & Panel Controllers
 
 Large feature pages and settings panels should keep JSX thin:
 
@@ -82,7 +82,7 @@ Large feature pages and settings panels should keep JSX thin:
 
 Return a flat object the shell destructures; keep public page/component export paths unchanged (`mms-structure-naming.md`). Memoize non-trivial calculations (`useMemo`) and callback/object references passed to child components or effects (`useCallback`) to prevent render churn; avoid premature memoization on trivial primitive operations (`mms-performance.md`). Prefer React 19 `useEffectEvent` / `startTransition` / `useDeferredValue` when the repo pattern fits (e.g. event handlers that read latest props without re-subscribing effects).
 
-## Work directory layout
+## 9. Work Directory Layout
 
 | Hook / component | Use |
 |------------------|-----|
@@ -91,7 +91,7 @@ Return a flat object the shell destructures; keep public page/component export p
 | Contacts column prefs | `useContactColumnLayout` via `ContactConfigContext` |
 | Command / dashboard metrics | `use*Metrics` from `@/tenant/hooks/collections/*` — ban client-reduce of full lists for KPI values |
 
-## New hooks checklist
+## 10. New Hooks Checklist
 
 - [ ] No ad-hoc polling loops — events, TanStack Query (incl. documented `refetchInterval`), or job-progress polls — `mms-core.md`
 - [ ] Internal API via `apiClient`

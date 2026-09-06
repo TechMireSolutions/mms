@@ -1,8 +1,9 @@
 import React from "react";
 import { useFinancePageController } from "@/tenant/features/finance/hooks/useFinancePageController";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { Plus, DollarSign, CalendarRange, Bell, AlarmClock } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
@@ -88,7 +89,7 @@ export default function Finance(): React.JSX.Element {
         )}
 
         <AnimatePresence mode="wait">
-          <motion.div key={c.activeTab + "-" + c.activeSubTab} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="space-y-4">
+          <ModuleTierMotion tier={c.activeTab + "-" + c.activeSubTab} className="space-y-4">
             <ErrorBoundary>
               {c.activeTab === "reports" && <FinanceReportsTier />}
               {c.activeTab === "setup" && <FinanceSetupTier />}
@@ -158,7 +159,7 @@ export default function Finance(): React.JSX.Element {
                 />
               )}
             </ErrorBoundary>
-          </motion.div>
+          </ModuleTierMotion>
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 

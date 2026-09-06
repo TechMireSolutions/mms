@@ -8,7 +8,7 @@ trigger: model_decision
 
 **Placement & per-module categories** → `mms-module-architecture.md`. This file covers report **implementation** only.
 
-## Data (Query-first)
+## 1. Data Layer (Query-first)
 
 - Prefer TanStack Query / server aggregates / module `/metrics` for REST-migrated modules.
 - `getCollection` / `useLiveCollection` only for legacy non-migrated report sources — never as the primary path for REST entities.
@@ -19,7 +19,7 @@ trigger: model_decision
 - No stale snapshot caches unless the user explicitly exports.
 - Hydrate cross-module ids via batch `/resolve` — ban N+1 client loops.
 
-## Definitions
+## 2. Definitions & Builders
 
 - Shared metadata/utils: `@/lib/reports/*` (feature paths may re-export)
 - `CustomReportBuilder` / `DynamicCardBuilder` — ad-hoc columns + aggregates (Sum, Avg, Count)
@@ -27,7 +27,7 @@ trigger: model_decision
 - Column picker keys must match field registry keys where applicable
 - Module report category must be module-specific — never `category="academic"` on module reports
 
-## Export (`ExportToolbar`)
+## 3. Export Architecture (ExportToolbar)
 
 | Format | Implementation |
 |--------|----------------|
@@ -38,11 +38,11 @@ trigger: model_decision
 Use shared `ExportToolbar` / `ExportToolbarCompact` (`@/components/ui/ExportToolbar*`, `exportToolbarUtils.ts`) — not a deleted `ReportExportBar`. Charts: `lazy` + `SafeResponsiveContainer`. Escape formula-prefix cells (`=`, `+`, `-`, `@`) in CSV/Excel.
 Exports above interactive size → **background job + tray download** (`mms-module-architecture.md` §5) — ban main-thread mega xlsx/PDF in the Reports tab.
 
-## Visual
+## 4. Visualizations & Chart Rules
 
 Recharts + semantic colours (`StatusBadge` / design tokens). Export/print labels via `t()` — `mms-settings-i18n.md`.
 
-## Dashboard & KPI SSOT
+## 5. Dashboard & KPI SSOT
 
 `PinnedWidgets` / dashboard cards — config via `kpi_custom_widgets` (`DASHBOARD_WIDGETS_KEY`) and typed `saved_reports` where applicable; not hardcoded in `DashboardPage.tsx`.
 
@@ -55,19 +55,18 @@ Recharts + semantic colours (`StatusBadge` / design tokens). Export/print labels
 
 Ban fake faculty workload hours (`hours += 2`); use real class counts.
 
-## Module-aware filters
+## 6. Module-Aware Filters
 
 Hide irrelevant filters per module context — do not show finance filters on attendance reports.
 
-## Permissions & export policy
+## 7. Permissions, Export Policy & Drill-Down
 
 Exports must respect active filters, search, field visibility, soft-deletion policy, and `can()` — same boundary as Work (`mms-module-architecture.md` §6–§7). Audit large/sensitive exports (target — `mms-auth-security.md`).
 
-## Drill-down (target)
-
+### Drill-Down (target)
 Chart segment / summary row → Work directory with equivalent filters (URL/search params when practical), preserving RBAC.
 
-## Saved reports
+## 8. Saved Reports
 
 Save **report logic** (filters, columns, aggregates), not a data snapshot. Re-run against current authorised data. If a saved field/tab is archived, show an explicit error — do not fail silently.
 

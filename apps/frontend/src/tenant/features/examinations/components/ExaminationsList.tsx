@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import type { Exam } from '@/lib/data/examinationData';
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { ListPagination } from "@/components/ui/ListPagination";
-import { ErrorState } from "@/components/ui/ErrorState";
+import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { useExamSelection } from "@/tenant/features/examinations/hooks/useExamSelection";
 import { useExaminationsContractList } from "@/tenant/features/examinations/hooks/useExaminationsTsrHooks";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
@@ -182,13 +181,27 @@ export default function ExaminationsList({
         />
       )}
 
-      {isError ? (
-        <ErrorState
-          title={t("examinations.loadFailed")}
-          description={t("examinations.loadFailedHint")}
-          onRetry={() => { void examsPageQuery.refetch(); }}
-        />
-      ) : isInitialLoading ? null : (
+      <ModuleWorkListStateShell
+        isError={isError}
+        isLoading={isInitialLoading}
+        isFetching={examsPageQuery.isFetching}
+        onRetry={() => { void examsPageQuery.refetch(); }}
+        errorTitle={t("examinations.loadFailed")}
+        errorHint={t("examinations.loadFailedHint")}
+        viewMode={viewMode}
+        skeletonColumnCount={6}
+        useServerWork={true}
+        pageData={{
+          page: serverPage,
+          total: serverTotal,
+          limit: serverLimit,
+          hasMore: serverHasMore,
+        }}
+        onPageChange={setListPage}
+        i18nNamespace="examinations"
+        showPagination={true}
+        loadingLabel={t("common.loading")}
+      >
         <ExaminationsListContent
           viewMode={viewMode}
           exams={pageExams}
@@ -214,16 +227,7 @@ export default function ExaminationsList({
             else setPendingTrashId(id);
           }}
         />
-      )}
-
-      <ListPagination
-        page={serverPage}
-        total={serverTotal}
-        limit={serverLimit}
-        hasMore={serverHasMore}
-        onPageChange={setListPage}
-        i18nNamespace="examinations"
-      />
+      </ModuleWorkListStateShell>
       <ExaminationsTrashDialogs
         pendingTrashId={pendingTrashId}
         onPendingTrashIdChange={setPendingTrashId}

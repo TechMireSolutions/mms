@@ -1,6 +1,5 @@
 import React from "react";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import { useTranslation } from "@/hooks/useTranslation";
+import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 
 export interface HasanatTrashDialogsProps {
   pendingTrashId: string | null;
@@ -23,41 +22,17 @@ export function HasanatTrashDialogs({
   onConfirmRowTrash,
   onConfirmBulkTrash,
 }: HasanatTrashDialogsProps): React.JSX.Element {
-  const { t } = useTranslation();
-
   return (
-    <>
-      <ConfirmAlertDialog
-        open={pendingTrashId !== null}
-        onOpenChange={(open) => {
-          if (!open) onPendingTrashIdChange(null);
-        }}
-        title={t("hasanat.trash.deleteTitle")}
-        description={t("hasanat.trash.deleteConfirm")}
-        confirmLabel={t("common.delete")}
-        cancelLabel={t("common.cancel")}
-        onConfirm={onConfirmRowTrash}
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkOpen}
-        onOpenChange={onConfirmBulkOpenChange}
-        title={
-          showDeleted
-            ? t("hasanat.trash.restore")
-            : t("hasanat.trash.deleteTitle")
-        }
-        description={t(
-          showDeleted
-            ? "hasanat.trash.bulkRestoreConfirm"
-            : "hasanat.trash.bulkDeleteConfirm",
-          { count: selectedCount },
-        )}
-        confirmLabel={
-          showDeleted ? t("hasanat.trash.restore") : t("common.delete")
-        }
-        cancelLabel={t("common.cancel")}
-        onConfirm={onConfirmBulkTrash}
-      />
-    </>
+    <ModuleStandardTrashDialogs
+      pendingTrashId={pendingTrashId}
+      onPendingTrashIdChange={onPendingTrashIdChange}
+      confirmBulkOpen={confirmBulkOpen}
+      onConfirmBulkOpenChange={onConfirmBulkOpenChange}
+      showDeleted={showDeleted}
+      selectedCount={selectedCount}
+      i18nNamespace="hasanat"
+      onConfirmRowTrash={onConfirmRowTrash}
+      onConfirmBulkTrash={onConfirmBulkTrash}
+    />
   );
 }

@@ -6,15 +6,13 @@ import {
   getPrimaryPhone,
   type Contact,
 } from '@mms/shared';
-import { Checkbox } from '@/components/ui/checkbox';
+import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
 import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
-import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
+import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
 import {
   Table,
   TableBody,
   TableCell,
-  TableHead,
-  TableHeader,
   TableRow,
 } from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -61,60 +59,35 @@ export function MessagingWorkRecipientsTable({
     <div className="space-y-2">
       <div className="overflow-x-auto rounded-lg border border-border/60">
         <Table className="table-fixed text-xs">
-          <TableHeader>
-            <TableRow className="border-b border-border/60 hover:bg-muted/30">
-              <TableHead className="w-10 px-4 py-2 h-auto">
-                <Checkbox
-                  checked={someVisibleSelected ? 'indeterminate' : allVisibleSelected}
-                  onCheckedChange={onToggleAllVisible}
-                  aria-label={t('messaging.selectAllVisible')}
-                />
-              </TableHead>
-              {showRecipientCol && (
-                <ModuleTableHeaderCell
-                  columnKey="recipient"
-                  width={getColumnWidth('recipient')}
-                  onResize={setColumnWidth}
-                  className="px-4 py-2"
-                >
-                  {t('messaging.recipient')}
-                </ModuleTableHeaderCell>
-              )}
-              {showPhoneCol && (
-                <ModuleTableHeaderCell
-                  columnKey="phone"
-                  width={getColumnWidth('phone')}
-                  onResize={setColumnWidth}
-                  className="px-4 py-2"
-                >
-                  {t('contacts.form.primaryPhone')}
-                </ModuleTableHeaderCell>
-              )}
-              {showEmailCol && (
-                <ModuleTableHeaderCell
-                  columnKey="email"
-                  width={getColumnWidth('email')}
-                  onResize={setColumnWidth}
-                  className="px-4 py-2"
-                >
-                  {t('contacts.form.primaryEmail')}
-                </ModuleTableHeaderCell>
-              )}
-            </TableRow>
-          </TableHeader>
+          <ModuleWorkTableHeader
+            columns={[
+              showRecipientCol ? { id: 'recipient', label: t('messaging.recipient') } : null,
+              showPhoneCol ? { id: 'phone', label: t('contacts.form.primaryPhone') } : null,
+              showEmailCol ? { id: 'email', label: t('contacts.form.primaryEmail') } : null,
+            ].filter((c): c is { id: string; label: string } => c !== null)}
+            getColumnWidth={getColumnWidth}
+            setColumnWidth={setColumnWidth}
+            selection={{
+              allSelected: allVisibleSelected,
+              someSelected: someVisibleSelected,
+              onSelectAll: () => onToggleAllVisible(!allVisibleSelected),
+              ariaLabel: t('messaging.selectAllVisible'),
+            }}
+            stickyColumnId=""
+          />
           <TableBody className="divide-y divide-border/50">
             {contacts.map((contact) => {
               const phone = getPrimaryPhone(contact);
               const email = getPrimaryEmail(contact);
               return (
                 <TableRow key={contact.id} className="hover:bg-muted/10">
-                  <TableCell className="px-4 py-2">
-                    <Checkbox
-                      checked={Boolean(selectedById[String(contact.id)])}
-                      onCheckedChange={() => onToggleRecipient(contact)}
-                      aria-label={t('messaging.selectRecipient', { name: getDisplayName(contact) })}
-                    />
-                  </TableCell>
+                  <ModuleTableSelectionCell
+                    checked={Boolean(selectedById[String(contact.id)])}
+                    onCheckedChange={() => onToggleRecipient(contact)}
+                    ariaLabel={t('messaging.selectRecipient', { name: getDisplayName(contact) })}
+                    sticky={false}
+                    className="px-4 py-2"
+                  />
                   {showRecipientCol && (
                     <TableCell className="px-4 py-2 font-medium text-foreground">
                       <div className="flex items-center gap-2">

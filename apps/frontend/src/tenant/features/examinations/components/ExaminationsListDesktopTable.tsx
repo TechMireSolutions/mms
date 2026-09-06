@@ -1,7 +1,7 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { formatDate } from "@mms/shared";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import {
@@ -82,13 +82,14 @@ export function ExaminationsListDesktopTable(props: ExaminationsListDesktopTable
               className={`hover:bg-muted/50 cursor-pointer transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
             >
               {canDelete && (
-                <TableCell className="px-3 py-3">
-                  <Checkbox
-                    checked={isSelected}
-                    onCheckedChange={(checked) => onToggleSelectedExam(exam.id, checked === true)}
-                    aria-label={t("examinations.trash.selectExam", { name: exam.name })}
-                  />
-                </TableCell>
+                <ModuleTableSelectionCell
+                  checked={isSelected}
+                  onCheckedChange={(checked) => onToggleSelectedExam(exam.id, checked)}
+                  ariaLabel={t("examinations.trash.selectExam", { name: exam.name })}
+                  sticky={false}
+                  stopPropagation={true}
+                  className="px-3 py-3"
+                />
               )}
               {isColumnVisible("name") && (
                 <TableCell className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{exam.name}</TableCell>

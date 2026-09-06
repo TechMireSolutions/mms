@@ -26,7 +26,7 @@ export function useContactsDirectoryFilters({
   const [selected, setSelected] = useState<(string | number)[]>([]);
 
   useEffect(() => {
-    setListPage(1);
+    setListPage((prev) => (prev === 1 ? prev : 1));
   }, [debouncedSearch, filterGender, quickFilter, sortField, sortDir, viewingDeleted]);
 
   const applyDrillDown = useCallback(
@@ -57,27 +57,35 @@ export function useContactsDirectoryFilters({
   const activeFilterCount =
     (filterGender ? 1 : 0) + (quickFilter !== "all" ? 1 : 0) + (search.trim() ? 1 : 0);
 
-  const handleSort = ((field: string) => {
-    if (sortField === field) setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
-    else {
-      setSortField(field);
+  const handleSort = useCallback((field: string) => {
+    setSortField((currentField) => {
+      if (currentField === field) {
+        setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
+        return currentField;
+      }
       setSortDir("asc");
-    }
-  });
+      return field;
+    });
+  }, []);
 
-  const handleSelect = ((id: string | number) => {
+  const handleSelect = useCallback((id: string | number) => {
     setSelected((selectedIds) => toggleIdInSelection(selectedIds, id));
-  });
+  }, []);
 
   /** Toggle current-page ids into/out of selection (keeps selections from other pages). */
-  const handleSelectAll = ((workContactIds: Array<string | number>) => {
+  const handleSelectAll = useCallback((workContactIds: Array<string | number>) => {
     setSelected((selectedIds) => togglePageIdsInSelection(selectedIds, workContactIds));
-  });
-  const clearFilters = (() => {
+  }, []);
+
+  const clearSelection = useCallback(() => {
+    setSelected([]);
+  }, []);
+
+  const clearFilters = useCallback(() => {
     setFilterGender("");
     setSearch("");
     setQuickFilter("all");
-  });
+  }, []);
 
   return {
     viewingDeleted,
@@ -101,5 +109,6 @@ export function useContactsDirectoryFilters({
     handleSelect,
     handleSelectAll,
     clearFilters,
+    clearSelection,
   };
 }

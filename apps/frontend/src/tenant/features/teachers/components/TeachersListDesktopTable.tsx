@@ -1,8 +1,8 @@
 import React from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import {
@@ -104,19 +104,11 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
                   {...rowMotion(Math.min(rowIndex * 0.03, 0.2))}
                   className={cn("hover:bg-muted/20 transition-colors group", isSelected && "bg-primary/5")}
                 >
-                  <TableCell
-                    className={cn(
-                      "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 transition-colors border-e border-border/30",
-                      workTableStickyCellBg(isSelected),
-                    )}
-                  >
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={() => onSelectOne(teacherIdStr)}
-                      aria-label={t("teachers.table.selectTeacher", { name: displayName })}
-                      className="cursor-pointer"
-                    />
-                  </TableCell>
+                  <ModuleTableSelectionCell
+                    checked={isSelected}
+                    onCheckedChange={() => onSelectOne(teacherIdStr)}
+                    ariaLabel={t("teachers.table.selectTeacher", { name: displayName })}
+                  />
                   {visibleColumns.map((col) => (
                     <TableCell
                       key={col.key}

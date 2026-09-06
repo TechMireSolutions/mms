@@ -90,7 +90,7 @@ Index: [.agent/skills/README.md](.agent/skills/README.md)
 
 ## Workflows (Antigravity)
 
-[.agent/workflows/](.agent/workflows/) — `dev-setup`, `feature-module`, `code-review`, `fix-migration-debt`
+[.agent/workflows/](.agent/workflows/) — `dev-setup`, `feature-module`, `code-review`, `fix-migration-debt`, `dry`, `run-tests`
 
 ## Sync policy
 
@@ -118,7 +118,7 @@ bash .agent/scripts/sync-all.sh
 
 Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cursor), `sync-claude.sh` (→ Claude).
 
-**20 rules** (4 always-on + 16 scoped): product (`mms-ui-ux-design`, `mms-fields`, `mms-module-architecture`, `mms-form-architecture`, `mms-messaging`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-auth-security`, ...). Index: `.cursor/rules/README.md`.
+**21 rules** (5 always-on + 16 scoped): product (`mms-ui-ux-design`, `mms-fields`, `mms-module-architecture`, `mms-form-architecture`, `mms-messaging`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-auth-security`, ...). Index: `.cursor/rules/README.md`.
 
 **Rule index:** [.cursor/rules/README.md](.cursor/rules/README.md) — canonical owner per topic (avoids duplicating tier/isolation/i18n prose).
 

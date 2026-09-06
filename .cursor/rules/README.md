@@ -16,24 +16,41 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 
 ## Scoped Rules (16)
 
+### Architecture & Platform Standards
+
 | Rule | Focus / Topic |
 |------|---------------|
 | `mms-dry.mdc` | DRY — single source of truth, extraction thresholds, `@mms/shared` exports |
+| `mms-structure-naming.mdc` | Monorepo layout, colocation, **file-size bands (~300 hard / ~220 soft)**, Title Case on save, naming |
 | `mms-dependencies.mdc` | Latest stable Node, pnpm, and workspace dependency upgrades |
 | `mms-ops-infrastructure.mdc` | Local dev setup, environment variables, Docker backend ports, health endpoints, Linux compatibility, and CI orchestration |
+
+### Backend, Data & Security
+
+| Rule | Focus / Topic |
+|------|---------------|
+| `mms-data-layer.mdc` | PostgreSQL, Drizzle schema, migrations, database transactions, TanStack Query policy |
+| `mms-api-interface.mdc` | apiClient, Fastify routes, error taxonomy, HTTP pagination, bulk PUT upsert |
+| `mms-auth-security.mdc` | Auth, users, JWT session shapes, RBAC permissions, multi-tenant isolation, cookie policies, rate limits |
+
+### Frontend Architecture & UI/UX
+
+| Rule | Focus / Topic |
+|------|---------------|
 | `mms-ui-ux-design.mdc` | UI primitives, design tokens, tabs, notifications, a11y (RTL / WCAG), and **§7 responsiveness** (FormModal chrome → `mms-form-architecture.mdc`) |
 | `mms-module-architecture.mdc` | Universal module manifest schemas, three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
-| `mms-data-layer.mdc` | PostgreSQL, Drizzle schema, migrations, database transactions, TanStack Query policy |
 | `mms-form-architecture.mdc` | Static FormModal forms, write Zod `.strict()`, React 19 defaults, decimal-as-string, local multipart uploads |
-| `mms-structure-naming.mdc` | Monorepo layout, colocation, **file-size bands (~300 hard / ~220 soft)**, Title Case on save, naming |
 | `mms-hooks.mdc` | Custom React hooks (Query recipes, page controllers / action handlers, Work layout) |
-| `mms-auth-security.mdc` | Auth, users, JWT session shapes, RBAC permissions, multi-tenant isolation, cookie policies, rate limits |
+| `mms-fields.mdc` | Field and tab registry, system vs custom fields, tab enablement SSOT |
 | `mms-settings-i18n.mdc` | Settings hierarchy, preview, navigation, translations, `formatDate` / `formatMoney` |
-| `mms-fields.mdc` | Field and tab registry |
-| `mms-api-interface.mdc` | apiClient, Fastify routes, error taxonomy, HTTP pagination, bulk PUT upsert |
-| `mms-reports.mdc` | Analytics implementation & exports |
-| `mms-testing-observability.mdc` | Vitest, API tests, logging, ErrorBoundary, Sentry, request-id |
+
+### Cross-Cutting Features & Testing
+
+| Rule | Focus / Topic |
+|------|---------------|
 | `mms-messaging.mdc` | SMS/WhatsApp campaigns, `MessageComposer`, templates, and message-log soft-archive semantics |
+| `mms-reports.mdc` | Analytics implementation & exports, KPI SSOT, `ExportToolbar`, saved reports |
+| `mms-testing-observability.mdc` | Vitest, API tests, logging, ErrorBoundary, Sentry, request-id |
 
 ## Ownership (see `mms-core.mdc`)
 
@@ -136,4 +153,4 @@ bash .agent/scripts/sync-all.sh
 
 ## Verify in Cursor
 
-**Settings → Rules** — four always-apply rules + 16 file-scoped rules when matching paths are open (**20 total**).
+**Settings → Rules** — five always-apply rules + 16 file-scoped rules when matching paths are open (**21 total**).

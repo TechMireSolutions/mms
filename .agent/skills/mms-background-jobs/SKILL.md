@@ -11,13 +11,13 @@ Use this skill when adding or changing background processing, export/download ar
 
 ## Reference Files
 
-- Backend routes: `apps/backend/src/routes/backgroundJobs.ts`
+- Backend routes: `apps/backend/src/routes/common/backgroundJobs.ts`
 - Worker registry: `apps/backend/src/services/backgroundJobWorkerService.ts`
 - Runners: `apps/backend/src/services/backgroundJobRunnerService.ts`
 - Artifacts: `apps/backend/src/services/exportArtifactService.ts`
 - Frontend API/store: `apps/frontend/src/lib/backgroundJobs/`
 - Tray: `apps/frontend/src/components/ui/BackgroundJobsTray.tsx`
-- Hook: `apps/frontend/src/hooks/useBackgroundJobs.ts`
+- Hook: `apps/frontend/src/tenant/hooks/useBackgroundJobs.ts`
 
 ## Workflow
 

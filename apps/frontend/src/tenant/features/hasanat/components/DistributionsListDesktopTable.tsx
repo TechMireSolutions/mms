@@ -2,6 +2,7 @@ import type React from "react";
 import { motion } from "framer-motion";
 import { User, Users2 } from "lucide-react";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import {
   Table,
@@ -82,17 +83,12 @@ export function DistributionsListDesktopTable(props: DistributionsListDesktopTab
           return (
             <motion.tr key={distribution.id} {...rowMotion(index * 0.03)} className="hover:bg-muted/20 transition-colors group">
               {canDelete && (
-                <TableCell className="px-3 py-3 w-10">
-                  <div className="flex justify-center">
-                    <input 
-                      type="checkbox"
-                      checked={selectedIdsSet.has(distribution.id)}
-                      onChange={(e) => onToggleSelectedDistribution(distribution.id, e.target.checked)}
-                      aria-label={t("hasanat.trash.selectDistribution", { name: distribution.recipientName || distribution.id })}
-                      className="cursor-pointer"
-                    />
-                  </div>
-                </TableCell>
+                <ModuleTableSelectionCell
+                  checked={selectedIdsSet.has(distribution.id)}
+                  onCheckedChange={(checked) => onToggleSelectedDistribution(distribution.id, checked)}
+                  ariaLabel={t("hasanat.trash.selectDistribution", { name: distribution.recipientName || distribution.id })}
+                  sticky={false}
+                />
               )}
               {isColumnVisible("card") && (
                 <TableCell className="px-4 py-3">

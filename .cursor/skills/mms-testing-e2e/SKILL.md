@@ -68,11 +68,10 @@ test('POST /api/contacts rejects unauthenticated tenant', async () => {
 ### Multi-Tenant RLS Concurrency Test
 When adding tenant tables, ensure the shared connection pool prevents cross-tenant data leakage:
 ```typescript
-// apps/backend/test/integration/rls-isolation.test.ts
-import { describe, it } from 'node:test';
-import assert from 'node:assert/strict';
-import { withTenant } from '../../src/db/tenant-context';
-import { students } from '../../src/db/schema';
+// apps/backend/src/__tests__/tenantIsolation.test.ts
+import { describe, it, expect } from 'vitest';
+import { withTenant } from '../db/tenant-context.js';
+import { students } from '../db/schema.js';
 
 describe('Row Level Security Concurrency Test', () => {
   it('prevents cross-tenant data leakage within the shared connection pool', async () => {
@@ -87,16 +86,16 @@ describe('Row Level Security Concurrency Test', () => {
       await tx.insert(students).values({ name: 'Tenant B Student', tenantId: tenantB });
     });
 
-    // Concurrently query across both tenants
+    // Concurrently query across both tenants with explicit column projection (no SELECT *)
     const [resultA, resultB] = await Promise.all([
-      withTenant(tenantA, async (tx) => tx.select().from(students)),
-      withTenant(tenantB, async (tx) => tx.select().from(students)),
+      withTenant(tenantA, async (tx) => tx.select({ id: students.id, name: students.name, tenantId: students.tenantId }).from(students)),
+      withTenant(tenantB, async (tx) => tx.select({ id: students.id, name: students.name, tenantId: students.tenantId }).from(students)),
     ]);
 
-    assert.equal(resultA.every((s) => s.tenantId === tenantA), true);
-    assert.equal(resultB.every((s) => s.tenantId === tenantB), true);
-    assert.equal(resultA.find((s) => s.name === 'Tenant B Student'), undefined);
-    assert.equal(resultB.find((s) => s.name === 'Tenant A Student'), undefined);
+    expect(resultA.every((s) => s.tenantId === tenantA)).toBe(true);
+    expect(resultB.every((s) => s.tenantId === tenantB)).toBe(true);
+    expect(resultA.find((s) => s.name === 'Tenant B Student')).toBeUndefined();
+    expect(resultB.find((s) => s.name === 'Tenant A Student')).toBeUndefined();
   });
 });
 ```
@@ -148,7 +147,7 @@ test('verifies bidirectional layout and Nastaliq rendering parity', async ({ pag
 
 ## 4. Verification Checklist Before Done
 
-- [ ] All new pure utility functions in `@mms/shared` have corresponding `node:test` unit tests.
+- [ ] All new pure utility functions in `@mms/shared` have corresponding Vitest unit tests.
 - [ ] Backend route changes include `inject()` test cases for authentication (`401`), authorization (`403`), and validation failure (`422`/`400`).
 - [ ] Form submission error states and touch targets are verified at 375px, 768px, and 1440px.
 - [ ] Performance refactors guarantee 100% backward compatibility for API contracts, schemas, and props (`mms-performance.mdc`).

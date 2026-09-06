@@ -1,16 +1,16 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Checkbox } from "@/components/ui/checkbox";
 import { TableCell } from "@/components/ui/table";
 import { getDisplayName, type Contact, type ContactPreferences } from "@mms/shared";
 import { type useTranslation } from "@/hooks/useTranslation";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { ContactsRowActions } from "@/tenant/features/contacts/components/ContactsRowActions";
+import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import { renderContactTableCell } from "@/tenant/features/contacts/components/ContactTableCells";
 import {
   type ContactsColumnConfig,
 } from "@/tenant/features/contacts/components/contactTableTypes";
-import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { cn } from "@/lib/utils";
 
 export type { ContactsColumnConfig };
@@ -39,7 +39,7 @@ export interface ContactTableRowProps {
   onEmail?: (contacts: Contact[]) => void;
 }
 
-export function ContactTableRow({
+export const ContactTableRow = React.memo(function ContactTableRow({
   contact,
   isSelected,
   columns,
@@ -73,19 +73,11 @@ export function ContactTableRow({
         isSelected && "bg-primary/5",
       )}
     >
-      <TableCell
-        className={cn(
-          "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 transition-colors border-e border-border/30",
-          workTableStickyCellBg(isSelected),
-        )}
-      >
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={() => onSelect(contact.id)}
-          aria-label={t("contacts.table.selectContact", { name: displayName })}
-          className="cursor-pointer"
-        />
-      </TableCell>
+      <ModuleTableSelectionCell
+        checked={isSelected}
+        onCheckedChange={() => onSelect(contact.id)}
+        ariaLabel={t("contacts.table.selectContact", { name: displayName })}
+      />
       {columns.map((col) =>
         renderContactTableCell({
           col,
@@ -117,8 +109,9 @@ export function ContactTableRow({
           showArchived={showArchived}
           canWrite={canWrite}
           canDelete={canDelete}
+          triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
         />
       </TableCell>
     </motion.tr>
   );
-}
+});

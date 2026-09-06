@@ -6,9 +6,8 @@ import { useQuestionBankSelection } from '@/tenant/features/question-bank/hooks/
 import type { QuestionBankQuestion as Question } from '@mms/shared';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { QuestionBankTrashDialogs } from '@/tenant/features/question-bank/components/QuestionBankTrashDialogs';
-import { ListPagination } from '@/components/ui/ListPagination';
-import { ErrorState } from '@/components/ui/ErrorState';
-import { QuestionBankEmptyState } from '@/tenant/features/question-bank/components/QuestionBankEmptyState';
+import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { QuestionsList } from '@/tenant/features/question-bank/components/QuestionsList';
 import { QuestionsListFilters } from '@/tenant/features/question-bank/components/QuestionsListFilters';
 import { QuestionBankBulkActionBar } from '@/tenant/features/question-bank/components/QuestionBankBulkActionBar';
@@ -181,52 +180,63 @@ export function QuestionBank({
         />
       )}
 
-      {pageQuery.isError ? (
-        <ErrorState
-          title={t('questionBank.loadFailed')}
-          description={t('questionBank.loadFailedHint')}
-          onRetry={() => { void pageQuery.refetch(); }}
-        />
-      ) : pageQuestions.length === 0 && !pageQuery.isPending ? (
-        <QuestionBankEmptyState />
-      ) : pageQuestions.length > 0 && (
-        <QuestionsList
-          viewMode={viewMode}
-          questions={pageQuestions}
-          config={config}
-          difficultyConfig={difficultyConfig}
-          typeConfig={typeConfig}
-          listMetaFields={listMetaFields}
-          selectedIds={selectedIds}
-          allVisibleSelected={allVisibleSelected}
-          someVisibleSelected={someVisibleSelected}
-          canWrite={canWrite}
-          canDelete={canDelete}
-          canTrashRows={canDelete && Boolean(showDeleted ? onRestore : onDelete)}
-          showDeleted={showDeleted}
-          showSourceCitation={showSourceCitation}
-          isColumnVisible={columnVisible}
-          getColumnWidth={getColumnWidth}
-          onColumnResize={onColumnResize}
-          onEditQuestion={openEditQuestion}
-          onTrashAction={(id) => {
-            if (showDeleted) void onRestore?.(id);
-            else setPendingTrashId(id);
-          }}
-          onToggleSelectedQuestion={toggleSelectedQuestion}
-          onToggleSelectAll={toggleSelectAll}
-          onRowClick={onRowClick}
-        />
-      )}
-
-      <ListPagination
-        page={serverPage}
-        total={serverTotal}
-        limit={serverLimit}
-        hasMore={serverHasMore}
+      <ModuleWorkListStateShell
+        isError={pageQuery.isError}
+        isLoading={pageQuery.isPending}
+        isFetching={pageQuery.isFetching}
+        onRetry={() => { void pageQuery.refetch(); }}
+        errorTitle={t('questionBank.loadFailed')}
+        errorHint={t('questionBank.loadFailedHint')}
+        viewMode={viewMode}
+        skeletonColumnCount={6}
+        useServerWork={true}
+        pageData={{
+          page: serverPage,
+          total: serverTotal,
+          limit: serverLimit,
+          hasMore: serverHasMore,
+        }}
         onPageChange={setListPage}
         i18nNamespace="questionBank"
-      />
+        showPagination={pageQuestions.length > 0}
+        loadingLabel={t("common.loading")}
+      >
+        {pageQuestions.length === 0 ? (
+          <EmptyState
+            variant="dashed"
+            title={t('questionBank.noQuestions')}
+            className="py-14"
+          />
+        ) : (
+          <QuestionsList
+            viewMode={viewMode}
+            questions={pageQuestions}
+            config={config}
+            difficultyConfig={difficultyConfig}
+            typeConfig={typeConfig}
+            listMetaFields={listMetaFields}
+            selectedIds={selectedIds}
+            allVisibleSelected={allVisibleSelected}
+            someVisibleSelected={someVisibleSelected}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            canTrashRows={canDelete && Boolean(showDeleted ? onRestore : onDelete)}
+            showDeleted={showDeleted}
+            showSourceCitation={showSourceCitation}
+            isColumnVisible={columnVisible}
+            getColumnWidth={getColumnWidth}
+            onColumnResize={onColumnResize}
+            onEditQuestion={openEditQuestion}
+            onTrashAction={(id) => {
+              if (showDeleted) void onRestore?.(id);
+              else setPendingTrashId(id);
+            }}
+            onToggleSelectedQuestion={toggleSelectedQuestion}
+            onToggleSelectAll={toggleSelectAll}
+            onRowClick={onRowClick}
+          />
+        )}
+      </ModuleWorkListStateShell>
 
       <QuestionBankTrashDialogs
         pendingTrashId={pendingTrashId}

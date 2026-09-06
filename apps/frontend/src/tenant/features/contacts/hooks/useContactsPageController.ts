@@ -1,7 +1,8 @@
+import { useCallback } from "react";
 import { CONTACTS_MODULE_MANIFEST, resolveModuleTierTab } from "@mms/shared";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactConfig, useContactColumns } from "@/lib/contexts/ContactConfigContext";
+import { useContactColumns } from "@/lib/contexts/ContactConfigContext";
 import { useGoogleContactsOAuthListener } from "@/lib/contacts/googleContactsOAuthListener";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
@@ -33,7 +34,6 @@ export function useContactsPageController() {
     canEditSetup,
   } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
   const bulkActions = CONTACTS_MODULE_MANIFEST.work.bulkActions;
-  const { prefs } = useContactConfig();
   const tableColumns = useContactColumns();
   const { t } = useTranslation();
   const crud = useContactsCrudActions();
@@ -51,11 +51,11 @@ export function useContactsPageController() {
   const [activeTab, setActiveTab] = usePersistedTabState<string>("contacts_active_tab", "work");
   const effectiveTab = resolveModuleTierTab(activeTab, visibleTopTabs.map((tab) => tab.id));
 
-  useGoogleContactsOAuthListener(
-    (() => {
-      setActiveTab("setup");
-    }),
-  );
+  const handleGoogleContactsOAuth = useCallback(() => {
+    setActiveTab("setup");
+  }, [setActiveTab]);
+
+  useGoogleContactsOAuthListener(handleGoogleContactsOAuth);
 
   const directory = useContactsDirectory({
     effectiveTab,
@@ -109,7 +109,7 @@ export function useContactsPageController() {
     selectedCount: directory.selected.length,
     hasActiveFilters: directory.hasActiveFilters,
     clearFilters: directory.clearFilters,
-    clearSelection: () => directory.setSelected([]),
+    clearSelection: directory.clearSelection,
     canWrite,
     viewingDeleted: directory.viewingDeleted,
     onCreate: actions.handleCreateContact,

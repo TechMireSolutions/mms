@@ -1,4 +1,4 @@
-import { type ComponentProps } from "react";
+import { useCallback, useMemo, type ComponentProps } from "react";
 import type ContactsListCards from "@/tenant/features/contacts/components/ContactsListCards";
 import type ContactsListDesktopTable from "@/tenant/features/contacts/components/ContactsListDesktopTable";
 import type { useContactsDirectory } from "@/tenant/features/contacts/hooks/useContactsDirectory";
@@ -53,64 +53,151 @@ export function useContactsPageTabPanelProps({
   tableProps: ComponentProps<typeof ContactsListDesktopTable>;
   handleBulkExport: () => void | Promise<void>;
 }) {
-  return (() => ({
-      workTierProps: {
+  const {
+    search,
+    setSearch,
+    filterGender,
+    setFilterGender,
+    quickFilter,
+    setQuickFilter,
+    sortField,
+    sortDir,
+    handleSort,
+    hasActiveFilters,
+    activeFilterCount,
+    clearFilters,
+    setViewingDeleted,
+    selected,
+    setSelected,
+    shownCount,
+    isWorkError,
+    isWorkLoading,
+    isWorkFetching,
+    refetchWork,
+    workContacts,
+    useServerWork,
+    workPageData,
+    setListPage,
+  } = directory;
 
-      effectiveTab,
-      search: directory.search,
-      onSearchChange: directory.setSearch,
-      filterGender: directory.filterGender,
-      onGenderChange: directory.setFilterGender,
-      quickFilter: directory.quickFilter,
-      onQuickFilterChange: directory.setQuickFilter,
-      sortField: directory.sortField,
-      sortDir: directory.sortDir,
-      onSort: directory.handleSort,
-      hasActiveFilters: directory.hasActiveFilters,
-      activeFilterCount: directory.activeFilterCount,
-      onClearFilters: directory.clearFilters,
-      viewingDeleted,
-      onShowDeletedChange: (next: boolean) => {
-        directory.setViewingDeleted(next);
-        directory.setSelected([]);
-      },
-      canViewDeleted: canDelete,
-      viewMode: overlay.viewMode,
-      onViewModeChange: overlay.setViewMode,
-      shownCount: directory.shownCount,
-      selected: directory.selected,
-      onClearSelection: () => directory.setSelected([]),
-      selectedTargets,
-      bulkActions,
-      canWriteMessaging: messaging.canWriteMessaging,
-      canExport,
-      canDelete,
-      onWhatsApp: messaging.handleWhatsApp,
-      onSms: messaging.handleSms,
-      onEmail: messaging.handleEmail,
-      onBulkExport: handleBulkExport,
-      onRequestBulkDelete: actions.requestBulkDelete,
-      onRequestBulkRestore: actions.requestBulkRestore,
-      onBulkTag: actions.handleBulkTag,
-      isWorkError: directory.isWorkError,
-      isWorkLoading: directory.isWorkLoading,
-      isWorkFetching: directory.isWorkFetching,
-      onRetryWork: () => {
-        void directory.refetchWork();
-      },
-      workContacts: directory.workContacts,
-      tableColumns,
-      commonDirectoryProps,
-      tableProps,
-      useServerWork: directory.useServerWork,
-      workPageData: directory.workPageData,
-      onPageChange: directory.setListPage,
-      canWrite
+  const handleShowDeletedChange = useCallback(
+    (next: boolean) => {
+      setViewingDeleted(next);
+      setSelected([]);
+    },
+    [setViewingDeleted, setSelected],
+  );
+
+  const handleClearSelection = useCallback(() => {
+    setSelected([]);
+  }, [setSelected]);
+
+  const handleRetryWork = useCallback(() => {
+    void refetchWork();
+  }, [refetchWork]);
+
+  return useMemo(
+    () => ({
+      workTierProps: {
+        effectiveTab,
+        search,
+        onSearchChange: setSearch,
+        filterGender,
+        onGenderChange: setFilterGender,
+        quickFilter,
+        onQuickFilterChange: setQuickFilter,
+        sortField,
+        sortDir,
+        onSort: handleSort,
+        hasActiveFilters,
+        activeFilterCount,
+        onClearFilters: clearFilters,
+        viewingDeleted,
+        onShowDeletedChange: handleShowDeletedChange,
+        canViewDeleted: canDelete,
+        viewMode: overlay.viewMode,
+        onViewModeChange: overlay.setViewMode,
+        shownCount,
+        selected,
+        onClearSelection: handleClearSelection,
+        selectedTargets,
+        bulkActions,
+        canWriteMessaging: messaging.canWriteMessaging,
+        canExport,
+        canDelete,
+        onWhatsApp: messaging.handleWhatsApp,
+        onSms: messaging.handleSms,
+        onEmail: messaging.handleEmail,
+        onBulkExport: handleBulkExport,
+        onRequestBulkDelete: actions.requestBulkDelete,
+        onRequestBulkRestore: actions.requestBulkRestore,
+        onBulkTag: actions.handleBulkTag,
+        isWorkError,
+        isWorkLoading,
+        isWorkFetching,
+        onRetryWork: handleRetryWork,
+        workContacts,
+        tableColumns,
+        commonDirectoryProps,
+        tableProps,
+        useServerWork,
+        workPageData,
+        onPageChange: setListPage,
+        canWrite,
       },
       setupTierProps: {
         canWrite,
         canEditSetup,
-        onImport: actions.handleImport
-      }
-    }))();
+        onImport: actions.handleImport,
+      },
+    }),
+    [
+      effectiveTab,
+      search,
+      setSearch,
+      filterGender,
+      setFilterGender,
+      quickFilter,
+      setQuickFilter,
+      sortField,
+      sortDir,
+      handleSort,
+      hasActiveFilters,
+      activeFilterCount,
+      clearFilters,
+      viewingDeleted,
+      handleShowDeletedChange,
+      canDelete,
+      overlay.viewMode,
+      overlay.setViewMode,
+      shownCount,
+      selected,
+      handleClearSelection,
+      selectedTargets,
+      bulkActions,
+      messaging.canWriteMessaging,
+      canExport,
+      messaging.handleWhatsApp,
+      messaging.handleSms,
+      messaging.handleEmail,
+      handleBulkExport,
+      actions.requestBulkDelete,
+      actions.requestBulkRestore,
+      actions.handleBulkTag,
+      actions.handleImport,
+      isWorkError,
+      isWorkLoading,
+      isWorkFetching,
+      handleRetryWork,
+      workContacts,
+      tableColumns,
+      commonDirectoryProps,
+      tableProps,
+      useServerWork,
+      workPageData,
+      setListPage,
+      canWrite,
+      canEditSetup,
+    ],
+  );
 }

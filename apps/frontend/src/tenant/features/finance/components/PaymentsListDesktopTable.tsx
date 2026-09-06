@@ -2,7 +2,7 @@ import { motion } from 'framer-motion';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -101,13 +101,13 @@ export function PaymentsListDesktopTable({
               className="transition-colors hover:bg-muted/20"
             >
               {canDelete && (
-                <TableCell className="px-3 py-2.5">
-                  <Checkbox
-                    checked={selectedSet.has(payment.id)}
-                    onCheckedChange={(checked) => onTogglePayment(payment.id, checked === true)}
-                    aria-label={t('finance.trash.selectPayment', { id: payment.id })}
-                  />
-                </TableCell>
+                <ModuleTableSelectionCell
+                  checked={selectedSet.has(payment.id)}
+                  onCheckedChange={(checked) => onTogglePayment(payment.id, checked)}
+                  ariaLabel={t('finance.trash.selectPayment', { id: payment.id })}
+                  sticky={false}
+                  className="px-3 py-2.5"
+                />
               )}
               {isColumnVisible("date") && <TableCell className="px-3 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</TableCell>}
               {isColumnVisible("student") && <TableCell className="px-3 py-2.5 text-sm font-semibold text-foreground whitespace-nowrap">{payment.studentName}</TableCell>}

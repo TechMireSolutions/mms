@@ -1,8 +1,7 @@
 import React from 'react';
 import { BookOpen } from 'lucide-react';
 import { EXAMINATIONS_MODULE_MANIFEST } from '@mms/shared';
-import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
-import { useTranslation } from '@/hooks/useTranslation';
+import { ModuleStandardBulkActionBar } from '@/components/ui/ModuleStandardBulkActionBar';
 
 export interface ExaminationsBulkActionBarProps {
   selectedCount: number;
@@ -14,7 +13,7 @@ export interface ExaminationsBulkActionBarProps {
   bulkActions?: readonly string[];
 }
 
-/** Examinations Work bulk bar — Question Bank-shaped composition over shared ModuleWorkBulkActionBar. */
+/** Examinations Work bulk bar — thin adapter delegating to shared ModuleStandardBulkActionBar. */
 export function ExaminationsBulkActionBar({
   selectedCount,
   showDeleted,
@@ -24,24 +23,17 @@ export function ExaminationsBulkActionBar({
   onClearSelection,
   bulkActions = EXAMINATIONS_MODULE_MANIFEST.work.bulkActions,
 }: ExaminationsBulkActionBarProps): React.JSX.Element {
-  const { t } = useTranslation();
-
   return (
-    <ModuleWorkBulkActionBar
+    <ModuleStandardBulkActionBar
       selectedCount={selectedCount}
-      viewingDeleted={showDeleted}
-      countLabel={t('examinations.trash.selected', { count: selectedCount })}
-      leading={<BookOpen className="w-4 h-4 text-primary" aria-hidden />}
-      deselectLabel={t('common.deselect')}
+      showDeleted={showDeleted}
       canDelete={canDelete}
-      restoreLabel={t('examinations.trash.restore')}
+      onRequestBulkDelete={onRequestBulkDelete}
       onRequestBulkRestore={onRequestBulkRestore}
       onClearSelection={onClearSelection}
-      deleteAction={
-        bulkActions.includes('delete') && canDelete
-          ? { label: t('common.delete'), onClick: onRequestBulkDelete }
-          : undefined
-      }
+      bulkActions={bulkActions}
+      leadingIcon={BookOpen}
+      i18nNamespace="examinations"
     />
   );
 }

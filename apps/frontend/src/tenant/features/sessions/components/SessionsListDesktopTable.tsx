@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
@@ -107,13 +107,12 @@ export function SessionsListDesktopTable({
                 className={`group transition-colors hover:bg-muted/20 ${isSelected ? "bg-primary/5" : ""}`}
               >
                 {canSelectSessions && (
-                  <TableCell className="px-4 py-3">
-                    <Checkbox
-                      checked={isSelected}
-                      onCheckedChange={(checked) => onToggleSelectedSession(sessionItem.id, checked === true)}
-                      aria-label={sessionItem.name}
-                    />
-                  </TableCell>
+                  <ModuleTableSelectionCell
+                    checked={isSelected}
+                    onCheckedChange={(checked) => onToggleSelectedSession(sessionItem.id, checked)}
+                    ariaLabel={sessionItem.name}
+                    sticky={false}
+                  />
                 )}
                 {isColumnVisible("name") && (
                   <TableCell className="px-4 py-3">

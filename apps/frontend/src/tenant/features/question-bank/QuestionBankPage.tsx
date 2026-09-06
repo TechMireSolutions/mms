@@ -1,7 +1,8 @@
 import type { JSX } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Library } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { QuestionBankCommandMetrics } from '@/tenant/features/question-bank/components/QuestionBankCommandMetrics';
 import { QuestionBankModalLayer } from '@/tenant/features/question-bank/components/QuestionBankModalLayer';
@@ -44,12 +45,8 @@ export default function QuestionBankPage(): JSX.Element {
         panelIdPrefix="question-bank-tab"
       >
         <AnimatePresence mode="wait">
-          <motion.div
-            key={`${c.effectiveTab}-${c.effectiveSubTab}-${String(c.showDeleted)}`}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+          <ModuleTierMotion
+            tier={`${c.effectiveTab}-${c.effectiveSubTab}-${String(c.showDeleted)}`}
             className="space-y-4"
           >
             {c.effectiveTab === 'setup' && (
@@ -90,7 +87,7 @@ export default function QuestionBankPage(): JSX.Element {
                 }}
               />
             )}
-          </motion.div>
+          </ModuleTierMotion>
         </AnimatePresence>
 
         <AnimatePresence>

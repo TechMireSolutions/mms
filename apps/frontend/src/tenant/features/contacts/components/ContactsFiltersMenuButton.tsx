@@ -1,4 +1,4 @@
-import type { JSX } from "react";
+import React, { useMemo, type JSX } from "react";
 import {
   CONTACTS_QUICK_FILTER_OPTIONS,
   isContactsQuickFilter,
@@ -26,7 +26,7 @@ export interface ContactsFiltersMenuButtonProps {
   t: TranslationFunction;
 }
 
-export function ContactsFiltersMenuButton({
+export const ContactsFiltersMenuButton = React.memo(function ContactsFiltersMenuButton({
   activeFilterCount,
   quickFilter,
   onQuickFilterChange,
@@ -38,6 +38,36 @@ export function ContactsFiltersMenuButton({
   onSort,
   t,
 }: ContactsFiltersMenuButtonProps): JSX.Element {
+  const quickFilterOptions = useMemo(
+    () =>
+      CONTACTS_QUICK_FILTER_OPTIONS.map((preset) => ({
+        value: preset.id,
+        label: t(preset.labelKey),
+      })),
+    [t],
+  );
+
+  const genderOptions = useMemo(
+    () => [
+      { value: "all", label: t("contacts.allGenders") },
+      ...genders.map((gender) => ({
+        value: gender,
+        label: formatContactGenderLabel(gender, t),
+        icon: <GenderIcon gender={gender} className="w-3.5 h-3.5" aria-hidden="true" />,
+      })),
+    ],
+    [genders, t],
+  );
+
+  const sortRadioOptions = useMemo(
+    () =>
+      sortOptions.map((opt) => ({
+        value: opt.field,
+        label: opt.label,
+      })),
+    [sortOptions],
+  );
+
   return (
     <ModuleFilterDropdown
       label={t("contacts.filters")}
@@ -49,10 +79,7 @@ export function ContactsFiltersMenuButton({
         onValueChange={(value) => {
           if (isContactsQuickFilter(value)) onQuickFilterChange(value);
         }}
-        options={CONTACTS_QUICK_FILTER_OPTIONS.map((preset) => ({
-          value: preset.id,
-          label: t(preset.labelKey),
-        }))}
+        options={quickFilterOptions}
       />
 
       <ModuleFilterDivider />
@@ -60,14 +87,7 @@ export function ContactsFiltersMenuButton({
         label={t("contacts.genderFilter")}
         value={filterGender || "all"}
         onValueChange={(value) => onGenderChange(value === "all" ? "" : value)}
-        options={[
-          { value: "all", label: t("contacts.allGenders") },
-          ...genders.map((gender) => ({
-            value: gender,
-            label: formatContactGenderLabel(gender, t),
-            icon: <GenderIcon gender={gender} className="w-3.5 h-3.5" aria-hidden="true" />,
-          })),
-        ]}
+        options={genderOptions}
       />
 
       <ModuleFilterDivider />
@@ -75,11 +95,8 @@ export function ContactsFiltersMenuButton({
         label={t("contacts.sortBy")}
         value={sortField}
         onValueChange={onSort}
-        options={sortOptions.map((opt) => ({
-          value: opt.field,
-          label: opt.label,
-        }))}
+        options={sortRadioOptions}
       />
     </ModuleFilterDropdown>
   );
-}
+});

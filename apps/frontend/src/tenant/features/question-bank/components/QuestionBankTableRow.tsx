@@ -5,7 +5,7 @@ import {
   getQuestionCategoryIds,
   type QuestionBankQuestion as Question,
 } from '@mms/shared';
-import { Checkbox } from '@/components/ui/checkbox';
+import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from '@/components/ui/ModuleRowActionsMenu';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { TableCell } from '@/components/ui/table';
@@ -68,13 +68,12 @@ export function QuestionBankTableRow({
       className={`group transition-colors hover:bg-muted/50 cursor-pointer ${isSelected ? "bg-primary/5" : ""}`}
     >
       {canDelete && (
-        <TableCell className="px-3 py-3">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={(checked) => onToggleSelected(question.id, checked === true)}
-            aria-label={t('questionBank.deleteQuestionAria', { text: question.text })}
-          />
-        </TableCell>
+        <ModuleTableSelectionCell
+          checked={isSelected}
+          onCheckedChange={(checked) => onToggleSelected(question.id, checked)}
+          ariaLabel={t('questionBank.deleteQuestionAria', { text: question.text })}
+          sticky={false}
+        />
       )}
       {isColumnVisible('text') && (
         <TableCell className="max-w-sidebar-mobile px-4 py-3 text-sm font-semibold text-foreground">

@@ -1,12 +1,8 @@
 import { useState } from "react";
 import { GraduationCap, BookOpen, IdCard } from "lucide-react";
 import { STUDENTS_MODULE_MANIFEST, type Student, type StudentsBulkEnrollBody } from "@mms/shared";
-import { ModuleWorkBulkActionBar } from "@/components/ui/ModuleWorkBulkActionBar";
+import { ModuleUniversalBulkActionBar } from "@/components/ui/ModuleUniversalBulkActionBar";
 import { Button } from "@/components/ui/button";
-import {
-  BulkSelectionStatusAction,
-  type BulkSelectionMessageChannel,
-} from "@/components/ui/BulkSelectionActions";
 import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentsBulkEnrollModal } from "@/tenant/features/students/components/StudentsBulkEnrollModal";
@@ -38,7 +34,7 @@ export interface StudentsBulkActionBarProps {
   statusPending?: boolean;
 }
 
-/** Students Work bulk bar — Contacts-shaped composition over shared ModuleWorkBulkActionBar. */
+/** Students Work bulk bar — delegates core actions to ModuleUniversalBulkActionBar. */
 export function StudentsBulkActionBar({
   selectedCount,
   viewingDeleted,
@@ -48,7 +44,7 @@ export function StudentsBulkActionBar({
   canExport = false,
   bulkActions = STUDENTS_MODULE_MANIFEST.work.bulkActions,
   selectedTargets,
-  studentStatusOptions,
+  studentStatusOptions: _studentStatusOptions,
   statusBadgeConfig,
   onWhatsApp,
   onSms,
@@ -66,69 +62,32 @@ export function StudentsBulkActionBar({
   const { t } = useTranslation();
   const [enrollModalOpen, setEnrollModalOpen] = useState(false);
 
-  const showWhatsApp = bulkActions.includes("whatsapp") && canWriteMessaging;
-  const showSms = bulkActions.includes("sms") && canWriteMessaging;
-  const showEmail = bulkActions.includes("email") && canWriteMessaging;
-  const showMessaging = !viewingDeleted && (showWhatsApp || showSms || showEmail);
-
-  const handleChannel = (channel: BulkSelectionMessageChannel): void => {
-    if (channel === "whatsapp") onWhatsApp(selectedTargets.waTargets);
-    else if (channel === "sms") onSms(selectedTargets.smsReady);
-    else if (channel === "email") onEmail(selectedTargets.emailReady);
-  };
-
   return (
     <>
-      <ModuleWorkBulkActionBar
+      <ModuleUniversalBulkActionBar<Student>
         selectedCount={selectedCount}
         viewingDeleted={viewingDeleted}
-        countLabel={t("students.selectedCount", { count: selectedCount })}
-        leading={<GraduationCap className="w-4 h-4 text-primary" aria-hidden />}
-        deselectLabel={t("common.deselect")}
+        canWrite={canWrite}
         canDelete={canDelete}
-        restoreLabel={t("students.bulkRestore")}
-        onRequestBulkRestore={onRequestBulkRestore}
+        canExport={canExport}
+        canWriteMessaging={canWriteMessaging}
+        leadingIcon={GraduationCap}
+        i18nNamespace="students"
+        bulkActions={bulkActions}
         onClearSelection={onClearSelection}
-        messaging={
-          showMessaging
-            ? {
-                onChannel: handleChannel,
-                labels: {
-                  whatsapp: t("students.whatsappBulk", {
-                    count: selectedTargets.waTargets.length,
-                  }),
-                  sms: t("students.smsBulk", { count: selectedTargets.smsReady.length }),
-                  email: t("students.emailBulk", {
-                    count: selectedTargets.emailReady.length,
-                  }),
-                },
-                channels: {
-                  whatsapp: showWhatsApp,
-                  sms: showSms,
-                  email: showEmail,
-                },
-              }
-            : undefined
-        }
-        exportAction={
-          bulkActions.includes("export") && canExport && onBulkExport
-            ? { label: t("students.bulkExport"), onClick: onBulkExport }
-            : undefined
-        }
+        onRequestBulkDelete={onRequestBulkDelete}
+        onRequestBulkRestore={onRequestBulkRestore}
+        onBulkExport={onBulkExport}
+        statusConfig={statusBadgeConfig}
+        onBulkStatusChange={onBulkStatusChange}
+        statusPending={statusPending}
+        messagingTargets={selectedTargets}
+        onWhatsApp={onWhatsApp}
+        onSms={onSms}
+        onEmail={onEmail}
         extraActions={
-          !viewingDeleted && (onBulkStatusChange || onBulkEnroll || onBulkPrintIdCards) ? (
+          !viewingDeleted && (onBulkEnroll || onBulkPrintIdCards) ? (
             <div className="flex items-center gap-1.5 flex-wrap">
-              {bulkActions.includes("status") && canWrite && onBulkStatusChange && (
-                <BulkSelectionStatusAction
-                  label={t("students.columns.status")}
-                  statuses={studentStatusOptions}
-                  statusBadgeConfig={statusBadgeConfig}
-                  disabled={statusPending}
-                  onSelectStatus={(statusVal) => {
-                    onBulkStatusChange(statusVal);
-                  }}
-                />
-              )}
               {canWrite && onBulkEnroll && (
                 <Button
                   type="button"
@@ -157,11 +116,6 @@ export function StudentsBulkActionBar({
             </div>
           ) : undefined
         }
-        deleteAction={
-          bulkActions.includes("delete") && canDelete
-            ? { label: t("students.bulkDelete"), onClick: onRequestBulkDelete }
-            : undefined
-        }
       />
 
       {enrollModalOpen && onBulkEnroll && (
@@ -176,4 +130,3 @@ export function StudentsBulkActionBar({
     </>
   );
 }
-

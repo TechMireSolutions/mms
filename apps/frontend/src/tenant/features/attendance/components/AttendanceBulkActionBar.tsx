@@ -1,8 +1,7 @@
 import React from 'react';
 import { UserCheck } from 'lucide-react';
 import { ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
-import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
-import { useTranslation } from '@/hooks/useTranslation';
+import { ModuleStandardBulkActionBar } from '@/components/ui/ModuleStandardBulkActionBar';
 
 export interface AttendanceBulkActionBarProps {
   selectedCount: number;
@@ -14,7 +13,7 @@ export interface AttendanceBulkActionBarProps {
   bulkActions?: readonly string[];
 }
 
-/** Attendance Work bulk bar — Obligations-shaped composition over shared ModuleWorkBulkActionBar. */
+/** Attendance Work bulk bar — thin adapter delegating to shared ModuleStandardBulkActionBar. */
 export function AttendanceBulkActionBar({
   selectedCount,
   showDeleted,
@@ -24,24 +23,17 @@ export function AttendanceBulkActionBar({
   onClearSelection,
   bulkActions = ATTENDANCE_MODULE_MANIFEST.work.bulkActions,
 }: AttendanceBulkActionBarProps): React.JSX.Element {
-  const { t } = useTranslation();
-
   return (
-    <ModuleWorkBulkActionBar
+    <ModuleStandardBulkActionBar
       selectedCount={selectedCount}
-      viewingDeleted={showDeleted}
-      countLabel={t('attendance.trash.selected', { count: selectedCount })}
-      leading={<UserCheck className="w-4 h-4 text-primary" aria-hidden />}
-      deselectLabel={t('common.deselect')}
+      showDeleted={showDeleted}
       canDelete={canDelete}
-      restoreLabel={t('attendance.trash.restore')}
+      onRequestBulkDelete={onRequestBulkDelete}
       onRequestBulkRestore={onRequestBulkRestore}
       onClearSelection={onClearSelection}
-      deleteAction={
-        bulkActions.includes('delete') && canDelete
-          ? { label: t('common.delete'), onClick: onRequestBulkDelete }
-          : undefined
-      }
+      bulkActions={bulkActions}
+      leadingIcon={UserCheck}
+      i18nNamespace="attendance"
     />
   );
 }

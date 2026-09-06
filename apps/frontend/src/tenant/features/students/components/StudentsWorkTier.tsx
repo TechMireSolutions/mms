@@ -1,6 +1,6 @@
-import { motion } from "framer-motion";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FilterChips } from "@/components/ui/FilterChips";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildStudentsWorkFilterChips } from "@/tenant/features/students/components/buildStudentsWorkFilterChips";
 import { StudentsBulkActionBar } from "@/tenant/features/students/components/StudentsBulkActionBar";
@@ -73,12 +73,8 @@ export function StudentsWorkTier({
 
   return (
     <ErrorBoundary>
-      <motion.div
-        key="work"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.18 }}
+      <ModuleTierMotion
+        tier="work"
         className="space-y-5"
         aria-busy={useServerWork && isWorkPageFetching ? true : undefined}
       >
@@ -183,7 +179,7 @@ export function StudentsWorkTier({
           canWriteMessaging={workOverlays.canWriteMessaging}
           onDeleteTargetChange={workOverlays.setDeleteTarget}
         />
-      </motion.div>
+      </ModuleTierMotion>
     </ErrorBoundary>
   );
 }

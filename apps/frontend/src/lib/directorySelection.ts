@@ -52,3 +52,44 @@ export function togglePageIdsInSelection<T extends string | number>(
   for (const id of pageIds) next.add(id);
   return [...next];
 }
+
+export interface StandardContactEntity {
+  id: string | number;
+  phone?: string | null;
+  email?: string | null;
+}
+
+export interface MessagingSelectionTargets<T> {
+  waTargets: T[];
+  smsReady: T[];
+  emailReady: T[];
+}
+
+/** Partition selected entities into WhatsApp, SMS, and Email eligible arrays. */
+export function partitionMessagingTargets<T extends StandardContactEntity>(
+  selectedIds: ReadonlyArray<string | number>,
+  rows: readonly T[],
+): MessagingSelectionTargets<T> {
+  if (selectedIds.length === 0 || rows.length === 0) {
+    return { waTargets: [], smsReady: [], emailReady: [] };
+  }
+  const selectedSet = new Set(selectedIds.map(String));
+  const waTargets: T[] = [];
+  const smsReady: T[] = [];
+  const emailReady: T[] = [];
+
+  for (const row of rows) {
+    if (!selectedSet.has(String(row.id))) continue;
+    const phone = row.phone?.trim();
+    const email = row.email?.trim();
+    if (phone) {
+      waTargets.push(row);
+      smsReady.push(row);
+    }
+    if (email && email.includes("@")) {
+      emailReady.push(row);
+    }
+  }
+
+  return { waTargets, smsReady, emailReady };
+}

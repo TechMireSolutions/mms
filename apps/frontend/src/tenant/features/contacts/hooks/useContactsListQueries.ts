@@ -33,14 +33,16 @@ export function useContactById(contactId: string | undefined, enabled = true) {
 /** Batch-resolve contact labels by id (pickers & cross-module links). */
 export function useContactsByIds(ids: (string | number | null | undefined)[]) {
   const { isAuthenticated } = useAuth();
-  const normalized = (() => uniqueRegistryIds(ids))();
+  const normalized = uniqueRegistryIds(ids);
   return useQuery({
     queryKey: [...CONTACTS_QUERY_KEY, 'resolve', normalized.join(',')] as const,
-    queryFn: async ({ signal: _signal }) => {
+    queryFn: async ({ signal }) => {
       const hydrated: Contact[] = [];
       const resolveChunk = async (chunk: string[]) => {
         const response = await apiContract.contacts.resolve({
           body: { ids: chunk },
+          signal,
+          fetchOptions: { signal },
         });
         if (response.status === 200) {
           const body = response.body as { contacts?: Contact[] } | undefined;

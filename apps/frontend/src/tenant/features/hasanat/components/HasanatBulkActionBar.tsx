@@ -1,8 +1,7 @@
 import type { ReactElement } from 'react';
 import { HandCoins } from 'lucide-react';
 import { HASANAT_MODULE_MANIFEST } from '@mms/shared';
-import { ModuleWorkBulkActionBar } from '@/components/ui/ModuleWorkBulkActionBar';
-import { useTranslation } from '@/hooks/useTranslation';
+import { ModuleStandardBulkActionBar } from '@/components/ui/ModuleStandardBulkActionBar';
 
 export interface HasanatBulkActionBarProps {
   selectedCount: number;
@@ -14,7 +13,7 @@ export interface HasanatBulkActionBarProps {
   bulkActions?: readonly string[];
 }
 
-/** Hasanat Work bulk bar — Question Bank-shaped composition over shared ModuleWorkBulkActionBar. */
+/** Hasanat Work bulk bar — thin adapter delegating to shared ModuleStandardBulkActionBar. */
 export function HasanatBulkActionBar({
   selectedCount,
   showDeleted,
@@ -24,24 +23,17 @@ export function HasanatBulkActionBar({
   onClearSelection,
   bulkActions = HASANAT_MODULE_MANIFEST.work.bulkActions,
 }: HasanatBulkActionBarProps): ReactElement {
-  const { t } = useTranslation();
-
   return (
-    <ModuleWorkBulkActionBar
+    <ModuleStandardBulkActionBar
       selectedCount={selectedCount}
-      viewingDeleted={showDeleted}
-      countLabel={t('hasanat.trash.selected', { count: selectedCount })}
-      leading={<HandCoins className="w-4 h-4 text-primary" aria-hidden />}
-      deselectLabel={t('common.deselect')}
+      showDeleted={showDeleted}
       canDelete={canDelete}
-      restoreLabel={t('hasanat.trash.restore')}
+      onRequestBulkDelete={onRequestBulkDelete}
       onRequestBulkRestore={onRequestBulkRestore}
       onClearSelection={onClearSelection}
-      deleteAction={
-        bulkActions.includes('delete') && canDelete
-          ? { label: t('common.delete'), onClick: onRequestBulkDelete }
-          : undefined
-      }
+      bulkActions={bulkActions}
+      leadingIcon={HandCoins}
+      i18nNamespace="hasanat"
     />
   );
 }

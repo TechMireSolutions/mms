@@ -97,7 +97,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Bulk id bodies / contacts list filters: shared schemas (`bulkIdsBodySchema`, `contactsListQuerySchema`) — no forked Messaging flags
 - [ ] Contacts `activeCount` = soft-delete-filtered total (not phantom `isActive`)
 - [ ] Settings: draft hooks + preview — skill **`mms-settings-i18n`** / **`mms-frontend`**
-- [ ] **Platform apex English-only** / **missing tenant hard-redirect** — `mms-auth-security.mdc`
+- [ ] **Platform apex English-only** (`mms-settings-i18n.mdc`) / **missing tenant hard-redirect** (`mms-auth-security.mdc`)
 
 ### RBAC (frontend)
 - [ ] Module pages use `useModulePermissions(X_MODULE_MANIFEST)` (or `can()`) — not `role ===` / `disabled={role === '…'}`

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import type { SessionsListPageResult } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { Session } from "@/lib/data/sessionsData";
@@ -126,11 +126,8 @@ export function SessionsWorkTier({
     : undefined;
 
   return (
-    <motion.div
-      key="work"
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0 }}
+    <ModuleTierMotion
+      tier="work"
       className="space-y-5"
       aria-busy={useServerWork && isWorkFetching ? true : undefined}
     >
@@ -193,6 +190,6 @@ export function SessionsWorkTier({
         canExport={canExport}
         onBulkExport={onBulkExport}
       />
-    </motion.div>
+    </ModuleTierMotion>
   );
 }

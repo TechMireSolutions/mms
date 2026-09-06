@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { Contact } from "@mms/shared";
 import { computeContactsSelectionTargets } from "@/tenant/features/contacts/hooks/contactsSelectionTargets";
 
@@ -8,9 +9,12 @@ export function useContactsSelectionTargets({
   selected: Array<string | number>;
   workContacts: Contact[];
 }): { waTargets: Contact[]; smsReady: Contact[]; emailReady: Contact[] } {
-  return (() =>
+  return useMemo(
+    () =>
       computeContactsSelectionTargets({
         selectedIds: selected,
         workContacts,
-      }))();
+      }),
+    [selected, workContacts],
+  );
 }

@@ -4,8 +4,9 @@ import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
+import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { AccountingPageHeaderActions } from "@/tenant/features/accounting/components/AccountingPageHeaderActions";
@@ -135,10 +136,10 @@ export default function Accounting() {
         panelIdPrefix="accounting-tab"
       >
       <AnimatePresence mode="wait">
-        <motion.div key={activeTab + "-" + activeSubTab + "-" + String(showDeleted)}
-          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }} transition={{ duration: 0.18 }}
-          className="space-y-4">
+        <ModuleTierMotion
+          tier={activeTab + "-" + activeSubTab + "-" + String(showDeleted)}
+          className="space-y-4"
+        >
 
           <ErrorBoundary>
           {activeTab === "reports" && (
@@ -208,7 +209,7 @@ export default function Accounting() {
             />
           )}
           </ErrorBoundary>
-        </motion.div>
+        </ModuleTierMotion>
       </AnimatePresence>
       </ResponsiveAccordionTabs>
     </ModulePageShell>

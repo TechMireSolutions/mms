@@ -1,7 +1,7 @@
 import { type ModuleColumnRegistryEntry, type Student } from "@mms/shared";
 import { motion } from "framer-motion";
-import { Checkbox } from "@/components/ui/checkbox";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { TableCell } from "@/components/ui/table";
 import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import { cn } from "@/lib/utils";
@@ -65,19 +65,11 @@ export function StudentsListDesktopTableRow({
       {...rowMotion(Math.min(rowIndex * 0.03, 0.2))}
       className={cn("hover:bg-muted/20 transition-colors group", isSelected && "bg-primary/5")}
     >
-      <TableCell
-        className={cn(
-          "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 transition-colors border-e border-border/30",
-          workTableStickyCellBg(isSelected),
-        )}
-      >
-        <Checkbox
-          checked={isSelected}
-          onCheckedChange={() => onSelectOne(studentIdStr)}
-          aria-label={t("students.table.selectStudent", { name: displayName })}
-          className="cursor-pointer"
-        />
-      </TableCell>
+      <ModuleTableSelectionCell
+        checked={isSelected}
+        onCheckedChange={() => onSelectOne(studentIdStr)}
+        ariaLabel={t("students.table.selectStudent", { name: displayName })}
+      />
       {visibleColumns.map((col) => (
         <TableCell
           key={col.key}

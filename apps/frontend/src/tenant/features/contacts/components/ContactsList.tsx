@@ -29,7 +29,7 @@ export interface ContactsListProps {
   onPageChange: (page: number) => void;
 }
 
-export function ContactsList({
+export const ContactsList = React.memo(function ContactsList({
   isWorkError,
   isWorkLoading,
   isWorkFetching,
@@ -104,4 +104,4 @@ export function ContactsList({
       )}
     </ModuleWorkListStateShell>
   );
-}
+});

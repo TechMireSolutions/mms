@@ -7,7 +7,7 @@ import { useMergedObligationContacts } from "@/tenant/features/obligations/hooks
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ObligationCollectionsListContent } from "@/tenant/features/obligations/components/ObligationCollectionsListContent";
 import { ObligationCollectionsListFilters } from "@/tenant/features/obligations/components/ObligationCollectionsListFilters";
@@ -234,23 +234,16 @@ export function ObligationCollectionsList({
         </Suspense>
       )}
 
-      <ConfirmAlertDialog
-        open={pendingTrashId !== null}
-        onOpenChange={(open) => { if (!open) setPendingTrashId(null); }}
-        title={t('obligations.trash.deleteTitle')}
-        description={t('obligations.trash.deleteConfirm')}
-        confirmLabel={t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={confirmRowTrash}
-      />
-      <ConfirmAlertDialog
-        open={confirmBulkOpen}
-        onOpenChange={setConfirmBulkOpen}
-        title={showDeleted ? t('obligations.trash.restore') : t('obligations.trash.deleteTitle')}
-        description={t(showDeleted ? 'obligations.trash.bulkRestoreConfirm' : 'obligations.trash.bulkDeleteConfirm', { count: selectedIds.length })}
-        confirmLabel={showDeleted ? t('obligations.trash.restore') : t('common.delete')}
-        cancelLabel={t('common.cancel')}
-        onConfirm={confirmBulkTrash}
+      <ModuleStandardTrashDialogs
+        pendingTrashId={pendingTrashId}
+        onPendingTrashIdChange={setPendingTrashId}
+        confirmBulkOpen={confirmBulkOpen}
+        onConfirmBulkOpenChange={setConfirmBulkOpen}
+        showDeleted={showDeleted}
+        selectedCount={selectedIds.length}
+        i18nNamespace="obligations"
+        onConfirmRowTrash={confirmRowTrash}
+        onConfirmBulkTrash={confirmBulkTrash}
       />
     </div>
   );

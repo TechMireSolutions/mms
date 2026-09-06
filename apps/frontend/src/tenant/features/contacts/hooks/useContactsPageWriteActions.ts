@@ -17,6 +17,7 @@ export function useContactsPageWriteActions({
   canWrite,
   shownCount,
   selected,
+  setSelected,
   editContact,
   setEditContact,
   setShowForm,
@@ -28,6 +29,7 @@ export function useContactsPageWriteActions({
   canWrite: boolean;
   shownCount: number;
   selected?: Array<string | number>;
+  setSelected?: (ids: Array<string | number>) => void;
   editContact: Contact | null;
   setEditContact: (contact: Contact | null) => void;
   setShowForm: (open: boolean) => void;
@@ -55,7 +57,7 @@ export function useContactsPageWriteActions({
     bulkTagContacts,
   } = crud;
 
-  const handleOpenDuplicates = (async () => {
+  const handleOpenDuplicates = useCallback(async () => {
     if (openingDuplicates) return;
     const needsAsyncScan = shownCount >= CONTACTS_MODULE_MANIFEST.duplicateScanAsyncMinContacts;
     if (needsAsyncScan) {
@@ -73,7 +75,7 @@ export function useContactsPageWriteActions({
       }
     }
     setShowDuplicates(true);
-  });
+  }, [openingDuplicates, shownCount, t, queryClient, setOpeningDuplicates, setShowDuplicates]);
 
   const openForm = useCallback(
     (contact: Contact | null = null) => {
@@ -85,9 +87,10 @@ export function useContactsPageWriteActions({
   );
 
   const handleEdit = openForm;
-  const handleCreateContact = (() => openForm(null));
+  const handleCreateContact = useCallback(() => openForm(null), [openForm]);
 
-  const handleSave = (async (contactDraft: Contact): Promise<void> => {
+  const handleSave = useCallback(
+    async (contactDraft: Contact): Promise<void> => {
       if (!canWrite) {
         throw new Error(t("contacts.form.writeDenied"));
       }
@@ -98,9 +101,12 @@ export function useContactsPageWriteActions({
       if (isCreatingContact && saved) {
         setEditContact(saved);
       }
-    });
+    },
+    [canWrite, t, editContact, saveContact, setEditContact],
+  );
 
-  const handleUpdateContact = ((updated: Contact): Promise<void> => {
+  const handleUpdateContact = useCallback(
+    (updated: Contact): Promise<void> => {
       if (!canWrite) {
         return Promise.reject(new Error(t("contacts.form.writeDenied")));
       }
@@ -111,30 +117,42 @@ export function useContactsPageWriteActions({
           handleError(err, "contacts.update_contact");
           throw err;
         });
-    });
+    },
+    [canWrite, t, updateContact, handleError],
+  );
 
-  const handleImport = (async (list: Contact[]): Promise<void> => {
+  const handleImport = useCallback(
+    async (list: Contact[]): Promise<void> => {
       if (!canWrite) {
         throw new Error(t("contacts.form.writeDenied"));
       }
       await importContacts(list);
-    });
+    },
+    [canWrite, t, importContacts],
+  );
 
-  const handleMerge = (async (keepId: string | number, deleteId: string | number, mergedData: Contact) => {
+  const handleMerge = useCallback(
+    async (keepId: string | number, deleteId: string | number, mergedData: Contact) => {
       if (!canWrite) {
         throw new Error(t("contacts.form.writeDenied"));
       }
       await mergeContacts(keepId, deleteId, mergedData);
-    });
+    },
+    [canWrite, t, mergeContacts],
+  );
 
-  const handleBulkTag = (async (tags: string[]) => {
+  const handleBulkTag = useCallback(
+    async (tags: string[]) => {
       if (!canWrite) {
         throw new Error(t("contacts.form.writeDenied"));
       }
       const ids = (selected ?? []).map(String);
       if (ids.length === 0 || tags.length === 0) return;
       await bulkTagContacts(ids, tags);
-    });
+      setSelected?.([]);
+    },
+    [canWrite, t, selected, bulkTagContacts, setSelected],
+  );
 
   return {
     handleOpenDuplicates,

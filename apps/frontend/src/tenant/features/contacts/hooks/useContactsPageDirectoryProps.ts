@@ -1,4 +1,4 @@
-import { type ComponentProps } from "react";
+import { useMemo, type ComponentProps } from "react";
 import type { Contact } from "@mms/shared";
 import type ContactsListCards from "@/tenant/features/contacts/components/ContactsListCards";
 import type ContactsListDesktopTable from "@/tenant/features/contacts/components/ContactsListDesktopTable";
@@ -45,7 +45,7 @@ export function useContactsPageDirectoryProps({
     handleSort,
   } = directory;
 
-  const messagingHandlers = (() => {
+  const messagingHandlers = useMemo(() => {
     if (!messaging.canWriteMessaging || viewingDeleted) {
       return { onWhatsApp: undefined, onSms: undefined, onEmail: undefined };
     }
@@ -54,15 +54,25 @@ export function useContactsPageDirectoryProps({
       onSms: messaging.handleSms,
       onEmail: messaging.handleEmail,
     };
-  })();
+  }, [
+    messaging.canWriteMessaging,
+    viewingDeleted,
+    messaging.handleWhatsApp,
+    messaging.handleSms,
+    messaging.handleEmail,
+  ]);
 
-  const pageSelection = (() =>
+  const pageSelection = useMemo(
+    () =>
       getDirectoryPageSelection(
         workContacts.map((contact: Contact) => contact.id),
         selected,
-      ))();
+      ),
+    [workContacts, selected],
+  );
 
-  const commonDirectoryProps = ((): ComponentProps<typeof ContactsListCards> => ({
+  const commonDirectoryProps = useMemo(
+    (): ComponentProps<typeof ContactsListCards> => ({
       contacts: workContacts,
       selected,
       onSelect: handleSelect,
@@ -79,9 +89,29 @@ export function useContactsPageDirectoryProps({
       columns: tableColumns,
       allSelected: pageSelection.allSelected,
       someSelected: pageSelection.someSelected,
-    }))();
+    }),
+    [
+      workContacts,
+      selected,
+      handleSelect,
+      handleSelectAll,
+      overlay.setViewContact,
+      actions.handleEdit,
+      actions.handleDelete,
+      actions.handleRestore,
+      viewingDeleted,
+      messagingHandlers,
+      allContactsForLinks,
+      canWrite,
+      canDelete,
+      tableColumns,
+      pageSelection.allSelected,
+      pageSelection.someSelected,
+    ],
+  );
 
-  const tableProps = ((): ComponentProps<typeof ContactsListDesktopTable> => ({
+  const tableProps = useMemo(
+    (): ComponentProps<typeof ContactsListDesktopTable> => ({
       contacts: workContacts,
       selected,
       onSelect: handleSelect,
@@ -101,7 +131,29 @@ export function useContactsPageDirectoryProps({
       onSort: handleSort,
       allSelected: pageSelection.allSelected,
       someSelected: pageSelection.someSelected,
-    }))();
+    }),
+    [
+      workContacts,
+      selected,
+      handleSelect,
+      handleSelectAll,
+      overlay.setViewContact,
+      actions.handleEdit,
+      actions.handleDelete,
+      actions.handleRestore,
+      viewingDeleted,
+      messagingHandlers,
+      allContactsForLinks,
+      canWrite,
+      canDelete,
+      tableColumns,
+      sortField,
+      sortDir,
+      handleSort,
+      pageSelection.allSelected,
+      pageSelection.someSelected,
+    ],
+  );
 
   return { messagingHandlers, commonDirectoryProps, tableProps };
 }

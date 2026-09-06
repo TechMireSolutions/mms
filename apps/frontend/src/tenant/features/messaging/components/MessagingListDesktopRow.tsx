@@ -15,7 +15,7 @@ import {
 } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { ChannelBadge } from "@/components/ui/ChannelBadge";
-import { Checkbox } from "@/components/ui/checkbox";
+import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -73,18 +73,15 @@ export function MessagingListDesktopRow({
       )}
       onClick={() => onViewLog?.(log)}
     >
-      <TableCell
+      <ModuleTableSelectionCell
+        checked={isSelected}
+        onCheckedChange={() => {}}
+        ariaLabel={t("messaging.selectRecipient", { name })}
+        sticky={false}
+        stopPropagation={true}
+        onClick={(e) => onToggleLog(log, (e.nativeEvent as MouseEvent).shiftKey)}
         className="px-3 py-2.5"
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleLog(log, (e.nativeEvent as MouseEvent).shiftKey);
-        }}
-      >
-        <Checkbox
-          checked={isSelected}
-          aria-label={t("messaging.selectRecipient", { name })}
-        />
-      </TableCell>
+      />
       {showRecipient && (
         <TableCell className="px-3 py-2.5 font-semibold text-foreground">
           <div className="flex items-center justify-between gap-2">

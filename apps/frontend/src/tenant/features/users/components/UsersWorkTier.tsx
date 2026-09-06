@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import type { ActivityLog, ModuleColumnRegistryEntry, SystemUser, UsersListPageResult } from '@mms/shared';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -120,12 +120,8 @@ export function UsersWorkTier({
         onChange={onSubTabChange}
       />
 
-      <motion.div
-        key={`work-${activeSubTab}`}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.18 }}
+      <ModuleTierMotion
+        tier={`work-${activeSubTab}`}
         className="space-y-4"
         aria-busy={activeSubTab === 'users' && isWorkPageFetching ? true : undefined}
       >
@@ -190,7 +186,7 @@ export function UsersWorkTier({
             onColumnResize={setActivityColumnWidth}
           />
         )}
-      </motion.div>
+      </ModuleTierMotion>
     </>
   );
 }

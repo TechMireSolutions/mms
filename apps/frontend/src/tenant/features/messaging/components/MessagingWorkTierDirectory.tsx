@@ -1,13 +1,14 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { AlertTriangle, MessageSquareOff, RotateCcw } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
+import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ModuleWorkDirectoryEmpty } from '@/components/ui/ModuleWorkDirectoryEmpty';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { Button } from '@/components/ui/button';
-import { SEMANTIC_BG, SEMANTIC_TEXT } from '@/lib/semanticTone';
+import { WarningCallout } from '@/components/ui/WarningCallout';
+import { SEMANTIC_TEXT } from '@/lib/semanticTone';
 import { MessagingDetail } from './MessagingDetail';
 import { MessagingWorkBulkActionBar } from './MessagingWorkBulkActionBar';
 import { MessagingListCards } from './MessagingListCards';
@@ -28,10 +29,8 @@ export function MessagingWorkTierDirectory({
   ...c
 }: MessagingWorkTierDirectoryProps): React.JSX.Element {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.2 }}
+    <ModuleTierMotion
+      tier="work-messaging"
       className="space-y-4"
     >
       <ErrorBoundary fallback={<div className={`p-4 text-sm ${SEMANTIC_TEXT.destructive}`}>{c.t('errors.toolbar.loadFailed')}</div>}>
@@ -66,23 +65,25 @@ export function MessagingWorkTierDirectory({
       <FilterChips chips={c.filterChips} onClearAll={c.clearFilters} />
 
       {c.status === 'failed' && c.failedLogs.length > 0 && (
-        <div className={`flex items-center justify-between p-3 rounded-xl border border-destructive/30 ${SEMANTIC_BG.destructive} ${SEMANTIC_TEXT.destructive} text-xs shadow-sm`}>
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 shrink-0" />
-            <span className="font-semibold">{c.failedLogs.length} {c.t('messaging.status.failed')}</span>
-          </div>
-          {canWrite && c.hasBulkResend && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => c.handleBulkResendLogs(c.failedLogs)}
-              className={`h-8 gap-1 text-xs border-destructive/40 ${SEMANTIC_TEXT.destructive} hover:bg-destructive/20 font-semibold`}
-            >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>{c.t('messaging.resend')}</span>
-            </Button>
-          )}
-        </div>
+        <WarningCallout
+          tone="destructive"
+          density="compact"
+          icon={AlertTriangle}
+          title={`${c.failedLogs.length} ${c.t('messaging.status.failed')}`}
+          action={
+            canWrite && c.hasBulkResend ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => c.handleBulkResendLogs(c.failedLogs)}
+                className="h-8 gap-1 text-xs border-destructive/40 text-destructive hover:bg-destructive/20 font-semibold"
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                <span>{c.t('messaging.resend')}</span>
+              </Button>
+            ) : undefined
+          }
+        />
       )}
 
       {c.selectedCount > 0 && (
@@ -184,6 +185,6 @@ export function MessagingWorkTierDirectory({
         onClose={c.handleCloseDetail}
         onResend={c.handleResendLog}
       />
-    </motion.div>
+    </ModuleTierMotion>
   );
 }
