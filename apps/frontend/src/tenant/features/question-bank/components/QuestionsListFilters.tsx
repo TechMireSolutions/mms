@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { FilterChips } from '@/components/ui/FilterChips';
-import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
+import { WorkTaskToolbar } from '@/components/common/work';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import { QuestionBankFiltersMenuButton } from '@/tenant/features/question-bank/components/QuestionBankFiltersMenuButton';
@@ -86,63 +86,62 @@ export function QuestionsListFilters({
   }));
 
   return (
-    <>
-      <ModuleWorkToolbar
-        regionLabel={t('page.questionBank.title')}
-        search={search}
-        onSearchChange={onSearchChange}
-        searchPlaceholder={t('questionBank.searchPlaceholder')}
-        searchId={QUESTION_BANK_WORK_SEARCH_INPUT_ID}
-        hasActiveFilters={activeFilterCount > 0}
-        onClearFilters={clearFilters}
-        clearFiltersLabel={t('questionBank.clearFilters')}
-        filterButton={
-          <QuestionBankFiltersMenuButton
-            config={config}
-            filterCats={filterCats}
-            filterDiff={filterDiff}
-            activeFilterCount={activeFilterCount}
-            onToggleCategory={toggleCategory}
-            onToggleDifficulty={toggleDifficulty}
-            onClearFilters={clearFilters}
-          />
-        }
-        primaryAction={
-          !hideToolbarAdd && canWrite && !showDeleted ? (
-            <Button
-              type="button"
-              onClick={onAddQuestion}
-              className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-            >
-              <Plus className="h-3.5 w-3.5" aria-hidden />
-              {t('questionBank.addQuestion')}
-            </Button>
-          ) : undefined
-        }
-        trashToggle={
-          canDelete && onToggleDeleted
-            ? {
-                canViewDeleted: canDelete,
-                viewingDeleted: showDeleted,
-                onToggle: onToggleDeleted,
-                activeLabel: t('questionBank.trash.showActive'),
-                deletedLabel: t('questionBank.trash.showDeleted'),
-              }
-            : undefined
-        }
-        viewModeToggle={{
-          viewMode,
-          onViewModeChange,
-        }}
-        columnCustomizer={columnCustomizer ? {
-          registry: columnCustomizer.columnRegistry,
-          onUpdate: columnCustomizer.updateUserColumnLayout,
-          onReset: columnCustomizer.onResetLayout,
-          labels: columnCustomizer.labels,
-        } : undefined}
-      />
-
-      <FilterChips chips={[...categoryChips, ...difficultyChips]} onClearAll={clearFilters} />
-    </>
+    <WorkTaskToolbar
+      regionLabel={t('page.questionBank.title')}
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder={t('questionBank.searchPlaceholder')}
+      searchId={QUESTION_BANK_WORK_SEARCH_INPUT_ID}
+      hasActiveFilters={activeFilterCount > 0}
+      onClearFilters={clearFilters}
+      clearFiltersLabel={t('questionBank.clearFilters')}
+      filterButton={
+        <QuestionBankFiltersMenuButton
+          config={config}
+          filterCats={filterCats}
+          filterDiff={filterDiff}
+          activeFilterCount={activeFilterCount}
+          onToggleCategory={toggleCategory}
+          onToggleDifficulty={toggleDifficulty}
+          onClearFilters={clearFilters}
+        />
+      }
+      filterChips={
+        <FilterChips chips={[...categoryChips, ...difficultyChips]} onClearAll={clearFilters} />
+      }
+      primaryAction={
+        !hideToolbarAdd && canWrite && !showDeleted ? (
+          <Button
+            type="button"
+            onClick={onAddQuestion}
+            className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+          >
+            <Plus className="h-3.5 w-3.5" aria-hidden />
+            {t('questionBank.addQuestion')}
+          </Button>
+        ) : undefined
+      }
+      trashToggle={
+        canDelete && onToggleDeleted
+          ? {
+              canViewDeleted: canDelete,
+              viewingDeleted: showDeleted,
+              onToggle: onToggleDeleted,
+              activeLabel: t('questionBank.trash.showActive'),
+              deletedLabel: t('questionBank.trash.showDeleted'),
+            }
+          : undefined
+      }
+      viewModeToggle={{
+        viewMode,
+        onViewModeChange,
+      }}
+      columnCustomizer={columnCustomizer ? {
+        registry: columnCustomizer.columnRegistry,
+        onUpdate: columnCustomizer.updateUserColumnLayout,
+        onReset: columnCustomizer.onResetLayout,
+        labels: columnCustomizer.labels,
+      } : undefined}
+    />
   );
 }

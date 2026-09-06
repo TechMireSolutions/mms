@@ -2,7 +2,7 @@ import type { ModuleColumnRegistryEntry, TeacherSortField, TeachersQuickFilter }
 import type { ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
+import { WorkTaskToolbar } from "@/components/common/work";
 import { TEACHERS_WORK_SEARCH_INPUT_ID } from "@/tenant/features/teachers/hooks/useTeachersKeyboardShortcuts";
 import { TeachersFiltersMenuButton } from "@/tenant/features/teachers/components/TeachersFiltersMenuButton";
 import {
@@ -84,7 +84,7 @@ export function TeachersListFilters({
         .filter((option): option is { field: TeacherSortField; label: string } => option !== null))();
 
   return (
-    <ModuleWorkToolbar
+    <WorkTaskToolbar
       shownCountLabel={shownCount != null ? t("teachers.shownCount", { count: shownCount }) : undefined}
       regionLabel={t("teachers.filters")}
       search={search}

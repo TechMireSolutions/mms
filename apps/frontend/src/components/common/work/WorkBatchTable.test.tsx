@@ -1,0 +1,101 @@
+import React from "react";
+import { describe, it, expect, vi } from "vitest";
+import { renderToStaticMarkup } from "react-dom/server";
+import { WorkBatchTable } from "./WorkBatchTable";
+import { TranslationContext, type TranslationFunction } from "@/lib/contexts/TranslationContext";
+
+const mockContext = {
+  language: "en",
+  t: ((key: string) => key) as TranslationFunction,
+  isLoading: false,
+  dir: "ltr" as const,
+  isRtl: false,
+};
+
+function TestWrapper({ children }: { children: React.ReactNode }) {
+  return (
+    <TranslationContext.Provider value={mockContext}>
+      {children}
+    </TranslationContext.Provider>
+  );
+}
+
+describe("WorkBatchTable", () => {
+  interface SampleRow {
+    id: string;
+    name: string;
+    status: string;
+  }
+
+  const sampleData: SampleRow[] = [
+    { id: "1", name: "Ahmed", status: "Active" },
+    { id: "2", name: "Fatima", status: "Pending" },
+  ];
+
+  const columns = [
+    {
+      id: "name",
+      label: "Name",
+      render: (row: SampleRow) => <span>{row.name}</span>,
+    },
+    {
+      id: "status",
+      label: "Status",
+      render: (row: SampleRow) => <span>{row.status}</span>,
+    },
+  ];
+
+  it("renders data rows and column headers", () => {
+    const html = renderToStaticMarkup(
+      <TestWrapper>
+        <WorkBatchTable data={sampleData} columns={columns} />
+      </TestWrapper>,
+    );
+
+    expect(html).toContain("Name");
+    expect(html).toContain("Status");
+    expect(html).toContain("Ahmed");
+    expect(html).toContain("Fatima");
+  });
+
+  it("renders selection column and footer count", () => {
+    const html = renderToStaticMarkup(
+      <TestWrapper>
+        <WorkBatchTable
+          data={sampleData}
+          columns={columns}
+          selection={{
+            selectedIds: ["1"],
+            onSelectOne: vi.fn(),
+            onSelectAll: vi.fn(),
+            allSelected: false,
+            someSelected: true,
+            selectAllAriaLabel: "Select all rows",
+          }}
+          footerCount={{
+            pageCountLabel: "Showing 2 of 2 records",
+            selectedCountLabel: "1 selected",
+          }}
+        />
+      </TestWrapper>,
+    );
+
+    expect(html).toContain("Select all rows");
+    expect(html).toContain("Showing 2 of 2 records");
+    expect(html).toContain("1 selected");
+  });
+
+  it("renders empty state when data is empty", () => {
+    const html = renderToStaticMarkup(
+      <TestWrapper>
+        <WorkBatchTable
+          data={[]}
+          columns={columns}
+          emptyState={<div id="empty">No records found</div>}
+        />
+      </TestWrapper>,
+    );
+
+    expect(html).toContain("No records found");
+  });
+});

@@ -1,7 +1,7 @@
 import type { StudentsQuickFilter } from "@mms/shared";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
+import { WorkTaskToolbar } from "@/components/common/work";
 import type { useStudentColumnLayout } from "@/tenant/features/students/hooks/useStudentColumnLayout";
 import { StudentsFiltersMenuButton } from "@/tenant/features/students/components/StudentsFiltersMenuButton";
 import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
@@ -75,7 +75,7 @@ export function StudentsListFilters({
         .filter((option): option is { field: StudentsListContentSortField; label: string } => option !== null))();
 
   return (
-    <ModuleWorkToolbar
+    <WorkTaskToolbar
       shownCountLabel={shownCount != null ? t("students.shownCount", { count: shownCount }) : undefined}
       regionLabel={t("students.filters")}
       search={studentSearch}

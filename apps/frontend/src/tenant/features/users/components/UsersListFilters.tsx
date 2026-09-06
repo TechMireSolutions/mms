@@ -1,7 +1,8 @@
 import type { JSX } from 'react';
+import React from 'react';
 import { workspaceRoleLabel, type ModuleColumnRegistryEntry, type WorkspaceRole } from '@mms/shared';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
+import { WorkTaskToolbar } from '@/components/common/work';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import type { ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
@@ -54,7 +55,7 @@ export function UsersListFilters({
   };
 
   return (
-    <ModuleWorkToolbar
+    <WorkTaskToolbar
       regionLabel={t('page.users.title')}
       searchId={USERS_WORK_SEARCH_INPUT_ID}
       search={search}
@@ -123,6 +124,6 @@ export function UsersListFilters({
           className="w-auto shrink-0"
         />
       ) : null}
-    </ModuleWorkToolbar>
+    </WorkTaskToolbar>
   );
 }

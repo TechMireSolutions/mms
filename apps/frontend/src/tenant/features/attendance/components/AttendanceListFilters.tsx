@@ -5,7 +5,7 @@ import {
 import {
   type ModuleColumnCustomizerProps,
 } from "@/components/ui/ModuleColumnCustomizer";
-import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
+import { WorkTaskToolbar } from "@/components/common/work";
 import { FilterChips } from "@/components/ui/FilterChips";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -99,7 +99,7 @@ export function AttendanceListFilters({
 
   return (
     <>
-      <ModuleWorkToolbar
+      <WorkTaskToolbar
         regionLabel={t("attendance.tabs.records")}
         search={search}
         onSearchChange={handleSearchChange}
@@ -157,7 +157,7 @@ export function AttendanceListFilters({
           }}
           pickerClassName="w-full min-w-0 max-w-full text-sm sm:max-w-filter-sm"
         />
-      </ModuleWorkToolbar>
+      </WorkTaskToolbar>
 
       <FilterChips chips={chips} onClearAll={clearFilters} />
     </>

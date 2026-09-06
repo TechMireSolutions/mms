@@ -1,7 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { FilterChips } from '@/components/ui/FilterChips';
 import { type ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
-import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
+import { WorkTaskToolbar } from "@/components/common/work";
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { Distribution } from '@/lib/data/hasanatData';
@@ -48,7 +48,7 @@ export function DistributionsListFilters({
 
   return (
     <>
-      <ModuleWorkToolbar
+      <WorkTaskToolbar
         regionLabel={t('hasanat.tabs.distribute')}
         search={search}
         onSearchChange={onSearchChange}

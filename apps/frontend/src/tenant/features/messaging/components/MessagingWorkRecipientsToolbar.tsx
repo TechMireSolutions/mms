@@ -8,7 +8,6 @@ import {
   ModuleFilterRadioGroup,
 } from '@/components/ui/ModuleFiltersMenuButton';
 import { type ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
-import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import { FilterChips } from '@/components/ui/FilterChips';
 import {
   WORK_TOOLBAR_TRIGGER,
@@ -18,6 +17,7 @@ import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { SEMANTIC_TEXT } from '@/lib/semanticTone';
+import { WorkTaskToolbar } from '@/components/common/work';
 
 export const MESSAGING_RECIPIENTS_SEARCH_INPUT_ID = 'messaging-recipients-search';
 
@@ -84,82 +84,79 @@ export const MessagingWorkRecipientsToolbar = (function MessagingWorkRecipientsT
   ];
 
   return (
-    <>
-      <ModuleWorkToolbar
-        regionLabel={t('messaging.stepSelectRecipients')}
-        search={searchContact}
-        onSearchChange={onSearchChange}
-        searchPlaceholder={t('messaging.search.placeholder')}
-        searchId={MESSAGING_RECIPIENTS_SEARCH_INPUT_ID}
-        hasActiveFilters={activeFilterCount > 0}
-        onClearFilters={clearFilters}
-        clearFiltersLabel={t('common.clearFilters')}
-        filterButton={
-          <ModuleFilterDropdown
-            label={t('common.filters')}
-            activeCount={activeFilterCount}
-            clearLabel={t('common.clearFilters')}
-            onClear={clearFilters}
-          >
-            <ModuleFilterRadioGroup
-              label={t('messaging.filterByRole')}
-              value={roleFilter}
-              onValueChange={(value) => onRoleFilterChange(value as MessagingRoleFilter)}
-              options={roleOptions.map((option) => ({
-                value: option.value,
-                label: option.label,
-              }))}
-            />
+    <WorkTaskToolbar
+      regionLabel={t('messaging.stepSelectRecipients')}
+      search={searchContact}
+      onSearchChange={onSearchChange}
+      searchPlaceholder={t('messaging.search.placeholder')}
+      searchId={MESSAGING_RECIPIENTS_SEARCH_INPUT_ID}
+      hasActiveFilters={activeFilterCount > 0}
+      onClearFilters={clearFilters}
+      clearFiltersLabel={t('common.clearFilters')}
+      filterButton={
+        <ModuleFilterDropdown
+          label={t('common.filters')}
+          activeCount={activeFilterCount}
+          clearLabel={t('common.clearFilters')}
+          onClear={clearFilters}
+        >
+          <ModuleFilterRadioGroup
+            label={t('messaging.filterByRole')}
+            value={roleFilter}
+            onValueChange={(value) => onRoleFilterChange(value as MessagingRoleFilter)}
+            options={roleOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
 
-            <ModuleFilterDivider />
-            <ModuleFilterRadioGroup
-              label={t('contacts.reportFields.gender')}
-              value={genderFilter}
-              onValueChange={(value) => onGenderFilterChange(value as MessagingGenderFilter)}
-              options={genderOptions.map((option) => ({
-                value: option.value,
-                label: option.label,
-              }))}
-            />
-          </ModuleFilterDropdown>
-        }
-        viewModeToggle={{
-          viewMode,
-          onViewModeChange,
-        }}
-        columnCustomizer={
-          columnRegistry && updateUserColumnLayout
-            ? {
-                registry: columnRegistry,
-                onUpdate: updateUserColumnLayout,
-                onReset: onResetColumnLayout,
-                labels: columnCustomizerLabels,
-              }
-            : undefined
-        }
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t('contacts.reportFields.gender')}
+            value={genderFilter}
+            onValueChange={(value) => onGenderFilterChange(value as MessagingGenderFilter)}
+            options={genderOptions.map((option) => ({
+              value: option.value,
+              label: option.label,
+            }))}
+          />
+        </ModuleFilterDropdown>
+      }
+      filterChips={<FilterChips chips={chips} onClearAll={clearFilters} />}
+      viewModeToggle={{
+        viewMode,
+        onViewModeChange,
+      }}
+      columnCustomizer={
+        columnRegistry && updateUserColumnLayout
+          ? {
+              registry: columnRegistry,
+              onUpdate: updateUserColumnLayout,
+              onReset: onResetColumnLayout,
+              labels: columnCustomizerLabels,
+            }
+          : undefined
+      }
+    >
+      <Button
+        type="button"
+        variant="outline"
+        disabled={selectingReachable}
+        onClick={() => onSelectReachable('phone')}
+        className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
       >
-        <Button
-          type="button"
-          variant="outline"
-          disabled={selectingReachable}
-          onClick={() => onSelectReachable('phone')}
-          className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
-        >
-          <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.info}`} /> {t('messaging.selectAllValidPhone')}
-        </Button>
+        <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.info}`} /> {t('messaging.selectAllValidPhone')}
+      </Button>
 
-        <Button
-          type="button"
-          variant="outline"
-          disabled={selectingReachable}
-          onClick={() => onSelectReachable('email')}
-          className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
-        >
-          <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.warning}`} /> {t('messaging.selectAllValidEmail')}
-        </Button>
-      </ModuleWorkToolbar>
-
-      <FilterChips chips={chips} onClearAll={clearFilters} />
-    </>
+      <Button
+        type="button"
+        variant="outline"
+        disabled={selectingReachable}
+        onClick={() => onSelectReachable('email')}
+        className={cn(WORK_TOOLBAR_TRIGGER, WORK_TOOLBAR_TRIGGER_IDLE, 'text-xs font-semibold')}
+      >
+        <CheckSquare className={`me-1 h-3.5 w-3.5 ${SEMANTIC_TEXT.warning}`} /> {t('messaging.selectAllValidEmail')}
+      </Button>
+    </WorkTaskToolbar>
   );
 });

@@ -5,7 +5,7 @@ import { DateRangeFilterBar } from "@/components/ui/DateRangeFilterBar";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
+import { WorkTaskToolbar } from "@/components/common/work";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -84,7 +84,7 @@ export function JournalEntriesListFilters({
   return (
     <>
       <SubTabBar tabs={modeTabs} value={mode} onChange={onModeChange} panelIdPrefix="journal-mode-advanced" />
-      <ModuleWorkToolbar
+      <WorkTaskToolbar
         regionLabel={t("nav.accounting")}
         search={search}
         onSearchChange={onSearchChange}
@@ -95,7 +95,7 @@ export function JournalEntriesListFilters({
           onStatusFilterChange("all");
           onTagFilterChange("all");
         }}
-        clearFiltersLabel={t("accounting.clearFilters")}
+        clearFiltersLabel={t("common.clearFilters")}
         filterButton={
           <AccountingFiltersMenuButton
             statusFilter={statusFilter}
@@ -114,8 +114,9 @@ export function JournalEntriesListFilters({
             <Button
               type="button"
               variant="default"
+              size="sm"
               onClick={onOpenNew}
-              className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+              className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold"
             >
               <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.newEntry")}
             </Button>
@@ -160,7 +161,7 @@ export function JournalEntriesListFilters({
         >
           <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
         </Button>
-      </ModuleWorkToolbar>
+      </WorkTaskToolbar>
       <FilterChips chips={chips} onClearAll={() => {
         onStatusFilterChange("all");
         onTagFilterChange("all");

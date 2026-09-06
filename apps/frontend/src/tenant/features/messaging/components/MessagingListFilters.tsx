@@ -3,7 +3,7 @@ import type { ModuleColumnRegistryEntry } from '@mms/shared';
 import { AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { MessagingFiltersMenuButton } from './MessagingFiltersMenuButton';
-import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
+import { WorkTaskToolbar } from '@/components/common/work';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
@@ -90,7 +90,7 @@ export function MessagingListFilters({
   const isFailedOnly = status === 'failed';
 
   return (
-    <ModuleWorkToolbar
+    <WorkTaskToolbar
       shownCountLabel={shownCount != null ? t("contacts.shownCount", { count: shownCount }) : undefined}
       regionLabel={t('messaging.title')}
       search={search}
@@ -147,6 +147,6 @@ export function MessagingListFilters({
         <AlertTriangle className="w-4 h-4" />
         <span>{t('messaging.status.failed')}</span>
       </Button>
-    </ModuleWorkToolbar>
+    </WorkTaskToolbar>
   );
 }

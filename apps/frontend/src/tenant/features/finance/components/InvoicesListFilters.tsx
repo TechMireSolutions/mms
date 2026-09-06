@@ -1,7 +1,7 @@
 import type React from "react";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { FilterChips } from "@/components/ui/FilterChips";
-import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
+import { WorkTaskToolbar } from "@/components/common/work";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { AppTranslationKey } from "@mms/shared";
@@ -41,7 +41,7 @@ export function InvoicesListFilters({
 
   return (
     <>
-      <ModuleWorkToolbar
+      <WorkTaskToolbar
         regionLabel={t("finance.invoices")}
         search={search}
         onSearchChange={onSearchChange}

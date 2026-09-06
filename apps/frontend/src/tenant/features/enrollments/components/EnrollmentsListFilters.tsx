@@ -1,6 +1,6 @@
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { FilterChips } from "@/components/ui/FilterChips";
-import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
+import { WorkTaskToolbar } from "@/components/common/work";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -59,7 +59,7 @@ export function EnrollmentsListFilters({
 
   return (
     <>
-      <ModuleWorkToolbar
+      <WorkTaskToolbar
         regionLabel={t("enrollments.filters")}
         search={search}
         onSearchChange={onSearchChange}
