@@ -8,6 +8,7 @@ import {
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
 import {
+  dedupeTrimmedIds,
   type Exam,
   type ExamResult,
   type ExaminationsCommandMetricsSnapshot,
@@ -73,6 +74,24 @@ export function createExaminationsUseCases(repo: ExaminationsRepository = examin
       return scopeDeleted(rows, options?.includeDeleted);
     },
 
+    loadExamById: async (id: string, includeDeleted = false): Promise<Exam | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const row = await repo.findExamById(tenant, cleanId);
+      if (!row) return null;
+      if (!includeDeleted && row.deletedAt) return null;
+      return row;
+    },
+
+    loadExamsByIds: async (ids: string[], includeDeleted = false): Promise<Exam[]> => {
+      const tenant = getRequestTenant();
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (!tenant || cleanIds.length === 0) return [];
+      const rows = await repo.findExamsByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
+    },
+
     loadExamsPage: async (query: ExaminationsListQuery & { includeDeleted?: boolean }) => {
       const tenant = getRequestTenant();
       if (!tenant) {
@@ -89,10 +108,27 @@ export function createExaminationsUseCases(repo: ExaminationsRepository = examin
 
     loadExamResults: async (): Promise<ExamResult[]> => examResultBulkService.load(),
 
+    loadExamResultById: async (id: string): Promise<ExamResult | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findExamResultById(tenant, cleanId);
+    },
+
+    loadExamResultsByIds: async (ids: string[]): Promise<ExamResult[]> => {
+      const tenant = getRequestTenant();
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (!tenant || cleanIds.length === 0) return [];
+      return repo.findExamResultsByIds(tenant, cleanIds);
+    },
+
     upsertExams: (records: Exam[]) =>
       upsertWithBroadcast(examListSchema, records, repo.bulkSaveExams, 'exams'),
     upsertExamResults: (records: ExamResult[]) =>
       upsertWithBroadcast(examResultListSchema, records, repo.bulkSaveExamResults, 'exam_results'),
+
+    createExam: examCrud.create,
+    updateExamById: examCrud.updateById,
 
     deleteExamById: examCrud.deleteById,
     restoreExamById: examCrud.restoreById,

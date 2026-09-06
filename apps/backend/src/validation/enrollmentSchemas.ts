@@ -15,6 +15,7 @@ export { enrollmentsBulkIdsSchema };
 export const enrollmentsListQuerySchema = baseListQuerySchema.extend({
   status: z.string().max(200).optional(),
   sessionId: z.string().max(100).optional(),
+  classId: z.string().max(100).optional(),
 });
 
 export const enrollmentsCsvExportBodySchema = csvExportBodySchema(enrollmentsListQuerySchema);

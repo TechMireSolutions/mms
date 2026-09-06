@@ -8,6 +8,7 @@ import {
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
 import {
+  dedupeTrimmedIds,
   type Denomination,
   type StockBatch,
   type Distribution,
@@ -79,16 +80,93 @@ export function createHasanatUseCases(repo: HasanatRepository = hasanatRepositor
 
   return {
     loadDenoms: denomService.load,
+    loadDenomById: async (id: string): Promise<Denomination | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findDenomById(tenant, cleanId);
+    },
+    loadDenomsByIds: async (ids: string[]): Promise<Denomination[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findDenomsByIds(tenant, cleanIds);
+    },
+    saveDenom: async (record: Denomination): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveDenom(tenant, record);
+    },
     replaceDenoms: denomService.replace,
+
     loadBatches: batchService.load,
+    loadBatchById: async (id: string): Promise<StockBatch | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findBatchById(tenant, cleanId);
+    },
+    loadBatchesByIds: async (ids: string[]): Promise<StockBatch[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findBatchesByIds(tenant, cleanIds);
+    },
+    saveBatch: async (record: StockBatch): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveBatch(tenant, record);
+    },
     replaceBatches: batchService.replace,
+
     replaceDistributions: distributionBulkService.replace,
+
     loadRedemptions: redemptionService.load,
+    loadRedemptionById: async (id: string): Promise<Redemption | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findRedemptionById(tenant, cleanId);
+    },
+    loadRedemptionsByIds: async (ids: string[]): Promise<Redemption[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findRedemptionsByIds(tenant, cleanIds);
+    },
+    saveRedemption: async (record: Redemption): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveRedemption(tenant, record);
+    },
     replaceRedemptions: redemptionService.replace,
 
     loadDistributions: async (options?: { includeDeleted?: boolean }): Promise<Distribution[]> => {
       const rows = await distributionCrud.loadAll({ includeDeleted: true });
       return scopeDeleted(rows, options?.includeDeleted);
+    },
+
+    loadDistributionById: async (id: string, includeDeleted = false): Promise<Distribution | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const dist = await repo.findDistributionById(tenant, cleanId);
+      if (!dist) return null;
+      if (!includeDeleted && dist.deletedAt) return null;
+      if (includeDeleted && !dist.deletedAt) return null;
+      return dist;
+    },
+
+    loadDistributionsByIds: async (ids: string[], includeDeleted = false): Promise<Distribution[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const rows = await repo.findDistributionsByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
     },
 
     loadDistributionsPage: async (query: HasanatListQuery & { includeDeleted?: boolean }) => {

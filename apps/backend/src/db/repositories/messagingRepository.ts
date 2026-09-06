@@ -3,6 +3,8 @@ export {
   templateRowToRecord,
   listMessageTemplatesByWorkspace,
   findMessageTemplateById,
+  findMessageTemplatesByIds,
+  saveMessageTemplate,
   bulkSaveMessageTemplates,
   replaceMessageTemplatesForWorkspace,
   deleteMessageTemplateById,
@@ -10,6 +12,9 @@ export {
 export {
   logRowToRecord,
   listMessageLogsByWorkspace,
+  findMessageLogById,
+  findMessageLogsByIds,
+  saveMessageLog,
   replaceMessageLogsForWorkspace,
   bulkSaveMessageLogs,
   deleteMessageLogsByWorkspace,

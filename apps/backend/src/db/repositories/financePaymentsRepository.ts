@@ -1,5 +1,5 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
-import { type Payment } from '@mms/shared';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type Payment } from '@mms/shared';
 import {
   financeFeeItems,
   financeFeeStructures,
@@ -71,6 +71,8 @@ export async function listPaymentsByWorkspace(
 }
 
 export async function findPaymentById(tenant: string, id: string): Promise<Payment | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -93,10 +95,45 @@ export async function findPaymentById(tenant: string, id: string): Promise<Payme
         updatedAt: financePayments.updatedAt,
       })
       .from(financePayments)
-      .where(and(eq(financePayments.workspaceSubdomain, subdomain), eq(financePayments.id, id)))
+      .where(and(eq(financePayments.workspaceSubdomain, subdomain), eq(financePayments.id, trimmedId)))
       .limit(1);
     const row = rows[0];
     return row ? paymentRowToRecord(row) : null;
+  });
+}
+
+export async function findPaymentsByIds(tenant: string, ids: string[]): Promise<Payment[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: financePayments.id,
+        workspaceSubdomain: financePayments.workspaceSubdomain,
+        invoiceId: financePayments.invoiceId,
+        studentId: financePayments.studentId,
+        studentName: financePayments.studentName,
+        amount: financePayments.amount,
+        date: financePayments.date,
+        method: financePayments.method,
+        receivedByUserId: financePayments.receivedByUserId,
+        receivedBy: financePayments.receivedBy,
+        note: financePayments.note,
+        deletedAt: financePayments.deletedAt,
+        deletedBy: financePayments.deletedBy,
+        deletionReason: financePayments.deletionReason,
+        createdAt: financePayments.createdAt,
+        updatedAt: financePayments.updatedAt,
+      })
+      .from(financePayments)
+      .where(
+        and(
+          eq(financePayments.workspaceSubdomain, subdomain),
+          inArray(financePayments.id, cleanIds),
+        ),
+      );
+    return rows.map(paymentRowToRecord);
   });
 }
 
@@ -146,11 +183,19 @@ export async function savePayment(tenant: string, record: Payment): Promise<void
 export async function bulkSavePayments(tenant: string, records: Payment[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Payment>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(financePayments)
       .values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           invoiceId: r.invoiceId,
@@ -191,11 +236,18 @@ export async function bulkSavePayments(tenant: string, records: Payment[]): Prom
 
 export async function replacePaymentsForWorkspace(tenant: string, records: Payment[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Payment>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(financePayments).where(eq(financePayments.workspaceSubdomain, subdomain));
-    if (records.length > 0) {
+    if (uniqueRecords.length > 0) {
       await tx.insert(financePayments).values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           invoiceId: r.invoiceId,

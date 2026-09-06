@@ -24,4 +24,10 @@ describe('studentRepositoryList Contacts SSOT', () => {
     expect(listSrc).toContain("COALESCE(${students.studentId}, '')");
     expect(listSrc).toContain("COALESCE(c.cnic, '')");
   });
+
+  it('filters related contact IDs against father, mother, and guardian contact IDs', () => {
+    expect(listSrc).toContain('${students.fatherContactId} IN');
+    expect(listSrc).toContain('${students.motherContactId} IN');
+    expect(listSrc).toContain('${students.guardianContactId} IN');
+  });
 });

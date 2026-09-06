@@ -7,6 +7,9 @@ const replaceActivityLogsForWorkspace = vi.fn();
 
 vi.mock('../db/repositories/logsRepository.js', () => ({
   listActivityLogsByWorkspace: vi.fn().mockResolvedValue([]),
+  findActivityLogById: vi.fn().mockResolvedValue(null),
+  findActivityLogsByIds: vi.fn().mockResolvedValue([]),
+  saveActivityLog: vi.fn().mockResolvedValue(undefined),
   bulkSaveActivityLogs,
   replaceActivityLogsForWorkspace,
 }));

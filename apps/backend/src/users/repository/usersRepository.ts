@@ -30,6 +30,9 @@ export interface UsersRepository {
 
   // Activity logs
   listActivityLogsByWorkspace(tenant: string): Promise<ActivityLog[]>;
+  findActivityLogById(tenant: string, id: string): Promise<ActivityLog | null>;
+  findActivityLogsByIds(tenant: string, ids: string[]): Promise<ActivityLog[]>;
+  saveActivityLog(tenant: string, record: ActivityLog): Promise<void>;
   bulkSaveActivityLogs(tenant: string, records: ActivityLog[]): Promise<void>;
   replaceActivityLogsForWorkspace(tenant: string, records: ActivityLog[]): Promise<void>;
 }

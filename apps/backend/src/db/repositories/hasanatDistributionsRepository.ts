@@ -1,5 +1,5 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
-import { type Distribution } from '@mms/shared';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type Distribution } from '@mms/shared';
 import { hasanatDistributions } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -73,6 +73,8 @@ export async function listDistributionsByWorkspace(tenant: string, options?: { l
 }
 
 export async function findDistributionById(tenant: string, id: string): Promise<Distribution | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -103,12 +105,52 @@ export async function findDistributionById(tenant: string, id: string): Promise<
       .where(
         and(
           eq(hasanatDistributions.workspaceSubdomain, subdomain),
-          eq(hasanatDistributions.id, id),
+          eq(hasanatDistributions.id, trimmedId),
         ),
       )
       .limit(1);
     const row = rows[0];
     return row ? distributionRowToRecord(row) : null;
+  });
+}
+
+export async function findDistributionsByIds(tenant: string, ids: string[]): Promise<Distribution[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: hasanatDistributions.id,
+        workspaceSubdomain: hasanatDistributions.workspaceSubdomain,
+        batchId: hasanatDistributions.batchId,
+        denominationId: hasanatDistributions.denominationId,
+        denominationName: hasanatDistributions.denominationName,
+        recipientType: hasanatDistributions.recipientType,
+        recipientStudentId: hasanatDistributions.recipientStudentId,
+        recipientTeacherId: hasanatDistributions.recipientTeacherId,
+        recipientName: hasanatDistributions.recipientName,
+        recipientClass: hasanatDistributions.recipientClass,
+        quantity: hasanatDistributions.quantity,
+        reason: hasanatDistributions.reason,
+        issuedDate: hasanatDistributions.issuedDate,
+        issuedByUserId: hasanatDistributions.issuedByUserId,
+        issuedBy: hasanatDistributions.issuedBy,
+        status: hasanatDistributions.status,
+        deletedAt: hasanatDistributions.deletedAt,
+        deletedBy: hasanatDistributions.deletedBy,
+        deletionReason: hasanatDistributions.deletionReason,
+        createdAt: hasanatDistributions.createdAt,
+        updatedAt: hasanatDistributions.updatedAt,
+      })
+      .from(hasanatDistributions)
+      .where(
+        and(
+          eq(hasanatDistributions.workspaceSubdomain, subdomain),
+          inArray(hasanatDistributions.id, cleanIds),
+        ),
+      );
+    return rows.map(distributionRowToRecord);
   });
 }
 
@@ -168,11 +210,19 @@ export async function saveDistribution(tenant: string, record: Distribution): Pr
 export async function bulkSaveDistributions(tenant: string, records: Distribution[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Distribution>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(hasanatDistributions)
       .values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           batchId: r.batchId,
@@ -223,11 +273,18 @@ export async function bulkSaveDistributions(tenant: string, records: Distributio
 
 export async function replaceDistributionsForWorkspace(tenant: string, records: Distribution[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Distribution>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(hasanatDistributions).where(eq(hasanatDistributions.workspaceSubdomain, subdomain));
-    if (records.length > 0) {
+    if (uniqueRecords.length > 0) {
       await tx.insert(hasanatDistributions).values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           batchId: r.batchId,

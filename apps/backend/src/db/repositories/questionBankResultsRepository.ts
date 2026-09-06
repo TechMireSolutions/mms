@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { type QuestionBankResult } from '@mms/shared';
+import { dedupeTrimmedIds, type QuestionBankResult } from '@mms/shared';
 import {
   questions,
   questionCategories,
@@ -131,6 +131,8 @@ export async function listResultsByWorkspace(
 }
 
 export async function findResultById(tenant: string, id: string): Promise<QuestionBankResult | null> {
+  const cleanId = id?.trim();
+  if (!cleanId) return null;
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -145,7 +147,7 @@ export async function findResultById(tenant: string, id: string): Promise<Questi
         deletionReason: assessmentResults.deletionReason,
       })
       .from(assessmentResults)
-      .where(and(eq(assessmentResults.workspaceSubdomain, subdomain), eq(assessmentResults.id, id)))
+      .where(and(eq(assessmentResults.workspaceSubdomain, subdomain), eq(assessmentResults.id, cleanId)))
       .limit(1);
     const row = rows[0];
     if (!row) return null;
@@ -161,7 +163,7 @@ export async function findResultById(tenant: string, id: string): Promise<Questi
       .where(
         and(
           eq(assessmentAnswers.workspaceSubdomain, subdomain),
-          eq(assessmentAnswers.resultId, id),
+          eq(assessmentAnswers.resultId, cleanId),
         ),
       );
 
@@ -174,6 +176,61 @@ export async function findResultById(tenant: string, id: string): Promise<Questi
     }
 
     return resultRowToRecord(row as unknown as ResultRow, ansMap, scoreMap);
+  });
+}
+
+export async function findResultsByIds(tenant: string, ids: string[]): Promise<QuestionBankResult[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: assessmentResults.id,
+        testId: assessmentResults.testId,
+        studentId: assessmentResults.studentId,
+        studentName: assessmentResults.studentName,
+        submittedAt: assessmentResults.submittedAt,
+        deletedAt: assessmentResults.deletedAt,
+        deletedBy: assessmentResults.deletedBy,
+        deletionReason: assessmentResults.deletionReason,
+      })
+      .from(assessmentResults)
+      .where(and(eq(assessmentResults.workspaceSubdomain, subdomain), inArray(assessmentResults.id, cleanIds)));
+    if (rows.length === 0) return [];
+
+    const resIds = rows.map((r) => r.id);
+    const allAnswers = await tx
+      .select({
+        resultId: assessmentAnswers.resultId,
+        questionId: assessmentAnswers.questionId,
+        studentAnswer: assessmentAnswers.studentAnswer,
+        score: assessmentAnswers.score,
+      })
+      .from(assessmentAnswers)
+      .where(
+        and(
+          eq(assessmentAnswers.workspaceSubdomain, subdomain),
+          inArray(assessmentAnswers.resultId, resIds),
+        ),
+      );
+
+    const answersByRes = new Map<string, Record<string, string>>();
+    const scoresByRes = new Map<string, Record<string, number>>();
+
+    for (const a of allAnswers) {
+      const ansMap = answersByRes.get(a.resultId) ?? {};
+      ansMap[a.questionId] = a.studentAnswer;
+      answersByRes.set(a.resultId, ansMap);
+
+      const scoreMap = scoresByRes.get(a.resultId) ?? {};
+      scoreMap[a.questionId] = Number(a.score ?? 0);
+      scoresByRes.set(a.resultId, scoreMap);
+    }
+
+    return rows.map((r) =>
+      resultRowToRecord(r as unknown as ResultRow, answersByRes.get(r.id) ?? {}, scoresByRes.get(r.id) ?? {}),
+    );
   });
 }
 
@@ -231,13 +288,20 @@ function flattenAnswerRows(subdomain: string, records: QuestionBankResult[]) {
 export async function bulkSaveResults(tenant: string, records: QuestionBankResult[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+
+  const dedupedMap = new Map<string, QuestionBankResult>();
+  for (const record of records) {
+    dedupedMap.set(record.id, record);
+  }
+  const uniqueRecords = Array.from(dedupedMap.values());
+
   await withTenant(subdomain, async (tx) => {
-    const resIds = records.map((r) => r.id);
+    const resIds = uniqueRecords.map((r) => r.id);
 
     await tx
       .insert(assessmentResults)
       .values(
-        records.map((record) => ({
+        uniqueRecords.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           testId: record.testId,
@@ -273,7 +337,7 @@ export async function bulkSaveResults(tenant: string, records: QuestionBankResul
         ),
       );
 
-    const allAnswerRows = flattenAnswerRows(subdomain, records);
+    const allAnswerRows = flattenAnswerRows(subdomain, uniqueRecords);
     if (allAnswerRows.length > 0) {
       await tx.insert(assessmentAnswers).values(allAnswerRows);
     }
@@ -282,14 +346,21 @@ export async function bulkSaveResults(tenant: string, records: QuestionBankResul
 
 export async function replaceResultsForWorkspace(tenant: string, records: QuestionBankResult[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+
+  const dedupedMap = new Map<string, QuestionBankResult>();
+  for (const record of records) {
+    dedupedMap.set(record.id, record);
+  }
+  const uniqueRecords = Array.from(dedupedMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(assessmentAnswers).where(eq(assessmentAnswers.workspaceSubdomain, subdomain));
     await tx.delete(assessmentResults).where(eq(assessmentResults.workspaceSubdomain, subdomain));
 
-    if (records.length === 0) return;
+    if (uniqueRecords.length === 0) return;
 
     await tx.insert(assessmentResults).values(
-      records.map((record) => ({
+      uniqueRecords.map((record) => ({
         id: record.id,
         workspaceSubdomain: subdomain,
         testId: record.testId,
@@ -303,7 +374,7 @@ export async function replaceResultsForWorkspace(tenant: string, records: Questi
       })),
     );
 
-    const allAnswerRows = flattenAnswerRows(subdomain, records);
+    const allAnswerRows = flattenAnswerRows(subdomain, uniqueRecords);
     if (allAnswerRows.length > 0) {
       await tx.insert(assessmentAnswers).values(allAnswerRows);
     }

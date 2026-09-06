@@ -7,6 +7,7 @@ import {
   reorderDashboardWidgetsForWorkspace,
   listAllDashboardWidgetsByWorkspace,
   replaceDashboardWidgetsForWorkspace,
+  findDashboardWidgetById,
 } from '../db/repositories/dashboardWidgetsRepository.js';
 import {
   getDashboardPreferencesByWorkspace,
@@ -141,6 +142,84 @@ describe('dashboard repositories', () => {
 
       expect(mockTx.delete).toHaveBeenCalled();
       expect(mockTx.insert).toHaveBeenCalled();
+    });
+    it('upsertDashboardWidgetsForWorkspace deduplicates widgets with duplicate IDs (last wins)', async () => {
+      const mockOnConflictDoUpdate = vi.fn().mockResolvedValue([]);
+      const mockValues = vi.fn().mockReturnValue({ onConflictDoUpdate: mockOnConflictDoUpdate });
+      mockTx.insert.mockReturnValue({ values: mockValues });
+
+      const dup1 = { ...sampleWidget, id: 'w-dup', title: 'First' };
+      const dup2 = { ...sampleWidget, id: 'w-dup', title: 'Second' };
+      await upsertDashboardWidgetsForWorkspace('demo', [dup1, dup2]);
+
+      expect(mockValues).toHaveBeenCalledTimes(1);
+      // Only one row should be inserted after dedup
+      const valuesArg = mockValues.mock.calls[0][0] as Array<{ title: string }>;
+      expect(valuesArg).toHaveLength(1);
+      expect(valuesArg[0].title).toBe('Second');
+    });
+
+    it('reorderDashboardWidgetsForWorkspace deduplicates order entries with duplicate IDs', async () => {
+      const mockWhere = vi.fn().mockResolvedValue([]);
+      const mockSet = vi.fn().mockReturnValue({ where: mockWhere });
+      mockTx.update.mockReturnValue({ set: mockSet });
+
+      await reorderDashboardWidgetsForWorkspace('demo', [
+        { id: 'w-dup', sortOrder: 1 },
+        { id: 'w-dup', sortOrder: 99 },
+        { id: 'w-other', sortOrder: 2 },
+      ]);
+
+      // Should still call update once with deduped IDs
+      expect(mockTx.update).toHaveBeenCalledTimes(1);
+      expect(mockSet).toHaveBeenCalledTimes(1);
+    });
+
+    it('findDashboardWidgetById returns null for empty/blank id', async () => {
+      const result1 = await findDashboardWidgetById('demo', '');
+      expect(result1).toBeNull();
+      const result2 = await findDashboardWidgetById('demo', '   ');
+      expect(result2).toBeNull();
+      expect(mockTx.select).not.toHaveBeenCalled();
+    });
+
+    it('findDashboardWidgetById returns mapped DTO when row found', async () => {
+      const dbRow = {
+        id: 'custom-1',
+        workspaceSubdomain: 'demo',
+        widgetType: 'card',
+        category: 'students',
+        collection: 'students',
+        role: 'admin',
+        isPinnedToDashboard: true,
+        title: 'Active Students',
+        icon: null,
+        color: 'emerald',
+        operation: 'count',
+        sortOrder: 1,
+        config: null,
+        updatedAt: new Date(),
+      };
+      const mockLimit = vi.fn().mockResolvedValue([dbRow]);
+      const mockOrderBy = vi.fn().mockReturnValue({ limit: mockLimit });
+      const mockWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy });
+      const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
+      mockTx.select.mockReturnValue({ from: mockFrom });
+
+      const widget = await findDashboardWidgetById('demo', ' custom-1 ');
+      expect(widget).not.toBeNull();
+      expect(widget?.id).toBe('custom-1');
+    });
+
+    it('findDashboardWidgetById returns null when no row found', async () => {
+      const mockLimit = vi.fn().mockResolvedValue([]);
+      const mockOrderBy = vi.fn().mockReturnValue({ limit: mockLimit });
+      const mockWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy });
+      const mockFrom = vi.fn().mockReturnValue({ where: mockWhere });
+      mockTx.select.mockReturnValue({ from: mockFrom });
+
+      const widget = await findDashboardWidgetById('demo', 'no-such-widget');
+      expect(widget).toBeNull();
     });
   });
 

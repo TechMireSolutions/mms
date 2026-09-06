@@ -175,7 +175,7 @@ export async function loadEnrollmentsReportAggregatesSql(
         monthly: { a: [], b: [] },
       };
 
-      const sessionIds = comparisonQuery.sessionIds ?? [];
+      const sessionIds = dedupeTrimmedIds(comparisonQuery.sessionIds ?? []);
       if (sessionIds.length > 0) {
         const compareSessionResult = await tx.execute(sql`
           SELECT

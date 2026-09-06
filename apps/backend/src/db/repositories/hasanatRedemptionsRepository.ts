@@ -1,5 +1,5 @@
-import { eq, sql } from 'drizzle-orm';
-import { type Redemption } from '@mms/shared';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type Redemption } from '@mms/shared';
 import {
   hasanatDenoms,
   hasanatBatches,
@@ -52,14 +52,117 @@ export async function listRedemptionsByWorkspace(tenant: string, options?: { lim
   });
 }
 
-export async function bulkSaveRedemptions(tenant: string, records: Redemption[]): Promise<void> {
-  if (records.length === 0) return;
+export async function findRedemptionById(tenant: string, id: string): Promise<Redemption | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: hasanatRedemptions.id,
+        workspaceSubdomain: hasanatRedemptions.workspaceSubdomain,
+        distributionId: hasanatRedemptions.distributionId,
+        studentName: hasanatRedemptions.studentName,
+        reward: hasanatRedemptions.reward,
+        pointsUsed: hasanatRedemptions.pointsUsed,
+        date: hasanatRedemptions.date,
+        approvedByUserId: hasanatRedemptions.approvedByUserId,
+        approvedBy: hasanatRedemptions.approvedBy,
+        updatedAt: hasanatRedemptions.updatedAt,
+        createdAt: hasanatRedemptions.createdAt,
+      })
+      .from(hasanatRedemptions)
+      .where(
+        and(
+          eq(hasanatRedemptions.workspaceSubdomain, subdomain),
+          eq(hasanatRedemptions.id, trimmedId),
+        ),
+      )
+      .limit(1);
+    const row = rows[0];
+    return row ? redemptionRowToRecord(row) : null;
+  });
+}
+
+export async function findRedemptionsByIds(tenant: string, ids: string[]): Promise<Redemption[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: hasanatRedemptions.id,
+        workspaceSubdomain: hasanatRedemptions.workspaceSubdomain,
+        distributionId: hasanatRedemptions.distributionId,
+        studentName: hasanatRedemptions.studentName,
+        reward: hasanatRedemptions.reward,
+        pointsUsed: hasanatRedemptions.pointsUsed,
+        date: hasanatRedemptions.date,
+        approvedByUserId: hasanatRedemptions.approvedByUserId,
+        approvedBy: hasanatRedemptions.approvedBy,
+        updatedAt: hasanatRedemptions.updatedAt,
+        createdAt: hasanatRedemptions.createdAt,
+      })
+      .from(hasanatRedemptions)
+      .where(
+        and(
+          eq(hasanatRedemptions.workspaceSubdomain, subdomain),
+          inArray(hasanatRedemptions.id, cleanIds),
+        ),
+      );
+    return rows.map(redemptionRowToRecord);
+  });
+}
+
+export async function saveRedemption(tenant: string, record: Redemption): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(hasanatRedemptions)
+      .values({
+        id: record.id,
+        workspaceSubdomain: subdomain,
+        distributionId: record.distributionId,
+        studentName: record.studentName ?? '',
+        reward: record.reward,
+        pointsUsed: record.pointsUsed ?? 0,
+        date: record.date,
+        approvedByUserId: record.approvedByUserId ?? null,
+        approvedBy: record.approvedBy ?? null,
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [hasanatRedemptions.workspaceSubdomain, hasanatRedemptions.id],
+        set: {
+          distributionId: record.distributionId,
+          studentName: record.studentName ?? '',
+          reward: record.reward,
+          pointsUsed: record.pointsUsed ?? 0,
+          date: record.date,
+          approvedByUserId: record.approvedByUserId ?? null,
+          approvedBy: record.approvedBy ?? null,
+          updatedAt: new Date(),
+        },
+      });
+  });
+}
+
+export async function bulkSaveRedemptions(tenant: string, records: Redemption[]): Promise<void> {
+  if (records.length === 0) return;
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Redemption>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
+  await withTenant(subdomain, async (tx) => {
+    await tx
+      .insert(hasanatRedemptions)
       .values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           distributionId: r.distributionId,
@@ -90,11 +193,18 @@ export async function bulkSaveRedemptions(tenant: string, records: Redemption[])
 
 export async function replaceRedemptionsForWorkspace(tenant: string, records: Redemption[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Redemption>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(hasanatRedemptions).where(eq(hasanatRedemptions.workspaceSubdomain, subdomain));
-    if (records.length > 0) {
+    if (uniqueRecords.length > 0) {
       await tx.insert(hasanatRedemptions).values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           distributionId: r.distributionId,

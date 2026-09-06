@@ -74,6 +74,21 @@ describe('sessions use-cases (DI with fake repository)', () => {
     expect(repo.bulkUpdateSessionsStatus).toHaveBeenCalledWith('demo', ['s1', 's2'], 'active');
   });
 
+  it('loadSessionsByIds filters out soft-deleted sessions', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.findSessionsByIds).mockResolvedValue([
+      { id: 's1', name: 'Active Session' } as never,
+      { id: 's2', name: 'Deleted Session', deletedAt: '2026-07-27T00:00:00.000Z' } as never,
+    ]);
+    const useCases = createSessionsUseCases(repo);
+
+    const result = await runWithTenant('demo', () =>
+      useCases.loadSessionsByIds(['s1', 's2']),
+    );
+
+    expect(result.map((s) => s.id)).toEqual(['s1']);
+  });
+
   it('returns empty defaults when no tenant context is bound', async () => {
     const repo = createFakeRepo();
     const useCases = createSessionsUseCases(repo);

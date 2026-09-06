@@ -206,7 +206,7 @@ export async function bulkTagContacts(
     const toAdd = options.addTags?.map((t) => t.trim()).filter(Boolean) ?? [];
     const toRemove = new Set(options.removeTags?.map((t) => t.trim().toLowerCase()).filter(Boolean) ?? []);
 
-    let updatedCount = 0;
+    const toSave: Contact[] = [];
     for (const c of contactsToUpdate) {
       if (c.deletedAt) continue;
       const currentTags = getContactTags(c);
@@ -237,10 +237,12 @@ export async function bulkTagContacts(
         tag: tagStr,
         updatedAt: new Date().toISOString(),
       };
-      await repo.save(tenant, next);
-      updatedCount++;
+      toSave.push(next);
     }
-    return { updatedCount };
+    if (toSave.length > 0) {
+      await repo.bulkSave(tenant, toSave);
+    }
+    return { updatedCount: toSave.length };
   });
   if (result.updatedCount > 0) {
     await broadcastCollection('contacts');

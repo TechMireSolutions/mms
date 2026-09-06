@@ -14,6 +14,7 @@ export const restoreEnrollmentById = enrollmentsUseCases.restoreEnrollmentById;
 export const bulkSoftDeleteEnrollments = enrollmentsUseCases.bulkSoftDeleteEnrollments;
 export const bulkRestoreEnrollments = enrollmentsUseCases.bulkRestoreEnrollments;
 export const loadEnrollmentsPage = enrollmentsUseCases.loadEnrollmentsPage;
+export const loadEnrollmentById = enrollmentsUseCases.loadEnrollmentById;
 export const loadEnrollmentsByIds = enrollmentsUseCases.loadEnrollmentsByIds;
 export const countEnrollments = enrollmentsUseCases.countEnrollments;
 export const loadEnrollmentsCommandMetrics = enrollmentsUseCases.loadEnrollmentsCommandMetrics;

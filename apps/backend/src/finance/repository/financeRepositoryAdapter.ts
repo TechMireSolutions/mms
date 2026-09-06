@@ -2,9 +2,11 @@ import type { FinanceRepository } from './financeRepository.js';
 import {
   listInvoicesByWorkspace,
   findInvoiceById,
+  findInvoicesByIds,
   saveInvoice,
   listPaymentsByWorkspace,
   findPaymentById,
+  findPaymentsByIds,
   savePayment,
 } from '../../db/repositories/financeRepository.js';
 import {
@@ -23,11 +25,13 @@ import { aggregateFinanceWidgetQueries } from '../../db/repositories/financeRepo
 export const financeRepository: FinanceRepository = {
   listInvoicesByWorkspace,
   findInvoiceById,
+  findInvoicesByIds,
   saveInvoice,
   listInvoicesPage,
   bulkUpdateInvoicesStatus: bulkUpdateInvoicesStatusSql,
   listPaymentsByWorkspace,
   findPaymentById,
+  findPaymentsByIds,
   savePayment,
   listPaymentsPage,
   aggregateFinanceCommandMetrics,

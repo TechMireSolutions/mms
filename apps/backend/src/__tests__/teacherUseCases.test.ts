@@ -217,6 +217,34 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
   });
 
+  it('updateTeacherById preserves existing fields when patch omits them', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('a', fakeTeacher('a', {
+      specialization: 'Tajweed',
+      qualification: 'MA',
+      employeeId: 'EMP-01',
+    }));
+    const useCases = createTeachersUseCases(repo);
+
+    const updated = await useCases.updateTeacherById('a', {
+      id: 'a',
+      contactId: undefined,
+      status: 'on_leave',
+    });
+
+    expect(updated?.status).toBe('on_leave');
+    expect(updated?.specialization).toBe('Tajweed');
+    expect(updated?.qualification).toBe('MA');
+    expect(updated?.employeeId).toBe('EMP-01');
+    expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({
+      id: 'a',
+      status: 'on_leave',
+      specialization: 'Tajweed',
+      qualification: 'MA',
+      employeeId: 'EMP-01',
+    }));
+  });
+
   it('softDeleteTeacherById marks only active rows and records who deleted them', async () => {
     const { repo, store } = createFakeRepo();
     store.set('a', fakeTeacher('a'));
@@ -286,6 +314,17 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(store.get('a')?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(repo.bulkSave).toHaveBeenCalledWith('demo', [expect.objectContaining({ id: 'a' })]);
     expect(mockBroadcastCollection).toHaveBeenCalledTimes(1);
+  });
+
+  it('bulkRestoreTeachers deduplicates input IDs and handles whitespace', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('a', fakeTeacher('a', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createTeachersUseCases(repo);
+
+    const result = await useCases.bulkRestoreTeachers(['a', ' a ', 'a']);
+
+    expect(result).toEqual({ succeeded: 1, failed: 0 });
+    expect(repo.bulkSave).toHaveBeenCalledWith('demo', [expect.objectContaining({ id: 'a' })]);
   });
 
   it('countTeachers counts only active rows via the injected repo', async () => {
@@ -380,6 +419,17 @@ describe('createTeachersUseCases (DI composition root)', () => {
 
     expect(rows.map((t) => t.id)).toEqual(['a', 'b']);
     expect(repo.findByIds).toHaveBeenCalledWith('demo', ['a', 'missing', 'b']);
+  });
+
+  it('loadTeachersByIds filters out soft-deleted teachers', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('a', fakeTeacher('a'));
+    store.set('gone', fakeTeacher('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createTeachersUseCases(repo);
+
+    const rows = await useCases.loadTeachersByIds(['a', 'gone']);
+
+    expect(rows.map((t) => t.id)).toEqual(['a']);
   });
 
   it('loadTeachersByIds returns an empty array for empty input without hitting the repo', async () => {

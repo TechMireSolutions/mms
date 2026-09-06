@@ -1,5 +1,5 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
-import { type Account } from '@mms/shared';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type Account } from '@mms/shared';
 import { accountingAccounts } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -51,6 +51,8 @@ export async function listAccountsByWorkspace(tenant: string): Promise<Account[]
 }
 
 export async function findAccountById(tenant: string, id: string): Promise<Account | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -70,10 +72,42 @@ export async function findAccountById(tenant: string, id: string): Promise<Accou
         updatedAt: accountingAccounts.updatedAt,
       })
       .from(accountingAccounts)
-      .where(and(eq(accountingAccounts.workspaceSubdomain, subdomain), eq(accountingAccounts.id, id)))
+      .where(and(eq(accountingAccounts.workspaceSubdomain, subdomain), eq(accountingAccounts.id, trimmedId)))
       .limit(1);
     const row = rows[0];
     return row ? accountRowToRecord(row) : null;
+  });
+}
+
+export async function findAccountsByIds(tenant: string, ids: string[]): Promise<Account[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: accountingAccounts.id,
+        workspaceSubdomain: accountingAccounts.workspaceSubdomain,
+        code: accountingAccounts.code,
+        name: accountingAccounts.name,
+        type: accountingAccounts.type,
+        subtype: accountingAccounts.subtype,
+        description: accountingAccounts.description,
+        isActive: accountingAccounts.isActive,
+        deletedAt: accountingAccounts.deletedAt,
+        deletedBy: accountingAccounts.deletedBy,
+        deletionReason: accountingAccounts.deletionReason,
+        createdAt: accountingAccounts.createdAt,
+        updatedAt: accountingAccounts.updatedAt,
+      })
+      .from(accountingAccounts)
+      .where(
+        and(
+          eq(accountingAccounts.workspaceSubdomain, subdomain),
+          inArray(accountingAccounts.id, cleanIds),
+        ),
+      );
+    return rows.map(accountRowToRecord);
   });
 }
 
@@ -117,11 +151,19 @@ export async function saveAccount(tenant: string, record: Account): Promise<void
 export async function bulkSaveAccounts(tenant: string, records: Account[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Account>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(accountingAccounts)
       .values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           code: r.code,
@@ -156,11 +198,18 @@ export async function bulkSaveAccounts(tenant: string, records: Account[]): Prom
 
 export async function replaceAccountsForWorkspace(tenant: string, records: Account[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Account>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(accountingAccounts).where(eq(accountingAccounts.workspaceSubdomain, subdomain));
-    if (records.length > 0) {
+    if (uniqueRecords.length > 0) {
       await tx.insert(accountingAccounts).values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           code: r.code,

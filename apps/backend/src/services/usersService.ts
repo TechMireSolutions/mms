@@ -8,6 +8,7 @@ import { usersUseCases } from '../users/use-cases/usersUseCases.js';
  */
 export const loadUsersPage = usersUseCases.loadUsersPage;
 export const loadUsersByIds = usersUseCases.loadUsersByIds;
+export const loadUserById = usersUseCases.loadUserById;
 export const countUsers = usersUseCases.countUsers;
 export const loadUsersCommandMetrics = usersUseCases.loadUsersCommandMetrics;
 export const loadWorkspaceUsers = usersUseCases.loadWorkspaceUsers;
@@ -22,4 +23,7 @@ export const resetUserPasswordById = usersUseCases.resetUserPasswordById;
 export const bulkSoftDeleteUsers = usersUseCases.bulkSoftDeleteUsers;
 export const bulkRestoreUsers = usersUseCases.bulkRestoreUsers;
 export const loadLogs = usersUseCases.loadLogs;
+export const loadLogById = usersUseCases.loadLogById;
+export const loadLogsByIds = usersUseCases.loadLogsByIds;
+export const saveLog = usersUseCases.saveLog;
 export const upsertLogs = usersUseCases.upsertLogs;

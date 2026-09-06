@@ -141,14 +141,21 @@ function entryInsertValues(subdomain: string, record: JournalEntry) {
 export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
-  const entryIds = records.map((r) => r.id);
+  const uniqueMap = new Map<string, JournalEntry>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+  const entryIds = uniqueRecords.map((r) => r.id);
 
   await withTenant(subdomain, async (tx) => {
     // Single batched upsert of all entries (keeps rows not in the batch, updates
     // matching rows — semantically identical to the previous per-record upsert).
     await tx
       .insert(accountingEntries)
-      .values(records.map((record) => entryInsertValues(subdomain, record)))
+      .values(uniqueRecords.map((record) => entryInsertValues(subdomain, record)))
       .onConflictDoUpdate({
         target: [accountingEntries.workspaceSubdomain, accountingEntries.id],
         set: {
@@ -201,7 +208,7 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
         ),
     ]);
 
-    const allLines = records.flatMap((record) =>
+    const allLines = uniqueRecords.flatMap((record) =>
       (record.lines ?? []).map((l) => ({
         id: l.id,
         workspaceSubdomain: subdomain,
@@ -216,7 +223,7 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
       await tx.insert(accountingJournalLines).values(allLines);
     }
 
-    const allTags = records.flatMap((record) =>
+    const allTags = uniqueRecords.flatMap((record) =>
       (record.tags ?? []).map((tag) => ({
         workspaceSubdomain: subdomain,
         entryId: record.id,
@@ -227,7 +234,7 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
       await tx.insert(accountingEntryTags).values(allTags);
     }
 
-    const allAttachments = records.flatMap((record) =>
+    const allAttachments = uniqueRecords.flatMap((record) =>
       (record.attachments ?? []).map((url) => ({
         workspaceSubdomain: subdomain,
         entryId: record.id,
@@ -242,17 +249,24 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
 
 export async function replaceEntriesForWorkspace(tenant: string, records: JournalEntry[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, JournalEntry>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(accountingEntryAttachments).where(eq(accountingEntryAttachments.workspaceSubdomain, subdomain));
     await tx.delete(accountingEntryTags).where(eq(accountingEntryTags.workspaceSubdomain, subdomain));
     await tx.delete(accountingJournalLines).where(eq(accountingJournalLines.workspaceSubdomain, subdomain));
     await tx.delete(accountingEntries).where(eq(accountingEntries.workspaceSubdomain, subdomain));
 
-    if (records.length === 0) return;
+    if (uniqueRecords.length === 0) return;
 
-    await tx.insert(accountingEntries).values(records.map((record) => entryInsertValues(subdomain, record)));
+    await tx.insert(accountingEntries).values(uniqueRecords.map((record) => entryInsertValues(subdomain, record)));
 
-    const allLines = records.flatMap((record) =>
+    const allLines = uniqueRecords.flatMap((record) =>
       (record.lines ?? []).map((l) => ({
         id: l.id,
         workspaceSubdomain: subdomain,

@@ -81,7 +81,8 @@ export async function bulkRestoreStudents(
         failed += 1;
         continue;
       }
-      if (existing.grNumber && acceptedGrNumbers.has(existing.grNumber)) {
+      const normalizedGr = existing.grNumber ? existing.grNumber.trim().toLowerCase() : null;
+      if (normalizedGr && acceptedGrNumbers.has(normalizedGr)) {
         failed += 1;
         conflicts.push({
           id: String(id),
@@ -102,7 +103,7 @@ export async function bulkRestoreStudents(
         continue;
       }
       toSave.push(restoredRow(existing));
-      if (existing.grNumber) acceptedGrNumbers.add(existing.grNumber);
+      if (normalizedGr) acceptedGrNumbers.add(normalizedGr);
       succeeded += 1;
     }
 

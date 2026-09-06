@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   EMPTY_ATTENDANCE_REPORT_AGGREGATES,
   attendanceReportComparisonQueryActive,
   ensureAllSessionsInComparison,
@@ -210,7 +211,7 @@ export async function loadAttendanceReportAggregatesSql(
       monthly: { a: [], b: [] },
     };
 
-    const sessionIds = query.sessionIds ?? [];
+    const sessionIds = dedupeTrimmedIds(query.sessionIds ?? []);
     if (sessionIds.length > 0) {
       const presentOrLate = isPresentOrLateSql('a');
       const compareSessionResult = await tx.execute(sql`

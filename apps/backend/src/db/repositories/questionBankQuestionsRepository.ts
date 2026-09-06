@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { type QuestionBankQuestion } from '@mms/shared';
+import { dedupeTrimmedIds, type QuestionBankQuestion } from '@mms/shared';
 import {
   questions,
   questionCategories,
@@ -146,6 +146,8 @@ export async function listQuestionsByWorkspace(
 }
 
 export async function findQuestionById(tenant: string, id: string): Promise<QuestionBankQuestion | null> {
+  const cleanId = id?.trim();
+  if (!cleanId) return null;
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -165,7 +167,7 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
         updatedAt: questions.updatedAt,
       })
       .from(questions)
-      .where(and(eq(questions.workspaceSubdomain, subdomain), eq(questions.id, id)))
+      .where(and(eq(questions.workspaceSubdomain, subdomain), eq(questions.id, cleanId)))
       .limit(1);
     const row = rows[0];
     if (!row) return null;
@@ -179,7 +181,7 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
         .where(
           and(
             eq(questionCategories.workspaceSubdomain, subdomain),
-            eq(questionCategories.questionId, id),
+            eq(questionCategories.questionId, cleanId),
           ),
         ),
       tx
@@ -191,7 +193,7 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
         .where(
           and(
             eq(questionOptions.workspaceSubdomain, subdomain),
-            eq(questionOptions.questionId, id),
+            eq(questionOptions.questionId, cleanId),
           ),
         ),
       tx
@@ -202,7 +204,7 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
         .where(
           and(
             eq(questionTags.workspaceSubdomain, subdomain),
-            eq(questionTags.questionId, id),
+            eq(questionTags.questionId, cleanId),
           ),
         ),
       tx
@@ -214,7 +216,7 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
         .where(
           and(
             eq(questionCitations.workspaceSubdomain, subdomain),
-            eq(questionCitations.questionId, id),
+            eq(questionCitations.questionId, cleanId),
           ),
         ),
     ]);
@@ -240,6 +242,134 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
       allTags.map((t) => t.tag),
       parsedCits,
     );
+  });
+}
+
+export async function findQuestionsByIds(tenant: string, ids: string[]): Promise<QuestionBankQuestion[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: questions.id,
+        workspaceSubdomain: questions.workspaceSubdomain,
+        type: questions.type,
+        difficulty: questions.difficulty,
+        questionLanguage: questions.questionLanguage,
+        text: questions.text,
+        answer: questions.answer,
+        marks: questions.marks,
+        deletedAt: questions.deletedAt,
+        deletedBy: questions.deletedBy,
+        deletionReason: questions.deletionReason,
+        createdAt: questions.createdAt,
+        updatedAt: questions.updatedAt,
+      })
+      .from(questions)
+      .where(and(eq(questions.workspaceSubdomain, subdomain), inArray(questions.id, cleanIds)));
+    if (rows.length === 0) return [];
+
+    const qIds = rows.map((r) => r.id);
+    const [allCats, allOpts, allTags, allCits] = await Promise.all([
+      tx
+        .select({
+          questionId: questionCategories.questionId,
+          categoryId: questionCategories.categoryId,
+        })
+        .from(questionCategories)
+        .where(
+          and(
+            eq(questionCategories.workspaceSubdomain, subdomain),
+            inArray(questionCategories.questionId, qIds),
+          ),
+        ),
+      tx
+        .select({
+          questionId: questionOptions.questionId,
+          optionIndex: questionOptions.optionIndex,
+          optionText: questionOptions.optionText,
+        })
+        .from(questionOptions)
+        .where(
+          and(
+            eq(questionOptions.workspaceSubdomain, subdomain),
+            inArray(questionOptions.questionId, qIds),
+          ),
+        ),
+      tx
+        .select({
+          questionId: questionTags.questionId,
+          tag: questionTags.tag,
+        })
+        .from(questionTags)
+        .where(
+          and(
+            eq(questionTags.workspaceSubdomain, subdomain),
+            inArray(questionTags.questionId, qIds),
+          ),
+        ),
+      tx
+        .select({
+          questionId: questionCitations.questionId,
+          bookId: questionCitations.bookId,
+          citation: questionCitations.citation,
+        })
+        .from(questionCitations)
+        .where(
+          and(
+            eq(questionCitations.workspaceSubdomain, subdomain),
+            inArray(questionCitations.questionId, qIds),
+          ),
+        ),
+    ]);
+
+    const catsByQ = new Map<string, string[]>();
+    for (const c of allCats) {
+      const arr = catsByQ.get(c.questionId) ?? [];
+      arr.push(c.categoryId);
+      catsByQ.set(c.questionId, arr);
+    }
+
+    const optsByQ = new Map<string, Array<{ optionIndex: number; optionText: string }>>();
+    for (const o of allOpts) {
+      const arr = optsByQ.get(o.questionId) ?? [];
+      arr.push({ optionIndex: o.optionIndex, optionText: o.optionText });
+      optsByQ.set(o.questionId, arr);
+    }
+
+    const tagsByQ = new Map<string, string[]>();
+    for (const t of allTags) {
+      const arr = tagsByQ.get(t.questionId) ?? [];
+      arr.push(t.tag);
+      tagsByQ.set(t.questionId, arr);
+    }
+
+    const citsByQ = new Map<string, Array<{ bookId: string; citation: Record<string, unknown> }>>();
+    for (const ci of allCits) {
+      let parsed: Record<string, unknown> = {};
+      try {
+        parsed = JSON.parse(ci.citation || '{}');
+      } catch {
+        // ignore
+      }
+      const arr = citsByQ.get(ci.questionId) ?? [];
+      arr.push({ bookId: ci.bookId, citation: parsed });
+      citsByQ.set(ci.questionId, arr);
+    }
+
+    return rows.map((r) => {
+      const sortedOpts = (optsByQ.get(r.id) ?? [])
+        .sort((a, b) => a.optionIndex - b.optionIndex)
+        .map((o) => o.optionText);
+      return questionRowToRecord(
+        r,
+        catsByQ.get(r.id) ?? [],
+        sortedOpts,
+        tagsByQ.get(r.id) ?? [],
+        citsByQ.get(r.id) ?? [],
+      );
+    });
   });
 }
 
@@ -342,13 +472,20 @@ async function insertQuestionChildrenTx(
 export async function bulkSaveQuestions(tenant: string, records: QuestionBankQuestion[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+
+  const dedupedMap = new Map<string, QuestionBankQuestion>();
+  for (const record of records) {
+    dedupedMap.set(record.id, record);
+  }
+  const uniqueRecords = Array.from(dedupedMap.values());
+
   await withTenant(subdomain, async (tx) => {
-    const qIds = records.map((r) => r.id);
+    const qIds = uniqueRecords.map((r) => r.id);
 
     await tx
       .insert(questions)
       .values(
-        records.map((record) => ({
+        uniqueRecords.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           type: record.type,
@@ -386,12 +523,19 @@ export async function bulkSaveQuestions(tenant: string, records: QuestionBankQue
       tx.delete(questionCitations).where(and(eq(questionCitations.workspaceSubdomain, subdomain), inArray(questionCitations.questionId, qIds))),
     ]);
 
-    await insertQuestionChildrenTx(tx, subdomain, records);
+    await insertQuestionChildrenTx(tx, subdomain, uniqueRecords);
   });
 }
 
 export async function replaceQuestionsForWorkspace(tenant: string, records: QuestionBankQuestion[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+
+  const dedupedMap = new Map<string, QuestionBankQuestion>();
+  for (const record of records) {
+    dedupedMap.set(record.id, record);
+  }
+  const uniqueRecords = Array.from(dedupedMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(questionCitations).where(eq(questionCitations.workspaceSubdomain, subdomain));
     await tx.delete(questionTags).where(eq(questionTags.workspaceSubdomain, subdomain));
@@ -399,10 +543,10 @@ export async function replaceQuestionsForWorkspace(tenant: string, records: Ques
     await tx.delete(questionCategories).where(eq(questionCategories.workspaceSubdomain, subdomain));
     await tx.delete(questions).where(eq(questions.workspaceSubdomain, subdomain));
 
-    if (records.length === 0) return;
+    if (uniqueRecords.length === 0) return;
 
     await tx.insert(questions).values(
-      records.map((record) => ({
+      uniqueRecords.map((record) => ({
         id: record.id,
         workspaceSubdomain: subdomain,
         type: record.type,
@@ -418,6 +562,6 @@ export async function replaceQuestionsForWorkspace(tenant: string, records: Ques
       })),
     );
 
-    await insertQuestionChildrenTx(tx, subdomain, records);
+    await insertQuestionChildrenTx(tx, subdomain, uniqueRecords);
   });
 }

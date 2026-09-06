@@ -18,9 +18,11 @@ vi.mock('../db/database.js', () => ({
 vi.mock('../db/repositories/financeRepository.js', () => ({
   listInvoicesByWorkspace: vi.fn().mockResolvedValue([]),
   findInvoiceById: (...args: unknown[]) => mockFindInvoiceById(...args),
+  findInvoicesByIds: vi.fn().mockResolvedValue([]),
   saveInvoice: (...args: unknown[]) => mockSaveInvoice(...args),
   listPaymentsByWorkspace: vi.fn().mockResolvedValue([]),
   findPaymentById: (...args: unknown[]) => mockFindPaymentById(...args),
+  findPaymentsByIds: vi.fn().mockResolvedValue([]),
   savePayment: (...args: unknown[]) => mockSavePayment(...args),
 }));
 

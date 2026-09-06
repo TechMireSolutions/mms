@@ -22,6 +22,7 @@ export interface ExaminationsRepository {
   // Exams
   listExamsByWorkspace(tenant: string): Promise<Exam[]>;
   findExamById(tenant: string, id: string): Promise<Exam | null>;
+  findExamsByIds(tenant: string, ids: string[]): Promise<Exam[]>;
   saveExam(tenant: string, record: Exam): Promise<void>;
   bulkSaveExams(tenant: string, records: Exam[]): Promise<void>;
   replaceExamsForWorkspace(tenant: string, records: Exam[]): Promise<void>;
@@ -29,6 +30,9 @@ export interface ExaminationsRepository {
 
   // Results
   listExamResultsByWorkspace(tenant: string): Promise<ExamResult[]>;
+  findExamResultById(tenant: string, id: string): Promise<ExamResult | null>;
+  findExamResultsByIds(tenant: string, ids: string[]): Promise<ExamResult[]>;
+  saveExamResult(tenant: string, record: ExamResult): Promise<void>;
   bulkSaveExamResults(tenant: string, records: ExamResult[]): Promise<void>;
   replaceExamResultsForWorkspace(tenant: string, records: ExamResult[]): Promise<void>;
 

@@ -340,6 +340,21 @@ describe('createStudentsUseCases (DI composition root)', () => {
     expect(store.get('ok')?.deletedAt).toBeUndefined();
   });
 
+  it('bulkRestoreStudents detects case-insensitive in-batch GR collisions', async () => {
+    const { repo, store } = createFakeRepo();
+    store.set('s1', fakeStudent('s1', { deletedAt: '2026-07-27T00:00:00.000Z', grNumber: 'GR-100' }));
+    store.set('s2', fakeStudent('s2', { deletedAt: '2026-07-27T00:00:00.000Z', grNumber: 'gr-100' }));
+    const useCases = createStudentsUseCases(repo);
+
+    const result = await useCases.bulkRestoreStudents(['s1', 's2']);
+
+    expect(result.succeeded).toBe(1);
+    expect(result.failed).toBe(1);
+    expect(result.conflicts).toEqual([
+      { id: 's2', errors: [{ field: 'grNumber', message: 'A student with this GR number already exists' }] },
+    ]);
+  });
+
   it('countStudents counts only active rows via the injected repo', async () => {
     const { repo, store } = createFakeRepo();
     store.set('a', fakeStudent('a'));
@@ -414,6 +429,22 @@ describe('createStudentsUseCases (DI composition root)', () => {
       regDate: '2026-08-10',
       restartAnnually: true,
     });
+  });
+
+  it('computeNextGrNumberForDate falls back to current year when regDate is invalid', async () => {
+    const { repo } = createFakeRepo();
+    vi.mocked(repo.countNextGrNumber).mockResolvedValue(0);
+    const useCases = createStudentsUseCases(repo);
+
+    const grNumber = await useCases.computeNextGrNumberForDate('invalid-date', {
+      grNumberTemplate: '{seq}-{year}',
+      grNumberDigits: 4,
+      grNumberRestartAnnually: true,
+    });
+
+    const currentYear = new Date().getFullYear();
+    expect(grNumber).toBe(`0001-${currentYear}`);
+    expect(grNumber).not.toContain('NaN');
   });
 
   it('checkStudentRegistrationDuplicate returns the conflict reason from the repo', async () => {

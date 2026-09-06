@@ -4,6 +4,7 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import { enrollmentRecordSchema, type EnrollmentRecord } from '../../validation/enrollmentSchemas.js';
 import {
+  dedupeTrimmedIds,
   EMPTY_ENROLLMENTS_REPORT_AGGREGATES,
   normalizeEnrollmentsReportComparisonQuery,
   type EnrollmentsListQuery,
@@ -62,7 +63,22 @@ export function createEnrollmentsUseCases(repo: EnrollmentsRepository = enrollme
     loadEnrollmentsByIds: async (ids: string[]): Promise<EnrollmentRecord[]> => {
       const tenant = getRequestTenant();
       if (!tenant || ids.length === 0) return [];
-      return repo.findEnrollmentsByIds(tenant, ids);
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const list = await repo.findEnrollmentsByIds(tenant, cleanIds);
+      return list.filter((e) => !e.deletedAt);
+    },
+
+    loadEnrollmentById: async (
+      id: string,
+      includeDeleted = false,
+    ): Promise<EnrollmentRecord | null> => {
+      const tenant = getRequestTenant();
+      if (!tenant || !id.trim()) return null;
+      const enrollment = await repo.findEnrollmentById(tenant, id.trim());
+      if (!enrollment) return null;
+      if (!includeDeleted && enrollment.deletedAt) return null;
+      return enrollment;
     },
 
     countEnrollments: async (): Promise<number> => {

@@ -23,6 +23,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
   };
 });
 
+const mockLoadEnrollmentById = vi.fn();
 const mockLoadEnrollmentsPage = vi.fn();
 const mockLoadEnrollmentsCommandMetrics = vi.fn();
 const mockLoadEnrollmentsReportAggregates = vi.fn();
@@ -33,6 +34,7 @@ const mockRecordAudit = vi.fn();
 
 vi.mock('../enrollments/use-cases/enrollmentsUseCases.js', () => ({
   enrollmentsUseCases: {
+    loadEnrollmentById: (...args: unknown[]) => mockLoadEnrollmentById(...args),
     loadEnrollmentsPage: (...args: unknown[]) => mockLoadEnrollmentsPage(...args),
     loadEnrollmentsCommandMetrics: (...args: unknown[]) => mockLoadEnrollmentsCommandMetrics(...args),
     loadEnrollmentsReportAggregates: (...args: unknown[]) => mockLoadEnrollmentsReportAggregates(...args),
@@ -64,6 +66,7 @@ vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {
 describe('enrollments REST routes integration', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
+    mockLoadEnrollmentById.mockReset().mockResolvedValue(null);
     mockLoadEnrollmentsPage.mockReset().mockResolvedValue({
       enrollments: [],
       total: 0,
@@ -132,6 +135,87 @@ describe('enrollments REST routes integration', () => {
       limit: 20,
       hasMore: false,
     });
+    await app.close();
+  });
+
+  it('GET /api/enrollments/:id returns enrollment for authorized user', async () => {
+    const mockEnrollment = {
+      id: 'enr-1',
+      studentId: 'stu-1',
+      studentName: 'Ali',
+      sessionId: 'ses-1',
+      sessionName: 'Hifz',
+      status: 'confirmed',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      updatedAt: '2026-01-01T00:00:00.000Z',
+    };
+    mockLoadEnrollmentById.mockResolvedValue(mockEnrollment);
+
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/enrollments/enr-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app, { name: 'Admin User' })}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json()).toEqual(mockEnrollment);
+    expect(mockLoadEnrollmentById).toHaveBeenCalledWith('enr-1', false);
+    await app.close();
+  });
+
+  it('GET /api/enrollments/:id returns 404 when enrollment does not exist', async () => {
+    mockLoadEnrollmentById.mockResolvedValue(null);
+
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/enrollments/enr-nonexistent',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(404);
+    expect(res.json()).toMatchObject({ type: 'not_found' });
+    await app.close();
+  });
+
+  it('GET /api/enrollments/:id returns 403 when user lacks read permission', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/enrollments/enr-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${viewerToken(app)}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    expect(mockLoadEnrollmentById).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/enrollments/:id with includeDeleted=true requires delete permission', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/enrollments/enr-1?includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden' });
+    expect(mockLoadEnrollmentById).not.toHaveBeenCalled();
     await app.close();
   });
 

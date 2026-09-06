@@ -23,6 +23,7 @@ export interface QuestionBankRepository {
   // Questions
   listQuestionsByWorkspace(tenant: string): Promise<QuestionBankQuestion[]>;
   findQuestionById(tenant: string, id: string): Promise<QuestionBankQuestion | null>;
+  findQuestionsByIds(tenant: string, ids: string[]): Promise<QuestionBankQuestion[]>;
   saveQuestion(tenant: string, record: QuestionBankQuestion): Promise<void>;
   bulkSaveQuestions(tenant: string, records: QuestionBankQuestion[]): Promise<void>;
   replaceQuestionsForWorkspace(tenant: string, records: QuestionBankQuestion[]): Promise<void>;
@@ -30,11 +31,17 @@ export interface QuestionBankRepository {
 
   // Tests
   listTestsByWorkspace(tenant: string): Promise<QuestionBankTest[]>;
+  findTestById(tenant: string, id: string): Promise<QuestionBankTest | null>;
+  findTestsByIds(tenant: string, ids: string[]): Promise<QuestionBankTest[]>;
+  saveTest(tenant: string, record: QuestionBankTest): Promise<void>;
   bulkSaveTests(tenant: string, records: QuestionBankTest[]): Promise<void>;
   replaceTestsForWorkspace(tenant: string, records: QuestionBankTest[]): Promise<void>;
 
   // Results
   listResultsByWorkspace(tenant: string): Promise<QuestionBankResult[]>;
+  findResultById(tenant: string, id: string): Promise<QuestionBankResult | null>;
+  findResultsByIds(tenant: string, ids: string[]): Promise<QuestionBankResult[]>;
+  saveResult(tenant: string, record: QuestionBankResult): Promise<void>;
   bulkSaveResults(tenant: string, records: QuestionBankResult[]): Promise<void>;
   replaceResultsForWorkspace(tenant: string, records: QuestionBankResult[]): Promise<void>;
 

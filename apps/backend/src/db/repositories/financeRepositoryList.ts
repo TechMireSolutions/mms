@@ -1,5 +1,6 @@
 import { and, eq, ilike, or, isNull, isNotNull, inArray, type SQL, desc, asc, sql } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   isQueryFlagTrue,
   OPEN_INVOICE_STATUSES,
   type FinanceCommandMetricsSnapshot,
@@ -259,7 +260,8 @@ export async function bulkUpdateInvoicesStatusSql(
   status: string,
 ): Promise<{ succeeded: number; failed: number }> {
   const subdomain = tenant.trim().toLowerCase();
-  if (ids.length === 0) return { succeeded: 0, failed: 0 };
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return { succeeded: 0, failed: 0 };
 
   // Single atomic UPDATE ... id IN (...) returning matched rows, instead of one
   // round-trip per id in a loop. RLS/soft-delete rows are simply not matched, so
@@ -272,7 +274,7 @@ export async function bulkUpdateInvoicesStatusSql(
       .where(
         and(
           eq(financeInvoices.workspaceSubdomain, subdomain),
-          inArray(financeInvoices.id, ids),
+          inArray(financeInvoices.id, cleanIds),
           isNull(financeInvoices.deletedAt),
         ),
       )
@@ -280,7 +282,7 @@ export async function bulkUpdateInvoicesStatusSql(
 
     return {
       succeeded: updated.length,
-      failed: Math.max(0, ids.length - updated.length),
+      failed: Math.max(0, cleanIds.length - updated.length),
     };
   });
 }

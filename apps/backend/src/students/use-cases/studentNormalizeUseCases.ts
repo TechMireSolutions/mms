@@ -18,7 +18,13 @@ export function throwGrUniqueConflict(error: unknown): never {
 
 /** Resolves a stable row id for creates (matches the legacy `st-<uuid>` prefix). */
 export function resolveStudentRowId(id: unknown): string {
-  return String(id ?? `st-${randomUUID()}`);
+  if (typeof id === 'string' && id.trim() !== '') {
+    return id.trim();
+  }
+  if (typeof id === 'number' && Number.isFinite(id)) {
+    return String(id);
+  }
+  return `st-${randomUUID()}`;
 }
 
 /**

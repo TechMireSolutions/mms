@@ -96,7 +96,13 @@ export async function prepareContactRecord(contact: Contact, id?: string | numbe
   const cleaned = cleanContactDraft(contact);
   const withPhones = await normalizeContactPhones(cleaned as Contact);
   const withScalars = syncContactScalarFields(withPhones);
-  const resolvedId = id ?? withScalars.id ?? `temp-${Date.now()}`;
+  const rawId =
+    (typeof id === 'string' && id.trim()) ||
+    (typeof id === 'number' && String(id)) ||
+    (typeof withScalars.id === 'string' && withScalars.id.trim()) ||
+    (typeof withScalars.id === 'number' && String(withScalars.id)) ||
+    undefined;
+  const resolvedId = rawId ?? `temp-${Date.now()}`;
   const titled = applyTitleCaseToContact({ ...withScalars, id: resolvedId });
   return stripContactRetiredClassificationFields({ ...titled });
 }

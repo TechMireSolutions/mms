@@ -1,5 +1,5 @@
-import { eq, sql } from 'drizzle-orm';
-import { type ObligationType } from '@mms/shared';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type ObligationType } from '@mms/shared';
 import { obligationTypes } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -35,14 +35,92 @@ export async function listObligationTypesByWorkspace(tenant: string): Promise<Ob
   });
 }
 
-export async function bulkSaveObligationTypes(tenant: string, records: ObligationType[]): Promise<void> {
-  if (records.length === 0) return;
+export async function findObligationTypeById(tenant: string, id: string): Promise<ObligationType | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: obligationTypes.id,
+        workspaceSubdomain: obligationTypes.workspaceSubdomain,
+        name: obligationTypes.name,
+        quantityBased: obligationTypes.quantityBased,
+        designatedFor: obligationTypes.designatedFor,
+        createdAt: obligationTypes.createdAt,
+        updatedAt: obligationTypes.updatedAt,
+      })
+      .from(obligationTypes)
+      .where(and(eq(obligationTypes.workspaceSubdomain, subdomain), eq(obligationTypes.id, trimmedId)))
+      .limit(1);
+    const row = rows[0];
+    return row ? obligationTypeRowToRecord(row) : null;
+  });
+}
+
+export async function findObligationTypesByIds(tenant: string, ids: string[]): Promise<ObligationType[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: obligationTypes.id,
+        workspaceSubdomain: obligationTypes.workspaceSubdomain,
+        name: obligationTypes.name,
+        quantityBased: obligationTypes.quantityBased,
+        designatedFor: obligationTypes.designatedFor,
+        createdAt: obligationTypes.createdAt,
+        updatedAt: obligationTypes.updatedAt,
+      })
+      .from(obligationTypes)
+      .where(and(eq(obligationTypes.workspaceSubdomain, subdomain), inArray(obligationTypes.id, cleanIds)));
+    return rows.map(obligationTypeRowToRecord);
+  });
+}
+
+export async function saveObligationType(tenant: string, record: ObligationType): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(obligationTypes)
+      .values({
+        id: record.id,
+        workspaceSubdomain: subdomain,
+        name: record.name,
+        quantityBased: Boolean(record.quantity_based),
+        designatedFor: record.designated_for ?? 'Both',
+        createdAt: record.created_at ? new Date(record.created_at) : new Date(),
+        updatedAt: record.updated_at ? new Date(record.updated_at) : new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [obligationTypes.workspaceSubdomain, obligationTypes.id],
+        set: {
+          name: record.name,
+          quantityBased: Boolean(record.quantity_based),
+          designatedFor: record.designated_for ?? 'Both',
+          updatedAt: new Date(),
+        },
+      });
+  });
+}
+
+export async function bulkSaveObligationTypes(tenant: string, records: ObligationType[]): Promise<void> {
+  if (records.length === 0) return;
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, ObligationType>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
+  await withTenant(subdomain, async (tx) => {
+    await tx
+      .insert(obligationTypes)
       .values(
-        records.map((record) => ({
+        uniqueRecords.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           name: record.name,
@@ -69,11 +147,18 @@ export async function replaceObligationTypesForWorkspace(
   records: ObligationType[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, ObligationType>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(obligationTypes).where(eq(obligationTypes.workspaceSubdomain, subdomain));
-    if (records.length > 0) {
+    if (uniqueRecords.length > 0) {
       await tx.insert(obligationTypes).values(
-        records.map((record) => ({
+        uniqueRecords.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           name: record.name,

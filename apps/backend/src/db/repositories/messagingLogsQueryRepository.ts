@@ -33,11 +33,22 @@ export async function queryFilteredMessageLogs(
   workspaceSubdomain: string,
   query: MessageLogsFilterQuery = {},
 ): Promise<MessageLogsPageResult> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
-  const includeDeleted = query.includeDeleted === true;
-  const page = Math.max(1, query.page ?? 1);
+  const subdomain = workspaceSubdomain?.trim().toLowerCase();
   const rawPageSize = query.pageSize && query.pageSize > 0 ? query.pageSize : MESSAGE_LOGS_DEFAULT_PAGE_SIZE;
   const pageSize = Math.min(rawPageSize, MESSAGE_LOGS_MAX_PAGE_SIZE);
+
+  if (!subdomain) {
+    return {
+      logs: [],
+      total: 0,
+      page: 1,
+      pageSize,
+      hasMore: false,
+    };
+  }
+
+  const includeDeleted = query.includeDeleted === true;
+  const page = Math.max(1, query.page ?? 1);
   const offset = (page - 1) * pageSize;
 
   return withTenant(subdomain, async (tx) => {
@@ -145,7 +156,28 @@ export async function queryMessagingMetrics(
   successRate: number;
   categoryBreakdown: Record<string, number>;
 }> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const subdomain = workspaceSubdomain?.trim().toLowerCase();
+  if (!subdomain) {
+    return {
+      total: 0,
+      smsCount: 0,
+      whatsappCount: 0,
+      emailCount: 0,
+      sentCount: 0,
+      deliveredCount: 0,
+      failedCount: 0,
+      skippedCount: 0,
+      queuedCount: 0,
+      successRate: 100,
+      categoryBreakdown: {
+        general: 0,
+        academic: 0,
+        financial: 0,
+        attendance: 0,
+        emergency: 0,
+      },
+    };
+  }
   const startDate = filters.startDate?.trim() || null;
   const endDate = filters.endDate?.trim() || null;
   return withTenant(subdomain, async (tx) => {
@@ -211,7 +243,8 @@ export async function queryMessagingMetrics(
 
 /** Soft-archives active message logs for a workspace in one tenant-scoped update. */
 export async function softDeleteActiveMessageLogs(workspaceSubdomain: string): Promise<void> {
-  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const subdomain = workspaceSubdomain?.trim().toLowerCase();
+  if (!subdomain) return;
   await withTenant(subdomain, async (tx) => {
     await tx
       .update(messageLogs)

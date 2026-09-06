@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { type Exam } from '@mms/shared';
+import { dedupeTrimmedIds, type Exam } from '@mms/shared';
 import { exams, examClasses } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -82,6 +82,8 @@ export async function listExamsByWorkspace(tenant: string, options?: { limit?: n
 }
 
 export async function findExamById(tenant: string, id: string): Promise<Exam | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -103,7 +105,7 @@ export async function findExamById(tenant: string, id: string): Promise<Exam | n
         updatedAt: exams.updatedAt,
       })
       .from(exams)
-      .where(and(eq(exams.workspaceSubdomain, subdomain), eq(exams.id, id)))
+      .where(and(eq(exams.workspaceSubdomain, subdomain), eq(exams.id, trimmedId)))
       .limit(1);
 
     const row = rows[0];
@@ -118,7 +120,7 @@ export async function findExamById(tenant: string, id: string): Promise<Exam | n
       .where(
         and(
           eq(examClasses.workspaceSubdomain, subdomain),
-          eq(examClasses.examId, id),
+          eq(examClasses.examId, trimmedId),
         ),
       );
 
@@ -126,6 +128,64 @@ export async function findExamById(tenant: string, id: string): Promise<Exam | n
       row,
       classRows.map((c) => c.classId),
     );
+  });
+}
+
+export async function findExamsByIds(tenant: string, ids: string[]): Promise<Exam[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const examRows = await tx
+      .select({
+        id: exams.id,
+        workspaceSubdomain: exams.workspaceSubdomain,
+        name: exams.name,
+        subject: exams.subject,
+        totalMarks: exams.totalMarks,
+        passingMarks: exams.passingMarks,
+        date: exams.date,
+        duration: exams.duration,
+        status: exams.status,
+        description: exams.description,
+        deletedAt: exams.deletedAt,
+        deletedBy: exams.deletedBy,
+        deletionReason: exams.deletionReason,
+        createdAt: exams.createdAt,
+        updatedAt: exams.updatedAt,
+      })
+      .from(exams)
+      .where(
+        and(
+          eq(exams.workspaceSubdomain, subdomain),
+          inArray(exams.id, cleanIds),
+        ),
+      );
+
+    if (examRows.length === 0) return [];
+
+    const examIds = examRows.map((e) => e.id);
+    const classRows = await tx
+      .select({
+        examId: examClasses.examId,
+        classId: examClasses.classId,
+      })
+      .from(examClasses)
+      .where(
+        and(
+          eq(examClasses.workspaceSubdomain, subdomain),
+          inArray(examClasses.examId, examIds),
+        ),
+      );
+
+    const classMap = new Map<string, string[]>();
+    for (const c of classRows) {
+      const list = classMap.get(c.examId) ?? [];
+      list.push(c.classId);
+      classMap.set(c.examId, list);
+    }
+
+    return examRows.map((row) => examRowToRecord(row, classMap.get(row.id) ?? []));
   });
 }
 
@@ -193,11 +253,19 @@ export async function saveExam(tenant: string, record: Exam): Promise<void> {
 export async function bulkSaveExams(tenant: string, records: Exam[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Exam>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(exams)
       .values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           name: r.name,
@@ -232,7 +300,7 @@ export async function bulkSaveExams(tenant: string, records: Exam[]): Promise<vo
         },
       });
 
-    const examIds = records.map((r) => r.id);
+    const examIds = uniqueRecords.map((r) => r.id);
     await tx
       .delete(examClasses)
       .where(
@@ -247,13 +315,14 @@ export async function bulkSaveExams(tenant: string, records: Exam[]): Promise<vo
       examId: string;
       classId: string;
     }> = [];
-    for (let i = 0; i < records.length; i++) {
-      const r = records[i];
-      const classIds = r?.classIds;
-      if (classIds) {
-        for (let j = 0; j < classIds.length; j++) {
-          const classId = classIds[j];
-          if (classId) {
+    const pairSet = new Set<string>();
+    for (const r of uniqueRecords) {
+      for (const rawClassId of r.classIds ?? []) {
+        const classId = typeof rawClassId === 'string' ? rawClassId.trim() : String(rawClassId);
+        if (classId) {
+          const key = `${r.id}:${classId}`;
+          if (!pairSet.has(key)) {
+            pairSet.add(key);
             classPairs.push({
               workspaceSubdomain: subdomain,
               examId: r.id,
@@ -271,12 +340,19 @@ export async function bulkSaveExams(tenant: string, records: Exam[]): Promise<vo
 
 export async function replaceExamsForWorkspace(tenant: string, records: Exam[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Exam>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(examClasses).where(eq(examClasses.workspaceSubdomain, subdomain));
     await tx.delete(exams).where(eq(exams.workspaceSubdomain, subdomain));
-    if (records.length > 0) {
+    if (uniqueRecords.length > 0) {
       await tx.insert(exams).values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           name: r.name,
@@ -299,13 +375,14 @@ export async function replaceExamsForWorkspace(tenant: string, records: Exam[]):
         examId: string;
         classId: string;
       }> = [];
-      for (let i = 0; i < records.length; i++) {
-        const r = records[i];
-        const classIds = r?.classIds;
-        if (classIds) {
-          for (let j = 0; j < classIds.length; j++) {
-            const classId = classIds[j];
-            if (classId) {
+      const pairSet = new Set<string>();
+      for (const r of uniqueRecords) {
+        for (const rawClassId of r.classIds ?? []) {
+          const classId = typeof rawClassId === 'string' ? rawClassId.trim() : String(rawClassId);
+          if (classId) {
+            const key = `${r.id}:${classId}`;
+            if (!pairSet.has(key)) {
+              pairSet.add(key);
               classPairs.push({
                 workspaceSubdomain: subdomain,
                 examId: r.id,

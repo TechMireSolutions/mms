@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
-import { type CreditNote, type Invoice } from '@mms/shared';
+import { dedupeTrimmedIds, type CreditNote, type Invoice } from '@mms/shared';
 import { financeCreditNotes, financeInvoices } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import { invoiceRowToRecord } from './financeInvoicesRepository.js';
@@ -96,7 +96,8 @@ export async function applyLateFeeAmounts(
 }
 
 export async function markInvoicesReminded(tenant: string, invoiceIds: string[]): Promise<void> {
-  if (invoiceIds.length === 0) return;
+  const cleanIds = dedupeTrimmedIds(invoiceIds);
+  if (cleanIds.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx
@@ -110,7 +111,7 @@ export async function markInvoicesReminded(tenant: string, invoiceIds: string[])
         and(
           eq(financeInvoices.workspaceSubdomain, subdomain),
           isNull(financeInvoices.deletedAt),
-          inArray(financeInvoices.id, invoiceIds),
+          inArray(financeInvoices.id, cleanIds),
         ),
       );
   });
@@ -156,9 +157,9 @@ export async function saveCreditNote(tenant: string, note: CreditNote): Promise<
 }
 
 export async function listInvoicesByIds(tenant: string, invoiceIds: string[]): Promise<Invoice[]> {
-  if (invoiceIds.length === 0) return [];
+  const cleanIds = dedupeTrimmedIds(invoiceIds).slice(0, 100);
+  if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  const ids = invoiceIds.slice(0, 100);
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select({
@@ -198,7 +199,7 @@ export async function listInvoicesByIds(tenant: string, invoiceIds: string[]): P
         and(
           eq(financeInvoices.workspaceSubdomain, subdomain),
           isNull(financeInvoices.deletedAt),
-          inArray(financeInvoices.id, ids),
+          inArray(financeInvoices.id, cleanIds),
         ),
       );
     return rows.map(invoiceRowToRecord);

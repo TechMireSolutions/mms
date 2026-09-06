@@ -14,6 +14,9 @@ import {
 } from '../../db/repositories/tenantUserRepositoryList.js';
 import {
   listActivityLogsByWorkspace,
+  findActivityLogById,
+  findActivityLogsByIds,
+  saveActivityLog,
   bulkSaveActivityLogs,
   replaceActivityLogsForWorkspace,
 } from '../../db/repositories/logsRepository.js';
@@ -33,6 +36,9 @@ export const usersRepository: UsersRepository = {
   verifyTenantUserEmailRow,
   resetTenantUserPasswordRow,
   listActivityLogsByWorkspace,
+  findActivityLogById,
+  findActivityLogsByIds,
+  saveActivityLog,
   bulkSaveActivityLogs,
   replaceActivityLogsForWorkspace,
 };

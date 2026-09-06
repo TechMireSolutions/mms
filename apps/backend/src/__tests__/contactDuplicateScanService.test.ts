@@ -155,6 +155,22 @@ describe('contactDuplicateScanService (SQL-scoped)', () => {
     expect(repo.findByIds).not.toHaveBeenCalled();
   });
 
+  it('countContactDuplicateMatches matches draft contact when id is null or undefined', async () => {
+    const store = new Map<string, Contact>();
+    const a = contact('a', 'Alice', '+923001111111');
+    store.set('a', a);
+    const repo = createFakeRepo(store);
+
+    // New draft in UI without assigned id or with null id
+    const draft = {
+      ...contact('', 'Alice Draft', '+923001111111'),
+      id: null as unknown as string,
+    };
+    const matchCount = await countContactDuplicateMatches(draft, repo);
+
+    expect(matchCount).toBe(1);
+  });
+
   it('runContactsDuplicateScan hydrates only blocked participants and persists the cache', async () => {
     const store = new Map<string, Contact>();
     const a = contact('a', 'Alice', '+923001111111');

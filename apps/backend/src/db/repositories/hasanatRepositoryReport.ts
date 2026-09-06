@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   EMPTY_HASANAT_REPORT_AGGREGATES,
   ensureAllSessionsInComparison,
   hasanatReportComparisonQueryActive,
@@ -58,7 +59,7 @@ export async function loadHasanatReportAggregatesSql(
       monthly: { a: [], b: [] },
     };
 
-    const sessionIds = comparisonQuery.sessionIds ?? [];
+    const sessionIds = dedupeTrimmedIds(comparisonQuery.sessionIds ?? []);
     if (sessionIds.length > 0) {
       const pointsExpr = denominationPointsSql('hd', 'den');
       const compareSessionResult = await tx.execute(sql`
@@ -111,7 +112,9 @@ export async function loadHasanatReportAggregatesSql(
       from: string | undefined,
       to: string | undefined,
     ): Promise<HasanatReportComparisonMonth[]> => {
-      if (!from || !to) return [];
+      const cleanFrom = from?.trim();
+      const cleanTo = to?.trim();
+      if (!cleanFrom || !cleanTo) return [];
       const pointsExpr = denominationPointsSql('hd', 'den');
       const monthResult = await tx.execute(sql`
         SELECT
@@ -123,8 +126,8 @@ export async function loadHasanatReportAggregatesSql(
           AND den.id = hd.denomination_id
         WHERE ${activeDistributionWhere(subdomain, 'hd')}
           AND hd.issued_date ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND hd.issued_date >= ${from}
-          AND hd.issued_date <= ${to}
+          AND hd.issued_date >= ${cleanFrom}
+          AND hd.issued_date <= ${cleanTo}
         GROUP BY 1
         ORDER BY 1 ASC
       `);

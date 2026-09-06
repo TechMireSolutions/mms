@@ -104,6 +104,13 @@ export async function replaceTenantUsersForWorkspace(
   users: TenantUserRow[],
 ): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
+
+  const dedupedMap = new Map<string, TenantUserRow>();
+  for (const u of users) {
+    dedupedMap.set(String(u.id), u);
+  }
+  const uniqueUsers = Array.from(dedupedMap.values());
+
   // Backup payloads never carry password hashes, so keep the current credential
   // for any account the payload still contains — a restore must not lock admins out.
   const existingRows = await listAllTenantUsersByWorkspace(subdomain);
@@ -118,7 +125,7 @@ export async function replaceTenantUsersForWorkspace(
 
   let parkedAnyCredential = false;
   let adminCredentialSurvives = false;
-  const values = users.map((user) => {
+  const values = uniqueUsers.map((user) => {
     const { columns } = splitProfileFields({ ...user, workspaceSubdomain: subdomain });
     if (!columns.passwordHash) {
       columns.passwordHash =
@@ -193,9 +200,16 @@ export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
 
 export async function upsertTenantUsersBatch(users: TenantUserRow[]): Promise<void> {
   if (users.length === 0) return;
-  const processedUsers = users.map((u) => applyTitleCaseRecursive(u) as TenantUserRow);
+
+  const dedupedMap = new Map<string, TenantUserRow>();
+  for (const u of users) {
+    dedupedMap.set(String(u.id), u);
+  }
+  const uniqueUsers = Array.from(dedupedMap.values());
+
+  const processedUsers = uniqueUsers.map((u) => applyTitleCaseRecursive(u) as TenantUserRow);
   const userIds = processedUsers.map((u) => String(u.id));
-  const subdomain = (users[0]?.workspaceSubdomain as string)?.trim().toLowerCase() || '';
+  const subdomain = (uniqueUsers[0]?.workspaceSubdomain as string)?.trim().toLowerCase() || '';
 
   await withTenant(subdomain, async (tx) => {
     const existingRows = await tx

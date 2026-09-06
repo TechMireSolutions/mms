@@ -597,6 +597,22 @@ describe('createContactsUseCases (DI composition root)', () => {
     expect(result.conflicts?.[0]?.id).toBe('b');
   });
 
+  it('bulkRestoreContacts and bulkSoftDeleteContacts match numeric contact IDs', async () => {
+    const { repo, store } = createFakeRepo();
+    // Simulate contact having a numeric ID
+    const numContact = { ...fakeContact('101'), id: 101 as unknown as string, deletedAt: '2026-07-27T00:00:00.000Z' };
+    store.set('101', numContact);
+    const useCases = createContactsUseCases(repo);
+
+    const restoreResult = await useCases.bulkRestoreContacts(['101']);
+    expect(restoreResult).toEqual({ succeeded: 1, failed: 0, conflicts: [] });
+    expect(store.get('101')?.deletedAt).toBeUndefined();
+
+    const deleteResult = await useCases.bulkSoftDeleteContacts(['101'], 'admin', 'Testing');
+    expect(deleteResult).toEqual({ succeeded: 1, failed: 0 });
+    expect(store.get('101')?.deletedAt).toBeDefined();
+  });
+
   describe('mergeContactsById', () => {
     it('merges the keep contact and soft-deletes the other record', async () => {
       const { repo, store } = createFakeRepo();
@@ -745,6 +761,8 @@ describe('bulkTagContacts use case', () => {
     expect(result.updatedCount).toBe(2);
     expect(store.get('c-1')?.tags).toEqual(['Donor', '2026', 'Ramadan']);
     expect(store.get('c-2')?.tags).toEqual(['Volunteer', '2026', 'Ramadan']);
+    expect(repo.bulkSave).toHaveBeenCalledTimes(1);
+    expect(repo.save).not.toHaveBeenCalled();
     expect(mockBroadcastCollection).toHaveBeenCalledWith('contacts');
   });
 

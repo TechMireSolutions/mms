@@ -35,10 +35,14 @@ function singleFilterSql(
     return sql`lower(${colSql}::text) LIKE ${`%${value.trim().toLowerCase()}%`}`;
   }
   if (op === 'gt') {
-    return sql`${colSql}::numeric > ${Number(value)}`;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return sql`${colSql}::numeric > ${num}`;
   }
   if (op === 'lt') {
-    return sql`${colSql}::numeric < ${Number(value)}`;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return sql`${colSql}::numeric < ${num}`;
   }
   return null;
 }

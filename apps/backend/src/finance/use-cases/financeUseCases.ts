@@ -5,6 +5,7 @@ import { invoiceRecordSchema, paymentRecordSchema } from '../../validation/finan
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import { runInTransaction } from '../../db/database.js';
 import {
+  dedupeTrimmedIds,
   getOutstandingAmountForInvoice,
   invoiceTotalsFromLines,
   normalizeFinanceReportComparisonQuery,
@@ -104,10 +105,25 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
     bulkSoftDeleteInvoices: invoiceCrud.bulkDeleteByIds,
     bulkRestoreInvoices: invoiceCrud.bulkRestoreByIds,
 
-    getInvoiceById: async (id: string): Promise<Invoice | null> => {
+    getInvoiceById: async (id: string, includeDeleted = false): Promise<Invoice | null> => {
       const tenant = getRequestTenant();
       if (!tenant) return null;
-      return repo.findInvoiceById(tenant, id);
+      const cleanId = id?.trim();
+      if (!cleanId) return null;
+      const invoice = await repo.findInvoiceById(tenant, cleanId);
+      if (!invoice) return null;
+      if (!includeDeleted && invoice.deletedAt) return null;
+      return invoice;
+    },
+
+    getInvoicesByIds: async (ids: string[], includeDeleted = false): Promise<Invoice[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const invoices = await repo.findInvoicesByIds(tenant, cleanIds);
+      if (includeDeleted) return invoices;
+      return invoices.filter((inv) => !inv.deletedAt);
     },
 
     bulkUpdateInvoicesStatus: async (
@@ -115,8 +131,10 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       status: string,
     ): Promise<{ succeeded: number; failed: number }> => {
       const tenant = getRequestTenant();
-      if (!tenant) return { succeeded: 0, failed: ids.length };
-      const result = await repo.bulkUpdateInvoicesStatus(tenant, ids, status);
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (!tenant) return { succeeded: 0, failed: cleanIds.length };
+      if (cleanIds.length === 0) return { succeeded: 0, failed: 0 };
+      const result = await repo.bulkUpdateInvoicesStatus(tenant, cleanIds, status);
       const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
       broadcastTenantUpdate(tenant, 'collection', 'finance_invoices');
       broadcastTenantUpdate(tenant, 'collection', 'finance_metrics');
@@ -145,10 +163,25 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
     bulkSoftDeletePayments: paymentCrud.bulkDeleteByIds,
     bulkRestorePayments: paymentCrud.bulkRestoreByIds,
 
-    getPaymentById: async (id: string): Promise<Payment | null> => {
+    getPaymentById: async (id: string, includeDeleted = false): Promise<Payment | null> => {
       const tenant = getRequestTenant();
       if (!tenant) return null;
-      return repo.findPaymentById(tenant, id);
+      const cleanId = id?.trim();
+      if (!cleanId) return null;
+      const payment = await repo.findPaymentById(tenant, cleanId);
+      if (!payment) return null;
+      if (!includeDeleted && payment.deletedAt) return null;
+      return payment;
+    },
+
+    getPaymentsByIds: async (ids: string[], includeDeleted = false): Promise<Payment[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const payments = await repo.findPaymentsByIds(tenant, cleanIds);
+      if (includeDeleted) return payments;
+      return payments.filter((pay) => !pay.deletedAt);
     },
 
     loadPaymentsPage: async (query: FinanceListQuery & { includeDeleted?: boolean }) => {

@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-import { type JournalEntry } from '@mms/shared';
+import { dedupeTrimmedIds, type JournalEntry } from '@mms/shared';
 import {
   accountingEntries,
   accountingJournalLines,
@@ -171,6 +171,8 @@ export async function listEntriesByWorkspace(
 }
 
 export async function findEntryById(tenant: string, id: string): Promise<JournalEntry | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -196,7 +198,7 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
         updatedAt: accountingEntries.updatedAt,
       })
       .from(accountingEntries)
-      .where(and(eq(accountingEntries.workspaceSubdomain, subdomain), eq(accountingEntries.id, id)))
+      .where(and(eq(accountingEntries.workspaceSubdomain, subdomain), eq(accountingEntries.id, trimmedId)))
       .limit(1);
     const row = rows[0];
     if (!row) return null;
@@ -215,7 +217,7 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
         .where(
           and(
             eq(accountingJournalLines.workspaceSubdomain, subdomain),
-            eq(accountingJournalLines.entryId, id),
+            eq(accountingJournalLines.entryId, trimmedId),
           ),
         ),
       tx
@@ -227,7 +229,7 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
         .where(
           and(
             eq(accountingEntryTags.workspaceSubdomain, subdomain),
-            eq(accountingEntryTags.entryId, id),
+            eq(accountingEntryTags.entryId, trimmedId),
           ),
         ),
       tx
@@ -239,7 +241,7 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
         .where(
           and(
             eq(accountingEntryAttachments.workspaceSubdomain, subdomain),
-            eq(accountingEntryAttachments.entryId, id),
+            eq(accountingEntryAttachments.entryId, trimmedId),
           ),
         ),
     ]);
@@ -249,6 +251,118 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
       lines,
       tags.map((t) => t.tag),
       attachments.map((a) => a.url),
+    );
+  });
+}
+
+export async function findEntriesByIds(tenant: string, ids: string[]): Promise<JournalEntry[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: accountingEntries.id,
+        workspaceSubdomain: accountingEntries.workspaceSubdomain,
+        date: accountingEntries.date,
+        ref: accountingEntries.ref,
+        description: accountingEntries.description,
+        status: accountingEntries.status,
+        createdBy: accountingEntries.createdBy,
+        fiscalYear: accountingEntries.fiscalYear,
+        fiscalYearId: accountingEntries.fiscalYearId,
+        sourceType: accountingEntries.sourceType,
+        sourceId: accountingEntries.sourceId,
+        transactionType: accountingEntries.transactionType,
+        reversedRef: accountingEntries.reversedRef,
+        simpleMode: accountingEntries.simpleMode,
+        deletedAt: accountingEntries.deletedAt,
+        deletedBy: accountingEntries.deletedBy,
+        deletionReason: accountingEntries.deletionReason,
+        createdAt: accountingEntries.createdAt,
+        updatedAt: accountingEntries.updatedAt,
+      })
+      .from(accountingEntries)
+      .where(
+        and(
+          eq(accountingEntries.workspaceSubdomain, subdomain),
+          inArray(accountingEntries.id, cleanIds),
+        ),
+      );
+    if (rows.length === 0) return [];
+
+    const foundIds = rows.map((r) => r.id);
+    const [allLines, allTags, allAttachments] = await Promise.all([
+      tx
+        .select({
+          id: accountingJournalLines.id,
+          entryId: accountingJournalLines.entryId,
+          accountId: accountingJournalLines.accountId,
+          debit: accountingJournalLines.debit,
+          credit: accountingJournalLines.credit,
+          description: accountingJournalLines.description,
+        })
+        .from(accountingJournalLines)
+        .where(
+          and(
+            eq(accountingJournalLines.workspaceSubdomain, subdomain),
+            inArray(accountingJournalLines.entryId, foundIds),
+          ),
+        ),
+      tx
+        .select({
+          entryId: accountingEntryTags.entryId,
+          tag: accountingEntryTags.tag,
+        })
+        .from(accountingEntryTags)
+        .where(
+          and(
+            eq(accountingEntryTags.workspaceSubdomain, subdomain),
+            inArray(accountingEntryTags.entryId, foundIds),
+          ),
+        ),
+      tx
+        .select({
+          entryId: accountingEntryAttachments.entryId,
+          url: accountingEntryAttachments.url,
+        })
+        .from(accountingEntryAttachments)
+        .where(
+          and(
+            eq(accountingEntryAttachments.workspaceSubdomain, subdomain),
+            inArray(accountingEntryAttachments.entryId, foundIds),
+          ),
+        ),
+    ]);
+
+    const linesByEntry = new Map<string, JournalLineRow[]>();
+    for (const line of allLines) {
+      const arr = linesByEntry.get(line.entryId) ?? [];
+      arr.push(line);
+      linesByEntry.set(line.entryId, arr);
+    }
+
+    const tagsByEntry = new Map<string, string[]>();
+    for (const tag of allTags) {
+      const arr = tagsByEntry.get(tag.entryId) ?? [];
+      arr.push(tag.tag);
+      tagsByEntry.set(tag.entryId, arr);
+    }
+
+    const attachmentsByEntry = new Map<string, string[]>();
+    for (const att of allAttachments) {
+      const arr = attachmentsByEntry.get(att.entryId) ?? [];
+      arr.push(att.url);
+      attachmentsByEntry.set(att.entryId, arr);
+    }
+
+    return rows.map((r) =>
+      entryRowToRecord(
+        r,
+        linesByEntry.get(r.id) ?? [],
+        tagsByEntry.get(r.id) ?? [],
+        attachmentsByEntry.get(r.id) ?? [],
+      ),
     );
   });
 }

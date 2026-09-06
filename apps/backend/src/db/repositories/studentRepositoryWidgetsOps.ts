@@ -31,7 +31,8 @@ export async function countStudentsForNextGrNumber(
   restartAnnually: boolean,
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  const year = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
+  const parsedYear = regDate ? new Date(regDate).getFullYear() : NaN;
+  const year = Number.isFinite(parsedYear) ? parsedYear : new Date().getFullYear();
   return withTenant(subdomain, async (tx) => {
     const base = and(eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt));
     if (!restartAnnually) {

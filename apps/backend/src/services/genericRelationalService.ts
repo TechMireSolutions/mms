@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { dedupeTrimmedIds } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import type { ZodType } from 'zod';
 
@@ -49,7 +50,12 @@ export function createGenericRelationalService<
   async function create(record: T): Promise<T> {
     const tenant = getRequestTenant();
     if (!tenant) throw new Error('Tenant context required');
-    const resolvedId = String(record.id ?? `${idPrefix}-${randomUUID()}`);
+    const resolvedId =
+      typeof record.id === 'string' && record.id.trim() !== ''
+        ? record.id.trim()
+        : typeof record.id === 'number' && Number.isFinite(record.id)
+          ? String(record.id)
+          : `${idPrefix}-${randomUUID()}`;
     const parsed = schema.parse({ ...record, id: resolvedId }) as T;
     const normalized = normalizeFn ? normalizeFn(parsed) : parsed;
     await repo.save(tenant, normalized);
@@ -63,7 +69,11 @@ export function createGenericRelationalService<
     if (!tenant) return null;
     const existing = await repo.findById(tenant, id);
     if (!existing || existing.deletedAt) return null;
-    const parsed = schema.parse({ ...record, id }) as T;
+    const merged = { ...existing };
+    for (const [key, value] of Object.entries(record)) {
+      if (value !== undefined) (merged as Record<string, unknown>)[key] = value;
+    }
+    const parsed = schema.parse({ ...merged, id }) as T;
     const normalized = normalizeFn ? normalizeFn(parsed) : parsed;
     await repo.save(tenant, normalized);
     const { broadcastTenantUpdate } = await import('./websocketService.js');
@@ -114,9 +124,11 @@ export function createGenericRelationalService<
     deletedBy: string,
     deletionReason?: string,
   ): Promise<{ succeeded: number; failed: number }> {
+    const uniqueIds = dedupeTrimmedIds(ids);
+    if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
     let succeeded = 0;
     let failed = 0;
-    for (const id of ids) {
+    for (const id of uniqueIds) {
       const ok = await deleteById(id, deletedBy, deletionReason);
       if (ok) succeeded += 1;
       else failed += 1;
@@ -125,9 +137,11 @@ export function createGenericRelationalService<
   }
 
   async function bulkRestoreByIds(ids: string[]): Promise<{ succeeded: number; failed: number }> {
+    const uniqueIds = dedupeTrimmedIds(ids);
+    if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
     let succeeded = 0;
     let failed = 0;
-    for (const id of ids) {
+    for (const id of uniqueIds) {
       const ok = await restoreById(id);
       if (ok) succeeded += 1;
       else failed += 1;

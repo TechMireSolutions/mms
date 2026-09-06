@@ -3,6 +3,7 @@ export {
   invoiceRowToRecord,
   listInvoicesByWorkspace,
   findInvoiceById,
+  findInvoicesByIds,
   saveInvoice,
   bulkSaveInvoices,
   replaceInvoicesForWorkspace,
@@ -12,9 +13,11 @@ export {
   paymentRowToRecord,
   listPaymentsByWorkspace,
   findPaymentById,
+  findPaymentsByIds,
   savePayment,
   bulkSavePayments,
   replacePaymentsForWorkspace,
   deletePayment,
   deleteFinanceByWorkspace,
 } from './financePaymentsRepository.js';
+

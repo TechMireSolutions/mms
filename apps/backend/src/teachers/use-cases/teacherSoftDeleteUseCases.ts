@@ -1,4 +1,4 @@
-import type { Teacher } from '@mms/shared';
+import { dedupeTrimmedIds, type Teacher } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
 import { broadcastCollection } from '../../lib/livePush.js';
@@ -43,18 +43,20 @@ export async function bulkRestoreTeachers(
   ids: string[],
   repo: TeachersRepository = teachersRepository,
 ): Promise<{ succeeded: number; failed: number }> {
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
   const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
-    if (!tenant) return { succeeded: 0, failed: ids.length };
+    if (!tenant) return { succeeded: 0, failed: uniqueIds.length };
     let succeeded = 0;
     let failed = 0;
     const toSave: Teacher[] = [];
 
-    const existingTeachers = await repo.findByIds(tenant, ids);
+    const existingTeachers = await repo.findByIds(tenant, uniqueIds);
     const existingMap = new Map(existingTeachers.map((teacher) => [String(teacher.id), teacher]));
 
-    for (const id of ids) {
-      const existing = existingMap.get(String(id));
+    for (const id of uniqueIds) {
+      const existing = existingMap.get(id);
       if (!existing || !existing.deletedAt) {
         failed += 1;
         continue;
@@ -88,20 +90,22 @@ export async function bulkSoftDeleteTeachers(
   deletionReason?: string,
   repo: TeachersRepository = teachersRepository,
 ): Promise<{ succeeded: number; failed: number }> {
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
   const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
-    if (!tenant) return { succeeded: 0, failed: ids.length };
+    if (!tenant) return { succeeded: 0, failed: uniqueIds.length };
     let succeeded = 0;
     let failed = 0;
     const now = nowIso();
     const trimmedReason = deletionReason?.trim();
     const toSave: Teacher[] = [];
 
-    const existingTeachers = await repo.findByIds(tenant, ids);
+    const existingTeachers = await repo.findByIds(tenant, uniqueIds);
     const existingMap = new Map(existingTeachers.map((teacher) => [String(teacher.id), teacher]));
 
-    for (const id of ids) {
-      const existing = existingMap.get(String(id));
+    for (const id of uniqueIds) {
+      const existing = existingMap.get(id);
       if (existing && !existing.deletedAt) {
         toSave.push({
           ...existing,

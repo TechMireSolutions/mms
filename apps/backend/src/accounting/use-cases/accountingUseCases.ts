@@ -9,6 +9,7 @@ import {
 } from '../../services/tenantBulkService.js';
 import {
   EMPTY_ACCOUNTING_REPORT_AGGREGATES,
+  dedupeTrimmedIds,
   type Account,
   type JournalEntry,
   type FiscalYear,
@@ -112,12 +113,66 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
       return scopeDeleted(rows, options?.includeDeleted);
     },
 
+    loadAccountById: async (id: string, includeDeleted = false): Promise<Account | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const row = await repo.findAccountById(tenant, cleanId);
+      if (!row) return null;
+      if (!includeDeleted && row.deletedAt) return null;
+      return row;
+    },
+
+    loadAccountsByIds: async (ids: string[], includeDeleted = false): Promise<Account[]> => {
+      const tenant = getRequestTenant();
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (!tenant || cleanIds.length === 0) return [];
+      const rows = await repo.findAccountsByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
+    },
+
     loadEntries: async (options?: { includeDeleted?: boolean }): Promise<JournalEntry[]> => {
       const rows = await entryCrud.loadAll({ includeDeleted: true });
       return scopeDeleted(rows, options?.includeDeleted);
     },
 
+    loadEntryById: async (id: string, includeDeleted = false): Promise<JournalEntry | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const row = await repo.findEntryById(tenant, cleanId);
+      if (!row) return null;
+      if (!includeDeleted && row.deletedAt) return null;
+      return row;
+    },
+
+    loadEntriesByIds: async (ids: string[], includeDeleted = false): Promise<JournalEntry[]> => {
+      const tenant = getRequestTenant();
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (!tenant || cleanIds.length === 0) return [];
+      const rows = await repo.findEntriesByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
+    },
+
     loadFiscalYears: fiscalYearService.load,
+
+    loadFiscalYearById: async (id: string, includeDeleted = false): Promise<FiscalYear | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const row = await repo.findFiscalYearById(tenant, cleanId);
+      if (!row) return null;
+      if (!includeDeleted && row.deletedAt) return null;
+      return row;
+    },
+
+    loadFiscalYearsByIds: async (ids: string[], includeDeleted = false): Promise<FiscalYear[]> => {
+      const tenant = getRequestTenant();
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (!tenant || cleanIds.length === 0) return [];
+      const rows = await repo.findFiscalYearsByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
+    },
 
     upsertAccounts: (accounts: Account[]) =>
       upsertWithBroadcast(accountListSchema, accounts, repo.bulkSaveAccounts, 'accounting_accounts'),
@@ -147,9 +202,10 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
       deletedBy: string,
       deletionReason?: string,
     ): Promise<{ succeeded: number; failed: number }> => {
+      const cleanIds = dedupeTrimmedIds(ids);
       let succeeded = 0;
       let failed = 0;
-      for (const id of ids) {
+      for (const id of cleanIds) {
         try {
           const ok = await deleteJournalEntryById(id, deletedBy, deletionReason);
           if (ok) succeeded += 1;

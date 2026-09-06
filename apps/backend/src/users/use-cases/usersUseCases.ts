@@ -25,6 +25,7 @@ import {
   normalizeWorkspaceUser,
   workspaceUserListSchema,
   activityLogListSchema,
+  activityLogRecordSchema,
   canAssignRole,
   canManageTargetUser,
   getDisplayName,
@@ -34,6 +35,7 @@ import {
   computeUserInitials,
   createContactLookupMap,
   hydrateWorkspaceUserProfile,
+  dedupeTrimmedIds,
 } from '@mms/shared';
 
 function createHttpError(statusCode: number, type: string, message: string): Error & { statusCode: number; type: string } {
@@ -332,11 +334,23 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       };
     },
 
-    loadUsersByIds: async (ids: string[]): Promise<WorkspaceUser[]> => {
-      const uniqueIds = [...new Set(ids.map(String).filter(Boolean))];
+    loadUsersByIds: async (ids: string[], includeDeleted = false): Promise<WorkspaceUser[]> => {
+      const uniqueIds = dedupeTrimmedIds(ids);
       if (uniqueIds.length === 0) return [];
       const rows = await repo.listTenantUsersByIds(uniqueIds);
-      return hydrateUserRows(rows);
+      const filtered = includeDeleted ? rows : rows.filter((r) => !r.deletedAt);
+      return hydrateUserRows(filtered);
+    },
+
+    loadUserById: async (id: string, includeDeleted = false): Promise<WorkspaceUser | null> => {
+      const cleanId = id?.trim();
+      if (!cleanId) return null;
+      const rows = await repo.listTenantUsersByIds([cleanId]);
+      const row = rows[0];
+      if (!row) return null;
+      if (!includeDeleted && row.deletedAt) return null;
+      const [user] = await hydrateUserRows([row]);
+      return user ?? null;
     },
 
     countUsers: async (): Promise<number> => {
@@ -601,6 +615,29 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
 
     // --- Activity Logs ---
     loadLogs: logService.load,
+
+    loadLogById: async (id: string): Promise<ActivityLog | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findActivityLogById(tenant, cleanId);
+    },
+
+    loadLogsByIds: async (ids: string[]): Promise<ActivityLog[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findActivityLogsByIds(tenant, cleanIds);
+    },
+
+    saveLog: async (record: ActivityLog): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      const parsed = activityLogRecordSchema.parse(record);
+      await repo.saveActivityLog(tenant, parsed);
+      await broadcastCollection('user_activity_logs');
+    },
 
     upsertLogs: async (records: ActivityLog[]): Promise<ActivityLog[]> => {
       const tenant = getRequestTenant();

@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-import type { Enrollment } from '@mms/shared';
+import { dedupeTrimmedIds, type Enrollment } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -189,7 +189,8 @@ export async function findEnrollmentsByIds(
   tenant: string,
   ids: string[],
 ): Promise<Enrollment[]> {
-  if (ids.length === 0) return [];
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -223,7 +224,7 @@ export async function findEnrollmentsByIds(
       .where(
         and(
           eq(enrollments.workspaceSubdomain, subdomain),
-          inArray(enrollments.id, ids),
+          inArray(enrollments.id, cleanIds),
         ),
       );
 
@@ -243,7 +244,7 @@ export async function findEnrollmentsByIds(
       .where(
         and(
           eq(enrollmentTimelineEvents.workspaceSubdomain, subdomain),
-          inArray(enrollmentTimelineEvents.enrollmentId, ids),
+          inArray(enrollmentTimelineEvents.enrollmentId, cleanIds),
         ),
       );
 

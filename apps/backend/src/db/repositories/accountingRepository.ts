@@ -3,6 +3,7 @@ export {
   accountRowToRecord,
   listAccountsByWorkspace,
   findAccountById,
+  findAccountsByIds,
   saveAccount,
   bulkSaveAccounts,
   replaceAccountsForWorkspace,
@@ -11,6 +12,7 @@ export {
   fiscalYearRowToRecord,
   listFiscalYearsByWorkspace,
   findFiscalYearById,
+  findFiscalYearsByIds,
   saveFiscalYear,
   bulkSaveFiscalYears,
   replaceFiscalYearsForWorkspace,
@@ -19,6 +21,7 @@ export {
   entryRowToRecord,
   listEntriesByWorkspace,
   findEntryById,
+  findEntriesByIds,
   findEntryIdBySource,
   type JournalLineRow,
 } from './accountingEntriesRepository.js';

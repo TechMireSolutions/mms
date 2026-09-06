@@ -146,5 +146,15 @@ describe('contactValidationUseCases', () => {
       const temp = await prepareContactRecord(noId);
       expect(String(temp.id)).toMatch(/^temp-/);
     });
+
+    it('falls back to contact id or temp id when id is blank or whitespace', async () => {
+      const blankExplicit = await prepareContactRecord(fakeContact('c1'), '   ');
+      expect(blankExplicit.id).toBe('c1');
+      const emptyBoth = await prepareContactRecord({ ...fakeContact(''), id: '' } as unknown as Contact, '   ');
+      expect(String(emptyBoth.id)).toMatch(/^temp-/);
+      const emptyContactId = { ...fakeContact(''), id: '' } as unknown as Contact;
+      const tempEmpty = await prepareContactRecord(emptyContactId);
+      expect(String(tempEmpty.id)).toMatch(/^temp-/);
+    });
   });
 });

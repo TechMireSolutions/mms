@@ -18,9 +18,11 @@ export async function aggregateAccountingReport(
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
+    const dateFrom = query.dateFrom?.trim() || undefined;
+    const dateTo = query.dateTo?.trim() || undefined;
     const entryDateFilter = and(
-      query.dateFrom ? sql`${accountingEntries.date} >= ${query.dateFrom}` : undefined,
-      query.dateTo ? sql`${accountingEntries.date} <= ${query.dateTo}` : undefined,
+      dateFrom ? sql`${accountingEntries.date} >= ${dateFrom}` : undefined,
+      dateTo ? sql`${accountingEntries.date} <= ${dateTo}` : undefined,
     );
 
     // Trial balance by account

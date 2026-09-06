@@ -10,10 +10,16 @@ import { examinationsUseCases } from '../examinations/use-cases/examinationsUseC
 export const replaceExams = examinationsUseCases.replaceExams;
 export const replaceExamResults = examinationsUseCases.replaceExamResults;
 export const loadExams = examinationsUseCases.loadExams;
+export const loadExamById = examinationsUseCases.loadExamById;
+export const loadExamsByIds = examinationsUseCases.loadExamsByIds;
 export const loadExamsPage = examinationsUseCases.loadExamsPage;
 export const loadExamResults = examinationsUseCases.loadExamResults;
+export const loadExamResultById = examinationsUseCases.loadExamResultById;
+export const loadExamResultsByIds = examinationsUseCases.loadExamResultsByIds;
 export const upsertExams = examinationsUseCases.upsertExams;
 export const upsertExamResults = examinationsUseCases.upsertExamResults;
+export const createExam = examinationsUseCases.createExam;
+export const updateExamById = examinationsUseCases.updateExamById;
 export const deleteExamById = examinationsUseCases.deleteExamById;
 export const restoreExamById = examinationsUseCases.restoreExamById;
 export const bulkSoftDeleteExams = examinationsUseCases.bulkSoftDeleteExams;

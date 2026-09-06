@@ -4,7 +4,7 @@ import { runInTransaction } from '../../db/database.js';
 import { broadcastCollection } from '../../lib/livePush.js';
 import type { TeachersRepository } from '../repository/teachersRepository.js';
 import { teachersRepository } from '../repository/teachersRepositoryAdapter.js';
-import { prepareTeacherRecord } from './teacherNormalizeUseCases.js';
+import { mergeTeacherPatch, prepareTeacherRecord } from './teacherNormalizeUseCases.js';
 
 export interface CreateTeacherResult {
   record: TeacherRecord;
@@ -58,7 +58,10 @@ export async function updateTeacherById(
     if (!tenant) return null;
     const existing = await repo.findById(tenant, id);
     if (!existing || existing.deletedAt) return null;
-    const normalized = prepareTeacherRecord({ ...record, id });
+    const normalized = prepareTeacherRecord({
+      ...mergeTeacherPatch(existing, record),
+      id,
+    });
     await repo.save(tenant, normalized);
     return normalized;
   });

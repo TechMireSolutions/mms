@@ -22,6 +22,12 @@ describe('studentNormalizeUseCases', () => {
     it('generates a fresh id each call', () => {
       expect(resolveStudentRowId(undefined)).not.toBe(resolveStudentRowId(undefined));
     });
+
+    it('generates a st-<uuid> prefixed id when id is empty or blank string or null', () => {
+      expect(resolveStudentRowId('')).toMatch(/^st-[0-9a-f-]{36}$/);
+      expect(resolveStudentRowId('   ')).toMatch(/^st-[0-9a-f-]{36}$/);
+      expect(resolveStudentRowId(null)).toMatch(/^st-[0-9a-f-]{36}$/);
+    });
   });
 
   describe('isUniqueViolation', () => {

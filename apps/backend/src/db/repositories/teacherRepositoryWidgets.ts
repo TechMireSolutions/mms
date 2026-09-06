@@ -54,10 +54,14 @@ function singleFilterSql(
     return sql`lower(${fieldExpr}::text) LIKE ${`%${valNormalized}%`}`;
   }
   if (op === 'gt') {
-    return sql`NULLIF(trim(${fieldExpr}::text), '')::numeric > ${Number(value)}`;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return sql`NULLIF(trim(${fieldExpr}::text), '')::numeric > ${num}`;
   }
   if (op === 'lt') {
-    return sql`NULLIF(trim(${fieldExpr}::text), '')::numeric < ${Number(value)}`;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return sql`NULLIF(trim(${fieldExpr}::text), '')::numeric < ${num}`;
   }
   return null;
 }

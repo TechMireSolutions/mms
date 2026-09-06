@@ -89,7 +89,22 @@ export default async function enrollmentsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list enrollments' } };
       }
     },
-    get: async () => ({ status: 404 as const, body: { type: 'not_found', message: 'Not implemented' } }),
+    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof enrollmentContract['get']>): Promise<unknown> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, ENROLLMENTS_COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true;
+      if (includeDeleted && !canDeleteCollection(user, ENROLLMENTS_COLLECTION)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted enrollments requires delete permissions' } };
+      }
+      try {
+        const item = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.loadEnrollmentById(id, includeDeleted), { readOnly: true });
+        if (!item) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } };
+        return { status: 200 as const, body: item };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load enrollment' } };
+      }
+    },
     create: async ({ body, request }: ContractRouteArgs<typeof enrollmentContract['create']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))

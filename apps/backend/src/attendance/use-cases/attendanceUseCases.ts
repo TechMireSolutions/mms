@@ -8,6 +8,7 @@ import { broadcastCollection } from '../../services/websocketService.js';
 import {
   attendanceRecordSchema,
   attendanceListSchema,
+  dedupeTrimmedIds,
   EMPTY_ATTENDANCE_REPORT_AGGREGATES,
   normalizeAttendanceReportComparisonQuery,
   type AttendanceCommandMetricsSnapshot,
@@ -77,6 +78,33 @@ export function createAttendanceUseCases(repo: AttendanceRepository = attendance
       return parsed;
     },
 
+    loadAttendanceRecordById: async (
+      id: string,
+      includeDeleted = false,
+    ): Promise<AttendanceRecord | null> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return null;
+      const cleanId = id?.trim();
+      if (!cleanId) return null;
+      const record = await repo.findAttendanceRecordById(tenant, cleanId);
+      if (!record) return null;
+      if (!includeDeleted && record.deletedAt) return null;
+      return record;
+    },
+
+    loadAttendanceRecordsByIds: async (
+      ids: string[],
+      includeDeleted = false,
+    ): Promise<AttendanceRecord[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const records = await repo.findAttendanceRecordsByIds(tenant, cleanIds);
+      if (includeDeleted) return records;
+      return records.filter((r) => !r.deletedAt);
+    },
+
     loadAttendancePage: async (query: AttendanceListQuery & { includeDeleted?: boolean }) => {
       const tenant = getRequestTenant();
       if (!tenant) {
@@ -105,11 +133,11 @@ export function createAttendanceUseCases(repo: AttendanceRepository = attendance
     },
 
     loadAttendanceCommandMetrics: async (
-      request: FastifyRequest,
+      request?: FastifyRequest,
     ): Promise<AttendanceCommandMetricsSnapshot> => {
       const tenant = getRequestTenant();
       if (!tenant) return EMPTY_ATTENDANCE_METRICS;
-      const dateParam = (request.query as { date?: string }).date;
+      const dateParam = (request?.query as { date?: string } | undefined)?.date;
       const selectedDate =
         typeof dateParam === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(dateParam)
           ? dateParam

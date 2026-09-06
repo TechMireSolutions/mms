@@ -80,4 +80,36 @@ describe('enrollments use-cases (DI with fake repository)', () => {
     expect(repo.countEnrollmentsActive).not.toHaveBeenCalled();
     expect(repo.listEnrollmentsPage).not.toHaveBeenCalled();
   });
+
+  it('loadEnrollmentsByIds deduplicates trimmed IDs and filters out soft-deleted enrollments', async () => {
+    const repo = createFakeRepo();
+    const active = { id: 'enr-1', studentName: 'Ali' } as any;
+    const deleted = { id: 'enr-2', studentName: 'Omar', deletedAt: '2026-03-01T00:00:00.000Z' } as any;
+    repo.findEnrollmentsByIds = vi.fn().mockResolvedValue([active, deleted]);
+    const useCases = createEnrollmentsUseCases(repo);
+
+    const result = await runWithTenant('demo', () =>
+      useCases.loadEnrollmentsByIds([' enr-1 ', 'enr-2', 'enr-1', '   ']),
+    );
+
+    expect(repo.findEnrollmentsByIds).toHaveBeenCalledWith('demo', ['enr-1', 'enr-2']);
+    expect(result).toEqual([active]);
+  });
+
+  it('loadEnrollmentById filters soft-deleted enrollments unless includeDeleted is true', async () => {
+    const repo = createFakeRepo();
+    const deleted = { id: 'enr-deleted', studentName: 'Zayd', deletedAt: '2026-03-01T00:00:00.000Z' } as any;
+    repo.findEnrollmentById = vi.fn().mockResolvedValue(deleted);
+    const useCases = createEnrollmentsUseCases(repo);
+
+    const activeResult = await runWithTenant('demo', () =>
+      useCases.loadEnrollmentById('enr-deleted', false),
+    );
+    expect(activeResult).toBeNull();
+
+    const deletedResult = await runWithTenant('demo', () =>
+      useCases.loadEnrollmentById('enr-deleted', true),
+    );
+    expect(deletedResult).toEqual(deleted);
+  });
 });

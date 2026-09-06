@@ -143,6 +143,8 @@ export async function listAllTenantUsersByWorkspace(
 }
 
 export async function findTenantUserRowById(id: string): Promise<TenantUserRow | null> {
+  const cleanId = id?.trim();
+  if (!cleanId) return null;
   return withTenant(null, async (tx) => {
     const rows = await tx
       .select({
@@ -163,7 +165,7 @@ export async function findTenantUserRowById(id: string): Promise<TenantUserRow |
         profileJson: tenantUsers.profileJson,
       })
       .from(tenantUsers)
-      .where(eq(tenantUsers.id, id));
+      .where(eq(tenantUsers.id, cleanId));
     const row = rows[0];
     return row ? rowToTenantUser(row) : null;
   });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  mergeTeacherPatch,
   prepareTeacherRecord,
   resolveTeacherRowId,
 } from '../teachers/use-cases/teacherNormalizeUseCases.js';
@@ -18,6 +19,37 @@ describe('teacherNormalizeUseCases', () => {
 
     it('generates a fresh id each call', () => {
       expect(resolveTeacherRowId(undefined)).not.toBe(resolveTeacherRowId(undefined));
+    });
+
+    it('generates a tch-<uuid> prefixed id when id is empty, blank string, or null', () => {
+      expect(resolveTeacherRowId('')).toMatch(/^tch-[0-9a-f-]{36}$/);
+      expect(resolveTeacherRowId('   ')).toMatch(/^tch-[0-9a-f-]{36}$/);
+      expect(resolveTeacherRowId(null)).toMatch(/^tch-[0-9a-f-]{36}$/);
+    });
+  });
+
+  describe('mergeTeacherPatch', () => {
+    it('merges defined patch fields onto existing and preserves omitted fields', () => {
+      const existing = {
+        id: 't-1',
+        contactId: 'c-10',
+        specialization: 'Hifz',
+        qualification: 'Alim',
+        status: 'active',
+      };
+      const patch = {
+        status: 'on_leave',
+        notes: 'Medical leave',
+      };
+      const merged = mergeTeacherPatch(existing, patch);
+      expect(merged).toEqual({
+        id: 't-1',
+        contactId: 'c-10',
+        specialization: 'Hifz',
+        qualification: 'Alim',
+        status: 'on_leave',
+        notes: 'Medical leave',
+      });
     });
   });
 

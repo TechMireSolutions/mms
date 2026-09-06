@@ -25,7 +25,8 @@ export async function computeNextGrNumberForDate(
   const count = await repo.countNextGrNumber(tenant, { regDate, restartAnnually });
   const template = settings.grNumberTemplate || '{seq}-{year}';
   const digits = settings.grNumberDigits || 4;
-  const year = regDate ? new Date(regDate).getFullYear() : new Date().getFullYear();
+  const parsedYear = regDate ? new Date(regDate).getFullYear() : NaN;
+  const year = Number.isFinite(parsedYear) ? parsedYear : new Date().getFullYear();
   const seqStr = String(count + 1).padStart(digits, '0');
   return template.replace('{seq}', seqStr).replace('{year}', String(year));
 }

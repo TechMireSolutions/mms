@@ -8,6 +8,7 @@ import {
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
 import {
+  dedupeTrimmedIds,
   type ObligationType,
   type Mujtahid,
   type MujtahidRep,
@@ -97,21 +98,142 @@ export function createObligationsUseCases(repo: ObligationsRepository = obligati
 
   return {
     loadObligationTypes: obligationTypeService.load,
+    loadObligationTypeById: async (id: string): Promise<ObligationType | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findObligationTypeById(tenant, cleanId);
+    },
+    loadObligationTypesByIds: async (ids: string[]): Promise<ObligationType[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findObligationTypesByIds(tenant, cleanIds);
+    },
+    saveObligationType: async (record: ObligationType): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveObligationType(tenant, record);
+    },
     replaceObligationTypes: obligationTypeService.replace,
+
     loadMujtahids: mujtahidService.load,
+    loadMujtahidById: async (id: string): Promise<Mujtahid | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findMujtahidById(tenant, cleanId);
+    },
+    loadMujtahidsByIds: async (ids: string[]): Promise<Mujtahid[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findMujtahidsByIds(tenant, cleanIds);
+    },
+    saveMujtahid: async (record: Mujtahid): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveMujtahid(tenant, record);
+    },
     replaceMujtahids: mujtahidService.replace,
+
     loadMujtahidReps: mujtahidRepService.load,
+    loadMujtahidRepById: async (id: string): Promise<MujtahidRep | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findMujtahidRepById(tenant, cleanId);
+    },
+    loadMujtahidRepsByIds: async (ids: string[]): Promise<MujtahidRep[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findMujtahidRepsByIds(tenant, cleanIds);
+    },
+    saveMujtahidRep: async (record: MujtahidRep): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveMujtahidRep(tenant, record);
+    },
     replaceMujtahidReps: mujtahidRepService.replace,
+
     loadWakalaTypes: wakalaTypeService.load,
+    loadWakalaTypeById: async (id: string): Promise<WakalaType | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findWakalaTypeById(tenant, cleanId);
+    },
+    loadWakalaTypesByIds: async (ids: string[]): Promise<WakalaType[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findWakalaTypesByIds(tenant, cleanIds);
+    },
+    saveWakalaType: async (record: WakalaType): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveWakalaType(tenant, record);
+    },
     replaceWakalaTypes: wakalaTypeService.replace,
+
     loadObligationDistributions: distributionService.load,
+    loadObligationDistributionById: async (id: string): Promise<ObligationDistribution | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findObligationDistributionById(tenant, cleanId);
+    },
+    loadObligationDistributionsByIds: async (ids: string[]): Promise<ObligationDistribution[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findObligationDistributionsByIds(tenant, cleanIds);
+    },
+    saveObligationDistribution: async (record: ObligationDistribution): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveObligationDistribution(tenant, record);
+    },
     replaceObligationDistributions: distributionService.replace,
+
     replaceObligationCollections: collectionBulkService.replace,
 
     loadObligationCollections: async (options?: { includeDeleted?: boolean }): Promise<ObligationCollection[]> => {
       const rows = await collectionCrud.loadAll({ includeDeleted: true });
       return scopeDeleted(rows, options?.includeDeleted);
     },
+    loadObligationCollectionById: async (id: string, includeDeleted = false): Promise<ObligationCollection | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const col = await repo.findObligationCollectionById(tenant, cleanId);
+      if (!col) return null;
+      if (!includeDeleted && col.deletedAt) return null;
+      if (includeDeleted && !col.deletedAt) return null;
+      return col;
+    },
+    loadObligationCollectionsByIds: async (ids: string[], includeDeleted = false): Promise<ObligationCollection[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const rows = await repo.findObligationCollectionsByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
+    },
+    saveObligationCollection: async (record: ObligationCollection): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveObligationCollection(tenant, record);
+    },
+
+    createObligationCollection: collectionCrud.create,
+    updateObligationCollectionById: collectionCrud.updateById,
 
     upsertObligationTypes: (types: ObligationType[]) =>
       upsertWithBroadcast(obligationTypeListSchema, types, repo.bulkSaveObligationTypes, 'obligation_types'),

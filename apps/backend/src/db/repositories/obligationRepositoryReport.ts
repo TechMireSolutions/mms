@@ -22,16 +22,20 @@ export async function aggregateObligationsReport(
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
+    const cleanTypeId = query.typeId?.trim();
+    const cleanRepId = query.repId?.trim();
+    const cleanDateFrom = query.dateFrom?.trim();
+    const cleanDateTo = query.dateTo?.trim();
     const baseWhere = and(
       eq(obligationCollections.workspaceSubdomain, subdomain),
       isNull(obligationCollections.deletedAt),
-      query.typeId ? eq(obligationCollections.obligationTypeId, query.typeId) : undefined,
-      query.repId ? eq(obligationCollections.mujtahidRepresentativeId, query.repId) : undefined,
-      query.dateFrom
-        ? sql`(${obligationCollections.receivedDate})::date >= ${query.dateFrom}::date`
+      cleanTypeId ? eq(obligationCollections.obligationTypeId, cleanTypeId) : undefined,
+      cleanRepId ? eq(obligationCollections.mujtahidRepresentativeId, cleanRepId) : undefined,
+      cleanDateFrom
+        ? sql`(${obligationCollections.receivedDate})::date >= ${cleanDateFrom}::date`
         : undefined,
-      query.dateTo
-        ? sql`(${obligationCollections.receivedDate})::date <= ${query.dateTo}::date`
+      cleanDateTo
+        ? sql`(${obligationCollections.receivedDate})::date <= ${cleanDateTo}::date`
         : undefined,
     );
 

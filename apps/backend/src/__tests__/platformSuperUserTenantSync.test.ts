@@ -248,6 +248,9 @@ vi.mock('../services/globalSettingsService.js', () => ({
 
 vi.mock('../db/repositories/logsRepository.js', () => ({
   listActivityLogsByWorkspace: vi.fn().mockResolvedValue([]),
+  findActivityLogById: vi.fn().mockResolvedValue(null),
+  findActivityLogsByIds: vi.fn().mockResolvedValue([]),
+  saveActivityLog: vi.fn().mockResolvedValue(undefined),
   bulkSaveActivityLogs: vi.fn(),
   replaceActivityLogsForWorkspace: vi.fn(),
 }));

@@ -24,7 +24,9 @@ export async function aggregateAccountingCommandMetrics(
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): Promise<AccountingCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  const periodStart = new Date(Date.now() - periodDays * 86_400_000)
+  const safePeriodDays =
+    Number.isFinite(periodDays) && periodDays > 0 ? periodDays : MODULE_METRICS_DEFAULT_PERIOD_DAYS;
+  const periodStart = new Date(Date.now() - safePeriodDays * 86_400_000)
     .toISOString()
     .slice(0, 10);
 

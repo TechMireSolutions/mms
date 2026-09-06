@@ -144,6 +144,16 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | u
   if (field === 'gender') {
     return dir === 'desc' ? desc(contacts.gender) : asc(contacts.gender);
   }
+  if (field === 'city') {
+    const cityExpr = sql`(
+      SELECT a.city FROM ${contactAddresses} a
+      WHERE a.workspace_subdomain = ${contacts.workspaceSubdomain}
+        AND a.contact_id = ${contacts.id}
+      ORDER BY CASE WHEN a.is_primary THEN 0 ELSE 1 END, a.sort_order ASC
+      LIMIT 1
+    )`;
+    return dir === 'desc' ? desc(cityExpr) : asc(cityExpr);
+  }
   return sql`${contacts.id} asc`;
 }
 

@@ -8,11 +8,16 @@ import { messagingUseCases } from '../messaging/use-cases/messagingUseCases.js';
  * `messaging/use-cases/messagingUseCases.js` directly.
  */
 export const loadMessageTemplates = messagingUseCases.loadMessageTemplates;
+export const loadMessageTemplateById = messagingUseCases.loadMessageTemplateById;
+export const loadMessageTemplatesByIds = messagingUseCases.loadMessageTemplatesByIds;
 export const replaceMessageTemplates = messagingUseCases.replaceMessageTemplates;
 export const getMessageTemplateById = messagingUseCases.getMessageTemplateById;
 export const saveMessageTemplate = messagingUseCases.saveMessageTemplate;
 export const removeMessageTemplate = messagingUseCases.removeMessageTemplate;
 export const loadMessageLogs = messagingUseCases.loadMessageLogs;
+export const loadMessageLogById = messagingUseCases.loadMessageLogById;
+export const loadMessageLogsByIds = messagingUseCases.loadMessageLogsByIds;
+export const saveMessageLog = messagingUseCases.saveMessageLog;
 export const replaceMessageLogs = messagingUseCases.replaceMessageLogs;
 export const loadFilteredMessageLogs = messagingUseCases.loadFilteredMessageLogs;
 export const recordMessageLogs = messagingUseCases.recordMessageLogs;

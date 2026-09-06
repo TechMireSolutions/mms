@@ -49,10 +49,14 @@ function singleFilterSql(
     return sql`lower(COALESCE(${colSql}, '')) LIKE ${`%${value.trim().toLowerCase()}%`}`;
   }
   if (op === 'gt') {
-    return sql`NULLIF(${colSql}, '')::numeric > ${Number(value)}`;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return sql`NULLIF(${colSql}, '')::numeric > ${num}`;
   }
   if (op === 'lt') {
-    return sql`NULLIF(${colSql}, '')::numeric < ${Number(value)}`;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return sql`NULLIF(${colSql}, '')::numeric < ${num}`;
   }
   return null;
 }

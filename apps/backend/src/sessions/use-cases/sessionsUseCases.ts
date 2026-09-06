@@ -1,6 +1,7 @@
 import type { SessionsRepository } from '../repository/sessionsRepository.js';
 import { sessionsRepository } from '../repository/sessionsRepositoryAdapter.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
+import { broadcastCollection } from '../../lib/livePush.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import {
   sessionRecordSchema,
@@ -49,8 +50,7 @@ export function createSessionsUseCases(repo: SessionsRepository = sessionsReposi
       if (!tenant) return { succeeded: 0, failed: ids.length };
       const result = await repo.bulkUpdateSessionsStatus(tenant, ids, status);
       if (result.succeeded > 0) {
-        const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
-        broadcastTenantUpdate(tenant, 'collection', 'sessions');
+        await broadcastCollection('sessions');
       }
       return result;
     },
@@ -72,7 +72,8 @@ export function createSessionsUseCases(repo: SessionsRepository = sessionsReposi
     loadSessionsByIds: async (ids: string[]): Promise<Session[]> => {
       const tenant = getRequestTenant();
       if (!tenant || ids.length === 0) return [];
-      return (await repo.findSessionsByIds(tenant, ids)) as Session[];
+      const matched = (await repo.findSessionsByIds(tenant, ids)) as Session[];
+      return matched.filter((session) => !session.deletedAt);
     },
 
     countSessions: async (): Promise<number> => {

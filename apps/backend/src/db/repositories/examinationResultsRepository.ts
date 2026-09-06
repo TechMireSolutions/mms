@@ -1,5 +1,5 @@
-import { and, eq, sql } from 'drizzle-orm';
-import { type ExamResult } from '@mms/shared';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type ExamResult } from '@mms/shared';
 import { examResults, examClasses, exams } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -38,6 +38,8 @@ export async function listExamResultsByWorkspace(
 }
 
 export async function findExamResultById(tenant: string, id: string): Promise<ExamResult | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -51,11 +53,34 @@ export async function findExamResultById(tenant: string, id: string): Promise<Ex
       .where(
         and(
           eq(examResults.workspaceSubdomain, subdomain),
-          eq(examResults.id, id),
+          eq(examResults.id, trimmedId),
         ),
       );
     const row = rows[0];
     return row ? resultRowToRecord(row) : null;
+  });
+}
+
+export async function findExamResultsByIds(tenant: string, ids: string[]): Promise<ExamResult[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: examResults.id,
+        examId: examResults.examId,
+        studentId: examResults.studentId,
+        marksObtained: examResults.marksObtained,
+      })
+      .from(examResults)
+      .where(
+        and(
+          eq(examResults.workspaceSubdomain, subdomain),
+          inArray(examResults.id, cleanIds),
+        ),
+      );
+    return rows.map(resultRowToRecord);
   });
 }
 
@@ -87,11 +112,19 @@ export async function saveExamResult(tenant: string, record: ExamResult): Promis
 export async function bulkSaveExamResults(tenant: string, records: ExamResult[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, ExamResult>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(examResults)
       .values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           examId: r.examId,
@@ -114,11 +147,18 @@ export async function bulkSaveExamResults(tenant: string, records: ExamResult[])
 
 export async function replaceExamResultsForWorkspace(tenant: string, records: ExamResult[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, ExamResult>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(examResults).where(eq(examResults.workspaceSubdomain, subdomain));
-    if (records.length > 0) {
+    if (uniqueRecords.length > 0) {
       await tx.insert(examResults).values(
-        records.map((r) => ({
+        uniqueRecords.map((r) => ({
           id: r.id,
           workspaceSubdomain: subdomain,
           examId: r.examId,

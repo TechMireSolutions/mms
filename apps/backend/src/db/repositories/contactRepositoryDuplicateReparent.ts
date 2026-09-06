@@ -60,7 +60,8 @@ export async function reparentContactReferences(
     `);
     await tx.execute(sql`
       UPDATE ${contactRelationships}
-      SET contact_id = ${keepId}
+      SET contact_id = ${keepId},
+          id = concat('rel-m-', id, '-', substr(md5(random()::text), 1, 6))
       WHERE workspace_subdomain = ${subdomain}
         AND contact_id = ${deleteId}
     `);

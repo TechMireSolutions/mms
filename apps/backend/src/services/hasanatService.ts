@@ -8,14 +8,29 @@ import { hasanatUseCases } from '../hasanat/use-cases/hasanatUseCases.js';
  * `hasanat/use-cases/hasanatUseCases.js` directly.
  */
 export const loadDenoms = hasanatUseCases.loadDenoms;
+export const loadDenomById = hasanatUseCases.loadDenomById;
+export const loadDenomsByIds = hasanatUseCases.loadDenomsByIds;
+export const saveDenom = hasanatUseCases.saveDenom;
 export const replaceDenoms = hasanatUseCases.replaceDenoms;
+
 export const loadBatches = hasanatUseCases.loadBatches;
+export const loadBatchById = hasanatUseCases.loadBatchById;
+export const loadBatchesByIds = hasanatUseCases.loadBatchesByIds;
+export const saveBatch = hasanatUseCases.saveBatch;
 export const replaceBatches = hasanatUseCases.replaceBatches;
-export const replaceDistributions = hasanatUseCases.replaceDistributions;
-export const loadRedemptions = hasanatUseCases.loadRedemptions;
-export const replaceRedemptions = hasanatUseCases.replaceRedemptions;
+
 export const loadDistributions = hasanatUseCases.loadDistributions;
+export const loadDistributionById = hasanatUseCases.loadDistributionById;
+export const loadDistributionsByIds = hasanatUseCases.loadDistributionsByIds;
+export const replaceDistributions = hasanatUseCases.replaceDistributions;
 export const loadDistributionsPage = hasanatUseCases.loadDistributionsPage;
+
+export const loadRedemptions = hasanatUseCases.loadRedemptions;
+export const loadRedemptionById = hasanatUseCases.loadRedemptionById;
+export const loadRedemptionsByIds = hasanatUseCases.loadRedemptionsByIds;
+export const saveRedemption = hasanatUseCases.saveRedemption;
+export const replaceRedemptions = hasanatUseCases.replaceRedemptions;
+
 export const upsertDenoms = hasanatUseCases.upsertDenoms;
 export const upsertBatches = hasanatUseCases.upsertBatches;
 export const upsertDistributions = hasanatUseCases.upsertDistributions;

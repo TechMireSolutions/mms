@@ -206,6 +206,10 @@ export function buildListConditions(
       relatedContactIds.map((id) => sql`${id}`),
       sql`, `,
     )})`);
+    relationshipConditions.push(sql`${students.motherContactId} IN (${sql.join(
+      relatedContactIds.map((id) => sql`${id}`),
+      sql`, `,
+    )})`);
     relationshipConditions.push(sql`${students.guardianContactId} IN (${sql.join(
       relatedContactIds.map((id) => sql`${id}`),
       sql`, `,

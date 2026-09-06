@@ -55,7 +55,7 @@ export async function loadTeachersByIds(
   const tenant = getRequestTenant();
   if (!tenant) return [];
   const matched = await repo.findByIds(tenant, ids);
-  return hydrateTeachersFromContacts(tenant, matched);
+  return hydrateTeachersFromContacts(tenant, matched.filter((teacher) => !teacher.deletedAt));
 }
 
 export async function loadTeacherLinkedContactIds(

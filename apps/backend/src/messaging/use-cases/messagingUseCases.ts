@@ -1,6 +1,10 @@
 import type { MessagingRepository } from '../repository/messagingRepository.js';
 import { messagingRepository } from '../repository/messagingRepositoryAdapter.js';
-import { defineTenantBulkCollectionService } from '../../services/tenantBulkService.js';
+import {
+  defineTenantBulkCollectionService,
+  scopeDeleted,
+} from '../../services/tenantBulkService.js';
+import { getRequestTenant } from '../../lib/tenantContext.js';
 import { broadcastCollection } from '../../services/websocketService.js';
 import {
   loadContactsByIdsForTenant,
@@ -8,6 +12,7 @@ import {
 } from '../../services/contactService.js';
 import { z } from 'zod';
 import {
+  dedupeTrimmedIds,
   type MessageTemplate,
   type Message,
   type MessagingMetricsDto,
@@ -97,28 +102,83 @@ export function createMessagingUseCases(repo: MessagingRepository = messagingRep
 
   return {
     loadMessageTemplates: templateBulkService.load,
+    loadMessageTemplateById: async (id: string): Promise<MessageTemplate | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      return repo.findMessageTemplateById(tenant, cleanId);
+    },
+    loadMessageTemplatesByIds: async (ids: string[]): Promise<MessageTemplate[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      return repo.findMessageTemplatesByIds(tenant, cleanIds);
+    },
     replaceMessageTemplates: templateBulkService.replace,
 
     getMessageTemplateById: async (
       workspaceSubdomain: string,
       templateId: string,
-    ): Promise<MessageTemplate | null> => repo.findMessageTemplateById(workspaceSubdomain, templateId),
+    ): Promise<MessageTemplate | null> => {
+      const cleanId = templateId?.trim();
+      const cleanTenant = workspaceSubdomain?.trim().toLowerCase();
+      if (!cleanTenant || !cleanId) return null;
+      return repo.findMessageTemplateById(cleanTenant, cleanId);
+    },
 
     saveMessageTemplate: async (
-      workspaceSubdomain: string,
-      template: MessageTemplate,
+      workspaceSubdomainOrRecord: string | MessageTemplate,
+      templateOrUndefined?: MessageTemplate,
     ): Promise<MessageTemplate> => {
-      await repo.bulkSaveMessageTemplates(workspaceSubdomain, [template]);
+      let tenant: string | null;
+      let record: MessageTemplate;
+      if (typeof workspaceSubdomainOrRecord === 'string') {
+        tenant = workspaceSubdomainOrRecord.trim().toLowerCase();
+        record = templateOrUndefined!;
+      } else {
+        tenant = getRequestTenant();
+        record = workspaceSubdomainOrRecord;
+      }
+      if (!tenant) throw new Error('Tenant context required');
+      await repo.saveMessageTemplate(tenant, record);
       await broadcastCollection('message_templates');
-      return template;
+      return record;
     },
 
     removeMessageTemplate: async (workspaceSubdomain: string, templateId: string): Promise<void> => {
-      await repo.deleteMessageTemplateById(workspaceSubdomain, templateId);
+      const cleanId = templateId?.trim();
+      const cleanTenant = workspaceSubdomain?.trim().toLowerCase();
+      if (!cleanTenant || !cleanId) return;
+      await repo.deleteMessageTemplateById(cleanTenant, cleanId);
       await broadcastCollection('message_templates');
     },
 
     loadMessageLogs: logBulkService.load,
+    loadMessageLogById: async (id: string, includeDeleted = false): Promise<Message | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const log = await repo.findMessageLogById(tenant, cleanId);
+      if (!log) return null;
+      if (!includeDeleted && log.deletedAt) return null;
+      if (includeDeleted && !log.deletedAt) return null;
+      return log;
+    },
+    loadMessageLogsByIds: async (ids: string[], includeDeleted = false): Promise<Message[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const rows = await repo.findMessageLogsByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
+    },
+    saveMessageLog: async (record: Message): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      await repo.saveMessageLog(tenant, record);
+      await broadcastCollection('message_logs');
+    },
     replaceMessageLogs: logBulkService.replace,
 
     loadFilteredMessageLogs: async (

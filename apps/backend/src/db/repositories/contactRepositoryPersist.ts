@@ -102,8 +102,16 @@ export async function saveContact(tenant: string, contact: Contact): Promise<voi
 export async function bulkSaveContacts(tenant: string, records: Contact[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Contact>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
   await withTenant(subdomain, async (tx) => {
-    const hydratedRecords = records.map(hydrateContactRelationshipFields);
+    const hydratedRecords = uniqueRecords.map(hydrateContactRelationshipFields);
     const contactIds = hydratedRecords.map((c) => String(c.id));
 
     await tx
@@ -180,6 +188,13 @@ export async function bulkSaveContacts(tenant: string, records: Contact[]): Prom
 
 export async function replaceContactsForWorkspace(tenant: string, records: Contact[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Contact>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx
       .update(students)
@@ -188,9 +203,9 @@ export async function replaceContactsForWorkspace(tenant: string, records: Conta
     await tx.update(teachers).set({ contactId: null }).where(eq(teachers.workspaceSubdomain, subdomain));
     await tx.update(tenantUsers).set({ contactId: null }).where(eq(tenantUsers.workspaceSubdomain, subdomain));
     await tx.delete(contacts).where(eq(contacts.workspaceSubdomain, subdomain));
-    if (records.length === 0) return;
+    if (uniqueRecords.length === 0) return;
 
-    const hydratedRecords = records.map(hydrateContactRelationshipFields);
+    const hydratedRecords = uniqueRecords.map(hydrateContactRelationshipFields);
     await tx.insert(contacts).values(
       hydratedRecords.map((contact) => {
         const fullName = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed';

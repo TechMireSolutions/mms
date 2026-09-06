@@ -1,5 +1,5 @@
-import { eq, sql } from 'drizzle-orm';
-import { type ObligationDistribution } from '@mms/shared';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type ObligationDistribution } from '@mms/shared';
 import { obligationDistributions } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -35,17 +35,99 @@ export async function listObligationDistributionsByWorkspace(tenant: string): Pr
   });
 }
 
+export async function findObligationDistributionById(tenant: string, id: string): Promise<ObligationDistribution | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: obligationDistributions.id,
+        workspaceSubdomain: obligationDistributions.workspaceSubdomain,
+        name: obligationDistributions.name,
+        percentage: obligationDistributions.percentage,
+        wakalaTypeId: obligationDistributions.wakalaTypeId,
+        type: obligationDistributions.type,
+        createdAt: obligationDistributions.createdAt,
+        updatedAt: obligationDistributions.updatedAt,
+      })
+      .from(obligationDistributions)
+      .where(and(eq(obligationDistributions.workspaceSubdomain, subdomain), eq(obligationDistributions.id, trimmedId)))
+      .limit(1);
+    const row = rows[0];
+    return row ? obligationDistributionRowToRecord(row) : null;
+  });
+}
+
+export async function findObligationDistributionsByIds(tenant: string, ids: string[]): Promise<ObligationDistribution[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: obligationDistributions.id,
+        workspaceSubdomain: obligationDistributions.workspaceSubdomain,
+        name: obligationDistributions.name,
+        percentage: obligationDistributions.percentage,
+        wakalaTypeId: obligationDistributions.wakalaTypeId,
+        type: obligationDistributions.type,
+        createdAt: obligationDistributions.createdAt,
+        updatedAt: obligationDistributions.updatedAt,
+      })
+      .from(obligationDistributions)
+      .where(and(eq(obligationDistributions.workspaceSubdomain, subdomain), inArray(obligationDistributions.id, cleanIds)));
+    return rows.map(obligationDistributionRowToRecord);
+  });
+}
+
+export async function saveObligationDistribution(tenant: string, record: ObligationDistribution): Promise<void> {
+  const subdomain = tenant.trim().toLowerCase();
+  await withTenant(subdomain, async (tx) => {
+    await tx
+      .insert(obligationDistributions)
+      .values({
+        id: record.id,
+        workspaceSubdomain: subdomain,
+        name: record.name,
+        percentage: String(record.percentage),
+        wakalaTypeId: record.wakala_type_id,
+        type: record.type,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .onConflictDoUpdate({
+        target: [obligationDistributions.workspaceSubdomain, obligationDistributions.id],
+        set: {
+          name: record.name,
+          percentage: String(record.percentage),
+          wakalaTypeId: record.wakala_type_id,
+          type: record.type,
+          updatedAt: new Date(),
+        },
+      });
+  });
+}
+
 export async function bulkSaveObligationDistributions(
   tenant: string,
   records: ObligationDistribution[],
 ): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, ObligationDistribution>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(obligationDistributions)
       .values(
-        records.map((record) => ({
+        uniqueRecords.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           name: record.name,
@@ -74,11 +156,18 @@ export async function replaceObligationDistributionsForWorkspace(
   records: ObligationDistribution[],
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, ObligationDistribution>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(obligationDistributions).where(eq(obligationDistributions.workspaceSubdomain, subdomain));
-    if (records.length > 0) {
+    if (uniqueRecords.length > 0) {
       await tx.insert(obligationDistributions).values(
-        records.map((record) => ({
+        uniqueRecords.map((record) => ({
           id: record.id,
           workspaceSubdomain: subdomain,
           name: record.name,

@@ -64,10 +64,10 @@ export async function bulkRestoreContacts(
     const accepted: Contact[] = [];
 
     const existingContacts = await repo.findByIds(tenant, ids);
-    const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
+    const existingMap = new Map(existingContacts.map((c) => [String(c.id), c]));
 
     for (const id of ids) {
-      const existing = existingMap.get(id);
+      const existing = existingMap.get(String(id));
       if (!(existing && existing.deletedAt)) {
         failed += 1;
         continue;
@@ -133,10 +133,10 @@ export async function bulkSoftDeleteContacts(
     const toSave: Contact[] = [];
 
     const existingContacts = await repo.findByIds(tenant, ids);
-    const existingMap = new Map(existingContacts.map((c) => [c.id, c]));
+    const existingMap = new Map(existingContacts.map((c) => [String(c.id), c]));
 
     for (const id of ids) {
-      const existing = existingMap.get(id);
+      const existing = existingMap.get(String(id));
       if (existing && !existing.deletedAt) {
         const updated: Contact = {
           ...existing,

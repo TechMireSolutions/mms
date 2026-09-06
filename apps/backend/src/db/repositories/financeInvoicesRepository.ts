@@ -1,5 +1,5 @@
-import { and, eq, isNull, sql } from 'drizzle-orm';
-import { type Invoice } from '@mms/shared';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type Invoice } from '@mms/shared';
 import { financeInvoiceLines, financeInvoices } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import { invoiceWriteValues } from './financeInvoiceValues.js';
@@ -94,6 +94,8 @@ export async function listInvoicesByWorkspace(
 }
 
 export async function findInvoiceById(tenant: string, id: string): Promise<Invoice | null> {
+  const trimmedId = id?.trim();
+  if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
@@ -130,7 +132,7 @@ export async function findInvoiceById(tenant: string, id: string): Promise<Invoi
         updatedAt: financeInvoices.updatedAt,
       })
       .from(financeInvoices)
-      .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), eq(financeInvoices.id, id)))
+      .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), eq(financeInvoices.id, trimmedId)))
       .limit(1);
     const row = rows[0];
     if (!row) return null;
@@ -148,9 +150,58 @@ export async function findInvoiceById(tenant: string, id: string): Promise<Invoi
       })
       .from(financeInvoiceLines)
       .where(
-        and(eq(financeInvoiceLines.workspaceSubdomain, subdomain), eq(financeInvoiceLines.invoiceId, id)),
+        and(eq(financeInvoiceLines.workspaceSubdomain, subdomain), eq(financeInvoiceLines.invoiceId, trimmedId)),
       );
     return { ...invoiceRowToRecord(row), lines: lineRows.map(invoiceLineRowToRecord) };
+  });
+}
+
+export async function findInvoicesByIds(tenant: string, ids: string[]): Promise<Invoice[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        id: financeInvoices.id,
+        workspaceSubdomain: financeInvoices.workspaceSubdomain,
+        studentId: financeInvoices.studentId,
+        studentName: financeInvoices.studentName,
+        class: financeInvoices.class,
+        session: financeInvoices.session,
+        baseFee: financeInvoices.baseFee,
+        discountType: financeInvoices.discountType,
+        discountValue: financeInvoices.discountValue,
+        discountAmt: financeInvoices.discountAmt,
+        finalAmt: financeInvoices.finalAmt,
+        status: financeInvoices.status,
+        dueDate: financeInvoices.dueDate,
+        paidDate: financeInvoices.paidDate,
+        method: financeInvoices.method,
+        paidAmt: financeInvoices.paidAmt,
+        invoiceNumber: financeInvoices.invoiceNumber,
+        feeStructureId: financeInvoices.feeStructureId,
+        billingPeriod: financeInvoices.billingPeriod,
+        enrollmentId: financeInvoices.enrollmentId,
+        familyContactId: financeInvoices.familyContactId,
+        lateFeeAmt: financeInvoices.lateFeeAmt,
+        creditedAmt: financeInvoices.creditedAmt,
+        lastRemindedAt: financeInvoices.lastRemindedAt,
+        reminderCount: financeInvoices.reminderCount,
+        deletedAt: financeInvoices.deletedAt,
+        deletedBy: financeInvoices.deletedBy,
+        deletionReason: financeInvoices.deletionReason,
+        createdAt: financeInvoices.createdAt,
+        updatedAt: financeInvoices.updatedAt,
+      })
+      .from(financeInvoices)
+      .where(
+        and(
+          eq(financeInvoices.workspaceSubdomain, subdomain),
+          inArray(financeInvoices.id, cleanIds),
+        ),
+      );
+    return rows.map(invoiceRowToRecord);
   });
 }
 
@@ -202,11 +253,19 @@ export async function saveInvoice(tenant: string, record: Invoice): Promise<void
 export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Invoice>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+  if (uniqueRecords.length === 0) return;
+
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(financeInvoices)
       .values(
-        records.map((r) => invoiceWriteValues(subdomain, r)),
+        uniqueRecords.map((r) => invoiceWriteValues(subdomain, r)),
       )
       .onConflictDoUpdate({
         target: [financeInvoices.workspaceSubdomain, financeInvoices.id],
@@ -245,10 +304,17 @@ export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Prom
 
 export async function replaceInvoicesForWorkspace(tenant: string, records: Invoice[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
+  const uniqueMap = new Map<string, Invoice>();
+  for (const r of records) {
+    const cleanId = typeof r.id === 'string' ? r.id.trim() : String(r.id);
+    if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
+  }
+  const uniqueRecords = Array.from(uniqueMap.values());
+
   await withTenant(subdomain, async (tx) => {
     await tx.delete(financeInvoices).where(eq(financeInvoices.workspaceSubdomain, subdomain));
-    if (records.length > 0) {
-      await tx.insert(financeInvoices).values(records.map((r) => invoiceWriteValues(subdomain, r)));
+    if (uniqueRecords.length > 0) {
+      await tx.insert(financeInvoices).values(uniqueRecords.map((r) => invoiceWriteValues(subdomain, r)));
     }
   });
 }

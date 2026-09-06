@@ -1,5 +1,6 @@
 import { sql } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   EMPTY_FINANCE_REPORT_AGGREGATES,
   ensureAllSessionsInComparison,
   financeReportComparisonQueryActive,
@@ -127,7 +128,7 @@ export async function loadFinanceReportAggregatesSql(
       monthly: { a: [], b: [] },
     };
 
-    const sessionIds = comparisonQuery.sessionIds ?? [];
+    const sessionIds = dedupeTrimmedIds(comparisonQuery.sessionIds ?? []);
     if (sessionIds.length > 0) {
       const collected = collectedAmountSql('fi');
       const compareSessionResult = await tx.execute(sql`

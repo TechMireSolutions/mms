@@ -140,6 +140,8 @@ export async function countContactDuplicateMatches(
   const peers = tenant ? (await repo.findByIds(tenant, ids)).filter((c) => !c.deletedAt) : [];
   const pairs = findContactDuplicatePairs([...peers, contact], preferences ?? {});
   return pairs.filter((pair) =>
-    pair.contacts.some((row) => String(row.id) === String(contact.id)),
+    pair.contacts.some(
+      (row) => row === contact || (contact.id != null && String(row.id) === String(contact.id)),
+    ),
   ).length;
 }

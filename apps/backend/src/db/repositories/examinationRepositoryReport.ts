@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import {
   EMPTY_EXAMINATIONS_REPORT_AGGREGATES,
+  dedupeTrimmedIds,
   ensureAllSessionsInComparison,
   examinationsReportComparisonQueryActive,
   type ExaminationsReportAggregates,
@@ -38,7 +39,7 @@ export async function loadExaminationsReportAggregatesSql(
       monthly: { a: [], b: [] },
     };
 
-    const sessionIds = comparisonQuery.sessionIds ?? [];
+    const sessionIds = dedupeTrimmedIds(comparisonQuery.sessionIds ?? []);
     if (sessionIds.length > 0) {
       const compareSessionResult = await tx.execute(sql`
         WITH selected AS (
@@ -64,7 +65,7 @@ export async function loadExaminationsReportAggregatesSql(
           SELECT
             er.exam_id,
             er.marks_obtained
-          FROM examination_results er
+          FROM exam_results er
           WHERE er.workspace_subdomain = ${subdomain}
         )
         SELECT
@@ -76,7 +77,7 @@ export async function loadExaminationsReportAggregatesSql(
         FROM selected sel
         LEFT JOIN session_classes sc ON sc.session_id = sel."sessionId"
         LEFT JOIN exam_classes ec ON ec.class_id = sc.class_id AND ec.workspace_subdomain = ${subdomain}
-        LEFT JOIN examinations e ON e.id = ec.exam_id AND ${activeExamWhere(subdomain, 'e')}
+        LEFT JOIN exams e ON e.id = ec.exam_id AND ${activeExamWhere(subdomain, 'e')}
         LEFT JOIN exam_results_cte erc ON erc.exam_id = e.id
         GROUP BY sel."sessionId"
       `);
@@ -96,17 +97,19 @@ export async function loadExaminationsReportAggregatesSql(
     }
 
     const loadMonthlyRange = async (
-      from: string | undefined,
-      to: string | undefined,
+      rawFrom: string | undefined,
+      rawTo: string | undefined,
     ): Promise<ExaminationsReportComparisonMonth[]> => {
+      const from = rawFrom?.trim();
+      const to = rawTo?.trim();
       if (!from || !to) return [];
       const monthResult = await tx.execute(sql`
         SELECT
           to_char(left(NULLIF(trim(e.date), ''), 10)::date, 'YYYY-MM') AS "monthKey",
           COUNT(er.id) AS "totalCount",
           SUM(CASE WHEN COALESCE(er.marks_obtained, 0) >= COALESCE(e.passing_marks, 0) THEN 1 ELSE 0 END) AS "passCount"
-        FROM examinations e
-        LEFT JOIN examination_results er ON er.exam_id = e.id AND er.workspace_subdomain = ${subdomain}
+        FROM exams e
+        LEFT JOIN exam_results er ON er.exam_id = e.id AND er.workspace_subdomain = ${subdomain}
         WHERE ${activeExamWhere(subdomain, 'e')}
           AND NULLIF(trim(e.date), '') IS NOT NULL
           AND NULLIF(trim(e.date), '') ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'

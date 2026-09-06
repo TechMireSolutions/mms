@@ -7,6 +7,7 @@ import {
   scopeDeleted,
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
+import { broadcastCollection } from '../../services/websocketService.js';
 import { getQuestionBankModulePreferencesForWorkspace } from '../../db/repositories/questionBankModulePreferencesRepository.js';
 import {
   type QuestionBankQuestion,
@@ -17,10 +18,13 @@ import {
   type QuestionBankReportQuery,
   type QuestionBankCommandMetricsSnapshot,
   EMPTY_QB_REPORT_AGGREGATES,
+  dedupeTrimmedIds,
   questionBankQuestionListSchema,
   questionBankTestListSchema,
   questionBankResultListSchema,
   questionBankQuestionRecordSchema,
+  questionBankTestRecordSchema,
+  questionBankResultRecordSchema,
   normalizeQuestionBankQuestion,
   normalizeQuestionBankModulePreferences,
 } from '@mms/shared';
@@ -106,6 +110,90 @@ export function createQuestionBankUseCases(repo: QuestionBankRepository = questi
       upsertWithBroadcast(questionBankTestListSchema, records, repo.bulkSaveTests, 'tests'),
     upsertResults: (records: QuestionBankResult[]) =>
       upsertWithBroadcast(questionBankResultListSchema, records, repo.bulkSaveResults, 'assessment_results'),
+
+    createQuestion: questionCrud.create,
+    updateQuestionById: questionCrud.updateById,
+
+    loadQuestionById: async (id: string, includeDeleted = false): Promise<QuestionBankQuestion | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const record = await repo.findQuestionById(tenant, cleanId);
+      if (!record) return null;
+      if (!includeDeleted && record.deletedAt) return null;
+      return record;
+    },
+
+    loadQuestionsByIds: async (ids: string[], includeDeleted = false): Promise<QuestionBankQuestion[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const rows = await repo.findQuestionsByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
+    },
+
+    saveQuestion: async (record: QuestionBankQuestion): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      const parsed = questionBankQuestionRecordSchema.parse(record);
+      await repo.saveQuestion(tenant, parsed);
+      await broadcastCollection('questions');
+    },
+
+    loadTestById: async (id: string, includeDeleted = false): Promise<QuestionBankTest | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const record = await repo.findTestById(tenant, cleanId);
+      if (!record) return null;
+      if (!includeDeleted && record.deletedAt) return null;
+      return record;
+    },
+
+    loadTestsByIds: async (ids: string[], includeDeleted = false): Promise<QuestionBankTest[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const rows = await repo.findTestsByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
+    },
+
+    saveTest: async (record: QuestionBankTest): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      const parsed = questionBankTestRecordSchema.parse(record);
+      await repo.saveTest(tenant, parsed);
+      await broadcastCollection('tests');
+    },
+
+    loadResultById: async (id: string, includeDeleted = false): Promise<QuestionBankResult | null> => {
+      const tenant = getRequestTenant();
+      const cleanId = id?.trim();
+      if (!tenant || !cleanId) return null;
+      const record = await repo.findResultById(tenant, cleanId);
+      if (!record) return null;
+      if (!includeDeleted && record.deletedAt) return null;
+      return record;
+    },
+
+    loadResultsByIds: async (ids: string[], includeDeleted = false): Promise<QuestionBankResult[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return [];
+      const rows = await repo.findResultsByIds(tenant, cleanIds);
+      return scopeDeleted(rows, includeDeleted);
+    },
+
+    saveResult: async (record: QuestionBankResult): Promise<void> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return;
+      const parsed = questionBankResultRecordSchema.parse(record);
+      await repo.saveResult(tenant, parsed);
+      await broadcastCollection('assessment_results');
+    },
 
     deleteQuestionById: questionCrud.deleteById,
     restoreQuestionById: questionCrud.restoreById,
