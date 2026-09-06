@@ -9,10 +9,11 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("@/components/ui/ModuleWorkToolbar", () => ({
-  ModuleWorkToolbar: ({ filterButton, primaryAction }: any) => (
+vi.mock("@/components/common/work", () => ({
+  WorkTaskToolbar: ({ filterButton, filterChips, primaryAction }: any) => (
     <div data-testid="module-toolbar">
       {filterButton}
+      {filterChips}
       {primaryAction}
     </div>
   ),
