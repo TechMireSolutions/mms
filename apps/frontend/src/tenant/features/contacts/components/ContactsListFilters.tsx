@@ -24,6 +24,7 @@ export interface ContactsListFiltersProps {
   viewMode: ContactsWorkViewMode;
   onViewModeChange: (mode: ContactsWorkViewMode) => void;
   shownCount?: number;
+  filterChips?: React.ReactNode;
 }
 
 export const ContactsListFilters = React.memo(function ContactsListFilters({
@@ -44,6 +45,7 @@ export const ContactsListFilters = React.memo(function ContactsListFilters({
   viewMode,
   onViewModeChange,
   shownCount,
+  filterChips,
 }: ContactsListFiltersProps): React.JSX.Element {
   const {
     t,
@@ -66,6 +68,7 @@ export const ContactsListFilters = React.memo(function ContactsListFilters({
       hasActiveFilters={hasActiveFilters}
       onClearFilters={onClearFilters}
       clearFiltersLabel={t("contacts.clearFilters")}
+      filterChips={filterChips}
       filterButton={
         <ContactsFiltersMenuButton
           activeFilterCount={activeFilterCount}

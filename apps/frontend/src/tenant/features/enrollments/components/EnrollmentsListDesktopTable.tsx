@@ -1,13 +1,6 @@
 import React from "react";
-import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
+import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@/components/ui/table";
-import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EnrollmentRowActions } from "@/tenant/features/enrollments/components/EnrollmentRowActions";
 import { renderEnrollmentWorkColumnValue } from "@/tenant/features/enrollments/components/enrollmentWorkColumnCell";
@@ -15,6 +8,7 @@ import {
   findEnrollmentStudent,
   type EnrollmentListContentProps,
 } from "@/tenant/features/enrollments/components/enrollmentListContentShared";
+import type { Enrollment } from "@/lib/data/enrollmentData";
 
 export type EnrollmentsListDesktopTableProps = Omit<
   EnrollmentListContentProps,
@@ -48,108 +42,132 @@ export function EnrollmentsListDesktopTable(props: EnrollmentsListDesktopTablePr
   } = props;
   const { t } = useTranslation();
 
-  const studentsById = new Map<string, (typeof students)[number]>();
-  for (const s of students) {
-    studentsById.set(String(s.id), s);
-  }
-  const selectedIdsSet = new Set(selectedIds);
-  const columnOptions = { t, students: studentsById, statusConfig, paymentConfig, formatCurrency };
+  const studentsById = React.useMemo(() => {
+    const map = new Map<string, (typeof students)[number]>();
+    for (const s of students) {
+      map.set(String(s.id), s);
+    }
+    return map;
+  }, [students]);
+  const selectedIdsSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
+  const columnOptions = React.useMemo(
+    () => ({ t, students: studentsById, statusConfig, paymentConfig, formatCurrency }),
+    [formatCurrency, paymentConfig, statusConfig, studentsById, t],
+  );
+
+  const columns = React.useMemo<WorkBatchTableColumn<Enrollment>[]>(() => {
+    const cols: WorkBatchTableColumn<Enrollment>[] = [];
+
+    if (isColumnVisible("student")) {
+      cols.push({
+        id: "student",
+        label: t("enrollments.columns.student"),
+        cellClassName: "px-3 py-2.5 whitespace-nowrap",
+        render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "student", columnOptions),
+      });
+    }
+
+    if (isColumnVisible("session")) {
+      cols.push({
+        id: "session",
+        label: t("enrollments.columns.session"),
+        cellClassName: "px-3 py-2.5 text-xs text-foreground max-w-cell-sm truncate",
+        render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "session", columnOptions),
+      });
+    }
+
+    if (isColumnVisible("class")) {
+      cols.push({
+        id: "class",
+        label: t("enrollments.columns.class"),
+        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap",
+        render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "class", columnOptions),
+      });
+    }
+
+    if (isColumnVisible("enrolledDate")) {
+      cols.push({
+        id: "enrolledDate",
+        label: t("enrollments.columns.enrolledDate"),
+        cellClassName: "px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap",
+        render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "enrolledDate", columnOptions),
+      });
+    }
+
+    if (isColumnVisible("finalFee")) {
+      cols.push({
+        id: "finalFee",
+        label: t("enrollments.columns.finalFee"),
+        headerClassName: "text-end",
+        cellClassName: "px-3 py-2.5 text-end font-semibold text-foreground whitespace-nowrap",
+        render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "finalFee", columnOptions),
+      });
+    }
+
+    if (isColumnVisible("status")) {
+      cols.push({
+        id: "status",
+        label: t("enrollments.columns.status"),
+        cellClassName: "px-3 py-2.5",
+        render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "status", columnOptions),
+      });
+    }
+
+    if (isColumnVisible("payment")) {
+      cols.push({
+        id: "payment",
+        label: t("enrollments.columns.payment"),
+        cellClassName: "px-3 py-2.5",
+        render: (enrollment: Enrollment) => renderEnrollmentWorkColumnValue(enrollment, "payment", columnOptions),
+      });
+    }
+
+    return cols;
+  }, [columnOptions, isColumnVisible, t]);
 
   return (
-    <Table className="table-fixed">
-      <ModuleWorkTableHeader
-        columns={[
-          isColumnVisible("student") ? { id: "student", label: t("enrollments.columns.student") } : null,
-          isColumnVisible("session") ? { id: "session", label: t("enrollments.columns.session") } : null,
-          isColumnVisible("class") ? { id: "class", label: t("enrollments.columns.class") } : null,
-          isColumnVisible("enrolledDate") ? { id: "enrolledDate", label: t("enrollments.columns.enrolledDate") } : null,
-          isColumnVisible("finalFee") ? { id: "finalFee", label: t("enrollments.columns.finalFee"), headerClassName: "text-end" } : null,
-          isColumnVisible("status") ? { id: "status", label: t("enrollments.columns.status") } : null,
-          isColumnVisible("payment") ? { id: "payment", label: t("enrollments.columns.payment") } : null,
-        ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
-        getColumnWidth={(key) => getColumnWidth?.(key)}
-        setColumnWidth={onColumnResize ?? (() => {})}
-        selection={canSelectEnrollments ? {
-          allSelected: allVisibleSelected,
-          someSelected: someVisibleSelected,
-          onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
-          ariaLabel: t("enrollments.table.selectAll")
-        } : undefined}
-        actionsLabel={t("enrollments.columns.actions")}
-        stickyColumnId={canSelectEnrollments ? "student" : undefined}
-      />
-      <TableBody className="divide-y divide-border">
-        {enrollments.map((enrollment) => {
-          const student = findEnrollmentStudent(enrollment, studentsById);
-          const isSelected = selectedIdsSet.has(enrollment.id);
-
-          return (
-            <TableRow
-              key={enrollment.id}
-              className={`group transition-colors hover:bg-muted/20 ${isSelected ? "bg-primary/5" : ""}`}
-            >
-              {canSelectEnrollments && (
-                <ModuleTableSelectionCell
-                  checked={isSelected}
-                  onCheckedChange={(checked) => onToggleSelectedEnrollment(enrollment.id, checked)}
-                  ariaLabel={t("enrollments.table.selectEnrollment", { name: enrollment.studentName })}
-                  sticky={false}
-                />
-              )}
-              {isColumnVisible("student") && (
-                <TableCell className="px-3 py-2.5 whitespace-nowrap">
-                  {renderEnrollmentWorkColumnValue(enrollment, "student", columnOptions)}
-                </TableCell>
-              )}
-              {isColumnVisible("session") && (
-                <TableCell className="px-3 py-2.5 text-xs text-foreground max-w-cell-sm truncate">
-                  {renderEnrollmentWorkColumnValue(enrollment, "session", columnOptions)}
-                </TableCell>
-              )}
-              {isColumnVisible("class") && (
-                <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                  {renderEnrollmentWorkColumnValue(enrollment, "class", columnOptions)}
-                </TableCell>
-              )}
-              {isColumnVisible("enrolledDate") && (
-                <TableCell className="px-3 py-2.5 font-mono text-xs text-muted-foreground whitespace-nowrap">
-                  {renderEnrollmentWorkColumnValue(enrollment, "enrolledDate", columnOptions)}
-                </TableCell>
-              )}
-              {isColumnVisible("finalFee") && (
-                <TableCell className="px-3 py-2.5 text-end font-semibold text-foreground whitespace-nowrap">
-                  {renderEnrollmentWorkColumnValue(enrollment, "finalFee", columnOptions)}
-                </TableCell>
-              )}
-              {isColumnVisible("status") && (
-                <TableCell className="px-3 py-2.5">
-                  {renderEnrollmentWorkColumnValue(enrollment, "status", columnOptions)}
-                </TableCell>
-              )}
-              {isColumnVisible("payment") && (
-                <TableCell className="px-3 py-2.5">
-                  {renderEnrollmentWorkColumnValue(enrollment, "payment", columnOptions)}
-                </TableCell>
-              )}
-              <TableCell className="px-3 py-2.5 text-end">
-                <EnrollmentRowActions
-                  enrollment={enrollment}
-                  student={student}
-                  canWrite={canWrite}
-                  canDelete={canDelete}
-                  showDeleted={showDeleted}
-                  triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
-                  onView={onView}
-                  onCancel={onCancel}
-                  onDelete={onDelete}
-                  onRestore={onRestore}
-                  openComposer={openComposer}
-                />
-              </TableCell>
-            </TableRow>
-          );
-        })}
-      </TableBody>
-    </Table>
+    <WorkBatchTable
+      data={enrollments}
+      columns={columns}
+      bordered={false}
+      stickyColumnId={canSelectEnrollments ? "student" : undefined}
+      selection={
+        canSelectEnrollments
+          ? {
+              selectedIds,
+              onSelectOne: (id) => onToggleSelectedEnrollment(id, !selectedIdsSet.has(id)),
+              onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+              allSelected: allVisibleSelected,
+              someSelected: someVisibleSelected,
+              selectAllAriaLabel: t("enrollments.table.selectAll"),
+              selectRowAriaLabel: (enrollment) =>
+                t("enrollments.table.selectEnrollment", { name: enrollment.studentName }),
+            }
+          : undefined
+      }
+      columnResize={{
+        getColumnWidth,
+        onColumnResize,
+      }}
+      renderRowActions={(enrollment) => {
+        const student = findEnrollmentStudent(enrollment, studentsById);
+        return (
+          <EnrollmentRowActions
+            enrollment={enrollment}
+            student={student}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            showDeleted={showDeleted}
+            triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+            onView={onView}
+            onCancel={onCancel}
+            onDelete={onDelete}
+            onRestore={onRestore}
+            openComposer={openComposer}
+          />
+        );
+      }}
+      actionsLabel={t("enrollments.columns.actions")}
+    />
   );
 }

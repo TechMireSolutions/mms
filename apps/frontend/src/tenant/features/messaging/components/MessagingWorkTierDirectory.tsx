@@ -1,7 +1,6 @@
 import React from 'react';
 import { AlertTriangle, MessageSquareOff, RotateCcw } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ModuleWorkDirectoryEmpty } from '@/components/ui/ModuleWorkDirectoryEmpty';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
@@ -59,10 +58,9 @@ export function MessagingWorkTierDirectory({
           updateUserColumnLayout={c.updateUserColumnLayout}
           columnCustomizerLabels={c.customizerLabels}
           shownCount={c.logsQuery.logs.length}
+          filterChips={<FilterChips chips={c.filterChips} onClearAll={c.clearFilters} />}
         />
       </ErrorBoundary>
-
-      <FilterChips chips={c.filterChips} onClearAll={c.clearFilters} />
 
       {c.status === 'failed' && c.failedLogs.length > 0 && (
         <WarningCallout
@@ -150,30 +148,23 @@ export function MessagingWorkTierDirectory({
             onFilterContact={c.handleFilterContact}
           />
         ) : (
-          <div className="space-y-2">
-            <MessagingListDesktopTable
-              logs={c.logsQuery.logs}
-              selectedIds={c.selectedById}
-              allVisibleSelected={c.allVisibleSelected}
-              someVisibleSelected={c.someVisibleSelected}
-              canWrite={canWrite}
-              logStatusConfig={c.logStatusConfig}
-              getRecipientName={c.getRecipientName}
-              getColumnWidth={c.getColumnWidth}
-              isColumnVisible={c.isColumnVisible}
-              setColumnWidth={c.setColumnWidth}
-              onToggleLog={c.toggleLog}
-              onToggleAllVisible={c.toggleAllVisible}
-              onResendLog={c.handleResendLog}
-              onViewLog={c.handleOpenDetail}
-              onFilterContact={c.handleFilterContact}
-            />
-            <ModuleTableFooterCount
-              selectedCount={c.selectedCount}
-              selectedCountLabel={String(c.selectedCountLabel)}
-              pageCountLabel={String(c.pageCountLabel)}
-            />
-          </div>
+          <MessagingListDesktopTable
+            logs={c.logsQuery.logs}
+            selectedIds={c.selectedById}
+            allVisibleSelected={c.allVisibleSelected}
+            someVisibleSelected={c.someVisibleSelected}
+            canWrite={canWrite}
+            logStatusConfig={c.logStatusConfig}
+            getRecipientName={c.getRecipientName}
+            getColumnWidth={c.getColumnWidth}
+            isColumnVisible={c.isColumnVisible}
+            setColumnWidth={c.setColumnWidth}
+            onToggleLog={c.toggleLog}
+            onToggleAllVisible={c.toggleAllVisible}
+            onResendLog={c.handleResendLog}
+            onViewLog={c.handleOpenDetail}
+            onFilterContact={c.handleFilterContact}
+          />
         )}
       </ModuleWorkListStateShell>
 

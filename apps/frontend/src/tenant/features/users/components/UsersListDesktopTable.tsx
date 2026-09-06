@@ -1,18 +1,10 @@
-import type { JSX } from 'react';
-import { motion } from 'framer-motion';
+import React, { type JSX } from 'react';
 import type { SystemUser } from '@mms/shared';
-import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
-import {
-  Table,
-  TableBody,
-  TableCell,
-} from '@/components/ui/table';
-import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useListRowMotion } from '@/hooks/useListRowMotion';
 import { UsersListAvatar } from '@/tenant/features/users/components/UsersListAvatar';
 import { UsersRowActions } from '@/tenant/features/users/components/UsersRowActions';
 import { renderUserWorkColumnValue } from '@/tenant/features/users/components/userWorkColumnCell';
+import { WorkBatchTable, type WorkBatchTableColumn } from '@/components/common/work';
 
 interface UsersListDesktopTableProps {
   users: SystemUser[];
@@ -56,97 +48,119 @@ export function UsersListDesktopTable({
   isColumnVisible,
 }: UsersListDesktopTableProps): JSX.Element {
   const { t } = useTranslation();
-  const rowMotion = useListRowMotion({ layout: true });
   const visible = isColumnVisible ?? (() => true);
-  const selectedSet = new Set(selectedIds);
+  const columnContext = React.useMemo(() => ({ t, formatLoginDate }), [t, formatLoginDate]);
+
+  const columns = React.useMemo<WorkBatchTableColumn<SystemUser>[]>(() => {
+    const cols: WorkBatchTableColumn<SystemUser>[] = [
+      {
+        id: 'user',
+        label: t('users.colUser'),
+        headerClassName: 'px-3 py-2.5',
+        cellClassName: 'px-3 py-2.5',
+        render: (user) => (
+          <div className="flex items-center gap-2.5">
+            <UsersListAvatar user={user} />
+            <div>
+              <p className="whitespace-nowrap text-sm font-semibold text-foreground">{user.name}</p>
+              <p className="text-xs text-muted-foreground">{user.email}</p>
+            </div>
+          </div>
+        ),
+      },
+    ];
+
+    if (visible('role')) {
+      cols.push({
+        id: 'role',
+        label: t('users.colRole'),
+        headerClassName: 'px-3 py-2.5',
+        cellClassName: 'px-3 py-2.5',
+        render: (user) => renderUserWorkColumnValue(user, 'role', columnContext),
+      });
+    }
+
+    if (visible('status')) {
+      cols.push({
+        id: 'status',
+        label: t('users.colStatus'),
+        headerClassName: 'px-3 py-2.5',
+        cellClassName: 'px-3 py-2.5',
+        render: (user) => renderUserWorkColumnValue(user, 'status', columnContext),
+      });
+    }
+
+    if (visible('lastLogin')) {
+      cols.push({
+        id: 'lastLogin',
+        label: t('users.colLastLogin'),
+        headerClassName: 'px-3 py-2.5',
+        cellClassName: 'whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground',
+        render: (user) => renderUserWorkColumnValue(user, 'lastLogin', columnContext),
+      });
+    }
+
+    if (visible('created')) {
+      cols.push({
+        id: 'created',
+        label: t('users.colCreated'),
+        headerClassName: 'px-3 py-2.5',
+        cellClassName: 'whitespace-nowrap px-3 py-2.5 font-mono text-xs text-muted-foreground',
+        render: (user) => renderUserWorkColumnValue(user, 'created', columnContext),
+      });
+    }
+
+    if (visible('twoFactor')) {
+      cols.push({
+        id: 'twoFactor',
+        label: t('users.col2fa'),
+        headerClassName: 'px-3 py-2.5',
+        cellClassName: 'px-3 py-2.5',
+        render: (user) => renderUserWorkColumnValue(user, 'twoFactor', columnContext),
+      });
+    }
+
+    return cols;
+  }, [columnContext, t, visible]);
 
   return (
-    <Table className="table-fixed">
-      <ModuleWorkTableHeader
-        columns={[
-          { id: 'user', label: t('users.colUser'), headerClassName: 'px-3 py-2.5' },
-          visible('role') ? { id: 'role', label: t('users.colRole'), headerClassName: 'px-3 py-2.5' } : null,
-          visible('status') ? { id: 'status', label: t('users.colStatus'), headerClassName: 'px-3 py-2.5' } : null,
-          visible('lastLogin') ? { id: 'lastLogin', label: t('users.colLastLogin'), headerClassName: 'px-3 py-2.5' } : null,
-          visible('created') ? { id: 'created', label: t('users.colCreated'), headerClassName: 'px-3 py-2.5' } : null,
-          visible('twoFactor') ? { id: 'twoFactor', label: t('users.col2fa'), headerClassName: 'px-3 py-2.5' } : null,
-        ].filter((c): c is Exclude<typeof c, null> => c !== null)}
-        getColumnWidth={(key) => getColumnWidth?.(key)}
-        setColumnWidth={onColumnResize ?? (() => {})}
-        actionsLabel={t('users.colActions')}
-        selection={
-          canDelete
-            ? {
-                allSelected,
-                someSelected,
-                onSelectAll: onToggleAll,
-                ariaLabel: t('users.selectAll'),
-              }
-            : undefined
-        }
-      />
-      <TableBody className="divide-y divide-border">
-        {users.map((user) => (
-          <motion.tr key={user.id} {...rowMotion()} className="transition-colors hover:bg-muted/20">
-            {canDelete && (
-              <ModuleTableSelectionCell
-                checked={selectedSet.has(user.id)}
-                onCheckedChange={() => onToggleSelect(user.id)}
-                ariaLabel={t('users.selectRow', { name: user.name })}
-                sticky={false}
-                className="px-3 py-2.5"
-              />
-            )}
-            <TableCell className="px-3 py-2.5">
-              <div className="flex items-center gap-2.5">
-                <UsersListAvatar user={user} />
-                <div>
-                  <p className="whitespace-nowrap text-sm font-semibold text-foreground">{user.name}</p>
-                  <p className="text-xs text-muted-foreground">{user.email}</p>
-                </div>
-              </div>
-            </TableCell>
-            {visible('role') && (
-              <TableCell className="px-3 py-2.5">
-                {renderUserWorkColumnValue(user, 'role', { t, formatLoginDate })}
-              </TableCell>
-            )}
-            {visible('status') && (
-              <TableCell className="px-3 py-2.5">
-                {renderUserWorkColumnValue(user, 'status', { t, formatLoginDate })}
-              </TableCell>
-            )}
-            {visible('lastLogin') && (
-              <TableCell className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">
-                {renderUserWorkColumnValue(user, 'lastLogin', { t, formatLoginDate })}
-              </TableCell>
-            )}
-            {visible('created') && (
-              <TableCell className="whitespace-nowrap px-3 py-2.5 font-mono text-xs text-muted-foreground">
-                {renderUserWorkColumnValue(user, 'created', { t, formatLoginDate })}
-              </TableCell>
-            )}
-            {visible('twoFactor') && (
-              <TableCell className="px-3 py-2.5">
-                {renderUserWorkColumnValue(user, 'twoFactor', { t, formatLoginDate })}
-              </TableCell>
-            )}
-            <TableCell className="px-3 py-2.5 text-end">
-              <UsersRowActions
-                user={user}
-                canWrite={canWrite}
-                canDelete={canDelete}
-                showDeleted={showDeleted}
-                onView={onView}
-                onEdit={onEdit}
-                onDelete={onDelete}
-                onRestore={onRestore}
-                onResetPassword={onResetPassword}
-              />
-            </TableCell>
-          </motion.tr>
-        ))}
-      </TableBody>
-    </Table>
+    <WorkBatchTable
+      data={users}
+      columns={columns}
+      className="table-fixed"
+      tableBodyClassName="divide-y divide-border"
+      bordered={false}
+      selection={
+        canDelete
+          ? {
+              selectedIds,
+              onSelectOne: (id) => onToggleSelect(String(id)),
+              onSelectAll: onToggleAll,
+              allSelected,
+              someSelected,
+              selectAllAriaLabel: t('users.selectAll'),
+              selectRowAriaLabel: (user) => t('users.selectRow', { name: user.name }),
+            }
+          : undefined
+      }
+      columnResize={{
+        getColumnWidth: (key) => getColumnWidth?.(key),
+        onColumnResize,
+      }}
+      renderRowActions={(user) => (
+        <UsersRowActions
+          user={user}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          showDeleted={showDeleted}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onResetPassword={onResetPassword}
+        />
+      )}
+      actionsLabel={t('users.colActions')}
+    />
   );
 }

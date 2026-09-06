@@ -103,9 +103,12 @@ export function StudentsWorkTier({
           onToggleDeleted={onToggleDeleted}
           onClearFilters={onClearFilters}
           shownCount={workPageData?.total ?? 0}
+          filterChips={
+            studentFilterChips.length > 0 ? (
+              <FilterChips chips={studentFilterChips} onClearAll={onClearFilters} />
+            ) : undefined
+          }
         />
-
-        <FilterChips chips={studentFilterChips} onClearAll={onClearFilters} />
 
         <StudentsBulkActionBar
           selectedCount={selectedIds.length}

@@ -98,4 +98,18 @@ describe("WorkBatchTable", () => {
 
     expect(html).toContain("No records found");
   });
+
+  it("applies custom rowClassName when provided", () => {
+    const html = renderToStaticMarkup(
+      <TestWrapper>
+        <WorkBatchTable
+          data={sampleData}
+          columns={columns}
+          rowClassName={(row) => (row.status === "Pending" ? "bg-warning/10" : undefined)}
+        />
+      </TestWrapper>,
+    );
+
+    expect(html).toContain("bg-warning/10");
+  });
 });

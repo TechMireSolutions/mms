@@ -126,9 +126,12 @@ export function TeachersWorkTier(props: TeachersWorkTierProps): React.JSX.Elemen
           onSpecializationChange={props.onSpecializationChange}
           onGenderChange={props.onGenderChange}
           onToggleDeleted={props.onToggleDeleted}
+          filterChips={
+            filterChips.length > 0 ? (
+              <FilterChips chips={filterChips} onClearAll={props.onClearFilters} />
+            ) : undefined
+          }
         />
-
-        <FilterChips chips={filterChips} onClearAll={props.onClearFilters} />
 
         <TeachersBulkActionBar
           selectedIds={props.selectedIds}

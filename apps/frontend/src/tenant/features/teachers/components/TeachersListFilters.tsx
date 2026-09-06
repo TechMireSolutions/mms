@@ -40,6 +40,7 @@ interface TeachersListFiltersProps {
   onSpecializationChange: (value: string) => void;
   onGenderChange: (value: string) => void;
   onToggleDeleted: () => void;
+  filterChips?: React.ReactNode;
 }
 
 export function TeachersListFilters({
@@ -72,6 +73,7 @@ export function TeachersListFilters({
   onSpecializationChange,
   onGenderChange,
   onToggleDeleted,
+  filterChips,
 }: TeachersListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -94,6 +96,7 @@ export function TeachersListFilters({
       hasActiveFilters={hasActiveFilters}
       onClearFilters={onClearFilters}
       clearFiltersLabel={t("teachers.clearFilters")}
+      filterChips={filterChips}
       filterButton={
         <TeachersFiltersMenuButton
           filterStatus={filterStatus}

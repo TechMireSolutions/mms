@@ -98,68 +98,67 @@ export function AttendanceListFilters({
   ];
 
   return (
-    <>
-      <WorkTaskToolbar
-        regionLabel={t("attendance.tabs.records")}
-        search={search}
-        onSearchChange={handleSearchChange}
-        searchPlaceholder={t("attendance.searchStudent")}
-        searchId={ATTENDANCE_WORK_SEARCH_INPUT_ID}
-        hasActiveFilters={activeFilterCount > 0}
-        onClearFilters={clearFilters}
-        clearFiltersLabel={t("attendance.clearFilters")}
-        filterButton={
-          <AttendanceFiltersMenuButton
-            statusFilter={statusFilter}
-            activeFilterCount={activeFilterCount}
-            statuses={statuses}
-            statusLabel={statusLabel}
-            onChangeStatus={(value) => {
-              setStatusFilter(value);
-              setPage(1);
-            }}
-            onClearFilters={clearFilters}
-          />
-        }
-        trashToggle={
-          canDelete && onToggleDeleted
-            ? {
-                canViewDeleted: canDelete,
-                viewingDeleted: showDeleted,
-                onToggle: onToggleDeleted,
-                activeLabel: t("attendance.showActive"),
-                deletedLabel: t("attendance.showDeleted"),
-              }
-            : undefined
-        }
-        viewModeToggle={{
-          viewMode,
-          onViewModeChange,
-        }}
-        columnCustomizer={columnCustomizer ? {
-          registry: columnCustomizer.columnRegistry,
-          onUpdate: columnCustomizer.updateUserColumnLayout,
-          onReset: columnCustomizer.onResetLayout,
-          labels: columnCustomizer.labels,
-        } : undefined}
-      >
-        <DateRangeFilterBar
-          idPrefix="attendance-records"
-          dateFrom={dateFrom}
-          dateTo={dateTo}
-          onDateFromChange={(value) => {
-            setDateFrom(value);
+    <WorkTaskToolbar
+      regionLabel={t("attendance.tabs.records")}
+      search={search}
+      onSearchChange={handleSearchChange}
+      searchPlaceholder={t("attendance.searchStudent")}
+      searchId={ATTENDANCE_WORK_SEARCH_INPUT_ID}
+      hasActiveFilters={activeFilterCount > 0}
+      onClearFilters={clearFilters}
+      clearFiltersLabel={t("attendance.clearFilters")}
+      filterButton={
+        <AttendanceFiltersMenuButton
+          statusFilter={statusFilter}
+          activeFilterCount={activeFilterCount}
+          statuses={statuses}
+          statusLabel={statusLabel}
+          onChangeStatus={(value) => {
+            setStatusFilter(value);
             setPage(1);
           }}
-          onDateToChange={(value) => {
-            setDateTo(value);
-            setPage(1);
-          }}
-          pickerClassName="w-full min-w-0 max-w-full text-sm sm:max-w-filter-sm"
+          onClearFilters={clearFilters}
         />
-      </WorkTaskToolbar>
-
-      <FilterChips chips={chips} onClearAll={clearFilters} />
-    </>
+      }
+      filterChips={
+        <FilterChips chips={chips} onClearAll={clearFilters} />
+      }
+      trashToggle={
+        canDelete && onToggleDeleted
+          ? {
+              canViewDeleted: canDelete,
+              viewingDeleted: showDeleted,
+              onToggle: onToggleDeleted,
+              activeLabel: t("attendance.showActive"),
+              deletedLabel: t("attendance.showDeleted"),
+            }
+          : undefined
+      }
+      viewModeToggle={{
+        viewMode,
+        onViewModeChange,
+      }}
+      columnCustomizer={columnCustomizer ? {
+        registry: columnCustomizer.columnRegistry,
+        onUpdate: columnCustomizer.updateUserColumnLayout,
+        onReset: columnCustomizer.onResetLayout,
+        labels: columnCustomizer.labels,
+      } : undefined}
+    >
+      <DateRangeFilterBar
+        idPrefix="attendance-records"
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onDateFromChange={(value) => {
+          setDateFrom(value);
+          setPage(1);
+        }}
+        onDateToChange={(value) => {
+          setDateTo(value);
+          setPage(1);
+        }}
+        pickerClassName="w-full min-w-0 max-w-full text-sm sm:max-w-filter-sm"
+      />
+    </WorkTaskToolbar>
   );
 }

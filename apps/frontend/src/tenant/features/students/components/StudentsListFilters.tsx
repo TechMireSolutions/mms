@@ -36,6 +36,7 @@ interface StudentsListFiltersProps {
   onToggleDeleted: () => void;
   onClearFilters: () => void;
   shownCount?: number;
+  filterChips?: React.ReactNode;
 }
 
 export function StudentsListFilters({
@@ -63,6 +64,7 @@ export function StudentsListFilters({
   onToggleDeleted,
   onClearFilters,
   shownCount,
+  filterChips,
 }: StudentsListFiltersProps) {
   const { t } = useTranslation();
 
@@ -85,6 +87,7 @@ export function StudentsListFilters({
       hasActiveFilters={hasActiveFilters}
       onClearFilters={onClearFilters}
       clearFiltersLabel={t("students.clearFilters")}
+      filterChips={filterChips}
       filterButton={
         <StudentsFiltersMenuButton
           studentFilterStatus={studentFilterStatus}

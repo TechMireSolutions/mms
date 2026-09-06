@@ -1,17 +1,11 @@
-import type React from "react";
-import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
+import React from "react";
+import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from "@/components/ui/table";
-import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { useTranslation } from "@/hooks/useTranslation";
 import { InvoicesRowActions } from "@/tenant/features/finance/components/InvoicesRowActions";
 import { renderInvoiceWorkColumnValue } from "@/tenant/features/finance/components/invoiceWorkColumnCell";
 import type { InvoicesListContentProps } from "@/tenant/features/finance/components/invoicesListShared";
+import type { Invoice } from "@/lib/data/financeData";
 
 export type InvoicesListDesktopTableProps = InvoicesListContentProps;
 
@@ -40,107 +34,121 @@ export function InvoicesListDesktopTable(props: InvoicesListDesktopTableProps): 
     openComposer,
   } = props;
   const { t } = useTranslation();
-  const selectedIdsSet = new Set(selectedIds);
+  const selectedIdsSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
+  const columnContext = React.useMemo(() => ({ t, statusConfig, formatCurrency }), [t, statusConfig, formatCurrency]);
+
+  const columns = React.useMemo<WorkBatchTableColumn<Invoice>[]>(() => {
+    const cols: WorkBatchTableColumn<Invoice>[] = [];
+
+    if (isColumnVisible("invoice")) {
+      cols.push({
+        id: "invoice",
+        label: t("finance.columns.invoice"),
+        render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "invoice", columnContext),
+      });
+    }
+
+    if (isColumnVisible("student")) {
+      cols.push({
+        id: "student",
+        label: t("finance.columns.student"),
+        render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "student", columnContext),
+      });
+    }
+
+    if (isColumnVisible("sessionClass")) {
+      cols.push({
+        id: "sessionClass",
+        label: t("finance.columns.sessionClass"),
+        render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "sessionClass", columnContext),
+      });
+    }
+
+    if (isColumnVisible("baseFee")) {
+      cols.push({
+        id: "baseFee",
+        label: t("finance.columns.baseFee"),
+        cellClassName: "whitespace-nowrap",
+        render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "baseFee", columnContext),
+      });
+    }
+
+    if (isColumnVisible("discount")) {
+      cols.push({
+        id: "discount",
+        label: t("finance.columns.discount"),
+        render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "discount", columnContext),
+      });
+    }
+
+    if (isColumnVisible("final")) {
+      cols.push({
+        id: "final",
+        label: t("finance.columns.final"),
+        cellClassName: "whitespace-nowrap",
+        render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "final", columnContext),
+      });
+    }
+
+    if (isColumnVisible("status")) {
+      cols.push({
+        id: "status",
+        label: t("finance.columns.status"),
+        render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "status", columnContext),
+      });
+    }
+
+    if (isColumnVisible("dueDate")) {
+      cols.push({
+        id: "dueDate",
+        label: t("finance.columns.dueDate"),
+        cellClassName: "whitespace-nowrap",
+        render: (invoice: Invoice) => renderInvoiceWorkColumnValue(invoice, "dueDate", columnContext),
+      });
+    }
+
+    return cols;
+  }, [columnContext, isColumnVisible, t]);
 
   return (
-    <Table className="table-fixed">
-      <caption className="sr-only">{t("finance.invoices")}</caption>
-      <ModuleWorkTableHeader
-        columns={[
-          isColumnVisible("invoice") ? { id: "invoice", label: t("finance.columns.invoice") } : null,
-          isColumnVisible("student") ? { id: "student", label: t("finance.columns.student") } : null,
-          isColumnVisible("sessionClass") ? { id: "sessionClass", label: t("finance.columns.sessionClass") } : null,
-          isColumnVisible("baseFee") ? { id: "baseFee", label: t("finance.columns.baseFee") } : null,
-          isColumnVisible("discount") ? { id: "discount", label: t("finance.columns.discount") } : null,
-          isColumnVisible("final") ? { id: "final", label: t("finance.columns.final") } : null,
-          isColumnVisible("status") ? { id: "status", label: t("finance.columns.status") } : null,
-          isColumnVisible("dueDate") ? { id: "dueDate", label: t("finance.columns.dueDate") } : null,
-        ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
-        getColumnWidth={(key) => getColumnWidth?.(key)}
-        setColumnWidth={onColumnResize ?? (() => {})}
-        selection={canSelectInvoices ? {
-          allSelected: allVisibleSelected,
-          someSelected: someVisibleSelected,
-          onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
-          ariaLabel: t("finance.table.selectAll")
-        } : undefined}
-        actionsLabel={t("common.actions")}
-      />
-      <TableBody className="divide-y divide-border/50">
-        {invoices.map((invoice) => {
-            const isSelected = selectedIdsSet.has(invoice.id);
-            return (
-              <TableRow
-                key={invoice.id}
-                className={`group transition-colors hover:bg-muted/20 ${isSelected ? "bg-primary/5" : ""}`}
-              >
-                {canSelectInvoices && (
-                  <ModuleTableSelectionCell
-                    checked={isSelected}
-                    onCheckedChange={(checked) => onToggleSelectedInvoice(invoice.id, checked)}
-                    ariaLabel={t("finance.table.selectInvoice", { id: invoice.id })}
-                    sticky={false}
-                  />
-                )}
-                {isColumnVisible("invoice") && (
-                  <TableCell className="px-4 py-3">
-                    {renderInvoiceWorkColumnValue(invoice, "invoice", { t, statusConfig, formatCurrency })}
-                  </TableCell>
-                )}
-                {isColumnVisible("student") && (
-                  <TableCell className="px-4 py-3">
-                    {renderInvoiceWorkColumnValue(invoice, "student", { t, statusConfig, formatCurrency })}
-                  </TableCell>
-                )}
-                {isColumnVisible("sessionClass") && (
-                  <TableCell className="px-4 py-3">
-                    {renderInvoiceWorkColumnValue(invoice, "sessionClass", { t, statusConfig, formatCurrency })}
-                  </TableCell>
-                )}
-                {isColumnVisible("baseFee") && (
-                  <TableCell className="px-4 py-3 whitespace-nowrap">
-                    {renderInvoiceWorkColumnValue(invoice, "baseFee", { t, statusConfig, formatCurrency })}
-                  </TableCell>
-                )}
-                {isColumnVisible("discount") && (
-                  <TableCell className="px-4 py-3">
-                    {renderInvoiceWorkColumnValue(invoice, "discount", { t, statusConfig, formatCurrency })}
-                  </TableCell>
-                )}
-                {isColumnVisible("final") && (
-                  <TableCell className="px-4 py-3 whitespace-nowrap">
-                    {renderInvoiceWorkColumnValue(invoice, "final", { t, statusConfig, formatCurrency })}
-                  </TableCell>
-                )}
-                {isColumnVisible("status") && (
-                  <TableCell className="px-4 py-3">
-                    {renderInvoiceWorkColumnValue(invoice, "status", { t, statusConfig, formatCurrency })}
-                  </TableCell>
-                )}
-                {isColumnVisible("dueDate") && (
-                  <TableCell className="px-4 py-3 whitespace-nowrap">
-                    {renderInvoiceWorkColumnValue(invoice, "dueDate", { t, statusConfig, formatCurrency })}
-                  </TableCell>
-                )}
-                <TableCell className="px-4 py-3">
-                  <InvoicesRowActions
-                    invoice={invoice}
-                    canWrite={canWrite}
-                    canDelete={canDelete}
-                    canWriteMessaging={canWriteMessaging}
-                    showDeleted={showDeleted}
-                    triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
-                    onView={onView}
-                    onRecord={onRecord}
-                    onRequestDelete={onRequestDelete}
-                    onRestore={onRestore}
-                    openComposer={openComposer}
-                  />
-                </TableCell>
-              </TableRow>
-            );
-          })}
-      </TableBody>
-    </Table>
+    <WorkBatchTable
+      data={invoices}
+      columns={columns}
+      caption={t("finance.invoices")}
+      bordered={false}
+      selection={
+        canSelectInvoices
+          ? {
+              selectedIds,
+              onSelectOne: (id) => onToggleSelectedInvoice(id, !selectedIdsSet.has(id)),
+              onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+              allSelected: allVisibleSelected,
+              someSelected: someVisibleSelected,
+              selectAllAriaLabel: t("finance.table.selectAll"),
+              selectRowAriaLabel: (invoice) => t("finance.table.selectInvoice", { id: invoice.id }),
+            }
+          : undefined
+      }
+      columnResize={{
+        getColumnWidth,
+        onColumnResize,
+      }}
+      renderRowActions={(invoice) => (
+        <InvoicesRowActions
+          invoice={invoice}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          canWriteMessaging={canWriteMessaging}
+          showDeleted={showDeleted}
+          triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+          onView={onView}
+          onRecord={onRecord}
+          onRequestDelete={onRequestDelete}
+          onRestore={onRestore}
+          openComposer={openComposer}
+        />
+      )}
+      actionsLabel={t("common.actions")}
+    />
   );
 }

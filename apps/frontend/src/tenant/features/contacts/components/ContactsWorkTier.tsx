@@ -88,10 +88,9 @@ export const ContactsWorkTier = React.memo(function ContactsWorkTier({
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}
           shownCount={shownCount}
+          filterChips={<FilterChips chips={filterChips} onClearAll={onClearFilters} />}
         />
       </ErrorBoundary>
-
-      <FilterChips chips={filterChips} onClearAll={onClearFilters} />
 
       <ContactsBulkActionBar
         selectedCount={selected.length}

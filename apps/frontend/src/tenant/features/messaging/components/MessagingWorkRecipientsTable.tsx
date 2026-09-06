@@ -1,4 +1,4 @@
-import React, { type JSX, type ReactNode } from 'react';
+import React, { type JSX, type ReactNode, useMemo } from 'react';
 import {
   getDisplayName,
   getInitials,
@@ -6,15 +6,7 @@ import {
   getPrimaryPhone,
   type Contact,
 } from '@mms/shared';
-import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
-import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
-import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from '@/components/ui/table';
+import { WorkBatchTable, type WorkBatchTableColumn } from '@/components/common/work';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { MessagingSelectedMap } from '@/tenant/features/messaging/components/messagingWorkPanelShared';
 import { SEMANTIC_TEXT, SEMANTIC_BG } from '@/lib/semanticTone';
@@ -55,70 +47,85 @@ export function MessagingWorkRecipientsTable({
 }: MessagingWorkRecipientsTableProps): JSX.Element {
   const { t } = useTranslation();
 
+  const selectedIdsArray = useMemo(
+    () => Object.keys(selectedById).filter((id) => selectedById[id]),
+    [selectedById],
+  );
+
+  const columns = useMemo<WorkBatchTableColumn<Contact>[]>(() => {
+    const cols: WorkBatchTableColumn<Contact>[] = [];
+
+    if (showRecipientCol) {
+      cols.push({
+        id: 'recipient',
+        label: t('messaging.recipient'),
+        cellClassName: 'px-4 py-2 font-medium text-foreground',
+        render: (contact: Contact) => {
+          const displayName = getDisplayName(contact);
+          return (
+            <div className="flex items-center gap-2">
+              <span className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${SEMANTIC_BG.primary} text-xs font-black ${SEMANTIC_TEXT.primary}`}>
+                {getInitials(displayName)}
+              </span>
+              <span className="truncate">{displayName}</span>
+            </div>
+          );
+        },
+      });
+    }
+
+    if (showPhoneCol) {
+      cols.push({
+        id: 'phone',
+        label: t('contacts.form.primaryPhone'),
+        cellClassName: 'px-4 py-2 font-mono',
+        render: (contact: Contact) => {
+          const phone = getPrimaryPhone(contact);
+          return phone ?? <MissingFieldBadge label={t('messaging.missingPhone')} />;
+        },
+      });
+    }
+
+    if (showEmailCol) {
+      cols.push({
+        id: 'email',
+        label: t('contacts.form.primaryEmail'),
+        cellClassName: 'px-4 py-2',
+        render: (contact: Contact) => {
+          const email = getPrimaryEmail(contact);
+          return email ?? <MissingFieldBadge label={t('messaging.missingEmail')} />;
+        },
+      });
+    }
+
+    return cols;
+  }, [showRecipientCol, showPhoneCol, showEmailCol, t]);
+
   return (
-    <div className="space-y-2">
-      <div className="overflow-x-auto rounded-lg border border-border/60">
-        <Table className="table-fixed text-xs">
-          <ModuleWorkTableHeader
-            columns={[
-              showRecipientCol ? { id: 'recipient', label: t('messaging.recipient') } : null,
-              showPhoneCol ? { id: 'phone', label: t('contacts.form.primaryPhone') } : null,
-              showEmailCol ? { id: 'email', label: t('contacts.form.primaryEmail') } : null,
-            ].filter((c): c is { id: string; label: string } => c !== null)}
-            getColumnWidth={getColumnWidth}
-            setColumnWidth={setColumnWidth}
-            selection={{
-              allSelected: allVisibleSelected,
-              someSelected: someVisibleSelected,
-              onSelectAll: () => onToggleAllVisible(!allVisibleSelected),
-              ariaLabel: t('messaging.selectAllVisible'),
-            }}
-            stickyColumnId=""
-          />
-          <TableBody className="divide-y divide-border/50">
-            {contacts.map((contact) => {
-              const phone = getPrimaryPhone(contact);
-              const email = getPrimaryEmail(contact);
-              return (
-                <TableRow key={contact.id} className="hover:bg-muted/10">
-                  <ModuleTableSelectionCell
-                    checked={Boolean(selectedById[String(contact.id)])}
-                    onCheckedChange={() => onToggleRecipient(contact)}
-                    ariaLabel={t('messaging.selectRecipient', { name: getDisplayName(contact) })}
-                    sticky={false}
-                    className="px-4 py-2"
-                  />
-                  {showRecipientCol && (
-                    <TableCell className="px-4 py-2 font-medium text-foreground">
-                      <div className="flex items-center gap-2">
-                        <span className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full ${SEMANTIC_BG.primary} text-xs font-black ${SEMANTIC_TEXT.primary}`}>
-                          {getInitials(getDisplayName(contact))}
-                        </span>
-                        <span className="truncate">{getDisplayName(contact)}</span>
-                      </div>
-                    </TableCell>
-                  )}
-                  {showPhoneCol && (
-                    <TableCell className="px-4 py-2 font-mono">
-                      {phone ?? <MissingFieldBadge label={t('messaging.missingPhone')} />}
-                    </TableCell>
-                  )}
-                  {showEmailCol && (
-                    <TableCell className="px-4 py-2">
-                      {email ?? <MissingFieldBadge label={t('messaging.missingEmail')} />}
-                    </TableCell>
-                  )}
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
-      </div>
-      <ModuleTableFooterCount
-        selectedCount={selectedCount}
-        selectedCountLabel={String(selectedCountLabel)}
-        pageCountLabel={String(pageCountLabel)}
-      />
-    </div>
+    <WorkBatchTable<Contact>
+      data={contacts}
+      columns={columns}
+      selection={{
+        selectedIds: selectedIdsArray,
+        onSelectOne: (id: string) => {
+          const found = contacts.find((c) => String(c.id) === id);
+          if (found) onToggleRecipient(found);
+        },
+        onSelectAll: () => onToggleAllVisible(!allVisibleSelected),
+        allSelected: allVisibleSelected,
+        someSelected: someVisibleSelected,
+        selectAllAriaLabel: t('messaging.selectAllVisible'),
+        selectRowAriaLabel: (contact) => t('messaging.selectRecipient', { name: getDisplayName(contact) }),
+      }}
+      columnResize={{
+        getColumnWidth,
+        onColumnResize: setColumnWidth,
+      }}
+      footerCount={{
+        selectedCountLabel: String(selectedCountLabel),
+        pageCountLabel: String(pageCountLabel),
+      }}
+      className="table-fixed text-xs"
+    />
   );
 }

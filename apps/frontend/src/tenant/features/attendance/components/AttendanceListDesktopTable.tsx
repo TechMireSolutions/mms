@@ -1,23 +1,13 @@
-import type React from 'react';
+import React from 'react';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { ModuleTableFooterCount } from '@/components/ui/ModuleTableFooterCount';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
-import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from '@/components/ui/table';
-import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
+import { WorkBatchTable, type WorkBatchTableColumn } from '@/components/common/work';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
 import { AttendanceRecordStatusCell } from './AttendanceRecordStatusCell';
 import { TimePicker } from '@/components/ui/TimePicker';
-import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
-import { useListRowMotion } from '@/hooks/useListRowMotion';
 
 export interface AttendanceListDesktopTableProps {
   paginatedRecords: AttendanceRecord[];
@@ -42,7 +32,7 @@ export interface AttendanceListDesktopTableProps {
 export function AttendanceListDesktopTable({
   paginatedRecords,
   isColumnVisible,
-  visibleColCount,
+  visibleColCount: _visibleColCount,
   editingRecord,
   statuses,
   updateDraft,
@@ -58,116 +48,171 @@ export function AttendanceListDesktopTable({
   onColumnResize,
   t,
 }: AttendanceListDesktopTableProps): React.JSX.Element {
-  const rowMotion = useListRowMotion({ layout: true });
   const recordsCountLabel = formatDirectoryPageCountLabel(paginatedRecords.length, t, {
     singular: 'attendance.item.record',
     plural: 'attendance.item.records',
   });
-  const selectedSet = new Set(selectedIds);
+  const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  const columns = React.useMemo<WorkBatchTableColumn<AttendanceRecord>[]>(() => {
+    const cols: WorkBatchTableColumn<AttendanceRecord>[] = [];
+
+    if (isColumnVisible("date")) {
+      cols.push({
+        id: "date",
+        label: t("attendance.columns.date"),
+        render: (r: AttendanceRecord) => (
+          <span className="font-mono text-xs text-foreground whitespace-nowrap">
+            {formatDate(r.date, true)}
+          </span>
+        ),
+      });
+    }
+
+    if (isColumnVisible("class")) {
+      cols.push({
+        id: "class",
+        label: t("attendance.columns.class"),
+        render: (r: AttendanceRecord) => (
+          <span className="text-foreground whitespace-nowrap">
+            {classLabel(r.classId)}
+          </span>
+        ),
+      });
+    }
+
+    if (isColumnVisible("session")) {
+      cols.push({
+        id: "session",
+        label: t("attendance.columns.session"),
+        render: (r: AttendanceRecord) => (
+          <span className="text-foreground whitespace-nowrap">
+            {r.sessionName || "—"}
+          </span>
+        ),
+      });
+    }
+
+    if (isColumnVisible("student")) {
+      cols.push({
+        id: "student",
+        label: t("attendance.columns.student"),
+        render: (r: AttendanceRecord) => (
+          <span className="font-semibold text-foreground whitespace-nowrap">
+            {r.studentName}
+          </span>
+        ),
+      });
+    }
+
+    if (isColumnVisible("status")) {
+      cols.push({
+        id: "status",
+        label: t("attendance.columns.status"),
+        render: (r: AttendanceRecord) => (
+          <AttendanceRecordStatusCell
+            attendanceRecord={r}
+            editingRecord={editingRecord}
+            statuses={statuses}
+            updateDraft={updateDraft}
+          />
+        ),
+      });
+    }
+
+    if (isColumnVisible("timeIn")) {
+      cols.push({
+        id: "timeIn",
+        label: t("attendance.columns.timeIn"),
+        render: (r: AttendanceRecord) =>
+          editingRecord?.id === r.id ? (
+            <TimePicker
+              id={`attendance-time-in-${r.id}`}
+              name="timeIn"
+              value={editingRecord.timeIn}
+              onChange={(nextValue) => updateDraft("timeIn", nextValue)}
+              aria-label={t("attendance.columns.timeIn")}
+              className="w-full min-w-attendance-status max-w-attendance-status text-xs"
+            />
+          ) : (
+            <span className="text-xs text-muted-foreground font-mono">
+              {r.timeIn || "—"}
+            </span>
+          ),
+      });
+    }
+
+    if (isColumnVisible("timeOut")) {
+      cols.push({
+        id: "timeOut",
+        label: t("attendance.columns.timeOut"),
+        render: (r: AttendanceRecord) =>
+          editingRecord?.id === r.id ? (
+            <TimePicker
+              id={`attendance-time-out-${r.id}`}
+              name="timeOut"
+              value={editingRecord.timeOut}
+              onChange={(nextValue) => updateDraft("timeOut", nextValue)}
+              aria-label={t("attendance.columns.timeOut")}
+              className="w-full min-w-attendance-status max-w-attendance-status text-xs"
+            />
+          ) : (
+            <span className="text-xs text-muted-foreground font-mono">
+              {r.timeOut || "—"}
+            </span>
+          ),
+      });
+    }
+
+    if (isColumnVisible("notes")) {
+      cols.push({
+        id: "notes",
+        label: t("attendance.columns.notes"),
+        cellClassName: "max-w-cell-sm truncate text-xs text-muted-foreground",
+        render: (r: AttendanceRecord) => r.notes || "—",
+      });
+    }
+
+    return cols;
+  }, [classLabel, editingRecord, isColumnVisible, statuses, t, updateDraft]);
 
   return (
     <article className={WORK_SURFACE}>
-      <Table className="table-fixed">
-        <ModuleWorkTableHeader
-          columns={[
-            isColumnVisible("date") ? { id: "date", label: t('attendance.columns.date') } : null,
-            isColumnVisible("class") ? { id: "class", label: t('attendance.columns.class') } : null,
-            isColumnVisible("session") ? { id: "session", label: t('attendance.columns.session') } : null,
-            isColumnVisible("student") ? { id: "student", label: t('attendance.columns.student') } : null,
-            isColumnVisible("status") ? { id: "status", label: t('attendance.columns.status') } : null,
-            isColumnVisible("timeIn") ? { id: "timeIn", label: t('attendance.columns.timeIn') } : null,
-            isColumnVisible("timeOut") ? { id: "timeOut", label: t('attendance.columns.timeOut') } : null,
-            isColumnVisible("notes") ? { id: "notes", label: t('attendance.columns.notes') } : null,
-          ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
-          getColumnWidth={(key) => getColumnWidth?.(key)}
-          setColumnWidth={onColumnResize ?? (() => {})}
-          selection={canDelete ? {
-            allSelected: allVisibleSelected,
-            someSelected: someVisibleSelected,
-            onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
-            ariaLabel: t('attendance.trash.selectAll')
-          } : undefined}
-          actionsLabel={t('attendance.table.actions')}
-        />
-        <TableBody className="divide-y divide-border">
-          {paginatedRecords.length === 0 ? (
-            <TableRow><TableCell colSpan={visibleColCount} className="py-4"><EmptyState title={t('attendance.empty.records')} description={t('attendance.empty.recordsHint')} compact /></TableCell></TableRow>
-          ) : paginatedRecords.map((attendanceRecord) => (
-            <motion.tr key={attendanceRecord.id} {...rowMotion()} className="group hover:bg-muted/20 transition-colors">
-              {canDelete && (
-                <ModuleTableSelectionCell
-                  checked={selectedSet.has(attendanceRecord.id)}
-                  onCheckedChange={(checked) => onToggleSelectedRecord(attendanceRecord.id, checked)}
-                  ariaLabel={t('attendance.trash.selectRecord', { student: attendanceRecord.studentName })}
-                  sticky={false}
-                />
-              )}
-              {isColumnVisible("date") && (
-                <TableCell className="px-3 py-2.5 font-mono text-xs text-foreground whitespace-nowrap">{formatDate(attendanceRecord.date, true)}</TableCell>
-              )}
-              {isColumnVisible("class") && (
-                <TableCell className="px-3 py-2.5 text-foreground whitespace-nowrap">{classLabel(attendanceRecord.classId)}</TableCell>
-              )}
-              {isColumnVisible("session") && (
-                <TableCell className="px-3 py-2.5 text-foreground whitespace-nowrap">{attendanceRecord.sessionName || '—'}</TableCell>
-              )}
-              {isColumnVisible("student") && (
-                <TableCell className="px-3 py-2.5 font-semibold text-foreground whitespace-nowrap">{attendanceRecord.studentName}</TableCell>
-              )}
-              {isColumnVisible("status") && (
-                <TableCell className="px-3 py-2.5">
-                  <AttendanceRecordStatusCell
-                    attendanceRecord={attendanceRecord}
-                    editingRecord={editingRecord}
-                    statuses={statuses}
-                    updateDraft={updateDraft}
-                  />
-                </TableCell>
-              )}
-              {isColumnVisible("timeIn") && (
-                <TableCell className="px-3 py-2.5">
-                  {editingRecord?.id === attendanceRecord.id
-                    ? <TimePicker
-                        id={`attendance-time-in-${attendanceRecord.id}`}
-                        name="timeIn"
-                        value={editingRecord.timeIn}
-                        onChange={(nextValue) => updateDraft('timeIn', nextValue)}
-                        aria-label={t('attendance.columns.timeIn')}
-                        className="w-full min-w-attendance-status max-w-attendance-status text-xs"
-                      />
-                    : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeIn || '—'}</span>
-                  }
-                </TableCell>
-              )}
-              {isColumnVisible("timeOut") && (
-                <TableCell className="px-3 py-2.5">
-                  {editingRecord?.id === attendanceRecord.id
-                    ? <TimePicker
-                        id={`attendance-time-out-${attendanceRecord.id}`}
-                        name="timeOut"
-                        value={editingRecord.timeOut}
-                        onChange={(nextValue) => updateDraft('timeOut', nextValue)}
-                        aria-label={t('attendance.columns.timeOut')}
-                        className="w-full min-w-attendance-status max-w-attendance-status text-xs"
-                      />
-                    : <span className="text-xs text-muted-foreground font-mono">{attendanceRecord.timeOut || '—'}</span>
-                  }
-                </TableCell>
-              )}
-              {isColumnVisible("notes") && (
-                <TableCell className="px-3 py-2.5 max-w-cell-sm truncate text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</TableCell>
-              )}
-              <TableCell className="px-3 py-2.5 text-end">
-                {renderRowActions(attendanceRecord)}
-              </TableCell>
-            </motion.tr>
-          ))}
-        </TableBody>
-      </Table>
-      <ModuleTableFooterCount
-        selectedCount={selectedIds.length}
-        selectedCountLabel={t('attendance.selectedCount', { count: selectedIds.length })}
-        pageCountLabel={recordsCountLabel}
+      <WorkBatchTable
+        data={paginatedRecords}
+        columns={columns}
+        bordered={false}
+        selection={
+          canDelete
+            ? {
+                selectedIds,
+                onSelectOne: (id) => onToggleSelectedRecord(id, !selectedSet.has(id)),
+                onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+                allSelected: allVisibleSelected,
+                someSelected: someVisibleSelected,
+                selectAllAriaLabel: t("attendance.trash.selectAll"),
+                selectRowAriaLabel: (r) =>
+                  t("attendance.trash.selectRecord", { student: r.studentName }),
+              }
+            : undefined
+        }
+        columnResize={{
+          getColumnWidth,
+          onColumnResize,
+        }}
+        renderRowActions={renderRowActions}
+        actionsLabel={t("attendance.table.actions")}
+        emptyState={
+          <EmptyState
+            title={t("attendance.empty.records")}
+            description={t("attendance.empty.recordsHint")}
+            compact
+          />
+        }
+        footerCount={{
+          selectedCountLabel: t("attendance.selectedCount", { count: selectedIds.length }),
+          pageCountLabel: recordsCountLabel,
+        }}
       />
     </article>
   );

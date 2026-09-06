@@ -2,7 +2,7 @@ import type React from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FilterChips, type FilterChip } from "@/components/ui/FilterChips";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
-import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
+import { WorkTaskToolbar } from "@/components/common/work/WorkTaskToolbar";
 import { ModuleSoftDeleteConfirmDialogs } from "@/components/ui/ModuleSoftDeleteConfirmDialogs";
 import type { ModuleColumnRegistryEntry, AppTranslationKey } from "@mms/shared";
 import type { ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
@@ -110,7 +110,7 @@ export function ModuleWorkDirectoryShell({
   return (
     <ModuleTierMotion tier="work" className="space-y-4" aria-busy={isFetching}>
       <ErrorBoundary fallback={<div className="p-4 text-sm text-destructive">{t("errors.toolbar.loadFailed")}</div>}>
-        <ModuleWorkToolbar
+        <WorkTaskToolbar
           regionLabel={t(filtersKey)}
           shownCountLabel={shownCount != null ? t(shownCountKey, { count: shownCount }) : undefined}
           search={search}
@@ -121,6 +121,11 @@ export function ModuleWorkDirectoryShell({
           onClearFilters={onClearFilters}
           clearFiltersLabel={t("common.clearFilters")}
           filterButton={filterButton}
+          filterChips={
+            filterChips && filterChips.length > 0 ? (
+              <FilterChips chips={filterChips} onClearAll={onClearFilters} />
+            ) : undefined
+          }
           primaryAction={primaryAction}
           trashToggle={
             canDelete
@@ -149,10 +154,6 @@ export function ModuleWorkDirectoryShell({
           }
         />
       </ErrorBoundary>
-
-      {filterChips && filterChips.length > 0 && (
-        <FilterChips chips={filterChips} onClearAll={onClearFilters} />
-      )}
 
       {bulkActionBar}
 

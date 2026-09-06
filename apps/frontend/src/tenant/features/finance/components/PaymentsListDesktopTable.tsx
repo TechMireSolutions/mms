@@ -1,18 +1,11 @@
-import { motion } from 'framer-motion';
+import React from 'react';
 import { RotateCcw, Trash2 } from 'lucide-react';
 import { formatDate } from '@mms/shared';
 import { Button } from '@/components/ui/button';
-import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from '@/components/ui/table';
-import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
+import { WorkBatchTable, type WorkBatchTableColumn } from '@/components/common/work';
 import type { Payment } from '@/lib/data/financeData';
 
 export interface PaymentsListDesktopTableProps {
@@ -37,7 +30,7 @@ export function PaymentsListDesktopTable({
   payments,
   selectedIds,
   isColumnVisible,
-  visibleColCount,
+  visibleColCount: _visibleColCount,
   allSelected,
   canDelete,
   showDeleted,
@@ -51,76 +44,115 @@ export function PaymentsListDesktopTable({
   onRestore,
 }: PaymentsListDesktopTableProps): React.JSX.Element {
   const { t } = useTranslation();
-  const selectedSet = new Set(selectedIds);
+  const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
 
-  const renderRowAction = (paymentId: string) => (
+  const columns = React.useMemo<WorkBatchTableColumn<Payment>[]>(() => {
+    const cols: WorkBatchTableColumn<Payment>[] = [];
+
+    if (isColumnVisible("date")) {
+      cols.push({
+        id: "date",
+        label: t("finance.columns.paymentDate"),
+        cellClassName: "px-3 py-2.5 text-sm text-muted-foreground whitespace-nowrap",
+        render: (payment: Payment) => formatDate(payment.date),
+      });
+    }
+
+    if (isColumnVisible("student")) {
+      cols.push({
+        id: "student",
+        label: t("finance.columns.student"),
+        cellClassName: "px-3 py-2.5 text-sm font-semibold text-foreground whitespace-nowrap",
+        render: (payment: Payment) => payment.studentName,
+      });
+    }
+
+    if (isColumnVisible("invoice")) {
+      cols.push({
+        id: "invoice",
+        label: t("finance.columns.invoice"),
+        cellClassName: "px-3 py-2.5 font-mono text-xs text-muted-foreground",
+        render: (payment: Payment) => payment.invoiceId,
+      });
+    }
+
+    if (isColumnVisible("amount")) {
+      cols.push({
+        id: "amount",
+        label: t("finance.columns.amount"),
+        cellClassName: "px-3 py-2.5 text-sm font-bold text-success whitespace-nowrap",
+        render: (payment: Payment) => formatCurrency(payment.amount),
+      });
+    }
+
+    if (isColumnVisible("method")) {
+      cols.push({
+        id: "method",
+        label: t("finance.columns.method"),
+        cellClassName: "px-3 py-2.5",
+        render: (payment: Payment) => <StatusBadge status={payment.method} config={methodConfig} size="sm" />,
+      });
+    }
+
+    if (isColumnVisible("receivedBy")) {
+      cols.push({
+        id: "receivedBy",
+        label: t("finance.columns.receivedBy"),
+        cellClassName: "px-3 py-2.5 text-sm text-muted-foreground",
+        render: (payment: Payment) => payment.receivedBy || "—",
+      });
+    }
+
+    if (isColumnVisible("note")) {
+      cols.push({
+        id: "note",
+        label: t("finance.columns.note"),
+        cellClassName: "max-w-cell-sm truncate px-3 py-2.5 text-sm text-muted-foreground",
+        render: (payment: Payment) => payment.note || "—",
+      });
+    }
+
+    return cols;
+  }, [formatCurrency, isColumnVisible, methodConfig, t]);
+
+  const renderRowAction = (payment: Payment) => (
     <Button
       type="button"
       variant="ghost"
       size="icon"
-      onClick={() => showDeleted ? onRestore?.(paymentId) : onRequestDelete(paymentId)}
-      aria-label={showDeleted ? t('finance.trash.restore') : t('common.delete')}
+      onClick={() => (showDeleted ? onRestore?.(payment.id) : onRequestDelete(payment.id))}
+      aria-label={showDeleted ? t("finance.trash.restore") : t("common.delete")}
     >
       {showDeleted ? <RotateCcw className="h-4 w-4" /> : <Trash2 className="h-4 w-4" />}
     </Button>
   );
 
   return (
-    <Table className="table-fixed">
-      <caption className="sr-only">{t('finance.paymentLog')}</caption>
-      <ModuleWorkTableHeader
-        columns={[
-          isColumnVisible("date") ? { id: "date", label: t('finance.columns.paymentDate') } : null,
-          isColumnVisible("student") ? { id: "student", label: t('finance.columns.student') } : null,
-          isColumnVisible("invoice") ? { id: "invoice", label: t('finance.columns.invoice') } : null,
-          isColumnVisible("amount") ? { id: "amount", label: t('finance.columns.amount') } : null,
-          isColumnVisible("method") ? { id: "method", label: t('finance.columns.method') } : null,
-          isColumnVisible("receivedBy") ? { id: "receivedBy", label: t('finance.columns.receivedBy') } : null,
-          isColumnVisible("note") ? { id: "note", label: t('finance.columns.note') } : null,
-        ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
-        getColumnWidth={(key) => getColumnWidth?.(key)}
-        setColumnWidth={onColumnResize ?? (() => {})}
-        selection={canDelete ? {
-          allSelected: allSelected,
-          someSelected: selectedIds.length > 0 && !allSelected,
-          onSelectAll: () => onToggleAll(!allSelected),
-          ariaLabel: t('finance.trash.selectAll')
-        } : undefined}
-        actionsLabel={canDelete ? t('common.actions') : undefined}
-      />
-      <TableBody className="divide-y divide-border/50">
-        {payments.length === 0 ? (
-          <TableRow className="hover:bg-transparent"><TableCell colSpan={visibleColCount || 1} className="py-4"><EmptyState title={t('finance.empty.payments')} compact /></TableCell></TableRow>
-        ) : (
-          payments.map((payment, index) => (
-            <motion.tr
-              key={payment.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.03 }}
-              className="transition-colors hover:bg-muted/20"
-            >
-              {canDelete && (
-                <ModuleTableSelectionCell
-                  checked={selectedSet.has(payment.id)}
-                  onCheckedChange={(checked) => onTogglePayment(payment.id, checked)}
-                  ariaLabel={t('finance.trash.selectPayment', { id: payment.id })}
-                  sticky={false}
-                  className="px-3 py-2.5"
-                />
-              )}
-              {isColumnVisible("date") && <TableCell className="px-3 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{formatDate(payment.date)}</TableCell>}
-              {isColumnVisible("student") && <TableCell className="px-3 py-2.5 text-sm font-semibold text-foreground whitespace-nowrap">{payment.studentName}</TableCell>}
-              {isColumnVisible("invoice") && <TableCell className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{payment.invoiceId}</TableCell>}
-              {isColumnVisible("amount") && <TableCell className="px-3 py-2.5 text-sm font-bold text-success whitespace-nowrap">{formatCurrency(payment.amount)}</TableCell>}
-              {isColumnVisible("method") && <TableCell className="px-3 py-2.5"><StatusBadge status={payment.method} config={methodConfig} size="sm" /></TableCell>}
-              {isColumnVisible("receivedBy") && <TableCell className="px-3 py-2.5 text-sm text-muted-foreground">{payment.receivedBy || '—'}</TableCell>}
-              {isColumnVisible("note") && <TableCell className="max-w-cell-sm truncate px-3 py-2.5 text-sm text-muted-foreground">{payment.note || '—'}</TableCell>}
-              {canDelete && <TableCell className="px-3 py-2.5">{renderRowAction(payment.id)}</TableCell>}
-            </motion.tr>
-          ))
-        )}
-      </TableBody>
-    </Table>
+    <WorkBatchTable
+      data={payments}
+      columns={columns}
+      caption={t("finance.paymentLog")}
+      bordered={false}
+      selection={
+        canDelete
+          ? {
+              selectedIds,
+              onSelectOne: (id) => onTogglePayment(id, !selectedSet.has(id)),
+              onSelectAll: () => onToggleAll(!allSelected),
+              allSelected,
+              someSelected: selectedIds.length > 0 && !allSelected,
+              selectAllAriaLabel: t("finance.trash.selectAll"),
+              selectRowAriaLabel: (payment) => t("finance.trash.selectPayment", { id: payment.id }),
+            }
+          : undefined
+      }
+      columnResize={{
+        getColumnWidth,
+        onColumnResize,
+      }}
+      renderRowActions={canDelete ? renderRowAction : undefined}
+      actionsLabel={canDelete ? t("common.actions") : undefined}
+      emptyState={<EmptyState title={t("finance.empty.payments")} compact />}
+    />
   );
 }

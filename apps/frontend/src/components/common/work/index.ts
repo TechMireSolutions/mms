@@ -15,3 +15,39 @@ export {
   type WorkBatchTableProps,
   type WorkBatchTableColumn,
 } from "./WorkBatchTable";
+
+export {
+  WorkQueue,
+  type WorkQueueProps,
+  type WorkQueuePriority,
+  type WorkQueueItemStatus,
+} from "./WorkQueue";
+
+export {
+  ModuleWorkDirectoryShell,
+  type ModuleWorkDirectoryShellProps,
+  type ModuleWorkDirectoryShellConfirmDialogsProps,
+} from "@/components/ui/ModuleWorkDirectoryShell";
+
+export {
+  useWorkDirectoryController,
+  type UseWorkDirectoryControllerOptions,
+  type PendingDeleteState,
+} from "@/hooks/useWorkDirectoryController";
+
+export {
+  DetailSheet,
+  type DetailSheetProps,
+  type DetailDrawerSize,
+} from "@/components/common/DetailSheet";
+
+export {
+  BulkActionDock,
+  type BulkActionDockProps,
+  BulkSelectionClearAction,
+  BulkSelectionDeleteAction,
+  BulkSelectionExportAction,
+  BulkSelectionMessagingActions,
+  BulkSelectionStatusAction,
+  type BulkSelectionMessageChannel,
+} from "@/components/common/BulkActionDock";

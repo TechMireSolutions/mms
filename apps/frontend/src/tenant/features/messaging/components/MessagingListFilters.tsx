@@ -37,12 +37,14 @@ export interface MessagingListFiltersProps {
   onResetColumnLayout?: () => void;
   columnCustomizerLabels?: ModuleColumnCustomizerLabels;
   shownCount?: number;
+  filterChips?: React.ReactNode;
 }
 
 export function MessagingListFilters({
   viewMode,
   onViewModeChange,
   search,
+  filterChips,
   onSearchChange,
   channel,
   onChannelChange,
@@ -100,6 +102,7 @@ export function MessagingListFilters({
       hasActiveFilters={hasActiveFilters}
       onClearFilters={onClearFilters}
       clearFiltersLabel={t('common.clearFilters')}
+      filterChips={filterChips}
       filterButton={
         <MessagingFiltersMenuButton
           activeFilterCount={activeFilterCount}

@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/BulkSelectionActions";
 
 export {
+  BulkSelectionClearAction,
   BulkSelectionDeleteAction,
   BulkSelectionRestoreAction,
   BulkSelectionExportAction,

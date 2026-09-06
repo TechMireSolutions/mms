@@ -1,12 +1,11 @@
-import React, { useEffect, type JSX } from 'react';
+import React, { type JSX } from 'react';
 import { ChevronDown, MessageSquare, RotateCcw, Trash2 } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
-import { BulkSelectionBar } from '@/components/ui/BulkSelectionBar';
 import {
-  BulkSelectionClearAction,
+  BulkActionDock,
   BulkSelectionDeleteAction,
   BulkSelectionExportAction,
-} from '@/components/ui/BulkSelectionActions';
+} from '@/components/common/work';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -39,25 +38,15 @@ export const MessagingWorkBulkActionBar = (function MessagingWorkBulkActionBar({
 }: MessagingWorkBulkActionBarProps): JSX.Element {
   const { t } = useTranslation();
 
-  // Keyboard shortcut: Esc to clear selection
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent): void => {
-      if (e.key === 'Escape') {
-        onClearSelection();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClearSelection]);
-
   return (
-    <BulkSelectionBar
+    <BulkActionDock
       placement="inline"
       tone="glass"
       selectedCount={selectedCount}
       countLabel={t('messaging.selectedCount', { count: selectedCount })}
       leading={<MessageSquare className={`h-4 w-4 ${SEMANTIC_TEXT.primary}`} aria-hidden />}
-      trailing={<BulkSelectionClearAction label={`${t('common.deselect')} (Esc)`} onClick={onClearSelection} />}
+      clearLabel={`${t('common.deselect')} (Esc)`}
+      onClearSelection={onClearSelection}
     >
       {canWrite && onBulkResend && (
         <DropdownMenu>
@@ -113,6 +102,6 @@ export const MessagingWorkBulkActionBar = (function MessagingWorkBulkActionBar({
           />
         </>
       )}
-    </BulkSelectionBar>
+    </BulkActionDock>
   );
 });

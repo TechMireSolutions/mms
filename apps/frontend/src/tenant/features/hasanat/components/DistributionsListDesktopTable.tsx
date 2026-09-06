@@ -1,18 +1,11 @@
-import type React from "react";
-import { motion } from "framer-motion";
+import React from "react";
 import { User, Users2 } from "lucide-react";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
-import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
-import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
-import {
-  Table,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { DistributionsRowActions } from "@/tenant/features/hasanat/components/DistributionsRowActions";
+import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work";
+import type { Distribution } from "@/lib/data/hasanatData";
 import {
   getDistributionDenomination,
   getDistributionStatuses,
@@ -43,120 +36,167 @@ export function DistributionsListDesktopTable(props: DistributionsListDesktopTab
     onTrashAction,
     getColumnWidth,
     onColumnResize,
+    onRowClick,
   } = props;
   const { t } = useTranslation();
-  const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
-  const statuses = getDistributionStatuses(statusConfig);
-  const denomsById = new Map<string, (typeof denoms)[number]>();
-  for (const d of denoms) {
-    denomsById.set(d.id, d);
-  }
-  const selectedIdsSet = new Set(selectedIds);
+  const statuses = React.useMemo(() => getDistributionStatuses(statusConfig), [statusConfig]);
+  const denomsById = React.useMemo(() => {
+    const map = new Map<string, (typeof denoms)[number]>();
+    for (const d of denoms) {
+      map.set(d.id, d);
+    }
+    return map;
+  }, [denoms]);
+  const selectedIdsSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
 
-  return (
-    <Table className="table-fixed">
-      <caption className="sr-only">{t("hasanat.distribution.aria")}</caption>
-      <ModuleWorkTableHeader
-        columns={[
-          isColumnVisible("card") ? { id: "card", label: t("hasanat.columns.distribution.card") } : null,
-          isColumnVisible("recipient") ? { id: "recipient", label: t("hasanat.columns.distribution.recipient") } : null,
-          isColumnVisible("recipientClass") ? { id: "recipientClass", label: t("hasanat.columns.distribution.recipientClass") } : null,
-          isColumnVisible("quantity") ? { id: "quantity", label: t("hasanat.columns.distribution.quantity") } : null,
-          isColumnVisible("reason") ? { id: "reason", label: t("hasanat.columns.distribution.reason") } : null,
-          isColumnVisible("issuedDate") ? { id: "issuedDate", label: t("hasanat.columns.distribution.issuedDate") } : null,
-          isColumnVisible("issuedBy") ? { id: "issuedBy", label: t("hasanat.columns.distribution.issuedBy") } : null,
-          isColumnVisible("status") ? { id: "status", label: t("hasanat.columns.distribution.status") } : null,
-        ].filter((c): c is { id: string; label: string; headerClassName?: string } => c !== null)}
-        getColumnWidth={(key) => getColumnWidth?.(key)}
-        setColumnWidth={onColumnResize ?? (() => {})}
-        selection={canDelete ? {
-          allSelected: allVisibleSelected,
-          someSelected: someVisibleSelected,
-          onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
-          ariaLabel: t("hasanat.trash.selectAll")
-        } : undefined}
-        actionsLabel={t("hasanat.columns.actions")}
-      />
-      <TableBody className="divide-y divide-border/50">
-        {distributions.map((distribution, index) => {
+  const columns = React.useMemo<WorkBatchTableColumn<Distribution>[]>(() => {
+    const cols: WorkBatchTableColumn<Distribution>[] = [];
+
+    if (isColumnVisible("card")) {
+      cols.push({
+        id: "card",
+        label: t("hasanat.columns.distribution.card"),
+        render: (distribution) => {
           const denomination = getDistributionDenomination(denomsById, distribution.denominationId);
           return (
-            <motion.tr key={distribution.id} {...rowMotion(index * 0.03)} className="hover:bg-muted/20 transition-colors group">
-              {canDelete && (
-                <ModuleTableSelectionCell
-                  checked={selectedIdsSet.has(distribution.id)}
-                  onCheckedChange={(checked) => onToggleSelectedDistribution(distribution.id, checked)}
-                  ariaLabel={t("hasanat.trash.selectDistribution", { name: distribution.recipientName || distribution.id })}
-                  sticky={false}
-                />
-              )}
-              {isColumnVisible("card") && (
-                <TableCell className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <span className="text-base" aria-hidden="true">{denomination?.icon || "⭐"}</span>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground whitespace-nowrap m-0">{distribution.denominationName}</p>
-                      {denomination && <p className="text-xs font-bold m-0" style={{ color: denomination.color }}>{t("hasanat.form.pointsShort", { points: denomination.points })}</p>}
-                    </div>
-                  </div>
-                </TableCell>
-              )}
-              {isColumnVisible("recipient") && (
-                <TableCell className="px-4 py-3">
-                  <div className="flex items-center gap-1.5">
-                    {distribution.recipientType === "faculty" ? <Users2 className="w-3 h-3 text-muted-foreground" aria-hidden="true" /> : <User className="w-3 h-3 text-muted-foreground" aria-hidden="true" />}
-                    <span className="text-sm font-semibold text-foreground whitespace-nowrap">{distribution.recipientName}</span>
-                  </div>
-                </TableCell>
-              )}
-              {isColumnVisible("recipientClass") && (
-                <TableCell className="px-4 py-3 text-sm text-muted-foreground">{distribution.recipientClass || "—"}</TableCell>
-              )}
-              {isColumnVisible("quantity") && (
-                <TableCell className="px-4 py-3">
-                  <span className="text-sm font-bold text-foreground">{distribution.quantity}</span>
-                </TableCell>
-              )}
-              {isColumnVisible("reason") && (
-                <TableCell className="px-4 py-3 max-w-cell-sm">
-                  <p className="text-sm text-muted-foreground truncate m-0">{distribution.reason}</p>
-                </TableCell>
-              )}
-              {isColumnVisible("issuedDate") && (
-                <TableCell className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{distribution.issuedDate}</TableCell>
-              )}
-              {isColumnVisible("issuedBy") && (
-                <TableCell className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{distribution.issuedBy || "—"}</TableCell>
-              )}
-              {isColumnVisible("status") && (
-                <TableCell className="px-4 py-3">
-                  <StatusBadge status={distribution.status} config={statusConfig} size="sm" />
-                </TableCell>
-              )}
-              <TableCell className="px-4 py-3 text-end">
-                <DistributionsRowActions
-                  distribution={distribution}
-                  statuses={statuses}
-                  statusLabels={statusLabels}
-                  canWrite={canWrite}
-                  canDelete={canDelete}
-                  showDeleted={showDeleted}
-                  canRestoreRows={canRestoreRows}
-                  canDeleteRows={canDeleteRows}
-                  triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
-                  onMessage={
-                    onMessage
-                      ? (channel, dist) => onMessage(channel, [dist])
-                      : undefined
-                  }
-                  onChangeStatus={onChangeStatus}
-                  onTrashAction={onTrashAction}
-                />
-              </TableCell>
-            </motion.tr>
+            <div className="flex items-center gap-2">
+              <span className="text-base" aria-hidden="true">{denomination?.icon || "⭐"}</span>
+              <div>
+                <p className="text-sm font-semibold text-foreground whitespace-nowrap m-0">{distribution.denominationName}</p>
+                {denomination && (
+                  <p className="text-xs font-bold m-0" style={{ color: denomination.color }}>
+                    {t("hasanat.form.pointsShort", { points: denomination.points })}
+                  </p>
+                )}
+              </div>
+            </div>
           );
-        })}
-      </TableBody>
-    </Table>
+        },
+      });
+    }
+
+    if (isColumnVisible("recipient")) {
+      cols.push({
+        id: "recipient",
+        label: t("hasanat.columns.distribution.recipient"),
+        render: (distribution) => (
+          <div className="flex items-center gap-1.5">
+            {distribution.recipientType === "faculty" ? (
+              <Users2 className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+            ) : (
+              <User className="w-3 h-3 text-muted-foreground" aria-hidden="true" />
+            )}
+            <span className="text-sm font-semibold text-foreground whitespace-nowrap">{distribution.recipientName}</span>
+          </div>
+        ),
+      });
+    }
+
+    if (isColumnVisible("recipientClass")) {
+      cols.push({
+        id: "recipientClass",
+        label: t("hasanat.columns.distribution.recipientClass"),
+        cellClassName: "text-sm text-muted-foreground",
+        render: (distribution) => distribution.recipientClass || "—",
+      });
+    }
+
+    if (isColumnVisible("quantity")) {
+      cols.push({
+        id: "quantity",
+        label: t("hasanat.columns.distribution.quantity"),
+        render: (distribution) => <span className="text-sm font-bold text-foreground">{distribution.quantity}</span>,
+      });
+    }
+
+    if (isColumnVisible("reason")) {
+      cols.push({
+        id: "reason",
+        label: t("hasanat.columns.distribution.reason"),
+        cellClassName: "max-w-cell-sm",
+        render: (distribution) => <p className="text-sm text-muted-foreground truncate m-0">{distribution.reason}</p>,
+      });
+    }
+
+    if (isColumnVisible("issuedDate")) {
+      cols.push({
+        id: "issuedDate",
+        label: t("hasanat.columns.distribution.issuedDate"),
+        cellClassName: "text-xs text-muted-foreground whitespace-nowrap",
+        render: (distribution) => distribution.issuedDate,
+      });
+    }
+
+    if (isColumnVisible("issuedBy")) {
+      cols.push({
+        id: "issuedBy",
+        label: t("hasanat.columns.distribution.issuedBy"),
+        cellClassName: "text-sm text-muted-foreground whitespace-nowrap",
+        render: (distribution) => distribution.issuedBy || "—",
+      });
+    }
+
+    if (isColumnVisible("status")) {
+      cols.push({
+        id: "status",
+        label: t("hasanat.columns.distribution.status"),
+        render: (distribution) => <StatusBadge status={distribution.status} config={statusConfig} size="sm" />,
+      });
+    }
+
+    return cols;
+  }, [denomsById, isColumnVisible, statusConfig, t]);
+
+  return (
+    <WorkBatchTable
+      data={distributions}
+      columns={columns}
+      caption={t("hasanat.distribution.aria")}
+      className="table-fixed"
+      tableBodyClassName="divide-y divide-border/50"
+      bordered={false}
+      onRowClick={onRowClick ? (d) => onRowClick(d.id) : undefined}
+      selection={
+        canDelete
+          ? {
+              selectedIds,
+              onSelectOne: (id) => onToggleSelectedDistribution(String(id), !selectedIdsSet.has(String(id))),
+              onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+              allSelected: allVisibleSelected,
+              someSelected: someVisibleSelected,
+              selectAllAriaLabel: t("hasanat.trash.selectAll"),
+              selectRowAriaLabel: (distribution) =>
+                t("hasanat.trash.selectDistribution", {
+                  name: distribution.recipientName || distribution.id,
+                }),
+            }
+          : undefined
+      }
+      columnResize={{
+        getColumnWidth: (key) => getColumnWidth?.(key),
+        onColumnResize,
+      }}
+      renderRowActions={(distribution) => (
+        <DistributionsRowActions
+          distribution={distribution}
+          statuses={statuses}
+          statusLabels={statusLabels}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          showDeleted={showDeleted}
+          canRestoreRows={canRestoreRows}
+          canDeleteRows={canDeleteRows}
+          triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+          onMessage={
+            onMessage
+              ? (channel, dist) => onMessage(channel, [dist])
+              : undefined
+          }
+          onChangeStatus={onChangeStatus}
+          onTrashAction={onTrashAction}
+        />
+      )}
+      actionsLabel={t("hasanat.columns.actions")}
+    />
   );
 }

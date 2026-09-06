@@ -46,68 +46,69 @@ export function DistributionsListFilters({
 }: DistributionsListFiltersProps): JSX.Element {
   const { t } = useTranslation();
 
-  return (
-    <>
-      <WorkTaskToolbar
-        regionLabel={t('hasanat.tabs.distribute')}
-        search={search}
-        onSearchChange={onSearchChange}
-        searchPlaceholder={t('hasanat.searchDistributions')}
-        searchId={HASANAT_WORK_SEARCH_INPUT_ID}
-        hasActiveFilters={filterStatus.length > 0}
-        onClearFilters={onClearStatuses}
-        clearFiltersLabel={t('hasanat.clearFilters')}
-        filterButton={
-          <HasanatFiltersMenuButton
-            filterStatus={filterStatus}
-            activeFilterCount={filterStatus.length}
-            statusLabels={statusLabels}
-            onToggleStatus={onToggleStatus}
-            onClearFilters={onClearStatuses}
-          />
-        }
-        primaryAction={
-          canWrite && !showDeleted ? (
-            <Button
-              type="button"
-              onClick={onOpenModal}
-              className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
-            >
-              {t('hasanat.distributeCards')}
-            </Button>
-          ) : undefined
-        }
-        trashToggle={
-          canDelete && onToggleDeleted
-            ? {
-                canViewDeleted: canDelete,
-                viewingDeleted: showDeleted,
-                onToggle: onToggleDeleted,
-                activeLabel: t('hasanat.trash.showActive'),
-                deletedLabel: t('hasanat.trash.showDeleted'),
-              }
-            : undefined
-        }
-        viewModeToggle={{
-          viewMode,
-          onViewModeChange,
-        }}
-        columnCustomizer={columnCustomizer ? {
-          registry: columnCustomizer.columnRegistry,
-          onUpdate: columnCustomizer.updateUserColumnLayout,
-          onReset: columnCustomizer.onResetLayout,
-          labels: columnCustomizer.labels,
-        } : undefined}
-      />
+  const filterChips = filterStatus.length > 0 ? (
+    <FilterChips
+      chips={filterStatus.map((status) => ({
+        key: `status:${status}`,
+        label: statusLabels[status],
+        onRemove: () => onToggleStatus(status),
+      }))}
+      onClearAll={onClearStatuses}
+    />
+  ) : null;
 
-      <FilterChips
-        chips={filterStatus.map((status) => ({
-          key: `status:${status}`,
-          label: statusLabels[status],
-          onRemove: () => onToggleStatus(status),
-        }))}
-        onClearAll={onClearStatuses}
-      />
-    </>
+  return (
+    <WorkTaskToolbar
+      regionLabel={t('hasanat.tabs.distribute')}
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder={t('hasanat.searchDistributions')}
+      searchId={HASANAT_WORK_SEARCH_INPUT_ID}
+      hasActiveFilters={filterStatus.length > 0}
+      onClearFilters={onClearStatuses}
+      clearFiltersLabel={t('hasanat.clearFilters')}
+      filterChips={filterChips}
+      filterButton={
+        <HasanatFiltersMenuButton
+          filterStatus={filterStatus}
+          activeFilterCount={filterStatus.length}
+          statusLabels={statusLabels}
+          onToggleStatus={onToggleStatus}
+          onClearFilters={onClearStatuses}
+        />
+      }
+      primaryAction={
+        canWrite && !showDeleted ? (
+          <Button
+            type="button"
+            onClick={onOpenModal}
+            className="flex min-h-11 items-center gap-1.5 whitespace-nowrap rounded-lg bg-primary px-3.5 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90"
+          >
+            {t('hasanat.distributeCards')}
+          </Button>
+        ) : undefined
+      }
+      trashToggle={
+        canDelete && onToggleDeleted
+          ? {
+              canViewDeleted: canDelete,
+              viewingDeleted: showDeleted,
+              onToggle: onToggleDeleted,
+              activeLabel: t('hasanat.trash.showActive'),
+              deletedLabel: t('hasanat.trash.showDeleted'),
+            }
+          : undefined
+      }
+      viewModeToggle={{
+        viewMode,
+        onViewModeChange,
+      }}
+      columnCustomizer={columnCustomizer ? {
+        registry: columnCustomizer.columnRegistry,
+        onUpdate: columnCustomizer.updateUserColumnLayout,
+        onReset: columnCustomizer.onResetLayout,
+        labels: columnCustomizer.labels,
+      } : undefined}
+    />
   );
 }

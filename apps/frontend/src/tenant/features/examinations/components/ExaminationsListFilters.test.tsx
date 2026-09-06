@@ -10,7 +10,15 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("@/components/common/work", () => ({
-  WorkTaskToolbar: ({ filterButton, filterChips, primaryAction }: any) => (
+  WorkTaskToolbar: ({
+    filterButton,
+    filterChips,
+    primaryAction,
+  }: {
+    filterButton?: React.ReactNode;
+    filterChips?: React.ReactNode;
+    primaryAction?: React.ReactNode;
+  }) => (
     <div data-testid="module-toolbar">
       {filterButton}
       {filterChips}

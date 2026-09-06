@@ -58,67 +58,66 @@ export function SessionsListFilters({
   const { t } = useTranslation();
 
   return (
-    <>
-      <ModuleWorkToolbar
-        regionLabel={t("nav.sessions")}
-        search={search}
-        onSearchChange={onSearchChange}
-        searchPlaceholder={t("sessions.searchPlaceholder")}
-        searchId={SESSIONS_WORK_SEARCH_INPUT_ID}
-        hasActiveFilters={activeFilterCount > 0}
-        onClearFilters={onClearFilters}
-        clearFiltersLabel={t("sessions.clearFilters")}
-        filterButton={
-          <SessionsFiltersMenuButton
-            filterStatus={filterStatus}
-            filterType={filterType}
-            statusOptions={statusOptions}
-            typeOptions={typeOptions}
-            statusLabels={statusLabels}
-            typeLabels={typeLabels}
-            activeFilterCount={activeFilterCount}
-            onStatusFilterToggle={onStatusFilterToggle}
-            onTypeFilterToggle={onTypeFilterToggle}
-            onClearFilters={onClearFilters}
-          />
-        }
-        trashToggle={
-          canDelete
-            ? {
-                canViewDeleted: canDelete,
-                viewingDeleted: showDeleted,
-                onToggle: onToggleDeleted,
-                activeLabel: t("sessions.showActive"),
-                deletedLabel: t("sessions.showDeleted"),
-              }
-            : undefined
-        }
-        viewModeToggle={{
-          viewMode,
-          onViewModeChange,
-        }}
-        columnCustomizer={{
-          registry: columnLayout.columnRegistry,
-          onUpdate: columnLayout.updateUserColumnLayout,
-          labels: columnLayout.customizerLabels,
-        }}
-      />
-
-      <FilterChips
-        chips={[
-          ...filterStatus.map((statusOption) => ({
-            key: statusOption,
-            label: statusLabels[statusOption] ?? statusOption,
-            onRemove: () => onStatusFilterToggle(statusOption),
-          })),
-          ...filterType.map((typeOption) => ({
-            key: typeOption,
-            label: typeLabels[typeOption] ?? typeOption,
-            onRemove: () => onTypeFilterToggle(typeOption),
-          })),
-        ]}
-        onClearAll={onClearFilters}
-      />
-    </>
+    <ModuleWorkToolbar
+      regionLabel={t("nav.sessions")}
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder={t("sessions.searchPlaceholder")}
+      searchId={SESSIONS_WORK_SEARCH_INPUT_ID}
+      hasActiveFilters={activeFilterCount > 0}
+      onClearFilters={onClearFilters}
+      clearFiltersLabel={t("sessions.clearFilters")}
+      filterButton={
+        <SessionsFiltersMenuButton
+          filterStatus={filterStatus}
+          filterType={filterType}
+          statusOptions={statusOptions}
+          typeOptions={typeOptions}
+          statusLabels={statusLabels}
+          typeLabels={typeLabels}
+          activeFilterCount={activeFilterCount}
+          onStatusFilterToggle={onStatusFilterToggle}
+          onTypeFilterToggle={onTypeFilterToggle}
+          onClearFilters={onClearFilters}
+        />
+      }
+      filterChips={
+        <FilterChips
+          chips={[
+            ...filterStatus.map((statusOption) => ({
+              key: statusOption,
+              label: statusLabels[statusOption] ?? statusOption,
+              onRemove: () => onStatusFilterToggle(statusOption),
+            })),
+            ...filterType.map((typeOption) => ({
+              key: typeOption,
+              label: typeLabels[typeOption] ?? typeOption,
+              onRemove: () => onTypeFilterToggle(typeOption),
+            })),
+          ]}
+          onClearAll={onClearFilters}
+        />
+      }
+      trashToggle={
+        canDelete
+          ? {
+              canViewDeleted: canDelete,
+              viewingDeleted: showDeleted,
+              onToggle: onToggleDeleted,
+              activeLabel: t("sessions.showActive"),
+              deletedLabel: t("sessions.showDeleted"),
+            }
+          : undefined
+      }
+      viewModeToggle={{
+        viewMode,
+        onViewModeChange,
+      }}
+      columnCustomizer={{
+        registry: columnLayout.columnRegistry,
+        onUpdate: columnLayout.updateUserColumnLayout,
+        labels: columnLayout.customizerLabels,
+      }}
+    />
   );
 }

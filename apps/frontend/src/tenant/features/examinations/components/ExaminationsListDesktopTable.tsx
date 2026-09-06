@@ -1,17 +1,11 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { formatDate } from "@mms/shared";
-import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
-import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
-import {
-  Table,
-  TableBody,
-  TableCell,
-} from "@/components/ui/table";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ExaminationsRowActions } from "@/tenant/features/examinations/components/ExaminationsRowActions";
+import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work";
+import type { Exam } from "@/lib/data/examinationData";
 import {
   getExamMeta,
   type ExaminationsListContentProps,
@@ -41,101 +35,135 @@ export function ExaminationsListDesktopTable(props: ExaminationsListDesktopTable
     onTrashAction,
   } = props;
   const { t } = useTranslation();
-  const selectedSet = new Set(selectedIds);
+  const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
+
+  const columns = React.useMemo<WorkBatchTableColumn<Exam>[]>(() => {
+    const cols: WorkBatchTableColumn<Exam>[] = [];
+
+    if (isColumnVisible("name")) {
+      cols.push({
+        id: "name",
+        label: t("examinations.columns.exam.name"),
+        headerClassName: "whitespace-nowrap",
+        cellClassName: "px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap",
+        render: (exam) => exam.name,
+      });
+    }
+
+    if (isColumnVisible("subject")) {
+      cols.push({
+        id: "subject",
+        label: t("examinations.columns.exam.subject"),
+        headerClassName: "whitespace-nowrap",
+        cellClassName: "px-4 py-3 text-sm text-muted-foreground",
+        render: (exam) => exam.subject,
+      });
+    }
+
+    if (isColumnVisible("date")) {
+      cols.push({
+        id: "date",
+        label: t("examinations.columns.exam.date"),
+        headerClassName: "whitespace-nowrap",
+        cellClassName: "px-4 py-3 text-sm text-muted-foreground whitespace-nowrap",
+        render: (exam) => formatDate(exam.date, true),
+      });
+    }
+
+    if (isColumnVisible("duration")) {
+      cols.push({
+        id: "duration",
+        label: t("examinations.columns.exam.duration"),
+        headerClassName: "whitespace-nowrap",
+        cellClassName: "px-4 py-3 text-sm text-muted-foreground whitespace-nowrap",
+        render: (exam) => t("examinations.durationMinutes", { minutes: exam.duration }),
+      });
+    }
+
+    if (isColumnVisible("status")) {
+      cols.push({
+        id: "status",
+        label: t("examinations.columns.exam.status"),
+        headerClassName: "whitespace-nowrap",
+        render: (exam) => <StatusBadge status={exam.status} config={statusConfig} size="sm" />,
+      });
+    }
+
+    if (isColumnVisible("totalMarks")) {
+      cols.push({
+        id: "totalMarks",
+        label: t("examinations.columns.exam.totalMarks"),
+        headerClassName: "whitespace-nowrap",
+        cellClassName: "px-4 py-3 text-sm font-bold text-foreground",
+        render: (exam) => exam.totalMarks,
+      });
+    }
+
+    if (isColumnVisible("passingMarks")) {
+      cols.push({
+        id: "passingMarks",
+        label: t("examinations.columns.exam.passingMarks"),
+        headerClassName: "whitespace-nowrap",
+        cellClassName: "px-4 py-3 text-sm text-foreground",
+        render: (exam) => exam.passingMarks,
+      });
+    }
+
+    if (isColumnVisible("classes")) {
+      cols.push({
+        id: "classes",
+        label: t("examinations.columns.exam.classes"),
+        headerClassName: "whitespace-nowrap",
+        cellClassName: "px-4 py-3 text-xs text-muted-foreground max-w-cell-sm truncate",
+        render: (exam) => {
+          const { assignedClasses } = getExamMeta(exam, classes, enrollments);
+          return assignedClasses.map((sessionClass) => sessionClass.name).join(", ") || "—";
+        },
+      });
+    }
+
+    return cols;
+  }, [classes, enrollments, isColumnVisible, statusConfig, t]);
 
   return (
-    <Table className="table-fixed">
-      <caption className="sr-only">{t("examinations.exams")}</caption>
-      <ModuleWorkTableHeader
-        columns={[
-          isColumnVisible("name") ? { id: "name", label: t("examinations.columns.exam.name"), headerClassName: "whitespace-nowrap" } : null,
-          isColumnVisible("subject") ? { id: "subject", label: t("examinations.columns.exam.subject"), headerClassName: "whitespace-nowrap" } : null,
-          isColumnVisible("date") ? { id: "date", label: t("examinations.columns.exam.date"), headerClassName: "whitespace-nowrap" } : null,
-          isColumnVisible("duration") ? { id: "duration", label: t("examinations.columns.exam.duration"), headerClassName: "whitespace-nowrap" } : null,
-          isColumnVisible("status") ? { id: "status", label: t("examinations.columns.exam.status"), headerClassName: "whitespace-nowrap" } : null,
-          isColumnVisible("totalMarks") ? { id: "totalMarks", label: t("examinations.columns.exam.totalMarks"), headerClassName: "whitespace-nowrap" } : null,
-          isColumnVisible("passingMarks") ? { id: "passingMarks", label: t("examinations.columns.exam.passingMarks"), headerClassName: "whitespace-nowrap" } : null,
-          isColumnVisible("classes") ? { id: "classes", label: t("examinations.columns.exam.classes"), headerClassName: "whitespace-nowrap" } : null,
-        ].filter((c): c is Exclude<typeof c, null> => c !== null)}
-        getColumnWidth={(key) => getColumnWidth?.(key)}
-        setColumnWidth={onColumnResize ?? (() => {})}
-        selection={canDelete ? {
-          allSelected: allVisibleSelected,
-          someSelected: someVisibleSelected,
-          onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
-          ariaLabel: t("examinations.trash.selectAll")
-        } : undefined}
-        actionsLabel={t("examinations.columns.actions")}
-      />
-      <TableBody className="divide-y divide-border/50">
-        {exams.map((exam, index) => {
-          const { assignedClasses } = getExamMeta(exam, classes, enrollments);
-          const isSelected = selectedSet.has(exam.id);
-
-          return (
-            <motion.tr 
-              key={exam.id} 
-              onClick={() => props.onRowClick?.(exam.id)}
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              transition={{ delay: index * 0.03 }} 
-              className={`hover:bg-muted/50 cursor-pointer transition-colors group ${isSelected ? "bg-primary/5" : ""}`}
-            >
-              {canDelete && (
-                <ModuleTableSelectionCell
-                  checked={isSelected}
-                  onCheckedChange={(checked) => onToggleSelectedExam(exam.id, checked)}
-                  ariaLabel={t("examinations.trash.selectExam", { name: exam.name })}
-                  sticky={false}
-                  stopPropagation={true}
-                  className="px-3 py-3"
-                />
-              )}
-              {isColumnVisible("name") && (
-                <TableCell className="px-4 py-3 text-sm font-semibold text-foreground whitespace-nowrap">{exam.name}</TableCell>
-              )}
-              {isColumnVisible("subject") && (
-                <TableCell className="px-4 py-3 text-sm text-muted-foreground">{exam.subject}</TableCell>
-              )}
-              {isColumnVisible("date") && (
-                <TableCell className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">{formatDate(exam.date, true)}</TableCell>
-              )}
-              {isColumnVisible("duration") && (
-                <TableCell className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap">
-                  {t("examinations.durationMinutes", { minutes: exam.duration })}
-                </TableCell>
-              )}
-              {isColumnVisible("status") && (
-                <TableCell className="px-4 py-3">
-                  <StatusBadge status={exam.status} config={statusConfig} size="sm" />
-                </TableCell>
-              )}
-              {isColumnVisible("totalMarks") && (
-                <TableCell className="px-4 py-3 text-sm font-bold text-foreground">{exam.totalMarks}</TableCell>
-              )}
-              {isColumnVisible("passingMarks") && (
-                <TableCell className="px-4 py-3 text-sm text-foreground">{exam.passingMarks}</TableCell>
-              )}
-              {isColumnVisible("classes") && (
-                <TableCell className="px-4 py-3 text-xs text-muted-foreground max-w-cell-sm truncate">
-                  {assignedClasses.map((sessionClass) => sessionClass.name).join(", ") || "—"}
-                </TableCell>
-              )}
-              <TableCell className="px-4 py-3 text-end">
-                <ExaminationsRowActions
-                  exam={exam}
-                  canWrite={canWrite}
-                  canDelete={canTrashRows}
-                  showDeleted={showDeleted}
-                  triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
-                  onEdit={onEdit}
-                  onTrashAction={onTrashAction}
-                />
-              </TableCell>
-            </motion.tr>
-          );
-        })}
-      </TableBody>
-    </Table>
+    <WorkBatchTable
+      data={exams}
+      columns={columns}
+      caption={t("examinations.exams")}
+      className="table-fixed"
+      tableBodyClassName="divide-y divide-border/50"
+      bordered={false}
+      onRowClick={props.onRowClick ? (exam) => props.onRowClick?.(exam.id) : undefined}
+      selection={
+        canDelete
+          ? {
+              selectedIds,
+              onSelectOne: (id) => onToggleSelectedExam(String(id), !selectedSet.has(String(id))),
+              onSelectAll: () => onToggleSelectAll(!allVisibleSelected),
+              allSelected: allVisibleSelected,
+              someSelected: someVisibleSelected,
+              selectAllAriaLabel: t("examinations.trash.selectAll"),
+              selectRowAriaLabel: (exam) =>
+                t("examinations.trash.selectExam", { name: exam.name }),
+            }
+          : undefined
+      }
+      columnResize={{
+        getColumnWidth: (key) => getColumnWidth?.(key),
+        onColumnResize,
+      }}
+      renderRowActions={(exam) => (
+        <ExaminationsRowActions
+          exam={exam}
+          canWrite={canWrite}
+          canDelete={canTrashRows}
+          showDeleted={showDeleted}
+          triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+          onEdit={onEdit}
+          onTrashAction={onTrashAction}
+        />
+      )}
+      actionsLabel={t("examinations.columns.actions")}
+    />
   );
 }

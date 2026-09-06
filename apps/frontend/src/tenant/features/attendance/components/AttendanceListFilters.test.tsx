@@ -10,8 +10,11 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("@/components/ui/ModuleWorkToolbar", () => ({
-  ModuleWorkToolbar: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="module-toolbar">{children}</div>
+  ModuleWorkToolbar: ({ children, filterChips }: { children: React.ReactNode; filterChips?: React.ReactNode }) => (
+    <div data-testid="module-toolbar">
+      {children}
+      {filterChips}
+    </div>
   ),
 }));
 

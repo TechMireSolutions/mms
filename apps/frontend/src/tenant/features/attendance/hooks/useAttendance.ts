@@ -13,6 +13,7 @@ import { useServerMetrics } from '@/hooks/useServerMetrics';
 import { tsrClient } from '@/lib/api';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
+import { invalidateAttendanceQueries } from '@/tenant/features/attendance/hooks/invalidateAttendanceQueries';
 
 export const ATTENDANCE_QUERY_KEY = ['attendance', 'list'] as const;
 export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
@@ -96,8 +97,7 @@ export function useAttendanceMutations() {
   const queryClient = useQueryClient();
 
   const invalidate = () => {
-    void queryClient.invalidateQueries({ queryKey: ATTENDANCE_QUERY_KEY });
-    void queryClient.invalidateQueries({ queryKey: ATTENDANCE_METRICS_QUERY_KEY });
+    invalidateAttendanceQueries(queryClient);
   };
 
   /** Bulk upsert. The legacy name is retained for callers while the endpoint remains PUT /bulk. */

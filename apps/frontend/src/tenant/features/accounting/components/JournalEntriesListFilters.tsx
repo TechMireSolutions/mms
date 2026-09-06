@@ -143,6 +143,12 @@ export function JournalEntriesListFilters({
           onReset: columnCustomizer.onResetLayout,
           labels: columnCustomizer.labels,
         } : undefined}
+        filterChips={
+          <FilterChips chips={chips} onClearAll={() => {
+            onStatusFilterChange("all");
+            onTagFilterChange("all");
+          }} />
+        }
       >
         <Button
           type="button"
@@ -162,10 +168,6 @@ export function JournalEntriesListFilters({
           <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
         </Button>
       </WorkTaskToolbar>
-      <FilterChips chips={chips} onClearAll={() => {
-        onStatusFilterChange("all");
-        onTagFilterChange("all");
-      }} />
     </>
   );
 }

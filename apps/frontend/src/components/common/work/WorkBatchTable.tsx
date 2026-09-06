@@ -31,6 +31,7 @@ export interface WorkBatchTableProps<TData extends { id: string | number }> {
     allSelected: boolean;
     someSelected: boolean;
     selectAllAriaLabel?: string;
+    selectRowAriaLabel?: (row: TData) => string;
   };
 
   // Sorting
@@ -62,12 +63,23 @@ export interface WorkBatchTableProps<TData extends { id: string | number }> {
     selectedCountLabel?: string;
   };
 
+  // Screen reader caption
+  caption?: string;
+
+  // Outer border styling (default: true)
+  bordered?: boolean;
+
+  // Custom table footer element (rendered inside Table)
+  tableFooter?: React.ReactNode;
+
   // Empty & loading states
   emptyState?: React.ReactNode;
   isLoading?: boolean;
 
   onRowClick?: (row: TData) => void;
+  rowClassName?: (row: TData) => string | undefined;
   className?: string;
+  tableBodyClassName?: string;
   containerClassName?: string;
 }
 
@@ -87,10 +99,15 @@ export function WorkBatchTable<TData extends { id: string | number }>({
   stickyColumnId,
   optimisticDeletedIds,
   footerCount,
+  caption,
+  bordered = true,
+  tableFooter,
   emptyState,
   isLoading,
   onRowClick,
+  rowClassName,
   className,
+  tableBodyClassName,
   containerClassName,
 }: WorkBatchTableProps<TData>): JSX.Element {
   const rowMotion = useListRowMotion({ layout: "position", fade: true, duration: 0.1 });
@@ -121,8 +138,9 @@ export function WorkBatchTable<TData extends { id: string | number }>({
 
   return (
     <div className={cn("space-y-2", containerClassName)}>
-      <div className="overflow-x-auto rounded-lg border border-border/60 bg-card">
+      <div className={cn("overflow-x-auto", bordered && "rounded-lg border border-border/60 bg-card")}>
         <Table className={cn("table-fixed w-full", className)}>
+          {caption ? <caption className="sr-only">{caption}</caption> : null}
           <ModuleWorkTableHeader
             columns={headerColumns}
             sortField={sort?.field}
@@ -144,11 +162,14 @@ export function WorkBatchTable<TData extends { id: string | number }>({
             stickyColumnId={stickyColumnId}
           />
 
-          <TableBody className="divide-y divide-border/50">
+          <TableBody className={cn("divide-y divide-border/50", tableBodyClassName)}>
             <AnimatePresence initial={false}>
               {activeRows.map((row, rowIndex) => {
                 const idStr = String(row.id);
                 const isSelected = selectedSet.has(row.id) || selectedSet.has(idStr);
+                const rowAriaLabel = selection?.selectRowAriaLabel
+                  ? selection.selectRowAriaLabel(row)
+                  : `Select row ${idStr}`;
 
                 return (
                   <motion.tr
@@ -159,6 +180,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
                       "group border-b border-border/40 transition-colors hover:bg-muted/40",
                       isSelected && "bg-accent/15",
                       onRowClick && "cursor-pointer",
+                      rowClassName?.(row),
                     )}
                   >
                     {/* Selectable Row Checkbox */}
@@ -166,7 +188,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
                       <ModuleTableSelectionCell
                         checked={isSelected}
                         onCheckedChange={() => selection.onSelectOne(idStr)}
-                        ariaLabel={`Select row ${idStr}`}
+                        ariaLabel={rowAriaLabel}
                         stopPropagation={Boolean(onRowClick)}
                       />
                     )}
@@ -209,6 +231,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
               })}
             </AnimatePresence>
           </TableBody>
+          {tableFooter}
         </Table>
       </div>
 
