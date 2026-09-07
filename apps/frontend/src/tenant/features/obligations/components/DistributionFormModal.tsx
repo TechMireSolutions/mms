@@ -53,8 +53,18 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
           <label htmlFor="dist-name" className={FORM_LABEL}>{t("obligations.wakala.distName")}<RequiredMark /></label>
           <Input
             id="dist-name"
+            name="name"
             value={form.name || ""}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
+            onChange={(event) => {
+              if (errors.name) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.name;
+                  return next;
+                });
+              }
+              setForm({ ...form, name: event.target.value });
+            }}
             className={FORM_INPUT}
             aria-invalid={!!errors.name}
           />
@@ -63,6 +73,7 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
           <label htmlFor="dist-type" className={FORM_LABEL}>{t("obligations.wakala.distType")}<RequiredMark /></label>
           <FormSelect
             id="dist-type"
+            name="type"
             value={form.type || ""}
             onChange={(val) => setForm({ ...form, type: val as DistributionType })}
             options={DISTRIBUTION_TYPES.map((type) => ({
@@ -75,12 +86,23 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
           <label htmlFor="dist-pct" className={FORM_LABEL}>{t("obligations.wakala.distPct")}<RequiredMark /></label>
           <Input
             id="dist-pct"
+            name="percentage"
             type="number"
+            inputMode="decimal"
             min="0.01"
             max="100"
             step="0.01"
             value={form.percentage || ""}
-            onChange={(event) => setForm({ ...form, percentage: parseFloat(event.target.value) })}
+            onChange={(event) => {
+              if (errors.pct) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.pct;
+                  return next;
+                });
+              }
+              setForm({ ...form, percentage: parseFloat(event.target.value) });
+            }}
             className={FORM_INPUT}
             aria-invalid={!!errors.pct}
           />

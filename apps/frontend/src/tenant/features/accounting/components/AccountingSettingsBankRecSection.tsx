@@ -75,9 +75,10 @@ export function AccountingSettingsBankRecSection({
   return (
     <SectionCard title={t("accounting.settings.secBankRec")} icon={Landmark} className={SETUP_SECTION_CARD_CLASS}>
       <p className="m-0 mb-3 text-xs text-muted-foreground">{t("accounting.settings.bankRec.hint")}</p>
-      <Field label={t("accounting.settings.bankRec.account")}>
+      <Field id="bank-rec-account" label={t("accounting.settings.bankRec.account")}>
         <FormSelect
           id="bank-rec-account"
+          name="accountId"
           value={accountId}
           onChange={setAccountId}
           options={accounts
@@ -86,10 +87,12 @@ export function AccountingSettingsBankRecSection({
         />
       </Field>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <DatePicker id="bank-period-start" value={periodStart} onChange={setPeriodStart} />
-        <DatePicker id="bank-period-end" value={periodEnd} onChange={setPeriodEnd} />
+        <DatePicker id="bank-period-start" name="periodStart" value={periodStart} onChange={setPeriodStart} />
+        <DatePicker id="bank-period-end" name="periodEnd" value={periodEnd} onChange={setPeriodEnd} />
       </div>
       <Input
+        id="bank-rec-closing"
+        name="closingBalance"
         className={`${FORM_INPUT} mt-3`}
         inputMode="decimal"
         value={closingBalance}
@@ -97,22 +100,22 @@ export function AccountingSettingsBankRecSection({
         aria-label={t("accounting.settings.bankRec.closing")}
       />
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <DatePicker id="bank-line-date" value={lineDate} onChange={setLineDate} />
-        <Input className={FORM_INPUT} value={lineDesc} onChange={(event) => setLineDesc(event.target.value)} aria-label={t("accounting.settings.bankRec.lineDesc")} />
-        <Input className={FORM_INPUT} inputMode="decimal" value={lineAmount} onChange={(event) => setLineAmount(event.target.value)} aria-label={t("accounting.settings.bankRec.lineAmount")} />
+        <DatePicker id="bank-line-date" name="lineDate" value={lineDate} onChange={setLineDate} />
+        <Input id="bank-line-desc" name="lineDesc" className={FORM_INPUT} value={lineDesc} onChange={(event) => setLineDesc(event.target.value)} aria-label={t("accounting.settings.bankRec.lineDesc")} />
+        <Input id="bank-line-amount" name="lineAmount" className={FORM_INPUT} inputMode="decimal" value={lineAmount} onChange={(event) => setLineAmount(event.target.value)} aria-label={t("accounting.settings.bankRec.lineAmount")} />
       </div>
-      <Button type="button" className="mt-3 min-h-11" onClick={() => void handleSave()} disabled={!accountId || save.isPending}>
+      <Button type="button" className="mt-3 min-h-11" onClick={async () => { await handleSave(); }} disabled={!accountId || save.isPending}>
         {t("accounting.settings.bankRec.add")}
       </Button>
       <p className="m-0 mt-3 text-xs text-muted-foreground">
         {t("accounting.settings.bankRec.count", { count: String(statements.length) })}
       </p>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Input className={FORM_INPUT} value={statementLineId} onChange={(event) => setStatementLineId(event.target.value)} aria-label={t("accounting.settings.bankRec.statementLine")} />
-        <Input className={FORM_INPUT} value={journalEntryId} onChange={(event) => setJournalEntryId(event.target.value)} aria-label={t("accounting.settings.bankRec.journalEntry")} />
-        <Input className={FORM_INPUT} value={journalLineId} onChange={(event) => setJournalLineId(event.target.value)} aria-label={t("accounting.settings.bankRec.journalLine")} />
+        <Input id="bank-statement-line" name="statementLineId" className={FORM_INPUT} value={statementLineId} onChange={(event) => setStatementLineId(event.target.value)} aria-label={t("accounting.settings.bankRec.statementLine")} />
+        <Input id="bank-journal-entry" name="journalEntryId" className={FORM_INPUT} value={journalEntryId} onChange={(event) => setJournalEntryId(event.target.value)} aria-label={t("accounting.settings.bankRec.journalEntry")} />
+        <Input id="bank-journal-line" name="journalLineId" className={FORM_INPUT} value={journalLineId} onChange={(event) => setJournalLineId(event.target.value)} aria-label={t("accounting.settings.bankRec.journalLine")} />
       </div>
-      <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={() => void handleMatch()} disabled={match.isPending}>
+      <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={async () => { await handleMatch(); }} disabled={match.isPending}>
         {t("accounting.settings.bankRec.match")}
       </Button>
     </SectionCard>

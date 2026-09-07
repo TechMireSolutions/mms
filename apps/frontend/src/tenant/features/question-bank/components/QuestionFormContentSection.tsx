@@ -35,21 +35,23 @@ export function QuestionFormContentSection({
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <Field label={t("questionBank.questionText")} required error={errors.text}>
+            <Field id="qb-text" label={t("questionBank.questionText")} required error={errors.text}>
               <Textarea
                 id="qb-text"
                 name="text"
                 value={questionDraft.text || ""}
                 onChange={(e) => updateDraft({ text: e.target.value })}
                 placeholder={t("questionBank.questionTextPlaceholder")}
+                aria-invalid={Boolean(errors.text)}
               />
             </Field>
           </div>
 
           <div className="sm:col-span-2">
-            <Field label={t("questionBank.type")}>
+            <Field id="qb-type" label={t("questionBank.type")}>
               <FormSelect
                 id="qb-type"
+                name="type"
                 className={FORM_SELECT}
                 value={questionDraft.type}
                 onChange={(val) => {

@@ -46,7 +46,7 @@ export default function SystemModulesSettings(): React.JSX.Element {
         <SettingsFormActions
           saveLabel={t('module.system.save')}
           savingLabel={t('module.system.saving')}
-          onSave={() => void handleSaveModules()}
+          onSave={handleSaveModules}
           onDiscard={handleDiscardModules}
           discardLabel={t('theme.discardChanges')}
           dirty={isModulesDirty}

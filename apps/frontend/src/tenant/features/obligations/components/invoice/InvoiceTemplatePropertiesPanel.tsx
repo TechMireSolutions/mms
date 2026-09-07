@@ -134,8 +134,11 @@ export function InvoiceTemplatePropertiesPanel({
                   </div>
                 </div>
                 <div>
-                  <span className="text-xs font-bold uppercase text-muted-foreground tracking-wide block mb-1">{t("obligations.invoiceTemplate.font")}</span>
+                  <label htmlFor="inv-font-family" className="text-xs font-bold uppercase text-muted-foreground tracking-wide block mb-1">{t("obligations.invoiceTemplate.font")}</label>
                   <FormSelect
+                    id="inv-font-family"
+                    name="fontFamily"
+                    aria-label={t("obligations.invoiceTemplate.font")}
                     value={selectedElement.style?.fontFamily || "inherit"}
                     onChange={(fontFamily) => onPatchStyle(selectedElement.id, { fontFamily })}
                     className="w-full"
@@ -149,8 +152,10 @@ export function InvoiceTemplatePropertiesPanel({
                     ]}
                   />
                 </div>
-                <label className="flex items-center gap-2 text-xs cursor-pointer select-none">
+                <label htmlFor="inv-rtl" className="flex items-center gap-2 text-xs cursor-pointer select-none">
                   <Checkbox
+                    id="inv-rtl"
+                    name="rtl"
                     checked={selectedElement.style?.direction === "rtl"}
                     onCheckedChange={(checked) => onPatchStyle(selectedElement.id, { direction: checked ? "rtl" : "ltr" })}
                   />

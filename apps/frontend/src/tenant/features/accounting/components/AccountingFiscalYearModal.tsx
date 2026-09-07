@@ -50,6 +50,17 @@ export function AccountingFiscalYearModal({
     return validationErrors;
   };
 
+  const updateFormField = <K extends keyof FiscalYear>(key: K, value: FiscalYear[K] | string) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
   const handleSave = async () => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) {
@@ -76,7 +87,7 @@ export function AccountingFiscalYearModal({
       error={Object.values(errors)}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
-      onSave={() => { void handleSave(); }}
+      onSave={handleSave}
       saving={submitting}
     >
       <div className="space-y-4">
@@ -84,9 +95,11 @@ export function AccountingFiscalYearModal({
           <label htmlFor="financial-year-label" className={FORM_LABEL}>{t("accounting.settings.fy.labelField")}</label>
           <Input
             id="financial-year-label"
+            name="label"
             value={form.label || ""}
-            onChange={(event) => setForm({ ...form, label: event.target.value })}
+            onChange={(event) => updateFormField("label", event.target.value)}
             placeholder={t("accounting.settings.fy.labelPlaceholder")}
+            aria-invalid={Boolean(errors.label)}
             required
           />
         </div>
@@ -97,7 +110,7 @@ export function AccountingFiscalYearModal({
               id="financial-year-start"
               name="startDate"
               value={form.startDate || ""}
-              onChange={(startDateValue) => setForm({ ...form, startDate: startDateValue })}
+              onChange={(startDateValue) => updateFormField("startDate", startDateValue)}
               max={form.endDate || undefined}
               required
             />
@@ -108,7 +121,7 @@ export function AccountingFiscalYearModal({
               id="financial-year-end"
               name="endDate"
               value={form.endDate || ""}
-              onChange={(endDateValue) => setForm({ ...form, endDate: endDateValue })}
+              onChange={(endDateValue) => updateFormField("endDate", endDateValue)}
               min={form.startDate || undefined}
               required
             />
@@ -118,8 +131,9 @@ export function AccountingFiscalYearModal({
           <label htmlFor="financial-year-status" className={FORM_LABEL}>{t("accounting.settings.fy.status")}</label>
           <FormSelect
             id="financial-year-status"
+            name="status"
             value={form.status || "upcoming"}
-            onChange={(statusValue) => setForm({ ...form, status: statusValue as FiscalYear["status"] | "upcoming" })}
+            onChange={(statusValue) => updateFormField("status", statusValue as FiscalYear["status"] | "upcoming")}
             options={[
               { value: "upcoming", label: t("accounting.settings.fy.status.upcoming") },
               { value: "active", label: t("accounting.settings.fy.status.active") },

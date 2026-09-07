@@ -1,6 +1,7 @@
 import React, { useDeferredValue, useMemo, useState } from "react";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { Field } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { useStudentsContractList } from "@/tenant/hooks/collections/students";
@@ -35,19 +36,20 @@ export function InvoiceFormStudentPicker({
 
   return (
     <div className="sm:col-span-2 space-y-2">
-      <label className={FORM_LABEL} htmlFor="invoice-student-search">
-        {t("finance.form.pickStudent")}
-      </label>
-      <Input
-        id="invoice-student-search"
-        className={FORM_INPUT}
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder={t("finance.form.searchStudent")}
-      />
+      <Field id="invoice-student-search" label={t("finance.form.pickStudent")}>
+        <Input
+          id="invoice-student-search"
+          name="studentSearch"
+          className={FORM_INPUT}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={t("finance.form.searchStudent")}
+        />
+      </Field>
       <FormSelect
         id="invoice-student-pick"
         name="studentPick"
+        aria-label={t("finance.form.pickStudent")}
         value={studentId}
         onChange={(value) => {
           const selected = students.find((student: { id: string }) => student.id === value);

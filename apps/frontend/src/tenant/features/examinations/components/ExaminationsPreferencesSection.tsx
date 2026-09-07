@@ -21,9 +21,10 @@ export function ExaminationsPreferencesSection({
   return (
     <div className="space-y-4 text-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label={t("examinations.settings.gradingSystem")}>
+        <Field id="exams-grading-system" label={t("examinations.settings.gradingSystem")}>
           <FormSelect
             id="exams-grading-system"
+            name="gradingSystem"
             value={settingsDraft.gradingSystem}
             onChange={(value) => upd("gradingSystem", value)}
             options={[
@@ -43,9 +44,10 @@ export function ExaminationsPreferencesSection({
           />
         </Field>
 
-        <Field label={t("examinations.settings.certificateTemplate")}>
+        <Field id="exams-cert-template" label={t("examinations.settings.certificateTemplate")}>
           <FormSelect
             id="exams-cert-template"
+            name="certificateTemplate"
             value={settingsDraft.certificateTemplate}
             onChange={(value) => upd("certificateTemplate", value)}
             options={[
@@ -65,10 +67,12 @@ export function ExaminationsPreferencesSection({
           />
         </Field>
 
-        <Field label={t("examinations.settings.passMark")}>
+        <Field id="exams-pass-mark" label={t("examinations.settings.passMark")}>
           <Input
             id="exams-pass-mark"
+            name="passMark"
             type="number"
+            inputMode="numeric"
             min="0"
             className={FORM_INPUT}
             value={settingsDraft.passMark || ""}
@@ -76,10 +80,12 @@ export function ExaminationsPreferencesSection({
           />
         </Field>
 
-        <Field label={t("examinations.settings.maxMark")}>
+        <Field id="exams-max-mark" label={t("examinations.settings.maxMark")}>
           <Input
             id="exams-max-mark"
+            name="maxMark"
             type="number"
+            inputMode="numeric"
             min="0"
             className={FORM_INPUT}
             value={settingsDraft.maxMark || ""}

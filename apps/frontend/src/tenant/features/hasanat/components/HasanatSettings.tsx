@@ -45,10 +45,12 @@ export const HasanatSettings = (function HasanatSettings({
       >
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <Field label={t("hasanat.settings.pointsPerUnit")}>
+            <Field id="points-per-unit" label={t("hasanat.settings.pointsPerUnit")}>
               <Input
                 id="points-per-unit"
+                name="pointsPerUnit"
                 type="number"
+                inputMode="numeric"
                 className={FORM_INPUT}
                 value={settingsDraft.pointsPerUnit || 10}
                 onChange={(event) => upd("pointsPerUnit", Number(event.target.value))}

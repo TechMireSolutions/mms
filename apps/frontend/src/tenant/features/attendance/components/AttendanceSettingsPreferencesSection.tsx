@@ -34,6 +34,7 @@ export function AttendanceSettingsPreferencesSection({
         <div className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field
+              id="setting-late-threshold"
               label={t("attendance.settings.lateThreshold")}
               hint={t("attendance.settings.lateThresholdDesc")}
             >
@@ -42,6 +43,7 @@ export function AttendanceSettingsPreferencesSection({
                   id="setting-late-threshold"
                   name="lateThresholdMins"
                   type="number"
+                  inputMode="numeric"
                   min={1}
                   max={60}
                   value={settingsDraft.lateThresholdMins || ""}
@@ -53,6 +55,7 @@ export function AttendanceSettingsPreferencesSection({
             </Field>
 
             <Field
+              id="setting-auto-absent"
               label={t("attendance.settings.autoAbsent")}
               hint={t("attendance.settings.autoAbsentDesc")}
             >
@@ -61,6 +64,7 @@ export function AttendanceSettingsPreferencesSection({
                   id="setting-auto-absent"
                   name="autoAbsentAfterMins"
                   type="number"
+                  inputMode="numeric"
                   min={10}
                   max={120}
                   value={settingsDraft.autoAbsentAfterMins || ""}
@@ -105,6 +109,7 @@ export function AttendanceSettingsPreferencesSection({
       >
         <div className="space-y-4">
           <Field
+            id="setting-low-attendance"
             label={t("attendance.settings.lowThreshold")}
             hint={t("attendance.settings.lowThresholdDesc")}
           >
@@ -113,6 +118,7 @@ export function AttendanceSettingsPreferencesSection({
                 id="setting-low-attendance"
                 name="lowAttendanceThreshold"
                 type="number"
+                inputMode="numeric"
                 min={50}
                 max={100}
                 value={(settingsDraft.lowAttendanceThreshold as number | undefined) || ""}

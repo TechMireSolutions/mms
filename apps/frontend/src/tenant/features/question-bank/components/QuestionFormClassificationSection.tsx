@@ -34,18 +34,20 @@ export function QuestionFormClassificationSection({
         className="shadow-sm"
       >
 
-        <Field label={t("questionBank.form.questionLanguage")}>
+        <Field id="qb-question-language" label={t("questionBank.form.questionLanguage")}>
           <FormSelect
             id="qb-question-language"
+            name="questionLanguage"
             value={questionDraft.questionLanguage}
             onChange={(val) => updateDraft({ questionLanguage: val as AppLanguageCode })}
             options={APP_LANGUAGES.map((appLanguage) => ({ value: appLanguage.code, label: formatLanguageSelectLabel(appLanguage) }))}
           />
         </Field>
 
-        <Field label={t("questionBank.form.difficulty")}>
+        <Field id="qb-difficulty" label={t("questionBank.form.difficulty")}>
           <FormSelect
             id="qb-difficulty"
+            name="difficulty"
             value={questionDraft.difficulty}
             onChange={(val) => updateDraft({ difficulty: val as QuestionDifficulty })}
             options={[

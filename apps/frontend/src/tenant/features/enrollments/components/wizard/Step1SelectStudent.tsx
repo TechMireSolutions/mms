@@ -64,6 +64,8 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
       </div>
 
       <SearchBar
+        id="enrollment-wizard-student-search"
+        name="studentSearch"
         value={search}
         onChange={setSearch}
         placeholder={t("enrollments.wizard.searchPlaceholder")}

@@ -46,8 +46,7 @@ export default function ContactEditModal({
       contact: contactPayload,
     });
     onSaved?.(response.contact);
-    onClose();
-  }, [canWrite, onClose, onSaved, t, updateContact]);
+  }, [canWrite, onSaved, t, updateContact]);
 
   if (!open || !canWrite || !contact?.id) return null;
 

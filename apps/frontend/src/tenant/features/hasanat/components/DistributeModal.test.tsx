@@ -254,4 +254,34 @@ describe('DistributeModal Component', () => {
       }),
     );
   });
+
+  it('displays inline validation errors when submitted without required fields', async () => {
+    const onSave = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <DistributeModal
+          open={true}
+          denoms={mockDenoms}
+          batches={mockBatches}
+          onClose={vi.fn()}
+          onSave={onSave}
+        />,
+      );
+    });
+
+    const saveBtn = container.querySelector('[data-testid="distribute-save-btn"]') as HTMLButtonElement;
+    expect(saveBtn.disabled).toBe(false);
+
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(onSave).not.toHaveBeenCalled();
+    const recipientError = container.querySelector('#recipient-error');
+    const reasonError = container.querySelector('#reason-error');
+    expect(recipientError).not.toBeNull();
+    expect(reasonError).not.toBeNull();
+  });
 });
+

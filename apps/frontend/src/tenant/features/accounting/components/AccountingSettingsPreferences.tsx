@@ -59,11 +59,13 @@ export function AccountingSettingsPreferences({
         className={SETUP_SECTION_CARD_CLASS}
       >
         <Field
+          id="accounting-org-name"
           label={t("accounting.settings.fields.organisationName")}
           hint={t("accounting.settings.fields.organisationNameHint")}
         >
           <Input
             id="accounting-org-name"
+            name="organizationName"
             className={FORM_INPUT}
             value={settingsDraft.organizationName || ""}
             aria-label={t("accounting.settings.fields.organisationName")}

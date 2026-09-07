@@ -56,12 +56,12 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
       progressLabel={t("common.formProgress")}
       cancelLabel={t("accounting.journal.form.cancel")}
       saveLabel={t("accounting.journal.form.postEntry")}
-      onSave={() => { void saveEntry("posted"); }}
+      onSave={async () => { await saveEntry("posted"); }}
       saving={submitting}
       saveDisabled={!isBalanced || submitting}
       error={errorMessages}
       footerStart={
-        <Button type="button" variant="secondary" disabled={submitting} onClick={() => { void saveEntry("draft"); }}>
+        <Button type="button" variant="secondary" disabled={submitting} onClick={async () => { await saveEntry("draft"); }}>
           {t("accounting.journal.form.saveDraft")}
         </Button>
       }

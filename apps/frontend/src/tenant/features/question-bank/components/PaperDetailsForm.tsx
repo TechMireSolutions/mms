@@ -23,6 +23,7 @@ export function PaperDetailsForm({ config, onChange }: PaperDetailsFormProps): R
           <label htmlFor="paper-name" className={FORM_LABEL}>{t("questionBank.paperName")}</label>
           <Input
             id="paper-name"
+            name="name"
             className={`${FORM_INPUT} shadow-none`}
             value={config.name}
             onChange={(event) => onChange("name", event.target.value)}
@@ -33,6 +34,7 @@ export function PaperDetailsForm({ config, onChange }: PaperDetailsFormProps): R
           <label htmlFor="paper-class" className={FORM_LABEL}>{t("questionBank.paperClass")}</label>
           <Input
             id="paper-class"
+            name="examClass"
             className={`${FORM_INPUT} shadow-none`}
             value={config.examClass}
             onChange={(event) => onChange("examClass", event.target.value)}
@@ -43,7 +45,9 @@ export function PaperDetailsForm({ config, onChange }: PaperDetailsFormProps): R
           <label htmlFor="paper-duration" className={FORM_LABEL}>{t("questionBank.durationMin")}</label>
           <Input
             id="paper-duration"
+            name="duration"
             type="number"
+            inputMode="numeric"
             className={`${FORM_INPUT} shadow-none`}
             value={config.duration}
             min={5}
@@ -54,7 +58,9 @@ export function PaperDetailsForm({ config, onChange }: PaperDetailsFormProps): R
           <label htmlFor="paper-marks" className={FORM_LABEL}>{t("questionBank.paperTotalMarks")}</label>
           <Input
             id="paper-marks"
+            name="totalMarks"
             type="number"
+            inputMode="numeric"
             className={`${FORM_INPUT} shadow-none`}
             value={config.totalMarks}
             min={1}
@@ -65,6 +71,7 @@ export function PaperDetailsForm({ config, onChange }: PaperDetailsFormProps): R
           <label htmlFor="paper-instructions" className={FORM_LABEL}>{t("questionBank.paperInstructions")}</label>
           <Textarea
             id="paper-instructions"
+            name="instructions"
             className={`${FORM_INPUT} min-h-20 shadow-none`}
             value={config.instructions}
             onChange={(event) => onChange("instructions", event.target.value)}

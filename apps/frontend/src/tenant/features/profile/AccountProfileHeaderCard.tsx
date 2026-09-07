@@ -33,11 +33,14 @@ export function AccountProfileHeaderCard({
         <div className="flex flex-col md:flex-row items-center gap-6 text-center md:text-start">
           <div className="relative group/avatar">
             <input
+              id="profile-avatar-upload"
+              name="avatar"
               type="file"
               ref={fileInputRef}
               onChange={onFileChange}
               accept="image/*"
               className="hidden"
+              aria-label={t("account.changePhoto")}
             />
             <Button
               type="button"

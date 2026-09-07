@@ -1,9 +1,11 @@
 import type { ReactNode } from 'react';
 import { Sparkles } from 'lucide-react';
 import { appendVariableToken } from '@mms/shared';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { Field } from '@/components/ui/FormPrimitives';
+import { FORM_INPUT_ERROR } from '@/components/ui/formStyles';
 import { MessagingVariableTokensBar } from '@/components/ui/MessagingVariableTokensBar';
 import { Textarea } from '@/components/ui/textarea';
+import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export interface MessagingMessageBodyFieldProps {
@@ -13,6 +15,7 @@ export interface MessagingMessageBodyFieldProps {
   onChange: (value: string) => void;
   placeholder: string;
   required?: boolean;
+  error?: string;
   footer?: ReactNode;
 }
 
@@ -27,13 +30,13 @@ export function MessagingMessageBodyField({
   onChange,
   placeholder,
   required = false,
+  error,
   footer,
 }: MessagingMessageBodyFieldProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
-    <div>
-      <label className={FORM_LABEL} htmlFor={id}>{t('messaging.messageBody')}</label>
+    <Field id={id} label={t('messaging.messageBody')} required={required} error={error}>
       <MessagingVariableTokensBar
         onSelectToken={(token) => onChange(appendVariableToken(value, token))}
         className="mb-2"
@@ -46,12 +49,14 @@ export function MessagingMessageBodyField({
         placeholder={placeholder}
         rows={4}
         required={required}
+        aria-invalid={Boolean(error)}
+        className={cn(error && FORM_INPUT_ERROR)}
       />
       <p className="mt-1 flex items-center gap-1 text-xs italic text-muted-foreground/80">
         <Sparkles className="h-3 w-3 flex-shrink-0 text-primary/70" />
         {t('messaging.fallbackHint')}
       </p>
       {footer}
-    </div>
+    </Field>
   );
 }

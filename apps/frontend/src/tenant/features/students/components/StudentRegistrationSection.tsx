@@ -3,7 +3,7 @@ import { Clock, GraduationCap, Hash } from "lucide-react";
 import { Field, EditableSelect } from "@/components/ui/FormPrimitives";
 import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_INPUT } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -74,6 +74,8 @@ export function StudentRegistrationSection({
   );
 
   const rawStatuses = statuses ?? statusSelectOptions.map((opt) => opt.value);
+  const grError = getFieldError("grNumber");
+  const statusError = getFieldError("status");
 
   return (
     <div className="space-y-6">
@@ -88,11 +90,13 @@ export function StudentRegistrationSection({
             <Field
               label={grLabel}
               required={isFieldRequired("grNumber")}
-              error={getFieldError("grNumber")}
+              error={grError}
               id="grNumber"
             >
               <div className="relative">
                 <LeadingIconInput
+                  id="grNumber"
+                  name="grNumber"
                   icon={Hash}
                   required={isFieldRequired("grNumber")}
                   value={studentDraft.grNumber || ""}
@@ -100,7 +104,13 @@ export function StudentRegistrationSection({
                   placeholder={t("students.form.grNumberPlaceholder")}
                   disabled={grInputDisabled}
                   iconPaddingClass={FORM_INPUT}
-                  className={cn("ps-10", isGrAutoAssigned && "pe-24")}
+                  aria-invalid={Boolean(grError)}
+                  aria-describedby={grError ? "grNumber-error" : undefined}
+                  className={cn(
+                    "ps-10",
+                    isGrAutoAssigned && "pe-24",
+                    grError && FORM_INPUT_ERROR,
+                  )}
                 />
                 {isGrAutoAssigned ? (
                   <FormFooterBadge
@@ -118,7 +128,7 @@ export function StudentRegistrationSection({
             <Field
               label={statusLabel}
               required={isFieldRequired("status")}
-              error={getFieldError("status")}
+              error={statusError}
               id="status"
             >
               {onUpdateStatuses ? (
@@ -129,7 +139,7 @@ export function StudentRegistrationSection({
                   onChange={(value) => onDraftChange({ status: value as StudentStatus })}
                   onUpdateOptions={onUpdateStatuses}
                   placeholder={t("contacts.form.selectOption")}
-                  className="w-full"
+                  className={cn("w-full", statusError && FORM_INPUT_ERROR)}
                 />
               ) : (
                 <FormSelect
@@ -138,6 +148,7 @@ export function StudentRegistrationSection({
                   value={studentDraft.status || "active"}
                   onChange={(value) => onDraftChange({ status: value as StudentStatus })}
                   options={statusSelectOptions}
+                  className={statusError ? FORM_INPUT_ERROR : undefined}
                 />
               )}
             </Field>

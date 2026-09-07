@@ -53,6 +53,8 @@ export function MarkAttendance(props: MarkAttendanceProps): React.JSX.Element {
       <MarkAttendanceStatsStrip statuses={controller.statuses} stats={controller.stats} />
 
       <SearchBar
+        id="attendance-search-student"
+        name="studentSearch"
         value={controller.search}
         onChange={controller.setSearch}
         placeholder={controller.t("attendance.searchStudent")}

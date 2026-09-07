@@ -58,7 +58,7 @@ export default function GlobalSettings(): React.JSX.Element {
         <SettingsFormActions
           saveLabel={t('global.saveSettings')}
           savingLabel={t('global.saving')}
-          onSave={() => void handleSaveGlobal()}
+          onSave={handleSaveGlobal}
           onDiscard={handleDiscardGlobal}
           discardLabel={t('theme.discardChanges')}
           dirty={isGlobalDirty}
@@ -77,6 +77,7 @@ export default function GlobalSettings(): React.JSX.Element {
             <Label htmlFor="language">{t('global.language')}</Label>
             <FormSelect
               id="language"
+              name="language"
               value={data.language}
               onChange={(next) => {
                 upd('language', next as AppLanguageCode);

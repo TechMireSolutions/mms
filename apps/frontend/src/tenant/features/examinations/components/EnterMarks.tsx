@@ -191,10 +191,13 @@ export function EnterMarks({ exams, results, onSaveResults }: EnterMarksProps): 
               <div className="relative w-full sm:w-64">
                 <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
                 <Input
+                  id="enter-marks-search"
+                  name="search"
                   type="search"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t("examinations.marks.searchPlaceholder")}
+                  aria-label={t("examinations.marks.searchPlaceholder")}
                   className={cn(FORM_INPUT_COMPACT, "ps-8 text-xs")}
                 />
               </div>

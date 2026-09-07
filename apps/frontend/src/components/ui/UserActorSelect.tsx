@@ -60,6 +60,7 @@ export function UserActorSelect({
       />
       <FormSelect
         id={selectId}
+        name={selectId}
         value={selectedValue}
         onChange={(userId) => {
           const selectedUser = users.find((user) => String(user.id) === userId);

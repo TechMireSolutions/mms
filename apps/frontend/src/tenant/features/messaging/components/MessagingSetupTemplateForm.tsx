@@ -3,10 +3,12 @@ import { Check, Edit3, Plus } from 'lucide-react';
 import type { MessageCategory } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { Field } from '@/components/ui/FormPrimitives';
+import { FORM_INPUT_ERROR } from '@/components/ui/formStyles';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
+import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessagingSetupTemplateFormProps {
@@ -17,6 +19,7 @@ interface MessagingSetupTemplateFormProps {
   channel: 'all' | 'sms' | 'whatsapp' | 'email';
   templateCategorySelectOptions: Array<{ value: string; label: string }>;
   channelSelectOptions: Array<{ value: string; label: string }>;
+  errors?: Record<string, string>;
   onReset: () => void;
   onSave: (event: React.FormEvent) => void;
   onLabelChange: (value: string) => void;
@@ -33,6 +36,7 @@ export function MessagingSetupTemplateForm({
   channel,
   templateCategorySelectOptions,
   channelSelectOptions,
+  errors = {},
   onReset,
   onSave,
   onLabelChange,
@@ -58,49 +62,51 @@ export function MessagingSetupTemplateForm({
       className="space-y-4 shadow-sm text-start"
     >
       <form onSubmit={onSave} className="space-y-3">
-            <div>
-              <label className={FORM_LABEL} htmlFor="tplLabel">{t('messaging.templateLabel')}</label>
-              <Input
-                id="tplLabel"
-                name="tplLabel"
-                value={label}
-                onChange={(event) => onLabelChange(event.target.value)}
-                placeholder={t('messaging.templateLabelPlaceholder')}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-              <div>
-                <label className={FORM_LABEL} htmlFor="tplCategory">{t('messaging.category')}</label>
-                <FormSelect
-                  id="tplCategory"
-                  value={category}
-                  onChange={(value) => onCategoryChange(value as MessageCategory)}
-                  options={templateCategorySelectOptions}
-                />
-              </div>
-              <div>
-                <label className={FORM_LABEL} htmlFor="tplChannel">{t('messaging.targetChannel')}</label>
-                <FormSelect
-                  id="tplChannel"
-                  value={channel}
-                  onChange={(value) => onChannelChange(value as typeof channel)}
-                  options={channelSelectOptions}
-                />
-              </div>
-            </div>
-            <MessagingMessageBodyField
-              id="tplBody"
-              value={body}
-              onChange={onBodyChange}
-              placeholder={t('messaging.templateBodyPlaceholder')}
-              required
+        <Field id="tplLabel" label={t('messaging.templateLabel')} required error={errors.label}>
+          <Input
+            id="tplLabel"
+            name="tplLabel"
+            value={label}
+            onChange={(event) => onLabelChange(event.target.value)}
+            placeholder={t('messaging.templateLabelPlaceholder')}
+            required
+            aria-invalid={Boolean(errors.label)}
+            className={cn(errors.label && FORM_INPUT_ERROR)}
+          />
+        </Field>
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+          <Field id="tplCategory" label={t('messaging.category')}>
+            <FormSelect
+              id="tplCategory"
+              name="category"
+              value={category}
+              onChange={(value) => onCategoryChange(value as MessageCategory)}
+              options={templateCategorySelectOptions}
             />
-            <Button type="submit" className="w-full font-bold">
-              <Check className="me-1.5 h-4 w-4" />
-              {editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
-            </Button>
-          </form>
+          </Field>
+          <Field id="tplChannel" label={t('messaging.targetChannel')}>
+            <FormSelect
+              id="tplChannel"
+              name="channel"
+              value={channel}
+              onChange={(value) => onChannelChange(value as typeof channel)}
+              options={channelSelectOptions}
+            />
+          </Field>
+        </div>
+        <MessagingMessageBodyField
+          id="tplBody"
+          value={body}
+          onChange={onBodyChange}
+          placeholder={t('messaging.templateBodyPlaceholder')}
+          required
+          error={errors.body}
+        />
+        <Button type="submit" className="w-full font-bold min-h-11">
+          <Check className="me-1.5 h-4 w-4" />
+          {editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
+        </Button>
+      </form>
     </SectionCard>
   );
 }

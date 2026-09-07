@@ -12,6 +12,7 @@ import { getApiValidationMessage } from "@/lib/apiValidationMessage";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import {
   checkTeacherFormDuplicate,
+  DUPLICATE_ERROR_KEYS,
   teacherValidationErrorsByField,
   validateTeacherDraft,
 } from "@/tenant/features/teachers/components/teacherFormValidation";
@@ -132,6 +133,17 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
       employeeId: typeof payload.employeeId === "string" ? payload.employeeId : undefined,
     });
 
+    if (duplicateReason === "employeeId") {
+      input.setErrors({ employeeId: input.t(DUPLICATE_ERROR_KEYS.employeeId) });
+      if (input.visibleTabKeys.includes("employment")) {
+        input.setActiveTab("employment");
+      }
+      focusTeacherValidationField(input.formInstanceId, "employeeId");
+      notify.error(input.t(DUPLICATE_ERROR_KEYS.employeeId));
+      input.setSaving(false);
+      return false;
+    }
+
     if (duplicateReason) {
       input.setPendingSaveData(payload as Partial<Teacher>);
       input.setTypedDuplicateReason(duplicateReason);
@@ -147,6 +159,24 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
     }
     return true;
   } catch (err: unknown) {
+    const validationMessage = getApiValidationMessage(err);
+    const errText = String(err instanceof Error ? err.message : err || "").toLowerCase();
+    const isEmployeeIdConflict =
+      errText.includes("employeeid") ||
+      errText.includes("employee_id") ||
+      errText.includes("duplicate_employee") ||
+      (typeof validationMessage === "string" && validationMessage.toLowerCase().includes("employee"));
+
+    if (isEmployeeIdConflict) {
+      input.setErrors({ employeeId: input.t(DUPLICATE_ERROR_KEYS.employeeId) });
+      if (input.visibleTabKeys.includes("employment")) {
+        input.setActiveTab("employment");
+      }
+      focusTeacherValidationField(input.formInstanceId, "employeeId");
+      notify.error(input.t(DUPLICATE_ERROR_KEYS.employeeId));
+      return false;
+    }
+
     notifyTeacherSaveFailed(input.t, err, "teachers.form_save");
     return false;
   } finally {

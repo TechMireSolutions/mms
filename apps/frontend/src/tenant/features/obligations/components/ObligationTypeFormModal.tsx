@@ -58,8 +58,18 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
           <label htmlFor="type-name" className={FORM_LABEL}>{t("obligations.types.colName")}<RequiredMark /></label>
           <Input
             id="type-name"
+            name="name"
             value={form.name || ""}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
+            onChange={(event) => {
+              if (errors.name) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.name;
+                  return next;
+                });
+              }
+              setForm({ ...form, name: event.target.value });
+            }}
             className={FORM_INPUT}
             aria-invalid={!!errors.name}
           />
@@ -68,6 +78,7 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
           <label htmlFor="type-designated" className={FORM_LABEL}>{t("obligations.types.colDesignated")}<RequiredMark /></label>
           <FormSelect
             id="type-designated"
+            name="designated_for"
             value={form.designated_for || ""}
             onChange={(val) => setForm({ ...form, designated_for: val as DesignatedFor })}
             options={designatedOptions}
@@ -76,6 +87,7 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
         <div className="flex items-center gap-3">
           <Checkbox
             id="qty"
+            name="quantity_based"
             checked={form.quantity_based}
             onCheckedChange={(checked) => setForm({ ...form, quantity_based: !!checked })}
           />

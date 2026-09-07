@@ -42,9 +42,12 @@ export function QuestionOrderingFields({
         <div key={index} className="flex items-center gap-2">
           <span className="w-6 flex-shrink-0 text-center text-xs font-bold text-muted-foreground">{index + 1}</span>
           <Input
+            id={`ordering-item-${index}`}
+            name={`ordering-item-${index}`}
             className={FORM_INPUT}
             value={item}
             placeholder={t('questionBank.orderingItemN', { n: index + 1 })}
+            aria-label={t('questionBank.orderingItemN', { n: index + 1 })}
             onChange={(event) => {
               const updatedItems = [...items];
               updatedItems[index] = event.target.value;

@@ -2,7 +2,7 @@ import React from "react";
 import { Search, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FORM_LABEL, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
-import { RequiredMark } from "@/components/ui/FormField";
+import { FieldErrorMessage, RequiredMark } from "@/components/ui/FormField";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ContactPickerMenu } from "./ContactPickerMenu";
@@ -21,6 +21,7 @@ interface ContactPickerSearchInputProps {
   open: boolean;
   allowCreate: boolean;
   error: boolean;
+  errorMessage?: string;
   searchPlaceholder?: string;
   createActionLabel: string;
   menuRef: React.RefObject<HTMLDivElement>;
@@ -53,6 +54,7 @@ export function ContactPickerSearchInput({
   open,
   allowCreate,
   error,
+  errorMessage,
   searchPlaceholder,
   createActionLabel,
   menuRef,
@@ -74,6 +76,9 @@ export function ContactPickerSearchInput({
   onCloseCreate,
   onCreated,
 }: ContactPickerSearchInputProps): React.JSX.Element {
+  const errorId = errorMessage ? `${resolvedId}-error` : undefined;
+  const isInvalid = Boolean(error || errorMessage);
+
   return (
     <div className="relative">
       <label htmlFor={resolvedId} className={FORM_LABEL}>
@@ -88,7 +93,7 @@ export function ContactPickerSearchInput({
           className={cn(
             "ps-9.5",
             allowCreate ? (query ? "pe-16" : "pe-10") : (query ? "pe-9" : "pe-3"),
-            error && FORM_INPUT_ERROR,
+            isInvalid && FORM_INPUT_ERROR,
           )}
           placeholder={searchPlaceholder ?? t("contacts.searchPlaceholder")}
           value={query}
@@ -100,6 +105,9 @@ export function ContactPickerSearchInput({
           autoComplete="off"
           aria-expanded={open}
           aria-controls={open ? `${resolvedId}-listbox` : undefined}
+          aria-invalid={isInvalid}
+          aria-describedby={errorId}
+          aria-autocomplete="list"
           role="combobox"
         />
         <div className="absolute end-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
@@ -134,6 +142,10 @@ export function ContactPickerSearchInput({
           ) : null}
         </div>
       </div>
+
+      {errorMessage ? (
+        <FieldErrorMessage id={errorId} message={errorMessage} className="mt-1.5" />
+      ) : null}
 
       <ContactPickerMenu
         open={open}

@@ -82,4 +82,48 @@ describe("useExaminationForm Hook", () => {
     ]);
     expect(hookResult.valid).toBe(true);
   });
+
+  it("validates empty draft and clears error on field update", async () => {
+    let hookResult: any;
+
+    function TestComponent() {
+      hookResult = useExaminationForm({
+        open: true,
+        exam: null,
+        onClose: vi.fn(),
+        onSave: vi.fn(),
+      });
+      return null;
+    }
+
+    const root = createRoot(container!);
+    await act(async () => {
+      root.render(React.createElement(TestComponent));
+    });
+
+    // Attempt save on empty draft
+    await act(async () => {
+      await hookResult.handleSave();
+    });
+
+    expect(hookResult.errors.name).toBe("examinations.form.validation.nameRequired");
+    expect(hookResult.submitError).toBe("examinations.form.validation.nameRequired");
+
+    // Updating draft field clears error
+    await act(async () => {
+      hookResult.updateDraft({ name: "Midterm Exam" });
+    });
+
+    expect(hookResult.errors.name).toBeUndefined();
+    expect(hookResult.submitError).toBe("examinations.form.validation.dateRequired");
+
+    // Updating remaining required fields clears all errors and submitError
+    await act(async () => {
+      hookResult.updateDraft({ date: "2025-05-01", classIds: ["cls-1"] });
+    });
+
+    expect(hookResult.errors.date).toBeUndefined();
+    expect(hookResult.errors.classes).toBeUndefined();
+    expect(hookResult.submitError).toBeUndefined();
+  });
 });

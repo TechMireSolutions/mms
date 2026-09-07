@@ -73,9 +73,10 @@ export function AccountingSettingsOpeningSection({
   return (
     <SectionCard title={t("accounting.settings.secOpening")} icon={Scale} className={SETUP_SECTION_CARD_CLASS}>
       <p className="m-0 mb-3 text-xs text-muted-foreground">{t("accounting.settings.opening.hint")}</p>
-      <Field label={t("accounting.settings.fy.label")}>
+      <Field id="opening-fy" label={t("accounting.settings.fy.label")}>
         <FormSelect
           id="opening-fy"
+          name="fiscalYearId"
           value={fiscalYearId}
           onChange={setFiscalYearId}
           options={sortedYears.map((year) => ({ value: year.id, label: year.label }))}
@@ -84,6 +85,7 @@ export function AccountingSettingsOpeningSection({
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <FormSelect
           id="opening-account"
+          name="accountId"
           value={accountId}
           onChange={setAccountId}
           placeholder={t("accounting.settings.opening.account")}
@@ -91,14 +93,30 @@ export function AccountingSettingsOpeningSection({
             .filter((account) => account.isActive !== false)
             .map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }))}
         />
-        <Input className={FORM_INPUT} inputMode="decimal" value={debit} onChange={(event) => setDebit(event.target.value)} aria-label={t("accounting.settings.opening.debit")} />
-        <Input className={FORM_INPUT} inputMode="decimal" value={credit} onChange={(event) => setCredit(event.target.value)} aria-label={t("accounting.settings.opening.credit")} />
+        <Input
+          id="opening-debit"
+          name="debit"
+          className={FORM_INPUT}
+          inputMode="decimal"
+          value={debit}
+          onChange={(event) => setDebit(event.target.value)}
+          aria-label={t("accounting.settings.opening.debit")}
+        />
+        <Input
+          id="opening-credit"
+          name="credit"
+          className={FORM_INPUT}
+          inputMode="decimal"
+          value={credit}
+          onChange={(event) => setCredit(event.target.value)}
+          aria-label={t("accounting.settings.opening.credit")}
+        />
       </div>
       <div className="mt-3 flex flex-wrap gap-2">
-        <Button type="button" className="min-h-11" onClick={() => void handleAdd()} disabled={!fiscalYearId || !accountId || save.isPending}>
+        <Button type="button" className="min-h-11" onClick={async () => { await handleAdd(); }} disabled={!fiscalYearId || !accountId || save.isPending}>
           {t("accounting.settings.opening.add")}
         </Button>
-        <Button type="button" variant="outline" className="min-h-11" onClick={() => void handlePost()} disabled={!fiscalYearId || post.isPending}>
+        <Button type="button" variant="outline" className="min-h-11" onClick={async () => { await handlePost(); }} disabled={!fiscalYearId || post.isPending}>
           {t("accounting.settings.opening.post")}
         </Button>
       </div>

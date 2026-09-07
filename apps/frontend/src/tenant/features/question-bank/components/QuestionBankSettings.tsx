@@ -69,10 +69,12 @@ export const QuestionBankSettings = (function QuestionBankSettings({
             onChange={(value) => upd("aiGrading", value)}
           />
 
-          <Field label={t("questionBank.defaultDuration")}>
+          <Field id="qb-default-duration" label={t("questionBank.defaultDuration")}>
             <Input
               id="qb-default-duration"
+              name="defaultTestDuration"
               type="number"
+              inputMode="numeric"
               min={5}
               className={FORM_INPUT}
               value={settingsDraft.defaultTestDuration}

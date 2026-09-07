@@ -32,8 +32,9 @@ export function Step2({ form, setForm, errors }: AddUserStepProps): JSX.Element 
       <FieldError msg={errors.role} />
 
       <div>
-        <label className="flex items-center gap-2 cursor-pointer">
+        <label htmlFor="users-temporary-role" className="flex items-center gap-2 cursor-pointer">
           <Checkbox
+            id="users-temporary-role"
             checked={!!form.temporaryRole}
             onCheckedChange={(checked) => setForm((previousForm) => ({ ...previousForm, temporaryRole: !!checked, roleExpiry: "" }))}
           />

@@ -41,8 +41,10 @@ export function TeacherNotesSection({
         icon={FileText}
         accentColor="emerald"
       >
-        <Field label={notesLabel} required={notesRequired}>
+        <Field label={notesLabel} id="notes" required={notesRequired}>
           <Textarea
+            id="notes"
+            name="notes"
             required={notesRequired}
             value={notes || ""}
             onChange={(event) => onDraftChange({ notes: event.target.value })}

@@ -87,6 +87,7 @@ export default function EmailIntegrationPanel({
           <Label htmlFor="email-provider">{t('email.provider')}</Label>
           <FormSelect
             id="email-provider"
+            name="providerId"
             value={form.providerId}
             onChange={(v) => setField('providerId', v as EmailProviderId)}
             options={providers.map((preset) => ({
@@ -103,6 +104,7 @@ export default function EmailIntegrationPanel({
           <Label htmlFor="email-from-name">{t('email.fromName')}</Label>
           <Input
             id="email-from-name"
+            name="fromName"
             value={form.fromName}
             onChange={(event) => setField('fromName', event.target.value)}
           />
@@ -111,6 +113,7 @@ export default function EmailIntegrationPanel({
           <Label htmlFor="email-from-address">{t('email.fromAddress')}</Label>
           <Input
             id="email-from-address"
+            name="fromAddress"
             type="email"
             value={form.fromAddress}
             onChange={(event) => setField('fromAddress', event.target.value)}
@@ -122,6 +125,7 @@ export default function EmailIntegrationPanel({
           <Label htmlFor="email-smtp-username">{t('email.smtpUsername')}</Label>
           <Input
             id="email-smtp-username"
+            name="smtpUsername"
             value={form.smtpUsername}
             onChange={(event) => setField('smtpUsername', event.target.value)}
             placeholder={`you@${selectedPreset.exampleDomain}`}
@@ -149,6 +153,7 @@ export default function EmailIntegrationPanel({
               <Label htmlFor="email-smtp-host">{t('email.smtpHost')}</Label>
               <Input
                 id="email-smtp-host"
+                name="smtpHost"
                 value={form.smtpHost ?? ''}
                 onChange={(event) => setField('smtpHost', event.target.value)}
               />
@@ -157,6 +162,7 @@ export default function EmailIntegrationPanel({
               <Label htmlFor="email-smtp-port">{t('email.smtpPort')}</Label>
               <Input
                 id="email-smtp-port"
+                name="smtpPort"
                 type="number"
                 value={form.smtpPort ?? 587}
                 onChange={(event) => setField('smtpPort', Number(event.target.value))}

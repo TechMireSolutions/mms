@@ -64,12 +64,15 @@ export function EnterMarksStudentRow({
         )}
         <div className="flex items-center gap-1.5">
           <Input
+            id={`marks-${student.id}`}
+            name={`marks_${student.id}`}
             type="text"
             inputMode="decimal"
             value={markValue}
             aria-label={t("examinations.enterMarks.marksInputAria", {
               name: student.name ?? t("examinations.enterMarks.studentLabel"),
             })}
+            aria-invalid={isInvalid}
             onChange={(event) => onMarkChange(String(student.id), event.target.value)}
             className={cn(
               FORM_INPUT_COMPACT,

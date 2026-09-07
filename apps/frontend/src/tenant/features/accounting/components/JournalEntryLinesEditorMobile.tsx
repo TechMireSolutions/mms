@@ -57,8 +57,10 @@ export function JournalEntryLinesEditorMobile({
               </Button>
             </div>
             <div>
-              <label className={FORM_LABEL}>{t("accounting.journal.detail.account")}</label>
+              <label htmlFor={`line-mobile-${lineIndex}-account`} className={FORM_LABEL}>{t("accounting.journal.detail.account")}</label>
               <FormSelect
+                id={`line-mobile-${lineIndex}-account`}
+                name={`lines.${lineIndex}.account_id`}
                 aria-label={`Account for line ${lineIndex + 1}`}
                 value={line.account_id}
                 onChange={(accountId) => onUpdateLine(lineIndex, "account_id", accountId)}
@@ -73,8 +75,10 @@ export function JournalEntryLinesEditorMobile({
               <FieldErrorMessage message={errors[`line${lineIndex}`]} className="m-0" />
             </div>
             <div>
-              <label className={FORM_LABEL}>{t("accounting.ledger.columns.lineNote")}</label>
+              <label htmlFor={`line-mobile-${lineIndex}-description`} className={FORM_LABEL}>{t("accounting.ledger.columns.lineNote")}</label>
               <Input
+                id={`line-mobile-${lineIndex}-description`}
+                name={`lines.${lineIndex}.description`}
                 aria-label={`Description for line ${lineIndex + 1}`}
                 value={line.description || ""}
                 onChange={(event) => onUpdateLine(lineIndex, "description", event.target.value)}
@@ -84,8 +88,10 @@ export function JournalEntryLinesEditorMobile({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className={FORM_LABEL}>{t("accounting.ledger.columns.debit")}</label>
+                <label htmlFor={`line-mobile-${lineIndex}-debit`} className={FORM_LABEL}>{t("accounting.ledger.columns.debit")}</label>
                 <Input
+                  id={`line-mobile-${lineIndex}-debit`}
+                  name={`lines.${lineIndex}.debit`}
                   type="text"
                   inputMode="decimal"
                   aria-label={`Debit amount for line ${lineIndex + 1}`}
@@ -96,8 +102,10 @@ export function JournalEntryLinesEditorMobile({
                 />
               </div>
               <div>
-                <label className={FORM_LABEL}>{t("accounting.ledger.columns.credit")}</label>
+                <label htmlFor={`line-mobile-${lineIndex}-credit`} className={FORM_LABEL}>{t("accounting.ledger.columns.credit")}</label>
                 <Input
+                  id={`line-mobile-${lineIndex}-credit`}
+                  name={`lines.${lineIndex}.credit`}
                   type="text"
                   inputMode="decimal"
                   aria-label={`Credit amount for line ${lineIndex + 1}`}

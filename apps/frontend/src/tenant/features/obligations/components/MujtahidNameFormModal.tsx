@@ -41,7 +41,10 @@ export function NameFormModal({ initial, onSave, onClose, label, title }: NameFo
           id="name-form-input"
           name="name"
           value={form.name || ""}
-          onChange={(event) => setForm({ ...form, name: event.target.value })}
+          onChange={(event) => {
+            if (error) setError("");
+            setForm({ ...form, name: event.target.value });
+          }}
           aria-invalid={!!error}
           required
         />

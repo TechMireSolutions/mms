@@ -39,6 +39,7 @@ export function BrandingSettingsProfileSection({
             </div>
             <Input
               id="madrasaName"
+              name="madrasaName"
               value={data.madrasaName}
               maxLength={NAME_MAX}
               placeholder={t('branding.madrasaNamePlaceholder')}
@@ -56,6 +57,7 @@ export function BrandingSettingsProfileSection({
             </div>
             <Input
               id="tagline"
+              name="tagline"
               value={data.tagline}
               maxLength={TAGLINE_MAX}
               placeholder={t('branding.taglinePlaceholder')}

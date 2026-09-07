@@ -113,6 +113,8 @@ export function CategorySelector({
         <p className="text-xs text-muted-foreground">{t('questionBank.categoriesMultiHint')}</p>
       )}
       <Input
+        id="category-search"
+        name="categorySearch"
         type="search"
         className={`${FORM_INPUT} shadow-none`}
         value={search}
@@ -168,6 +170,8 @@ export function CategorySelector({
       {showCreate ? (
         <div className="flex flex-col gap-2 rounded-lg border border-dashed border-border p-3 sm:flex-row">
           <Input
+            id="new-category-name"
+            name="newCategoryName"
             type="text"
             className={`${FORM_INPUT} shadow-none`}
             value={newName}

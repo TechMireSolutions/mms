@@ -67,36 +67,40 @@ export function AccountingSettingsPostingSection({
     <SectionCard title={t("accounting.settings.secPosting")} icon={BookOpen} className={SETUP_SECTION_CARD_CLASS}>
       <p className="m-0 mb-3 text-xs text-muted-foreground">{t("accounting.settings.posting.hint")}</p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <Field label={t("accounting.settings.fields.arAccount")} hint={t("accounting.settings.fields.arAccountHint")}>
+        <Field id="accounting-ar-account" label={t("accounting.settings.fields.arAccount")} hint={t("accounting.settings.fields.arAccountHint")}>
           <FormSelect
             id="accounting-ar-account"
+            name="arAccountId"
             value={draft.arAccountId}
             onChange={(value) => setDraft((current) => ({ ...current, arAccountId: value }))}
             placeholder={t("accounting.journal.form.none")}
             options={accountOptions(accounts, "Asset")}
           />
         </Field>
-        <Field label={t("accounting.settings.fields.cashAccount")} hint={t("accounting.settings.fields.cashAccountHint")}>
+        <Field id="accounting-cash-account" label={t("accounting.settings.fields.cashAccount")} hint={t("accounting.settings.fields.cashAccountHint")}>
           <FormSelect
             id="accounting-cash-account"
+            name="cashAccountId"
             value={draft.cashAccountId}
             onChange={(value) => setDraft((current) => ({ ...current, cashAccountId: value }))}
             placeholder={t("accounting.journal.form.none")}
             options={accountOptions(accounts, "Asset")}
           />
         </Field>
-        <Field label={t("accounting.settings.fields.incomeAccount")} hint={t("accounting.settings.fields.incomeAccountHint")}>
+        <Field id="accounting-income-account" label={t("accounting.settings.fields.incomeAccount")} hint={t("accounting.settings.fields.incomeAccountHint")}>
           <FormSelect
             id="accounting-income-account"
+            name="incomeAccountId"
             value={draft.incomeAccountId}
             onChange={(value) => setDraft((current) => ({ ...current, incomeAccountId: value }))}
             placeholder={t("accounting.journal.form.none")}
             options={accountOptions(accounts, "Revenue")}
           />
         </Field>
-        <Field label={t("accounting.settings.fields.discountAccount")} hint={t("accounting.settings.fields.discountAccountHint")}>
+        <Field id="accounting-discount-account" label={t("accounting.settings.fields.discountAccount")} hint={t("accounting.settings.fields.discountAccountHint")}>
           <FormSelect
             id="accounting-discount-account"
+            name="discountAccountId"
             value={draft.discountAccountId}
             onChange={(value) => setDraft((current) => ({ ...current, discountAccountId: value }))}
             placeholder={t("accounting.journal.form.none")}
@@ -104,7 +108,7 @@ export function AccountingSettingsPostingSection({
           />
         </Field>
       </div>
-      <Button type="button" className="mt-4 min-h-11" onClick={() => void handleSave()} disabled={save.isPending}>
+      <Button type="button" className="mt-4 min-h-11" onClick={async () => { await handleSave(); }} disabled={save.isPending}>
         {t("common.save")}
       </Button>
     </SectionCard>

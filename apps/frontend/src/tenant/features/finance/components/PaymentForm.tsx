@@ -8,7 +8,7 @@ import { UserActorSelect } from "@/components/ui/UserActorSelect";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notify } from "@/lib/notify";
 import { PAYMENT_METHODS, type Invoice } from '@/lib/data/financeData';
-import { FORM_INPUT } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Card } from "@/components/ui/card";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -52,6 +52,18 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
   const updateDraft = (patch: Partial<typeof paymentDraft>) => {
     setPaymentDraft((prev) => ({ ...prev, ...patch }));
+    const patchedKeys = Object.keys(patch);
+    setErrors((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const key of patchedKeys) {
+        if (next[key]) {
+          delete next[key];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
   };
 
   const handleSave = async () => {
@@ -109,7 +121,8 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       saveLabel={t("finance.recordPayment")}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={!paymentDraft.amount.trim() || Number(paymentDraft.amount) <= 0}
+      saveDisabled={saving}
+      error={Object.values(errors)[0]}
       footerStart={footerStart || undefined}
     >
       <div className="space-y-5 text-start">
@@ -136,7 +149,12 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="sm:col-span-2">
-              <Field label={`${t("finance.columns.amount")} (${activeCurrency.code})`} required error={errors.amount}>
+              <Field
+                id="payment-amount-input"
+                label={`${t("finance.columns.amount")} (${activeCurrency.code})`}
+                required
+                error={errors.amount}
+              >
                 <div className="relative flex items-center group/input">
                   <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
@@ -145,10 +163,11 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                     type="text"
                     inputMode="decimal"
                     placeholder="0.00"
-                    className={`${FORM_INPUT} ps-10`}
+                    className={cn(`${FORM_INPUT} ps-10`, errors.amount && FORM_INPUT_ERROR)}
                     value={paymentDraft.amount}
                     onChange={(event) => updateDraft({ amount: event.target.value })}
                     required
+                    aria-invalid={Boolean(errors.amount)}
                   />
                 </div>
                 {Number(paymentDraft.amount) < balance && Number(paymentDraft.amount) > 0 && (
@@ -159,16 +178,17 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
               </Field>
             </div>
 
-            <Field label={t("finance.columns.method")} required>
+            <Field id="payment-method-select" label={t("finance.columns.method")} required error={errors.method}>
               <FormSelect
                 id="payment-method-select"
+                name="method"
                 value={paymentDraft.method}
                 onChange={(value) => updateDraft({ method: value })}
                 options={paymentMethodOptions}
               />
             </Field>
 
-            <Field label={t("finance.columns.paymentDate")} required>
+            <Field id="payment-date-input" label={t("finance.columns.paymentDate")} required error={errors.date}>
               <DatePicker
                 id="payment-date-input"
                 name="date"
@@ -189,16 +209,17 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
             </div>
 
             <div className="sm:col-span-2">
-              <Field label={t("finance.columns.note")} error={errors.note}>
+              <Field id="payment-note" label={t("finance.columns.note")} error={errors.note}>
                 <div className="relative flex items-center group/input">
                   <FileText className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                   <Input
                     id="payment-note"
                     name="note"
-                    className={`${FORM_INPUT} ps-10`}
+                    className={cn(`${FORM_INPUT} ps-10`, errors.note && FORM_INPUT_ERROR)}
                     value={paymentDraft.note || ""}
                     onChange={(event) => updateDraft({ note: event.target.value })}
                     placeholder={t("finance.paymentNotePlaceholder")}
+                    aria-invalid={Boolean(errors.note)}
                   />
                 </div>
               </Field>

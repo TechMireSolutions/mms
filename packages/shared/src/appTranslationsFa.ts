@@ -5582,6 +5582,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "sessions.form.editTitle": "ویرایش دوره",
   "sessions.form.endDate": "تاریخ پایان",
   "sessions.form.endDateRequired": "تاریخ پایان اجباری است",
+  "sessions.form.endDateAfterStartDate": "تاریخ پایان باید هم‌زمان یا بعد از تاریخ شروع باشد",
   "sessions.form.name": "نام دوره",
   "sessions.form.namePlaceholder": "مثلاً دوره صبحگاهی حفظ ۱۴۰۵",
   "sessions.form.nameRequired": "نام دوره اجباری است",

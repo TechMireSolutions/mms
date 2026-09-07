@@ -33,6 +33,8 @@ export function GeneralLedgerFilters({
   return (
     <nav aria-label={t("accounting.ledger.filtersAria")} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <FormSelect
+        id="ledger-filter-type"
+        name="typeFilter"
         aria-label={t("accounting.coa.filterTypeAria")}
         value={typeFilter}
         onChange={(accountTypeValue) => {
@@ -45,6 +47,8 @@ export function GeneralLedgerFilters({
         ]}
       />
       <FormSelect
+        id="ledger-filter-account"
+        name="selectedAccount"
         aria-label={t("accounting.ledger.selectAccountAria")}
         value={selectedAccount}
         onChange={onSelectedAccountChange}

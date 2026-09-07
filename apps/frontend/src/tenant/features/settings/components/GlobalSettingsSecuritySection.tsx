@@ -66,6 +66,7 @@ export function GlobalSettingsSecuritySection({
             <Label htmlFor="sessionTimeout">{t('global.sessionTimeout')}</Label>
             <FormSelect
               id="sessionTimeout"
+              name="sessionTimeout"
               value={normalizeSessionTimeout(data.sessionTimeout)}
               onChange={(v) => upd('sessionTimeout', normalizeSessionTimeout(v))}
               options={SESSION_TIMEOUT_PRESETS.map((preset) => ({
@@ -79,6 +80,7 @@ export function GlobalSettingsSecuritySection({
             <Label htmlFor="passwordPolicy">{t('global.passwordPolicy')}</Label>
             <FormSelect
               id="passwordPolicy"
+              name="passwordPolicy"
               value={passwordPolicy}
               onChange={(v) => upd('passwordPolicy', normalizePasswordPolicy(v))}
               options={[

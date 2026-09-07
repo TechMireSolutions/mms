@@ -55,6 +55,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
             <span className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground" aria-hidden="true">{currencySymbol}</span>
             <Input
               id="wizard-amount"
+              name="amount"
               type="text"
               inputMode="decimal"
               value={form.amount}
@@ -72,6 +73,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
             <label htmlFor="wizard-acc-in" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.receivedInto")}</label>
             <FormSelect
               id="wizard-acc-in"
+              name="debitAcc"
               value={form.debitAcc}
               onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
               options={cashAccountOptions}
@@ -83,6 +85,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
               <label htmlFor="wizard-acc-to" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.transferTo")}</label>
               <FormSelect
                 id="wizard-acc-to"
+                name="debitAcc"
                 value={form.debitAcc}
                 onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
                 options={cashAccountOptions}
@@ -92,6 +95,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
               <label htmlFor="wizard-acc-from" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.transferFrom")}</label>
               <FormSelect
                 id="wizard-acc-from"
+                name="creditAcc"
                 value={form.creditAcc}
                 onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
                 options={cashAccountOptions}
@@ -103,6 +107,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
             <label htmlFor="wizard-acc-out" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.paidFrom")}</label>
             <FormSelect
               id="wizard-acc-out"
+              name="creditAcc"
               value={form.creditAcc}
               onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
               options={cashAccountOptions}
@@ -114,6 +119,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
           <label htmlFor="wizard-description" className={FORM_LABEL}>{t("accounting.columns.journal.description")}</label>
           <Input
             id="wizard-description"
+            name="description"
             value={form.description}
             onChange={(event) => setForm({ ...form, description: event.target.value })}
             placeholder={t(type.descriptionKey)}
@@ -124,6 +130,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
           <label htmlFor="wizard-ref" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.refNo")} <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span></label>
           <Input
             id="wizard-ref"
+            name="ref"
             value={form.ref}
             onChange={(event) => setForm({ ...form, ref: event.target.value })}
             placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
@@ -131,11 +138,13 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
         </div>
 
         <div>
-          <label className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.receipt")} <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span></label>
-          <label className={`${FORM_INPUT} flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground`}>
+          <label htmlFor="wizard-receipt" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.receipt")} <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span></label>
+          <label htmlFor="wizard-receipt" className={`${FORM_INPUT} flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground`}>
             <Upload className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
             <span className="text-xs">{form.receipt ? form.receipt : t("accounting.journal.dashboard.wizard.uploadReceipt")}</span>
             <Input
+              id="wizard-receipt"
+              name="receipt"
               type="file"
               accept="image/*,application/pdf"
               className="hidden"

@@ -10,7 +10,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { FORM_LABEL, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
+import { Field } from '@/components/ui/FormPrimitives';
+import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -56,8 +57,7 @@ export function MessageComposerFormBody({
   return (
     <div className="space-y-3">
       {isEmail && (
-        <div>
-          <label className={FORM_LABEL} htmlFor="emailSubject">{t('messaging.subject')}</label>
+        <Field id="emailSubject" label={t('messaging.subject')} required>
           <Input
             id="emailSubject"
             name="emailSubject"
@@ -66,14 +66,14 @@ export function MessageComposerFormBody({
             placeholder={t('messaging.subjectPlaceholder')}
             required
           />
-        </div>
+        </Field>
       )}
 
       {channelTemplates.length > 0 && (
-        <div>
-          <label className={FORM_LABEL} htmlFor="messageTemplate">{t('messaging.messageTemplate')}</label>
+        <Field id="messageTemplate" label={t('messaging.messageTemplate')}>
           <FormSelect
             id="messageTemplate"
+            name="messageTemplate"
             value={templateId}
             onChange={onTemplateChange}
             options={channelTemplates.map((template) => ({
@@ -81,7 +81,7 @@ export function MessageComposerFormBody({
               label: `${template.labelKey ? t(template.labelKey as Parameters<typeof t>[0]) : template.label} [${t(getMessageCategoryLabelKey(template.category || 'general'))}]`,
             }))}
           />
-        </div>
+        </Field>
       )}
 
       <MessagingMessageBodyField

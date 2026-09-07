@@ -33,13 +33,23 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [data, setData] = useState<Partial<Distribution>>({
     ...EMPTY_DIST,
     denominationId: denoms[0]?.id || "",
   });
 
-  const updateField = (field: string, value: unknown) =>
+  const updateField = (field: string, value: unknown) => {
     setData((previousData: Partial<Distribution>) => ({ ...previousData, [field]: value } as Partial<Distribution>));
+    if (errors[field]) {
+      setErrors((previousErrors) => {
+        const next = { ...previousErrors };
+        delete next[field];
+        return next;
+      });
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -49,6 +59,8 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
         issuedDate: todayISO(),
         issuedByUserId: authUser?.id || "",
       });
+      setErrors({});
+      setSubmitError(null);
     }
   }, [open, denoms, authUser?.id]);
 
@@ -58,29 +70,69 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
 
   const { orderedFields, isFieldEnabled, isFieldRequired } = useHasanatConfig();
 
-  const isValid = (() => {
-    if (totalAvailable === 0) return false;
-    for (const field of orderedFields) {
-      const isEnabled = isFieldEnabled(field.id);
-      const isRequired = isFieldRequired(field.id);
-      if (!isEnabled || !isRequired) continue;
-      if (field.id === "recipientName") {
-        const recipientId = data.recipientType === "faculty"
-          ? data.recipientTeacherId
-          : data.recipientStudentId;
-        if (!recipientId) return false;
-        continue;
-      }
-      if (field.id === "issuedBy") {
-        const actorId = data.issuedByUserId || "";
-        if (!actorId) return false;
-        continue;
-      }
-      const fieldValue = (data as Record<string, unknown>)[field.id];
-      if (fieldValue === undefined || fieldValue === null || fieldValue === "") return false;
+  const handleSave = async () => {
+    const newErrors: Record<string, string> = {};
+    if (!data.denominationId) {
+      newErrors.denominationId = t("common.required");
     }
-    return true;
-  })();
+    const recipientId = data.recipientType === "faculty"
+      ? data.recipientTeacherId
+      : data.recipientStudentId;
+    if (!recipientId) {
+      newErrors.recipientName = t("common.required");
+    }
+    if (!data.quantity || Number(data.quantity) < 1) {
+      newErrors.quantity = t("common.required");
+    } else if (Number(data.quantity) > totalAvailable) {
+      newErrors.quantity = t("common.required");
+    }
+    if (!data.issuedDate) {
+      newErrors.issuedDate = t("common.required");
+    }
+    if (!data.reason?.trim()) {
+      newErrors.reason = t("common.required");
+    }
+
+    for (const field of orderedFields) {
+      if (!isFieldEnabled(field.id) || !isFieldRequired(field.id)) continue;
+      if (field.id === "recipientClass" && !data.recipientClass?.trim()) {
+        newErrors.recipientClass = t("common.required");
+      }
+      if (field.id === "issuedBy" && !data.issuedByUserId && !authUser?.id) {
+        newErrors.issuedBy = t("common.required");
+      }
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSubmitError(t("common.formPleaseFixErrors"));
+      return;
+    }
+
+    setSubmitError(null);
+    const denomination = denoms.find((candidate) => candidate.id === data.denominationId);
+    const batch = batches.find((candidate) => candidate.denominationId === data.denominationId && candidate.remaining > 0);
+    const payload: Distribution = {
+      ...data,
+      id: `dist${crypto.randomUUID()}`,
+      denominationName: denomination?.name || "",
+      batchId: batch?.id || "",
+      status: "active",
+      recipientName: "",
+      issuedByUserId: data.issuedByUserId || authUser?.id || "",
+    } as Distribution;
+    if (data.recipientType === "faculty") {
+      delete payload.recipientStudentId;
+    } else {
+      delete payload.recipientTeacherId;
+    }
+    setSubmitting(true);
+    try {
+      await onSave(payload);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <FormModal
@@ -91,33 +143,9 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
       cancelLabel={t("common.cancel")}
       saveLabel={t("hasanat.form.distributeAction")}
       saving={submitting}
-      onSave={() => {
-        void (async () => {
-        const denomination = denoms.find((candidate) => candidate.id === data.denominationId);
-        const batch = batches.find((candidate) => candidate.denominationId === data.denominationId && candidate.remaining > 0);
-        const payload: Distribution = {
-          ...data,
-          id: `dist${crypto.randomUUID()}`,
-          denominationName: denomination?.name || "",
-          batchId: batch?.id || "",
-          status: "active",
-          recipientName: "",
-          issuedByUserId: data.issuedByUserId || authUser?.id || "",
-        } as Distribution;
-        if (data.recipientType === "faculty") {
-          delete payload.recipientStudentId;
-        } else {
-          delete payload.recipientTeacherId;
-        }
-        setSubmitting(true);
-        try {
-          await onSave(payload);
-        } finally {
-          setSubmitting(false);
-        }
-        })();
-      }}
-      saveDisabled={!isValid}
+      error={submitError || undefined}
+      onSave={handleSave}
+      saveDisabled={totalAvailable === 0}
     >
       <DistributeModalFields
         denoms={denoms}
@@ -126,6 +154,7 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
         totalAvailable={totalAvailable}
         setData={setData}
         updateField={updateField}
+        errors={errors}
       />
     </FormModal>
   );

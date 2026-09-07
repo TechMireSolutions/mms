@@ -37,12 +37,13 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
               onChange={(dateValue) => setForm({ ...form, date: dateValue })}
               required
             />
-            <FieldErrorMessage message={errors.date} />
+            <FieldErrorMessage id="je-date-error" message={errors.date} />
           </div>
           <div>
             <label htmlFor="journal-entry-financial-year" className={FORM_LABEL}>{t("accounting.journal.form.financialYear")}</label>
             <FormSelect
               id="journal-entry-financial-year"
+              name="fiscalYear"
               value={form.fiscal_year_id || form.fiscal_year || ""}
               onChange={(fiscalYearValue) => {
                 const selected = (fiscalYears || []).find(
@@ -67,14 +68,16 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
               <BookOpen className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
               <Input
                 id="journal-entry-description"
+                name="description"
                 className="ps-10"
                 value={form.description}
                 onChange={(event) => setForm({ ...form, description: event.target.value })}
                 placeholder={t("accounting.journal.form.narrationPlaceholder")}
                 aria-invalid={!!errors.description}
+                aria-describedby={errors.description ? "je-description-error" : undefined}
               />
             </div>
-            <FieldErrorMessage message={errors.description} />
+            <FieldErrorMessage id="je-description-error" message={errors.description} />
           </div>
         </div>
     </SectionCard>

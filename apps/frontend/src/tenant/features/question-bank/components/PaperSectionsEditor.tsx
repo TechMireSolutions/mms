@@ -81,6 +81,7 @@ export function PaperSectionsEditor({
                   <label htmlFor={`section-title-${section.id}`} className={FORM_LABEL}>{t("questionBank.sectionTitle")}</label>
                   <Input
                     id={`section-title-${section.id}`}
+                    name={`sections.${section.id}.title`}
                     className={`${FORM_INPUT} shadow-none`}
                     value={section.title}
                     onChange={(event) => onUpdateSection(section.id, { title: event.target.value })}
@@ -91,6 +92,7 @@ export function PaperSectionsEditor({
                   <label htmlFor={`section-instructions-${section.id}`} className={FORM_LABEL}>{t("questionBank.sectionInstructions")}</label>
                   <Input
                     id={`section-instructions-${section.id}`}
+                    name={`sections.${section.id}.instructions`}
                     className={`${FORM_INPUT} shadow-none`}
                     value={section.instructions}
                     onChange={(event) => onUpdateSection(section.id, { instructions: event.target.value })}

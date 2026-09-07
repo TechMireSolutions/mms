@@ -5583,6 +5583,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "sessions.form.editTitle": "سیشن میں ترمیم",
   "sessions.form.endDate": "اختتام کی تاریخ",
   "sessions.form.endDateRequired": "اختتام کی تاریخ لازمی ہے",
+  "sessions.form.endDateAfterStartDate": "اختتام کی تاریخ آغاز کی تاریخ کے بعد یا اسی دن ہونی چاہیے",
   "sessions.form.name": "سیشن کا نام",
   "sessions.form.namePlaceholder": "مثلاً: حفظ صبح سیشن 2026",
   "sessions.form.nameRequired": "سیشن کا نام لازمی ہے",

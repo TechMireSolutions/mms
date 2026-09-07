@@ -66,6 +66,7 @@ export function AccountProfilePasswordCard({
           >
             <PasswordInput
               id="current-password"
+              name="currentPassword"
               label={t("account.currentPassword")}
               value={currentPassword}
               onChange={(event) => onCurrentPasswordChange(event.target.value)}
@@ -76,6 +77,7 @@ export function AccountProfilePasswordCard({
             <div className="space-y-1">
               <PasswordInput
                 id="new-password"
+                name="newPassword"
                 label={t("account.newPassword")}
                 value={newPassword}
                 onChange={(event) => onNewPasswordChange(event.target.value)}
@@ -112,6 +114,7 @@ export function AccountProfilePasswordCard({
             <div className="space-y-1">
               <PasswordInput
                 id="confirm-password"
+                name="confirmPassword"
                 label={t("account.confirmPassword")}
                 value={confirmPassword}
                 onChange={(event) => onConfirmPasswordChange(event.target.value)}

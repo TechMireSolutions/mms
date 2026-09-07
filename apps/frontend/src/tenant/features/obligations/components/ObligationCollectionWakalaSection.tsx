@@ -47,6 +47,8 @@ export function ObligationCollectionWakalaSection({
         <div className="space-y-4">
           {formField('obligation_type_id', t('obligations.form.obligationType'), true,
             <FormSelect
+              id="obligation-obligation_type_id"
+              name="obligation_type_id"
               value={form.obligation_type_id}
               onChange={(val) => setForm({ ...form, obligation_type_id: val })}
               placeholder={t('obligations.form.selectType')}
@@ -61,6 +63,8 @@ export function ObligationCollectionWakalaSection({
           {formField('mujtahid_representative_id', t('obligations.form.representative'), true,
             <div className="space-y-1 w-full">
               <FormSelect
+                id="obligation-mujtahid_representative_id"
+                name="mujtahid_representative_id"
                 value={form.mujtahid_representative_id}
                 onChange={(val) => setForm({ ...form, mujtahid_representative_id: val })}
                 disabled={!form.obligation_type_id}

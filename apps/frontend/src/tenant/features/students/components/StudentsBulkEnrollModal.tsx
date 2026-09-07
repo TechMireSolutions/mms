@@ -103,10 +103,14 @@ export function StudentsBulkEnrollModal({
 
         {/* Action Mode Radio Group */}
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-foreground">
+          <label className="text-xs font-semibold text-foreground" id="bulk-enroll-mode-label">
             {t("students.bulkEnrollMode")}
           </label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div
+            role="radiogroup"
+            aria-labelledby="bulk-enroll-mode-label"
+            className="grid grid-cols-1 sm:grid-cols-3 gap-2"
+          >
             {(
               [
                 { id: "add", label: t("students.bulkEnrollModeAdd") },
@@ -119,9 +123,11 @@ export function StudentsBulkEnrollModal({
                 <button
                   key={opt.id}
                   type="button"
+                  role="radio"
+                  aria-checked={isSelected}
                   onClick={() => setMode(opt.id)}
                   className={cn(
-                    "flex items-start gap-2 p-3 text-start rounded-xl border text-xs transition-colors min-h-11",
+                    "flex items-start gap-2 p-3 text-start rounded-xl border text-xs transition-colors min-h-11 cursor-pointer",
                     isSelected
                       ? "border-primary bg-primary/10 text-foreground font-medium ring-1 ring-primary"
                       : "border-border/60 hover:bg-muted/50 text-muted-foreground",
@@ -180,9 +186,11 @@ export function StudentsBulkEnrollModal({
                   <button
                     key={session.id}
                     type="button"
+                    role="checkbox"
+                    aria-checked={isChecked}
                     onClick={() => toggleSession(String(session.id))}
                     className={cn(
-                      "w-full flex items-center justify-between p-2.5 rounded-lg text-xs text-start transition-colors min-h-11",
+                      "w-full flex items-center justify-between p-2.5 rounded-lg text-xs text-start transition-colors min-h-11 cursor-pointer",
                       isChecked
                         ? "bg-primary/15 text-foreground font-semibold"
                         : "hover:bg-muted text-muted-foreground",

@@ -7,7 +7,6 @@ import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
 import type { FieldDefinition } from "@mms/shared";
 import {
   ContactProfileValue,
-  FieldError,
   resolveStudentFieldLabel,
   type StudentFieldErrorGetter,
 } from "@/tenant/features/students/components/StudentFormSectionShared";
@@ -68,22 +67,20 @@ export function StudentContactSection({
       >
         <div className="space-y-4">
           {showContact ? (
-            <>
-              <ContactPicker
-                label={contactLabel}
-                value={contactId ? String(contactId) : null}
-                onChange={onContactSelect}
-                excludeIds={excludeIds}
-                onAvatarChange={onStudentAvatarChange}
-                searchPlaceholder={t("contacts.picker.searchPlaceholder")}
-                emptyTitle={t("contacts.picker.emptyTitle")}
-                emptyHint={t("contacts.picker.emptyHint")}
-                required={isFieldRequired("contactId")}
-                error={!!getFieldError("contactId")}
-                id="contactId"
-              />
-              <FieldError message={getFieldError("contactId")} />
-            </>
+            <ContactPicker
+              label={contactLabel}
+              value={contactId ? String(contactId) : null}
+              onChange={onContactSelect}
+              excludeIds={excludeIds}
+              onAvatarChange={onStudentAvatarChange}
+              searchPlaceholder={t("contacts.picker.searchPlaceholder")}
+              emptyTitle={t("contacts.picker.emptyTitle")}
+              emptyHint={t("contacts.picker.emptyHint")}
+              required={isFieldRequired("contactId")}
+              error={Boolean(getFieldError("contactId"))}
+              errorMessage={getFieldError("contactId")}
+              id="contactId"
+            />
           ) : null}
 
           {showProfileRow ? (

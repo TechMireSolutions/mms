@@ -30,8 +30,12 @@ const defaults = (): ContactLookupsMap => {
   };
 };
 
-export async function fetchContactLookups(_signal?: AbortSignal): Promise<ContactLookupsMap> {
-  const response = await apiContract.contacts.getLookups({ query: {} });
+export async function fetchContactLookups(signal?: AbortSignal): Promise<ContactLookupsMap> {
+  const response = await apiContract.contacts.getLookups({
+    query: {},
+    fetchOptions: { signal },
+    signal,
+  });
   if (response.status !== 200) return defaults();
   const body = response.body as { lookups?: ContactLookupsMap } | undefined;
   return body?.lookups ?? defaults();

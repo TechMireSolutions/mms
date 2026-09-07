@@ -30,6 +30,7 @@ export interface ContactPickerProps {
   createLabel?: string;
   createWithQueryLabel?: (query: string) => string;
   error?: boolean;
+  errorMessage?: string;
   required?: boolean;
   id?: string;
   name?: string;
@@ -52,6 +53,7 @@ export default function ContactPicker({
   createLabel,
   createWithQueryLabel,
   error = false,
+  errorMessage,
   required = false,
   id,
   name,
@@ -105,7 +107,8 @@ export default function ContactPicker({
       query={picker.query}
       open={picker.open}
       allowCreate={canCreate}
-      error={error}
+      error={Boolean(error || errorMessage)}
+      errorMessage={errorMessage}
       searchPlaceholder={searchPlaceholder}
       createActionLabel={createActionLabel}
       menuRef={picker.menuRef}

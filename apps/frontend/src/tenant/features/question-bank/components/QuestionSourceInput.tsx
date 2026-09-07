@@ -30,6 +30,7 @@ export function QuestionSourceInput({
         {field.type === "textarea" ? (
           <Textarea
             id={inputId}
+            name={inputId}
             value={value}
             onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => onChange(e.target.value)}
             placeholder={field.placeholder}
@@ -46,6 +47,7 @@ export function QuestionSourceInput({
         ) : (
           <Input
             id={inputId}
+            name={inputId}
             type="text"
             value={value}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => onChange(e.target.value)}

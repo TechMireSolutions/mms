@@ -57,8 +57,18 @@ export function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onS
           <label htmlFor="wakala-rep" className={FORM_LABEL}>{t("obligations.wakala.repLabel")}<RequiredMark /></label>
           <FormSelect
             id="wakala-rep"
+            name="mujtahid_representative_id"
             value={form.mujtahid_representative_id || ""}
-            onChange={(val) => setForm({ ...form, mujtahid_representative_id: val })}
+            onChange={(val) => {
+              if (errors.rep) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.rep;
+                  return next;
+                });
+              }
+              setForm({ ...form, mujtahid_representative_id: val });
+            }}
             placeholder={t("obligations.wakala.repPlaceholder")}
             options={reps.map((rep) => {
               const mujtahid = getMujtahidForRep(rep.id);
@@ -70,8 +80,18 @@ export function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onS
           <label htmlFor="wakala-type" className={FORM_LABEL}>{t("obligations.wakala.obTypeLabel")}<RequiredMark /></label>
           <FormSelect
             id="wakala-type"
+            name="obligation_type_id"
             value={form.obligation_type_id || ""}
-            onChange={(val) => setForm({ ...form, obligation_type_id: val })}
+            onChange={(val) => {
+              if (errors.obType) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next.obType;
+                  return next;
+                });
+              }
+              setForm({ ...form, obligation_type_id: val });
+            }}
             placeholder={t("obligations.wakala.obTypePlaceholder")}
             options={obligationTypes.map((obligationType) => ({ value: obligationType.id, label: obligationType.name }))}
           />

@@ -62,7 +62,10 @@ export function PlatformForgotPasswordResetStep({ controller }: PlatformForgotPa
               label={t("platform.forgotNewPassword")}
               autoComplete="new-password"
               value={password}
-              onChange={setPassword}
+              onChange={(value) => {
+                setPassword(value);
+                if (error) setError(null);
+              }}
             />
             <PasswordStrengthMeter password={password} />
           </div>
@@ -72,7 +75,10 @@ export function PlatformForgotPasswordResetStep({ controller }: PlatformForgotPa
             label={t("platform.forgotConfirmPassword")}
             autoComplete="new-password"
             value={confirmPassword}
-            onChange={setConfirmPassword}
+            onChange={(value) => {
+              setConfirmPassword(value);
+              if (error) setError(null);
+            }}
           />
 
           <AuthSubmitButton

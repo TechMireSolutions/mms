@@ -138,8 +138,13 @@ export function RoleFormModal({
               </label>
               <Input
                 id="role-name"
+                name="name"
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                aria-invalid={Boolean(error)}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  if (error) setError('');
+                }}
                 placeholder={t('users.permissions.fieldNamePlaceholder')}
               />
             </div>
@@ -149,6 +154,7 @@ export function RoleFormModal({
               </label>
               <Input
                 id="role-desc"
+                name="description"
                 value={desc}
                 onChange={(event) => setDesc(event.target.value)}
                 placeholder={t('users.permissions.fieldDescriptionPlaceholder')}

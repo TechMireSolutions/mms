@@ -70,14 +70,26 @@ export function PaperQuestionPicker({
 
       <div className="mb-3 grid gap-2 sm:grid-cols-2 md:grid-cols-3">
         <Input
+          id="paper-picker-search"
+          name="search"
           className={`${FORM_INPUT} shadow-none sm:col-span-2 md:col-span-3`}
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder={t("questionBank.searchPlaceholder")}
           aria-label={t("questionBank.searchPlaceholder")}
         />
-        <FormSelect value={categoryFilter} onChange={onCategoryFilterChange} options={categoryOptions} />
         <FormSelect
+          id="paper-picker-category"
+          name="categoryFilter"
+          aria-label={t("questionBank.category")}
+          value={categoryFilter}
+          onChange={onCategoryFilterChange}
+          options={categoryOptions}
+        />
+        <FormSelect
+          id="paper-picker-difficulty"
+          name="difficultyFilter"
+          aria-label={t("questionBank.difficulty")}
           value={difficultyFilter}
           onChange={(value) => onDifficultyFilterChange(value as DifficultyFilter)}
           options={difficultyOptions}

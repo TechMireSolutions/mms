@@ -54,6 +54,8 @@ export function QuestionFormAnswerFields({
               <div className="relative flex items-center w-full">
                 <HelpCircle className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
                 <Input
+                  id={`qb-choice-input-${optionIndex}`}
+                  name={`options.${optionIndex}`}
                   type="text"
                   className={`${FORM_INPUT} ps-10`}
                   value={optionValue}
@@ -63,6 +65,7 @@ export function QuestionFormAnswerFields({
                     updateDraft({ options: nextOptions });
                   }}
                   placeholder={t("questionBank.optionN", { n: optionIndex + 1 })}
+                  aria-label={t("questionBank.optionN", { n: optionIndex + 1 })}
                 />
               </div>
             </div>
@@ -98,7 +101,7 @@ export function QuestionFormAnswerFields({
   if (questionDraft.type === "short") {
     return (
       <div className="sm:col-span-2">
-        <Field label={t("questionBank.modelAnswer")}>
+        <Field id="qb-answer" label={t("questionBank.modelAnswer")}>
           <Textarea
             id="qb-answer"
             name="answer"

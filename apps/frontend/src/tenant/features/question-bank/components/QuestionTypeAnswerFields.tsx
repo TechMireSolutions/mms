@@ -55,6 +55,7 @@ export function QuestionTypeAnswerFields({
               </label>
               <Input
                 id={`qb-blank-${index}`}
+                name={`blank-${index}`}
                 className={FORM_INPUT}
                 value={blank}
                 onChange={(event) => {
@@ -102,7 +103,9 @@ export function QuestionTypeAnswerFields({
           <label htmlFor="qb-numeric-answer" className={FORM_LABEL}>{t('questionBank.numericAnswer')}<RequiredMark /></label>
           <Input
             id="qb-numeric-answer"
+            name="numericAnswer"
             type="number"
+            inputMode="decimal"
             className={FORM_INPUT}
             value={answer}
             onChange={(e) => onAnswerChange(e.target.value)}
@@ -112,7 +115,9 @@ export function QuestionTypeAnswerFields({
           <label htmlFor="qb-numeric-tolerance" className={FORM_LABEL}>{t('questionBank.numericTolerance')}</label>
           <Input
             id="qb-numeric-tolerance"
+            name="numericTolerance"
             type="number"
+            inputMode="decimal"
             min={0}
             step="any"
             className={FORM_INPUT}

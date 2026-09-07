@@ -142,6 +142,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <label htmlFor="filter-session" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.session")}</label>
                 <FormSelect
                   id="filter-session"
+                  name="sessionId"
                   value={filters.sessionId}
                   onChange={(value) => setRelationFilter("sessionId", value)}
                   placeholder={t("attendance.filters.allSessions")}
@@ -154,6 +155,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <label htmlFor="filter-class" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.class")}</label>
                 <FormSelect
                   id="filter-class"
+                  name="classId"
                   value={filters.classId}
                   onChange={(value) => setFilterValue("classId", value)}
                   placeholder={t("attendance.filters.allClasses")}
@@ -166,6 +168,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 <label htmlFor="filter-teacher" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.teacher")}</label>
                 <FormSelect
                   id="filter-teacher"
+                  name="teacherId"
                   value={filters.teacherId}
                   onChange={(value) => setRelationFilter("teacherId", value)}
                   placeholder={t('attendance.filters.allTeachers')}

@@ -5582,6 +5582,7 @@ export const APP_TRANSLATIONS_EN = {
   "sessions.form.editTitle": "Edit Session",
   "sessions.form.endDate": "End date",
   "sessions.form.endDateRequired": "End date is required",
+  "sessions.form.endDateAfterStartDate": "End date must be on or after start date",
   "sessions.form.name": "Session name",
   "sessions.form.namePlaceholder": "e.g. Hifz Morning Session 2026",
   "sessions.form.nameRequired": "Session name is required",

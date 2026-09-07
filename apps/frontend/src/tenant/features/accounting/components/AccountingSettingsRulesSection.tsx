@@ -66,11 +66,13 @@ export function AccountingSettingsRulesSection({
       >
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field
+            id="accounting-account-code-length"
             label={t("accounting.settings.fields.defaultCodeLength")}
             hint={t("accounting.settings.fields.defaultCodeLengthHint")}
           >
             <FormSelect
               id="accounting-account-code-length"
+              name="accountCodeLength"
               value={String(settingsDraft.accountCodeLength ?? 4)}
               onChange={(codeLengthValue) => upd("accountCodeLength", parseInt(codeLengthValue))}
               options={[3, 4, 5, 6].map((digitCount) => String(digitCount))}
@@ -79,11 +81,13 @@ export function AccountingSettingsRulesSection({
           </Field>
 
           <Field
+            id="accounting-retained-earnings-account"
             label={t("accounting.settings.fields.retainedEarningsAccount")}
             hint={t("accounting.settings.fields.retainedEarningsAccountHint")}
           >
             <FormSelect
               id="accounting-retained-earnings-account"
+              name="retainedEarningsAccount"
               value={settingsDraft.retainedEarningsAccount || ""}
               onChange={(accountId) => upd("retainedEarningsAccount", accountId)}
               placeholder={t("accounting.journal.form.none")}

@@ -54,6 +54,8 @@ export function CategoryManager({
             className="grid grid-cols-1 items-center gap-2 rounded-lg border border-border/70 bg-muted/20 p-2 sm:grid-row-category-5"
           >
             <Input
+              id={`cat-icon-${cat.id}`}
+              name={`category.${cat.id}.icon`}
               type="text"
               className="w-12 rounded-lg border border-border bg-background px-2 py-1.5 min-h-11 text-center text-sm shadow-none"
               value={cat.icon}
@@ -61,6 +63,8 @@ export function CategoryManager({
               aria-label={t('questionBank.categoryIcon')}
             />
             <Input
+              id={`cat-name-${cat.id}`}
+              name={`category.${cat.id}.name`}
               type="text"
               className={`${FORM_INPUT} min-h-11 shadow-none`}
               value={cat.name}
@@ -68,6 +72,8 @@ export function CategoryManager({
               aria-label={t('questionBank.categoryName')}
             />
             <Input
+              id={`cat-color-${cat.id}`}
+              name={`category.${cat.id}.color`}
               type="color"
               className="min-h-11 w-full cursor-pointer rounded-lg border border-border bg-background p-0.5 shadow-none"
               value={cat.color}

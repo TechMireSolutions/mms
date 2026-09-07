@@ -68,6 +68,18 @@ export function QuestionForm({
 
   const updateDraft = (patch: Partial<typeof questionDraft>) => {
     setQuestionDraft((prev) => ({ ...prev, ...patch }));
+    const keys = Object.keys(patch);
+    setErrors((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const k of keys) {
+        if (next[k]) {
+          delete next[k];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
   };
 
   // Inline category/source-book creation in the question form persists to the

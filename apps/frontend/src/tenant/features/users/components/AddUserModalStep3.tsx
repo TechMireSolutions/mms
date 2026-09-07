@@ -81,13 +81,16 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
             className="space-y-3"
           >
             <div>
-              <Label required>{t('users.addTempPassword')}</Label>
+              <Label htmlFor="add-user-temp-password" required>{t('users.addTempPassword')}</Label>
               <div className="relative">
                 <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <UiInput
+                  id="add-user-temp-password"
+                  name="password"
                   type={showPwd ? 'text' : 'password'}
                   placeholder={passwordHint}
                   value={form.password || ''}
+                  aria-invalid={Boolean(errors.password)}
                   onChange={(event) => setForm((previousForm) => ({ ...previousForm, password: event.target.value }))}
                   className="ps-9.5 pe-9"
                 />
@@ -105,8 +108,9 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
               <p className="mt-1 text-xs text-muted-foreground">{passwordHint}</p>
             </div>
 
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label htmlFor="add-user-force-reset" className="flex items-center gap-2 cursor-pointer">
               <Checkbox
+                id="add-user-force-reset"
                 checked={form.forceReset !== false}
                 onCheckedChange={(checked) => setForm((previousForm) => ({ ...previousForm, forceReset: !!checked }))}
               />
@@ -116,8 +120,9 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
         )}
       </AnimatePresence>
 
-      <label className="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors">
+      <label htmlFor="add-user-2fa" className="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors">
         <Checkbox
+          id="add-user-2fa"
           checked={!!form.twoFactorEnabled}
           onCheckedChange={(checked) => setForm((previousForm) => ({ ...previousForm, twoFactorEnabled: !!checked }))}
         />

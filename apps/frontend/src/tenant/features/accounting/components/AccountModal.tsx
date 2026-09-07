@@ -29,6 +29,17 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
   const subtypes = type ? (ACCOUNT_SUBTYPES[type] || []) : [];
   const { fields, orderedFields, isFieldEnabled } = useAccountingConfig();
 
+  const updateField = (key: keyof Account, value: unknown) => {
+    setForm((prev) => ({ ...prev, [key]: value }));
+    if (errors[key]) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next[key];
+        return next;
+      });
+    }
+  };
+
   const saveAccount = async () => {
     const candidate = {
       ...form,
@@ -89,7 +100,15 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
           if (field.id === 'code') {
             return (
               <Field key="code" id="account-code" label={t('accounting.coa.fields.code')} required error={errors.code}>
-                <Input id="account-code" name="code" value={form.code || ''} onChange={(event) => setForm({ ...form, code: event.target.value })} placeholder={t('accounting.coa.fields.codePlaceholder')} required />
+                <Input
+                  id="account-code"
+                  name="code"
+                  value={form.code || ''}
+                  onChange={(event) => updateField('code', event.target.value)}
+                  placeholder={t('accounting.coa.fields.codePlaceholder')}
+                  aria-invalid={Boolean(errors.code)}
+                  required
+                />
               </Field>
             );
           }
@@ -101,10 +120,19 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                   id="account-type"
                   name="type"
                   value={form.type || 'Asset'}
-                  onChange={(val) =>
-                    setForm((prev) => ({ ...prev, type: val as AccountType, subtype: '' }))
-                  }
+                  onChange={(val) => {
+                    setForm((prev) => ({ ...prev, type: val as AccountType, subtype: '' }));
+                    if (errors.type || errors.subtype) {
+                      setErrors((prev) => {
+                        const next = { ...prev };
+                        delete next.type;
+                        delete next.subtype;
+                        return next;
+                      });
+                    }
+                  }}
                   options={ACCOUNT_TYPES.map((accType) => ({ value: accType, label: t(`accounting.type.${accType}` as AppTranslationKey) }))}
+                  aria-invalid={Boolean(errors.type)}
                 />
               </Field>
             );
@@ -114,7 +142,15 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="name" className="sm:col-span-2">
                 <Field id="account-name" label={t('accounting.coa.fields.name')} required error={errors.name}>
-                <Input id="account-name" name="name" value={form.name || ''} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder={t('accounting.coa.fields.namePlaceholder')} required />
+                  <Input
+                    id="account-name"
+                    name="name"
+                    value={form.name || ''}
+                    onChange={(event) => updateField('name', event.target.value)}
+                    placeholder={t('accounting.coa.fields.namePlaceholder')}
+                    aria-invalid={Boolean(errors.name)}
+                    required
+                  />
                 </Field>
               </div>
             );
@@ -129,9 +165,10 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
                     id="account-subtype"
                     name="subtype"
                     value={form.subtype || ''}
-                    onChange={(val) => setForm({ ...form, subtype: val })}
+                    onChange={(val) => updateField('subtype', val)}
                     options={subtypes}
                     placeholder={t('accounting.journal.form.none')}
+                    aria-invalid={Boolean(errors.subtype)}
                   />
                 </Field>
               </div>
@@ -143,7 +180,15 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
             return (
               <div key="description" className="sm:col-span-2">
                 <Field id="account-description" label={t('accounting.coa.fields.description')} required={isRequired} error={errors.description}>
-                  <Input id="account-description" name="description" value={form.description || ''} onChange={(event) => setForm({ ...form, description: event.target.value })} placeholder={t('accounting.coa.fields.descriptionPlaceholder')} required={isRequired} />
+                  <Input
+                    id="account-description"
+                    name="description"
+                    value={form.description || ''}
+                    onChange={(event) => updateField('description', event.target.value)}
+                    placeholder={t('accounting.coa.fields.descriptionPlaceholder')}
+                    aria-invalid={Boolean(errors.description)}
+                    required={isRequired}
+                  />
                 </Field>
               </div>
             );

@@ -68,7 +68,7 @@ export function EligibilityCheck(): React.JSX.Element {
           <label htmlFor="select-session" className={FORM_LABEL}>{t("enrollments.eligibility.session")}</label>
           <FormSelect
             id="select-session"
-            name="select-session"
+            name="sessionId"
             value={sessionId}
             onChange={setSessionId}
             options={sessions.map((sessionOption) => ({

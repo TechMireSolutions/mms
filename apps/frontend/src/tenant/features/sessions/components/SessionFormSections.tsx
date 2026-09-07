@@ -4,9 +4,10 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { FORM_INPUT } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_INPUT_ERROR, FORM_TEXTAREA } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { SessionFormDraft } from "@/tenant/features/sessions/components/sessionFormShared";
 
@@ -45,29 +46,37 @@ export function SessionDetailsSection({
         title={t("sessions.form.sectionDetails")}
         className="shadow-sm text-start"
       >
-        <Field label={t("sessions.form.name")} required error={errors.name}>
+        <Field label={t("sessions.form.name")} id="session-name" required error={errors.name}>
           <div className="relative flex items-center group/input">
             <Calendar className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
+              id="session-name"
+              name="name"
               value={sessionDraft.name || ""}
               onChange={(event) => onDraftChange({ name: event.target.value })}
               placeholder={t("sessions.form.namePlaceholder")}
-              className={`${FORM_INPUT} ps-10`}
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? "session-name-error" : undefined}
+              className={cn(FORM_INPUT, "ps-10", errors.name && FORM_INPUT_ERROR)}
             />
           </div>
         </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label={t("sessions.form.type")}>
+          <Field label={t("sessions.form.type")} id="session-type">
             <FormSelect
+              id="session-type"
+              name="type"
               value={sessionDraft.type || defaultType}
               onChange={(val) => onDraftChange({ type: val })}
               options={sessionTypeOptions}
             />
           </Field>
 
-          <Field label={t("sessions.form.status")}>
+          <Field label={t("sessions.form.status")} id="session-status">
             <FormSelect
+              id="session-status"
+              name="status"
               value={sessionDraft.status || "active"}
               onChange={(val) => onDraftChange({ status: val })}
               options={statusOptions}
@@ -99,12 +108,14 @@ export function SessionDetailsSection({
           </Field>
         </div>
 
-        <Field label={t("sessions.form.description")}>
+        <Field label={t("sessions.form.description")} id="session-description">
           <Textarea
+            id="session-description"
+            name="description"
             value={sessionDraft.description || ""}
             onChange={(event) => onDraftChange({ description: event.target.value })}
             placeholder={t("sessions.form.descriptionPlaceholder")}
-            className="min-h-textarea-lg"
+            className={cn(FORM_TEXTAREA, "min-h-textarea-lg")}
           />
         </Field>
       </SectionCard>
@@ -120,6 +131,7 @@ interface SessionFinancialSectionProps extends SessionSectionBaseProps {
 export function SessionFinancialSection({
   currencyOptions,
   defaultCurrency,
+  errors,
   sessionDraft,
   onDraftChange,
 }: SessionFinancialSectionProps): React.JSX.Element {
@@ -133,22 +145,28 @@ export function SessionFinancialSection({
         title={t("sessions.form.sectionFinancial")}
         className="shadow-sm text-start"
       >
-        <Field label={t("sessions.form.baseFee")}>
+        <Field label={t("sessions.form.baseFee")} id="session-baseFee" error={errors.baseFee}>
           <div className="relative flex items-center group/input">
             <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
+              id="session-baseFee"
+              name="baseFee"
               type="text"
               inputMode="decimal"
               placeholder="0.00"
               value={sessionDraft.baseFee || ""}
               onChange={(event) => onDraftChange({ baseFee: event.target.value })}
-              className={`${FORM_INPUT} ps-10`}
+              aria-invalid={Boolean(errors.baseFee)}
+              aria-describedby={errors.baseFee ? "session-baseFee-error" : undefined}
+              className={cn(FORM_INPUT, "ps-10", errors.baseFee && FORM_INPUT_ERROR)}
             />
           </div>
         </Field>
 
-        <Field label={t("sessions.form.currency")}>
+        <Field label={t("sessions.form.currency")} id="session-currency">
           <FormSelect
+            id="session-currency"
+            name="currency"
             value={sessionDraft.currency || defaultCurrency}
             onChange={(val) => onDraftChange({ currency: val })}
             options={currencyOptions}

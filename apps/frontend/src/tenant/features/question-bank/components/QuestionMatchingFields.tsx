@@ -43,8 +43,10 @@ export function QuestionMatchingFields({
       {pairs.map((pair, index) => (
         <div key={index} className="grid grid-cols-1 gap-2 rounded-lg border border-border/70 bg-muted/10 p-3 sm:grid-row-matching-3">
           <div>
-            <label className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingLeft')}</label>
+            <label htmlFor={`matching-left-${index}`} className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingLeft')}</label>
             <Input
+              id={`matching-left-${index}`}
+              name={`matching-left-${index}`}
               className={FORM_INPUT}
               value={pair.left}
               onChange={(event) => {
@@ -56,8 +58,10 @@ export function QuestionMatchingFields({
             />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingRight')}</label>
+            <label htmlFor={`matching-right-${index}`} className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingRight')}</label>
             <Input
+              id={`matching-right-${index}`}
+              name={`matching-right-${index}`}
               className={FORM_INPUT}
               value={pair.right}
               onChange={(event) => {

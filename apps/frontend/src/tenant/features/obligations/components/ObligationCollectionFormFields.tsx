@@ -56,7 +56,12 @@ export function ObligationCollectionFormFields({
     required: boolean,
     children: React.ReactNode,
   ) => (
-    <Field label={label} required={required} error={errors[key] ? t(errors[key]!) : undefined}>
+    <Field
+      id={`obligation-${key}`}
+      label={label}
+      required={required}
+      error={errors[key] ? t(errors[key]!) : undefined}
+    >
       {children}
     </Field>
   );
@@ -90,6 +95,8 @@ export function ObligationCollectionFormFields({
             )}
             {formField('payment_mode', t('obligations.form.paymentMode'), true,
               <FormSelect
+                id="obligation-payment_mode"
+                name="payment_mode"
                 value={form.payment_mode}
                 onChange={(val) => setForm({ ...form, payment_mode: val })}
                 options={PAYMENT_MODES.map((mode) => ({
@@ -144,17 +151,22 @@ export function ObligationCollectionFormFields({
               <div className="relative flex items-center group/input w-full">
                 <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none z-10" />
                 <Input
+                  id="obligation-amount"
+                  name="amount"
                   type="text"
                   inputMode="decimal"
                   value={form.amount}
                   onChange={(event) => setForm({ ...form, amount: event.target.value })}
                   placeholder="0.00"
                   className="ps-10 w-full"
+                  aria-invalid={!!errors.amount}
                 />
               </div>,
             )}
             {formField('currency_id', t('obligations.form.currency'), true,
               <FormSelect
+                id="obligation-currency_id"
+                name="currency_id"
                 value={form.currency_id}
                 onChange={(val) => setForm({ ...form, currency_id: val })}
                 options={currencies.map((currency) => ({ value: currency.id, label: `${currency.code} – ${currency.name}` }))}

@@ -58,10 +58,15 @@ export function PlatformProfileNameForm({
           <label htmlFor="platform-profile-name" className={FORM_LABEL}>{t("platform.profileName")}</label>
           <Input
             id="platform-profile-name"
+            name="name"
             autoComplete="name"
             required
             value={name}
-            onChange={(event) => setName(event.target.value)}
+            aria-invalid={Boolean(nameError)}
+            onChange={(event) => {
+              setName(event.target.value);
+              if (nameError) setNameError(null);
+            }}
             className="min-h-11"
           />
         </div>

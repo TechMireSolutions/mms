@@ -71,6 +71,8 @@ export function ChartOfAccountsListFilters({
     >
       <div className="flex-shrink-0 min-w-filter-xl">
         <FormSelect
+          id="coa-filter-type"
+          name="typeFilter"
           aria-label={t("accounting.coa.filterTypeAria")}
           value={typeFilter}
           onChange={(accountTypeValue) => setTypeFilter(accountTypeValue as AccountType | "all")}

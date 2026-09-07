@@ -50,6 +50,7 @@ export function EditableMultiSelect({
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [newTagValue, setNewTagValue] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
   const fallbackId = useId();
   const resolvedId = id || fallbackId;
@@ -106,6 +107,7 @@ export function EditableMultiSelect({
           handleAdd(newTagValue);
         }
         setOpen(isOpen);
+        setHighlightedIndex(isOpen ? 0 : -1);
         if (!isOpen) {
           setSearchQuery("");
           setNewTagValue("");
@@ -121,6 +123,7 @@ export function EditableMultiSelect({
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-controls={listboxId}
+        aria-invalid={Boolean(error)}
         className={cn(
           "min-h-11 w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-lg border border-border bg-background text-foreground hover:bg-muted/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 transition-all text-start cursor-pointer touch-manipulation",
           error && FORM_INPUT_ERROR,
@@ -148,12 +151,38 @@ export function EditableMultiSelect({
         sideOffset={6}
         collisionPadding={8}
         className="p-0 w-[var(--radix-popover-trigger-width)] min-w-64 max-h-80 flex flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-xl divide-y divide-border/60"
+        onKeyDown={(event) => {
+          if (event.key === "ArrowDown") {
+            event.preventDefault();
+            if (filteredOptions.length === 0) return;
+            setHighlightedIndex((prev) => (prev + 1) % filteredOptions.length);
+          } else if (event.key === "ArrowUp") {
+            event.preventDefault();
+            if (filteredOptions.length === 0) return;
+            setHighlightedIndex((prev) => (prev - 1 + filteredOptions.length) % filteredOptions.length);
+          } else if (
+            event.key === "Enter" &&
+            (event.target as HTMLElement).tagName !== "INPUT"
+          ) {
+            const highlighted = filteredOptions[highlightedIndex];
+            if (highlighted !== undefined) {
+              event.preventDefault();
+              toggleOption(highlighted);
+            }
+          }
+        }}
       >
         {options.length > 4 && (
           <EditableMultiSelectSearchBar
             searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-            onClearSearch={() => setSearchQuery("")}
+            onSearchChange={(query) => {
+              setSearchQuery(query);
+              setHighlightedIndex(0);
+            }}
+            onClearSearch={() => {
+              setSearchQuery("");
+              setHighlightedIndex(0);
+            }}
             t={t}
           />
         )}
@@ -165,6 +194,8 @@ export function EditableMultiSelect({
           values={values}
           canRemoveOptions={canRemoveOptions}
           t={t}
+          highlightedIndex={highlightedIndex}
+          onHoverOption={setHighlightedIndex}
           onToggleOption={toggleOption}
           onRemoveOption={handleRemoveOption}
         />
@@ -174,9 +205,16 @@ export function EditableMultiSelect({
             <Input
               type="text"
               value={newTagValue}
-              onChange={(e) => setNewTagValue(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val.includes(",")) {
+                  handleAdd(val);
+                } else {
+                  setNewTagValue(val);
+                }
+              }}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" || e.key === ",") {
                   e.preventDefault();
                   e.stopPropagation();
                   handleAdd();

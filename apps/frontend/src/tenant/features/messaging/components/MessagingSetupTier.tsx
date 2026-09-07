@@ -48,6 +48,7 @@ export const MessagingSetupTier = (function MessagingSetupTier({
   const [body, setBody] = useState("");
   const [category, setCategory] = useState<MessageCategory>("general");
   const [channel, setChannel] = useState<"all" | "sms" | "whatsapp" | "email">("all");
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const isFormDirty = Boolean(label.trim() || body.trim() || editingId);
 
@@ -76,12 +77,39 @@ export const MessagingSetupTier = (function MessagingSetupTier({
     setBody("");
     setCategory("general");
     setChannel("all");
+    setErrors({});
+  };
+
+  const handleLabelChange = (value: string): void => {
+    setLabel(value);
+    if (errors.label) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.label;
+        return next;
+      });
+    }
+  };
+
+  const handleBodyChange = (value: string): void => {
+    setBody(value);
+    if (errors.body) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.body;
+        return next;
+      });
+    }
   };
 
   const save = async (event: React.FormEvent): Promise<void> => {
     event.preventDefault();
     if (!user) return;
-    if (!label.trim() || !body.trim()) {
+    const newErrors: Record<string, string> = {};
+    if (!label.trim()) newErrors.label = t("common.required");
+    if (!body.trim()) newErrors.body = t("common.required");
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       notify.error(t("messaging.createPresetDesc"));
       return;
     }
@@ -167,10 +195,11 @@ export const MessagingSetupTier = (function MessagingSetupTier({
                     channel={channel}
                     templateCategorySelectOptions={templateCategorySelectOptions}
                     channelSelectOptions={channelSelectOptions}
+                    errors={errors}
                     onReset={resetForm}
                     onSave={(event) => void save(event)}
-                    onLabelChange={setLabel}
-                    onBodyChange={setBody}
+                    onLabelChange={handleLabelChange}
+                    onBodyChange={handleBodyChange}
                     onCategoryChange={setCategory}
                     onChannelChange={setChannel}
                   />

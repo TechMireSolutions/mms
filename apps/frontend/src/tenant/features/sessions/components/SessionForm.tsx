@@ -82,6 +82,11 @@ export const SessionForm = (function SessionForm({
         }
         if (!sessionDraft.endDate) {
           newErrors.endDate = t('sessions.form.endDateRequired');
+        } else if (sessionDraft.startDate && sessionDraft.endDate < sessionDraft.startDate) {
+          newErrors.endDate = t('sessions.form.endDateAfterStartDate');
+        }
+        if (sessionDraft.baseFee && Number(sessionDraft.baseFee) < 0) {
+          newErrors.baseFee = t('common.formPleaseFixErrors');
         }
 
         if (Object.keys(newErrors).length > 0) {
@@ -112,6 +117,14 @@ export const SessionForm = (function SessionForm({
 
           const parsed = SessionSchema.safeParse(payload);
           if (!parsed.success) {
+            const schemaErrors: Record<string, string> = {};
+            for (const issue of parsed.error.issues) {
+              const field = issue.path[0];
+              if (typeof field === 'string' && !schemaErrors[field]) {
+                schemaErrors[field] = issue.message;
+              }
+            }
+            setErrors((prev) => ({ ...prev, ...schemaErrors }));
             notify.error(t('common.formPleaseFixErrors'));
             return false;
           }
@@ -160,6 +173,7 @@ export const SessionForm = (function SessionForm({
           onSave={handleSave}
           isDirty={isDirty}
           saving={saving}
+          error={Object.values(errors)[0]}
           saveDisabled={
             !sessionDraft.name?.trim()
             || !sessionDraft.startDate

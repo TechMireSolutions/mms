@@ -101,7 +101,10 @@ export function ResetUserPasswordModal({
             name="temporaryPassword"
             autoComplete="new-password"
             value={temporaryPassword}
-            onChange={(event) => setTemporaryPassword(event.target.value)}
+            onChange={(event) => {
+              setTemporaryPassword(event.target.value);
+              if (error) setError('');
+            }}
             disabled={submitting}
             aria-label={t('users.resetPasswordTemporaryLabel')}
           />
@@ -116,7 +119,10 @@ export function ResetUserPasswordModal({
             name="confirmTemporaryPassword"
             autoComplete="new-password"
             value={confirmation}
-            onChange={(event) => setConfirmation(event.target.value)}
+            onChange={(event) => {
+              setConfirmation(event.target.value);
+              if (error) setError('');
+            }}
             disabled={submitting}
             aria-label={t('users.resetPasswordConfirmLabel')}
           />

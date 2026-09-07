@@ -39,11 +39,13 @@ export function AccountingSettingsCurrencySection({
     >
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Field
+          id="accounting-base-currency"
           label={t("accounting.settings.fields.baseCurrency")}
           hint={t("accounting.settings.fields.baseCurrencyHint")}
         >
           <FormSelect
             id="accounting-base-currency"
+            name="currency"
             value={settingsDraft.currency}
             onChange={(currencyValue) => {
               const selectedCurrency = currencies.find((currencyOption) => currencyOption.code === currencyValue);
@@ -62,27 +64,30 @@ export function AccountingSettingsCurrencySection({
           )}
         </Field>
 
-        <Field label={t("accounting.settings.fields.dateFormat")}>
+        <Field id="accounting-date-format" label={t("accounting.settings.fields.dateFormat")}>
           <FormSelect
             id="accounting-date-format"
+            name="dateFormat"
             value={settingsDraft.dateFormat}
             onChange={(dateFormatValue) => upd("dateFormat", dateFormatValue)}
             options={DATE_FORMATS}
           />
         </Field>
 
-        <Field label={t("accounting.settings.fields.numberFormat")}>
+        <Field id="accounting-decimal-separator" label={t("accounting.settings.fields.numberFormat")}>
           <FormSelect
             id="accounting-decimal-separator"
+            name="decimalSeparator"
             value={settingsDraft.decimalSeparator}
             onChange={(separatorValue) => upd("decimalSeparator", separatorValue as AccountingSettings["decimalSeparator"])}
             options={decimalSeparators}
           />
         </Field>
 
-        <Field label={t("accounting.settings.fields.decimalPlaces")}>
+        <Field id="accounting-decimal-places" label={t("accounting.settings.fields.decimalPlaces")}>
           <FormSelect
             id="accounting-decimal-places"
+            name="decimalPlaces"
             value={String(settingsDraft.decimalPlaces ?? 2)}
             onChange={(decimalPlacesValue) => upd("decimalPlaces", parseInt(decimalPlacesValue))}
             options={[0, 1, 2, 3].map((placeCount) => String(placeCount))}

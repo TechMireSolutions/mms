@@ -20,19 +20,23 @@ export function EnrollmentsPreferencesSection({
   return (
     <div className="space-y-4 text-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label={t("enrollments.settings.maxStudentsPerClass")}>
+        <Field id="maxStudentsPerClass" label={t("enrollments.settings.maxStudentsPerClass")}>
           <Input
             id="maxStudentsPerClass"
+            name="maxStudentsPerClass"
             type="number"
+            inputMode="numeric"
             className={FORM_INPUT}
             value={settingsDraft.maxStudentsPerClass || ""}
             onChange={(event) => upd("maxStudentsPerClass", event.target.value)}
           />
         </Field>
-        <Field label={t("enrollments.settings.dropDeadlineDays")}>
+        <Field id="dropDeadlineDays" label={t("enrollments.settings.dropDeadlineDays")}>
           <Input
             id="dropDeadlineDays"
+            name="dropDeadlineDays"
             type="number"
+            inputMode="numeric"
             className={FORM_INPUT}
             value={settingsDraft.dropDeadlineDays || ""}
             onChange={(event) => upd("dropDeadlineDays", event.target.value)}

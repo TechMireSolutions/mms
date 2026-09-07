@@ -149,6 +149,7 @@ export function EditUserModalFields({
                   <FormControl>
                     <Input
                       id={`custom-field-${cf.id}`}
+                      name={field.name}
                       value={String(field.value ?? '')}
                       onChange={field.onChange}
                       placeholder={cf.placeholder || cf.label}

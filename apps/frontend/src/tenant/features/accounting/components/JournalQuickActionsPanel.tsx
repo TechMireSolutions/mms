@@ -59,6 +59,7 @@ export function JournalQuickActionsPanel({
               <label htmlFor="nl-input" className="sr-only">{t("accounting.journal.dashboard.nlInputAria")}</label>
               <Input
                 id="nl-input"
+                name="nlInput"
                 value={nlInput}
                 onChange={(event) => onNlChange(event.target.value)}
                 placeholder={t("accounting.journal.dashboard.placeholderNl")}

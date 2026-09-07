@@ -5583,6 +5583,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "sessions.form.editTitle": "تعديل الحصة",
   "sessions.form.endDate": "تاريخ النهاية",
   "sessions.form.endDateRequired": "تاريخ النهاية مطلوب",
+  "sessions.form.endDateAfterStartDate": "يجب أن يكون تاريخ النهاية في أو بعد تاريخ البداية",
   "sessions.form.name": "اسم الحصة",
   "sessions.form.namePlaceholder": "مثال: حصة الحفظ الصباحية 2026",
   "sessions.form.nameRequired": "اسم الحصة مطلوب",

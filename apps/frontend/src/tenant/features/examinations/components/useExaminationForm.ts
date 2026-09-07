@@ -33,6 +33,18 @@ export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminati
 
   const updateDraft = (patch: Partial<typeof examDraft>) => {
     setExamDraft((prev) => ({ ...prev, ...patch }));
+    const patchedKeys = Object.keys(patch);
+    setErrors((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const key of patchedKeys) {
+        if (next[key]) {
+          delete next[key];
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
   };
 
   const classes = (() => sessions.flatMap((session) =>
@@ -82,6 +94,7 @@ export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminati
   };
 
   const valid = !!(examDraft.name && examDraft.date && examDraft.classIds && examDraft.classIds.length > 0);
+  const submitError = Object.values(errors)[0] || undefined;
 
   const getFieldError = (fieldId: string): string | undefined => errors[fieldId];
 
@@ -90,6 +103,7 @@ export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminati
     exam,
     saving,
     errors,
+    submitError,
     examDraft,
     classes,
     updateDraft,

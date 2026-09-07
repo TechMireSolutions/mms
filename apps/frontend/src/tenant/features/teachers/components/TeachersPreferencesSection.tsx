@@ -24,7 +24,7 @@ export function TeachersPreferencesSection({
   return (
     <div className="space-y-4 text-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <Field label={t("teachers.settings.idPrefix")}>
+        <Field label={t("teachers.settings.idPrefix")} id="teacher-idPrefix">
           <Input
             id="teacher-idPrefix"
             name="teacher-idPrefix"
@@ -35,9 +35,10 @@ export function TeachersPreferencesSection({
           />
         </Field>
 
-        <Field label={t("teachers.settings.defaultSpecialization")}>
+        <Field label={t("teachers.settings.defaultSpecialization")} id="teacher-defaultSpecialization">
           <FormSelect
             id="teacher-defaultSpecialization"
+            name="defaultSpecialization"
             value={settingsDraft.defaultSpecialization}
             onChange={(specialization) => upd("defaultSpecialization", specialization)}
             options={specializationOptions}

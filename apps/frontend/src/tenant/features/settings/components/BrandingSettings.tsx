@@ -40,12 +40,12 @@ export default function BrandingSettings(): React.JSX.Element {
         <SettingsFormActions
           saveLabel={t('branding.save')}
           savingLabel={t('branding.saving')}
-          onSave={() =>
+          onSave={() => {
             void handleSaveIdentity({
               saveSuccessMessage: t('branding.savedToast'),
               saveSuccessDescription: t('branding.savedToastDesc'),
-            })
-          }
+            });
+          }}
           onDiscard={handleDiscardIdentity}
           discardLabel={t('theme.discardChanges')}
           dirty={isIdentityDirty}
@@ -67,6 +67,7 @@ export default function BrandingSettings(): React.JSX.Element {
             <Label htmlFor="addressLine1">{t('branding.addressLine1')}</Label>
             <Input
               id="addressLine1"
+              name="addressLine1"
               value={data.addressLine1}
               autoComplete="address-line1"
               onChange={(event) => upd('addressLine1', event.target.value)}
@@ -76,6 +77,7 @@ export default function BrandingSettings(): React.JSX.Element {
             <Label htmlFor="addressLine2">{t('branding.addressLine2')}</Label>
             <Input
               id="addressLine2"
+              name="addressLine2"
               value={data.addressLine2}
               autoComplete="address-line2"
               onChange={(event) => upd('addressLine2', event.target.value)}
@@ -84,19 +86,19 @@ export default function BrandingSettings(): React.JSX.Element {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="city">{t('branding.city')}</Label>
-              <Input id="city" value={data.city} autoComplete="address-level2" onChange={(event) => upd('city', event.target.value)} />
+              <Input id="city" name="city" value={data.city} autoComplete="address-level2" onChange={(event) => upd('city', event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="region">{t('branding.region')}</Label>
-              <Input id="region" value={data.region} autoComplete="address-level1" onChange={(event) => upd('region', event.target.value)} />
+              <Input id="region" name="region" value={data.region} autoComplete="address-level1" onChange={(event) => upd('region', event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="postalCode">{t('branding.postalCode')}</Label>
-              <Input id="postalCode" value={data.postalCode} autoComplete="postal-code" onChange={(event) => upd('postalCode', event.target.value)} />
+              <Input id="postalCode" name="postalCode" value={data.postalCode} autoComplete="postal-code" onChange={(event) => upd('postalCode', event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="country">{t('branding.country')}</Label>
-              <Input id="country" value={data.country} autoComplete="country-name" onChange={(event) => upd('country', event.target.value)} />
+              <Input id="country" name="country" value={data.country} autoComplete="country-name" onChange={(event) => upd('country', event.target.value)} />
             </div>
           </div>
           <p className="text-xs text-muted-foreground pt-1">
@@ -110,11 +112,11 @@ export default function BrandingSettings(): React.JSX.Element {
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="legalName">{t('branding.legalName')}</Label>
-              <Input id="legalName" value={data.legalName} onChange={(event) => upd('legalName', event.target.value)} />
+              <Input id="legalName" name="legalName" value={data.legalName} onChange={(event) => upd('legalName', event.target.value)} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="registrationNumber">{t('branding.registrationNumber')}</Label>
-              <Input id="registrationNumber" value={data.registrationNumber} onChange={(event) => upd('registrationNumber', event.target.value)} />
+              <Input id="registrationNumber" name="registrationNumber" value={data.registrationNumber} onChange={(event) => upd('registrationNumber', event.target.value)} />
             </div>
           </div>
         </SectionCard>

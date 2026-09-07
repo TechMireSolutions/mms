@@ -96,6 +96,8 @@ interface EditableMultiSelectOptionListProps {
   values: string[];
   canRemoveOptions: boolean;
   t: TranslationFunction;
+  highlightedIndex?: number;
+  onHoverOption?: (index: number) => void;
   onToggleOption: (option: string) => void;
   onRemoveOption: (option: string, event: React.MouseEvent) => void;
 }
@@ -107,6 +109,8 @@ export function EditableMultiSelectOptionList({
   values,
   canRemoveOptions,
   t,
+  highlightedIndex = -1,
+  onHoverOption,
   onToggleOption,
   onRemoveOption,
 }: EditableMultiSelectOptionListProps): React.JSX.Element {
@@ -122,18 +126,24 @@ export function EditableMultiSelectOptionList({
       ) : (
         filteredOptions.map((option, index) => {
           const isSelected = isOptionSelected(values, option);
+          const isHighlighted = index === highlightedIndex;
           return (
             <div
               key={option}
               id={`${resolvedId}-opt-${index}`}
               role="option"
               aria-selected={isSelected}
+              onMouseEnter={() => onHoverOption?.(index)}
               onClick={() => onToggleOption(option)}
               className={cn(
                 "flex min-h-9 items-center justify-between gap-2 px-3 py-1.5 text-sm cursor-pointer transition-colors select-none",
                 isSelected
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-foreground hover:bg-muted/60",
+                  ? isHighlighted
+                    ? "bg-primary/20 text-primary font-medium"
+                    : "bg-primary/10 text-primary font-medium"
+                  : isHighlighted
+                    ? "bg-muted/80 text-foreground"
+                    : "text-foreground hover:bg-muted/60",
               )}
             >
               <span className="truncate flex-1">{formatContactOptionLabel(option, t) || option}</span>

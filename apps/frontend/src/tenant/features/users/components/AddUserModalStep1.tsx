@@ -109,9 +109,12 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
             ) : (
               <div className="space-y-1 py-1">
                 <Input
+                  id="add-user-email"
+                  name="email"
                   type="email"
                   placeholder={t("auth.emailAddress")}
                   value={form.email}
+                  aria-invalid={Boolean(errors.email)}
                   onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                   className="h-8 text-xs bg-background"
                 />
@@ -131,8 +134,10 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
       ) : null}
 
       <div>
-        <Label>{t("users.fieldStatus")}</Label>
+        <Label htmlFor="add-user-status">{t("users.fieldStatus")}</Label>
         <FormSelect
+          id="add-user-status"
+          name="status"
           value={form.status}
           onChange={(val) => setForm((previousForm) => ({ ...previousForm, status: val as UserStatus }))}
           options={statusOptions}

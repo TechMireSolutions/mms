@@ -187,15 +187,17 @@ export function ContactFormTabContent({
   return (
     <div className="space-y-4">
       {draft.duplicateCount > 0 && (
-        <WarningCallout
-          tone="warning"
-          density="compact"
-          icon={AlertTriangle}
-          title={t("contacts.duplicates.title")}
-          description={t("contacts.duplicates.potentialDuplicatesAlert", {
-            count: draft.duplicateCount,
-          })}
-        />
+        <div role="status" aria-live="polite">
+          <WarningCallout
+            tone="warning"
+            density="compact"
+            icon={AlertTriangle}
+            title={t("contacts.duplicates.title")}
+            description={t("contacts.duplicates.potentialDuplicatesAlert", {
+              count: draft.duplicateCount,
+            })}
+          />
+        </div>
       )}
       {body}
     </div>

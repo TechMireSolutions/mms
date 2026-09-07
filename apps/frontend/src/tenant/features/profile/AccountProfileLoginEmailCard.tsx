@@ -107,6 +107,7 @@ export function AccountProfileLoginEmailCard({
                     <Label htmlFor="new-login-email" className="text-xs font-semibold text-muted-foreground">{t("account.newLoginEmail")}</Label>
                     <Input
                       id="new-login-email"
+                      name="newLoginEmail"
                       type="email"
                       value={newLoginEmail}
                       onChange={(event) => onNewLoginEmailChange(event.target.value)}
@@ -119,6 +120,7 @@ export function AccountProfileLoginEmailCard({
                     <Label htmlFor="login-email-password" className="text-xs font-semibold text-muted-foreground">{t("account.currentPassword")}</Label>
                     <Input
                       id="login-email-password"
+                      name="loginPassword"
                       type="password"
                       value={loginPassword}
                       onChange={(event) => onLoginPasswordChange(event.target.value)}
@@ -164,6 +166,8 @@ export function AccountProfileLoginEmailCard({
                     <Label htmlFor="login-email-code" className="text-xs font-semibold text-muted-foreground">{t("account.verificationCode")}</Label>
                     <Input
                       id="login-email-code"
+                      name="verifyCode"
+                      inputMode="numeric"
                       value={verifyCode}
                       onChange={(event) => onVerifyCodeChange(event.target.value)}
                       required

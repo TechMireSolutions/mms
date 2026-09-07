@@ -118,7 +118,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
       progressLabel={t("common.formProgress")}
       cancelLabel={t("common.cancel")}
       saveLabel={t("obligations.form.save")}
-      onSave={() => { void handleSave(); }}
+      onSave={handleSave}
       saving={submitting}
       error={errorMessages}
     >

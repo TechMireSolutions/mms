@@ -175,4 +175,35 @@ describe("SessionForm Component", () => {
       }),
     );
   });
+
+  it("fails validation when endDate is before startDate", async () => {
+    const onSave = vi.fn();
+
+    await act(async () => {
+      root.render(
+        <SessionForm
+          open={true}
+          onClose={vi.fn()}
+          onSave={onSave}
+        />,
+      );
+    });
+
+    const nameInput = container.querySelector("input[class*='ps-10']") as HTMLInputElement;
+    const datePickers = container.querySelectorAll("[data-testid='datepicker']");
+    const saveBtn = container.querySelector("[data-testid='save-session-btn']") as HTMLButtonElement;
+
+    await act(async () => {
+      setInputValue(nameInput, "Summer Session");
+      setInputValue(datePickers[0] as HTMLInputElement, "2026-09-01");
+      setInputValue(datePickers[1] as HTMLInputElement, "2026-06-01");
+    });
+
+    await act(async () => {
+      saveBtn.click();
+    });
+
+    expect(onSave).not.toHaveBeenCalled();
+    expect(container.textContent).toContain("sessions.form.endDateAfterStartDate");
+  });
 });

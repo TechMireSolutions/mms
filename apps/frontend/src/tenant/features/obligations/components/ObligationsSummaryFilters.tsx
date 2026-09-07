@@ -69,6 +69,8 @@ export function ObligationsSummaryFilters({
         <div className="relative col-span-2 sm:col-span-1">
           <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
           <Input
+            id="obligations-summary-search"
+            name="search"
             type="search"
             aria-label={t("obligations.summary.filters.searchAria")}
             value={search}
@@ -89,6 +91,8 @@ export function ObligationsSummaryFilters({
           pickerClassName="w-full min-w-0 flex-1 text-xs"
         />
         <FormSelect
+          id="obligations-summary-rep"
+          name="repFilter"
           aria-label={t("obligations.summary.filters.byRepresentativeAria")}
           value={repFilter}
           onChange={onRepFilterChange}
@@ -96,6 +100,8 @@ export function ObligationsSummaryFilters({
           className="text-xs rounded-lg border border-border bg-background"
         />
         <FormSelect
+          id="obligations-summary-type"
+          name="typeFilter"
           aria-label={t("obligations.summary.filters.byTypeAria")}
           value={typeFilter}
           onChange={onTypeFilterChange}
@@ -103,6 +109,8 @@ export function ObligationsSummaryFilters({
           className="text-xs rounded-lg border border-border bg-background"
         />
         <FormSelect
+          id="obligations-summary-user"
+          name="userFilter"
           aria-label={t("obligations.summary.filters.byCollectorAria")}
           value={userFilter}
           onChange={onUserFilterChange}

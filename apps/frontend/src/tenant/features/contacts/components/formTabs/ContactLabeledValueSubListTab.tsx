@@ -157,6 +157,7 @@ export function ContactLabeledValueSubListTab({
               spellCheck={spellCheck}
               enterKeyHint={enterKeyHint}
               aria-invalid={Boolean(valueError)}
+              aria-describedby={valueError ? `${valueInputIdPrefix}-${idx}-error` : undefined}
               onChange={(e) => {
                 const value = e.target.value;
                 if (onValueChange) {

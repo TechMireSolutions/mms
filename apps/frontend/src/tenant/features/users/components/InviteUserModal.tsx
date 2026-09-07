@@ -116,7 +116,9 @@ export function InviteUserModal({
       error={firstZodFieldError(form.formState.errors, t) || undefined}
       cancelLabel={t('users.cancel')}
       saveLabel={t('users.inviteSubmit')}
-      onSave={() => { void handleSave(); }}
+      onSave={async () => {
+        await handleSave();
+      }}
       saving={submitting}
     >
       <Form {...form}>
@@ -171,7 +173,7 @@ export function InviteUserModal({
                 <FormControl>
                   <FormSelect
                     id="invite-status"
-                    name="invite-status"
+                    name="status"
                     value={field.value}
                     onChange={field.onChange}
                     options={USER_STATUS_VALUES.map((status) => ({

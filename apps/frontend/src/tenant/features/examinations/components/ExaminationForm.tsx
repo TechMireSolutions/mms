@@ -30,9 +30,9 @@ const ExamForm = (function ExamForm({
           icon={BookOpen}
           cancelLabel={form.t("examinations.form.cancel")}
           saveLabel={exam ? form.t("examinations.form.saveChanges") : form.t("examinations.form.create")}
+          error={form.submitError}
           onSave={form.handleSave}
           saving={form.saving}
-          saveDisabled={!form.valid}
         >
           <ExaminationFormFields
             t={form.t}

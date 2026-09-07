@@ -64,28 +64,42 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
           <div className="md:col-span-2">
             <PasswordInput
               id="platform-current-password"
+              name="currentPassword"
               label={t("platform.profileCurrentPassword")}
               autoComplete="current-password"
               required
               value={currentPassword}
-              onChange={(event) => setCurrentPassword(event.target.value)}
+              onChange={(event) => {
+                setCurrentPassword(event.target.value);
+                if (passwordError) setPasswordError(null);
+              }}
             />
           </div>
           <PasswordInput
             id="platform-new-password"
+            name="newPassword"
             label={t("platform.profileNewPassword")}
             autoComplete="new-password"
             required
             value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
+            aria-invalid={Boolean(passwordError)}
+            onChange={(event) => {
+              setNewPassword(event.target.value);
+              if (passwordError) setPasswordError(null);
+            }}
           />
           <PasswordInput
             id="platform-confirm-new-password"
+            name="confirmPassword"
             label={t("platform.profileConfirmPassword")}
             autoComplete="new-password"
             required
             value={confirmPassword}
-            onChange={(event) => setConfirmPassword(event.target.value)}
+            aria-invalid={Boolean(passwordError)}
+            onChange={(event) => {
+              setConfirmPassword(event.target.value);
+              if (passwordError) setPasswordError(null);
+            }}
           />
           <PasswordStrengthMeter password={newPassword} className="md:col-span-2" showChecks />
         </div>

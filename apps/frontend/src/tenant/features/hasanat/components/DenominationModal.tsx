@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import { CreditCard } from 'lucide-react';
 import { type Denomination } from '@/lib/data/hasanatData';
 import { FormModal } from '@/components/ui/FormModal';
-import { RequiredMark } from '@/components/ui/FormPrimitives';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { FieldErrorMessage, RequiredMark } from '@/components/ui/FormPrimitives';
+import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from '@/components/ui/formStyles';
 import { DEFAULT_DENOMINATION_COLOR, getDenominationPresetColors } from '@/lib/denominationColors';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from '@/hooks/useTranslation';
+import { cn } from '@/lib/utils';
 
 const EMPTY: Denomination = { id: '', name: '', points: 100, color: DEFAULT_DENOMINATION_COLOR, description: '', icon: '⭐', active: true };
 const PRESET_ICONS = ['⭐', '🌟', '✨', '💎', '👑', '🏆', '🎖️', '📿'];
@@ -24,14 +25,52 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
   const { t } = useTranslation();
   const [data, setData] = useState<Denomination>(denom || { ...EMPTY });
   const [submitting, setSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const presetColors = getDenominationPresetColors();
-  const updateField = <K extends keyof Denomination>(field: K, value: Denomination[K]) => setData((previousData: Denomination) => ({ ...previousData, [field]: value }));
+
+  const updateField = <K extends keyof Denomination>(field: K, value: Denomination[K]) => {
+    setData((previousData: Denomination) => ({ ...previousData, [field]: value }));
+    if (errors[field as string]) {
+      setErrors((previousErrors) => {
+        const next = { ...previousErrors };
+        delete next[field as string];
+        return next;
+      });
+    }
+  };
 
   React.useEffect(() => {
     if (open) {
       setData(denom || { ...EMPTY });
+      setErrors({});
+      setSubmitError(null);
     }
   }, [open, denom]);
+
+  const handleSave = async () => {
+    const newErrors: Record<string, string> = {};
+    if (!data.name?.trim()) {
+      newErrors.name = t('common.required');
+    }
+    if (!data.points || Number(data.points) < 1) {
+      newErrors.points = t('common.required');
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      setSubmitError(t('common.formPleaseFixErrors'));
+      return;
+    }
+
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      await onSave({ ...data, id: denom?.id || `den${crypto.randomUUID()}` });
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   return (
     <FormModal
@@ -42,17 +81,8 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
       cancelLabel={t('common.cancel')}
       saveLabel={t('hasanat.denominations.save')}
       saving={submitting}
-      onSave={() => {
-        void (async () => {
-          setSubmitting(true);
-          try {
-            await onSave({ ...data, id: denom?.id || `den${crypto.randomUUID()}` });
-          } finally {
-            setSubmitting(false);
-          }
-        })();
-      }}
-      saveDisabled={!data.name || !data.points}
+      error={submitError || undefined}
+      onSave={handleSave}
     >
       <div className="space-y-4">
         <div className="flex items-center justify-center" aria-hidden="true">
@@ -64,16 +94,38 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label htmlFor="denom-name" className={FORM_LABEL}>{t('hasanat.denominations.cardName')}<RequiredMark /></label>
-            <Input id="denom-name" value={data.name} onChange={(event) => updateField('name', event.target.value)} placeholder={t('hasanat.denominations.cardNamePlaceholder')} />
+            <Input
+              id="denom-name"
+              name="name"
+              className={cn(FORM_INPUT, errors.name && FORM_INPUT_ERROR)}
+              value={data.name}
+              onChange={(event) => updateField('name', event.target.value)}
+              placeholder={t('hasanat.denominations.cardNamePlaceholder')}
+              aria-invalid={Boolean(errors.name)}
+              aria-describedby={errors.name ? "denom-name-error" : undefined}
+            />
+            <FieldErrorMessage id="denom-name-error" message={errors.name} />
           </div>
           <div>
             <label htmlFor="denom-pts" className={FORM_LABEL}>{t('hasanat.denominations.pointsValue')}<RequiredMark /></label>
-            <Input id="denom-pts" type="number" value={data.points} onChange={(event) => updateField('points', +event.target.value)} min={1} />
+            <Input
+              id="denom-pts"
+              name="points"
+              type="number"
+              inputMode="numeric"
+              className={cn(FORM_INPUT, errors.points && FORM_INPUT_ERROR)}
+              value={data.points}
+              onChange={(event) => updateField('points', +event.target.value)}
+              min={1}
+              aria-invalid={Boolean(errors.points)}
+              aria-describedby={errors.points ? "denom-pts-error" : undefined}
+            />
+            <FieldErrorMessage id="denom-pts-error" message={errors.points} />
           </div>
         </div>
         <div>
           <label htmlFor="denom-desc" className={FORM_LABEL}>{t('hasanat.denominations.description')}</label>
-          <Input id="denom-desc" value={data.description} onChange={(event) => updateField('description', event.target.value)} placeholder={t('hasanat.denominations.descriptionPlaceholder')} />
+          <Input id="denom-desc" name="description" className={FORM_INPUT} value={data.description} onChange={(event) => updateField('description', event.target.value)} placeholder={t('hasanat.denominations.descriptionPlaceholder')} />
         </div>
 
         <fieldset>
@@ -96,7 +148,7 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
         <fieldset>
           <legend className={FORM_LABEL}>{t('hasanat.denominations.color')}</legend>
           <div className="flex gap-2 flex-wrap items-center">
-            {presetColors.map((color) => (
+            {Array.from(new Set(presetColors)).map((color) => (
               <Button
                 type="button"
                 aria-pressed={data.color === color}
@@ -108,12 +160,12 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
               />
             ))}
             <label className="sr-only" htmlFor="custom-color">{t('hasanat.denominations.customColor')}</label>
-            <Input id="custom-color" type="color" value={data.color} onChange={(event) => updateField('color', event.target.value)} className="min-h-11 min-w-11 rounded cursor-pointer border-0 p-0" title={t('hasanat.denominations.customColor')} />
+            <Input id="custom-color" name="customColor" type="color" value={data.color} onChange={(event) => updateField('color', event.target.value)} className="min-h-11 min-w-11 rounded cursor-pointer border-0 p-0" title={t('hasanat.denominations.customColor')} />
           </div>
         </fieldset>
 
-        <label className="flex items-center gap-2.5 cursor-pointer">
-          <Checkbox checked={data.active} onCheckedChange={(checked) => updateField('active', !!checked)} />
+        <label htmlFor="denom-active" className="flex items-center gap-2.5 cursor-pointer">
+          <Checkbox id="denom-active" name="active" checked={data.active} onCheckedChange={(checked) => updateField('active', !!checked)} />
           <span className="text-sm font-medium text-foreground">{t('hasanat.status.active')}</span>
         </label>
       </div>

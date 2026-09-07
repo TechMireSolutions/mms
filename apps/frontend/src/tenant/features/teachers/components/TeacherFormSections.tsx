@@ -2,8 +2,9 @@ import type React from "react";
 import { Briefcase, GraduationCap, Hash, School, User } from "lucide-react";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
+import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
+import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -64,16 +65,18 @@ export function TeacherBasicSection({
             emptyTitle={t("teachers.form.noContacts")}
             emptyHint={t("teachers.form.noContactsHint")}
             error={!!errors.contactId}
+            errorMessage={errors.contactId}
           />
-          <FieldErrorMessage message={errors.contactId} />
         </SectionCard>
       ) : null}
 
       {showDetailsCard ? (
         <SectionCard title={t("teachers.form.sectionDetails")} icon={School} accentColor="primary" className="z-10">
           {showSpecialization ? (
-            <Field label={specializationLabel} required={isFieldRequired("specialization")}>
+            <Field label={specializationLabel} id="specialization" required={isFieldRequired("specialization")}>
               <FormSelect
+                id="specialization"
+                name="specialization"
                 value={teacherDraft.specialization || defaultSpecialization}
                 onChange={(val) => onDraftChange({ specialization: val })}
                 options={specializationOptions}
@@ -82,12 +85,17 @@ export function TeacherBasicSection({
           ) : null}
 
           {showQualification ? (
-            <Field label={qualificationLabel} required={isFieldRequired("qualification")} error={errors.qualification}>
+            <Field label={qualificationLabel} id="qualification" required={isFieldRequired("qualification")} error={errors.qualification}>
               <LeadingIconInput
+                id="qualification"
+                name="qualification"
                 icon={GraduationCap}
                 value={teacherDraft.qualification || ""}
                 onChange={(event) => onDraftChange({ qualification: event.target.value })}
                 placeholder={t("teachers.form.qualificationPlaceholder")}
+                aria-invalid={Boolean(errors.qualification)}
+                aria-describedby={errors.qualification ? "qualification-error" : undefined}
+                className={errors.qualification ? FORM_INPUT_ERROR : undefined}
               />
             </Field>
           ) : null}
@@ -132,20 +140,27 @@ export function TeacherEmploymentSection({
       {showEmploymentCard ? (
         <SectionCard title={t("teachers.form.sectionEmployment")} icon={Briefcase} accentColor="primary">
           {showEmployeeId ? (
-            <Field label={employeeIdLabel} required error={errors.employeeId}>
+            <Field label={employeeIdLabel} id="employeeId" required error={errors.employeeId}>
               <LeadingIconInput
+                id="employeeId"
+                name="employeeId"
                 icon={Hash}
                 value={teacherDraft.employeeId || ""}
                 onChange={(event) => onDraftChange({ employeeId: event.target.value })}
                 placeholder={t("teachers.form.employeeIdPlaceholder", { prefix: idPrefix })}
                 disabled={autoGenerateId && !teacher?.id && Boolean(nextEmployeeId)}
+                aria-invalid={Boolean(errors.employeeId)}
+                aria-describedby={errors.employeeId ? "employeeId-error" : undefined}
+                className={errors.employeeId ? FORM_INPUT_ERROR : undefined}
               />
             </Field>
           ) : null}
 
           {showStatus ? (
-            <Field label={statusLabel} required={isFieldRequired("status")}>
+            <Field label={statusLabel} id="status" required={isFieldRequired("status")}>
               <FormSelect
+                id="status"
+                name="status"
                 value={resolveTeacherStatus(teacherDraft.status)}
                 onChange={(val) => onDraftChange({ status: val as Teacher["status"] })}
                 options={statusOptions}

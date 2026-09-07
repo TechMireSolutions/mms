@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { Clock } from "lucide-react";
 import { DAYS, ACTIVITY_TYPES, type TimetableItem } from '@/lib/data/sessionsData';
 import { FormModal } from "@/components/ui/FormModal";
-import { RequiredMark } from "@/components/ui/FormPrimitives";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { FieldErrorMessage, RequiredMark } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { TimePicker } from "@/components/ui/TimePicker";
@@ -21,13 +21,31 @@ interface TimetableAddActivityModalProps {
 export function TimetableAddActivityModal({ open, onClose, onSave, saving }: TimetableAddActivityModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const [activityDraft, setActivityDraft] = useState<Partial<TimetableItem>>({ ...TIMETABLE_EMPTY_DRAFT });
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const updateActivityDraft = <K extends keyof TimetableItem>(field: K, value: TimetableItem[K]) => setActivityDraft((currentDraft) => ({ ...currentDraft, [field]: value }));
 
   React.useEffect(() => {
     if (open) {
       setActivityDraft({ ...TIMETABLE_EMPTY_DRAFT });
+      setErrors({});
     }
   }, [open]);
+
+  const handleSave = async () => {
+    const newErrors: Record<string, string> = {};
+    if (!activityDraft.activity?.trim()) {
+      newErrors.activity = t("common.formPleaseFixErrors");
+    }
+    if (activityDraft.startTime && activityDraft.endTime && activityDraft.startTime >= activityDraft.endTime) {
+      newErrors.endTime = t("common.formPleaseFixErrors");
+    }
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    await onSave({ ...activityDraft, id: `tt${crypto.randomUUID()}` } as TimetableItem);
+  };
 
   return (
     <FormModal
@@ -37,20 +55,33 @@ export function TimetableAddActivityModal({ open, onClose, onSave, saving }: Tim
       icon={Clock}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.add")}
-      onSave={() => onSave({ ...activityDraft, id: `tt${crypto.randomUUID()}` } as TimetableItem)}
+      onSave={handleSave}
+      error={Object.values(errors)[0]}
       saving={saving}
-      saveDisabled={!activityDraft.activity}
+      saveDisabled={!activityDraft.activity?.trim()}
     >
       <div className="space-y-4">
         <div>
           <label className={FORM_LABEL} htmlFor="activity-name">{t("sessions.timetable.form.name")}<RequiredMark /></label>
-          <Input id="activity-name" value={activityDraft.activity || ""} onChange={(event) => updateActivityDraft("activity", event.target.value)} placeholder={t("sessions.timetable.form.namePlaceholder")} required />
+          <Input
+            id="activity-name"
+            name="activity"
+            value={activityDraft.activity || ""}
+            onChange={(event) => updateActivityDraft("activity", event.target.value)}
+            placeholder={t("sessions.timetable.form.namePlaceholder")}
+            aria-invalid={Boolean(errors.activity)}
+            aria-describedby={errors.activity ? "activity-name-error" : undefined}
+            className={errors.activity ? FORM_INPUT_ERROR : undefined}
+            required
+          />
+          <FieldErrorMessage id="activity-name-error" message={errors.activity} />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={FORM_LABEL} htmlFor="activity-day">{t("sessions.timetable.form.day")}</label>
             <FormSelect
               id="activity-day"
+              name="day"
               value={activityDraft.day || "Mon"}
               onChange={(value) => updateActivityDraft("day", value as TimetableItem["day"])}
               options={DAYS.map((day) => ({ value: day, label: t(`sessions.timetable.day.${day}` as AppTranslationKey) }))}
@@ -61,6 +92,7 @@ export function TimetableAddActivityModal({ open, onClose, onSave, saving }: Tim
             <label className={FORM_LABEL} htmlFor="activity-type">{t("sessions.timetable.form.type")}</label>
             <FormSelect
               id="activity-type"
+              name="type"
               value={activityDraft.type || "class"}
               onChange={(value) => updateActivityDraft("type", value as TimetableItem["type"])}
               options={ACTIVITY_TYPES.map((activityType) => ({ value: activityType, label: t(`sessions.timetable.type.${activityType}` as AppTranslationKey) }))}
@@ -88,11 +120,12 @@ export function TimetableAddActivityModal({ open, onClose, onSave, saving }: Tim
               onChange={(nextValue) => updateActivityDraft("endTime", nextValue)}
               required
             />
+            <FieldErrorMessage id="activity-end-error" message={errors.endTime} />
           </div>
         </div>
         <div>
           <label className={FORM_LABEL} htmlFor="activity-location">{t("sessions.timetable.form.location")}</label>
-          <Input id="activity-location" value={activityDraft.location || ""} onChange={(event) => updateActivityDraft("location", event.target.value)} placeholder={t("sessions.timetable.form.locationPlaceholder")} />
+          <Input id="activity-location" name="location" value={activityDraft.location || ""} onChange={(event) => updateActivityDraft("location", event.target.value)} placeholder={t("sessions.timetable.form.locationPlaceholder")} />
         </div>
       </div>
     </FormModal>

@@ -49,11 +49,13 @@ export function AccountingSettingsFiscalYearsSection({
       className={SETUP_SECTION_CARD_CLASS}
     >
       <Field
+        id="accounting-fy-start-month"
         label={t("accounting.settings.fields.fyStartMonth")}
         hint={t("accounting.settings.fields.fyStartMonthHint")}
       >
         <FormSelect
           id="accounting-fy-start-month"
+          name="fyStartMonth"
           value={settingsDraft.fyStartMonth}
           onChange={(startMonthValue) => upd("fyStartMonth", startMonthValue)}
           options={localizedFiscalMonths(t)}

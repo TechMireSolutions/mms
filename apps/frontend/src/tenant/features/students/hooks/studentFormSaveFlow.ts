@@ -8,6 +8,7 @@ import {
   validateStudentDraft,
   checkStudentFormDuplicate,
   prepareStudentForSave,
+  DUPLICATE_ERROR_KEYS,
   type StudentValidationContext,
 } from "./studentFormValidation";
 
@@ -104,6 +105,21 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<b
           : undefined,
     });
 
+    if (duplicateReason === "grNumber") {
+      input.setValidationErrors([
+        {
+          fieldId: "grNumber",
+          tabId: "registration",
+          message: input.t(DUPLICATE_ERROR_KEYS.grNumber),
+        },
+      ]);
+      input.onValidationTab?.("registration", "grNumber");
+      focusStudentValidationField(input.formInstanceId, "grNumber");
+      notify.error(input.t(DUPLICATE_ERROR_KEYS.grNumber));
+      input.setSaving(false);
+      return false;
+    }
+
     if (duplicateReason) {
       input.setPendingSaveData(input.studentDraft);
       input.setTypedDuplicateReason(duplicateReason);
@@ -124,6 +140,28 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<b
     }
     return true;
   } catch (err: unknown) {
+    const validationMessage = getApiValidationMessage(err);
+    const errText = String(err instanceof Error ? err.message : err || "").toLowerCase();
+    const isGrConflict =
+      errText.includes("gr") ||
+      errText.includes("grnumber") ||
+      errText.includes("duplicate_gr") ||
+      (typeof validationMessage === "string" && validationMessage.toLowerCase().includes("gr"));
+
+    if (isGrConflict) {
+      input.setValidationErrors([
+        {
+          fieldId: "grNumber",
+          tabId: "registration",
+          message: input.t(DUPLICATE_ERROR_KEYS.grNumber),
+        },
+      ]);
+      input.onValidationTab?.("registration", "grNumber");
+      focusStudentValidationField(input.formInstanceId, "grNumber");
+      notify.error(input.t(DUPLICATE_ERROR_KEYS.grNumber));
+      return false;
+    }
+
     notifyStudentSaveFailed(input.t, err, "students.form_save");
     return false;
   } finally {

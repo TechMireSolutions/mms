@@ -17,7 +17,10 @@ export interface FormSelectProps {
   className?: string;
   id?: string;
   name?: string;
+  required?: boolean;
   "aria-label"?: string;
+  "aria-invalid"?: boolean | "true" | "false";
+  "aria-describedby"?: string;
 }
 
 /**
@@ -32,7 +35,10 @@ export function FormSelect({
   className,
   id,
   name,
+  required,
   "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
 }: FormSelectProps): React.JSX.Element {
   const fallbackId = React.useId();
   const resolvedId = id || fallbackId;
@@ -43,6 +49,9 @@ export function FormSelect({
         id={resolvedId}
         name={resolvedName}
         aria-label={ariaLabel}
+        aria-invalid={ariaInvalid}
+        aria-describedby={ariaDescribedBy}
+        required={required}
         disabled={disabled}
         value={value}
         onChange={(event) => onChange(event.target.value)}

@@ -38,10 +38,14 @@ export const InvoiceForm = (function InvoiceForm({
 
       const [draft, setDraft] = useState<InvoiceDraft>(() => createInitialDraft(settings.dueDays));
       const [submitting, setSubmitting] = useState(false);
+      const [errors, setErrors] = useState<Record<string, string>>({});
+      const [submitError, setSubmitError] = useState<string | undefined>();
 
       useEffect(() => {
         if (open) {
           setDraft(createInitialDraft(settings.dueDays));
+          setErrors({});
+          setSubmitError(undefined);
         }
       }, [open, settings.dueDays]);
 
@@ -50,6 +54,13 @@ export const InvoiceForm = (function InvoiceForm({
 
       const setField = (key: keyof InvoiceDraft, value: string): void => {
         setDraft((currentDraft) => ({ ...currentDraft, [key]: value }));
+        setErrors((prev) => {
+          if (!prev[key]) return prev;
+          const next = { ...prev };
+          delete next[key];
+          return next;
+        });
+        setSubmitError(undefined);
       };
 
       const applyFeeStructure = (structureId: string): void => {
@@ -68,15 +79,37 @@ export const InvoiceForm = (function InvoiceForm({
           session: structure?.session || currentDraft.session,
           baseFee: totals ? String(totals.baseFee) : currentDraft.baseFee,
         }));
+        setErrors((prev) => {
+          if (!prev.baseFee && !prev.class && !prev.session) return prev;
+          const next = { ...prev };
+          delete next.baseFee;
+          delete next.class;
+          delete next.session;
+          return next;
+        });
       };
 
       const resetAndClose = (): void => {
         setDraft(createInitialDraft(settings.dueDays));
+        setErrors({});
+        setSubmitError(undefined);
         onClose();
       };
 
       const handleSubmit = async (): Promise<void> => {
-        if (!canSave) return;
+        const newErrors: Record<string, string> = {};
+        if (!draft.studentName.trim()) newErrors.studentName = t("common.required");
+        if (!draft.studentId.trim()) newErrors.studentId = t("common.required");
+        if (!draft.class.trim()) newErrors.class = t("common.required");
+        if (!draft.session.trim()) newErrors.session = t("common.required");
+        if (!draft.baseFee.trim() || baseFee <= 0) newErrors.baseFee = t("finance.amountRequired");
+        if (!draft.dueDate.trim()) newErrors.dueDate = t("finance.dateRequired");
+
+        if (Object.keys(newErrors).length > 0 || !canSave) {
+          setErrors(newErrors);
+          setSubmitError(t("finance.fixErrors"));
+          return;
+        }
 
         setSubmitting(true);
         try {
@@ -135,6 +168,7 @@ export const InvoiceForm = (function InvoiceForm({
           onSave={handleSubmit}
           saving={saving || submitting}
           saveDisabled={!canSave}
+          error={submitError}
         >
           <div className="space-y-5 text-start">
             <InvoiceFormFieldsSection
@@ -143,6 +177,7 @@ export const InvoiceForm = (function InvoiceForm({
               onFieldChange={setField}
               feeStructures={feeStructures}
               onApplyFeeStructure={applyFeeStructure}
+              errors={errors}
             />
             <InvoiceFormSummarySection
               t={t}

@@ -24,9 +24,10 @@ export function SessionsSettingsPreferences({
   return (
     <div className="space-y-4 text-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label={t("sessions.settings.defaultDuration")}>
+        <Field label={t("sessions.settings.defaultDuration")} id="defaultDuration">
           <Input
             id="defaultDuration"
+            name="defaultDuration"
             type="number"
             min="1"
             className={FORM_INPUT}
@@ -34,18 +35,20 @@ export function SessionsSettingsPreferences({
             onChange={(event) => upd("defaultDuration", event.target.value)}
           />
         </Field>
-        <Field label={t("sessions.settings.defaultSessionType")}>
+        <Field label={t("sessions.settings.defaultSessionType")} id="defaultSessionType">
           <FormSelect
             id="defaultSessionType"
+            name="defaultSessionType"
             value={settingsDraft.defaultSessionType}
             onChange={(value) => upd("defaultSessionType", value)}
             options={typeOptions}
             className="w-full"
           />
         </Field>
-        <Field label={t("sessions.settings.academicYear")}>
+        <Field label={t("sessions.settings.academicYear")} id="academicYear">
           <Input
             id="academicYear"
+            name="academicYear"
             type="text"
             className={FORM_INPUT}
             value={settingsDraft.academicYear || ""}
@@ -53,9 +56,10 @@ export function SessionsSettingsPreferences({
             placeholder={t("sessions.settings.academicYearPlaceholder")}
           />
         </Field>
-        <Field label={t("sessions.settings.sessionStart")}>
+        <Field label={t("sessions.settings.sessionStart")} id="sessionStart">
           <FormSelect
             id="sessionStart"
+            name="sessionStart"
             value={settingsDraft.sessionStart}
             onChange={(value) => upd("sessionStart", value)}
             options={["january", "february", "march", "april", "may", "june",

@@ -59,21 +59,25 @@ export function FinanceGenerateInvoicesDialog({
       icon={CalendarRange}
       cancelLabel={t("common.cancel")}
       saveLabel={t("finance.generate.submit")}
-      onSave={() => void handleGenerate()}
+      onSave={handleGenerate}
       saving={generate.isPending}
       saveDisabled={!period || generate.isPending}
     >
       <div className="space-y-4">
-        <Field label={t("finance.generate.period")}>
+        <Field id="generate-invoice-period" label={t("finance.generate.period")}>
           <Input
+            id="generate-invoice-period"
+            name="period"
             className={FORM_INPUT}
             type="month"
             value={period}
             onChange={(event) => setPeriod(event.target.value)}
           />
         </Field>
-        <Field label={t("finance.generate.session")}>
+        <Field id="generate-invoice-session" label={t("finance.generate.session")}>
           <FormSelect
+            id="generate-invoice-session"
+            name="sessionId"
             value={sessionId}
             onChange={(value) => {
               setSessionId(value);
@@ -85,8 +89,10 @@ export function FinanceGenerateInvoicesDialog({
             ]}
           />
         </Field>
-        <Field label={t("finance.generate.class")}>
+        <Field id="generate-invoice-class" label={t("finance.generate.class")}>
           <FormSelect
+            id="generate-invoice-class"
+            name="classId"
             value={classId}
             onChange={setClassId}
             options={[

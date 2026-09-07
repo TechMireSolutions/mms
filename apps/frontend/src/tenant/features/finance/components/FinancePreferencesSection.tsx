@@ -39,9 +39,10 @@ export function FinancePreferencesSection({
   return (
     <div className="space-y-4 text-start">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <Field label={t("finance.settings.currency")}>
+        <Field id="finance-currency" label={t("finance.settings.currency")}>
           <FormSelect
             id="finance-currency"
+            name="currency"
             value={settingsDraft.currency}
             onChange={(value) => upd("currency", value)}
             options={DEFAULT_CURRENCIES.map((c) => ({
@@ -51,9 +52,10 @@ export function FinancePreferencesSection({
           />
         </Field>
 
-        <Field label={t("finance.settings.invoicePrefix")}>
+        <Field id="inv-prefix" label={t("finance.settings.invoicePrefix")}>
           <Input
             id="inv-prefix"
+            name="invoicePrefix"
             className={FORM_INPUT}
             value={settingsDraft.invoicePrefix || ""}
             onChange={(event) => upd("invoicePrefix", event.target.value)}
@@ -61,10 +63,12 @@ export function FinancePreferencesSection({
           />
         </Field>
 
-        <Field label={t("finance.settings.dueDays")}>
+        <Field id="due-days" label={t("finance.settings.dueDays")}>
           <Input
             id="due-days"
+            name="dueDays"
             type="number"
+            inputMode="numeric"
             min="0"
             className={FORM_INPUT}
             value={settingsDraft.dueDays || ""}
@@ -72,10 +76,12 @@ export function FinancePreferencesSection({
           />
         </Field>
 
-        <Field label={t("finance.settings.lateFee")}>
+        <Field id="late-fee" label={t("finance.settings.lateFee")}>
           <Input
             id="late-fee"
+            name="lateFeePercent"
             type="number"
+            inputMode="numeric"
             min="0"
             max="100"
             className={FORM_INPUT}
@@ -84,10 +90,12 @@ export function FinancePreferencesSection({
           />
         </Field>
 
-        <Field label={t("finance.settings.taxRate")}>
+        <Field id="tax-rate" label={t("finance.settings.taxRate")}>
           <Input
             id="tax-rate"
+            name="taxRate"
             type="number"
+            inputMode="numeric"
             min="0"
             max="100"
             className={FORM_INPUT}
@@ -96,10 +104,12 @@ export function FinancePreferencesSection({
           />
         </Field>
 
-        <Field label={t("finance.settings.reminderDays")}>
+        <Field id="reminder-days" label={t("finance.settings.reminderDays")}>
           <Input
             id="reminder-days"
+            name="reminderDaysBefore"
             type="number"
+            inputMode="numeric"
             min="0"
             className={FORM_INPUT}
             value={settingsDraft.reminderDaysBefore || ""}

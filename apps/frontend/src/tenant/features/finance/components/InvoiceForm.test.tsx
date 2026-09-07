@@ -191,4 +191,27 @@ describe("InvoiceForm Component", () => {
       }),
     );
   });
+
+  it("updates field values and allows clearing inputs", async () => {
+    await act(async () => {
+      root.render(
+        <InvoiceForm
+          open={true}
+          onClose={vi.fn()}
+          onSave={vi.fn()}
+        />,
+      );
+    });
+
+    const studentNameInput = container.querySelector("#invoice-student-name") as HTMLInputElement;
+    await act(async () => {
+      setInputValue(studentNameInput, "Ali Reza");
+    });
+    expect(studentNameInput.value).toBe("Ali Reza");
+
+    await act(async () => {
+      setInputValue(studentNameInput, "");
+    });
+    expect(studentNameInput.value).toBe("");
+  });
 });

@@ -106,6 +106,8 @@ export function JournalEntryLinesEditor({
                     <TableRow key={line.id} className="hover:bg-muted/10">
                       <TableCell className="px-3 py-2">
                         <FormSelect
+                          id={`line-${lineIndex}-account`}
+                          name={`lines.${lineIndex}.account_id`}
                           aria-label={`Account for line ${lineIndex + 1}`}
                           value={line.account_id}
                           onChange={(accountId) => onUpdateLine(lineIndex, "account_id", accountId)}
@@ -121,6 +123,8 @@ export function JournalEntryLinesEditor({
                       </TableCell>
                       <TableCell className="px-3 py-2 hidden md:table-cell">
                         <Input
+                          id={`line-${lineIndex}-description`}
+                          name={`lines.${lineIndex}.description`}
                           aria-label={`Description for line ${lineIndex + 1}`}
                           value={line.description || ""}
                           onChange={(event) => onUpdateLine(lineIndex, "description", event.target.value)}
@@ -130,6 +134,8 @@ export function JournalEntryLinesEditor({
                       </TableCell>
                       <TableCell className="px-3 py-2">
                         <Input
+                          id={`line-${lineIndex}-debit`}
+                          name={`lines.${lineIndex}.debit`}
                           type="text"
                           inputMode="decimal"
                           aria-label={`Debit amount for line ${lineIndex + 1}`}
@@ -141,6 +147,8 @@ export function JournalEntryLinesEditor({
                       </TableCell>
                       <TableCell className="px-3 py-2">
                         <Input
+                          id={`line-${lineIndex}-credit`}
+                          name={`lines.${lineIndex}.credit`}
                           type="text"
                           inputMode="decimal"
                           aria-label={`Credit amount for line ${lineIndex + 1}`}

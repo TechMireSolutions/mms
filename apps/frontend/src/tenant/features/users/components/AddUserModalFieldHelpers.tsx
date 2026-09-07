@@ -13,12 +13,13 @@ export function FieldError({ msg }: FieldErrorProps): JSX.Element | null {
 
 interface LabelProps {
   children: React.ReactNode;
+  htmlFor?: string;
   required?: boolean;
 }
 
-export function Label({ children, required = false }: LabelProps): JSX.Element {
+export function Label({ children, htmlFor, required = false }: LabelProps): JSX.Element {
   return (
-    <label className={FORM_LABEL}>
+    <label htmlFor={htmlFor} className={FORM_LABEL}>
       {children}{required && <span className="text-destructive ms-0.5">*</span>}
     </label>
   );

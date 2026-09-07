@@ -44,11 +44,16 @@ export function StyleInput({
   step,
   className = "",
 }: StyleInputProps): React.JSX.Element {
+  const inputId = `style-input-${label.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
   return (
     <div className={`flex flex-col gap-0.5 ${className}`}>
-      <span className="text-xs font-bold uppercase text-muted-foreground tracking-wide">{label}</span>
+      <label htmlFor={inputId} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">{label}</label>
       <Input
+        id={inputId}
+        name={inputId}
+        aria-label={label}
         type={type}
+        inputMode={type === "number" ? "decimal" : undefined}
         value={value}
         onChange={(event) => onChange(type === "number" ? Number(event.target.value) : event.target.value)}
         min={min}
