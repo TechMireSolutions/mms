@@ -23,7 +23,7 @@ export default defineConfig({
     // lifecycle cannot interfere with other tests.
     exclude: ['src/__tests__/db-integration/**'],
     pool: 'threads',
-    isolate: false,
+    isolate: true,
     maxWorkers: process.env.CI ? 4 : undefined,
     fileParallelism: true,
     clearMocks: true,
