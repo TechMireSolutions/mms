@@ -69,4 +69,17 @@ describe('filterSidebarNavItems', () => {
 
     expect(visiblePaths(items)).not.toContain(ROUTES.students);
   });
+
+  it('orders academics sub-items in canonical sequence (teachers, students, sessions, enrollments, attendance)', () => {
+    const academicsItem = NAV_ITEMS.find((item) => item.labelKey === 'nav.academics');
+    expect(academicsItem).toBeDefined();
+    const subItemKeys = academicsItem?.subItems?.map((s) => s.labelKey);
+    expect(subItemKeys?.slice(0, 5)).toEqual([
+      'nav.teachers',
+      'nav.students',
+      'nav.sessions',
+      'nav.enrollments',
+      'nav.attendance',
+    ]);
+  });
 });

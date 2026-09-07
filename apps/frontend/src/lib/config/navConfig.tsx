@@ -83,18 +83,18 @@ export const NAV_ITEMS: NavItem[] = [
     icon: BookOpen,
     subItems: [
       {
-        labelKey: "nav.students",
-        icon: GraduationCap,
-        path: ROUTES.students,
-        moduleId: "students",
-        requiredPermission: STUDENTS_MODULE_MANIFEST.permissions.read,
-      },
-      {
         labelKey: "nav.teachers",
         icon: School,
         path: ROUTES.teachers,
         moduleId: "teachers",
         requiredPermission: TEACHERS_MODULE_MANIFEST.permissions.read,
+      },
+      {
+        labelKey: "nav.students",
+        icon: GraduationCap,
+        path: ROUTES.students,
+        moduleId: "students",
+        requiredPermission: STUDENTS_MODULE_MANIFEST.permissions.read,
       },
       {
         labelKey: "nav.sessions",
@@ -104,18 +104,18 @@ export const NAV_ITEMS: NavItem[] = [
         requiredPermission: SESSIONS_MODULE_MANIFEST.permissions.read,
       },
       {
-        labelKey: "nav.attendance",
-        icon: UserCheck,
-        path: ROUTES.attendance,
-        moduleId: "attendance",
-        requiredPermission: ATTENDANCE_MODULE_MANIFEST.permissions.read,
-      },
-      {
         labelKey: "nav.enrollments",
         icon: ClipboardList,
         path: ROUTES.enrollments,
         moduleId: "enrollment",
         requiredPermission: ENROLLMENTS_MODULE_MANIFEST.permissions.read,
+      },
+      {
+        labelKey: "nav.attendance",
+        icon: UserCheck,
+        path: ROUTES.attendance,
+        moduleId: "attendance",
+        requiredPermission: ATTENDANCE_MODULE_MANIFEST.permissions.read,
       },
       {
         labelKey: "nav.hasanatCards",
