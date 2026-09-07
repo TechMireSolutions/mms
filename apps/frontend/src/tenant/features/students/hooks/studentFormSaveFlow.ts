@@ -4,6 +4,7 @@ import type { Contact } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { getApiValidationMessage } from "@/lib/apiValidationMessage";
 import { reportClientError } from "@/lib/clientErrorReporting";
+import { scrollAndFocusFirstError } from "@/lib/forms/formAutoScroll";
 import {
   validateStudentDraft,
   checkStudentFormDuplicate,
@@ -25,7 +26,6 @@ interface StudentSaveFlowInput {
   onClose: () => void;
   keepOpen?: boolean;
   onBaselineReset?: (data: Partial<Student>) => void;
-  onValidationTab?: (tabId: string, fieldId: string) => void;
   setValidationErrors: (errors: ValidationError[]) => void;
   setSaving: (saving: boolean) => void;
   setPendingSaveData: (data: Partial<Student> | null) => void;
@@ -42,26 +42,7 @@ function focusStudentValidationField(formInstanceId: string, fieldId: string): v
     readOnlyFocusIds.has(fieldId) ? `sf-${formInstanceId}-guardians` : "",
   ].filter(Boolean);
 
-  const tryFocus = (): boolean => {
-    for (const candidate of candidates) {
-      const target = document.getElementById(candidate);
-      if (target instanceof HTMLElement) {
-        target.focus();
-        target.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        return true;
-      }
-    }
-    return false;
-  };
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      if (tryFocus()) return;
-      window.setTimeout(() => {
-        tryFocus();
-      }, 50);
-    });
-  });
+  scrollAndFocusFirstError(candidates, { behavior: "smooth", block: "center" });
 }
 
 function notifyStudentSaveFailed(t: TranslationFunction, err: unknown, scope: string): void {
@@ -86,7 +67,6 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<b
     input.setValidationErrors(zodErrors);
     const first = zodErrors[0];
     if (first) {
-      input.onValidationTab?.(first.tabId, first.fieldId);
       focusStudentValidationField(input.formInstanceId, first.fieldId);
     }
     notify.error(input.t("common.formPleaseFixErrors"));
@@ -113,7 +93,6 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<b
           message: input.t(DUPLICATE_ERROR_KEYS.grNumber),
         },
       ]);
-      input.onValidationTab?.("registration", "grNumber");
       focusStudentValidationField(input.formInstanceId, "grNumber");
       notify.error(input.t(DUPLICATE_ERROR_KEYS.grNumber));
       input.setSaving(false);
@@ -156,7 +135,6 @@ export async function runStudentSaveFlow(input: StudentSaveFlowInput): Promise<b
           message: input.t(DUPLICATE_ERROR_KEYS.grNumber),
         },
       ]);
-      input.onValidationTab?.("registration", "grNumber");
       focusStudentValidationField(input.formInstanceId, "grNumber");
       notify.error(input.t(DUPLICATE_ERROR_KEYS.grNumber));
       return false;

@@ -10,8 +10,6 @@ import { useStudentFormLinkedData } from "@/tenant/features/students/hooks/useSt
 import { useStudentFormActionHandlers } from "@/tenant/features/students/hooks/useStudentFormActionHandlers";
 import { useStudentLookupMutation } from "@/tenant/features/students/hooks/useStudentLookups";
 import { isStudentCreate } from "@/tenant/features/students/hooks/studentFormHandlers";
-import { resolveStudentFormModalTabs, normalizeStudentFormModalTab } from "@/tenant/features/students/components/studentFormTabs";
-import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import {
   type FieldDefinition,
   type Student,
@@ -46,7 +44,6 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const [typedDuplicateReason, setTypedDuplicateReason] = useState<import("@mms/shared").StudentDuplicateReason | null>(null);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
   const [pendingSaveData, setPendingSaveData] = useState<Partial<Student> | null>(null);
-  const [activeTab, setActiveTab] = useState("basic");
   const grManuallyEdited = useRef(false);
 
   const statusBadgeConfig = (() => studentStatusBadgeConfig(t))();
@@ -79,25 +76,6 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const isDirty = studentDraftSnapshot(studentDraft) !== baselineSnapshot;
 
   const enabledTabs = (() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS))();
-
-  const visibleTabs = (() => {
-    return resolveStudentFormModalTabs(settings.formTabs, enabledTabs, fields).map((tabItem) => ({
-      key: tabItem.key,
-      icon: tabItem.icon,
-      label: resolveRegistryLabel(tabItem, t),
-    }));
-  })();
-
-  useEffect(() => {
-    const normalized = normalizeStudentFormModalTab(activeTab);
-    if (normalized !== activeTab) {
-      setActiveTab(normalized);
-      return;
-    }
-    if (!visibleTabs.some((tabItem) => tabItem.key === normalized)) {
-      setActiveTab(visibleTabs[0]?.key ?? "basic");
-    }
-  }, [activeTab, visibleTabs]);
 
   const getFieldError = (fieldId: string) => {
     const fieldError = validationErrors.find((validationError) => validationError.fieldId === fieldId);
@@ -135,11 +113,6 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     });
   }, [nextGrNumber, student, autoGenerateId]);
 
-  const handleValidationTab = (tabId: string, _fieldId: string) => {
-    const normalized = normalizeStudentFormModalTab(tabId);
-    setActiveTab(visibleTabs.some((tab) => tab.key === normalized) ? normalized : (visibleTabs[0]?.key ?? "basic"));
-  };
-
   const actions = useStudentFormActionHandlers({
     student,
     studentDraft,
@@ -163,7 +136,6 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     setTypedDuplicateReason,
     setDuplicateConfirmOpen,
     formInstanceId,
-    onValidationTab: handleValidationTab,
     onBaselineReset: (data) => setBaselineSnapshot(studentDraftSnapshot(data)),
   });
 
@@ -179,9 +151,6 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     onUpdateStatuses: handleUpdateStatuses,
     fields,
     formInstanceId,
-    activeTab,
-    setActiveTab,
-    visibleTabs,
     getFieldError,
     linkedContact,
     linkedGenderRaw,

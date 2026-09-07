@@ -34,21 +34,31 @@ const defaultProps = {
 };
 
 describe("TeacherFormTabContent Component", () => {
-  it("renders employment and notes sections when tab is employment", () => {
+  it("renders unified vertical layout with contact, basic, employment, and notes sections simultaneously", () => {
     const html = renderToStaticMarkup(
-      <TeacherFormTabContent {...defaultProps} tab="employment" />,
+      <TeacherFormTabContent
+        {...defaultProps}
+        teacherDraft={{ ...defaultProps.teacherDraft, contactId: "cnt-1" }}
+        linkedContact={{
+          id: "cnt-1",
+          name: "Ustadh Umar",
+          phone: "+923001234567",
+          email: "umar@example.com",
+        } as unknown as import("@mms/shared").Contact}
+      />
     );
 
-    expect(html).toContain("teachers.form.notesSection");
-    expect(html).toContain("Teacher notes sample");
-  });
+    // Contact link / section
+    expect(html).toContain("contact-picker");
+    expect(html).toContain("3001234567");
+    expect(html).toContain("umar@example.com");
 
-  it("renders basic section when tab is basic", () => {
-    const html = renderToStaticMarkup(
-      <TeacherFormTabContent {...defaultProps} tab="basic" />,
-    );
-
+    // Basic & employment sections
     expect(html).toContain("teachers.field.specialization");
     expect(html).toContain("Tajweed");
+
+    // Notes section
+    expect(html).toContain("teachers.form.notesSection");
+    expect(html).toContain("Teacher notes sample");
   });
 });

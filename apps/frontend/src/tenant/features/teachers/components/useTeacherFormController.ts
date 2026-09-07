@@ -3,7 +3,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/tenant/features/teachers/hooks/useTeachers";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
-import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { teacherStatusOptions } from "@/lib/teachers/teacherStatusUi";
 import { useTeacherStatusConfig, useTeacherLookupOptions } from "@/tenant/features/teachers/hooks/useTeacherStatusConfig";
 import {
@@ -24,7 +23,6 @@ import {
 import {
   DUPLICATE_ERROR_KEYS,
 } from "@/tenant/features/teachers/components/teacherFormValidation";
-import { resolveTeacherFormModalTabs } from "@/tenant/features/teachers/components/teacherFormTabs";
 import type { TeacherStatusOption } from '@/tenant/features/teachers/components/TeacherFormSections';
 
 export interface UseTeacherFormControllerOptions {
@@ -54,7 +52,6 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
 
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [activeTab, setActiveTab] = useState("basic");
   const [pendingSaveData, setPendingSaveData] = useState<Partial<Teacher> | null>(null);
   const [typedDuplicateReason, setTypedDuplicateReason] = useState<TeacherDuplicateReason | null>(null);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
@@ -81,20 +78,6 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
   const isDirty = teacherDraftSnapshot(teacherDraft) !== baselineSnapshot;
 
   const enabledTabs = (() => new Set(resolveTeacherEnabledTabIds(settings)))();
-
-  const visibleTabs = (() => {
-    return resolveTeacherFormModalTabs(settings.formTabs, enabledTabs).map((tabItem) => ({
-      key: tabItem.key,
-      icon: tabItem.icon,
-      label: resolveRegistryLabel(tabItem, t),
-    }));
-  })();
-
-  useEffect(() => {
-    if (!visibleTabs.some((tabItem) => tabItem.key === activeTab)) {
-      setActiveTab(visibleTabs[0]?.key ?? "basic");
-    }
-  }, [activeTab, visibleTabs]);
 
   const getFieldError = (fieldId: string): string | undefined =>
     errors[fieldId] || errors[`custom:${fieldId}`];
@@ -158,7 +141,6 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
       enabledTabs,
       fields: fieldsMap,
       language,
-      visibleTabKeys: visibleTabs.map((tab) => tab.key),
       t,
       onSave,
       onClose,
@@ -167,7 +149,6 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
         setBaselineSnapshot(teacherDraftSnapshot(payload));
       },
       setErrors,
-      setActiveTab,
       setSaving,
       setPendingSaveData,
       setTypedDuplicateReason,
@@ -208,9 +189,6 @@ export function useTeacherFormController({ teacher, onClose, onSave }: UseTeache
     idPrefix,
     nextEmployeeId,
     formInstanceId,
-    activeTab,
-    setActiveTab,
-    visibleTabs,
     isFieldEnabled,
     isFieldRequired,
     getFieldError,

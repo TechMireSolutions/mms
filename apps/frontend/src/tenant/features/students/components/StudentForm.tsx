@@ -49,10 +49,6 @@ export const StudentForm = (function StudentForm({
         icon={GraduationCap}
         tall
         priority={priority}
-        tabs={form.visibleTabs}
-        activeTab={form.activeTab}
-        onTabChange={form.setActiveTab}
-        tabPanelIdPrefix="student-form-tab"
         lang={form.language}
         dir={form.dir}
         cancelLabel={form.t("common.cancel")}
@@ -68,7 +64,6 @@ export const StudentForm = (function StudentForm({
         footerStart={footerStart}
       >
         <StudentFormTabContent
-          tab={form.activeTab}
           formInstanceId={form.formInstanceId}
           studentDraft={form.studentDraft}
           linkedContact={form.linkedContact}
@@ -105,4 +100,5 @@ export const StudentForm = (function StudentForm({
     </>
   );
 });
+export { StudentForm as StudentFormModal };
 export default StudentForm;

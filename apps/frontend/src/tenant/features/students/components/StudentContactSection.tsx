@@ -1,10 +1,14 @@
-import type React from "react";
-import { Calendar, User } from "lucide-react";
+import { Calendar, Mail, Phone, User } from "lucide-react";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
-import type { FieldDefinition } from "@mms/shared";
+import {
+  getPrimaryEmail,
+  getPrimaryPhone,
+  type Contact,
+  type FieldDefinition,
+} from "@mms/shared";
 import {
   ContactProfileValue,
   resolveStudentFieldLabel,
@@ -13,6 +17,7 @@ import {
 
 export interface StudentContactSectionProps {
   contactId?: string | number | null;
+  linkedContact?: Contact | null;
   excludeIds: string[];
   linkedGenderRaw?: string;
   linkedGenderLabel: string;
@@ -29,6 +34,7 @@ export interface StudentContactSectionProps {
 
 export function StudentContactSection({
   contactId,
+  linkedContact,
   excludeIds,
   linkedGenderRaw,
   linkedGenderLabel,
@@ -46,7 +52,9 @@ export function StudentContactSection({
   const showContact = isFieldEnabled("contactId");
   const showGender = isFieldEnabled("gender");
   const showDob = isFieldEnabled("dob");
-  const showProfileRow = Boolean(contactId) && (showGender || showDob);
+  const primaryPhone = linkedContact ? getPrimaryPhone(linkedContact) : null;
+  const primaryEmail = linkedContact ? getPrimaryEmail(linkedContact) : null;
+  const showProfileRow = Boolean(contactId) && (showGender || showDob || Boolean(primaryPhone) || Boolean(primaryEmail));
 
   if (!showContact && !showProfileRow) {
     return null;
@@ -85,6 +93,20 @@ export function StudentContactSection({
 
           {showProfileRow ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-border/40">
+              {primaryPhone ? (
+                <ContactProfileValue
+                  label={t("contacts.fields.phoneNumber")}
+                  value={primaryPhone}
+                  icon={Phone}
+                />
+              ) : null}
+              {primaryEmail ? (
+                <ContactProfileValue
+                  label={t("contacts.fields.emailAddress")}
+                  value={primaryEmail}
+                  icon={Mail}
+                />
+              ) : null}
               {showGender ? (
                 <ContactProfileValue
                   label={genderLabel}

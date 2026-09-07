@@ -40,9 +40,6 @@ export const TeacherForm = (function TeacherForm({
     idPrefix,
     nextEmployeeId,
     formInstanceId,
-    activeTab,
-    setActiveTab,
-    visibleTabs,
     isFieldEnabled,
     isFieldRequired,
     getFieldError,
@@ -66,10 +63,6 @@ export const TeacherForm = (function TeacherForm({
         icon={School}
         tall
         priority={priority}
-        tabs={visibleTabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        tabPanelIdPrefix="teacher-form-tab"
         lang={language}
         dir={dir}
         cancelLabel={t("common.cancel")}
@@ -93,7 +86,6 @@ export const TeacherForm = (function TeacherForm({
         }
       >
         <TeacherFormTabContent
-          tab={activeTab}
           formInstanceId={formInstanceId}
           teacher={teacher}
           teacherDraft={teacherDraft}
@@ -110,6 +102,7 @@ export const TeacherForm = (function TeacherForm({
           isFieldRequired={isFieldRequired}
           getFieldError={getFieldError}
           onDraftChange={updateDraft}
+          linkedContact={linkedContact}
         />
       </FormModal>
       <ConfirmAlertDialog
@@ -126,3 +119,5 @@ export const TeacherForm = (function TeacherForm({
     </>
   );
 });
+
+export { TeacherForm as TeacherFormModal };

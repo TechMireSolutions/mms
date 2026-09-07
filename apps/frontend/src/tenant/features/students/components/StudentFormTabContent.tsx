@@ -7,11 +7,9 @@ import {
   type StudentFieldErrorGetter,
   type StudentStatusSelectOption,
 } from "@/tenant/features/students/components/StudentFormSections";
-import { normalizeStudentFormModalTab } from "@/tenant/features/students/components/studentFormTabs";
 import React from "react";
 
 export interface StudentFormTabContentProps {
-  tab: string;
   formInstanceId: string;
   studentDraft: Partial<Student>;
   linkedContact?: Contact | null;
@@ -35,7 +33,6 @@ export interface StudentFormTabContentProps {
 }
 
 export const StudentFormTabContent = (function StudentFormTabContent({
-  tab,
   formInstanceId,
   studentDraft,
   linkedContact,
@@ -57,58 +54,54 @@ export const StudentFormTabContent = (function StudentFormTabContent({
   onGrNumberChange,
   onDraftChange,
 }: StudentFormTabContentProps): React.JSX.Element {
-      const normalizedTab = normalizeStudentFormModalTab(tab);
-      if (normalizedTab === "registration") {
-        return (
-          <div className="space-y-6 pb-6">
-            <StudentRegistrationSection
-              studentDraft={studentDraft}
-              isGrAutoAssigned={isGrAutoAssigned}
-              grInputDisabled={grInputDisabled}
-              statusSelectOptions={statusSelectOptions}
-              statuses={statuses}
-              onUpdateStatuses={onUpdateStatuses}
-              fields={fields}
-              isFieldEnabled={isFieldEnabled}
-              isFieldRequired={isFieldRequired}
-              getFieldError={getFieldError}
-              onGrNumberChange={onGrNumberChange}
-              onDraftChange={onDraftChange}
-            />
-            <StudentNotesSection
-              notes={studentDraft.notes}
-              fields={fields}
-              isFieldEnabled={isFieldEnabled}
-              isFieldRequired={isFieldRequired}
-              onDraftChange={onDraftChange}
-            />
-          </div>
-        );
-      }
+  return (
+    <div className="space-y-6 pb-6">
+      {/* Top Section: Contact Association */}
+      <StudentContactSection
+        contactId={studentDraft.contactId}
+        linkedContact={linkedContact}
+        excludeIds={excludeIds}
+        linkedGenderRaw={linkedGenderRaw}
+        linkedGenderLabel={linkedGenderLabel}
+        linkedDob={linkedDob}
+        genderError={getFieldError("gender")}
+        dobError={getFieldError("dob")}
+        fields={fields}
+        isFieldEnabled={isFieldEnabled}
+        isFieldRequired={isFieldRequired}
+        getFieldError={getFieldError}
+        onContactSelect={onContactSelect}
+        onStudentAvatarChange={onStudentAvatarChange}
+      />
+      <StudentGuardianSection
+        formInstanceId={formInstanceId}
+        studentDraft={studentDraft}
+        linkedContact={linkedContact}
+        isFieldEnabled={isFieldEnabled}
+      />
 
-      return (
-        <div className="space-y-6 pb-6">
-          <StudentContactSection
-            contactId={studentDraft.contactId}
-            excludeIds={excludeIds}
-            linkedGenderRaw={linkedGenderRaw}
-            linkedGenderLabel={linkedGenderLabel}
-            linkedDob={linkedDob}
-            genderError={getFieldError("gender")}
-            dobError={getFieldError("dob")}
-            fields={fields}
-            isFieldEnabled={isFieldEnabled}
-            isFieldRequired={isFieldRequired}
-            getFieldError={getFieldError}
-            onContactSelect={onContactSelect}
-            onStudentAvatarChange={onStudentAvatarChange}
-          />
-          <StudentGuardianSection
-            formInstanceId={formInstanceId}
-            studentDraft={studentDraft}
-            linkedContact={linkedContact}
-            isFieldEnabled={isFieldEnabled}
-          />
-        </div>
-      );
-    });
+      {/* Bottom Section: Entity Details */}
+      <StudentRegistrationSection
+        studentDraft={studentDraft}
+        isGrAutoAssigned={isGrAutoAssigned}
+        grInputDisabled={grInputDisabled}
+        statusSelectOptions={statusSelectOptions}
+        statuses={statuses}
+        onUpdateStatuses={onUpdateStatuses}
+        fields={fields}
+        isFieldEnabled={isFieldEnabled}
+        isFieldRequired={isFieldRequired}
+        getFieldError={getFieldError}
+        onGrNumberChange={onGrNumberChange}
+        onDraftChange={onDraftChange}
+      />
+      <StudentNotesSection
+        notes={studentDraft.notes}
+        fields={fields}
+        isFieldEnabled={isFieldEnabled}
+        isFieldRequired={isFieldRequired}
+        onDraftChange={onDraftChange}
+      />
+    </div>
+  );
+});

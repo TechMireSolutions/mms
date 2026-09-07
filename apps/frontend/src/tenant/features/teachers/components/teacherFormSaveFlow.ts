@@ -10,6 +10,7 @@ import type { FieldDefinition } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { getApiValidationMessage } from "@/lib/apiValidationMessage";
 import { reportClientError } from "@/lib/clientErrorReporting";
+import { scrollAndFocusFirstError } from "@/lib/forms/formAutoScroll";
 import {
   checkTeacherFormDuplicate,
   DUPLICATE_ERROR_KEYS,
@@ -28,21 +29,19 @@ export interface TeacherSaveFlowInput {
   enabledTabs: Set<string>;
   fields: Record<string, FieldDefinition[]>;
   language: string;
-  visibleTabKeys: string[];
   t: TranslationFunction;
   onSave: (teacher: Teacher) => void | Promise<void>;
   onClose: () => void;
   keepOpen?: boolean;
   onBaselineReset?: (payload: Partial<Teacher>) => void;
   setErrors: (errors: Record<string, string>) => void;
-  setActiveTab: (tabId: string) => void;
   setSaving: (saving: boolean) => void;
   setPendingSaveData: (data: Partial<Teacher> | null) => void;
   setTypedDuplicateReason: (reason: TeacherDuplicateReason | null) => void;
   setDuplicateConfirmOpen: (open: boolean) => void;
 }
 
-/** Focus the first invalid teacher form field (custom fields use the "tf" id prefix). */
+/** Focus the first invalid teacher form field with smooth auto-scroll. */
 function focusTeacherValidationField(formInstanceId: string, fieldId: string): void {
   const candidates = [
     `tf-${formInstanceId}-${fieldId}`,
@@ -50,26 +49,7 @@ function focusTeacherValidationField(formInstanceId: string, fieldId: string): v
     fieldId === "contactId" ? "contactId" : "",
   ].filter(Boolean);
 
-  const tryFocus = (): boolean => {
-    for (const candidate of candidates) {
-      const target = document.getElementById(candidate);
-      if (target instanceof HTMLElement) {
-        target.focus();
-        target.scrollIntoView({ block: "nearest", behavior: "smooth" });
-        return true;
-      }
-    }
-    return false;
-  };
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      if (tryFocus()) return;
-      window.setTimeout(() => {
-        tryFocus();
-      }, 50);
-    });
-  });
+  scrollAndFocusFirstError(candidates, { behavior: "smooth", block: "center" });
 }
 
 /** Build the save payload (resolved employeeId + typed contactId) from the draft. */
@@ -112,10 +92,6 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
   });
   if (validationErrors) {
     input.setErrors(teacherValidationErrorsByField(validationErrors));
-    const firstTab = validationErrors[0]?.tabId;
-    if (firstTab && input.visibleTabKeys.includes(firstTab)) {
-      input.setActiveTab(firstTab);
-    }
     const firstField = validationErrors[0]?.fieldId;
     if (firstField) {
       focusTeacherValidationField(input.formInstanceId, firstField);
@@ -135,9 +111,6 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
 
     if (duplicateReason === "employeeId") {
       input.setErrors({ employeeId: input.t(DUPLICATE_ERROR_KEYS.employeeId) });
-      if (input.visibleTabKeys.includes("employment")) {
-        input.setActiveTab("employment");
-      }
       focusTeacherValidationField(input.formInstanceId, "employeeId");
       notify.error(input.t(DUPLICATE_ERROR_KEYS.employeeId));
       input.setSaving(false);
@@ -169,9 +142,6 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
 
     if (isEmployeeIdConflict) {
       input.setErrors({ employeeId: input.t(DUPLICATE_ERROR_KEYS.employeeId) });
-      if (input.visibleTabKeys.includes("employment")) {
-        input.setActiveTab("employment");
-      }
       focusTeacherValidationField(input.formInstanceId, "employeeId");
       notify.error(input.t(DUPLICATE_ERROR_KEYS.employeeId));
       return false;

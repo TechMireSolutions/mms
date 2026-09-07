@@ -49,22 +49,19 @@ const defaultProps = {
 };
 
 describe("StudentFormTabContent Component", () => {
-  it("renders registration and notes sections when tab is registration", () => {
+  it("renders unified vertical layout with contact, guardians, registration, and notes sections", () => {
     const html = renderToStaticMarkup(
-      <StudentFormTabContent {...defaultProps} tab="registration" />,
+      <StudentFormTabContent {...defaultProps} />,
     );
 
+    // Top Section: Contact Association
+    expect(html).toContain("students.form.contactLabel");
+    expect(html).toContain("students.form.guardiansSection");
+    expect(html).toContain("contact-picker");
+
+    // Bottom Section: Entity Details
     expect(html).toContain("students.form.registrationSection");
     expect(html).toContain("students.form.notesSection");
     expect(html).toContain("Student notes sample");
-  });
-
-  it("renders contact and guardians sections when tab is basic", () => {
-    const html = renderToStaticMarkup(
-      <StudentFormTabContent {...defaultProps} tab="basic" />,
-    );
-
-    expect(html).toContain("students.form.contactLabel");
-    expect(html).toContain("students.form.guardiansSection");
   });
 });

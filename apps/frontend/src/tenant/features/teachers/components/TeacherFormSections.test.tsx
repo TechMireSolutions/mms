@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
   TeacherBasicSection,
+  TeacherContactSection,
   TeacherEmploymentSection,
 } from "./TeacherFormSections";
 
@@ -17,15 +18,14 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("TeacherFormSections Components", () => {
-  it("renders TeacherBasicSection contact picker and details fields", () => {
+  it("renders TeacherContactSection with contact picker and details", () => {
     const html = renderToStaticMarkup(
-      <TeacherBasicSection
-        teacherDraft={{ specialization: "Tajweed" }}
+      <TeacherContactSection
+        teacherDraft={{ contactId: "cnt-1" }}
+        linkedContact={{ id: "cnt-1", name: "Ustadh Ali" } as any}
+        linkedTeacherContactIds={[]}
         errors={{}}
         fields={{}}
-        defaultSpecialization="Tajweed"
-        linkedTeacherContactIds={[]}
-        specializationOptions={["Tajweed", "Hifz"]}
         isFieldEnabled={() => true}
         isFieldRequired={() => false}
         onDraftChange={vi.fn()}
@@ -33,6 +33,22 @@ describe("TeacherFormSections Components", () => {
     );
 
     expect(html).toContain("contact-picker");
+  });
+
+  it("renders TeacherBasicSection details fields", () => {
+    const html = renderToStaticMarkup(
+      <TeacherBasicSection
+        teacherDraft={{ specialization: "Tajweed" }}
+        errors={{}}
+        fields={{}}
+        defaultSpecialization="Tajweed"
+        specializationOptions={["Tajweed", "Hifz"]}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
     expect(html).toContain("teachers.form.sectionDetails");
     expect(html).toContain("Tajweed");
   });
@@ -64,7 +80,6 @@ describe("TeacherFormSections Components", () => {
         errors={{ qualification: "Invalid qualification" }}
         fields={{}}
         defaultSpecialization="Tajweed"
-        linkedTeacherContactIds={[]}
         specializationOptions={["Tajweed"]}
         isFieldEnabled={() => true}
         isFieldRequired={() => true}

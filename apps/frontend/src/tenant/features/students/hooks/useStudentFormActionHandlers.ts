@@ -41,7 +41,6 @@ interface UseStudentFormActionHandlersOptions {
   setTypedDuplicateReason: (value: StudentDuplicateReason | null) => void;
   setDuplicateConfirmOpen: (value: boolean) => void;
   formInstanceId: string;
-  onValidationTab?: (tabId: string, fieldId: string) => void;
   onBaselineReset?: (data: Partial<Student>) => void;
 }
 
@@ -68,7 +67,6 @@ export function useStudentFormActionHandlers({
   setTypedDuplicateReason,
   setDuplicateConfirmOpen,
   formInstanceId,
-  onValidationTab,
   onBaselineReset,
 }: UseStudentFormActionHandlersOptions) {
   const clearDuplicatePrompt = useCallback(() => {
@@ -112,7 +110,6 @@ export function useStudentFormActionHandlers({
       onClose,
       keepOpen: options?.keepOpen,
       onBaselineReset,
-      onValidationTab,
       setValidationErrors,
       setSaving: (value: boolean) => {
         savingRef.current = value;
