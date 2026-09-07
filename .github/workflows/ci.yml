@@ -117,10 +117,11 @@ jobs:
             --outputFile=.vitest-reports/blob-${{ matrix.shardIndex }}.json
 
       - name: Upload Shard Report Artifact
+        if: always()
         uses: actions/upload-artifact@v7
         with:
           name: vitest-blob-report-${{ matrix.shardIndex }}
-          path: apps/frontend/.vitest-reports/
+          path: apps/frontend/.vitest-reports/blob-${{ matrix.shardIndex }}.json
           retention-days: 1
 
   test-frontend-coverage:
@@ -145,7 +146,14 @@ jobs:
           path: apps/frontend/.vitest-reports
 
       - name: Merge Shard Reports & Enforce Coverage Gate
-        run: pnpm --filter mms-frontend exec vitest run --merge-reports=.vitest-reports --coverage
+        run: |
+          mkdir -p apps/frontend/.vitest-reports
+          if [ -d "apps/frontend/.vitest-reports" ] && [ "$(ls -A apps/frontend/.vitest-reports)" ]; then
+            pnpm --filter mms-frontend exec vitest run --merge-reports=.vitest-reports --coverage
+          else
+            echo "::error::No vitest blob reports found in apps/frontend/.vitest-reports to merge!"
+            exit 1
+          fi
 
   test-backend-unit:
     name: Backend Unit Tests
