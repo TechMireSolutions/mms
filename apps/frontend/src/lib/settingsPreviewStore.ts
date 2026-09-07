@@ -9,7 +9,7 @@ import {
   getEffectiveGlobalSettings,
   mergeBrandingSettingsPreview,
   mergeGlobalSettingsPreview,
-} from '@/lib/db';
+} from '@/lib/dbObjects.js';
 import {
   isTenantHost,
   MMS_PLATFORM_BRANDING,

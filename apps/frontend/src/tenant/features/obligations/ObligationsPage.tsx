@@ -1,14 +1,25 @@
+import React, { Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Scale } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
+import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { ObligationsModalLayer } from '@/tenant/features/obligations/components/ObligationsModalLayer';
 import { ObligationsPageActions } from '@/tenant/features/obligations/components/ObligationsPageActions';
-import { ObligationsReportsTier } from '@/tenant/features/obligations/components/ObligationsReportsTier';
-import { ObligationsSetupTier } from '@/tenant/features/obligations/components/ObligationsSetupTier';
 import { ObligationsWorkTier } from '@/tenant/features/obligations/components/ObligationsWorkTier';
 import { ObligationsCommandMetrics } from '@/tenant/features/obligations/components/ObligationsCommandMetrics';
 import { useObligationsPageController } from '@/tenant/features/obligations/hooks/useObligationsPageController';
+
+const ObligationsReportsTier = lazy(() =>
+  import('@/tenant/features/obligations/components/ObligationsReportsTier').then((m) => ({
+    default: m.ObligationsReportsTier,
+  }))
+);
+const ObligationsSetupTier = lazy(() =>
+  import('@/tenant/features/obligations/components/ObligationsSetupTier').then((m) => ({
+    default: m.ObligationsSetupTier,
+  }))
+);
 
 /**
  * Obligations — Khums, Zakat, and collections. Work | Reports | Setup.
@@ -50,7 +61,9 @@ export default function Obligations() {
             className="space-y-4"
           >
             {c.effectiveTab === 'reports' && (
-              <ObligationsReportsTier />
+              <Suspense fallback={<RouteStatusFallback />}>
+                <ObligationsReportsTier />
+              </Suspense>
             )}
 
             {c.effectiveTab === 'work' && (
@@ -79,22 +92,24 @@ export default function Obligations() {
             )}
 
             {c.effectiveTab === 'setup' && (
-              <ObligationsSetupTier
-                tabs={c.CONFIG_SUB_TABS}
-                activeTab={c.effectiveConfigTab}
-                canEditSetup={c.canEditSetup}
-                obligationTypes={c.obligationTypes}
-                mujtahids={c.mujtahids}
-                reps={c.reps}
-                wakalaTypes={c.wakalaTypes}
-                distributions={c.distributions}
-                onTabChange={c.setActiveConfigTab}
-                onChangeTypes={(next) => c.runSetupSave(() => c.replaceTypes.mutateAsync(next))}
-                onChangeMujtahids={(next) => c.runSetupSave(() => c.replaceMujtahids.mutateAsync(next))}
-                onChangeReps={(next) => c.runSetupSave(() => c.replaceReps.mutateAsync(next))}
-                onChangeWakala={(next) => c.runSetupSave(() => c.replaceWakala.mutateAsync(next))}
-                onChangeDistributions={(next) => c.runSetupSave(() => c.replaceDistributions.mutateAsync(next))}
-              />
+              <Suspense fallback={<RouteStatusFallback />}>
+                <ObligationsSetupTier
+                  tabs={c.CONFIG_SUB_TABS}
+                  activeTab={c.effectiveConfigTab}
+                  canEditSetup={c.canEditSetup}
+                  obligationTypes={c.obligationTypes}
+                  mujtahids={c.mujtahids}
+                  reps={c.reps}
+                  wakalaTypes={c.wakalaTypes}
+                  distributions={c.distributions}
+                  onTabChange={c.setActiveConfigTab}
+                  onChangeTypes={(next) => c.runSetupSave(() => c.replaceTypes.mutateAsync(next))}
+                  onChangeMujtahids={(next) => c.runSetupSave(() => c.replaceMujtahids.mutateAsync(next))}
+                  onChangeReps={(next) => c.runSetupSave(() => c.replaceReps.mutateAsync(next))}
+                  onChangeWakala={(next) => c.runSetupSave(() => c.replaceWakala.mutateAsync(next))}
+                  onChangeDistributions={(next) => c.runSetupSave(() => c.replaceDistributions.mutateAsync(next))}
+                />
+              </Suspense>
             )}
           </motion.div>
         </AnimatePresence>

@@ -9,13 +9,19 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { MessagingTarget } from "@/hooks/useMessageComposerState";
 import { MessagingCommandMetrics } from "./MessagingCommandMetrics";
 import { MessagingPageHeaderActions } from "./MessagingPageHeaderActions";
-import { MessagingReportsTier } from "./MessagingReportsTier";
-import { MessagingSetupTier } from "./MessagingSetupTier";
 import { MessagingWorkTier } from "./MessagingWorkTier";
+
+const MessagingReportsTier = lazy(() =>
+  import("./MessagingReportsTier").then((m) => ({ default: m.MessagingReportsTier }))
+);
+const MessagingSetupTier = lazy(() =>
+  import("./MessagingSetupTier").then((m) => ({ default: m.MessagingSetupTier }))
+);
 
 const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -127,13 +133,19 @@ export function MessagingPageView({
               onChannelChange={setChannelFilter}
             />
           )}
-          {activeTab === "reports" && <MessagingReportsTier canWrite={canWrite} />}
+          {activeTab === "reports" && (
+            <Suspense fallback={<RouteStatusFallback />}>
+              <MessagingReportsTier canWrite={canWrite} />
+            </Suspense>
+          )}
           {activeTab === "setup" && (
-            <MessagingSetupTier
-              canWrite={canWrite}
-              canEditSetup={canEditSetup}
-              onDeleteRequest={setDeleteTemplateId}
-            />
+            <Suspense fallback={<RouteStatusFallback />}>
+              <MessagingSetupTier
+                canWrite={canWrite}
+                canEditSetup={canEditSetup}
+                onDeleteRequest={setDeleteTemplateId}
+              />
+            </Suspense>
           )}
         </ResponsiveAccordionTabs>
       )}

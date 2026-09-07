@@ -1,14 +1,25 @@
+import React, { Suspense, lazy } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Plus, Calendar, Download } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
+import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { SessionsDialogLayer } from '@/tenant/features/sessions/components/SessionsDialogLayer';
-import { SessionsReportsTier } from '@/tenant/features/sessions/components/SessionsReportsTier';
-import { SessionsSetupTier } from '@/tenant/features/sessions/components/SessionsSetupTier';
 import { SessionsWorkTier } from '@/tenant/features/sessions/components/SessionsWorkTier';
 import { SessionsCommandMetrics } from '@/tenant/features/sessions/components/SessionsCommandMetrics';
 import { useSessionsPageController } from '@/tenant/features/sessions/hooks/useSessionsPageController';
+
+const SessionsReportsTier = lazy(() =>
+  import('@/tenant/features/sessions/components/SessionsReportsTier').then((m) => ({
+    default: m.SessionsReportsTier,
+  }))
+);
+const SessionsSetupTier = lazy(() =>
+  import('@/tenant/features/sessions/components/SessionsSetupTier').then((m) => ({
+    default: m.SessionsSetupTier,
+  }))
+);
 
 export default function Sessions() {
   const c = useSessionsPageController();
@@ -97,9 +108,13 @@ export default function Sessions() {
               onBulkExport={() => void c.handleBulkExport()}
             />
           ) : c.activeTab === 'reports' ? (
-            <SessionsReportsTier />
+            <Suspense fallback={<RouteStatusFallback />}>
+              <SessionsReportsTier />
+            </Suspense>
           ) : c.activeTab === 'setup' ? (
-            <SessionsSetupTier />
+            <Suspense fallback={<RouteStatusFallback />}>
+              <SessionsSetupTier />
+            </Suspense>
           ) : null}
         </AnimatePresence>
       </ResponsiveAccordionTabs>

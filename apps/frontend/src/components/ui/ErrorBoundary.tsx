@@ -1,8 +1,11 @@
 import React, { Component, type ErrorInfo, type ReactNode } from "react";
-import { ErrorState } from "@/components/ui/ErrorState";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { useTranslation } from "@/hooks/useTranslation";
+
+const LazyErrorState = React.lazy(() =>
+  import("@/components/ui/ErrorState").then((m) => ({ default: m.ErrorState }))
+);
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -24,11 +27,13 @@ function ErrorBoundaryFallback({
   const { t } = useTranslation();
   return (
     <div className={`${WORK_SURFACE} p-6 my-4`}>
-      <ErrorState
-        title={t("errors.boundary.title")}
-        description={error?.message || t("errors.boundary.description")}
-        onRetry={onRetry}
-      />
+      <React.Suspense fallback={<div className="p-4 text-center text-muted-foreground">{t("common.loading")}</div>}>
+        <LazyErrorState
+          title={t("errors.boundary.title")}
+          description={error?.message || t("errors.boundary.description")}
+          onRetry={onRetry}
+        />
+      </React.Suspense>
     </div>
   );
 }

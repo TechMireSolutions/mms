@@ -8,12 +8,22 @@ import { AnimatePresence } from "framer-motion";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { AccountingPageHeaderActions } from "@/tenant/features/accounting/components/AccountingPageHeaderActions";
-import { AccountingReportsTier } from "@/tenant/features/accounting/components/AccountingReportsTier";
-import { AccountingSetupTier } from "@/tenant/features/accounting/components/AccountingSetupTier";
 import { AccountingWorkTier } from "@/tenant/features/accounting/components/AccountingWorkTier";
 import { AccountingCommandMetrics } from "@/tenant/features/accounting/components/AccountingCommandMetrics";
+
+const AccountingReportsTier = React.lazy(() =>
+  import("@/tenant/features/accounting/components/AccountingReportsTier").then((m) => ({
+    default: m.AccountingReportsTier,
+  }))
+);
+const AccountingSetupTier = React.lazy(() =>
+  import("@/tenant/features/accounting/components/AccountingSetupTier").then((m) => ({
+    default: m.AccountingSetupTier,
+  }))
+);
 import { useAccountingJournalColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingJournalColumnLayout";
 import { useAccountingAccountColumnLayout } from "@/tenant/features/accounting/hooks/useAccountingAccountColumnLayout";
 import { useAccountingConfig } from "@/hooks/useStandardModuleConfig";
@@ -143,7 +153,9 @@ export default function Accounting() {
 
           <ErrorBoundary>
           {activeTab === "reports" && (
-            <AccountingReportsTier />
+            <React.Suspense fallback={<RouteStatusFallback />}>
+              <AccountingReportsTier />
+            </React.Suspense>
           )}
 
           {activeTab === "work" && (
@@ -202,11 +214,13 @@ export default function Accounting() {
           )}
 
           {activeTab === "setup" && (
-            <AccountingSetupTier
-              accounts={accounts}
-              fiscalYears={fiscalYears}
-              onSaveFiscalYears={setFiscalYears}
-            />
+            <React.Suspense fallback={<RouteStatusFallback />}>
+              <AccountingSetupTier
+                accounts={accounts}
+                fiscalYears={fiscalYears}
+                onSaveFiscalYears={setFiscalYears}
+              />
+            </React.Suspense>
           )}
           </ErrorBoundary>
         </ModuleTierMotion>

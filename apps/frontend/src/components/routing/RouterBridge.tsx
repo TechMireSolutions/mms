@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { registerAppNavigate, unregisterAppNavigate } from "@/lib/routing/appNavigate";
-import { applyAppTheme } from "@/lib/brandingTheme";
 import { applyApexPlatformTheme } from "@/lib/brandingThemeCore";
 import { revertSettingsPreviews } from "@/lib/settingsPreview";
 import { useScrollToTopOnNavigate } from "@/lib/routing/useScrollToTopOnNavigate";
@@ -41,7 +40,9 @@ export default function RouterBridge(): null {
       applyApexPlatformTheme("en");
       return;
     }
-    applyAppTheme(location.pathname);
+    void import("@/lib/brandingTheme").then(({ applyAppTheme }) => {
+      applyAppTheme(location.pathname);
+    });
   }, [
     location.pathname,
     isApex,

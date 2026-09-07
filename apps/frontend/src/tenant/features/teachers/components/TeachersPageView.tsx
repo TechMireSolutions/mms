@@ -1,3 +1,4 @@
+import React, { Suspense, lazy } from "react";
 import { School } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -6,10 +7,20 @@ import { TeachersCommandMetrics } from "@/tenant/features/teachers/components/Te
 import { TeachersPageHeaderActions } from "@/tenant/features/teachers/components/TeachersPageHeaderActions";
 import { TeachersPageOverlays } from "@/tenant/features/teachers/components/TeachersPageOverlays";
 import { AnimatePresence } from "framer-motion";
-import { TeachersReportsTier } from "@/tenant/features/teachers/components/TeachersReportsTier";
-import { TeachersSetupTier } from "@/tenant/features/teachers/components/TeachersSetupTier";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { TeachersWorkTier } from "@/tenant/features/teachers/components/TeachersWorkTier";
 import type { useTeachersPageController } from "@/tenant/features/teachers/hooks/useTeachersPageController";
+
+const TeachersReportsTier = lazy(() =>
+  import("@/tenant/features/teachers/components/TeachersReportsTier").then((m) => ({
+    default: m.TeachersReportsTier,
+  }))
+);
+const TeachersSetupTier = lazy(() =>
+  import("@/tenant/features/teachers/components/TeachersSetupTier").then((m) => ({
+    default: m.TeachersSetupTier,
+  }))
+);
 
 export type TeachersPageViewProps = ReturnType<typeof useTeachersPageController>;
 
@@ -62,9 +73,13 @@ export function TeachersPageView({
           {activeTab === "work" ? (
             <TeachersWorkTier {...tabPanelProps.workTierProps} />
           ) : activeTab === "reports" ? (
-            <TeachersReportsTier />
+            <Suspense fallback={<RouteStatusFallback />}>
+              <TeachersReportsTier />
+            </Suspense>
           ) : activeTab === "setup" ? (
-            <TeachersSetupTier />
+            <Suspense fallback={<RouteStatusFallback />}>
+              <TeachersSetupTier />
+            </Suspense>
           ) : null}
         </AnimatePresence>
       </ResponsiveAccordionTabs>

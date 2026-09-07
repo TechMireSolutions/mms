@@ -9,19 +9,49 @@ import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { InvoicesList } from "@/tenant/features/finance/components/InvoicesList";
-import { InvoiceDetail } from "@/tenant/features/finance/components/InvoiceDetail";
-import { InvoiceForm } from "@/tenant/features/finance/components/InvoiceForm";
-import { FinanceGenerateInvoicesDialog } from "@/tenant/features/finance/components/FinanceGenerateInvoicesDialog";
-import { PaymentForm } from "@/tenant/features/finance/components/PaymentForm";
 import { PaymentsList } from "@/tenant/features/finance/components/PaymentsList";
-import { PaymentDetail } from "@/tenant/features/finance/components/PaymentDetail";
-import { FinanceSetupTier } from "@/tenant/features/finance/components/FinanceSetupTier";
-import { FinanceReportsTier } from "@/tenant/features/finance/components/FinanceReportsTier";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { type Invoice } from '@/lib/data/financeData';
 import { FinanceCommandMetrics } from "@/tenant/features/finance/components/FinanceCommandMetrics";
 import { notify } from "@/lib/notify";
 
+const InvoiceDetail = React.lazy(() =>
+  import("@/tenant/features/finance/components/InvoiceDetail").then((m) => ({
+    default: m.InvoiceDetail,
+  }))
+);
+const InvoiceForm = React.lazy(() =>
+  import("@/tenant/features/finance/components/InvoiceForm").then((m) => ({
+    default: m.InvoiceForm,
+  }))
+);
+const FinanceGenerateInvoicesDialog = React.lazy(() =>
+  import("@/tenant/features/finance/components/FinanceGenerateInvoicesDialog").then((m) => ({
+    default: m.FinanceGenerateInvoicesDialog,
+  }))
+);
+const PaymentForm = React.lazy(() =>
+  import("@/tenant/features/finance/components/PaymentForm").then((m) => ({
+    default: m.PaymentForm,
+  }))
+);
+const PaymentDetail = React.lazy(() =>
+  import("@/tenant/features/finance/components/PaymentDetail").then((m) => ({
+    default: m.PaymentDetail,
+  }))
+);
+
+const FinanceSetupTier = React.lazy(() =>
+  import("@/tenant/features/finance/components/FinanceSetupTier").then((m) => ({
+    default: m.FinanceSetupTier,
+  }))
+);
+const FinanceReportsTier = React.lazy(() =>
+  import("@/tenant/features/finance/components/FinanceReportsTier").then((m) => ({
+    default: m.FinanceReportsTier,
+  }))
+);
 const InvoiceReceiptModal = React.lazy(() =>
   import("@/tenant/features/finance/components/InvoiceReceiptModal").then((m) => ({
     default: m.InvoiceReceiptModal,
@@ -91,8 +121,16 @@ export default function Finance(): React.JSX.Element {
         <AnimatePresence mode="wait">
           <ModuleTierMotion tier={c.activeTab + "-" + c.activeSubTab} className="space-y-4">
             <ErrorBoundary>
-              {c.activeTab === "reports" && <FinanceReportsTier />}
-              {c.activeTab === "setup" && <FinanceSetupTier />}
+              {c.activeTab === "reports" && (
+                <React.Suspense fallback={<RouteStatusFallback />}>
+                  <FinanceReportsTier />
+                </React.Suspense>
+              )}
+              {c.activeTab === "setup" && (
+                <React.Suspense fallback={<RouteStatusFallback />}>
+                  <FinanceSetupTier />
+                </React.Suspense>
+              )}
 
               {c.activeTab === "work" && c.activeSubTab === "invoices" && c.invoicesResult.isError ? (
                 <ErrorState
@@ -165,30 +203,38 @@ export default function Finance(): React.JSX.Element {
 
       <AnimatePresence>
         {c.generatingInvoices && c.canWrite && !c.showDeleted && (
-          <FinanceGenerateInvoicesDialog
-            open={c.generatingInvoices}
-            onClose={() => c.setGeneratingInvoices(false)}
-          />
+          <React.Suspense fallback={null}>
+            <FinanceGenerateInvoicesDialog
+              open={c.generatingInvoices}
+              onClose={() => c.setGeneratingInvoices(false)}
+            />
+          </React.Suspense>
         )}
         {c.creatingInvoice && c.canWrite && !c.showDeleted && (
-          <InvoiceForm
-            open={c.creatingInvoice}
-            saving={c.createInvoice.isPending}
-            onClose={() => c.setCreatingInvoice(false)}
-            onSave={c.handleCreateInvoice}
-          />
+          <React.Suspense fallback={null}>
+            <InvoiceForm
+              open={c.creatingInvoice}
+              saving={c.createInvoice.isPending}
+              onClose={() => c.setCreatingInvoice(false)}
+              onSave={c.handleCreateInvoice}
+            />
+          </React.Suspense>
         )}
         {c.viewInvoice && (
-          <InvoiceDetail
-            invoice={c.viewInvoice}
-            onClose={() => c.setViewInvoice(null)}
-            onRecord={(invoiceToRecord: Invoice) => { c.setViewInvoice(null); c.setRecordInvoice(invoiceToRecord); }}
-            onPrintReceipt={(inv) => { c.setViewInvoice(null); setReceiptInvoices([inv]); }}
-            canWrite={c.canWrite}
-          />
+          <React.Suspense fallback={null}>
+            <InvoiceDetail
+              invoice={c.viewInvoice}
+              onClose={() => c.setViewInvoice(null)}
+              onRecord={(invoiceToRecord: Invoice) => { c.setViewInvoice(null); c.setRecordInvoice(invoiceToRecord); }}
+              onPrintReceipt={(inv) => { c.setViewInvoice(null); setReceiptInvoices([inv]); }}
+              canWrite={c.canWrite}
+            />
+          </React.Suspense>
         )}
         {c.recordInvoice && c.canWrite && !c.showDeleted && (
-          <PaymentForm open={!!c.recordInvoice} invoice={c.recordInvoice} onClose={() => c.setRecordInvoice(null)} onSave={c.handleRecordPayment} />
+          <React.Suspense fallback={null}>
+            <PaymentForm open={!!c.recordInvoice} invoice={c.recordInvoice} onClose={() => c.setRecordInvoice(null)} onSave={c.handleRecordPayment} />
+          </React.Suspense>
         )}
       </AnimatePresence>
 
@@ -214,12 +260,14 @@ export default function Finance(): React.JSX.Element {
 
       <AnimatePresence>
         {c.activePayment && (
-          <PaymentDetail
-            payment={c.activePayment}
-            onClose={() => c.setActivePayment(null)}
-            canDelete={c.canDelete}
-            onRestore={c.restorePayment.mutateAsync}
-          />
+          <React.Suspense fallback={null}>
+            <PaymentDetail
+              payment={c.activePayment}
+              onClose={() => c.setActivePayment(null)}
+              canDelete={c.canDelete}
+              onRestore={c.restorePayment.mutateAsync}
+            />
+          </React.Suspense>
         )}
       </AnimatePresence>
     </>

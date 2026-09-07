@@ -3,16 +3,16 @@ import { BrowserRouter as Router } from 'react-router-dom';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider } from '@/lib/contexts/AuthContext';
 import { BrandingPaletteProvider } from '@/lib/contexts/BrandingPaletteContext';
-import { PlatformAuthProvider } from '@/platform/lib/PlatformAuthContext';
 import { TenantProvider } from '@/lib/contexts/TenantContext';
 import { TranslationProvider } from '@/lib/contexts/TranslationContext';
 import { DirectionProvider } from '@/providers/DirectionProvider';
-import { ApexBootPrefetch } from '@/platform/components/ApexBootPrefetch';
-import TenantScopedProviders from '@/providers/TenantScopedProviders';
 import { queryClientInstance } from '@/lib/queryClient';
 import RootErrorBoundary from '@/components/routing/RootErrorBoundary';
 import QueryDevtools from '@/components/dev/QueryDevtools';
-import { Toaster } from '@/components/ui/toaster';
+
+const LazyToaster = React.lazy(() =>
+  import('@/components/ui/toaster').then((m) => ({ default: m.Toaster }))
+);
 
 export interface AppProvidersProps {
   children: React.ReactNode;
@@ -29,16 +29,15 @@ export function AppProviders({ children }: AppProvidersProps): React.JSX.Element
               <TenantProvider>
                 <TranslationProvider>
                   <DirectionProvider>
-                    <PlatformAuthProvider>
-                      <ApexBootPrefetch />
-                      <TenantScopedProviders>{children}</TenantScopedProviders>
-                    </PlatformAuthProvider>
+                    {children}
                   </DirectionProvider>
                 </TranslationProvider>
               </TenantProvider>
             </BrandingPaletteProvider>
           </Router>
-          <Toaster />
+          <React.Suspense fallback={null}>
+            <LazyToaster />
+          </React.Suspense>
           <QueryDevtools />
         </QueryClientProvider>
       </AuthProvider>

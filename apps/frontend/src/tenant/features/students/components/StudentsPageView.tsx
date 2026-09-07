@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { Suspense, lazy } from "react";
 import { GraduationCap } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -6,11 +6,17 @@ import { StudentsCommandMetrics } from "@/tenant/features/students/components/St
 import { StudentsPageHeaderActions } from "@/tenant/features/students/components/StudentsPageHeaderActions";
 import { StudentsPageOverlays } from "@/tenant/features/students/components/StudentsPageOverlays";
 import { AnimatePresence } from "framer-motion";
-import { StudentsReportsTier } from "@/tenant/features/students/components/StudentsReportsTier";
-import StudentsSetupTier from "@/tenant/features/students/components/StudentsSetupTier";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { StudentsWorkTier } from "@/tenant/features/students/components/StudentsWorkTier";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { useStudentsPageController } from "@/tenant/features/students/hooks/useStudentsPageController";
+
+const StudentsReportsTier = lazy(() =>
+  import("@/tenant/features/students/components/StudentsReportsTier").then((m) => ({
+    default: m.StudentsReportsTier,
+  }))
+);
+const StudentsSetupTier = lazy(() => import("@/tenant/features/students/components/StudentsSetupTier"));
 
 export type StudentsPageViewProps = ReturnType<typeof useStudentsPageController>;
 
@@ -63,9 +69,13 @@ export function StudentsPageView({
           {activeTab === "work" ? (
             <StudentsWorkTier {...tabPanelProps.workTierProps} />
           ) : activeTab === "reports" ? (
-            <StudentsReportsTier />
+            <Suspense fallback={<RouteStatusFallback />}>
+              <StudentsReportsTier />
+            </Suspense>
           ) : activeTab === "setup" ? (
-            <StudentsSetupTier />
+            <Suspense fallback={<RouteStatusFallback />}>
+              <StudentsSetupTier />
+            </Suspense>
           ) : null}
         </AnimatePresence>
       </ResponsiveAccordionTabs>

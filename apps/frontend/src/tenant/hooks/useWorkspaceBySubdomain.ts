@@ -1,4 +1,5 @@
-import { tsrClient } from '@/lib/api';
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch, resolveApiUrl } from '@/lib/apiClient';
 import type { PublicBranding } from '@mms/shared';
 
 export interface PublicWorkspace {
@@ -49,10 +50,22 @@ export function cacheWorkspaceLookup(subdomain: string, data: WorkspaceLookupRes
 }
 
 export function useWorkspaceBySubdomain(subdomain: string | null, enabled: boolean) {
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.workspace.bySubdomain.useQuery({
+  return useQuery<{ status: number; body: WorkspaceLookupResult }>({
     queryKey: [...WORKSPACE_BY_SUBDOMAIN_KEY, subdomain],
-    queryData: { params: { subdomain: subdomain! } },
+    queryFn: async ({ signal }): Promise<{ status: number; body: WorkspaceLookupResult }> => {
+      const url = resolveApiUrl(`/api/workspace/by-subdomain?subdomain=${encodeURIComponent(subdomain ?? '')}`);
+      const res = await apiFetch(url, { signal });
+      if (res.status === 404) {
+        return { status: 404, body: null as unknown as WorkspaceLookupResult };
+      }
+      if (!res.ok) {
+        const error = new Error(`Workspace lookup failed: ${res.status}`);
+        (error as unknown as { status: number }).status = res.status;
+        throw error;
+      }
+      const data = (await res.json()) as WorkspaceLookupResult;
+      return { status: 200, body: data };
+    },
     enabled: enabled && Boolean(subdomain),
     staleTime: 60_000,
     initialData: enabled && subdomain ? getCachedWorkspaceLookup(subdomain) : undefined,

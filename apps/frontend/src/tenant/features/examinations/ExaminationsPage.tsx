@@ -4,14 +4,29 @@ import { Layers } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
+import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { ExaminationsCommandMetrics } from '@/tenant/features/examinations/components/ExaminationsCommandMetrics';
 import { ExaminationsModalLayer } from '@/tenant/features/examinations/components/ExaminationsModalLayer';
 import { ExaminationsPageActions } from '@/tenant/features/examinations/components/ExaminationsPageActions';
-import { ExaminationsReportsTier } from '@/tenant/features/examinations/components/ExaminationsReportsTier';
-import { ExaminationsSetupTier } from '@/tenant/features/examinations/components/ExaminationsSetupTier';
 import { ExaminationsWorkTier } from '@/tenant/features/examinations/components/ExaminationsWorkTier';
-import { ExaminationDetail } from '@/tenant/features/examinations/components/ExaminationDetail';
 import { useExaminationsPageController } from '@/tenant/features/examinations/hooks/useExaminationsPageController';
+
+const ExaminationDetail = React.lazy(() =>
+  import('@/tenant/features/examinations/components/ExaminationDetail').then((m) => ({
+    default: m.ExaminationDetail,
+  }))
+);
+
+const ExaminationsReportsTier = React.lazy(() =>
+  import('@/tenant/features/examinations/components/ExaminationsReportsTier').then((m) => ({
+    default: m.ExaminationsReportsTier,
+  }))
+);
+const ExaminationsSetupTier = React.lazy(() =>
+  import('@/tenant/features/examinations/components/ExaminationsSetupTier').then((m) => ({
+    default: m.ExaminationsSetupTier,
+  }))
+);
 
 /**
  * Examinations — formal exams, marking, and results. Work | Reports | Setup.
@@ -50,10 +65,16 @@ export default function Examinations(): React.JSX.Element {
             className="space-y-4"
           >
             {c.effectiveTab === 'setup' && (
-              <ExaminationsSetupTier />
+              <React.Suspense fallback={<RouteStatusFallback />}>
+                <ExaminationsSetupTier />
+              </React.Suspense>
             )}
 
-            {c.effectiveTab === 'reports' && <ExaminationsReportsTier />}
+            {c.effectiveTab === 'reports' && (
+              <React.Suspense fallback={<RouteStatusFallback />}>
+                <ExaminationsReportsTier />
+              </React.Suspense>
+            )}
 
             {c.effectiveTab === 'work' && (
               <ExaminationsWorkTier
@@ -95,17 +116,19 @@ export default function Examinations(): React.JSX.Element {
 
         <AnimatePresence>
           {c.activeExam && (
-            <ExaminationDetail
-              exam={c.activeExam}
-                            onClose={() => c.setActiveExam(null)}
-              onEdit={(exam) => {
-                c.setActiveExam(null);
-                c.setEditExam(exam);
-                c.setShowExamForm(true);
-              }}
-              canDelete={c.canDelete}
-              onRestore={c.handleRestoreExam}
-            />
+            <React.Suspense fallback={null}>
+              <ExaminationDetail
+                exam={c.activeExam}
+                onClose={() => c.setActiveExam(null)}
+                onEdit={(exam) => {
+                  c.setActiveExam(null);
+                  c.setEditExam(exam);
+                  c.setShowExamForm(true);
+                }}
+                canDelete={c.canDelete}
+                onRestore={c.handleRestoreExam}
+              />
+            </React.Suspense>
           )}
         </AnimatePresence>
       </ResponsiveAccordionTabs>

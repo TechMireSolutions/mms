@@ -1,8 +1,18 @@
+import React, { Suspense, lazy } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { Session } from "@/lib/data/sessionsData";
-import { SessionDetail } from "@/tenant/features/sessions/components/SessionDetail";
-import { SessionForm } from "@/tenant/features/sessions/components/SessionForm";
 import { SessionsListConfirmDialogs } from "@/tenant/features/sessions/components/SessionsListConfirmDialogs";
+
+const SessionDetail = lazy(() =>
+  import("@/tenant/features/sessions/components/SessionDetail").then((m) => ({
+    default: m.SessionDetail,
+  }))
+);
+const SessionForm = lazy(() =>
+  import("@/tenant/features/sessions/components/SessionForm").then((m) => ({
+    default: m.SessionForm,
+  }))
+);
 
 interface SessionsDialogLayerProps {
   showForm: boolean;
@@ -52,21 +62,27 @@ export function SessionsDialogLayer({
   return (
     <>
       <AnimatePresence>
-        <SessionForm
-          open={showForm}
-          session={editSession}
-          onClose={onCloseForm}
-          onSave={onSave}
-        />
+        {showForm && (
+          <Suspense fallback={null}>
+            <SessionForm
+              open={showForm}
+              session={editSession}
+              onClose={onCloseForm}
+              onSave={onSave}
+            />
+          </Suspense>
+        )}
         {detailSession ? (
-          <SessionDetail
-            session={detailSession}
-            onClose={onCloseDetail}
-            onUpdate={onUpdate}
-            onEdit={onEdit}
-            canDelete={canDelete}
-            onRestore={onRestore}
-          />
+          <Suspense fallback={null}>
+            <SessionDetail
+              session={detailSession}
+              onClose={onCloseDetail}
+              onUpdate={onUpdate}
+              onEdit={onEdit}
+              canDelete={canDelete}
+              onRestore={onRestore}
+            />
+          </Suspense>
         ) : null}
       </AnimatePresence>
 

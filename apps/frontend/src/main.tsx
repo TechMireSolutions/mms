@@ -3,9 +3,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App'
 import '@/index.css'
-import { isApexHost } from '@mms/shared'
+import { isApexHost } from '@mms/shared/tenantUtils'
 import { getAppDomain } from '@/lib/config/tenantConfig'
-import { applyPlatformDocumentFavicon, applyTenantDocumentFavicon } from '@/lib/documentFavicon'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 
 // Error reporting is non-interactive: initialize it without blocking first
@@ -13,16 +12,18 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 // clientErrorReporting -> clientErrorReportingCore dynamic-import boundary.
 void import('@/lib/clientErrorReporting').then(({ initErrorReporting }) => initErrorReporting())
 
-if (typeof window !== 'undefined' && isApexHost(window.location.hostname, getAppDomain())) {
-  applyPlatformDocumentFavicon();
-  void import('@/lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => {
-    applyApexPlatformTheme('en');
-  });
-} else {
-  // Drop the static platform favicon from index.html before React mounts.
-  applyTenantDocumentFavicon({});
-  void import('@/lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme())
-}
+void import('@/lib/documentFavicon').then(({ applyPlatformDocumentFavicon, applyTenantDocumentFavicon }) => {
+  if (typeof window !== 'undefined' && isApexHost(window.location.hostname, getAppDomain())) {
+    applyPlatformDocumentFavicon();
+    void import('@/lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => {
+      applyApexPlatformTheme('en');
+    });
+  } else {
+    // Drop the static platform favicon from index.html before React mounts.
+    applyTenantDocumentFavicon({});
+    void import('@/lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme());
+  }
+});
 
 // DEV ONLY: suppress the Recharts v3 false-positive dimension warnings that
 // fire during mount. The global console must stay unpatched in production —

@@ -6,10 +6,20 @@ import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { HasanatCommandMetrics } from '@/tenant/features/hasanat/components/HasanatCommandMetrics';
-import { HasanatReportsTier } from '@/tenant/features/hasanat/components/HasanatReportsTier';
-import { HasanatSetupTier } from '@/tenant/features/hasanat/components/HasanatSetupTier';
+import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { HasanatWorkTier } from '@/tenant/features/hasanat/components/HasanatWorkTier';
 import { useHasanatCardsPageController } from '@/tenant/features/hasanat/hooks/useHasanatCardsPageController';
+
+const HasanatReportsTier = React.lazy(() =>
+  import('@/tenant/features/hasanat/components/HasanatReportsTier').then((m) => ({
+    default: m.HasanatReportsTier,
+  }))
+);
+const HasanatSetupTier = React.lazy(() =>
+  import('@/tenant/features/hasanat/components/HasanatSetupTier').then((m) => ({
+    default: m.HasanatSetupTier,
+  }))
+);
 
 const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
 
@@ -52,18 +62,22 @@ export default function HasanatCards() {
             className="space-y-4"
           >
             {c.effectiveTab === 'reports' && (
-              <HasanatReportsTier />
+              <Suspense fallback={<RouteStatusFallback />}>
+                <HasanatReportsTier />
+              </Suspense>
             )}
             {c.effectiveTab === 'setup' && (
-              <HasanatSetupTier
-                tabs={c.SETUP_TABS}
-                activeTab={c.effectiveConfigTab}
-                canEditSetup={c.canEditSetup}
-                canWrite={c.canWrite}
-                denoms={c.denoms}
-                onTabChange={c.setConfigSubTab}
-                onUpdateDenoms={(next) => c.runHasanatSave(() => c.replaceDenoms.mutateAsync(next))}
-              />
+              <Suspense fallback={<RouteStatusFallback />}>
+                <HasanatSetupTier
+                  tabs={c.SETUP_TABS}
+                  activeTab={c.effectiveConfigTab}
+                  canEditSetup={c.canEditSetup}
+                  canWrite={c.canWrite}
+                  denoms={c.denoms}
+                  onTabChange={c.setConfigSubTab}
+                  onUpdateDenoms={(next) => c.runHasanatSave(() => c.replaceDenoms.mutateAsync(next))}
+                />
+              </Suspense>
             )}
 
             {c.effectiveTab === 'work' && (

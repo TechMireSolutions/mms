@@ -6,12 +6,13 @@ import { apexUrl } from "@/lib/config/tenantConfig";
 import ProtectedRoute from "@/tenant/components/guards/ProtectedRoute";
 import GuestRoute from "@/tenant/components/guards/GuestRoute";
 import WorkspaceDisabledScreen from "@/tenant/components/WorkspaceDisabledScreen";
-import AppLayout from "@/tenant/components/layout/AppLayout";
-import PageNotFound from "@/tenant/components/PageNotFound";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { AuthPageFrame } from "@/components/entry";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { useTranslation } from "@/hooks/useTranslation";
+
+const AppLayout = React.lazy(() => import("@/tenant/components/layout/AppLayout"));
+const PageNotFound = React.lazy(() => import("@/tenant/components/PageNotFound"));
 
 const Dashboard = React.lazy(() => import("@/tenant/features/dashboard/DashboardPage"));
 const Contacts = React.lazy(() => import("@/tenant/features/contacts/ContactsPage"));
@@ -108,47 +109,51 @@ function TenantRoutesInner(): React.JSX.Element {
       <Routes>
         <Route path={ROUTES.onboarding} element={<RedirectToApex path={ROUTES.onboarding} />} />
 
-        <Route path={ROUTES.twoFactor} element={<TwoFactorAuth />} />
+        <Route path={ROUTES.twoFactor} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><TwoFactorAuth /></React.Suspense>} />
         <Route element={<GuestRoute />}>
-          <Route path={ROUTES.login} element={<Login />} />
-          <Route path={ROUTES.forgotPassword} element={<ForgotPassword />} />
+          <Route path={ROUTES.login} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><Login /></React.Suspense>} />
+          <Route path={ROUTES.forgotPassword} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><ForgotPassword /></React.Suspense>} />
         </Route>
 
         <Route element={<ProtectedRoute />}>
-          <Route path={ROUTES.forcePasswordChange} element={<ForcePasswordChange />} />
-          <Route path={ROUTES.institutionSetup} element={<InstitutionSetup />} />
-          <Route element={<AppLayout />}>
-            <Route path={ROUTES.home} element={<Dashboard />} />
-            <Route path={ROUTES.contacts} element={<Contacts />} />
-            <Route path={ROUTES.messaging} element={<Messaging />} />
-            <Route path={ROUTES.students} element={<Students />} />
-            <Route path={ROUTES.teachers} element={<Teachers />} />
-            <Route path={ROUTES.enrollments} element={<Enrollments />} />
-            <Route path={ROUTES.sessions} element={<Sessions />} />
-            <Route path={ROUTES.attendance} element={<Attendance />} />
-            <Route path={ROUTES.finance} element={<Finance />} />
-            <Route path={ROUTES.hasanatCards} element={<HasanatCards />} />
-            <Route path={ROUTES.examinations} element={<Examinations />} />
-            <Route path={ROUTES.questionBank} element={<QuestionBankPage />} />
-            <Route path={ROUTES.accounting} element={<Accounting />} />
-            <Route path={ROUTES.obligations} element={<Obligations />} />
-            <Route path={ROUTES.users} element={<Users />} />
-            <Route path={ROUTES.profile} element={<AccountProfile />} />
-            <Route path={ROUTES.settings} element={<SettingsPage />} />
+          <Route path={ROUTES.forcePasswordChange} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><ForcePasswordChange /></React.Suspense>} />
+          <Route path={ROUTES.institutionSetup} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><InstitutionSetup /></React.Suspense>} />
+          <Route element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><AppLayout /></React.Suspense>}>
+            <Route path={ROUTES.home} element={<React.Suspense fallback={<RouteStatusFallback />}><Dashboard /></React.Suspense>} />
+            <Route path={ROUTES.contacts} element={<React.Suspense fallback={<RouteStatusFallback />}><Contacts /></React.Suspense>} />
+            <Route path={ROUTES.messaging} element={<React.Suspense fallback={<RouteStatusFallback />}><Messaging /></React.Suspense>} />
+            <Route path={ROUTES.students} element={<React.Suspense fallback={<RouteStatusFallback />}><Students /></React.Suspense>} />
+            <Route path={ROUTES.teachers} element={<React.Suspense fallback={<RouteStatusFallback />}><Teachers /></React.Suspense>} />
+            <Route path={ROUTES.enrollments} element={<React.Suspense fallback={<RouteStatusFallback />}><Enrollments /></React.Suspense>} />
+            <Route path={ROUTES.sessions} element={<React.Suspense fallback={<RouteStatusFallback />}><Sessions /></React.Suspense>} />
+            <Route path={ROUTES.attendance} element={<React.Suspense fallback={<RouteStatusFallback />}><Attendance /></React.Suspense>} />
+            <Route path={ROUTES.finance} element={<React.Suspense fallback={<RouteStatusFallback />}><Finance /></React.Suspense>} />
+            <Route path={ROUTES.hasanatCards} element={<React.Suspense fallback={<RouteStatusFallback />}><HasanatCards /></React.Suspense>} />
+            <Route path={ROUTES.examinations} element={<React.Suspense fallback={<RouteStatusFallback />}><Examinations /></React.Suspense>} />
+            <Route path={ROUTES.questionBank} element={<React.Suspense fallback={<RouteStatusFallback />}><QuestionBankPage /></React.Suspense>} />
+            <Route path={ROUTES.accounting} element={<React.Suspense fallback={<RouteStatusFallback />}><Accounting /></React.Suspense>} />
+            <Route path={ROUTES.obligations} element={<React.Suspense fallback={<RouteStatusFallback />}><Obligations /></React.Suspense>} />
+            <Route path={ROUTES.users} element={<React.Suspense fallback={<RouteStatusFallback />}><Users /></React.Suspense>} />
+            <Route path={ROUTES.profile} element={<React.Suspense fallback={<RouteStatusFallback />}><AccountProfile /></React.Suspense>} />
+            <Route path={ROUTES.settings} element={<React.Suspense fallback={<RouteStatusFallback />}><SettingsPage /></React.Suspense>} />
             <Route path={`${ROUTES.settings}/:section`} element={<Navigate to={ROUTES.settings} replace />} />
           </Route>
         </Route>
 
-        <Route path="*" element={<PageNotFound />} />
+        <Route path="*" element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PageNotFound /></React.Suspense>} />
       </Routes>
     </TenantBootGate>
   );
 }
 
+import TenantScopedProviders from "@/providers/TenantScopedProviders";
+
 export default function TenantRoutes(): React.JSX.Element {
   return (
     <React.Suspense fallback={<RouteStatusFallback fullScreen />}>
-      <TenantRoutesInner />
+      <TenantScopedProviders>
+        <TenantRoutesInner />
+      </TenantScopedProviders>
     </React.Suspense>
   );
 }

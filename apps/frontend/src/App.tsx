@@ -1,12 +1,12 @@
 import React, { useEffect, Suspense } from "react";
-import { isApexHost } from "@mms/shared";
+import { isApexHost } from "@mms/shared/tenantUtils";
 import { SETTINGS_PREVIEW_EVENT } from "@/lib/settingsPreview";
 import { getAppDomain } from "@/lib/config/tenantConfig";
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useIsTenantHost } from '@/lib/host/useIsTenantHost';
-import UserNotRegisteredError from '@/components/routing/UserNotRegisteredError';
+const UserNotRegisteredError = React.lazy(() => import('@/components/routing/UserNotRegisteredError'));
+const HostRoutes = React.lazy(() => import('@/components/routing/HostRoutes'));
 import RouterBridge from '@/components/routing/RouterBridge';
-import HostRoutes from '@/components/routing/HostRoutes';
 import { isEntryPath } from "@/lib/config/routes";
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { AppProviders } from '@/providers/AppProviders';
@@ -23,7 +23,11 @@ const AuthenticatedApp = (): React.JSX.Element | null => {
     }
 
     if (authError?.type === 'user_not_registered') {
-      return <UserNotRegisteredError />;
+      return (
+        <Suspense fallback={<RouteStatusFallback fullScreen />}>
+          <UserNotRegisteredError />
+        </Suspense>
+      );
     }
   }
 

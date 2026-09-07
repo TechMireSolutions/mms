@@ -1,17 +1,27 @@
-import type { JSX } from 'react';
+import React, { type JSX, Suspense, lazy } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Library } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
+import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { QuestionBankCommandMetrics } from '@/tenant/features/question-bank/components/QuestionBankCommandMetrics';
 import { QuestionBankModalLayer } from '@/tenant/features/question-bank/components/QuestionBankModalLayer';
 import { QuestionBankPageActions } from '@/tenant/features/question-bank/components/QuestionBankPageActions';
-import { QuestionBankReportsTier } from '@/tenant/features/question-bank/components/QuestionBankReportsTier';
-import { QuestionBankSetupTier } from '@/tenant/features/question-bank/components/QuestionBankSetupTier';
 import { QuestionBankWorkTier } from '@/tenant/features/question-bank/components/QuestionBankWorkTier';
 import { QuestionBankDetail } from '@/tenant/features/question-bank/components/QuestionBankDetail';
 import { useQuestionBankPageController } from '@/tenant/features/question-bank/hooks/useQuestionBankPageController';
+
+const QuestionBankReportsTier = lazy(() =>
+  import('@/tenant/features/question-bank/components/QuestionBankReportsTier').then((m) => ({
+    default: m.QuestionBankReportsTier,
+  }))
+);
+const QuestionBankSetupTier = lazy(() =>
+  import('@/tenant/features/question-bank/components/QuestionBankSetupTier').then((m) => ({
+    default: m.QuestionBankSetupTier,
+  }))
+);
 
 /**
  * Question Bank — Work | Reports | Setup.
@@ -50,11 +60,15 @@ export default function QuestionBankPage(): JSX.Element {
             className="space-y-4"
           >
             {c.effectiveTab === 'setup' && (
-              <QuestionBankSetupTier />
+              <Suspense fallback={<RouteStatusFallback />}>
+                <QuestionBankSetupTier />
+              </Suspense>
             )}
 
             {c.effectiveTab === 'reports' && (
-              <QuestionBankReportsTier />
+              <Suspense fallback={<RouteStatusFallback />}>
+                <QuestionBankReportsTier />
+              </Suspense>
             )}
 
             {c.effectiveTab === 'work' && (

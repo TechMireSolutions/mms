@@ -1,8 +1,6 @@
-import React from "react";
+import React, { lazy } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { MessageComposerProps } from "@/components/ui/MessageComposer";
-import { ObligationCollectionDetail } from "@/tenant/features/obligations/components/ObligationCollectionDetail";
-import { ObligationCollectionForm } from "@/tenant/features/obligations/components/ObligationCollectionForm";
 import type {
   ObligationCollection,
   ObligationDistribution,
@@ -11,6 +9,17 @@ import type {
   MujtahidRep,
   WakalaType,
 } from "@/lib/data/obligationsData";
+
+const ObligationCollectionDetail = lazy(() =>
+  import("@/tenant/features/obligations/components/ObligationCollectionDetail").then((m) => ({
+    default: m.ObligationCollectionDetail,
+  }))
+);
+const ObligationCollectionForm = lazy(() =>
+  import("@/tenant/features/obligations/components/ObligationCollectionForm").then((m) => ({
+    default: m.ObligationCollectionForm,
+  }))
+);
 
 const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
@@ -58,26 +67,30 @@ export function ObligationsModalLayer({
     <>
       <AnimatePresence>
         {showForm && canWrite && !showDeleted && (
-          <ObligationCollectionForm
-            obligationTypes={obligationTypes}
-            reps={reps}
-            mujtahids={mujtahids}
-            wakalaTypes={wakalaTypes}
-            existingCollections={collections}
-            onSave={onSaveCollection}
-            onClose={onCloseForm}
-          />
+          <React.Suspense fallback={null}>
+            <ObligationCollectionForm
+              obligationTypes={obligationTypes}
+              reps={reps}
+              mujtahids={mujtahids}
+              wakalaTypes={wakalaTypes}
+              existingCollections={collections}
+              onSave={onSaveCollection}
+              onClose={onCloseForm}
+            />
+          </React.Suspense>
         )}
         {viewCollection && (
-          <ObligationCollectionDetail
-            collection={viewCollection}
-            obligationTypes={obligationTypes}
-            reps={reps}
-            mujtahids={mujtahids}
-            wakalaTypes={wakalaTypes}
-            distributions={distributions}
-            onClose={onCloseDetail}
-          />
+          <React.Suspense fallback={null}>
+            <ObligationCollectionDetail
+              collection={viewCollection}
+              obligationTypes={obligationTypes}
+              reps={reps}
+              mujtahids={mujtahids}
+              wakalaTypes={wakalaTypes}
+              distributions={distributions}
+              onClose={onCloseDetail}
+            />
+          </React.Suspense>
         )}
       </AnimatePresence>
 

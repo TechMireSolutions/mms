@@ -1,5 +1,4 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface RouteStatusFallbackProps {
@@ -19,7 +18,18 @@ export default function RouteStatusFallback({
       role="status"
       aria-live="polite"
     >
-      <Loader2 className="w-8 h-8 animate-spin text-primary" aria-hidden="true" />
+      <svg
+        className="h-8 w-8 animate-spin text-primary"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+      </svg>
       <span className="sr-only">{t('common.loading')}</span>
     </div>
   );

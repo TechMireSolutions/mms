@@ -4,11 +4,11 @@ import {
   isApexHost,
   buildTenantUrl,
   buildApexUrl,
-  type PublicBranding,
-} from "@mms/shared";
+} from "@mms/shared/tenantUtils";
+import type { PublicBranding } from "@mms/shared";
 import { getTenantUrlOptions } from "@/lib/config/tenantConfig";
 import { useDeploymentAppDomain } from "@/tenant/hooks/useDeploymentAppDomain";
-import { cachePublicBranding } from "@/lib/db";
+import { cachePublicBranding } from "@/lib/dbObjects";
 import {
   cacheWorkspaceLookup,
   isWorkspaceNotFoundError,

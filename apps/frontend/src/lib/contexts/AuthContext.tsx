@@ -5,7 +5,7 @@ import { appNavigate } from '@/lib/routing/appNavigate';
 import { ROUTES } from '@/lib/config/routes';
 import { apiFetch, apiJson, isApiError } from '@/lib/apiClient';
 import { isCurrentHostApex } from '@/lib/config/tenantConfig';
-import { getWorkspaceLocalStoragePrefix } from '@/lib/db';
+import { getWorkspaceLocalStoragePrefix } from '@/lib/dbStorageCore';
 import { queryClientInstance } from '@/lib/queryClient';
 import { isAuthErrorType, parseAuthError, type AuthError } from '@/lib/authErrors';
 import {

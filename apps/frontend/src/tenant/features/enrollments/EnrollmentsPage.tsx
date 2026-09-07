@@ -1,18 +1,28 @@
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import { AnimatePresence } from "framer-motion";
 import { ClipboardList } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { EnrollmentsCommandMetrics } from "@/tenant/features/enrollments/components/EnrollmentsCommandMetrics";
 import { EnrollmentsModalLayer } from "@/tenant/features/enrollments/components/EnrollmentsModalLayer";
-import { EnrollmentsReportsTier } from "@/tenant/features/enrollments/components/EnrollmentsReportsTier";
-import { EnrollmentsSetupTier } from "@/tenant/features/enrollments/components/EnrollmentsSetupTier";
 import { EnrollmentsWorkTier } from "@/tenant/features/enrollments/components/EnrollmentsWorkTier";
 import { EnrollmentsPageHeaderActions } from "@/tenant/features/enrollments/components/EnrollmentsPageHeaderActions";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ENROLLMENTS_MODULE_MANIFEST } from "@mms/shared";
 import { useEnrollmentsPageState } from "@/tenant/features/enrollments/hooks/useEnrollmentsPageState";
+
+const EnrollmentsReportsTier = lazy(() =>
+  import("@/tenant/features/enrollments/components/EnrollmentsReportsTier").then((m) => ({
+    default: m.EnrollmentsReportsTier,
+  }))
+);
+const EnrollmentsSetupTier = lazy(() =>
+  import("@/tenant/features/enrollments/components/EnrollmentsSetupTier").then((m) => ({
+    default: m.EnrollmentsSetupTier,
+  }))
+);
 
 /**
  * Enrollments management — Work | Reports | Setup.
@@ -123,7 +133,9 @@ export default function EnrollmentsPage() {
         >
           {tab === "reports" && (
             <ErrorBoundary>
-              <EnrollmentsReportsTier />
+              <Suspense fallback={<RouteStatusFallback />}>
+                <EnrollmentsReportsTier />
+              </Suspense>
             </ErrorBoundary>
           )}
 
@@ -186,7 +198,9 @@ export default function EnrollmentsPage() {
 
           {tab === "setup" && (
             <ErrorBoundary>
-              <EnrollmentsSetupTier />
+              <Suspense fallback={<RouteStatusFallback />}>
+                <EnrollmentsSetupTier />
+              </Suspense>
             </ErrorBoundary>
           )}
         </ModuleTierMotion>

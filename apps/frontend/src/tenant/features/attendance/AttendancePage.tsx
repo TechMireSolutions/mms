@@ -5,12 +5,22 @@ import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { AttendanceCommandMetrics } from '@/tenant/features/attendance/components/AttendanceCommandMetrics';
-import { AttendanceReportsTier } from '@/tenant/features/attendance/components/AttendanceReportsTier';
-import { AttendanceSetupTier } from '@/tenant/features/attendance/components/AttendanceSetupTier';
+import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { AttendanceWorkTier } from '@/tenant/features/attendance/components/AttendanceWorkTier';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { useAttendancePageController } from '@/tenant/features/attendance/hooks/useAttendancePageController';
+
+const AttendanceReportsTier = React.lazy(() =>
+  import('@/tenant/features/attendance/components/AttendanceReportsTier').then((m) => ({
+    default: m.AttendanceReportsTier,
+  }))
+);
+const AttendanceSetupTier = React.lazy(() =>
+  import('@/tenant/features/attendance/components/AttendanceSetupTier').then((m) => ({
+    default: m.AttendanceSetupTier,
+  }))
+);
 
 const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
 
@@ -53,18 +63,24 @@ export default function Attendance() {
   const renderContent = () => {
     if (!effectiveTab) return null;
     if (effectiveTab === 'setup') {
-      return <AttendanceSetupTier />;
+      return (
+        <React.Suspense fallback={<RouteStatusFallback />}>
+          <AttendanceSetupTier />
+        </React.Suspense>
+      );
     }
 
     if (effectiveTab === 'reports') {
       return (
-        <AttendanceReportsTier
-          role={role}
-          filters={filters}
-          analyticsTabs={visibleAnalyticsTabs}
-          activeAnalyticsTab={effectiveAnalyticsTab}
-          onAnalyticsTabChange={setActiveAnalyticsTab}
-        />
+        <React.Suspense fallback={<RouteStatusFallback />}>
+          <AttendanceReportsTier
+            role={role}
+            filters={filters}
+            analyticsTabs={visibleAnalyticsTabs}
+            activeAnalyticsTab={effectiveAnalyticsTab}
+            onAnalyticsTabChange={setActiveAnalyticsTab}
+          />
+        </React.Suspense>
       );
     }
 

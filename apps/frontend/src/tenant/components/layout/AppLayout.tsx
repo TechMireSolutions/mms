@@ -8,7 +8,9 @@ import Sidebar from "@/tenant/components/layout/Sidebar";
 import TopBar from "@/tenant/components/layout/TopBar";
 import TopBarActions from "@/tenant/components/layout/TopBarActions";
 import MobileSidebar from "@/tenant/components/layout/MobileSidebar";
-import { CommandPalette } from "@/components/ui/CommandPalette";
+const CommandPalette = React.lazy(() =>
+  import("@/components/ui/CommandPalette").then((m) => ({ default: m.CommandPalette }))
+);
 import { useBranding } from "@/tenant/hooks/useBranding";
 import { getInitials } from "@mms/shared";
 import { useSessionTimeout } from "@/tenant/hooks/useSessionTimeout";
@@ -100,7 +102,11 @@ export default function AppLayout(): React.JSX.Element {
       </div>
 
       {/* Command Palette Modal */}
-      <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+      {commandPaletteOpen ? (
+        <Suspense fallback={null}>
+          <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+        </Suspense>
+      ) : null}
 
       {/* Main Content */}
       <main

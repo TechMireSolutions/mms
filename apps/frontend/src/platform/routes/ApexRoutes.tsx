@@ -28,20 +28,20 @@ export default function ApexRoutes(): React.JSX.Element {
   return (
     <Routes>
       {/* Entry — no platform session required */}
-      <Route path={ROUTES.home} element={<ApexHome />} />
-      <Route path={ROUTES.login} element={<PlatformLoginPage />} />
-      <Route path={ROUTES.platformLogin} element={<PlatformLoginPage />} />
-      <Route path={ROUTES.tenantNotFound} element={<TenantNotFoundPage />} />
+      <Route path={ROUTES.home} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><ApexHome /></React.Suspense>} />
+      <Route path={ROUTES.login} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PlatformLoginPage /></React.Suspense>} />
+      <Route path={ROUTES.platformLogin} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PlatformLoginPage /></React.Suspense>} />
+      <Route path={ROUTES.tenantNotFound} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><TenantNotFoundPage /></React.Suspense>} />
       <Route
         path={ROUTES.forgotPassword}
-        element={<ApexWorkspaceGate variant="forgotPassword" showWorkspaceList />}
+        element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><ApexWorkspaceGate variant="forgotPassword" showWorkspaceList /></React.Suspense>}
       />
       <Route element={<PlatformFirstRunGate />}>
-        <Route path={ROUTES.platformForgotPassword} element={<PlatformForgotPassword />} />
+        <Route path={ROUTES.platformForgotPassword} element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PlatformForgotPassword /></React.Suspense>} />
       </Route>
       <Route
         path={ROUTES.twoFactor}
-        element={<ApexWorkspaceGate variant="twoFactor" showWorkspaceList={false} />}
+        element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><ApexWorkspaceGate variant="twoFactor" showWorkspaceList={false} /></React.Suspense>}
       />
       <Route path={`${ROUTES.settings}/*`} element={apexTenantGate} />
       {TENANT_APP_PATHS.map((path) => (
@@ -50,21 +50,21 @@ export default function ApexRoutes(): React.JSX.Element {
 
       {/* Protected platform routes — BootGate sends unauthenticated users to `/platform/login` */}
       <Route element={<PlatformBootGate requireAuth />}>
-        <Route path={ROUTES.platformAccount} element={<PlatformAccount />} />
-        <Route path={ROUTES.platformDashboard} element={<PlatformConsole />} />
-        <Route path={ROUTES.platformWorkspaces} element={<PlatformConsole />} />
-        <Route path={ROUTES.platformReports} element={<PlatformConsole />} />
+        <Route path={ROUTES.platformAccount} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformAccount /></React.Suspense>} />
+        <Route path={ROUTES.platformDashboard} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+        <Route path={ROUTES.platformWorkspaces} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+        <Route path={ROUTES.platformReports} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
       </Route>
       <Route element={<PlatformBootGate requireAuth requirePermission="onboard" />}>
-        <Route path={ROUTES.onboarding} element={<OnboardingWizard />} />
+        <Route path={ROUTES.onboarding} element={<React.Suspense fallback={<RouteStatusFallback />}><OnboardingWizard /></React.Suspense>} />
       </Route>
       <Route element={<PlatformBootGate requireAuth requirePermission="admins" />}>
-        <Route path={ROUTES.platformAdmins} element={<PlatformAdmins />} />
+        <Route path={ROUTES.platformAdmins} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformAdmins /></React.Suspense>} />
       </Route>
       <Route element={<PlatformBootGate requireAuth requirePermission="system" />}>
-        <Route path={ROUTES.platformActivityLogs} element={<PlatformConsole />} />
-        <Route path={ROUTES.platformSystem} element={<PlatformConsole />} />
-        <Route path={ROUTES.platformErd} element={<PlatformErdPage />} />
+        <Route path={ROUTES.platformActivityLogs} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+        <Route path={ROUTES.platformSystem} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+        <Route path={ROUTES.platformErd} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformErdPage /></React.Suspense>} />
       </Route>
 
       <Route path="*" element={<PlatformFallbackRoute />} />
@@ -72,10 +72,16 @@ export default function ApexRoutes(): React.JSX.Element {
   );
 }
 
+import { PlatformAuthProvider } from '@/platform/lib/PlatformAuthContext';
+import { ApexBootPrefetch } from '@/platform/components/ApexBootPrefetch';
+
 export function ApexRoutesWithSuspense(): React.JSX.Element {
   return (
-    <React.Suspense fallback={<RouteStatusFallback fullScreen />}>
-      <ApexRoutes />
-    </React.Suspense>
+    <PlatformAuthProvider>
+      <ApexBootPrefetch />
+      <React.Suspense fallback={<RouteStatusFallback fullScreen />}>
+        <ApexRoutes />
+      </React.Suspense>
+    </PlatformAuthProvider>
   );
 }

@@ -1,5 +1,7 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { useIsTenantHost } from "@/lib/host/useIsTenantHost";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
+
 const TenantRoutes = React.lazy(() => import("@/tenant/routes/TenantRoutes"));
 const ApexRoutesWithSuspense = React.lazy(() =>
   import("@/platform/routes/ApexRoutes").then((m) => ({ default: m.ApexRoutesWithSuspense }))
@@ -11,9 +13,9 @@ const ApexRoutesWithSuspense = React.lazy(() =>
 export default function HostRoutes(): React.JSX.Element {
   const isTenantHost = useIsTenantHost();
 
-  if (isTenantHost) {
-    return <TenantRoutes />;
-  }
-
-  return <ApexRoutesWithSuspense />;
+  return (
+    <Suspense fallback={<RouteStatusFallback fullScreen />}>
+      {isTenantHost ? <TenantRoutes /> : <ApexRoutesWithSuspense />}
+    </Suspense>
+  );
 }

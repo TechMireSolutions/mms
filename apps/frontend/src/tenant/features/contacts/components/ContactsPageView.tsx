@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { Suspense, lazy } from "react";
 import { Users } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
@@ -7,11 +7,17 @@ import ContactsDataBanner from "@/tenant/features/contacts/components/ContactsDa
 import ContactsSyncConflictPanel from "@/tenant/features/contacts/components/ContactsSyncConflictPanel";
 import { ContactsPageOverlays } from "@/tenant/features/contacts/components/ContactsPageOverlays";
 import { AnimatePresence } from "framer-motion";
-import ContactsSetupTier from "@/tenant/features/contacts/components/ContactsSetupTier";
+import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { ContactsWorkTier } from "@/tenant/features/contacts/components/ContactsWorkTier";
-import { ContactsReportsTier } from "@/tenant/features/contacts/components/ContactsReportsTier";
 import { ContactsPageHeaderActions } from "@/tenant/features/contacts/components/ContactsPageHeaderActions";
 import type { useContactsPageController } from "@/tenant/features/contacts/hooks/useContactsPageController";
+
+const ContactsSetupTier = lazy(() => import("@/tenant/features/contacts/components/ContactsSetupTier"));
+const ContactsReportsTier = lazy(() =>
+  import("@/tenant/features/contacts/components/ContactsReportsTier").then((m) => ({
+    default: m.ContactsReportsTier,
+  }))
+);
 
 export type ContactsPageViewProps = ReturnType<typeof useContactsPageController>;
 
@@ -89,9 +95,13 @@ export function ContactsPageView({
           {effectiveTab === "work" ? (
             <ContactsWorkTier {...tabPanelProps.workTierProps} />
           ) : effectiveTab === "reports" ? (
-            <ContactsReportsTier />
+            <Suspense fallback={<RouteStatusFallback />}>
+              <ContactsReportsTier />
+            </Suspense>
           ) : effectiveTab === "setup" ? (
-            <ContactsSetupTier {...tabPanelProps.setupTierProps} />
+            <Suspense fallback={<RouteStatusFallback />}>
+              <ContactsSetupTier {...tabPanelProps.setupTierProps} />
+            </Suspense>
           ) : null}
         </AnimatePresence>
       </ResponsiveAccordionTabs>
