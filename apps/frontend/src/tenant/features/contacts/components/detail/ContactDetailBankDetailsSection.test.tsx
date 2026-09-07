@@ -19,14 +19,8 @@ const mockContactWithBank: Contact = {
     {
       id: "bnk-1",
       bankName: "Meezan Bank",
-      accountTitle: "Ali Raza",
+      accountType: "Current",
       accountNumber: "020202020202",
-      iban: "PK36MEZN00020202020202",
-      swiftCode: "MEZNPKKA",
-      branchName: "F-10 Markaz",
-      currency: "PKR",
-      isPrimary: true,
-      label: "Salary",
     },
   ],
   createdAt: "2024-01-01T00:00:00Z",
@@ -43,19 +37,15 @@ const mockContactEmpty: Contact = {
 };
 
 describe("ContactDetailBankDetailsSection Component", () => {
-  it("renders bank details with primary badge, account number, and IBAN", () => {
+  it("renders bank details with bank name, account type badge, and account number", () => {
     const html = renderToStaticMarkup(
       <ContactDetailBankDetailsSection contact={mockContactWithBank} />,
     );
 
     expect(html).toContain("Meezan Bank");
-    expect(html).toContain("Ali Raza");
+    expect(html).toContain("Current");
     expect(html).toContain("020202020202");
-    expect(html).toContain("PK36MEZN00020202020202");
-    expect(html).toContain("MEZNPKKA");
-    expect(html).toContain("F-10 Markaz");
-    expect(html).toContain("Salary");
-    expect(html).toContain("contacts.form.primary");
+    expect(html).toContain("contacts.fields.bankAccountNumber");
   });
 
   it("renders empty state message when no bank accounts exist", () => {

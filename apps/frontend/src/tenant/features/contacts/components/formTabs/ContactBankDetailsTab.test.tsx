@@ -5,22 +5,38 @@ import { ContactBankDetailsTab } from "./ContactBankDetailsTab";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: Record<string, unknown>) => {
+      if (params?.index !== undefined) {
+        return `${key}:${params.index}`;
+      }
+      return key;
+    },
   }),
 }));
 
 vi.mock("./ContactSubListCards", () => ({
-  ContactSubListShell: ({ children, isEmpty, emptyMessage }: { children: React.ReactNode; isEmpty?: boolean; emptyMessage?: React.ReactNode }) => (
-    <div data-testid="sublist-shell">{isEmpty ? <div data-testid="empty-message">{emptyMessage}</div> : children}</div>
-  ),
-  ListFieldCard: ({ children, typeSelect, headerExtras }: {
+  ContactSubListShell: ({
+    children,
+    isEmpty,
+    emptyMessage,
+  }: {
     children: React.ReactNode;
-    typeSelect?: React.ReactNode;
-    headerExtras?: React.ReactNode;
+    isEmpty?: boolean;
+    emptyMessage?: React.ReactNode;
+  }) => (
+    <div data-testid="sublist-shell">
+      {isEmpty ? <div data-testid="empty-message">{emptyMessage}</div> : children}
+    </div>
+  ),
+  ListFieldCard: ({
+    label,
+    children,
+  }: {
+    label?: string;
+    children: React.ReactNode;
   }) => (
     <div data-testid="list-field-card">
-      <div data-testid="card-type-select">{typeSelect}</div>
-      <div data-testid="card-extra-action">{headerExtras}</div>
+      {label && <div data-testid="card-label">{label}</div>}
       <div data-testid="card-body">{children}</div>
     </div>
   ),
@@ -28,7 +44,15 @@ vi.mock("./ContactSubListCards", () => ({
 }));
 
 vi.mock("@/components/ui/FormPrimitives", () => ({
-  Field: ({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) => (
+  Field: ({
+    label,
+    error,
+    children,
+  }: {
+    label: string;
+    error?: string;
+    children: React.ReactNode;
+  }) => (
     <div data-testid="field">
       <label>{label}</label>
       {error && <span data-testid="field-error">{error}</span>}
@@ -38,24 +62,25 @@ vi.mock("@/components/ui/FormPrimitives", () => ({
   EditableSelect: ({ value }: { value?: string }) => (
     <div data-testid="editable-select">{value}</div>
   ),
-  CardPrimaryButton: ({
-    isPrimary,
-    primaryLabel = "Primary",
-    setPrimaryLabel = "Set Primary",
-  }: {
-    isPrimary: boolean;
-    primaryLabel?: string;
-    setPrimaryLabel?: string;
-  }) => (
-    <button type="button" data-testid="card-primary-btn">
-      {isPrimary ? primaryLabel : setPrimaryLabel}
-    </button>
-  ),
 }));
 
 vi.mock("@/components/ui/LeadingIconInput", () => ({
-  LeadingIconInput: ({ value, placeholder, className }: { value?: string; placeholder?: string; className?: string }) => (
-    <input data-testid="leading-icon-input" value={value || ""} placeholder={placeholder} className={className} readOnly />
+  LeadingIconInput: ({
+    value,
+    placeholder,
+    className,
+  }: {
+    value?: string;
+    placeholder?: string;
+    className?: string;
+  }) => (
+    <input
+      data-testid="leading-icon-input"
+      value={value || ""}
+      placeholder={placeholder}
+      className={className}
+      readOnly
+    />
   ),
 }));
 
@@ -85,7 +110,7 @@ describe("ContactBankDetailsTab Component", () => {
     expect(html).toContain("empty-message");
   });
 
-  it("renders bank account cards with complete details", () => {
+  it("renders bank account cards with bankName, accountType, and accountNumber", () => {
     const html = renderToStaticMarkup(
       <ContactBankDetailsTab
         {...baseProps}
@@ -94,15 +119,8 @@ describe("ContactBankDetailsTab Component", () => {
             {
               id: "bnk-1",
               bankName: "Meezan Bank",
-              accountTitle: "Muhammad Ali",
+              accountType: "Salary",
               accountNumber: "010203040506",
-              iban: "PK36MEZN00010203040506",
-              swiftCode: "MEZNPKKA",
-              branchName: "Gulshan Branch",
-              branchCode: "0102",
-              currency: "PKR",
-              isPrimary: true,
-              label: "Salary",
             },
           ],
         }}
@@ -110,13 +128,11 @@ describe("ContactBankDetailsTab Component", () => {
     );
 
     expect(html).toContain("Meezan Bank");
-    expect(html).toContain("Muhammad Ali");
-    expect(html).toContain("010203040506");
-    expect(html).toContain("PK36MEZN00010203040506");
-    expect(html).toContain("MEZNPKKA");
-    expect(html).toContain("Gulshan Branch");
     expect(html).toContain("Salary");
-    expect(html).toContain("contacts.form.primary");
+    expect(html).toContain("010203040506");
+    expect(html).toContain("contacts.fields.bankName");
+    expect(html).toContain("contacts.fields.bankAccountType");
+    expect(html).toContain("contacts.fields.bankAccountNumber");
   });
 
   it("propagates field errors when present", () => {
@@ -131,7 +147,7 @@ describe("ContactBankDetailsTab Component", () => {
             {
               id: "bnk-1",
               bankName: "HBL",
-              accountTitle: "Ali Khan",
+              accountType: "Current",
               accountNumber: "",
             },
           ],
@@ -143,27 +159,23 @@ describe("ContactBankDetailsTab Component", () => {
     expect(html).toContain("field-error");
   });
 
-  it("renders multiple bank cards with primary and non-primary indicators", () => {
-    const setPrimarySubListItem = vi.fn();
+  it("renders multiple bank cards with sequence counters and without primary logic", () => {
     const html = renderToStaticMarkup(
       <ContactBankDetailsTab
         {...baseProps}
-        setPrimarySubListItem={setPrimarySubListItem}
         contactDraft={{
           bankDetails: [
             {
               id: "bnk-1",
               bankName: "Meezan Bank",
-              accountTitle: "Muhammad Ali",
+              accountType: "Current",
               accountNumber: "010203040506",
-              isPrimary: true,
             },
             {
               id: "bnk-2",
               bankName: "HBL",
-              accountTitle: "Muhammad Ali",
+              accountType: "Savings",
               accountNumber: "987654321000",
-              isPrimary: false,
             },
           ],
         }}
@@ -172,7 +184,9 @@ describe("ContactBankDetailsTab Component", () => {
 
     expect(html).toContain("Meezan Bank");
     expect(html).toContain("HBL");
-    expect(html).toContain("contacts.form.primary");
-    expect(html).toContain("contacts.form.setPrimary");
+    expect(html).toContain("contacts.form.bankAccountSequence:1");
+    expect(html).toContain("contacts.form.bankAccountSequence:2");
+    expect(html).not.toContain("contacts.form.primary");
+    expect(html).not.toContain("contacts.form.setPrimary");
   });
 });

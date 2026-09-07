@@ -99,17 +99,9 @@ export const contactSkillSchema = z
 export const contactBankDetailSchema = z
   .object({
     id: z.string().optional(),
-    bankName: z.string(),
-    accountTitle: z.string(),
-    accountNumber: z.string(),
-    iban: z.string().optional(),
-    swiftCode: z.string().optional(),
-    branchName: z.string().optional(),
-    branchCode: z.string().optional(),
-    routingNumber: z.string().optional(),
-    currency: z.string().optional(),
-    isPrimary: z.boolean().optional(),
-    label: z.string().optional(),
+    bankName: z.string().trim().optional().nullable().or(z.literal("")),
+    accountType: z.string().trim().optional().nullable().or(z.literal("")),
+    accountNumber: z.string().trim().optional().nullable().or(z.literal("")),
     sortOrder: z.number().optional(),
   })
   .strict();

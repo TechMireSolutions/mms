@@ -12,7 +12,6 @@ export interface ContactItemNormalizeDefaults {
   skillProficiency?: string;
   relationship?: string;
   bankLabel?: string;
-  bankCurrency?: string;
   defaultPhoneCountryCode?: string;
 }
 

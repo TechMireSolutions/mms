@@ -673,6 +673,13 @@
       "when": 1786802400000,
       "tag": "0095_finance_collect_corrections",
       "breakpoints": true
+    },
+    {
+      "idx": 96,
+      "version": "7",
+      "when": 1786806000000,
+      "tag": "0096_remove_contact_bank_details_fields",
+      "breakpoints": true
     }
   ]
 }

@@ -134,7 +134,6 @@ export const ERD_DOMAIN_CONTACTS: ErdDomain = {
         { name: 'bank_name', type: 'varchar(255)', kind: 'column' },
         { name: 'account_title', type: 'varchar(255)', kind: 'column' },
         { name: 'account_number', type: 'varchar(100)', kind: 'column' },
-        { name: 'iban', type: 'varchar(100)', kind: 'column' },
       ],
     },
     {

@@ -82,22 +82,16 @@ export interface ContactSkill {
   sortOrder?: number;
 }
 
-/** Bank account and financial routing details for contacts. */
+/** Bank account details for contacts. */
 export interface ContactBankDetail {
   id?: string;
-  bankName: string;
-  accountTitle: string;
-  accountNumber: string;
-  iban?: string;
-  swiftCode?: string;
-  branchName?: string;
-  branchCode?: string;
-  routingNumber?: string;
-  currency?: string;
-  isPrimary?: boolean;
-  label?: string;
+  bankName?: string | null;
+  accountType?: string | null;
+  accountNumber?: string | null;
   sortOrder?: number;
 }
+
+export type ContactBankDetailInput = ContactBankDetail;
 
 /** Linked contact entry for the Relationship form tab (reciprocal graph). */
 export interface RelationshipContact {

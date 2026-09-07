@@ -192,13 +192,13 @@ export const mergeContacts = (
   (other.skills || []).forEach(addSkill);
   merged.skills = mergedSkills;
 
-  // Merge bank details: match by bankName & accountNumber / iban
+  // Merge bank details: match by bankName & accountNumber
   const seenBankAccounts = new Set<string>();
   const mergedBankDetails: ContactBankDetail[] = [];
 
   const addBankDetail = (bank: ContactBankDetail | undefined): void => {
-    if (!bank || (!bank.accountNumber && !bank.iban)) return;
-    const key = [bank.bankName, bank.accountNumber, bank.iban]
+    if (!bank || !bank.accountNumber) return;
+    const key = [bank.bankName, bank.accountNumber]
       .filter(Boolean)
       .map((seg) => seg!.trim().toLowerCase())
       .join("|");

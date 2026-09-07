@@ -179,29 +179,21 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
     );
   }
   if (Array.isArray(result.bankDetails)) {
-    result.bankDetails = ensureSinglePrimaryFlag(
-      result.bankDetails
-        .filter(
-          (bank) =>
-            !isBlankContactListRow(
-              bank,
-              ["bankName", "accountTitle", "accountNumber", "iban"],
-              BANK_DETAIL_SYSTEM_KEYS,
-            ),
-        )
-        .map((bank) => ({
-          ...bank,
-          bankName: (bank.bankName || "").trim(),
-          accountTitle: (bank.accountTitle || "").trim(),
-          accountNumber: (bank.accountNumber || "").trim(),
-          iban: typeof bank.iban === "string" ? bank.iban.trim().toUpperCase() : bank.iban,
-          swiftCode: typeof bank.swiftCode === "string" ? bank.swiftCode.trim().toUpperCase() : bank.swiftCode,
-          branchName: typeof bank.branchName === "string" ? bank.branchName.trim() : bank.branchName,
-          branchCode: typeof bank.branchCode === "string" ? bank.branchCode.trim() : bank.branchCode,
-          routingNumber: typeof bank.routingNumber === "string" ? bank.routingNumber.trim() : bank.routingNumber,
-          currency: typeof bank.currency === "string" ? bank.currency.trim().toUpperCase() : bank.currency,
-        })),
-    );
+    result.bankDetails = result.bankDetails
+      .filter(
+        (bank) =>
+          !isBlankContactListRow(
+            bank,
+            ["bankName", "accountType", "accountNumber"],
+            BANK_DETAIL_SYSTEM_KEYS,
+          ),
+      )
+      .map((bank) => ({
+        ...bank,
+        bankName: typeof bank.bankName === "string" ? bank.bankName.trim() : (bank.bankName ?? ""),
+        accountType: typeof bank.accountType === "string" ? bank.accountType.trim() : ((bank as Record<string, unknown>).label as string ?? ""),
+        accountNumber: typeof bank.accountNumber === "string" ? bank.accountNumber.trim() : ((bank as Record<string, unknown>).iban as string ?? (bank.accountNumber ?? "")),
+      }));
   }
   if (Array.isArray(result.relationshipContacts)) {
     result.relationshipContacts = result.relationshipContacts

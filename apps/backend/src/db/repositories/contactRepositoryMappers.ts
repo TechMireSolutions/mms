@@ -175,18 +175,10 @@ export function contactRowToRecord(
     const item: ContactBankDetail = {
       id: b.id,
       bankName: b.bankName,
-      accountTitle: b.accountTitle,
+      accountType: b.accountType,
       accountNumber: b.accountNumber,
-      isPrimary: b.isPrimary,
       sortOrder: b.sortOrder,
     };
-    if (b.iban) item.iban = b.iban;
-    if (b.swiftCode) item.swiftCode = b.swiftCode;
-    if (b.branchName) item.branchName = b.branchName;
-    if (b.branchCode) item.branchCode = b.branchCode;
-    if (b.routingNumber) item.routingNumber = b.routingNumber;
-    if (b.currency) item.currency = b.currency;
-    if (b.label) item.label = b.label;
     return item;
   });
 

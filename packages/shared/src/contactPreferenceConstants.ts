@@ -27,16 +27,30 @@ export const COLOR_PALETTES = {
 export const DEFAULT_PHONE_LABELS = ["Mobile", "Home", "Work", "WhatsApp", "Other"];
 export const DEFAULT_EMAIL_LABELS = ["Personal", "Work", "Other"];
 export const DEFAULT_ADDRESS_LABELS = ["Home", "Work", "Billing", "Other"];
-export const DEFAULT_BANK_LABELS = [
-  "Primary",
+export const DEFAULT_BANK_NAMES = [
+  "Meezan Bank",
+  "Habib Bank Limited (HBL)",
+  "United Bank Limited (UBL)",
+  "MCB Bank",
+  "Allied Bank Limited (ABL)",
+  "Bank Alfalah",
+  "Standard Chartered",
+  "Dubai Islamic Bank",
+  "Faysal Bank",
+  "National Bank of Pakistan (NBP)",
+  "Other",
+];
+export const DEFAULT_BANK_ACCOUNT_TYPES = [
+  "Current",
+  "Savings",
   "Salary",
-  "Personal",
   "Business",
   "Operations",
   "Fee Collection",
   "Zakat / Sadaqah",
   "Other",
 ];
+export const DEFAULT_BANK_LABELS = DEFAULT_BANK_ACCOUNT_TYPES;
 export const DEFAULT_BANK_CURRENCIES = [
   "PKR",
   "USD",

@@ -6,7 +6,6 @@ import {
   DEFAULT_SKILL_CATEGORY_LABELS,
   DEFAULT_SKILL_PROFICIENCY_LABELS,
   DEFAULT_BANK_LABELS,
-  DEFAULT_BANK_CURRENCIES,
   SOCIAL_PLATFORMS,
   type Contact,
   type PhoneNumber as ContactPhone,
@@ -55,7 +54,6 @@ export function normalizeContactForEdit(
     socialPlatform: optionDefaults.socialPlatform || SOCIAL_PLATFORMS[0] || "Facebook",
     relationship: optionDefaults.relationship || "Parent",
     bankLabel: optionDefaults.bankLabel || DEFAULT_BANK_LABELS[0] || "Primary",
-    bankCurrency: optionDefaults.bankCurrency || DEFAULT_BANK_CURRENCIES[0] || "PKR",
     defaultPhoneCountryCode: optionDefaults.defaultPhoneCountryCode || "",
   };
   const dialDefault = defaults.defaultPhoneCountryCode || "";
@@ -247,16 +245,8 @@ export function normalizeContactForEdit(
   if (bankDetails.length === 0) {
     bankDetails = [{
       bankName: "",
-      accountTitle: "",
+      accountType: "",
       accountNumber: "",
-      iban: "",
-      swiftCode: "",
-      branchName: "",
-      branchCode: "",
-      routingNumber: "",
-      currency: defaults.bankCurrency || "PKR",
-      label: defaults.bankLabel || "Primary",
-      isPrimary: true,
     }];
   }
 

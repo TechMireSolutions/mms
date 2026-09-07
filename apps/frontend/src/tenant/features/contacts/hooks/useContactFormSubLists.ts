@@ -16,7 +16,6 @@ function withHealedPrimary(
   if (
     fieldKey !== "phones" &&
     fieldKey !== "emails" &&
-    fieldKey !== "bankDetails" &&
     fieldKey !== "addresses"
   ) {
     return list;

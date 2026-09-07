@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useContext } from "react";
 import { Landmark } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
@@ -6,57 +6,63 @@ import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   type ContactBankDetail,
-  DEFAULT_BANK_LABELS,
-  DEFAULT_BANK_CURRENCIES,
+  DEFAULT_BANK_NAMES,
+  DEFAULT_BANK_ACCOUNT_TYPES,
 } from "@mms/shared";
 import { ContactBankDetailCard } from "./ContactBankDetailCard";
+import { ContactConfigContext } from "@/lib/contacts/contactConfigContextTypes";
 
 export interface ContactBankDetailsTabProps extends ContactSubListTabBaseProps {
-  labelOptions?: string[];
-  onUpdateLabelOptions?: (options: string[]) => void;
-  currencyOptions?: string[];
+  bankNameOptions?: string[];
+  onUpdateBankNameOptions?: (options: string[]) => void;
+  accountTypeOptions?: string[];
+  onUpdateAccountTypeOptions?: (options: string[]) => void;
 }
 
 export function ContactBankDetailsTab({
   contactDraft,
   getLocalId,
-  labelOptions = DEFAULT_BANK_LABELS,
-  onUpdateLabelOptions,
-  currencyOptions = DEFAULT_BANK_CURRENCIES,
+  bankNameOptions,
+  onUpdateBankNameOptions,
+  accountTypeOptions,
+  onUpdateAccountTypeOptions,
   formInstanceId,
   getListItemError,
   isFieldEnabled,
-  isFieldRequired,
   addSubListItem,
   ensureSubListItem,
   updateSubListItem,
   removeSubListItem,
-  setPrimarySubListItem,
 }: ContactBankDetailsTabProps): React.JSX.Element {
   const { t } = useTranslation();
+  const contactConfig = useContext(ContactConfigContext);
+
+  const resolvedBankNameOptions =
+    bankNameOptions ??
+    (contactConfig?.bankNames && contactConfig.bankNames.length > 0
+      ? contactConfig.bankNames
+      : DEFAULT_BANK_NAMES);
+
+  const resolvedOnUpdateBankNameOptions =
+    onUpdateBankNameOptions ?? contactConfig?.updateBankNames;
+
+  const resolvedAccountTypeOptions =
+    accountTypeOptions ??
+    (contactConfig?.bankAccountTypes && contactConfig.bankAccountTypes.length > 0
+      ? contactConfig.bankAccountTypes
+      : DEFAULT_BANK_ACCOUNT_TYPES);
+
+  const resolvedOnUpdateAccountTypeOptions =
+    onUpdateAccountTypeOptions ?? contactConfig?.updateBankAccountTypes;
 
   const showBankName = isFieldEnabled("bankDetails", "bankName");
-  const showAccountTitle = isFieldEnabled("bankDetails", "accountTitle");
+  const showAccountType = isFieldEnabled("bankDetails", "accountType");
   const showAccountNumber = isFieldEnabled("bankDetails", "accountNumber");
-  const showIban = isFieldEnabled("bankDetails", "iban");
-  const showSwiftCode = isFieldEnabled("bankDetails", "swiftCode");
-  const showBranchName = isFieldEnabled("bankDetails", "branchName");
-  const showBranchCode = isFieldEnabled("bankDetails", "branchCode");
-  const showRoutingNumber = isFieldEnabled("bankDetails", "routingNumber");
-  const showCurrency = isFieldEnabled("bankDetails", "currency");
-  const showIsPrimary = isFieldEnabled("bankDetails", "isPrimary");
 
   const allowAdd = resolveSubListAllowAdd([
     showBankName,
-    showAccountTitle,
+    showAccountType,
     showAccountNumber,
-    showIban,
-    showSwiftCode,
-    showBranchName,
-    showBranchCode,
-    showRoutingNumber,
-    showCurrency,
-    showIsPrimary,
   ]);
 
   const bankDetails = contactDraft.bankDetails || [];
@@ -64,12 +70,9 @@ export function ContactBankDetailsTab({
   const emptyBankDetail = useCallback((): ContactBankDetail => ({
     id: `bnk-${crypto.randomUUID()}`,
     bankName: "",
-    accountTitle: (contactDraft.name || `${contactDraft.firstName || ""} ${contactDraft.lastName || ""}`).trim(),
+    accountType: "",
     accountNumber: "",
-    currency: "PKR",
-    isPrimary: bankDetails.length === 0,
-    label: labelOptions[0] || "Primary",
-  }), [bankDetails.length, contactDraft.firstName, contactDraft.lastName, contactDraft.name, labelOptions]);
+  }), []);
 
   const addBankDetail = useCallback(() => {
     addSubListItem("bankDetails", emptyBankDetail());
@@ -82,10 +85,6 @@ export function ContactBankDetailsTab({
   const removeBankDetail = useCallback((idx: number) => {
     removeSubListItem("bankDetails", idx);
   }, [removeSubListItem]);
-
-  const handleSetPrimary = useCallback((idx: number) => {
-    setPrimarySubListItem?.("bankDetails", idx);
-  }, [setPrimarySubListItem]);
 
   const updateBankDetail = useCallback(
     (
@@ -114,23 +113,15 @@ export function ContactBankDetailsTab({
             bankDetail={bankDetail}
             idx={idx}
             formInstanceId={formInstanceId}
-            labelOptions={labelOptions}
-            onUpdateLabelOptions={onUpdateLabelOptions}
-            currencyOptions={currencyOptions}
+            bankNameOptions={resolvedBankNameOptions}
+            onUpdateBankNameOptions={resolvedOnUpdateBankNameOptions}
+            accountTypeOptions={resolvedAccountTypeOptions}
+            onUpdateAccountTypeOptions={resolvedOnUpdateAccountTypeOptions}
             showBankName={showBankName}
-            showAccountTitle={showAccountTitle}
+            showAccountType={showAccountType}
             showAccountNumber={showAccountNumber}
-            showIban={showIban}
-            showSwiftCode={showSwiftCode}
-            showBranchName={showBranchName}
-            showBranchCode={showBranchCode}
-            showRoutingNumber={showRoutingNumber}
-            showCurrency={showCurrency}
-            showIsPrimary={showIsPrimary}
-            isFieldRequired={isFieldRequired}
             getListItemError={getListItemError}
             getLocalId={getLocalId}
-            onSetPrimary={() => handleSetPrimary(idx)}
             updateBankDetail={updateBankDetail}
             removeBankDetail={removeBankDetail}
           />

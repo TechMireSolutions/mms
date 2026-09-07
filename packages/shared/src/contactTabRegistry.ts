@@ -21,6 +21,12 @@ export const REMOVED_FORM_FIELD_KEYS: readonly string[] = [
   "communicationPreference",
   "phone",
   "email",
+  "iban",
+  "swiftCode",
+  "branchName",
+  "branchCode",
+  "routingNumber",
+  "currency",
 ];
 
 export const DEFAULT_PAGE_TABS: TabDefinition[] = [
@@ -196,5 +202,4 @@ export const COLUMN_FIELD_MAPPING: Record<string, { tabId: string; fieldId: stri
   relationship_type: { tabId: "relationship", fieldId: "relationship" },
   bank_name: { tabId: "bankDetails", fieldId: "bankName" },
   bank_account: { tabId: "bankDetails", fieldId: "accountNumber" },
-  bank_iban: { tabId: "bankDetails", fieldId: "iban" },
 };

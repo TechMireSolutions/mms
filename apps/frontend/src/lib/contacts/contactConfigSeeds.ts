@@ -4,6 +4,8 @@ import {
   DEFAULT_PHONE_LABELS,
   DEFAULT_EMAIL_LABELS,
   DEFAULT_ADDRESS_LABELS,
+  DEFAULT_BANK_NAMES,
+  DEFAULT_BANK_ACCOUNT_TYPES,
   DEFAULT_EDUCATION_DEGREE_LABELS,
   DEFAULT_EMPLOYMENT_TYPE_LABELS,
   DEFAULT_SKILL_CATEGORY_LABELS,
@@ -26,6 +28,8 @@ export function getContactConfigCollectionDefaults(): {
   employmentTypes: string[];
   skillCategories: string[];
   skillProficiencies: string[];
+  bankNames: string[];
+  bankAccountTypes: string[];
   tags: string[];
 } {
   return {
@@ -40,6 +44,8 @@ export function getContactConfigCollectionDefaults(): {
     employmentTypes: [...DEFAULT_EMPLOYMENT_TYPE_LABELS],
     skillCategories: [...DEFAULT_SKILL_CATEGORY_LABELS],
     skillProficiencies: [...DEFAULT_SKILL_PROFICIENCY_LABELS],
+    bankNames: [...DEFAULT_BANK_NAMES],
+    bankAccountTypes: [...DEFAULT_BANK_ACCOUNT_TYPES],
     tags: [...DEFAULT_TAG_LABELS],
   };
 }
