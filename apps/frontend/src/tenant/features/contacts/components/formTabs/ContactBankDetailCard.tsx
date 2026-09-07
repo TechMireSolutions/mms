@@ -1,5 +1,5 @@
 import type React from "react";
-import { CreditCard } from "lucide-react";
+import { CreditCard, User } from "lucide-react";
 import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
@@ -7,7 +7,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   type ContactBankDetail,
   DEFAULT_BANK_NAMES,
-  DEFAULT_BANK_ACCOUNT_TYPES,
 } from "@mms/shared";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
@@ -19,10 +18,8 @@ export interface ContactBankDetailCardProps {
   formInstanceId: string;
   bankNameOptions?: string[];
   onUpdateBankNameOptions?: (options: string[]) => void;
-  accountTypeOptions?: string[];
-  onUpdateAccountTypeOptions?: (options: string[]) => void;
   showBankName: boolean;
-  showAccountType: boolean;
+  showAccountTitle: boolean;
   showAccountNumber: boolean;
   isFieldRequired?: (group: string, field: string) => boolean;
   getListItemError?: (group: string, field: string, index: number) => string | undefined;
@@ -37,10 +34,8 @@ export function ContactBankDetailCard({
   formInstanceId,
   bankNameOptions = DEFAULT_BANK_NAMES,
   onUpdateBankNameOptions,
-  accountTypeOptions = DEFAULT_BANK_ACCOUNT_TYPES,
-  onUpdateAccountTypeOptions,
   showBankName,
-  showAccountType,
+  showAccountTitle,
   showAccountNumber,
   getListItemError,
   getLocalId,
@@ -50,7 +45,7 @@ export function ContactBankDetailCard({
   const { t } = useTranslation();
 
   const bankNameError = getListItemError?.("bankDetails", "bankName", idx);
-  const accountTypeError = getListItemError?.("bankDetails", "accountType", idx);
+  const accountTitleError = getListItemError?.("bankDetails", "accountTitle", idx);
   const accountNumberError = getListItemError?.("bankDetails", "accountNumber", idx);
 
   return (
@@ -84,23 +79,25 @@ export function ContactBankDetailCard({
           </Field>
         )}
 
-        {/* Field 2: Account Type */}
-        {showAccountType && (
+        {/* Field 2: Account Title */}
+        {showAccountTitle && (
           <Field
-            label={t("contacts.fields.bankAccountType")}
+            label={t("contacts.fields.bankAccountTitle")}
             required={false}
-            error={accountTypeError}
-            id={`cf-${formInstanceId}-bank-type-${idx}`}
+            error={accountTitleError}
+            id={`cf-${formInstanceId}-bank-title-${idx}`}
           >
-            <EditableSelect
-              id={`cf-${formInstanceId}-bank-type-${idx}`}
-              name={`cf-${formInstanceId}-bank-type-${idx}`}
-              options={accountTypeOptions}
-              value={bankDetail.accountType || ""}
-              onChange={(val) => updateBankDetail(idx, { accountType: val })}
-              onUpdateOptions={onUpdateAccountTypeOptions}
-              className="w-full"
-              placeholder={t("contacts.fields.bankAccountTypePlaceholder")}
+            <LeadingIconInput
+              icon={User}
+              id={`cf-${formInstanceId}-bank-title-${idx}`}
+              name={`cf-${formInstanceId}-bank-title-${idx}`}
+              autoCapitalize="words"
+              enterKeyHint="next"
+              aria-invalid={Boolean(accountTitleError)}
+              className={cn(accountTitleError && FORM_INPUT_ERROR)}
+              value={bankDetail.accountTitle || ""}
+              onChange={(e) => updateBankDetail(idx, { accountTitle: e.target.value })}
+              placeholder={t("contacts.fields.bankAccountTitlePlaceholder")}
             />
           </Field>
         )}

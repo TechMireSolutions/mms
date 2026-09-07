@@ -3,7 +3,6 @@ import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 import {
   DEFAULT_ADDRESS_LABELS,
   DEFAULT_BANK_NAMES,
-  DEFAULT_BANK_ACCOUNT_TYPES,
   DEFAULT_EDUCATION_DEGREE_LABELS,
   DEFAULT_EMAIL_LABELS,
   DEFAULT_EMPLOYMENT_TYPE_LABELS,
@@ -83,7 +82,7 @@ export const INITIAL_FIELD_SEED: Record<string, FieldDefinition[]> = {
   ],
   bankDetails: [
     { key: "bankName",      label: "Bank Name",              labelKey: "contacts.fields.bankName",          type: "select",   description: "Name of the commercial or Islamic bank.", descriptionKey: "contacts.fields.bankNameDesc", options: DEFAULT_BANK_NAMES, defaultValue: "", permissions: [], enabled: true, order: 0, required: false },
-    { key: "accountType",   label: "Account Type",          labelKey: "contacts.fields.bankAccountType",   type: "select",   description: "Purpose or type of account (Current, Savings, Salary, etc.).", descriptionKey: "contacts.fields.bankAccountTypeDesc", options: DEFAULT_BANK_ACCOUNT_TYPES, defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
+    { key: "accountTitle",  label: "Account Title",          labelKey: "contacts.fields.bankAccountTitle",  type: "text",     description: "Account holder or beneficiary title.",    descriptionKey: "contacts.fields.bankAccountTitleDesc", defaultValue: "", permissions: [], enabled: true, order: 1, required: false },
     { key: "accountNumber", label: "Account Number / IBAN",  labelKey: "contacts.fields.bankAccountNumber", type: "text",     description: "Bank account number or IBAN.",            descriptionKey: "contacts.fields.bankAccountNumberDesc", defaultValue: "", permissions: [], enabled: true, order: 2, required: false },
   ],
 };

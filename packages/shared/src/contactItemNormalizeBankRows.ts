@@ -15,14 +15,14 @@ export function normalizeBankDetailItem(
   if (!item || typeof item !== "object") {
     return {
       bankName: typeof item === "string" ? item.trim() : "",
-      accountType: "",
+      accountTitle: "",
       accountNumber: "",
     };
   }
 
   const obj = item as Record<string, unknown>;
   const bankName = String(obj.bankName || obj.bank || "").trim();
-  const accountType = String(obj.accountType || obj.label || obj.type || "").trim();
+  const accountTitle = String(obj.accountTitle || obj.title || "").trim();
   const accountNumber = String(
     obj.accountNumber || obj.accountNo || obj.iban || obj.value || "",
   ).trim();
@@ -30,7 +30,7 @@ export function normalizeBankDetailItem(
   return {
     ...retainExtraKeys(obj, BANK_DETAIL_SYSTEM_KEYS),
     bankName: bankName || undefined,
-    accountType: accountType || undefined,
+    accountTitle: accountTitle || undefined,
     accountNumber: accountNumber || undefined,
   };
 }

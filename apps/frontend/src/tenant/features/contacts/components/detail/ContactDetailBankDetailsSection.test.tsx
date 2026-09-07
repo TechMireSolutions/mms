@@ -19,7 +19,7 @@ const mockContactWithBank: Contact = {
     {
       id: "bnk-1",
       bankName: "Meezan Bank",
-      accountType: "Current",
+      accountTitle: "Syed Ali",
       accountNumber: "020202020202",
     },
   ],
@@ -37,13 +37,14 @@ const mockContactEmpty: Contact = {
 };
 
 describe("ContactDetailBankDetailsSection Component", () => {
-  it("renders bank details with bank name, account type badge, and account number", () => {
+  it("renders bank details with bank name, account title, and account number", () => {
     const html = renderToStaticMarkup(
       <ContactDetailBankDetailsSection contact={mockContactWithBank} />,
     );
 
     expect(html).toContain("Meezan Bank");
-    expect(html).toContain("Current");
+    expect(html).toContain("Syed Ali");
+    expect(html).toContain("contacts.fields.bankAccountTitle");
     expect(html).toContain("020202020202");
     expect(html).toContain("contacts.fields.bankAccountNumber");
   });

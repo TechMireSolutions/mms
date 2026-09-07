@@ -27,7 +27,6 @@ const defaults = (): ContactLookupsMap => {
     skillCategories: seeded.skillCategories,
     skillProficiencies: seeded.skillProficiencies,
     bankNames: seeded.bankNames,
-    bankAccountTypes: seeded.bankAccountTypes,
     tags: seeded.tags,
   };
 };

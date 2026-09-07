@@ -7,7 +7,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   type ContactBankDetail,
   DEFAULT_BANK_NAMES,
-  DEFAULT_BANK_ACCOUNT_TYPES,
 } from "@mms/shared";
 import { ContactBankDetailCard } from "./ContactBankDetailCard";
 import { ContactConfigContext } from "@/lib/contacts/contactConfigContextTypes";
@@ -15,8 +14,6 @@ import { ContactConfigContext } from "@/lib/contacts/contactConfigContextTypes";
 export interface ContactBankDetailsTabProps extends ContactSubListTabBaseProps {
   bankNameOptions?: string[];
   onUpdateBankNameOptions?: (options: string[]) => void;
-  accountTypeOptions?: string[];
-  onUpdateAccountTypeOptions?: (options: string[]) => void;
 }
 
 export function ContactBankDetailsTab({
@@ -24,8 +21,6 @@ export function ContactBankDetailsTab({
   getLocalId,
   bankNameOptions,
   onUpdateBankNameOptions,
-  accountTypeOptions,
-  onUpdateAccountTypeOptions,
   formInstanceId,
   getListItemError,
   isFieldEnabled,
@@ -46,22 +41,13 @@ export function ContactBankDetailsTab({
   const resolvedOnUpdateBankNameOptions =
     onUpdateBankNameOptions ?? contactConfig?.updateBankNames;
 
-  const resolvedAccountTypeOptions =
-    accountTypeOptions ??
-    (contactConfig?.bankAccountTypes && contactConfig.bankAccountTypes.length > 0
-      ? contactConfig.bankAccountTypes
-      : DEFAULT_BANK_ACCOUNT_TYPES);
-
-  const resolvedOnUpdateAccountTypeOptions =
-    onUpdateAccountTypeOptions ?? contactConfig?.updateBankAccountTypes;
-
   const showBankName = isFieldEnabled("bankDetails", "bankName");
-  const showAccountType = isFieldEnabled("bankDetails", "accountType");
+  const showAccountTitle = isFieldEnabled("bankDetails", "accountTitle");
   const showAccountNumber = isFieldEnabled("bankDetails", "accountNumber");
 
   const allowAdd = resolveSubListAllowAdd([
     showBankName,
-    showAccountType,
+    showAccountTitle,
     showAccountNumber,
   ]);
 
@@ -70,7 +56,7 @@ export function ContactBankDetailsTab({
   const emptyBankDetail = useCallback((): ContactBankDetail => ({
     id: `bnk-${crypto.randomUUID()}`,
     bankName: "",
-    accountType: "",
+    accountTitle: "",
     accountNumber: "",
   }), []);
 
@@ -115,10 +101,8 @@ export function ContactBankDetailsTab({
             formInstanceId={formInstanceId}
             bankNameOptions={resolvedBankNameOptions}
             onUpdateBankNameOptions={resolvedOnUpdateBankNameOptions}
-            accountTypeOptions={resolvedAccountTypeOptions}
-            onUpdateAccountTypeOptions={resolvedOnUpdateAccountTypeOptions}
             showBankName={showBankName}
-            showAccountType={showAccountType}
+            showAccountTitle={showAccountTitle}
             showAccountNumber={showAccountNumber}
             getListItemError={getListItemError}
             getLocalId={getLocalId}

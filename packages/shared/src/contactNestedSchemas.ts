@@ -100,7 +100,7 @@ export const contactBankDetailSchema = z
   .object({
     id: z.string().optional(),
     bankName: z.string().trim().optional().nullable().or(z.literal("")),
-    accountType: z.string().trim().optional().nullable().or(z.literal("")),
+    accountTitle: z.string().trim().optional().nullable().or(z.literal("")),
     accountNumber: z.string().trim().optional().nullable().or(z.literal("")),
     sortOrder: z.number().optional(),
   })

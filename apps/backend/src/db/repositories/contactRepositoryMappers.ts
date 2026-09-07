@@ -175,7 +175,7 @@ export function contactRowToRecord(
     const item: ContactBankDetail = {
       id: b.id,
       bankName: b.bankName,
-      accountType: b.accountType,
+      accountTitle: b.accountTitle,
       accountNumber: b.accountNumber,
       sortOrder: b.sortOrder,
     };

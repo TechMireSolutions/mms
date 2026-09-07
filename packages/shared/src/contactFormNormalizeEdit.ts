@@ -245,7 +245,7 @@ export function normalizeContactForEdit(
   if (bankDetails.length === 0) {
     bankDetails = [{
       bankName: "",
-      accountType: "",
+      accountTitle: "",
       accountNumber: "",
     }];
   }

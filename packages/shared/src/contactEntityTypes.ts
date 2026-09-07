@@ -86,7 +86,7 @@ export interface ContactSkill {
 export interface ContactBankDetail {
   id?: string;
   bankName?: string | null;
-  accountType?: string | null;
+  accountTitle?: string | null;
   accountNumber?: string | null;
   sortOrder?: number;
 }

@@ -61,7 +61,7 @@ export function useContactFormDraftHelpers({
       (link) => link.contactId,
     ).length;
     const filledBankDetails = (contactDraft.bankDetails || []).filter(
-      (b) => (b.accountNumber || b.bankName || b.accountType || "").trim(),
+      (b) => (b.accountNumber || b.bankName || b.accountTitle || "").trim(),
     ).length;
     return {
       filledPhones,

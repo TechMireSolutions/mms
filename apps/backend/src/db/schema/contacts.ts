@@ -278,7 +278,7 @@ export const contactBankDetails = pgTable('contact_bank_details', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   contactId: text('contact_id').notNull(),
   bankName: varchar('bank_name', { length: 255 }),
-  accountType: varchar('account_type', { length: 100 }),
+  accountTitle: varchar('account_title', { length: 255 }),
   accountNumber: varchar('account_number', { length: 100 }),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),

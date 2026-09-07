@@ -40,17 +40,7 @@ export const DEFAULT_BANK_NAMES = [
   "National Bank of Pakistan (NBP)",
   "Other",
 ];
-export const DEFAULT_BANK_ACCOUNT_TYPES = [
-  "Current",
-  "Savings",
-  "Salary",
-  "Business",
-  "Operations",
-  "Fee Collection",
-  "Zakat / Sadaqah",
-  "Other",
-];
-export const DEFAULT_BANK_LABELS = DEFAULT_BANK_ACCOUNT_TYPES;
+export const DEFAULT_BANK_LABELS = ["Primary", "Other"];
 export const DEFAULT_BANK_CURRENCIES = [
   "PKR",
   "USD",

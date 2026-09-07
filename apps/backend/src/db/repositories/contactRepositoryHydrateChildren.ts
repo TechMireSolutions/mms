@@ -309,7 +309,7 @@ export async function loadContactChildMaps(
         contactId: contactBankDetails.contactId,
         workspaceSubdomain: contactBankDetails.workspaceSubdomain,
         bankName: contactBankDetails.bankName,
-        accountType: contactBankDetails.accountType,
+        accountTitle: contactBankDetails.accountTitle,
         accountNumber: contactBankDetails.accountNumber,
         sortOrder: contactBankDetails.sortOrder,
         createdAt: contactBankDetails.createdAt,

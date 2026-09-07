@@ -27,7 +27,7 @@ export function ContactDetailBankDetailsSection({
   return (
     <DetailSection title={t("contacts.detail.bankDetails")}>
       {bankDetails.map((bank, idx) => {
-        const copySummary = [bank.bankName, bank.accountType, bank.accountNumber]
+        const copySummary = [bank.bankName, bank.accountTitle, bank.accountNumber]
           .filter(Boolean)
           .join(" · ");
 
@@ -36,7 +36,7 @@ export function ContactDetailBankDetailsSection({
             key={bank.id || `bank-${idx}`}
             className="p-3 border-b border-border/50 last:border-b-0 space-y-2 text-xs"
           >
-            {/* Header: Bank Name, Account Type Badge & Copy */}
+            {/* Header: Bank Name, Account Title & Copy */}
             <div className="flex items-start justify-between gap-2">
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex flex-wrap items-center gap-1.5">
@@ -44,12 +44,12 @@ export function ContactDetailBankDetailsSection({
                     <Landmark className="h-3.5 w-3.5 text-primary" />
                     {bank.bankName || t("contacts.form.bankAccount")}
                   </span>
-                  {bank.accountType ? (
-                    <span className="px-1.5 py-0.5 rounded text-3xs font-medium bg-muted text-muted-foreground border border-border">
-                      {bank.accountType}
-                    </span>
-                  ) : null}
                 </div>
+                {bank.accountTitle ? (
+                  <div className="text-muted-foreground font-medium">
+                    {t("contacts.fields.bankAccountTitle")}: <span className="text-foreground">{bank.accountTitle}</span>
+                  </div>
+                ) : null}
               </div>
 
               {copySummary ? <CopyBtn text={copySummary} showToast /> : null}

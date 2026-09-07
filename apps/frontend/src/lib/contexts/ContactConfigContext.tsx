@@ -80,7 +80,6 @@ export function ContactConfigProvider({ children }: { children: ReactNode }) {
     updateSkillCategories: (skillCategories: string[]) => updateLookupKind({ kind: "skillCategories", items: skillCategories }),
     updateSkillProficiencies: (skillProficiencies: string[]) => updateLookupKind({ kind: "skillProficiencies", items: skillProficiencies }),
     updateBankNames: (bankNames: string[]) => updateLookupKind({ kind: "bankNames", items: bankNames }),
-    updateBankAccountTypes: (bankAccountTypes: string[]) => updateLookupKind({ kind: "bankAccountTypes", items: bankAccountTypes }),
     updateTags: (tags: string[]) => updateLookupKind({ kind: "tags", items: tags }),
     ...(fieldConfigResponse?.body ?? {}),
     updateConfig,

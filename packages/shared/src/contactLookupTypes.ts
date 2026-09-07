@@ -15,7 +15,6 @@ export const CONTACT_LOOKUP_KINDS = [
   'skillProficiencies',
   'tags',
   'bankNames',
-  'bankAccountTypes',
 ] as const;
 
 export type ContactLookupKind = (typeof CONTACT_LOOKUP_KINDS)[number];
@@ -48,7 +47,6 @@ export type ContactLookupsMap = {
   skillProficiencies: string[];
   tags: string[];
   bankNames: string[];
-  bankAccountTypes: string[];
 };
 
 export const contactLookupKindParamsSchema = z.object({
@@ -85,7 +83,6 @@ export const CONTACT_LOOKUP_FIELD_TARGETS = {
   skillCategories: { tabId: 'skills', fieldId: 'category' },
   skillProficiencies: { tabId: 'skills', fieldId: 'proficiency' },
   bankNames: { tabId: 'bankDetails', fieldId: 'bankName' },
-  bankAccountTypes: { tabId: 'bankDetails', fieldId: 'accountType' },
   tags: { tabId: 'basic', fieldId: 'tag' },
 } as const satisfies Record<
   Exclude<ContactLookupKind, 'countryCodes'>,

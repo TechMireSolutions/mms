@@ -247,7 +247,7 @@ export async function syncContactChildrenTx(
         workspaceSubdomain: subdomain,
         contactId,
         bankName: b.bankName ?? null,
-        accountType: b.accountType ?? null,
+        accountTitle: b.accountTitle ?? null,
         accountNumber: b.accountNumber ?? null,
         sortOrder: b.sortOrder ?? idx,
       })),
@@ -452,7 +452,7 @@ export async function bulkInsertContactChildrenTx(
       workspaceSubdomain: subdomain,
       contactId,
       bankName: b.bankName ?? null,
-      accountType: b.accountType ?? null,
+      accountTitle: b.accountTitle ?? null,
       accountNumber: b.accountNumber ?? null,
       sortOrder: b.sortOrder ?? idx,
     }));

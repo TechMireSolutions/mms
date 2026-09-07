@@ -37,7 +37,6 @@ export type ContactConfigExtras = {
   skillCategories: string[];
   skillProficiencies: string[];
   bankNames: string[];
-  bankAccountTypes: string[];
   tags: string[];
   lookupsReady: boolean;
   lookupsLoading: boolean;
@@ -57,7 +56,6 @@ export type ContactConfigExtras = {
   updateSkillCategories: (skillCategoryOptions: string[]) => void | Promise<void>;
   updateSkillProficiencies: (skillProficiencyOptions: string[]) => void | Promise<void>;
   updateBankNames: (bankNameOptions: string[]) => void | Promise<void>;
-  updateBankAccountTypes: (bankAccountTypeOptions: string[]) => void | Promise<void>;
   updateTags: (tagOptions: string[]) => void | Promise<void>;
 
   // ── Column Layout & Visibility ──────────────────────────────────────────────

@@ -680,6 +680,13 @@
       "when": 1786806000000,
       "tag": "0096_remove_contact_bank_details_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 97,
+      "version": "7",
+      "when": 1786809600000,
+      "tag": "0097_contact_bank_details_account_title",
+      "breakpoints": true
     }
   ]
 }

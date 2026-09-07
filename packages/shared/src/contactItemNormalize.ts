@@ -184,14 +184,14 @@ export function cleanContactDraft(draft: Partial<Contact>): Partial<Contact> {
         (bank) =>
           !isBlankContactListRow(
             bank,
-            ["bankName", "accountType", "accountNumber"],
+            ["bankName", "accountTitle", "accountNumber"],
             BANK_DETAIL_SYSTEM_KEYS,
           ),
       )
       .map((bank) => ({
         ...bank,
         bankName: typeof bank.bankName === "string" ? bank.bankName.trim() : (bank.bankName ?? ""),
-        accountType: typeof bank.accountType === "string" ? bank.accountType.trim() : ((bank as Record<string, unknown>).label as string ?? ""),
+        accountTitle: typeof bank.accountTitle === "string" ? bank.accountTitle.trim() : ((bank as Record<string, unknown>).title as string ?? ""),
         accountNumber: typeof bank.accountNumber === "string" ? bank.accountNumber.trim() : ((bank as Record<string, unknown>).iban as string ?? (bank.accountNumber ?? "")),
       }));
   }

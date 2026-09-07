@@ -98,7 +98,7 @@ vi.mock("@/lib/semanticTone", () => ({
 const baseDetail: ContactBankDetail = {
   id: "bnk-test-1",
   bankName: "Meezan Bank",
-  accountType: "Current",
+  accountTitle: "Muhammad Ali",
   accountNumber: "010203040506",
 };
 
@@ -106,9 +106,8 @@ const baseProps = {
   idx: 0,
   formInstanceId: "test-form",
   bankNameOptions: ["Meezan Bank", "HBL", "Standard Chartered"],
-  accountTypeOptions: ["Current", "Savings", "Remittance"],
   showBankName: true,
-  showAccountType: true,
+  showAccountTitle: true,
   showAccountNumber: true,
   getListItemError: () => undefined,
   getLocalId: (_g: string, idx: number) => `local-bank-${idx}`,
@@ -123,10 +122,10 @@ describe("ContactBankDetailCard", () => {
     );
 
     expect(html).toContain("Meezan Bank");
-    expect(html).toContain("Current");
+    expect(html).toContain("Muhammad Ali");
     expect(html).toContain("010203040506");
     expect(html).toContain("contacts.fields.bankName");
-    expect(html).toContain("contacts.fields.bankAccountType");
+    expect(html).toContain("contacts.fields.bankAccountTitle");
     expect(html).toContain("contacts.fields.bankAccountNumber");
   });
 
@@ -148,19 +147,21 @@ describe("ContactBankDetailCard", () => {
     expect(html).not.toContain("contacts.fields.bankIsPrimary");
   });
 
-  it("propagates field errors for bankName, accountType, and accountNumber", () => {
+  it("propagates field errors for bankName, accountTitle, and accountNumber", () => {
     const html = renderToStaticMarkup(
       <ContactBankDetailCard
         {...baseProps}
         getListItemError={(_group, field) => {
+          if (field === "accountTitle") return "Invalid account title";
           if (field === "accountNumber") return "Invalid account number";
           if (field === "bankName") return "Select bank";
           return undefined;
         }}
-        bankDetail={{ ...baseDetail, accountNumber: "", bankName: "" }}
+        bankDetail={{ ...baseDetail, accountTitle: "", accountNumber: "", bankName: "" }}
       />,
     );
 
+    expect(html).toContain("Invalid account title");
     expect(html).toContain("Invalid account number");
     expect(html).toContain("Select bank");
   });
@@ -170,13 +171,13 @@ describe("ContactBankDetailCard", () => {
       <ContactBankDetailCard
         {...baseProps}
         showBankName={false}
-        showAccountType={false}
+        showAccountTitle={false}
         bankDetail={baseDetail}
       />,
     );
 
     expect(html).not.toContain("contacts.fields.bankName");
-    expect(html).not.toContain("contacts.fields.bankAccountType");
+    expect(html).not.toContain("contacts.fields.bankAccountTitle");
     expect(html).toContain("contacts.fields.bankAccountNumber");
   });
 

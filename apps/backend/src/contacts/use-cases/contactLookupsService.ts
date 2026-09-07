@@ -2,7 +2,6 @@ import {
   CONTACT_LOOKUP_KINDS,
   COUNTRY_CODES,
   DEFAULT_ADDRESS_LABELS,
-  DEFAULT_BANK_ACCOUNT_TYPES,
   DEFAULT_BANK_NAMES,
   DEFAULT_EDUCATION_DEGREE_LABELS,
   DEFAULT_EMAIL_LABELS,
@@ -61,8 +60,6 @@ function defaultStringItems(kind: ContactStringLookupKind): string[] {
       return [...DEFAULT_SKILL_PROFICIENCY_LABELS];
     case 'bankNames':
       return [...DEFAULT_BANK_NAMES];
-    case 'bankAccountTypes':
-      return [...DEFAULT_BANK_ACCOUNT_TYPES];
     case 'tags':
       return [...DEFAULT_TAG_LABELS];
     default: {
@@ -89,7 +86,6 @@ function emptyStringLookupsMap(): Record<ContactStringLookupKind, string[]> {
     skillCategories: defaultStringItems('skillCategories'),
     skillProficiencies: defaultStringItems('skillProficiencies'),
     bankNames: defaultStringItems('bankNames'),
-    bankAccountTypes: defaultStringItems('bankAccountTypes'),
     tags: defaultStringItems('tags'),
   };
 }

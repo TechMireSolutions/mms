@@ -110,7 +110,7 @@ describe("ContactBankDetailsTab Component", () => {
     expect(html).toContain("empty-message");
   });
 
-  it("renders bank account cards with bankName, accountType, and accountNumber", () => {
+  it("renders bank account cards with bankName, accountTitle, and accountNumber", () => {
     const html = renderToStaticMarkup(
       <ContactBankDetailsTab
         {...baseProps}
@@ -119,7 +119,7 @@ describe("ContactBankDetailsTab Component", () => {
             {
               id: "bnk-1",
               bankName: "Meezan Bank",
-              accountType: "Salary",
+              accountTitle: "Salaried Account",
               accountNumber: "010203040506",
             },
           ],
@@ -128,10 +128,10 @@ describe("ContactBankDetailsTab Component", () => {
     );
 
     expect(html).toContain("Meezan Bank");
-    expect(html).toContain("Salary");
+    expect(html).toContain("Salaried Account");
     expect(html).toContain("010203040506");
     expect(html).toContain("contacts.fields.bankName");
-    expect(html).toContain("contacts.fields.bankAccountType");
+    expect(html).toContain("contacts.fields.bankAccountTitle");
     expect(html).toContain("contacts.fields.bankAccountNumber");
   });
 
@@ -147,7 +147,7 @@ describe("ContactBankDetailsTab Component", () => {
             {
               id: "bnk-1",
               bankName: "HBL",
-              accountType: "Current",
+              accountTitle: "Business Account",
               accountNumber: "",
             },
           ],
@@ -168,13 +168,13 @@ describe("ContactBankDetailsTab Component", () => {
             {
               id: "bnk-1",
               bankName: "Meezan Bank",
-              accountType: "Current",
+              accountTitle: "Title A",
               accountNumber: "010203040506",
             },
             {
               id: "bnk-2",
               bankName: "HBL",
-              accountType: "Savings",
+              accountTitle: "Title B",
               accountNumber: "987654321000",
             },
           ],
