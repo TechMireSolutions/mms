@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { AlertTriangle, Bell, ChevronDown, ChevronUp } from "lucide-react";
@@ -22,7 +22,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
   const { unpaidInvoices, students, studentMap } = useUnpaidInvoiceStudents();
   const { activeCurrency, formatCurrency } = useFinanceCurrency();
 
-  const overdueStudents = (() => {
+  const overdueStudents = useMemo(() => {
     const todayIso = formatDateToIso(new Date());
     const rows: OverdueStudent[] = [];
 
@@ -43,7 +43,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     });
 
     return rows.sort((a, b) => b.daysOverdue - a.daysOverdue);
-  })();
+  }, [unpaidInvoices, activeCurrency.code, t]);
 
   const [expanded, setExpanded] = useState(true);
   const [remindedIds, setRemindedIds] = useState<Set<string>>(new Set());
@@ -63,9 +63,12 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
     searchFields: (overdueStudent) => [overdueStudent.name, overdueStudent.obligationType],
   });
 
-  const totalOverdue = (() => overdueStudents.reduce((sum, overdueStudent) => sum + overdueStudent.amount, 0))();
+  const totalOverdue = useMemo(
+    () => overdueStudents.reduce((sum, overdueStudent) => sum + overdueStudent.amount, 0),
+    [overdueStudents],
+  );
 
-  const handleRemind = (overdueStudent: OverdueStudent) => {
+  const handleRemind = useCallback((overdueStudent: OverdueStudent) => {
     const student = studentMap.get(String(overdueStudent.id));
     const phone = student?.phone || "";
     if (!phone) return;
@@ -82,9 +85,9 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
       next.add(overdueStudent.id);
       return next;
     });
-  };
+  }, [studentMap, openComposer]);
 
-  const handleRemindAll = () => {
+  const handleRemindAll = useCallback(() => {
     const recipients = filteredStudents
       .map((overdueStudent) => {
         const student = studentMap.get(String(overdueStudent.id));
@@ -107,7 +110,7 @@ export default function OverdueObligationsWidget({ title }: { title?: string }) 
       recipients.forEach((recipient) => next.add(String(recipient.id)));
       return next;
     });
-  };
+  }, [filteredStudents, studentMap, openComposer]);
 
   return (
     <WidgetCard ariaLabelledby="overdue-obligations-heading" accentColor="destructive">

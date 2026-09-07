@@ -43,7 +43,7 @@ export interface BulkSelectionBarProps {
   "aria-label"?: string;
 }
 
-export const BulkSelectionBar = (function BulkSelectionBar({
+export const BulkSelectionBar = React.memo(function BulkSelectionBar({
   selectedCount,
   countLabel,
   placement = "inline",

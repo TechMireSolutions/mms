@@ -23,31 +23,39 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
   const invoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
   const { formatCurrency } = useFinanceCurrency();
 
-  const now = (() => new Date())();
-  const currentYear = now.getFullYear();
-  const currentMonth = now.getMonth();
+  const {
+    totalCollected,
+    collectedPct,
+    outstandingPct,
+    breakdown,
+    byClass,
+    displayDate,
+    comparisonMonthName,
+    displayTrendPct,
+    isPositiveTrend,
+  } = React.useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
 
-  const prevMonthDate = (() => {
-    return new Date(currentYear, currentMonth - 1, 1);
-  })();
-  const prevYear = prevMonthDate.getFullYear();
-  const prevMonth = prevMonthDate.getMonth();
+    const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
+    const prevYear = prevMonthDate.getFullYear();
+    const prevMonth = prevMonthDate.getMonth();
 
-  // Calculate overall metrics for current month
-  const totalCollected = (() => getCollectedAmountForMonth(invoices, currentYear, currentMonth))();
-  const totalOutstanding = (() => getOutstandingAmountForMonth(invoices, currentYear, currentMonth))();
+    // Calculate overall metrics for current month
+    const collected = getCollectedAmountForMonth(invoices, currentYear, currentMonth);
+    const outstanding = getOutstandingAmountForMonth(invoices, currentYear, currentMonth);
 
-  const totalTarget = totalCollected + totalOutstanding;
-  const collectedPct = totalTarget > 0 ? Math.round((totalCollected / totalTarget) * 100) : 0;
-  const outstandingPct = totalTarget > 0 ? (100 - collectedPct) : 0;
+    const target = collected + outstanding;
+    const colPct = target > 0 ? Math.round((collected / target) * 100) : 0;
+    const outPct = target > 0 ? (100 - colPct) : 0;
 
-  const breakdown = [
-    { label: t("finance.report.collected"),   value: totalCollected, total: totalTarget, color: "bg-success", pct: collectedPct },
-    { label: t("finance.report.outstanding"), value: totalOutstanding,  total: totalTarget, color: "bg-destructive",     pct: outstandingPct },
-  ];
+    const bDown = [
+      { label: t("finance.report.collected"),   value: collected, total: target, color: "bg-success", pct: colPct },
+      { label: t("finance.report.outstanding"), value: outstanding,  total: target, color: "bg-destructive",     pct: outPct },
+    ];
 
-  // Group by Class for current month
-  const classMap = (() => {
+    // Group by Class for current month
     const map: Record<string, { name: string; collected: number; target: number }> = {};
     invoices.forEach((inv) => {
       if (!inv || inv.status === "cancelled") return;
@@ -69,25 +77,24 @@ export default function FeeCollectionSummary({ title }: { title?: string }) {
         }
       }
     });
-    return map;
-  })();
 
-  const byClass = (() => Object.values(classMap))();
+    const prevCol = getCollectedAmountForMonth(invoices, prevYear, prevMonth);
+    const chgPct = percentChange(collected, prevCol);
 
-  const displayDate = (() => {
-    return formatMonthYear(now, "long");
-  })();
-
-  const comparisonMonthName = (() => {
-    return formatMonthName(prevMonthDate);
-  })();
-
-  const prevCollected = (() => getCollectedAmountForMonth(invoices, prevYear, prevMonth))();
-
-  const changePct = (() => percentChange(totalCollected, prevCollected))();
-
-  const displayTrendPct = Math.abs(changePct);
-  const isPositiveTrend = changePct >= 0;
+    return {
+      totalCollected: collected,
+      totalOutstanding: outstanding,
+      totalTarget: target,
+      collectedPct: colPct,
+      outstandingPct: outPct,
+      breakdown: bDown,
+      byClass: Object.values(map),
+      displayDate: formatMonthYear(now, "long"),
+      comparisonMonthName: formatMonthName(prevMonthDate),
+      displayTrendPct: Math.abs(chgPct),
+      isPositiveTrend: chgPct >= 0,
+    };
+  }, [invoices, t]);
 
   return (
     <WidgetCard ariaLabelledby="fee-collection-heading" accentColor="primary">

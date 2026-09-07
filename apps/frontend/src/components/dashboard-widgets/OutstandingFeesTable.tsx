@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
@@ -25,7 +26,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
 
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
 
-  const mappedRows = (() => {
+  const mappedRows = useMemo(() => {
     const now = new Date();
     const nowYear = now.getFullYear();
     const nowMonth = now.getMonth();
@@ -50,7 +51,7 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
         dueDate: invoice.dueDate,
       };
     });
-  })();
+  }, [unpaidInvoices, studentMap]);
 
   const {
     searchQuery,
@@ -67,12 +68,12 @@ export default function OutstandingFeesTable({ title }: { title?: string }) {
   });
 
   const totalUnpaid = unpaidInvoices.length;
-  const listProps = {
+  const listProps = useMemo(() => ({
     canWriteMessaging,
     formatCurrency,
     openComposer,
     t,
-  };
+  }), [canWriteMessaging, formatCurrency, openComposer, t]);
 
   return (
     <WidgetCard ariaLabelledby="outstanding-fees-heading" accentColor="destructive">

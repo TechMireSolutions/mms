@@ -72,7 +72,8 @@ export function useWorkspaceBySubdomain(subdomain: string | null, enabled: boole
     queryKey: [...WORKSPACE_BY_SUBDOMAIN_KEY, subdomain],
     queryFn: ({ signal }) => fetchWorkspaceBySubdomain(subdomain!, signal),
     enabled: enabled && Boolean(subdomain),
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
     initialData: enabled && subdomain ? getCachedWorkspaceLookup(subdomain) : undefined,
     initialDataUpdatedAt: 0,
     retry: (failureCount: number, error: unknown) =>

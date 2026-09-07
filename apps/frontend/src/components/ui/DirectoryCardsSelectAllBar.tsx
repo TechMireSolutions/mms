@@ -1,4 +1,4 @@
-import type { ReactElement, ReactNode } from "react";
+import React, { type ReactElement, type ReactNode } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Badge } from "@/components/ui/badge";
@@ -19,7 +19,7 @@ export interface DirectoryCardsSelectAllBarProps {
 }
 
 /** Shared Work cards select-all strip (Contacts / Students SSOT). */
-export function DirectoryCardsSelectAllBar({
+export const DirectoryCardsSelectAllBar = React.memo(function DirectoryCardsSelectAllBar({
   checkboxId,
   allSelected,
   someSelected,
@@ -71,4 +71,4 @@ export function DirectoryCardsSelectAllBar({
       </Badge>
     </div>
   );
-}
+});

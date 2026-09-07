@@ -1,3 +1,6 @@
+import { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { cn } from "@/lib/utils";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import {
   Table,
@@ -32,8 +35,22 @@ export function OutstandingFeesTableDesktopBody({
   openComposer,
   t,
 }: OutstandingFeesTableDesktopBodyProps) {
+  const parentRef = useRef<HTMLDivElement | null>(null);
+  const isVirtualized = rows.length > 30;
+
+  const rowVirtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 52,
+    overscan: 10,
+    enabled: isVirtualized,
+  });
+
   return (
-    <div className="hidden overflow-x-auto md:block">
+    <div
+      ref={parentRef}
+      className={cn("hidden overflow-x-auto md:block", isVirtualized && "max-h-120 overflow-y-auto")}
+    >
       <Table className="w-full text-sm">
         <TableHeader>
           <TableRow className="border-b border-border/45 bg-muted/30 hover:bg-transparent">
@@ -63,6 +80,61 @@ export function OutstandingFeesTableDesktopBody({
                 <EmptyState title={t("finance.report.noInvoicesMatch")} compact icon={null} className="select-none" />
               </TableCell>
             </TableRow>
+          ) : isVirtualized ? (
+            <>
+              {rowVirtualizer.getVirtualItems().length > 0 && (
+                <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }}>
+                  <td colSpan={canWriteMessaging ? 5 : 4} />
+                </tr>
+              )}
+              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                const outstandingFee = rows[virtualRow.index];
+                return (
+                  <TableRow
+                    key={outstandingFee.id}
+                    className="hover:bg-muted/20 transition-colors"
+                  >
+                    <TableCell className="px-5 py-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <UserAvatar
+                          id={outstandingFee.studentId}
+                          name={outstandingFee.student}
+                          size="sm"
+                          className="shrink-0"
+                        />
+                        <span className="text-sm font-semibold text-foreground truncate">{outstandingFee.student}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="px-3 py-3 text-sm text-muted-foreground/80 font-medium hidden sm:table-cell truncate max-w-36">
+                      {outstandingFee.class}
+                    </TableCell>
+                    <TableCell className="px-3 py-3">
+                      <span className="text-sm font-bold text-destructive tabular-nums">{formatCurrency(outstandingFee.amount)}</span>
+                    </TableCell>
+                    <TableCell className="px-3 py-3 hidden md:table-cell">
+                      <OutstandingFeeOverdueBadge months={outstandingFee.months} t={t} />
+                    </TableCell>
+                    {canWriteMessaging && (
+                      <TableCell className="px-3 py-3 text-end">
+                        <OutstandingFeeMessagingActions row={outstandingFee} openComposer={openComposer} t={t} />
+                      </TableCell>
+                    )}
+                  </TableRow>
+                );
+              })}
+              {rowVirtualizer.getVirtualItems().length > 0 && (
+                <tr
+                  style={{
+                    height: `${
+                      rowVirtualizer.getTotalSize() -
+                      rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end
+                    }px`,
+                  }}
+                >
+                  <td colSpan={canWriteMessaging ? 5 : 4} />
+                </tr>
+              )}
+            </>
           ) : (
             rows.map((outstandingFee, index) => (
               <MotionTableRow

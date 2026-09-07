@@ -16,6 +16,7 @@ import {
   type PublicWorkspace,
   type WorkspaceLookupResult,
 } from "@/tenant/hooks/useWorkspaceBySubdomain";
+import { queryClientInstance } from "@/lib/queryClient";
 
 export type { PublicWorkspace };
 
@@ -66,6 +67,14 @@ export const TenantProvider: React.FC<{ children: React.ReactNode }> = ({ childr
     tenantLookupEnabled && !workspaceLoading && isError && !notFound;
   // Missing tenants hard-redirect to apex Tenant Not Found — skip branding fetch.
   const publicBranding = lookupBody?.branding ?? null;
+
+  const prevSubdomainRef = React.useRef<string | null | undefined>(undefined);
+  React.useEffect(() => {
+    if (prevSubdomainRef.current !== undefined && prevSubdomainRef.current !== subdomain) {
+      queryClientInstance.clear();
+    }
+    prevSubdomainRef.current = subdomain;
+  }, [subdomain]);
 
   React.useEffect(() => {
     if (subdomain && lookupBody?.workspace) {

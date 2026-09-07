@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 import { clampModuleColumnWidth } from '@mms/shared';
@@ -31,54 +31,69 @@ export function ResizableTableHead({
   const thRef = useRef<HTMLTableCellElement>(null);
   const [draftWidth, setDraftWidth] = useState<number | null>(null);
   const resizingRef = useRef(false);
+  const cleanupResizeRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (cleanupResizeRef.current) {
+        cleanupResizeRef.current();
+        cleanupResizeRef.current = null;
+      }
+    };
+  }, []);
 
   const resolvedWidth = draftWidth ?? width;
 
-  const handlePointerDown = ((event: React.PointerEvent<HTMLSpanElement>) => {
-      if (!onResize) return;
-      event.preventDefault();
-      event.stopPropagation();
+  const handlePointerDown = (event: React.PointerEvent<HTMLSpanElement>) => {
+    if (!onResize) return;
+    event.preventDefault();
+    event.stopPropagation();
 
-      const startX = event.clientX;
-      const startWidth =
-        resolvedWidth ??
-        thRef.current?.getBoundingClientRect().width ??
-        minWidth;
-      resizingRef.current = true;
-      setDraftWidth(startWidth);
+    const startX = event.clientX;
+    const startWidth =
+      resolvedWidth ??
+      thRef.current?.getBoundingClientRect().width ??
+      minWidth;
+    resizingRef.current = true;
+    setDraftWidth(startWidth);
 
-      const previousUserSelect = document.body.style.userSelect;
-      document.body.style.userSelect = 'none';
+    const previousUserSelect = document.body.style.userSelect;
+    document.body.style.userSelect = 'none';
 
-      const handlePointerMove = (moveEvent: PointerEvent) => {
-        if (!resizingRef.current) return;
-        const rawDelta = moveEvent.clientX - startX;
-        const delta = isRtl ? -rawDelta : rawDelta;
-        const nextWidth = clampModuleColumnWidth(
-          Math.min(maxWidth, Math.max(minWidth, startWidth + delta)),
-        );
-        setDraftWidth(nextWidth);
-      };
+    const handlePointerMove = (moveEvent: PointerEvent) => {
+      if (!resizingRef.current) return;
+      const rawDelta = moveEvent.clientX - startX;
+      const delta = isRtl ? -rawDelta : rawDelta;
+      const nextWidth = clampModuleColumnWidth(
+        Math.min(maxWidth, Math.max(minWidth, startWidth + delta)),
+      );
+      setDraftWidth(nextWidth);
+    };
 
-      const handlePointerUp = (upEvent: PointerEvent) => {
-        if (!resizingRef.current) return;
-        resizingRef.current = false;
-        document.body.style.userSelect = previousUserSelect;
-        window.removeEventListener('pointermove', handlePointerMove);
-        window.removeEventListener('pointerup', handlePointerUp);
+    const cleanup = () => {
+      if (!resizingRef.current) return;
+      resizingRef.current = false;
+      document.body.style.userSelect = previousUserSelect;
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      cleanupResizeRef.current = null;
+    };
 
-        const rawDelta = upEvent.clientX - startX;
-        const delta = isRtl ? -rawDelta : rawDelta;
-        const nextWidth = clampModuleColumnWidth(
-          Math.min(maxWidth, Math.max(minWidth, startWidth + delta)),
-        );
-        setDraftWidth(null);
-        onResize(columnKey, nextWidth);
-      };
+    const handlePointerUp = (upEvent: PointerEvent) => {
+      cleanup();
+      const rawDelta = upEvent.clientX - startX;
+      const delta = isRtl ? -rawDelta : rawDelta;
+      const nextWidth = clampModuleColumnWidth(
+        Math.min(maxWidth, Math.max(minWidth, startWidth + delta)),
+      );
+      setDraftWidth(null);
+      onResize(columnKey, nextWidth);
+    };
 
-      window.addEventListener('pointermove', handlePointerMove);
-      window.addEventListener('pointerup', handlePointerUp);
-    });
+    cleanupResizeRef.current = cleanup;
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerup', handlePointerUp);
+  };
 
   return (
     <th

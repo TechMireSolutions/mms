@@ -32,6 +32,8 @@ export function createModuleLookupsHooks<
       // TanStack Query NonFunctionGuard cannot be proven for generic TMap (plain object at runtime).
       // @ts-expect-error generic placeholderData vs NonFunctionGuard<TMap>
       placeholderData: defaults(),
+      staleTime: 5 * 60_000,
+      gcTime: 10 * 60_000,
     });
   }
 

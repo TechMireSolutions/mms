@@ -97,11 +97,11 @@ export function connectTenantDatabaseSocket(handlers: TenantWebSocketHandlers): 
       return;
     }
 
-    socket.addEventListener('open', () => {
+    const onOpen = () => {
       attempt = 0;
-    });
+    };
 
-    socket.addEventListener('message', (event) => {
+    const onMessage = (event: MessageEvent) => {
       if (typeof event.data !== 'string') return;
       try {
         const parsed = JSON.parse(event.data) as unknown;
@@ -114,19 +114,38 @@ export function connectTenantDatabaseSocket(handlers: TenantWebSocketHandlers): 
       } catch {
         /* ignore invalid JSON */
       }
-    });
+    };
 
-    socket.addEventListener('error', (event) => {
+    const onError = (event: Event) => {
       handlers.onError?.(event);
-    });
+    };
 
-    socket.addEventListener('close', (event) => {
-      socket = null;
+    const cleanupSocket = (s: WebSocket) => {
+      s.removeEventListener('open', onOpen);
+      s.removeEventListener('message', onMessage);
+      s.removeEventListener('error', onError);
+      s.removeEventListener('close', onClose);
+      s.onopen = null;
+      s.onmessage = null;
+      s.onerror = null;
+      s.onclose = null;
+    };
+
+    const onClose = (event: CloseEvent) => {
+      if (socket) {
+        cleanupSocket(socket);
+        socket = null;
+      }
       // Do not auto-reconnect if closed due to auth, missing token, or subdomain mismatch (4000-4009)
       if (!closedByCaller && (event.code < 4000 || event.code > 4009)) {
         scheduleReconnect();
       }
-    });
+    };
+
+    socket.addEventListener('open', onOpen);
+    socket.addEventListener('message', onMessage);
+    socket.addEventListener('error', onError);
+    socket.addEventListener('close', onClose);
   };
 
   open();
@@ -137,10 +156,16 @@ export function connectTenantDatabaseSocket(handlers: TenantWebSocketHandlers): 
     if (socket) {
       const s = socket;
       socket = null;
+      s.onopen = null;
+      s.onmessage = null;
+      s.onerror = null;
+      s.onclose = null;
       if (s.readyState === WebSocket.CONNECTING) {
-        s.addEventListener('open', () => {
+        const handleConnectingOpen = () => {
+          s.removeEventListener('open', handleConnectingOpen);
           s.close(1000, 'Client unmounted');
-        });
+        };
+        s.addEventListener('open', handleConnectingOpen, { once: true });
       } else if (s.readyState === WebSocket.OPEN) {
         s.close(1000, 'Client unmounted');
       }

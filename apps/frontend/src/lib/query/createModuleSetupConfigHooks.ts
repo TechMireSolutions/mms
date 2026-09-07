@@ -37,7 +37,8 @@ export function createModuleSetupConfigHooks<
       // TanStack Query NonFunctionGuard cannot be proven for generic TPreferences.
       // @ts-expect-error generic placeholderData vs NonFunctionGuard<TPreferences>
       placeholderData: resolveValue(preferencesPlaceholder),
-      staleTime: 60_000,
+      staleTime: 5 * 60_000,
+      gcTime: 10 * 60_000,
     });
   }
 
