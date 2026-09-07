@@ -12,7 +12,7 @@ function TenantLivePushSubscriber(): null {
   return null;
 }
 
-/** Mounts tenant-only providers (contacts config + live push) — skipped on platform apex, when unauthenticated, or during setup gating. */
+/** Mounts tenant-only providers (contacts config + live push) — live push is active only when authenticated. */
 export default function TenantScopedProviders({
   children,
 }: {
@@ -22,13 +22,21 @@ export default function TenantScopedProviders({
   const { isAuthenticated, user, authChecked } = useAuth();
   const branding = useBranding();
 
-  if (!isTenantHost || !authChecked || !isAuthenticated || !user || user.mustChangePassword || !isInstitutionSetupComplete(branding)) {
+  if (!isTenantHost) {
     return <>{children}</>;
   }
 
+  const shouldSubscribeLivePush = Boolean(
+    authChecked &&
+    isAuthenticated &&
+    user &&
+    !user.mustChangePassword &&
+    isInstitutionSetupComplete(branding),
+  );
+
   return (
     <ContactConfigProvider>
-      <TenantLivePushSubscriber />
+      {shouldSubscribeLivePush ? <TenantLivePushSubscriber /> : null}
       {children}
     </ContactConfigProvider>
   );

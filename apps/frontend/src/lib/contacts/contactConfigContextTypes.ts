@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import type { ContactConfigExtras } from "./useContactConfigTypes";
+import { getDefaultContactConfigContextValue } from "./defaultContactConfigValue";
 
 /** Column descriptor for Contacts tables and grid views. */
 export interface ContactsColumnConfig {
@@ -16,6 +17,8 @@ export interface ContactConfigContextType
 }
 
 /** React Context instance for Contacts module configuration. */
-export const ContactConfigContext = createContext<ContactConfigContextType | null>(null);
+export const ContactConfigContext = createContext<ContactConfigContextType>(
+  getDefaultContactConfigContextValue(),
+);
 
 
