@@ -9,7 +9,10 @@ import {
   getBullMQConnectionOptions,
 } from './queueConfig.js';
 import { markJobPermanentlyFailed } from '../../services/backgroundJobWorkerService.js';
+import { stripUndefinedFields } from '../../lib/payloadTrimmer.js';
 import { logger } from '../../lib/logger.js';
+
+export const MAX_JOB_PAYLOAD_BYTES = 1024 * 1024; // 1 MB payload ceiling
 
 export interface EnqueuedJobData {
   jobId: string;
@@ -68,6 +71,21 @@ export async function dispatchJobToQueue(
   const queueName = resolveQueueNameForJob(job.moduleId, job.kind);
   const queue = getQueue(queueName);
 
+  const sanitizedPayload = stripUndefinedFields(payload);
+  if (sanitizedPayload !== undefined && sanitizedPayload !== null) {
+    try {
+      const payloadSize = Buffer.byteLength(JSON.stringify(sanitizedPayload), 'utf8');
+      if (payloadSize > MAX_JOB_PAYLOAD_BYTES) {
+        logger.warn(
+          { jobId: job.id, queue: queueName, payloadSize, max: MAX_JOB_PAYLOAD_BYTES },
+          'Job payload exceeds 1MB limit; consider offloading to external storage artifact',
+        );
+      }
+    } catch {
+      // ignore serialization check failures
+    }
+  }
+
   const jobData: EnqueuedJobData = {
     jobId: job.id,
     tenantId,
@@ -75,7 +93,7 @@ export async function dispatchJobToQueue(
     moduleId: job.moduleId,
     kind: job.kind,
     label: job.label,
-    payload,
+    payload: sanitizedPayload,
     enqueuedAt: new Date().toISOString(),
   };
 

@@ -20,6 +20,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     trustProxy: config.trustProxy,
     bodyLimit: config.bodyLimit,
     requestTimeout: config.requestTimeoutMs,
+    keepAliveTimeout: 65000,
     genReqId: (request) => {
       const incoming = request.headers['x-request-id'];
       if (typeof incoming === 'string' && incoming.length > 0) return incoming;

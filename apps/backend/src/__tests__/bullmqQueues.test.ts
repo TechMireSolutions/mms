@@ -6,6 +6,7 @@ import {
   QUEUE_MESSAGING_BROADCAST,
   QUEUE_SETTINGS,
   DEFAULT_JOB_OPTIONS,
+  WORKER_HEAP_LIMIT_BYTES,
   resolveQueueNameForJob,
   handleDeadLetterJob,
   getQueue,
@@ -28,12 +29,21 @@ describe('BullMQ Queue Architecture (Phase 5)', () => {
     });
   });
 
-  it('configures exponential backoff retry policy', () => {
+  it('configures exponential backoff retry and auto-removal retention policies', () => {
     expect(DEFAULT_JOB_OPTIONS.attempts).toBe(3);
     expect(DEFAULT_JOB_OPTIONS.backoff).toEqual({
       type: 'exponential',
       delay: 1000,
     });
+    expect(DEFAULT_JOB_OPTIONS.removeOnComplete).toEqual({
+      count: 100,
+      age: 3600,
+    });
+    expect(DEFAULT_JOB_OPTIONS.removeOnFail).toEqual({
+      count: 500,
+      age: 86400,
+    });
+    expect(WORKER_HEAP_LIMIT_BYTES).toBeGreaterThanOrEqual(128 * 1024 * 1024);
   });
 
   it('correctly resolves queue names based on module and kind', () => {

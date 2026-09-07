@@ -17,7 +17,7 @@ import { buildUsersCsvExport, generateUsersCsvStreamChunks } from './usersExport
 /** Cap on ledger entries carried in the `finance:export-excel` job payload. */
 const MAX_EXCEL_PAYLOAD_ENTRIES = 50_000;
 import { buildMessagingCsvExport } from './messagingExportService.js';
-import { saveExportArtifact } from './exportArtifactService.js';
+import { saveExportArtifact, saveStreamedExportArtifact } from './exportArtifactService.js';
 import { runContactsDuplicateScan } from './contactDuplicateScanService.js';
 import { registerBackgroundJobRunner } from './backgroundJobWorkerService.js';
 import { registerModuleCsvExportJobRunner } from '../lib/registerModuleCsvExportJobRunner.js';
@@ -259,6 +259,12 @@ export function registerDefaultBackgroundJobRunners(): void {
       },
       async (pct) => ctx.updateProgress(pct, 100)
     );
+    await saveStreamedExportArtifact(ctx.userId, ctx.jobId, {
+      key: result.key,
+      storageType: result.storageType,
+      filename,
+      contentType: 'application/pdf',
+    });
     await ctx.complete({
       label: `Generated Report Card (${result.key})`,
       progress: { current: 100, total: 100 },
@@ -280,6 +286,12 @@ export function registerDefaultBackgroundJobRunners(): void {
       },
       async (pct) => ctx.updateProgress(pct, 100)
     );
+    await saveStreamedExportArtifact(ctx.userId, ctx.jobId, {
+      key: result.key,
+      storageType: result.storageType,
+      filename,
+      contentType: 'application/pdf',
+    });
     await ctx.complete({
       label: `Generated Fee Receipt (${result.key})`,
       progress: { current: 100, total: 100 },
@@ -301,6 +313,12 @@ export function registerDefaultBackgroundJobRunners(): void {
       },
       async (pct) => ctx.updateProgress(pct, 100)
     );
+    await saveStreamedExportArtifact(ctx.userId, ctx.jobId, {
+      key: result.key,
+      storageType: result.storageType,
+      filename,
+      contentType: 'application/pdf',
+    });
     await ctx.complete({
       label: `Generated Financial Ledger (${result.key})`,
       progress: { current: 100, total: 100 },
@@ -319,7 +337,7 @@ export function registerDefaultBackgroundJobRunners(): void {
   });
 
   registerBackgroundJobRunner('finance:export-excel', async (payload, ctx) => {
-    const { streamLedgerToS3 } = await import('../worker/processors/excel-export.js');
+    const { streamTableToExcel } = await import('../worker/processors/excel-export.js');
     const { filename = 'ledger-export.xlsx', entries = [] } = payload as {
       filename?: string;
       entries?: Record<string, unknown>[];
@@ -339,9 +357,28 @@ export function registerDefaultBackgroundJobRunners(): void {
     }
 
     await ctx.updateProgress(10, 100);
-    const key = await streamLedgerToS3(ctx.tenant, filename, generateRows());
+    const result = await streamTableToExcel({
+      tenantId: ctx.tenant,
+      filename,
+      worksheetName: 'Ledger',
+      columns: [
+        { header: 'Date', key: 'date', width: 15 },
+        { header: 'Account', key: 'account', width: 25 },
+        { header: 'Debit', key: 'debit', width: 15 },
+        { header: 'Credit', key: 'credit', width: 15 },
+        { header: 'Balance', key: 'balance', width: 15 },
+        { header: 'Description', key: 'description', width: 35 },
+      ],
+      rowGenerator: generateRows(),
+    });
+    await saveStreamedExportArtifact(ctx.userId, ctx.jobId, {
+      key: result.key,
+      storageType: result.storageType,
+      filename,
+      contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    });
     await ctx.complete({
-      label: `Streamed Ledger to Excel (${key})`,
+      label: `Streamed Ledger to Excel (${result.key})`,
       progress: { current: 100, total: 100 },
       hasDownload: true,
     });

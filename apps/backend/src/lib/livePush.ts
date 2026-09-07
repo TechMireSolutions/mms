@@ -6,12 +6,15 @@ export interface MinimalWebSocket {
   terminate(): void;
   ping(): void;
   send(data: string): void;
+  bufferedAmount?: number;
   on(event: 'pong', listener: () => void): void;
   on(event: 'close', listener: () => void): void;
   on(event: 'error', listener: (err: Error) => void): void;
   off?(event: string, listener: (...args: any[]) => void): void;
   removeListener?(event: string, listener: (...args: any[]) => void): void;
 }
+
+export const MAX_WS_BUFFERED_AMOUNT = 512 * 1024; // 512 KB backpressure threshold
 
 interface ActiveConnection {
   subdomain: string;
@@ -197,6 +200,17 @@ export function broadcastLocalTenantUpdate(
   let sentCount = 0;
   for (const connection of tenantSet) {
     try {
+      if (
+        typeof connection.socket.bufferedAmount === 'number' &&
+        connection.socket.bufferedAmount > MAX_WS_BUFFERED_AMOUNT
+      ) {
+        logger.warn(
+          { userId: connection.userId, subdomain: normSubdomain, bufferedAmount: connection.socket.bufferedAmount },
+          'WS socket buffer backlog exceeded threshold; terminating stalled connection',
+        );
+        connection.socket.terminate();
+        continue;
+      }
       connection.socket.send(message);
       sentCount++;
     } catch (err) {
@@ -255,6 +269,17 @@ export function broadcastLocalJobEvent(jobEvent: {
   for (const connection of tenantSet) {
     if (!jobEvent.userId || connection.userId === jobEvent.userId) {
       try {
+        if (
+          typeof connection.socket.bufferedAmount === 'number' &&
+          connection.socket.bufferedAmount > MAX_WS_BUFFERED_AMOUNT
+        ) {
+          logger.warn(
+            { userId: connection.userId, jobId: jobEvent.jobId, bufferedAmount: connection.socket.bufferedAmount },
+            'WS socket buffer backlog exceeded threshold; terminating stalled connection',
+          );
+          connection.socket.terminate();
+          continue;
+        }
         connection.socket.send(message);
         sentCount++;
       } catch (err) {

@@ -61,23 +61,33 @@ export function registerCountRoute(
 ): void {
   const { path = '/count', collection, loadCountFn, loadAllFn, errorMessagePrefix } = options;
 
-  fastify.get(path, async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, collection)) return sendForbidden(reply);
-    try {
-      if (loadCountFn) {
-        const count = await loadCountFn();
-        return reply.send({ count });
-      }
-      if (!loadAllFn) {
+  fastify.get(
+    path,
+    {
+      schema: {
+        response: {
+          200: z.object({ count: z.number() }),
+        },
+      },
+    },
+    async (request, reply) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, collection)) return sendForbidden(reply);
+      try {
+        if (loadCountFn) {
+          const count = await loadCountFn();
+          return reply.send({ count });
+        }
+        if (!loadAllFn) {
+          return sendDatabaseError(reply, `Failed to count ${errorMessagePrefix}`);
+        }
+        const items = await loadAllFn();
+        return reply.send({ count: items.length });
+      } catch {
         return sendDatabaseError(reply, `Failed to count ${errorMessagePrefix}`);
       }
-      const items = await loadAllFn();
-      return reply.send({ count: items.length });
-    } catch {
-      return sendDatabaseError(reply, `Failed to count ${errorMessagePrefix}`);
-    }
-  });
+    },
+  );
 }
 
 export interface ResolveRouteOptions {

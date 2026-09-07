@@ -3,6 +3,7 @@ import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
 import jwt from '@fastify/jwt';
 import websocket from '@fastify/websocket';
+import compress from '@fastify/compress';
 import { isOriginAllowedForAppDomain, isTrustedWorkspaceOrigin } from '@mms/shared';
 import type { ServerConfig } from '../config/serverConfig.js';
 import { getRedisClient, getRedisSubscriberClient } from '../lib/redis.js';
@@ -12,6 +13,10 @@ export async function registerHttpPlugins(
   app: FastifyInstance,
   config: ServerConfig,
 ): Promise<void> {
+  await app.register(compress, {
+    global: true,
+    threshold: 1024,
+  });
   await app.register(cookie);
   await app.register(cors, {
     origin: config.isProd

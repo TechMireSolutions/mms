@@ -1,6 +1,6 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { readFile, unlink, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, unlink, mkdtemp, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { existsSync } from 'node:fs';
@@ -11,6 +11,42 @@ const execFileAsync = promisify(execFile);
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const TEMPLATES_DIR = join(__dirname, '../templates');
 
+export const MAX_CONCURRENT_TYPST_PROCESSES = Math.max(
+  1,
+  Number.parseInt(process.env.TYPST_MAX_CONCURRENCY || '2', 10),
+);
+
+let activeTypstProcesses = 0;
+const waitingQueue: Array<() => void> = [];
+
+async function acquireTypstSlot(): Promise<() => void> {
+  if (activeTypstProcesses < MAX_CONCURRENT_TYPST_PROCESSES) {
+    activeTypstProcesses++;
+    let released = false;
+    return () => {
+      if (released) return;
+      released = true;
+      activeTypstProcesses--;
+      const next = waitingQueue.shift();
+      if (next) next();
+    };
+  }
+
+  return new Promise<() => void>((resolve) => {
+    waitingQueue.push(() => {
+      activeTypstProcesses++;
+      let released = false;
+      resolve(() => {
+        if (released) return;
+        released = true;
+        activeTypstProcesses--;
+        const next = waitingQueue.shift();
+        if (next) next();
+      });
+    });
+  });
+}
+
 export type TypstTemplateType = 'report-card' | 'fee-receipt' | 'financial-ledger';
 
 export interface TypstRenderOptions {
@@ -19,6 +55,11 @@ export interface TypstRenderOptions {
   fontDir?: string;
   lang?: 'ar' | 'ur' | 'fa' | 'en';
   direction?: 'rtl' | 'ltr';
+}
+
+export interface TypstCompiledFile {
+  filePath: string;
+  cleanup: () => Promise<void>;
 }
 
 export function getTemplatePath(template: TypstTemplateType): string {
@@ -127,17 +168,33 @@ function escapePdfString(str: string): string {
 }
 
 /**
- * Compiles a Typst document to PDF using native CLI if available or headless BiDi engine.
+ * Compiles a Typst document directly to a disk file to prevent buffering
+ * multi-megabyte payloads in server memory. Returns the output file path
+ * and a cleanup function to remove temporary files when finished.
+ * If CLI is unavailable or fails, writes the conforming engine buffer to disk.
  */
-export async function compileTypstToPdf(options: TypstRenderOptions): Promise<Buffer> {
+export async function compileTypstToFile(options: TypstRenderOptions): Promise<TypstCompiledFile> {
   const templatePath = getTemplatePath(options.template);
   const binary = findTypstBinary();
+  const tempDir = await mkdtemp(join(tmpdir(), 'mms-typst-'));
+  const outputPath = join(tempDir, `output-${Date.now()}-${Math.random().toString(36).slice(2, 7)}.pdf`);
+
+  const cleanup = async () => {
+    try {
+      if (existsSync(outputPath)) await unlink(outputPath);
+    } catch {
+      // Cleanup ignore
+    }
+    try {
+      await rm(tempDir, { recursive: true, force: true });
+    } catch {
+      // Cleanup ignore
+    }
+  };
 
   if (binary) {
-    const tempDir = await mkdtemp(join(tmpdir(), 'mms-typst-'));
-    const outputPath = join(tempDir, `output-${Date.now()}.pdf`);
     const inputJson = JSON.stringify(options.data || {});
-
+    const releaseSlot = await acquireTypstSlot();
     try {
       const args = [
         'compile',
@@ -151,26 +208,40 @@ export async function compileTypstToPdf(options: TypstRenderOptions): Promise<Bu
         args.push('--font-path', options.fontDir);
       }
 
-      await execFileAsync(binary, args, { timeout: 30000 });
-      const pdfBuffer = await readFile(outputPath);
-      return pdfBuffer;
+      await execFileAsync(binary, args, {
+        timeout: 15000,
+        maxBuffer: 1024 * 1024,
+        killSignal: 'SIGKILL',
+      });
+
+      return { filePath: outputPath, cleanup };
     } catch (error) {
-      logger.warn({ err: error }, 'CLI compile failed, using conforming engine');
-      return generateConformingPdf(options);
+      logger.warn({ err: error }, 'CLI compile failed, falling back to conforming engine');
     } finally {
-      try {
-        if (existsSync(outputPath)) await unlink(outputPath);
-      } catch {
-        // Cleanup ignore
-      }
-      try {
-        await rm(tempDir, { recursive: true, force: true });
-      } catch {
-        // Cleanup ignore
-      }
+      releaseSlot();
     }
   }
 
-  // Pure conforming headless document generator
-  return generateConformingPdf(options);
+  // Fallback: write conforming PDF to file directly
+  try {
+    const conformingBuffer = generateConformingPdf(options);
+    await writeFile(outputPath, conformingBuffer);
+    return { filePath: outputPath, cleanup };
+  } catch (err) {
+    await cleanup();
+    throw err;
+  }
+}
+
+/**
+ * Compiles a Typst document to PDF using native CLI if available or headless BiDi engine.
+ */
+export async function compileTypstToPdf(options: TypstRenderOptions): Promise<Buffer> {
+  const compiled = await compileTypstToFile(options);
+  try {
+    const pdfBuffer = await readFile(compiled.filePath);
+    return pdfBuffer;
+  } finally {
+    await compiled.cleanup();
+  }
 }

@@ -36,10 +36,14 @@ export function getBullMQConnectionOptions(): ConnectionOptions {
       username: url.username || undefined,
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
-      // Do not buffer commands while Redis is down. This makes `queue.add`
-      // fail fast when Redis is unreachable so a timed-out dispatch cannot
-      // silently enqueue the job later (after the DB row was marked failed).
       enableOfflineQueue: false,
+      connectTimeout: 5000,
+      keepAlive: 30000,
+      disconnectTimeout: 2000,
+      retryStrategy(times: number) {
+        if (times > 5) return null;
+        return Math.min(times * 150 + Math.floor(Math.random() * 50), 2000);
+      },
     };
   } catch {
     return {
@@ -48,9 +52,19 @@ export function getBullMQConnectionOptions(): ConnectionOptions {
       maxRetriesPerRequest: null,
       enableReadyCheck: false,
       enableOfflineQueue: false,
+      connectTimeout: 5000,
+      keepAlive: 30000,
+      disconnectTimeout: 2000,
+      retryStrategy(times: number) {
+        if (times > 5) return null;
+        return Math.min(times * 150 + Math.floor(Math.random() * 50), 2000);
+      },
     };
   }
 }
+
+export const WORKER_HEAP_LIMIT_BYTES =
+  (Number(process.env.WORKER_HEAP_LIMIT_MB) || 512) * 1024 * 1024;
 
 export const DEFAULT_JOB_OPTIONS: JobsOptions = {
   attempts: 3,
@@ -59,11 +73,12 @@ export const DEFAULT_JOB_OPTIONS: JobsOptions = {
     delay: 1000,
   },
   removeOnComplete: {
-    age: 24 * 3600, // 24 hours
-    count: 1000,
+    count: 100,
+    age: 3600, // 1 hour
   },
   removeOnFail: {
-    age: 7 * 24 * 3600, // 7 days
-    count: 5000,
+    count: 500,
+    age: 86400, // 24 hours
   },
 };
+

@@ -26,9 +26,17 @@ export function getRedisClient(): Redis | null {
       maxRetriesPerRequest: 1,
       enableOfflineQueue: false,
       lazyConnect: true,
+      connectTimeout: 5000,
+      commandTimeout: 5000,
+      keepAlive: 30000,
+      disconnectTimeout: 2000,
+      autoResendUnfulfilledCommands: false,
       retryStrategy(times: number) {
-        if (times > 3) return null;
-        return Math.min(times * 100, 1000);
+        if (times > 5) return null;
+        return Math.min(times * 150 + Math.floor(Math.random() * 75), 2000);
+      },
+      reconnectOnError(err: Error) {
+        return err.message.includes('READONLY');
       },
     });
 
@@ -71,9 +79,14 @@ export function getRedisSubscriberClient(): Redis | null {
       maxRetriesPerRequest: 1,
       enableOfflineQueue: false,
       lazyConnect: true,
+      connectTimeout: 5000,
+      commandTimeout: 5000,
+      keepAlive: 30000,
+      disconnectTimeout: 2000,
+      autoResubscribe: true,
       retryStrategy(times: number) {
-        if (times > 3) return null;
-        return Math.min(times * 100, 1000);
+        if (times > 5) return null;
+        return Math.min(times * 150 + Math.floor(Math.random() * 75), 2000);
       },
     });
 
@@ -229,20 +242,28 @@ export function clearInMemoryRedisFallback(): void {
  * Gracefully disconnects all active Redis client connections.
  */
 export async function disconnectRedis(): Promise<void> {
-  if (redisInstance) {
+  const safeQuit = async (client: Redis) => {
     try {
-      await redisInstance.quit();
+      let timeoutId: NodeJS.Timeout;
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timeoutId = setTimeout(() => reject(new Error('Redis quit timeout')), 2000);
+      });
+      try {
+        await Promise.race([client.quit(), timeoutPromise]);
+      } finally {
+        clearTimeout(timeoutId!);
+      }
     } catch {
-      redisInstance.disconnect();
+      client.disconnect();
     }
+  };
+
+  if (redisInstance) {
+    await safeQuit(redisInstance);
     redisInstance = null;
   }
   if (redisSubscriberInstance) {
-    try {
-      await redisSubscriberInstance.quit();
-    } catch {
-      redisSubscriberInstance.disconnect();
-    }
+    await safeQuit(redisSubscriberInstance);
     redisSubscriberInstance = null;
   }
   isRedisConnected = false;
