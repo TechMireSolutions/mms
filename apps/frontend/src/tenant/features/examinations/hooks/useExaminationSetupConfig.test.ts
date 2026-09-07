@@ -38,7 +38,7 @@ describe("useExaminationSetupConfig Hooks", () => {
     document.body.appendChild(container);
     return () => {
       if (container) {
-        document.body.removeChild(container);
+        container.remove();
         container = null;
       }
     };
