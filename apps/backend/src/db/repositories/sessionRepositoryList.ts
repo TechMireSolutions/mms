@@ -100,16 +100,19 @@ function buildListConditions(subdomain: string, query: SessionsListQuery): SQL[]
  */
 export async function listSessionsPage(
   tenant: string,
-  query: SessionsListQuery,
-): Promise<SessionsListPageResult> {
+  query: SessionsListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<SessionsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, sessions, {
       conditions: buildListConditions(subdomain, query),
       orderBy: buildOrderBy(query.sortField, query.sortDir),
+      columns: { id: sessions.id },
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 12,
       rowMapper: (row) => row as typeof sessions.$inferSelect,
     });
@@ -141,6 +144,7 @@ export async function listSessionsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }

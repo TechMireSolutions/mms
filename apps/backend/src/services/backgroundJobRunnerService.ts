@@ -16,7 +16,7 @@ import { buildUsersCsvExport, generateUsersCsvStreamChunks } from './usersExport
 
 /** Cap on ledger entries carried in the `finance:export-excel` job payload. */
 const MAX_EXCEL_PAYLOAD_ENTRIES = 50_000;
-import { buildMessagingCsvExport } from './messagingExportService.js';
+import { buildMessagingCsvExport, generateMessagingCsvStreamChunks } from './messagingExportService.js';
 import { saveExportArtifact, saveStreamedExportArtifact } from './exportArtifactService.js';
 import { runContactsDuplicateScan } from './contactDuplicateScanService.js';
 import { registerBackgroundJobRunner } from './backgroundJobWorkerService.js';
@@ -225,23 +225,25 @@ export function registerDefaultBackgroundJobRunners(): void {
       }),
   });
 
-  registerBackgroundJobRunner(`${messagingModuleId}:export`, async (payload, ctx) => {
-    const exportPayload = payload as MessagingExportJobPayload;
-    await ctx.updateProgress(0, 1);
-    const { csv, filename, count } = await buildMessagingCsvExport(
-      ctx.tenant,
-      exportPayload.query ?? {},
-      {
-        filename: exportPayload.filename,
-        onProgress: (current, total) => ctx.updateProgress(current, total),
-      },
-    );
-    await saveExportArtifact(ctx.userId, ctx.jobId, csv, filename);
-    await ctx.complete({
-      label: exportPayload.label ?? `Exported ${count} message logs`,
-      progress: { current: count, total: count },
-      hasDownload: true,
-    });
+  registerModuleCsvExportJobRunner({
+    moduleId: messagingModuleId,
+    entityNounPlural: 'message logs',
+    buildExport: (query, options, tenant) =>
+      buildMessagingCsvExport(
+        tenant || '',
+        query as MessagingCsvExportQueryDto,
+        {
+          filename: options.filename,
+        },
+      ),
+    generateStreamChunks: (query, options, tenant) =>
+      generateMessagingCsvStreamChunks(
+        tenant || '',
+        query as MessagingCsvExportQueryDto,
+        {
+          filename: options.filename,
+        },
+      ),
   });
 
   // Phase 6: Headless BiDi Document Engine & Streaming Excel exports

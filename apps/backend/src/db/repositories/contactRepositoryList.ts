@@ -239,14 +239,36 @@ function buildListConditions(
   return conditions;
 }
 
+const CONTACT_LIST_COLUMNS = {
+  id: contacts.id,
+  workspaceSubdomain: contacts.workspaceSubdomain,
+  firstName: contacts.firstName,
+  lastName: contacts.lastName,
+  name: contacts.name,
+  gender: contacts.gender,
+  dob: contacts.dob,
+  cnic: contacts.cnic,
+  isSyed: contacts.isSyed,
+  avatar: contacts.avatar,
+  whatsappStatus: contacts.whatsappStatus,
+  lastCheckedAt: contacts.lastCheckedAt,
+  deletedAt: contacts.deletedAt,
+  deletedBy: contacts.deletedBy,
+  deletionReason: contacts.deletionReason,
+  createdAt: contacts.createdAt,
+  updatedAt: contacts.updatedAt,
+  createdBy: contacts.createdBy,
+  updatedBy: contacts.updatedBy,
+};
+
 /**
  * SQL-filtered contacts Work list page (typed columns & relational search/joins).
  * Search approximates normalizeSearchString (NFD + Yeh/Kaf + harakat) via SQL.
  */
 export async function listContactsPage(
   tenant: string,
-  query: ContactsListQuery,
-): Promise<ContactsListPageResult> {
+  query: ContactsListQuery & { afterId?: string },
+): Promise<ContactsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
   const excludeIds = dedupeTrimmedIds(query.excludeIds ?? []);
   const includeIds =
@@ -264,8 +286,10 @@ export async function listContactsPage(
     const result = await runListPage(tx, contacts, {
       conditions: buildListConditions(subdomain, query, excludeIds, includeIds),
       orderBy: buildOrderBy(query.sortField, query.sortDir),
+      columns: CONTACT_LIST_COLUMNS,
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
       defaultPageSize: 50,
       rowMapper: (row) => row as typeof contacts.$inferSelect,
     });
@@ -277,6 +301,7 @@ export async function listContactsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }

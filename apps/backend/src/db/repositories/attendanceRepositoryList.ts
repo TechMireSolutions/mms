@@ -132,22 +132,30 @@ function rowToRecord(row: AttendanceRow): AttendanceRecord {
 
 export async function listAttendancePage(
   tenant: string,
-  query: AttendanceListQuery,
-): Promise<AttendanceListPageResult> {
+  query: AttendanceListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<AttendanceListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const page = Math.max(1, query.page ?? 1);
     const limit = Math.min(Math.max(1, query.limit ?? 15), 500);
-    const offset = (page - 1) * limit;
+    const isCursorPaging = Boolean(query.afterId?.trim());
+    const offset = isCursorPaging ? 0 : (page - 1) * limit;
 
-    const conditions = buildAttendanceListConditions(subdomain, query);
+    const baseConditions = buildAttendanceListConditions(subdomain, query);
+    const conditions = [...baseConditions];
+    if (isCursorPaging) {
+      conditions.push(sql`${attendance.id} > ${query.afterId!.trim()}`);
+    }
     const whereClause = and(...conditions);
 
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(attendance)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
+    let total = 0;
+    if (!query.skipCount) {
+      const countRows = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(attendance)
+        .where(and(...baseConditions));
+      total = Number(countRows[0]?.count ?? 0);
+    }
 
     const classJoinConditions: SQL[] = [
       eq(attendance.workspaceSubdomain, sessionClasses.workspaceSubdomain),
@@ -159,6 +167,10 @@ export async function listAttendancePage(
     if (query.teacherId?.trim()) {
       classJoinConditions.push(eq(sessionClasses.teacherId, query.teacherId.trim()));
     }
+
+    const orderBy = isCursorPaging
+      ? asc(attendance.id)
+      : buildAttendanceOrderBy(query.sortField, query.sortDir);
 
     const rows = await tx
       .select({
@@ -190,7 +202,7 @@ export async function listAttendancePage(
         eq(sessionClasses.sessionId, sessions.id)
       ))
       .where(whereClause)
-      .orderBy(buildAttendanceOrderBy(query.sortField, query.sortDir))
+      .orderBy(orderBy)
       .limit(limit)
       .offset(offset);
 
@@ -207,7 +219,8 @@ export async function listAttendancePage(
       total,
       page,
       limit,
-      hasMore: page * limit < total,
+      hasMore: isCursorPaging ? rows.length === limit : page * limit < total,
+      ...(isCursorPaging && rows.length > 0 ? { nextCursor: rows[rows.length - 1].attendance.id } : {}),
     };
   });
 }

@@ -107,8 +107,8 @@ function buildQuestionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQ
 
 export async function listQuestionsPage(
   tenant: string,
-  query: QuestionBankListQuery,
-): Promise<QuestionBankListPageResult> {
+  query: QuestionBankListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<QuestionBankListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
@@ -117,6 +117,8 @@ export async function listQuestionsPage(
       orderBy: buildQuestionsOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 15,
       rowMapper: (row) => row as typeof questions.$inferSelect,
     });
@@ -238,6 +240,7 @@ export async function listQuestionsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }

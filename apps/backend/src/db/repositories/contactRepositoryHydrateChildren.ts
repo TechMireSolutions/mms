@@ -59,6 +59,58 @@ export async function loadContactChildMaps(
   subdomain: string,
   contactIds: string[],
 ): Promise<ContactChildMaps> {
+  if (contactIds.length === 0) {
+    return {
+      phonesMap: new Map(),
+      emailsMap: new Map(),
+      addressesMap: new Map(),
+      tagsMap: new Map(),
+      socialsMap: new Map(),
+      educationsMap: new Map(),
+      experiencesMap: new Map(),
+      skillsMap: new Map(),
+      relationshipsMap: new Map(),
+      activitiesMap: new Map(),
+      attachmentsMap: new Map(),
+      bankDetailsMap: new Map(),
+    };
+  }
+
+  const BATCH_SIZE = 250;
+  if (contactIds.length > BATCH_SIZE) {
+    const combined: ContactChildMaps = {
+      phonesMap: new Map(),
+      emailsMap: new Map(),
+      addressesMap: new Map(),
+      tagsMap: new Map(),
+      socialsMap: new Map(),
+      educationsMap: new Map(),
+      experiencesMap: new Map(),
+      skillsMap: new Map(),
+      relationshipsMap: new Map(),
+      activitiesMap: new Map(),
+      attachmentsMap: new Map(),
+      bankDetailsMap: new Map(),
+    };
+    for (let i = 0; i < contactIds.length; i += BATCH_SIZE) {
+      const slice = contactIds.slice(i, i + BATCH_SIZE);
+      const partial = await loadContactChildMaps(tx, subdomain, slice);
+      for (const [k, v] of partial.phonesMap) combined.phonesMap.set(k, v);
+      for (const [k, v] of partial.emailsMap) combined.emailsMap.set(k, v);
+      for (const [k, v] of partial.addressesMap) combined.addressesMap.set(k, v);
+      for (const [k, v] of partial.tagsMap) combined.tagsMap.set(k, v);
+      for (const [k, v] of partial.socialsMap) combined.socialsMap.set(k, v);
+      for (const [k, v] of partial.educationsMap) combined.educationsMap.set(k, v);
+      for (const [k, v] of partial.experiencesMap) combined.experiencesMap.set(k, v);
+      for (const [k, v] of partial.skillsMap) combined.skillsMap.set(k, v);
+      for (const [k, v] of partial.relationshipsMap) combined.relationshipsMap.set(k, v);
+      for (const [k, v] of partial.activitiesMap) combined.activitiesMap.set(k, v);
+      for (const [k, v] of partial.attachmentsMap) combined.attachmentsMap.set(k, v);
+      for (const [k, v] of partial.bankDetailsMap) combined.bankDetailsMap.set(k, v);
+    }
+    return combined;
+  }
+
   const [
     phonesRows,
     emailsRows,
@@ -349,6 +401,52 @@ export async function loadContactSummaryChildMaps(
   subdomain: string,
   contactIds: string[],
 ): Promise<ContactChildMaps> {
+  if (contactIds.length === 0) {
+    return {
+      phonesMap: new Map(),
+      emailsMap: new Map(),
+      addressesMap: new Map(),
+      tagsMap: new Map(),
+      socialsMap: new Map(),
+      educationsMap: new Map(),
+      experiencesMap: new Map(),
+      skillsMap: new Map(),
+      relationshipsMap: new Map(),
+      activitiesMap: new Map(),
+      attachmentsMap: new Map(),
+      bankDetailsMap: new Map(),
+    };
+  }
+
+  const BATCH_SIZE = 250;
+  if (contactIds.length > BATCH_SIZE) {
+    const combined: ContactChildMaps = {
+      phonesMap: new Map(),
+      emailsMap: new Map(),
+      addressesMap: new Map(),
+      tagsMap: new Map(),
+      socialsMap: new Map(),
+      educationsMap: new Map(),
+      experiencesMap: new Map(),
+      skillsMap: new Map(),
+      relationshipsMap: new Map(),
+      activitiesMap: new Map(),
+      attachmentsMap: new Map(),
+      bankDetailsMap: new Map(),
+    };
+    for (let i = 0; i < contactIds.length; i += BATCH_SIZE) {
+      const slice = contactIds.slice(i, i + BATCH_SIZE);
+      const partial = await loadContactSummaryChildMaps(tx, subdomain, slice);
+      for (const [k, v] of partial.phonesMap) combined.phonesMap.set(k, v);
+      for (const [k, v] of partial.emailsMap) combined.emailsMap.set(k, v);
+      for (const [k, v] of partial.addressesMap) combined.addressesMap.set(k, v);
+      for (const [k, v] of partial.tagsMap) combined.tagsMap.set(k, v);
+      for (const [k, v] of partial.socialsMap) combined.socialsMap.set(k, v);
+      for (const [k, v] of partial.relationshipsMap) combined.relationshipsMap.set(k, v);
+    }
+    return combined;
+  }
+
   const [phonesRows, emailsRows, addressesRows, tagsRows, socialsRows, relationshipsRows] = await Promise.all([
     tx
       .select({

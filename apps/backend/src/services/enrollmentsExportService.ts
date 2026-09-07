@@ -56,15 +56,18 @@ const enrollmentsCsv = createModuleCsvExportService<
   }),
   prepareExport: prepareEnrollmentsExport,
   loadByIds: (ids) => loadEnrollmentsByIds(ids) as Promise<Enrollment[]>,
-  loadPage: async (query, page, limit) => {
+  loadPage: async (query, page, limit, afterId) => {
     const pageResult = await loadEnrollmentsPage({
       ...query,
       page,
       limit,
+      afterId,
+      skipCount: true,
     } as never);
     return {
       rows: pageResult.enrollments as Enrollment[],
       hasMore: pageResult.hasMore,
+      nextCursor: (pageResult as { nextCursor?: string }).nextCursor,
     };
   },
   yieldDataChunks: (enrollments, columns, chunkSize) => {

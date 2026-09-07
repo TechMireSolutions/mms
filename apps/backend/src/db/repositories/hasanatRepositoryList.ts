@@ -102,8 +102,8 @@ type DistributionRow = typeof hasanatDistributions.$inferSelect;
 
 export async function listDistributionsPage(
   tenant: string,
-  query: HasanatListQuery,
-): Promise<HasanatDistributionsListPageResult> {
+  query: HasanatListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<HasanatDistributionsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const result = await runListPage<DistributionRow, Distribution>(tx, hasanatDistributions, {
@@ -111,6 +111,8 @@ export async function listDistributionsPage(
       orderBy: buildDistributionsOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 15,
       rowMapper: distributionRowToRecord,
     });
@@ -120,6 +122,7 @@ export async function listDistributionsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }

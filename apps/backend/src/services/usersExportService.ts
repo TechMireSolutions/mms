@@ -56,15 +56,18 @@ const usersCsv = createModuleCsvExportService<
   }),
   prepareExport: prepareUsersExport,
   loadByIds: (ids) => loadUsersByIds(ids),
-  loadPage: async (query, page, limit) => {
+  loadPage: async (query, page, limit, afterId) => {
     const pageResult = await loadUsersPage({
       ...query,
       page,
       limit,
+      afterId,
+      skipCount: true,
     } as never);
     return {
       rows: pageResult.users,
       hasMore: pageResult.hasMore,
+      nextCursor: (pageResult as { nextCursor?: string }).nextCursor,
     };
   },
   yieldDataChunks: (users, columns, chunkSize) => {

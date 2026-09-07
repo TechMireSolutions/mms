@@ -3,12 +3,10 @@ import {
   formatDateTime,
   MESSAGING_CSV_EXPORT_MAX_BYTES,
   MESSAGING_CSV_EXPORT_MAX_ROWS,
-  type Message,
   type MessagingCsvExportQueryDto,
 } from '@mms/shared';
 import { loadFilteredMessageLogs, resolveMessagingRecipients } from './messagingService.js';
 
-const EXPORT_PAGE_SIZE = 500;
 const RESOLVE_CHUNK_SIZE = 100;
 
 const CSV_HEADERS = ['Recipient', 'Channel', 'Category', 'Message', 'Date Sent'] as const;
@@ -48,92 +46,122 @@ function normalizeFilters(query: MessagingCsvExportQueryDto = {}): MessagingCsvE
 }
 
 /**
- * Pages active message logs, resolves recipient names, and builds a CSV artifact.
- * Soft-archived logs are never included (`includeDeleted` is never set).
- * Fails when row count or CSV bytes would exceed shared caps.
+ * Streams messaging CSV chunks page-by-page (250 records max per batch)
+ * with recipient resolution, yielding CSV chunks without accumulating all logs in memory.
  */
-export async function buildMessagingCsvExport(
+export async function* generateMessagingCsvStreamChunks(
   workspaceSubdomain: string,
   query: MessagingCsvExportQueryDto = {},
   options: MessagingCsvExportOptions = {},
-): Promise<MessagingCsvExportResult> {
+): AsyncGenerator<string, { count: number; filename: string }, undefined> {
   const filters = normalizeFilters(query);
   const filename = normalizeFilename(options.filename);
-  const logs: Message[] = [];
+  const CHUNK_SIZE = 250;
+
+  // Yield header
+  yield CSV_HEADERS.map((header) => escapeCsvCell(header)).join(',') + '\n';
 
   let page = 1;
+  let count = 0;
   let hasMore = true;
 
   while (hasMore) {
     const result = await loadFilteredMessageLogs(workspaceSubdomain, {
       ...filters,
       page,
-      pageSize: EXPORT_PAGE_SIZE,
-      // Never export soft-archived logs.
+      pageSize: CHUNK_SIZE,
       includeDeleted: false,
     });
+
     if (page === 1 && result.total > MESSAGING_CSV_EXPORT_MAX_ROWS) {
       throw new MessagingCsvExportLimitError(
         `Export exceeds maximum of ${MESSAGING_CSV_EXPORT_MAX_ROWS} rows (${result.total} matched)`,
       );
     }
-    logs.push(...result.logs);
-    if (logs.length > MESSAGING_CSV_EXPORT_MAX_ROWS) {
-      throw new MessagingCsvExportLimitError(
-        `Export exceeds maximum of ${MESSAGING_CSV_EXPORT_MAX_ROWS} rows`,
-      );
+
+    const logs = result.logs;
+    if (logs.length > 0) {
+      // Resolve recipient names for this page only
+      const uniqueIdSet = new Set<string>();
+      for (let i = 0; i < logs.length; i++) {
+        uniqueIdSet.add(String(logs[i].contactId));
+      }
+      const uniqueIds = [...uniqueIdSet];
+      const nameById = new Map<string, string>();
+      for (let index = 0; index < uniqueIds.length; index += RESOLVE_CHUNK_SIZE) {
+        const chunk = uniqueIds.slice(index, index + RESOLVE_CHUNK_SIZE);
+        const recipients = await resolveMessagingRecipients(workspaceSubdomain, chunk);
+        for (const recipient of recipients) {
+          nameById.set(String(recipient.id), recipient.name);
+        }
+      }
+
+      const lines: string[] = [];
+      for (let i = 0; i < logs.length; i++) {
+        const log = logs[i];
+        const contactKey = String(log.contactId);
+        const name = nameById.get(contactKey) || `Contact #${contactKey}`;
+        lines.push(
+          [
+            name,
+            log.channel,
+            log.category || 'general',
+            log.body,
+            formatDateTime(log.sentAt),
+          ]
+            .map((cell) => escapeCsvCell(cell))
+            .join(','),
+        );
+      }
+      yield lines.join('\n') + '\n';
+      count += logs.length;
+      if (count > MESSAGING_CSV_EXPORT_MAX_ROWS) {
+        throw new MessagingCsvExportLimitError(
+          `Export exceeds maximum of ${MESSAGING_CSV_EXPORT_MAX_ROWS} rows`,
+        );
+      }
     }
-    await options.onProgress?.(logs.length, Math.max(result.total, 1));
+
+    await options.onProgress?.(count, Math.max(result.total, 1));
     hasMore = result.hasMore;
     page += 1;
   }
 
-  const uniqueIdSet = new Set<string>();
-  for (let i = 0; i < logs.length; i++) {
-    uniqueIdSet.add(String(logs[i].contactId));
-  }
-  const uniqueIds = [...uniqueIdSet];
-  const nameById = new Map<string, string>();
+  return { count, filename };
+}
 
-  for (let index = 0; index < uniqueIds.length; index += RESOLVE_CHUNK_SIZE) {
-    const chunk = uniqueIds.slice(index, index + RESOLVE_CHUNK_SIZE);
-    const recipients = await resolveMessagingRecipients(workspaceSubdomain, chunk);
-    for (const recipient of recipients) {
-      nameById.set(String(recipient.id), recipient.name);
+/**
+ * Builds a CSV artifact from streaming chunks with byte and row limits.
+ */
+export async function buildMessagingCsvExport(
+  workspaceSubdomain: string,
+  query: MessagingCsvExportQueryDto = {},
+  options: MessagingCsvExportOptions = {},
+): Promise<MessagingCsvExportResult> {
+  const generator = generateMessagingCsvStreamChunks(workspaceSubdomain, query, options);
+  const chunks: string[] = [];
+  let totalBytes = 0;
+  let step = await generator.next();
+
+  while (!step.done) {
+    const chunk = step.value;
+    totalBytes += Buffer.byteLength(chunk, 'utf8');
+    if (totalBytes > MESSAGING_CSV_EXPORT_MAX_BYTES) {
+      throw new MessagingCsvExportLimitError(
+        `Export exceeds maximum of ${MESSAGING_CSV_EXPORT_MAX_BYTES} bytes (${totalBytes} generated)`,
+      );
     }
+    chunks.push(chunk);
+    step = await generator.next();
   }
 
-  // Build the CSV incrementally (header + one line per log) instead of
-  // materialising a full rows[][] (plus buildCsvContent's internal line array)
-  // in memory. Output is byte-identical to the previous buildCsvContent(rows).
-  const lines: string[] = new Array(logs.length + 1);
-  lines[0] = CSV_HEADERS.map((header) => escapeCsvCell(header)).join(',');
-  for (let i = 0; i < logs.length; i++) {
-    const log = logs[i];
-    const contactKey = String(log.contactId);
-    const name = nameById.get(contactKey) || `Contact #${contactKey}`;
-    lines[i + 1] = [
-      name,
-      log.channel,
-      log.category || 'general',
-      log.body,
-      formatDateTime(log.sentAt),
-    ]
-      .map((cell) => escapeCsvCell(cell))
-      .join(',');
-  }
-
-  const csv = lines.join('\n');
-  const byteLength = Buffer.byteLength(csv, 'utf8');
-  if (byteLength > MESSAGING_CSV_EXPORT_MAX_BYTES) {
-    throw new MessagingCsvExportLimitError(
-      `Export exceeds maximum of ${MESSAGING_CSV_EXPORT_MAX_BYTES} bytes (${byteLength} generated)`,
-    );
-  }
+  const meta = step.value;
+  // Trim trailing newline to match previous format
+  const csv = chunks.join('').replace(/\n$/, '');
 
   return {
     csv,
-    filename,
-    count: logs.length,
+    filename: meta?.filename || normalizeFilename(options.filename),
+    count: meta?.count ?? 0,
   };
 }

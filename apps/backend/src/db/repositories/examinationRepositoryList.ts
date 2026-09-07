@@ -88,8 +88,8 @@ type ExamRow = typeof exams.$inferSelect;
 
 export async function listExamsPage(
   tenant: string,
-  query: ExaminationsListQuery,
-): Promise<ExaminationsListPageResult> {
+  query: ExaminationsListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<ExaminationsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const result = await runListPage<ExamRow, ExamRow>(tx, exams, {
@@ -97,6 +97,8 @@ export async function listExamsPage(
       orderBy: buildExamsOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 12,
       rowMapper: (row) => row,
     });
@@ -135,6 +137,7 @@ export async function listExamsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }

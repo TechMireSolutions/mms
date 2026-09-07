@@ -18,6 +18,10 @@ export interface RunListPageOptions<Row, Record> {
   columns?: SelectedFields;
   /** Maps a raw Drizzle row to the public record shape (e.g. merge `customData`). */
   rowMapper: (row: Row) => Record;
+  /** Keyset cursor: fetch items strictly after this ID (enables O(1) indexed page traversal). */
+  afterId?: string;
+  /** Skip count(*) query when total count is not needed (e.g. streaming export chunking). */
+  skipCount?: boolean;
 }
 
 export interface ListPageResult<Record> {
@@ -26,6 +30,7 @@ export interface ListPageResult<Record> {
   page: number;
   limit: number;
   hasMore: boolean;
+  nextCursor?: string;
 }
 
 /**
@@ -41,15 +46,31 @@ export async function runListPage<Row, Record>(
 ): Promise<ListPageResult<Record>> {
   const page = Math.max(1, options.page ?? 1);
   const limit = Math.min(Math.max(1, options.limit ?? options.defaultPageSize ?? 50), 500);
-  const offset = (page - 1) * limit;
+  const isCursorPaging = Boolean(options.afterId?.trim());
+  const offset = isCursorPaging ? 0 : (page - 1) * limit;
 
-  const whereClause = and(...options.conditions);
+  const baseWhereClause = and(...options.conditions);
+  const conditions = [...options.conditions];
+  if (isCursorPaging) {
+    // Keyset pagination: filter id > afterId strictly using the primary key index.
+    conditions.push(sql`${(table as unknown as { id: SQL }).id} > ${options.afterId!.trim()}`);
+  }
+  const whereClause = and(...conditions);
 
-  const countRows = await tx
-    .select({ count: sql<number>`count(*)::int` })
-    .from(table)
-    .where(whereClause);
-  const total = Number(countRows[0]?.count ?? 0);
+  let total = 0;
+  if (!options.skipCount) {
+    // Count over base conditions so total reflects whole matching dataset, not only rows after cursor
+    const countRows = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(table)
+      .where(baseWhereClause);
+    total = Number(countRows[0]?.count ?? 0);
+  }
+
+  // When keyset paging on `id > afterId`, ordering must be `id ASC` to preserve index scan consistency
+  const effectiveOrderBy = isCursorPaging
+    ? sql`${(table as unknown as { id: SQL }).id} asc`
+    : options.orderBy;
 
   // Never fall back to a bare `tx.select()` (SELECT *) wildcard. Project an
   // explicit column object — a caller-supplied projection when provided,
@@ -60,18 +81,22 @@ export async function runListPage<Row, Record>(
   const rows = await baseQuery
     .from(table)
     .where(whereClause)
-    .orderBy(options.orderBy)
+    .orderBy(effectiveOrderBy)
     .limit(limit)
     .offset(offset);
 
   const items = (rows as unknown as Row[]).map(options.rowMapper);
+  const hasMore = isCursorPaging ? items.length === limit : page * limit < total;
+  const lastItem = items[items.length - 1] as { id?: unknown } | undefined;
+  const nextCursor = isCursorPaging && hasMore && lastItem?.id ? String(lastItem.id) : undefined;
 
   return {
     items,
     total,
     page,
     limit,
-    hasMore: page * limit < total,
+    hasMore,
+    ...(nextCursor ? { nextCursor } : {}),
   };
 }
 

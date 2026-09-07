@@ -63,15 +63,17 @@ const teachersCsv = createModuleCsvExportService<
   }),
   prepareExport: prepareTeachersExport,
   loadByIds: (ids) => loadTeachersByIds(ids) as Promise<Teacher[]>,
-  loadPage: async (query, page, limit) => {
+  loadPage: async (query, page, limit, afterId) => {
     const pageResult = await loadTeachersPage({
       ...query,
       page,
       limit,
+      afterId,
     } as never);
     return {
       rows: pageResult.teachers as Teacher[],
       hasMore: pageResult.hasMore,
+      nextCursor: (pageResult as { nextCursor?: string }).nextCursor,
     };
   },
   yieldDataChunks: (teachers, columns, chunkSize) => {

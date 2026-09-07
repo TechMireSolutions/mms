@@ -96,22 +96,52 @@ function buildListConditions(subdomain: string, query: EnrollmentsListQuery): SQ
   return conditions;
 }
 
+const ENROLLMENT_LIST_COLUMNS = {
+  id: enrollments.id,
+  workspaceSubdomain: enrollments.workspaceSubdomain,
+  studentId: enrollments.studentId,
+  studentName: enrollments.studentName,
+  sessionId: enrollments.sessionId,
+  sessionName: enrollments.sessionName,
+  classId: enrollments.classId,
+  className: enrollments.className,
+  enrolledDate: enrollments.enrolledDate,
+  baseFee: enrollments.baseFee,
+  discountType: enrollments.discountType,
+  discountLabel: enrollments.discountLabel,
+  discountPct: enrollments.discountPct,
+  discountAmt: enrollments.discountAmt,
+  finalFee: enrollments.finalFee,
+  status: enrollments.status,
+  invoiceId: enrollments.invoiceId,
+  paymentStatus: enrollments.paymentStatus,
+  notes: sql<string | null>`NULL`.as('notes'),
+  deletedAt: enrollments.deletedAt,
+  deletedBy: enrollments.deletedBy,
+  deletionReason: enrollments.deletionReason,
+  createdAt: enrollments.createdAt,
+  updatedAt: enrollments.updatedAt,
+};
+
 /**
  * SQL-filtered enrollments Work list page (typed 3NF columns).
  * includeDeleted → deleted-only (Work trash parity).
  */
 export async function listEnrollmentsPage(
   tenant: string,
-  query: EnrollmentsListQuery,
-): Promise<EnrollmentsListPageResult> {
+  query: EnrollmentsListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<EnrollmentsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
     const result = await runListPage(tx, enrollments, {
       conditions: buildListConditions(subdomain, query),
       orderBy: buildOrderBy(query.sortField, query.sortDir),
+      columns: ENROLLMENT_LIST_COLUMNS,
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 12,
       rowMapper: (row) => row as typeof enrollments.$inferSelect,
     });
@@ -157,6 +187,7 @@ export async function listEnrollmentsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }

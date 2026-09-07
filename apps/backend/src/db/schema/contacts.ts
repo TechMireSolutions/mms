@@ -41,6 +41,39 @@ export const contacts = pgTable('contacts', {
   index('contacts_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_id_active_idx')
+    .on(table.workspaceSubdomain, table.id)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_gender_active_idx')
+    .on(table.workspaceSubdomain, table.gender)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_gender_id_active_idx')
+    .on(table.workspaceSubdomain, table.gender, table.id)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_gender_created_at_active_idx')
+    .on(table.workspaceSubdomain, table.gender, table.createdAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_gender_updated_at_active_idx')
+    .on(table.workspaceSubdomain, table.gender, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_gender_expr_updated_at_active_idx')
+    .on(table.workspaceSubdomain, sql`(lower(btrim(COALESCE(${table.gender}, ''))))`, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_gender_expr_id_active_idx')
+    .on(table.workspaceSubdomain, sql`(lower(btrim(COALESCE(${table.gender}, ''))))`, table.id)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_is_syed_active_idx')
+    .on(table.workspaceSubdomain, table.isSyed, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_name_active_idx')
+    .on(table.workspaceSubdomain, table.name)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_first_name_active_idx')
+    .on(table.workspaceSubdomain, table.firstName)
+    .where(sql`${table.deletedAt} is null`),
+  index('contacts_workspace_last_name_active_idx')
+    .on(table.workspaceSubdomain, table.lastName)
+    .where(sql`${table.deletedAt} is null`),
   uniqueIndex('contacts_workspace_cnic_active_uidx')
     .on(
       table.workspaceSubdomain,

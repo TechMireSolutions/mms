@@ -23,6 +23,7 @@ export type RegisterModuleCsvExportJobRunnerOptions = {
       viewerRole: string;
       allowDeleted?: boolean;
     },
+    tenant?: string,
   ) => Promise<{ csv: string; filename: string; count: number }>;
   /**
    * Optional streaming generator. When provided, the runner streams the CSV to
@@ -38,6 +39,7 @@ export type RegisterModuleCsvExportJobRunnerOptions = {
       viewerRole: string;
       allowDeleted?: boolean;
     },
+    tenant?: string,
   ) => AsyncGenerator<string, { count: number; filename: string }, undefined>;
 };
 
@@ -63,6 +65,7 @@ async function streamCsvToStorage(
       viewerRole: exportPayload.viewerRole,
       allowDeleted: exportPayload.allowDeleted === true,
     },
+    ctx.tenant,
   );
 
   try {
@@ -117,6 +120,7 @@ export function registerModuleCsvExportJobRunner(
           viewerRole: exportPayload.viewerRole,
           allowDeleted: exportPayload.allowDeleted === true,
         },
+        ctx.tenant,
       );
       count = result.count;
       await saveExportArtifact(ctx.userId, ctx.jobId, result.csv, result.filename);

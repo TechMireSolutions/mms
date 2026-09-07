@@ -19,8 +19,8 @@ import {
 
 export async function listAccountsPage(
   tenant: string,
-  query: AccountingListQuery,
-): Promise<AccountingAccountsListPageResult> {
+  query: AccountingListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<AccountingAccountsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
@@ -43,6 +43,8 @@ export async function listAccountsPage(
       orderBy: buildAccountOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 12,
       rowMapper: (row) => accountRowToRecord(row as typeof accountingAccounts.$inferSelect),
     });
@@ -53,14 +55,15 @@ export async function listAccountsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }
 
 export async function listFiscalYearsPage(
   tenant: string,
-  query: AccountingListQuery,
-): Promise<AccountingFiscalYearsListPageResult> {
+  query: AccountingListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<AccountingFiscalYearsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
@@ -81,6 +84,8 @@ export async function listFiscalYearsPage(
       orderBy: buildFiscalYearOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 12,
       rowMapper: (row) => fiscalYearRowToRecord(row as typeof accountingFiscalYears.$inferSelect),
     });
@@ -91,6 +96,7 @@ export async function listFiscalYearsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }

@@ -46,7 +46,8 @@ export type CreateModuleCsvExportServiceOptions<
     query: TQuery & { includeIds?: Array<string | number> },
     page: number,
     limit: number,
-  ) => Promise<{ rows: TRow[]; hasMore: boolean }>;
+    afterId?: string,
+  ) => Promise<{ rows: TRow[]; hasMore: boolean; nextCursor?: string }>;
   yieldDataChunks: (
     rows: TRow[],
     columns: TCol[],
@@ -84,7 +85,8 @@ export function createModuleCsvExportService<
       columns: prepared.columns,
       includeIds,
       loadByIds: options.loadByIds,
-      loadPage: async (page, limit) => options.loadPage(normalized, page, limit),
+      loadPage: async (page, limit, afterId) =>
+        options.loadPage(normalized, page, limit, afterId),
       yieldDataChunks: (rows, cols, size) =>
         options.yieldDataChunks(
           rows as TRow[],

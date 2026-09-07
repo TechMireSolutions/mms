@@ -131,7 +131,8 @@ export async function listTeachersByWorkspace(
         updatedBy: teachers.updatedBy,
       })
       .from(teachers)
-      .where(and(...conditions));
+      .where(and(...conditions))
+      .orderBy(teachers.id);
     if (options?.offset) {
       baseQuery.offset(Math.max(0, options.offset));
     }

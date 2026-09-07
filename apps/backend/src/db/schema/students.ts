@@ -41,6 +41,33 @@ export const students = pgTable('students', {
   index('students_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_id_active_idx')
+    .on(table.workspaceSubdomain, table.id)
+    .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_status_id_active_idx')
+    .on(table.workspaceSubdomain, table.status, table.id)
+    .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_created_at_active_idx')
+    .on(table.workspaceSubdomain, table.createdAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_updated_at_active_idx')
+    .on(table.workspaceSubdomain, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_status_updated_at_active_idx')
+    .on(table.workspaceSubdomain, table.status, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_status_expr_updated_at_active_idx')
+    .on(table.workspaceSubdomain, sql`(lower(btrim(COALESCE(${table.status}, 'active'))))`, table.updatedAt)
+    .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_status_expr_id_active_idx')
+    .on(table.workspaceSubdomain, sql`(lower(btrim(COALESCE(${table.status}, 'active'))))`, table.id)
+    .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_registered_date_active_idx')
+    .on(table.workspaceSubdomain, table.registeredDate)
+    .where(sql`${table.deletedAt} is null`),
+  index('students_workspace_gr_number_active_idx')
+    .on(table.workspaceSubdomain, table.grNumber)
+    .where(sql`${table.deletedAt} is null`),
   index('students_workspace_contact_active_idx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),

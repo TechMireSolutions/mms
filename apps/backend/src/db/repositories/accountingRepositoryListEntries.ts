@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, eq, inArray, sql } from 'drizzle-orm';
 import type {
   AccountingListQuery,
   AccountingEntriesListPageResult,
@@ -15,23 +15,34 @@ import { buildEntryListConditions, buildEntryOrderBy } from './accountingReposit
 
 export async function listEntriesPage(
   tenant: string,
-  query: AccountingListQuery,
-): Promise<AccountingEntriesListPageResult> {
+  query: AccountingListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<AccountingEntriesListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
   const page = Math.max(1, query.page ?? 1);
   const limit = Math.min(Math.max(1, query.limit ?? 12), 500);
-  const offset = (page - 1) * limit;
+  const isCursorPaging = Boolean(query.afterId?.trim());
+  const offset = isCursorPaging ? 0 : (page - 1) * limit;
 
   return withTenant(subdomain, async (tx) => {
-    const conditions = buildEntryListConditions(subdomain, query);
+    const baseConditions = buildEntryListConditions(subdomain, query);
+    const baseWhereClause = and(...baseConditions);
+    const conditions = [...baseConditions];
+    if (isCursorPaging) {
+      conditions.push(sql`${accountingEntries.id} > ${query.afterId!.trim()}`);
+    }
     const whereClause = and(...conditions);
-    const orderBy = buildEntryOrderBy(query.sortField, query.sortDir);
+    const orderBy = isCursorPaging
+      ? asc(accountingEntries.id)
+      : buildEntryOrderBy(query.sortField, query.sortDir);
 
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(accountingEntries)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
+    let total = 0;
+    if (!query.skipCount) {
+      const countRows = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(accountingEntries)
+        .where(baseWhereClause);
+      total = Number(countRows[0]?.count ?? 0);
+    }
 
     const rows = await tx
       .select({
@@ -162,7 +173,8 @@ export async function listEntriesPage(
       total,
       page,
       limit,
-      hasMore: page * limit < total,
+      hasMore: isCursorPaging ? rows.length === limit : page * limit < total,
+      ...(isCursorPaging && rows.length > 0 ? { nextCursor: rows[rows.length - 1].id } : {}),
     };
   });
 }

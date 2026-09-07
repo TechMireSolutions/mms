@@ -67,15 +67,18 @@ const sessionsCsv = createModuleCsvExportService<
   }),
   prepareExport: prepareSessionsExport,
   loadByIds: loadSessionsByIds,
-  loadPage: async (query, page, limit) => {
+  loadPage: async (query, page, limit, afterId) => {
     const pageResult = await loadSessionsPage({
       ...query,
       page,
       limit,
+      afterId,
+      skipCount: true,
     } as never);
     return {
       rows: pageResult.sessions as Session[],
       hasMore: pageResult.hasMore,
+      nextCursor: (pageResult as { nextCursor?: string }).nextCursor,
     };
   },
   yieldDataChunks: (sessionRows, columns, chunkSize) => {

@@ -125,8 +125,8 @@ function buildPaymentOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL 
 
 export async function listInvoicesPage(
   tenant: string,
-  query: FinanceListQuery,
-): Promise<FinanceInvoicesListPageResult> {
+  query: FinanceListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<FinanceInvoicesListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
@@ -135,6 +135,8 @@ export async function listInvoicesPage(
       orderBy: buildInvoiceOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 12,
       rowMapper: invoiceRowToRecord,
     });
@@ -145,14 +147,15 @@ export async function listInvoicesPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }
 
 export async function listPaymentsPage(
   tenant: string,
-  query: FinanceListQuery,
-): Promise<FinancePaymentsListPageResult> {
+  query: FinanceListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<FinancePaymentsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
@@ -161,6 +164,8 @@ export async function listPaymentsPage(
       orderBy: buildPaymentOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 12,
       rowMapper: paymentRowToRecord,
     });
@@ -171,6 +176,7 @@ export async function listPaymentsPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }

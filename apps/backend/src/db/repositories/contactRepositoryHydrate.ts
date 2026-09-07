@@ -126,7 +126,7 @@ export async function listContactsByWorkspace(
       })
       .from(contacts)
       .where(and(...conditions))
-      .orderBy(contacts.name)
+      .orderBy(contacts.name, contacts.id)
       .limit(limit)
       .offset(offset);
     return hydrateContactsList(tx, subdomain, rows);

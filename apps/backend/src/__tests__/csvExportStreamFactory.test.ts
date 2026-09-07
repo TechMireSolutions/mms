@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   CsvExportLimitError,
   MODULE_CSV_EXPORT_MAX_BYTES,
+  MODULE_CSV_EXPORT_MAX_RECORDS,
   buildCsvExportFromGenerator,
   generateCsvStreamChunks,
   normalizeIncludeDeletedFlag,
@@ -152,9 +153,21 @@ describe('csvExportStreamFactory', () => {
       expect(res.filename).toBe('default.csv');
       expect(res.count).toBe(1);
     });
+
+    it('throws CsvExportLimitError when record count exceeds MODULE_CSV_EXPORT_MAX_RECORDS', async () => {
+      async function* excessRecordsGen(): AsyncGenerator<string, { count: number; filename: string }, undefined> {
+        yield 'chunk1';
+        return { count: 501, filename: 'large.csv' };
+      }
+
+      await expect(
+        buildCsvExportFromGenerator(excessRecordsGen(), 'fallback.csv'),
+      ).rejects.toThrow(CsvExportLimitError);
+    });
   });
 
-  it('exports MODULE_CSV_EXPORT_MAX_BYTES constant', () => {
+  it('exports MODULE_CSV_EXPORT_MAX_BYTES and MODULE_CSV_EXPORT_MAX_RECORDS constants', () => {
     expect(MODULE_CSV_EXPORT_MAX_BYTES).toBe(25 * 1024 * 1024);
+    expect(MODULE_CSV_EXPORT_MAX_RECORDS).toBe(500);
   });
 });

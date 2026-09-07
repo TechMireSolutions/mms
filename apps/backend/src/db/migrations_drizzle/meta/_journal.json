@@ -687,6 +687,27 @@
       "when": 1786809600000,
       "tag": "0097_contact_bank_details_account_title",
       "breakpoints": true
+    },
+    {
+      "idx": 98,
+      "version": "7",
+      "when": 1786813200000,
+      "tag": "0098_directory_compound_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 99,
+      "version": "7",
+      "when": 1786816800000,
+      "tag": "0099_directory_cursor_compound_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 100,
+      "version": "7",
+      "when": 1786820400000,
+      "tag": "0100_directory_expression_compound_indexes",
+      "breakpoints": true
     }
   ]
 }

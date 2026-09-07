@@ -11,8 +11,8 @@ import {
  * and released without holding the whole tenant in memory at once.
  */
 export interface SnapshotJsonSource {
-  /** [collectionName, rows][] in deterministic order. */
-  collections?: AsyncIterable<[string, unknown[]]>;
+  /** [collectionName, rows | asyncRows][] in deterministic order. */
+  collections?: AsyncIterable<[string, unknown[] | AsyncIterable<unknown>]>;
   /** [logicalKey, value][] in deterministic order. */
   objects?: AsyncIterable<[string, unknown]>;
   /** [uploadUrl, base64][] in deterministic order. */
@@ -54,6 +54,13 @@ export async function* generateSnapshotJsonFromSource(
         for (let i = 0; i < items.length; i++) {
           if (i > 0) yield ',';
           yield JSON.stringify(items[i]);
+        }
+      } else if (items && typeof (items as AsyncIterable<unknown>)[Symbol.asyncIterator] === 'function') {
+        let firstItem = true;
+        for await (const item of items as AsyncIterable<unknown>) {
+          if (!firstItem) yield ',';
+          firstItem = false;
+          yield JSON.stringify(item);
         }
       }
       yield ']';

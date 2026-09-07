@@ -12,7 +12,7 @@ import {
   type FieldConfig,
 } from '@mms/shared';
 import { createModuleCsvExportService } from '../../lib/createModuleCsvExportService.js';
-import { normalizeIncludeDeletedFlag } from '../../lib/csvExportStreamFactory.js';
+import { CsvExportLimitError, normalizeIncludeDeletedFlag } from '../../lib/csvExportStreamFactory.js';
 import { loadContactsByIds, loadContactsPage } from './contactLoadUseCases.js';
 import { loadContactFieldConfig } from './contactConfigService.js';
 
@@ -80,15 +80,17 @@ const contactsCsv = createModuleCsvExportService<
   }),
   prepareExport: prepareContactsExport,
   loadByIds: loadContactsByIds,
-  loadPage: async (query, page, limit) => {
+  loadPage: async (query, page, limit, afterId) => {
     const pageResult = await loadContactsPage({
       ...query,
       page,
       limit,
+      afterId,
     } as never);
     return {
       rows: pageResult.contacts as Contact[],
       hasMore: pageResult.hasMore,
+      nextCursor: (pageResult as { nextCursor?: string }).nextCursor,
     };
   },
   yieldDataChunks: (contacts, columns, chunkSize, context) => {
@@ -166,8 +168,10 @@ export async function* generateContactsVcfStreamChunks(options?: {
 export async function buildContactsVcfExport(options?: {
   filename?: string;
   chunkSize?: number;
+  maxRecords?: number;
   onProgress?: (processed: number, total: number) => void | Promise<void>;
 }): Promise<ContactsVcfExportResult> {
+  const maxRecords = options?.maxRecords ?? 500;
   const generator = generateContactsVcfStreamChunks(options);
   const chunks: string[] = [];
   let step = await generator.next();
@@ -176,6 +180,11 @@ export async function buildContactsVcfExport(options?: {
     step = await generator.next();
   }
   const meta = step.value;
+  if (meta && meta.count > maxRecords) {
+    throw new CsvExportLimitError(
+      `VCF export exceeds in-memory cap of ${maxRecords} records (${meta.count} records). Use streaming export instead.`,
+    );
+  }
   return {
     vcf: chunks.join(''),
     filename: meta?.filename || options?.filename?.trim() || 'contacts.vcf',

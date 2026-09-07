@@ -12,25 +12,29 @@ export async function hydrateStudentsList(
   if (rows.length === 0) return [];
   const ids = rows.map((r) => r.id);
 
-  const sessionRows = await tx
-    .select({
-      studentId: studentEnrolledSessions.studentId,
-      sessionId: studentEnrolledSessions.sessionId,
-      sortOrder: studentEnrolledSessions.sortOrder,
-    })
-    .from(studentEnrolledSessions)
-    .where(
-      and(
-        eq(studentEnrolledSessions.workspaceSubdomain, subdomain),
-        inArray(studentEnrolledSessions.studentId, ids),
-      ),
-    );
-
   const sessionsByStudentId = new Map<string, Array<{ sessionId: string; sortOrder: number }>>();
-  for (const s of sessionRows) {
-    const list = sessionsByStudentId.get(s.studentId) ?? [];
-    list.push(s);
-    sessionsByStudentId.set(s.studentId, list);
+  const CHUNK_SIZE = 250;
+  for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
+    const chunkIds = ids.slice(i, i + CHUNK_SIZE);
+    const sessionRows = await tx
+      .select({
+        studentId: studentEnrolledSessions.studentId,
+        sessionId: studentEnrolledSessions.sessionId,
+        sortOrder: studentEnrolledSessions.sortOrder,
+      })
+      .from(studentEnrolledSessions)
+      .where(
+        and(
+          eq(studentEnrolledSessions.workspaceSubdomain, subdomain),
+          inArray(studentEnrolledSessions.studentId, chunkIds),
+        ),
+      );
+
+    for (const s of sessionRows) {
+      const list = sessionsByStudentId.get(s.studentId) ?? [];
+      list.push(s);
+      sessionsByStudentId.set(s.studentId, list);
+    }
   }
 
   return rows.map((row) => studentRowToRecord(row, sessionsByStudentId.get(row.id) ?? []));
@@ -92,7 +96,8 @@ export async function listStudentsByWorkspace(
         updatedBy: students.updatedBy,
       })
       .from(students)
-      .where(and(...conditions));
+      .where(and(...conditions))
+      .orderBy(students.id);
     if (options?.offset) {
       baseQuery.offset(Math.max(0, options.offset));
     }

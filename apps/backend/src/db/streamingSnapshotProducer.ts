@@ -1,4 +1,4 @@
-import { asc } from 'drizzle-orm';
+import { asc, gt } from 'drizzle-orm';
 import {
   WORKSPACES_COLLECTION,
   PLATFORM_SUPER_USERS_OBJECT_KEY,
@@ -22,23 +22,28 @@ const PAGE_SIZE = 200;
 /**
  * Yields `[logicalKey, rows][]` for the tenant's document-store collections, page
  * by page, mirroring `getAllData`'s tenant-scoping and `sanitizeSnapshot`'s
- * `WORKSPACES_COLLECTION` exclusion. Each page is released before the next is
- * read, so peak memory is bounded to one page of collections at a time.
+ * `WORKSPACES_COLLECTION` exclusion. Uses keyset pagination on `name` (primary key)
+ * to guarantee $O(1)$ page traversal without offset scanning overhead.
  */
 export async function* pageTenantCollections(
   tx: DbClient,
   subdomain: string | null,
 ): AsyncGenerator<[string, unknown[]]> {
   const tenant = subdomain?.trim().toLowerCase() || '';
-  let offset = 0;
+  let lastSeenName: string | null = null;
   for (;;) {
-    const rows = await tx
+    const baseQuery = tx
       .select({ name: schema.collections.name, data: schema.collections.data })
-      .from(schema.collections)
+      .from(schema.collections);
+
+    const rows = await (lastSeenName
+      ? baseQuery.where(gt(schema.collections.name, lastSeenName))
+      : baseQuery)
       .orderBy(asc(schema.collections.name))
-      .limit(PAGE_SIZE)
-      .offset(offset);
+      .limit(PAGE_SIZE);
+
     if (rows.length === 0) break;
+    lastSeenName = rows[rows.length - 1].name;
 
     for (const row of rows) {
       if (row.name === WORKSPACES_COLLECTION) continue;
@@ -52,29 +57,34 @@ export async function* pageTenantCollections(
     }
 
     if (rows.length < PAGE_SIZE) break;
-    offset += PAGE_SIZE;
   }
 }
 
 /**
  * Yields `[logicalKey, value][]` for the tenant's document-store objects, page by
  * page, mirroring `getAllData` (server-only + backup-excluded key exclusion) and
- * `sanitizeSnapshot` (platform super-users exclusion).
+ * `sanitizeSnapshot` (platform super-users exclusion). Uses keyset pagination on
+ * `key` (primary key) to guarantee $O(1)$ page traversal.
  */
 export async function* pageTenantObjects(
   tx: DbClient,
   subdomain: string | null,
 ): AsyncGenerator<[string, unknown]> {
   const tenant = subdomain?.trim().toLowerCase() || '';
-  let offset = 0;
+  let lastSeenKey: string | null = null;
   for (;;) {
-    const rows = await tx
+    const baseQuery = tx
       .select({ key: schema.objects.key, data: schema.objects.data })
-      .from(schema.objects)
+      .from(schema.objects);
+
+    const rows = await (lastSeenKey
+      ? baseQuery.where(gt(schema.objects.key, lastSeenKey))
+      : baseQuery)
       .orderBy(asc(schema.objects.key))
-      .limit(PAGE_SIZE)
-      .offset(offset);
+      .limit(PAGE_SIZE);
+
     if (rows.length === 0) break;
+    lastSeenKey = rows[rows.length - 1].key;
 
     for (const row of rows) {
       const parsed = parseTenantScopedStorageKey(row.key);
@@ -91,7 +101,6 @@ export async function* pageTenantObjects(
     }
 
     if (rows.length < PAGE_SIZE) break;
-    offset += PAGE_SIZE;
   }
 }
 
@@ -186,7 +195,7 @@ export async function* streamBackupSnapshot(
       .map(([key]) => key),
   );
 
-  async function* collections(): AsyncGenerator<[string, unknown[]]> {
+  async function* collections(): AsyncGenerator<[string, unknown[] | AsyncIterable<unknown>]> {
     for await (const [key, rows] of pageTenantCollections(tx, tenant)) {
       if (relationalKeys.has(key)) continue;
       collectAssetUrlsFromValue(rows, assetUrls);
@@ -195,11 +204,34 @@ export async function* streamBackupSnapshot(
     for (const [key, mapping] of Object.entries(RELATIONAL_REPLACE_MAPPING)) {
       if (!mapping.snapshotFnName) continue;
       const repo = (await import(mapping.importPath)) as Record<string, unknown>;
-      const listRows = repo[mapping.snapshotFnName] as (subdomain: string) => Promise<unknown[]>;
-      const rows = await listRows(tenant ?? '');
-      const cleaned = stripCredentials(Array.isArray(rows) ? rows : []);
-      collectAssetUrlsFromValue(cleaned, assetUrls);
-      yield [key, cleaned];
+      const listRows = repo[mapping.snapshotFnName] as (
+        subdomain: string,
+        options?: { limit?: number; offset?: number },
+      ) => Promise<unknown[]>;
+
+      async function* streamTableRows(): AsyncGenerator<unknown, void, unknown> {
+        const CHUNK_SIZE = 250;
+        let offset = 0;
+        let previousFirstId: unknown = undefined;
+        for (;;) {
+          const chunk = await listRows(tenant ?? '', { limit: CHUNK_SIZE, offset });
+          if (!Array.isArray(chunk) || chunk.length === 0) break;
+          const currentFirstId = (chunk[0] as { id?: unknown })?.id ?? chunk[0];
+          if (offset > 0 && currentFirstId !== undefined && currentFirstId === previousFirstId) {
+            break;
+          }
+          previousFirstId = currentFirstId;
+          const cleaned = stripCredentials(chunk);
+          collectAssetUrlsFromValue(cleaned, assetUrls);
+          for (const item of cleaned) {
+            yield item;
+          }
+          if (chunk.length < CHUNK_SIZE) break;
+          offset += CHUNK_SIZE;
+        }
+      }
+
+      yield [key, streamTableRows()];
     }
   }
 

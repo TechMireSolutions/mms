@@ -11,23 +11,33 @@ import { buildListConditions, buildOrderBy } from './studentRepositoryListQuery.
  */
 export async function listStudentsPage(
   tenant: string,
-  query: StudentsListQuery,
-): Promise<StudentsListPageResult> {
+  query: StudentsListQuery & { afterId?: string; skipCount?: boolean },
+): Promise<StudentsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
   const page = Math.max(1, query.page ?? 1);
   const limit = Math.min(Math.max(1, query.limit ?? 50), 500);
-  const offset = (page - 1) * limit;
+  const isCursorPaging = Boolean(query.afterId?.trim());
+  const offset = isCursorPaging ? 0 : (page - 1) * limit;
 
   return withTenant(subdomain, async (tx) => {
     const conditions = buildListConditions(subdomain, query);
+    const baseWhereClause = and(...conditions);
+    if (isCursorPaging) {
+      conditions.push(sql`${students.id} > ${query.afterId!.trim()}`);
+    }
     const whereClause = and(...conditions);
-    const orderBy = buildOrderBy(query.sortField, query.sortDir);
+    const effectiveOrderBy = isCursorPaging
+      ? sql`${students.id} asc`
+      : buildOrderBy(query.sortField, query.sortDir);
 
-    const countRows = await tx
-      .select({ count: sql<number>`count(*)::int` })
-      .from(students)
-      .where(whereClause);
-    const total = Number(countRows[0]?.count ?? 0);
+    let total = 0;
+    if (!query.skipCount) {
+      const countRows = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(students)
+        .where(baseWhereClause);
+      total = Number(countRows[0]?.count ?? 0);
+    }
 
     const rows = await tx
       .select({
@@ -48,7 +58,7 @@ export async function listStudentsPage(
         discountType: students.discountType,
         discountPct: students.discountPct,
         registrationType: students.registrationType,
-        notes: students.notes,
+        notes: sql<string | null>`NULL`.as('notes'),
         deletedAt: students.deletedAt,
         deletedBy: students.deletedBy,
         deletionReason: students.deletionReason,
@@ -59,18 +69,22 @@ export async function listStudentsPage(
       })
       .from(students)
       .where(whereClause)
-      .orderBy(orderBy)
+      .orderBy(effectiveOrderBy)
       .limit(limit)
       .offset(offset);
 
     const hydratedStudents = await hydrateStudentsList(tx, subdomain, rows);
+    const hasMore = isCursorPaging ? rows.length === limit : page * limit < total;
+    const lastRow = rows[rows.length - 1];
+    const nextCursor = isCursorPaging && hasMore && lastRow ? lastRow.id : undefined;
 
     return {
       students: hydratedStudents,
       total,
       page,
       limit,
-      hasMore: page * limit < total,
+      hasMore,
+      ...(nextCursor ? { nextCursor } : {}),
     };
   });
 }

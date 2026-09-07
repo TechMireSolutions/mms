@@ -135,8 +135,8 @@ function buildListConditions(subdomain: string, query: UsersListQuery & { includ
  */
 export async function listTenantUsersPage(
   tenant: string,
-  query: UsersListQuery & { includeDeleted?: boolean },
-): Promise<{ rows: TenantUserRow[]; total: number; page: number; limit: number; hasMore: boolean }> {
+  query: UsersListQuery & { includeDeleted?: boolean; afterId?: string; skipCount?: boolean },
+): Promise<{ rows: TenantUserRow[]; total: number; page: number; limit: number; hasMore: boolean; nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
@@ -145,6 +145,8 @@ export async function listTenantUsersPage(
       orderBy: buildOrderBy(query.sortField, query.sortDir),
       page: query.page,
       limit: query.limit,
+      afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 50,
       columns: TENANT_USER_LIST_COLUMNS,
       rowMapper: (row) => rowToTenantUser(row as typeof tenantUsers.$inferSelect),
@@ -156,6 +158,7 @@ export async function listTenantUsersPage(
       page: result.page,
       limit: result.limit,
       hasMore: result.hasMore,
+      ...(result.nextCursor ? { nextCursor: result.nextCursor } : {}),
     };
   });
 }
