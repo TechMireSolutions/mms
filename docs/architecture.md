@@ -103,7 +103,7 @@ packages/shared/src/
 | Lint | ESLint (per-package) | `eslint.config.js` (each package) |
 | Unit/integration tests | Vitest + coverage thresholds | `vitest.config.ts` (each package) |
 | E2E | Playwright (2 shards) | `e2e/playwright.config.ts` |
-| CI | typecheck → lint → unit (Postgres) → coverage → e2e | `.github/workflows/ci.yml` |
+| CI | DAG: changes → [lint-and-typecheck, test-frontend, test-backend-unit, test-backend-db (conditional)] → ci-gate → e2e / build-dist | `.github/workflows/ci.yml` |
 
 **Adopted but not yet enforced (need a coordinated dependency+lockfile change, then a one-time `format:write`):**
 - **Prettier** — `.prettierrc.json` + `.prettierignore` are committed; `pnpm add -D prettier` then

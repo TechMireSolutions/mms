@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit",
     "lint": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint src --quiet",
     "test": "vitest run",
+    "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:db": "vitest run --config vitest.db.config.ts"
   },

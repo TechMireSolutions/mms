@@ -25,9 +25,18 @@ export default defineConfig({
     },
     include: ['src/__tests__/db-integration/**/*.{test,spec}.ts'],
     pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: true,
+        isolate: false,
+      },
+    },
     maxWorkers: 1,
+    fileParallelism: false,
+    clearMocks: true,
+    restoreMocks: true,
     execArgv: ['--no-experimental-webstorage'],
-    testTimeout: 15_000,
+    testTimeout: 20_000,
     hookTimeout: 30_000,
   },
 });

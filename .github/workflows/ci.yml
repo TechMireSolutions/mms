@@ -27,33 +27,53 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  typecheck-lint:
+  changes:
+    name: Detect File Changes
+    runs-on: ubuntu-latest
+    outputs:
+      backend_db: ${{ steps.filter.outputs.backend_db }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend_unit: ${{ steps.filter.outputs.backend_unit }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Paths Filter
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend_db:
+              - 'apps/backend/src/db/**'
+              - 'apps/backend/drizzle.config.ts'
+              - 'apps/backend/src/**/repository/**'
+              - 'apps/backend/src/**/ledgerPosting/**'
+              - 'apps/backend/src/accounting/**'
+              - 'apps/backend/vitest.db.config.ts'
+              - 'packages/shared/**'
+              - '.github/**'
+            frontend:
+              - 'apps/frontend/**'
+              - 'packages/shared/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - '.github/**'
+            backend_unit:
+              - 'apps/backend/**'
+              - 'packages/shared/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - '.github/**'
+
+  lint-and-typecheck:
+    name: Lint & Typecheck
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
 
-      - name: Cache Turbo (incremental state)
-        uses: actions/cache@v6
-        with:
-          path: |
-            .turbo
-            node_modules/.cache/turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
 
       - name: Run Typecheck
         run: pnpm typecheck
@@ -63,7 +83,47 @@ jobs:
       - name: Lint (all packages)
         run: pnpm lint
 
-  unit:
+  test-frontend:
+    name: Frontend Tests
+    needs: [changes]
+    if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
+        with:
+          build-shared: 'true'
+
+      - name: Run Frontend Tests & Enforce Coverage
+        run: pnpm --filter mms-frontend test:coverage
+
+  test-backend-unit:
+    name: Backend Unit Tests
+    needs: [changes]
+    if: ${{ needs.changes.outputs.backend_unit == 'true' || github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
+        with:
+          build-shared: 'true'
+
+      - name: Run Shared Package Tests & Coverage
+        run: pnpm --filter @mms/shared test:coverage
+
+      - name: Run Backend Unit Tests & Coverage
+        run: pnpm --filter mms-backend test:coverage
+
+  test-backend-db:
+    name: Backend DB Integration Tests
+    needs: [changes]
+    if: ${{ needs.changes.outputs.backend_db == 'true' || github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -84,47 +144,79 @@ jobs:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
       DATABASE_URL: 'postgres://postgres:postgres@localhost:5432/mms'
       NODE_ENV: 'test'
-      LOG_LEVEL: 'warn'
+      LOG_LEVEL: 'silent'
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
 
-      - name: Cache Turbo (incremental state)
-        uses: actions/cache@v6
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
         with:
-          path: |
-            .turbo
-            node_modules/.cache/turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Build shared package
-        run: pnpm --filter @mms/shared build
+          build-shared: 'true'
 
       - name: Run DB Migrations
         run: pnpm --filter mms-backend run db:migrate
 
-      - name: Run Test Suite
-        run: pnpm test
+      - name: Run Backend DB Integration Tests
+        run: pnpm --filter mms-backend run test:db
 
-      # Enforce coverage thresholds (configured in each vitest.config.ts).
-      # Runs the suite again with --coverage so a coverage regression fails CI.
-      - name: Run Coverage (enforce thresholds)
-        run: pnpm test:coverage
+  ci-gate:
+    name: CI Gate (All Checks Passed)
+    if: always()
+    needs: [changes, lint-and-typecheck, test-frontend, test-backend-unit, test-backend-db]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check Status of All Jobs
+        run: |
+          echo "==================== CI Gate Summary ===================="
+          echo "Lint & Typecheck:       ${{ needs.lint-and-typecheck.result }}"
+          echo "Frontend Tests:         ${{ needs.test-frontend.result }}"
+          echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
+          echo "Backend DB Tests:       ${{ needs.test-backend-db.result }}"
+          echo "========================================================="
+
+          failed=0
+
+          if [ "${{ needs.lint-and-typecheck.result }}" != "success" ]; then
+            echo "::error::lint-and-typecheck failed or was cancelled (result: ${{ needs.lint-and-typecheck.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.test-frontend.result }}" != "success" ] && [ "${{ needs.test-frontend.result }}" != "skipped" ]; then
+            echo "::error::test-frontend failed or was cancelled (result: ${{ needs.test-frontend.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.test-backend-unit.result }}" != "success" ] && [ "${{ needs.test-backend-unit.result }}" != "skipped" ]; then
+            echo "::error::test-backend-unit failed or was cancelled (result: ${{ needs.test-backend-unit.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.test-backend-db.result }}" != "success" ] && [ "${{ needs.test-backend-db.result }}" != "skipped" ]; then
+            echo "::error::test-backend-db failed or was cancelled (result: ${{ needs.test-backend-db.result }})"
+            failed=1
+          fi
+
+          if [ "$failed" -ne 0 ]; then
+            echo "CI Gate failed: One or more required checks did not succeed."
+            exit 1
+          fi
+
+          echo "CI Gate passed: All required checks succeeded (or were safely bypassed via hermetic path filtering)."
+
+      - name: Publish CI Gate Step Summary
+        run: |
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ### 🚀 MMS CI Gate Status: Passed
+
+          | Quality Check | Status | Execution Mode |
+          |---|---|---|
+          | **Lint & Typecheck** | `${{ needs.lint-and-typecheck.result }}` | Turbo Cache Concurrent |
+          | **Frontend Tests** | `${{ needs.test-frontend.result }}` | Isolated Vitest + Coverage Gate |
+          | **Backend Unit Tests** | `${{ needs.test-backend-unit.result }}` | In-Memory Fast Unit + Coverage Gate |
+          | **Backend DB Tests** | `${{ needs.test-backend-db.result }}` | Docker Postgres 16 (RAM tmpfs) |
+          EOF
 
   e2e:
     runs-on: ubuntu-latest
@@ -158,27 +250,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v7
 
-      - name: Cache Turbo (incremental state)
-        uses: actions/cache@v6
-        with:
-          path: |
-            .turbo
-            node_modules/.cache/turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
 
       - name: Fast Build Apps
         run: pnpm build
@@ -220,17 +293,8 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v7
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
 
       - name: Download Blob Reports
         uses: actions/download-artifact@v8
@@ -255,33 +319,14 @@ jobs:
           retention-days: 7
 
   build-dist:
-    needs: [typecheck-lint, unit]
+    needs: [ci-gate]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
 
-      - name: Cache Turbo (incremental state)
-        uses: actions/cache@v6
-        with:
-          path: |
-            .turbo
-            node_modules/.cache/turbo
-          key: turbo-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
 
       - name: Production build
         env:

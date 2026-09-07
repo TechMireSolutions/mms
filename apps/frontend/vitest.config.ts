@@ -16,8 +16,13 @@ export default defineConfig({
     execArgv: ['--no-experimental-webstorage'],
     include: ['src/**/*.test.{ts,tsx}', 'src/**/*.spec.{ts,tsx}'],
     pool: 'threads',
-    // Turbo runs frontend and backend tests together; leave capacity for both suites.
-    maxWorkers: 2,
+    poolOptions: {
+      threads: {
+        maxThreads: process.env.CI ? 2 : undefined,
+        minThreads: process.env.CI ? 2 : undefined,
+      },
+    },
+    maxWorkers: process.env.CI ? 2 : undefined,
     fileParallelism: true,
     clearMocks: true,
     restoreMocks: true,

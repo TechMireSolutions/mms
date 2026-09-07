@@ -10,6 +10,7 @@
     "lint:fix": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint . --fix",
     "typecheck": "tsc -p ./tsconfig.json",
     "test": "vitest run",
+    "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
     "preview": "vite preview"
   },

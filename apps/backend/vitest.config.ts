@@ -23,8 +23,14 @@ export default defineConfig({
     // lifecycle cannot interfere with other tests.
     exclude: ['src/__tests__/db-integration/**'],
     pool: 'threads',
-    // Turbo runs backend and frontend tests together; leave capacity for both suites.
-    maxWorkers: 2,
+    poolOptions: {
+      threads: {
+        isolate: false,
+        maxThreads: process.env.CI ? 2 : undefined,
+        minThreads: process.env.CI ? 2 : undefined,
+      },
+    },
+    maxWorkers: process.env.CI ? 2 : undefined,
     fileParallelism: true,
     clearMocks: true,
     restoreMocks: true,

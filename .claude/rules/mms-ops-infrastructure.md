@@ -106,11 +106,15 @@ To ensure seamless deployments on Ubuntu systems:
 ---
 
 ## 4. CI/CD & Deploy Procedures
-The GitHub Actions workflow (`.github/workflows/ci.yml`) runs parallel jobs on push/PR to `main`:
-1. **typecheck-lint** — install → typecheck → FE/BE lint
-2. **unit** — install → Postgres → `pnpm test`
-3. **e2e** — install → Postgres → Playwright chromium → responsive shell + authenticated specs
-4. **build-dist** (main push only, after 1–3) — production `pnpm build` + upload `mms-dist` artifact (tarball + sha256)
+The GitHub Actions workflow (`.github/workflows/ci.yml`) runs a parallelized Directed Acyclic Graph (DAG) on push/PR to `main`:
+1. **changes** — path filter (`dorny/paths-filter`) detecting backend DB, schema, and repository modifications
+2. **lint-and-typecheck** — install → concurrent `pnpm typecheck` & `pnpm lint` across workspaces
+3. **test-frontend** — install → `pnpm --filter mms-frontend test:coverage` (isolated frontend suite with coverage gate)
+4. **test-backend-unit** — install → fast mocked in-memory backend and `@mms/shared` unit suites with coverage gate
+5. **test-backend-db** — conditionally triggered on schema/migration/backend DB modifications; spins up PostgreSQL 16, runs Drizzle migrations, and executes `vitest.db.config.ts`
+6. **ci-gate** — unified branch protection status check aggregating all test/lint jobs with safe skip handling for bypassed DB runs
+7. **e2e** & **merge-reports** — parallel Playwright sharded integration suite
+8. **build-dist** — runs after `ci-gate` to produce production `mms-dist` tarball artifact for deployment
 
 `deploy.yml` triggers on CI success for `main` (`workflow_run`) or manual dispatch: downloads the CI artifact (or builds on dispatch), SCPs to the VPS, runs `scripts/deploy-on-server.sh` pinned to `DEPLOY_SHA` (= CI `head_sha`). Schema DDL runs on backend startup via `initDb` / Drizzle migrate — no separate deploy migrate step. Rollback: `bash scripts/deploy-rollback.sh` (uses `.deploy-releases/`).
 
