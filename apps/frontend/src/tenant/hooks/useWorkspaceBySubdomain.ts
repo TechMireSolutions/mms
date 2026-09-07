@@ -49,23 +49,28 @@ export function cacheWorkspaceLookup(subdomain: string, data: WorkspaceLookupRes
   }
 }
 
+export async function fetchWorkspaceBySubdomain(
+  subdomain: string,
+  signal?: AbortSignal,
+): Promise<{ status: number; body: WorkspaceLookupResult }> {
+  const url = resolveApiUrl(`/api/workspace/by-subdomain/${encodeURIComponent(subdomain)}`);
+  const res = await apiFetch(url, { signal });
+  if (res.status === 404) {
+    return { status: 404, body: null as unknown as WorkspaceLookupResult };
+  }
+  if (!res.ok) {
+    const error = new Error(`Workspace lookup failed: ${res.status}`);
+    (error as unknown as { status: number }).status = res.status;
+    throw error;
+  }
+  const data = (await res.json()) as WorkspaceLookupResult;
+  return { status: 200, body: data };
+}
+
 export function useWorkspaceBySubdomain(subdomain: string | null, enabled: boolean) {
   return useQuery<{ status: number; body: WorkspaceLookupResult }>({
     queryKey: [...WORKSPACE_BY_SUBDOMAIN_KEY, subdomain],
-    queryFn: async ({ signal }): Promise<{ status: number; body: WorkspaceLookupResult }> => {
-      const url = resolveApiUrl(`/api/workspace/by-subdomain?subdomain=${encodeURIComponent(subdomain ?? '')}`);
-      const res = await apiFetch(url, { signal });
-      if (res.status === 404) {
-        return { status: 404, body: null as unknown as WorkspaceLookupResult };
-      }
-      if (!res.ok) {
-        const error = new Error(`Workspace lookup failed: ${res.status}`);
-        (error as unknown as { status: number }).status = res.status;
-        throw error;
-      }
-      const data = (await res.json()) as WorkspaceLookupResult;
-      return { status: 200, body: data };
-    },
+    queryFn: ({ signal }) => fetchWorkspaceBySubdomain(subdomain!, signal),
     enabled: enabled && Boolean(subdomain),
     staleTime: 60_000,
     initialData: enabled && subdomain ? getCachedWorkspaceLookup(subdomain) : undefined,
