@@ -84,9 +84,49 @@ jobs:
         run: pnpm lint
 
   test-frontend:
-    name: Frontend Tests
+    name: Frontend Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     needs: [changes]
     if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
+        with:
+          build-shared: 'true'
+
+      - name: Run Frontend Test Shard & Generate Blob Report
+        run: |
+          mkdir -p apps/frontend/.vitest-reports
+          pnpm --filter mms-frontend exec vitest run \
+            --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }} \
+            --coverage \
+            --coverage.thresholds.lines=0 \
+            --coverage.thresholds.statements=0 \
+            --coverage.thresholds.functions=0 \
+            --coverage.thresholds.branches=0 \
+            --reporter=default \
+            --reporter=blob \
+            --outputFile=.vitest-reports/blob-${{ matrix.shardIndex }}.json
+
+      - name: Upload Shard Report Artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-blob-report-${{ matrix.shardIndex }}
+          path: apps/frontend/.vitest-reports/
+          retention-days: 1
+
+  test-frontend-coverage:
+    name: Frontend Coverage Gate
+    needs: [changes, test-frontend]
+    if: ${{ (needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request') && !cancelled() && needs.test-frontend.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -97,8 +137,15 @@ jobs:
         with:
           build-shared: 'true'
 
-      - name: Run Frontend Tests & Enforce Coverage
-        run: pnpm --filter mms-frontend test:coverage
+      - name: Download All Shard Report Artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: vitest-blob-report-*
+          merge-multiple: true
+          path: apps/frontend/.vitest-reports
+
+      - name: Merge Shard Reports & Enforce Coverage Gate
+        run: pnpm --filter mms-frontend exec vitest run --merge-reports=.vitest-reports --coverage
 
   test-backend-unit:
     name: Backend Unit Tests
@@ -164,7 +211,7 @@ jobs:
   ci-gate:
     name: CI Gate (All Checks Passed)
     if: always()
-    needs: [changes, lint-and-typecheck, test-frontend, test-backend-unit, test-backend-db]
+    needs: [changes, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db]
     runs-on: ubuntu-latest
     steps:
       - name: Check Status of All Jobs
@@ -172,6 +219,7 @@ jobs:
           echo "==================== CI Gate Summary ===================="
           echo "Lint & Typecheck:       ${{ needs.lint-and-typecheck.result }}"
           echo "Frontend Tests:         ${{ needs.test-frontend.result }}"
+          echo "Frontend Coverage:      ${{ needs.test-frontend-coverage.result }}"
           echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
           echo "Backend DB Tests:       ${{ needs.test-backend-db.result }}"
           echo "========================================================="
@@ -185,6 +233,11 @@ jobs:
 
           if [ "${{ needs.test-frontend.result }}" != "success" ] && [ "${{ needs.test-frontend.result }}" != "skipped" ]; then
             echo "::error::test-frontend failed or was cancelled (result: ${{ needs.test-frontend.result }})"
+            failed=1
+          fi
+
+          if [ "${{ needs.test-frontend-coverage.result }}" != "success" ] && [ "${{ needs.test-frontend-coverage.result }}" != "skipped" ]; then
+            echo "::error::test-frontend-coverage failed or was cancelled (result: ${{ needs.test-frontend-coverage.result }})"
             failed=1
           fi
 
@@ -213,9 +266,10 @@ jobs:
           | Quality Check | Status | Execution Mode |
           |---|---|---|
           | **Lint & Typecheck** | `${{ needs.lint-and-typecheck.result }}` | Turbo Cache Concurrent |
-          | **Frontend Tests** | `${{ needs.test-frontend.result }}` | Isolated Vitest + Coverage Gate |
+          | **Frontend Tests** | `${{ needs.test-frontend.result }}` | 2-Way Sharded Parallel Matrix |
+          | **Frontend Coverage** | `${{ needs.test-frontend-coverage.result }}` | Merged Blob Reports & Coverage Enforcement |
           | **Backend Unit Tests** | `${{ needs.test-backend-unit.result }}` | In-Memory Fast Unit + Coverage Gate |
-          | **Backend DB Tests** | `${{ needs.test-backend-db.result }}` | Docker Postgres 16 (RAM tmpfs) |
+          | **Backend DB Tests** | `${{ needs.test-backend-db.result }}` | Docker Postgres 16 (Healthchecked) |
           EOF
 
   e2e:

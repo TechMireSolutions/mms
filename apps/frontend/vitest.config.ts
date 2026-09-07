@@ -16,13 +16,7 @@ export default defineConfig({
     execArgv: ['--no-experimental-webstorage'],
     include: ['src/**/*.test.{ts,tsx}', 'src/**/*.spec.{ts,tsx}'],
     pool: 'threads',
-    poolOptions: {
-      threads: {
-        maxThreads: process.env.CI ? 2 : undefined,
-        minThreads: process.env.CI ? 2 : undefined,
-      },
-    },
-    maxWorkers: process.env.CI ? 2 : undefined,
+    maxWorkers: process.env.CI ? 4 : undefined,
     fileParallelism: true,
     clearMocks: true,
     restoreMocks: true,

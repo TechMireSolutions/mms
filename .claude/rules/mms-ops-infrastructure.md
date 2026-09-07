@@ -109,7 +109,7 @@ To ensure seamless deployments on Ubuntu systems:
 The GitHub Actions workflow (`.github/workflows/ci.yml`) runs a parallelized Directed Acyclic Graph (DAG) on push/PR to `main`:
 1. **changes** — path filter (`dorny/paths-filter`) detecting backend DB, schema, and repository modifications
 2. **lint-and-typecheck** — install → concurrent `pnpm typecheck` & `pnpm lint` across workspaces
-3. **test-frontend** — install → `pnpm --filter mms-frontend test:coverage` (isolated frontend suite with coverage gate)
+3. **test-frontend** & **test-frontend-coverage** — 2-way parallel sharded frontend suite generating blob reports, merged by `test-frontend-coverage` to enforce unified coverage thresholds
 4. **test-backend-unit** — install → fast mocked in-memory backend and `@mms/shared` unit suites with coverage gate
 5. **test-backend-db** — conditionally triggered on schema/migration/backend DB modifications; spins up PostgreSQL 16, runs Drizzle migrations, and executes `vitest.db.config.ts`
 6. **ci-gate** — unified branch protection status check aggregating all test/lint jobs with safe skip handling for bypassed DB runs

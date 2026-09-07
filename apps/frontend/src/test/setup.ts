@@ -99,12 +99,9 @@ if (typeof HTMLCanvasElement !== 'undefined' && !HTMLCanvasElement.prototype.get
   })) as unknown as typeof HTMLCanvasElement.prototype.getContext;
 }
 
-// Global teardown: remove residual Radix portals after each test
+// Global teardown: clear document body and residual Radix portals after each test
 afterEach(() => {
   if (typeof document !== 'undefined') {
-    const portals = document.querySelectorAll('[data-radix-portal]');
-    for (const portal of portals) {
-      portal.remove();
-    }
+    document.body.innerHTML = '';
   }
 });
