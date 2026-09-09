@@ -15,7 +15,6 @@ const PREF_KEYS = [
   "allowEditPosted",
   "autoPostDrafts",
   "retainedEarningsAccount",
-  "organizationName",
   "defaultViewLayout",
 ] as const;
 

@@ -62,7 +62,7 @@ export const accountingPreferencesResponseSchema = z.object({
   allowEditPosted: z.boolean(),
   autoPostDrafts: z.boolean(),
   retainedEarningsAccount: z.string(),
-  organizationName: z.string(),
+  organizationName: z.string().optional(),
   defaultViewLayout: z.string().optional(),
 });
 

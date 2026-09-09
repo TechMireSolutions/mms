@@ -16,7 +16,7 @@ export interface AccountingSettings {
   allowEditPosted: boolean;
   autoPostDrafts: boolean;
   retainedEarningsAccount: string;
-  organizationName: string;
+  organizationName?: string;
   defaultViewLayout?: string;
   fields?: Record<string, unknown>;
   customFields?: [];

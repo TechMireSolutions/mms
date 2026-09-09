@@ -1,11 +1,5 @@
 import { type AccountingSettings, type Account, type FiscalYear } from "@mms/shared";
-import { Building2 } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { useTranslation } from "@/hooks/useTranslation";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { SectionCard } from "@/components/ui/SectionCard";
-import { Field } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { AccountingSettingsCurrencySection } from "./AccountingSettingsCurrencySection";
 import { AccountingSettingsFiscalYearsSection } from "./AccountingSettingsFiscalYearsSection";
 import { AccountingSettingsRulesSection } from "./AccountingSettingsRulesSection";
@@ -48,32 +42,8 @@ export function AccountingSettingsPreferences({
   onDeleteFiscalYear,
   onCloseFiscalYear,
 }: AccountingSettingsPreferencesProps): React.JSX.Element {
-  const { t } = useTranslation();
-
   return (
     <div className="space-y-6">
-      <SectionCard
-        accentColor="primary"
-        title={t("accounting.settings.secOrganisation")}
-        icon={Building2}
-        className={SETUP_SECTION_CARD_CLASS}
-      >
-        <Field
-          id="accounting-org-name"
-          label={t("accounting.settings.fields.organisationName")}
-          hint={t("accounting.settings.fields.organisationNameHint")}
-        >
-          <Input
-            id="accounting-org-name"
-            name="organizationName"
-            className={FORM_INPUT}
-            value={settingsDraft.organizationName || ""}
-            aria-label={t("accounting.settings.fields.organisationName")}
-            onChange={(event) => upd("organizationName", event.target.value)}
-          />
-        </Field>
-      </SectionCard>
-
       <AccountingSettingsCurrencySection
         settingsDraft={settingsDraft}
         upd={upd}

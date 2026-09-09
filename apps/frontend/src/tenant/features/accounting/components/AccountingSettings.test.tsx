@@ -35,7 +35,6 @@ vi.mock("@/tenant/features/accounting/hooks/useAccountingSetupPanelState", () =>
       allowEditPosted: false,
       autoPostDrafts: false,
       retainedEarningsAccount: "a3100",
-      organizationName: "Al-Madrasa Al-Islamiyya",
       defaultViewLayout: "list",
     },
     upd: vi.fn(),

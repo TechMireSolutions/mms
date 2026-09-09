@@ -98,7 +98,7 @@ export const accountingPreferencesPutBodySchema = z
     allowEditPosted: z.boolean().default(false),
     autoPostDrafts: z.boolean().default(false),
     retainedEarningsAccount: z.string().default('a3100'),
-    organizationName: z.string().default(''),
+    organizationName: z.string().default('').optional(),
     defaultViewLayout: z.string().optional(),
   })
   .strict();
@@ -121,7 +121,7 @@ export interface AccountingModulePreferences {
   allowEditPosted: boolean;
   autoPostDrafts: boolean;
   retainedEarningsAccount: string;
-  organizationName: string;
+  organizationName?: string;
   defaultViewLayout?: string;
 }
 
