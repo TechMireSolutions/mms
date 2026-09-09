@@ -5,7 +5,7 @@ description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, CSRF/Ori
 
 # MMS Backend Security Workflow
 
-**Rule (norms SSOT):** `mms-auth-security.mdc`. Also `mms-performance.mdc` §3 (Cache Namespacing & Tenant Isolation). Route/service wiring → **`mms-backend-api`**.
+**Rule (norms SSOT):** `mms-auth-security.mdc` · `mms-data-layer.mdc` §5. Also `mms-performance.mdc` §3 (Cache Namespacing & Tenant Isolation). Modern Audit Trail & Tamper-Evidence → **`mms-audit-trail`**. Route/service wiring → **`mms-backend-api`**.
 
 ## When to use
 
@@ -93,6 +93,9 @@ Security Invariants:
 - Constant-time string/hash comparisons (`crypto.timingSafeEqual` from `node:crypto`) for passwords, tokens, and OTP codes to eliminate side-channel timing attacks.
 - One-shot hashing with `crypto.hash()` from `node:crypto` (no verbose `createHash().update().digest()` chains).
 - Rate limiting: on `429`, emit `Retry-After` header — `mms-auth-security.mdc`.
+- **Modern Audit Trails & Immutability (`mms-audit-trail`)**: 5-dimension RFC 8785 canonical JSON payloads in transactional outboxes; sharded cryptographic hash chains with Merkle tree rollups; `INSERT`-only DB privileges (`REVOKE UPDATE, DELETE`); right-to-erasure via crypto-shredding or redact-and-append without historical row destruction; direct audit log read access is MFA-enforced with JIT break-glass expiration; access to audit logs is itself an auditable event.
+- **Trace Context Correlation**: W3C `traceparent` header extracted and propagated into `AsyncLocalStorage` and audit records as `correlation_id`.
+- **Statement-Level Auditing (`pgAudit`)**: Pair application row-level audit with database-native `pgAudit` to track ad-hoc console sessions, superusers, and DDL migrations.
 
 ## Tenant isolation checklist
 

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, primaryKey, varchar, bigint, foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, primaryKey, varchar, foreignKey } from "drizzle-orm/pg-core";
 import { desc, sql } from "drizzle-orm";
 import type { PersistedSavedReportCategory } from "@mms/shared";
 import { workspaces } from "./platform.js";
@@ -90,44 +90,6 @@ export const savedReports = pgTable('saved_reports', {
   ),
 ]);
 
-export const auditLogs = pgTable('audit_logs', {
-  id: bigint('id', { mode: 'number' }).primaryKey().generatedAlwaysAsIdentity(),
-  workspaceSubdomain: text('workspace_subdomain'),
-  tableName: text('table_name').notNull(),
-  recordId: text('record_id').notNull(),
-  action: text('action').notNull(),
-  oldValues: jsonb('old_values'),
-  newValues: jsonb('new_values'),
-  userId: text('user_id'),
-  changedAt: timestamp('changed_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  index('audit_logs_workspace_changed_idx').on(table.workspaceSubdomain, table.changedAt),
-  index('audit_logs_workspace_user_changed_idx').on(table.workspaceSubdomain, table.userId, desc(table.changedAt)),
-  index('audit_logs_table_record_idx').on(table.tableName, table.recordId),
-]);
-
-export const auditLogEntries = pgTable('audit_log_entries', {
-  id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  at: varchar('at', { length: 35 }).notNull(),
-  userId: varchar('user_id', { length: 64 }).notNull(),
-  userEmail: varchar('user_email', { length: 255 }),
-  tenant: varchar('tenant', { length: 100 }),
-  action: varchar('action', { length: 100 }).notNull(),
-  entityType: varchar('entity_type', { length: 50 }).notNull(),
-  entityId: varchar('entity_id', { length: 255 }).notNull(),
-  summary: text('summary'),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('audit_log_entries_workspace_user_idx').on(table.workspaceSubdomain, table.userId),
-  index('audit_log_entries_workspace_action_idx').on(table.workspaceSubdomain, table.action),
-  index('audit_log_entries_workspace_entity_type_idx').on(table.workspaceSubdomain, table.entityType),
-  index('audit_log_entries_workspace_at_idx').on(table.workspaceSubdomain, table.at),
-  index('audit_log_entries_workspace_at_desc_idx').on(table.workspaceSubdomain, desc(table.at)),
-]);
-
 export const userActivityLogs = pgTable('user_activity_logs', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
@@ -181,10 +143,6 @@ export type BackgroundJobRow = typeof backgroundJobs.$inferSelect;
 export type InsertBackgroundJobRow = typeof backgroundJobs.$inferInsert;
 export type SavedReportRow = typeof savedReports.$inferSelect;
 export type InsertSavedReportRow = typeof savedReports.$inferInsert;
-export type AuditLogRow = typeof auditLogs.$inferSelect;
-export type InsertAuditLogRow = typeof auditLogs.$inferInsert;
-export type AuditLogEntryRow = typeof auditLogEntries.$inferSelect;
-export type InsertAuditLogEntryRow = typeof auditLogEntries.$inferInsert;
 export type UserActivityLogRow = typeof userActivityLogs.$inferSelect;
 export type InsertUserActivityLogRow = typeof userActivityLogs.$inferInsert;
 export type DataMigrationRow = typeof dataMigrations.$inferSelect;

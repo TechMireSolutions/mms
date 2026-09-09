@@ -6,7 +6,8 @@ import { enqueueCsvExportJob, normalizeExportQuery } from './csvExportEnqueue.js
 import { sendForbidden, sendServiceUnavailable } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import { moduleExportAuditBodySchema } from '../validation/csvExportBodySchema.js';
-import { recordAudit } from '../services/auditService.js';
+import { recordModernAuditEvent, mapActionStringToAuditType } from '../services/auditTrailService.js';
+import { logger } from './logger.js';
 import { QueueUnavailableError } from '../services/backgroundJobWorkerService.js';
 
 export type RegisterModuleCsvExportRoutesOptions = {
@@ -77,14 +78,16 @@ export function registerModuleCsvExportRoutes(
       throw err;
     }
 
-    await recordAudit({
-      userId: user.id,
-      userEmail: user.email,
-      action: options.queueAuditAction,
-      entityType: 'collection',
-      entityId: job.id,
-      summary: `Queued ${options.entityNoun} export "${label}"`,
-    });
+    void recordModernAuditEvent({
+      workspaceSubdomain: getRequestTenant() ?? 'unknown',
+      tableName: options.moduleId,
+      recordId: job.id,
+      actionType: mapActionStringToAuditType(options.queueAuditAction),
+      realUserId: String(user.id),
+      newState: { summary: `Queued ${options.entityNoun} export "${label}"`, action: options.queueAuditAction },
+    }).catch((err: unknown) =>
+      logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+    );
     return reply.status(202).send({ job });
   });
 
@@ -100,14 +103,16 @@ export function registerModuleCsvExportRoutes(
       scope?: 'all' | 'filtered' | 'selection';
     };
     const scope = data.scope ?? 'filtered';
-    await recordAudit({
-      userId: user.id,
-      userEmail: user.email,
-      action: options.exportAuditAction,
-      entityType: 'collection',
-      entityId: options.moduleId,
-      summary: `Exported ${data.count} ${options.entityNoun}(s) (${scope})`,
-    });
+    void recordModernAuditEvent({
+      workspaceSubdomain: getRequestTenant() ?? 'unknown',
+      tableName: options.moduleId,
+      recordId: options.moduleId,
+      actionType: mapActionStringToAuditType(options.exportAuditAction),
+      realUserId: String(user.id),
+      newState: { summary: `Exported ${data.count} ${options.entityNoun}(s) (${scope})`, action: options.exportAuditAction },
+    }).catch((err: unknown) =>
+      logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+    );
     return reply.send({ success: true });
   });
 }

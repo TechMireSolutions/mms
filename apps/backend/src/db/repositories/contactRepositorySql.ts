@@ -76,7 +76,7 @@ export function contactFieldNonEmptySql(fieldKey: string): SQL {
     case 'gender':
       return sql`NULLIF(trim(${contacts.gender}), '') IS NOT NULL`;
     case 'dob':
-      return sql`NULLIF(trim(${contacts.dob}), '') IS NOT NULL`;
+      return sql`${contacts.dob} IS NOT NULL`;
     case 'cnic':
       return sql`NULLIF(trim(${contacts.cnic}), '') IS NOT NULL`;
     case 'isSyed':

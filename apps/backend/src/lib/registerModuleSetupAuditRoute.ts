@@ -5,7 +5,9 @@ import { roleHasPermission } from '@mms/shared';
 import { sendForbidden } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import { moduleSetupAuditBodySchema } from '../validation/csvExportBodySchema.js';
-import { recordAudit } from '../services/auditService.js';
+import { recordModernAuditEvent, mapActionStringToAuditType } from '../services/auditTrailService.js';
+import { getRequestTenant } from './tenantContext.js';
+import { logger } from './logger.js';
 
 export type RegisterModuleSetupAuditRouteOptions = {
   setupWritePermission: Permission;
@@ -32,14 +34,20 @@ export function registerModuleSetupAuditRoute(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
     const data = parsed.data as { area: string; summary: string };
-    await recordAudit({
-      userId: user.id,
-      userEmail: user.email,
-      action: options.auditAction,
-      entityType: 'collection',
-      entityId: `setup:${data.area}`,
-      summary: data.summary,
-    });
+    const tenant = getRequestTenant();
+    if (!tenant) return reply.send({ success: true });
+    await recordModernAuditEvent({
+      workspaceSubdomain: tenant,
+      tableName: `setup:${data.area}`,
+      recordId: `setup:${data.area}`,
+      actionType: mapActionStringToAuditType(options.auditAction),
+      realUserId: String(user.id),
+      newState: data.summary
+        ? { summary: data.summary, action: options.auditAction }
+        : { action: options.auditAction },
+    }).catch((err: unknown) =>
+      logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+    );
     return reply.send({ success: true });
   });
 }

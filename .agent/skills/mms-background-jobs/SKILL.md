@@ -32,7 +32,8 @@ Use this skill when adding or changing background processing, export/download ar
 6. Store job state and artifacts scoped by tenant and user (e.g., S3 URLs).
 7. Update progress, complete with a clear label, or fail with an actionable reason.
 8. Surface status in `BackgroundJobsTray` and provide download/result links only for owned artifacts.
-9. Audit sensitive queued work such as export, bulk delete/restore, import, merge, messaging, and sync recovery. Emitting structured logs to `stdout` (via Pino).
+9. Audit sensitive queued work such as export, bulk delete/restore, import, merge, messaging, and sync recovery. Propagate W3C `traceparent` correlation ID into `correlation_id` to link background worker execution with database audit records and APM traces (`mms-audit-trail`).
+10. Register background audit verification worker (`runAuditVerificationJob`) to execute scheduled cryptographic hash chain checks and Merkle root rollups.
 
 ## Job Checklist
 
@@ -46,6 +47,8 @@ Use this skill when adding or changing background processing, export/download ar
 - [ ] Download requires current user ownership
 - [ ] Export respects field visibility and soft-delete policy
 - [ ] Sensitive job is audited
+- [ ] W3C traceparent propagated as correlation ID in audit events
+- [ ] Scheduled verification runner registered for audit integrity
 - [ ] Datasets exceeding interactive threshold (>500 rows) offloaded to background worker jobs with streaming pipelines
 - [ ] Jobs use BullMQ + Redis 7+ for durable queuing
 - [ ] Tests cover success, forbidden, and failure paths

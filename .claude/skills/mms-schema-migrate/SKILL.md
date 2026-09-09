@@ -5,7 +5,7 @@ description: Forward-only Drizzle migrations with journal/meta, expand/contract 
 
 # MMS Schema & Drizzle Migration Workflow
 
-**Rules (norms SSOT):** `mms-data-layer.md` · `mms-performance.md` §1 · `mms-ops-infrastructure.md` · `mms-structure-naming.md` · `mms-api-interface.md` · `mms-form-architecture.md`.
+**Rules (norms SSOT):** `mms-data-layer.md` §5 · `mms-auth-security.md` §5 · `mms-performance.md` §1 · `mms-ops-infrastructure.md` · `mms-structure-naming.md` · `mms-api-interface.md` · `mms-form-architecture.md`. Audit trail workflow → **`mms-audit-trail`**.
 
 Use when designing and implementing PostgreSQL database schemas, Drizzle ORM models, relations, forward-only SQL migrations, and matching `@mms/shared` Zod contracts.
 
@@ -39,7 +39,11 @@ Use when designing and implementing PostgreSQL database schemas, Drizzle ORM mod
     WITH CHECK (true);
   ```
 - **Composite Tenant Uniqueness:** Any entity-level unique constraint must include the tenant identifier (e.g., `UNIQUE(tenant_id, email)` or `UNIQUE(tenant_id, code)`).
-- **Immutable Audit Ledger:** Every balance change, grade modification, and attendance update must be backed by an append-only audit trail (`audit_trail_ledger`) verified via cryptographic hashing.
+- **Immutable Audit Ledger & Partitioning (`mms-audit-trail`):** Every state change, balance modification, and critical entity update must be backed by an append-only audit trail (`audit_trail_events` / `audit_trail_ledger`). Audit tables must use monthly date partitioning (`PARTITION BY RANGE (transaction_timestamp)`), include cryptographic chaining columns (`hash_previous`, `hash_current`), enforce `INSERT`-only database permissions for the application user, and strictly execute:
+  ```sql
+  REVOKE UPDATE, DELETE, TRUNCATE ON audit_trail_events FROM PUBLIC, mms_app_user;
+  ```
+  Archive older partitions (91+ days to cold WORM storage) by detaching partitions (`ALTER TABLE audit_trail_events DETACH PARTITION ...`) rather than running `DELETE` queries, eliminating table locks, transaction bloat, and WAL churn.
 
 ## 3. Data Typing & Column Standards
 - **Primary Keys:** Standardize on:
@@ -102,6 +106,7 @@ When generating code for any feature or entity, provide:
 6. New tenant tables: RLS + `FORCE ROW LEVEL SECURITY`; writes via `withTenantTransaction` / `SET LOCAL`.
 7. Prefer partial indexes for hot active lists (`WHERE deleted_at IS NULL`) when adding soft-delete.
 8. Statement/sql safety budgets → `mms-data-layer.md` (`statement_timeout`, parameterized `sql` only).
+9. Audit trail tables: Monthly date partitioning (`PARTITION BY RANGE (transaction_timestamp)`), `INSERT`-only database privileges (`REVOKE UPDATE, DELETE, TRUNCATE ON audit_trail_events FROM PUBLIC, mms_app_user, mms_admin;`), and partition detachment (`ALTER TABLE ... DETACH PARTITION ...`) for zero-downtime archival without `DELETE` table locks (`mms-audit-trail`).
 
 ## Checklist
 
@@ -120,6 +125,7 @@ When generating code for any feature or entity, provide:
 - [ ] schema.ts + SQL DDL + journal/meta committed together
 - [ ] No drizzle-kit push in CI/prod docs or scripts
 - [ ] FORCE RLS on new tenant tables
+- [ ] Audit tables partitioned by date with INSERT-only privileges (UPDATE/DELETE revoked)
 ```
 
 ## Done

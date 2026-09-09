@@ -5,9 +5,9 @@ description: Implements or audits MMS finance and accounting workflows — invoi
 
 # MMS Finance & Accounting Workflow
 
-**Rules (norms SSOT):** `mms-core.mdc` · `mms-data-layer.mdc` · `mms-performance.mdc` §1-2 · `mms-form-architecture.mdc` · `mms-reports.mdc` · `mms-structure-naming.mdc`
+**Rules (norms SSOT):** `mms-core.mdc` · `mms-data-layer.mdc` §5 · `mms-auth-security.mdc` §5 · `mms-performance.mdc` §1-2 · `mms-form-architecture.mdc` · `mms-reports.mdc` · `mms-structure-naming.mdc`. Modern Audit Trail Workflow → **`mms-audit-trail`**.
 
-Architecture standards for Madrasa financial management, student billing/invoices, payments, and double-entry accounting ledgers.
+Architecture standards for Madrasa financial management, student billing/invoices, payments, double-entry accounting ledgers, and regulatory audit compliance.
 
 ---
 
@@ -20,6 +20,9 @@ Architecture standards for Madrasa financial management, student billing/invoice
 | **Immutability of Closed Periods**| Transactions in closed fiscal years (`is_closed: true`) cannot be created, edited, or deleted. Corrections require adjustment entries in the current open fiscal year. |
 | **No Client-Side Optimistic Money**| TanStack Query mutations for invoices, payments, and ledger entries must never use optimistic updates. Await server response before UI confirmation. |
 | **Soft-Delete & Audit Trail** | Financial records (invoices, payments, entries) require typed `deleted_at`, `deleted_by`, and `deletion_reason` columns. Voiding an invoice records audit metadata and adjusts linked ledger entries. |
+| **SOX 7-Year Retention Floor** | General ledger records, invoices, payments, and double-entry journals carry a statutory minimum 7-year retention floor (`mms-audit-trail`). |
+| **PCI-DSS Tokenization Ban on Card Data** | Avoid storing raw payment card numbers (PAN), CVVs, or cardholder secrets in database tables or audit trails — reference tokenized payment-processor records only (1-year floor, 3 months online) (`mms-audit-trail`). |
+| **Transactional Outbox Capture** | Mutating financial records must emit 5-dimension audit events (`action_type: 'CREATE' \| 'UPDATE' \| 'DELETE'`) with RFC 8785 canonical JSON inside `withTenantTransaction`. |
 
 ---
 
@@ -72,3 +75,6 @@ apps/frontend/src/tenant/features/
 - [ ] Invoice/entry creation forms require clean dirty checking and disable submit when invalid.
 - [ ] Reports and KPI tiles load metrics via server SQL aggregate endpoints.
 - [ ] Unit tests verify currency formatting and debit/credit ledger equality.
+- [ ] Financial mutations emit 5-dimension audit events with RFC 8785 canonical JSON inside `withTenantTransaction` (`mms-audit-trail`).
+- [ ] SOX 7-year retention policy applied to financial audit trail events.
+- [ ] Cardholder secrets and PAN are never logged; payment processor token references used exclusively.

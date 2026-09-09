@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Data Layer & Caching System
 
-**Workflow skills:** REST Query factories → `mms-query-factories` · Drizzle DDL/RLS/Schema → `mms-schema-migrate` · backend API → `mms-backend-api` · shared package → `mms-shared-package` · legacy `/api/db` → `mms-data-sync` · backup wipe → `mms-backup-restore`.
+**Workflow skills:** REST Query factories → `mms-query-factories` · Drizzle DDL/RLS/Schema → `mms-schema-migrate` · backend API → `mms-backend-api` · shared package → `mms-shared-package` · legacy `/api/db` → `mms-data-sync` · backup wipe → `mms-backup-restore` · audit trail → `mms-audit-trail`.
 
 Authoritative standards for backend databases, Drizzle ORM, transactions, shared Zod contracts, and TanStack Query across **tenant and platform** boundaries.
 
@@ -95,5 +95,73 @@ When generating code for any feature or entity, provide:
 | **Auth Gate & Signal** | `enabled: isAuthenticated` (tenant) / `isPlatformAuthenticated` (platform). Pass Query `signal` to `apiFetch` (mandatory). |
 | **Mutations & Cache** | Call-site `notify.*` + `t()` after `mutateAsync`. Await mutation before dialog close. Invalidate specific list/count tuple keys. Ban global mutation toast buses. |
 | **Optimistic Policy** | Only for idempotent, easily-rollbackable actions. **Banned** for money, soft-delete, bulk ops, messaging sends. Always reconcile against server response. |
-| **Pagination & Lists** | Server `page` + `limit` for directories (default 25, max 100); `placeholderData: (prev) => prev` for smooth pagination. Unpaged dumps (`loadAllFn`) are strictly banned. Virtualize rows when rendered items > 30 (`@tanstack/react-virtual` — `mms-performance.md`). |
 | **Live WebSocket Push** | `/api/ws` with `broadcastTenantUpdate` → FE `TenantLivePushSubscriber` invalidates Query tuple keys on server events. |
+
+---
+
+## 5. Modern Database Audit Trail & Cryptographic Integrity
+
+Authoritative standards for audit trail architecture, tamper-evident hash chains, transactional capture, privacy-compliant erasure, and storage tiering.
+
+### 1. Five-Dimension Payload Standard & Canonical JSON
+- **Five Dimensions:** Every audit record must capture:
+  - **Who:** `real_user_id`, `impersonated_user_id` (if any), `ip_address`, `client_app`, `session_id`. Traces both human/system actor and any impersonated context.
+  - **What:** `table_name`, `record_id`, `old_state`, `new_state` stored as canonical JSON for exact point-in-time state reconstruction.
+  - **When:** `transaction_timestamp` in UTC with microsecond precision (`timestamptz`) for timeline accuracy under concurrent writes.
+  - **Why:** `correlation_id` (propagating W3C Trace Context `traceparent`), `action_type` (`CREATE`, `UPDATE`, `DELETE`, `VIEW`, `LOGIN`, `REDACT`, `RESTORE`), `api_endpoint`, `http_method`. Links a database write back to the request or business event that caused it.
+  - **Integrity:** `hash_previous`, `hash_current`, `verification_status`.
+- **W3C Trace Context as Correlation ID:** Propagate the W3C Trace Context `traceparent` value as (or alongside) the `correlation_id` (use a real trace ID, not a bespoke UUID). This links audit rows directly to the APM/observability tracing stack rather than maintaining an isolated, audit-only identifier.
+- **RFC 8785 Canonical JSON (JCS):** Row states (`old_state`, `new_state`) and payload hashing MUST use RFC 8785 JSON Canonicalization Scheme for deterministic representation across environments, runtimes, and languages — rather than an ad-hoc "sort keys, strip whitespace" convention, so canonicalisation is interoperable across your stack. Ad-hoc string manipulation is strictly forbidden.
+- **Capture Minimization:** Minimize at capture time. Capture only fields essential for point-in-time state reconstruction. Never log full raw PII payloads or secrets (passwords, tokens, credentials, payment details) into audit rows — every field captured is a field that must later be handled under an erasure request.
+
+### 2. Capture Patterns & Consistency Trade-Offs
+- **Application-Level Outbox (Default for MMS):** Audit events must be written atomically inside the existing database transaction (`withTenantTransaction`) alongside the primary entity mutation. Best for new services where strong consistency is required; low overhead (writes inside the existing transaction). If the transaction rolls back, no orphan audit rows exist.
+- **Change Data Capture (CDC):** Best for high-throughput systems where you cannot touch application code; near-zero overhead on the primary; async downstream; eventual consistency (e.g. Debezium reading WAL into Kafka).
+- **Hybrid (CDC + Outbox):** Sanctioned for large systems with mixed workloads requiring strong consistency for financial transactions and async capture for read/metric streams.
+- **Event Sourcing Ban for Pure Audit:** Do not reach for Event Sourcing purely for audit purposes. Event sourcing is an architectural commitment across the entire domain, not an audit feature; adopt it only if your domain already benefits from an event-sourced model for reasons beyond auditing.
+
+### 3. Scalable Cryptographic Tamper-Evidence
+- **Cryptographic Hash Chaining:**
+  `hash_current = SHA-256(hash_previous + canonical_json(payload) + transaction_timestamp)`
+  Emitted via native `node:crypto` (`crypto.hash('sha256', buffer)`).
+- **Sharded Chains Over Global Serialization:** Scale the chain — never serialize all writes through a single global chain. A single strictly-sequential hash chain forces every write to wait on the previous row's hash, causing severe transaction lock contention under concurrent load. Shard hash chains per logical partition (per tenant workspace, per aggregate domain, or per time-window) and periodically roll shard heads up into a Merkle tree, publishing the Merkle root at fixed intervals (the same technique certificate-transparency logs use to make tamper-evidence scale under concurrent writes); verify against the published root rather than replaying one global serial chain.
+- **Scheduled Automated Verification:** Run automated chain (or Merkle-root) verification on a scheduled cadence (hourly/daily). Store verification outcomes in a separate append-only table (`audit_verification_runs`). Immediately alert on broken chains, missing records, or sequence gaps — never rely on someone noticing during a manual audit.
+- **Complementary Statement-Level Auditing (`pgAudit`):** Statement-level logging is complementary, not a substitute. A row-based audit table only captures writes that go through the application write path. It will not see ad-hoc `SELECT`s, direct database console access, or DDL. Pair it with database-native statement/session auditing (`pgAudit`) to close that gap.
+- **Database Privilege Hardening & JIT Access:**
+  - The service writing transactional data gets `INSERT`-only privileges on the audit schema.
+  - Revoke `UPDATE`/`DELETE` on audit tables from every role, including the application's own database user.
+  - Direct read access is segregated to a dedicated security role with mandatory MFA enforcement and ideally Just-In-Time (JIT) break-glass access (granted, logged, and expires — not a standing grant).
+
+### 4. Privacy, Retention & Right-to-Erasure
+- **Ban on Historical Row Deletion:** Immutable audit logs and a "right to erasure" obligation are in direct tension. Resolve it with one of two recognized patterns — never delete or rewrite historical rows, which breaks the hash chain:
+  1. **Crypto-Shredding (Primary Standard):** Encrypt personal-data fields with a per-subject (or per-record) key at write time. To "erase" a subject, destroy their key rather than the row. The audit row, its hash, and position in the chain remain untouched; the plaintext becomes permanently unrecoverable mathematical noise. More rigorous option and scales cleanly to bulk erasure requests.
+  2. **Redact-and-Append:** Replace personal-data values in-place with a fixed redaction marker (`[REDACTED_PER_REQUEST]`), appending a new chained audit event (`action_type = 'REDACT'`). Never recompute `hash_previous`/`hash_current` on the historical rows — the chain attests to when the redaction happened, not to a rewritten history.
+- **Statutory Retention Floors:**
+  - **HIPAA:** 6 years (if health records are in scope).
+  - **SOX:** 7 years (if listed-company financials are in scope).
+  - **PCI-DSS:** 1 year (3 months online). Avoid storing card data in the audit trail at all — reference a tokenised payment-processor record instead.
+  - **Regional Privacy Laws (GDPR / equivalent):** Verify your jurisdiction's law is actually enacted and in force before treating a draft bill as binding.
+- **Automated Retention Enforcement:** Automate retention enforcement as policy-driven purging (on the *encrypted-key* lifecycle for crypto-shredded data, or on the *raw row* lifecycle for non-personal audit data) rather than manual review.
+
+### 5. Storage Tiering & Archival
+- **Partitioned Relational Tables (Hot: 0–30 days):** Partition audit tables by date (monthly `PARTITION BY RANGE (transaction_timestamp)`). Bounds index sizes, speeds time-bound queries, and makes archiving a partition-detach operation instead of a `DELETE`.
+- **Warm Tier (31–90 days):** Time-series storage or older read-only partitions for time-bound queries and limited aggregation.
+- **Cold Tier (91+ days):** Columnar format (Parquet/ORC) on WORM-locked (Write Once Read Many) immutable object storage (S3 Object Lock or immutable blob storage). Cold storage must be WORM-enforced — "cold" without immutability is merely cheaper storage, not tamper-evident storage.
+- **Detached Partition Verification:** Carry the relevant chain hash (or Merkle root) alongside each archived batch so a detached partition can still be verified after archival.
+
+### 6. Integrity Monitoring, Anomaly Baselining & Auditing the Auditor
+- **Integrity Monitoring:** Automated chain verification on schedule; alert on breaks, gaps, or missing records.
+- **Anomaly Detection Baselining:** Baseline normal write volume and access patterns per actor. Alert on write spikes (>300% of baseline), off-hours administrative access, and geographically implausible sessions. Reserve ML-based anomaly detection for when rule-based baselining stops catching real incidents — it is a scaling step, not a starting point.
+- **Compliance Reporting & Auditing the Auditor:** Automate report generation and tamper-evident export (include chain/Merkle verification in the export itself). Access to the audit trail is itself an auditable event: all search queries, view sessions, and exports targeting audit tables must emit an immutable audit event (`action_type: 'VIEW'`, `table_name: 'audit_trail_events'`).
+
+### 7. Implementation Roadmap & Blockchain Scoping
+- **Five-Phase Implementation Roadmap:**
+  1. **Phase 1 (Foundation):** Payload schema with RFC 8785 canonical JSON, append-only privilege model (`INSERT`-only), monthly date partitioning.
+  2. **Phase 2 (Core Capture):** Transactional outbox or CDC deployment, W3C `traceparent` correlation-ID propagation, initial monitoring.
+  3. **Phase 3 (Integrity):** Sharded hash chaining, Merkle tree rollups, scheduled automated verification job, alerting.
+  4. **Phase 4 (Privacy):** Crypto-shredding key management or redact-and-append erasure workflows, automated policy-driven retention purging.
+  5. **Phase 5 (Advanced):** Tiered storage lifecycle with WORM S3 Object Lock, rule-to-ML anomaly detection baselining, external anchoring only if a stated requirement exists.
+- **Blockchain / Decentralized Anchoring Scope:** Scope blockchain/decentralized anchoring correctly. It solves one specific problem: proving integrity to an external party without that party trusting your database administrators. Most systems don't have that requirement. Treat it as an optional addition for cases with an explicit external-evidentiary need (e.g. a regulator or court requires proof independent of your own infrastructure) — not a default "layer" every audit system should build.
+
+
+

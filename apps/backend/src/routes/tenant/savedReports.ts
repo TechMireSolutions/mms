@@ -29,7 +29,9 @@ import {
   listSavedReports,
   runSavedReport,
 } from '../../services/savedReportsService.js';
-import { recordAudit } from '../../services/auditService.js';
+import { recordModernAuditEvent, mapActionStringToAuditType } from '../../services/auditTrailService.js';
+import { getRequestTenant } from '../../lib/tenantContext.js';
+import { logger } from '../../lib/logger.js';
 
 const s = initServer();
 
@@ -62,14 +64,18 @@ async function auditSavedReport(
   reportId: string,
   summary: string,
 ): Promise<void> {
-  await recordAudit({
-    userId: user.id,
-    userEmail: user.email,
-    action: `saved_report.${action}`,
-    entityType: 'collection',
-    entityId: reportId,
-    summary: `${category}: ${summary}`,
-  });
+  const tenant = getRequestTenant();
+  if (!tenant) return;
+  void recordModernAuditEvent({
+    workspaceSubdomain: tenant,
+    tableName: 'saved_reports',
+    recordId: reportId,
+    actionType: mapActionStringToAuditType(action),
+    realUserId: String(user.id),
+    newState: { summary: `${category}: ${summary}`, action: `saved_report.${action}`, category },
+  }).catch((err: unknown) =>
+    logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+  );
 }
 
 const savedReportsRouter = s.router(savedReportsContract, {

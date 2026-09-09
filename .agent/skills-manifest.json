@@ -27,6 +27,22 @@
       ]
     },
     {
+      "name": "mms-audit-trail",
+      "path": "skills/mms-audit-trail",
+      "keywords": [
+        "audit trail",
+        "tamper evidence",
+        "hash chain",
+        "canonical json",
+        "rfc 8785",
+        "crypto shredding",
+        "erasure",
+        "outbox",
+        "partitioning",
+        "pgAudit"
+      ]
+    },
+    {
       "name": "mms-backend-api",
       "path": "skills/mms-backend-api",
       "keywords": [

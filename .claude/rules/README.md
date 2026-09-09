@@ -92,6 +92,7 @@ Every rule starts with a **Workflow skill:** line; the full rule→skill map liv
 | FE shell / apiClient | `mms-frontend` |
 | FormModal / Zod forms | `mms-form-architecture` |
 | Backup wipe-restore | `mms-backup-restore` |
+| Audit trails / tamper-evidence / retention | `mms-audit-trail` |
 | Dep upgrades / catalogs | `mms-dependency-upgrade` |
 | axe / focus-return | `mms-a11y-smoke` |
 | Migration debt | `mms-migration-fixes` |

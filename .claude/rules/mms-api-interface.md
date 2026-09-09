@@ -31,7 +31,7 @@ All frontend requests to backend resources (tenant or platform) must use `apiFet
 - **Response shapes**: Derive serializers / type guards from the same `@mms/shared` Zod — still ban hand-forked Fastify JSON Schema DTOs.
 - **Destructive merges**: Atomic server transaction (`POST …/merge`) — ban FE-only dual delete+upsert.
 - **429 handling**: Honor `Retry-After` header — `mms-auth-security.md`.
-- **Request Tracing & Context**: Propagate `X-Request-Id` (or Fastify `req.id`) through API responses. Track tenant and request context via `AsyncLocalStorage` (backed by Node 24 `AsyncContextFrame`) across asynchronous call stacks.
+- **Request Tracing, Context & W3C Traceparent**: Propagate `X-Request-Id` (or Fastify `req.id`) through API responses. Extract and validate W3C Trace Context `traceparent` headers, propagating them through `AsyncLocalStorage` (`tenantStorage`, backed by Node 24 `AsyncContextFrame`) to serve as (or alongside) `correlation_id` in database audit records and outbox events. Banned: generating ad-hoc random UUIDs that break correlation with external APM / distributed tracing stacks.
 
 ---
 

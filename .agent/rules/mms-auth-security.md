@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Auth & Security System
 
-**Workflow skill:** `mms-backend-security` (CSRF/Origin, cookies, RBAC, tenant isolation). Route/service wiring → `mms-backend-api`.
+**Workflow skill:** `mms-backend-security` (CSRF/Origin, cookies, RBAC, tenant isolation) · audit trail security → `mms-audit-trail`. Route/service wiring → `mms-backend-api`.
 
 Governs user authentication, sessions, tenant isolation, role-based authorization (RBAC), and server threat protections in the Madrasa Management System (MMS). These security rules apply **equally and rigorously to both tenant workspaces and the platform apex**.
 
@@ -106,4 +106,25 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 - **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables.
 - **XSS & Output Encoding**: No unsanitized HTML (`dangerouslySetInnerHTML` forbidden without strict DOMPurify sanitization); encode user content in PDF/CSV/Excel cells to prevent CSV formula injection.
 - **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, bulk PII, or OAuth client secrets / refresh tokens. Structured logging emits to `stdout` (Pino).
-- **Auditing**: `auditService` append-only entry on collection writes, merges, soft-deletes. PG row triggers read `app.current_user_id` + `app.current_tenant` (SET LOCAL in `withTenantTransaction` / `runInTransaction`).
+- **Auditing**: `auditService` append-only entry on collection writes, merges, soft-deletes. PG row triggers and outbox workers read `app.current_user_id` + `app.current_tenant` (SET LOCAL in `withTenantTransaction` / `runInTransaction`).
+
+---
+
+## 5. Audit Trail Security, Governance & Trace Context
+- **Five-Dimension Capture Security:** Every audit record binds Who (`real_user_id`, `impersonated_user_id`, `ip_address`, `session_id`, `client_app`), What (RFC 8785 canonical JSON row delta), When (`timestamptz` UTC microsecond precision), Why (W3C `traceparent` as `correlation_id`, `action_type`, endpoint, HTTP method), and Integrity (`hash_previous`, `hash_current`, `verification_status`).
+- **W3C Trace Context Propagation:** Propagate the W3C Trace Context `traceparent` header into the request `AsyncLocalStorage` context and store it as (or alongside) `correlation_id` in audit payloads. Banned: bespoke ad-hoc random UUIDs that break correlation with APM/tracing infrastructure.
+- **Audit Data Segregation & JIT Break-Glass:** The application service writing transactional data gets `INSERT`-only privileges on the audit schema. `UPDATE` and `DELETE` are strictly revoked on audit tables from every role, including the application's own database user. Direct read access to audit logs is segregated to a dedicated security role with mandatory Multi-Factor Authentication (MFA) and ideally Just-In-Time (JIT) break-glass access (granted, logged, and expires — not a standing grant).
+- **Auditing the Auditor:** Access to the audit trail is itself an auditable event. All search queries, view sessions, and exports targeting audit tables must emit an immutable audit event (`action_type: 'VIEW'`, `table_name: 'audit_trail_events'`).
+- **Complementary Statement-Level Auditing (`pgAudit`):** Pair application row-level audit with database-native statement auditing (`pgAudit`) to capture direct database console access, ad-hoc DBA queries, and schema DDL that bypass the Fastify application write path.
+- **Tamper-Evident Compliance Exports:** Automated compliance export pipelines must include cryptographic hash verification proofs and published Merkle roots within the exported artifact.
+- **Anomaly Detection Baselining:** Baseline normal write volume and access patterns per actor. Alert on write spikes (>300% of baseline), off-hours administrative access, and geographically implausible sessions. Reserve ML-based anomaly detection for when rule-based baselining stops catching real incidents — it is a scaling step, not a starting point.
+- **Capture Minimization:** Minimise at capture time. Don't log full PII payloads into `old_state`/`new_state` if the field isn't needed for reconstruction — every field captured is a field you must later handle under an erasure request. Strip secrets (passwords, tokens, credentials, payment card numbers) completely.
+- **Right-to-Erasure Security Invariant:** Never delete or mutate historical audit rows to satisfy GDPR/privacy requests (modifying rows destroys cryptographic hash chains). Execute erasure strictly via crypto-shredding (destroying per-subject encryption key, permanently rendering plaintext unrecoverable mathematical noise) or redact-and-append (recording `action_type = 'REDACT'`); never recompute historical hashes.
+- **Statutory Retention Floors & Automated Enforcement:**
+  - HIPAA: 6 years (health records).
+  - SOX: 7 years (financials).
+  - PCI-DSS: 1 year (3 months online). Avoid storing card data at all — reference a tokenised payment-processor record instead.
+  - Regional privacy laws (GDPR / equivalent): verify jurisdiction's law is actually enacted and in force before treating draft legislation as binding.
+  - Automate retention enforcement as policy-driven purging (on the *encrypted-key* lifecycle for crypto-shredded data, or on the *raw row* lifecycle for non-personal audit data) rather than manual review.
+- **Decentralized / Blockchain Anchoring Scope:** Scope external blockchain anchoring strictly to scenarios with an explicit external regulatory or evidentiary mandate (e.g. proving integrity to a court or regulator independent of database administrators); do not introduce external chains as an unrequested default layer.
+

@@ -104,10 +104,24 @@ bash scripts/verify-tenant-hosts.sh dar-ul-quran apps/backend/.env   # on server
 curl -fsS "https://dar-ul-quran.${MMS_APP_DOMAIN}/health"            # replace slug
 ```
 
+## Audit Trail Operations (pgAudit & WORM Storage)
+
+- **PostgreSQL Statement Auditing (`pgAudit`)**:
+  ```bash
+  sudo apt-get install -y postgresql-16-pgaudit
+  # Add to /etc/postgresql/16/main/postgresql.conf:
+  # shared_preload_libraries = 'pgaudit'
+  # pgaudit.log = 'write, ddl, role'
+  sudo systemctl restart postgresql
+  ```
+- **Scheduled Verification Timer**: Register daily/hourly cron job to trigger `runAuditVerificationJob`.
+- **WORM Object Storage for Cold Tier (91+ days)**: Configure S3 Object Lock or MinIO bucket in Compliance mode with retention locks (HIPAA 6y, SOX 7y, PCI-DSS 1y) to store columnar Parquet archives alongside their Merkle roots.
+
 ## Rules
 
-`mms-ops-infrastructure.md`, `mms-auth-security.md` (Cursor mirrors use `.mdc` — sync docs only; agent canon is `.md`)
+`mms-ops-infrastructure.md`, `mms-auth-security.md`, `mms-data-layer.md` (Cursor mirrors use `.mdc` — sync docs only; agent canon is `.md`)
 
 ## Related skills
 
-`mms-dev-setup`, `mms-backend-api`, `mms-backend-security`
+`mms-dev-setup`, `mms-backend-api`, `mms-backend-security`, `mms-audit-trail`
+

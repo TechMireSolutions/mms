@@ -12,7 +12,8 @@ import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { MESSAGING_LOG_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-import { recordAudit } from '../../../services/auditService.js';
+import { recordModernAuditEvent } from '../../../services/auditTrailService.js';
+import { logger } from '../../../lib/logger.js';
 import {
   canClearMessagingLogs,
   canReadMessaging,
@@ -237,14 +238,16 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
       }
     try {
       await messagingUseCases.clearAllMessageLogs(tenantSubdomain);
-      await recordAudit({
-        userId: user.id,
-        userEmail: user.email,
-        action: 'messaging.logs.clear',
-        entityType: 'collection',
-        entityId: 'message_logs',
-        summary: 'Soft-archived all message logs from Reports',
-      });
+      void recordModernAuditEvent({
+        workspaceSubdomain: tenantSubdomain,
+        tableName: 'message_logs',
+        recordId: 'message_logs',
+        actionType: 'DELETE',
+        realUserId: String(user.id),
+        newState: { summary: 'Soft-archived all message logs from Reports', action: 'messaging.logs.clear' },
+      }).catch((err: unknown) =>
+        logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+      );
       return reply.send({ success: true });
     } catch (err) {
       return sendDatabaseError(reply, 'Failed to clear message logs', err);

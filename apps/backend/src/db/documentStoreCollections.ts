@@ -102,7 +102,7 @@ export async function saveCollection(
     }
   } catch (error) {
     // Log only a safe message — the raw error/row payload must not reach logs (PII).
-    logger.error({ name, err: error instanceof Error ? error.message : 'non-error' }, 'Error saving collection');
+    logger.error({ name, err: error instanceof Error ? error.message : String(error) }, 'Error saving collection');
     throw error;
   }
 }

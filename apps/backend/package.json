@@ -20,6 +20,8 @@
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage",
     "test:db": "vitest run --config vitest.db.config.ts",
+    "audit:verify": "tsx src/scripts/verify-audit-chains.ts",
+    "audit:detach": "tsx src/scripts/detach-audit-partition.ts",
     "benchmark:worker": "tsx src/scripts/benchmarkWorkerHeap.ts"
   },
   "dependencies": {

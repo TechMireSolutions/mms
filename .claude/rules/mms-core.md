@@ -54,6 +54,7 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
   - **Security & Lifecycle:** `--permission` model security flags; graceful termination lifecycle (`SIGTERM`/`SIGINT` with unref fallback timeout).
 - **Module Pages:** Three tiers only (Work, Reports, Setup) via `PageHeader` + `useFilteredModuleTierTabs`.
 - **Write Mechanism:** Cookie SPA + `apiClient` only (No React Server Actions).
+- **Audit Trail & Immutability:** Enterprise state changes tracked via 5-dimension RFC 8785 canonical JSON payloads in transactional outboxes; sharded cryptographic hash chains (`hash_current = SHA-256(...)`) with Merkle tree rollups; `INSERT`-only DB privileges on audit tables (revoking `UPDATE`/`DELETE`); right-to-erasure via crypto-shredding or redact-and-append without historical row destruction — `mms-data-layer.md`, `mms-auth-security.md`.
 
 ## Standards Index (Ownership Matrix)
 
@@ -65,6 +66,7 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
 | Auth, Sessions, CSRF, RBAC & Isolation | `mms-auth-security.md` | `mms-backend-security` |
 | API Contracts, Errors, Pagination & Bulk PUT | `mms-api-interface.md` | `mms-frontend` · `mms-backend-api` |
 | Data Layer, Drizzle RLS, PG Timeouts & Query | `mms-data-layer.md` | `mms-query-factories` · `mms-schema-migrate` |
+| Audit Trails, Tamper-Evidence & Retention | `mms-data-layer.md` · `mms-auth-security.md` | `mms-audit-trail` · `mms-backend-security` |
 | Backend Architecture & Repository Gateway | `mms-api-interface.md` §2 · `mms-structure-naming.md` | `mms-backend-api` |
 | Work Directory, Detail Drawer & Trash UX | `mms-module-architecture.md` | `mms-module-work` · `mms-module-page` |
 | Background Jobs & Queue Processing | `mms-module-architecture.md` §5 | `mms-background-jobs` |

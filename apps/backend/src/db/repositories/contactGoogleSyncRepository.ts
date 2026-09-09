@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { contactGoogleSyncCredentials } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { encryptSecretAtRest, decryptSecretAtRest } from '../../lib/cryptoAtRest.js';
 
 export interface ContactGoogleSyncCredentialRecord {
   clientId?: string;
@@ -16,9 +17,9 @@ function toRecord(row: CredentialRow): ContactGoogleSyncCredentialRecord {
   const record: ContactGoogleSyncCredentialRecord = {};
 
   if (row.clientId) record.clientId = row.clientId;
-  if (row.clientSecret) record.clientSecret = row.clientSecret;
-  if (row.accessToken) record.accessToken = row.accessToken;
-  if (row.refreshToken) record.refreshToken = row.refreshToken;
+  if (row.clientSecret) record.clientSecret = decryptSecretAtRest(row.clientSecret);
+  if (row.accessToken) record.accessToken = decryptSecretAtRest(row.accessToken);
+  if (row.refreshToken) record.refreshToken = decryptSecretAtRest(row.refreshToken);
   if (row.updatedAt) record.updatedAt = row.updatedAt.toISOString();
 
   return record;
@@ -61,9 +62,9 @@ export async function upsertContactGoogleSyncCredentials(
     workspaceSubdomain: tenant,
     userId,
     clientId: config.clientId ?? null,
-    clientSecret: config.clientSecret ?? null,
-    accessToken: config.accessToken ?? null,
-    refreshToken: config.refreshToken ?? null,
+    clientSecret: encryptSecretAtRest(config.clientSecret) ?? null,
+    accessToken: encryptSecretAtRest(config.accessToken) ?? null,
+    refreshToken: encryptSecretAtRest(config.refreshToken) ?? null,
     updatedAt: now,
   };
 
@@ -121,9 +122,9 @@ export async function replaceContactGoogleSyncCredentialsForWorkspace(
         workspaceSubdomain: tenant,
         userId: entry.userId,
         clientId: entry.clientId ?? null,
-        clientSecret: entry.clientSecret ?? null,
-        accessToken: entry.accessToken ?? null,
-        refreshToken: entry.refreshToken ?? null,
+        clientSecret: encryptSecretAtRest(entry.clientSecret) ?? null,
+        accessToken: encryptSecretAtRest(entry.accessToken) ?? null,
+        refreshToken: encryptSecretAtRest(entry.refreshToken) ?? null,
         updatedAt: entry.updatedAt ? new Date(entry.updatedAt) : now,
       })),
     );

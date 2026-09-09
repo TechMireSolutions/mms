@@ -157,6 +157,13 @@ import { BarChart, Bar } from 'recharts'; // in a parent report component
 - [ ] Export column headers via t() — same keys as table column headers
 ```
 
+## Tamper-Evident Compliance & Audit Exports
+
+For regulatory compliance (HIPAA, SOX, PCI-DSS, GDPR) and audit logs (`audit_trail_events`):
+- **Cryptographic Attestation in Exports**: When exporting audit records (`POST /api/audit/export`), embed the cryptographic chain hash, the published Merkle root proof, and the verification status directly into the document metadata (PDF document properties or JSON envelope).
+- **Auditing the Auditor**: Every view, query, filter evaluation, or export targeting audit logs must itself emit an immutable audit event (`action_type: 'VIEW'`, `tableName: 'audit_trail_events'`).
+- **Data Minimization**: Compliance exports must strip raw decrypted PII unless explicitly requested under an authorized break-glass session.
+
 ## Completion Checklist
 
 ```
@@ -176,6 +183,8 @@ import { BarChart, Bar } from 'recharts'; // in a parent report component
 - [ ] Export filename includes module + date range + timestamp
 - [ ] Formula injection escaped in Excel/CSV cells
 - [ ] PII exports logged to audit log
+- [ ] Tamper-evident compliance exports embed chain hash + Merkle root proof
+- [ ] Accessing audit logs emits 'VIEW' audit entry (Auditing the Auditor)
 - [ ] Background job for exports >500 rows Excel / >200 rows PDF
 - [ ] Permissions match Work boundary (can(), field visibility, soft-delete)
 - [ ] a11y: aria-label, table caption, keyboard drill-down, aria-busy on export

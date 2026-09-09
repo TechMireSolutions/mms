@@ -54,8 +54,10 @@ vi.mock('../services/studentLookupsService.js', () => ({
   replaceStudentLookupKind: (...args: unknown[]) => mockReplaceStudentLookupKind(...args),
 }));
 
-vi.mock('../services/auditService.js', () => ({
-  recordAudit: vi.fn().mockResolvedValue(undefined),
+vi.mock('../services/auditTrailService.js', () => ({
+  recordModernAuditEvent: vi.fn().mockResolvedValue(undefined),
+  mapActionStringToAuditType: (action: string) => (action.includes('delete') ? 'DELETE' : action.includes('create') ? 'CREATE' : 'UPDATE'),
+  getLatestShardHash: vi.fn().mockResolvedValue('0'.repeat(64)),
 }));
 
 describe('students Setup routes', () => {

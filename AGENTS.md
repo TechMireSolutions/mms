@@ -15,7 +15,7 @@ bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 ```
 .agent/
   rules/             # behavioural rules (always_on + model_decision)
-  skills/            # 28 capability modules (SKILL.md per folder)
+  skills/            # 29 capability modules (SKILL.md per folder)
   workflows/         # multi-step procedures
   skills-manifest.json
 ```
@@ -75,6 +75,7 @@ Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker
 | `mms-shared-package` | `@mms/shared` |
 | `mms-backend-api` | Fastify backend |
 | `mms-backend-security` | Tenant isolation, RBAC, cookies, CSRF |
+| `mms-audit-trail` | Database audit trail, RFC 8785 canonical JSON, sharded hash chains, crypto-shredding, monthly partitions |
 | `mms-finance-accounting` | Invoices, payments, double-entry ledger |
 | `mms-reports-export` | Analytics & export |
 | `mms-messaging` | SMS/WhatsApp campaigns |

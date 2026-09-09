@@ -4,7 +4,6 @@ import {
   WORKSPACES_COLLECTION,
   type Workspace,
   type ActivityLog,
-  type AuditLogEntry,
 } from '@mms/shared';
 import {
   getCollectionByStorageName,
@@ -12,7 +11,6 @@ import {
 } from '../database.js';
 import {
   replaceActivityLogsForWorkspace,
-  replaceAuditLogEntriesForWorkspace,
 } from '../repositories/logsRepository.js';
 
 async function discoverTenantSubdomains(): Promise<Set<string>> {
@@ -48,19 +46,9 @@ export async function runMigration033(): Promise<void> {
         `[Migration 033] Imported ${legacyActivityLogs.length} activity log(s) for "${subdomain}" into user_activity_logs table.`,
       );
     }
-
-    // 2. Audit Log Entries
-    const legacyAuditLogs = await getCollectionByStorageName(`${prefix}audit_log`);
-    if (Array.isArray(legacyAuditLogs) && legacyAuditLogs.length > 0) {
-      await replaceAuditLogEntriesForWorkspace(subdomain, legacyAuditLogs as AuditLogEntry[]);
-      changed = true;
-      console.log(
-        `[Migration 033] Imported ${legacyAuditLogs.length} audit log entry/entries for "${subdomain}" into audit_log_entries table.`,
-      );
-    }
   }
 
   if (!changed) {
-    console.log('[Migration 033] No legacy activity or audit logs to import.');
+    console.log('[Migration 033] No legacy activity logs to import.');
   }
 }

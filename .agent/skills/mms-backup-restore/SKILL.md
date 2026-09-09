@@ -18,8 +18,9 @@ Do **not** use for Postgres ops dumps → `mms-ops-deploy` / production scripts.
 5. Run `validateWorkspaceBackupJson` / `validateAndNormalizeSnapshot` (dry-run) **before** wipe — never commit a partial restore.
 6. **Restore step 2**: wipe-restore under `withSyncTimeout`; abort → full rollback + `408` / `backup.syncTimeout`.
 7. Strip `SERVER_ONLY_OBJECT_KEYS`; exclude credential tables from `relationalReplaceMapping`.
-8. After success: clear FE collection cache by tenant prefix; keep settings/singleton objects only.
-9. All UI copy via `backup.*` keys (en/ar/ur/fa). Confirm modal must not close while busy.
+8. **Audit Trail Preservation**: Wipe-restore must NEVER truncate or mutate historical `audit_trail_events` or break cryptographic chains. Restore operations must append an immutable audit event (`action_type = 'RESTORE'`, `tableName = 'workspace_snapshot'`). Encrypted backup exports carrying audit trails must include cryptographic chain hashes and verification status in metadata (`mms-audit-trail`).
+9. After success: clear FE collection cache by tenant prefix; keep settings/singleton objects only.
+10. All UI copy via `backup.*` keys (en/ar/ur/fa). Confirm modal must not close while busy.
 
 ## Checklist
 
@@ -30,6 +31,7 @@ Do **not** use for Postgres ops dumps → `mms-ops-deploy` / production scripts.
 - [ ] Timeout rolls back (no partial commit)
 - [ ] Secrets/credentials stripped from snapshot
 - [ ] No dual-write restore from browser cache alone
+- [ ] Audit trail preserved (no truncation) and restore operation audited
 ```
 
 ## Done

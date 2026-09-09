@@ -50,8 +50,29 @@ vi.mock('../enrollments/use-cases/enrollmentsUseCases.js', () => ({
   },
 }));
 
-vi.mock('../services/auditService.js', () => ({
-  recordAudit: (...args: unknown[]) => mockRecordAudit(...args),
+vi.mock('../services/auditTrailService.js', () => ({
+  recordModernAuditEvent: (first: unknown, second?: unknown) => {
+    const input = (second ?? first) as {
+      realUserId?: string;
+      tableName?: string;
+      recordId?: string;
+      newState?: { action?: string; summary?: string };
+    };
+    mockRecordAudit({
+      userId: input.realUserId,
+      action: input.newState?.action,
+      entityType: 'collection',
+      entityId: input.recordId,
+      summary: input.newState?.summary,
+    });
+    return Promise.resolve({
+      hashPrevious: '0'.repeat(64),
+      hashCurrent: '1'.repeat(64),
+      canonicalPayload: '{}',
+    });
+  },
+  mapActionStringToAuditType: (action: string) => (action.includes('delete') ? 'DELETE' : action.includes('create') ? 'CREATE' : 'UPDATE'),
+  getLatestShardHash: vi.fn().mockResolvedValue('0'.repeat(64)),
 }));
 
 vi.mock('../services/backgroundJobWorkerService.js', async (importOriginal) => {

@@ -11,6 +11,8 @@ import { deleteRefreshTokensForUser } from '../../services/auth/authArtifactServ
 import { hashPassword } from '../../services/auth/passwordService.js';
 import { assertPasswordMeetsPolicy } from '../../services/globalSettingsService.js';
 import { revokeAllUserSessions } from '../../services/session.service.js';
+import { recordModernAuditEvent, mapActionStringToAuditType } from '../../services/auditTrailService.js';
+import { logger } from '../../lib/logger.js';
 import { loadContactsByIds } from '../../services/contactService.js';
 import {
   type WorkspaceUser,
@@ -129,6 +131,24 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     };
     await repo.bulkSaveActivityLogs(tenant, [log]);
     await broadcastCollection('user_activity_logs');
+
+    // Bridge: also emit to tamper-evident audit_trail_events so LOGIN/LOGOUT/session
+    // events appear in the 5-dimension chain (best-practices §1 & §2, action_type LOGIN).
+    // Non-blocking: never throw into the caller on audit failure.
+    recordModernAuditEvent({
+      workspaceSubdomain: tenant,
+      tableName: 'users',
+      recordId: userId,
+      actionType: mapActionStringToAuditType(action),
+      realUserId: userId,
+      ipAddress: ip,
+      newState: { action, detail, module: 'users' },
+    }).catch((err: unknown) =>
+      logger.error(
+        { err: err instanceof Error ? err.message : String(err) },
+        'audit_trail_events bridge failed for user activity log',
+      ),
+    );
   }
 
   async function hydrateUserRows(rows: Awaited<ReturnType<UsersRepository['listTenantUsersByIds']>>): Promise<WorkspaceUser[]> {

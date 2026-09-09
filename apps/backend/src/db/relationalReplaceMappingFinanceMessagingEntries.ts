@@ -83,9 +83,4 @@ export const RELATIONAL_REPLACE_MAPPING_FINANCE_MESSAGING: Record<string, Relati
     fnName: 'replaceDashboardWidgetsForWorkspace',
     snapshotFnName: 'listAllDashboardWidgetsByWorkspace',
   },
-  audit_log: {
-    priority: 950,
-    importPath: './repositories/logsRepository.js',
-    fnName: 'replaceAuditLogEntriesForWorkspace',
-  },
 };

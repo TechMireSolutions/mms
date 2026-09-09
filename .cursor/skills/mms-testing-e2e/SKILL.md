@@ -149,7 +149,11 @@ test('verifies bidirectional layout and Nastaliq rendering parity', async ({ pag
 
 - [ ] All new pure utility functions in `@mms/shared` have corresponding Vitest unit tests.
 - [ ] Backend route changes include `inject()` test cases for authentication (`401`), authorization (`403`), and validation failure (`422`/`400`).
+- [ ] Audit trail mutations verify RFC 8785 canonical JSON hashing and SHA-256 chain continuity.
+- [ ] Scheduled audit verification (`runAuditVerificationJob`) tested for detecting broken chains, sequence gaps, and timestamp regressions.
+- [ ] Access to audit logs/exports verified to emit immutable `VIEW` audit records (Auditing the Auditor).
 - [ ] Form submission error states and touch targets are verified at 375px, 768px, and 1440px.
 - [ ] Performance refactors guarantee 100% backward compatibility for API contracts, schemas, and props (`mms-performance.mdc`).
 - [ ] Performance refactors explicitly document baseline bottleneck and quantified resource saved (CPU/RAM/DB/Bundle/DOM).
 - [ ] `pnpm test` runs with 100% pass rate.
+

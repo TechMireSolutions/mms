@@ -80,9 +80,8 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
     ]);
   });
 
-  it('never snapshots the audit trail (restore must not roll it back)', () => {
-    expect(RELATIONAL_REPLACE_MAPPING.audit_log.snapshotFnName).toBeUndefined();
-    expect(RELATIONAL_REPLACE_MAPPING.audit_log.fnName).toBe('replaceAuditLogEntriesForWorkspace');
+  it('never snapshots or replaces the audit trail (restore must not roll it back)', () => {
+    expect(RELATIONAL_REPLACE_MAPPING.audit_log).toBeUndefined();
   });
 
   it('restores contacts before users to preserve contact_id foreign keys', () => {
@@ -119,7 +118,7 @@ describe('RELATIONAL_REPLACE_MAPPING backup coverage', () => {
 
   it('covers every tenant business table that belongs in a full workspace backup', () => {
     // Keep this list in sync with apps/backend/src/db/schema.ts tenant tables.
-    // Intentional non-backup tables: audit_log_entries, audit_logs, background_jobs,
+    // Intentional non-backup tables: audit_trail_events, audit_verification_runs, audit_merkle_roots, crypto_shredding_keys, background_jobs,
     // contact_google_sync_credentials (OAuth secrets — never snapshot),
     // plus platform/global tables (workspaces, platform_*, auth_artifacts, data_migrations).
     const tenantBusinessTables = [

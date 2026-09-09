@@ -1,7 +1,8 @@
 import { relations } from "drizzle-orm";
 
 import { workspaces, platformUsers, platformUserPermissions, platformActivityLogs } from "./platform.js";
-import { backgroundJobs, savedReports, auditLogEntries, userActivityLogs } from "./system.js";
+import { backgroundJobs, savedReports, userActivityLogs } from "./system.js";
+import { auditTrailEvents, auditVerificationRuns } from "./auditTrail.js";
 import { contacts, contactTags, contactPhones, contactEmails, contactAddresses, contactSocials, contactEducations, contactExperiences, contactSkills, contactRelationships, contactActivities, contactAttachments, contactBankDetails, tenantUsers } from "./contacts.js";
 import { students, studentEnrolledSessions } from "./students.js";
 import { teachers } from "./teachers.js";
@@ -596,9 +597,16 @@ export const userActivityLogsRelations = relations(userActivityLogs, ({ one }) =
   }),
 }));
 
-export const auditLogEntriesRelations = relations(auditLogEntries, ({ one }) => ({
+export const auditTrailEventsRelations = relations(auditTrailEvents, ({ one }) => ({
   workspace: one(workspaces, {
-    fields: [auditLogEntries.workspaceSubdomain],
+    fields: [auditTrailEvents.workspaceSubdomain],
+    references: [workspaces.subdomain],
+  }),
+}));
+
+export const auditVerificationRunsRelations = relations(auditVerificationRuns, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [auditVerificationRuns.workspaceSubdomain],
     references: [workspaces.subdomain],
   }),
 }));
@@ -722,7 +730,8 @@ export const tenantUsersRelations = relations(tenantUsers, ({ one, many }) => ({
   teachers: many(teachers),
   backgroundJobs: many(backgroundJobs),
   userActivityLogs: many(userActivityLogs),
-  auditLogEntries: many(auditLogEntries),
+  auditTrailEvents: many(auditTrailEvents),
+  auditVerificationRuns: many(auditVerificationRuns),
 }));
 
 export const studentsRelations = relations(students, ({ one, many }) => ({

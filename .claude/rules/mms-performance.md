@@ -36,6 +36,10 @@ Authoritative performance and resource constraints across **tenant workspaces an
   - Maintain and reuse the persistent connection pool (`PG_POOL_MAX`, default 20) with `withTenantTransaction`.
   - NEVER open ad-hoc, unpooled database connections (`new Pool()` or `new Client()` per request).
   - Use Node.js 24 Explicit Resource Management (`using` / `await using`) for automatic cleanup and checkout release back to the pool without boilerplate `finally` blocks.
+- **Audit Hash Chain Sharding & Partition Detachment (`mms-audit-trail`):**
+  - NEVER serialize all system writes through a single global cryptographic hash chain. Global sequential chaining forces every write to wait on the previous row's hash, causing severe transaction lock contention under concurrent load.
+  - Shard hash chains per logical partition (per tenant workspace or per aggregate domain) and periodically roll shard heads up into a Merkle tree, publishing the Merkle root at fixed intervals (certificate-transparency scaling model).
+  - Archive hot audit partitions (0–30 days) by detaching PostgreSQL date partitions (`ALTER TABLE audit_trail_events DETACH PARTITION ...`) rather than running `DELETE` queries, preventing massive WAL churn, table locks, and index bloat.
 
 ---
 
@@ -54,6 +58,9 @@ Authoritative performance and resource constraints across **tenant workspaces an
 - **Lean Network Payloads & Compression:**
   - Keep payloads minimal: serialize only required DTO fields, strip `null`/`undefined` keys where practical, and ensure Fastify `@fastify/compress` (gzip/Brotli) is active on responses.
   - Never serialize internal database attributes (`tenantId`, password hashes, salts, internal flags) to client consumers. Format money as exact decimal strings (`/^\d+(\.\d{1,2})?$/`).
+- **Audit Payload Minimization & Canonical Hashing (`mms-audit-trail`):**
+  - Minimize audit payloads at capture time: never log full raw PII payloads, redundant blobs, or secrets into `old_state`/`new_state`. Only record fields required for point-in-time state reconstruction; every unneeded personal field captured increases storage overhead and future Right to Erasure cryptographic shredding / redaction processing.
+  - State hashing and delta comparisons must strictly use RFC 8785 (JSON Canonicalization Scheme - JCS) for deterministic representation across environments, avoiding CPU-heavy custom recursive key-sorting algorithms on hot write paths.
 
 ---
 

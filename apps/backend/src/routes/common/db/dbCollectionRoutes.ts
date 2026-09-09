@@ -11,9 +11,14 @@ import {
 import { WORKSPACES_COLLECTION } from '@mms/shared';
 import type { User } from '@mms/shared';
 import {
-  recordAudit,
-  AUDITED_COLLECTIONS,
-} from '../../../services/auditService.js';
+  recordModernAuditEvent,
+} from '../../../services/auditTrailService.js';
+import { getRequestTenant } from '../../../lib/tenantContext.js';
+import { logger } from '../../../lib/logger.js';
+
+/** Collection names that always generate an audit event on write. */
+const AUDITED_COLLECTIONS = new Set(['users', 'contacts']);
+
 import { SYNC_MAX_BODY_BYTES } from '../../../lib/syncLimits.js';
 import {
   collectionSaveBodySchema,
@@ -74,14 +79,16 @@ export const dbCollectionRoutes: FastifyPluginAsync = async (fastify) => {
 
         await persistCollection(name, collectionRowsToSave);
         if (AUDITED_COLLECTIONS.has(name)) {
-          await recordAudit({
-            userId: user.id,
-            userEmail: user.email,
-            action: 'collection.write',
-            entityType: 'collection',
-            entityId: name,
-            summary: `Wrote ${collectionRowsToSave.length} row(s)`,
-          });
+          void recordModernAuditEvent({
+            workspaceSubdomain: getRequestTenant() ?? 'unknown',
+            tableName: name,
+            recordId: name,
+            actionType: 'UPDATE',
+            realUserId: String(user.id),
+            newState: { summary: `Wrote ${collectionRowsToSave.length} row(s)` },
+          }).catch((err: unknown) =>
+            logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+          );
         }
         return reply.send({ success: true });
       } catch (error: unknown) {

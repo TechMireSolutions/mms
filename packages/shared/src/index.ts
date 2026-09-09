@@ -27,6 +27,7 @@ export interface User {
 
 export * from './zodCsp.js';
 export * from './auditTypes.js';
+export * from './rfc8785CanonicalJson.js';
 export * from './passwordStrengthUtils.js';
 export * from './permissions.js';
 export * from './profileSchemas.js';

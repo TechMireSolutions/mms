@@ -127,3 +127,12 @@ Treat `turbo.json` inputs/outputs as sensitive — change only with intentional 
 - Configure Apache upstreams via `scripts/fix-apache-upstream.sh` to forward to `:5002` (skipped when Apache fingerprint unchanged unless `MMS_FORCE_APACHE=1`).
 - Skip prod `pnpm install` when `pnpm-lock.yaml` hash matches `.deploy-lock-hash` unless `MMS_FORCE_PNPM_INSTALL=1`.
 - Run health checks locally on the production host using `curl http://127.0.0.1:5002/health`.
+
+---
+
+## 5. Audit Operations, Statement Auditing & Storage Tiering
+- **Database Statement Auditing (`pgAudit`)**: Install `pgaudit` extension on the PostgreSQL host (`postgresql-16-pgaudit`), configure `shared_preload_libraries = 'pgaudit'` in `postgresql.conf`, and enable statement auditing (`pgaudit.log = 'write, ddl, role'`). Essential for capturing out-of-band direct database console access, DBA queries, and schema DDL that bypass the Fastify application layer.
+- **Scheduled Verification Jobs**: Register a scheduled background cron/timer executing automated chain and Merkle root verification (`runAuditVerificationJob`). Persist results in `audit_verification_runs` and emit immediate P1 security alerts on hash breaks, missing sequence numbers, or timestamp regressions.
+- **WORM Immutable Cold Storage**: Cold audit archives (91+ days) must be exported to WORM-locked (Write Once Read Many) object storage (S3 Object Lock or MinIO in Compliance/Governance mode). Enforce retention locks matching statutory floors (HIPAA 6 years, SOX 7 years, PCI-DSS 1 year). Carry the shard chain hash / Merkle root alongside each Parquet/ORC batch so detached archives remain verifiable.
+- **Partition Lifecycle Automation**: Maintain monthly partitions (`PARTITION BY RANGE (transaction_timestamp)`) via automated scripts that pre-create future partitions and detach partitions >30 days old to the warm tier without table locks or `DELETE` contention.
+

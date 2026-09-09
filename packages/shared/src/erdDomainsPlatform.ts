@@ -85,10 +85,10 @@ export const ERD_DOMAIN_SYSTEM: ErdDomain = {
       ],
     },
     {
-      name: 'audit_log_entries',
+      name: 'audit_trail_events',
       columns: [
         { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
-        { name: 'id', type: 'text', kind: 'pk' },
+        { name: 'id', type: 'bigint', kind: 'pk' },
       ],
     },
     {
@@ -129,7 +129,7 @@ export const ERD_DOMAIN_SYSTEM: ErdDomain = {
       cardinality: 'N:1',
     },
     {
-      fromTable: 'audit_log_entries',
+      fromTable: 'audit_trail_events',
       fromColumn: 'workspace_subdomain',
       toTable: 'workspaces',
       toColumn: 'subdomain',

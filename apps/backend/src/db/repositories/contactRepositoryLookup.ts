@@ -65,7 +65,7 @@ function scalarFieldSql(fieldKey: string): SQL {
     case 'cnic':
       return sql`regexp_replace(COALESCE(${contacts.cnic}, ''), '[^0-9]', '', 'g')`;
     case 'dob':
-      return sql`lower(trim(COALESCE(${contacts.dob}, '')))`;
+      return sql`lower(trim(COALESCE(${contacts.dob}::text, '')))`;
     case 'city':
       return sql`lower(trim(COALESCE((
         SELECT a.city FROM ${contactAddresses} a

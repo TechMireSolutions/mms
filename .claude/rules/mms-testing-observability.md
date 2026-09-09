@@ -70,3 +70,12 @@ Assert production-safe JSON `{ type, message }` — never leak SQL/stack traces.
 - **Error Boundaries**: Wrap lazy route modules and heavy Work/Reports/Setup tiers in the central `ErrorBoundary`. Query `isError` handles fetch failures — boundaries catch render crashes.
 - **Graceful Failures**: `notify.error(t('errors.generic'))` — no silent `catch`.
 - **TanStack Query States**: Render gracefully from Query `isPending`, `isFetching`, and `isError` flags.
+
+---
+
+## 5. Audit Trail & Cryptographic Verification Testing
+- **Hash Chain Determinism**: Unit test cryptographic hash chaining (`hash_current = SHA-256(hash_previous + canonical_json(payload) + transaction_timestamp)`) using RFC 8785 canonical JSON against known test vectors to verify platform-independent reproducibility.
+- **Verification Job Simulation**: Test `runAuditVerificationJob` with synthetic broken chains, altered payloads, sequence gaps, and timestamp regressions. Assert that `verificationStatus` transitions to `BROKEN_CHAIN`, `TAMPERED`, or `SEQUENCE_GAP` and dispatches alerts.
+- **Auditing the Auditor**: Integration test confirming that reading, querying, or exporting from audit tables emits an immutable audit event (`action_type: 'VIEW'`, `table_name: 'audit_trail_events'`).
+- **Erasure Compliance Testing**: Test crypto-shredding (subject key destruction makes plaintext unrecoverable while preserving cryptographic chain links) and redact-and-append (verifies redaction appends `action_type: 'REDACT'` without recomputing or corrupting historical row hashes).
+

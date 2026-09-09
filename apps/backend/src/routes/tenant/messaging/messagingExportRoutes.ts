@@ -7,7 +7,8 @@ import { MESSAGING_LOG_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-import { recordAudit } from '../../../services/auditService.js';
+import { recordModernAuditEvent } from '../../../services/auditTrailService.js';
+import { logger } from '../../../lib/logger.js';
 import {
   enqueueBackgroundJob,
   getUserBackgroundJob,
@@ -81,14 +82,16 @@ export const messagingExportRoutes: FastifyPluginAsync = async (fastify) => {
         bodyDigest,
       });
 
-      await recordAudit({
-        userId: user.id,
-        userEmail: user.email,
-        action: 'messaging.export.queue',
-        entityType: 'collection',
-        entityId: jobId,
-        summary: `Queued messaging export "${label}"`,
-      });
+      void recordModernAuditEvent({
+        workspaceSubdomain: tenant,
+        tableName: 'messaging',
+        recordId: jobId,
+        actionType: 'VIEW',
+        realUserId: String(user.id),
+        newState: { summary: `Queued messaging export "${label}"`, action: 'messaging.export.queue' },
+      }).catch((err: unknown) =>
+        logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+      );
 
       return reply.status(202).send({ job });
     });

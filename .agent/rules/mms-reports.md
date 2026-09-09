@@ -76,3 +76,9 @@ Save **report logic** (filters, columns, aggregates), not a data snapshot. Re-ru
 | Contacts (share scopes) | Same table, `category: 'contacts'`; share fields inside `filters` JSONB | `/api/contacts/saved-reports` — **not** generic category enum; **not** `objects` key `contacts_saved_reports` |
 
 Do not add `'contacts'` to the generic saved-reports public category enum without also implementing share-aware list/delete semantics.
+
+## 9. Audit Trail & Compliance Reporting
+- **Statutory Compliance Reporting**: Automate compliance report generation for statutory regimes (HIPAA 6-year retention, SOX 7-year retention, PCI-DSS 1-year tokenized records, GDPR / enacted regional privacy laws).
+- **Tamper-Evident Compliance Exports**: When exporting audit trail or compliance data (`POST /api/audit/export`), embed cryptographic chain hashes, published Merkle root proofs, and verification signatures directly into the export artifact metadata (JSON/PDF).
+- **Auditing the Auditor**: Access to audit logs and compliance reports is itself an auditable event. All view sessions, search queries, filter evaluations, and export operations targeting audit data must emit an immutable audit event (`action_type: 'VIEW'`, `table_name: 'audit_trail_events'`).
+

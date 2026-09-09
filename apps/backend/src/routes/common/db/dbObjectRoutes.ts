@@ -26,13 +26,14 @@ import {
   saveGlobalSettings,
   maskGlobalSettingsForClient,
 } from '../../../services/globalSettingsService.js';
-import {
-  recordAudit,
-  AUDITED_OBJECTS,
-} from '../../../services/auditService.js';
+import { recordModernAuditEvent } from '../../../services/auditTrailService.js';
+import { logger } from '../../../lib/logger.js';
 import { resourceKeyParamsSchema } from '../../../validation/commonSchemas.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
+
+/** Object keys that always generate an audit event on write. */
+const AUDITED_OBJECTS = new Set(['global_settings', 'branding']);
 
 /** Document-store KV object read/write routes. */
 export const dbObjectRoutes: FastifyPluginAsync = async (fastify) => {
@@ -109,13 +110,15 @@ export const dbObjectRoutes: FastifyPluginAsync = async (fastify) => {
       await persistObject(key, objectValueToSave);
 
       if (AUDITED_OBJECTS.has(key)) {
-        await recordAudit({
-          userId: user.id,
-          userEmail: user.email,
-          action: 'object.write',
-          entityType: 'object',
-          entityId: key,
-        });
+        void recordModernAuditEvent({
+          workspaceSubdomain: getRequestTenant() ?? 'unknown',
+          tableName: key,
+          recordId: key,
+          actionType: 'UPDATE',
+          realUserId: String(user.id),
+        }).catch((err: unknown) =>
+          logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+        );
       }
 
       if (key === 'branding') {

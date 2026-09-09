@@ -10,9 +10,8 @@ import {
   validateAndNormalizeSnapshot,
 } from '@mms/shared';
 import type { User } from '@mms/shared';
-import {
-  recordAudit,
-} from '../../../services/auditService.js';
+import { recordModernAuditEvent } from '../../../services/auditTrailService.js';
+import { logger } from '../../../lib/logger.js';
 import { SYNC_ABORTED_MESSAGE, SYNC_MAX_BODY_BYTES, withSyncTimeout } from '../../../lib/syncLimits.js';
 import { syncPayloadSchema } from '../../../validation/dbSchemas.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
@@ -121,14 +120,16 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
           stripUnwritableObjects(payload.objects, user);
         }
         await withSyncTimeout((signal) => synchronizeData(payload, signal, true));
-        await recordAudit({
-          userId: String(user.id),
-          userEmail: user.email,
-          action: 'database.restore',
-          entityType: 'collection',
-          entityId: 'sync',
-          summary: `Restored workspace backup with ${Object.keys(payload.collections || {}).length} collections and ${Object.keys(payload.objects || {}).length} objects`,
-        });
+        void recordModernAuditEvent({
+          workspaceSubdomain: getRequestTenant() ?? 'unknown',
+          tableName: 'sync',
+          recordId: 'sync',
+          actionType: 'RESTORE',
+          realUserId: String(user.id),
+          newState: { summary: `Restored workspace backup with ${Object.keys(payload.collections || {}).length} collections and ${Object.keys(payload.objects || {}).length} objects` },
+        }).catch((err: unknown) =>
+          logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+        );
         return reply.send({ success: true });
       } catch (error: unknown) {
         const err = error as Error & { statusCode?: number; type?: string };
@@ -156,14 +157,16 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
     }
     try {
       await resetToDefaults();
-      await recordAudit({
-        userId: String(user.id),
-        userEmail: user.email,
-        action: 'database.reset',
-        entityType: 'collection',
-        entityId: 'reset',
-        summary: 'Reset database to minimal defaults',
-      });
+      void recordModernAuditEvent({
+        workspaceSubdomain: getRequestTenant() ?? 'unknown',
+        tableName: 'reset',
+        recordId: 'reset',
+        actionType: 'DELETE',
+        realUserId: String(user.id),
+        newState: { summary: 'Reset database to minimal defaults' },
+      }).catch((err: unknown) =>
+        logger.error({ err: err instanceof Error ? err.message : String(err) }, 'audit event append failed'),
+      );
       return reply.send({ success: true, message: 'Workspace reset to minimal defaults' });
     } catch (error: unknown) {
       return sendDatabaseError(reply, 'Failed to reset database', error);

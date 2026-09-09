@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, foreignKey, varchar, primaryKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, index, integer, bigint, date, boolean, foreignKey, varchar, primaryKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 
@@ -9,13 +9,13 @@ export const contacts = pgTable('contacts', {
   lastName: varchar('last_name', { length: 150 }),
   name: varchar('name', { length: 300 }).notNull(),
   gender: varchar('gender', { length: 20 }),
-  dob: varchar('dob', { length: 30 }),
+  dob: date('dob', { mode: 'string' }),
   cnic: varchar('cnic', { length: 30 }),
   isSyed: boolean('is_syed').notNull().default(false),
   avatar: text('avatar'),
   notes: text('notes'),
   whatsappStatus: varchar('whatsapp_status', { length: 30 }).notNull().default('unknown'),
-  lastCheckedAt: varchar('last_checked_at', { length: 35 }),
+  lastCheckedAt: timestamp('last_checked_at', { withTimezone: true, mode: 'date' }),
   aiSummary: text('ai_summary'),
   deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
   deletedBy: text('deleted_by'),
@@ -209,7 +209,7 @@ export const contactRelationships = pgTable('contact_relationships', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   contactId: text('contact_id').notNull(),
-  relatedContactId: varchar('related_contact_id', { length: 64 }),
+  relatedContactId: text('related_contact_id'),
   name: varchar('name', { length: 255 }),
   relationship: varchar('relationship', { length: 100 }),
   phone: varchar('phone', { length: 50 }),
@@ -226,6 +226,10 @@ export const contactRelationships = pgTable('contact_relationships', {
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
   }).onDelete('cascade'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.relatedContactId],
+    foreignColumns: [contacts.workspaceSubdomain, contacts.id],
+  }).onDelete('set null'),
 ]);
 
 export const contactActivities = pgTable('contact_activities', {
@@ -253,7 +257,7 @@ export const contactAttachments = pgTable('contact_attachments', {
   contactId: text('contact_id').notNull(),
   name: varchar('name', { length: 255 }).notNull(),
   type: varchar('type', { length: 100 }).notNull(),
-  size: integer('size').notNull().default(0),
+  size: bigint('size', { mode: 'number' }).notNull().default(0),
   url: text('url').notNull(),
   date: varchar('date', { length: 35 }).notNull(),
   sortOrder: integer('sort_order').notNull().default(0),

@@ -7,6 +7,7 @@ import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import BackupExportSection from '@/tenant/features/settings/components/backup/BackupExportSection';
 import BackupHistorySection from '@/tenant/features/settings/components/backup/BackupHistorySection';
 import BackupImportSection from '@/tenant/features/settings/components/backup/BackupImportSection';
+import { AuditIntegritySection } from '@/tenant/features/settings/components/backup/AuditIntegritySection';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
 import { useBackupRestore } from '@/tenant/features/settings/hooks/useBackupRestore';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
@@ -110,6 +111,8 @@ const BackupRestore = (function BackupRestore(): React.JSX.Element {
         onRestore={backup.openHistoryRestore}
         onDownload={backup.handleDownloadBackup}
       />
+
+      <AuditIntegritySection workspaceSubdomain={subdomain ?? ''} />
 
       {credentialsModalProps && <BackupCredentialsModal {...credentialsModalProps} />}
 

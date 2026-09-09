@@ -708,6 +708,27 @@
       "when": 1786820400000,
       "tag": "0100_directory_expression_compound_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 101,
+      "version": "7",
+      "when": 1786824000000,
+      "tag": "0101_contacts_schema_hardening",
+      "breakpoints": true
+    },
+    {
+      "idx": 102,
+      "version": "7",
+      "when": 1786827600000,
+      "tag": "0102_modern_audit_trail",
+      "breakpoints": true
+    },
+    {
+      "idx": 103,
+      "version": "7",
+      "when": 1786831200000,
+      "tag": "0103_drop_legacy_audit_tables",
+      "breakpoints": true
     }
   ]
 }

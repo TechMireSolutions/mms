@@ -4,7 +4,8 @@ import { isWorkspaceEnabled, parseSessionTimeoutMinutes } from '@mms/shared';
 import { tenantSessionScope } from '../services/sessionClockService.js';
 import { enforceTenantSessionClock, SESSION_EXPIRY_RESPONSE } from '../services/sessionGuardService.js';
 import { tenantSessionPolicy } from '../services/sessionPolicyService.js';
-import { bindRequestTenant, bindRequestUserId, getRequestTenant, resolveSubdomainFromRequest } from '../lib/tenantContext.js';
+import { bindRequestTenant, bindRequestUserId, bindRequestAuditContext, getRequestTenant, resolveSubdomainFromRequest } from '../lib/tenantContext.js';
+import { formatTraceParent } from '../config/telemetry.js';
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
 import { loadGlobalSettings } from '../services/globalSettingsService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
@@ -145,4 +146,18 @@ export async function authenticateTenant(
   (request as AuthenticatedRequest).tenant = { id: tenant };
 
   bindRequestUserId(user.id ? String(user.id) : null);
+
+  const traceparent =
+    (request.telemetrySpan ? formatTraceParent(request.telemetrySpan.context) : null) ||
+    (typeof request.headers['traceparent'] === 'string' ? request.headers['traceparent'].trim() : null) ||
+    undefined;
+
+  bindRequestAuditContext({
+    correlationId: traceparent,
+    ipAddress: request.ip,
+    clientApp: typeof request.headers['user-agent'] === 'string' ? request.headers['user-agent'].slice(0, 64) : undefined,
+    sessionId: user.jti,
+    apiEndpoint: request.url,
+    httpMethod: request.method,
+  });
 }

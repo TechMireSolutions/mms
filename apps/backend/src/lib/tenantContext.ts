@@ -60,4 +60,29 @@ export function resolveSubdomainFromRequest(
   return parseTenantFromHost(hostname, appDomain);
 }
 
-export { tenantStorage };
+export interface RequestAuditContext {
+  correlationId?: string;
+  ipAddress?: string;
+  clientApp?: string;
+  sessionId?: string;
+  apiEndpoint?: string;
+  httpMethod?: string;
+  impersonatedUserId?: string;
+}
+
+const requestAuditContextStorage = new AsyncLocalStorage<RequestAuditContext | null>();
+
+/** Returns the active request audit context (W3C traceparent, IP, endpoint, etc.) if any. */
+export function getRequestAuditContext(): RequestAuditContext | null {
+  return requestAuditContextStorage.getStore() ?? null;
+}
+
+/**
+ * Binds the request audit context for the remainder of the request.
+ * Populates 5-dimension audit metadata automatically across async calls.
+ */
+export function bindRequestAuditContext(context: RequestAuditContext | null): void {
+  requestAuditContextStorage.enterWith(context);
+}
+
+export { tenantStorage, requestAuditContextStorage };

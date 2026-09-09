@@ -1,10 +1,9 @@
 import { and, eq, inArray, desc, sql } from 'drizzle-orm';
-import { dedupeTrimmedIds, type ActivityLog, type AuditLogEntry } from '@mms/shared';
-import { userActivityLogs, auditLogEntries } from '../schema.js';
+import { dedupeTrimmedIds, type ActivityLog } from '@mms/shared';
+import { userActivityLogs } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
 type ActivityLogRow = typeof userActivityLogs.$inferSelect;
-type AuditLogRow = typeof auditLogEntries.$inferSelect;
 
 function activityLogRowToRecord(row: ActivityLogRow): ActivityLog {
   return {
@@ -16,23 +15,6 @@ function activityLogRowToRecord(row: ActivityLogRow): ActivityLog {
     ts: row.ts,
     ip: row.ip,
   };
-}
-
-function auditLogRowToRecord(row: AuditLogRow): AuditLogEntry {
-  const entry: AuditLogEntry = {
-    id: row.id,
-    at: row.at,
-    userId: row.userId,
-    action: row.action,
-    entityType: row.entityType as AuditLogEntry['entityType'],
-    entityId: row.entityId,
-  };
-
-  if (row.userEmail) entry.userEmail = row.userEmail;
-  if (row.tenant) entry.tenant = row.tenant;
-  if (row.summary) entry.summary = row.summary;
-
-  return entry;
 }
 
 export interface ListLogsOptions {
@@ -221,111 +203,9 @@ export async function replaceActivityLogsForWorkspace(
   });
 }
 
-export async function listAuditLogEntriesByWorkspace(
-  tenant: string,
-  options?: ListLogsOptions,
-): Promise<AuditLogEntry[]> {
-  const subdomain = tenant.trim().toLowerCase();
-  const limit = Math.min(Math.max(1, options?.limit ?? 100), 500);
-  const offset = Math.max(0, options?.offset ?? 0);
-  return withTenant(subdomain, async (tx) => {
-    const rows = await tx
-      .select({
-        id: auditLogEntries.id,
-        workspaceSubdomain: auditLogEntries.workspaceSubdomain,
-        at: auditLogEntries.at,
-        userId: auditLogEntries.userId,
-        userEmail: auditLogEntries.userEmail,
-        tenant: auditLogEntries.tenant,
-        action: auditLogEntries.action,
-        entityType: auditLogEntries.entityType,
-        entityId: auditLogEntries.entityId,
-        summary: auditLogEntries.summary,
-      })
-      .from(auditLogEntries)
-      .where(eq(auditLogEntries.workspaceSubdomain, subdomain))
-      .orderBy(desc(auditLogEntries.at))
-      .limit(limit)
-      .offset(offset);
-    return rows.map((r) => auditLogRowToRecord(r as AuditLogRow));
-  });
-}
-
-export async function saveAuditLogEntry(tenant: string, record: AuditLogEntry): Promise<void> {
-  const subdomain = tenant.trim().toLowerCase();
-  await withTenant(subdomain, async (tx) => {
-    await tx
-      .insert(auditLogEntries)
-      .values({
-        id: record.id,
-        workspaceSubdomain: subdomain,
-        at: record.at,
-        userId: record.userId,
-        userEmail: record.userEmail ?? null,
-        tenant: record.tenant ?? null,
-        action: record.action,
-        entityType: record.entityType,
-        entityId: record.entityId,
-        summary: record.summary ?? null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: [auditLogEntries.workspaceSubdomain, auditLogEntries.id],
-        set: {
-          at: record.at,
-          userId: record.userId,
-          userEmail: record.userEmail ?? null,
-          tenant: record.tenant ?? null,
-          action: record.action,
-          entityType: record.entityType,
-          entityId: record.entityId,
-          summary: record.summary ?? null,
-          updatedAt: new Date(),
-        },
-      });
-  });
-}
-
-export async function replaceAuditLogEntriesForWorkspace(
-  tenant: string,
-  records: AuditLogEntry[],
-): Promise<void> {
-  const subdomain = tenant.trim().toLowerCase();
-
-  const dedupedMap = new Map<string, AuditLogEntry>();
-  for (const record of records) {
-    dedupedMap.set(record.id, record);
-  }
-  const uniqueRecords = Array.from(dedupedMap.values());
-
-  await withTenant(subdomain, async (tx) => {
-    await tx.delete(auditLogEntries).where(eq(auditLogEntries.workspaceSubdomain, subdomain));
-    if (uniqueRecords.length > 0) {
-      await tx.insert(auditLogEntries).values(
-        uniqueRecords.map((record) => ({
-          id: record.id,
-          workspaceSubdomain: subdomain,
-          at: record.at,
-          userId: record.userId,
-          userEmail: record.userEmail ?? null,
-          tenant: record.tenant ?? null,
-          action: record.action,
-          entityType: record.entityType,
-          entityId: record.entityId,
-          summary: record.summary ?? null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })),
-      );
-    }
-  });
-}
-
 export async function deleteLogsByWorkspace(workspaceSubdomain: string): Promise<void> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(userActivityLogs).where(eq(userActivityLogs.workspaceSubdomain, subdomain));
-    await tx.delete(auditLogEntries).where(eq(auditLogEntries.workspaceSubdomain, subdomain));
   });
 }

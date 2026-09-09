@@ -3,6 +3,7 @@ import { resolveBackendListenPort } from '@mms/shared';
 import { buildApp } from './app.js';
 import { closeDatabase } from './db/database.js';
 import { startAuthArtifactPurgeScheduler } from './services/auth/authArtifactPurgeScheduler.js';
+import { startAuditVerificationScheduler } from './services/auditVerificationScheduler.js';
 import { closeAllQueues } from './worker/queues/index.js';
 import { disconnectRedis } from './lib/redis.js';
 import { closeAllConnections } from './lib/livePush.js';
@@ -19,9 +20,11 @@ async function startServer(): Promise<void> {
   const host = process.env.HOST || '0.0.0.0';
 
   const stopArtifactPurge = startAuthArtifactPurgeScheduler(app.log);
+  const stopAuditVerification = startAuditVerificationScheduler(app.log);
   
   // Encapsulate all resource teardowns inside Fastify's native onClose lifecycle
   app.addHook('onClose', async () => {
+    stopAuditVerification();
     stopArtifactPurge();
     await closeAllQueues();
     await disconnectRedis();

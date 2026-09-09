@@ -73,6 +73,7 @@ When the user asks to fix migration debt, work from the open priorities here and
 | Users Work REST parity | SQL page/filter (`tenantUserRepositoryList`), FE `useUsersPaginated` + ListPagination, DetailDrawer archive chrome, SQL metrics, server CSV |
 | Sessions typed Setup REST | `session_field_configs` / `session_module_preferences` / `session_user_column_prefs` + `registerModuleSetupConfigRoutes`; Drizzle `0022_session_setup_config`; data migrate `049`/`050`; Query-first `useSessionConfig` |
 | Users typed Setup REST | `user_field_configs` / `user_module_preferences` / `user_user_column_prefs` + REST; prefs include `workspaceRoles` + auth `requireEmailVerification`; Drizzle `0023_user_setup_config`; data migrate `051`/`052`; Query-first `useUsersConfig` |
+| Modern Database Audit Trail Parity | 5-dimension RFC 8785 canonical JSON, transactional outbox capture, sharded cryptographic hash chains with Merkle tree rollups, crypto-shredding / redact-and-append erasure, monthly date partitioning, `INSERT`-only DB privileges, `pgAudit` statement auditing (`mms-audit-trail`) |
 
 ## Open priorities
 

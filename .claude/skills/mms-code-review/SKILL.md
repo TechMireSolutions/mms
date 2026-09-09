@@ -26,6 +26,12 @@ Agent self-review after edits → also follow always-on `mms-completion-review.m
 | bodyLimit / outbound `AbortSignal.timeout` / idempotency↔body | `mms-api-interface.md` · **`mms-backend-api`** |
 | Title Case skip ar/ur/fa / RTL prose | `mms-structure-naming.md` · **`mms-shared-package`** |
 | Messaging send idempotency digest | `mms-api-interface.md` §6 · **`mms-messaging`** |
+| Audit trail 5 dimensions & RFC 8785 canonical JSON | `mms-data-layer.md` §5 · `mms-auth-security.md` §5 · **`mms-audit-trail`** |
+| Sharded hash chains & Merkle rollups | `mms-performance.md` §1 · **`mms-audit-trail`** |
+| Crypto-shredding & right-to-erasure | `mms-auth-security.md` §5 · **`mms-audit-trail`** |
+| Monthly date partition detachment & WORM cold tier | `mms-ops-infrastructure.md` §5 · `mms-data-layer.md` §5 · **`mms-audit-trail`** |
+| Auditing the Auditor & compliance exports | `mms-reports.md` §9 · **`mms-audit-trail`** |
+| INSERT-only audit privileges & pgAudit pairing | `mms-auth-security.md` §5 · **`mms-audit-trail`** |
 
 ## Review order
 
@@ -140,6 +146,17 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Never trust client tenant/userId for authz
 - [ ] `ContactConfigProvider` not nested on child pages
 
+### Audit trail & immutability (when touched)
+- [ ] 5-dimension payload (Who, What, When, Why, Integrity) populated
+- [ ] RFC 8785 Canonical JSON (JCS) used for delta and hash computation
+- [ ] W3C `traceparent` extracted and recorded as `correlationId`
+- [ ] Minimization: non-essential PII and secrets stripped from old/new state
+- [ ] Atomically written in transactional outbox (`withTenantTransaction`)
+- [ ] Sharded hash chains (no global serial chain contention); Merkle root rollups
+- [ ] Right-to-erasure: crypto-shredding (destroy key) or redact-and-append (`action_type = 'REDACT'`); no historical row deletion or hash recomputation
+- [ ] Database permissions: `INSERT`-only for app user; `UPDATE`/`DELETE` revoked
+- [ ] Access to audit records logged as auditable event (`action_type = 'VIEW'`)
+
 ### Testing
 - [ ] New `@mms/shared` pure helpers have unit tests
 - [ ] Auth/RBAC/tenant changes have `inject()` allow+deny tests
@@ -168,11 +185,12 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 
 ## Severity
 
-- **Critical:** security bypass, missing `authenticateTenant`, cross-tenant leak, bulk wipe PUT, data loss
+- **Critical:** security bypass, missing `authenticateTenant`, cross-tenant leak, bulk wipe PUT, data loss, breaking audit hash chains
 - **Major:** missing RBAC on writes, raw `fetch('/api')`, dual data paths, broken migration journal, nested `ContactConfigProvider`
 - **Minor:** style, optional DRY, residual `role ===` in untouched files
 
 ## References
 
 - Rules: `mms-api-interface.md`, `mms-data-layer.md`, `mms-hooks.md`, `mms-ui-ux-design.md`, `mms-auth-security.md`, `mms-form-architecture.md`, `mms-messaging.md`, `mms-migration-status.md`, `mms-performance.md`
-- Skills: `mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`
+- Skills: `mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-audit-trail`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`
+

@@ -4,7 +4,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 
 **Antigravity:** start with [antigravity-workspace](antigravity-workspace/SKILL.md). Manifest: [.agent/skills-manifest.json](../skills-manifest.json)
 
-## Skills index (28)
+## Skills index (29)
 
 | Skill | Use when |
 |-------|----------|
@@ -25,6 +25,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-shared-package](mms-shared-package/SKILL.md) | `@mms/shared` types and utils |
 | [mms-backend-api](mms-backend-api/SKILL.md) | Fastify routes, middleware, Zod, inject tests |
 | [mms-backend-security](mms-backend-security/SKILL.md) | Tenant isolation, RBAC, cookies, CSRF/Origin, rate limits |
+| [mms-audit-trail](mms-audit-trail/SKILL.md) | Database audit trail, RFC 8785 canonical JSON, sharded hash chains, crypto-shredding, monthly partitions |
 | [mms-finance-accounting](mms-finance-accounting/SKILL.md) | Invoices, payments, double-entry ledger, accounts, fiscal years |
 | [mms-reports-export](mms-reports-export/SKILL.md) | Analytics, charts, PDF/Excel |
 | [mms-messaging](mms-messaging/SKILL.md) | SMS/WhatsApp campaigns, MessageComposer, logs |

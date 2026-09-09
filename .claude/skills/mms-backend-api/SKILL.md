@@ -5,7 +5,7 @@ description: Adds or modifies Fastify routes, middleware (authenticateTenant), s
 
 # MMS Backend API Workflow
 
-**Rules (norms SSOT):** `mms-api-interface.md` · `mms-data-layer.md` · `mms-performance.md` · `mms-auth-security.md` · `mms-testing-observability.md` · `mms-form-architecture.md`
+**Rules (norms SSOT):** `mms-api-interface.md` · `mms-data-layer.md` §5 · `mms-performance.md` · `mms-auth-security.md` §5 · `mms-testing-observability.md` · `mms-form-architecture.md`. Modern Audit Trail Workflow → **`mms-audit-trail`**.
 
 ## When to use
 
@@ -57,6 +57,13 @@ When the entity supports archives (Contacts / Students / Teachers pattern + Sess
 ## Bulk PUT
 
 Upsert only (`bulkSave` + `conflictTarget`). **Never** wire `replaceForWorkspace` as route `saveFn` for normal client saves.
+
+## Transactional Outbox Audit Capture (`mms-audit-trail`)
+
+When mutating audited entities (Contacts, Students, Teachers, Invoices, Accounting, Sessions):
+- Capture audit events within the primary `withTenantTransaction` using the transactional outbox pattern to ensure atomicity.
+- Populate the 5 dimensions: Who (`real_user_id`, `session_id`, `ip_address`), What (`table_name`, `record_id`, `old_state`, `new_state` as RFC 8785 canonical JSON), When (`clock_timestamp()`), Why (`correlation_id` from W3C `traceparent` header, `action_type`), and Integrity (`hash_previous`, `hash_current`).
+- Strip non-essential PII and secrets (passwords, tokens) before serializing state deltas.
 
 ## Deliverable Format for Entity & Feature Generation
 When generating backend code for any feature or entity, provide:

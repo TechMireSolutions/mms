@@ -211,7 +211,7 @@ export function contactRowToRecord(
   if (row.cnic) contact.cnic = row.cnic;
   if (row.avatar) contact.avatar = row.avatar;
   if (row.notes) contact.notes = row.notes;
-  if (row.lastCheckedAt) contact.lastCheckedAt = row.lastCheckedAt;
+  if (row.lastCheckedAt) contact.lastCheckedAt = row.lastCheckedAt instanceof Date ? row.lastCheckedAt.toISOString() : String(row.lastCheckedAt);
   if (row.aiSummary) contact.aiSummary = row.aiSummary;
   if (row.deletedAt) contact.deletedAt = new Date(row.deletedAt).toISOString();
   if (row.deletedBy) contact.deletedBy = row.deletedBy;
