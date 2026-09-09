@@ -13,6 +13,7 @@ import type {
 // Import Drizzle schema modules
 import * as platformSchema from '../../db/schema/platform.js';
 import * as systemSchema from '../../db/schema/system.js';
+import * as auditTrailSchema from '../../db/schema/auditTrail.js';
 import * as contactsSchema from '../../db/schema/contacts.js';
 import * as studentsSchema from '../../db/schema/students.js';
 import * as teachersSchema from '../../db/schema/teachers.js';
@@ -118,7 +119,7 @@ const DOMAIN_REGISTRY: readonly DomainConfig[] = [
   {
     id: 'system',
     labelKey: 'platform.erdDomainSystem',
-    modules: [systemSchema],
+    modules: [systemSchema, auditTrailSchema],
   },
   {
     id: 'teachers',

@@ -45,6 +45,22 @@ describe('platformErdService', () => {
     expect(tableNames.has('contact_module_preferences')).toBe(true);
   });
 
+  it('introspects all modern audit trail tables in the system domain', () => {
+    const result = getIntrospectedErdDomains();
+    const systemDomain = result.domains.find((d) => d.id === 'system');
+    expect(systemDomain).toBeDefined();
+
+    const tableNames = new Set(systemDomain!.tables.map((t) => t.name));
+    expect(tableNames.has('audit_trail_events')).toBe(true);
+    expect(tableNames.has('audit_verification_runs')).toBe(true);
+    expect(tableNames.has('audit_merkle_roots')).toBe(true);
+    expect(tableNames.has('crypto_shredding_keys')).toBe(true);
+    expect(tableNames.has('audit_erasure_requests')).toBe(true);
+    expect(tableNames.has('background_jobs')).toBe(true);
+    expect(tableNames.has('saved_reports')).toBe(true);
+    expect(tableNames.has('user_activity_logs')).toBe(true);
+  });
+
   it('preserves relationship integrity where both endpoints exist in domain tables', () => {
     const result = getIntrospectedErdDomains();
     for (const domain of result.domains) {

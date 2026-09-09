@@ -13,7 +13,7 @@ Enterprise guidelines for immutable, tamper-evident, privacy-compliant database 
 
 ## When to use
 
-- Designing or modifying audit log schemas (`audit_logs`, `audit_log_entries`, `audit_trail_ledger`)
+- Designing or querying audit tables (`audit_trail_events`, `audit_verification_runs`, `audit_merkle_roots`, `crypto_shredding_keys`, `audit_erasure_requests`)
 - Writing entity state change tracking or outbox capture hooks
 - Cryptographic hash verification, Merkle tree rollups, or tamper-evidence checks
 - Handling Right to Erasure / GDPR compliance without breaking cryptographic chains

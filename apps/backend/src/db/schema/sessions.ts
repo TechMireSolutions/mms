@@ -4,7 +4,7 @@ import { workspaces } from "./platform.js";
 
 /**
  * Sessions entity rows.
- * Soft-delete audit columns (`deleted_by` / `deletion_reason`) — Drizzle `0027`.
+ * Soft-delete metadata columns (`deleted_by` / `deletion_reason`) for Work Trash UX — Drizzle `0027`.
  */
 export const sessions = pgTable('sessions', {
   id: text('id').notNull(),

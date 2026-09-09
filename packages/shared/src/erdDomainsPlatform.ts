@@ -92,6 +92,34 @@ export const ERD_DOMAIN_SYSTEM: ErdDomain = {
       ],
     },
     {
+      name: 'audit_verification_runs',
+      columns: [
+        { name: 'id', type: 'varchar', kind: 'pk' },
+        { name: 'workspace_subdomain', type: 'text', kind: 'fk' },
+      ],
+    },
+    {
+      name: 'audit_merkle_roots',
+      columns: [
+        { name: 'id', type: 'varchar', kind: 'pk' },
+        { name: 'root_hash', type: 'varchar', kind: 'column' },
+      ],
+    },
+    {
+      name: 'crypto_shredding_keys',
+      columns: [
+        { name: 'id', type: 'varchar', kind: 'pk' },
+        { name: 'subject_id', type: 'varchar', kind: 'column' },
+      ],
+    },
+    {
+      name: 'audit_erasure_requests',
+      columns: [
+        { name: 'id', type: 'varchar', kind: 'pk' },
+        { name: 'subject_id', type: 'varchar', kind: 'column' },
+      ],
+    },
+    {
       name: 'user_activity_logs',
       columns: [
         { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
@@ -130,6 +158,13 @@ export const ERD_DOMAIN_SYSTEM: ErdDomain = {
     },
     {
       fromTable: 'audit_trail_events',
+      fromColumn: 'workspace_subdomain',
+      toTable: 'workspaces',
+      toColumn: 'subdomain',
+      cardinality: 'N:1',
+    },
+    {
+      fromTable: 'audit_verification_runs',
       fromColumn: 'workspace_subdomain',
       toTable: 'workspaces',
       toColumn: 'subdomain',
