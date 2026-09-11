@@ -13,7 +13,7 @@ import type { User } from '@mms/shared';
 import { recordModernAuditEvent } from '../../../services/auditTrailService.js';
 import { logger } from '../../../lib/logger.js';
 import { SYNC_ABORTED_MESSAGE, SYNC_MAX_BODY_BYTES, withSyncTimeout } from '../../../lib/syncLimits.js';
-import { syncPayloadSchema } from '../../../validation/dbSchemas.js';
+import { tenantDatabaseSnapshotSchema as syncPayloadSchema } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import {

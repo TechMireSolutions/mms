@@ -4,8 +4,7 @@ import type { User } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendDatabaseError, sendNotFound } from '../../lib/httpErrors.js';
-import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
-import { backgroundJobUpsertSchema } from '../../validation/backgroundJobSchemas.js';
+import { resourceIdParamsSchema, backgroundJobUpsertSchema } from '@mms/shared';
 import {
   clearFinishedUserBackgroundJobs,
   dismissUserBackgroundJob,

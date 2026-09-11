@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { registerSoftDeletableBulkTrashRoutes } from '../../../lib/crudBulkRoutes.js';
-import { teachersBulkIdsSchema } from '../../../validation/teacherSchemas.js';
+import { bulkIdsBodySchema as teachersBulkIdsSchema } from '@mms/shared';
 import { teacherUseCases } from '../../../teachers/use-cases/teacherUseCases.js';
 import { auditTeacher } from './teacherRouteHelpers.js';
 

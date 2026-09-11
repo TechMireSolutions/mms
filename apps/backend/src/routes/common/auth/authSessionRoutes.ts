@@ -18,7 +18,7 @@ import { tenantSessionPolicy } from '../../../services/sessionPolicyService.js';
 import { parseSessionTimeoutMinutes } from '@mms/shared';
 import { getPublicUserById } from '../../../services/auth/userService.js';
 import { rotateRefreshToken, validateRefreshToken } from '../../../services/auth/twoFactorService.js';
-import { handoffBodySchema } from '../../../validation/commonSchemas.js';
+import { handoffBodySchema } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendForbidden, sendUnauthorized } from '../../../lib/httpErrors.js';
 import { getWorkspaceInstitutionSetupStatus } from '../../../services/workspaceService.js';

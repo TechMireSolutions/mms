@@ -53,3 +53,20 @@ export function mapAuditTimestamps<T extends DrizzleAuditSelectRow>(row: T): Con
   if (row.updatedBy != null) fields.updatedBy = row.updatedBy;
   return fields;
 }
+
+/**
+ * Normalizes Drizzle SQL null column values to undefined for optional contract fields.
+ */
+export type NullToUndefined<T> = {
+  [K in keyof T]: null extends T[K] ? Exclude<T[K], null> | undefined : T[K];
+};
+
+export function nullsToUndefined<T extends Record<string, unknown>>(row: T): NullToUndefined<T> {
+  const result = {} as Record<string, unknown>;
+  for (const [key, value] of Object.entries(row)) {
+    result[key] = value === null ? undefined : value;
+  }
+  return result as NullToUndefined<T>;
+}
+
+

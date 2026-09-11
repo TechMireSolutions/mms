@@ -21,7 +21,7 @@ import {
 import { canDeleteCollection, canReadCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
-import { includeDeletedQuerySchema } from '../validation/commonSchemas.js';
+import { includeDeletedQuerySchema } from '@mms/shared';
 import { sql } from 'drizzle-orm';
 import { withTenant } from '../db/tenant-context.js';
 import { getRequestTenant } from './tenantContext.js';

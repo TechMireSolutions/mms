@@ -5,7 +5,7 @@ import { getRequestTenant } from './tenantContext.js';
 import { enqueueCsvExportJob, normalizeExportQuery } from './csvExportEnqueue.js';
 import { sendForbidden, sendServiceUnavailable } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
-import { moduleExportAuditBodySchema } from '../validation/csvExportBodySchema.js';
+import { moduleExportAuditBodySchema } from '@mms/shared';
 import { recordModernAuditEvent, mapActionStringToAuditType } from '../services/auditTrailService.js';
 import { logger } from './logger.js';
 import { QueueUnavailableError } from '../services/backgroundJobWorkerService.js';

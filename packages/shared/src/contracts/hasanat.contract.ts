@@ -1,11 +1,15 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { baseListQuerySchema } from '../apiSchemas.js';
+import { baseListQuerySchema, bulkStringIdsBodySchema, softDeleteBodySchema } from '../apiSchemas.js';
 import {
   denomRecordSchema,
   batchRecordSchema,
   distributionRecordSchema,
   redemptionRecordSchema,
+  denomListSchema,
+  batchListSchema,
+  distributionListSchema,
+  redemptionListSchema,
 } from '../hasanatModuleManifest.js';
 import { hasanatReportAggregatesSchema } from '../hasanatReportAggregates.js';
 import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
@@ -13,7 +17,6 @@ import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
 const c = initContract();
 const errorResponse = z.unknown();
 const ok = z.unknown();
-const bulkIds = z.object({ ids: z.array(z.string()), deletionReason: z.string().optional() });
 
 /** `{ success: true, succeeded, failed }` bulk-operation envelope. */
 const hasanatBulkResultResponseSchema = z.object({
@@ -78,14 +81,14 @@ export const hasanatContract = c.router({
   bulkDeleteDistributions: {
     method: 'POST',
     path: '/api/hasanat/distributions/bulk-delete',
-    body: bulkIds,
+    body: bulkStringIdsBodySchema,
     responses: { 200: hasanatBulkResultResponseSchema, 403: ok, 500: ok },
     summary: 'Bulk soft-delete distributions',
   },
   bulkRestoreDistributions: {
     method: 'POST',
     path: '/api/hasanat/distributions/bulk-restore',
-    body: bulkIds,
+    body: bulkStringIdsBodySchema,
     responses: { 200: hasanatBulkResultResponseSchema, 403: ok, 500: ok },
     summary: 'Bulk restore distributions',
   },
@@ -120,35 +123,35 @@ export const hasanatContract = c.router({
   replaceDenoms: {
     method: 'PUT',
     path: '/api/hasanat/denoms/bulk',
-    body: z.object({}).passthrough(),
+    body: denomListSchema,
     responses: { 200: z.object({ denoms: z.array(denomRecordSchema) }), 403: ok, 500: ok },
     summary: 'Replace denoms',
   },
   replaceBatches: {
     method: 'PUT',
     path: '/api/hasanat/batches/bulk',
-    body: z.object({}).passthrough(),
+    body: batchListSchema,
     responses: { 200: z.object({ batches: z.array(batchRecordSchema) }), 403: ok, 500: ok },
     summary: 'Replace batches',
   },
   replaceDistributions: {
     method: 'PUT',
     path: '/api/hasanat/distributions/bulk',
-    body: z.object({}).passthrough(),
+    body: distributionListSchema,
     responses: { 200: z.object({ distributions: z.array(distributionRecordSchema) }), 403: ok, 500: ok },
     summary: 'Replace distributions',
   },
   replaceRedemptions: {
     method: 'PUT',
     path: '/api/hasanat/redemptions/bulk',
-    body: z.object({}).passthrough(),
+    body: redemptionListSchema,
     responses: { 200: z.object({ redemptions: z.array(redemptionRecordSchema) }), 403: ok, 500: ok },
     summary: 'Replace redemptions',
   },
   deleteDistribution: {
     method: 'DELETE',
     path: '/api/hasanat/distributions/:id',
-    body: z.object({}).passthrough().optional(),
+    body: softDeleteBodySchema.optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: ok, 404: ok, 500: ok },
     summary: 'Delete distribution',
   },

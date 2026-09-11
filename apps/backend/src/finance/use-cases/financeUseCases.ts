@@ -1,7 +1,7 @@
 import type { FinanceRepository } from '../repository/financeRepository.js';
 import { financeRepository } from '../repository/financeRepositoryAdapter.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { invoiceRecordSchema, paymentRecordSchema } from '../../validation/financeSchemas.js';
+import { invoiceRecordSchema, paymentRecordSchema } from '@mms/shared';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import { runInTransaction } from '../../db/database.js';
 import {

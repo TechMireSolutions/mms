@@ -20,11 +20,14 @@ import { logger } from '../../../lib/logger.js';
 const AUDITED_COLLECTIONS = new Set(['users', 'contacts']);
 
 import { SYNC_MAX_BODY_BYTES } from '../../../lib/syncLimits.js';
-import {
-  collectionSaveBodySchema,
-  normalizeCollectionSaveBody,
-} from '../../../validation/dbSchemas.js';
-import { resourceNameParamsSchema } from '../../../validation/commonSchemas.js';
+import { collectionSaveBodySchema, resourceNameParamsSchema } from '@mms/shared';
+import type { z } from 'zod';
+
+/** Normalize a collection save body — arrays pass through, `{ data }` objects unwrap. */
+function normalizeCollectionSaveBody(body: z.infer<typeof collectionSaveBodySchema>): unknown[] {
+  if (Array.isArray(body)) return body;
+  return body.data;
+}
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 

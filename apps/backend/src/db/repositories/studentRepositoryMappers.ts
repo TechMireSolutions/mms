@@ -1,6 +1,6 @@
 import { type Student, type StudentStatus } from '@mms/shared';
 import { type students } from '../schema.js';
-import { mapAuditTimestamps } from './repositoryMappers.js';
+import { mapAuditTimestamps, nullsToUndefined } from './repositoryMappers.js';
 
 export function studentRowToRecord(
   row: typeof students.$inferSelect,
@@ -11,25 +11,32 @@ export function studentRowToRecord(
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((s) => s.sessionId);
 
+  const {
+    createdAt: _createdAt,
+    updatedAt: _updatedAt,
+    deletedAt: _deletedAt,
+    deletedBy: _deletedBy,
+    deletionReason: _deletionReason,
+    restoredAt: _restoredAt,
+    restoredBy: _restoredBy,
+    deletedWithCascade: _deletedWithCascade,
+    createdBy: _createdBy,
+    updatedBy: _updatedBy,
+    workspaceSubdomain: _workspaceSubdomain,
+    ...restRow
+  } = nullsToUndefined(row);
+
   return {
-    id: row.id,
-    contactId: row.contactId ?? '',
+    ...restRow,
+    contactId: restRow.contactId ?? '',
     fatherContactId: row.fatherContactId ?? null,
     motherContactId: row.motherContactId ?? null,
     guardianContactId: row.guardianContactId ?? null,
-    status: (row.status as StudentStatus) ?? 'active',
+    status: (restRow.status as StudentStatus) ?? 'active',
     enrolledSessions,
-    fatherName: row.fatherName ?? undefined,
-    motherName: row.motherName ?? undefined,
-    guardianName: row.guardianName ?? undefined,
-    grNumber: row.grNumber ?? undefined,
-    studentId: row.studentId ?? undefined,
-    registeredDate: row.registeredDate ?? undefined,
-    enrollmentDate: row.enrollmentDate ?? undefined,
-    discountType: row.discountType ?? undefined,
-    discountPct: row.discountPct != null ? Number(row.discountPct) : undefined,
-    registrationType: row.registrationType ?? undefined,
-    notes: row.notes ?? undefined,
+    discountPct: restRow.discountPct != null ? Number(restRow.discountPct) : undefined,
     ...mapAuditTimestamps(row),
   } satisfies Student;
+
 }
+

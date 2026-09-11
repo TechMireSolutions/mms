@@ -1,6 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { type StudentRecord, studentRecordSchema } from '@mms/shared';
+import {
+  type StudentRecord,
+  normalizeStoredStudent,
+  stripStudentClientSoftDeleteFields,
+} from '@mms/shared';
 import { isUniqueViolation } from '../../lib/pgErrors.js';
+
 
 /** Re-throws a unique violation as a 409 conflict (create/update GR duplicates). */
 export function throwGrUniqueConflict(error: unknown): never {
@@ -44,14 +49,16 @@ export function mergeStudentPatch(
 
 /**
  * Parses + normalizes a write payload: strips client soft-delete metadata and
- * contact-owned identity keys, then validates against the shared record schema.
+ * contact-owned identity keys. Accepts pre-validated StudentRecord.
  */
 export function prepareStudentRecord(record: StudentRecord | Record<string, unknown>): StudentRecord {
-  return studentRecordSchema.parse({
+  const withId = {
     ...record,
     id: resolveStudentRowId(record.id),
-  }) as StudentRecord;
+  };
+  return normalizeStoredStudent(stripStudentClientSoftDeleteFields(withId) as StudentRecord);
 }
+
 
 /**
  * Raised when restoring a soft-deleted student would collide with an active

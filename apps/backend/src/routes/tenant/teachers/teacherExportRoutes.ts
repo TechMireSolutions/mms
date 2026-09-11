@@ -7,9 +7,9 @@ import {
   canReadCollection,
 } from '../../../services/rbacService.js';
 import {
-  teacherSetupAuditSchema,
+  moduleFieldsPrefsAuditBodySchema as teacherSetupAuditSchema,
   teachersCsvExportBodySchema,
-} from '../../../validation/teacherSchemas.js';
+} from '@mms/shared';
 
 /** Teachers CSV export queue, export audit, and Setup audit logging. */
 export const teacherExportRoutes: FastifyPluginAsync = async (fastify) => {

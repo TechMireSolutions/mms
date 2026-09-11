@@ -4,7 +4,7 @@ import type { Permission, User } from '@mms/shared';
 import { roleHasPermission } from '@mms/shared';
 import { sendForbidden } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
-import { moduleSetupAuditBodySchema } from '../validation/csvExportBodySchema.js';
+import { moduleSetupAuditBodySchema } from '@mms/shared';
 import { recordModernAuditEvent, mapActionStringToAuditType } from '../services/auditTrailService.js';
 import { getRequestTenant } from './tenantContext.js';
 import { logger } from './logger.js';

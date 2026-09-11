@@ -10,7 +10,7 @@ import {
   buildContactDuplicateCheckBodySchema,
   contactsDuplicatesQuerySchema,
   contactsDuplicateScanBodySchema,
-} from '../../../validation/contactSchemas.js';
+} from '@mms/shared';
 import { loadContactFieldConfig } from '../../../services/contactConfigService.js';
 import { collectContactWriteExtraFieldKeys, sanitizeContactsForViewer } from '@mms/shared';
 import {

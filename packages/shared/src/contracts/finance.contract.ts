@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { baseListQuerySchema } from '../apiSchemas.js';
+import { baseListQuerySchema, bulkIdsBodySchema, softDeleteBodySchema } from '../apiSchemas.js';
 import { invoiceCreateSchema, paymentCreateSchema } from '../schemas/finance.dto.js';
 import {
   invoiceRecordSchema,
@@ -99,7 +99,7 @@ export const financeContract = c.router({
   deleteInvoice: {
     method: 'DELETE',
     path: '/api/finance/invoices/:id',
-    body: z.object({ deletionReason: z.string().optional() }).optional(),
+    body: softDeleteBodySchema.optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Delete an invoice',
   },
@@ -134,21 +134,21 @@ export const financeContract = c.router({
   deletePayment: {
     method: 'DELETE',
     path: '/api/finance/payments/:id',
-    body: z.object({ deletionReason: z.string().optional() }).optional(),
+    body: softDeleteBodySchema.optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Delete a payment',
   },
   bulkDeleteInvoices: {
     method: 'POST',
     path: '/api/finance/invoices/bulk-delete',
-    body: z.object({ ids: z.array(z.union([z.string(), z.number()])).min(1) }),
+    body: bulkIdsBodySchema,
     responses: { 200: financeBulkResultResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk soft-delete invoices',
   },
   bulkRestoreInvoices: {
     method: 'POST',
     path: '/api/finance/invoices/bulk-restore',
-    body: z.object({ ids: z.array(z.union([z.string(), z.number()])).min(1) }),
+    body: bulkIdsBodySchema,
     responses: { 200: financeBulkResultResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk restore invoices',
   },
@@ -162,14 +162,14 @@ export const financeContract = c.router({
   bulkDeletePayments: {
     method: 'POST',
     path: '/api/finance/payments/bulk-delete',
-    body: z.object({ ids: z.array(z.union([z.string(), z.number()])).min(1) }),
+    body: bulkIdsBodySchema,
     responses: { 200: financeBulkResultResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk soft-delete payments',
   },
   bulkRestorePayments: {
     method: 'POST',
     path: '/api/finance/payments/bulk-restore',
-    body: z.object({ ids: z.array(z.union([z.string(), z.number()])).min(1) }),
+    body: bulkIdsBodySchema,
     responses: { 200: financeBulkResultResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk restore payments',
   },

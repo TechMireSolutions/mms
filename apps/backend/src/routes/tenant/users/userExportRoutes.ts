@@ -6,9 +6,9 @@ import {
   canReadCollection,
 } from '../../../services/rbacService.js';
 import {
-  userExportAuditSchema,
+  moduleExportAuditBodySchema as userExportAuditSchema,
   usersCsvExportBodySchema,
-} from '../../../validation/userSchemas.js';
+} from '@mms/shared';
 
 /** Users CSV export queue and export audit logging. */
 export const userExportRoutes: FastifyPluginAsync = async (fastify) => {

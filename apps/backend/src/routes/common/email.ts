@@ -17,7 +17,7 @@ import { canWriteObject } from '../../services/rbacService.js';
 import {
   emailIntegrationBodySchema,
   verificationCodeBodySchema,
-} from '../../validation/emailSchemas.js';
+} from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendForbidden } from '../../lib/httpErrors.js';
 

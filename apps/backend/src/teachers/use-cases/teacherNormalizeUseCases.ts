@@ -3,7 +3,6 @@ import {
   normalizeStoredTeacher,
   stripTeacherClientSoftDeleteFields,
   type TeacherRecord,
-  teacherRecordSchema,
 } from '@mms/shared';
 
 /** Client-supplied soft-delete metadata must never reach storage. */
@@ -37,11 +36,13 @@ export function mergeTeacherPatch(
 
 /**
  * Parses + normalizes a write payload: strips client soft-delete metadata and
- * contact-owned profile keys, then validates against the shared record schema.
+ * contact-owned profile keys. Accepts pre-validated TeacherRecord.
  */
 export function prepareTeacherRecord(record: TeacherRecord | Record<string, unknown>): TeacherRecord {
-  return teacherRecordSchema.parse({
+  const withId = {
     ...record,
     id: resolveTeacherRowId(record.id),
-  }) as TeacherRecord;
+  };
+  return normalizeStoredTeacher(stripTeacherClientSoftDeleteFields(withId) as TeacherRecord);
 }
+

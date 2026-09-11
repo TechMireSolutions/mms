@@ -7,7 +7,7 @@ import { NotFoundError } from '../../lib/httpErrors.js';
 import {
   sessionRecordSchema,
   type SessionRecord,
-} from '../../validation/sessionSchemas.js';
+} from '@mms/shared';
 import {
   dedupeTrimmedIds,
   normalizeStoredSession,

@@ -2,7 +2,7 @@ import type { EnrollmentsRepository } from '../repository/enrollmentsRepository.
 import { enrollmentsRepository } from '../repository/enrollmentsRepositoryAdapter.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
-import { enrollmentRecordSchema, type EnrollmentRecord } from '../../validation/enrollmentSchemas.js';
+import { enrollmentRecordSchema, type EnrollmentRecord } from '@mms/shared';
 import {
   dedupeTrimmedIds,
   EMPTY_ENROLLMENTS_REPORT_AGGREGATES,

@@ -12,12 +12,7 @@ import {
   authenticatePlatform,
   requirePlatformPermission,
 } from '../../../middleware/authenticatePlatform.js';
-import { onboardBodySchema } from '../../../validation/authSchemas.js';
-import {
-  challengeCodeBodySchema,
-  challengeIdBodySchema,
-  loginBodySchema,
-} from '../../../validation/commonSchemas.js';
+import { onboardBodySchema, challengeCodeBodySchema, challengeIdBodySchema, loginBodySchema } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendNotFound } from '../../../lib/httpErrors.js';
 

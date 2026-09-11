@@ -21,3 +21,24 @@ export type ContractRouteArgs<T> = {
   headers: T extends { headers: infer H } ? z.infer<H> : never;
   request: FastifyRequest & { user?: User; tenant?: { id: string } };
 };
+
+/**
+ * Extracts the discriminated response union `{ status, body }` for a contract route.
+ * Evaluated per-endpoint to avoid TS union-depth limits on monolithic contracts.
+ */
+export type ContractRouteResponse<T> = T extends { responses: infer R }
+  ? {
+      [K in keyof R]: {
+        status: K extends `${infer N extends number}` ? N : K extends number ? K : never;
+        body: R[K] extends z.ZodTypeAny ? z.infer<R[K]> : unknown;
+      };
+    }[keyof R]
+  : { status: number; body: unknown };
+
+/**
+ * Type-safe contract route handler definition enforcing strictly typed request & response.
+ */
+export type ContractRouteHandler<T> = (
+  args: ContractRouteArgs<T>,
+) => Promise<ContractRouteResponse<T>>;
+

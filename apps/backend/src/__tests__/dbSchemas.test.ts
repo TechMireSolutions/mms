@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { collectionSaveBodySchema, normalizeCollectionSaveBody } from '../validation/dbSchemas.js';
+import { collectionSaveBodySchema } from '@mms/shared';
+import type { z } from 'zod';
+
+/** Normalize a collection save body — mirrors the helper in dbCollectionRoutes. */
+function normalizeCollectionSaveBody(body: z.infer<typeof collectionSaveBodySchema>): unknown[] {
+  if (Array.isArray(body)) return body;
+  return body.data;
+}
 
 describe('collectionSaveBodySchema', () => {
   it('accepts string lookup collections such as relationships', () => {

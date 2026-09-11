@@ -10,10 +10,10 @@ import { canReadContacts, canDeleteContacts } from '../../../services/rbacServic
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
 import {
   buildContactMergeBodySchema,
-  contactSetupAuditSchema,
+  moduleSetupAuditBodySchema as contactSetupAuditSchema,
   contactsCsvExportBodySchema,
   contactsVcfExportBodySchema,
-} from '../../../validation/contactSchemas.js';
+} from '@mms/shared';
 import {
   auditContact,
   enqueueContactBackgroundJob,

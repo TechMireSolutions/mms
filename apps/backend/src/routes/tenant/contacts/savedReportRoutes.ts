@@ -7,8 +7,7 @@ import {
   listContactsSavedReports,
   touchContactsSavedReportRun,
 } from '../../../services/contactSavedReportsService.js';
-import { contactsSavedReportCreateSchema } from '../../../validation/contactSchemas.js';
-import { resourceIdParamsSchema } from '../../../validation/commonSchemas.js';
+import { contactsSavedReportCreateSchema, resourceIdParamsSchema } from '@mms/shared';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { auditContact, requireContactPermission, savedReportViewer } from './contactRouteHelpers.js';

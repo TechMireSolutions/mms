@@ -5,10 +5,7 @@ import { registerSoftDeletableBulkTrashRoutes } from '../../../lib/crudBulkRoute
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
 import { ContactUniqueFieldError } from '../../../services/contactService.js';
 import { canDeleteContacts } from '../../../services/rbacService.js';
-import {
-  contactRecordSchema,
-} from '../../../validation/contactSchemas.js';
-import { bulkIdsBodySchema } from '../../../validation/commonSchemas.js';
+import { contactRecordSchema, bulkIdsBodySchema } from '@mms/shared';
 import { auditContact, sanitizeOneForUser } from './contactRouteHelpers.js';
 
 /** Contact soft-delete, restore, and bulk trash routes. */

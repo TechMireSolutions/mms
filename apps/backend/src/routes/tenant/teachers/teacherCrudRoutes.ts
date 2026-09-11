@@ -11,7 +11,7 @@ import {
   teacherContract,
 } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { replyValidationError } from '../../../lib/zodRequest.js';
 import { teacherUseCases } from '../../../teachers/use-cases/teacherUseCases.js';
 import { validateTeacherDynamic } from '../../../services/teacherValidationService.js';
@@ -26,7 +26,7 @@ const s = initServer();
 /** Main teacher CRUD — @ts-rest contract router. */
 export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
   const router = s.router(teacherContract, {
-    list: async ({ query, request }: ContractRouteArgs<typeof teacherContract['list']>): Promise<unknown> => {
+    list: async ({ query, request }: ContractRouteArgs<typeof teacherContract['list']>): Promise<ContractRouteResponse<typeof teacherContract['list']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -48,7 +48,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof teacherContract['get']>): Promise<unknown> => {
+    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof teacherContract['get']>): Promise<ContractRouteResponse<typeof teacherContract['get']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -68,7 +68,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    create: async ({ body, request }: ContractRouteArgs<typeof teacherContract['create']>): Promise<unknown> => {
+    create: async ({ body, request }: ContractRouteArgs<typeof teacherContract['create']>): Promise<ContractRouteResponse<typeof teacherContract['create']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -91,16 +91,22 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         const result = await withTenant(String(tenant), () => teacherUseCases.createTeacher(
           { ...(body as Record<string, unknown>), workspaceId: (user as User & { workspaceId?: string }).workspaceId } as never), { readOnly: false });
         await auditTeacher(user, 'teacher.create', `Created teacher ${result.record.id}`, String(result.record.id));
-        return {
-          status: (result.restored ? 200 : 201) as 200 | 201,
-          body: { success: true, teacher: await sanitizeOneTeacherForUser(result.record as Teacher, user) },
-        };
+        const teacher = await sanitizeOneTeacherForUser(result.record as Teacher, user);
+        return result.restored
+          ? {
+              status: 200 as const,
+              body: { success: true as const, teacher },
+            }
+          : {
+              status: 201 as const,
+              body: { success: true as const, teacher },
+            };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create teacher' } };
       }
     },
 
-    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof teacherContract['update']>): Promise<unknown> => {
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof teacherContract['update']>): Promise<ContractRouteResponse<typeof teacherContract['update']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -122,13 +128,13 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         const updated = await withTenant(String(tenant), () => teacherUseCases.updateTeacherById(id, payload as never), { readOnly: false });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Teacher not found' } };
         await auditTeacher(user, 'teacher.update', `Updated teacher ${id}`, id);
-        return { status: 200 as const, body: { success: true, teacher: await sanitizeOneTeacherForUser(updated as Teacher, user) } };
+        return { status: 200 as const, body: { success: true as const, teacher: await sanitizeOneTeacherForUser(updated as Teacher, user) } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update teacher' } };
       }
     },
 
-    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof teacherContract['delete']>): Promise<unknown> => {
+    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof teacherContract['delete']>): Promise<ContractRouteResponse<typeof teacherContract['delete']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -139,13 +145,13 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Teacher not found' } };
         const reasonNote = reason?.trim() ? ` — ${reason.trim()}` : '';
         await auditTeacher(user, 'teacher.soft_delete', `Soft-deleted teacher ${id}${reasonNote}`, id);
-        return { status: 200 as const, body: { success: true } };
+        return { status: 200 as const, body: { success: true as const } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete teacher' } };
       }
     },
 
-    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof teacherContract['bulkStatus']>): Promise<unknown> => {
+    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof teacherContract['bulkStatus']>): Promise<ContractRouteResponse<typeof teacherContract['bulkStatus']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -161,13 +167,13 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
           'teacher.bulk_status',
           `Updated status to ${body.status} for ${result.succeeded} teacher(s); ${result.failed} failed`,
         );
-        return { status: 200 as const, body: { success: true, ...result } };
+        return { status: 200 as const, body: { success: true as const, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update teacher status' } };
       }
     },
 
-    bulkSpecialization: async ({ body, request }: ContractRouteArgs<typeof teacherContract['bulkSpecialization']>): Promise<unknown> => {
+    bulkSpecialization: async ({ body, request }: ContractRouteArgs<typeof teacherContract['bulkSpecialization']>): Promise<ContractRouteResponse<typeof teacherContract['bulkSpecialization']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -183,13 +189,13 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
           'teacher.bulk_specialization',
           `Updated specialization to ${body.specialization} for ${result.succeeded} teacher(s); ${result.failed} failed`,
         );
-        return { status: 200 as const, body: { success: true, ...result } };
+        return { status: 200 as const, body: { success: true as const, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update teacher specialization' } };
       }
     },
 
-    duplicateCheck: async ({ body, request }: ContractRouteArgs<typeof teacherContract['duplicateCheck']>): Promise<unknown> => {
+    duplicateCheck: async ({ body, request }: ContractRouteArgs<typeof teacherContract['duplicateCheck']>): Promise<ContractRouteResponse<typeof teacherContract['duplicateCheck']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -203,7 +209,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    nextEmployeeId: async ({ query, request }: ContractRouteArgs<typeof teacherContract['nextEmployeeId']>): Promise<unknown> => {
+    nextEmployeeId: async ({ query, request }: ContractRouteArgs<typeof teacherContract['nextEmployeeId']>): Promise<ContractRouteResponse<typeof teacherContract['nextEmployeeId']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -219,7 +225,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    migrateEmployeeIds: async ({ request }: ContractRouteArgs<typeof teacherContract['migrateEmployeeIds']>): Promise<unknown> => {
+    migrateEmployeeIds: async ({ request }: ContractRouteArgs<typeof teacherContract['migrateEmployeeIds']>): Promise<ContractRouteResponse<typeof teacherContract['migrateEmployeeIds']>> => {
       const user = request.user as User;
       if (!roleHasPermission(user.role, TEACHERS_MODULE_MANIFEST.permissions.setupWrite)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -227,7 +233,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           teacherUseCases.migrateTeachersMissingEmployeeIds(), { readOnly: false });
-        return { status: 200 as const, body: { success: true, ...result } };
+        return { status: 200 as const, body: { success: true as const, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate employee IDs' } };
       }

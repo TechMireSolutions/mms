@@ -6,7 +6,7 @@ import { registerSoftDeletableBulkTrashRoutes } from '../../../lib/crudBulkRoute
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
 import { StudentRestoreConflictError } from '../../../students/use-cases/studentNormalizeUseCases.js';
 import { canDeleteCollection } from '../../../services/rbacService.js';
-import { studentsBulkIdsSchema } from '../../../validation/studentSchemas.js';
+import { bulkIdsBodySchema as studentsBulkIdsSchema } from '@mms/shared';
 import { auditStudent, sanitizeOneStudentForUser } from './studentRouteHelpers.js';
 
 /**

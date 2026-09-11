@@ -5,7 +5,7 @@ import {
   canDeleteCollection,
   canReadCollection,
 } from '../../../services/rbacService.js';
-import { sessionsCsvExportBodySchema } from '../../../validation/sessionSchemas.js';
+import { sessionsCsvExportBodySchema } from '@mms/shared';
 
 /** Sessions CSV export queue and export audit logging. */
 export const sessionExportRoutes: FastifyPluginAsync = async (fastify) => {

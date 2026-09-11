@@ -15,7 +15,7 @@ import {
   contactGoogleSyncAuditSchema,
   contactGoogleSyncConfigSchema,
   contactGoogleSyncExchangeSchema,
-} from '../../../validation/contactSchemas.js';
+} from '@mms/shared';
 import { sendDatabaseError } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { auditContact, requireContactPermission } from './contactRouteHelpers.js';

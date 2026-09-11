@@ -6,7 +6,7 @@ import {
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-import { entityResolveBodySchema } from '../../../validation/commonSchemas.js';
+import { entityResolveBodySchema } from '@mms/shared';
 import { canReadMessaging } from '../../../services/rbacService.js';
 import { messagingUseCases } from '../../../messaging/use-cases/messagingUseCases.js';
 

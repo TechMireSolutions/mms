@@ -12,7 +12,7 @@ import {
 import { validateStudentDynamic } from '../../../services/studentValidationService.js';
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { replyValidationError } from '../../../lib/zodRequest.js';
 import { StudentPermissionError } from '../../../students/use-cases/studentNormalizeUseCases.js';
 import {
@@ -26,7 +26,7 @@ const s = initServer();
 /** Main student CRUD — @ts-rest contract router. */
 export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
   const router = s.router(studentContract, {
-    list: async ({ query, request }: ContractRouteArgs<typeof studentContract['list']>): Promise<unknown> => {
+    list: async ({ query, request }: ContractRouteArgs<typeof studentContract['list']>): Promise<ContractRouteResponse<typeof studentContract['list']>> => {
       const user = request.user as User;
 
       if (!canReadCollection(user, 'students')) {
@@ -53,7 +53,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       };
     },
 
-    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof studentContract['get']>): Promise<unknown> => {
+    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof studentContract['get']>): Promise<ContractRouteResponse<typeof studentContract['get']>> => {
       const user = request.user as User;
 
       if (!canReadCollection(user, 'students')) {
@@ -76,7 +76,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    create: async ({ body, request }: ContractRouteArgs<typeof studentContract['create']>): Promise<unknown> => {
+    create: async ({ body, request }: ContractRouteArgs<typeof studentContract['create']>): Promise<ContractRouteResponse<typeof studentContract['create']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -114,7 +114,9 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
 
         const response = await sanitizeOneStudentForUser(result.record as Student, user);
-        return { status: (result.restored ? 200 : 201) as 200 | 201, body: { student: response } };
+        return result.restored
+          ? { status: 200 as const, body: { student: response } }
+          : { status: 201 as const, body: { student: response } };
       } catch (error: unknown) {
         if (error instanceof StudentPermissionError) {
           return { status: 403 as const, body: { type: 'forbidden', message: error.message } };
@@ -136,7 +138,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentContract['update']>): Promise<unknown> => {
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentContract['update']>): Promise<ContractRouteResponse<typeof studentContract['update']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -176,7 +178,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentContract['delete']>): Promise<unknown> => {
+    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof studentContract['delete']>): Promise<ContractRouteResponse<typeof studentContract['delete']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -198,7 +200,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkStatus']>): Promise<unknown> => {
+    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkStatus']>): Promise<ContractRouteResponse<typeof studentContract['bulkStatus']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -220,7 +222,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    bulkEnroll: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkEnroll']>): Promise<unknown> => {
+    bulkEnroll: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkEnroll']>): Promise<ContractRouteResponse<typeof studentContract['bulkEnroll']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -243,7 +245,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    nextGrNumber: async ({ query, request }: ContractRouteArgs<typeof studentContract['nextGrNumber']>): Promise<unknown> => {
+    nextGrNumber: async ({ query, request }: ContractRouteArgs<typeof studentContract['nextGrNumber']>): Promise<ContractRouteResponse<typeof studentContract['nextGrNumber']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -261,7 +263,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    duplicateCheck: async ({ body, request }: ContractRouteArgs<typeof studentContract['duplicateCheck']>): Promise<unknown> => {
+    duplicateCheck: async ({ body, request }: ContractRouteArgs<typeof studentContract['duplicateCheck']>): Promise<ContractRouteResponse<typeof studentContract['duplicateCheck']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -276,7 +278,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    migrateGrNumbers: async ({ request }: ContractRouteArgs<typeof studentContract['migrateGrNumbers']>): Promise<unknown> => {
+    migrateGrNumbers: async ({ request }: ContractRouteArgs<typeof studentContract['migrateGrNumbers']>): Promise<ContractRouteResponse<typeof studentContract['migrateGrNumbers']>> => {
       const user = request.user as User;
       if (!roleHasPermission(user.role, STUDENTS_MODULE_MANIFEST.permissions.setupWrite)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };

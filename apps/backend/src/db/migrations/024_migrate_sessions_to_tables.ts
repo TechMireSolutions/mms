@@ -9,7 +9,7 @@ import {
   listCollectionStorageNames,
 } from '../database.js';
 import { bulkSaveSessions } from '../repositories/sessionRepository.js';
-import type { SessionRecord } from '../../validation/sessionSchemas.js';
+import type { SessionRecord } from '@mms/shared';
 
 async function discoverTenantSubdomains(): Promise<Set<string>> {
   const subdomains = new Set<string>();

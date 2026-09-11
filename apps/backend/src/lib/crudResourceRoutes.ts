@@ -9,7 +9,7 @@ import { parseRequest, replyValidationError, executeDynamicValidation } from './
 import {
   resourceIdParamsSchema,
   softDeleteBodySchema,
-} from '../validation/commonSchemas.js';
+} from '@mms/shared';
 import { sql } from 'drizzle-orm';
 import { withTenant } from '../db/tenant-context.js';
 import { getRequestTenant } from './tenantContext.js';

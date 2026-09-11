@@ -5,7 +5,7 @@ import {
   canDeleteCollection,
   canReadCollection,
 } from '../../../services/rbacService.js';
-import { enrollmentsCsvExportBodySchema } from '../../../validation/enrollmentSchemas.js';
+import { enrollmentsCsvExportBodySchema } from '@mms/shared';
 
 /** Enrollments CSV export queue and export audit logging. */
 export const enrollmentExportRoutes: FastifyPluginAsync = async (fastify) => {

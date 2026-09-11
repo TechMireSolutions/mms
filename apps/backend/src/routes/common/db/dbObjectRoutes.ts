@@ -28,7 +28,7 @@ import {
 } from '../../../services/globalSettingsService.js';
 import { recordModernAuditEvent } from '../../../services/auditTrailService.js';
 import { logger } from '../../../lib/logger.js';
-import { resourceKeyParamsSchema } from '../../../validation/commonSchemas.js';
+import { resourceKeyParamsSchema } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 

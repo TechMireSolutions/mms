@@ -9,7 +9,7 @@ import { canDeleteCollection, canWriteCollection, canReadCollection } from '../.
 import { sessionsUseCases } from '../../sessions/use-cases/sessionsUseCases.js';
 
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
-import { sessionRecordSchema } from '../../validation/sessionSchemas.js';
+import { sessionRecordSchema } from '@mms/shared';
 
 import { sessionExportRoutes } from './sessions/sessionExportRoutes.js';
 import { sessionSetupConfigRoutes } from './sessions/sessionSetupConfigRoutes.js';

@@ -6,7 +6,7 @@ import { canDeleteCollection, canWriteCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError, sendIfHttpDomainError, sendConflict } from './httpErrors.js';
 import { isUniqueViolation } from './pgErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
-import { bulkIdsBodySchema } from '../validation/commonSchemas.js';
+import { bulkIdsBodySchema } from '@mms/shared';
 import {
   handleBulkListGet,
   shouldCaptureDeletionReason,
