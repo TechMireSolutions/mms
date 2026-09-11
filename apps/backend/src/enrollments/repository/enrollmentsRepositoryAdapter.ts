@@ -4,6 +4,8 @@ import {
   findEnrollmentById,
   findEnrollmentsByIds,
   saveEnrollment,
+  bulkSoftDeleteEnrollments,
+  bulkRestoreEnrollments,
 } from '../../db/repositories/enrollmentRepository.js';
 import {
   listEnrollmentsPage,
@@ -27,4 +29,6 @@ export const enrollmentsRepository: EnrollmentsRepository = {
   aggregateEnrollmentsCommandMetrics,
   aggregateEnrollmentsWidgetQueries,
   loadEnrollmentsReportAggregates: loadEnrollmentsReportAggregatesSql,
+  bulkSoftDeleteEnrollments,
+  bulkRestoreEnrollments,
 };

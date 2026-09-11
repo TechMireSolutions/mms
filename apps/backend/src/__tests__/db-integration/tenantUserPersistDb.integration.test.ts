@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +35,19 @@ beforeAll(async () => {
   initializeDatabaseConnection();
   dbAvailable = await pingDatabase();
   if (!dbAvailable) return;
+
+  const preCleanupTx = await beginLongLivedTenantTransaction(null);
+  try {
+    await preCleanupTx.tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
+    await preCleanupTx.tx
+      .delete(tenantUsers)
+      .where(eq(tenantUsers.workspaceSubdomain, TEST_SUBDOMAIN));
+    await preCleanupTx.tx.delete(workspaces).where(eq(workspaces.subdomain, TEST_SUBDOMAIN));
+    await preCleanupTx.commit();
+  } catch {
+    await preCleanupTx.rollback().catch(() => undefined);
+  }
+
   const seedTx = await beginLongLivedTenantTransaction(null);
   try {
     await seedTx.tx.insert(workspaces).values({
@@ -64,6 +77,7 @@ afterAll(async () => {
   if (dbAvailable) {
     const cleanupTx = await beginLongLivedTenantTransaction(null);
     try {
+      await cleanupTx.tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
       await cleanupTx.tx
         .delete(tenantUsers)
         .where(eq(tenantUsers.workspaceSubdomain, TEST_SUBDOMAIN));

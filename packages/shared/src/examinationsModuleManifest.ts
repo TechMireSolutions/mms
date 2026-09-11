@@ -23,6 +23,9 @@ export const examRecordSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
@@ -52,6 +55,14 @@ export type Exam = z.infer<typeof examRecordSchema>;
 export type ExamInsert = z.infer<typeof examRecordInsertSchema>;
 export type ExamUpdate = z.infer<typeof examRecordUpdateSchema>;
 export const examListSchema = z.array(examRecordSchema);
+
+export function isExamDeleted(exam: { deletedAt?: string | null }): boolean {
+  return Boolean(exam.deletedAt);
+}
+
+export function filterActiveExams<T extends { deletedAt?: string | null }>(exams: T[]): T[] {
+  return exams.filter((e) => !isExamDeleted(e));
+}
 
 /** Zod schema for single Exam Result entry. */
 export const examResultRecordSchema = z
@@ -99,6 +110,7 @@ export const EXAMINATIONS_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: false,
+    retentionDays: null,
   },
   permissions: {
     read: 'students.read',

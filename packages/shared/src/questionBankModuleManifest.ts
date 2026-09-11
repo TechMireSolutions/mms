@@ -59,6 +59,9 @@ export const questionBankQuestionRecordSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
@@ -85,6 +88,14 @@ export const questionBankQuestionUpdateSchema = questionBankQuestionInsertSchema
 export type QuestionBankQuestionInsert = z.infer<typeof questionBankQuestionInsertSchema>;
 export type QuestionBankQuestionUpdate = z.infer<typeof questionBankQuestionUpdateSchema>;
 export const questionBankQuestionListSchema = z.array(questionBankQuestionRecordSchema);
+
+export function isQuestionDeleted(question: { deletedAt?: string | null }): boolean {
+  return Boolean(question.deletedAt);
+}
+
+export function filterActiveQuestions<T extends { deletedAt?: string | null }>(questions: T[]): T[] {
+  return questions.filter((q) => !isQuestionDeleted(q));
+}
 
 /**
  * Strict single-question write schema (FE form + BE write boundary).
@@ -240,6 +251,7 @@ export const QUESTION_BANK_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: false,
+    retentionDays: null,
   },
   permissions: {
     read: 'students.read',

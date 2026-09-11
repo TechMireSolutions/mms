@@ -177,6 +177,9 @@ export interface Contact {
   deletedAt?: string;
   deletedBy?: string;
   deletionReason?: string;
+  restoredAt?: string;
+  restoredBy?: string;
+  deletedWithCascade?: boolean;
 
   // Status & Scalar Extensions
   whatsappStatus?: WhatsAppStatus | 'unknown';

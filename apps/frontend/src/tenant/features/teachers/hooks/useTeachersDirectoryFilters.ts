@@ -4,6 +4,7 @@ import {
   type TeachersQuickFilter,
 } from '@mms/shared';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useTrashMode } from '@/hooks/useTrashMode';
 import {
   toggleIdInSelection,
   togglePageIdsInSelection,
@@ -22,7 +23,7 @@ export function useTeachersDirectoryFilters({
   setActiveTab: (tab: string) => void;
 }) {
   const [listPage, setListPage] = useState(1);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, setShowDeleted] = useTrashMode();
   const [sortField, setSortField] = useState<TeacherSortField>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [search, setSearch] = useState('');

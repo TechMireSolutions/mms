@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useTrashMode } from '@/hooks/useTrashMode';
 import type { SessionSortField, SessionStatus, SessionType } from '@/tenant/features/sessions/components/sessionPageTypes';
 
 /** Directory filters, sort, and trash SSOT for Sessions Work (Teachers/Users-shaped). */
 export function useSessionsDirectoryFilters() {
   const [listPage, setListPage] = useState(1);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, setShowDeleted] = useTrashMode();
   const [sortField, setSortField] = useState<SessionSortField>('name');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [search, setSearch] = useState('');

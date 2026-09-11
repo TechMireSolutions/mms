@@ -216,6 +216,8 @@ export function contactRowToRecord(
   if (row.deletedAt) contact.deletedAt = new Date(row.deletedAt).toISOString();
   if (row.deletedBy) contact.deletedBy = row.deletedBy;
   if (row.deletionReason) contact.deletionReason = row.deletionReason;
+  if (row.restoredAt) contact.restoredAt = new Date(row.restoredAt).toISOString();
+  if (row.restoredBy) contact.restoredBy = row.restoredBy;
   if (row.createdBy) contact.createdBy = row.createdBy;
   if (row.updatedBy) contact.updatedBy = row.updatedBy;
 

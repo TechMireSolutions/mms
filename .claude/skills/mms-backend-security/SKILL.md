@@ -5,7 +5,7 @@ description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, CSRF/Ori
 
 # MMS Backend Security Workflow
 
-**Rule (norms SSOT):** `mms-auth-security.md` · `mms-data-layer.md` §5. Also `mms-performance.md` §3 (Cache Namespacing & Tenant Isolation). Modern Audit Trail & Tamper-Evidence → **`mms-audit-trail`**. Route/service wiring → **`mms-backend-api`**.
+**Rule (norms SSOT):** `mms-auth-security.md` · `mms-data-layer.md` §5–§6. Also `mms-performance.md` §3 (Cache Namespacing & Tenant Isolation). Modern Audit Trail & Tamper-Evidence → **`mms-audit-trail`**. Soft-Delete System → **`mms-soft-delete`**. Route/service wiring → **`mms-backend-api`**.
 
 ## When to use
 
@@ -93,6 +93,10 @@ Security Invariants:
 - Constant-time string/hash comparisons (`crypto.timingSafeEqual` from `node:crypto`) for passwords, tokens, and OTP codes to eliminate side-channel timing attacks.
 - One-shot hashing with `crypto.hash()` from `node:crypto` (no verbose `createHash().update().digest()` chains).
 - Rate limiting: on `429`, emit `Retry-After` header — `mms-auth-security.md`.
+- **Soft-Delete Session Invalidation ("Not deleted until sessions die")**: Soft-deleting user or teacher accounts (`tenant_users`, `teachers`) must immediately revoke all active JWTs, refresh tokens, and Redis sessions. Authentication resolvers (`authenticateTenant`, `/me`, OAuth, credentials login) must verify `deleted_at IS NULL` to prevent zombie sessions and silent account resurrection (`docs/soft-delete.md` §1.2).
+- **Soft-Delete & Trash RBAC Gating**: `DELETE /:id`, `POST /:id/restore`, `POST /bulk-delete`, `POST /bulk-restore`, and reading `includeDeleted=true` (list and single `GET /:id?includeDeleted=true`) require delete permissions (`canDeleteCollection(user, collection)`). Non-delete users must never be permitted to inspect archived rows.
+- **Hard-Delete Defense-in-Depth**: Physical row deletion is blocked by PostgreSQL `forbid_hard_delete()` trigger. Privilege escalation via `SET LOCAL app.allow_hard_purge = 'true'` is strictly restricted to authorized background retention workers (`purgeExpiredArchivedRecords`) and platform workspace teardown (`purgeTenantDataBySubdomain`).
+- **GDPR Article 17 Dual-Track Erasure**: Soft-delete is for operational recovery, not GDPR Article 17 compliance. Erasure requires cryptographic shredding (destroying KMS envelope keys for encrypted data) paired with in-place pseudonymization/scrubbing of plain PII attributes while preserving PK continuity.
 - **Modern Audit Trails & Immutability (`mms-audit-trail`)**: 5-dimension RFC 8785 canonical JSON payloads in transactional outboxes; sharded cryptographic hash chains with Merkle tree rollups; `INSERT`-only DB privileges (`REVOKE UPDATE, DELETE`); right-to-erasure via crypto-shredding or redact-and-append without historical row destruction; direct audit log read access is MFA-enforced with JIT break-glass expiration; access to audit logs is itself an auditable event.
 - **Trace Context Correlation**: W3C `traceparent` header extracted and propagated into `AsyncLocalStorage` and audit records as `correlation_id`.
 - **Statement-Level Auditing (`pgAudit`)**: Pair application row-level audit with database-native `pgAudit` to track ad-hoc console sessions, superusers, and DDL migrations.

@@ -366,6 +366,22 @@
       ]
     },
     {
+      "name": "mms-soft-delete",
+      "path": "skills/mms-soft-delete",
+      "keywords": [
+        "soft-delete",
+        "trash",
+        "restore",
+        "deleted_at",
+        "partial unique index",
+        "forbid_hard_delete",
+        "ModuleTrashToggle",
+        "purgeArchivedRecords",
+        "retention",
+        "4-bucket"
+      ]
+    },
+    {
       "name": "mms-testing-e2e",
       "path": "skills/mms-testing-e2e",
       "keywords": [

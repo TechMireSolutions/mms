@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { readFileSync } from 'node:fs';
 import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -42,6 +42,31 @@ beforeAll(async () => {
   initializeDatabaseConnection();
   dbAvailable = await pingDatabase();
   if (!dbAvailable) return;
+
+  const preCleanupTx = await beginLongLivedTenantTransaction(null);
+  try {
+    await preCleanupTx.tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
+    await preCleanupTx.tx
+      .delete(accountingEntryAttachments)
+      .where(eq(accountingEntryAttachments.workspaceSubdomain, TEST_SUBDOMAIN));
+    await preCleanupTx.tx
+      .delete(accountingEntryTags)
+      .where(eq(accountingEntryTags.workspaceSubdomain, TEST_SUBDOMAIN));
+    await preCleanupTx.tx
+      .delete(accountingJournalLines)
+      .where(eq(accountingJournalLines.workspaceSubdomain, TEST_SUBDOMAIN));
+    await preCleanupTx.tx
+      .delete(accountingEntries)
+      .where(eq(accountingEntries.workspaceSubdomain, TEST_SUBDOMAIN));
+    await preCleanupTx.tx
+      .delete(accountingAccounts)
+      .where(eq(accountingAccounts.workspaceSubdomain, TEST_SUBDOMAIN));
+    await preCleanupTx.tx.delete(workspaces).where(eq(workspaces.subdomain, TEST_SUBDOMAIN));
+    await preCleanupTx.commit();
+  } catch {
+    await preCleanupTx.rollback().catch(() => undefined);
+  }
+
   const seedTx = await beginLongLivedTenantTransaction(null);
   try {
     await seedTx.tx.insert(workspaces).values({
@@ -121,6 +146,7 @@ afterAll(async () => {
   if (dbAvailable) {
     const cleanupTx = await beginLongLivedTenantTransaction(null);
     try {
+      await cleanupTx.tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
       await cleanupTx.tx
         .delete(accountingEntryAttachments)
         .where(eq(accountingEntryAttachments.workspaceSubdomain, TEST_SUBDOMAIN));

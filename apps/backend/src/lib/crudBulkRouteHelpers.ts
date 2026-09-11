@@ -1,10 +1,81 @@
 import type { ZodType } from 'zod';
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import { isQueryFlagTrue, type User } from '@mms/shared';
+import {
+  isQueryFlagTrue,
+  type User,
+  CONTACTS_MODULE_MANIFEST,
+  STUDENTS_MODULE_MANIFEST,
+  TEACHERS_MODULE_MANIFEST,
+  SESSIONS_MODULE_MANIFEST,
+  ENROLLMENTS_MODULE_MANIFEST,
+  ATTENDANCE_MODULE_MANIFEST,
+  FINANCE_MODULE_MANIFEST,
+  ACCOUNTING_MODULE_MANIFEST,
+  OBLIGATIONS_MODULE_MANIFEST,
+  HASANAT_MODULE_MANIFEST,
+  EXAMINATIONS_MODULE_MANIFEST,
+  QUESTION_BANK_MODULE_MANIFEST,
+  USERS_MODULE_MANIFEST,
+  MESSAGING_MODULE_MANIFEST,
+} from '@mms/shared';
 import { canDeleteCollection, canReadCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import { includeDeletedQuerySchema } from '../validation/commonSchemas.js';
+import { sql } from 'drizzle-orm';
+import { withTenant } from '../db/tenant-context.js';
+import { getRequestTenant } from './tenantContext.js';
+
+const MANIFESTS_BY_COLLECTION: Record<string, { softDelete?: { captureDeletionReason?: boolean } }> = {
+  contacts: CONTACTS_MODULE_MANIFEST,
+  students: STUDENTS_MODULE_MANIFEST,
+  teachers: TEACHERS_MODULE_MANIFEST,
+  sessions: SESSIONS_MODULE_MANIFEST,
+  enrollments: ENROLLMENTS_MODULE_MANIFEST,
+  attendance: ATTENDANCE_MODULE_MANIFEST,
+  attendance_records: ATTENDANCE_MODULE_MANIFEST,
+  finance: FINANCE_MODULE_MANIFEST,
+  finance_invoices: FINANCE_MODULE_MANIFEST,
+  finance_payments: FINANCE_MODULE_MANIFEST,
+  accounting: ACCOUNTING_MODULE_MANIFEST,
+  accounting_entries: ACCOUNTING_MODULE_MANIFEST,
+  accounting_accounts: ACCOUNTING_MODULE_MANIFEST,
+  obligations: OBLIGATIONS_MODULE_MANIFEST,
+  obligation_collections: OBLIGATIONS_MODULE_MANIFEST,
+  obligation_types: OBLIGATIONS_MODULE_MANIFEST,
+  obligation_distributions: OBLIGATIONS_MODULE_MANIFEST,
+  hasanat: HASANAT_MODULE_MANIFEST,
+  hasanat_distributions: HASANAT_MODULE_MANIFEST,
+  examinations: EXAMINATIONS_MODULE_MANIFEST,
+  exams: EXAMINATIONS_MODULE_MANIFEST,
+  exam_results: EXAMINATIONS_MODULE_MANIFEST,
+  question_bank: QUESTION_BANK_MODULE_MANIFEST,
+  questionBank: QUESTION_BANK_MODULE_MANIFEST,
+  questions: QUESTION_BANK_MODULE_MANIFEST,
+  tests: QUESTION_BANK_MODULE_MANIFEST,
+  users: USERS_MODULE_MANIFEST,
+  messaging: MESSAGING_MODULE_MANIFEST,
+  messages: MESSAGING_MODULE_MANIFEST,
+  message_logs: MESSAGING_MODULE_MANIFEST,
+  message_templates: MESSAGING_MODULE_MANIFEST,
+};
+
+/**
+ * Returns whether a collection should capture deletion reason based on its module manifest,
+ * unless explicitly overridden by options.
+ */
+export function shouldCaptureDeletionReason(
+  collection?: string,
+  explicitOption?: boolean,
+): boolean {
+  if (explicitOption !== undefined) return explicitOption;
+  if (!collection) return true;
+  const manifest = MANIFESTS_BY_COLLECTION[collection];
+  if (manifest?.softDelete?.captureDeletionReason !== undefined) {
+    return manifest.softDelete.captureDeletionReason;
+  }
+  return true;
+}
 
 export interface BulkRoutesOptions<T> {
   path: string;
@@ -39,13 +110,14 @@ export interface SoftDeletableBulkRoutesOptions<T> {
   defaultPageSize?: number;
   saveFn: (data: T) => Promise<unknown>;
   deleteFn: (id: string, userId: string, reason?: string) => Promise<boolean | null | unknown>;
-  restoreFn: (id: string) => Promise<boolean | null | unknown>;
+  restoreFn: (id: string, userId: string) => Promise<boolean | null | unknown>;
   bulkDeleteFn: (
     ids: string[],
     userId: string,
     reason?: string,
   ) => Promise<{ succeeded: number; failed: number }>;
-  bulkRestoreFn: (ids: string[]) => Promise<{ succeeded: number; failed: number }>;
+  /** Second `userId` arg for modules that audit the restore actor. */
+  bulkRestoreFn: (ids: string[], userId: string) => Promise<{ succeeded: number; failed: number }>;
   responseKey: string;
   errorMessagePrefix: string;
   nameSingular: string;
@@ -53,6 +125,22 @@ export interface SoftDeletableBulkRoutesOptions<T> {
   bulkBodySchema?: ZodType<{ ids: Array<string | number>; deletionReason?: string }>;
   /** Map domain delete failures (e.g. posted entries, self-delete) to stable HTTP responses. */
   mapDeleteError?: SoftDeleteRouteErrorMapper;
+  /** Map domain restore failures (e.g. conflicting active records) to stable HTTP responses. */
+  mapRestoreError?: SoftDeleteRouteErrorMapper;
+  /** Whether this module captures deletion reason. Defaults to true. When false, deletionReason is stripped. */
+  captureDeletionReason?: boolean;
+  canDelete?: (user: User) => boolean;
+  onAfterDelete?: (user: User, id: string, reason?: string) => Promise<void>;
+  onAfterRestore?: (user: User, id: string) => Promise<void>;
+  onAfterBulkDelete?: (
+    user: User,
+    result: { succeeded: number; failed: number },
+    deletionReason?: string,
+  ) => Promise<void>;
+  onAfterBulkRestore?: (
+    user: User,
+    result: { succeeded: number; failed: number },
+  ) => Promise<void>;
 }
 
 export type SoftDeletableBulkTrashRoutesOptions = {
@@ -72,6 +160,12 @@ export type SoftDeletableBulkTrashRoutesOptions = {
     userId: string,
   ) => Promise<{ succeeded: number; failed: number }>;
   canDelete?: (user: User) => boolean;
+  /** Whether this module captures deletion reason. Defaults to true. When false, deletionReason is stripped. */
+  captureDeletionReason?: boolean;
+  /** Map domain delete failures (e.g. active dependencies, restrict guards) to stable HTTP responses. */
+  mapDeleteError?: SoftDeleteRouteErrorMapper;
+  /** Map domain restore failures (e.g. conflicting active records) to stable HTTP responses. */
+  mapRestoreError?: SoftDeleteRouteErrorMapper;
   onAfterBulkDelete?: (
     user: User,
     result: { succeeded: number; failed: number },
@@ -92,6 +186,7 @@ export type BulkListLoadContext = {
   errorMessagePrefix: string;
   /** When true, parse `includeDeleted` and gate trash reads on delete permission. */
   supportsIncludeDeleted?: boolean;
+  canDelete?: (user: User) => boolean;
 };
 
 export async function handleBulkListGet(
@@ -111,6 +206,7 @@ export async function handleBulkListGet(
     responseKey,
     errorMessagePrefix,
     supportsIncludeDeleted,
+    canDelete = (u: User) => canDeleteCollection(u, collection),
   } = ctx;
 
   try {
@@ -121,26 +217,48 @@ export async function handleBulkListGet(
       const parsed = parseRequest(listQuerySchema, request.query);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
       const query = parsed.data as Record<string, unknown>;
-      if (supportsIncludeDeleted) {
-        includeDeleted = isQueryFlagTrue(query.includeDeleted);
+      if (supportsIncludeDeleted || query.includeDeleted !== undefined) {
+        includeDeleted = isQueryFlagTrue(
+          query.includeDeleted !== undefined
+            ? query.includeDeleted
+            : (request.query as Record<string, unknown>)?.includeDeleted,
+        );
       }
       if (query.page != null && loadPageFn) pageQuery = query;
     } else if (supportsIncludeDeleted) {
       const parsed = parseRequest(includeDeletedQuerySchema, request.query);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
       includeDeleted = isQueryFlagTrue(parsed.data.includeDeleted);
+    } else {
+      const query = request.query as Record<string, unknown> | undefined;
+      if (query?.includeDeleted !== undefined) {
+        includeDeleted = isQueryFlagTrue(query.includeDeleted);
+      }
     }
 
-    if (includeDeleted && !canDeleteCollection(user, collection)) {
-      return sendForbidden(reply);
+    if (includeDeleted && !canDelete(user)) {
+      return sendForbidden(reply, `Viewing deleted ${errorMessagePrefix} requires delete permissions`);
     }
+
+    const runInScope = async <R>(fn: () => Promise<R>): Promise<R> => {
+      if (!includeDeleted) return fn();
+      const tenant = getRequestTenant() ?? user.workspaceSubdomain;
+      return withTenant(tenant, async (tx) => {
+        if (tx && typeof tx.execute === 'function') {
+          await tx.execute(sql`SET LOCAL app.include_deleted = 'true'`);
+        }
+        return fn();
+      });
+    };
 
     if (pageQuery && loadPageFn) {
-      const data = await loadPageFn({
-        ...pageQuery,
-        limit: pageQuery.limit ?? defaultPageSize,
-        ...(supportsIncludeDeleted ? { includeDeleted } : {}),
-      });
+      const data = await runInScope(() =>
+        loadPageFn({
+          ...pageQuery,
+          limit: pageQuery.limit ?? defaultPageSize,
+          ...(supportsIncludeDeleted ? { includeDeleted } : {}),
+        }),
+      );
       return reply.send(data);
     }
 
@@ -150,14 +268,16 @@ export async function handleBulkListGet(
       if (isPaginated && loadPageFn) {
         const page = parseInt(queryParams.page || '1', 10);
         const limit = parseInt(queryParams.limit || '50', 10);
-        const data = await loadPageFn({
-          page,
-          limit,
-          search: queryParams.search,
-          sortField: queryParams.sortField,
-          sortDir: queryParams.sortDir as 'asc' | 'desc',
-          ...(supportsIncludeDeleted ? { includeDeleted } : {}),
-        });
+        const data = await runInScope(() =>
+          loadPageFn({
+            page,
+            limit,
+            search: queryParams.search,
+            sortField: queryParams.sortField,
+            sortDir: queryParams.sortDir as 'asc' | 'desc',
+            ...(supportsIncludeDeleted ? { includeDeleted } : {}),
+          }),
+        );
         return reply.send(data);
       }
     }
@@ -167,9 +287,11 @@ export async function handleBulkListGet(
     }
 
     const data = supportsIncludeDeleted
-      ? await (loadFn as (options?: { includeDeleted?: boolean }) => Promise<unknown>)({
-          includeDeleted,
-        })
+      ? await runInScope(() =>
+          (loadFn as (options?: { includeDeleted?: boolean }) => Promise<unknown>)({
+            includeDeleted,
+          }),
+        )
       : await loadFn();
     return reply.send({ [responseKey]: data });
   } catch (error: unknown) {

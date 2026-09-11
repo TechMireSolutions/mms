@@ -102,6 +102,7 @@ export const TEACHERS_MODULE_MANIFEST = {
     /** Active Work exports exclude trash; Work trash UI omits export CTAs. */
     exportsIncludeDeleted: false,
     captureDeletionReason: true,
+    retentionDays: null,
   },
   exportInlineMaxRows: 500,
   exportChunkSize: 100,

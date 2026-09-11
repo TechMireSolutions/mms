@@ -63,6 +63,9 @@ export async function listEntriesPage(
         deletedAt: accountingEntries.deletedAt,
         deletedBy: accountingEntries.deletedBy,
         deletionReason: accountingEntries.deletionReason,
+        restoredAt: accountingEntries.restoredAt,
+        restoredBy: accountingEntries.restoredBy,
+        deletedWithCascade: accountingEntries.deletedWithCascade,
         createdAt: accountingEntries.createdAt,
         updatedAt: accountingEntries.updatedAt,
       })

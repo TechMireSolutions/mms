@@ -6,6 +6,8 @@ import {
   saveAttendanceRecord,
   bulkSaveAttendanceRecords,
   replaceAttendanceRecordsForWorkspace,
+  bulkSoftDeleteAttendanceRecords,
+  bulkRestoreAttendanceRecords,
 } from '../../db/repositories/attendanceRepository.js';
 import {
   listAttendancePage,
@@ -31,4 +33,6 @@ export const attendanceRepository: AttendanceRepository = {
   aggregateAttendanceCommandMetrics,
   aggregateAttendanceWidgetQueries,
   loadAttendanceReportAggregates: loadAttendanceReportAggregatesSql,
+  bulkSoftDeleteAttendanceRecords,
+  bulkRestoreAttendanceRecords,
 };

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useTrashMode } from '@/hooks/useTrashMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { BookOpen, FileText } from 'lucide-react';
@@ -38,7 +39,7 @@ export function useExaminationsPageController() {
     ])();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('examinations_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = useState('exams');
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, setShowDeleted] = useTrashMode();
   const [createExamKey, setCreateExamKey] = useState(0);
 
   const examsResult = useExaminationsExams({ includeDeleted: showDeleted });

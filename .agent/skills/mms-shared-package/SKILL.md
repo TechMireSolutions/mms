@@ -44,6 +44,13 @@ packages/shared/src/
    export type EntityResponseDto = z.infer<typeof entityResponseSchema>;
    ```
 4. **1:1 Alignment**: Ensure Zod schemas align 1:1 with Drizzle PostgreSQL table definitions.
+5. **Soft-Delete Contracts & Helpers (`docs/soft-delete.md` §3)**:
+   - Request DTOs: `softDeleteBodySchema` (optional `deletionReason` max 500, deep sanitized, `.strict()`), `bulkIdsBodySchema` (1–500 IDs, optional `deletionReason`, `.strict()`), `bulkStringIdsBodySchema`.
+   - Write Schemas: Must strip or omit server-owned fields (`deletedAt`, `deletedBy`, `deletionReason`) via `.strict()` and helpers like `stripContactClientSoftDeleteFields`.
+   - Canonical Query Flag Parsing: Use `isQueryFlagTrue(value)` for all `includeDeleted` URL query param parsing — never inline ternaries.
+   - Predicate Helpers: Export `is[Entity]Deleted()` and `filterActive[Entities]()` in domain types.
+   - List Scope Types: `SoftDeleteListFilter = 'active' | 'deleted' | 'all'`. Note: `'all'` bypasses soft-delete RLS and must NEVER be exposed to tenant-scoped list endpoints without explicit platform RBAC and tenant filtering.
+   - Manifest Contract: Every `*ModuleManifest.ts` must declare `softDelete: { workExcludesDeleted, reportsIncludeDeleted, exportsIncludeDeleted, duplicatesIncludeDeleted, captureDeletionReason, retentionDays }`.
 
 ## Do / Don't
 
@@ -54,7 +61,9 @@ packages/shared/src/
 | Export explicit `Insert*Dto`, `Update*Dto`, `*ResponseDto` | Use untyped `any` or ad-hoc inline payload types |
 | `formatDate` / `formatMoney` / `parsePhoneNumber` / `normalizeToE164` | Ad-hoc `toLocale*` / currency prefixes |
 | `applyTitleCaseRecursive` for Latin/display names | Title-casing ar/ur/fa / non-Latin / free-form RTL prose — `mms-structure-naming.md` |
-| Soft-delete strip helpers (`stripContactClientSoftDeleteFields`) | Accepting client `deletedAt` on write DTOs |
+| `isQueryFlagTrue` for parsing `includeDeleted` query flags | Inline boolean coercion ternaries (`query.includeDeleted === 'true'`) |
+| Soft-delete strip helpers (`stripContactClientSoftDeleteFields`) | Accepting client `deletedAt`/`deletionReason` on write DTOs |
+| Bounded bulk schemas (`bulkIdsBodySchema` $\le 500$) | Unbounded array schemas in write DTOs |
 | Native Node built-ins first (`crypto.hash`, `URLPattern`, `node:fs/promises` `glob`) | Adding 3rd-party dependencies for built-in functionality |
 | Pure functions only | React, Fastify, DB, `localStorage`, DOM |
 

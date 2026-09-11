@@ -23,6 +23,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 import { DetailAttributeRow } from '@/components/ui/DetailAttributeRow';
 import { InvoiceTemplateEditor } from "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor";
+import {
+  DetailDrawerArchivedBanner,
+  DetailDrawerRestoreOrEditAction,
+} from "@/components/ui/DetailDrawerArchiveChrome";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 
@@ -34,6 +38,8 @@ export interface ObligationCollectionDetailProps {
   distributions: ObligationDistribution[];
   wakalaTypes: WakalaType[];
   onClose: () => void;
+  canDelete?: boolean;
+  onRestore?: (id: string) => void | Promise<void>;
 }
 
 /**
@@ -47,6 +53,8 @@ export const ObligationCollectionDetail = (function ObligationCollectionDetail({
   distributions,
   wakalaTypes,
   onClose,
+  canDelete = false,
+  onRestore,
 }: ObligationCollectionDetailProps) {
   const { t } = useTranslation();
   const currencies = DEFAULT_CURRENCIES;
@@ -84,8 +92,27 @@ export const ObligationCollectionDetail = (function ObligationCollectionDetail({
 
   const dists = (() => (wakalaType ? distributions.filter((distribution) => distribution.wakala_type_id === wakalaType.id) : []))();
 
+  const isArchived = Boolean(collection.deletedAt);
+
   return (
-    <DetailDrawerShell open onClose={onClose} title={t("obligations.detail.title")} icon={Receipt} className="max-w-2xl">
+    <DetailDrawerShell
+      open
+      onClose={onClose}
+      title={t("obligations.detail.title")}
+      icon={Receipt}
+      className="max-w-2xl"
+      headerExtra={isArchived ? <DetailDrawerArchivedBanner deletedAt={collection.deletedAt} /> : undefined}
+      headerActions={
+        onRestore ? (
+          <DetailDrawerRestoreOrEditAction
+            isArchived={isArchived}
+            canRestore={canDelete}
+            onRestore={() => onRestore(collection.id)}
+            restoreLabel={t("common.restore")}
+          />
+        ) : undefined
+      }
+    >
       <div className="space-y-5">
         <Card className="p-4 flex items-center gap-3.5 bg-primary/5 border-primary/25">
           <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
@@ -187,10 +214,12 @@ export const ObligationCollectionDetail = (function ObligationCollectionDetail({
         )}
 
         <footer className="flex flex-wrap items-center justify-between gap-2">
-          <Button type="button" onClick={() => setShowPrint(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
-            <Printer className="w-4 h-4" aria-hidden="true" /> {t("obligations.actions.printShort")}
-          </Button>
+          {!isArchived && (
+            <Button type="button" onClick={() => setShowPrint(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors">
+              <Printer className="w-4 h-4" aria-hidden="true" /> {t("obligations.actions.printShort")}
+            </Button>
+          )}
           <Button type="button" onClick={onClose}
             variant="outline"
             className="px-4 py-2 rounded-lg border border-border text-sm font-semibold text-muted-foreground hover:bg-muted transition-colors">

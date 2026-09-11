@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { User, WidgetQuery } from '@mms/shared';
+import { isQueryFlagTrue, type User, type WidgetQuery } from '@mms/shared';
 import { questionBankContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
@@ -32,7 +32,7 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
       if (!canReadCollection(user, 'questions')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true;
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, 'questions')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
@@ -69,7 +69,7 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          questionBankUseCases.bulkRestoreQuestions(body.ids.map(String)),
+          questionBankUseCases.bulkRestoreQuestions(body.ids.map(String), user?.id),
           { readOnly: false },
         );
         return { status: 200 as const, body: { success: true, ...result } };

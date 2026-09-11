@@ -26,7 +26,11 @@ export interface MessagingRepository {
   // Logs
   listMessageLogsByWorkspace(tenant: string): Promise<Message[]>;
   findMessageLogById(tenant: string, id: string): Promise<Message | null>;
-  findMessageLogsByIds(tenant: string, ids: string[]): Promise<Message[]>;
+  findMessageLogsByIds(
+    tenant: string,
+    ids: string[],
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<Message[]>;
   saveMessageLog(tenant: string, record: Message): Promise<void>;
   bulkSaveMessageLogs(tenant: string, records: Message[]): Promise<void>;
   replaceMessageLogsForWorkspace(tenant: string, records: Message[]): Promise<void>;

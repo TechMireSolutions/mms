@@ -7,6 +7,8 @@ export {
   saveAccount,
   bulkSaveAccounts,
   replaceAccountsForWorkspace,
+  bulkSoftDeleteAccounts,
+  bulkRestoreAccounts,
 } from './accountingAccountsRepository.js';
 export {
   fiscalYearRowToRecord,
@@ -30,4 +32,6 @@ export {
   bulkSaveEntries,
   replaceEntriesForWorkspace,
   deleteAccountingByWorkspace,
+  bulkSoftDeleteEntries,
+  bulkRestoreEntries,
 } from './accountingEntriesPersist.js';

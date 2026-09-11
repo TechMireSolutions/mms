@@ -34,6 +34,8 @@ export function studentRowToRecord(
   if (row.deletedAt) student.deletedAt = row.deletedAt.toISOString();
   if (row.deletedBy) student.deletedBy = row.deletedBy;
   if (row.deletionReason) student.deletionReason = row.deletionReason;
+  if (row.restoredAt) student.restoredAt = row.restoredAt.toISOString();
+  if (row.restoredBy) student.restoredBy = row.restoredBy;
   if (row.createdAt) student.createdAt = row.createdAt.toISOString();
   if (row.updatedAt) student.updatedAt = row.updatedAt.toISOString();
   if (row.createdBy) student.createdBy = row.createdBy;

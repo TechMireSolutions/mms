@@ -6,6 +6,8 @@ export {
   findContactsByIds,
   saveContact,
   bulkSaveContacts,
+  bulkSoftDeleteContactsSql,
+  bulkRestoreContactsSql,
   replaceContactsForWorkspace,
 } from './contactRepositoryCore.js';
 export { listContactsPage } from './contactRepositoryList.js';

@@ -187,4 +187,7 @@ export const StudentDetail = (function StudentDetail({
   );
 });
 
+export const StudentDrawer = StudentDetail;
 export default StudentDetail;
+
+

@@ -19,7 +19,11 @@ import type {
 export interface EnrollmentsRepository {
   listEnrollmentsByWorkspace(tenant: string): Promise<Enrollment[]>;
   findEnrollmentById(tenant: string, id: string): Promise<Enrollment | null>;
-  findEnrollmentsByIds(tenant: string, ids: string[]): Promise<Enrollment[]>;
+  findEnrollmentsByIds(
+    tenant: string,
+    ids: string[],
+    options?: { includeDeleted?: boolean },
+  ): Promise<Enrollment[]>;
   saveEnrollment(tenant: string, record: Enrollment): Promise<void>;
   listEnrollmentsPage(tenant: string, query: EnrollmentsListQuery): Promise<EnrollmentsListPageResult>;
   countEnrollmentsActive(tenant: string): Promise<number>;
@@ -32,4 +36,16 @@ export interface EnrollmentsRepository {
     tenant: string,
     comparisonQuery?: EnrollmentsReportComparisonQuery,
   ): Promise<EnrollmentsReportAggregates>;
+  bulkSoftDeleteEnrollments?(
+    tenant: string,
+    ids: string[],
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkRestoreEnrollments?(
+    tenant: string,
+    ids: string[],
+    userId?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
 }
+

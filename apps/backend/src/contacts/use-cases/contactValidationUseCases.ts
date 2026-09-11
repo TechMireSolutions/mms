@@ -22,6 +22,7 @@ import { loadContactFieldConfig } from './contactConfigService.js';
 import { loadContactRuntimeDefaults } from './contactLoadUseCases.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
+import { ConflictError } from '../../lib/httpErrors.js';
 
 export function stripClientSoftDeleteFields(contact: Contact): Contact {
   return stripContactClientSoftDeleteFields(contact);
@@ -108,7 +109,7 @@ export async function prepareContactRecord(contact: Contact, id?: string | numbe
 }
 
 /** Thrown when a contact reuses a Setup-unique field value. */
-export class ContactUniqueFieldError extends Error {
+export class ContactUniqueFieldError extends ConflictError {
   readonly code = 'unique_conflict' as const;
   readonly errors: ValidationError[];
 

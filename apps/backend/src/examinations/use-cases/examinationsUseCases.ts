@@ -4,7 +4,6 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import {
   defineTenantBulkCollectionService,
-  scopeDeleted,
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
 import {
@@ -59,6 +58,8 @@ export function createExaminationsUseCases(repo: ExaminationsRepository = examin
       listByWorkspace: repo.listExamsByWorkspace,
       findById: repo.findExamById,
       save: repo.saveExam,
+      bulkDelete: repo.bulkSoftDeleteExams,
+      bulkRestore: repo.bulkRestoreExams,
     },
     schema: examRecordSchema,
     websocketCollection: 'exams',
@@ -69,10 +70,7 @@ export function createExaminationsUseCases(repo: ExaminationsRepository = examin
     replaceExams: examBulkService.replace,
     replaceExamResults: examResultBulkService.replace,
 
-    loadExams: async (options?: { includeDeleted?: boolean }): Promise<Exam[]> => {
-      const rows = await examCrud.loadAll({ includeDeleted: true });
-      return scopeDeleted(rows, options?.includeDeleted);
-    },
+    loadExams: examCrud.loadAll,
 
     loadExamById: async (id: string, includeDeleted = false): Promise<Exam | null> => {
       const tenant = getRequestTenant();
@@ -88,8 +86,7 @@ export function createExaminationsUseCases(repo: ExaminationsRepository = examin
       const tenant = getRequestTenant();
       const cleanIds = dedupeTrimmedIds(ids);
       if (!tenant || cleanIds.length === 0) return [];
-      const rows = await repo.findExamsByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findExamsByIds(tenant, cleanIds, { includeDeleted });
     },
 
     loadExamsPage: async (query: ExaminationsListQuery & { includeDeleted?: boolean }) => {

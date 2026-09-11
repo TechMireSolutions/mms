@@ -39,12 +39,30 @@ export interface HasanatRepository {
   replaceBatchesForWorkspace(tenant: string, records: StockBatch[]): Promise<void>;
 
   // Distributions
-  listDistributionsByWorkspace(tenant: string): Promise<Distribution[]>;
+  listDistributionsByWorkspace(
+    tenant: string,
+    options?: { limit?: number; offset?: number; deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<Distribution[]>;
   findDistributionById(tenant: string, id: string): Promise<Distribution | null>;
-  findDistributionsByIds(tenant: string, ids: string[]): Promise<Distribution[]>;
+  findDistributionsByIds(
+    tenant: string,
+    ids: string[],
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<Distribution[]>;
   saveDistribution(tenant: string, record: Distribution): Promise<void>;
   bulkSaveDistributions(tenant: string, records: Distribution[]): Promise<void>;
   replaceDistributionsForWorkspace(tenant: string, records: Distribution[]): Promise<void>;
+  bulkSoftDeleteDistributions?(
+    tenant: string,
+    ids: string[],
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkRestoreDistributions?(
+    tenant: string,
+    ids: string[],
+    userId?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
   listDistributionsPage(
     tenant: string,
     query: HasanatListQuery,

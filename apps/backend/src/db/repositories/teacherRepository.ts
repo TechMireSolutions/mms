@@ -19,6 +19,8 @@ export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
   if (row.deletedAt) teacher.deletedAt = row.deletedAt.toISOString();
   if (row.deletedBy) teacher.deletedBy = row.deletedBy;
   if (row.deletionReason) teacher.deletionReason = row.deletionReason;
+  if (row.restoredAt) teacher.restoredAt = row.restoredAt.toISOString();
+  if (row.restoredBy) teacher.restoredBy = row.restoredBy;
   if (row.createdAt) teacher.createdAt = row.createdAt.toISOString();
   if (row.updatedAt) teacher.updatedAt = row.updatedAt.toISOString();
   if (row.createdBy) teacher.createdBy = row.createdBy;
@@ -58,6 +60,8 @@ export async function persistTeacherTx(
       deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
       deletedBy: teacher.deletedBy ?? null,
       deletionReason: teacher.deletionReason ?? null,
+      restoredAt: teacher.restoredAt ? new Date(teacher.restoredAt) : null,
+      restoredBy: teacher.restoredBy ?? null,
       createdAt: teacher.createdAt ? new Date(teacher.createdAt) : new Date(),
       updatedAt: new Date(),
       createdBy: teacher.createdBy ?? null,
@@ -77,6 +81,8 @@ export async function persistTeacherTx(
         deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
         deletedBy: teacher.deletedBy ?? null,
         deletionReason: teacher.deletionReason ?? null,
+        restoredAt: teacher.restoredAt ? new Date(teacher.restoredAt) : null,
+        restoredBy: teacher.restoredBy ?? null,
         updatedAt: new Date(),
         updatedBy: teacher.updatedBy ?? null,
       },
@@ -125,6 +131,9 @@ export async function listTeachersByWorkspace(
         deletedAt: teachers.deletedAt,
         deletedBy: teachers.deletedBy,
         deletionReason: teachers.deletionReason,
+        restoredAt: teachers.restoredAt,
+        restoredBy: teachers.restoredBy,
+        deletedWithCascade: teachers.deletedWithCascade,
         createdAt: teachers.createdAt,
         updatedAt: teachers.updatedAt,
         createdBy: teachers.createdBy,
@@ -160,6 +169,9 @@ export async function findTeacherById(tenant: string, id: string): Promise<Teach
         deletedAt: teachers.deletedAt,
         deletedBy: teachers.deletedBy,
         deletionReason: teachers.deletionReason,
+        restoredAt: teachers.restoredAt,
+        restoredBy: teachers.restoredBy,
+        deletedWithCascade: teachers.deletedWithCascade,
         createdAt: teachers.createdAt,
         updatedAt: teachers.updatedAt,
         createdBy: teachers.createdBy,
@@ -194,6 +206,9 @@ export async function findTeachersByIds(tenant: string, ids: string[]): Promise<
         deletedAt: teachers.deletedAt,
         deletedBy: teachers.deletedBy,
         deletionReason: teachers.deletionReason,
+        restoredAt: teachers.restoredAt,
+        restoredBy: teachers.restoredBy,
+        deletedWithCascade: teachers.deletedWithCascade,
         createdAt: teachers.createdAt,
         updatedAt: teachers.updatedAt,
         createdBy: teachers.createdBy,
@@ -233,6 +248,8 @@ export async function bulkSaveTeachers(tenant: string, items: Teacher[]): Promis
           deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
           deletedBy: teacher.deletedBy ?? null,
           deletionReason: teacher.deletionReason ?? null,
+          restoredAt: teacher.restoredAt ? new Date(teacher.restoredAt) : null,
+          restoredBy: teacher.restoredBy ?? null,
           createdAt: teacher.createdAt ? new Date(teacher.createdAt) : new Date(),
           updatedAt: new Date(),
           createdBy: teacher.createdBy ?? null,
@@ -253,6 +270,8 @@ export async function bulkSaveTeachers(tenant: string, items: Teacher[]): Promis
           deletedAt: sql`excluded.deleted_at`,
           deletedBy: sql`excluded.deleted_by`,
           deletionReason: sql`excluded.deletion_reason`,
+          restoredAt: sql`excluded.restored_at`,
+          restoredBy: sql`excluded.restored_by`,
           updatedAt: new Date(),
           updatedBy: sql`excluded.updated_by`,
         },
@@ -280,6 +299,8 @@ export async function replaceTeachersForWorkspace(tenant: string, items: Teacher
           deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
           deletedBy: teacher.deletedBy ?? null,
           deletionReason: teacher.deletionReason ?? null,
+          restoredAt: teacher.restoredAt ? new Date(teacher.restoredAt) : null,
+          restoredBy: teacher.restoredBy ?? null,
           createdAt: teacher.createdAt ? new Date(teacher.createdAt) : new Date(),
           updatedAt: new Date(),
           createdBy: teacher.createdBy ?? null,

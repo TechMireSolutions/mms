@@ -4,7 +4,6 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import {
   defineTenantBulkCollectionService,
-  scopeDeleted,
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
 import {
@@ -72,6 +71,8 @@ export function createHasanatUseCases(repo: HasanatRepository = hasanatRepositor
       listByWorkspace: repo.listDistributionsByWorkspace,
       findById: repo.findDistributionById,
       save: repo.saveDistribution,
+      bulkDelete: repo.bulkSoftDeleteDistributions,
+      bulkRestore: repo.bulkRestoreDistributions,
     },
     schema: distributionRecordSchema,
     websocketCollection: 'hasanat_distributions',
@@ -144,10 +145,7 @@ export function createHasanatUseCases(repo: HasanatRepository = hasanatRepositor
     },
     replaceRedemptions: redemptionService.replace,
 
-    loadDistributions: async (options?: { includeDeleted?: boolean }): Promise<Distribution[]> => {
-      const rows = await distributionCrud.loadAll({ includeDeleted: true });
-      return scopeDeleted(rows, options?.includeDeleted);
-    },
+    loadDistributions: distributionCrud.loadAll,
 
     loadDistributionById: async (id: string, includeDeleted = false): Promise<Distribution | null> => {
       const tenant = getRequestTenant();
@@ -165,8 +163,7 @@ export function createHasanatUseCases(repo: HasanatRepository = hasanatRepositor
       if (!tenant) return [];
       const cleanIds = dedupeTrimmedIds(ids);
       if (cleanIds.length === 0) return [];
-      const rows = await repo.findDistributionsByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findDistributionsByIds(tenant, cleanIds, { includeDeleted });
     },
 
     loadDistributionsPage: async (query: HasanatListQuery & { includeDeleted?: boolean }) => {

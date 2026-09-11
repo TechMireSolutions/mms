@@ -14,10 +14,16 @@ export function useContactsCrudDeleteActions({
   t,
   handleError,
   notifyBulkResult,
+  notifyArchivedWithUndo,
 }: {
   t: TranslationFunction;
   handleError: (err: unknown, scope: string, messageKey?: AppTranslationKey) => void;
   notifyBulkResult: NotifyBulkResult;
+  notifyArchivedWithUndo?: (
+    onUndo: () => void | Promise<void>,
+    recordName?: string,
+    options?: { description?: string },
+  ) => unknown;
 }) {
   const {
     deleteContact,
@@ -32,11 +38,15 @@ export function useContactsCrudDeleteActions({
           id: String(id),
           ...(deletionReason ? { deletionReason } : {}),
         });
-        notify.info(t("contacts.deletedTitle"), {
-          description: name
-            ? t("contacts.deletedDescription", { name })
-            : t("contacts.deletedDescriptionDefault"),
-        });
+        if (notifyArchivedWithUndo) {
+          notifyArchivedWithUndo(() => restoreContactAction(String(id)), name);
+        } else {
+          notify.info(t("contacts.deletedTitle"), {
+            description: name
+              ? t("contacts.deletedDescription", { name })
+              : t("contacts.deletedDescriptionDefault"),
+          });
+        }
       } catch (err) {
         handleError(err, "contacts.remove_contact");
       }

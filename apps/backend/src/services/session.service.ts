@@ -1,10 +1,18 @@
-import { redisBatch, redisDel, redisExists, redisGet, redisSet, type RedisBatchOp } from '../lib/redis.js';
+import { redisBatch, redisDel, redisDelPattern, redisExists, redisGet, redisSet, type RedisBatchOp } from '../lib/redis.js';
 
 const REVOKED_TOKEN_PREFIX = 'session:revoked:';
 const USER_REVOKED_AT_PREFIX = 'user:revoked_at:';
 const TENANT_BLOCKED_PREFIX = 'tenant:blocked:';
 
 const DEFAULT_ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
+
+/**
+ * Revokes all session cache keys matching mms:session:${userId}:* in Redis.
+ */
+export async function revokeUserSessionKeys(userId: string): Promise<void> {
+  if (!userId) return;
+  await redisDelPattern(`mms:session:${userId}:*`);
+}
 
 /**
  * Revokes a specific JWT token by its unique JWT ID (jti).
@@ -28,7 +36,7 @@ export async function isTokenRevoked(jti?: string): Promise<boolean> {
 }
 
 /**
- * Revokes all sessions for a user by recording a revocation timestamp.
+ * Revokes all sessions for a user by recording a revocation timestamp and deleting active session keys.
  */
 export async function revokeAllUserSessions(
   userId: string,
@@ -38,6 +46,7 @@ export async function revokeAllUserSessions(
   const key = `${USER_REVOKED_AT_PREFIX}${userId}`;
   const now = Date.now().toString();
   await redisSet(key, now, ttlSeconds);
+  await revokeUserSessionKeys(userId);
 }
 
 /**

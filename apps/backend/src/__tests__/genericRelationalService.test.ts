@@ -28,18 +28,21 @@ describe('createGenericRelationalService restoreById', () => {
         deletedAt: z.string().nullable().optional(),
         deletedBy: z.string().nullable().optional(),
         deletionReason: z.string().nullable().optional(),
+        restoredAt: z.string().nullable().optional(),
+        restoredBy: z.string().nullable().optional(),
       }),
       websocketCollection: 'records',
       idPrefix: 'record',
     });
 
-    const restored = await runWithTenant('demo', () => service.restoreById('record-1'));
+    const restored = await runWithTenant('demo', () => service.restoreById('record-1', 'restorer-1'));
 
     expect(restored).toBe(true);
     expect(save).toHaveBeenCalledWith('demo', expect.objectContaining({
       deletedAt: null,
       deletedBy: null,
       deletionReason: null,
+      restoredBy: 'restorer-1',
     }));
   });
 

@@ -2,13 +2,11 @@ import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
-import { sessionContract } from '@mms/shared';
+import { sessionContract, isQueryFlagTrue, SESSIONS_MODULE_MANIFEST, type User } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../services/rbacService.js';
 import { sessionsUseCases } from '../../sessions/use-cases/sessionsUseCases.js';
-import type { User } from '@mms/shared';
-import { SESSIONS_MODULE_MANIFEST } from '@mms/shared';
 
 import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
 import { sessionRecordSchema } from '../../validation/sessionSchemas.js';
@@ -47,6 +45,7 @@ export default async function sessionsRoutes(
         loadCountFn: sessionsUseCases.countSessions,
         loadMetricsFn: sessionsUseCases.loadSessionsCommandMetrics,
         loadWidgetAggregatesFn: sessionsUseCases.loadSessionsWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
+        loadByIdFn: sessionsUseCases.loadSessionById,
         updateFn: sessionsUseCases.updateSessionById,
         deleteFn: sessionsUseCases.deleteSessionById,
         restoreFn: sessionsUseCases.restoreSessionById,
@@ -63,12 +62,12 @@ export default async function sessionsRoutes(
       const user = request.user as User;
       if (!canReadCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true ? true : (query?.includeDeleted === 'false' || query?.includeDeleted === false ? false : undefined);
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) } as Parameters<typeof sessionsUseCases.loadSessionsPage>[0]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsPage({ ...query, ...(includeDeleted ? { includeDeleted } : {}) } as Parameters<typeof sessionsUseCases.loadSessionsPage>[0]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list sessions' } };
@@ -113,7 +112,7 @@ export default async function sessionsRoutes(
       if (!canDeleteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.bulkRestoreSessions(body.ids.map(String)), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.bulkRestoreSessions(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore sessions' } };

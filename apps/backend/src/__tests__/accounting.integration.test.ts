@@ -393,7 +393,7 @@ describe('accounting REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreJournalEntryById).toHaveBeenCalledWith('je-1');
+    expect(mockRestoreJournalEntryById).toHaveBeenCalledWith('je-1', 'u-accountant');
     await app.close();
   });
 

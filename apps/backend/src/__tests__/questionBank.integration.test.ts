@@ -252,7 +252,7 @@ describe('question bank REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreQuestionById).toHaveBeenCalledWith('q-1');
+    expect(mockRestoreQuestionById).toHaveBeenCalledWith('q-1', 'u-teacher');
     await app.close();
   });
 

@@ -1,11 +1,13 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { messageTemplates, messageLogs } from '../schema.js';
 import { dedupeTrimmedIds, type Message } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
 
 type LogRow = typeof messageLogs.$inferSelect;
+/** Row shape accepted by logRowToRecord — purgeAfter is DB-only generated column, not surfaced to app layer. */
+type LogSelectRow = Omit<LogRow, 'purgeAfter'>;
 
-export function logRowToRecord(row: LogRow): Message {
+export function logRowToRecord(row: LogSelectRow): Message {
   const message: Message = {
     id: row.id,
     userId: row.userId,
@@ -98,11 +100,31 @@ export async function findMessageLogById(tenant: string, id: string): Promise<Me
   });
 }
 
-export async function findMessageLogsByIds(tenant: string, ids: string[]): Promise<Message[]> {
+export async function findMessageLogsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<Message[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(messageLogs.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(messageLogs.deletedAt)
+          : isNull(messageLogs.deletedAt);
+
+    const conditions = [
+      eq(messageLogs.workspaceSubdomain, subdomain),
+      inArray(messageLogs.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: messageLogs.id,
@@ -123,7 +145,7 @@ export async function findMessageLogsByIds(tenant: string, ids: string[]): Promi
         updatedAt: messageLogs.updatedAt,
       })
       .from(messageLogs)
-      .where(and(eq(messageLogs.workspaceSubdomain, subdomain), inArray(messageLogs.id, cleanIds)));
+      .where(and(...conditions));
     return rows.map((r) => logRowToRecord(r as LogRow));
   });
 }

@@ -15,7 +15,7 @@ Related: `mms-ui-ux-design.md` §7 (dialog `@container`), `mms-fields.md`, `mms-
 2. Primitives + `formStyles` (`FORM_INPUT`, `FORM_ERROR`, `FORM_CARD`, `FORM_INPUT_BUILDER`); inline errors via `FieldErrorMessage`; shared Zod write schema via `parseRequest` / `mapZodFormErrors` (`.strict()` preferred). Form inputs/footers: `LeadingIconInput` for leading-icon inputs and `FormFooterChip` (`FormFooterEntityChip` / `FormFooterBadge` / `FormFooterErrorChip`) for form-footer badges — do not hand-roll in features.
 3. Init fields safely; money as strings; phones via `parsePhoneNumber` + E.164. **Ban** Server Actions / `useActionState` / form `action=` for all MMS writes (tenant and platform).
 4. Collection tabs: `cleanContactDraft` / `mergeContactEditSavePayload` — empty arrays clear scalars (rule §3).
-5. Persist with `mutateAsync`; soft-delete only via DELETE/restore routes.
+5. Persist with `mutateAsync`; soft-delete only via dedicated DELETE/restore routes (`mms-soft-delete`). Write schemas reject/strip client soft-delete fields (`deletedAt`, `deletedBy`, `deletionReason`). Enforce **Active Foreign Key Guarding**: write forms and validators assigning foreign keys (`contactId`, `sessionId`, `teacherId`, `accountId`) must verify referenced entities are active (`deleted_at IS NULL`), preventing ghost relationships (`mms-data-layer.md` §6).
 6. Uploads: authenticated multipart `/api/uploads/*` + `resolveApiUrl`; stream chunks directly to disk/storage via Fastify `@fastify/multipart` — never buffer files into process memory (`Buffer.concat`, `file.toBuffer()`) (`mms-performance.md`); magic-byte + size + dimension/page caps; auth (or short-TTL) to read.
 7. Tall FormModal: prefer `dvh`/`svh` + safe-area when touching chrome.
 8. On close: **focus-return** to the control that opened the dialog.
@@ -26,7 +26,7 @@ Related: `mms-ui-ux-design.md` §7 (dialog `@container`), `mms-fields.md`, `mms-
 - [ ] FormModal + tall/scroll rules from rule §1 (dvh/svh when touching)
 - [ ] Focus-return to opener on close
 - [ ] No Server Actions / useActionState for tenant or platform writes
-- [ ] Shared Zod write/read DTOs; soft-delete stripped on write
+- [ ] Shared Zod write/read DTOs; soft-delete stripped on write; active foreign key guarding (reject soft-deleted FK references)
 - [ ] Contact-linked modules (`contactId`): strip `CONTACT_PROFILE_FIELDS` / guardian dual-write on prepare; hydrate on read (Students closed)
 - [ ] formStyles + DatePicker / TimePicker / DateTimePicker; name + id on controls; field errors via `FieldErrorMessage` / `FORM_ERROR`
 - [ ] Empty collection arrays persist; no scalar resurrection
@@ -40,7 +40,7 @@ Related: `mms-ui-ux-design.md` §7 (dialog `@container`), `mms-fields.md`, `mms-
 - Reintroduce dynamic form compilers on the frontend
 - Dual-write Query + `saveCollection` on save
 - Persist person profile keys on student/teacher JSONB when `contactId` is set
-- Accept client soft-delete fields on create/update
+- Accept client soft-delete fields on create/update or assign foreign keys to soft-deleted entities
 - Rebuild list rows from legacy scalars when arrays are `[]`
 - Invent React Server Actions posts against the Fastify cookie API
 

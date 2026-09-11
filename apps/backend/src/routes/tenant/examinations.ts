@@ -50,7 +50,7 @@ export default async function examinationsRoutes(
         deleteFn: examinationsUseCases.deleteExamById,
         restoreFn: examinationsUseCases.restoreExamById,
         bulkDeleteFn: examinationsUseCases.bulkSoftDeleteExams,
-        bulkRestoreFn: examinationsUseCases.bulkRestoreExams,
+        bulkRestoreFn: (ids, userId) => examinationsUseCases.bulkRestoreExams(ids, userId),
         responseKey: 'exams',
         errorMessagePrefix: 'exams',
         nameSingular: 'Exam',

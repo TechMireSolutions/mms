@@ -200,6 +200,9 @@ export const SessionSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
@@ -222,9 +225,6 @@ export const SessionInsertSchema = z
     budget: SessionBudgetInsertSchema.optional(),
     events: z.array(SessionEventInsertSchema).default([]),
     tabarruk: z.array(TabarrukItemInsertSchema).default([]),
-    deletedAt: z.string().nullable().optional(),
-    deletedBy: z.string().nullable().optional(),
-    deletionReason: z.string().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
@@ -250,3 +250,13 @@ export type Session = z.infer<typeof SessionSchema>;
 export type SessionInsert = z.infer<typeof SessionInsertSchema>;
 export const SessionUpdateSchema = SessionInsertSchema.partial();
 export type SessionUpdate = z.infer<typeof SessionUpdateSchema>;
+
+/** Whether a session record is soft-deleted. */
+export function isSessionDeleted(session: { deletedAt?: string | null }): boolean {
+  return Boolean(session.deletedAt);
+}
+
+/** Active directory rows — excludes soft-deleted records from Work by default. */
+export function filterActiveSessions<T extends { deletedAt?: string | null }>(sessions: T[]): T[] {
+  return sessions.filter((session) => !isSessionDeleted(session));
+}

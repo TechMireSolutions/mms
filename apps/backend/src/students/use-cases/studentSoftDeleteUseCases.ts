@@ -5,6 +5,11 @@ import { broadcastCollection } from '../../lib/livePush.js';
 import type { StudentsRepository } from '../repository/studentsRepository.js';
 import { studentsRepository } from '../repository/studentsRepositoryAdapter.js';
 import { StudentRestoreConflictError } from './studentNormalizeUseCases.js';
+import { isUniqueViolation } from '../../lib/pgErrors.js';
+import { emitOutboxEvent } from '../../services/outboxEventService.js';
+import { recordModernAuditEvent } from '../../services/auditTrailService.js';
+import { buildStudentForensicSnapshot } from '../../services/forensicSnapshotService.js';
+
 
 interface StudentBulkRestoreConflict {
   id: string;
@@ -22,18 +27,21 @@ function nowIso(): string {
 }
 
 /** Clears soft-delete metadata on a stored student row (restore). */
-function restoredRow(existing: Student): Student {
+function restoredRow(existing: Student, userId?: string): Student {
   return {
     ...existing,
     deletedAt: undefined,
     deletedBy: undefined,
     deletionReason: undefined,
+    restoredAt: nowIso(),
+    restoredBy: userId,
     updatedAt: nowIso(),
   };
 }
 
 export async function restoreStudentById(
   id: string,
+  userId?: string,
   repo: StudentsRepository = studentsRepository,
 ): Promise<Student | null> {
   const restored = await runInTransaction(async () => {
@@ -51,8 +59,38 @@ export async function restoreStudentById(
       throw new StudentRestoreConflictError();
     }
 
-    const next = restoredRow(existing);
-    await repo.save(tenant, next);
+    const next = restoredRow(existing, userId);
+    try {
+      await repo.save(tenant, next);
+    } catch (err: unknown) {
+      if (
+        isUniqueViolation(err) ||
+        (typeof err === 'object' && err !== null && 'code' in err && (err as { code: unknown }).code === '23505')
+      ) {
+        throw new StudentRestoreConflictError();
+      }
+      throw err;
+    }
+
+    const restoredAt = next.restoredAt ?? new Date().toISOString();
+    // Emit CDC outbox and audit within the same transaction (activeDb() resolves
+    // to the in-flight transaction via AsyncLocalStorage).
+    await emitOutboxEvent('entity.restored', {
+      entityType: 'students',
+      entityId: String(id),
+      tenantId: tenant,
+      restoredAt,
+      restoredBy: userId ?? 'unknown',
+      version: Date.now(),
+    });
+    await recordModernAuditEvent({
+      workspaceSubdomain: tenant,
+      tableName: 'students',
+      recordId: String(id),
+      actionType: 'RESTORE',
+      newState: next,
+      minimizeDelta: false,
+    });
     return next;
   });
   if (restored) await broadcastCollection('students');
@@ -61,6 +99,7 @@ export async function restoreStudentById(
 
 export async function bulkRestoreStudents(
   ids: string[],
+  userId?: string,
   repo: StudentsRepository = studentsRepository,
 ): Promise<StudentBulkRestoreResult> {
   const result = await runInTransaction(async () => {
@@ -102,13 +141,45 @@ export async function bulkRestoreStudents(
         });
         continue;
       }
-      toSave.push(restoredRow(existing));
+      const restored = restoredRow(existing, userId);
+      toSave.push(restored);
       if (normalizedGr) acceptedGrNumbers.add(normalizedGr);
       succeeded += 1;
     }
 
     if (toSave.length > 0) {
-      await repo.bulkSave(tenant, toSave);
+      try {
+        await repo.bulkSave(tenant, toSave);
+      } catch (err: unknown) {
+        if (
+          isUniqueViolation(err) ||
+          (typeof err === 'object' && err !== null && 'code' in err && (err as { code: unknown }).code === '23505')
+        ) {
+          throw new StudentRestoreConflictError();
+        }
+        throw err;
+      }
+
+      // Emit CDC outbox + audit for each successfully restored student
+      const restoredAt = new Date().toISOString();
+      for (const s of toSave) {
+        await emitOutboxEvent('entity.restored', {
+          entityType: 'students',
+          entityId: String(s.id),
+          tenantId: tenant,
+          restoredAt,
+          restoredBy: userId ?? 'unknown',
+          version: Date.now(),
+        });
+        await recordModernAuditEvent({
+          workspaceSubdomain: tenant,
+          tableName: 'students',
+          recordId: String(s.id),
+          actionType: 'RESTORE',
+          newState: s,
+          minimizeDelta: false,
+        });
+      }
     }
     return { succeeded, failed, conflicts };
   });
@@ -161,6 +232,28 @@ export async function bulkSoftDeleteStudents(
 
     if (toSave.length > 0) {
       await repo.bulkSave(tenant, toSave);
+
+      // Emit CDC outbox + audit for each archived student within the same tx
+      for (const s of toSave) {
+        await emitOutboxEvent('entity.soft_deleted', {
+          entityType: 'students',
+          entityId: String(s.id),
+          tenantId: tenant,
+          deletedAt: s.deletedAt ?? now,
+          deletedBy: deletedBy,
+          deletionReason: s.deletionReason,
+          version: Date.now(),
+          snapshot: buildStudentForensicSnapshot(s),
+        });
+        await recordModernAuditEvent({
+          workspaceSubdomain: tenant,
+          tableName: 'students',
+          recordId: String(s.id),
+          actionType: 'DELETE',
+          oldState: s,
+          minimizeDelta: false,
+        });
+      }
     }
     return { succeeded, failed };
   });

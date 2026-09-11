@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useTrashMode } from '@/hooks/useTrashMode';
 
 /** Directory filters and pagination SSOT for Accounting Work (journal + CoA). */
 export function useAccountingDirectoryFilters() {
   const [entryListPage, setEntryListPage] = useState(1);
   const [accountListPage, setAccountListPage] = useState(1);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, setShowDeleted] = useTrashMode();
   const [entrySearch, setEntrySearch] = useState('');
   const debouncedEntrySearch = useDebounce(entrySearch, 250);
   const [entryStatusFilter, setEntryStatusFilter] = useState('all');

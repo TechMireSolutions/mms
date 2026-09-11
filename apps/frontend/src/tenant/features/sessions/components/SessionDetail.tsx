@@ -200,3 +200,6 @@ export const SessionDetail = (function SessionDetail({
         </DetailDrawerShell>
       );
     });
+
+export const SessionDrawer = SessionDetail;
+

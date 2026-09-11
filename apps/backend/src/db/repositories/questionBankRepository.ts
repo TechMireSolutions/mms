@@ -6,6 +6,8 @@ export {
   saveQuestion,
   bulkSaveQuestions,
   replaceQuestionsForWorkspace,
+  bulkSoftDeleteQuestions,
+  bulkRestoreQuestions,
 } from './questionBankQuestionsRepository.js';
 
 export {

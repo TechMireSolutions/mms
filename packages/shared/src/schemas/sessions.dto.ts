@@ -1,15 +1,32 @@
 import { z } from 'zod';
 import { deepSanitizeStrings } from './sanitize.js';
 import { SessionSchema } from '../sessionTypes.js';
+import { stripSessionClientSoftDeleteFields } from '../sessionUtils.js';
 
-const sessionCreateBodyBaseSchema = SessionSchema.extend({
+const sessionCreateBodyBaseSchema = SessionSchema.omit({
+  deletedAt: true,
+  deletedBy: true,
+  deletionReason: true,
+  restoredAt: true,
+  restoredBy: true,
+  deletedWithCascade: true,
+}).extend({
   id: z.string().optional(),
 }).strict();
 
 export const sessionCreateBodySchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
-  return deepSanitizeStrings(raw);
+  const stripped = stripSessionClientSoftDeleteFields(raw as Record<string, unknown>);
+  return deepSanitizeStrings(stripped);
 }, sessionCreateBodyBaseSchema);
+
+const sessionUpdateBodyBaseSchema = sessionCreateBodyBaseSchema.partial().strict();
+
+export const sessionUpdateBodySchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const stripped = stripSessionClientSoftDeleteFields(raw as Record<string, unknown>);
+  return deepSanitizeStrings(stripped);
+}, sessionUpdateBodyBaseSchema);
 
 const sessionsBulkIdsBaseSchema = z.object({
   ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
@@ -20,3 +37,7 @@ export const sessionsBulkIdsSchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   return deepSanitizeStrings(raw);
 }, sessionsBulkIdsBaseSchema);
+
+export type SessionCreateBody = z.infer<typeof sessionCreateBodySchema>;
+export type SessionUpdateBody = z.infer<typeof sessionUpdateBodySchema>;
+export type SessionsBulkIdsBody = z.infer<typeof sessionsBulkIdsSchema>;

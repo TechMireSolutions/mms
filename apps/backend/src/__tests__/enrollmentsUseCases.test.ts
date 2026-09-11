@@ -85,14 +85,18 @@ describe('enrollments use-cases (DI with fake repository)', () => {
     const repo = createFakeRepo();
     const active = { id: 'enr-1', studentName: 'Ali' } as any;
     const deleted = { id: 'enr-2', studentName: 'Omar', deletedAt: '2026-03-01T00:00:00.000Z' } as any;
-    repo.findEnrollmentsByIds = vi.fn().mockResolvedValue([active, deleted]);
+    repo.findEnrollmentsByIds = vi.fn().mockImplementation((_tenant, _ids, options) => {
+      return Promise.resolve(options?.includeDeleted ? [active, deleted] : [active]);
+    });
     const useCases = createEnrollmentsUseCases(repo);
 
     const result = await runWithTenant('demo', () =>
       useCases.loadEnrollmentsByIds([' enr-1 ', 'enr-2', 'enr-1', '   ']),
     );
 
-    expect(repo.findEnrollmentsByIds).toHaveBeenCalledWith('demo', ['enr-1', 'enr-2']);
+    expect(repo.findEnrollmentsByIds).toHaveBeenCalledWith('demo', ['enr-1', 'enr-2'], {
+      includeDeleted: false,
+    });
     expect(result).toEqual([active]);
   });
 
@@ -112,4 +116,69 @@ describe('enrollments use-cases (DI with fake repository)', () => {
     );
     expect(deletedResult).toEqual(deleted);
   });
+
+  it('createEnrollment throws 400 when student is archived', async () => {
+    const repo = createFakeRepo();
+    const findStudentById = vi.fn().mockResolvedValue({ id: 's1', deletedAt: '2026-01-01T00:00:00.000Z' });
+    const findSessionById = vi.fn().mockResolvedValue({ id: 'sess1' });
+    const useCases = createEnrollmentsUseCases(repo, { findStudentById, findSessionById });
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.createEnrollment({
+          studentId: 's1',
+          sessionId: 'sess1',
+          classId: 'c1',
+          enrolledDate: '2026-09-01',
+        } as any),
+      ),
+    ).rejects.toThrow('Referenced student is archived or does not exist');
+  });
+
+  it('createEnrollment throws 400 when session is archived', async () => {
+    const repo = createFakeRepo();
+    const findStudentById = vi.fn().mockResolvedValue({ id: 's1' });
+    const findSessionById = vi.fn().mockResolvedValue({ id: 'sess1', deletedAt: '2026-01-01T00:00:00.000Z' });
+    const useCases = createEnrollmentsUseCases(repo, { findStudentById, findSessionById });
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.createEnrollment({
+          studentId: 's1',
+          sessionId: 'sess1',
+          classId: 'c1',
+          enrolledDate: '2026-09-01',
+        } as any),
+      ),
+    ).rejects.toThrow('Referenced session is archived or does not exist');
+  });
+
+  it('updateEnrollmentById throws 400 when referenced student is archived', async () => {
+    const repo = createFakeRepo();
+    const findStudentById = vi.fn().mockResolvedValue({ id: 's1', deletedAt: '2026-01-01T00:00:00.000Z' });
+    const useCases = createEnrollmentsUseCases(repo, { findStudentById });
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.updateEnrollmentById('enr-1', {
+          studentId: 's1',
+        } as any),
+      ),
+    ).rejects.toThrow('Referenced student is archived or does not exist');
+  });
+
+  it('updateEnrollmentById throws 400 when referenced session is archived', async () => {
+    const repo = createFakeRepo();
+    const findSessionById = vi.fn().mockResolvedValue({ id: 'sess1', deletedAt: '2026-01-01T00:00:00.000Z' });
+    const useCases = createEnrollmentsUseCases(repo, { findSessionById });
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.updateEnrollmentById('enr-1', {
+          sessionId: 'sess1',
+        } as any),
+      ),
+    ).rejects.toThrow('Referenced session is archived or does not exist');
+  });
 });
+

@@ -67,6 +67,7 @@ export function hydratedEmail(user: PersistedUser): string {
 }
 
 export function asAuthUser(user: PersistedUser): StoredUser | null {
+  if (user.deletedAt) return null;
   const loginEmail = resolveTenantLoginEmail(user, hydratedEmail(user));
   const workspaceSubdomain =
     typeof user.workspaceSubdomain === 'string' ? user.workspaceSubdomain.trim() : '';

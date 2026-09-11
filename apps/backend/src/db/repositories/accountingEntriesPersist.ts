@@ -1,5 +1,5 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import { type JournalEntry } from '@mms/shared';
+import { and, eq, inArray, isNotNull, isNull, ne, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type JournalEntry } from '@mms/shared';
 import {
   accountingAccounts,
   accountingBankReconciliations,
@@ -319,5 +319,75 @@ export async function deleteAccountingByWorkspace(workspaceSubdomain: string): P
     await tx.delete(accountingEntries).where(eq(accountingEntries.workspaceSubdomain, subdomain));
     await tx.delete(accountingFiscalYears).where(eq(accountingFiscalYears.workspaceSubdomain, subdomain));
     await tx.delete(accountingAccounts).where(eq(accountingAccounts.workspaceSubdomain, subdomain));
+  });
+}
+
+export async function bulkSoftDeleteEntries(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(accountingEntries)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(accountingEntries.workspaceSubdomain, subdomain),
+          inArray(accountingEntries.id, uniqueIds),
+          isNull(accountingEntries.deletedAt),
+          ne(accountingEntries.status, 'posted'),
+        ),
+      )
+      .returning({ id: accountingEntries.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreEntries(
+  tenant: string,
+  ids: string[],
+  _userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(accountingEntries)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(accountingEntries.workspaceSubdomain, subdomain),
+          inArray(accountingEntries.id, uniqueIds),
+          isNotNull(accountingEntries.deletedAt),
+        ),
+      )
+      .returning({ id: accountingEntries.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
   });
 }

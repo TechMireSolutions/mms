@@ -1,7 +1,8 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Invoice } from '@mms/shared';
-import { financeInvoiceLines, financeInvoices } from '../schema.js';
+import { financeInvoiceLines, financeInvoices, financePayments } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { ValidationError } from '../../lib/httpErrors.js';
 import { invoiceWriteValues } from './financeInvoiceValues.js';
 import { invoiceLineRowToRecord, replaceInvoiceLines } from './financeBillingRepository.js';
 
@@ -33,10 +34,10 @@ export function invoiceRowToRecord(row: InvoiceRow): Invoice {
   if (row.billingPeriod) invoice.billingPeriod = row.billingPeriod;
   if (row.enrollmentId) invoice.enrollmentId = row.enrollmentId;
   if (row.familyContactId) invoice.familyContactId = row.familyContactId;
-  if (Number(row.lateFeeAmt ?? 0) > 0) invoice.lateFeeAmt = Number(row.lateFeeAmt);
-  if (Number(row.creditedAmt ?? 0) > 0) invoice.creditedAmt = Number(row.creditedAmt);
+  if (row.lateFeeAmt != null) invoice.lateFeeAmt = Number(row.lateFeeAmt);
+  if (row.creditedAmt != null) invoice.creditedAmt = Number(row.creditedAmt);
   if (row.lastRemindedAt) invoice.lastRemindedAt = row.lastRemindedAt.toISOString();
-  if (row.reminderCount) invoice.reminderCount = row.reminderCount;
+  if (row.reminderCount != null) invoice.reminderCount = row.reminderCount;
   if (row.deletedAt) invoice.deletedAt = row.deletedAt.toISOString();
   if (row.deletedBy) invoice.deletedBy = row.deletedBy;
   if (row.deletionReason) invoice.deletionReason = row.deletionReason;
@@ -44,14 +45,27 @@ export function invoiceRowToRecord(row: InvoiceRow): Invoice {
   return invoice;
 }
 
+export interface ListInvoicesOptions {
+  limit?: number;
+  offset?: number;
+  deleted?: 'active' | 'deleted' | 'all';
+  includeDeleted?: boolean;
+}
+
 export async function listInvoicesByWorkspace(
   tenant: string,
-  options?: { limit?: number; offset?: number },
+  options?: ListInvoicesOptions,
 ): Promise<Invoice[]> {
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
+    const conditions = [eq(financeInvoices.workspaceSubdomain, subdomain)];
+    if (options?.deleted === 'deleted') {
+      conditions.push(isNotNull(financeInvoices.deletedAt));
+    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
+      conditions.push(isNull(financeInvoices.deletedAt));
+    }
     const rows = await tx
       .select({
         id: financeInvoices.id,
@@ -82,11 +96,14 @@ export async function listInvoicesByWorkspace(
         deletedAt: financeInvoices.deletedAt,
         deletedBy: financeInvoices.deletedBy,
         deletionReason: financeInvoices.deletionReason,
+        restoredAt: financeInvoices.restoredAt,
+        restoredBy: financeInvoices.restoredBy,
+        deletedWithCascade: financeInvoices.deletedWithCascade,
         createdAt: financeInvoices.createdAt,
         updatedAt: financeInvoices.updatedAt,
       })
       .from(financeInvoices)
-      .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), isNull(financeInvoices.deletedAt)))
+      .where(and(...conditions))
       .limit(limit)
       .offset(offset);
     return rows.map(invoiceRowToRecord);
@@ -128,6 +145,9 @@ export async function findInvoiceById(tenant: string, id: string): Promise<Invoi
         deletedAt: financeInvoices.deletedAt,
         deletedBy: financeInvoices.deletedBy,
         deletionReason: financeInvoices.deletionReason,
+        restoredAt: financeInvoices.restoredAt,
+        restoredBy: financeInvoices.restoredBy,
+        deletedWithCascade: financeInvoices.deletedWithCascade,
         createdAt: financeInvoices.createdAt,
         updatedAt: financeInvoices.updatedAt,
       })
@@ -156,11 +176,22 @@ export async function findInvoiceById(tenant: string, id: string): Promise<Invoi
   });
 }
 
-export async function findInvoicesByIds(tenant: string, ids: string[]): Promise<Invoice[]> {
+export async function findInvoicesByIds(
+  tenant: string,
+  ids: string[],
+  options?: { includeDeleted?: boolean },
+): Promise<Invoice[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const conditions = [
+      eq(financeInvoices.workspaceSubdomain, subdomain),
+      inArray(financeInvoices.id, cleanIds),
+    ];
+    if (!options?.includeDeleted) {
+      conditions.push(isNull(financeInvoices.deletedAt));
+    }
     const rows = await tx
       .select({
         id: financeInvoices.id,
@@ -191,16 +222,14 @@ export async function findInvoicesByIds(tenant: string, ids: string[]): Promise<
         deletedAt: financeInvoices.deletedAt,
         deletedBy: financeInvoices.deletedBy,
         deletionReason: financeInvoices.deletionReason,
+        restoredAt: financeInvoices.restoredAt,
+        restoredBy: financeInvoices.restoredBy,
+        deletedWithCascade: financeInvoices.deletedWithCascade,
         createdAt: financeInvoices.createdAt,
         updatedAt: financeInvoices.updatedAt,
       })
       .from(financeInvoices)
-      .where(
-        and(
-          eq(financeInvoices.workspaceSubdomain, subdomain),
-          inArray(financeInvoices.id, cleanIds),
-        ),
-      );
+      .where(and(...conditions));
     return rows.map(invoiceRowToRecord);
   });
 }
@@ -327,3 +356,87 @@ export async function deleteInvoice(tenant: string, id: string): Promise<void> {
       .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), eq(financeInvoices.id, id)));
   });
 }
+
+export async function bulkSoftDeleteInvoices(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const activePaymentsCount = await tx.$count(
+      financePayments,
+      and(
+        eq(financePayments.workspaceSubdomain, subdomain),
+        inArray(financePayments.invoiceId, uniqueIds),
+        isNull(financePayments.deletedAt),
+      ),
+    );
+    if (activePaymentsCount > 0) {
+      throw new ValidationError(
+        `Cannot archive invoice with active payments (${activePaymentsCount} active payment(s) exist)`,
+      );
+    }
+
+    const updated = await tx
+      .update(financeInvoices)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(financeInvoices.workspaceSubdomain, subdomain),
+          inArray(financeInvoices.id, uniqueIds),
+          isNull(financeInvoices.deletedAt),
+        ),
+      )
+      .returning({ id: financeInvoices.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreInvoices(
+  tenant: string,
+  ids: string[],
+  _userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(financeInvoices)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(financeInvoices.workspaceSubdomain, subdomain),
+          inArray(financeInvoices.id, uniqueIds),
+          isNotNull(financeInvoices.deletedAt),
+        ),
+      )
+      .returning({ id: financeInvoices.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+

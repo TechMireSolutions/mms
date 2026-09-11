@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { User } from '@mms/shared';
+import { isQueryFlagTrue, type User } from '@mms/shared';
 import { obligationContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
-import { canReadCollection } from '../../../services/rbacService.js';
+import { canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import { obligationsUseCases } from '../../../obligations/use-cases/obligationsUseCases.js';
 
@@ -16,8 +16,16 @@ export const obligationContractRouter: FastifyPluginAsync = async (fastify) => {
       if (!canReadCollection(user, 'obligation_collections')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+      if (includeDeleted && !canDeleteCollection(user, 'obligation_collections')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => obligationsUseCases.loadObligationCollections(query as Parameters<typeof obligationsUseCases.loadObligationCollections>[0]), { readOnly: true });
+        const result = await withTenant(
+          String(request.tenant?.id),
+          () => obligationsUseCases.loadObligationCollections({ ...query, includeDeleted }),
+          { readOnly: true },
+        );
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list collections' } };

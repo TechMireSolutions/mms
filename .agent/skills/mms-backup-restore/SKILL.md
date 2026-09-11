@@ -21,6 +21,7 @@ Do **not** use for Postgres ops dumps → `mms-ops-deploy` / production scripts.
 8. **Audit Trail Preservation**: Wipe-restore must NEVER truncate or mutate historical `audit_trail_events` or break cryptographic chains. Restore operations must append an immutable audit event (`action_type = 'RESTORE'`, `tableName = 'workspace_snapshot'`). Encrypted backup exports carrying audit trails must include cryptographic chain hashes and verification status in metadata (`mms-audit-trail`).
 9. After success: clear FE collection cache by tenant prefix; keep settings/singleton objects only.
 10. All UI copy via `backup.*` keys (en/ar/ur/fa). Confirm modal must not close while busy.
+11. **Soft-Delete Continuity & Purge Bypass**: Encrypted backup exports include soft-delete metadata columns (`deleted_at`, `deleted_by`, etc.) to preserve historical audit links. During restore step 2, the wipe-restore transaction executes `SET LOCAL app.allow_hard_purge = 'true'` to bypass the `forbid_hard_delete()` trigger when purging pre-existing rows before restoring snapshot entities (`docs/soft-delete.md` §1 & §2.5 · `mms-soft-delete`). Note: Right-to-Erasure crypto-shredding permanently renders encrypted custom fields unrecoverable even across historical backups.
 
 ## Checklist
 
@@ -32,6 +33,7 @@ Do **not** use for Postgres ops dumps → `mms-ops-deploy` / production scripts.
 - [ ] Secrets/credentials stripped from snapshot
 - [ ] No dual-write restore from browser cache alone
 - [ ] Audit trail preserved (no truncation) and restore operation audited
+- [ ] Backup preserves soft-delete metadata; wipe-restore executes under SET LOCAL app.allow_hard_purge = 'true'
 ```
 
 ## Done

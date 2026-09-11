@@ -84,6 +84,35 @@ export async function authenticateTenant(
     return;
   }
 
+  // Soft-deleted accounts must not retain access or active sessions (SSOT §1.2 & §4.7).
+  markRequestDiagnosticStage(request, 'authentication_account_active');
+  const userClaims = user as unknown as { deletedAt?: unknown; deleted_at?: unknown };
+  if (userClaims.deletedAt || userClaims.deleted_at) {
+    await sendUnauthorized(reply, 'Session revoked');
+    return;
+  }
+
+  if (user.id) {
+    try {
+      const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepositoryHydrate.js');
+      const userRow = await findTenantUserRowById(String(user.id));
+      if (userRow?.deletedAt || (userRow as { deleted_at?: unknown })?.deleted_at) {
+        await sendUnauthorized(reply, 'Session revoked');
+        return;
+      }
+      if (user.role === 'teacher') {
+        const { teachersRepository } = await import('../teachers/repository/teachersRepositoryAdapter.js');
+        const teacherRow = await teachersRepository.findById(tenant, String(user.id));
+        if (teacherRow?.deletedAt || (teacherRow as { deleted_at?: unknown })?.deleted_at) {
+          await sendUnauthorized(reply, 'Session revoked');
+          return;
+        }
+      }
+    } catch {
+      // Fall through for tests without DB context
+    }
+  }
+
   // Server-authoritative inactivity + absolute lifetime enforcement via the Redis
   // session clock for this request.
   markRequestDiagnosticStage(request, 'authentication_idle_clock');

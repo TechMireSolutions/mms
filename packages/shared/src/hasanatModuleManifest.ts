@@ -85,6 +85,9 @@ export const distributionRecordSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
@@ -116,6 +119,14 @@ export type Distribution = z.infer<typeof distributionRecordSchema>;
 export type DistributionInsert = z.infer<typeof distributionRecordInsertSchema>;
 export type DistributionUpdate = z.infer<typeof distributionRecordUpdateSchema>;
 export const distributionListSchema = z.array(distributionRecordSchema);
+
+export function isDistributionDeleted(distribution: { deletedAt?: string | null }): boolean {
+  return Boolean(distribution.deletedAt);
+}
+
+export function filterActiveDistributions<T extends { deletedAt?: string | null }>(distributions: T[]): T[] {
+  return distributions.filter((d) => !isDistributionDeleted(d));
+}
 
 export const redemptionRecordSchema = z
   .object({
@@ -169,6 +180,7 @@ export const HASANAT_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: false,
+    retentionDays: null,
   },
   permissions: {
     read: 'hasanat.read',

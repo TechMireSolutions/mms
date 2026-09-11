@@ -38,14 +38,22 @@ export function sendIfHttpDomainError(
   if (
     error instanceof Error &&
     'statusCode' in error &&
-    typeof (error as { statusCode?: unknown }).statusCode === 'number' &&
-    'type' in error &&
-    typeof (error as { type?: unknown }).type === 'string'
+    typeof (error as { statusCode?: unknown }).statusCode === 'number'
   ) {
-    const domainError = error as Error & { statusCode: number; type: string };
-    return reply.status(domainError.statusCode).send({
-      type: domainError.type,
-      message: domainError.message,
+    const statusCode = (error as { statusCode: number }).statusCode;
+    const type =
+      'type' in error && typeof (error as { type?: unknown }).type === 'string'
+        ? (error as { type: string }).type
+        : statusCode === 400
+          ? 'validation_error'
+          : statusCode === 404
+            ? 'not_found'
+            : statusCode === 409
+              ? 'conflict'
+              : 'error';
+    return reply.status(statusCode).send({
+      type,
+      message: error.message,
     });
   }
   return null;
@@ -85,4 +93,35 @@ export function sendServiceUnavailable(
   message = 'Service unavailable',
 ): FastifyReply {
   return reply.status(503).send({ type: 'service_unavailable', message });
+}
+
+/** Base domain error with status code and error type contract. */
+export class HttpDomainError extends Error {
+  readonly statusCode: number;
+  readonly type: string;
+
+  constructor(statusCode: number, type: string, message: string) {
+    super(message);
+    this.name = this.constructor.name;
+    this.statusCode = statusCode;
+    this.type = type;
+  }
+}
+
+export class ConflictError extends HttpDomainError {
+  constructor(message = 'Conflict') {
+    super(409, 'conflict', message);
+  }
+}
+
+export class ValidationError extends HttpDomainError {
+  constructor(message = 'Validation error') {
+    super(400, 'validation_error', message);
+  }
+}
+
+export class NotFoundError extends HttpDomainError {
+  constructor(message = 'Resource not found') {
+    super(404, 'not_found', message);
+  }
 }

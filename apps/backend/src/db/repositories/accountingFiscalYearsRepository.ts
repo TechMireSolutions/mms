@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type FiscalYear } from '@mms/shared';
 import { accountingFiscalYears } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -25,9 +25,25 @@ export function fiscalYearRowToRecord(row: FiscalYearRow): FiscalYear {
   return fiscalYear;
 }
 
-export async function listFiscalYearsByWorkspace(tenant: string): Promise<FiscalYear[]> {
+export async function listFiscalYearsByWorkspace(
+  tenant: string,
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<FiscalYear[]> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(accountingFiscalYears.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(accountingFiscalYears.deletedAt)
+          : isNull(accountingFiscalYears.deletedAt);
+
+    const conditions = [eq(accountingFiscalYears.workspaceSubdomain, subdomain)];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: accountingFiscalYears.id,
@@ -41,11 +57,14 @@ export async function listFiscalYearsByWorkspace(tenant: string): Promise<Fiscal
         deletedAt: accountingFiscalYears.deletedAt,
         deletedBy: accountingFiscalYears.deletedBy,
         deletionReason: accountingFiscalYears.deletionReason,
+        restoredAt: accountingFiscalYears.restoredAt,
+        restoredBy: accountingFiscalYears.restoredBy,
+        deletedWithCascade: accountingFiscalYears.deletedWithCascade,
         createdAt: accountingFiscalYears.createdAt,
         updatedAt: accountingFiscalYears.updatedAt,
       })
       .from(accountingFiscalYears)
-      .where(and(eq(accountingFiscalYears.workspaceSubdomain, subdomain), isNull(accountingFiscalYears.deletedAt)));
+      .where(and(...conditions));
     return rows.map(fiscalYearRowToRecord);
   });
 }
@@ -68,6 +87,9 @@ export async function findFiscalYearById(tenant: string, id: string): Promise<Fi
         deletedAt: accountingFiscalYears.deletedAt,
         deletedBy: accountingFiscalYears.deletedBy,
         deletionReason: accountingFiscalYears.deletionReason,
+        restoredAt: accountingFiscalYears.restoredAt,
+        restoredBy: accountingFiscalYears.restoredBy,
+        deletedWithCascade: accountingFiscalYears.deletedWithCascade,
         createdAt: accountingFiscalYears.createdAt,
         updatedAt: accountingFiscalYears.updatedAt,
       })
@@ -79,11 +101,31 @@ export async function findFiscalYearById(tenant: string, id: string): Promise<Fi
   });
 }
 
-export async function findFiscalYearsByIds(tenant: string, ids: string[]): Promise<FiscalYear[]> {
+export async function findFiscalYearsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<FiscalYear[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(accountingFiscalYears.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(accountingFiscalYears.deletedAt)
+          : isNull(accountingFiscalYears.deletedAt);
+
+    const conditions = [
+      eq(accountingFiscalYears.workspaceSubdomain, subdomain),
+      inArray(accountingFiscalYears.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: accountingFiscalYears.id,
@@ -97,16 +139,14 @@ export async function findFiscalYearsByIds(tenant: string, ids: string[]): Promi
         deletedAt: accountingFiscalYears.deletedAt,
         deletedBy: accountingFiscalYears.deletedBy,
         deletionReason: accountingFiscalYears.deletionReason,
+        restoredAt: accountingFiscalYears.restoredAt,
+        restoredBy: accountingFiscalYears.restoredBy,
+        deletedWithCascade: accountingFiscalYears.deletedWithCascade,
         createdAt: accountingFiscalYears.createdAt,
         updatedAt: accountingFiscalYears.updatedAt,
       })
       .from(accountingFiscalYears)
-      .where(
-        and(
-          eq(accountingFiscalYears.workspaceSubdomain, subdomain),
-          inArray(accountingFiscalYears.id, cleanIds),
-        ),
-      );
+      .where(and(...conditions));
     return rows.map(fiscalYearRowToRecord);
   });
 }

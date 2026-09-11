@@ -52,7 +52,7 @@ export default async function questionBankRoutes(
         deleteFn: questionBankUseCases.deleteQuestionById,
         restoreFn: questionBankUseCases.restoreQuestionById,
         bulkDeleteFn: questionBankUseCases.bulkSoftDeleteQuestions,
-        bulkRestoreFn: questionBankUseCases.bulkRestoreQuestions,
+        bulkRestoreFn: (ids, userId) => questionBankUseCases.bulkRestoreQuestions(ids, userId),
         responseKey: 'questions',
         errorMessagePrefix: 'questions',
         nameSingular: 'Question',

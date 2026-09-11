@@ -36,6 +36,8 @@ import {
   saveObligationCollection,
   bulkSaveObligationCollections,
   replaceObligationCollectionsForWorkspace,
+  bulkSoftDeleteObligationCollections,
+  bulkRestoreObligationCollections,
 } from '../../db/repositories/obligationRepository.js';
 import { aggregateObligationsCommandMetrics } from '../../db/repositories/obligationRepositoryMetrics.js';
 import { aggregateObligationsReport } from '../../db/repositories/obligationRepositoryReport.js';
@@ -81,6 +83,8 @@ export const obligationsRepository: ObligationsRepository = {
   saveObligationCollection,
   bulkSaveObligationCollections,
   replaceObligationCollectionsForWorkspace,
+  bulkSoftDeleteObligationCollections,
+  bulkRestoreObligationCollections,
   aggregateObligationsCommandMetrics,
   aggregateObligationsReport,
 };

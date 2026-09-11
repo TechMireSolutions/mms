@@ -30,6 +30,7 @@ Raw HTML controls (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, c
 | `DetailSectionTitle` / `FormFooterChip` | `@/components/ui/*` | Section headings and form footer entity/badge/error chips. |
 | `StatusBadge` | `@/components/ui/StatusBadge` | Status indicators paired with `t()` text labels (never color alone). |
 | `ModuleFiltersMenuButton` | `@/components/ui/ModuleFiltersMenuButton` | Single Filters dropdown shell (`ModuleFilterDropdown` + checkbox/radio groups). |
+| `ModuleTrashToggle` | `@/components/ui/ModuleTrashToggle` | Work directory trash mode toggle with `aria-pressed={showDeleted}`. Mount in toolbar (not in filter dropdown); preserve filters on toggle; hide Add/Create and Export in trash. |
 | `ModulePageShell` | `@/components/ui/ModulePageShell` | Standard page container margins, SEO metadata header, and `PageHeader` layout. |
 
 ## 2. Design Tokens & Surface Styling

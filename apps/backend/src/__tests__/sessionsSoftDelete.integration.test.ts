@@ -189,7 +189,7 @@ describe('sessions soft delete routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 2, failed: 0 });
-    expect(mockBulkRestoreSessions).toHaveBeenCalledWith(['s1', 's2']);
+    expect(mockBulkRestoreSessions).toHaveBeenCalledWith(['s1', 's2'], 'u-admin');
     await app.close();
   });
 });

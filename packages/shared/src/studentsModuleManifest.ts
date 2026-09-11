@@ -76,6 +76,7 @@ export const STUDENTS_MODULE_MANIFEST = {
     /** Active Work exports exclude trash; Work trash UI omits export CTAs. */
     exportsIncludeDeleted: false,
     captureDeletionReason: true,
+    retentionDays: null,
   },
   /** Rows above this count use chunked / page-walk export with progress. */
   exportInlineMaxRows: 500,

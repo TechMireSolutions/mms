@@ -46,6 +46,7 @@ export const SESSIONS_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: true,
+    retentionDays: null,
   },
   defaultPageSize: 12,
   maxPageSize: 500,

@@ -101,6 +101,7 @@ export const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
   teachers: TEACHERS_MODULE_MANIFEST.permissions.delete,
   attendance: ATTENDANCE_MODULE_MANIFEST.permissions.delete,
   attendance_records: ATTENDANCE_MODULE_MANIFEST.permissions.delete,
+  obligation_collections: OBLIGATIONS_MODULE_MANIFEST.permissions.delete,
 };
 
 export const OBJECT_READ_PERMISSION: Record<string, Permission> = {

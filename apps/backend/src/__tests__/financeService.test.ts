@@ -20,10 +20,14 @@ vi.mock('../db/repositories/financeRepository.js', () => ({
   findInvoiceById: (...args: unknown[]) => mockFindInvoiceById(...args),
   findInvoicesByIds: vi.fn().mockResolvedValue([]),
   saveInvoice: (...args: unknown[]) => mockSaveInvoice(...args),
+  bulkSoftDeleteInvoices: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
+  bulkRestoreInvoices: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
   listPaymentsByWorkspace: vi.fn().mockResolvedValue([]),
   findPaymentById: (...args: unknown[]) => mockFindPaymentById(...args),
   findPaymentsByIds: vi.fn().mockResolvedValue([]),
   savePayment: (...args: unknown[]) => mockSavePayment(...args),
+  bulkSoftDeletePayments: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
+  bulkRestorePayments: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
 }));
 
 vi.mock('../services/websocketService.js', () => ({

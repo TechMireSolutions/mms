@@ -2,7 +2,8 @@ import { Worker } from 'bullmq';
 import { initDb, closeDatabase } from '../db/database.js';
 import { and, eq, lt } from 'drizzle-orm';
 import { withTenant } from '../db/tenant-context.js';
-import { backgroundJobs } from '../db/schema.js';
+import { backgroundJobs, workspaces } from '../db/schema.js';
+import { activeDb } from '../db/dbConnection.js';
 import { disconnectRedis } from '../lib/redis.js';
 import {
   QUEUE_PDF_RENDERING,
@@ -17,6 +18,9 @@ import {
 import { processBackgroundJob } from './processors/jobProcessor.js';
 import { registerDefaultBackgroundJobRunners } from '../services/backgroundJobRunnerService.js';
 import { logger } from '../lib/logger.js';
+import { processOutboxCdcBatch } from './processors/outboxCdcProcessor.js';
+import { defaultSearchAdapter } from './adapters/searchIndexAdapter.js';
+import { purgeExpiredArchivedRecords } from './purgeArchivedRecordsJob.js';
 
 /** A 'pending' job older than this is assumed to have never been dispatched. */
 const STALE_PENDING_MS = 10 * 60 * 1000;
@@ -67,6 +71,70 @@ export async function cleanupOrphanedJobs(): Promise<void> {
 
 let isRunning = true;
 const activeWorkers: Worker<EnqueuedJobData>[] = [];
+/** NodeJS timer handle for the CDC outbox poller — cleared on shutdown. */
+let cdcPollerTimer: ReturnType<typeof setInterval> | null = null;
+/** NodeJS timer handle for the daily retention purge scheduler — cleared on shutdown. */
+let purgeSchedulerTimer: ReturnType<typeof setTimeout> | null = null;
+
+const CDC_POLL_INTERVAL_MS = 5_000;
+
+/**
+ * Computes millisecond delay until the next specified UTC hour (default: 02:00 UTC).
+ */
+export function getMsUntilNextUtcHour(targetUtcHour = 2): number {
+  const now = new Date();
+  const next = new Date(now);
+  next.setUTCHours(targetUtcHour, 0, 0, 0);
+  if (next.getTime() <= now.getTime()) {
+    next.setUTCDate(next.getUTCDate() + 1);
+  }
+  return next.getTime() - now.getTime();
+}
+
+/**
+ * Runs a full retention purge cycle across all active tenant workspaces.
+ */
+export async function runRetentionPurgeCycle(dbClient = activeDb()): Promise<Record<string, Record<string, number>>> {
+  const results: Record<string, Record<string, number>> = {};
+  try {
+    const tenants = await dbClient
+      .select({ subdomain: workspaces.subdomain })
+      .from(workspaces);
+
+    for (const { subdomain } of tenants) {
+      try {
+        const res = await purgeExpiredArchivedRecords(dbClient, subdomain);
+        results[subdomain] = res.purgedTables;
+      } catch (tenantErr) {
+        logger.error({ tenant: subdomain, err: tenantErr }, '[RetentionPurge] Failed for tenant');
+      }
+    }
+    logger.info({ results }, '[RetentionPurge] Completed scheduled daily purge cycle');
+  } catch (err) {
+    logger.error({ err }, '[RetentionPurge] Error running scheduled retention purge cycle');
+  }
+  return results;
+}
+
+/**
+ * Schedules the retention purge worker to run daily at 02:00 UTC.
+ */
+export function scheduleNextDailyPurge(dbClient = activeDb(), targetUtcHour = 2): void {
+  if (!isRunning) return;
+  const delayMs = getMsUntilNextUtcHour(targetUtcHour);
+  logger.info({ delayMs, targetUtcHour }, '[RetentionPurge] Scheduled next daily purge run');
+
+  purgeSchedulerTimer = setTimeout(() => {
+    void runRetentionPurgeCycle(dbClient)
+      .catch((err) => {
+        logger.error({ err }, '[RetentionPurge] Error during scheduled purge run');
+      })
+      .finally(() => {
+        scheduleNextDailyPurge(dbClient, targetUtcHour);
+      });
+  }, delayMs);
+  purgeSchedulerTimer.unref?.();
+}
 
 export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData> {
   const connection = getBullMQConnectionOptions();
@@ -130,6 +198,18 @@ export async function startWorkerDaemon(): Promise<void> {
 
   logger.info('All workers started and listening.');
 
+  // Start the CDC outbox poller (5-second interval, no-op when DB has no rows)
+  cdcPollerTimer = setInterval(() => {
+    processOutboxCdcBatch(defaultSearchAdapter).catch((err) => {
+      logger.error({ err }, '[OutboxCdc] Poll cycle error');
+    });
+  }, CDC_POLL_INTERVAL_MS);
+  cdcPollerTimer.unref?.();
+  logger.info({ intervalMs: CDC_POLL_INTERVAL_MS }, '[OutboxCdc] CDC poller started');
+
+  // Register the daily retention purge schedule to run at 02:00 UTC
+  scheduleNextDailyPurge(activeDb(), 2);
+
   const shutdown = async (signal: string) => {
     if (!isRunning) return;
     logger.info({ signal }, 'Received signal, shutting down...');
@@ -145,6 +225,18 @@ export async function startWorkerDaemon(): Promise<void> {
     forceExitTimer.unref?.();
 
     try {
+      // Stop CDC poller first so it doesn't fire mid-shutdown
+      if (cdcPollerTimer !== null) {
+        clearInterval(cdcPollerTimer);
+        cdcPollerTimer = null;
+      }
+
+      // Stop retention purge scheduler
+      if (purgeSchedulerTimer !== null) {
+        clearTimeout(purgeSchedulerTimer);
+        purgeSchedulerTimer = null;
+      }
+
       // Close all workers
       for (const worker of activeWorkers) {
         try {
@@ -184,7 +276,10 @@ export async function startWorkerDaemon(): Promise<void> {
   });
 }
 
-export { activeWorkers };
+export {
+  activeWorkers,
+  purgeExpiredArchivedRecords,
+};
 
 if (process.env.NODE_ENV !== 'test' && import.meta.url === `file://${process.argv[1]}`) {
   startWorkerDaemon().catch((error) => {

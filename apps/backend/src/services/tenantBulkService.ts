@@ -8,8 +8,9 @@ interface TenantBulkRepo<T> {
 }
 
 /**
- * Filters soft-deleted rows for Work vs trash list semantics.
- * `includeDeleted: true` returns only archived rows; otherwise active rows.
+ * @deprecated Legacy in-memory soft-delete filter for collection-store backed modules only.
+ * Banned for SQL-backed modules per mms-performance.md §1 and mms-data-layer.md §6.
+ * SQL modules must filter at the database layer (WHERE deleted_at IS NULL / IS NOT NULL).
  */
 export function scopeDeleted<T extends { deletedAt?: string | null }>(
   rows: T[],

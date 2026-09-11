@@ -204,8 +204,26 @@ describe('users REST routes', () => {
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ users: [deletedUser], total: 1, page: 1, limit: 50, hasMore: false });
     expect(mockLoadWorkspaceUsers).toHaveBeenCalledWith(
-      expect.objectContaining({ includeDeleted: 'true' }),
+      expect.objectContaining({ includeDeleted: true }),
     );
+    await app.close();
+  });
+
+  it('GET /api/users?includeDeleted=true returns 403 when user lacks delete permission', async () => {
+    const rbacService = await import('../services/rbacService.js');
+    const spy = vi.spyOn(rbacService, 'canDeleteCollection').mockReturnValue(false);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/users?includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toEqual({ type: 'forbidden', message: 'Insufficient permissions' });
+    spy.mockRestore();
     await app.close();
   });
 
@@ -255,7 +273,25 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true });
-    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1', 'admin');
+    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1', 'admin', 'u-admin', '127.0.0.1');
+    await app.close();
+  });
+
+  it('POST /api/users/:id/restore returns 409 conflict when code is 23505', async () => {
+    const error = new Error('duplicate key value violates unique constraint');
+    Object.assign(error, { code: '23505' });
+    mockRestoreUserById.mockRejectedValue(error);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/u-1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual(expect.objectContaining({ type: 'conflict' }));
     await app.close();
   });
 
@@ -378,7 +414,7 @@ describe('users REST routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 1, failed: 0 });
-    expect(mockBulkRestoreUsers).toHaveBeenCalledWith(['u-1'], 'admin');
+    expect(mockBulkRestoreUsers).toHaveBeenCalledWith(['u-1'], 'admin', 'u-admin', '127.0.0.1');
     await app.close();
   });
 

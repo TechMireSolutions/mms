@@ -31,6 +31,31 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   fastify.get('/me', { preHandler: authenticateTenant }, async (request, reply) => {
+    const user = request.user as User & { deletedAt?: unknown; deleted_at?: unknown };
+    if (user.deletedAt || user.deleted_at) {
+      return sendUnauthorized(reply, 'Session revoked');
+    }
+    if (user.id) {
+      try {
+        const { findTenantUserRowById } = await import('../../../db/repositories/tenantUserRepositoryHydrate.js');
+        const userRow = await findTenantUserRowById(String(user.id));
+        if (userRow?.deletedAt) {
+          return sendUnauthorized(reply, 'Session revoked');
+        }
+        if (user.role === 'teacher') {
+          const tenant = getRequestTenant() ?? user.workspaceSubdomain;
+          if (tenant) {
+            const { teachersRepository } = await import('../../../teachers/repository/teachersRepositoryAdapter.js');
+            const teacherRow = await teachersRepository.findById(tenant, String(user.id));
+            if (teacherRow?.deletedAt) {
+              return sendUnauthorized(reply, 'Session revoked');
+            }
+          }
+        }
+      } catch {
+        // Fall through for tests without DB context
+      }
+    }
     return reply.send({
       user: request.user as User,
       isAuthenticated: true,

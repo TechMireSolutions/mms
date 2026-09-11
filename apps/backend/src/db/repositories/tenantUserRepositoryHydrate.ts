@@ -54,6 +54,10 @@ export async function listTenantUsersByIds(ids: string[]): Promise<TenantUserRow
         updatedAt: tenantUsers.updatedAt,
         deletedAt: tenantUsers.deletedAt,
         deletedBy: tenantUsers.deletedBy,
+        deletionReason: tenantUsers.deletionReason,
+        restoredAt: tenantUsers.restoredAt,
+        restoredBy: tenantUsers.restoredBy,
+        deletedWithCascade: tenantUsers.deletedWithCascade,
         profileJson: tenantUsers.profileJson,
       })
       .from(tenantUsers)
@@ -98,6 +102,10 @@ export async function listTenantUsersByWorkspace(
         updatedAt: tenantUsers.updatedAt,
         deletedAt: tenantUsers.deletedAt,
         deletedBy: tenantUsers.deletedBy,
+        deletionReason: tenantUsers.deletionReason,
+        restoredAt: tenantUsers.restoredAt,
+        restoredBy: tenantUsers.restoredBy,
+        deletedWithCascade: tenantUsers.deletedWithCascade,
         profileJson: tenantUsers.profileJson,
       })
       .from(tenantUsers)
@@ -134,6 +142,10 @@ export async function listAllTenantUsersByWorkspace(
         updatedAt: tenantUsers.updatedAt,
         deletedAt: tenantUsers.deletedAt,
         deletedBy: tenantUsers.deletedBy,
+        deletionReason: tenantUsers.deletionReason,
+        restoredAt: tenantUsers.restoredAt,
+        restoredBy: tenantUsers.restoredBy,
+        deletedWithCascade: tenantUsers.deletedWithCascade,
         profileJson: tenantUsers.profileJson,
       })
       .from(tenantUsers)
@@ -162,6 +174,10 @@ export async function findTenantUserRowById(id: string): Promise<TenantUserRow |
         updatedAt: tenantUsers.updatedAt,
         deletedAt: tenantUsers.deletedAt,
         deletedBy: tenantUsers.deletedBy,
+        deletionReason: tenantUsers.deletionReason,
+        restoredAt: tenantUsers.restoredAt,
+        restoredBy: tenantUsers.restoredBy,
+        deletedWithCascade: tenantUsers.deletedWithCascade,
         profileJson: tenantUsers.profileJson,
       })
       .from(tenantUsers)

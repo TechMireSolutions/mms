@@ -1,6 +1,7 @@
 import { useCallback, useState, useEffect } from 'react';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useTrashMode } from '@/hooks/useTrashMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
@@ -33,7 +34,7 @@ export function useQuestionBankPageController() {
     canViewSetup,
   } = useModulePermissions(QUESTION_BANK_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, setShowDeleted] = useTrashMode();
   const questionsResult = useQuestionBankQuestions({ includeDeleted: showDeleted });
   const questions = useQuestionBankQuestionsCollection({ includeDeleted: showDeleted });
   const tests = useQuestionBankTestsCollection();

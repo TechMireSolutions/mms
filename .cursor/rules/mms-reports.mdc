@@ -63,7 +63,7 @@ Hide irrelevant filters per module context — do not show finance filters on at
 
 ## 7. Permissions, Export Policy & Drill-Down
 
-Exports must respect active filters, search, field visibility, soft-deletion policy, and `can()` — same boundary as Work (`mms-module-architecture.mdc` §6–§7). Audit large/sensitive exports (target — `mms-auth-security.mdc`).
+Exports must respect active filters, search, field visibility, soft-deletion policy, and `can()` — same boundary as Work (`mms-module-architecture.mdc` §6–§7). Reports and exports must strictly adhere to the module manifest `softDelete` configuration: `reportsIncludeDeleted: false` displays only active rows in analytical dashboards, while `exportsIncludeDeleted: false` hides export CTAs in trash mode and excludes archived rows from CSV/PDF/Excel exports (`docs/soft-delete.md` §5 & §7.6 · `mms-soft-delete`). Audit large/sensitive exports (target — `mms-auth-security.mdc`).
 
 ### Drill-Down (target)
 Chart segment / summary row → Work directory with equivalent filters (URL/search params when practical), preserving RBAC.

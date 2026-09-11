@@ -22,3 +22,5 @@ export * from "./inventory.js";
 export * from "./charity.js";
 export * from "./workshops.js";
 export * from "./auditTrail.js";
+export * from "./softDeleteSchema.js";
+export * from "./outboxEvents.js";

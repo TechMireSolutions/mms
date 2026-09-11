@@ -1,9 +1,19 @@
 import type { Contact } from './contactTypes.js';
 
 /** Soft-delete metadata must only be set by dedicated soft-delete helpers. */
-export const CONTACT_CLIENT_SOFT_DELETE_KEYS = ['deletedAt', 'deletedBy', 'deletionReason'] as const;
+export const CLIENT_SOFT_DELETE_KEYS = [
+  'deletedAt',
+  'deletedBy',
+  'deletionReason',
+  'restoredAt',
+  'restoredBy',
+  'deletedWithCascade',
+] as const;
 
-/** Whether a contact is soft-deleted (globle1 §1.5). */
+/** Backwards-compatible alias for contact-specific imports. */
+export const CONTACT_CLIENT_SOFT_DELETE_KEYS = CLIENT_SOFT_DELETE_KEYS;
+
+/** Whether a contact is soft-deleted (soft-delete.md §1). */
 export function isContactDeleted(contact: Contact): boolean {
   return Boolean(contact.deletedAt);
 }
@@ -13,11 +23,19 @@ export function filterActiveContacts(contacts: Contact[]): Contact[] {
   return contacts.filter((contact) => !isContactDeleted(contact));
 }
 
-/** Strip client-supplied soft-delete fields from a contact write payload. */
-export function stripContactClientSoftDeleteFields<T extends Record<string, unknown>>(record: T): T {
-  const next = { ...record };
-  for (const key of CONTACT_CLIENT_SOFT_DELETE_KEYS) {
+/** Strip client-supplied soft-delete and restore fields from a write payload. */
+export function stripClientSoftDeleteFields<T>(record: T): T {
+  if (!record || typeof record !== 'object') {
+    return record;
+  }
+  const next = { ...(record as Record<string, unknown>) };
+  for (const key of CLIENT_SOFT_DELETE_KEYS) {
     delete next[key];
   }
-  return next;
+  return next as T;
 }
+
+/** Backwards-compatible alias for contact-specific imports. */
+export const stripContactClientSoftDeleteFields = stripClientSoftDeleteFields;
+
+export { isEntityDeleted, filterActiveEntities } from './softDelete.js';

@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, index, boolean, jsonb, primaryKey, varchar, numeric, foreignKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { desc, sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const accountingAccounts = pgTable('accounting_accounts', {
   id: text('id').notNull(),
@@ -11,9 +12,7 @@ export const accountingAccounts = pgTable('accounting_accounts', {
   subtype: varchar('subtype', { length: 100 }).notNull().default(''),
   description: text('description').notNull().default(''),
   isActive: boolean('is_active').notNull().default(true),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -24,6 +23,9 @@ export const accountingAccounts = pgTable('accounting_accounts', {
   index('accounting_accounts_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('accounting_accounts_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
@@ -35,9 +37,7 @@ export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
   status: varchar('status', { length: 20 }).notNull().default('upcoming'),
   closedAt: timestamp('closed_at', { withTimezone: true, mode: 'date' }),
   closedBy: text('closed_by'),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -47,6 +47,9 @@ export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
   index('accounting_fiscal_years_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('accounting_fiscal_years_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const accountingEntries = pgTable('accounting_entries', {
@@ -64,9 +67,7 @@ export const accountingEntries = pgTable('accounting_entries', {
   transactionType: varchar('transaction_type', { length: 50 }),
   reversedRef: varchar('reversed_ref', { length: 100 }),
   simpleMode: boolean('simple_mode').notNull().default(false),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -86,6 +87,9 @@ export const accountingEntries = pgTable('accounting_entries', {
   index('accounting_entries_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('accounting_entries_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
   index('accounting_entries_workspace_fiscal_date_active_idx')
     .on(table.workspaceSubdomain, table.fiscalYear, desc(table.date))
     .where(sql`${table.deletedAt} is null`),

@@ -4,7 +4,6 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import {
   defineTenantBulkCollectionService,
-  scopeDeleted,
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
 import { broadcastCollection } from '../../services/websocketService.js';
@@ -69,6 +68,8 @@ export function createQuestionBankUseCases(repo: QuestionBankRepository = questi
       listByWorkspace: repo.listQuestionsByWorkspace,
       findById: repo.findQuestionById,
       save: repo.saveQuestion,
+      bulkDelete: repo.bulkSoftDeleteQuestions,
+      bulkRestore: repo.bulkRestoreQuestions,
     },
     schema: questionBankQuestionRecordSchema,
     websocketCollection: 'questions',
@@ -82,10 +83,7 @@ export function createQuestionBankUseCases(repo: QuestionBankRepository = questi
     replaceTests: testBulkService.replace,
     replaceResults: resultBulkService.replace,
 
-    loadQuestions: async (options?: { includeDeleted?: boolean }): Promise<QuestionBankQuestion[]> => {
-      const rows = await questionCrud.loadAll({ includeDeleted: true });
-      return scopeDeleted(rows, options?.includeDeleted);
-    },
+    loadQuestions: questionCrud.loadAll,
 
     loadQuestionsPage: async (query: QuestionBankListQuery & { includeDeleted?: boolean }) => {
       const tenant = getRequestTenant();
@@ -129,8 +127,7 @@ export function createQuestionBankUseCases(repo: QuestionBankRepository = questi
       if (!tenant) return [];
       const cleanIds = dedupeTrimmedIds(ids);
       if (cleanIds.length === 0) return [];
-      const rows = await repo.findQuestionsByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findQuestionsByIds(tenant, cleanIds, { includeDeleted });
     },
 
     saveQuestion: async (record: QuestionBankQuestion): Promise<void> => {
@@ -156,8 +153,7 @@ export function createQuestionBankUseCases(repo: QuestionBankRepository = questi
       if (!tenant) return [];
       const cleanIds = dedupeTrimmedIds(ids);
       if (cleanIds.length === 0) return [];
-      const rows = await repo.findTestsByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findTestsByIds(tenant, cleanIds, { includeDeleted });
     },
 
     saveTest: async (record: QuestionBankTest): Promise<void> => {
@@ -183,8 +179,7 @@ export function createQuestionBankUseCases(repo: QuestionBankRepository = questi
       if (!tenant) return [];
       const cleanIds = dedupeTrimmedIds(ids);
       if (cleanIds.length === 0) return [];
-      const rows = await repo.findResultsByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findResultsByIds(tenant, cleanIds, { includeDeleted });
     },
 
     saveResult: async (record: QuestionBankResult): Promise<void> => {

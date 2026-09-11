@@ -44,10 +44,10 @@ export function createTeachersUseCases(repo: TeachersRepository = teachersReposi
       softDelete.softDeleteTeacherById(id, deletedBy, deletionReason, repo),
     bulkSoftDeleteTeachers: (ids: string[], deletedBy: string, deletionReason?: string) =>
       softDelete.bulkSoftDeleteTeachers(ids, deletedBy, deletionReason, repo),
-    restoreTeacherById: (id: string) =>
-      softDelete.restoreTeacherById(id, repo),
-    bulkRestoreTeachers: (ids: string[]) =>
-      softDelete.bulkRestoreTeachers(ids, repo),
+    restoreTeacherById: (id: string, userId?: string) =>
+      softDelete.restoreTeacherById(id, userId, repo),
+    bulkRestoreTeachers: (ids: string[], userId?: string) =>
+      softDelete.bulkRestoreTeachers(ids, userId, repo),
     bulkUpdateTeacherStatus: (ids: string[], status: string) =>
       operation.bulkUpdateTeacherStatus(ids, status, repo),
     bulkUpdateTeacherSpecialization: (ids: string[], specialization: string) =>

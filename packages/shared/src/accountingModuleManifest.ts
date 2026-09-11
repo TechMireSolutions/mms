@@ -14,6 +14,9 @@ export const accountRecordSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
@@ -71,6 +74,9 @@ export const journalEntryRecordSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
@@ -157,6 +163,7 @@ export const ACCOUNTING_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: false,
+    retentionDays: null,
   },
   permissions: {
     read: 'finance.write',
@@ -175,3 +182,27 @@ export const ACCOUNTING_MODULE_MANIFEST = {
 } as const;
 
 export type AccountingModuleTier = (typeof ACCOUNTING_MODULE_MANIFEST.tiers)[number];
+
+export function isAccountDeleted(account: { deletedAt?: string | null }): boolean {
+  return Boolean(account.deletedAt);
+}
+
+export function filterActiveAccounts<T extends { deletedAt?: string | null }>(accounts: T[]): T[] {
+  return accounts.filter((account) => !isAccountDeleted(account));
+}
+
+export function isJournalEntryDeleted(entry: { deletedAt?: string | null }): boolean {
+  return Boolean(entry.deletedAt);
+}
+
+export function filterActiveJournalEntries<T extends { deletedAt?: string | null }>(entries: T[]): T[] {
+  return entries.filter((entry) => !isJournalEntryDeleted(entry));
+}
+
+export function isFiscalYearDeleted(year: { deletedAt?: string | null }): boolean {
+  return Boolean(year.deletedAt);
+}
+
+export function filterActiveFiscalYears<T extends { deletedAt?: string | null }>(years: T[]): T[] {
+  return years.filter((year) => !isFiscalYearDeleted(year));
+}

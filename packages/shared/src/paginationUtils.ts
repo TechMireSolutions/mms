@@ -49,7 +49,9 @@ export function paginateArray<T>(items: T[], page = 1, limit = 50, maxLimit = 50
 
 /**
  * Evaluates whether an unparsed query parameter value represents boolean true.
- * Recognizes boolean `true`, numeric `1`, and string `'true'`, `'1'`, `'yes'`.
+ * Recognizes boolean `true`, numeric `1`, and string `'true'`, `'1'`, `'yes'` (case/whitespace-insensitive).
+ * @param value Raw unparsed query parameter value.
+ * @returns True if value represents a truthy flag, false otherwise.
  */
 export function isQueryFlagTrue(value: unknown): boolean {
   if (value === true || value === 1) return true;

@@ -17,10 +17,14 @@ function createFakeRepo(): FinanceRepository {
       hasMore: false,
     }),
     bulkUpdateInvoicesStatus: vi.fn().mockResolvedValue({ succeeded: 2, failed: 0 }),
+    bulkSoftDeleteInvoices: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
+    bulkRestoreInvoices: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
     listPaymentsByWorkspace: vi.fn().mockResolvedValue([]),
     findPaymentById: vi.fn().mockResolvedValue(null),
     findPaymentsByIds: vi.fn().mockResolvedValue([]),
     savePayment: vi.fn().mockResolvedValue(undefined),
+    bulkSoftDeletePayments: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
+    bulkRestorePayments: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
     listPaymentsPage: vi.fn().mockResolvedValue({
       payments: [],
       total: 0,
@@ -142,15 +146,22 @@ describe('finance use-cases (DI with fake repository)', () => {
     const deleted: any = { id: 'inv-3', studentName: 'Student 3', deletedAt: '2026-08-01T00:00:00.000Z' };
 
     const repo = createFakeRepo();
-    (repo.findInvoicesByIds as any).mockResolvedValue([active1, active2, deleted]);
+    (repo.findInvoicesByIds as any).mockImplementation((_tenant: string, _ids: string[], options: { includeDeleted?: boolean }) => {
+      return Promise.resolve(options?.includeDeleted ? [active1, active2, deleted] : [active1, active2]);
+    });
     const useCases = createFinanceUseCases(repo);
 
     await runWithTenant('demo', async () => {
       const activeOnly = await useCases.getInvoicesByIds(['inv-1', ' inv-2 ', 'inv-1', 'inv-3']);
-      expect(repo.findInvoicesByIds).toHaveBeenCalledWith('demo', ['inv-1', 'inv-2', 'inv-3']);
+      expect(repo.findInvoicesByIds).toHaveBeenCalledWith('demo', ['inv-1', 'inv-2', 'inv-3'], {
+        includeDeleted: false,
+      });
       expect(activeOnly).toEqual([active1, active2]);
 
       const includingDeleted = await useCases.getInvoicesByIds(['inv-1', 'inv-3'], true);
+      expect(repo.findInvoicesByIds).toHaveBeenCalledWith('demo', ['inv-1', 'inv-3'], {
+        includeDeleted: true,
+      });
       expect(includingDeleted).toEqual([active1, active2, deleted]);
 
       const empty = await useCases.getInvoicesByIds([]);
@@ -197,15 +208,22 @@ describe('finance use-cases (DI with fake repository)', () => {
     const deleted: any = { id: 'pay-3', amount: 50, deletedAt: '2026-08-01T00:00:00.000Z' };
 
     const repo = createFakeRepo();
-    (repo.findPaymentsByIds as any).mockResolvedValue([active1, active2, deleted]);
+    (repo.findPaymentsByIds as any).mockImplementation((_tenant: string, _ids: string[], options: { includeDeleted?: boolean }) => {
+      return Promise.resolve(options?.includeDeleted ? [active1, active2, deleted] : [active1, active2]);
+    });
     const useCases = createFinanceUseCases(repo);
 
     await runWithTenant('demo', async () => {
       const activeOnly = await useCases.getPaymentsByIds(['pay-1', ' pay-2 ', 'pay-1', 'pay-3']);
-      expect(repo.findPaymentsByIds).toHaveBeenCalledWith('demo', ['pay-1', 'pay-2', 'pay-3']);
+      expect(repo.findPaymentsByIds).toHaveBeenCalledWith('demo', ['pay-1', 'pay-2', 'pay-3'], {
+        includeDeleted: false,
+      });
       expect(activeOnly).toEqual([active1, active2]);
 
       const includingDeleted = await useCases.getPaymentsByIds(['pay-1', 'pay-3'], true);
+      expect(repo.findPaymentsByIds).toHaveBeenCalledWith('demo', ['pay-1', 'pay-3'], {
+        includeDeleted: true,
+      });
       expect(includingDeleted).toEqual([active1, active2, deleted]);
 
       const empty = await useCases.getPaymentsByIds([]);

@@ -44,10 +44,10 @@ export function createStudentsUseCases(repo: StudentsRepository = studentsReposi
       softDelete.softDeleteStudentById(id, deletedBy, deletionReason, repo),
     bulkSoftDeleteStudents: (ids: string[], deletedBy: string, deletionReason?: string) =>
       softDelete.bulkSoftDeleteStudents(ids, deletedBy, deletionReason, repo),
-    restoreStudentById: (id: string) =>
-      softDelete.restoreStudentById(id, repo),
-    bulkRestoreStudents: (ids: string[]) =>
-      softDelete.bulkRestoreStudents(ids, repo),
+    restoreStudentById: (id: string, userId?: string) =>
+      softDelete.restoreStudentById(id, userId, repo),
+    bulkRestoreStudents: (ids: string[], userId?: string) =>
+      softDelete.bulkRestoreStudents(ids, userId, repo),
     bulkUpdateStudentStatus: (ids: string[], status: string) =>
       operation.bulkUpdateStudentStatus(ids, status, repo),
     bulkEnrollStudents: (input: Parameters<typeof operation.bulkEnrollStudents>[0]) =>

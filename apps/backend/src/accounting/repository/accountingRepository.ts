@@ -23,27 +23,70 @@ import type {
  */
 export interface AccountingRepository {
   // Accounts
-  listAccountsByWorkspace(tenant: string): Promise<Account[]>;
+  listAccountsByWorkspace(
+    tenant: string,
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<Account[]>;
   findAccountById(tenant: string, id: string): Promise<Account | null>;
-  findAccountsByIds(tenant: string, ids: string[]): Promise<Account[]>;
+  findAccountsByIds(
+    tenant: string,
+    ids: string[],
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<Account[]>;
   saveAccount(tenant: string, record: Account): Promise<void>;
   bulkSaveAccounts(tenant: string, records: Account[]): Promise<void>;
   replaceAccountsForWorkspace(tenant: string, records: Account[]): Promise<void>;
   listAccountsPage(tenant: string, query: AccountingListQuery): Promise<AccountingAccountsListPageResult>;
+  bulkSoftDeleteAccounts?(
+    tenant: string,
+    ids: string[],
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkRestoreAccounts?(
+    tenant: string,
+    ids: string[],
+    userId?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
 
   // Journal entries
-  listEntriesByWorkspace(tenant: string): Promise<JournalEntry[]>;
+  listEntriesByWorkspace(
+    tenant: string,
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean; limit?: number; offset?: number },
+  ): Promise<JournalEntry[]>;
   findEntryById(tenant: string, id: string): Promise<JournalEntry | null>;
-  findEntriesByIds(tenant: string, ids: string[]): Promise<JournalEntry[]>;
+  findEntriesByIds(
+    tenant: string,
+    ids: string[],
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<JournalEntry[]>;
   saveEntry(tenant: string, record: JournalEntry): Promise<void>;
   bulkSaveEntries(tenant: string, records: JournalEntry[]): Promise<void>;
   replaceEntriesForWorkspace(tenant: string, records: JournalEntry[]): Promise<void>;
   listEntriesPage(tenant: string, query: AccountingListQuery): Promise<AccountingEntriesListPageResult>;
+  bulkSoftDeleteEntries?(
+    tenant: string,
+    ids: string[],
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkRestoreEntries?(
+    tenant: string,
+    ids: string[],
+    userId?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
 
   // Fiscal years
-  listFiscalYearsByWorkspace(tenant: string): Promise<FiscalYear[]>;
+  listFiscalYearsByWorkspace(
+    tenant: string,
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<FiscalYear[]>;
   findFiscalYearById(tenant: string, id: string): Promise<FiscalYear | null>;
-  findFiscalYearsByIds(tenant: string, ids: string[]): Promise<FiscalYear[]>;
+  findFiscalYearsByIds(
+    tenant: string,
+    ids: string[],
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<FiscalYear[]>;
   saveFiscalYear(tenant: string, record: FiscalYear): Promise<void>;
   bulkSaveFiscalYears(tenant: string, records: FiscalYear[]): Promise<void>;
   replaceFiscalYearsForWorkspace(tenant: string, records: FiscalYear[]): Promise<void>;

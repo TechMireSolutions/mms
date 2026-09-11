@@ -13,6 +13,7 @@ import * as schema from './schema.js';
 
 async function deleteTenantRowsByColumn(columnName: 'workspace_subdomain' | 'tenant_id', tenant: string): Promise<void> {
   await withTenant(tenant, async (tx) => {
+    await tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
     const result = await tx.execute(sql`
       SELECT table_name
       FROM information_schema.columns

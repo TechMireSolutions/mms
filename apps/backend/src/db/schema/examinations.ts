@@ -2,6 +2,7 @@ import { pgTable, text, timestamp, index, integer, jsonb, primaryKey, foreignKey
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { students } from "./students.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const exams = pgTable('exams', {
   id: text('id').notNull(),
@@ -14,9 +15,7 @@ export const exams = pgTable('exams', {
   duration: integer('duration').notNull().default(60),
   status: varchar('status', { length: 20 }).notNull().default('upcoming'),
   description: text('description').notNull().default(''),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -30,6 +29,9 @@ export const exams = pgTable('exams', {
   index('exams_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('exams_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const examClasses = pgTable('exam_classes', {
@@ -78,9 +80,7 @@ export const questions = pgTable('questions', {
   text: text('text').notNull(),
   answer: text('answer').notNull(),
   marks: integer('marks').notNull().default(1),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -91,6 +91,9 @@ export const questions = pgTable('questions', {
   index('questions_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('questions_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const questionCategories = pgTable('question_categories', {
@@ -164,9 +167,7 @@ export const tests = pgTable('tests', {
   examClass: varchar('exam_class', { length: 120 }),
   totalMarks: integer('total_marks'),
   instructions: text('instructions'),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -176,6 +177,9 @@ export const tests = pgTable('tests', {
   index('tests_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('tests_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const testQuestions = pgTable('test_questions', {
@@ -236,9 +240,7 @@ export const assessmentResults = pgTable('assessment_results', {
   studentId: varchar('student_id', { length: 64 }).notNull(),
   studentName: varchar('student_name', { length: 255 }).notNull().default(''),
   submittedAt: varchar('submitted_at', { length: 30 }).notNull(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -257,6 +259,9 @@ export const assessmentResults = pgTable('assessment_results', {
   index('assessment_results_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('assessment_results_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const assessmentAnswers = pgTable('assessment_answers', {

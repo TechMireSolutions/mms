@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, index, boolean, primaryKey, varchar, numeric , foreignKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const obligationTypes = pgTable('obligation_types', {
   id: text('id').notNull(),
@@ -86,9 +87,7 @@ export const obligationCollections = pgTable('obligation_collections', {
   obligationTypeId: text('obligation_type_id').notNull(),
   mujtahidRepresentativeId: text('mujtahid_representative_id').notNull(),
   receivedBy: varchar('received_by', { length: 255 }).notNull(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -102,6 +101,9 @@ export const obligationCollections = pgTable('obligation_collections', {
   index('obligation_collections_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('obligation_collections_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 /** Per-user Obligations Work column layout (was document-store `obligations_user_column_preferences`). */

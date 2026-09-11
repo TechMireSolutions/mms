@@ -10,6 +10,7 @@ export interface UseModuleWorkKeyboardShortcutsOptions {
   clearSelection?: () => void;
   canWrite?: boolean;
   showDeleted?: boolean;
+  viewingDeleted?: boolean;
   onCreate: () => void;
   /** When false, search/Escape/create shortcuts are inactive (e.g. other Work sub-tab). */
   enabled?: boolean;
@@ -27,13 +28,16 @@ export function useModuleWorkKeyboardShortcuts({
   clearSelection,
   canWrite = true,
   showDeleted = false,
+  viewingDeleted,
   onCreate,
   enabled = true,
 }: UseModuleWorkKeyboardShortcutsOptions): void {
+  const isViewingDeleted = viewingDeleted ?? showDeleted;
   useModuleCreateHotkey({
-    enabled: enabled && canWrite && !showDeleted,
+    enabled: enabled && canWrite && !isViewingDeleted,
     onCreate,
   });
+
 
   useEffect(() => {
     if (!enabled) return;

@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Distribution } from '@mms/shared';
 import { hasanatDistributions } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -30,11 +30,27 @@ export function distributionRowToRecord(row: DistRow): Distribution {
   return dist;
 }
 
-export async function listDistributionsByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<Distribution[]> {
+export interface ListDistributionsOptions {
+  limit?: number;
+  offset?: number;
+  deleted?: 'active' | 'deleted' | 'all';
+  includeDeleted?: boolean;
+}
+
+export async function listDistributionsByWorkspace(
+  tenant: string,
+  options?: ListDistributionsOptions,
+): Promise<Distribution[]> {
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 1000, 1), 10000);
   const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
+    const conditions = [eq(hasanatDistributions.workspaceSubdomain, subdomain)];
+    if (options?.deleted === 'deleted') {
+      conditions.push(isNotNull(hasanatDistributions.deletedAt));
+    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
+      conditions.push(isNull(hasanatDistributions.deletedAt));
+    }
     const rows = await tx
       .select({
         id: hasanatDistributions.id,
@@ -56,16 +72,14 @@ export async function listDistributionsByWorkspace(tenant: string, options?: { l
         deletedAt: hasanatDistributions.deletedAt,
         deletedBy: hasanatDistributions.deletedBy,
         deletionReason: hasanatDistributions.deletionReason,
+        restoredAt: hasanatDistributions.restoredAt,
+        restoredBy: hasanatDistributions.restoredBy,
+        deletedWithCascade: hasanatDistributions.deletedWithCascade,
         createdAt: hasanatDistributions.createdAt,
         updatedAt: hasanatDistributions.updatedAt,
       })
       .from(hasanatDistributions)
-      .where(
-        and(
-          eq(hasanatDistributions.workspaceSubdomain, subdomain),
-          isNull(hasanatDistributions.deletedAt),
-        ),
-      )
+      .where(and(...conditions))
       .limit(limit)
       .offset(offset);
     return rows.map(distributionRowToRecord);
@@ -98,6 +112,9 @@ export async function findDistributionById(tenant: string, id: string): Promise<
         deletedAt: hasanatDistributions.deletedAt,
         deletedBy: hasanatDistributions.deletedBy,
         deletionReason: hasanatDistributions.deletionReason,
+        restoredAt: hasanatDistributions.restoredAt,
+        restoredBy: hasanatDistributions.restoredBy,
+        deletedWithCascade: hasanatDistributions.deletedWithCascade,
         createdAt: hasanatDistributions.createdAt,
         updatedAt: hasanatDistributions.updatedAt,
       })
@@ -114,11 +131,31 @@ export async function findDistributionById(tenant: string, id: string): Promise<
   });
 }
 
-export async function findDistributionsByIds(tenant: string, ids: string[]): Promise<Distribution[]> {
+export async function findDistributionsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<Distribution[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(hasanatDistributions.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(hasanatDistributions.deletedAt)
+          : isNull(hasanatDistributions.deletedAt);
+
+    const conditions = [
+      eq(hasanatDistributions.workspaceSubdomain, subdomain),
+      inArray(hasanatDistributions.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: hasanatDistributions.id,
@@ -140,16 +177,14 @@ export async function findDistributionsByIds(tenant: string, ids: string[]): Pro
         deletedAt: hasanatDistributions.deletedAt,
         deletedBy: hasanatDistributions.deletedBy,
         deletionReason: hasanatDistributions.deletionReason,
+        restoredAt: hasanatDistributions.restoredAt,
+        restoredBy: hasanatDistributions.restoredBy,
+        deletedWithCascade: hasanatDistributions.deletedWithCascade,
         createdAt: hasanatDistributions.createdAt,
         updatedAt: hasanatDistributions.updatedAt,
       })
       .from(hasanatDistributions)
-      .where(
-        and(
-          eq(hasanatDistributions.workspaceSubdomain, subdomain),
-          inArray(hasanatDistributions.id, cleanIds),
-        ),
-      );
+      .where(and(...conditions));
     return rows.map(distributionRowToRecord);
   });
 }
@@ -308,5 +343,74 @@ export async function replaceDistributionsForWorkspace(tenant: string, records: 
         })),
       );
     }
+  });
+}
+
+export async function bulkSoftDeleteDistributions(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(hasanatDistributions)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(hasanatDistributions.workspaceSubdomain, subdomain),
+          inArray(hasanatDistributions.id, uniqueIds),
+          isNull(hasanatDistributions.deletedAt),
+        ),
+      )
+      .returning({ id: hasanatDistributions.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreDistributions(
+  tenant: string,
+  ids: string[],
+  _userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(hasanatDistributions)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(hasanatDistributions.workspaceSubdomain, subdomain),
+          inArray(hasanatDistributions.id, uniqueIds),
+          isNotNull(hasanatDistributions.deletedAt),
+        ),
+      )
+      .returning({ id: hasanatDistributions.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
   });
 }

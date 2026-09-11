@@ -1,7 +1,8 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Account } from '@mms/shared';
-import { accountingAccounts } from '../schema.js';
+import { accountingAccounts, accountingEntries, accountingJournalLines } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { ValidationError } from '../../lib/httpErrors.js';
 
 type AccountRow = typeof accountingAccounts.$inferSelect;
 
@@ -25,9 +26,25 @@ export function accountRowToRecord(row: AccountRow): Account {
   return account;
 }
 
-export async function listAccountsByWorkspace(tenant: string): Promise<Account[]> {
+export async function listAccountsByWorkspace(
+  tenant: string,
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<Account[]> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(accountingAccounts.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(accountingAccounts.deletedAt)
+          : isNull(accountingAccounts.deletedAt);
+
+    const conditions = [eq(accountingAccounts.workspaceSubdomain, subdomain)];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: accountingAccounts.id,
@@ -41,11 +58,14 @@ export async function listAccountsByWorkspace(tenant: string): Promise<Account[]
         deletedAt: accountingAccounts.deletedAt,
         deletedBy: accountingAccounts.deletedBy,
         deletionReason: accountingAccounts.deletionReason,
+        restoredAt: accountingAccounts.restoredAt,
+        restoredBy: accountingAccounts.restoredBy,
+        deletedWithCascade: accountingAccounts.deletedWithCascade,
         createdAt: accountingAccounts.createdAt,
         updatedAt: accountingAccounts.updatedAt,
       })
       .from(accountingAccounts)
-      .where(and(eq(accountingAccounts.workspaceSubdomain, subdomain), isNull(accountingAccounts.deletedAt)));
+      .where(and(...conditions));
     return rows.map(accountRowToRecord);
   });
 }
@@ -68,6 +88,9 @@ export async function findAccountById(tenant: string, id: string): Promise<Accou
         deletedAt: accountingAccounts.deletedAt,
         deletedBy: accountingAccounts.deletedBy,
         deletionReason: accountingAccounts.deletionReason,
+        restoredAt: accountingAccounts.restoredAt,
+        restoredBy: accountingAccounts.restoredBy,
+        deletedWithCascade: accountingAccounts.deletedWithCascade,
         createdAt: accountingAccounts.createdAt,
         updatedAt: accountingAccounts.updatedAt,
       })
@@ -79,11 +102,31 @@ export async function findAccountById(tenant: string, id: string): Promise<Accou
   });
 }
 
-export async function findAccountsByIds(tenant: string, ids: string[]): Promise<Account[]> {
+export async function findAccountsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<Account[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(accountingAccounts.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(accountingAccounts.deletedAt)
+          : isNull(accountingAccounts.deletedAt);
+
+    const conditions = [
+      eq(accountingAccounts.workspaceSubdomain, subdomain),
+      inArray(accountingAccounts.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: accountingAccounts.id,
@@ -97,16 +140,14 @@ export async function findAccountsByIds(tenant: string, ids: string[]): Promise<
         deletedAt: accountingAccounts.deletedAt,
         deletedBy: accountingAccounts.deletedBy,
         deletionReason: accountingAccounts.deletionReason,
+        restoredAt: accountingAccounts.restoredAt,
+        restoredBy: accountingAccounts.restoredBy,
+        deletedWithCascade: accountingAccounts.deletedWithCascade,
         createdAt: accountingAccounts.createdAt,
         updatedAt: accountingAccounts.updatedAt,
       })
       .from(accountingAccounts)
-      .where(
-        and(
-          eq(accountingAccounts.workspaceSubdomain, subdomain),
-          inArray(accountingAccounts.id, cleanIds),
-        ),
-      );
+      .where(and(...conditions));
     return rows.map(accountRowToRecord);
   });
 }
@@ -227,3 +268,152 @@ export async function replaceAccountsForWorkspace(tenant: string, records: Accou
     }
   });
 }
+
+export async function bulkSoftDeleteAccounts(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const activeLinesCount = await tx.$count(
+      accountingJournalLines,
+      and(
+        eq(accountingJournalLines.workspaceSubdomain, subdomain),
+        inArray(accountingJournalLines.accountId, uniqueIds),
+      ),
+    );
+    if (activeLinesCount > 0) {
+      throw new ValidationError(
+        `Cannot archive account with active journal lines (${activeLinesCount} active line(s) exist)`,
+      );
+    }
+
+    const updated = await tx
+      .update(accountingAccounts)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(accountingAccounts.workspaceSubdomain, subdomain),
+          inArray(accountingAccounts.id, uniqueIds),
+          isNull(accountingAccounts.deletedAt),
+        ),
+      )
+      .returning({ id: accountingAccounts.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreAccounts(
+  tenant: string,
+  ids: string[],
+  _userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(accountingAccounts)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(accountingAccounts.workspaceSubdomain, subdomain),
+          inArray(accountingAccounts.id, uniqueIds),
+          isNotNull(accountingAccounts.deletedAt),
+        ),
+      )
+      .returning({ id: accountingAccounts.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function countActiveJournalLinesForAccount(
+  tenant: string,
+  accountId: string,
+): Promise<number> {
+  const subdomain = tenant.trim().toLowerCase();
+  const cleanAccountId = accountId?.trim();
+  if (!cleanAccountId) return 0;
+  return withTenant(subdomain, async (tx) => {
+    const result = await tx
+      .select({ count: sql<number>`count(*)::int` })
+      .from(accountingJournalLines)
+      .innerJoin(
+        accountingEntries,
+        and(
+          eq(accountingJournalLines.workspaceSubdomain, accountingEntries.workspaceSubdomain),
+          eq(accountingJournalLines.entryId, accountingEntries.id),
+        ),
+      )
+      .where(
+        and(
+          eq(accountingJournalLines.workspaceSubdomain, subdomain),
+          eq(accountingJournalLines.accountId, cleanAccountId),
+          isNull(accountingEntries.deletedAt),
+        ),
+      );
+    return Number(result[0]?.count ?? 0);
+  });
+}
+
+export async function countActiveJournalLinesForAccounts(
+  tenant: string,
+  accountIds: string[],
+): Promise<Map<string, number>> {
+  const subdomain = tenant.trim().toLowerCase();
+  const cleanIds = dedupeTrimmedIds(accountIds);
+  const map = new Map<string, number>();
+  if (cleanIds.length === 0) return map;
+  return withTenant(subdomain, async (tx) => {
+    const rows = await tx
+      .select({
+        accountId: accountingJournalLines.accountId,
+        count: sql<number>`count(*)::int`,
+      })
+      .from(accountingJournalLines)
+      .innerJoin(
+        accountingEntries,
+        and(
+          eq(accountingJournalLines.workspaceSubdomain, accountingEntries.workspaceSubdomain),
+          eq(accountingJournalLines.entryId, accountingEntries.id),
+        ),
+      )
+      .where(
+        and(
+          eq(accountingJournalLines.workspaceSubdomain, subdomain),
+          inArray(accountingJournalLines.accountId, cleanIds),
+          isNull(accountingEntries.deletedAt),
+        ),
+      )
+      .groupBy(accountingJournalLines.accountId);
+    for (const r of rows) {
+      map.set(r.accountId, Number(r.count));
+    }
+    return map;
+  });
+}
+

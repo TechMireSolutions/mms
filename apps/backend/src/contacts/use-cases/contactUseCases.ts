@@ -59,10 +59,10 @@ export function createContactsUseCases(repo: ContactsRepository = contactsReposi
       writeUseCases.bulkSaveContacts(contacts, repo),
     bulkTagContacts: (ids: string[], options: Parameters<typeof writeUseCases.bulkTagContacts>[1]) =>
       writeUseCases.bulkTagContacts(ids, options, repo),
-    restoreContactById: (id: string) =>
-      softDeleteUseCases.restoreContactById(id, repo),
-    bulkRestoreContacts: (ids: string[]) =>
-      softDeleteUseCases.bulkRestoreContacts(ids, repo),
+    restoreContactById: (id: string, userId?: string) =>
+      softDeleteUseCases.restoreContactById(id, userId, repo),
+    bulkRestoreContacts: (ids: string[], userId?: string) =>
+      softDeleteUseCases.bulkRestoreContacts(ids, userId, repo),
     softDeleteContactById: (id: string, deletedBy: string, deletionReason?: string) =>
       softDeleteUseCases.softDeleteContactById(id, deletedBy, deletionReason, repo),
     bulkSoftDeleteContacts: (ids: string[], deletedBy: string, deletionReason?: string) =>

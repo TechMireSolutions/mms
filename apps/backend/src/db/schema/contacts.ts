@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, bigint, date, boolean, jsonb, primaryKey, foreignKey, varchar, unique } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const contacts = pgTable('contacts', {
   id: text('id').notNull(),
@@ -17,9 +18,7 @@ export const contacts = pgTable('contacts', {
   whatsappStatus: varchar('whatsapp_status', { length: 30 }).notNull().default('unknown'),
   lastCheckedAt: timestamp('last_checked_at', { withTimezone: true, mode: 'date' }),
   aiSummary: text('ai_summary'),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   createdBy: text('created_by'),
@@ -82,6 +81,9 @@ export const contacts = pgTable('contacts', {
     .where(
       sql`${table.deletedAt} is null and nullif(regexp_replace(${table.cnic}, '[^0-9]', '', 'g'), '') is not null`,
     ),
+  index('contacts_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const contactPhones = pgTable('contact_phones', {
@@ -340,10 +342,9 @@ export const tenantUsers = pgTable('tenant_users', {
   emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true, mode: 'date' }),
   pendingLoginEmail: text('pending_login_email'),
   mustChangePassword: boolean('must_change_password').notNull().default(false),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
   /** Non-auth profile fields from legacy JSON user rows. */
   profileJson: jsonb('profile_json').$type<Record<string, unknown>>(),
 }, (table) => [
@@ -352,6 +353,12 @@ export const tenantUsers = pgTable('tenant_users', {
     .on(table.workspaceSubdomain, table.loginEmail)
     .where(sql`${table.deletedAt} is null`),
   index('tenant_users_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('tenant_users_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+  index('tenant_users_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
   index('tenant_users_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
   index('tenant_users_workspace_contact_active_idx')
     .on(table.workspaceSubdomain, table.contactId)

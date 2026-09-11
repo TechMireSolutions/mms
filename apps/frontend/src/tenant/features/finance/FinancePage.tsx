@@ -228,6 +228,8 @@ export default function Finance(): React.JSX.Element {
               onRecord={(invoiceToRecord: Invoice) => { c.setViewInvoice(null); c.setRecordInvoice(invoiceToRecord); }}
               onPrintReceipt={(inv) => { c.setViewInvoice(null); setReceiptInvoices([inv]); }}
               canWrite={c.canWrite}
+              canDelete={c.canDelete}
+              onRestore={c.restoreInvoice.mutateAsync}
             />
           </React.Suspense>
         )}

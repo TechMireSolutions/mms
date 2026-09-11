@@ -33,4 +33,26 @@ export interface SessionsRepository {
     queries: SessionsWidgetQuery[],
   ): Promise<Record<string, SessionsWidgetAggregateResult>>;
   loadSessionsReportAggregates(tenant: string): Promise<SessionsReportAggregates>;
+  softDeleteSessionWithCascade(
+    tenant: string,
+    sessionId: string,
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<boolean>;
+  restoreSessionWithCascade(
+    tenant: string,
+    sessionId: string,
+    userId?: string,
+  ): Promise<boolean>;
+  bulkSoftDeleteSessionsWithCascade(
+    tenant: string,
+    sessionIds: string[],
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkRestoreSessionsWithCascade(
+    tenant: string,
+    sessionIds: string[],
+    userId?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
 }

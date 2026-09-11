@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type QuestionBankTest } from '@mms/shared';
 import {
   tests,
@@ -33,6 +33,9 @@ export async function listTestsByWorkspace(
         deletedAt: tests.deletedAt,
         deletedBy: tests.deletedBy,
         deletionReason: tests.deletionReason,
+        restoredAt: tests.restoredAt,
+        restoredBy: tests.restoredBy,
+        deletedWithCascade: tests.deletedWithCascade,
         createdAt: tests.createdAt,
         updatedAt: tests.updatedAt,
       })
@@ -155,6 +158,9 @@ export async function findTestById(tenant: string, id: string): Promise<Question
         deletedAt: tests.deletedAt,
         deletedBy: tests.deletedBy,
         deletionReason: tests.deletionReason,
+        restoredAt: tests.restoredAt,
+        restoredBy: tests.restoredBy,
+        deletedWithCascade: tests.deletedWithCascade,
         createdAt: tests.createdAt,
         updatedAt: tests.updatedAt,
       })
@@ -238,11 +244,31 @@ export async function findTestById(tenant: string, id: string): Promise<Question
   });
 }
 
-export async function findTestsByIds(tenant: string, ids: string[]): Promise<QuestionBankTest[]> {
+export async function findTestsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<QuestionBankTest[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(tests.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(tests.deletedAt)
+          : isNull(tests.deletedAt);
+
+    const conditions = [
+      eq(tests.workspaceSubdomain, subdomain),
+      inArray(tests.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: tests.id,
@@ -257,11 +283,14 @@ export async function findTestsByIds(tenant: string, ids: string[]): Promise<Que
         deletedAt: tests.deletedAt,
         deletedBy: tests.deletedBy,
         deletionReason: tests.deletionReason,
+        restoredAt: tests.restoredAt,
+        restoredBy: tests.restoredBy,
+        deletedWithCascade: tests.deletedWithCascade,
         createdAt: tests.createdAt,
         updatedAt: tests.updatedAt,
       })
       .from(tests)
-      .where(and(eq(tests.workspaceSubdomain, subdomain), inArray(tests.id, cleanIds)));
+      .where(and(...conditions));
     if (rows.length === 0) return [];
 
     const tIds = rows.map((r) => r.id);

@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { contactWriteSchema, type Contact, type User } from '@mms/shared';
+import { contactWriteSchema, isQueryFlagTrue, type Contact, type User } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { getLinkedContactId } from '../../../services/auth/userService.js';
@@ -40,7 +40,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true;
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
@@ -48,9 +48,8 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         const effectiveQuery = {
           page: 1,
           limit: 25,
-          includeDeleted: false,
           ...query,
-          ...(query?.includeDeleted !== undefined ? { includeDeleted } : {}),
+          includeDeleted,
         };
         const result = await contactUseCases.loadContactsPage(effectiveQuery);
         const contacts = Array.isArray(result) ? result : result.contacts;
@@ -64,7 +63,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
     // @ts-expect-error - TS union discrimination limit with ts-rest
-    get: async ({ params: { id }, request }) => {
+    get: async ({ params: { id }, query, request }) => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
@@ -72,9 +71,15 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
+      const includeDeleted = isQueryFlagTrue((query as { includeDeleted?: unknown })?.includeDeleted);
+      if (includeDeleted && !canDeleteCollection(user, 'contacts')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted contacts requires delete permissions' } };
+      }
       try {
-        const contact = await contactUseCases.getContactById(id);
-        if (!contact) return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
+        const contact = await contactUseCases.getContactById(id, includeDeleted);
+        if (!contact || (!includeDeleted && (contact as { deletedAt?: unknown }).deletedAt != null)) {
+          return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
+        }
         return { status: 200 as const, body: { contact: await sanitizeOneForUser(contact, user) } };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load contact' } };

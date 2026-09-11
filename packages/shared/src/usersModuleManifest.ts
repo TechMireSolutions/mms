@@ -132,6 +132,7 @@ export const USERS_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: false,
+    retentionDays: null,
   },
   permissions: {
     read: 'users.manage',

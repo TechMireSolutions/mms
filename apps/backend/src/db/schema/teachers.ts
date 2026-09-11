@@ -2,6 +2,7 @@ import { pgTable, text, timestamp, uniqueIndex, index, integer, jsonb, primaryKe
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { contacts, tenantUsers } from "./contacts.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 /**
  * Teachers entity rows — normalized 3NF relational columns.
@@ -17,9 +18,7 @@ export const teachers = pgTable('teachers', {
   qualification: varchar('qualification', { length: 255 }),
   joinDate: varchar('join_date', { length: 35 }),
   notes: text('notes'),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   createdBy: text('created_by'),
@@ -57,9 +56,12 @@ export const teachers = pgTable('teachers', {
   index('teachers_workspace_specialization_active_idx')
     .on(table.workspaceSubdomain, table.specialization)
     .where(sql`${table.deletedAt} is null`),
-  index('teachers_workspace_employee_id_active_idx')
+  uniqueIndex('teachers_workspace_employee_id_active_uidx')
     .on(table.workspaceSubdomain, table.employeeId)
-    .where(sql`${table.deletedAt} is null`),
+    .where(sql`${table.deletedAt} is null and ${table.employeeId} is not null`),
+  index('teachers_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
   index('teachers_workspace_contact_active_idx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),

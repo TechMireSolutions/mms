@@ -74,6 +74,7 @@ When the user asks to fix migration debt, work from the open priorities here and
 | Sessions typed Setup REST | `session_field_configs` / `session_module_preferences` / `session_user_column_prefs` + `registerModuleSetupConfigRoutes`; Drizzle `0022_session_setup_config`; data migrate `049`/`050`; Query-first `useSessionConfig` |
 | Users typed Setup REST | `user_field_configs` / `user_module_preferences` / `user_user_column_prefs` + REST; prefs include `workspaceRoles` + auth `requireEmailVerification`; Drizzle `0023_user_setup_config`; data migrate `051`/`052`; Query-first `useUsersConfig` |
 | Modern Database Audit Trail Parity | 5-dimension RFC 8785 canonical JSON, transactional outbox capture, sharded cryptographic hash chains with Merkle tree rollups, crypto-shredding / redact-and-append erasure, monthly date partitioning, `INSERT`-only DB privileges, `pgAudit` statement auditing (`mms-audit-trail`) |
+| Bulk restore userId audit fix | `registerSoftDeletableBulkRoutes` passes `userId` to `bulkRestoreFn` in `crudBulkRouteFactories.ts` and `crudBulkRouteHelpers.ts` |
 
 ## Open priorities
 
@@ -81,11 +82,22 @@ Residual Work SQL-page debt for **other** modules (not Teachers/Users/Sessions) 
 
 ### P1 — Soft-delete / schema remaining gaps
 
-**Problem:** Messaging log clear is intentional soft-archive (not a trash browser). Question Bank tests/papers and assessment_results remain upsert-only by design. JSONB entity search/sort may still page in memory after SQL soft-delete filter.
+**Problem:** Gaps identified across entity schemas, routes, and background workers (`docs/soft-delete.md` §11):
+1. **High**: Missing partial unique indexes on `email`/`phone`/`employee_id` for contacts, students, teachers — archived rows block re-registration of the same email.
+2. **Medium**: Missing Category B partial indexes (`WHERE deleted_at IS NULL`) and Category C partial indexes (`WHERE deleted_at IS NOT NULL`) on 10+ tables (teachers, sessions, enrollments, finance, accounting, obligations, hasanat, examinations).
+3. **Medium**: Missing `deleted_with_cascade` column on `enrollments` — cascade restore from session restore cannot be distinguished from standalone archive.
+4. **Low**: Inconsistent inline ternaries for `includeDeleted` in `sessions.ts` / `finance.ts` (replace with `isQueryFlagTrue`).
+5. **Low**: Unimplemented scheduled retention hard-purge worker (`purgeExpiredArchivedRecords`).
 
-**Fix:** Do not regress Messaging clear or QB papers/results variants without an explicit product change. Users soft-delete is in the squashed baseline (`tenant_users.deleted_at` in `0000_init` + forward migrations). Push SQL pagination when touching list hot paths (`mms-data-layer.mdc`).
+**Fix:**
+- DDL migration `086_add_soft_delete_partial_unique_indexes.ts` for partial unique indexes (`WHERE deleted_at IS NULL`).
+- DDL migration `085_add_soft_delete_partial_indexes.ts` for Category B & C partial indexes.
+- Add `deleted_with_cascade` column to enrollments; update session cascade soft-delete and restore logic (`docs/soft-delete.md` §2.2).
+- Standardize all query-flag parsing on `isQueryFlagTrue`.
+- Implement `purgeExpiredArchivedRecords` in `apps/backend/src/worker/` using chunked `LIMIT 500 FOR UPDATE SKIP LOCKED` (`docs/soft-delete.md` §13).
+- Do not regress Messaging clear or QB papers/results variants without an explicit product change. Users soft-delete is in the squashed baseline (`tenant_users.deleted_at` in `0000_init` + forward migrations).
 
-**Skills:** `mms-module-work`, `mms-module-page` (§7), `mms-frontend`, `mms-backend-api`
+**Skills:** `mms-soft-delete`, `mms-module-work`, `mms-module-page` (§7), `mms-frontend`, `mms-backend-api`, `mms-schema-migrate`, `mms-background-jobs`
 
 ### P2 — Residual permission / role special cases
 

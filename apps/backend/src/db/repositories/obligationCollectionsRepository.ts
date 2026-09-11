@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type ObligationCollection } from '@mms/shared';
 import {
   obligationCollections,
@@ -36,11 +36,27 @@ export function obligationCollectionRowToRecord(row: ObligationCollectionRow): O
   return collection;
 }
 
-export async function listObligationCollectionsByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<ObligationCollection[]> {
+export interface ListObligationCollectionsOptions {
+  limit?: number;
+  offset?: number;
+  deleted?: 'active' | 'deleted' | 'all';
+  includeDeleted?: boolean;
+}
+
+export async function listObligationCollectionsByWorkspace(
+  tenant: string,
+  options?: ListObligationCollectionsOptions,
+): Promise<ObligationCollection[]> {
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 2000, 1), 10000);
   const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
+    const conditions = [eq(obligationCollections.workspaceSubdomain, subdomain)];
+    if (options?.deleted === 'deleted') {
+      conditions.push(isNotNull(obligationCollections.deletedAt));
+    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
+      conditions.push(isNull(obligationCollections.deletedAt));
+    }
     const rows = await tx
       .select({
         id: obligationCollections.id,
@@ -58,11 +74,14 @@ export async function listObligationCollectionsByWorkspace(tenant: string, optio
         deletedAt: obligationCollections.deletedAt,
         deletedBy: obligationCollections.deletedBy,
         deletionReason: obligationCollections.deletionReason,
+        restoredAt: obligationCollections.restoredAt,
+        restoredBy: obligationCollections.restoredBy,
+        deletedWithCascade: obligationCollections.deletedWithCascade,
         createdAt: obligationCollections.createdAt,
         updatedAt: obligationCollections.updatedAt,
       })
       .from(obligationCollections)
-      .where(and(eq(obligationCollections.workspaceSubdomain, subdomain), isNull(obligationCollections.deletedAt)))
+      .where(and(...conditions))
       .limit(limit)
       .offset(offset);
     return rows.map(obligationCollectionRowToRecord);
@@ -91,6 +110,9 @@ export async function findObligationCollectionById(tenant: string, id: string): 
         deletedAt: obligationCollections.deletedAt,
         deletedBy: obligationCollections.deletedBy,
         deletionReason: obligationCollections.deletionReason,
+        restoredAt: obligationCollections.restoredAt,
+        restoredBy: obligationCollections.restoredBy,
+        deletedWithCascade: obligationCollections.deletedWithCascade,
         createdAt: obligationCollections.createdAt,
         updatedAt: obligationCollections.updatedAt,
       })
@@ -102,11 +124,31 @@ export async function findObligationCollectionById(tenant: string, id: string): 
   });
 }
 
-export async function findObligationCollectionsByIds(tenant: string, ids: string[]): Promise<ObligationCollection[]> {
+export async function findObligationCollectionsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<ObligationCollection[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(obligationCollections.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(obligationCollections.deletedAt)
+          : isNull(obligationCollections.deletedAt);
+
+    const conditions = [
+      eq(obligationCollections.workspaceSubdomain, subdomain),
+      inArray(obligationCollections.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: obligationCollections.id,
@@ -124,11 +166,14 @@ export async function findObligationCollectionsByIds(tenant: string, ids: string
         deletedAt: obligationCollections.deletedAt,
         deletedBy: obligationCollections.deletedBy,
         deletionReason: obligationCollections.deletionReason,
+        restoredAt: obligationCollections.restoredAt,
+        restoredBy: obligationCollections.restoredBy,
+        deletedWithCascade: obligationCollections.deletedWithCascade,
         createdAt: obligationCollections.createdAt,
         updatedAt: obligationCollections.updatedAt,
       })
       .from(obligationCollections)
-      .where(and(eq(obligationCollections.workspaceSubdomain, subdomain), inArray(obligationCollections.id, cleanIds)));
+      .where(and(...conditions));
     return rows.map(obligationCollectionRowToRecord);
   });
 }
@@ -276,6 +321,75 @@ export async function replaceObligationCollectionsForWorkspace(
         })),
       );
     }
+  });
+}
+
+export async function bulkSoftDeleteObligationCollections(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(obligationCollections)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(obligationCollections.workspaceSubdomain, subdomain),
+          inArray(obligationCollections.id, uniqueIds),
+          isNull(obligationCollections.deletedAt),
+        ),
+      )
+      .returning({ id: obligationCollections.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreObligationCollections(
+  tenant: string,
+  ids: string[],
+  _userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(obligationCollections)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(obligationCollections.workspaceSubdomain, subdomain),
+          inArray(obligationCollections.id, uniqueIds),
+          isNotNull(obligationCollections.deletedAt),
+        ),
+      )
+      .returning({ id: obligationCollections.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
   });
 }
 

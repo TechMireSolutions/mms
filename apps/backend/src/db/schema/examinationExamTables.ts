@@ -2,6 +2,7 @@ import { pgTable, text, timestamp, index, integer, primaryKey, foreignKey, varch
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { students } from "./students.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const exams = pgTable('exams', {
   id: text('id').notNull(),
@@ -14,9 +15,7 @@ export const exams = pgTable('exams', {
   duration: integer('duration').notNull().default(60),
   status: varchar('status', { length: 20 }).notNull().default('upcoming'),
   description: text('description').notNull().default(''),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -27,6 +26,9 @@ export const exams = pgTable('exams', {
   index('exams_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('exams_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const examClasses = pgTable('exam_classes', {

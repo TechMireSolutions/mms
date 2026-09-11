@@ -4,10 +4,14 @@ import {
   findInvoiceById,
   findInvoicesByIds,
   saveInvoice,
+  bulkSoftDeleteInvoices,
+  bulkRestoreInvoices,
   listPaymentsByWorkspace,
   findPaymentById,
   findPaymentsByIds,
   savePayment,
+  bulkSoftDeletePayments,
+  bulkRestorePayments,
 } from '../../db/repositories/financeRepository.js';
 import {
   listInvoicesPage,
@@ -29,12 +33,17 @@ export const financeRepository: FinanceRepository = {
   saveInvoice,
   listInvoicesPage,
   bulkUpdateInvoicesStatus: bulkUpdateInvoicesStatusSql,
+  bulkSoftDeleteInvoices,
+  bulkRestoreInvoices,
   listPaymentsByWorkspace,
   findPaymentById,
   findPaymentsByIds,
   savePayment,
   listPaymentsPage,
+  bulkSoftDeletePayments,
+  bulkRestorePayments,
   aggregateFinanceCommandMetrics,
   aggregateFinanceWidgetQueries,
   loadFinanceReportAggregates: loadFinanceReportAggregatesSql,
 };
+

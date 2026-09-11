@@ -382,7 +382,7 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreObligationCollectionById).toHaveBeenCalledWith('oc1');
+    expect(mockRestoreObligationCollectionById).toHaveBeenCalledWith('oc1', 'u-admin');
     await app.close();
   });
 
@@ -414,7 +414,7 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreHasanatDistributionById).toHaveBeenCalledWith('dist1');
+    expect(mockRestoreHasanatDistributionById).toHaveBeenCalledWith('dist1', 'u-admin');
     await app.close();
   });
 
@@ -446,7 +446,7 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreExamById).toHaveBeenCalledWith('ex1');
+    expect(mockRestoreExamById).toHaveBeenCalledWith('ex1', 'u-admin');
     await app.close();
   });
 
@@ -478,7 +478,46 @@ describe('soft deletion and restore integrations', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1', 'admin');
+    expect(mockRestoreUserById).toHaveBeenCalledWith('u-1', 'admin', 'u-admin', '127.0.0.1');
+    await app.close();
+  });
+
+  it('POST /api/users/:id/restore returns 409 conflict when code is 23505', async () => {
+    const error = new Error('duplicate key value violates unique constraint');
+    Object.assign(error, { code: '23505' });
+    mockRestoreUserById.mockRejectedValue(error);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/users/u-1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual(expect.objectContaining({ type: 'conflict' }));
+    await app.close();
+  });
+
+  it('POST /api/enrollments/:id/restore returns 409 conflict when code is 23505', async () => {
+    const error = new Error('duplicate key value violates unique constraint');
+    Object.assign(error, { code: '23505' });
+    mockRestoreEnrollmentById.mockRejectedValue(error);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/enrollments/enr-1/restore',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toEqual({
+      type: 'conflict',
+      message: 'A record with this unique identifier already exists',
+    });
     await app.close();
   });
 });

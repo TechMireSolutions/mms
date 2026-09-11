@@ -91,3 +91,18 @@ Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload
 - **Idempotency**: POSTs that enqueue jobs or send campaigns must accept an idempotency key (header `Idempotency-Key` or body `idempotencyKey`) when retries are likely. **Bind** the key to a cryptographic body digest (computed via `crypto.hash('sha256', normalizedPayload)` from `node:crypto`) and reject mismatched replays with `409` / `conflict` — do not accept the same key for a different payload.
 - **Optimistic concurrency**: Contested single-row PUTs should prefer `updated_at` / version checks → `409 conflict`, or document intentional last-write-wins. Write DTO fields → `mms-form-architecture.mdc`.
 - Production error `message` fields must stay non-sensitive; keep verbose debug messages for development only.
+
+---
+
+## 7. Soft-Delete & Restore REST Contracts
+Standardizes lifecycle deletion endpoints per `docs/soft-delete.md` · skill **`mms-soft-delete`**:
+- **Standard Endpoints**: `DELETE /:id` (soft-delete), `POST /:id/restore` (restore), `POST /bulk-delete` (bulk soft-delete), `POST /bulk-restore` (bulk restore), and `GET /?includeDeleted=true` (trash list).
+- **Single-Record Read Semantics (`GET /:id`)**: Standard reads append `isNull(table.deletedAt)` and return `404 Not Found` for archived rows. Detail inspection with `?includeDeleted=true` requires `canDeleteCollection(user, collection)` check and sets `SET LOCAL app.include_deleted = 'true'` (`docs/soft-delete.md` §4.7).
+- **Atomic Conditional Latch**: Soft-delete updates must execute an atomic conditional clause (`UPDATE table SET deleted_at = NOW(), ... WHERE id = :id AND deleted_at IS NULL RETURNING id`) to prevent TOCTOU concurrent delete races. `DELETE /:id` on an already-archived row returns `404 Not Found`.
+- **Restore Uniqueness & Error 23505 Trap**: Handlers restoring records with unique fields (`email`, `phone`, `employee_id`) must pre-check active conflicts and trap PostgreSQL error `23505` (`unique_violation`), mapping it cleanly to `409 Conflict` (`docs/soft-delete.md` §4.5).
+- **Parent Deletion vs Child Insertion Race (Orphan Guard)**: When executing an atomic cascade soft-delete, lock the parent row (`SELECT id FROM parent WHERE id = :id AND deleted_at IS NULL FOR UPDATE`) before cascading to prevent concurrent child insertions from creating orphaned active records (`docs/soft-delete.md` §4.6).
+- **Active Foreign Key Guarding**: Reject writes attempting to assign foreign keys pointing to soft-deleted entities (`deleted_at IS NOT NULL`), preventing ghost relationships (`docs/soft-delete.md` §1.8).
+- **Batched Single-Statement Bulk Updates**: `bulkDeleteFn` and `bulkRestoreFn` execute a single batched SQL `UPDATE ... WHERE id IN (...) AND deleted_at IS NULL` — per-row iteration loops ($N+1$) are strictly banned (`mms-performance.mdc` §1).
+- **Query Parsing**: All `includeDeleted` query flags must be parsed using `isQueryFlagTrue(query.includeDeleted)` from `@mms/shared` — ban inline boolean coercion ternaries.
+- **Write DTO Lifecycle Protection**: Create and Update write schemas strip or reject client soft-delete fields (`deletedAt`, `deletedBy`, `deletionReason`) to prevent lifecycle mutation via forms.
+

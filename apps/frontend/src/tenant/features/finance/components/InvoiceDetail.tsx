@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
+import { DetailDrawerArchivedBanner, DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDate, getOutstandingAmountForInvoice } from "@mms/shared";
@@ -20,6 +21,8 @@ export interface InvoiceDetailProps {
   onRecord: (invoice: Invoice) => void;
   onPrintReceipt?: (invoice: Invoice) => void;
   canWrite?: boolean;
+  canDelete?: boolean;
+  onRestore?: (id: string) => void | Promise<void>;
 }
 
 /**
@@ -37,9 +40,12 @@ export const InvoiceDetail = (function InvoiceDetail({
   onRecord,
   onPrintReceipt,
   canWrite = true,
+  canDelete = false,
+  onRestore,
 }: InvoiceDetailProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
+  const isArchived = Boolean(invoice.deletedAt);
 
   const statusConfig = (() => ({
     paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
@@ -62,7 +68,7 @@ export const InvoiceDetail = (function InvoiceDetail({
 
   const footerNode = (() => (
     <div className="space-y-2">
-      {canWrite && invoice.status !== "paid" && invoice.status !== "cancelled" && (
+      {!isArchived && canWrite && invoice.status !== "paid" && invoice.status !== "cancelled" && (
         <Button
           onClick={() => { onRecord(invoice); onClose(); }}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
@@ -79,7 +85,7 @@ export const InvoiceDetail = (function InvoiceDetail({
           <Printer className="w-4 h-4" aria-hidden="true" /> {t("finance.printReceipt")}
         </Button>
       )}
-      {canWrite && (
+      {!isArchived && canWrite && (
         <InvoiceCorrectionActions invoice={invoice} onCancelled={onClose} />
       )}
     </div>
@@ -92,6 +98,17 @@ export const InvoiceDetail = (function InvoiceDetail({
       title={t("finance.detail.title", { id: invoice.id })}
       icon={ReceiptText}
       className="max-w-2xl"
+      headerExtra={isArchived && <DetailDrawerArchivedBanner deletedAt={invoice.deletedAt} />}
+      headerActions={
+        <DetailDrawerRestoreOrEditAction
+          isArchived={isArchived}
+          canEdit={false}
+          canRestore={canDelete}
+          onRestore={() => onRestore?.(invoice.id)}
+          restoreLabel={t('common.restore')}
+          editLabel={t('common.edit')}
+        />
+      }
       footer={footerNode}
     >
       <div className="space-y-5">

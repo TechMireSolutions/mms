@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import type { User, UsersListQuery, WorkspaceUser } from '@mms/shared';
-import { userContract } from '@mms/shared';
+import { isQueryFlagTrue, userContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
@@ -16,6 +16,7 @@ import {
   markRequestDiagnosticStage,
   startRequestDiagnostics,
 } from '../../../lib/requestDiagnostics.js';
+import { isUniqueViolation } from '../../../lib/pgErrors.js';
 
 const s = initServer();
 
@@ -38,6 +39,9 @@ function handleUserRouterError(
   }
   if (error.statusCode === 400) {
     return { status: 400 as const, body: { type: error.type ?? 'validation_error', message: error.message } };
+  }
+  if (error.statusCode === 409 || isUniqueViolation(err)) {
+    return { status: 409 as const, body: { type: 'conflict', message: error.message || 'A record with this unique identifier already exists' } };
   }
   const diagnostic = getRequestDiagnosticContext(request);
   const failureStage = error.passwordResetStage ?? diagnostic?.stage;
@@ -82,12 +86,19 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
       if (!canReadCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
+      const includeDeleted = isQueryFlagTrue((query as Record<string, unknown>)?.includeDeleted);
+      if (includeDeleted && !canDeleteCollection(user, 'users')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
       const parsedQuery = parseRequest(usersListQuerySchema, query);
       if (!parsedQuery.ok) {
         return { status: 400 as const, body: { type: 'validation_error', message: parsedQuery.message } };
       }
       try {
-        const result = await usersUseCases.loadUsersPage(parsedQuery.data as UsersListQuery);
+        const result = await usersUseCases.loadUsersPage({
+          ...(parsedQuery.data as UsersListQuery),
+          includeDeleted,
+        });
         return { status: 200 as const, body: result };
       } catch (err) {
         return handleUserRouterError(err, request, 'Failed to list users');
@@ -159,7 +170,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await usersUseCases.bulkRestoreUsers(body.ids.map(String), user.role);
+        const result = await usersUseCases.bulkRestoreUsers(body.ids.map(String), user.role, String(user.id), request.ip);
         return { status: 200 as const, body: { success: true, ...result } };
       } catch (err: unknown) {
         return handleUserRouterError(err, request, 'Failed to bulk restore users');
@@ -184,7 +195,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const ok = await usersUseCases.restoreUserById(id, user.role);
+        const ok = await usersUseCases.restoreUserById(id, user.role, String(user.id), request.ip);
         if (!ok) return { status: 404 as const, body: { type: 'not_found', message: 'User not found' } };
         return { status: 200 as const, body: { success: true } };
       } catch (err: unknown) {

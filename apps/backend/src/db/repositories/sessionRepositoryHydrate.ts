@@ -343,6 +343,9 @@ export async function listSessionsByWorkspace(
       deletedAt: sessions.deletedAt,
       deletedBy: sessions.deletedBy,
       deletionReason: sessions.deletionReason,
+      restoredAt: sessions.restoredAt,
+      restoredBy: sessions.restoredBy,
+      deletedWithCascade: sessions.deletedWithCascade,
       createdAt: sessions.createdAt,
       updatedAt: sessions.updatedAt,
     };
@@ -364,6 +367,7 @@ export async function listSessionsByWorkspace(
 export async function findSessionById(tenant: string, id: string): Promise<Session | null> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    if (!tx || typeof (tx as any).select !== 'function') return null;
     const rows = await tx
       .select({
         id: sessions.id,
@@ -381,6 +385,9 @@ export async function findSessionById(tenant: string, id: string): Promise<Sessi
         deletedAt: sessions.deletedAt,
         deletedBy: sessions.deletedBy,
         deletionReason: sessions.deletionReason,
+        restoredAt: sessions.restoredAt,
+        restoredBy: sessions.restoredBy,
+        deletedWithCascade: sessions.deletedWithCascade,
         createdAt: sessions.createdAt,
         updatedAt: sessions.updatedAt,
       })
@@ -397,6 +404,7 @@ export async function findSessionsByIds(tenant: string, ids: string[]): Promise<
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    if (!tx || typeof (tx as any).select !== 'function') return [];
     const rows = await tx
       .select({
         id: sessions.id,
@@ -414,6 +422,9 @@ export async function findSessionsByIds(tenant: string, ids: string[]): Promise<
         deletedAt: sessions.deletedAt,
         deletedBy: sessions.deletedBy,
         deletionReason: sessions.deletionReason,
+        restoredAt: sessions.restoredAt,
+        restoredBy: sessions.restoredBy,
+        deletedWithCascade: sessions.deletedWithCascade,
         createdAt: sessions.createdAt,
         updatedAt: sessions.updatedAt,
       })
@@ -451,6 +462,9 @@ export async function findSessionsSummaryByIds(
         deletedAt: sessions.deletedAt,
         deletedBy: sessions.deletedBy,
         deletionReason: sessions.deletionReason,
+        restoredAt: sessions.restoredAt,
+        restoredBy: sessions.restoredBy,
+        deletedWithCascade: sessions.deletedWithCascade,
         createdAt: sessions.createdAt,
         updatedAt: sessions.updatedAt,
       })

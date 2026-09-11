@@ -14,7 +14,7 @@ export function useStudentsCrudActions({
   editStudent: Student | null;
   mutations: ReturnType<typeof useStudentMutations>;
 }) {
-  const { handleError, notifyBulkResult } = useStudentsCrudNotify();
+  const { handleError, notifyBulkResult, notifyArchivedWithUndo } = useStudentsCrudNotify();
   const bulkEnrollMutation = useStudentsBulkEnrollMutation();
   const {
     deleteStudent,
@@ -44,7 +44,7 @@ export function useStudentsCrudActions({
   const handleDelete = async (studentId: string, deletionReason?: string): Promise<void> => {
     try {
       await deleteStudent.mutateAsync({ params: { id: String(studentId) }, body: { deletionReason } });
-      notifyBulkResult(1, 0, "students.deleteSuccess", "students.bulkDeleteSuccess");
+      notifyArchivedWithUndo(() => handleRestore(studentId));
     } catch (error) {
       handleError(error, "students.delete", "students.deleteFailed");
     }

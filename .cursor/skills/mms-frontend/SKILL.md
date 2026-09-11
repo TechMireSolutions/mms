@@ -52,7 +52,7 @@ Always `apiJson` / `apiFetch` from `@/lib/apiClient` — cookie session (`creden
 - [ ] List pending: aria-busy / polite live region when touching Work loads
 - [ ] Copy via t(); StatusBadge (not text-green-500)
 - [ ] Internal API via apiClient; RBAC via useModulePermissions / can()
-- [ ] Soft-delete trash UI when REST restore ships — mms-module-work
+- [ ] Soft-delete trash UI (URL ?view=trash, ModuleTrashToggle, optimistic Undo toast, filter preservation) — mms-soft-delete · mms-module-work
 - [ ] §7 gold-standard — mms-module-page
 ```
 
@@ -98,13 +98,15 @@ App-wide only — not module Fields/Preferences. Workflow → **`mms-settings-i1
 | Hooks inventory | `mms-hooks.mdc` |
 | i18n / settings panels | `mms-settings-i18n.mdc` |
 | RBAC UI / apex-tenant | `mms-auth-security.mdc` |
+| Soft-Delete Work UX & Lifecycle | `mms-module-architecture.mdc` · **`mms-soft-delete`** |
 | Tests | `mms-testing-observability.mdc` |
 | Performance, Caching & Virtualization | `mms-performance.mdc` |
 | Debt register | `mms-migration-status.mdc` · **`mms-migration-fixes`** |
 
 ## Related skills
 
-`mms-query-factories`, `mms-module-page`, `mms-module-work`, `mms-form-architecture`, `mms-settings-i18n`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-data-sync`, `mms-messaging`, `mms-code-review`
+`mms-query-factories`, `mms-module-page`, `mms-module-work`, `mms-soft-delete`, `mms-form-architecture`, `mms-settings-i18n`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-data-sync`, `mms-messaging`, `mms-code-review`
+
 
 ## Done
 

@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type QuestionBankQuestion } from '@mms/shared';
 import {
   questions,
@@ -12,14 +12,27 @@ import { questionRowToRecord, syncQuestionChildren } from './questionBankQuestio
 
 export { questionRowToRecord } from './questionBankQuestionsSync.js';
 
+export interface ListQuestionsOptions {
+  limit?: number;
+  offset?: number;
+  deleted?: 'active' | 'deleted' | 'all';
+  includeDeleted?: boolean;
+}
+
 export async function listQuestionsByWorkspace(
   tenant: string,
-  options?: { limit?: number; offset?: number },
+  options?: ListQuestionsOptions,
 ): Promise<QuestionBankQuestion[]> {
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
+    const conditions = [eq(questions.workspaceSubdomain, subdomain)];
+    if (options?.deleted === 'deleted') {
+      conditions.push(isNotNull(questions.deletedAt));
+    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
+      conditions.push(isNull(questions.deletedAt));
+    }
     const rows = await tx
       .select({
         id: questions.id,
@@ -33,11 +46,14 @@ export async function listQuestionsByWorkspace(
         deletedAt: questions.deletedAt,
         deletedBy: questions.deletedBy,
         deletionReason: questions.deletionReason,
+        restoredAt: questions.restoredAt,
+        restoredBy: questions.restoredBy,
+        deletedWithCascade: questions.deletedWithCascade,
         createdAt: questions.createdAt,
         updatedAt: questions.updatedAt,
       })
       .from(questions)
-      .where(and(eq(questions.workspaceSubdomain, subdomain), isNull(questions.deletedAt)))
+      .where(and(...conditions))
       .limit(limit)
       .offset(offset);
     if (rows.length === 0) return [];
@@ -163,6 +179,9 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
         deletedAt: questions.deletedAt,
         deletedBy: questions.deletedBy,
         deletionReason: questions.deletionReason,
+        restoredAt: questions.restoredAt,
+        restoredBy: questions.restoredBy,
+        deletedWithCascade: questions.deletedWithCascade,
         createdAt: questions.createdAt,
         updatedAt: questions.updatedAt,
       })
@@ -245,11 +264,31 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
   });
 }
 
-export async function findQuestionsByIds(tenant: string, ids: string[]): Promise<QuestionBankQuestion[]> {
+export async function findQuestionsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<QuestionBankQuestion[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(questions.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(questions.deletedAt)
+          : isNull(questions.deletedAt);
+
+    const conditions = [
+      eq(questions.workspaceSubdomain, subdomain),
+      inArray(questions.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: questions.id,
@@ -263,11 +302,14 @@ export async function findQuestionsByIds(tenant: string, ids: string[]): Promise
         deletedAt: questions.deletedAt,
         deletedBy: questions.deletedBy,
         deletionReason: questions.deletionReason,
+        restoredAt: questions.restoredAt,
+        restoredBy: questions.restoredBy,
+        deletedWithCascade: questions.deletedWithCascade,
         createdAt: questions.createdAt,
         updatedAt: questions.updatedAt,
       })
       .from(questions)
-      .where(and(eq(questions.workspaceSubdomain, subdomain), inArray(questions.id, cleanIds)));
+      .where(and(...conditions));
     if (rows.length === 0) return [];
 
     const qIds = rows.map((r) => r.id);
@@ -563,5 +605,74 @@ export async function replaceQuestionsForWorkspace(tenant: string, records: Ques
     );
 
     await insertQuestionChildrenTx(tx, subdomain, uniqueRecords);
+  });
+}
+
+export async function bulkSoftDeleteQuestions(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(questions)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(questions.workspaceSubdomain, subdomain),
+          inArray(questions.id, uniqueIds),
+          isNull(questions.deletedAt),
+        ),
+      )
+      .returning({ id: questions.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreQuestions(
+  tenant: string,
+  ids: string[],
+  _userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(questions)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(questions.workspaceSubdomain, subdomain),
+          inArray(questions.id, uniqueIds),
+          isNotNull(questions.deletedAt),
+        ),
+      )
+      .returning({ id: questions.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
   });
 }

@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type QuestionBankResult } from '@mms/shared';
 import {
   questions,
@@ -179,11 +179,31 @@ export async function findResultById(tenant: string, id: string): Promise<Questi
   });
 }
 
-export async function findResultsByIds(tenant: string, ids: string[]): Promise<QuestionBankResult[]> {
+export async function findResultsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<QuestionBankResult[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(assessmentResults.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(assessmentResults.deletedAt)
+          : isNull(assessmentResults.deletedAt);
+
+    const conditions = [
+      eq(assessmentResults.workspaceSubdomain, subdomain),
+      inArray(assessmentResults.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: assessmentResults.id,
@@ -196,7 +216,7 @@ export async function findResultsByIds(tenant: string, ids: string[]): Promise<Q
         deletionReason: assessmentResults.deletionReason,
       })
       .from(assessmentResults)
-      .where(and(eq(assessmentResults.workspaceSubdomain, subdomain), inArray(assessmentResults.id, cleanIds)));
+      .where(and(...conditions));
     if (rows.length === 0) return [];
 
     const resIds = rows.map((r) => r.id);

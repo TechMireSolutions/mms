@@ -284,7 +284,11 @@ describe('obligations use-cases (DI with fake repository)', () => {
       deletedAt: '2026-09-02T00:00:00.000Z',
     };
 
-    (repo.findObligationCollectionsByIds as any).mockResolvedValue([activeCollection, deletedCollection]);
+    (repo.findObligationCollectionsByIds as any).mockImplementation(async (_tenant: string, ids: string[], opts?: { includeDeleted?: boolean }) => {
+      const all = [activeCollection, deletedCollection].filter((c) => ids.includes(c.id));
+      if (opts?.includeDeleted) return all.filter((c) => Boolean((c as any).deletedAt));
+      return all.filter((c) => !(c as any).deletedAt);
+    });
     const useCases = createObligationsUseCases(repo);
 
     const activeList = await runWithTenant('demo', () => useCases.loadObligationCollectionsByIds(['oc-1', 'oc-2']));

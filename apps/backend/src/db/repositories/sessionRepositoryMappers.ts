@@ -148,6 +148,8 @@ export function sessionRowToRecord(
   if (row.deletedAt) session.deletedAt = row.deletedAt.toISOString();
   if (row.deletedBy) session.deletedBy = row.deletedBy;
   if (row.deletionReason) session.deletionReason = row.deletionReason;
+  if (row.restoredAt) session.restoredAt = row.restoredAt.toISOString();
+  if (row.restoredBy) session.restoredBy = row.restoredBy;
 
   return session;
 }

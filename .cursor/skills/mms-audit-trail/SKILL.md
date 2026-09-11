@@ -61,6 +61,14 @@ withTenantTransaction(async (tx) => {
 ```
 
 - **Application-Level Outbox:** Default for MMS. Write audit records in the exact same database transaction as the primary entity mutation. If the transaction rolls back, no orphan audit rows exist; if it commits, the audit record is atomically persisted.
+- **Soft-Delete CDC & Monotonic Versioned Outbox Events (`docs/soft-delete.md` §8):**
+  - Because soft-delete executes as a SQL `UPDATE`, downstream search indexes (Meilisearch) and caching layers do not receive native SQL `DELETE` triggers.
+  - In the same transaction as the soft-delete or restore `UPDATE`, emit transactional outbox events:
+    * `entity.soft_deleted`: `{ entityType, entityId, tenantId, deletedAt, deletedBy, version: Date.now() }` → Downstream search processor deletes index document (`meiliSearch.index(entityType).deleteDocument(entityId)`) and evicts Redis keys.
+    * `entity.restored`: `{ entityType, entityId, tenantId, restoredAt, restoredBy, version: Date.now() }` → Re-indexes entity document and invalidates cache.
+  - **Idempotent Out-of-Order Delivery Guard:** External search workers must discard events where `incomingEvent.version <= existingIndexMeta.version` to prevent rapid delete-restore races from permanently de-syncing search indexes.
+  - **Forensic Content Snapshotting on Archival:** For entities with user-authored text (student progress notes, remarks, incident logs), the archival audit event MUST capture the full textual snapshot so that forensic records survive future retention hard purges.
+  - **Hard Purge Pre-Delete Audit:** The background retention purge worker must emit `entity.hard_purge` inside the transactional boundary before executing physical row deletion.
 - **W3C Trace Context Propagation:** Use a real trace ID for `correlation_id`, not a bespoke UUID. Propagate the W3C Trace Context `traceparent` value as (or alongside) the correlation ID. This lets audit rows be correlated directly with your observability/tracing stack instead of maintaining a parallel, audit-only identifier.
 - **CDC (Change Data Capture):** Reserved for high-throughput streaming pipelines where eventual consistency is acceptable (e.g. Debezium reading WAL into Kafka/broker).
 - **Event Sourcing Ban for Pure Audit:** Don't reach for Event Sourcing purely for audit purposes — it's an architectural commitment across the entire domain, not an audit feature; adopt it only if your domain already benefits from an event-sourced model for reasons beyond auditing.

@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
 import { dedupeTrimmedIds, type JournalEntry } from '@mms/shared';
 import {
   accountingEntries,
@@ -60,12 +60,25 @@ export function entryRowToRecord(
 
 export async function listEntriesByWorkspace(
   tenant: string,
-  options?: { limit?: number; offset?: number },
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean; limit?: number; offset?: number },
 ): Promise<JournalEntry[]> {
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(accountingEntries.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(accountingEntries.deletedAt)
+          : isNull(accountingEntries.deletedAt);
+
+    const conditions = [eq(accountingEntries.workspaceSubdomain, subdomain)];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: accountingEntries.id,
@@ -85,11 +98,14 @@ export async function listEntriesByWorkspace(
         deletedAt: accountingEntries.deletedAt,
         deletedBy: accountingEntries.deletedBy,
         deletionReason: accountingEntries.deletionReason,
+        restoredAt: accountingEntries.restoredAt,
+        restoredBy: accountingEntries.restoredBy,
+        deletedWithCascade: accountingEntries.deletedWithCascade,
         createdAt: accountingEntries.createdAt,
         updatedAt: accountingEntries.updatedAt,
       })
       .from(accountingEntries)
-      .where(and(eq(accountingEntries.workspaceSubdomain, subdomain), isNull(accountingEntries.deletedAt)))
+      .where(and(...conditions))
       .limit(limit)
       .offset(offset);
     if (rows.length === 0) return [];
@@ -194,6 +210,9 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
         deletedAt: accountingEntries.deletedAt,
         deletedBy: accountingEntries.deletedBy,
         deletionReason: accountingEntries.deletionReason,
+        restoredAt: accountingEntries.restoredAt,
+        restoredBy: accountingEntries.restoredBy,
+        deletedWithCascade: accountingEntries.deletedWithCascade,
         createdAt: accountingEntries.createdAt,
         updatedAt: accountingEntries.updatedAt,
       })
@@ -255,11 +274,31 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
   });
 }
 
-export async function findEntriesByIds(tenant: string, ids: string[]): Promise<JournalEntry[]> {
+export async function findEntriesByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<JournalEntry[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(accountingEntries.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(accountingEntries.deletedAt)
+          : isNull(accountingEntries.deletedAt);
+
+    const conditions = [
+      eq(accountingEntries.workspaceSubdomain, subdomain),
+      inArray(accountingEntries.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const rows = await tx
       .select({
         id: accountingEntries.id,
@@ -279,16 +318,14 @@ export async function findEntriesByIds(tenant: string, ids: string[]): Promise<J
         deletedAt: accountingEntries.deletedAt,
         deletedBy: accountingEntries.deletedBy,
         deletionReason: accountingEntries.deletionReason,
+        restoredAt: accountingEntries.restoredAt,
+        restoredBy: accountingEntries.restoredBy,
+        deletedWithCascade: accountingEntries.deletedWithCascade,
         createdAt: accountingEntries.createdAt,
         updatedAt: accountingEntries.updatedAt,
       })
       .from(accountingEntries)
-      .where(
-        and(
-          eq(accountingEntries.workspaceSubdomain, subdomain),
-          inArray(accountingEntries.id, cleanIds),
-        ),
-      );
+      .where(and(...conditions));
     if (rows.length === 0) return [];
 
     const foundIds = rows.map((r) => r.id);

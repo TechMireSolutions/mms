@@ -61,12 +61,30 @@ export interface ObligationsRepository {
   replaceObligationDistributionsForWorkspace(tenant: string, records: ObligationDistribution[]): Promise<void>;
 
   // Collections
-  listObligationCollectionsByWorkspace(tenant: string): Promise<ObligationCollection[]>;
+  listObligationCollectionsByWorkspace(
+    tenant: string,
+    options?: { limit?: number; offset?: number; deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<ObligationCollection[]>;
   findObligationCollectionById(tenant: string, id: string): Promise<ObligationCollection | null>;
-  findObligationCollectionsByIds(tenant: string, ids: string[]): Promise<ObligationCollection[]>;
+  findObligationCollectionsByIds(
+    tenant: string,
+    ids: string[],
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<ObligationCollection[]>;
   saveObligationCollection(tenant: string, record: ObligationCollection): Promise<void>;
   bulkSaveObligationCollections(tenant: string, records: ObligationCollection[]): Promise<void>;
   replaceObligationCollectionsForWorkspace(tenant: string, records: ObligationCollection[]): Promise<void>;
+  bulkSoftDeleteObligationCollections?(
+    tenant: string,
+    ids: string[],
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkRestoreObligationCollections?(
+    tenant: string,
+    ids: string[],
+    userId?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
 
   // Aggregates
   aggregateObligationsCommandMetrics(

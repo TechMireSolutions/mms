@@ -188,7 +188,11 @@ describe('messaging use-cases (DI with fake repository)', () => {
       deletedAt: '2026-09-02T00:00:00.000Z',
     };
 
-    (repo.findMessageLogsByIds as any).mockResolvedValue([activeLog, deletedLog]);
+    (repo.findMessageLogsByIds as any).mockImplementation(async (_tenant: string, ids: string[], opts?: { includeDeleted?: boolean }) => {
+      const all = [activeLog, deletedLog].filter((l) => ids.includes(l.id));
+      if (opts?.includeDeleted) return all.filter((l) => Boolean(l.deletedAt));
+      return all.filter((l) => !l.deletedAt);
+    });
     const useCases = createMessagingUseCases(repo);
 
     const activeList = await runWithTenant('demo', () => useCases.loadMessageLogsByIds(['msg-1', 'msg-2']));

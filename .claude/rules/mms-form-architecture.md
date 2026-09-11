@@ -76,9 +76,10 @@ Simple static forms with design-system primitives — not dynamic layout engines
 
 ## 4. Write vs read Zod schemas
 
-- Prefer a **write** schema for POST/PUT that omits/strips server-owned fields such as soft-delete metadata.
+- Prefer a **write** schema for POST/PUT that omits/strips server-owned fields such as soft-delete metadata (`deletedAt`, `deletedBy`, `deletionReason`). Soft delete and restore operations are strictly performed via dedicated `DELETE /:id`, `POST /:id/restore`, `POST /bulk-delete`, and `POST /bulk-restore` endpoints (workflow skill **`mms-soft-delete`**) — forms never accept or mutate lifecycle delete metadata directly.
 - Prefer Zod `.strict()` on write DTOs (or explicit `.strip()` with documented exceptions) — unknown keys must not persist. Write-vs-read schema split and soft-delete strip on create/update bodies live here; HTTP/parseRequest wiring → `mms-api-interface.md`.
-- Use `z.preprocess` / `stripContactClientSoftDeleteFields` so `.passthrough()` cannot reintroduce stripped keys.
+- Use `z.preprocess` / `stripContactClientSoftDeleteFields` so `.passthrough()` cannot reintroduce stripped keys. Unit tests in `@mms/shared` must assert that write schemas drop `deletionReason`, `deletedAt`, and `deletedBy`.
+- **Active Foreign Key Guarding**: Write forms and validators assigning foreign keys (`contactId`, `sessionId`, `teacherId`, `accountId`) must verify that referenced entities are active (`deleted_at IS NULL`), rejecting assignments to soft-deleted entities to prevent ghost/dangling references (`mms-data-layer.md` §6).
 - Map Zod issues via shared `mapZodFormErrors` — prefer a shared Zod `errorMap` / issue-code → `t()` mapping in `@mms/shared` (also used by `parseRequest` messages); ban per-form string switches on `ZodIssue.code`.
 - Money/decimals as **strings** through input + validation — no IEEE 754 float math. Currency type: `z.string().regex(/^\d+(\.\d{1,2})?$/)`. Phones: `z.string().regex(/^\+[1-9]\d{1,14}$/)` (E.164). Date: `YYYY-MM-DD`. Datetime: `z.string().datetime({ offset: true })`.
 - **Loaded edit records**: Avoid flash of empty defaults — hydrate from Query (`placeholderData` / settled data) or a Suspense boundary; never optimistic-empty overwrite of a server row.

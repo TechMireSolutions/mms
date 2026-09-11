@@ -32,3 +32,12 @@ export const bulkStringIdsBodySchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   return deepSanitizeStrings(raw);
 }, bulkStringIdsBodyBaseSchema);
+
+/** Inferred type for softDeleteBodySchema. */
+export type SoftDeleteBody = z.infer<typeof softDeleteBodySchema>;
+
+/** Inferred type for bulkIdsBodySchema. */
+export type BulkIdsBody = z.infer<typeof bulkIdsBodySchema>;
+
+/** Inferred type for bulkStringIdsBodySchema. */
+export type BulkStringIdsBody = z.infer<typeof bulkStringIdsBodySchema>;

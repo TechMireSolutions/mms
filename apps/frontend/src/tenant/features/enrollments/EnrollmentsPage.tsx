@@ -210,6 +210,8 @@ export default function EnrollmentsPage() {
       <EnrollmentsModalLayer
         viewing={viewing}
         canWrite={canWriteEnrollments}
+        canDelete={canDelete}
+        onRestore={handleRestore}
         showDeleted={showDeleted}
         showWizard={showWizard}
         pendingDeleteId={pendingDeleteId}

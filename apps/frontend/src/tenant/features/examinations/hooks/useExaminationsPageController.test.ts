@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { useExaminationsPageController } from "./useExaminationsPageController";
 
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
@@ -101,7 +102,7 @@ describe("useExaminationsPageController Hook", () => {
 
     const root = createRoot(container!);
     await act(async () => {
-      root.render(React.createElement(TestComponent));
+      root.render(React.createElement(MemoryRouter, null, React.createElement(TestComponent)));
     });
 
     expect(hookResult.effectiveTab).toBe("work");

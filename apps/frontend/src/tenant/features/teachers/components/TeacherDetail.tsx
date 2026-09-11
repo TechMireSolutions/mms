@@ -158,4 +158,6 @@ export const TeacherDetail = (function TeacherDetail({
   );
 });
 
+export const TeacherDrawer = TeacherDetail;
 export default TeacherDetail;
+

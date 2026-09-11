@@ -1,7 +1,8 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { type Session } from '@mms/shared';
 import {
   sessions,
+  enrollments,
   sessionClasses,
   sessionTimetable,
   sessionDiscounts,
@@ -41,6 +42,8 @@ async function persistSessionTx(
       deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
       deletedBy: record.deletedBy ?? null,
       deletionReason: record.deletionReason ?? null,
+      restoredAt: record.restoredAt ? new Date(record.restoredAt) : null,
+      restoredBy: record.restoredBy ?? null,
       createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
       updatedAt: new Date(),
     })
@@ -60,6 +63,8 @@ async function persistSessionTx(
         deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
         deletedBy: record.deletedBy ?? null,
         deletionReason: record.deletionReason ?? null,
+        restoredAt: record.restoredAt ? new Date(record.restoredAt) : null,
+        restoredBy: record.restoredBy ?? null,
         updatedAt: new Date(),
       },
     });
@@ -445,5 +450,245 @@ export async function replaceSessionsForWorkspace(tenant: string, records: Sessi
     );
 
     await insertSessionChildrenTx(tx, subdomain, records);
+  });
+}
+
+export async function softDeleteSessionWithCascade(
+  tenant: string,
+  sessionId: string,
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<boolean> {
+  const subdomain = tenant.trim().toLowerCase();
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    // Lock parent session row to prevent race conditions during cascade
+    await tx
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.workspaceSubdomain, subdomain),
+          eq(sessions.id, sessionId),
+          isNull(sessions.deletedAt),
+        ),
+      )
+      .for('update');
+
+    const sessionRes = await tx
+      .update(sessions)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(sessions.workspaceSubdomain, subdomain),
+          eq(sessions.id, sessionId),
+          isNull(sessions.deletedAt),
+        ),
+      )
+      .returning({ id: sessions.id });
+
+    if (sessionRes.length === 0) {
+      return false;
+    }
+
+    await tx
+      .update(enrollments)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletedWithCascade: true,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(enrollments.workspaceSubdomain, subdomain),
+          eq(enrollments.sessionId, sessionId),
+          isNull(enrollments.deletedAt),
+        ),
+      );
+
+    return true;
+  });
+}
+
+export async function restoreSessionWithCascade(
+  tenant: string,
+  sessionId: string,
+  userId?: string,
+): Promise<boolean> {
+  const subdomain = tenant.trim().toLowerCase();
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const sessionRes = await tx
+      .update(sessions)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        restoredAt: now,
+        restoredBy: userId ?? null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(sessions.workspaceSubdomain, subdomain),
+          eq(sessions.id, sessionId),
+          isNotNull(sessions.deletedAt),
+        ),
+      )
+      .returning({ id: sessions.id });
+
+    if (sessionRes.length === 0) {
+      return false;
+    }
+
+    await tx
+      .update(enrollments)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletedWithCascade: false,
+        restoredAt: now,
+        restoredBy: userId ?? null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(enrollments.workspaceSubdomain, subdomain),
+          eq(enrollments.sessionId, sessionId),
+          eq(enrollments.deletedWithCascade, true),
+        ),
+      );
+
+    return true;
+  });
+}
+
+export async function bulkSoftDeleteSessionsWithCascade(
+  tenant: string,
+  sessionIds: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  if (sessionIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+
+  return withTenant(subdomain, async (tx) => {
+    // Lock parent session rows to prevent race conditions during cascade
+    await tx
+      .select({ id: sessions.id })
+      .from(sessions)
+      .where(
+        and(
+          eq(sessions.workspaceSubdomain, subdomain),
+          inArray(sessions.id, sessionIds),
+          isNull(sessions.deletedAt),
+        ),
+      )
+      .for('update');
+
+    const updated = await tx
+      .update(sessions)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(sessions.workspaceSubdomain, subdomain),
+          inArray(sessions.id, sessionIds),
+          isNull(sessions.deletedAt),
+        ),
+      )
+      .returning({ id: sessions.id });
+
+    const succeededIds = updated.map((r) => r.id);
+    if (succeededIds.length > 0) {
+      await tx
+        .update(enrollments)
+        .set({
+          deletedAt: now,
+          deletedBy: deletedBy || null,
+          deletedWithCascade: true,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(enrollments.workspaceSubdomain, subdomain),
+            inArray(enrollments.sessionId, succeededIds),
+            isNull(enrollments.deletedAt),
+          ),
+        );
+    }
+
+    return {
+      succeeded: succeededIds.length,
+      failed: sessionIds.length - succeededIds.length,
+    };
+  });
+}
+
+export async function bulkRestoreSessionsWithCascade(
+  tenant: string,
+  sessionIds: string[],
+  userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  if (sessionIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(sessions)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        restoredAt: now,
+        restoredBy: userId ?? null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(sessions.workspaceSubdomain, subdomain),
+          inArray(sessions.id, sessionIds),
+          isNotNull(sessions.deletedAt),
+        ),
+      )
+      .returning({ id: sessions.id });
+
+    const succeededIds = updated.map((r) => r.id);
+    if (succeededIds.length > 0) {
+      await tx
+        .update(enrollments)
+        .set({
+          deletedAt: null,
+          deletedBy: null,
+          deletedWithCascade: false,
+          restoredAt: now,
+          restoredBy: userId ?? null,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(enrollments.workspaceSubdomain, subdomain),
+            inArray(enrollments.sessionId, succeededIds),
+            eq(enrollments.deletedWithCascade, true),
+          ),
+        );
+    }
+
+    return {
+      succeeded: succeededIds.length,
+      failed: sessionIds.length - succeededIds.length,
+    };
   });
 }

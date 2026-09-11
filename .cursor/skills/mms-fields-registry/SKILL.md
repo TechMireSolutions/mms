@@ -24,6 +24,7 @@ description: Adds or changes field/tab registries, module Setup Fields UI, and f
 | Cascading rules | Hide/disable in forms, drawers, reports, exports, filters, search, mobile |
 | Tab mapping | Ensure one tab per field; support reordering without data loss |
 | Required fields | Enforce in validation and scroll to/focus tab on error |
+| Unique fields | Back with partial unique index (`WHERE deleted_at IS NULL`) — never standard `UNIQUE` or `UNIQUE NULLS NOT DISTINCT` (`mms-soft-delete`) |
 | Deletions | Check dependencies using `getContactFieldRemovalIssues()` or equivalent before deleting |
 ## Add a field type
 

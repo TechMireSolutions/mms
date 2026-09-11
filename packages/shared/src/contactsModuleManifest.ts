@@ -104,6 +104,7 @@ export const CONTACTS_MODULE_MANIFEST = {
     exportsIncludeDeleted: false,
     duplicatesIncludeDeleted: false,
     captureDeletionReason: true,
+    retentionDays: null,
   },
   /** Rows above this count use chunked export with progress. */
   exportInlineMaxRows: 500,

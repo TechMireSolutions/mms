@@ -2,6 +2,8 @@ import { describe, it, expect } from 'vitest';
 import {
   STUDENT_STATUS_VALUES,
   resolveStudentStatuses,
+  isStudentDeleted,
+  filterActiveStudents,
   type Student,
 } from '../studentTypes.js';
 
@@ -50,4 +52,22 @@ describe('studentTypes', () => {
       expect(student.gender).toBe('male');
     });
   });
+
+  describe('soft-delete predicate helpers', () => {
+    it('isStudentDeleted identifies soft-deleted students', () => {
+      expect(isStudentDeleted({ deletedAt: '2026-01-01T00:00:00.000Z' })).toBe(true);
+      expect(isStudentDeleted({ deletedAt: null })).toBe(false);
+      expect(isStudentDeleted({})).toBe(false);
+    });
+
+    it('filterActiveStudents filters out archived students', () => {
+      const records = [
+        { id: '1', contactId: 'c1' },
+        { id: '2', contactId: 'c2', deletedAt: '2026-01-01T00:00:00.000Z' },
+        { id: '3', contactId: 'c3', deletedAt: null },
+      ];
+      expect(filterActiveStudents(records).map((s) => s.id)).toEqual(['1', '3']);
+    });
+  });
 });
+

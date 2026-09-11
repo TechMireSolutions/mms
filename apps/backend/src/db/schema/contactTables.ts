@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, bigint, date, boolean, foreignKey, varchar, primaryKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const contacts = pgTable('contacts', {
   id: text('id').notNull(),
@@ -17,9 +18,7 @@ export const contacts = pgTable('contacts', {
   whatsappStatus: varchar('whatsapp_status', { length: 30 }).notNull().default('unknown'),
   lastCheckedAt: timestamp('last_checked_at', { withTimezone: true, mode: 'date' }),
   aiSummary: text('ai_summary'),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   createdBy: text('created_by'),
@@ -43,6 +42,9 @@ export const contacts = pgTable('contacts', {
     .where(
       sql`${table.deletedAt} is null and nullif(regexp_replace(${table.cnic}, '[^0-9]', '', 'g'), '') is not null`,
     ),
+  index('contacts_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const contactPhones = pgTable('contact_phones', {

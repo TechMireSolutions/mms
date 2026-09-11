@@ -74,10 +74,23 @@ export interface Teacher {
   deletedAt?: string;
   deletedBy?: string;
   deletionReason?: string;
+  restoredAt?: string;
+  restoredBy?: string;
+  deletedWithCascade?: boolean;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
   /** Custom Setup fields and other extension keys. */
   [key: string]: unknown;
+}
+
+/** Whether a teacher record is soft-deleted. */
+export function isTeacherDeleted(teacher: { deletedAt?: string | null }): boolean {
+  return Boolean(teacher.deletedAt);
+}
+
+/** Active directory rows — excludes soft-deleted records from Work by default. */
+export function filterActiveTeachers<T extends { deletedAt?: string | null }>(teachers: T[]): T[] {
+  return teachers.filter((teacher) => !isTeacherDeleted(teacher));
 }

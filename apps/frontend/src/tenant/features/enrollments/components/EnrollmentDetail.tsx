@@ -12,6 +12,7 @@ import { ENROLLMENT_PAYMENT_STATUSES, formatDate, formatDateTime } from "@mms/sh
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EnrollmentArchivedBanner } from "@/tenant/features/enrollments/components/EnrollmentArchivedBanner";
+import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { Card } from "@/components/ui/card";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
@@ -22,6 +23,8 @@ export interface EnrollmentDetailProps {
   onStatusChange: (id: string, newStatus: Enrollment["status"]) => void;
   onPaymentStatusChange: (id: string, newStatus: Enrollment["paymentStatus"]) => void;
   canWrite: boolean;
+  canDelete?: boolean;
+  onRestore?: (id: string) => void;
 }
 
 export const EnrollmentDetail = (function EnrollmentDetail({
@@ -30,6 +33,8 @@ export const EnrollmentDetail = (function EnrollmentDetail({
   onStatusChange,
   onPaymentStatusChange,
   canWrite,
+  canDelete,
+  onRestore,
 }: EnrollmentDetailProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const { data: resolvedStudents = [] } = useStudentsByIds(enrollment ? [enrollment.studentId] : []);
@@ -77,6 +82,19 @@ export const EnrollmentDetail = (function EnrollmentDetail({
     (paymentStatus) => paymentStatus !== enrollment.paymentStatus,
   );
 
+  const isArchived = Boolean(enrollment.deletedAt);
+
+  const headerActions = onRestore ? (
+    <DetailDrawerRestoreOrEditAction
+      isArchived={isArchived}
+      canRestore={Boolean(canDelete)}
+      canEdit={false}
+      restoreLabel={t("enrollments.restore")}
+      editLabel=""
+      onRestore={onRestore ? () => onRestore(enrollment.id) : undefined}
+    />
+  ) : undefined;
+
   return (
     <DetailDrawerShell
       open={Boolean(enrollment)}
@@ -86,6 +104,7 @@ export const EnrollmentDetail = (function EnrollmentDetail({
       icon={User}
       ariaLabel={t("enrollments.detail.ariaLabel")}
       className="max-w-2xl"
+      headerActions={headerActions}
       headerExtra={headerExtraNode}
     >
       <div className="space-y-4">
@@ -163,7 +182,7 @@ export const EnrollmentDetail = (function EnrollmentDetail({
           </div>
         )}
 
-        {canWrite && (
+        {canWrite && !isArchived && (
           <div className="space-y-3 pt-1">
             {nextStatuses.length > 0 && (
               <div className="flex items-center gap-2 flex-wrap">

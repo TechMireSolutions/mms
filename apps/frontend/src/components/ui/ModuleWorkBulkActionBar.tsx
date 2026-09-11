@@ -12,7 +12,8 @@ import {
 
 export interface ModuleWorkBulkActionBarProps {
   selectedCount: number;
-  viewingDeleted: boolean;
+  viewingDeleted?: boolean;
+  showDeleted?: boolean;
   countLabel: string;
   leading: ReactNode;
   deselectLabel: string;
@@ -50,6 +51,7 @@ export interface ModuleWorkBulkActionBarProps {
 export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
   selectedCount,
   viewingDeleted,
+  showDeleted,
   countLabel,
   leading,
   deselectLabel,
@@ -62,6 +64,7 @@ export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
   extraActions,
   deleteAction,
 }: ModuleWorkBulkActionBarProps): JSX.Element {
+  const isViewingDeleted = viewingDeleted ?? showDeleted ?? false;
   const trailingNode = (() => (
       <BulkSelectionClearAction label={deselectLabel} onClick={onClearSelection} />
     ))();
@@ -75,11 +78,12 @@ export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
       leading={leading}
       trailing={trailingNode}
     >
-      {viewingDeleted ? (
+      {isViewingDeleted ? (
         canDelete && (
           <BulkSelectionRestoreAction label={restoreLabel} onClick={onRequestBulkRestore} />
         )
       ) : (
+
         <>
           {messaging && (
             <BulkSelectionMessagingActions

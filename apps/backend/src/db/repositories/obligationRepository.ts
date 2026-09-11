@@ -50,5 +50,7 @@ export {
   saveObligationCollection,
   bulkSaveObligationCollections,
   replaceObligationCollectionsForWorkspace,
+  bulkSoftDeleteObligationCollections,
+  bulkRestoreObligationCollections,
   deleteObligationsByWorkspace,
 } from './obligationCollectionsRepository.js';

@@ -18,7 +18,7 @@ Do **not** use for app shell/routing → `mms-frontend`. Do **not** use for db.t
 5. Thin hooks wrap factories: `enabled: isAuthenticated` (tenant) or `enabled: !!session` (platform), pass Query `signal` into `apiJson` / `apiFetch`.
 6. Mutations: narrow invalidate list + count (+ `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY` for contacts). Pair every mutation with targeted cache invalidation and WebSocket real-time updates.
 7. Await `mutateAsync`; toast success/error at the **call site** via `notify.*` + `t()` — no global `MutationCache` toast bus.
-8. **Optimistic updates**: only for idempotent, easily-rollbackable UX. **Ban** for money, soft-delete/restore, bulk, backup/restore, messaging send. Reconcile via invalidate + server response.
+8. **Optimistic updates**: only for idempotent, easily-rollbackable UX. **Ban** for money, bulk, backup/restore, messaging send. Single-record soft-delete uses optimistic cache hide with 5–10s Undo toast (`docs/soft-delete.md` §7.8, skill `mms-soft-delete`). Reconcile via invalidate + server response.
 9. Export cross-feature facade from `@/tenant/hooks/collections/{module}` or `@/platform/hooks/collections/{module}` — ban feature→feature deep imports.
 10. Align client defaults with `queryClient.ts` (`staleTime` 30s, `gcTime` 5m, etc.) — `mms-data-layer.mdc`, `mms-performance.mdc`.
 11. Paginated lists: `placeholderData: (previousData) => previousData` (Query v5) for smooth pagination without layout flickers — not the v4 boolean `keepPreviousData`.
@@ -31,7 +31,7 @@ Do **not** use for app shell/routing → `mms-frontend`. Do **not** use for db.t
 - [ ] Inflight request deduplication via TanStack Query tuple keys
 - [ ] AbortSignal wired through apiClient
 - [ ] No saveCollection dual-write on mutation success
-- [ ] Optimistic policy respected
+- [ ] Optimistic policy respected (optimistic single soft-delete with 5–10s Undo toast allowed; money/bulk/backup banned)
 - [ ] Paginated lists use placeholderData: (prev) => prev when needed
 - [ ] Keyset/cursor Query when API supports it (hot/large lists)
 - [ ] Facade exported for cross-feature use when needed (tenant/platform)

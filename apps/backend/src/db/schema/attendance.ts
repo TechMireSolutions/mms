@@ -17,7 +17,10 @@ export const attendance = pgTable('attendance', {
   notes: text('notes').notNull().default(''),
   deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
   deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  deletionReason: varchar('deletion_reason', { length: 500 }),
+  /** Generated column: TTL sentinel = deleted_at + 10 years (retentionDays = null/indefinite per §13.4; future-proofs purge worker). */
+  purgeAfter: timestamp('purge_after', { withTimezone: true, mode: 'date' })
+    .generatedAlwaysAs(sql`deleted_at + INTERVAL '3650 days'`),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -43,6 +46,13 @@ export const attendance = pgTable('attendance', {
   index('attendance_workspace_updated_at_active_idx')
     .on(table.workspaceSubdomain, table.updatedAt)
     .where(sql`${table.deletedAt} is null`),
+  index('attendance_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
+  /** Planner-efficient index for purge worker candidate selection (§13.2). */
+  index('attendance_purge_after_idx')
+    .on(table.workspaceSubdomain, table.purgeAfter)
+    .where(sql`${table.deletedAt} is not null and ${table.purgeAfter} is not null`),
 ]);
 
 export const attendanceLeaves = pgTable('attendance_leaves', {

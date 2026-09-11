@@ -42,6 +42,8 @@ export function enrollmentRowToRecord(
   if (row.deletedAt) enrollment.deletedAt = row.deletedAt.toISOString();
   if (row.deletedBy) enrollment.deletedBy = row.deletedBy;
   if (row.deletionReason) enrollment.deletionReason = row.deletionReason;
+  if (row.restoredAt) enrollment.restoredAt = row.restoredAt.toISOString();
+  if (row.restoredBy) enrollment.restoredBy = row.restoredBy;
 
   return enrollment;
 }
@@ -78,6 +80,9 @@ export async function listEnrollmentsByWorkspace(
         deletedAt: enrollments.deletedAt,
         deletedBy: enrollments.deletedBy,
         deletionReason: enrollments.deletionReason,
+        deletedWithCascade: enrollments.deletedWithCascade,
+        restoredAt: enrollments.restoredAt,
+        restoredBy: enrollments.restoredBy,
         createdAt: enrollments.createdAt,
         updatedAt: enrollments.updatedAt,
       })
@@ -150,6 +155,9 @@ export async function findEnrollmentById(
         deletedAt: enrollments.deletedAt,
         deletedBy: enrollments.deletedBy,
         deletionReason: enrollments.deletionReason,
+        deletedWithCascade: enrollments.deletedWithCascade,
+        restoredAt: enrollments.restoredAt,
+        restoredBy: enrollments.restoredBy,
         createdAt: enrollments.createdAt,
         updatedAt: enrollments.updatedAt,
       })
@@ -188,11 +196,19 @@ export async function findEnrollmentById(
 export async function findEnrollmentsByIds(
   tenant: string,
   ids: string[],
+  options?: { includeDeleted?: boolean },
 ): Promise<Enrollment[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const conditions = [
+      eq(enrollments.workspaceSubdomain, subdomain),
+      inArray(enrollments.id, cleanIds),
+    ];
+    if (!options?.includeDeleted) {
+      conditions.push(isNull(enrollments.deletedAt));
+    }
     const rows = await tx
       .select({
         id: enrollments.id,
@@ -217,16 +233,14 @@ export async function findEnrollmentsByIds(
         deletedAt: enrollments.deletedAt,
         deletedBy: enrollments.deletedBy,
         deletionReason: enrollments.deletionReason,
+        deletedWithCascade: enrollments.deletedWithCascade,
+        restoredAt: enrollments.restoredAt,
+        restoredBy: enrollments.restoredBy,
         createdAt: enrollments.createdAt,
         updatedAt: enrollments.updatedAt,
       })
       .from(enrollments)
-      .where(
-        and(
-          eq(enrollments.workspaceSubdomain, subdomain),
-          inArray(enrollments.id, cleanIds),
-        ),
-      );
+      .where(and(...conditions));
 
     if (rows.length === 0) return [];
 

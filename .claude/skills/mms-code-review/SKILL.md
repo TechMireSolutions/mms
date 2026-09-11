@@ -7,7 +7,7 @@ description: Reviews MMS code against project rules, skills, and migration statu
 
 Agent self-review after edits → also follow always-on `mms-completion-review.md`.
 
-**When X → skill Y (deep dive, not this index):** FormModal / Zod forms → **`mms-form-architecture`** · Query factories → **`mms-query-factories`** · axe / focus-return → **`mms-a11y-smoke`** · deps bumps → **`mms-dependency-upgrade`** · DDL → **`mms-schema-migrate`** · CSRF/cookies → **`mms-backend-security`** · backup wipe → **`mms-backup-restore`**.
+**When X → skill Y (deep dive, not this index):** FormModal / Zod forms → **`mms-form-architecture`** · Query factories → **`mms-query-factories`** · axe / focus-return → **`mms-a11y-smoke`** · deps bumps → **`mms-dependency-upgrade`** · DDL → **`mms-schema-migrate`** · CSRF/cookies → **`mms-backend-security`** · backup wipe → **`mms-backup-restore`** · Soft-delete → **`mms-soft-delete`**.
 
 ## Modern practices (pointers only)
 
@@ -32,6 +32,12 @@ Agent self-review after edits → also follow always-on `mms-completion-review.m
 | Monthly date partition detachment & WORM cold tier | `mms-ops-infrastructure.md` §5 · `mms-data-layer.md` §5 · **`mms-audit-trail`** |
 | Auditing the Auditor & compliance exports | `mms-reports.md` §9 · **`mms-audit-trail`** |
 | INSERT-only audit privileges & pgAudit pairing | `mms-auth-security.md` §5 · **`mms-audit-trail`** |
+| Soft-delete invariants & 3-tier index strategy | `mms-data-layer.md` §6 · `mms-module-architecture.md` §6 · **`mms-soft-delete`** |
+| Uniqueness-on-restore 23505 trap & partial unique indexes | `mms-data-layer.md` §6 · `mms-backend-api` · **`mms-soft-delete`** |
+| Session revocation on user soft-delete | `mms-auth-security.md` · `mms-backend-security` · **`mms-soft-delete`** |
+| Scheduled retention hard-purge worker (LIMIT 500 SKIP LOCKED) | `mms-data-layer.md` §6 · `mms-background-jobs` · **`mms-soft-delete`** |
+| Active foreign key guarding on writes | `mms-data-layer.md` §6 · `mms-form-architecture` · **`mms-soft-delete`** |
+| Outbox CDC tombstones with monotonic versioning | `mms-data-layer.md` §6 · **`mms-soft-delete`** |
 
 ## Review order
 
@@ -85,7 +91,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Query factories / tuple keys — skill **`mms-query-factories`**
 - [ ] `enabled: isAuthenticated` on tenant REST hooks
 - [ ] Mutations invalidate affected queries (list + count keys; Contacts also messaging resolve)
-- [ ] Optimistic updates banned for money / soft-delete / bulk / backup / messaging send
+- [ ] Optimistic updates: banned for money, bulk, backup/restore, messaging send; single-record soft-delete uses optimistic hide with 5–10s Undo toast (`docs/soft-delete.md` §7.8)
 - [ ] No duplicate data path (Query mutations + parallel `saveCollection` for same write)
 - [ ] After server `bulkSave` imports (e.g. Google sync), invalidate only — do not re-upsert the same rows
 - [ ] REST pages use Query hooks / collection facades — not raw `useLiveCollection` for entity rows
@@ -110,13 +116,21 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] Forbidden actions omitted — not disabled placeholders
 
 ### Soft delete (when entity supports it)
-- [ ] `DELETE` soft-deletes; `POST :id/restore` restores
-- [ ] List supports `includeDeleted`; Work default excludes deleted; BE SQL-filters `deleted_at`
+- [ ] `DELETE` soft-deletes; `POST :id/restore` restores (atomic conditional latch `WHERE deleted_at IS NULL RETURNING id`)
+- [ ] Restore traps PostgreSQL error `23505` (`unique_violation`) and maps to `409 Conflict` (`docs/soft-delete.md` §4.5)
+- [ ] Single-record `GET /:id` returns `404` for archived rows unless `?includeDeleted=true` is authorized with `canDelete`
+- [ ] Batched single-statement SQL for bulk delete/restore (`WHERE id IN (...) AND deleted_at IS NULL` — no per-row loops)
+- [ ] List supports `includeDeleted`; Work default excludes deleted; BE SQL-filters `deleted_at` via dynamic AST (no parameterized booleans)
+- [ ] Relational child queries in `with: { ... }` explicitly filter `where: (c, { isNull }) => isNull(c.deletedAt)`
+- [ ] Partial unique indexes (`WHERE deleted_at IS NULL`) used for recyclable keys (email, phone, employee_id) — `UNIQUE NULLS NOT DISTINCT` banned
+- [ ] Session invalidation on user/teacher soft delete + auth resolvers gate on `deleted_at IS NULL`
+- [ ] Active foreign key guarding: write schemas reject references to soft-deleted records
 - [ ] Create/update write schemas strip client soft-delete fields
-- [ ] FE trash UI or documented intentional hard-delete / manifest variant
-- [ ] Soft-delete modules: trash toggle + restore omit Add/messaging in archive mode; drawer uses `WarningCallout` + Restore
-- [ ] Work multi-select uses `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / Restore / Messaging) on list/parent (no forked selection chrome; no toolbar-inline trash)
+- [ ] FE trash UI: URL param sync (`?view=trash`), filter state preserved on toggle, optimistic 5–10s Undo toast, drawer `ArchivedBanner` (`WarningCallout`) with single restore
+- [ ] Soft-delete modules: trash toggle + restore omit Add/messaging/exports in archive mode
+- [ ] Work multi-select uses `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` / Messaging) on list/parent (no forked selection chrome; no toolbar-inline trash)
 - [ ] Entity merge (if any) is atomic server endpoint — not FE dual-write
+- [ ] Outbox CDC events emitted with monotonic versioning (`entity.soft_deleted`, `entity.restored`)
 
 ### Gold-standard module parity (`mms-module-architecture.md` §7)
 - [ ] Bulk PUT upsert-only — no `replaceForWorkspace` / wipe-missing-rows (incl. custom-tabs) on API write paths
@@ -192,5 +206,5 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 ## References
 
 - Rules: `mms-api-interface.md`, `mms-data-layer.md`, `mms-hooks.md`, `mms-ui-ux-design.md`, `mms-auth-security.md`, `mms-form-architecture.md`, `mms-messaging.md`, `mms-migration-status.md`, `mms-performance.md`
-- Skills: `mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-audit-trail`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`
+- Skills: `mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-soft-delete`, `mms-audit-trail`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`
 

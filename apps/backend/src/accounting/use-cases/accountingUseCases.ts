@@ -4,7 +4,6 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import {
   defineTenantBulkCollectionService,
-  scopeDeleted,
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
 import {
@@ -40,13 +39,21 @@ const EMPTY_ACCOUNTING_METRICS: AccountingCommandMetricsSnapshot = {
   liabilities: 0,
 };
 
+export interface AccountingUseCasesDependencies {
+  countActiveJournalLinesForAccount?: (tenant: string, accountId: string) => Promise<number>;
+  countActiveJournalLinesForAccounts?: (tenant: string, accountIds: string[]) => Promise<Map<string, number>>;
+}
+
 /**
  * Accounting use-cases — composition root binding an {@link AccountingRepository}
  * to every operation. Production uses the default Drizzle-backed
  * `accountingUseCases`; tests can pass a fake repository to exercise
  * orchestration in isolation.
  */
-export function createAccountingUseCases(repo: AccountingRepository = accountingRepository) {
+export function createAccountingUseCases(
+  repo: AccountingRepository = accountingRepository,
+  deps?: AccountingUseCasesDependencies,
+) {
   const accountService = defineTenantBulkCollectionService<Account>(
     { listByWorkspace: repo.listAccountsByWorkspace, replaceForWorkspace: repo.replaceAccountsForWorkspace },
     accountListSchema,
@@ -70,6 +77,8 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
       listByWorkspace: repo.listEntriesByWorkspace,
       findById: repo.findEntryById,
       save: repo.saveEntry,
+      bulkDelete: repo.bulkSoftDeleteEntries,
+      bulkRestore: repo.bulkRestoreEntries,
     },
     schema: journalEntryRecordSchema,
     websocketCollection: 'accounting_entries',
@@ -81,6 +90,8 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
       listByWorkspace: repo.listAccountsByWorkspace,
       findById: repo.findAccountById,
       save: repo.saveAccount,
+      bulkDelete: repo.bulkSoftDeleteAccounts,
+      bulkRestore: repo.bulkRestoreAccounts,
     },
     schema: accountRecordSchema,
     websocketCollection: 'accounting_accounts',
@@ -108,10 +119,7 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
     replaceEntries: entryBulkService.replace,
     replaceFiscalYears: fiscalYearService.replace,
 
-    loadAccounts: async (options?: { includeDeleted?: boolean }): Promise<Account[]> => {
-      const rows = await accountCrud.loadAll({ includeDeleted: true });
-      return scopeDeleted(rows, options?.includeDeleted);
-    },
+    loadAccounts: (options?: { includeDeleted?: boolean }) => accountCrud.loadAll(options),
 
     loadAccountById: async (id: string, includeDeleted = false): Promise<Account | null> => {
       const tenant = getRequestTenant();
@@ -127,14 +135,10 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
       const tenant = getRequestTenant();
       const cleanIds = dedupeTrimmedIds(ids);
       if (!tenant || cleanIds.length === 0) return [];
-      const rows = await repo.findAccountsByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findAccountsByIds(tenant, cleanIds, { includeDeleted });
     },
 
-    loadEntries: async (options?: { includeDeleted?: boolean }): Promise<JournalEntry[]> => {
-      const rows = await entryCrud.loadAll({ includeDeleted: true });
-      return scopeDeleted(rows, options?.includeDeleted);
-    },
+    loadEntries: (options?: { includeDeleted?: boolean }) => entryCrud.loadAll(options),
 
     loadEntryById: async (id: string, includeDeleted = false): Promise<JournalEntry | null> => {
       const tenant = getRequestTenant();
@@ -150,11 +154,14 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
       const tenant = getRequestTenant();
       const cleanIds = dedupeTrimmedIds(ids);
       if (!tenant || cleanIds.length === 0) return [];
-      const rows = await repo.findEntriesByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findEntriesByIds(tenant, cleanIds, { includeDeleted });
     },
 
-    loadFiscalYears: fiscalYearService.load,
+    loadFiscalYears: async (options?: { includeDeleted?: boolean }): Promise<FiscalYear[]> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return [];
+      return repo.listFiscalYearsByWorkspace(tenant, options);
+    },
 
     loadFiscalYearById: async (id: string, includeDeleted = false): Promise<FiscalYear | null> => {
       const tenant = getRequestTenant();
@@ -170,8 +177,7 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
       const tenant = getRequestTenant();
       const cleanIds = dedupeTrimmedIds(ids);
       if (!tenant || cleanIds.length === 0) return [];
-      const rows = await repo.findFiscalYearsByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findFiscalYearsByIds(tenant, cleanIds, { includeDeleted });
     },
 
     upsertAccounts: (accounts: Account[]) =>
@@ -203,6 +209,16 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
       deletionReason?: string,
     ): Promise<{ succeeded: number; failed: number }> => {
       const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return { succeeded: 0, failed: 0 };
+      const tenant = getRequestTenant();
+      if (repo.bulkSoftDeleteEntries && tenant) {
+        const result = await repo.bulkSoftDeleteEntries(tenant, cleanIds, deletedBy, deletionReason);
+        if (result.succeeded > 0) {
+          const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
+          broadcastTenantUpdate(tenant, 'collection', 'accounting_entries');
+        }
+        return result;
+      }
       let succeeded = 0;
       let failed = 0;
       for (const id of cleanIds) {
@@ -217,9 +233,56 @@ export function createAccountingUseCases(repo: AccountingRepository = accounting
       return { succeeded, failed };
     },
 
-    deleteAccountById: accountCrud.deleteById,
+    deleteAccountById: async (
+      id: string,
+      deletedBy: string,
+      deletionReason?: string,
+    ): Promise<boolean> => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      const cleanId = id?.trim();
+      if (!cleanId) return false;
+      const getActiveCount =
+        deps?.countActiveJournalLinesForAccount ??
+        (await import('../../db/repositories/accountingAccountsRepository.js'))
+          .countActiveJournalLinesForAccount;
+      const activeCount = await getActiveCount(tenant, cleanId);
+      if (activeCount > 0) {
+        const err = new Error('Cannot archive account with active ledger entries');
+        (err as Error & { statusCode: number }).statusCode = 400;
+        throw err;
+      }
+      return accountCrud.deleteById(cleanId, deletedBy, deletionReason);
+    },
     restoreAccountById: accountCrud.restoreById,
-    bulkSoftDeleteAccounts: accountCrud.bulkDeleteByIds,
+    bulkSoftDeleteAccounts: async (
+      ids: string[],
+      deletedBy: string,
+      deletionReason?: string,
+    ): Promise<{ succeeded: number; failed: number }> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return { succeeded: 0, failed: ids.length };
+      const cleanIds = dedupeTrimmedIds(ids);
+      if (cleanIds.length === 0) return { succeeded: 0, failed: 0 };
+      const getActiveCounts =
+        deps?.countActiveJournalLinesForAccounts ??
+        (await import('../../db/repositories/accountingAccountsRepository.js'))
+          .countActiveJournalLinesForAccounts;
+      const activeCounts = await getActiveCounts(tenant, cleanIds);
+      const blockedIds = new Set<string>();
+      for (const [accId, count] of activeCounts.entries()) {
+        if (count > 0) blockedIds.add(accId);
+      }
+      const allowedIds = cleanIds.filter((id) => !blockedIds.has(id));
+      if (allowedIds.length === 0) {
+        return { succeeded: 0, failed: cleanIds.length };
+      }
+      const result = await accountCrud.bulkDeleteByIds(allowedIds, deletedBy, deletionReason);
+      return {
+        succeeded: result.succeeded,
+        failed: result.failed + blockedIds.size,
+      };
+    },
     bulkRestoreAccounts: accountCrud.bulkRestoreByIds,
 
     loadAccountsPage: async (query: AccountingListQuery & { includeDeleted?: boolean }) => {

@@ -1,5 +1,6 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it } from "vitest";
 import { useEnrollmentsDirectoryFilters } from "./useEnrollmentsDirectoryFilters";
 
@@ -19,7 +20,7 @@ describe("useEnrollmentsDirectoryFilters hook", () => {
   it("initializes with default filters and clears them", async () => {
     const root = createRoot(document.createElement("div"));
     await act(async () => {
-      root.render(React.createElement(TestComponent));
+      root.render(React.createElement(MemoryRouter, null, React.createElement(TestComponent)));
     });
 
     expect(hookResult?.listPage).toBe(1);

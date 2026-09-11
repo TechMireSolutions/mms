@@ -2,7 +2,6 @@ import type { MessagingRepository } from '../repository/messagingRepository.js';
 import { messagingRepository } from '../repository/messagingRepositoryAdapter.js';
 import {
   defineTenantBulkCollectionService,
-  scopeDeleted,
 } from '../../services/tenantBulkService.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { broadcastCollection } from '../../services/websocketService.js';
@@ -170,8 +169,7 @@ export function createMessagingUseCases(repo: MessagingRepository = messagingRep
       if (!tenant) return [];
       const cleanIds = dedupeTrimmedIds(ids);
       if (cleanIds.length === 0) return [];
-      const rows = await repo.findMessageLogsByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findMessageLogsByIds(tenant, cleanIds, { includeDeleted });
     },
     saveMessageLog: async (record: Message): Promise<void> => {
       const tenant = getRequestTenant();

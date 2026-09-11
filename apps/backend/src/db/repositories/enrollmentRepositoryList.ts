@@ -119,6 +119,7 @@ const ENROLLMENT_LIST_COLUMNS = {
   deletedAt: enrollments.deletedAt,
   deletedBy: enrollments.deletedBy,
   deletionReason: enrollments.deletionReason,
+  deletedWithCascade: enrollments.deletedWithCascade,
   createdAt: enrollments.createdAt,
   updatedAt: enrollments.updatedAt,
 };

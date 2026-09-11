@@ -5,7 +5,7 @@ description: Adds or modifies Fastify routes, middleware (authenticateTenant), s
 
 # MMS Backend API Workflow
 
-**Rules (norms SSOT):** `mms-api-interface.mdc` · `mms-data-layer.mdc` §5 · `mms-performance.mdc` · `mms-auth-security.mdc` §5 · `mms-testing-observability.mdc` · `mms-form-architecture.mdc`. Modern Audit Trail Workflow → **`mms-audit-trail`**.
+**Rules (norms SSOT):** `mms-api-interface.mdc` · `mms-data-layer.mdc` §5–§6 · `mms-performance.mdc` · `mms-auth-security.mdc` §5 · `mms-testing-observability.mdc` · `mms-form-architecture.mdc`. Modern Audit Trail Workflow → **`mms-audit-trail`**. Soft-Delete Workflow → **`mms-soft-delete`**.
 
 ## When to use
 
@@ -13,7 +13,7 @@ description: Adds or modifies Fastify routes, middleware (authenticateTenant), s
 - Service / Zod validation / WhatsApp-email backend
 - Backend tests with Node 24 `node:test` and Fastify `inject()`
 
-DDL / `schema.ts` / journal → skill **`mms-schema-migrate`**. CSRF / Origin / cookies / rate limits → **`mms-backend-security`**. Health/ready probes → `mms-ops-infrastructure.mdc`.
+DDL / `schema.ts` / journal → skill **`mms-schema-migrate`**. CSRF / Origin / cookies / rate limits → **`mms-backend-security`**. Soft-delete architecture & checklist → **`mms-soft-delete`**. Health/ready probes → `mms-ops-infrastructure.mdc`.
 
 ## Architecture
 
@@ -46,13 +46,28 @@ Shipped REST: students, contacts, teachers, finance, enrollments, obligations, a
 
 ## Soft delete on REST resources
 
-When the entity supports archives (Contacts / Students / Teachers pattern + Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations):
+All soft-delete route logic flows through shared route factories (`crudResourceRoutes.ts`, `crudBulkRouteFactories.ts`, `crudBulkRouteHelpers.ts`). Never hand-roll ad-hoc delete/restore endpoints (complete workflow & checklist → **`mms-soft-delete`**):
 
-- Prefer `registerStandardTenantRoutes` with `deleteFn` + `restoreFn` (`POST :id/restore`)
-- List: `includeDeleted`; **SQL-filter** typed `deleted_at` — do not load full tenant then filter only in memory
-- Default exclude deleted; trash = deleted-only; FE Work trash required for parity (`mms-module-work`)
-- Document variants in `{Module}ModuleManifest.softDelete`
-- Write schemas strip soft-delete fields; merge (Contacts) = atomic tenant transaction
+- **Factory Route Registration**: Use `registerResourceRoutes` (`deleteFn`, `restoreFn`) and `registerSoftDeletableBulkTrashRoutes` (`bulkDeleteFn`, `bulkRestoreFn`). Gated on `canDeleteCollection(user, collection)` or module `canDelete`.
+- **Trash-Aware List Loading**: Use `handleBulkListGet` with `supportsIncludeDeleted: true` (parses `isQueryFlagTrue(request.query.includeDeleted)` and enforces `canDeleteCollection` gate). Ban `scopeDeleted()` in memory.
+- **Single-Record Read Semantics (`GET /:id`)**: Standard reads MUST append `isNull(table.deletedAt)` and return `404 Not Found` for archived records. Detail inspection with `?includeDeleted=true` requires `canDeleteCollection` check and sets `SET LOCAL app.include_deleted = 'true'` (`docs/soft-delete.md` §4.7).
+- **Atomic Conditional Latch**: Avoid TOCTOU race conditions by updating with an atomic conditional latch:
+  ```ts
+  const [deleted] = await db.update(table)
+    .set({ deletedAt: new Date(), deletedBy: userId, deletionReason: reason ?? null })
+    .where(and(eq(table.id, id), eq(table.workspaceSubdomain, tenant), isNull(table.deletedAt)))
+    .returning({ id: table.id });
+  if (!deleted) throw new NotFoundError('Record not found or already archived');
+  ```
+- **Batched Single-Statement Bulk Updates**: `bulkDeleteFn` and `bulkRestoreFn` implementations must execute a single batched SQL statement (`inArray(table.id, ids)`). Never iterate sequentially row-by-row (`mms-performance.mdc` §1).
+- **Dynamic Query AST**: Construct Drizzle query branches dynamically (`isNull(table.deletedAt)` vs `isNotNull(table.deletedAt)`). Never emit parameterized booleans (`$2::boolean IS TRUE OR deleted_at IS NULL`) which disable Category B partial indexes.
+- **Relational Child Guardrails**: Nested relations in Drizzle `db.query.table.findMany({ with: { ... } })` do NOT auto-filter soft-deleted children. Declare explicit `where: (c, { isNull }) => isNull(c.deletedAt)`.
+- **Uniqueness-on-Restore & Error 23505 Trap**: When restoring entities with unique fields (`email`, `phone`, `employee_id`), check for conflicts first, execute update, and catch PostgreSQL error `23505` (`unique_violation`), mapping it cleanly to `409 Conflict` (`docs/soft-delete.md` §4.5).
+- **Session Revocation Invariant**: Immediately revoke active sessions and refresh tokens in Redis upon soft-deleting users or teachers. Gate auth resolvers on `deleted_at IS NULL`.
+- **Active Foreign Key Guarding**: Reject writes attempting to assign foreign keys pointing to soft-deleted entities.
+- **CDC Outbox Events**: Emit `entity.soft_deleted` and `entity.restored` transactional outbox events with monotonic versioning (`version: Date.now()`) for search index and Redis eviction.
+- **Write Schemas**: Create/Update write schemas strip client soft-delete fields (`deletedAt`, `deletedBy`, `deletionReason`). Default excludes deleted; trash = deleted-only.
+- **Audit Hooks**: Call `onAfterDelete` and `onAfterRestore` hooks; capture text snapshots on archival for forensics survival.
 
 ## Bulk PUT
 
@@ -112,6 +127,15 @@ Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.t
 - [ ] Replace legacy `url.parse()` with WHATWG `new URL()`
 - [ ] Core module imports prefixed with `node:` (`node:fs/promises`, `node:crypto`, `node:path`, `node:async_hooks`)
 - [ ] Request / tenant tracking via `AsyncLocalStorage` (`AsyncContextFrame`)
+- [ ] Soft-delete endpoints use registerResourceRoutes (deleteFn/restoreFn) + registerSoftDeletableBulkTrashRoutes
+- [ ] Atomic conditional latch on soft-delete (`WHERE deleted_at IS NULL RETURNING id`)
+- [ ] Batched single-statement SQL for bulk delete/restore (no per-row loops)
+- [ ] Dynamic AST in Drizzle queries matching Category B/C partial indexes (no parameterized booleans)
+- [ ] Relational child queries in `with: { ... }` explicitly declare `where: (c, { isNull }) => isNull(c.deletedAt)`
+- [ ] Restore traps PostgreSQL error `23505` mapping to `409 Conflict`
+- [ ] Single-record `GET /:id` returns 404 for archived records unless `?includeDeleted=true` with `canDelete`
+- [ ] Session invalidation on user/teacher soft delete + `deleted_at IS NULL` verification in auth resolvers
+- [ ] CDC outbox events emitted with monotonic versioning (`entity.soft_deleted` / `entity.restored`)
 ```
 
 ## Auth / workspace routes

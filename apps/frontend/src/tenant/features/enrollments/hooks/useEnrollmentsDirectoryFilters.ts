@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useDebounce } from '@/hooks/useDebounce';
+import { useTrashMode } from '@/hooks/useTrashMode';
 
 /** Directory filters and trash SSOT for Enrollments Work. */
 export function useEnrollmentsDirectoryFilters() {
   const [listPage, setListPage] = useState(1);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, setShowDeleted] = useTrashMode();
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 250);
   const [statusFilter, setStatusFilter] = useState('all');

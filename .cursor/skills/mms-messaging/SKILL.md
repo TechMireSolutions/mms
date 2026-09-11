@@ -22,7 +22,7 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 
 1. Recipients via `MessagingRecipient` / `toMessagingRecipient` — never contacts schemas in composer.
 2. Query + `/api/messaging` only (`/recipients`, `/recipients/match`, `/contacts/resolve`, logs, metrics, templates, `/export/csv`).
-3. Bulk template/log writes upsert; clear-logs soft-archive (intentional §7 variant).
+3. Bulk template/log writes upsert; clear-logs soft-archive (intentional §7 variant). Note: `message_logs` follows the 4-Bucket taxonomy as **Bucket 3 (Sweeper-Driven TTL Purge)** with a 365-day retention window (`retentionDays: 365` in manifest) and tuned autovacuum (`autovacuum_vacuum_scale_factor = 0.05, autovacuum_vacuum_cost_limit = 1000`) purged via background worker (`docs/soft-delete.md` §10 & §13.4 · `mms-soft-delete`).
 4. Allowlisted tokens; plain text; BE forces session `userId`, strips client `deletedAt`.
 5. §7 UX: permissions, `ErrorState`, Cmd/Ctrl+N, `mutateAsync`, `t()`.
 6. Campaign/send POSTs: idempotency key **bound to body digest** when the client may retry; reject mismatched replay with `409` — `mms-api-interface.mdc` §6. Surface `429` / `Retry-After` via `notify` — `mms-auth-security.mdc`.
@@ -34,6 +34,7 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 - [ ] useModulePermissions(MESSAGING_MODULE_MANIFEST)
 - [ ] No raw fetch('/api/...')
 - [ ] Upsert saves; clear-logs soft-archive + audit `messaging.logs.clear`
+- [ ] message_logs follows Bucket 3 TTL purge with 365-day retention window and tuned autovacuum (mms-soft-delete)
 - [ ] Select-all uses /recipients/match (lean); CSV uses /export/csv job
 - [ ] CSV export respects MESSAGING_CSV_EXPORT_MAX_ROWS / MAX_BYTES
 - [ ] No messages_u: / message_* in ALLOWED_COLLECTIONS dual-write

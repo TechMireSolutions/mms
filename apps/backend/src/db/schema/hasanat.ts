@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { students } from "./students.js";
 import { teachers } from "./teachers.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const hasanatDenoms = pgTable('hasanat_denoms', {
   id: text('id').notNull(),
@@ -60,9 +61,7 @@ export const hasanatDistributions = pgTable('hasanat_distributions', {
   issuedByUserId: text('issued_by_user_id'),
   issuedBy: varchar('issued_by', { length: 120 }),
   status: varchar('status', { length: 20 }).notNull().default('active'),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -93,6 +92,9 @@ export const hasanatDistributions = pgTable('hasanat_distributions', {
   index('hasanat_dist_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('hasanat_dist_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const hasanatRedemptions = pgTable('hasanat_redemptions', {

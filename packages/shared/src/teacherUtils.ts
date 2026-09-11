@@ -7,14 +7,17 @@ import {
   lookupContact,
   stripRecordFields,
 } from './contactLinkPolicy.js';
-import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
+export {
+  TEACHER_CLIENT_SOFT_DELETE_KEYS,
+  stripTeacherClientSoftDeleteFields,
+  stripClientSoftDeleteFields,
+  isEntityDeleted,
+  filterActiveEntities,
+  isTeacherDeleted,
+  filterActiveTeachers,
+} from './teacherSoftDelete.js';
 
-/** Strip client soft-delete metadata from teacher create/update payloads. */
-export function stripTeacherClientSoftDeleteFields<T extends Record<string, unknown>>(record: T): T {
-  const next = stripContactClientSoftDeleteFields(record) as Record<string, unknown>;
-  delete next.deleted;
-  return next as T;
-}
+import { stripTeacherClientSoftDeleteFields } from './teacherSoftDelete.js';
 
 /**
  * Soft-delete + Contacts profile dual-write strip shared by wire preprocess and dynamic Zod.

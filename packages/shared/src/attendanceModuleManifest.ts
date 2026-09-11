@@ -122,9 +122,18 @@ export const ATTENDANCE_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: true,
+    retentionDays: null,
   },
   defaultPageSize: 15,
   maxPageSize: 500,
 } as const;
 
 export type AttendanceModuleTier = (typeof ATTENDANCE_MODULE_MANIFEST.tiers)[number];
+
+export function isAttendanceRecordDeleted(record: { deletedAt?: string | null }): boolean {
+  return Boolean(record.deletedAt);
+}
+
+export function filterActiveAttendanceRecords<T extends { deletedAt?: string | null }>(records: T[]): T[] {
+  return records.filter((record) => !isAttendanceRecordDeleted(record));
+}

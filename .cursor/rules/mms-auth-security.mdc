@@ -40,6 +40,7 @@ Governs user authentication, sessions, tenant isolation, role-based authorizatio
 ### Platform session revoke & soft-disable
 - **`sessionVersion`**: Compare JWT claim to `platform_users.session_version`. Mismatch → `401` `{ type: 'session_revoked' }`. Bump on password change/reset and admin **disable** (re-issue cookie after self password change). Re-enable does **not** bump.
 - **Soft-disable**: `platform_users.disabled_at` (API `disabledAt`). Non-null → login (after password verifies) and middleware `401` `{ type: 'account_disabled' }`. Super-users cannot be disabled/deleted; cannot disable/delete self; destructive admin ops require current-password re-auth (`sendInvalidCurrentPassword`).
+- **Soft-Delete Session Invalidation ("Not deleted until sessions die"):** When a user or staff account (`tenant_users`, `teachers`) is soft-deleted, all active sessions and refresh tokens must be revoked immediately in Redis/auth stores. All authentication resolvers (`authenticateTenant`, `/me`, credentials login, OAuth) must explicitly verify `deleted_at IS NULL` to prevent zombie sessions and silent account resurrection (`mms-soft-delete`).
 - Missing/invalid JWT → default `auth_required` (`sendUnauthorized`).
 
 ### Platform error SSOT
@@ -85,12 +86,14 @@ Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-m
 - **Platform console**: Use `platformUserCan` / `requirePlatformPermission` for grantable caps; keep intentional `super_user` checks for admin-management gates — do not invent tenant permission strings.
 - **DOM Rendering**: Forbidden elements must be omitted from rendering entirely; do not render disabled placeholders for unauthorized actions.
 - **Backend Enforcement**: Enforce permission checks inside route preHandlers (e.g. `canWriteCollection(user, 'students')`). Denied operations must return `403` with a stable `type: 'forbidden'` payload.
+- **Soft-Delete & Trash RBAC Gating:** All soft-delete actions (`DELETE /:id`, `POST /:id/restore`, `POST /bulk-delete`, `POST /bulk-restore`) and trash inspection queries (`GET /?includeDeleted=true`, `GET /:id?includeDeleted=true`) require delete privileges (`canDeleteCollection(user, collection)` or module `canDelete`). Lacking delete permissions returns `403 Forbidden` immediately; non-delete users must never be permitted to browse archived rows.
 
 ---
 
 ## 4. Threat Mitigations & Security Checklist
 - **Rate Limiting**: Limit onboarding/login and write-heavy / messaging send endpoints (`@fastify/rate-limit`); return `429` on abuse (`type: 'rate_limit_exceeded'` where configured). Emit **`Retry-After`** (and `X-RateLimit-*` when the plugin exposes them). FE must not tight-loop retries on `429` — back off / surface `notify`.
 - **Platform `AUTH_RATE_LIMIT`**: Auth-sensitive + destructive platform routes (login/setup/password flows; admin disable/delete; workspace delete; database reset; migrate-and-restart) — do not ship those mutations without the limit + password confirm where already required.
+- **Hard-Delete Bypass Security:** Physical row deletion is blocked by PostgreSQL `forbid_hard_delete()` trigger. Executing `SET LOCAL app.allow_hard_purge = 'true'` is strictly restricted to authorized background retention workers (`purgeExpiredArchivedRecords`) and platform workspace teardown (`purgeTenantDataBySubdomain`).
 - **Cookie CSRF / Origin**: Cookie-auth state-changing requests (`POST`/`PUT`/`PATCH`/`DELETE`) must enforce same-origin (`Origin` / `Sec-Fetch-Site` header checks against allowed origin) or an equivalent CSRF defense. Do not rely on `SameSite=Lax` alone for mutations.
 - **Content-Type**: JSON mutation routes reject bodies without `application/json` (multipart only on upload routes). Ban empty/`text/plain` bodies on JSON write paths.
 - **Password Security**: Keep `scrypt` + `crypto.timingSafeEqual` (constant-time check from `node:crypto`) to prevent timing side-channel attacks. Enforce onboarding / platform password policy. Do not switch to argon2 (or dual algorithms) without an explicit dual-verify migration plan.

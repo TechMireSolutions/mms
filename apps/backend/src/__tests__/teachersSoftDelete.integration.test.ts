@@ -90,7 +90,7 @@ describe('teachers soft delete routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreTeacherById).toHaveBeenCalledWith('t1');
+    expect(mockRestoreTeacherById).toHaveBeenCalledWith('t1', 'u-admin');
     await app.close();
   });
 
@@ -150,7 +150,7 @@ describe('teachers soft delete routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 2, failed: 0 });
-    expect(mockBulkRestoreTeachers).toHaveBeenCalledWith(['t1', 't2']);
+    expect(mockBulkRestoreTeachers).toHaveBeenCalledWith(['t1', 't2'], 'u-admin');
     await app.close();
   });
 

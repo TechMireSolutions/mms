@@ -11,11 +11,23 @@ vi.mock('../db/repositories/attendanceRepository.js', () => ({
   saveAttendanceRecord: vi.fn(),
   bulkSaveAttendanceRecords,
   replaceAttendanceRecordsForWorkspace,
+  bulkSoftDeleteAttendanceRecords: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
+  bulkRestoreAttendanceRecords: vi.fn().mockResolvedValue({ succeeded: 0, failed: 0 }),
 }));
 
 vi.mock('../services/websocketService.js', () => ({
   broadcastCollection: vi.fn(),
   broadcastTenantUpdate: vi.fn(),
+}));
+
+vi.mock('../db/repositories/studentRepository.js', () => ({
+  findStudentsByIds: vi.fn().mockResolvedValue([{ id: 'student-1', deletedAt: null }]),
+  findStudentById: vi.fn().mockResolvedValue({ id: 'student-1', deletedAt: null }),
+}));
+
+vi.mock('../db/repositories/sessionRepositoryHydrate.js', () => ({
+  findSessionsByIds: vi.fn().mockResolvedValue([{ id: 'class-a', deletedAt: null }]),
+  findSessionById: vi.fn().mockResolvedValue({ id: 'class-a', deletedAt: null }),
 }));
 
 describe('attendanceService bulk upsert', () => {

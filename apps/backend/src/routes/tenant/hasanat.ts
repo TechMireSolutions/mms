@@ -73,7 +73,7 @@ export default async function hasanatRoutes(
         deleteFn: hasanatUseCases.deleteDistributionById,
         restoreFn: hasanatUseCases.restoreDistributionById,
         bulkDeleteFn: hasanatUseCases.bulkSoftDeleteDistributions,
-        bulkRestoreFn: hasanatUseCases.bulkRestoreDistributions,
+        bulkRestoreFn: (ids, userId) => hasanatUseCases.bulkRestoreDistributions(ids, userId),
         responseKey: 'distributions',
         errorMessagePrefix: 'distributions',
         nameSingular: 'Distribution',

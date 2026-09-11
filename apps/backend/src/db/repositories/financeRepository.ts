@@ -8,6 +8,8 @@ export {
   bulkSaveInvoices,
   replaceInvoicesForWorkspace,
   deleteInvoice,
+  bulkSoftDeleteInvoices,
+  bulkRestoreInvoices,
 } from './financeInvoicesRepository.js';
 export {
   paymentRowToRecord,
@@ -18,6 +20,9 @@ export {
   bulkSavePayments,
   replacePaymentsForWorkspace,
   deletePayment,
+  bulkSoftDeletePayments,
+  bulkRestorePayments,
   deleteFinanceByWorkspace,
 } from './financePaymentsRepository.js';
+
 

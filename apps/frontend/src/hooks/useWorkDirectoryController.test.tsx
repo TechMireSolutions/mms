@@ -1,5 +1,6 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useWorkDirectoryController } from "./useWorkDirectoryController";
 
@@ -32,14 +33,18 @@ describe("useWorkDirectoryController", () => {
     container.remove();
   });
 
-  function renderHook() {
+  function renderHook(initialEntries: string[] = ["/"]) {
     let current!: ReturnType<typeof useWorkDirectoryController>;
     function TestComponent() {
       current = useWorkDirectoryController({ defaultSortField: "name" });
       return null;
     }
     act(() => {
-      root.render(<TestComponent />);
+      root.render(
+        <MemoryRouter initialEntries={initialEntries}>
+          <TestComponent />
+        </MemoryRouter>,
+      );
     });
     return {
       get current() {
@@ -108,5 +113,20 @@ describe("useWorkDirectoryController", () => {
     });
     expect(hook.current.pendingDelete.open).toBe(false);
     expect(hook.current.pendingDelete.id).toBeNull();
+  });
+
+  it("synchronizes viewingDeleted with URL search parameters", () => {
+    const hook = renderHook(["/?view=trash"]);
+    expect(hook.current.viewingDeleted).toBe(true);
+
+    act(() => {
+      hook.current.setViewingDeleted(false);
+    });
+    expect(hook.current.viewingDeleted).toBe(false);
+
+    act(() => {
+      hook.current.setViewingDeleted(true);
+    });
+    expect(hook.current.viewingDeleted).toBe(true);
   });
 });

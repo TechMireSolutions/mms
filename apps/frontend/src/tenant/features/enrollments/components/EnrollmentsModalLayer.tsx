@@ -28,6 +28,8 @@ export interface EnrollmentsModalLayerProps {
   onBulkRestoreOpenChange: (open: boolean) => void;
   onConfirmBulkDelete: (reason?: string) => void;
   onConfirmBulkRestore: () => void;
+  canDelete?: boolean;
+  onRestore?: (id: string) => void;
 }
 
 export function EnrollmentsModalLayer({
@@ -51,6 +53,8 @@ export function EnrollmentsModalLayer({
   onBulkRestoreOpenChange,
   onConfirmBulkDelete,
   onConfirmBulkRestore,
+  canDelete,
+  onRestore,
 }: EnrollmentsModalLayerProps): React.JSX.Element {
   return (
     <>
@@ -60,6 +64,8 @@ export function EnrollmentsModalLayer({
             <EnrollmentDetail
               enrollment={viewing}
               canWrite={canWrite && !showDeleted}
+              canDelete={canDelete}
+              onRestore={onRestore}
               onClose={onCloseViewing}
               onStatusChange={onStatusChange}
               onPaymentStatusChange={onPaymentStatusChange}

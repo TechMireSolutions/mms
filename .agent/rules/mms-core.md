@@ -55,6 +55,14 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
 - **Module Pages:** Three tiers only (Work, Reports, Setup) via `PageHeader` + `useFilteredModuleTierTabs`.
 - **Write Mechanism:** Cookie SPA + `apiClient` only (No React Server Actions).
 - **Audit Trail & Immutability:** Enterprise state changes tracked via 5-dimension RFC 8785 canonical JSON payloads in transactional outboxes; sharded cryptographic hash chains (`hash_current = SHA-256(...)`) with Merkle tree rollups; `INSERT`-only DB privileges on audit tables (revoking `UPDATE`/`DELETE`); right-to-erasure via crypto-shredding or redact-and-append without historical row destruction — `mms-data-layer.md`, `mms-auth-security.md`.
+- **Soft-Delete Architecture & Lifecycle:** Mandatory for all entity tables in tenant modules (Contacts, Students, Teachers, Sessions, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations) — complete operational SSOT → skill **`mms-soft-delete`**. Follows the 4-Bucket deletion taxonomy (1. Soft-Delete for audit & recovery; 2. Ephemeral Hard-Delete for scratch/test edges; 3. Sweeper-Driven TTL Purge for time-bounded logs/artifacts; 4. Append-Only Immutable for audit/accounting ledgers).
+  - **Schema-Level Hard-Delete Guard:** PostgreSQL `BEFORE DELETE` triggers (`forbid_hard_delete()`) forbid physical row deletions; bypass permitted only via explicit transaction flag `SET LOCAL app.allow_hard_purge = 'true'` by retention workers and workspace teardown (`purgeTenantDataBySubdomain`).
+  - **Session Invalidation Invariant ("Not deleted until sessions die"):** Soft-deleting a user or teacher account immediately revokes all active JWTs, refresh tokens, and Redis sessions. Authentication resolvers (`authenticateTenant`, `/me`, OAuth, credentials) must verify `deleted_at IS NULL` to prevent zombie sessions and silent account resurrection.
+  - **Partial Unique Indexes:** Unique constraints on recyclable identifiers (`email`, `phone`, `employee_id`, `student_id`, slug) must use partial unique indexes `WHERE deleted_at IS NULL` (banning standard `UNIQUE` and `UNIQUE NULLS NOT DISTINCT` which block re-registration).
+  - **Active Foreign Key Guarding:** Prevent dangling ghost references by verifying foreign keys reference active entities (`deleted_at IS NULL`) on write.
+  - **Relational Guardrails:** Drizzle relational queries (`db.query.*`) with child relations must declare explicit `where: (c, { isNull }) => isNull(c.deletedAt)` — `mms-data-layer.md`.
+  - **Atomic Latches & Single-Record Reads:** Soft-delete updates use atomic conditional latches (`WHERE deleted_at IS NULL RETURNING id`). Standard `GET /:id` returns 404 for archived records; `?includeDeleted=true` requires `canDeleteCollection` check.
+  - **CDC Outbox Tombstones:** Soft-delete and restore emit `entity.soft_deleted` and `entity.restored` transactional outbox events with monotonic versioning for Meilisearch index and Redis cache clearing.
 
 ## Standards Index (Ownership Matrix)
 
@@ -66,6 +74,7 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
 | Auth, Sessions, CSRF, RBAC & Isolation | `mms-auth-security.md` | `mms-backend-security` |
 | API Contracts, Errors, Pagination & Bulk PUT | `mms-api-interface.md` | `mms-frontend` · `mms-backend-api` |
 | Data Layer, Drizzle RLS, PG Timeouts & Query | `mms-data-layer.md` | `mms-query-factories` · `mms-schema-migrate` |
+| Soft-Delete Architecture & Lifecycle | `mms-data-layer.md` · `mms-module-architecture.md` | `mms-soft-delete` · `mms-module-work` |
 | Audit Trails, Tamper-Evidence & Retention | `mms-data-layer.md` · `mms-auth-security.md` | `mms-audit-trail` · `mms-backend-security` |
 | Backend Architecture & Repository Gateway | `mms-api-interface.md` §2 · `mms-structure-naming.md` | `mms-backend-api` |
 | Work Directory, Detail Drawer & Trash UX | `mms-module-architecture.md` | `mms-module-work` · `mms-module-page` |

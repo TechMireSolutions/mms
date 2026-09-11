@@ -90,6 +90,9 @@ export async function listStudentsByWorkspace(
         deletedAt: students.deletedAt,
         deletedBy: students.deletedBy,
         deletionReason: students.deletionReason,
+        restoredAt: students.restoredAt,
+        restoredBy: students.restoredBy,
+        deletedWithCascade: students.deletedWithCascade,
         createdAt: students.createdAt,
         updatedAt: students.updatedAt,
         createdBy: students.createdBy,
@@ -111,6 +114,7 @@ export async function listStudentsByWorkspace(
 export async function findStudentById(tenant: string, id: string): Promise<Student | null> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    if (!tx || typeof (tx as any).select !== 'function') return null;
     const rows = await tx
       .select({
         id: students.id,
@@ -134,6 +138,9 @@ export async function findStudentById(tenant: string, id: string): Promise<Stude
         deletedAt: students.deletedAt,
         deletedBy: students.deletedBy,
         deletionReason: students.deletionReason,
+        restoredAt: students.restoredAt,
+        restoredBy: students.restoredBy,
+        deletedWithCascade: students.deletedWithCascade,
         createdAt: students.createdAt,
         updatedAt: students.updatedAt,
         createdBy: students.createdBy,
@@ -152,6 +159,7 @@ export async function findStudentsByIds(tenant: string, ids: string[]): Promise<
   const subdomain = tenant.trim().toLowerCase();
   if (ids.length === 0) return [];
   return withTenant(subdomain, async (tx) => {
+    if (!tx || typeof (tx as any).select !== 'function') return [];
     const rows = await tx
       .select({
         id: students.id,
@@ -175,6 +183,9 @@ export async function findStudentsByIds(tenant: string, ids: string[]): Promise<
         deletedAt: students.deletedAt,
         deletedBy: students.deletedBy,
         deletionReason: students.deletionReason,
+        restoredAt: students.restoredAt,
+        restoredBy: students.restoredBy,
+        deletedWithCascade: students.deletedWithCascade,
         createdAt: students.createdAt,
         updatedAt: students.updatedAt,
         createdBy: students.createdBy,

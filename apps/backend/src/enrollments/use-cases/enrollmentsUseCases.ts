@@ -14,37 +14,109 @@ import {
   type EnrollmentsWidgetQuery,
 } from '@mms/shared';
 
+export interface EnrollmentsUseCasesDependencies {
+  findStudentById?: (tenant: string, id: string) => Promise<{ id: string; deletedAt?: unknown } | null>;
+  findSessionById?: (tenant: string, id: string) => Promise<{ id: string; deletedAt?: unknown } | null>;
+}
+
 /**
  * Enrollments use-cases — composition root binding an {@link EnrollmentsRepository}
  * to every operation. Production uses the default Drizzle-backed
  * `enrollmentsUseCases`; tests can pass a fake repository to exercise
  * orchestration in isolation.
  */
-export function createEnrollmentsUseCases(repo: EnrollmentsRepository = enrollmentsRepository) {
+export function createEnrollmentsUseCases(
+  repo: EnrollmentsRepository = enrollmentsRepository,
+  deps?: EnrollmentsUseCasesDependencies,
+) {
   const crud = createGenericRelationalService<EnrollmentRecord>({
     repo: {
       listByWorkspace: repo.listEnrollmentsByWorkspace,
       findById: repo.findEnrollmentById,
       save: repo.saveEnrollment,
+      bulkDelete: repo.bulkSoftDeleteEnrollments,
+      bulkRestore: repo.bulkRestoreEnrollments,
     },
     schema: enrollmentRecordSchema,
     websocketCollection: 'enrollments',
     idPrefix: 'enr',
   });
 
+  const validateActiveForeignKeys = async (tenant: string, record: Partial<EnrollmentRecord>) => {
+    if (record.studentId) {
+      const getStudent =
+        deps?.findStudentById ??
+        (await import('../../db/repositories/studentRepositoryHydrate.js')).findStudentById;
+      const student = await getStudent(tenant, record.studentId);
+      if (!student || student.deletedAt) {
+        const err = new Error('Referenced student is archived or does not exist');
+        (err as Error & { statusCode: number }).statusCode = 400;
+        throw err;
+      }
+    }
+
+    if (record.sessionId) {
+      const getSession =
+        deps?.findSessionById ??
+        (await import('../../db/repositories/sessionRepositoryHydrate.js')).findSessionById;
+      const session = await getSession(tenant, record.sessionId);
+      if (!session || session.deletedAt) {
+        const err = new Error('Referenced session is archived or does not exist');
+        (err as Error & { statusCode: number }).statusCode = 400;
+        throw err;
+      }
+    }
+  };
+
   return {
     createEnrollment: async (record: EnrollmentRecord) => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+
+      // Active Foreign Key Guarding (§1.8)
+      await validateActiveForeignKeys(tenant, record);
+
       const created = await crud.create(record);
       const { maybeGenerateInvoiceForEnrollment } = await import(
         '../../finance/use-cases/financeInvoiceGenerationUseCases.js'
       );
       return maybeGenerateInvoiceForEnrollment(created);
     },
-    updateEnrollmentById: crud.updateById,
+    updateEnrollmentById: async (id: string, record: EnrollmentRecord) => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+
+      // Active Foreign Key Guarding (§1.8)
+      await validateActiveForeignKeys(tenant, record);
+
+      return crud.updateById(id, record);
+    },
     deleteEnrollmentById: crud.deleteById,
-    restoreEnrollmentById: crud.restoreById,
+    restoreEnrollmentById: async (id: string, userId?: string) => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      const existing = await repo.findEnrollmentById(tenant, id);
+      if (!existing || !existing.deletedAt) return false;
+      if (existing.deletedWithCascade) {
+        const err = new Error('Cannot restore enrollment archived with its session. Restore the parent session instead.');
+        (err as Error & { statusCode: number }).statusCode = 400;
+        throw err;
+      }
+      if (existing.sessionId) {
+        const getSession =
+          deps?.findSessionById ??
+          (await import('../../db/repositories/sessionRepositoryHydrate.js')).findSessionById;
+        const session = await getSession(tenant, existing.sessionId);
+        if (session?.deletedAt) {
+          const err = new Error('Cannot restore enrollment because its session is archived. Restore the session instead.');
+          (err as Error & { statusCode: number }).statusCode = 400;
+          throw err;
+        }
+      }
+      return crud.restoreById(id, userId);
+    },
     bulkSoftDeleteEnrollments: crud.bulkDeleteByIds,
-    bulkRestoreEnrollments: crud.bulkRestoreByIds,
+    bulkRestoreEnrollments: (ids: string[], userId?: string) => crud.bulkRestoreByIds(ids, userId),
 
     loadEnrollmentsPage: async (query: EnrollmentsListQuery & { includeDeleted?: boolean }) => {
       const tenant = getRequestTenant();
@@ -60,13 +132,16 @@ export function createEnrollmentsUseCases(repo: EnrollmentsRepository = enrollme
       return repo.listEnrollmentsPage(tenant, query);
     },
 
-    loadEnrollmentsByIds: async (ids: string[]): Promise<EnrollmentRecord[]> => {
+    loadEnrollmentsByIds: async (
+      ids: string[],
+      options: boolean | { includeDeleted?: boolean } = false,
+    ): Promise<EnrollmentRecord[]> => {
       const tenant = getRequestTenant();
       if (!tenant || ids.length === 0) return [];
       const cleanIds = dedupeTrimmedIds(ids);
       if (cleanIds.length === 0) return [];
-      const list = await repo.findEnrollmentsByIds(tenant, cleanIds);
-      return list.filter((e) => !e.deletedAt);
+      const includeDeleted = typeof options === 'boolean' ? options : options?.includeDeleted ?? false;
+      return repo.findEnrollmentsByIds(tenant, cleanIds, { includeDeleted });
     },
 
     loadEnrollmentById: async (

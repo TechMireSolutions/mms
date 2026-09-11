@@ -111,7 +111,7 @@ export const userContract = c.router({
     method: 'POST',
     path: '/api/users/:id/restore',
     body: z.unknown().optional(),
-    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 409: errorResponse, 500: errorResponse },
     summary: 'Restore a soft-deleted user',
   },
   verifyEmail: {

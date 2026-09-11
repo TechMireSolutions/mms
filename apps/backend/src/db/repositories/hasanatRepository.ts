@@ -23,6 +23,8 @@ export {
   saveDistribution,
   bulkSaveDistributions,
   replaceDistributionsForWorkspace,
+  bulkSoftDeleteDistributions,
+  bulkRestoreDistributions,
 } from './hasanatDistributionsRepository.js';
 export {
   listRedemptionsByWorkspace,

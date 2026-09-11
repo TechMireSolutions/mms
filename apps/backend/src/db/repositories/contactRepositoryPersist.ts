@@ -1,5 +1,6 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import {
+  dedupeTrimmedIds,
   hydrateContactRelationshipFields,
   type Contact,
 } from '@mms/shared';
@@ -239,6 +240,77 @@ export async function replaceContactsForWorkspace(tenant: string, records: Conta
   });
 }
 
+export async function bulkSoftDeleteContactsSql(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(contacts)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(contacts.workspaceSubdomain, subdomain),
+          inArray(contacts.id, uniqueIds),
+          isNull(contacts.deletedAt),
+        ),
+      )
+      .returning({ id: contacts.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreContactsSql(
+  tenant: string,
+  ids: string[],
+  userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(contacts)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        restoredAt: now,
+        restoredBy: userId || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(contacts.workspaceSubdomain, subdomain),
+          inArray(contacts.id, uniqueIds),
+          isNotNull(contacts.deletedAt),
+        ),
+      )
+      .returning({ id: contacts.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
 export const contactRepo = {
   listByWorkspace: listContactsByWorkspace,
   countByWorkspace: countContactsByWorkspace,
@@ -246,5 +318,7 @@ export const contactRepo = {
   findByIds: findContactsByIds,
   save: saveContact,
   bulkSave: bulkSaveContacts,
+  bulkSoftDelete: bulkSoftDeleteContactsSql,
+  bulkRestore: bulkRestoreContactsSql,
   replaceForWorkspace: replaceContactsForWorkspace,
 };

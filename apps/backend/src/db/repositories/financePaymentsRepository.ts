@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Payment } from '@mms/shared';
 import {
   financeFeeItems,
@@ -35,14 +35,27 @@ export function paymentRowToRecord(row: PaymentRow): Payment {
   return payment;
 }
 
+export interface ListPaymentsOptions {
+  limit?: number;
+  offset?: number;
+  deleted?: 'active' | 'deleted' | 'all';
+  includeDeleted?: boolean;
+}
+
 export async function listPaymentsByWorkspace(
   tenant: string,
-  options?: { limit?: number; offset?: number },
+  options?: ListPaymentsOptions,
 ): Promise<Payment[]> {
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
+    const conditions = [eq(financePayments.workspaceSubdomain, subdomain)];
+    if (options?.deleted === 'deleted') {
+      conditions.push(isNotNull(financePayments.deletedAt));
+    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
+      conditions.push(isNull(financePayments.deletedAt));
+    }
     const rows = await tx
       .select({
         id: financePayments.id,
@@ -59,11 +72,14 @@ export async function listPaymentsByWorkspace(
         deletedAt: financePayments.deletedAt,
         deletedBy: financePayments.deletedBy,
         deletionReason: financePayments.deletionReason,
+        restoredAt: financePayments.restoredAt,
+        restoredBy: financePayments.restoredBy,
+        deletedWithCascade: financePayments.deletedWithCascade,
         createdAt: financePayments.createdAt,
         updatedAt: financePayments.updatedAt,
       })
       .from(financePayments)
-      .where(and(eq(financePayments.workspaceSubdomain, subdomain), isNull(financePayments.deletedAt)))
+      .where(and(...conditions))
       .limit(limit)
       .offset(offset);
     return rows.map(paymentRowToRecord);
@@ -91,6 +107,9 @@ export async function findPaymentById(tenant: string, id: string): Promise<Payme
         deletedAt: financePayments.deletedAt,
         deletedBy: financePayments.deletedBy,
         deletionReason: financePayments.deletionReason,
+        restoredAt: financePayments.restoredAt,
+        restoredBy: financePayments.restoredBy,
+        deletedWithCascade: financePayments.deletedWithCascade,
         createdAt: financePayments.createdAt,
         updatedAt: financePayments.updatedAt,
       })
@@ -102,11 +121,22 @@ export async function findPaymentById(tenant: string, id: string): Promise<Payme
   });
 }
 
-export async function findPaymentsByIds(tenant: string, ids: string[]): Promise<Payment[]> {
+export async function findPaymentsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { includeDeleted?: boolean },
+): Promise<Payment[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const conditions = [
+      eq(financePayments.workspaceSubdomain, subdomain),
+      inArray(financePayments.id, cleanIds),
+    ];
+    if (!options?.includeDeleted) {
+      conditions.push(isNull(financePayments.deletedAt));
+    }
     const rows = await tx
       .select({
         id: financePayments.id,
@@ -123,16 +153,14 @@ export async function findPaymentsByIds(tenant: string, ids: string[]): Promise<
         deletedAt: financePayments.deletedAt,
         deletedBy: financePayments.deletedBy,
         deletionReason: financePayments.deletionReason,
+        restoredAt: financePayments.restoredAt,
+        restoredBy: financePayments.restoredBy,
+        deletedWithCascade: financePayments.deletedWithCascade,
         createdAt: financePayments.createdAt,
         updatedAt: financePayments.updatedAt,
       })
       .from(financePayments)
-      .where(
-        and(
-          eq(financePayments.workspaceSubdomain, subdomain),
-          inArray(financePayments.id, cleanIds),
-        ),
-      );
+      .where(and(...conditions));
     return rows.map(paymentRowToRecord);
   });
 }
@@ -275,6 +303,75 @@ export async function deletePayment(tenant: string, id: string): Promise<void> {
     await tx
       .delete(financePayments)
       .where(and(eq(financePayments.workspaceSubdomain, subdomain), eq(financePayments.id, id)));
+  });
+}
+
+export async function bulkSoftDeletePayments(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(financePayments)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(financePayments.workspaceSubdomain, subdomain),
+          inArray(financePayments.id, uniqueIds),
+          isNull(financePayments.deletedAt),
+        ),
+      )
+      .returning({ id: financePayments.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestorePayments(
+  tenant: string,
+  ids: string[],
+  _userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(financePayments)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(financePayments.workspaceSubdomain, subdomain),
+          inArray(financePayments.id, uniqueIds),
+          isNotNull(financePayments.deletedAt),
+        ),
+      )
+      .returning({ id: financePayments.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
   });
 }
 

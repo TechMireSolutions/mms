@@ -12,7 +12,11 @@ export {
 } from './crudBulkRoutes.js';
 export {
   registerResourceRoutes,
+  registerSingleRestoreRoute,
+  registerSingleDeleteRoute,
   type ResourceRoutesOptions,
+  type SingleRestoreRouteOptions,
+  type SingleDeleteRouteOptions,
 } from './crudResourceRoutes.js';
 export {
   registerMetricsRoute,

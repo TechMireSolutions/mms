@@ -116,6 +116,18 @@ export * from './contactResponseSanitizer.js';
 export * from './contactSetupConfigTypes.js';
 export * from './contactSiblingDerivation.js';
 export * from './contactSoftDelete.js';
+export {
+  stripClientSoftDeleteFields,
+  isEntityDeleted,
+  filterActiveEntities,
+  CLIENT_SOFT_DELETE_KEYS,
+  CONTACT_CLIENT_SOFT_DELETE_KEYS,
+} from './contactSoftDelete.js';
+export * from './studentSoftDelete.js';
+export * from './teacherSoftDelete.js';
+export * from './sessionSoftDelete.js';
+export * from './enrollmentSoftDelete.js';
+export * from './softDelete.js';
 export * from './contactSyncDiff.js';
 export * from './contactTypes.js';
 export * from './contactUtils.js';
@@ -174,6 +186,7 @@ export * from './schemas/hasanat.dto.js';
 export * from './schemas/examinations.dto.js';
 export * from './schemas/questionBank.dto.js';
 export * from './schemas/backgroundJob.dto.js';
+export * from './schemas/api.dto.js';
 export * from './contracts/index.js';
 export * from './studentsExportUtils.js';
 export * from './studentsListQuery.js';
@@ -219,6 +232,7 @@ export {
 // 8. Sessions & Enrollments Modules
 // ---------------------------------------------------------------------------
 export * from './enrollmentSetupConfigTypes.js';
+export * from './enrollmentUtils.js';
 export * from './enrollmentsExportUtils.js';
 export * from './enrollmentsListQuery.js';
 export * from './enrollmentsModuleManifest.js';
@@ -336,3 +350,4 @@ export * from './widgetFilterUtils.js';
 export * from './examinationsReportAggregates.js';
 export * from './reportComparisonQuery.js';
 export * from './widgetAggregateTypes.js';
+export * from './types/moduleManifest.js';

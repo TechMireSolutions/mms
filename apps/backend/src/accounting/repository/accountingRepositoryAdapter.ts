@@ -18,6 +18,10 @@ import {
   saveFiscalYear,
   bulkSaveFiscalYears,
   replaceFiscalYearsForWorkspace,
+  bulkSoftDeleteAccounts,
+  bulkRestoreAccounts,
+  bulkSoftDeleteEntries,
+  bulkRestoreEntries,
 } from '../../db/repositories/accountingRepository.js';
 import {
   listAccountsPage,
@@ -55,4 +59,8 @@ export const accountingRepository: AccountingRepository = {
   listFiscalYearsPage,
   aggregateAccountingCommandMetrics,
   aggregateAccountingReport,
+  bulkSoftDeleteAccounts,
+  bulkRestoreAccounts,
+  bulkSoftDeleteEntries,
+  bulkRestoreEntries,
 };

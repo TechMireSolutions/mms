@@ -158,6 +158,9 @@ export const obligationCollectionRecordSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
   })
   .strict();
 
@@ -179,15 +182,20 @@ export const obligationCollectionInsertSchema = z
     received_by: z.string().min(1),
     created_at: z.string().optional(),
     updated_at: z.string().optional(),
-    deletedAt: z.string().nullable().optional(),
-    deletedBy: z.string().nullable().optional(),
-    deletionReason: z.string().nullable().optional(),
   })
   .strict();
 
 export type ObligationCollectionInsert = z.infer<typeof obligationCollectionInsertSchema>;
 export const obligationCollectionUpdateSchema = obligationCollectionInsertSchema.partial();
 export type ObligationCollectionUpdate = z.infer<typeof obligationCollectionUpdateSchema>;
+
+export function isObligationCollectionDeleted(collection: { deletedAt?: string | null }): boolean {
+  return Boolean(collection.deletedAt);
+}
+
+export function filterActiveObligationCollections<T extends { deletedAt?: string | null }>(collections: T[]): T[] {
+  return collections.filter((c) => !isObligationCollectionDeleted(c));
+}
 
 /** Tenant-scoped object key for the obligations invoice template. */
 export const INVOICE_TEMPLATE_OBJECT_KEY = 'mms_invoice_template';
@@ -208,15 +216,16 @@ export const OBLIGATIONS_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: false,
+    retentionDays: null,
   },
   permissions: {
-    read: 'obligations.write',
+    read: 'obligations.read',
     write: 'obligations.write',
-    delete: 'obligations.write',
+    delete: 'obligations.delete',
     setupView: 'configuration.view',
     setupWrite: 'settings.global.write',
-    export: 'obligations.write',
-    reports: 'obligations.write',
+    export: 'obligations.read',
+    reports: 'obligations.read',
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['summary', 'collections'] as const,

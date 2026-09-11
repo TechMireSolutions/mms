@@ -39,6 +39,7 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 4. **UI** — bind via registry / form draft; `labelKey` only (no hardcoded labels)
 5. **Removal** — call `getFieldRemovalIssues()` / `get*FieldRemovalIssues()` before delete to check dependency conflicts (`createFieldRemovalIssuesChecker` in `@mms/shared`)
 6. **Validation** — entity save routes validate via shared Zod schemas (`safeParse`) — client validation is UX only
+7. **Soft-Delete Aware Uniqueness** — recyclable unique fields (`email`, `phone`, `employee_id`, `student_id`, slug) MUST use partial unique indexes `WHERE deleted_at IS NULL`; standard `UNIQUE` constraints and `UNIQUE NULLS NOT DISTINCT` are strictly forbidden on soft-deletable tables (`docs/soft-delete.md` §2.4 · `mms-soft-delete`)
 
 ## 3. Localization
 

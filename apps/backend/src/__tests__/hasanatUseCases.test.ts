@@ -151,14 +151,18 @@ describe('hasanat use-cases (DI with fake repository)', () => {
     const repo = createFakeRepo();
     const activeDist = { id: 'dist-1', batchId: 'b-1', denominationId: 'd-1', denominationName: 'Star', recipientType: 'student' as const, recipientName: 'Alice', recipientClass: '1A', quantity: 1, reason: 'Good deed', issuedDate: '2026-09-01', status: 'active' as const };
     const deletedDist = { ...activeDist, id: 'dist-2', deletedAt: new Date().toISOString() };
-    (repo.findDistributionsByIds as any).mockResolvedValue([activeDist, deletedDist]);
+    (repo.findDistributionsByIds as any).mockImplementation(async (_t: string, _ids: string[], opts?: any) => {
+      return (opts?.includeDeleted || opts?.deleted === 'deleted') ? [deletedDist] : [activeDist];
+    });
     const useCases = createHasanatUseCases(repo);
 
     const activeOnly = await runWithTenant('demo', () => useCases.loadDistributionsByIds(['dist-1', 'dist-2']));
     const archivedOnly = await runWithTenant('demo', () => useCases.loadDistributionsByIds(['dist-1', 'dist-2'], true));
 
+    expect(repo.findDistributionsByIds).toHaveBeenCalledWith('demo', ['dist-1', 'dist-2'], { includeDeleted: false });
     expect(activeOnly).toHaveLength(1);
     expect(activeOnly[0].id).toBe('dist-1');
+    expect(repo.findDistributionsByIds).toHaveBeenCalledWith('demo', ['dist-1', 'dist-2'], { includeDeleted: true });
     expect(archivedOnly).toHaveLength(1);
     expect(archivedOnly[0].id).toBe('dist-2');
   });

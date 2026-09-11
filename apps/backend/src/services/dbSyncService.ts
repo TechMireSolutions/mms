@@ -18,6 +18,8 @@ import {
   runInReadSnapshotTransaction,
   runInTransaction
 } from '../db/database.js';
+import { activeDb } from '../db/dbConnection.js';
+import { sql } from 'drizzle-orm';
 import { loadRelationalSnapshotCollections } from '../db/relationalSnapshot.js';
 import {
   sortCollectionNamesForRestore,
@@ -162,6 +164,8 @@ export async function synchronizeData(
     if (tenant && !(await acquireTenantRestoreLock(tenant))) {
       throw new RestoreInProgressError();
     }
+
+    await activeDb().execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
 
     if (fullRestore) {
       // Jobs race mid-restore and export artifacts are not in the envelope.

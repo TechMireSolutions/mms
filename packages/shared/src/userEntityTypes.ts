@@ -63,10 +63,22 @@ export interface WorkspaceUser {
   avatarInitials: string;
   deletedAt?: string | null;
   deletedBy?: string | null;
+  deletionReason?: string | null;
+  restoredAt?: string | null;
+  restoredBy?: string | null;
+  deletedWithCascade?: boolean | null;
   emailVerifiedAt?: string | null;
 }
 
 export type SystemUser = WorkspaceUser;
+
+export function isUserDeleted(user: { deletedAt?: string | null }): boolean {
+  return Boolean(user.deletedAt);
+}
+
+export function filterActiveUsers<T extends { deletedAt?: string | null }>(users: T[]): T[] {
+  return users.filter((u) => !isUserDeleted(u));
+}
 
 export const DEFAULT_WORKSPACE_USERS: WorkspaceUser[] = [];
 

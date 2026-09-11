@@ -5,7 +5,7 @@ description: Implements or reviews MMS background jobs and queued processing —
 
 # MMS Background Jobs Workflow
 
-Source: `mms-module-architecture.md` §5. Rules: `mms-module-architecture.md`, `mms-auth-security.md`, `mms-performance.md` §2 (Zero Memory Buffering & Streaming Background Workers).
+Source: `mms-module-architecture.md` §5. Rules: `mms-module-architecture.md`, `mms-auth-security.md`, `mms-performance.md` §2 (Zero Memory Buffering & Streaming Background Workers). Retention hard-purge workflow → **`mms-soft-delete`**.
 
 Use this skill when adding or changing background processing, export/download artifacts, bulk operation progress, job tray UX, or queued sync recovery.
 
@@ -34,6 +34,12 @@ Use this skill when adding or changing background processing, export/download ar
 8. Surface status in `BackgroundJobsTray` and provide download/result links only for owned artifacts.
 9. Audit sensitive queued work such as export, bulk delete/restore, import, merge, messaging, and sync recovery. Propagate W3C `traceparent` correlation ID into `correlation_id` to link background worker execution with database audit records and APM traces (`mms-audit-trail`).
 10. Register background audit verification worker (`runAuditVerificationJob`) to execute scheduled cryptographic hash chain checks and Merkle root rollups.
+11. **Scheduled Retention Hard-Purge Worker (`purgeExpiredArchivedRecords`)**:
+    - Schedule off-peak (daily at 02:00 UTC) as an isolated worker task (`docs/soft-delete.md` §13) — never run purges inline in HTTP request paths.
+    - Chunked lock-free purge loop in bounded batches of 500 rows using `LIMIT 500 FOR UPDATE SKIP LOCKED` with 50ms pauses between batches to prevent WAL spikes and row-lock contention.
+    - Emits `entity.hard_purge` audit record inside transaction before physical `DELETE`.
+    - Executes `SET LOCAL app.allow_hard_purge = 'true'` inside the worker transaction to bypass the `BEFORE DELETE` trigger.
+    - Strictly tenant-scoped (`workspaceSubdomain = tenant`). Supports dry run (`DRY_RUN=true`).
 
 ## Job Checklist
 
@@ -49,6 +55,7 @@ Use this skill when adding or changing background processing, export/download ar
 - [ ] Sensitive job is audited
 - [ ] W3C traceparent propagated as correlation ID in audit events
 - [ ] Scheduled verification runner registered for audit integrity
+- [ ] Scheduled retention hard-purge runner registered for expired soft-deleted entities (LIMIT 500 SKIP LOCKED)
 - [ ] Datasets exceeding interactive threshold (>500 rows) offloaded to background worker jobs with streaming pipelines
 - [ ] Jobs use BullMQ + Redis 7+ for durable queuing
 - [ ] Tests cover success, forbidden, and failure paths
@@ -58,8 +65,11 @@ Use this skill when adding or changing background processing, export/download ar
 
 - Trust client-upserted job records for privileged work.
 - Use queued jobs to bypass field, report, export, or soft-delete rules.
+- Run hard-purge deletions inline in HTTP request handlers.
+- Execute hard purge without SET LOCAL app.allow_hard_purge = 'true' or without emitting entity.hard_purge audit record.
+- Execute global cross-tenant hard purge operations.
 - Leave failed jobs invisible.
 - Store long-lived artifacts without expiry.
 - Bypass BullMQ for heavy report generation; do not block Fastify event loop.
 
-Related skills: `mms-module-work`, `mms-module-page`, `mms-reports-export`, `mms-backend-security`.
+Related skills: `mms-module-work`, `mms-module-page`, `mms-reports-export`, `mms-backend-security`, `mms-soft-delete`.

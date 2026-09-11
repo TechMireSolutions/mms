@@ -1,14 +1,19 @@
 import { type FastifyInstance } from 'fastify';
 import { z, type ZodType } from 'zod';
 
-import type { User } from '@mms/shared';
+import { isQueryFlagTrue, type User } from '@mms/shared';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from './rbacCanHelpers.js';
-import { sendForbidden, sendDatabaseError, sendNotFound, sendConflict } from './httpErrors.js';
+import { sendForbidden, sendDatabaseError, sendNotFound, sendConflict, sendIfHttpDomainError } from './httpErrors.js';
+import { isUniqueViolation } from './pgErrors.js';
 import { parseRequest, replyValidationError, executeDynamicValidation } from './zodRequest.js';
 import {
   resourceIdParamsSchema,
   softDeleteBodySchema,
 } from '../validation/commonSchemas.js';
+import { sql } from 'drizzle-orm';
+import { withTenant } from '../db/tenant-context.js';
+import { getRequestTenant } from './tenantContext.js';
+import { shouldCaptureDeletionReason } from './crudBulkRouteHelpers.js';
 import type { ResourceRecord } from './crudRouterTypes.js';
 import type { SoftDeleteRouteErrorMapper } from './crudBulkRoutes.js';
 
@@ -34,6 +39,8 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   validateDynamicFn?: (tenant: string, data: T, lang: string, user: User) => Promise<void>;
   /** Override collection delete capability (defaults to canDeleteCollection). */
   canDelete?: (user: User) => boolean;
+  /** Whether this module captures deletion reason. Defaults to true. When false, deletionReason is stripped. */
+  captureDeletionReason?: boolean;
   /** Optional post-create audit hook. */
   onAfterCreate?: (user: User, item: unknown) => Promise<void>;
   /** Optional post-update audit hook. */
@@ -53,6 +60,8 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   ) => Promise<Record<string, unknown>> | Record<string, unknown>;
   /** Transform single-entity responses (GET /:id, POST, PUT) — used for viewer-role sanitization. */
   buildSingleResponse?: (item: unknown, user: User) => Promise<unknown> | unknown;
+  /** Map domain delete failures (e.g. active dependencies, restrict guards) to stable HTTP responses. */
+  mapDeleteError?: SoftDeleteRouteErrorMapper;
   /** Map domain restore failures (e.g. unique field conflicts) to HTTP replies. */
   mapRestoreError?: SoftDeleteRouteErrorMapper;
 }
@@ -83,12 +92,14 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     customPutRoute = false,
     validateDynamicFn,
     canDelete = (user) => canDeleteCollection(user, collection),
+    captureDeletionReason,
     onAfterCreate,
     onAfterUpdate,
     onAfterDelete,
     onAfterRestore,
     buildRestoreResponse,
     buildSingleResponse,
+    mapDeleteError,
     mapRestoreError,
   } = options;
 
@@ -113,15 +124,31 @@ export function registerResourceRoutes<T extends ResourceRecord>(
       if (!canReadCollection(user, collection)) return sendForbidden(reply);
       const params = parseRequest(resourceIdParamsSchema, request.params);
       if (!params.ok) return replyValidationError(reply, params.message);
+      const query = request.query as { includeDeleted?: unknown } | undefined;
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+      if (includeDeleted && !canDelete(user)) {
+        return sendForbidden(reply, `Viewing deleted ${namePlural} requires delete permissions`);
+      }
       try {
-        const item = await loadByIdFn(params.data.id, false);
-        if (!item) {
+        const tenant = getRequestTenant() ?? user.workspaceSubdomain;
+        const item = includeDeleted
+          ? await withTenant(tenant, async (tx) => {
+              if (tx && typeof tx.execute === 'function') {
+                await tx.execute(sql`SET LOCAL app.include_deleted = 'true'`);
+              }
+              return loadByIdFn(params.data.id, true);
+            })
+          : await loadByIdFn(params.data.id, false);
+
+        if (!item || (!includeDeleted && (item as { deletedAt?: unknown }).deletedAt != null)) {
           return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
         }
         const response = buildSingleResponse ? await buildSingleResponse(item, user) : item;
         return reply.send({ [nameSingular]: response });
-      } catch {
-        return sendDatabaseError(reply, `Failed to load ${nameSingular}`);
+      } catch (error: unknown) {
+        const domainHandled = sendIfHttpDomainError(reply, error);
+        if (domainHandled) return domainHandled;
+        return sendDatabaseError(reply, `Failed to load ${nameSingular}`, error);
       }
     });
   }
@@ -156,23 +183,12 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         const response = buildSingleResponse ? await buildSingleResponse(item, user) : item;
         return reply.status(201).send({ [nameSingular]: response });
       } catch (error: unknown) {
-        const isDomainError =
-          typeof error === 'object' &&
-          error !== null &&
-          'statusCode' in error &&
-          typeof (error as { statusCode: unknown }).statusCode === 'number';
-        const statusCode = isDomainError ? (error as { statusCode: number }).statusCode : 0;
-        const fallbackMsg = `Failed to create ${nameSingular}`;
-        if (statusCode === 409) {
-          return sendConflict(reply, error instanceof Error ? error.message : fallbackMsg);
+        const domainHandled = sendIfHttpDomainError(reply, error);
+        if (domainHandled) return domainHandled;
+        if (isUniqueViolation(error)) {
+          return sendConflict(reply, `A record with this unique identifier already exists`);
         }
-        // Domain errors (which set a statusCode) keep their message; unexpected /
-        // driver errors get a generic message and are logged server-side so
-        // internal DB details are never echoed to the client.
-        if (isDomainError) {
-          return sendDatabaseError(reply, error instanceof Error ? error.message : fallbackMsg, error);
-        }
-        return sendDatabaseError(reply, fallbackMsg, error);
+        return sendDatabaseError(reply, `Failed to create ${nameSingular}`, error);
       }
     });
   }
@@ -214,73 +230,160 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         const response = buildSingleResponse ? await buildSingleResponse(updated, user) : updated;
         return reply.send({ [nameSingular]: response });
       } catch (error: unknown) {
-        const isDomainError =
-          typeof error === 'object' &&
-          error !== null &&
-          'statusCode' in error &&
-          typeof (error as { statusCode: unknown }).statusCode === 'number';
-        const statusCode = isDomainError ? (error as { statusCode: number }).statusCode : 0;
-        const fallbackMsg = `Failed to update ${nameSingular}`;
-        if (statusCode === 409) {
-          return sendConflict(reply, error instanceof Error ? error.message : fallbackMsg);
+        const domainHandled = sendIfHttpDomainError(reply, error);
+        if (domainHandled) return domainHandled;
+        if (isUniqueViolation(error)) {
+          return sendConflict(reply, `A record with this unique identifier already exists`);
         }
-        // Domain errors (which set a statusCode) keep their message; unexpected /
-        // driver errors get a generic message and are logged server-side so
-        // internal DB details are never echoed to the client.
-        if (isDomainError) {
-          return sendDatabaseError(reply, error instanceof Error ? error.message : fallbackMsg, error);
-        }
-        return sendDatabaseError(reply, fallbackMsg, error);
+        return sendDatabaseError(reply, `Failed to update ${nameSingular}`, error);
       }
     });
   }
 
   // DELETE /:id or DELETE /prefix/:id
   if (deleteFn) {
-    fastify.delete<{ Params: { id: string } }>(`${prefix}/:id`, async (request, reply) => {
-      const user = request.user as User;
-      if (!canDelete(user)) return sendForbidden(reply);
-      const params = parseRequest(resourceIdParamsSchema, request.params);
-      if (!params.ok) return replyValidationError(reply, params.message);
-      const body = parseRequest(softDeleteBodySchema, request.body ?? {});
-      if (!body.ok) return replyValidationError(reply, body.message);
-      try {
-        const deleted = await deleteFn(params.data.id, String(user.id), body.data.deletionReason);
-        if (!deleted) {
-          return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
-        }
-        await onAfterDelete?.(user, params.data.id, body.data.deletionReason);
-        return reply.send({ success: true });
-      } catch {
-        return sendDatabaseError(reply, `Failed to delete ${nameSingular}`);
-      }
+    registerSingleDeleteRoute(fastify, {
+      prefix,
+      collection,
+      nameSingular,
+      deleteFn,
+      canDelete,
+      captureDeletionReason,
+      onAfterDelete,
+      mapDeleteError,
     });
   }
 
   // POST /:id/restore or POST /prefix/:id/restore
   if (restoreFn) {
-    fastify.post(`${prefix}/:id/restore`, async (request, reply) => {
-      const user = request.user as User;
-      if (!canDelete(user)) return sendForbidden(reply);
-      const params = parseRequest(resourceIdParamsSchema, request.params);
-      if (!params.ok) return replyValidationError(reply, params.message);
-      try {
-        const restored = await restoreFn(params.data.id, String(user.id));
-        if (!restored) {
-          return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found or not deleted`);
-        }
-        await onAfterRestore?.(user, params.data.id);
-        const payload = buildRestoreResponse
-          ? await buildRestoreResponse(restored, user)
-          : { success: true };
-        return reply.send(payload);
-      } catch (error: unknown) {
-        const mapped = mapRestoreError?.(error);
-        if (mapped) {
-          return reply.status(mapped.statusCode).send(mapped.body);
-        }
-        return sendDatabaseError(reply, `Failed to restore ${nameSingular}`);
-      }
+    registerSingleRestoreRoute(fastify, {
+      prefix,
+      collection,
+      nameSingular,
+      restoreFn,
+      canDelete,
+      onAfterRestore,
+      buildRestoreResponse,
+      mapRestoreError,
     });
   }
+}
+
+export interface SingleDeleteRouteOptions {
+  prefix?: string;
+  collection: string;
+  nameSingular: string;
+  deleteFn: (id: string, userId: string, reason?: string) => Promise<unknown | null>;
+  canDelete?: (user: User) => boolean;
+  captureDeletionReason?: boolean;
+  onAfterDelete?: (user: User, id: string, reason?: string) => Promise<void>;
+  mapDeleteError?: SoftDeleteRouteErrorMapper;
+}
+
+export interface SingleRestoreRouteOptions {
+  prefix?: string;
+  collection: string;
+  nameSingular: string;
+  restoreFn: (id: string, userId: string) => Promise<unknown | null>;
+  canDelete?: (user: User) => boolean;
+  onAfterRestore?: (user: User, id: string) => Promise<void>;
+  buildRestoreResponse?: (
+    restored: unknown,
+    user: User,
+  ) => Promise<Record<string, unknown>> | Record<string, unknown>;
+  mapRestoreError?: SoftDeleteRouteErrorMapper;
+}
+
+/**
+ * Registers a standard single DELETE /:id endpoint with soft-delete body parsing,
+ * RBAC enforcement, manifest deletionReason stripping, and error mapping.
+ */
+export function registerSingleDeleteRoute(
+  fastify: FastifyInstance,
+  options: SingleDeleteRouteOptions,
+): void {
+  const {
+    prefix = '',
+    collection,
+    nameSingular,
+    deleteFn,
+    canDelete = (user) => canDeleteCollection(user, collection),
+    captureDeletionReason,
+    onAfterDelete,
+    mapDeleteError,
+  } = options;
+
+  fastify.delete<{ Params: { id: string } }>(`${prefix}/:id`, async (request, reply) => {
+    const user = request.user as User;
+    if (!canDelete(user)) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    const body = parseRequest(softDeleteBodySchema, request.body ?? {});
+    if (!body.ok) return replyValidationError(reply, body.message);
+    try {
+      const captureReason = shouldCaptureDeletionReason(collection, captureDeletionReason);
+      const reason = captureReason ? body.data.deletionReason : undefined;
+      const deleted = reason !== undefined
+        ? await deleteFn(params.data.id, String(user.id), reason)
+        : await deleteFn(params.data.id, String(user.id));
+      if (!deleted) {
+        return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);
+      }
+      await onAfterDelete?.(user, params.data.id, reason);
+      return reply.send({ success: true });
+    } catch (error: unknown) {
+      const mapped = mapDeleteError?.(error);
+      if (mapped) return reply.status(mapped.statusCode).send(mapped.body);
+      const domainHandled = sendIfHttpDomainError(reply, error);
+      if (domainHandled) return domainHandled;
+      return sendDatabaseError(reply, `Failed to delete ${nameSingular}`, error);
+    }
+  });
+}
+
+/**
+ * Registers a standard single POST /:id/restore endpoint with RBAC enforcement,
+ * userId attribution, conflict mapping, and custom restore responses.
+ */
+export function registerSingleRestoreRoute(
+  fastify: FastifyInstance,
+  options: SingleRestoreRouteOptions,
+): void {
+  const {
+    prefix = '',
+    collection,
+    nameSingular,
+    restoreFn,
+    canDelete = (user) => canDeleteCollection(user, collection),
+    onAfterRestore,
+    buildRestoreResponse,
+    mapRestoreError,
+  } = options;
+
+  fastify.post(`${prefix}/:id/restore`, async (request, reply) => {
+    const user = request.user as User;
+    if (!canDelete(user)) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    try {
+      const restored = await restoreFn(params.data.id, String(user.id));
+      if (!restored) {
+        return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found or not deleted`);
+      }
+      await onAfterRestore?.(user, params.data.id);
+      const payload = buildRestoreResponse
+        ? await buildRestoreResponse(restored, user)
+        : { success: true };
+      return reply.send(payload);
+    } catch (error: unknown) {
+      const mapped = mapRestoreError?.(error);
+      if (mapped) return reply.status(mapped.statusCode).send(mapped.body);
+      const domainHandled = sendIfHttpDomainError(reply, error);
+      if (domainHandled) return domainHandled;
+      if (isUniqueViolation(error)) {
+        return sendConflict(reply, 'A record with this unique identifier already exists');
+      }
+      return sendDatabaseError(reply, `Failed to restore ${nameSingular}`, error);
+    }
+  });
 }

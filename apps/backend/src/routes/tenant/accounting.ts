@@ -58,7 +58,7 @@ export default async function accountingRoutes(
         deleteFn: accountingUseCases.deleteJournalEntryById,
         restoreFn: accountingUseCases.restoreJournalEntryById,
         bulkDeleteFn: accountingUseCases.bulkSoftDeleteJournalEntries,
-        bulkRestoreFn: accountingUseCases.bulkRestoreJournalEntries,
+        bulkRestoreFn: (ids, userId) => accountingUseCases.bulkRestoreJournalEntries(ids, userId),
         responseKey: 'entries',
         errorMessagePrefix: 'entries',
         nameSingular: 'Journal entry',

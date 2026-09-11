@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import React, { act } from 'react';
 import { createRoot } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 import { useUsersPageController } from './useUsersPageController';
 import { normalizeWorkspaceUser } from '@mms/shared';
 
@@ -90,7 +91,11 @@ describe('useUsersPageController', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     act(() => {
-      root.render(<Consumer />);
+      root.render(
+        <MemoryRouter>
+          <Consumer />
+        </MemoryRouter>,
+      );
     });
 
     expect(controller).toBeDefined();
@@ -115,7 +120,11 @@ describe('useUsersPageController', () => {
     const container = document.createElement('div');
     const root = createRoot(container);
     act(() => {
-      root.render(<Consumer />);
+      root.render(
+        <MemoryRouter>
+          <Consumer />
+        </MemoryRouter>,
+      );
     });
 
     const superAdminUser = normalizeWorkspaceUser({

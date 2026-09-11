@@ -71,6 +71,7 @@ export const financeContract = c.router({
   getInvoice: {
     method: 'GET',
     path: '/api/finance/invoices/:id',
+    query: z.object({ includeDeleted: z.string().optional() }).optional(),
     responses: { 200: z.object({ invoice: invoiceRecordSchema }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Get a single invoice',
   },
@@ -105,6 +106,7 @@ export const financeContract = c.router({
   getPayment: {
     method: 'GET',
     path: '/api/finance/payments/:id',
+    query: z.object({ includeDeleted: z.string().optional() }).optional(),
     responses: { 200: z.object({ payment: paymentRecordSchema }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Get a single payment',
   },

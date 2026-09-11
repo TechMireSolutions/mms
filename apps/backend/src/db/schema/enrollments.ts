@@ -1,8 +1,9 @@
-import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar, bigint, numeric , foreignKey } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar, bigint, numeric, foreignKey } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { students } from "./students.js";
 import { sessions, sessionClasses } from "./sessions.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const enrollments = pgTable('enrollments', {
   id: text('id').notNull(),
@@ -24,9 +25,7 @@ export const enrollments = pgTable('enrollments', {
   invoiceId: varchar('invoice_id', { length: 64 }),
   paymentStatus: varchar('payment_status', { length: 20 }).notNull().default('none'),
   notes: text('notes').notNull().default(''),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -61,6 +60,9 @@ export const enrollments = pgTable('enrollments', {
   index('enrollments_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('enrollments_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const enrollmentTimelineEvents = pgTable('enrollment_timeline_events', {

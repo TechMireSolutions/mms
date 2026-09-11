@@ -145,10 +145,68 @@ test('verifies bidirectional layout and Nastaliq rendering parity', async ({ pag
 
 ---
 
-## 4. Verification Checklist Before Done
+## 4. Soft-Delete Integration & Parity Testing (`docs/soft-delete.md` §12)
+
+Every soft-deletable module must include integration tests (`inject()`) verifying:
+1. **Single-Record 404 on Archived**: Standard `GET /:id` returns `404 Not Found` for soft-deleted entities; `GET /:id?includeDeleted=true` returns `200 OK` when caller has `canDeleteCollection`.
+2. **Conflict Trap on Restore (PostgreSQL Error 23505)**: Restoring a record whose email/phone is currently assigned to another active record traps error `23505` and returns formatted `409 Conflict`.
+3. **Idempotency & State Latches**: `DELETE /:id` on an already-archived row returns `404 Not Found`. `POST /:id/restore` on an active row returns `404 Not Found`.
+4. **Partial Unique Index Verification**: Creating a new active entity with the same email/phone as an archived entity succeeds without a uniqueness violation (validating `WHERE deleted_at IS NULL` index).
+5. **Bulk Counts Accuracy**: `POST /bulk-delete` and `POST /bulk-restore` with mixed active/archived IDs accurately return `{ succeeded: N, failed: M }`.
+6. **Session Invalidation**: Soft-deleting a user account immediately invalidates active tokens in Redis and prevents subsequent authentication.
+
+```typescript
+// Fastify inject() soft-delete integration pattern
+test('DELETE /api/contacts/:id soft-deletes and subsequent GET returns 404', async () => {
+  const app = await createServer();
+  const deleteRes = await app.inject({
+    method: 'DELETE',
+    url: `/api/contacts/${contactId}`,
+    headers: { host: 'tenant.localhost' },
+    cookies: { mms_tenant_session: validSessionCookie },
+  });
+  expect(deleteRes.statusCode).toBe(200);
+
+  // Standard GET returns 404
+  const getRes = await app.inject({
+    method: 'GET',
+    url: `/api/contacts/${contactId}`,
+    headers: { host: 'tenant.localhost' },
+    cookies: { mms_tenant_session: validSessionCookie },
+  });
+  expect(getRes.statusCode).toBe(404);
+});
+```
+
+### Playwright E2E Trash & Undo Verification
+```typescript
+test('soft-delete row hides item, shows Undo toast, and trash toggle syncs URL', async ({ page }) => {
+  await page.goto('/tenant/students');
+
+  // 1. Single delete triggers optimistic hide + Undo toast
+  await page.locator('[data-testid="row-actions-btn"]').first().click();
+  await page.locator('[data-testid="archive-row-btn"]').click();
+  await expect(page.locator('text=Record archived')).toBeVisible();
+  await expect(page.locator('button:has-text("Undo")')).toBeVisible();
+
+  // 2. Toggle trash syncs URL to ?view=trash and preserves filters
+  await page.locator('[data-testid="search-input"]').fill('Ali');
+  await page.locator('[data-testid="module-trash-toggle"]').click();
+  await expect(page).toHaveURL(/.*view=trash.*/);
+  await expect(page.locator('[data-testid="search-input"]')).toHaveValue('Ali');
+
+  // 3. Add CTA hidden in trash mode
+  await expect(page.locator('[data-testid="add-record-btn"]')).toBeHidden();
+});
+```
+
+---
+
+## 5. Verification Checklist Before Done
 
 - [ ] All new pure utility functions in `@mms/shared` have corresponding Vitest unit tests.
 - [ ] Backend route changes include `inject()` test cases for authentication (`401`), authorization (`403`), and validation failure (`422`/`400`).
+- [ ] Soft-delete endpoints tested for 404 on archived GET, 409 on duplicate restore, 404 on re-delete, and bulk `{ succeeded, failed }` counts.
 - [ ] Audit trail mutations verify RFC 8785 canonical JSON hashing and SHA-256 chain continuity.
 - [ ] Scheduled audit verification (`runAuditVerificationJob`) tested for detecting broken chains, sequence gaps, and timestamp regressions.
 - [ ] Access to audit logs/exports verified to emit immutable `VIEW` audit records (Auditing the Auditor).
@@ -156,4 +214,5 @@ test('verifies bidirectional layout and Nastaliq rendering parity', async ({ pag
 - [ ] Performance refactors guarantee 100% backward compatibility for API contracts, schemas, and props (`mms-performance.md`).
 - [ ] Performance refactors explicitly document baseline bottleneck and quantified resource saved (CPU/RAM/DB/Bundle/DOM).
 - [ ] `pnpm test` runs with 100% pass rate.
+
 

@@ -1,4 +1,6 @@
+import React from "react";
 import { toast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 
 /**
  * Canonical, DRY notification API for the whole app.
@@ -10,6 +12,7 @@ import { toast } from "@/components/ui/use-toast";
  * @example
  * notify.success(t('contacts.form.contactCreated'), { description: `${name} saved.` });
  * notify.error(t('contacts.form.pleaseFixErrors'), { description: firstError.message });
+ * notify.archivedWithUndo(t('common.recordArchived'), () => restore(id));
  */
 
 /** Standard auto-dismiss durations (ms). */
@@ -24,7 +27,15 @@ type ToastReturn = ReturnType<typeof toast>;
 export interface NotifyOptions {
   /** Secondary line under the title. */
   description?: string;
+  /** Action node (e.g. Undo button). */
+  action?: React.ReactNode;
   /** Override the auto-dismiss delay. Pass `Infinity` for a sticky toast. */
+  duration?: number;
+}
+
+export interface NotifyArchivedUndoOptions {
+  description?: string;
+  undoLabel?: string;
   duration?: number;
 }
 
@@ -35,6 +46,7 @@ function make(variant: NotifyVariant, fallbackDuration: number) {
     toast({
       title,
       description: options.description,
+      action: options.action,
       variant,
       duration: options.duration ?? fallbackDuration,
     });
@@ -51,6 +63,41 @@ export const notify = {
   info: make("info", NOTIFY_DURATION.default),
   /** Plain, theme-neutral message. */
   message: make("default", NOTIFY_DURATION.default),
+  /**
+   * Optimistic soft-delete toast with an accessible Undo action button (§7.8).
+   * Displays the archival notification with a 5–10s grace window (default 8000ms).
+   */
+  archivedWithUndo: (
+    title: string,
+    onUndo: () => void | Promise<void>,
+    options: NotifyArchivedUndoOptions = {},
+  ): ToastReturn => {
+    const { undoLabel = "Undo", description, duration = NOTIFY_DURATION.long } = options;
+    return toast({
+      title,
+      description,
+      variant: "default",
+      duration,
+      action: React.createElement(
+        ToastAction,
+        {
+          role: "button",
+          tabIndex: 0,
+          onClick: () => {
+            void onUndo();
+          },
+          onKeyDown: (e: React.KeyboardEvent) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              void onUndo();
+            }
+          },
+          className: "cursor-pointer select-none",
+        },
+        undoLabel,
+      ),
+    });
+  },
 } as const;
 
 export type Notify = typeof notify;

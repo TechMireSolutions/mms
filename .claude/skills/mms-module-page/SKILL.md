@@ -16,7 +16,7 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 | §3 | Work directory | skill **`mms-module-work`** |
 | §4 | Setup / fields | skill **`mms-module-setup`**, `mms-fields.md` |
 | §5 | Background jobs | skill **`mms-background-jobs`** |
-| §6 | Soft-delete Work UX + RBAC omit | `mms-module-architecture.md` (+ sessions/RBAC middleware → `mms-auth-security.md`) |
+| §6 | Soft-delete Work UX + RBAC omit | skill **`mms-soft-delete`** · `mms-module-architecture.md` (+ sessions/RBAC middleware → `mms-auth-security.md`) |
 | §7 | Gold-standard parity | checklist below |
 | Reports | Analytics / export | skill **`mms-reports-export`** |
 
@@ -39,7 +39,7 @@ Reference: Contacts (full), Students/Teachers (soft-delete Work). Before buildin
 
 ```
 - [ ] Bulk PUT upsert-only (never replaceForWorkspace wipe on API write paths)
-- [ ] Soft-delete + Work trash UI (or documented manifest variant)
+- [ ] Soft-delete + Work trash UI (or documented manifest variant) — skill **`mms-soft-delete`**
 - [ ] mutateAsync + await form/setup saves; close only after success
 - [ ] setupSubTabs + canEditSetup + saveSettingsAsync
 - [ ] ErrorState + retry + hint on list query failure
@@ -75,7 +75,7 @@ Reference: Contacts (full), Students/Teachers (soft-delete Work). Before buildin
 
 ## Related skills
 
-`mms-module-work`, `mms-module-setup`, `mms-background-jobs`, `mms-reports-export`, `mms-query-factories`, `mms-form-architecture`, `mms-fields-registry`, `mms-messaging`
+`mms-module-work`, `mms-soft-delete`, `mms-module-setup`, `mms-background-jobs`, `mms-reports-export`, `mms-query-factories`, `mms-form-architecture`, `mms-fields-registry`, `mms-messaging`
 
 ## Done
 

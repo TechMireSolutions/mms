@@ -66,9 +66,12 @@ Large feature pages and settings panels should keep JSX thin:
 
 | Pattern | Name | Owns |
 |---------|------|------|
-| Page orchestrator | `use{Module}PageController` | Tabs, permissions wiring, list/trash state, command-centre handlers |
+| Page orchestrator | `use{Module}PageController` | Tabs, permissions wiring, list/trash state (`viewingDeleted` synced with URL search params `?view=trash`), command-centre handlers |
 | Panel / form state | `use{Thing}State` / `use{Thing}Draft` | Local draft + derived options |
-| Action clusters | `use{Thing}Actions` / `*ActionHandlers` | Save, restore, bulk, decrypt — called from the orchestrator |
+| Action clusters | `use{Thing}Actions` / `*ActionHandlers` | Save, restore, bulk, decrypt, optimistic soft-delete with 5–10s Undo toast — called from the orchestrator |
+
+- **Soft-Delete State & URL Synchronization (`docs/soft-delete.md` §7.1 & §7.10):** Synchronize `viewingDeleted` with URL search params via the shared `useTrashMode` hook (`@/hooks/useTrashMode` wrapping `useSearchParams` with `?view=trash`). TanStack Query hooks map `viewingDeleted` to `includeDeleted`. Toggling `ModuleTrashToggle` must **preserve** active search query and faceted filter selections — never reset filters on toggle.
+- **Single Soft-Delete Optimistic Pattern (`docs/soft-delete.md` §7.8):** Row action triggers an instant TanStack Query cache hide, displaying a toast with an `[Undo]` button lasting 5–10 seconds that executes `POST /:id/restore` on click without navigating to the trash view.
 
 Return a flat object the shell destructures; keep public page/component export paths unchanged (`mms-structure-naming.md`). Memoize non-trivial calculations (`useMemo`) and callback/object references passed to child components or effects (`useCallback`) to prevent render churn; avoid premature memoization on trivial primitive operations (`mms-performance.md`). Prefer React 19 `useEffectEvent` / `startTransition` / `useDeferredValue` when the repo pattern fits (e.g. event handlers that read latest props without re-subscribing effects).
 
@@ -80,6 +83,7 @@ Return a flat object the shell destructures; keep public page/component export p
 | `useModuleColumnLayout` | Column visibility **and** width — merge rules **`mms-module-architecture.md` §3** |
 | Contacts column prefs | `useContactColumnLayout` via `ContactConfigContext` |
 | Command / dashboard metrics | `use*Metrics` from `@/tenant/hooks/collections/*` — ban client-reduce of full lists for KPI values |
+| Trash toggle & bulk actions | `ModuleTrashToggle` in toolbar; `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` via `ModuleWorkBulkActionBar` (`mms-soft-delete`) |
 
 ## 10. New Hooks Checklist
 
@@ -87,6 +91,8 @@ Return a flat object the shell destructures; keep public page/component export p
 - [ ] Internal API via `apiClient`
 - [ ] Export query keys when using Query; pass `signal`
 - [ ] `enabled: isAuthenticated` (tenant) / `enabled: isPlatformAuthenticated` (platform) for REST queries
+- [ ] Trash mode (`?view=trash`) synchronized with URL search params; search/filter state preserved across toggle (`mms-soft-delete`)
+- [ ] Single soft-delete mutation uses optimistic cache hide + 5–10s Undo toast hook pattern
 - [ ] No new `useLiveCollection` for REST-migrated entities
 - [ ] Controllers stay under soft ~220 lines when split — extract action/presentational siblings rather than growing one mega-hook
 - [ ] Test pure wrappers where ROI is high (`mms-testing-observability.md`)

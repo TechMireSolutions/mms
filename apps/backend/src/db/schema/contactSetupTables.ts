@@ -2,6 +2,7 @@ import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, 
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { contacts } from "./contactTables.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 /** Madrasa workspace auth users — isolated per subdomain. */
 export const tenantUsers = pgTable('tenant_users', {
@@ -15,10 +16,9 @@ export const tenantUsers = pgTable('tenant_users', {
   emailVerifiedAt: timestamp('email_verified_at', { withTimezone: true, mode: 'date' }),
   pendingLoginEmail: text('pending_login_email'),
   mustChangePassword: boolean('must_change_password').notNull().default(false),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
   /** Non-auth profile fields from legacy JSON user rows. */
   profileJson: jsonb('profile_json').$type<Record<string, unknown>>(),
 }, (table) => [
@@ -27,6 +27,12 @@ export const tenantUsers = pgTable('tenant_users', {
     .on(table.workspaceSubdomain, table.loginEmail)
     .where(sql`${table.deletedAt} is null`),
   index('tenant_users_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
+  index('tenant_users_workspace_active_idx')
+    .on(table.workspaceSubdomain)
+    .where(sql`${table.deletedAt} is null`),
+  index('tenant_users_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
   index('tenant_users_workspace_contact_idx').on(table.workspaceSubdomain, table.contactId),
   index('tenant_users_workspace_contact_active_idx')
     .on(table.workspaceSubdomain, table.contactId)

@@ -40,6 +40,7 @@ export const MESSAGING_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: false,
+    retentionDays: 365,
   },
   recipientsColumnPreferencesObjectKey: 'messaging_recipients_user_column_preferences',
   historyColumnPreferencesObjectKey: 'messaging_history_user_column_preferences',
@@ -157,5 +158,13 @@ export function toMessagingRecipient<
     phone: phone || '',
     email: email || '',
   };
+}
+
+export function isMessageLogDeleted(log: { deletedAt?: string | null }): boolean {
+  return Boolean(log.deletedAt);
+}
+
+export function filterActiveMessageLogs<T extends { deletedAt?: string | null }>(logs: T[]): T[] {
+  return logs.filter((log) => !isMessageLogDeleted(log));
 }
 

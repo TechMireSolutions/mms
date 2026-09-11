@@ -21,18 +21,40 @@ import type {
  */
 export interface QuestionBankRepository {
   // Questions
-  listQuestionsByWorkspace(tenant: string): Promise<QuestionBankQuestion[]>;
+  listQuestionsByWorkspace(
+    tenant: string,
+    options?: { limit?: number; offset?: number; deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<QuestionBankQuestion[]>;
   findQuestionById(tenant: string, id: string): Promise<QuestionBankQuestion | null>;
-  findQuestionsByIds(tenant: string, ids: string[]): Promise<QuestionBankQuestion[]>;
+  findQuestionsByIds(
+    tenant: string,
+    ids: string[],
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<QuestionBankQuestion[]>;
   saveQuestion(tenant: string, record: QuestionBankQuestion): Promise<void>;
   bulkSaveQuestions(tenant: string, records: QuestionBankQuestion[]): Promise<void>;
   replaceQuestionsForWorkspace(tenant: string, records: QuestionBankQuestion[]): Promise<void>;
+  bulkSoftDeleteQuestions?(
+    tenant: string,
+    ids: string[],
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkRestoreQuestions?(
+    tenant: string,
+    ids: string[],
+    userId?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
   listQuestionsPage(tenant: string, query: QuestionBankListQuery): Promise<QuestionBankListPageResult>;
 
   // Tests
   listTestsByWorkspace(tenant: string): Promise<QuestionBankTest[]>;
   findTestById(tenant: string, id: string): Promise<QuestionBankTest | null>;
-  findTestsByIds(tenant: string, ids: string[]): Promise<QuestionBankTest[]>;
+  findTestsByIds(
+    tenant: string,
+    ids: string[],
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<QuestionBankTest[]>;
   saveTest(tenant: string, record: QuestionBankTest): Promise<void>;
   bulkSaveTests(tenant: string, records: QuestionBankTest[]): Promise<void>;
   replaceTestsForWorkspace(tenant: string, records: QuestionBankTest[]): Promise<void>;
@@ -40,7 +62,11 @@ export interface QuestionBankRepository {
   // Results
   listResultsByWorkspace(tenant: string): Promise<QuestionBankResult[]>;
   findResultById(tenant: string, id: string): Promise<QuestionBankResult | null>;
-  findResultsByIds(tenant: string, ids: string[]): Promise<QuestionBankResult[]>;
+  findResultsByIds(
+    tenant: string,
+    ids: string[],
+    options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+  ): Promise<QuestionBankResult[]>;
   saveResult(tenant: string, record: QuestionBankResult): Promise<void>;
   bulkSaveResults(tenant: string, records: QuestionBankResult[]): Promise<void>;
   replaceResultsForWorkspace(tenant: string, records: QuestionBankResult[]): Promise<void>;

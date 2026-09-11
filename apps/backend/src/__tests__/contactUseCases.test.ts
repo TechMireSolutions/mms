@@ -22,6 +22,15 @@ vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: (...args: unknown[]) => mockBroadcastCollection(...args),
 }));
 
+vi.mock('../services/outboxEventService.js', () => ({
+  emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../services/auditTrailService.js', () => ({
+  recordModernAuditEvent: vi.fn().mockResolvedValue({ id: 1, hashPrevious: '0'.repeat(64), hashCurrent: 'a'.repeat(64), canonicalPayload: '{}' }),
+  sanitizeAuditState: (v: unknown) => v,
+}));
+
 vi.mock('../contacts/use-cases/contactDuplicateScanUseCases.js', () => ({
   invalidateDuplicateScanCache: (...args: unknown[]) => mockInvalidateDuplicateScanCache(...args),
   getDuplicateScanCache: (...args: unknown[]) => mockGetDuplicateScanCache(...args),

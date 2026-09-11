@@ -4,7 +4,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 
 **Antigravity:** start with [antigravity-workspace](antigravity-workspace/SKILL.md). Manifest: [.agent/skills-manifest.json](../skills-manifest.json)
 
-## Skills index (29)
+## Skills index (30)
 
 | Skill | Use when |
 |-------|----------|
@@ -23,6 +23,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-backup-restore](mms-backup-restore/SKILL.md) | Encrypted backup / wipe-restore validate-before-wipe |
 | [mms-schema-migrate](mms-schema-migrate/SKILL.md) | Forward-only Drizzle DDL, FORCE RLS, ban db push |
 | [mms-shared-package](mms-shared-package/SKILL.md) | `@mms/shared` types and utils |
+| [mms-soft-delete](mms-soft-delete/SKILL.md) | MMS Soft-Delete System, 3-tier indexing, restore, URL sync, outbox CDC, hard-purge |
 | [mms-backend-api](mms-backend-api/SKILL.md) | Fastify routes, middleware, Zod, inject tests |
 | [mms-backend-security](mms-backend-security/SKILL.md) | Tenant isolation, RBAC, cookies, CSRF/Origin, rate limits |
 | [mms-audit-trail](mms-audit-trail/SKILL.md) | Database audit trail, RFC 8785 canonical JSON, sharded hash chains, crypto-shredding, monthly partitions |

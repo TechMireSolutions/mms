@@ -4,6 +4,7 @@ import { canDeleteCollection, canWriteCollection, canReadCollection } from '../.
 import {
   STUDENTS_MODULE_MANIFEST,
   roleHasPermission,
+  isQueryFlagTrue,
   type User,
   type Student,
   studentContract,
@@ -31,7 +32,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
 
-      const includeDeleted = query.includeDeleted === 'true' || query.includeDeleted === true;
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
 
       if (includeDeleted && !canDeleteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
@@ -59,12 +60,12 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const includeDeleted = (query as { includeDeleted?: boolean | 'true' | 'false' }).includeDeleted === true || (query as { includeDeleted?: boolean | 'true' | 'false' }).includeDeleted === 'true';
+        const includeDeleted = isQueryFlagTrue((query as { includeDeleted?: unknown })?.includeDeleted);
         if (includeDeleted && !canDeleteCollection(user, 'students')) {
           return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
         }
         const item = await withTenant(String(request.tenant?.id), () => studentUseCases.loadStudentById(id, includeDeleted), { readOnly: true });
-        if (!item) {
+        if (!item || (!includeDeleted && (item as { deletedAt?: unknown }).deletedAt != null)) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Student not found' } };
         }
         const response = await sanitizeOneStudentForUser(item as Student, user);

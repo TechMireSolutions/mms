@@ -6,7 +6,7 @@ description: Mandatory performance, resource efficiency, caching, streaming, que
 
 Authoritative performance and resource constraints across **tenant workspaces and platform apex**. Every code change, refactor, and new feature is strictly bound by these invariants.
 
-**Workflow skills:** code review & bottlenecks → `mms-code-review` · query factories & caching → `mms-query-factories` · backend services → `mms-backend-api` · Drizzle indexes & DDL → `mms-schema-migrate` · frontend shell & rendering → `mms-frontend`.
+**Workflow skills:** code review & bottlenecks → `mms-code-review` · query factories & caching → `mms-query-factories` · backend services → `mms-backend-api` · Drizzle indexes & DDL → `mms-schema-migrate` · soft-delete performance & purge → `mms-soft-delete` · frontend shell & rendering → `mms-frontend`.
 
 ---
 
@@ -40,6 +40,10 @@ Authoritative performance and resource constraints across **tenant workspaces an
   - NEVER serialize all system writes through a single global cryptographic hash chain. Global sequential chaining forces every write to wait on the previous row's hash, causing severe transaction lock contention under concurrent load.
   - Shard hash chains per logical partition (per tenant workspace or per aggregate domain) and periodically roll shard heads up into a Merkle tree, publishing the Merkle root at fixed intervals (certificate-transparency scaling model).
   - Archive hot audit partitions (0–30 days) by detaching PostgreSQL date partitions (`ALTER TABLE audit_trail_events DETACH PARTITION ...`) rather than running `DELETE` queries, preventing massive WAL churn, table locks, and index bloat.
+- **Soft-Delete Indexing & Storage Engine Efficiency:**
+  - Active list queries must hit Category B partial indexes (`WHERE deleted_at IS NULL`), while trash views hit Category C partial indexes (`WHERE deleted_at IS NOT NULL`). Tables with both partial indexes outperform single-predicate indexes by up to 276× on skewed-status datasets.
+  - While soft-delete `UPDATE` statements cannot execute Heap-Only Tuple (HOT) updates, PostgreSQL immediately evicts dead tuples from Category B partial indexes upon archival, keeping hot active-record indexes compact and cache-resident.
+  - Autovacuum tuning: High-churn soft-deleted tables (`message_logs`, `attendance_records`) must declare aggressive vacuum thresholds in DDL (`autovacuum_vacuum_scale_factor = 0.05, autovacuum_vacuum_cost_limit = 1000`) to prevent dead-tuple table and index bloat.
 
 ---
 
@@ -61,6 +65,10 @@ Authoritative performance and resource constraints across **tenant workspaces an
 - **Audit Payload Minimization & Canonical Hashing (`mms-audit-trail`):**
   - Minimize audit payloads at capture time: never log full raw PII payloads, redundant blobs, or secrets into `old_state`/`new_state`. Only record fields required for point-in-time state reconstruction; every unneeded personal field captured increases storage overhead and future Right to Erasure cryptographic shredding / redaction processing.
   - State hashing and delta comparisons must strictly use RFC 8785 (JSON Canonicalization Scheme - JCS) for deterministic representation across environments, avoiding CPU-heavy custom recursive key-sorting algorithms on hot write paths.
+- **Batched Single-Statement Bulk Updates:**
+  - `bulkDeleteFn` and `bulkRestoreFn` must execute a single batched SQL `UPDATE` statement scoped via `inArray(table.id, ids)`. Iterating through ID arrays sequentially with individual row updates ($N+1$ query loops) is strictly banned.
+- **Chunked Lock-Free Background Purge Processing:**
+  - Hard-purge workers (`purgeExpiredArchivedRecords`) must execute deletions in bounded chunks of 500 rows using `LIMIT 500 FOR UPDATE SKIP LOCKED` with brief inter-chunk pauses (50ms). Purging thousands of rows in an unbounded single transaction is banned because it causes severe WAL spikes, extended exclusive row locks, and blocks concurrent tenant transactions.
 
 ---
 

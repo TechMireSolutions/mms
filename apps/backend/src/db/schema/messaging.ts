@@ -32,7 +32,10 @@ export const messageLogs = pgTable('message_logs', {
   errorMessage: varchar('error_message', { length: 1000 }),
   deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
   deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  deletionReason: varchar('deletion_reason', { length: 500 }),
+  /** Generated column: TTL expiry = deleted_at + 365 days (retentionDays = 365 per §13.4). */
+  purgeAfter: timestamp('purge_after', { withTimezone: true, mode: 'date' })
+    .generatedAlwaysAs(sql`deleted_at + INTERVAL '365 days'`),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -55,6 +58,13 @@ export const messageLogs = pgTable('message_logs', {
   index('message_logs_workspace_channel_status_sent_active_idx')
     .on(table.workspaceSubdomain, table.channel, table.status, desc(table.sentAt))
     .where(sql`${table.deletedAt} is null`),
+  index('message_logs_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
+  /** Planner-efficient index for purge worker candidate selection (§13.2). */
+  index('message_logs_purge_after_idx')
+    .on(table.workspaceSubdomain, table.purgeAfter)
+    .where(sql`${table.deletedAt} is not null and ${table.purgeAfter} is not null`),
 ]);
 
 

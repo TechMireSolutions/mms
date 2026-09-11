@@ -32,6 +32,7 @@ interface ObligationsModalLayerProps {
   showForm: boolean;
   canWrite: boolean;
   showDeleted: boolean;
+  canDelete?: boolean;
   viewCollection: ObligationCollection | null;
   obligationTypes: ObligationType[];
   reps: MujtahidRep[];
@@ -41,6 +42,7 @@ interface ObligationsModalLayerProps {
   collections: ObligationCollection[];
   messagingTarget: MessagingTarget | null;
   onSaveCollection: (collection: ObligationCollection) => Promise<void>;
+  onRestore?: (id: string) => void | Promise<void>;
   onCloseForm: () => void;
   onCloseDetail: () => void;
   onCloseComposer: () => void;
@@ -50,6 +52,7 @@ export function ObligationsModalLayer({
   showForm,
   canWrite,
   showDeleted,
+  canDelete = false,
   viewCollection,
   obligationTypes,
   reps,
@@ -59,6 +62,7 @@ export function ObligationsModalLayer({
   collections,
   messagingTarget,
   onSaveCollection,
+  onRestore,
   onCloseForm,
   onCloseDetail,
   onCloseComposer,
@@ -88,6 +92,8 @@ export function ObligationsModalLayer({
               mujtahids={mujtahids}
               wakalaTypes={wakalaTypes}
               distributions={distributions}
+              canDelete={canDelete}
+              onRestore={onRestore}
               onClose={onCloseDetail}
             />
           </React.Suspense>

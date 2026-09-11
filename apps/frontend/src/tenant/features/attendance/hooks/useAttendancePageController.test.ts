@@ -1,5 +1,6 @@
 import React, { act } from "react";
 import { createRoot } from "react-dom/client";
+import { MemoryRouter } from "react-router-dom";
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
 import { useAttendancePageController } from "./useAttendancePageController";
 
@@ -90,7 +91,7 @@ describe("useAttendancePageController Hook", () => {
 
     await act(async () => {
       const root = createRoot(container!);
-      root.render(React.createElement(TestComponent));
+      root.render(React.createElement(MemoryRouter, null, React.createElement(TestComponent)));
     });
 
     expect(hookResult).toBeDefined();

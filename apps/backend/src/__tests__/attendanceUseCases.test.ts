@@ -70,7 +70,10 @@ describe('attendance use-cases (DI with fake repository)', () => {
 
   it('upsertAttendanceRecords delegates to the injected repository', async () => {
     const repo = createFakeRepo();
-    const useCases = createAttendanceUseCases(repo);
+    const useCases = createAttendanceUseCases(repo, {
+      findStudentsByIds: vi.fn().mockResolvedValue([{ id: 'student-1', deletedAt: null }]),
+      findSessionsByIds: vi.fn().mockResolvedValue([{ id: 'class-a', deletedAt: null }]),
+    });
     const record = {
       id: 'class-a-2026-07-27-student-1',
       classId: 'class-a',
@@ -175,6 +178,63 @@ describe('attendance use-cases (DI with fake repository)', () => {
       expect(metricsValidDate.total).toBe(7);
       expect(repo.aggregateAttendanceCommandMetrics).toHaveBeenCalledWith('demo', { selectedDate: '2026-09-01' });
     });
+  });
+
+  it('createAttendanceRecord throws 400 when student is archived', async () => {
+    const repo = createFakeRepo();
+    const findStudentById = vi.fn().mockResolvedValue({ id: 's1', deletedAt: '2026-01-01' });
+    const useCases = createAttendanceUseCases(repo, { findStudentById });
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.createAttendanceRecord({
+          id: 'att-1',
+          classId: 'c1',
+          studentId: 's1',
+          date: '2026-09-01',
+          status: 'present',
+        } as any),
+      ),
+    ).rejects.toThrow('Referenced student is archived or does not exist');
+  });
+
+  it('createAttendanceRecord throws 400 when session is archived', async () => {
+    const repo = createFakeRepo();
+    const findStudentById = vi.fn().mockResolvedValue({ id: 's1', deletedAt: null });
+    const findSessionById = vi.fn().mockResolvedValue({ id: 'c1', deletedAt: '2026-01-01' });
+    const useCases = createAttendanceUseCases(repo, { findStudentById, findSessionById });
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.createAttendanceRecord({
+          id: 'att-1',
+          classId: 'c1',
+          studentId: 's1',
+          date: '2026-09-01',
+          status: 'present',
+        } as any),
+      ),
+    ).rejects.toThrow('Referenced session is archived or does not exist');
+  });
+
+  it('upsertAttendanceRecords throws 400 when batch contains an archived student', async () => {
+    const repo = createFakeRepo();
+    const findStudentsByIds = vi.fn().mockResolvedValue([{ id: 's1', deletedAt: '2026-01-01' }]);
+    const useCases = createAttendanceUseCases(repo, { findStudentsByIds });
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.upsertAttendanceRecords([
+          {
+            id: 'att-1',
+            classId: 'c1',
+            studentId: 's1',
+            date: '2026-09-01',
+            status: 'present',
+          } as any,
+        ]),
+      ),
+    ).rejects.toThrow('Referenced student is archived or does not exist');
   });
 });
 

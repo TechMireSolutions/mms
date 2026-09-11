@@ -6,6 +6,7 @@ import {
   roleHasPermission,
   DEFAULT_TEACHERS_SETTINGS,
   teacherRecordSchema,
+  isQueryFlagTrue,
   type Teacher,
   type User,
   teacherContract,
@@ -30,7 +31,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canReadCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const includeDeleted = query.includeDeleted === 'true' || query.includeDeleted === true;
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted teachers requires delete permissions' } };
       }
@@ -52,13 +53,15 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canReadCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true;
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted teachers requires delete permissions' } };
       }
       try {
         const item = await withTenant(String(request.tenant?.id), () => teacherUseCases.loadTeacherById(id, includeDeleted), { readOnly: true });
-        if (!item) return { status: 404 as const, body: { type: 'not_found', message: 'Teacher not found' } };
+        if (!item || (!includeDeleted && (item as { deletedAt?: unknown }).deletedAt != null)) {
+          return { status: 404 as const, body: { type: 'not_found', message: 'Teacher not found' } };
+        }
         return { status: 200 as const, body: { teacher: await sanitizeOneTeacherForUser(item as Teacher, user) } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load teacher' } };

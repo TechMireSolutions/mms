@@ -97,7 +97,11 @@ describe('examinations use-cases (DI with fake repository)', () => {
 
     const repo = createFakeRepo();
     vi.mocked(repo.findExamById).mockResolvedValue(deletedExam);
-    vi.mocked(repo.findExamsByIds).mockResolvedValue([activeExam, deletedExam]);
+    vi.mocked(repo.findExamsByIds).mockImplementation(async (_tenant, ids, opts) => {
+      const all = [activeExam, deletedExam].filter((e) => ids.includes(e.id));
+      if (opts?.includeDeleted) return all.filter((e) => Boolean((e as any).deletedAt));
+      return all.filter((e) => !(e as any).deletedAt);
+    });
     const useCases = createExaminationsUseCases(repo);
 
     await runWithTenant('demo', async () => {

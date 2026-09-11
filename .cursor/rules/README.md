@@ -95,6 +95,7 @@ Every rule starts with a **Workflow skill:** line; the full rule→skill map liv
 | Audit trails / tamper-evidence / retention | `mms-audit-trail` |
 | Dep upgrades / catalogs | `mms-dependency-upgrade` |
 | axe / focus-return | `mms-a11y-smoke` |
+| Soft-delete / trash lifecycle / hard-purge | `mms-soft-delete` |
 | Migration debt | `mms-migration-fixes` |
 | PR / self-review | `mms-code-review` |
 
@@ -132,6 +133,7 @@ bash .agent/scripts/sync-all.sh
 - [ ] Update **all mirrors** when changing standards: `bash .agent/scripts/sync-all.sh`
 - [ ] Auth/write routes: `mms-auth-security.mdc` (do not OR entity write with `canEditSetup`)
 - [ ] Backup/restore: admin + `canBulkSync`, safety backup + password step-up, sync timeout rollback, strip secrets / exclude credential tables — `mms-settings-i18n.mdc` / `mms-data-layer.mdc` / `mms-auth-security.mdc`
+- [ ] Soft-delete: 3-tier indexes, partial unique indexes `WHERE deleted_at IS NULL`, URL sync `?view=trash`, 23505 conflict trap, session invalidation, outbox CDC — `mms-soft-delete`
 - [ ] New UI: `mms-ui-ux-design.mdc` keyboard + labels + §7 responsive checklist (375 / 768 / 1440)
 - [ ] New `@mms/shared` pure helpers: unit test per `mms-testing-observability.mdc`
 

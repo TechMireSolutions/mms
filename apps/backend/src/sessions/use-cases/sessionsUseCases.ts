@@ -3,11 +3,13 @@ import { sessionsRepository } from '../repository/sessionsRepositoryAdapter.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { broadcastCollection } from '../../lib/livePush.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
+import { NotFoundError } from '../../lib/httpErrors.js';
 import {
   sessionRecordSchema,
   type SessionRecord,
 } from '../../validation/sessionSchemas.js';
 import {
+  dedupeTrimmedIds,
   normalizeStoredSession,
   type SessionsListQuery,
   type Session,
@@ -15,12 +17,22 @@ import {
   type SessionsReportAggregates,
 } from '@mms/shared';
 
+export interface SessionsUseCasesDependencies {
+  findTeachersByIds?: (
+    tenant: string,
+    ids: string[],
+  ) => Promise<Array<{ id: string | number; deletedAt?: unknown }>>;
+}
+
 /**
  * Sessions use-cases — composition root binding a {@link SessionsRepository} to
  * every operation. Production uses the default Drizzle-backed `sessionsUseCases`;
  * tests can pass a fake repository to exercise orchestration in isolation.
  */
-export function createSessionsUseCases(repo: SessionsRepository = sessionsRepository) {
+export function createSessionsUseCases(
+  repo: SessionsRepository = sessionsRepository,
+  deps?: SessionsUseCasesDependencies,
+) {
   const crud = createGenericRelationalService<SessionRecord>({
     repo: {
       listByWorkspace: repo.listSessionsByWorkspace,
@@ -33,14 +45,117 @@ export function createSessionsUseCases(repo: SessionsRepository = sessionsReposi
     normalizeFn: normalizeStoredSession as (record: SessionRecord) => SessionRecord,
   });
 
+  const validateActiveTeacherForeignKeys = async (
+    tenant: string,
+    record: Partial<SessionRecord>,
+  ) => {
+    const teacherIds = dedupeTrimmedIds(
+      (record.classes ?? []).map((c) => c.teacherId).filter(Boolean),
+    );
+    if (teacherIds.length > 0) {
+      const getTeachers =
+        deps?.findTeachersByIds ??
+        (await import('../../db/repositories/teacherRepository.js')).findTeachersByIds;
+      const teachers = await getTeachers(tenant, teacherIds);
+      const activeTeacherIds = new Set(
+        teachers.filter((t) => !t.deletedAt).map((t) => String(t.id)),
+      );
+      for (const teacherId of teacherIds) {
+        if (!activeTeacherIds.has(teacherId)) {
+          const err = new Error('Referenced teacher is archived or does not exist');
+          (err as Error & { statusCode: number }).statusCode = 400;
+          throw err;
+        }
+      }
+    }
+  };
+
   return {
     loadSessions: crud.loadAll,
-    createSession: crud.create,
-    updateSessionById: crud.updateById,
-    deleteSessionById: crud.deleteById,
-    restoreSessionById: crud.restoreById,
-    bulkSoftDeleteSessions: crud.bulkDeleteByIds,
-    bulkRestoreSessions: crud.bulkRestoreByIds,
+    loadSessionById: crud.loadById,
+    createSession: async (record: SessionRecord): Promise<SessionRecord> => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      await validateActiveTeacherForeignKeys(tenant, record);
+      return crud.create(record);
+    },
+    updateSessionById: async (
+      id: string,
+      record: SessionRecord,
+    ): Promise<SessionRecord | null> => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      await validateActiveTeacherForeignKeys(tenant, record);
+      return crud.updateById(id, record);
+    },
+    deleteSessionById: async (
+      id: string,
+      deletedBy?: string,
+      deletionReason?: string,
+    ): Promise<boolean> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return false;
+      const ok = await repo.softDeleteSessionWithCascade(tenant, id, deletedBy, deletionReason);
+      if (!ok) {
+        const existing = await repo.findSessionById(tenant, id);
+        if (existing?.deletedAt) {
+          throw new NotFoundError('Session is already archived');
+        }
+        throw new NotFoundError('Session not found');
+      }
+      await broadcastCollection('sessions');
+      await broadcastCollection('enrollments');
+      return true;
+    },
+    restoreSessionById: async (id: string, userId?: string): Promise<boolean> => {
+      const tenant = getRequestTenant();
+      if (!tenant) return false;
+      const ok = await repo.restoreSessionWithCascade(tenant, id, userId);
+      if (!ok) {
+        const existing = await repo.findSessionById(tenant, id);
+        if (existing && !existing.deletedAt) {
+          throw new NotFoundError('Session is already active');
+        }
+        throw new NotFoundError('Session not found');
+      }
+      await broadcastCollection('sessions');
+      await broadcastCollection('enrollments');
+      return true;
+    },
+    bulkSoftDeleteSessions: async (
+      ids: string[],
+      deletedBy: string,
+      deletionReason?: string,
+    ): Promise<{ succeeded: number; failed: number }> => {
+      const tenant = getRequestTenant();
+      const uniqueIds = dedupeTrimmedIds(ids);
+      if (!tenant || uniqueIds.length === 0) return { succeeded: 0, failed: uniqueIds.length };
+      const res = await repo.bulkSoftDeleteSessionsWithCascade(
+        tenant,
+        uniqueIds,
+        deletedBy,
+        deletionReason,
+      );
+      if (res.succeeded > 0) {
+        await broadcastCollection('sessions');
+        await broadcastCollection('enrollments');
+      }
+      return res;
+    },
+    bulkRestoreSessions: async (
+      ids: string[],
+      userId?: string,
+    ): Promise<{ succeeded: number; failed: number }> => {
+      const tenant = getRequestTenant();
+      const uniqueIds = dedupeTrimmedIds(ids);
+      if (!tenant || uniqueIds.length === 0) return { succeeded: 0, failed: uniqueIds.length };
+      const res = await repo.bulkRestoreSessionsWithCascade(tenant, uniqueIds, userId);
+      if (res.succeeded > 0) {
+        await broadcastCollection('sessions');
+        await broadcastCollection('enrollments');
+      }
+      return res;
+    },
 
     bulkUpdateSessionsStatus: async (
       ids: string[],

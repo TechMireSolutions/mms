@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { type User, type WidgetQuery, ATTENDANCE_MODULE_MANIFEST, rootContract } from '@mms/shared';
+import { isQueryFlagTrue, type User, type WidgetQuery, ATTENDANCE_MODULE_MANIFEST, rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
@@ -22,12 +22,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
 
-      const includeDeleted =
-        query?.includeDeleted === 'true' || query?.includeDeleted === true
-          ? true
-          : query?.includeDeleted === 'false' || query?.includeDeleted === false
-            ? false
-            : undefined;
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
 
       if (includeDeleted && !canDeleteCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -41,7 +36,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(
           tenantId,
-          () => attendanceUseCases.loadAttendancePage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) }),
+          () => attendanceUseCases.loadAttendancePage({ ...query, includeDeleted }),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };
@@ -131,7 +126,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const result = await withTenant(tenantId, () => attendanceUseCases.bulkRestoreAttendance(body.ids.map(String)), { readOnly: false });
+        const result = await withTenant(tenantId, () => attendanceUseCases.bulkRestoreAttendance(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch (error: unknown) {
         request.log?.error(error, 'Failed to bulk restore attendance records');

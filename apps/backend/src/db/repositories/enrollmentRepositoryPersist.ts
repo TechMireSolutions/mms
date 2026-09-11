@@ -1,5 +1,5 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
-import type { Enrollment, EnrollmentTimelineItem } from '@mms/shared';
+import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { dedupeTrimmedIds, type Enrollment, type EnrollmentTimelineItem } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -214,3 +214,77 @@ export async function replaceEnrollmentsForWorkspace(
     }
   });
 }
+
+export async function bulkSoftDeleteEnrollments(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(enrollments)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        deletedWithCascade: false,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(enrollments.workspaceSubdomain, subdomain),
+          inArray(enrollments.id, uniqueIds),
+          isNull(enrollments.deletedAt),
+        ),
+      )
+      .returning({ id: enrollments.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreEnrollments(
+  tenant: string,
+  ids: string[],
+  userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(enrollments)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        deletedWithCascade: false,
+        restoredAt: now,
+        restoredBy: userId || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(enrollments.workspaceSubdomain, subdomain),
+          inArray(enrollments.id, uniqueIds),
+          isNotNull(enrollments.deletedAt),
+        ),
+      )
+      .returning({ id: enrollments.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+

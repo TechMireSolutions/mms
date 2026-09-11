@@ -4,7 +4,6 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
 import {
   defineTenantBulkCollectionService,
-  scopeDeleted,
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
 import {
@@ -90,6 +89,8 @@ export function createObligationsUseCases(repo: ObligationsRepository = obligati
       listByWorkspace: repo.listObligationCollectionsByWorkspace,
       findById: repo.findObligationCollectionById,
       save: repo.saveObligationCollection,
+      bulkDelete: repo.bulkSoftDeleteObligationCollections,
+      bulkRestore: repo.bulkRestoreObligationCollections,
     },
     schema: obligationCollectionRecordSchema,
     websocketCollection: 'obligation_collections',
@@ -204,10 +205,7 @@ export function createObligationsUseCases(repo: ObligationsRepository = obligati
 
     replaceObligationCollections: collectionBulkService.replace,
 
-    loadObligationCollections: async (options?: { includeDeleted?: boolean }): Promise<ObligationCollection[]> => {
-      const rows = await collectionCrud.loadAll({ includeDeleted: true });
-      return scopeDeleted(rows, options?.includeDeleted);
-    },
+    loadObligationCollections: collectionCrud.loadAll,
     loadObligationCollectionById: async (id: string, includeDeleted = false): Promise<ObligationCollection | null> => {
       const tenant = getRequestTenant();
       const cleanId = id?.trim();
@@ -223,8 +221,7 @@ export function createObligationsUseCases(repo: ObligationsRepository = obligati
       if (!tenant) return [];
       const cleanIds = dedupeTrimmedIds(ids);
       if (cleanIds.length === 0) return [];
-      const rows = await repo.findObligationCollectionsByIds(tenant, cleanIds);
-      return scopeDeleted(rows, includeDeleted);
+      return repo.findObligationCollectionsByIds(tenant, cleanIds, { includeDeleted });
     },
     saveObligationCollection: async (record: ObligationCollection): Promise<void> => {
       const tenant = getRequestTenant();

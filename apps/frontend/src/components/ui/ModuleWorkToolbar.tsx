@@ -55,6 +55,7 @@ export interface ModuleWorkToolbarProps {
 
   // 5. Additional custom slot
   children?: React.ReactNode; 
+  showExportInTrash?: boolean;
 }
 
 export const ModuleWorkToolbar = (function ModuleWorkToolbar({
@@ -75,9 +76,11 @@ export const ModuleWorkToolbar = (function ModuleWorkToolbar({
   viewModeToggle,
   columnCustomizer,
   children,
+  showExportInTrash = true,
 }: ModuleWorkToolbarProps): JSX.Element {
+  const showChildren = Boolean(children && (!trashToggle?.viewingDeleted || showExportInTrash !== false));
   const hasFilterControls = Boolean(
-    children || filterButton || (hasActiveFilters && onClearFilters) || primaryAction || trashToggle?.canViewDeleted,
+    showChildren || filterButton || (hasActiveFilters && onClearFilters) || (!trashToggle?.viewingDeleted && primaryAction) || trashToggle?.canViewDeleted,
   );
   const hasLayoutControls = Boolean(
     viewModeToggle || (columnCustomizer && columnCustomizer.registry?.length),
@@ -127,7 +130,7 @@ export const ModuleWorkToolbar = (function ModuleWorkToolbar({
         </div>
 
         <div className="flex flex-wrap items-center justify-start sm:justify-end gap-2 shrink-0">
-          {children}
+          {showChildren && children}
 
           {filterButton}
 
@@ -138,7 +141,7 @@ export const ModuleWorkToolbar = (function ModuleWorkToolbar({
             />
           )}
 
-          {primaryAction}
+          {!trashToggle?.viewingDeleted && primaryAction}
 
           {trashToggle?.canViewDeleted && (
             <ModuleTrashToggle

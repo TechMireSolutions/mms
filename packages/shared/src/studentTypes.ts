@@ -45,9 +45,22 @@ export interface Student {
   deletedAt?: string;
   deletedBy?: string;
   deletionReason?: string;
+  restoredAt?: string;
+  restoredBy?: string;
+  deletedWithCascade?: boolean;
   createdAt?: string;
   updatedAt?: string;
   createdBy?: string;
   updatedBy?: string;
   [key: string]: unknown;
+}
+
+/** Whether a student record is soft-deleted. */
+export function isStudentDeleted(student: { deletedAt?: string | null }): boolean {
+  return Boolean(student.deletedAt);
+}
+
+/** Active directory rows — excludes soft-deleted records from Work by default. */
+export function filterActiveStudents<T extends { deletedAt?: string | null }>(students: T[]): T[] {
+  return students.filter((student) => !isStudentDeleted(student));
 }

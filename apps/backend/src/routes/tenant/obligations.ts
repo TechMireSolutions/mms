@@ -94,7 +94,7 @@ export default async function obligationsRoutes(
         deleteFn: obligationsUseCases.deleteObligationCollectionById,
         restoreFn: obligationsUseCases.restoreObligationCollectionById,
         bulkDeleteFn: obligationsUseCases.bulkSoftDeleteObligationCollections,
-        bulkRestoreFn: obligationsUseCases.bulkRestoreObligationCollections,
+        bulkRestoreFn: (ids, userId) => obligationsUseCases.bulkRestoreObligationCollections(ids, userId),
         responseKey: 'collections',
         errorMessagePrefix: 'obligation collections',
         nameSingular: 'Obligation collection',

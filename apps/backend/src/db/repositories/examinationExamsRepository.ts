@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Exam } from '@mms/shared';
 import { exams, examClasses } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -26,11 +26,27 @@ export function examRowToRecord(row: ExamRow, classIds: string[] = []): Exam {
   return exam;
 }
 
-export async function listExamsByWorkspace(tenant: string, options?: { limit?: number; offset?: number }): Promise<Exam[]> {
+export interface ListExamsOptions {
+  limit?: number;
+  offset?: number;
+  deleted?: 'active' | 'deleted' | 'all';
+  includeDeleted?: boolean;
+}
+
+export async function listExamsByWorkspace(
+  tenant: string,
+  options?: ListExamsOptions,
+): Promise<Exam[]> {
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
   return withTenant(subdomain, async (tx) => {
+    const conditions = [eq(exams.workspaceSubdomain, subdomain)];
+    if (options?.deleted === 'deleted') {
+      conditions.push(isNotNull(exams.deletedAt));
+    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
+      conditions.push(isNull(exams.deletedAt));
+    }
     const examRows = await tx
       .select({
         id: exams.id,
@@ -46,11 +62,14 @@ export async function listExamsByWorkspace(tenant: string, options?: { limit?: n
         deletedAt: exams.deletedAt,
         deletedBy: exams.deletedBy,
         deletionReason: exams.deletionReason,
+        restoredAt: exams.restoredAt,
+        restoredBy: exams.restoredBy,
+        deletedWithCascade: exams.deletedWithCascade,
         createdAt: exams.createdAt,
         updatedAt: exams.updatedAt,
       })
       .from(exams)
-      .where(and(eq(exams.workspaceSubdomain, subdomain), isNull(exams.deletedAt)))
+      .where(and(...conditions))
       .limit(limit)
       .offset(offset);
 
@@ -101,6 +120,9 @@ export async function findExamById(tenant: string, id: string): Promise<Exam | n
         deletedAt: exams.deletedAt,
         deletedBy: exams.deletedBy,
         deletionReason: exams.deletionReason,
+        restoredAt: exams.restoredAt,
+        restoredBy: exams.restoredBy,
+        deletedWithCascade: exams.deletedWithCascade,
         createdAt: exams.createdAt,
         updatedAt: exams.updatedAt,
       })
@@ -131,11 +153,31 @@ export async function findExamById(tenant: string, id: string): Promise<Exam | n
   });
 }
 
-export async function findExamsByIds(tenant: string, ids: string[]): Promise<Exam[]> {
+export async function findExamsByIds(
+  tenant: string,
+  ids: string[],
+  options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
+): Promise<Exam[]> {
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    const isDeletedOnly = options?.deleted === 'deleted';
+    const isAll = options?.deleted === 'all';
+    const deletedCond = isDeletedOnly
+      ? isNotNull(exams.deletedAt)
+      : isAll
+        ? null
+        : options?.includeDeleted
+          ? isNotNull(exams.deletedAt)
+          : isNull(exams.deletedAt);
+
+    const conditions = [
+      eq(exams.workspaceSubdomain, subdomain),
+      inArray(exams.id, cleanIds),
+    ];
+    if (deletedCond) conditions.push(deletedCond);
+
     const examRows = await tx
       .select({
         id: exams.id,
@@ -151,16 +193,14 @@ export async function findExamsByIds(tenant: string, ids: string[]): Promise<Exa
         deletedAt: exams.deletedAt,
         deletedBy: exams.deletedBy,
         deletionReason: exams.deletionReason,
+        restoredAt: exams.restoredAt,
+        restoredBy: exams.restoredBy,
+        deletedWithCascade: exams.deletedWithCascade,
         createdAt: exams.createdAt,
         updatedAt: exams.updatedAt,
       })
       .from(exams)
-      .where(
-        and(
-          eq(exams.workspaceSubdomain, subdomain),
-          inArray(exams.id, cleanIds),
-        ),
-      );
+      .where(and(...conditions));
 
     if (examRows.length === 0) return [];
 
@@ -396,5 +436,74 @@ export async function replaceExamsForWorkspace(tenant: string, records: Exam[]):
         await tx.insert(examClasses).values(classPairs);
       }
     }
+  });
+}
+
+export async function bulkSoftDeleteExams(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(exams)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(exams.workspaceSubdomain, subdomain),
+          inArray(exams.id, uniqueIds),
+          isNull(exams.deletedAt),
+        ),
+      )
+      .returning({ id: exams.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreExams(
+  tenant: string,
+  ids: string[],
+  _userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(exams)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(exams.workspaceSubdomain, subdomain),
+          inArray(exams.id, uniqueIds),
+          isNotNull(exams.deletedAt),
+        ),
+      )
+      .returning({ id: exams.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
   });
 }

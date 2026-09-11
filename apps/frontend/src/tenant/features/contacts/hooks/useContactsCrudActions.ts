@@ -4,10 +4,10 @@ import { useContactsCrudWriteActions } from "@/tenant/features/contacts/hooks/us
 import { useContactsCrudDeleteActions } from "@/tenant/features/contacts/hooks/useContactsCrudDeleteActions";
 
 export function useContactsCrudActions() {
-  const { t, handleError, notifyBulkResult } = useContactsCrudNotify();
+  const { t, handleError, notifyBulkResult, notifyArchivedWithUndo } = useContactsCrudNotify();
   const { logExportAudit } = useContactMutations();
   const write = useContactsCrudWriteActions({ t, handleError, notifyBulkResult });
-  const remove = useContactsCrudDeleteActions({ t, handleError, notifyBulkResult });
+  const remove = useContactsCrudDeleteActions({ t, handleError, notifyBulkResult, notifyArchivedWithUndo });
 
   return {
     updateContact: write.updateContact,

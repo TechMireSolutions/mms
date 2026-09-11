@@ -92,7 +92,18 @@ export function useEnrollmentsPageActions({
   const handleDelete = (id: string, deletionReason?: string) => {
     deleteEnrollment.mutate({ id, deletionReason }, {
       onSuccess: () => {
-        notify.info(t("enrollments.toast.deleted"));
+        notify.archivedWithUndo(
+          t("enrollments.toast.deleted"),
+          () => {
+            restoreEnrollment.mutate(id, {
+              onSuccess: () => notify.success(t("enrollments.toast.restored")),
+              onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
+                description: err instanceof Error ? err.message : String(err),
+              }),
+            });
+          },
+          { undoLabel: t("common.undo"), duration: 8000 },
+        );
         if (viewing?.id === id) onViewingChange(null);
       },
       onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {

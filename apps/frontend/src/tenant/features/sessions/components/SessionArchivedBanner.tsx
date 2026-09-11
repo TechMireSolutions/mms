@@ -1,4 +1,4 @@
-import type { Session } from '@mms/shared';
+import { SESSIONS_MODULE_MANIFEST, type Session } from '@mms/shared';
 import { EntityArchivedBanner } from '@/components/ui/DetailDrawerArchiveChrome';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -15,6 +15,9 @@ export function SessionArchivedBanner({
       deletionReason={session.deletionReason}
       titleWithDate={(date) => t('sessions.detail.archivedBanner', { date })}
       reasonLabel={t('sessions.deletionReasonLabel')}
+      retentionDays={(session as { retentionDays?: number | null }).retentionDays ?? SESSIONS_MODULE_MANIFEST.softDelete?.retentionDays ?? null}
+      purgeAfter={(session as { purgeAfter?: unknown }).purgeAfter}
     />
   );
 }
+

@@ -1,7 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { withTenant } from '../../../db/tenant-context.js';
 import { type User } from '@mms/shared';
-import { canDeleteCollection } from '../../../services/rbacService.js';
 import { teacherUseCases } from '../../../teachers/use-cases/teacherUseCases.js';
 import {
   registerMetricsRoute,
@@ -9,6 +7,7 @@ import {
   registerWidgetAggregatesRoute,
   registerResolveRoute,
   registerLinkedContactIdsRoute,
+  registerSingleRestoreRoute,
 } from '../../../lib/crudRouter.js';
 import { auditTeacher, sanitizeTeachersForUser } from './teacherRouteHelpers.js';
 
@@ -48,21 +47,12 @@ export const teacherAggregateRoutes: FastifyPluginAsync = async (sub) => {
     errorMessagePrefix: 'teachers',
   });
 
-  sub.post<{ Params: { id: string } }>('/:id/restore', async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, 'teachers')) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Insufficient permissions' });
-    }
-    const { id } = request.params;
-    try {
-      const restored = await withTenant(String(request.tenant?.id), () => teacherUseCases.restoreTeacherById(id), { readOnly: false });
-      if (!restored) {
-        return reply.status(404).send({ type: 'not_found', message: 'Teacher not found or not deleted' });
-      }
+  registerSingleRestoreRoute(sub, {
+    collection: 'teachers',
+    nameSingular: 'teacher',
+    restoreFn: (id, userId) => teacherUseCases.restoreTeacherById(id, userId),
+    onAfterRestore: async (user, id) => {
       await auditTeacher(user, 'teacher.restore', `Restored teacher ${id}`, id);
-      return reply.send({ success: true });
-    } catch {
-      return reply.status(500).send({ type: 'database_error', message: 'Failed to restore teacher' });
-    }
+    },
   });
 };

@@ -13,6 +13,8 @@ export {
   persistContactTx,
   saveContact,
   bulkSaveContacts,
+  bulkSoftDeleteContactsSql,
+  bulkRestoreContactsSql,
   replaceContactsForWorkspace,
   contactRepo,
 } from './contactRepositoryPersist.js';

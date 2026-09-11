@@ -1,8 +1,9 @@
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { FINANCE_MODULE_MANIFEST, type User, type WidgetQuery, financeContract } from '@mms/shared';
+import { FINANCE_MODULE_MANIFEST, type User, type WidgetQuery, financeContract, isQueryFlagTrue } from '@mms/shared';
 import { registerStandardExtendedRoutes } from '../../lib/crudStandardRoutes.js';
+import { registerSingleRestoreRoute } from '../../lib/crudResourceRoutes.js';
 
 import { financeUseCases } from '../../finance/use-cases/financeUseCases.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../services/rbacService.js';
@@ -41,24 +42,13 @@ export default async function financeRoutes(
         collection: FINANCE_COLLECTION,
         errorMessagePrefix: 'invoices',
         nameSingular: 'invoice',
-
       });
 
-      sub.post<{ Params: { id: string } }>('/invoices/:id/restore', async (request, reply) => {
-        const user = request.user as User;
-        if (!canDeleteCollection(user, FINANCE_COLLECTION)) {
-          return reply.status(403).send({ type: 'forbidden', message: 'Insufficient permissions' });
-        }
-        const { id } = request.params;
-        try {
-          const restored = await withTenant(String(request.tenant?.id), () => financeUseCases.restoreInvoiceById(id, String(user.id)), { readOnly: false });
-          if (!restored) {
-            return reply.status(404).send({ type: 'not_found', message: 'Invoice not found or not deleted' });
-          }
-          return reply.send({ success: true });
-        } catch {
-          return reply.status(500).send({ type: 'database_error', message: 'Failed to restore invoice' });
-        }
+      registerSingleRestoreRoute(sub, {
+        prefix: '/invoices',
+        collection: FINANCE_COLLECTION,
+        nameSingular: 'invoice',
+        restoreFn: (id, userId) => financeUseCases.restoreInvoiceById(id, userId),
       });
 
       // --- Payments Extended Routes (Column Preferences, etc) ---
@@ -67,24 +57,13 @@ export default async function financeRoutes(
         collection: PAYMENT_COLLECTION,
         errorMessagePrefix: 'payments',
         nameSingular: 'payment',
-
       });
 
-      sub.post<{ Params: { id: string } }>('/payments/:id/restore', async (request, reply) => {
-        const user = request.user as User;
-        if (!canDeleteCollection(user, PAYMENT_COLLECTION)) {
-          return reply.status(403).send({ type: 'forbidden', message: 'Insufficient permissions' });
-        }
-        const { id } = request.params;
-        try {
-          const restored = await withTenant(String(request.tenant?.id), () => financeUseCases.restorePaymentById(id, String(user.id)), { readOnly: false });
-          if (!restored) {
-            return reply.status(404).send({ type: 'not_found', message: 'Payment not found or not deleted' });
-          }
-          return reply.send({ success: true });
-        } catch {
-          return reply.status(500).send({ type: 'database_error', message: 'Failed to restore payment' });
-        }
+      registerSingleRestoreRoute(sub, {
+        prefix: '/payments',
+        collection: PAYMENT_COLLECTION,
+        nameSingular: 'payment',
+        restoreFn: (id, userId) => financeUseCases.restorePaymentById(id, userId),
       });
     },
     { prefix: '/api/finance' },
@@ -94,20 +73,24 @@ export default async function financeRoutes(
     listInvoices: async ({ query, request }: ContractRouteArgs<typeof financeContract['listInvoices']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true ? true : (query?.includeDeleted === 'false' || query?.includeDeleted === false ? false : undefined);
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadInvoicesPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) } as Parameters<typeof financeUseCases.loadInvoicesPage>[0]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadInvoicesPage({ ...query, ...(includeDeleted ? { includeDeleted } : {}) } as Parameters<typeof financeUseCases.loadInvoicesPage>[0]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list invoices' } };
       }
     },
-    getInvoice: async ({ params: { id }, request }: ContractRouteArgs<typeof financeContract['getInvoice']>): Promise<unknown> => {
+    getInvoice: async ({ params: { id }, query, request }: ContractRouteArgs<typeof financeContract['getInvoice']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+      if (includeDeleted && !canDeleteCollection(user, FINANCE_COLLECTION)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
       try {
-        const item = await withTenant(String(request.tenant?.id), () => financeUseCases.getInvoiceById(id), { readOnly: true });
+        const item = await withTenant(String(request.tenant?.id), () => financeUseCases.getInvoiceById(id, includeDeleted), { readOnly: true });
         if (!item) return { status: 404 as const, body: { type: 'not_found', message: 'Invoice not found' } };
         return { status: 200 as const, body: { invoice: item } };
       } catch (error) {
@@ -149,20 +132,24 @@ export default async function financeRoutes(
     listPayments: async ({ query, request }: ContractRouteArgs<typeof financeContract['listPayments']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      const includeDeleted = query?.includeDeleted === 'true' || query?.includeDeleted === true ? true : (query?.includeDeleted === 'false' || query?.includeDeleted === false ? false : undefined);
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadPaymentsPage({ ...query, ...(includeDeleted !== undefined ? { includeDeleted } : {}) } as Parameters<typeof financeUseCases.loadPaymentsPage>[0]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadPaymentsPage({ ...query, ...(includeDeleted ? { includeDeleted } : {}) } as Parameters<typeof financeUseCases.loadPaymentsPage>[0]), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list payments' } };
       }
     },
-    getPayment: async ({ params: { id }, request }: ContractRouteArgs<typeof financeContract['getPayment']>): Promise<unknown> => {
+    getPayment: async ({ params: { id }, query, request }: ContractRouteArgs<typeof financeContract['getPayment']>): Promise<unknown> => {
       const user = request.user as User;
       if (!canReadCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+      if (includeDeleted && !canDeleteCollection(user, PAYMENT_COLLECTION)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
       try {
-        const item = await withTenant(String(request.tenant?.id), () => financeUseCases.getPaymentById(id), { readOnly: true });
+        const item = await withTenant(String(request.tenant?.id), () => financeUseCases.getPaymentById(id, includeDeleted), { readOnly: true });
         if (!item) return { status: 404 as const, body: { type: 'not_found', message: 'Payment not found' } };
         return { status: 200 as const, body: { payment: item } };
       } catch (error) {
@@ -219,7 +206,7 @@ export default async function financeRoutes(
       if (!canDeleteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          financeUseCases.bulkRestoreInvoices(body.ids.map(String)), { readOnly: false });
+          financeUseCases.bulkRestoreInvoices(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore invoices' } };
@@ -255,7 +242,7 @@ export default async function financeRoutes(
       if (!canDeleteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          financeUseCases.bulkRestorePayments(body.ids.map(String)), { readOnly: false });
+          financeUseCases.bulkRestorePayments(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore payments' } };

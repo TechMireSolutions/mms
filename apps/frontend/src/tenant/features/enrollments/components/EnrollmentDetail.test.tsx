@@ -27,15 +27,17 @@ vi.mock("@/tenant/hooks/collections/students", () => ({
 }));
 
 vi.mock("@/components/ui/DetailDrawerShell", () => ({
-  DetailDrawerShell: ({ title, subtitle, headerExtra, children }: {
+  DetailDrawerShell: ({ title, subtitle, headerExtra, headerActions, children }: {
     title: string;
     subtitle?: string;
     headerExtra?: React.ReactNode;
+    headerActions?: React.ReactNode;
     children: React.ReactNode;
   }) => (
     <div data-testid="drawer-shell">
       <h2>{title}</h2>
       <p>{subtitle}</p>
+      <div data-testid="header-actions">{headerActions}</div>
       <div>{headerExtra}</div>
       <div>{children}</div>
     </div>
@@ -102,6 +104,44 @@ describe("EnrollmentDetail Component", () => {
 
     act(() => paidButton?.dispatchEvent(new MouseEvent("click", { bubbles: true })));
     expect(onPaymentStatusChange).toHaveBeenCalledWith("enr-1", "paid");
+
+    act(() => root.unmount());
+  });
+
+  it("hides status/payment mutators when enrollment is archived and renders restore action", () => {
+    const onRestore = vi.fn();
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    act(() => {
+      root.render(
+        <EnrollmentDetail
+          enrollment={{
+            ...mockEnrollment,
+            deletedAt: "2026-03-01T00:00:00.000Z",
+            paymentStatus: "pending",
+          }}
+          onClose={vi.fn()}
+          onStatusChange={vi.fn()}
+          onPaymentStatusChange={vi.fn()}
+          canWrite={true}
+          canDelete={true}
+          onRestore={onRestore}
+        />,
+      );
+    });
+
+    // Mutator buttons must NOT be present when archived
+    const paidButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.textContent?.includes("enrollments.payment.paid"),
+    );
+    expect(paidButton).toBeUndefined();
+
+    // Restore action button must be present in header actions
+    const restoreButton = Array.from(container.querySelectorAll("button")).find(
+      (button) => button.getAttribute("aria-label")?.includes("restore") || button.textContent?.includes("restore"),
+    );
+    expect(restoreButton).toBeDefined();
 
     act(() => root.unmount());
   });

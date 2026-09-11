@@ -156,6 +156,9 @@ export async function redisSet(key: string, value: string, ttlSeconds?: number):
 }
 
 export async function redisDel(key: string): Promise<void> {
+  if (key.includes('*')) {
+    return redisDelPattern(key);
+  }
   const client = getRedisClient();
   if (client && isRedisConnected) {
     try {
@@ -165,6 +168,28 @@ export async function redisDel(key: string): Promise<void> {
     }
   }
   inMemoryStore.delete(key);
+}
+
+export async function redisDelPattern(pattern: string): Promise<void> {
+  const client = getRedisClient();
+  if (client && isRedisConnected) {
+    try {
+      const keys = await client.keys(pattern);
+      if (keys.length > 0) {
+        await client.del(...keys);
+      }
+    } catch {
+      // Fallback to in-memory
+    }
+  }
+
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+  const regex = new RegExp(`^${escaped}$`);
+  for (const key of inMemoryStore.keys()) {
+    if (regex.test(key)) {
+      inMemoryStore.delete(key);
+    }
+  }
 }
 
 export async function redisExists(key: string): Promise<boolean> {

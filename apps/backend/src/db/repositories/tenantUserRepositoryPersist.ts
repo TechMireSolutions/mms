@@ -8,6 +8,7 @@ import {
   listAllTenantUsersByWorkspace,
   type TenantUserRow,
 } from './tenantUserRepositoryHydrate.js';
+import { revokeAllUserSessions, revokeUserSessionKeys } from '../../services/session.service.js';
 
 const TABLE_AUTH_KEYS = new Set([
   'id',
@@ -302,6 +303,8 @@ export async function softDeleteTenantUserRow(
       })
       .where(tenantUserIdWhere(id, workspaceSubdomain));
   });
+  await revokeAllUserSessions(id);
+  await revokeUserSessionKeys(id);
   return true;
 }
 

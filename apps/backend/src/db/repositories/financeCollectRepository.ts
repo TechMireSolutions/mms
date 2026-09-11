@@ -58,6 +58,9 @@ export async function listOpenInvoicesForCollect(tenant: string): Promise<Invoic
         deletedAt: financeInvoices.deletedAt,
         deletedBy: financeInvoices.deletedBy,
         deletionReason: financeInvoices.deletionReason,
+        restoredAt: financeInvoices.restoredAt,
+        restoredBy: financeInvoices.restoredBy,
+        deletedWithCascade: financeInvoices.deletedWithCascade,
         createdAt: financeInvoices.createdAt,
         updatedAt: financeInvoices.updatedAt,
       })
@@ -191,6 +194,9 @@ export async function listInvoicesByIds(tenant: string, invoiceIds: string[]): P
         deletedAt: financeInvoices.deletedAt,
         deletedBy: financeInvoices.deletedBy,
         deletionReason: financeInvoices.deletionReason,
+        restoredAt: financeInvoices.restoredAt,
+        restoredBy: financeInvoices.restoredBy,
+        deletedWithCascade: financeInvoices.deletedWithCascade,
         createdAt: financeInvoices.createdAt,
         updatedAt: financeInvoices.updatedAt,
       })

@@ -777,7 +777,7 @@ describe('contacts REST routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreContactById).toHaveBeenCalledWith('c1');
+    expect(mockRestoreContactById).toHaveBeenCalledWith('c1', 'u-admin');
     expect(res.json()).toMatchObject({ success: true, contact: expect.objectContaining({ id: 'c1' }) });
     await app.close();
   });
@@ -794,7 +794,7 @@ describe('contacts REST routes', () => {
       payload: { ids: ['c1', 'c2'] },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockBulkRestoreContacts).toHaveBeenCalledWith(['c1', 'c2']);
+    expect(mockBulkRestoreContacts).toHaveBeenCalledWith(['c1', 'c2'], 'u-admin');
     expect(res.json()).toMatchObject({ success: true, succeeded: 1, failed: 0 });
     await app.close();
   });

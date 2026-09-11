@@ -119,6 +119,7 @@ export default function Obligations() {
         showForm={c.showForm}
         canWrite={c.canWrite}
         showDeleted={c.showDeleted}
+        canDelete={c.canDelete}
         viewCollection={c.viewCollection}
         obligationTypes={c.obligationTypes}
         reps={c.reps}
@@ -128,6 +129,7 @@ export default function Obligations() {
         collections={c.collections}
         messagingTarget={c.messagingTarget}
         onSaveCollection={c.handleSaveCollection}
+        onRestore={c.handleRestore}
         onCloseForm={() => c.setShowForm(false)}
         onCloseDetail={() => c.setViewCollection(null)}
         onCloseComposer={c.closeComposer}

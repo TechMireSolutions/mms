@@ -121,16 +121,19 @@ describe('questionBank use-cases (DI with fake repository)', () => {
       answer: 'a',
     };
     const q2 = { ...q1, id: 'q2', deletedAt: '2026-09-01T00:00:00.000Z' };
-    vi.mocked(repo.findQuestionsByIds).mockResolvedValue([q1, q2]);
+    vi.mocked(repo.findQuestionsByIds).mockImplementation(async (_t, _ids, opts) => {
+      return (opts?.includeDeleted || opts?.deleted === 'deleted') ? [q2] : [q1];
+    });
 
     const useCases = createQuestionBankUseCases(repo);
 
     await runWithTenant('demo', async () => {
       const results = await useCases.loadQuestionsByIds([' q1 ', 'q2', 'q1', '  ']);
-      expect(repo.findQuestionsByIds).toHaveBeenCalledWith('demo', ['q1', 'q2']);
+      expect(repo.findQuestionsByIds).toHaveBeenCalledWith('demo', ['q1', 'q2'], { includeDeleted: false });
       expect(results).toEqual([q1]);
 
       const all = await useCases.loadQuestionsByIds(['q1', 'q2'], true);
+      expect(repo.findQuestionsByIds).toHaveBeenCalledWith('demo', ['q1', 'q2'], { includeDeleted: true });
       expect(all).toEqual([q2]);
     });
   });
@@ -177,7 +180,9 @@ describe('questionBank use-cases (DI with fake repository)', () => {
       if (id === 't2') return deletedTest;
       return null;
     });
-    vi.mocked(repo.findTestsByIds).mockResolvedValue([activeTest, deletedTest]);
+    vi.mocked(repo.findTestsByIds).mockImplementation(async (_t, _ids, opts) => {
+      return (opts?.includeDeleted || opts?.deleted === 'deleted') ? [deletedTest] : [activeTest];
+    });
 
     const useCases = createQuestionBankUseCases(repo);
 
@@ -193,7 +198,7 @@ describe('questionBank use-cases (DI with fake repository)', () => {
       expect(delVisible).toEqual(deletedTest);
 
       const activeList = await useCases.loadTestsByIds([' t1 ', 't2', 't1']);
-      expect(repo.findTestsByIds).toHaveBeenCalledWith('demo', ['t1', 't2']);
+      expect(repo.findTestsByIds).toHaveBeenCalledWith('demo', ['t1', 't2'], { includeDeleted: false });
       expect(activeList).toEqual([activeTest]);
     });
   });
@@ -239,7 +244,9 @@ describe('questionBank use-cases (DI with fake repository)', () => {
       if (id === 'r2') return deletedResult;
       return null;
     });
-    vi.mocked(repo.findResultsByIds).mockResolvedValue([activeResult, deletedResult]);
+    vi.mocked(repo.findResultsByIds).mockImplementation(async (_t, _ids, opts) => {
+      return (opts?.includeDeleted || opts?.deleted === 'deleted') ? [deletedResult] : [activeResult];
+    });
 
     const useCases = createQuestionBankUseCases(repo);
 
@@ -255,7 +262,7 @@ describe('questionBank use-cases (DI with fake repository)', () => {
       expect(delVisible).toEqual(deletedResult);
 
       const activeList = await useCases.loadResultsByIds([' r1 ', 'r2', 'r1']);
-      expect(repo.findResultsByIds).toHaveBeenCalledWith('demo', ['r1', 'r2']);
+      expect(repo.findResultsByIds).toHaveBeenCalledWith('demo', ['r1', 'r2'], { includeDeleted: false });
       expect(activeList).toEqual([activeResult]);
     });
   });

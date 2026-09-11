@@ -38,4 +38,15 @@ export interface AttendanceRepository {
     tenant: string,
     query?: AttendanceReportAggregatesQuery,
   ): Promise<AttendanceReportAggregates>;
+  bulkSoftDeleteAttendanceRecords?(
+    tenant: string,
+    ids: string[],
+    deletedBy?: string,
+    deletionReason?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
+  bulkRestoreAttendanceRecords?(
+    tenant: string,
+    ids: string[],
+    userId?: string,
+  ): Promise<{ succeeded: number; failed: number }>;
 }

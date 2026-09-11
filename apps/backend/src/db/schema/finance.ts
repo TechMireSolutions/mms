@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, index, jsonb, primaryKey, varchar, numeric, integer, foreignKey, uniqueIndex } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
+import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const financeInvoices = pgTable('finance_invoices', {
   id: text('id').notNull(),
@@ -28,9 +29,7 @@ export const financeInvoices = pgTable('finance_invoices', {
   creditedAmt: numeric('credited_amt', { precision: 12, scale: 2 }).notNull().default('0'),
   lastRemindedAt: timestamp('last_reminded_at', { withTimezone: true, mode: 'date' }),
   reminderCount: integer('reminder_count').notNull().default(0),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -60,6 +59,9 @@ export const financeInvoices = pgTable('finance_invoices', {
   index('finance_invoices_workspace_family_idx')
     .on(table.workspaceSubdomain, table.familyContactId)
     .where(sql`${table.deletedAt} is null`),
+  index('finance_invoices_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const financePayments = pgTable('finance_payments', {
@@ -74,9 +76,7 @@ export const financePayments = pgTable('finance_payments', {
   receivedByUserId: text('received_by_user_id'),
   receivedBy: varchar('received_by', { length: 120 }),
   note: text('note').notNull().default(''),
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: text('deletion_reason'),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -92,6 +92,9 @@ export const financePayments = pgTable('finance_payments', {
   index('finance_payments_workspace_active_idx')
     .on(table.workspaceSubdomain)
     .where(sql`${table.deletedAt} is null`),
+  index('finance_payments_workspace_deleted_records_idx')
+    .on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
 ]);
 
 export const financeFieldConfigs = pgTable('finance_field_configs', {

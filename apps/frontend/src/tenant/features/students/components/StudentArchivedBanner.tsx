@@ -1,4 +1,4 @@
-import type { Student } from "@mms/shared";
+import { STUDENTS_MODULE_MANIFEST, type Student } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { EntityArchivedBanner } from "@/components/ui/DetailDrawerArchiveChrome";
 
@@ -15,6 +15,9 @@ export function StudentArchivedBanner({
       deletionReason={student.deletionReason}
       titleWithDate={(date) => t("students.detail.archivedBanner", { date })}
       reasonLabel={t("students.deletionReasonLabel")}
+      retentionDays={(student as { retentionDays?: number | null }).retentionDays ?? STUDENTS_MODULE_MANIFEST.softDelete?.retentionDays ?? null}
+      purgeAfter={(student as { purgeAfter?: unknown }).purgeAfter}
     />
   );
 }
+

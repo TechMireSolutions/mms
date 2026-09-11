@@ -6,6 +6,8 @@ export {
   saveExam,
   bulkSaveExams,
   replaceExamsForWorkspace,
+  bulkSoftDeleteExams,
+  bulkRestoreExams,
 } from './examinationExamsRepository.js';
 export {
   listExamResultsByWorkspace,

@@ -5,7 +5,7 @@ description: Forward-only Drizzle migrations with journal/meta, expand/contract 
 
 # MMS Schema & Drizzle Migration Workflow
 
-**Rules (norms SSOT):** `mms-data-layer.mdc` §5 · `mms-auth-security.mdc` §5 · `mms-performance.mdc` §1 · `mms-ops-infrastructure.mdc` · `mms-structure-naming.mdc` · `mms-api-interface.mdc` · `mms-form-architecture.mdc`. Audit trail workflow → **`mms-audit-trail`**.
+**Rules (norms SSOT):** `mms-data-layer.mdc` §5–§6 · `mms-auth-security.mdc` §5 · `mms-performance.mdc` §1 · `mms-ops-infrastructure.mdc` · `mms-structure-naming.mdc` · `mms-api-interface.mdc` · `mms-form-architecture.mdc`. Audit trail workflow → **`mms-audit-trail`**. Soft-delete workflow → **`mms-soft-delete`**.
 
 Use when designing and implementing PostgreSQL database schemas, Drizzle ORM models, relations, forward-only SQL migrations, and matching `@mms/shared` Zod contracts.
 
@@ -58,14 +58,22 @@ Use when designing and implementing PostgreSQL database schemas, Drizzle ORM mod
 - **Mandatory Indexing for Query Predicates (`mms-performance.mdc`):** Every column used in `where()` filters, `leftJoin() ... on()` foreign keys, and `orderBy()` sorting clauses must have an explicit B-Tree index. Prefix multi-tenant compound indexes with tenant scope (`(tenant_id, status, created_at DESC)`).
 - **Foreign Key Indexing:** Every foreign key column must have an explicit B-Tree index to prevent full table scans during joins and cascade deletes.
 - **Database-Enforced Integrity:** Never rely solely on application-layer validation. Enforce invariants with `CHECK`, `NOT NULL`, `DEFAULT`, and `FOREIGN KEY` definitions directly in DDL.
-- **Filter Predicates & Partial Indexes:** Create composite indexes matching query patterns left-to-right, and partial indexes `WHERE deleted_at IS NULL` for active queries on soft-deleted tables:
+- **Soft-Delete Column Quintuple (`softDeleteColumns` mixin):** Every soft-deletable entity table carries `deletedAt` (Date), `deletedBy` (text), `deletionReason` (varchar 500), `restoredAt` (Date), `restoredBy` (text), and `deletedWithCascade` (boolean default false). For automated lifecycle purge, add `purgeAfter` generated column (`deleted_at + INTERVAL '90 days'`) (`mms-soft-delete`).
+- **Filter Predicates & Three-Tier Soft-Delete Index Strategy:** Create composite indexes matching query patterns left-to-right, and implement the three soft-delete index categories:
+  - **Category A (Non-partial trash index):** `index('table_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt)` for `includeDeleted=true` queries.
+  - **Category B (Active-record partial index):** `index('table_workspace_active_idx').on(table.workspaceSubdomain).where(sql`${table.deletedAt} is null`)` for hot active reads.
+  - **Category C (Archived-record partial index):** `index('table_workspace_deleted_records_idx').on(table.workspaceSubdomain, table.deletedAt).where(sql`${table.deletedAt} is not null`)` for trash browser pagination.
   ```ts
   (table) => [
-    uniqueIndex('entity_tenant_code_uidx').on(table.tenantId, table.code),
-    index('entity_tenant_status_created_idx').on(table.tenantId, table.status, table.createdAt),
-    index('entity_deleted_at_idx').on(table.tenantId, table.deletedAt).where(sql`${table.deletedAt} is null`),
+    uniqueIndex('contacts_email_active_unique').on(table.workspaceSubdomain, table.email).where(sql`${table.deletedAt} is null`),
+    index('contacts_workspace_active_idx').on(table.workspaceSubdomain).where(sql`${table.deletedAt} is null`),
+    index('contacts_workspace_deleted_records_idx').on(table.workspaceSubdomain, table.deletedAt).where(sql`${table.deletedAt} is not null`),
   ]
   ```
+- **Partial Unique Indexes vs `NULLS NOT DISTINCT`:** Recyclable unique fields (`email`, `phone`, `employee_id`, `student_id`, slug) MUST use partial unique indexes `WHERE deleted_at IS NULL`. Banned: PostgreSQL 15+ `UNIQUE NULLS NOT DISTINCT` (it treats NULLs as identical, permitting only 1 soft-deleted row).
+- **Schema-Level Hard-Delete Guard (`BEFORE DELETE` Trigger):** Attach `forbid_hard_delete()` trigger on soft-deletable tables (`students`, `contacts`, etc.) to prevent physical row deletions unless `current_setting('app.allow_hard_purge', true) = 'true'`.
+- **Row-Level Security (RLS) Policy:** Configure `tenant_soft_delete_isolation` policy ensuring queries automatically exclude soft-deleted rows unless `current_setting('app.include_deleted', true) = 'true'`.
+- **High-Churn Autovacuum Tuning:** High-churn soft-deleted tables (`message_logs`, `attendance_records`) must declare tuned vacuum parameters in DDL (`autovacuum_vacuum_scale_factor = 0.05, autovacuum_vacuum_cost_limit = 1000`).
 - **Zero Wildcard Projections (`SELECT *` Strict Ban):** Query surfaces must explicitly project only required columns matching `@mms/shared` Response DTOs. Never emit unconstrained `db.select().from(table)` across network boundaries. Strip heavy blobs/notes from list queries.
 
 ## 5. Drizzle ORM & Migration Guidelines
@@ -126,6 +134,11 @@ When generating code for any feature or entity, provide:
 - [ ] No drizzle-kit push in CI/prod docs or scripts
 - [ ] FORCE RLS on new tenant tables
 - [ ] Audit tables partitioned by date with INSERT-only privileges (UPDATE/DELETE revoked)
+- [ ] Soft-delete column sextuple via `softDeleteColumns` mixin (`Date` objects contract)
+- [ ] Soft-delete Category A (non-partial), Category B (active partial), Category C (archived partial) indexes
+- [ ] Partial unique indexes (`WHERE deleted_at IS NULL`) on recyclable unique fields (`email`, `phone`, `employee_id`)
+- [ ] `forbid_hard_delete()` trigger attached to soft-deletable tables
+- [ ] `tenant_soft_delete_isolation` RLS policy configured with `app.include_deleted` gate
 ```
 
 ## Done

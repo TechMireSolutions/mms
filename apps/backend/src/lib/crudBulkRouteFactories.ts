@@ -3,15 +3,18 @@ import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
 import { canDeleteCollection, canWriteCollection } from './rbacCanHelpers.js';
-import { sendForbidden, sendDatabaseError, sendIfHttpDomainError, sendNotFound } from './httpErrors.js';
+import { sendForbidden, sendDatabaseError, sendIfHttpDomainError, sendConflict } from './httpErrors.js';
+import { isUniqueViolation } from './pgErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import { bulkIdsBodySchema } from '../validation/commonSchemas.js';
 import {
   handleBulkListGet,
+  shouldCaptureDeletionReason,
   type BulkRoutesOptions,
   type SoftDeletableBulkRoutesOptions,
   type SoftDeletableBulkTrashRoutesOptions,
 } from './crudBulkRouteHelpers.js';
+import { registerSingleDeleteRoute, registerSingleRestoreRoute } from './crudResourceRoutes.js';
 
 /**
  * Registers GET and PUT endpoints for a bulk list collection.
@@ -83,6 +86,7 @@ export function registerIncludableBulkRoutes<T>(
     responseKey: string;
     errorMessagePrefix: string;
     customGetRoute?: boolean;
+    canDelete?: (user: User) => boolean;
   },
 ): void {
   const {
@@ -97,6 +101,7 @@ export function registerIncludableBulkRoutes<T>(
     responseKey,
     errorMessagePrefix,
     customGetRoute,
+    canDelete,
   } = options;
 
   const bulkPath = path === '/' ? '/bulk' : `${path}/bulk`;
@@ -111,6 +116,7 @@ export function registerIncludableBulkRoutes<T>(
         responseKey,
         errorMessagePrefix,
         supportsIncludeDeleted: true,
+        canDelete,
       });
     });
   }
@@ -153,14 +159,20 @@ export function registerSoftDeletableBulkTrashRoutes(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const ids = parsed.data.ids.map(String);
+      const captureReason = shouldCaptureDeletionReason(options.collection, options.captureDeletionReason);
+      const reason = captureReason ? parsed.data.deletionReason : undefined;
       const result = await options.bulkDeleteFn(
         ids,
         String(user.id),
-        parsed.data.deletionReason,
+        reason,
       );
-      await options.onAfterBulkDelete?.(user, result, parsed.data.deletionReason);
+      await options.onAfterBulkDelete?.(user, result, reason);
       return reply.send({ success: true, ...result });
     } catch (error: unknown) {
+      const mapped = options.mapDeleteError?.(error);
+      if (mapped) return reply.status(mapped.statusCode).send(mapped.body);
+      const domainHandled = sendIfHttpDomainError(reply, error);
+      if (domainHandled) return domainHandled;
       return sendDatabaseError(
         reply,
         `Failed to bulk delete ${options.errorMessagePrefix}`,
@@ -180,6 +192,13 @@ export function registerSoftDeletableBulkTrashRoutes(
       await options.onAfterBulkRestore?.(user, result);
       return reply.send({ success: true, ...result });
     } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        return sendConflict(reply, 'A record with this unique identifier already exists');
+      }
+      const mapped = options.mapRestoreError?.(error);
+      if (mapped) return reply.status(mapped.statusCode).send(mapped.body);
+      const domainHandled = sendIfHttpDomainError(reply, error);
+      if (domainHandled) return domainHandled;
       return sendDatabaseError(
         reply,
         `Failed to bulk restore ${options.errorMessagePrefix}`,
@@ -197,7 +216,7 @@ export function registerSoftDeletableBulkRoutes<T>(
   options: SoftDeletableBulkRoutesOptions<T> & { customGetRoute?: boolean; customBulkTrashRoutes?: boolean },
 ): void {
   const {
-    path,
+    path = '/',
     collection,
     schema,
     loadFn,
@@ -211,12 +230,14 @@ export function registerSoftDeletableBulkRoutes<T>(
     nameSingular,
     bulkBodySchema = bulkIdsBodySchema,
     mapDeleteError,
+    mapRestoreError,
     customGetRoute,
     customBulkTrashRoutes,
+    captureDeletionReason,
   } = options;
 
-  const idPath = path === '/' ? '/:id' : `${path}/:id`;
-  const restorePath = path === '/' ? '/:id/restore' : `${path}/:id/restore`;
+  const canDelete =
+    options.canDelete ?? ((user: User) => canDeleteCollection(user, collection));
 
   registerIncludableBulkRoutes(fastify, {
     path,
@@ -230,6 +251,7 @@ export function registerSoftDeletableBulkRoutes<T>(
     responseKey,
     errorMessagePrefix,
     customGetRoute,
+    canDelete,
   });
 
   // Static bulk paths before /:id to avoid parametric capture.
@@ -240,33 +262,46 @@ export function registerSoftDeletableBulkRoutes<T>(
       errorMessagePrefix,
       bulkBodySchema,
       bulkDeleteFn,
-      bulkRestoreFn: (ids) => bulkRestoreFn(ids),
+      bulkRestoreFn,
+      canDelete,
+      captureDeletionReason,
+      mapDeleteError,
+      mapRestoreError,
+      onAfterBulkDelete: options.onAfterBulkDelete,
+      onAfterBulkRestore: options.onAfterBulkRestore,
     });
   }
 
-  fastify.delete<{ Params: { id: string } }>(idPath, async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
-    try {
-      const ok = await deleteFn(request.params.id, String(user.id));
-      if (!ok) return sendNotFound(reply, `${nameSingular} not found`);
-      return reply.send({ success: true });
-    } catch (error: unknown) {
-      const mapped = mapDeleteError?.(error);
-      if (mapped) return reply.status(mapped.statusCode).send(mapped.body);
-      return sendDatabaseError(reply, `Failed to delete ${nameSingular.toLowerCase()}`, error);
-    }
-  });
+  const prefix = path === '/' ? '' : path;
 
-  fastify.post<{ Params: { id: string } }>(restorePath, async (request, reply) => {
-    const user = request.user as User;
-    if (!canDeleteCollection(user, collection)) return sendForbidden(reply);
-    try {
-      const ok = await restoreFn(request.params.id);
-      if (!ok) return sendNotFound(reply, `${nameSingular} not found`);
-      return reply.send({ success: true });
-    } catch (error: unknown) {
-      return sendDatabaseError(reply, `Failed to restore ${nameSingular.toLowerCase()}`, error);
-    }
-  });
+  // Cast to optional: options type requires them but the factory supports partial
+  // registration (e.g. Contacts registers single routes via registerResourceRoutes).
+  const optDeleteFn: typeof deleteFn | undefined = deleteFn;
+  const optRestoreFn: typeof restoreFn | undefined = restoreFn;
+
+  if (optDeleteFn) {
+    registerSingleDeleteRoute(fastify, {
+      prefix,
+      collection,
+      nameSingular,
+      deleteFn: optDeleteFn,
+      canDelete,
+      captureDeletionReason,
+      onAfterDelete: options.onAfterDelete,
+      mapDeleteError,
+    });
+  }
+
+  if (optRestoreFn) {
+    registerSingleRestoreRoute(fastify, {
+      prefix,
+      collection,
+      nameSingular,
+      restoreFn: optRestoreFn,
+      canDelete,
+      onAfterRestore: options.onAfterRestore,
+      mapRestoreError,
+    });
+  }
 }
+

@@ -7,12 +7,23 @@ import {
   stripRecordFields,
   type ContactLike,
 } from './contactLinkPolicy.js';
-import { stripContactClientSoftDeleteFields } from './contactSoftDelete.js';
 import {
   resolveStudentGuardianLinks,
   type ContactWithRelationships,
 } from './studentGuardianFromContacts.js';
 import type { Student } from './studentTypes.js';
+
+export {
+  STUDENT_CLIENT_SOFT_DELETE_KEYS,
+  stripStudentClientSoftDeleteFields,
+  stripClientSoftDeleteFields,
+  isEntityDeleted,
+  filterActiveEntities,
+  isStudentDeleted,
+  filterActiveStudents,
+} from './studentSoftDelete.js';
+
+import { stripStudentClientSoftDeleteFields } from './studentSoftDelete.js';
 
 export const STUDENT_GUARDIAN_LINK_FIELDS = [
   'fatherContactId',
@@ -22,13 +33,6 @@ export const STUDENT_GUARDIAN_LINK_FIELDS = [
   'motherName',
   'guardianName',
 ] as const;
-
-/** Strip client soft-delete metadata from student create/update payloads. */
-export function stripStudentClientSoftDeleteFields<T extends Record<string, unknown>>(record: T): T {
-  const next = stripContactClientSoftDeleteFields(record) as Record<string, unknown>;
-  delete next.deleted;
-  return next as T;
-}
 
 function stripStudentGuardianLinkFields<T extends Record<string, unknown>>(record: T): T {
   return stripRecordFields(record, STUDENT_GUARDIAN_LINK_FIELDS);

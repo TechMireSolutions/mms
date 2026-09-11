@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useTrashMode } from "@/hooks/useTrashMode";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import {
   getDirectoryPageSelection,
@@ -33,7 +34,7 @@ export function useWorkDirectoryController<TSort extends string = string>(
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 250);
   const [page, setPage] = useState(1);
-  const [viewingDeleted, setViewingDeleted] = useState(false);
+  const [viewingDeleted, setViewingDeleted] = useTrashMode();
   const [sortField, setSortField] = useState<TSort | undefined>(defaultSortField);
   const [sortDir, setSortDir] = useState<"asc" | "desc">(defaultSortDir);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

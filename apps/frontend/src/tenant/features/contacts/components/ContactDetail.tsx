@@ -134,12 +134,12 @@ export function ContactDetail({
         visibleCollectionFields={visibleCollectionFields}
         primaryPhone={primaryPhone}
         primaryEmail={primaryEmail}
-        onWhatsApp={onWhatsApp}
-        onSms={onSms}
-        onEmail={onEmail}
+        onWhatsApp={!isArchived ? onWhatsApp : undefined}
+        onSms={!isArchived ? onSms : undefined}
+        onEmail={!isArchived ? onEmail : undefined}
         onNavigateToContact={handleNavigateToContact}
         activities={combinedActivities}
-        canPersistContact={canPersistContact}
+        canPersistContact={!isArchived && canPersistContact}
         onAddNote={handleAddNote}
         isDragging={isDragging}
         isUploading={isUploading}
@@ -168,5 +168,7 @@ export function ContactDetail({
   );
 }
 
+export const ContactDrawer = ContactDetail;
 export default ContactDetail;
+
 

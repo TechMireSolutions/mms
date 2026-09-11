@@ -174,7 +174,7 @@ describe('students trash / bulk / column-preferences routes', () => {
       payload: { ids: ['s-1'] },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockBulkRestoreStudents).toHaveBeenCalledWith(['s-1']);
+    expect(mockBulkRestoreStudents).toHaveBeenCalledWith(['s-1'], 'u-admin');
     await app.close();
   });
 

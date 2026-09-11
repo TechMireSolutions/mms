@@ -618,12 +618,14 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     bulkRestoreUsers: async (
       ids: string[],
       actorRole?: string,
+      actorId = 'system',
+      ip = '127.0.0.1',
     ): Promise<{ succeeded: number; failed: number }> => {
       let succeeded = 0;
       let failed = 0;
       for (const id of ids) {
         try {
-          const ok = await restoreUserById(id, actorRole);
+          const ok = await restoreUserById(id, actorRole, actorId, ip);
           if (ok) succeeded += 1;
           else failed += 1;
         } catch {

@@ -59,11 +59,22 @@ export function createSessionUpdateHandler(deps: Pick<SessionMutationHandlersDep
   };
 }
 
-export function createSessionDeleteHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'detailSession' | 'setDetailSession' | 'deleteSession'>) {
+export function createSessionDeleteHandler(deps: Pick<SessionMutationHandlersDeps, 't' | 'detailSession' | 'setDetailSession' | 'deleteSession' | 'restoreSession'>) {
   return (id: string, deletionReason?: string) => {
     deps.deleteSession.mutate({ id, deletionReason }, {
       onSuccess: () => {
-        notify.info(deps.t('sessions.toast.deleted'));
+        notify.archivedWithUndo(
+          deps.t('sessions.toast.deleted'),
+          () => {
+            deps.restoreSession.mutate(id, {
+              onSuccess: () => notify.success(deps.t('sessions.toast.restored')),
+              onError: (err) => notify.error(deps.t('settings.serverSaveFailed'), {
+                description: err instanceof Error ? err.message : String(err),
+              }),
+            });
+          },
+          { undoLabel: deps.t('common.undo'), duration: 8000 },
+        );
         if (deps.detailSession?.id === id) deps.setDetailSession(null);
       },
       onError: (err) => notify.error(deps.t('settings.serverSaveFailed'), {

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { FastifyInstance } from 'fastify';
 
-type TokenRole = 'admin' | 'teacher' | 'accountant' | 'assistant_teacher' | 'viewer' | 'guardian';
+type TokenRole = 'admin' | 'teacher' | 'accountant' | 'assistant_teacher' | 'viewer' | 'guardian' | 'auditor';
 
 type TenantTokenOptions = {
   role?: TokenRole;
@@ -89,6 +89,16 @@ export function guardianToken(app: FastifyInstance, options: RoleTokenOptions = 
     name: 'Guardian',
     ...options,
     role: 'guardian',
+  });
+}
+
+export function auditorToken(app: FastifyInstance, options: RoleTokenOptions = {}): string {
+  return signTenantToken(app, {
+    id: 'u-auditor',
+    email: 'auditor@test.com',
+    name: 'Auditor',
+    ...options,
+    role: 'auditor',
   });
 }
 

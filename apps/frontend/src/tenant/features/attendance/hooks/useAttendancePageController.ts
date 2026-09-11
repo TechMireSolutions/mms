@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useModuleShortcuts } from '@/hooks/useModuleShortcuts';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useTrashMode } from '@/hooks/useTrashMode';
 import { todayISO, ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
 import { useAttendanceRecords } from '@/tenant/features/attendance/hooks/useAttendance';
 import { useAttendancePageActions } from '@/tenant/features/attendance/hooks/useAttendancePageActions';
@@ -26,7 +27,7 @@ export function useAttendancePageController() {
   const [activeOpsTab, setActiveOpsTab] = useState('mark');
   const [activeAnalyticsTab, setActiveAnalyticsTab] = useState('charts');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
-  const [showDeleted, setShowDeleted] = useState(false);
+  const [showDeleted, setShowDeleted] = useTrashMode();
   const [shownCount, setShownCount] = useState(0);
   const attendanceCollectionQuery = useAttendanceRecords();
   const activeAttendanceRecords = attendanceCollectionQuery.data ?? [];

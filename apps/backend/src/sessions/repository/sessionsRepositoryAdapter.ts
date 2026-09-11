@@ -4,6 +4,10 @@ import {
   findSessionById,
   findSessionsByIds,
   saveSession,
+  softDeleteSessionWithCascade,
+  restoreSessionWithCascade,
+  bulkSoftDeleteSessionsWithCascade,
+  bulkRestoreSessionsWithCascade,
 } from '../../db/repositories/sessionRepository.js';
 import {
   listSessionsPage,
@@ -29,4 +33,8 @@ export const sessionsRepository: SessionsRepository = {
   bulkUpdateSessionsStatus: bulkUpdateSessionsStatusSql,
   aggregateSessionsWidgetQueries,
   loadSessionsReportAggregates: loadSessionsReportAggregatesSql,
+  softDeleteSessionWithCascade,
+  restoreSessionWithCascade,
+  bulkSoftDeleteSessionsWithCascade,
+  bulkRestoreSessionsWithCascade,
 };

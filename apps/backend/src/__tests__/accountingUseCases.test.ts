@@ -116,7 +116,11 @@ describe('accounting use-cases (DI with fake repository)', () => {
 
     const repo = createFakeRepo();
     vi.mocked(repo.findAccountById).mockResolvedValue(deletedAccount);
-    vi.mocked(repo.findAccountsByIds).mockResolvedValue([activeAccount, deletedAccount]);
+    vi.mocked(repo.findAccountsByIds).mockImplementation(async (_tenant, ids, opts) => {
+      const all = [activeAccount, deletedAccount].filter((a) => ids.includes(a.id));
+      if (opts?.includeDeleted) return all.filter((a) => Boolean((a as any).deletedAt));
+      return all.filter((a) => !(a as any).deletedAt);
+    });
     const useCases = createAccountingUseCases(repo);
 
     await runWithTenant('demo', async () => {
@@ -163,7 +167,11 @@ describe('accounting use-cases (DI with fake repository)', () => {
 
     const repo = createFakeRepo();
     vi.mocked(repo.findEntryById).mockResolvedValue(deletedEntry);
-    vi.mocked(repo.findEntriesByIds).mockResolvedValue([activeEntry, deletedEntry]);
+    vi.mocked(repo.findEntriesByIds).mockImplementation(async (_tenant, ids, opts) => {
+      const all = [activeEntry, deletedEntry].filter((e) => ids.includes(e.id));
+      if (opts?.includeDeleted) return all.filter((e) => Boolean((e as any).deletedAt));
+      return all.filter((e) => !(e as any).deletedAt);
+    });
     const useCases = createAccountingUseCases(repo);
 
     await runWithTenant('demo', async () => {
@@ -197,7 +205,11 @@ describe('accounting use-cases (DI with fake repository)', () => {
 
     const repo = createFakeRepo();
     vi.mocked(repo.findFiscalYearById).mockResolvedValue(deletedYear);
-    vi.mocked(repo.findFiscalYearsByIds).mockResolvedValue([activeYear, deletedYear]);
+    vi.mocked(repo.findFiscalYearsByIds).mockImplementation(async (_tenant, ids, opts) => {
+      const all = [activeYear, deletedYear].filter((f) => ids.includes(f.id));
+      if (opts?.includeDeleted) return all.filter((f) => Boolean((f as any).deletedAt));
+      return all.filter((f) => !(f as any).deletedAt);
+    });
     const useCases = createAccountingUseCases(repo);
 
     await runWithTenant('demo', async () => {
@@ -211,5 +223,34 @@ describe('accounting use-cases (DI with fake repository)', () => {
       expect(batchRes).toHaveLength(1);
       expect(batchRes[0]?.id).toBe('fy_1');
     });
+  });
+
+  it('deleteAccountById blocks soft-deletion and throws 400 when account has active ledger entries', async () => {
+    const repo = createFakeRepo();
+    const countActiveJournalLinesForAccount = vi.fn().mockResolvedValue(3);
+    const useCases = createAccountingUseCases(repo, { countActiveJournalLinesForAccount });
+
+    await expect(
+      runWithTenant('demo', () => useCases.deleteAccountById('acc_1', 'user_1', 'Testing')),
+    ).rejects.toThrow('Cannot archive account with active ledger entries');
+  });
+
+  it('bulkSoftDeleteAccounts excludes accounts with active ledger entries', async () => {
+    const repo = createFakeRepo();
+    repo.bulkSoftDeleteAccounts = vi.fn().mockResolvedValue({ succeeded: 1, failed: 0 });
+    const countActiveJournalLinesForAccounts = vi.fn().mockResolvedValue(
+      new Map([
+        ['acc_1', 0],
+        ['acc_2', 5], // has active lines, must be blocked
+      ]),
+    );
+    const useCases = createAccountingUseCases(repo, { countActiveJournalLinesForAccounts });
+
+    const result = await runWithTenant('demo', () =>
+      useCases.bulkSoftDeleteAccounts(['acc_1', 'acc_2'], 'user_1'),
+    );
+
+    expect(result.succeeded).toBe(1);
+    expect(result.failed).toBe(1); // acc_2 was blocked
   });
 });

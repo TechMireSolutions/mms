@@ -55,5 +55,34 @@ export function useModuleCrudNotify({
       }
     });
 
-  return { t, handleError, notifyBulkResult };
+  const notifyArchivedWithUndo = useCallback(
+    (
+      onUndo: () => void | Promise<void>,
+      recordName?: string,
+      options?: { description?: string },
+    ) => {
+      const title = recordName
+        ? `${t("common.recordArchived")}: ${recordName}`
+        : t("common.recordArchived");
+      return notify.archivedWithUndo(
+        title,
+        async () => {
+          try {
+            await onUndo();
+            notify.success(t("common.recordRestored"));
+          } catch (err) {
+            handleError(err, "crud.undoRestore", defaultErrorKey);
+          }
+        },
+        {
+          undoLabel: t("common.undo"),
+          description: options?.description,
+          duration: 8000,
+        },
+      );
+    },
+    [t, handleError, defaultErrorKey],
+  );
+
+  return { t, handleError, notifyBulkResult, notifyArchivedWithUndo };
 }

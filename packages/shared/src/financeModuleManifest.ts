@@ -37,6 +37,9 @@ export const invoiceRecordSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
@@ -83,6 +86,14 @@ export type InvoiceUpdate = z.infer<typeof invoiceRecordUpdateSchema>;
 export type InvoiceCreateInput = InvoiceInsert;
 export const invoiceListSchema = z.array(invoiceRecordSchema);
 
+export function isInvoiceDeleted(invoice: { deletedAt?: string | null }): boolean {
+  return Boolean(invoice.deletedAt);
+}
+
+export function filterActiveInvoices<T extends { deletedAt?: string | null }>(invoices: T[]): T[] {
+  return invoices.filter((i) => !isInvoiceDeleted(i));
+}
+
 export const invoicesBulkStatusSchema = z
   .object({
     ids: z.array(z.string().min(1)).min(1, 'At least one invoice ID is required'),
@@ -118,6 +129,9 @@ export const paymentRecordSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
   })
@@ -147,6 +161,14 @@ export type PaymentUpdate = z.infer<typeof paymentRecordUpdateSchema>;
 export type PaymentCreateInput = PaymentInsert;
 export const paymentListSchema = z.array(paymentRecordSchema);
 
+export function isPaymentDeleted(payment: { deletedAt?: string | null }): boolean {
+  return Boolean(payment.deletedAt);
+}
+
+export function filterActivePayments<T extends { deletedAt?: string | null }>(payments: T[]): T[] {
+  return payments.filter((p) => !isPaymentDeleted(p));
+}
+
 /** Finance module manifest — aligns with globle1 universal module architecture. */
 export const FINANCE_MODULE_MANIFEST = {
   moduleId: 'finance',
@@ -165,6 +187,7 @@ export const FINANCE_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: false,
+    retentionDays: null,
   },
   permissions: {
     read: 'finance.write',

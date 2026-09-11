@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useTrashMode } from "@/hooks/useTrashMode";
 import { isContactsQuickFilter, type ContactsQuickFilter } from "@mms/shared";
 import {
   CONTACTS_WORK_DRILLDOWN_EVENT,
@@ -10,12 +11,11 @@ import { toggleIdInSelection, togglePageIdsInSelection } from "@/lib/directorySe
 
 export function useContactsDirectoryFilters({
   setActiveTab,
-  initialViewingDeleted = false,
 }: {
   setActiveTab: (tab: string) => void;
   initialViewingDeleted?: boolean;
 }) {
-  const [viewingDeleted, setViewingDeleted] = useState(initialViewingDeleted);
+  const [viewingDeleted, setViewingDeleted] = useTrashMode();
   const [listPage, setListPage] = useState(1);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 250);

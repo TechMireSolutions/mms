@@ -9,10 +9,13 @@ import {
 import { cn } from '@/lib/utils';
 
 export interface ModuleTrashToggleProps {
-  showDeleted: boolean;
+  showDeleted?: boolean;
+  viewingDeleted?: boolean;
   onToggle: () => void;
-  showActiveLabel: string;
-  showDeletedLabel: string;
+  showActiveLabel?: string;
+  showDeletedLabel?: string;
+  activeLabel?: string;
+  deletedLabel?: string;
   className?: string;
   disabled?: boolean;
   title?: string;
@@ -23,29 +26,39 @@ export interface ModuleTrashToggleProps {
  */
 export const ModuleTrashToggle = (function ModuleTrashToggle({
   showDeleted,
+  viewingDeleted,
   onToggle,
   showActiveLabel,
   showDeletedLabel,
+  activeLabel,
+  deletedLabel,
   className,
   disabled = false,
   title,
 }: ModuleTrashToggleProps): React.JSX.Element {
+  const isDeleted = viewingDeleted ?? showDeleted ?? false;
+  const label = isDeleted
+    ? (showActiveLabel ?? activeLabel ?? "Show Active")
+    : (showDeletedLabel ?? deletedLabel ?? "Show Trash");
+
   return (
     <Button
       type="button"
       variant="outline"
       onClick={onToggle}
       disabled={disabled}
-      title={title}
-      aria-pressed={showDeleted}
+      title={title ?? label}
+      aria-pressed={isDeleted}
+      aria-label={label}
       className={cn(
         WORK_TOOLBAR_TRIGGER,
-        showDeleted ? WORK_TOOLBAR_TRIGGER_ACTIVE : WORK_TOOLBAR_TRIGGER_IDLE,
+        isDeleted ? WORK_TOOLBAR_TRIGGER_ACTIVE : WORK_TOOLBAR_TRIGGER_IDLE,
         className,
       )}
     >
       <Archive className="h-3.5 w-3.5" aria-hidden="true" />
-      {showDeleted ? showActiveLabel : showDeletedLabel}
+      {label}
     </Button>
   );
 });
+

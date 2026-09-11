@@ -7,6 +7,8 @@ const mockListContactsByWorkspace = vi.fn();
 const mockListContactsPage = vi.fn();
 const mockSaveContact = vi.fn();
 const mockBulkSaveContacts = vi.fn();
+const mockBulkSoftDeleteContactsSql = vi.fn();
+const mockBulkRestoreContactsSql = vi.fn();
 const mockGetRequestTenant = vi.fn();
 const mockInvalidateDuplicateScanCache = vi.fn();
 
@@ -19,6 +21,8 @@ vi.mock('../db/repositories/contactRepository.js', () => ({
   saveContact: (...args: unknown[]) => mockSaveContact(...args),
   findContactsByIds: (...args: unknown[]) => mockFindContactsByIds(...args),
   bulkSaveContacts: (...args: unknown[]) => mockBulkSaveContacts(...args),
+  bulkSoftDeleteContactsSql: (...args: unknown[]) => mockBulkSoftDeleteContactsSql(...args),
+  bulkRestoreContactsSql: (...args: unknown[]) => mockBulkRestoreContactsSql(...args),
 }));
 
 vi.mock('../contacts/use-cases/contactValidationUseCases.js', async (importOriginal) => {
@@ -53,6 +57,16 @@ vi.mock('../contacts/use-cases/contactPreferencesService.js', () => ({
 vi.mock('../db/database.js', () => ({
   runInTransaction: (cb: () => unknown) => cb(),
 }));
+
+vi.mock('../services/outboxEventService.js', () => ({
+  emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../services/auditTrailService.js', () => ({
+  recordModernAuditEvent: vi.fn().mockResolvedValue({ id: 1, hashPrevious: '0'.repeat(64), hashCurrent: 'a'.repeat(64), canonicalPayload: '{}' }),
+  sanitizeAuditState: (v: unknown) => v,
+}));
+
 
 import {
   loadContactsPage,
@@ -549,22 +563,17 @@ describe('contactService relationship reciprocal mapping', () => {
     );
   });
 
-  it('soft-delete bulkSave includes deletedBy and deletionReason for column sync', async () => {
-    mockFindContactsByIds.mockResolvedValue([contact({ id: 'a', firstName: 'Ahmed' })]);
+  it('soft-delete bulkSoftDelete includes deletedBy and deletionReason for column sync', async () => {
+    mockBulkSoftDeleteContactsSql.mockResolvedValue({ succeeded: 1, failed: 0 });
 
     const result = await bulkSoftDeleteContacts(['a'], 'u-admin', 'Duplicate entry');
 
     expect(result).toEqual({ succeeded: 1, failed: 0 });
-    expect(mockBulkSaveContacts).toHaveBeenCalledWith(
+    expect(mockBulkSoftDeleteContactsSql).toHaveBeenCalledWith(
       'demo',
-      [
-        expect.objectContaining({
-          id: 'a',
-          deletedBy: 'u-admin',
-          deletionReason: 'Duplicate entry',
-          deletedAt: expect.any(String),
-        }),
-      ],
+      ['a'],
+      'u-admin',
+      'Duplicate entry',
     );
   });
 });

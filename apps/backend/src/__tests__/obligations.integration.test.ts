@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
-import { adminToken, teacherToken } from './helpers/tokens.js';
+import { adminToken, auditorToken, teacherToken } from './helpers/tokens.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -24,6 +24,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 });
 
 const mockLoadObligationsCommandMetrics = vi.fn();
+const mockLoadObligationCollections = vi.fn();
 
 vi.mock('../obligations/use-cases/obligationsUseCases.js', () => ({
   obligationsUseCases: {
@@ -37,7 +38,7 @@ vi.mock('../obligations/use-cases/obligationsUseCases.js', () => ({
     upsertWakalaTypes: vi.fn(),
     loadObligationDistributions: vi.fn().mockResolvedValue([]),
     upsertObligationDistributions: vi.fn(),
-    loadObligationCollections: vi.fn().mockResolvedValue([]),
+    loadObligationCollections: (...args: unknown[]) => mockLoadObligationCollections(...args),
     upsertObligationCollections: vi.fn(),
     deleteObligationCollectionById: vi.fn(),
     restoreObligationCollectionById: vi.fn(),
@@ -65,6 +66,7 @@ describe('obligations metrics REST', () => {
       newThisPeriod: 1,
       obligationTypes: 3,
     });
+    mockLoadObligationCollections.mockReset().mockResolvedValue([]);
   });
 
   afterEach(() => {
@@ -108,6 +110,72 @@ describe('obligations metrics REST', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(mockLoadObligationsCommandMetrics).not.toHaveBeenCalled();
+    await app.close();
+  });
+});
+
+describe('obligations collections contract REST', () => {
+  it('GET /api/obligations/collections allows authorized roles with read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/obligations/collections',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${auditorToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadObligationCollections).toHaveBeenCalledWith(
+      expect.objectContaining({ includeDeleted: false }),
+    );
+    await app.close();
+  });
+
+  it('GET /api/obligations/collections?includeDeleted=true returns 403 for roles without delete permissions', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/obligations/collections?includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${auditorToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadObligationCollections).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('GET /api/obligations/collections?includeDeleted=true succeeds for admin with delete permissions', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/obligations/collections?includeDeleted=true',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockLoadObligationCollections).toHaveBeenCalledWith(
+      expect.objectContaining({ includeDeleted: true }),
+    );
+    await app.close();
+  });
+
+  it('GET /api/obligations/collections returns 403 for roles without read access', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/obligations/collections',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockLoadObligationCollections).not.toHaveBeenCalled();
     await app.close();
   });
 });

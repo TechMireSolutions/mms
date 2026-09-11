@@ -5,7 +5,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 
 # MMS Module Work Workflow
 
-**Rule (norms SSOT):** `mms-module-architecture.md` §2–§3, §6–§7. Also `mms-auth-security.md`, `mms-data-layer.md`, `mms-performance.md`.
+**Rule (norms SSOT):** `mms-module-architecture.md` §2–§3, §6–§7. Also `mms-auth-security.md`, `mms-data-layer.md` §6, `mms-performance.md`. Soft-Delete System SSOT → **`mms-soft-delete`**.
 
 ## Reference
 
@@ -25,8 +25,15 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 5. **View mode**: person-directory Work → `directoryViews: ['table','cards']` (never `list`); domain modules keep their own sub-modes (finance/attendance/…). Resolve one `viewMode`; defaults/cards paging — rule §3.
 6. REST modules: Query hooks + server pagination/`/metrics` — no full-collection client reduce; no new `useLiveCollection`; ban `loadAllFn` / unpaged list GET. Prefer **keyset/cursor** for hot/large directories when touching list APIs — `mms-data-layer.md`.
 7. `useModulePermissions(manifest)` / `can()` (tenant) or `platformUserCan` (platform) — omit forbidden CTAs (UI hide ≠ security; BE `rbacService` / platform guards still required).
-8. Soft-delete: default exclude deleted; trash = `includeDeleted` + restore/bulk restore; hide Add/messaging in trash; **drawer** `WarningCallout` archive chrome + Restore + `DrawerSyncStatusFooter` (shared synced/archived footer); hide Call/WA/SMS/Email when `deletedAt`.
-9. §7: `ErrorState`+retry+hint on list `isError`; directory empties via `ModuleWorkDirectoryEmpty` (`title` via `t()`; `compact` when dense; Clear Filters / Show Active CTAs — Teachers uses `teachers.noTeachersMatchFilters` / `teachers.noDeletedTeachers` / `teachers.tryAdjustingFilters` / `teachers.clickAddTeacher` / `teachers.emptyDirectoryReadOnly` / `teachers.clearFilters`); Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via floating/inline `BulkSelectionBar` + `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` (not toolbar-inline trash); column gates via `isColumnVisible` into table/cards.
+8. **Soft-delete Work UX**:
+   - **URL Search Param Sync**: Synchronize `viewingDeleted` with URL search params (`?view=trash` via `useSearchParams`). Query hook maps `viewingDeleted` to `includeDeleted`. Deep linking to trash works seamlessly.
+   - **Filter State Preservation**: Toggling `ModuleTrashToggle` must preserve active search query and filter selections — never reset filters on toggle (`docs/soft-delete.md` §7.10).
+   - **Toolbar Controls**: Mount `ModuleTrashToggle` directly in `ModuleWorkToolbar` (not in Filters dropdown). Hide Add/Create and Export CTAs when `viewingDeleted = true`. Guard `Cmd/Ctrl+N` shortcut: check `!viewingDeleted && canWrite`.
+   - **Bulk Actions**: Wire `BulkSelectionDeleteAction` (active mode) and `BulkSelectionRestoreAction` (trash mode) via `ModuleWorkBulkActionBar`.
+   - **Detail Drawer & Precedence**: On `deletedAt != null`, render `ArchivedBanner` (`WarningCallout` tone="warning") above drawer tabs. Hide Edit, Call, SMS, WhatsApp, and Email buttons; show Restore button (gated on `canDelete`). When drawer opens with active bulk selection, drawer takes precedence; restore operates strictly on the drawer entity.
+   - **Optimistic Undo Toast**: Single-record deletions trigger an instant TanStack Query cache hide with a 5–10s Undo toast triggering `POST /:id/restore` without forcing navigation to trash.
+   - **Retention Expiry Countdown**: Render countdown badge in trash directory and drawer (`⚠️ Purges in N days` if $\le 7$ days, or `Archived indefinitely` if null).
+9. §7: `ErrorState`+retry+hint on list `isError`; directory empties via `ModuleWorkDirectoryEmpty` (`title` via `t()`; `compact` when dense; Clear Filters / Show Active CTAs — Teachers uses `teachers.noTeachersMatchFilters` / `teachers.noDeletedTeachers` / `teachers.tryAdjustingFilters` / `teachers.clickAddTeacher` / `teachers.emptyDirectoryReadOnly` / `teachers.clearFilters`); Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via floating/inline `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` / Messaging) on list/parent (not toolbar-inline trash); column gates via `isColumnVisible` into table/cards.
 10. **Column layout**: `useModuleColumnLayout` — merge/local-width rules in rule §3 (do not restate). Pass `isColumnVisible` through content — ban `visibleColumns` boolean object fans.
 11. **Mandatory Work table & list virtualization**: always virtualize DOM rows when rendered items > 30 using `@tanstack/react-virtual` (following `ContactsListDesktopTable.tsx`) — ban unvirtualized rendering of long collections — `mms-performance.md`.
 12. Command/report KPI **StatCard strips** → `ModuleCommandMetricsGrid` when adding metrics — `mms-ui-ux-design.md`.
@@ -37,11 +44,14 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 
 ```
 - [ ] PageHeader visible on all tiers; metrics permission-scoped (tenant or platform)
-- [ ] Create omitted when !canWrite (or !platformUserCan); Cmd/Ctrl+N when allowed
+- [ ] Create omitted when !canWrite (or !platformUserCan); Cmd/Ctrl+N when allowed && !viewingDeleted
 - [ ] Server pagination / metrics — no unbounded client lists / no `loadAllFn`
 - [ ] Hot/large directories: keyset preference when touching list APIs
 - [ ] Person-directory: `directoryViews: ['table','cards']`; cards + table same page API
-- [ ] Soft-delete trash + restore (+ drawer `WarningCallout` archive chrome) or documented variant
+- [ ] Soft-delete trash + restore: URL synced ?view=trash; ModuleTrashToggle in toolbar; filter state preserved on toggle
+- [ ] Optimistic soft-delete with 5–10s Undo toast for single-record delete
+- [ ] Detail drawer uses ArchivedBanner (WarningCallout) + Restore; hides edit/comm CTAs; drawer takes precedence over bulk select
+- [ ] Retention expiry countdown badge displayed in trash and drawer (Purges in N days / Archived indefinitely)
 - [ ] Bulk selection bar uses shared `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / Restore / Messaging) on list/parent (no forked floating/inline chrome; no toolbar-inline trash)
 - [ ] Directory empties use `ModuleWorkDirectoryEmpty` / `EmptyState` (`title` required; dashed when bordered; `compact` when dense)
 - [ ] Column gates via `isColumnVisible` into leaves (no `visibleColumns`/`show*` boolean fans)
@@ -49,7 +59,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 - [ ] New KPI StatCard strips use `ModuleCommandMetricsGrid`
 - [ ] mutateAsync awaited before form close
 - [ ] Bulk actions: eligibility + partial failure reporting
-- [ ] Export respects filters, RBAC, soft-delete policy
+- [ ] Export respects filters, RBAC, soft-delete policy (hidden in trash mode if exportsIncludeDeleted: false)
 - [ ] Filters menu SSOT — no duplicate preset pill bar; shared preset options when cross-layer
 - [ ] Directory viewMode SSOT — cards default `< md`, table `md+`; toggle overrides without CSS dual-render
 - [ ] Column widths persist — local + `/column-preferences`; merge preserves device widths
@@ -64,9 +74,12 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 - Show forbidden actions as disabled clutter.
 - Treat `isError` as an empty directory.
 - Reintroduce a Work preset chip bar that duplicates Filters menu options.
+- Reset active search query or filters when toggling `ModuleTrashToggle`.
+- Render ModuleTrashToggle inside the Filters dropdown menu.
+- Show Add/Create or Export CTAs when browsing trash mode.
 - Dual CSS breakpoint render + separate viewMode override for the same directory.
 - Overwrite local column widths with server prefs that omit `width`.
 
 ## Done
 
-`pnpm typecheck` · FE lint · `mms-completion-review.md`. Related: `mms-module-page`, `mms-form-architecture`, `mms-data-sync`, `mms-background-jobs`.
+`pnpm typecheck` · FE lint · `mms-completion-review.md`. Related: `mms-soft-delete`, `mms-module-page`, `mms-form-architecture`, `mms-data-sync`, `mms-background-jobs`.

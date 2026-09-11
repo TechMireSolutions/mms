@@ -1,6 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { dedupeTrimmedIds } from '@mms/shared';
+import { eq, isNull, isNotNull, type SQL } from 'drizzle-orm';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { ConflictError, NotFoundError } from '../lib/httpErrors.js';
 import type { ZodType } from 'zod';
 
 export type SoftDeleteListFilter = 'active' | 'deleted' | 'all';
@@ -10,17 +12,84 @@ export interface ListByWorkspaceOptions {
   includeDeleted?: boolean;
 }
 
+/**
+ * Builds mandatory tenant and soft-delete SQL conditions with dynamic AST construction.
+ * Enforces mandatory tenant predicate `eq(table.workspaceSubdomain, tenant)`.
+ * Matches Category B partial index for 'active', Category C for 'deleted'.
+ */
+export function buildTenantSoftDeleteConditions<
+  TTable extends {
+    workspaceSubdomain: any;
+    deletedAt: any;
+  },
+>(
+  table: TTable,
+  tenant: string,
+  filter: SoftDeleteListFilter = 'active',
+): SQL[] {
+  const subdomain = tenant.trim().toLowerCase();
+  const conditions: SQL[] = [eq(table.workspaceSubdomain, subdomain)];
+  if (filter === 'deleted') {
+    conditions.push(isNotNull(table.deletedAt));
+  } else if (filter === 'active') {
+    conditions.push(isNull(table.deletedAt));
+  }
+  // 'all' includes both active and deleted rows while keeping tenant isolation strictly intact.
+  return conditions;
+}
+
+/**
+ * @deprecated In-memory soft-delete filtering is banned for relational SQL modules per mms-data-layer.md §6.
+ * Use `buildTenantSoftDeleteConditions` or database-level queries matching partial indexes.
+ */
+export function filterInMemorySoftDeleted<T extends { deletedAt?: string | Date | null }>(
+  records: T[],
+  filter: SoftDeleteListFilter = 'active',
+): T[] {
+  if (filter === 'deleted') {
+    return records.filter((r) => Boolean(r.deletedAt));
+  }
+  if (filter === 'active') {
+    return records.filter((r) => !r.deletedAt);
+  }
+  return records;
+}
+
 interface SoftDeleteFields {
-  deletedAt?: string | null;
+  deletedAt?: string | Date | null;
   deletedBy?: string | null;
   deletionReason?: string | null;
+  restoredAt?: string | Date | null;
+  restoredBy?: string | null;
 }
 
 export interface GenericServiceOptions<T> {
   repo: {
     listByWorkspace: (subdomain: string, options?: ListByWorkspaceOptions) => Promise<T[]>;
-    findById: (subdomain: string, id: string) => Promise<T | null>;
+    findById: (subdomain: string, id: string, options?: { includeDeleted?: boolean }) => Promise<T | null>;
     save: (subdomain: string, record: T) => Promise<void>;
+    deleteById?: (
+      subdomain: string,
+      id: string,
+      deletedBy: string,
+      deletionReason?: string,
+    ) => Promise<boolean>;
+    restoreById?: (
+      subdomain: string,
+      id: string,
+      userId?: string,
+    ) => Promise<boolean>;
+    bulkDelete?: (
+      subdomain: string,
+      ids: string[],
+      deletedBy: string,
+      deletionReason?: string,
+    ) => Promise<{ succeeded: number; failed: number }>;
+    bulkRestore?: (
+      subdomain: string,
+      ids: string[],
+      userId?: string,
+    ) => Promise<{ succeeded: number; failed: number }>;
   };
   schema: ZodType<T>;
   websocketCollection: string;
@@ -45,6 +114,15 @@ export function createGenericRelationalService<
     return repo.listByWorkspace(tenant, {
       deleted: opts?.includeDeleted ? 'deleted' : 'active',
     });
+  }
+
+  async function loadById(id: string, includeDeleted = false): Promise<T | null> {
+    const tenant = getRequestTenant();
+    if (!tenant) return null;
+    const existing = await repo.findById(tenant, id, { includeDeleted });
+    if (!existing) return null;
+    if (!includeDeleted && existing.deletedAt) return null;
+    return existing;
   }
 
   async function create(record: T): Promise<T> {
@@ -88,8 +166,42 @@ export function createGenericRelationalService<
   ): Promise<boolean> {
     const tenant = getRequestTenant();
     if (!tenant) return false;
-    const existing = await repo.findById(tenant, id);
-    if (!existing || existing.deletedAt) return false;
+
+    if (repo.deleteById) {
+      const ok = await repo.deleteById(tenant, id, deletedBy, deletionReason);
+      if (ok) {
+        const { broadcastTenantUpdate } = await import('./websocketService.js');
+        broadcastTenantUpdate(tenant, 'collection', websocketCollection);
+        return true;
+      }
+      const existing = await repo.findById(tenant, id, { includeDeleted: true });
+      if (existing?.deletedAt) {
+        throw new NotFoundError(`${idPrefix} is already archived`);
+      }
+      throw new NotFoundError(`${idPrefix} not found`);
+    }
+
+    if (repo.bulkDelete) {
+      const res = await repo.bulkDelete(tenant, [id], deletedBy, deletionReason);
+      if (res.succeeded === 1) {
+        const { broadcastTenantUpdate } = await import('./websocketService.js');
+        broadcastTenantUpdate(tenant, 'collection', websocketCollection);
+        return true;
+      }
+      const existing = await repo.findById(tenant, id, { includeDeleted: true });
+      if (existing?.deletedAt) {
+        throw new NotFoundError(`${idPrefix} is already archived`);
+      }
+      throw new NotFoundError(`${idPrefix} not found`);
+    }
+
+    const existing = await repo.findById(tenant, id, { includeDeleted: true });
+    if (!existing) {
+      throw new NotFoundError(`${idPrefix} not found`);
+    }
+    if (existing.deletedAt) {
+      throw new NotFoundError(`${idPrefix} is already archived`);
+    }
     const updated = {
       ...existing,
       deletedAt: new Date().toISOString(),
@@ -102,18 +214,68 @@ export function createGenericRelationalService<
     return true;
   }
 
-  async function restoreById(id: string, _userId?: string): Promise<boolean> {
+  async function restoreById(id: string, userId?: string): Promise<boolean> {
     const tenant = getRequestTenant();
     if (!tenant) return false;
-    const existing = await repo.findById(tenant, id);
-    if (!existing || !existing.deletedAt) return false;
+
+    if (repo.restoreById) {
+      const ok = await repo.restoreById(tenant, id, userId);
+      if (ok) {
+        const { broadcastTenantUpdate } = await import('./websocketService.js');
+        broadcastTenantUpdate(tenant, 'collection', websocketCollection);
+        return true;
+      }
+      const existing = await repo.findById(tenant, id, { includeDeleted: true });
+      if (existing && !existing.deletedAt) {
+        throw new NotFoundError(`${idPrefix} is already active`);
+      }
+      throw new NotFoundError(`${idPrefix} not found`);
+    }
+
+    if (repo.bulkRestore) {
+      const res = await repo.bulkRestore(tenant, [id], userId);
+      if (res.succeeded === 1) {
+        const { broadcastTenantUpdate } = await import('./websocketService.js');
+        broadcastTenantUpdate(tenant, 'collection', websocketCollection);
+        return true;
+      }
+      const existing = await repo.findById(tenant, id, { includeDeleted: true });
+      if (existing && !existing.deletedAt) {
+        throw new NotFoundError(`${idPrefix} is already active`);
+      }
+      throw new NotFoundError(`${idPrefix} not found`);
+    }
+
+    const existing = await repo.findById(tenant, id, { includeDeleted: true });
+    if (!existing) {
+      throw new NotFoundError(`${idPrefix} not found`);
+    }
+    if (!existing.deletedAt) {
+      throw new NotFoundError(`${idPrefix} is already active`);
+    }
     const restored = {
       ...existing,
       deletedAt: null,
       deletedBy: null,
       deletionReason: null,
+      restoredAt: new Date().toISOString(),
+      restoredBy: userId ?? null,
     } as T;
-    await repo.save(tenant, restored);
+    try {
+      await repo.save(tenant, restored);
+    } catch (err: unknown) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'code' in err &&
+        (err as { code: unknown }).code === '23505'
+      ) {
+        throw new ConflictError(
+          `Cannot restore ${idPrefix}: active record with this unique identifier already exists`,
+        );
+      }
+      throw err;
+    }
     const { broadcastTenantUpdate } = await import('./websocketService.js');
     broadcastTenantUpdate(tenant, 'collection', websocketCollection);
     return true;
@@ -126,23 +288,48 @@ export function createGenericRelationalService<
   ): Promise<{ succeeded: number; failed: number }> {
     const uniqueIds = dedupeTrimmedIds(ids);
     if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+    const tenant = getRequestTenant();
+    if (repo.bulkDelete && tenant) {
+      const result = await repo.bulkDelete(tenant, uniqueIds, deletedBy, deletionReason);
+      if (result.succeeded > 0) {
+        const { broadcastTenantUpdate } = await import('./websocketService.js');
+        broadcastTenantUpdate(tenant, 'collection', websocketCollection);
+      }
+      return result;
+    }
     let succeeded = 0;
     let failed = 0;
     for (const id of uniqueIds) {
-      const ok = await deleteById(id, deletedBy, deletionReason);
-      if (ok) succeeded += 1;
-      else failed += 1;
+      try {
+        const ok = await deleteById(id, deletedBy, deletionReason);
+        if (ok) succeeded += 1;
+        else failed += 1;
+      } catch {
+        failed += 1;
+      }
     }
     return { succeeded, failed };
   }
 
-  async function bulkRestoreByIds(ids: string[]): Promise<{ succeeded: number; failed: number }> {
+  async function bulkRestoreByIds(
+    ids: string[],
+    userId?: string,
+  ): Promise<{ succeeded: number; failed: number }> {
     const uniqueIds = dedupeTrimmedIds(ids);
     if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+    const tenant = getRequestTenant();
+    if (repo.bulkRestore && tenant) {
+      const result = await repo.bulkRestore(tenant, uniqueIds, userId);
+      if (result.succeeded > 0) {
+        const { broadcastTenantUpdate } = await import('./websocketService.js');
+        broadcastTenantUpdate(tenant, 'collection', websocketCollection);
+      }
+      return result;
+    }
     let succeeded = 0;
     let failed = 0;
     for (const id of uniqueIds) {
-      const ok = await restoreById(id);
+      const ok = await restoreById(id, userId);
       if (ok) succeeded += 1;
       else failed += 1;
     }
@@ -151,6 +338,7 @@ export function createGenericRelationalService<
 
   return {
     loadAll,
+    loadById,
     create,
     updateById,
     deleteById,

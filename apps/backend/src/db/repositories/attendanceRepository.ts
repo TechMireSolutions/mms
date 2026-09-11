@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 
 import { attendance, attendanceLeaves } from '../schema.js';
 import { dedupeTrimmedIds, type AttendanceRecord } from '@mms/shared';
@@ -8,7 +8,10 @@ import { withTenant } from '../tenant-context.js';
 type AttendanceRow = typeof attendance.$inferSelect;
 type AttendanceInsert = typeof attendance.$inferInsert;
 
-function rowToRecord(row: AttendanceRow): AttendanceRecord {
+/** Row shape returned by explicit select projections (purgeAfter is DB-only generated column). */
+type AttendanceSelectRow = Omit<AttendanceRow, 'purgeAfter'>;
+
+function rowToRecord(row: AttendanceSelectRow): AttendanceRecord {
   return {
     id: row.id,
     classId: row.classId,
@@ -285,5 +288,74 @@ export async function deleteAttendanceRecordsByWorkspace(tenant: string): Promis
   await withTenant(subdomain, async (tx) => {
     await tx.delete(attendanceLeaves).where(eq(attendanceLeaves.workspaceSubdomain, subdomain));
     await tx.delete(attendance).where(eq(attendance.workspaceSubdomain, subdomain));
+  });
+}
+
+export async function bulkSoftDeleteAttendanceRecords(
+  tenant: string,
+  ids: string[],
+  deletedBy?: string,
+  deletionReason?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(attendance)
+      .set({
+        deletedAt: now,
+        deletedBy: deletedBy || null,
+        deletionReason: deletionReason || null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(attendance.workspaceSubdomain, subdomain),
+          inArray(attendance.id, uniqueIds),
+          isNull(attendance.deletedAt),
+        ),
+      )
+      .returning({ id: attendance.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
+  });
+}
+
+export async function bulkRestoreAttendanceRecords(
+  tenant: string,
+  ids: string[],
+  _userId?: string,
+): Promise<{ succeeded: number; failed: number }> {
+  const subdomain = tenant.trim().toLowerCase();
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const now = new Date();
+  return withTenant(subdomain, async (tx) => {
+    const updated = await tx
+      .update(attendance)
+      .set({
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
+        updatedAt: now,
+      })
+      .where(
+        and(
+          eq(attendance.workspaceSubdomain, subdomain),
+          inArray(attendance.id, uniqueIds),
+          isNotNull(attendance.deletedAt),
+        ),
+      )
+      .returning({ id: attendance.id });
+
+    return {
+      succeeded: updated.length,
+      failed: uniqueIds.length - updated.length,
+    };
   });
 }

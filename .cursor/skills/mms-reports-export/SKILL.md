@@ -5,7 +5,7 @@ description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboar
 
 # MMS Reports & Export Workflow
 
-**Rules:** `mms-reports.mdc`, `mms-data-layer.mdc` (Query-first policy), `mms-performance.mdc` §1-2 (Server Aggregates, Streaming & Heavy Exports), `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`.
+**Rules:** `mms-reports.mdc`, `mms-data-layer.mdc` (Query-first policy), `mms-performance.mdc` §1-2 (Server Aggregates, Streaming & Heavy Exports), `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`. Soft-Delete Workflow → **`mms-soft-delete`**.
 
 ## Placement
 
@@ -37,6 +37,7 @@ saveCollection('students', rows)                     // widget toggle banned
 - **Aggregation on server only**: charts showing monthly/weekly/daily bucketing require a `/report-aggregates` backend endpoint. No `limit:500` page dump + client `reduce()`.
 - **QueryOptions**: report aggregate queries use `staleTime: 5 * 60 * 1000` — reports are not real-time.
 - **Dashboard / KPI SSOT**: home seeded cards + report standard KPIs → category-gated `use*Metrics` / widget-aggregates. Gate `useWidgetCollections({ requiredCollections })` for pinned widgets / builder / drilldown; visualizer → `useReportCollectionRows`. Niche charts/statements may Query-reduce rows when aggregates unavailable — never localStorage-primary for REST. Ban fake faculty hours (`hours += 2`); use real class counts.
+- **Soft-Delete Manifest Compliance**: Analytical dashboards must respect manifest `softDelete.reportsIncludeDeleted: false` by querying only active records (`WHERE deleted_at IS NULL`). Exports must respect manifest `softDelete.exportsIncludeDeleted: false` by hiding export buttons in trash mode and excluding archived rows (`docs/soft-delete.md` §5 & §7.6 · `mms-soft-delete`).
 
 ## Tier Shell Standard
 
@@ -121,7 +122,7 @@ import { BarChart, Bar } from 'recharts'; // in a parent report component
 - Escape formula-prefix cells (`=`, `+`, `-`, `@`) — formula injection vector.
 - Export filename: `{module}-report-{date-range}-{YYYY-MM-DD}.{ext}`.
 - Include `generatedAt` timestamp and `generatedBy` in the export file header row.
-- Respect filters, RBAC, field visibility, soft-delete policy, `can()`.
+- Respect filters, RBAC, field visibility, soft-delete policy (hide export CTAs in trash when `exportsIncludeDeleted: false`; filter archived rows), `can()`.
 - Log PII exports to audit log before streaming.
 - Background export jobs must emit BullMQ progress events at ≥10% increments.
 
@@ -186,7 +187,7 @@ For regulatory compliance (HIPAA, SOX, PCI-DSS, GDPR) and audit logs (`audit_tra
 - [ ] Tamper-evident compliance exports embed chain hash + Merkle root proof
 - [ ] Accessing audit logs emits 'VIEW' audit entry (Auditing the Auditor)
 - [ ] Background job for exports >500 rows Excel / >200 rows PDF
-- [ ] Permissions match Work boundary (can(), field visibility, soft-delete)
+- [ ] Permissions match Work boundary (can(), field visibility, soft-delete policy: reportsIncludeDeleted / exportsIncludeDeleted from manifest; Export CTA hidden in trash mode)
 - [ ] a11y: aria-label, table caption, keyboard drill-down, aria-busy on export
 - [ ] All strings via t(); numbers via formatNumber(); dates via formatDate()
 - [ ] Filter state URL-serializable; date ranges UTC-normalized

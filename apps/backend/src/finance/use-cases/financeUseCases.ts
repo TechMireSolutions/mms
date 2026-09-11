@@ -49,6 +49,8 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       listByWorkspace: repo.listInvoicesByWorkspace,
       findById: repo.findInvoiceById,
       save: repo.saveInvoice,
+      bulkDelete: repo.bulkSoftDeleteInvoices,
+      bulkRestore: repo.bulkRestoreInvoices,
     },
     schema: invoiceRecordSchema,
     websocketCollection: 'finance_invoices',
@@ -60,6 +62,8 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       listByWorkspace: repo.listPaymentsByWorkspace,
       findById: repo.findPaymentById,
       save: repo.savePayment,
+      bulkDelete: repo.bulkSoftDeletePayments,
+      bulkRestore: repo.bulkRestorePayments,
     },
     schema: paymentRecordSchema,
     websocketCollection: 'finance_payments',
@@ -87,6 +91,11 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       const totals = lines.length > 0 ? invoiceTotalsFromLines(lines) : null;
       const { findStudentsByIds } = await import('../../db/repositories/studentRepository.js');
       const students = record.studentId ? await findStudentsByIds(tenant, [record.studentId]) : [];
+      if (record.studentId && (!students[0] || students[0].deletedAt)) {
+        const err = new Error('Referenced student is archived or does not exist');
+        (err as Error & { statusCode: number }).statusCode = 400;
+        throw err;
+      }
       const created = await invoiceCrud.create({
         ...record,
         familyContactId: record.familyContactId ?? resolveFamilyContactId(students[0]),
@@ -99,7 +108,20 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       await tryPostInvoiceJournal(tenant, created);
       return created;
     },
-    updateInvoiceById: invoiceCrud.updateById,
+    updateInvoiceById: async (id: string, record: Invoice): Promise<Invoice | null> => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      if (record.studentId) {
+        const { findStudentsByIds } = await import('../../db/repositories/studentRepository.js');
+        const students = await findStudentsByIds(tenant, [record.studentId]);
+        if (!students[0] || students[0].deletedAt) {
+          const err = new Error('Referenced student is archived or does not exist');
+          (err as Error & { statusCode: number }).statusCode = 400;
+          throw err;
+        }
+      }
+      return invoiceCrud.updateById(id, record);
+    },
     deleteInvoiceById: invoiceCrud.deleteById,
     restoreInvoiceById: invoiceCrud.restoreById,
     bulkSoftDeleteInvoices: invoiceCrud.bulkDeleteByIds,
@@ -121,9 +143,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       if (!tenant) return [];
       const cleanIds = dedupeTrimmedIds(ids);
       if (cleanIds.length === 0) return [];
-      const invoices = await repo.findInvoicesByIds(tenant, cleanIds);
-      if (includeDeleted) return invoices;
-      return invoices.filter((inv) => !inv.deletedAt);
+      return repo.findInvoicesByIds(tenant, cleanIds, { includeDeleted });
     },
 
     bulkUpdateInvoicesStatus: async (
@@ -179,9 +199,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       if (!tenant) return [];
       const cleanIds = dedupeTrimmedIds(ids);
       if (cleanIds.length === 0) return [];
-      const payments = await repo.findPaymentsByIds(tenant, cleanIds);
-      if (includeDeleted) return payments;
-      return payments.filter((pay) => !pay.deletedAt);
+      return repo.findPaymentsByIds(tenant, cleanIds, { includeDeleted });
     },
 
     loadPaymentsPage: async (query: FinanceListQuery & { includeDeleted?: boolean }) => {
@@ -212,7 +230,11 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
         if (existingPayment) return existingPayment;
 
         const invoice = await repo.findInvoiceById(tenant, normalizedPayment.invoiceId);
-        if (!invoice || invoice.deletedAt) throw new Error('Invoice not found or deleted');
+        if (!invoice || invoice.deletedAt) {
+          const err = new Error('Referenced invoice is archived or does not exist');
+          (err as Error & { statusCode: number }).statusCode = 400;
+          throw err;
+        }
 
         const paidAmount = invoice.paidAmt ?? 0;
         const remainingBalance = getOutstandingAmountForInvoice(invoice);

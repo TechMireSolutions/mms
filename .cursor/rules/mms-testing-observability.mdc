@@ -75,3 +75,18 @@ Assert production-safe JSON `{ type, message }` — never leak SQL/stack traces.
 - **Auditing the Auditor**: Integration test confirming that reading, querying, or exporting from audit tables emits an immutable audit event (`action_type: 'VIEW'`, `table_name: 'audit_trail_events'`).
 - **Erasure Compliance Testing**: Test crypto-shredding (subject key destruction makes plaintext unrecoverable while preserving cryptographic chain links) and redact-and-append (verifies redaction appends `action_type: 'REDACT'` without recomputing or corrupting historical row hashes).
 
+---
+
+## 6. Soft-Delete Verification Testing
+Standardizes test verification for soft-deletable entities per `docs/soft-delete.md` · skill **`mms-soft-delete`**:
+- **Single-Record 404 Verification**: Assert `GET /:id` returns `404 Not Found` for soft-deleted entities on standard reads, and `200 OK` on `?includeDeleted=true` when caller has `canDeleteCollection`.
+- **Conflict Trap Verification (PostgreSQL 23505)**: Integration tests must verify that restoring a soft-deleted record whose recyclable unique key (`email`, `phone`, `employee_id`) has been claimed by another active record traps error `23505` and returns formatted `409 Conflict`.
+- **Idempotency & State Latches**: Verify `DELETE /:id` on an already-archived row returns `404 Not Found`. Verify `POST /:id/restore` on an active row returns `404 Not Found`.
+- **Partial Unique Index Active Re-registration**: Verify that creating a new active record with the same email/phone/slug as an archived row succeeds, proving the partial unique index `WHERE deleted_at IS NULL` works as intended.
+- **Bulk Operation Count Integrity**: Verify `POST /bulk-delete` and `POST /bulk-restore` with mixed active/archived IDs report accurate `succeeded` and `failed` counts.
+- **Session Revocation Invariant**: Integration test confirming that soft-deleting a user account immediately invalidates active sessions/refresh tokens in Redis and prevents subsequent authentication.
+- **Drizzle Relational Query Guarding**: Verify relational queries (`db.query.table.findMany({ with: { children: true } })`) explicitly filter child relations so soft-deleted child rows are never leaked to active consumers.
+- **Active Foreign Key Guarding**: Verify write mutations reject foreign key assignments pointing to soft-deleted entities (`deleted_at IS NOT NULL`).
+- **Atomic Cascade & Lock Verification**: Verify cascade soft-delete marks children with `deleted_with_cascade = true` while parent row is locked (`FOR UPDATE`), and parent restore only restores cascade-deleted children.
+
+

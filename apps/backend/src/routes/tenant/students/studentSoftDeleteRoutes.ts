@@ -27,7 +27,7 @@ export const studentSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     customPostRoute: true,
     customPutRoute: true,
     canDelete: (user) => canDeleteCollection(user, 'students'),
-    restoreFn: (id) => studentUseCases.restoreStudentById(id),
+    restoreFn: (id, userId) => studentUseCases.restoreStudentById(id, userId),
     onAfterRestore: async (user, id) => {
       await auditStudent(user, 'student.restore', `Restored student ${id}`, id);
     },
@@ -56,7 +56,7 @@ export const studentSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     bulkBodySchema: studentsBulkIdsSchema,
     canDelete: (user) => canDeleteCollection(user, 'students'),
     bulkDeleteFn: (ids, user, reason) => studentUseCases.bulkSoftDeleteStudents(ids, user, reason),
-    bulkRestoreFn: (ids) => studentUseCases.bulkRestoreStudents(ids),
+    bulkRestoreFn: (ids, userId) => studentUseCases.bulkRestoreStudents(ids, userId),
     onAfterBulkDelete: async (user, result, deletionReason) => {
       const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
       await auditStudent(

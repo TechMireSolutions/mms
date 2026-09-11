@@ -44,6 +44,9 @@ export const enrollmentRecordSchema = z
     deletedAt: z.string().nullable().optional(),
     deletedBy: z.string().nullable().optional(),
     deletionReason: z.string().nullable().optional(),
+    restoredAt: z.string().nullable().optional(),
+    restoredBy: z.string().nullable().optional(),
+    deletedWithCascade: z.boolean().nullable().optional(),
   })
   .strict();
 
@@ -78,6 +81,16 @@ export type EnrollmentInsert = z.infer<typeof enrollmentRecordInsertSchema>;
 export type EnrollmentUpdate = z.infer<typeof enrollmentRecordUpdateSchema>;
 export const enrollmentListSchema = z.array(enrollmentRecordSchema);
 
+/** Whether an enrollment record is soft-deleted. */
+export function isEnrollmentDeleted(enrollment: { deletedAt?: string | null }): boolean {
+  return Boolean(enrollment.deletedAt);
+}
+
+/** Active directory rows — excludes soft-deleted records from Work by default. */
+export function filterActiveEnrollments<T extends { deletedAt?: string | null }>(enrollments: T[]): T[] {
+  return enrollments.filter((enrollment) => !isEnrollmentDeleted(enrollment));
+}
+
 /** Enrollments module manifest — aligns with globle1 universal module architecture. */
 
 export const ENROLLMENTS_MODULE_MANIFEST = {
@@ -110,6 +123,7 @@ export const ENROLLMENTS_MODULE_MANIFEST = {
     reportsIncludeDeleted: false,
     exportsIncludeDeleted: false,
     captureDeletionReason: true,
+    retentionDays: null,
   },
   defaultPageSize: 12,
   maxPageSize: 500,

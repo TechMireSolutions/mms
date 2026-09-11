@@ -14,7 +14,7 @@ export function useTeachersPageActions({
   editTeacher,
 }: UseTeachersPageActionsParams) {
   const { t } = useTranslation();
-  const { handleError, notifyBulkResult } = useTeachersCrudNotify();
+  const { handleError, notifyBulkResult, notifyArchivedWithUndo } = useTeachersCrudNotify();
   const {
     createTeacher,
     updateTeacher,
@@ -66,7 +66,7 @@ export function useTeachersPageActions({
   const handleDelete = async (id: string, deletionReason?: string): Promise<void> => {
     try {
       await deleteTeacher.mutateAsync({ params: { id }, body: { deletionReason } });
-      notifyBulkResult(1, 0, "teachers.toast.deleted", "teachers.toast.deleted");
+      notifyArchivedWithUndo(() => handleRestore(id));
     } catch (error) {
       handleError(error, "teachers.delete", "teachers.deleteFailed");
       throw error;

@@ -651,7 +651,7 @@ describe('students routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreStudentById).toHaveBeenCalledWith('s1');
+    expect(mockRestoreStudentById).toHaveBeenCalledWith('s1', 'u-admin');
     expect(mockRecordAudit).toHaveBeenCalledWith(
       expect.objectContaining({
         action: 'student.restore',
