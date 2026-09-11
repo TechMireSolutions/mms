@@ -1,392 +1,350 @@
 # Madrasa Management System (MMS)
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/TechMireSolutions/mms/main/apps/frontend/public/logo.png" alt="MMS Logo" width="96" height="96" onerror="this.style.display='none'"/>
-</p>
-
-<p align="center">
-  <strong>Enterprise-Grade, Multi-Tenant Educational and Administrative Management Platform</strong>
-</p>
-
-<p align="center">
-  <img src="https://img.shields.io/badge/Node.js-%3E%3D24.14.0-339933?style=flat-square&logo=node.js&logoColor=white" alt="Node.js 24+"/>
-  <img src="https://img.shields.io/badge/pnpm-%3E%3D11.15.1-F69220?style=flat-square&logo=pnpm&logoColor=white" alt="pnpm 11+"/>
-  <img src="https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black" alt="React 19"/>
-  <img src="https://img.shields.io/badge/Fastify-5-000000?style=flat-square&logo=fastify&logoColor=white" alt="Fastify 5"/>
-  <img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white" alt="PostgreSQL 16"/>
-  <img src="https://img.shields.io/badge/Drizzle_ORM-0.31-C5F74F?style=flat-square&logo=drizzle&logoColor=black" alt="Drizzle ORM"/>
-  <img src="https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" alt="Tailwind CSS v4"/>
-  <img src="https://img.shields.io/badge/TypeScript-Strict-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript Strict"/>
-  <img src="https://img.shields.io/badge/Turborepo-2.10-EF4444?style=flat-square&logo=turborepo&logoColor=white" alt="Turborepo"/>
-</p>
+A full-stack, multi-tenant **Madrasa Management System** built for Islamic educational institutions. MMS manages students, teachers, sessions, enrollments, attendance, finance, examinations, messaging, and more — with robust multi-tenancy, encrypted backups, tamper-evident audit trails, and RTL/BiDi internationalisation (English, Arabic, Urdu, Persian).
 
 ---
 
-## 📑 Table of Contents
+## Stack
 
-- [Overview](#-overview)
-- [Key Capabilities](#-key-capabilities)
-- [System Architecture](#-system-architecture)
-- [Technology Stack](#-technology-stack)
-- [Monorepo Directory Layout](#-monorepo-directory-layout)
-- [Core Engineering Invariants](#-core-engineering-invariants)
-- [Getting Started](#-getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#1-clone--install-dependencies)
-  - [Environment Configuration](#2-configure-environment-variables)
-  - [Database Migrations](#3-database-setup--migrations)
-  - [Running Locally](#4-start-development-servers)
-- [Docker & Containerized Deployment](#-docker--containerized-deployment)
-- [Available Scripts](#-available-scripts)
-- [Localization (i18n) & BiDi Design](#-localization-i18n--bidi-design)
-- [Security & Tenant Isolation](#-security--tenant-isolation)
-- [AI Agents & Pair Programming Guidelines](#-ai-agents--pair-programming-guidelines)
-- [License](#-license)
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 19 · Vite 8 · Tailwind CSS v4 · Radix UI / shadcn · TanStack Query v5 · Framer Motion · Recharts |
+| **Backend** | Fastify 5 · Node.js ≥ 24.14 (`--experimental-strip-types`) · TypeScript 7 (strict) |
+| **Database** | PostgreSQL 16 · Drizzle ORM · Row-Level Security (RLS) · Forward-only migrations |
+| **Cache / Queue** | Redis 7 · BullMQ |
+| **Shared** | `@mms/shared` — Zod DTOs, types, manifests, pure utils (zero DOM/React/Fastify deps) |
+| **Monorepo** | pnpm workspaces · Turborepo · TypeScript project references |
+| **CI/CD** | GitHub Actions (typecheck → lint → unit → DB integration → E2E → deploy) |
+| **Production** | Hetzner VPS · PM2 · Apache reverse proxy (PORT 5002) |
 
 ---
 
-## 📖 Overview
+## Repository Layout
 
-**Madrasa Management System (MMS)** is a cloud-native, multi-tenant administrative suite engineered specifically for Islamic educational institutions, madrasas, and modern schools. It provides end-to-end management covering student admissions, guardian relations, academic schedules, curriculum-aligned question repositories, examinations with automated grading, discipline tracking (*Hasanat/Tarbiyah*), fee invoicing with double-entry general ledger bookkeeping, omnichannel WhatsApp/SMS broadcasting, and multi-tier analytics.
-
-MMS is architected with a zero-trust multi-tenancy model enforced directly at the database layer via PostgreSQL Row-Level Security (RLS) and transaction session boundaries, guaranteeing complete isolation between institutions.
-
----
-
-## 🌟 Key Capabilities
-
-### 1. Unified Person & Academic Management
-- **Canonical Contacts Registry**: Centralized contact entity linking students, teachers, staff, and guardians, eliminating duplicate identity records.
-- **Student Admissions & Profiles**: Complete demographic and family linkages, custom field extensions, and bulk class enrollment.
-- **Faculty & Workload Orchestration**: Faculty specialization tracking, course assignments, and real-time workload metrics.
-- **Academic Sessions & Enrollments**: Lifecycle management for academic years, class sections, promotion batches, and capacity thresholds.
-
-### 2. Daily Operations & Academic Excellence
-- **Attendance Tracking**: Real-time session and daily attendance logging (Present, Absent, Late, Excused) with automated deficit warnings and parent alerts.
-- **Question Bank & Curricula**: Pedagogical question repository tagged by subject, difficulty, and citation metadata with automated test paper generation.
-- **Examinations & Auto-Grading**: Flexible grading scales, scheduled assessment windows, mark sheet generation, and printable report cards.
-- **Hasanat & Tarbiyah (Conduct & Merits)**: Behavior logging, character recognition badges, merit/demerit ledger, and parent notifications.
-
-### 3. Financial Management & Accounting
-- **Tuition & Fee Schedules**: Configurable recurring fee structures, sibling discounts, and automated invoice runs.
-- **Invoice & Payment Processing**: Multi-channel payment recording, receipt generation, and balance adjustments.
-- **Double-Entry General Ledger**: Chart of accounts, journal entries, trial balances, and audit-proof financial statements.
-
-### 4. Omnichannel Communications & Analytics
-- **Messaging Engine**: Batch SMS and WhatsApp campaigns powered by template token interpolation (`{{firstName}}`, `{{balance}}`), delivery logs, and soft-archive semantics.
-- **Three-Tier Module Architecture**: Standardized layout across all features dividing workflows into **Work** (operational directory, command centre, detail drawers, trash), **Reports** (Recharts visualizer, KPIs, exports), and **Setup** (field registry, preferences).
-- **Asynchronous Data Exports**: Streamed client-side and background worker-backed exports for PDF (`jspdf`) and Excel (`xlsx`).
-
----
-
-## 🏗️ System Architecture
-
-```mermaid
-graph TD
-    subgraph Client Layer ["Client Tier (Browser / SPA)"]
-        UI["React 19 + Tailwind CSS v4"]
-        TQ["TanStack Query v5 Cache"]
-        BiDi["BiDi Engine (RTL / LTR)"]
-        UI --> TQ
-        UI --> BiDi
-    end
-
-    subgraph Gateway ["HTTP & Network Gateway"]
-        APIC["apiClient (Native Fetch)"]
-        WS["WebSocket Client (/api/ws)"]
-        TQ --> APIC
-        UI --> WS
-    end
-
-    subgraph Backend ["Backend Tier (Fastify 5 + Node.js 24)"]
-        FST["Fastify Server (:3000 dev / :5002 prod)"]
-        AUTH["Auth & Tenant RLS Middleware"]
-        ROUTES["Domain Use Cases & REST Routes"]
-        ALS["AsyncLocalStorage (Trace & Context)"]
-        
-        APIC --> FST
-        WS --> FST
-        FST --> AUTH
-        AUTH --> ROUTES
-        AUTH --> ALS
-    end
-
-    subgraph Data Tier ["Data & Worker Tier"]
-        DRZ["Drizzle ORM Adapter"]
-        PG[("PostgreSQL 16 (RLS Enforced)")]
-        REDIS[("Redis 7 (Cache & BullMQ)")]
-        WRK["Background Worker Process"]
-
-        ROUTES --> DRZ
-        DRZ --> PG
-        ROUTES --> REDIS
-        WRK --> REDIS
-        WRK --> PG
-    end
-
-    subgraph Shared ["Shared Core (@mms/shared)"]
-        ZOD["Strict Zod Schemas & DTOs"]
-        I18N["Translation Catalogs (en, ar, ur, fa)"]
-        TYPES["Domain Types & Pure Utils"]
-    end
-
-    UI -.-> Shared
-    ROUTES -.-> Shared
-    DRZ -.-> Shared
 ```
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technology | Purpose & Rationale |
-|---|---|---|
-| **Monorepo** | [Turborepo 2](https://turbo.build/) + [pnpm 11](https://pnpm.io/) | Fast, cached, multi-package builds with strict dependency catalogs |
-| **Frontend Framework** | [React 19](https://react.dev/) + [Vite 8](https://vitejs.dev/) | Concurrent rendering, route-level code splitting, sub-second HMR |
-| **State & Data Fetching** | [TanStack Query v5](https://tanstack.com/query) | Server-authoritative caching, query options factories, zero ad-hoc effects |
-| **Styling & Design System** | [Tailwind CSS v4](https://tailwindcss.com/) + [Radix UI](https://www.radix-ui.com/) | CSS-first `@theme` design tokens, WCAG 2.1 AA accessible primitives |
-| **DOM Virtualization** | [@tanstack/react-virtual](https://tanstack.com/virtual) | Mandatory row virtualization for tables and lists $> 30$ items |
-| **Animations & Icons** | [Framer Motion](https://www.framer.com/motion/) + [Lucide React](https://lucide.dev/) | Fluid micro-interactions, responsive directional mirroring |
-| **Backend Framework** | [Fastify 5](https://fastify.dev/) | High-performance asynchronous HTTP engine with native schema validation |
-| **Runtime Environment** | [Node.js 24](https://nodejs.org/) | Native `fetch`, `node:` imports, `using` resource cleanup, `crypto.hash` |
-| **Database & ORM** | [PostgreSQL 16](https://www.postgresql.org/) + [Drizzle ORM](https://orm.drizzle.team/) | Strict 3NF/BCNF normalization, typed column projections, database-level RLS |
-| **Caching & Job Queue** | [Redis 7](https://redis.io/) + [BullMQ](https://bullmq.io/) | Multi-tenant namespaced caching, asynchronous large dataset export pipelines |
-| **Shared Contracts** | `@mms/shared` (`packages/shared`) | Single Source of Truth for Zod write DTOs, domain models, and i18n catalogs |
-| **Testing Suite** | [Vitest](https://vitest.dev/) + [Playwright](https://playwright.dev/) | Fast parallel unit/integration testing and cross-browser end-to-end specs |
-
----
-
-## 📁 Monorepo Directory Layout
-
-```text
 mms/
 ├── apps/
-│   ├── frontend/                     # React 19 Client SPA
-│   │   ├── src/
-│   │   │   ├── components/ui/        # Design system primitives (Button, Table, FormModal)
-│   │   │   ├── lib/                  # Shared FE core (apiClient, query factories, i18n runtime)
-│   │   │   ├── platform/             # Super-admin apex administration (/platform)
-│   │   │   └── tenant/               # Tenant workspace domain modules
-│   │   │       ├── features/         # Module implementations (contacts, students, finance, etc.)
-│   │   │       └── hooks/            # Cross-feature facades (@/tenant/hooks/collections/*)
-│   │   ├── package.json
-│   │   └── vite.config.ts
-│   └── backend/                      # Fastify 5 REST API & WebSocket Server
-│       ├── src/
-│       │   ├── db/                   # Drizzle schema definitions & SQL migrations
-│       │   ├── middleware/           # authenticateTenant, authenticatePlatform, RLS session
-│       │   ├── routes/               # Modular route plugins & ts-rest contract handlers
-│       │   ├── services/             # Domain use cases & business logic
-│       │   ├── worker/               # Background task queues & export processors
-│       │   └── index.ts              # Fastify application composition root
-│       ├── package.json
-│       └── Dockerfile
+│   ├── backend/          # Fastify 5 API server + BullMQ worker
+│   └── frontend/         # React 19 SPA
 ├── packages/
-│   └── shared/                       # Universal Shared Package (@mms/shared)
-│       ├── src/
-│       │   ├── schemas/              # Strict Zod write DTOs (.strict()) & query contracts
-│       │   ├── translations/         # Translation dictionaries (en, ar, ur, fa)
-│       │   ├── types/                # Pure TypeScript domain types & manifests
-│       │   └── utils/                # Universal helpers (formatDate, formatMoney, parsePhone)
-│       └── package.json
-├── .agent/                           # Antigravity agent configuration, workflows & rules
-├── .cursor/                          # Cursor IDE rules (.mdc) & skills
-├── .claude/                          # Claude Code rules & skills mirror
-├── docker-compose.yml                # Production and local ops container stack
-├── turbo.json                        # Turborepo task pipeline configuration
-└── package.json                      # Root workspace configuration & scripts
+│   └── shared/           # @mms/shared — SSOT types, Zod schemas, pure utils
+├── e2e/                  # Playwright end-to-end tests
+├── scripts/              # i18n checker, ESLint TS compat shim, sync scripts
+├── docker-compose.yml    # Postgres 16 + Redis 7 + backend + worker
+├── ecosystem.config.cjs  # PM2 config (production)
+├── restart_servers.sh    # Local dev entry point (GNU screen)
+└── turbo.json
 ```
 
+### Backend source (`apps/backend/src/`)
+
+| Directory | Purpose |
+|---|---|
+| `contacts/` | Canonical person/contact registry |
+| `students/` | Student module — enrollment linking, field guards |
+| `teachers/` | Teacher module |
+| `sessions/` | Class sessions |
+| `enrollments/` | Session ↔ student enrollments |
+| `attendance/` | Attendance records |
+| `examinations/` | Exam + question bank |
+| `finance/` | Invoices, payments, double-entry ledger |
+| `accounting/` | Accounting / chart of accounts |
+| `messaging/` | SMS / WhatsApp campaigns |
+| `hasanat/` | Hasanat (merit) points module |
+| `obligations/` | Obligations / dues tracking |
+| `questionBank/` | Question bank |
+| `users/` | Workspace users + RBAC |
+| `services/` | Auth, audit verification, artifact purge schedulers |
+| `lib/` | DB pool, Redis, Pino logger, live WebSocket push |
+| `db/` | Drizzle schema, migrations, RLS helpers |
+| `worker/` | BullMQ job processors (exports, imports, bulk ops) |
+| `middleware/` | Auth, CSRF, rate-limit, tenant isolation |
+
+### Frontend source (`apps/frontend/src/`)
+
+| Directory | Purpose |
+|---|---|
+| `tenant/features/` | 17 feature modules (students, teachers, sessions, finance, …) |
+| `tenant/hooks/collections/` | TanStack Query facades per resource |
+| `platform/` | Platform apex (super-admin, tenant management) |
+| `components/ui/` | Shared design-system primitives |
+| `lib/` | `apiClient`, query factories, i18n, routing |
+
 ---
 
-## 🛡️ Core Engineering Invariants
+## Prerequisites
 
-Every contribution to MMS is strictly governed by authoritative architectural rules:
-
-### 1. Multi-Tenant Isolation & Zero Trust
-- Every tenant query executes within a database transaction scoped with `SET LOCAL app.current_tenant = :tenant_id`.
-- Tenant tables enforce PostgreSQL `FORCE ROW LEVEL SECURITY`.
-- The application never trusts client-supplied `workspaceSubdomain` or `userId` from request bodies.
-
-### 2. Validation Single Source of Truth (SSOT)
-- Domain write DTOs are authored once in `@mms/shared` using strict Zod schemas (`.strict()`).
-- The backend validates payloads via `parseRequest` before database persistence; the frontend uses the same schemas with React Hook Form.
-
-### 3. Universal Three-Tier Module Contract
-All primary domain pages adhere strictly to the 3-tier structure:
-- **Work**: Operational record directory, search/filters menu, directory view toggle (`table` | `cards`), detail profile drawer (`DetailDrawerShell`), soft-delete trash view, and bulk operations (`BulkSelectionBar`).
-- **Reports**: KPI summary strip (`ModuleCommandMetricsGrid`), interactive Recharts charts, and export tools (`ExportToolbar`).
-- **Setup**: Module custom fields builder and preferences draft panel gated by `canEditSetup`.
-
-### 4. Performance & Resource Efficiency Rules
-- **N+1 Elimination**: Zero database queries inside iterative loops (`for`, `map`, `Promise.all`). Iterations must be batched via Drizzle relational `with`, `inArray`, or batch `/resolve`.
-- **Zero Wildcard Projections**: Strict ban on `SELECT *` or bare `db.select().from(table)`. All queries must explicitly project only required columns matching `@mms/shared` Response DTOs.
-- **Mandatory Virtualization**: Any list, table, cards grid, or feed rendering more than 30 concurrent DOM items must use `@tanstack/react-virtual` (reference: `ContactsListDesktopTable.tsx`).
-- **Multi-Tier Caching**: Read-heavy queries cache in Redis (`apps/backend/src/lib/redis.ts`) with explicit TTLs (60s metrics, 300s lookups/config) namespaced by tenant (`mms:{tenantId}:{module}:{resource}:{hash}`).
-- **Memory & Streaming**: Zero memory buffering for large uploads or datasets (`Buffer.concat` ban). File uploads stream via `@fastify/multipart`; exports stream via `node:stream`. Datasets $> 500$ rows offload to background worker jobs.
-- **Targeted Memoization**: Non-trivial calculations (`useMemo`) and callback dependencies (`useCallback`) are memoized to eliminate render churn without premature memoization on simple primitives.
+| Tool | Version |
+|---|---|
+| Node.js | ≥ 24.14.0 |
+| pnpm | 11.15.1 (enforced via `packageManager`) |
+| PostgreSQL | 16 (or use Docker) |
+| Redis | 7 (or use Docker) |
 
 ---
 
-## 🚀 Getting Started
+## Quick Start — Local Development
 
-### Prerequisites
-
-Ensure the following runtimes and services are installed:
-
-- **Node.js**: `>= 24.14.0` (LTS or current stable)
-- **pnpm**: `>= 11.15.1` (enforced via `packageManager`)
-- **PostgreSQL**: `>= 16.0` (with `pgcrypto` / `uuid-ossp`)
-- **Redis**: `>= 7.0` (for session revoking, caching, and background queues)
-
-### 1. Clone & Install Dependencies
+### 1. Clone and install
 
 ```bash
-git clone https://github.com/TechMireSolutions/mms.git
+git clone <repo-url> mms
 cd mms
-
-# Install workspace dependencies using pnpm
 pnpm install
 ```
 
-### 2. Configure Environment Variables
+### 2. Configure environment
 
-Create `.env` files in both the backend and frontend packages using the templates below:
+```bash
+# Root secrets (for docker-compose)
+cp .env.example .env
 
-#### Backend (`apps/backend/.env`)
+# Backend app config
+cp apps/backend/.env.example apps/backend/.env
+```
+
+Edit `apps/backend/.env` — minimum required vars:
 
 ```env
-NODE_ENV=development
-PORT=3000
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mms_dev
-REDIS_URL=redis://localhost:6379
-JWT_SECRET=your-super-secure-jwt-secret-minimum-32-characters
-COOKIE_SECRET=your-cookie-signing-secret-minimum-32-characters
-CORS_ORIGIN=http://localhost:5173
-PG_POOL_MAX=20
-PG_STATEMENT_TIMEOUT_MS=30000
+JWT_SECRET=<openssl rand -hex 32>
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/mms
+REDIS_URL=redis://:your-redis-password@localhost:6379
+PLATFORM_APP_URL=http://localhost:5173
 ```
 
-#### Frontend (`apps/frontend/.env`)
+### 3. Start infrastructure (Postgres + Redis)
 
-```env
-VITE_API_URL=http://localhost:3000
+**Option A — Docker Compose (recommended):**
+```bash
+docker compose up postgres redis -d
 ```
 
-### 3. Database Setup & Migrations
+**Option B — Local Postgres/Redis already running:** skip this step.
+
+### 4. Run migrations
 
 ```bash
-# Apply forward-only Drizzle database migrations
-pnpm --filter mms-backend db:migrate
-
-# (Optional) Reset and seed initial development database
-pnpm --filter mms-backend db:reset
+cd apps/backend
+pnpm db:migrate
 ```
 
-### 4. Start Development Servers
-
-Run the frontend client and backend API concurrently using Turborepo:
+### 5. Start dev servers
 
 ```bash
-pnpm dev
+# From repo root — starts backend :3000 + frontend :5173 in GNU screen
+./restart_servers.sh
+
+# Attach to see logs
+screen -r mms-dev
+
+# Or run in foreground (Ctrl+C to stop)
+./restart_servers.sh --foreground
 ```
 
-The services will be available at:
-- **Frontend SPA**: `http://localhost:5173`
-- **Backend API**: `http://localhost:3000`
-- **API Health Check**: `http://localhost:3000/health`
-- **API Readiness Check**: `http://localhost:3000/ready`
-
----
-
-## 🐳 Docker & Containerized Deployment
-
-A production-ready `docker-compose.yml` orchestrates PostgreSQL, Redis, the Fastify API server, and the BullMQ background worker.
-
-```bash
-# 1. Set required secrets in shell environment or root .env
-export POSTGRES_PASSWORD=$(openssl rand -hex 16)
-export REDIS_PASSWORD=$(openssl rand -hex 24)
-export JWT_SECRET=$(openssl rand -hex 32)
-
-# 2. Build and start all services in detached mode
-docker compose up -d --build
-
-# 3. View status and logs
-docker compose ps
-docker compose logs -f backend
-```
-
-- **Production API Port**: `5002` (Hetzner / Apache Reverse Proxy target)
-- **Local Dev API Port**: `3000`
-
----
-
-## 📜 Available Scripts
-
-Run these scripts from the repository root:
-
-| Command | Description |
+| URL | Service |
 |---|---|
-| `pnpm dev` | Start development servers for frontend and backend in watch mode |
-| `pnpm build` | Compile and bundle all workspaces (`@mms/shared`, `backend`, `frontend`) |
-| `pnpm typecheck` | Run TypeScript strict compiler check across all packages |
-| `pnpm lint` | Execute ESLint with project compatibility rules across all packages |
-| `pnpm test` | Run Vitest unit and integration tests across all packages |
-| `pnpm test:coverage` | Execute tests and generate detailed V8 coverage reports |
-| `pnpm test:e2e` | Run Playwright end-to-end browser automation tests |
-| `pnpm check:i18n` | Validate translation key completeness across `en`, `ar`, `ur`, and `fa` |
-| `pnpm --filter mms-backend db:migrate` | Execute pending Drizzle SQL migrations against PostgreSQL |
-| `pnpm --filter mms-backend worker` | Start the BullMQ background worker in watch mode |
+| `http://localhost:5173` | Frontend |
+| `http://localhost:3000/health` | Backend health check |
 
 ---
 
-## 🌍 Localization (i18n) & BiDi Design
+## Available Commands
 
-MMS supports 4 first-class languages:
+### Root (Turborepo)
 
-| Code | Language | Script Direction | Layout Standard |
-|---|---|---|---|
-| `en` | **English** | Left-to-Right (LTR) | Standard logical CSS |
-| `ar` | **العربية (Arabic)** | Right-to-Left (RTL) | Native logical properties (`ms-*`, `text-start`) |
-| `ur` | **اردو (Urdu)** | Right-to-Left (RTL) | Native logical properties, Nastaliq typography |
-| `fa` | **فارسی (Persian/Farsi)** | Right-to-Left (RTL) | Native logical properties |
+```bash
+pnpm dev            # Start frontend + backend in parallel
+pnpm build          # Build all packages
+pnpm typecheck      # TypeScript strict check across all workspaces
+pnpm test           # Run all unit tests (Vitest)
+pnpm test:coverage  # Coverage report
+pnpm lint           # ESLint across all workspaces
+pnpm test:e2e       # Playwright E2E suite
+pnpm check:i18n     # Verify translation key completeness (en/ar/ur/fa)
+```
 
-### Bidirectional Layout Rules
-- **CSS Logical Properties**: Never use physical margin/padding (`ml-*`, `mr-*`, `pl-*`, `pr-*`). Use logical properties (`ms-*`, `me-*`, `ps-*`, `pe-*`, `border-s-*`, `border-e-*`, `text-start`, `text-end`).
-- **Directional Icon Flipping**: Navigation and progress arrows flip automatically with `rtl:rotate-180`. Brand and non-directional symbols remain unflipped.
-- **Zero Fallback English Strings**: Hardcoded UI strings are banned. All copy must resolve through `t('module.key')`. Missing translation keys are detected via `pnpm check:i18n`.
+### Backend (`apps/backend/`)
 
----
+```bash
+pnpm dev              # tsx watch (hot reload)
+pnpm worker           # BullMQ worker process (hot reload)
+pnpm build            # tsc + copy migrations + worker templates
+pnpm db:migrate       # Run forward-only Drizzle migrations
+pnpm db:reset         # ⚠️ Wipe and re-seed (dev only)
+pnpm test:db          # Integration tests against a real DB
+pnpm audit:verify     # Verify audit chain integrity
+pnpm audit:detach     # Detach an old audit partition (archival)
+```
 
-## 🔒 Security & Tenant Isolation
+### Frontend (`apps/frontend/`)
 
-- **HTTP Security Headers**: Fastify is preconfigured with `@fastify/helmet` (CSP, HSTS, frameguard, XSS protection).
-- **Cookie Policy**: Authentication cookies use `HttpOnly`, `SameSite=Strict` (or `Lax` for OAuth flows), and `Secure` in production.
-- **Rate Limiting**: Tiered endpoint rate limiting using `@fastify/rate-limit` backed by Redis to prevent brute-force and DoS attacks.
-- **CSRF & Origin Verification**: All state-mutating requests (`POST`, `PUT`, `PATCH`, `DELETE`) enforce strict Origin and Referer validation against authorized domains.
-- **Audit Logging**: Sensitive record deletions, administrative role changes, and data exports generate persistent audit logs.
-
----
-
-## 🤖 AI Agents & Pair Programming Guidelines
-
-This monorepo is configured with synchronized AI pair programming rules for **Antigravity**, **Cursor**, and **Claude Code**.
-
-- **Authoritative Rules Directory**: `.cursor/rules/*.mdc` (source of truth)
-- **Agent Mirrors**: `.agent/rules/*.md` (Antigravity) and `.claude/rules/*.md` (Claude Code)
-- **Synchronization**: Running `bash .agent/scripts/sync-all.sh` mirrors rule bodies, skills, and workflows across all 3 agent formats.
-
-### 5 Always-On Rules
-1. `antigravity-global`: Cognition, terse code style, security standards, and Node 24 runtime rules.
-2. `mms-core`: Monorepo stack boundaries, ownership index, and edit discipline.
-3. `mms-performance`: Authoritative performance, Drizzle query projection, Redis caching, and DOM virtualization rules.
-4. `mms-migration-status`: Technical debt tracking and architectural anti-pattern preventions.
-5. `mms-completion-review`: Mandatory post-edit verification, typecheck, lint, and defect resolution checklist.
+```bash
+pnpm dev         # Vite dev server
+pnpm build       # Production bundle
+pnpm typecheck   # tsc --noEmit
+pnpm lint        # ESLint
+pnpm test        # Vitest unit tests
+```
 
 ---
 
-## 📄 License
+## Docker Compose (Full Stack)
 
-Proprietary and Confidential. Copyright &copy; 2026 TechMire Solutions. All rights reserved.
-Unauthorized copying, modification, distribution, or commercial use of this codebase is strictly prohibited.
+Runs Postgres 16 + Redis 7 + backend API + BullMQ worker — all secrets interpolated from `.env` (never hardcoded).
+
+```bash
+# Copy and fill root .env first
+cp .env.example .env   # set POSTGRES_PASSWORD, REDIS_PASSWORD, JWT_SECRET
+
+docker compose up -d
+```
+
+| Container | Port | Notes |
+|---|---|---|
+| `mms-postgres` | `127.0.0.1:5432` | Bound to loopback only |
+| `mms-redis` | `127.0.0.1:6379` | Password-protected, loopback only |
+| `mms-backend` | `5002` | API + health endpoint |
+| `mms-worker` | — | BullMQ job processor |
+
+---
+
+## Production Deploy (Hetzner + PM2)
+
+```bash
+# Build
+pnpm build
+
+# Start / restart via PM2
+pm2 start ecosystem.config.cjs
+pm2 save
+```
+
+PM2 manages two processes: `mmsv2-backend` (API on PORT 5002) and `mmsv2-worker` (BullMQ). Apache proxies `yourdomain.com → 127.0.0.1:5002`.
+
+Automated deploys on push to `main` via [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml).
+
+---
+
+## Environment Variables Reference
+
+### Root `.env` (docker-compose only)
+
+| Variable | Required | Description |
+|---|---|---|
+| `POSTGRES_PASSWORD` | ✅ | PostgreSQL password |
+| `REDIS_PASSWORD` | ✅ | Redis `requirepass` value |
+| `JWT_SECRET` | ✅ | 256-bit hex secret (`openssl rand -hex 32`) |
+| `POSTGRES_USER` | — | Default: `postgres` |
+| `POSTGRES_DB` | — | Default: `mms` |
+
+### `apps/backend/.env`
+
+| Variable | Required | Description |
+|---|---|---|
+| `JWT_SECRET` | ✅ | Same 256-bit hex key |
+| `DATABASE_URL` | ✅ | `postgresql://user:pass@host:5432/db` |
+| `REDIS_URL` | ✅ | `redis://:password@host:6379` |
+| `NODE_ENV` | — | `development` / `production` / `test` |
+| `PORT` | — | `3000` dev · `5002` prod |
+| `PLATFORM_APP_URL` | — | Frontend URL for CORS + email links |
+| `MMS_APP_DOMAIN` | — | Apex domain for tenant subdomains |
+| `PG_POOL_MAX` | — | Default: `20` |
+| `PG_STATEMENT_TIMEOUT_MS` | — | Default: `30000` |
+| `PLATFORM_RESEND_API_KEY` | — | Transactional email via Resend |
+| `PLATFORM_SMTP_HOST` | — | Transactional email via SMTP |
+| `PLATFORM_ALLOW_ENV_BOOTSTRAP` | — | `false` by default; enables admin seeding |
+
+See [`apps/backend/.env.example`](apps/backend/.env.example) for the full reference with comments.
+
+---
+
+## Feature Modules
+
+MMS uses a **three-tier module architecture** (Work · Reports · Setup) across all domains:
+
+| Module | Description |
+|---|---|
+| **Contacts** | Canonical person registry shared across all person modules |
+| **Students** | Student profiles, custom fields, tab guards, guardian linking |
+| **Teachers** | Teacher profiles, custom fields, employment fields |
+| **Sessions** | Class/lecture sessions, scheduling |
+| **Enrollments** | Session ↔ student many-to-many with status tracking |
+| **Attendance** | Per-session attendance with bulk entry |
+| **Examinations** | Exam management linked to sessions and question bank |
+| **Question Bank** | Categorised question library with source citations |
+| **Finance** | Invoices, payment collection, fee plans |
+| **Accounting** | Double-entry ledger, chart of accounts, journal entries |
+| **Hasanat** | Islamic merit points — track, assign, redeem |
+| **Obligations** | Dues and obligation tracking per student |
+| **Messaging** | SMS/WhatsApp campaigns with template personalisation |
+| **Users** | Workspace users with role-based access control (RBAC) |
+| **Dashboard** | Configurable widget dashboard with trend metrics |
+| **Settings** | Global, branding, i18n, email, backup/restore |
+
+---
+
+## Security Architecture
+
+- **Multi-tenancy:** Every tenant table uses `FORCE ROW LEVEL SECURITY` + `SET LOCAL app.current_tenant` via `withTenantTransaction`.
+- **Auth:** `@fastify/cookie` HttpOnly session cookies + `@fastify/jwt`. No JWTs in `localStorage`.
+- **CSRF:** `Sec-Fetch-Site: same-origin|same-site|none` origin gate on all cookie-mutating routes.
+- **RBAC:** `can()` permission checks via `@mms/shared` — no raw `role ===` comparisons.
+- **Soft-Delete System:** In-place lifecycle archiving across all tenant entities · partial unique indexes (`WHERE deleted_at IS NULL`) · `BEFORE DELETE` triggers forbidding physical deletes · atomic conditional latches · transactional outbox CDC tombstones · URL-synced trash directories with 5–10s optimistic Undo toasts · scheduled chunked hard-purge workers (see [`docs/soft-delete.md`](docs/soft-delete.md) · skill `mms-soft-delete`).
+- **Audit Trail:** RFC 8785 canonical JSON payloads · per-tenant sharded hash chains · Merkle rollups · `INSERT`-only audit tables · crypto-shredding for Right to Erasure.
+- **Backups:** AES-256-GCM encrypted workspace exports with PBKDF2-derived keys · validate-before-wipe safety gate.
+- **Input validation:** All DTOs via `@mms/shared` Zod schemas (`.strict()` on write paths) — raw client bodies are never trusted.
+
+---
+
+## Internationalisation (i18n)
+
+Full BiDi / RTL support with four languages:
+
+| Locale | Language |
+|---|---|
+| `en` | English (LTR) |
+| `ar` | Arabic (RTL) |
+| `ur` | Urdu (RTL) |
+| `fa` | Persian / Farsi (RTL) |
+
+Translation keys live in `@mms/shared` (`appTranslationsEn.ts`, `appTranslationsAr.ts`, etc.). Run `pnpm check:i18n` to verify completeness.
+
+---
+
+## Testing
+
+```bash
+pnpm test              # Unit tests (all workspaces via Turborepo)
+pnpm test:coverage     # Coverage with @vitest/coverage-v8
+pnpm test:e2e          # Playwright E2E (requires running stack)
+
+# Scoped
+cd apps/backend && pnpm test:db   # Integration tests against real Postgres
+cd packages/shared && pnpm test   # Shared utility unit tests
+```
+
+CI runs on every PR and push to `main` via [`.github/workflows/ci.yml`](.github/workflows/ci.yml):
+Typecheck → ESLint → unit tests → DB integration tests → E2E → deploy (on `main` only).
+
+---
+
+## Agent / AI Tooling
+
+This repository ships configuration for multiple AI coding agents:
+
+| Tool | Config |
+|---|---|
+| Antigravity | [`AGENTS.md`](AGENTS.md) · [`.agent/`](.agent/) |
+| Cursor | [`.cursor/rules/`](.cursor/rules/) · [`.cursor/skills/`](.cursor/skills/) |
+| Claude Code | [`CLAUDE.md`](CLAUDE.md) · [`.claude/`](.claude/) |
+
+Start with [`AGENTS.md`](AGENTS.md) for the full skill/rule index and workspace orientation.
+
+---
+
+## Contributing
+
+1. Branch off `main` using Conventional Commits: `feat/`, `fix/`, `chore/`.
+2. Run `pnpm typecheck && pnpm lint && pnpm test` before opening a PR.
+3. Never commit `.env` files, secrets, or credentials.
+4. When changing rules or skills, run `bash .agent/scripts/sync-all.sh` to keep Antigravity, Cursor, and Claude Code in sync.

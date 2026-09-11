@@ -15,7 +15,7 @@ bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 ```
 .agent/
   rules/             # behavioural rules (always_on + model_decision)
-  skills/            # 29 capability modules (SKILL.md per folder)
+  skills/            # 30 capability modules (SKILL.md per folder)
   workflows/         # multi-step procedures
   skills-manifest.json
 ```
@@ -73,6 +73,7 @@ Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker
 | `mms-schema-migrate` | Forward-only Drizzle DDL |
 | `mms-linux-compatibility` | Linux/Ubuntu VPS compatibility |
 | `mms-shared-package` | `@mms/shared` |
+| `mms-soft-delete` | MMS Soft-Delete System, 3-tier indexing, restore, URL sync, outbox CDC, hard-purge |
 | `mms-backend-api` | Fastify backend |
 | `mms-backend-security` | Tenant isolation, RBAC, cookies, CSRF |
 | `mms-audit-trail` | Database audit trail, RFC 8785 canonical JSON, sharded hash chains, crypto-shredding, monthly partitions |
