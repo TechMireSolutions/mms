@@ -7,7 +7,9 @@ import {
   type BankStatement,
   type FiscalYear,
   type OpeningBalance,
+  type OpeningBalanceInsert,
   type PostingRules,
+  type PostingRulesUpdate,
 } from '@mms/shared';
 import { requireTenant } from '../../lib/tenantContext.js';
 import {
@@ -31,7 +33,7 @@ export async function loadPostingRules(): Promise<PostingRules> {
   return getPostingRules(requireTenant());
 }
 
-export async function upsertPostingRules(input: PostingRules): Promise<PostingRules> {
+export async function upsertPostingRules(input: PostingRulesUpdate): Promise<PostingRules> {
   const tenant = requireTenant();
   const parsed = postingRulesUpdateSchema.parse(input);
   await savePostingRules(tenant, parsed);
@@ -45,7 +47,7 @@ export async function loadOpeningBalances(fiscalYearId: string): Promise<Opening
 
 export async function upsertOpeningBalances(
   fiscalYearId: string,
-  balances: OpeningBalance[],
+  balances: OpeningBalanceInsert[],
 ): Promise<OpeningBalance[]> {
   const tenant = requireTenant();
   const parsed = openingBalancesReplaceSchema.parse({ fiscalYearId, balances });

@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
-import { z } from 'zod';
 import { desc, eq, and, sql } from 'drizzle-orm';
-import { AUDIT_ACTION_TYPES, roleHasPermission } from '@mms/shared';
+import { listAuditEventsQuerySchema, roleHasPermission } from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendForbidden } from '../../../lib/httpErrors.js';
 import { activeDb } from '../../../db/dbConnection.js';
@@ -15,16 +14,6 @@ import {
 } from '../../../services/auditTrailService.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { formatTraceParent } from '../../../config/telemetry.js';
-
-const listAuditEventsQuerySchema = z
-  .object({
-    limit: z.coerce.number().int().min(1).max(100).default(25),
-    offset: z.coerce.number().int().min(0).default(0),
-    tableName: z.string().optional(),
-    recordId: z.string().optional(),
-    actionType: z.enum(AUDIT_ACTION_TYPES).optional(),
-  })
-  .strict();
 
 /**
  * Helper to extract W3C traceparent from request context.

@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
 import { desc } from 'drizzle-orm';
-import { roleHasPermission } from '@mms/shared';
+import { auditAnomaliesQuerySchema, roleHasPermission } from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendForbidden } from '../../../lib/httpErrors.js';
 import { activeDb } from '../../../db/dbConnection.js';
@@ -12,12 +11,6 @@ import {
 } from '../../../services/auditVerificationService.js';
 import { detectAuditAnomalies } from '../../../services/auditAnomalyService.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-
-const anomaliesQuerySchema = z
-  .object({
-    windowHours: z.coerce.number().int().min(1).max(168).default(24),
-  })
-  .strict();
 
 export const auditIntegrityRoutes: FastifyPluginAsync = async (fastify) => {
   /**
@@ -83,7 +76,7 @@ export const auditIntegrityRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(403).send({ type: 'forbidden', message: 'Tenant required' });
     }
 
-    const parsedQuery = parseRequest(anomaliesQuerySchema, request.query);
+    const parsedQuery = parseRequest(auditAnomaliesQuerySchema, request.query);
     if (!parsedQuery.ok) {
       return replyValidationError(reply, parsedQuery.message);
     }

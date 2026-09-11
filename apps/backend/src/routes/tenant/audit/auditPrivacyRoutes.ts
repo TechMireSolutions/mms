@@ -1,6 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { z } from 'zod';
-import { AUDIT_RETENTION_REGIMES, roleHasPermission } from '@mms/shared';
+import {
+  executeErasureBodySchema,
+  retentionEvaluateBodySchema,
+  roleHasPermission,
+} from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendForbidden } from '../../../lib/httpErrors.js';
 import {
@@ -9,22 +12,6 @@ import {
 } from '../../../services/auditRetentionService.js';
 import { executeSubjectErasure } from '../../../services/cryptoShreddingService.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
-
-const executeErasureBodySchema = z
-  .object({
-    subjectId: z.string().min(1),
-    regime: z.enum(AUDIT_RETENTION_REGIMES),
-    erasureType: z.enum(['CRYPTO_SHRED', 'REDACT_APPEND']),
-    reason: z.string().optional(),
-  })
-  .strict();
-
-const retentionEvaluateBodySchema = z
-  .object({
-    regime: z.enum(AUDIT_RETENTION_REGIMES),
-    dryRun: z.boolean().default(true),
-  })
-  .strict();
 
 export const auditPrivacyRoutes: FastifyPluginAsync = async (fastify) => {
   /**

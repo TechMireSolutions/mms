@@ -3,12 +3,15 @@ import {
   FINANCE_MODULE_MANIFEST,
   collectInvoicesBodySchema,
   creditNoteInsertSchema,
+  creditNotesQuerySchema,
   remindInvoicesBodySchema,
+  resourceIdParamsSchema,
   type User,
 } from '@mms/shared';
 import { ZodError } from 'zod';
 import { canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { sendBadRequest, sendForbidden, sendIfHttpDomainError, sendDatabaseError } from '../../../lib/httpErrors.js';
+import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import {
   cancelInvoice,
@@ -57,13 +60,15 @@ export const financeCollectRoutes: FastifyPluginAsync = async (fastify) => {
     }
   });
 
-  fastify.post<{ Params: { id: string } }>('/invoices/:id/cancel', async (request, reply) => {
+  fastify.post('/invoices/:id/cancel', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
     try {
       const invoice = await withTenant(
         String(request.tenant?.id),
-        () => cancelInvoice(request.params.id),
+        () => cancelInvoice(params.data.id),
         { readOnly: false },
       );
       return reply.send({ invoice });
@@ -72,13 +77,13 @@ export const financeCollectRoutes: FastifyPluginAsync = async (fastify) => {
     }
   });
 
-  fastify.get<{ Querystring: { invoiceId?: string } }>('/credit-notes', async (request, reply) => {
+  fastify.get('/credit-notes', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
-    const invoiceId = request.query.invoiceId?.trim();
-    if (!invoiceId) return sendBadRequest(reply, 'invoiceId is required');
+    const parsed = parseRequest(creditNotesQuerySchema, request.query);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const notes = await withTenant(String(request.tenant?.id), () => loadCreditNotes(invoiceId), {
+      const notes = await withTenant(String(request.tenant?.id), () => loadCreditNotes(parsed.data.invoiceId), {
         readOnly: true,
       });
       return reply.send({ notes });

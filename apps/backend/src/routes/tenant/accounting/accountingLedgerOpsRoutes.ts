@@ -1,7 +1,19 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { ACCOUNTING_MODULE_MANIFEST, type User } from '@mms/shared';
+import {
+  ACCOUNTING_MODULE_MANIFEST,
+  bankReconciliationMatchSchema,
+  bankStatementInsertSchema,
+  closeFiscalYearBodySchema,
+  fiscalYearParamsSchema,
+  openingBalancesQuerySchema,
+  openingBalancesReplaceSchema,
+  postingRulesUpdateSchema,
+  resourceIdParamsSchema,
+  type User,
+} from '@mms/shared';
 import { canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { sendForbidden, sendIfHttpDomainError, sendDatabaseError } from '../../../lib/httpErrors.js';
+import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import {
   closeFiscalYear,
@@ -33,10 +45,12 @@ export const accountingLedgerOpsRoutes: FastifyPluginAsync = async (fastify) => 
   fastify.put('/posting-rules', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(postingRulesUpdateSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const rules = await withTenant(
         String(request.tenant?.id),
-        () => upsertPostingRules(request.body as Parameters<typeof upsertPostingRules>[0]),
+        () => upsertPostingRules(parsed.data),
         { readOnly: false },
       );
       return reply.send({ rules });
@@ -45,14 +59,17 @@ export const accountingLedgerOpsRoutes: FastifyPluginAsync = async (fastify) => 
     }
   });
 
-  fastify.post<{ Params: { id: string } }>('/fiscal-years/:id/close', async (request, reply) => {
+  fastify.post('/fiscal-years/:id/close', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
-    const body = (request.body ?? {}) as { retainedEarningsAccountId?: string };
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    const body = parseRequest(closeFiscalYearBodySchema, request.body ?? {});
+    if (!body.ok) return replyValidationError(reply, body.message);
     try {
       const fiscalYear = await withTenant(
         String(request.tenant?.id),
-        () => closeFiscalYear(request.params.id, String(user.id), body.retainedEarningsAccountId),
+        () => closeFiscalYear(params.data.id, String(user.id), body.data.retainedEarningsAccountId),
         { readOnly: false },
       );
       return reply.send({ fiscalYear });
@@ -61,13 +78,13 @@ export const accountingLedgerOpsRoutes: FastifyPluginAsync = async (fastify) => 
     }
   });
 
-  fastify.get<{ Querystring: { fiscalYearId?: string } }>('/opening-balances', async (request, reply) => {
+  fastify.get('/opening-balances', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, COLLECTION)) return sendForbidden(reply);
-    const fiscalYearId = request.query.fiscalYearId?.trim();
-    if (!fiscalYearId) return reply.status(400).send({ type: 'bad_request', message: 'fiscalYearId is required' });
+    const parsed = parseRequest(openingBalancesQuerySchema, request.query);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const balances = await withTenant(String(request.tenant?.id), () => loadOpeningBalances(fiscalYearId), {
+      const balances = await withTenant(String(request.tenant?.id), () => loadOpeningBalances(parsed.data.fiscalYearId), {
         readOnly: true,
       });
       return reply.send({ balances });
@@ -79,12 +96,12 @@ export const accountingLedgerOpsRoutes: FastifyPluginAsync = async (fastify) => 
   fastify.put('/opening-balances', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
-    const body = request.body as { fiscalYearId?: string; balances?: Parameters<typeof upsertOpeningBalances>[1] };
-    if (!body.fiscalYearId) return reply.status(400).send({ type: 'bad_request', message: 'fiscalYearId is required' });
+    const parsed = parseRequest(openingBalancesReplaceSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const balances = await withTenant(
         String(request.tenant?.id),
-        () => upsertOpeningBalances(body.fiscalYearId as string, body.balances ?? []),
+        () => upsertOpeningBalances(parsed.data.fiscalYearId, parsed.data.balances),
         { readOnly: false },
       );
       return reply.send({ balances });
@@ -93,13 +110,15 @@ export const accountingLedgerOpsRoutes: FastifyPluginAsync = async (fastify) => 
     }
   });
 
-  fastify.post<{ Params: { fiscalYearId: string } }>(
+  fastify.post(
     '/opening-balances/:fiscalYearId/post',
     async (request, reply) => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+      const params = parseRequest(fiscalYearParamsSchema, request.params);
+      if (!params.ok) return replyValidationError(reply, params.message);
       try {
-        await withTenant(String(request.tenant?.id), () => postOpeningBalances(request.params.fiscalYearId), {
+        await withTenant(String(request.tenant?.id), () => postOpeningBalances(params.data.fiscalYearId), {
           readOnly: false,
         });
         return reply.send({ success: true });
@@ -123,8 +142,10 @@ export const accountingLedgerOpsRoutes: FastifyPluginAsync = async (fastify) => 
   fastify.put('/bank-statements', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(bankStatementInsertSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const statement = await withTenant(String(request.tenant?.id), () => upsertBankStatement(request.body), {
+      const statement = await withTenant(String(request.tenant?.id), () => upsertBankStatement(parsed.data), {
         readOnly: false,
       });
       return reply.send({ statement });
@@ -136,8 +157,10 @@ export const accountingLedgerOpsRoutes: FastifyPluginAsync = async (fastify) => 
   fastify.post('/bank-reconciliations', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(bankReconciliationMatchSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      await withTenant(String(request.tenant?.id), () => matchBankStatementLine(request.body), { readOnly: false });
+      await withTenant(String(request.tenant?.id), () => matchBankStatementLine(parsed.data), { readOnly: false });
       return reply.send({ success: true });
     } catch (error) {
       return sendIfHttpDomainError(reply, error) ?? sendDatabaseError(reply, 'Failed to match bank line', error);

@@ -36,15 +36,7 @@ const IDEMPOTENCY_PENDING_POLL_ATTEMPTS = 8;
 /** `recorded: null` = in-flight claim; number = completed dispatch audit. */
 type MessagingIdempotencyPayload = { recorded: number | null; bodyDigest: string };
 
-function normalizeDispatchLogs(user: User, logs: Array<{
-  contactId: string | number;
-  channel: 'sms' | 'whatsapp' | 'email';
-  body: string;
-  status?: 'sent' | 'failed' | 'skipped';
-  subject?: string;
-  category?: Message['category'];
-  errorMessage?: string;
-}>): Message[] {
+function normalizeDispatchLogs(user: User, logs: MessageLogCreateDto[]): Message[] {
   const sentAt = new Date().toISOString();
   return logs.map((log) => ({
     id: randomUUID(),

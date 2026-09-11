@@ -155,3 +155,11 @@ export const creditNoteInsertSchema = z
 
 export type CreditNote = z.infer<typeof creditNoteRecordSchema>;
 export type CreditNoteInsert = z.input<typeof creditNoteInsertSchema>;
+
+export const creditNotesQuerySchema = z
+  .object({
+    invoiceId: z.string().min(1),
+  })
+  .strict();
+
+export type CreditNotesQuery = z.infer<typeof creditNotesQuerySchema>;

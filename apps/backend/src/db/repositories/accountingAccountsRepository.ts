@@ -3,11 +3,13 @@ import { dedupeTrimmedIds, type Account } from '@mms/shared';
 import { accountingAccounts, accountingEntries, accountingJournalLines } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import { ValidationError } from '../../lib/httpErrors.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
+import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 
 type AccountRow = typeof accountingAccounts.$inferSelect;
 
 export function accountRowToRecord(row: AccountRow): Account {
-  const account: Account = {
+  return {
     id: row.id,
     code: row.code,
     name: row.name,
@@ -15,15 +17,8 @@ export function accountRowToRecord(row: AccountRow): Account {
     subtype: row.subtype,
     description: row.description,
     isActive: row.isActive,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    ...mapAuditTimestamps(row),
   };
-
-  if (row.deletedAt) account.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) account.deletedBy = row.deletedBy;
-  if (row.deletionReason) account.deletionReason = row.deletionReason;
-
-  return account;
 }
 
 export async function listAccountsByWorkspace(
@@ -32,18 +27,8 @@ export async function listAccountsByWorkspace(
 ): Promise<Account[]> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
-    const isDeletedOnly = options?.deleted === 'deleted';
-    const isAll = options?.deleted === 'all';
-    const deletedCond = isDeletedOnly
-      ? isNotNull(accountingAccounts.deletedAt)
-      : isAll
-        ? null
-        : options?.includeDeleted
-          ? isNotNull(accountingAccounts.deletedAt)
-          : isNull(accountingAccounts.deletedAt);
-
-    const conditions = [eq(accountingAccounts.workspaceSubdomain, subdomain)];
-    if (deletedCond) conditions.push(deletedCond);
+    const filter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
+    const conditions = buildTenantSoftDeleteConditions(accountingAccounts, subdomain, filter);
 
     const rows = await tx
       .select({
@@ -111,21 +96,11 @@ export async function findAccountsByIds(
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
-    const isDeletedOnly = options?.deleted === 'deleted';
-    const isAll = options?.deleted === 'all';
-    const deletedCond = isDeletedOnly
-      ? isNotNull(accountingAccounts.deletedAt)
-      : isAll
-        ? null
-        : options?.includeDeleted
-          ? isNotNull(accountingAccounts.deletedAt)
-          : isNull(accountingAccounts.deletedAt);
-
+    const filter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
     const conditions = [
-      eq(accountingAccounts.workspaceSubdomain, subdomain),
+      ...buildTenantSoftDeleteConditions(accountingAccounts, subdomain, filter),
       inArray(accountingAccounts.id, cleanIds),
     ];
-    if (deletedCond) conditions.push(deletedCond);
 
     const rows = await tx
       .select({

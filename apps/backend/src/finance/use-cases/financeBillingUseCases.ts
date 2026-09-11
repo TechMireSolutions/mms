@@ -1,6 +1,4 @@
 import {
-  feeStructureInsertSchema,
-  feeStructureRecordSchema,
   type FeeStructure,
   type FeeStructureInsert,
 } from '@mms/shared';
@@ -17,15 +15,14 @@ export async function loadFeeStructures(): Promise<FeeStructure[]> {
 
 export async function upsertFeeStructure(input: FeeStructureInsert): Promise<FeeStructure> {
   const tenant = requireTenant();
-  const parsed = feeStructureInsertSchema.parse(input);
-  const record: FeeStructure = feeStructureRecordSchema.parse({
-    ...parsed,
-    id: parsed.id || `fs-${Date.now()}`,
-    items: (parsed.items ?? []).map((item, index) => ({
+  const record: FeeStructure = {
+    ...input,
+    id: input.id || `fs-${Date.now()}`,
+    items: (input.items ?? []).map((item, index) => ({
       ...item,
       id: item.id ?? `fi-${index + 1}`,
     })),
-  });
+  };
   await saveFeeStructure(tenant, record);
   const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'finance_fee_structures');

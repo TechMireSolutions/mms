@@ -99,3 +99,21 @@ export const closeFiscalYearBodySchema = z
     retainedEarningsAccountId: z.string().min(1).optional(),
   })
   .strict();
+
+export type CloseFiscalYearBody = z.infer<typeof closeFiscalYearBodySchema>;
+
+export const openingBalancesQuerySchema = z
+  .object({
+    fiscalYearId: z.string().min(1),
+  })
+  .strict();
+
+export type OpeningBalancesQuery = z.infer<typeof openingBalancesQuerySchema>;
+
+export const fiscalYearParamsSchema = z
+  .object({
+    fiscalYearId: z.string().min(1),
+  })
+  .strict();
+
+export type FiscalYearParams = z.infer<typeof fiscalYearParamsSchema>;

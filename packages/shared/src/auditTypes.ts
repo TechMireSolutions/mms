@@ -255,3 +255,47 @@ export function calculateStateDelta(
   return { oldDelta, newDelta };
 }
 
+/** Paginated audit event list query schema. */
+export const listAuditEventsQuerySchema = z
+  .object({
+    limit: z.coerce.number().int().min(1).max(100).default(25),
+    offset: z.coerce.number().int().min(0).default(0),
+    tableName: z.string().optional(),
+    recordId: z.string().optional(),
+    actionType: auditActionTypeSchema.optional(),
+  })
+  .strict();
+
+export type ListAuditEventsQuery = z.infer<typeof listAuditEventsQuerySchema>;
+
+/** Audit anomalies detection query schema. */
+export const auditAnomaliesQuerySchema = z
+  .object({
+    windowHours: z.coerce.number().int().min(1).max(168).default(24),
+  })
+  .strict();
+
+export type AuditAnomaliesQuery = z.infer<typeof auditAnomaliesQuerySchema>;
+
+/** GDPR / privacy right-to-erasure execution payload schema. */
+export const executeErasureBodySchema = z
+  .object({
+    subjectId: z.string().min(1),
+    regime: auditRetentionRegimeSchema,
+    erasureType: z.enum(['CRYPTO_SHRED', 'REDACT_APPEND']),
+    reason: z.string().optional(),
+  })
+  .strict();
+
+export type ExecuteErasureBody = z.infer<typeof executeErasureBodySchema>;
+
+/** Audit retention evaluation payload schema. */
+export const retentionEvaluateBodySchema = z
+  .object({
+    regime: auditRetentionRegimeSchema,
+    dryRun: z.boolean().default(true),
+  })
+  .strict();
+
+export type RetentionEvaluateBody = z.infer<typeof retentionEvaluateBodySchema>;
+

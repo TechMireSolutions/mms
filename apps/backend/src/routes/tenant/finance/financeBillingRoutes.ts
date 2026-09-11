@@ -1,8 +1,15 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { FINANCE_MODULE_MANIFEST, generateInvoicesBodySchema, type User } from '@mms/shared';
+import {
+  FINANCE_MODULE_MANIFEST,
+  feeStructureInsertSchema,
+  generateInvoicesBodySchema,
+  resourceIdParamsSchema,
+  type User,
+} from '@mms/shared';
 import { ZodError } from 'zod';
 import { canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { sendBadRequest, sendForbidden, sendIfHttpDomainError, sendDatabaseError } from '../../../lib/httpErrors.js';
+import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import {
   loadFeeStructures,
@@ -31,10 +38,12 @@ export const financeBillingRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.put('/fee-structures', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(feeStructureInsertSchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const structure = await withTenant(
         String(request.tenant?.id),
-        () => upsertFeeStructure(request.body as Parameters<typeof upsertFeeStructure>[0]),
+        () => upsertFeeStructure(parsed.data),
         { readOnly: false },
       );
       return reply.send({ structure });
@@ -60,11 +69,13 @@ export const financeBillingRoutes: FastifyPluginAsync = async (fastify) => {
     }
   });
 
-  fastify.delete<{ Params: { id: string } }>('/fee-structures/:id', async (request, reply) => {
+  fastify.delete('/fee-structures/:id', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+    const params = parseRequest(resourceIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
     try {
-      await withTenant(String(request.tenant?.id), () => removeFeeStructure(request.params.id), {
+      await withTenant(String(request.tenant?.id), () => removeFeeStructure(params.data.id), {
         readOnly: false,
       });
       return reply.send({ success: true });
