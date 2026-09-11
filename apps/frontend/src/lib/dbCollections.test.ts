@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
-import { hasCollectionInCache, getCollection } from '@/lib/dbCollections';
-import { scopedStorageKey } from '@/lib/dbStorageCore';
+import { hasCollectionInCache, getCollection, saveCollection } from '@/lib/dbCollections';
+import { scopedStorageKey, syncToServer } from '@/lib/dbStorageCore';
 
 // Avoid real network calls from getCollection's background sync during seeding.
 vi.mock('@/lib/dbStorageCore', async (importOriginal) => {
@@ -14,6 +14,7 @@ vi.mock('@/lib/dbStorageCore', async (importOriginal) => {
 describe('dbCollections', () => {
   beforeEach(() => {
     localStorage.clear();
+    vi.clearAllMocks();
   });
 
   afterEach(() => {
@@ -47,5 +48,14 @@ describe('dbCollections', () => {
     const defaults = [{ id: 'cur1', code: 'PKR' }];
     const result = getCollection('currencies', defaults);
     expect(result).toEqual(defaults);
+  });
+
+  it('does not dispatch syncToServer for REST-migrated entity collections', async () => {
+    saveCollection('contacts', [{ id: 'c1', name: 'Test' }]);
+    expect(syncToServer).not.toHaveBeenCalled();
+
+    getCollection('students', [{ id: 's1', name: 'Student' }]);
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(syncToServer).not.toHaveBeenCalled();
   });
 });

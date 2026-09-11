@@ -7,7 +7,7 @@ import {
   type TeachersCommandMetricsSnapshot,
   teachersWidgetQueryFromWidget,
 } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
 import { tsrClient, apiContract } from '@/lib/api';
@@ -19,6 +19,13 @@ import {
   type TeacherNextEmployeeIdParams,
   type TeachersWidgetAggregateWidgetInput,
 } from '@/tenant/features/teachers/hooks/teachersQueryKeys';
+
+export function teachersCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<TeachersCommandMetricsSnapshot>({
+    moduleId: TEACHERS_MODULE_MANIFEST.moduleId,
+    apiPath: TEACHERS_MODULE_MANIFEST.restBasePath,
+  });
+}
 import {
   type TeachersListPageResult,
   type TeachersPaginatedParams,

@@ -28,6 +28,9 @@ vi.mock('../db/tenant-context.js', () => ({
   withTenant: vi.fn((_subdomain: string, cb: (tx: typeof mockTx) => Promise<unknown>) =>
     cb(mockTx),
   ),
+  withTenantRead: vi.fn((_subdomain: string, cb: (tx: typeof mockTx) => Promise<unknown>) =>
+    cb(mockTx),
+  ),
 }));
 
 describe('dashboard repositories', () => {

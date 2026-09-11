@@ -3,7 +3,7 @@ import { clear2FAState, getPendingChallengeId, mark2FAVerified, setPendingChalle
 import { type User } from '@mms/shared';
 import { appNavigate } from '@/lib/routing/appNavigate';
 import { ROUTES } from '@/lib/config/routes';
-import { apiFetch, apiJson, isApiError } from '@/lib/apiClient';
+import { apiFetch, apiJson, isApiError, SESSION_EXPIRED_EVENT } from '@/lib/apiClient';
 import { isCurrentHostApex } from '@/lib/config/tenantConfig';
 import { getWorkspaceLocalStoragePrefix } from '@/lib/dbStorageCore';
 import { queryClientInstance } from '@/lib/queryClient';
@@ -234,11 +234,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
+    const handleSessionExpired = (_event: Event) => {
+      clear2FAState();
+      if (userRef.current?.id) {
+        clearUserScopedCachesOnLogout(userRef.current.id, getWorkspaceLocalStoragePrefix());
+      }
+      queryClientInstance.clear();
+      clearPersistedAuthUser();
+      setUser(null);
+      setIsAuthenticated(false);
+      setAuthChecked(true);
+      appNavigate(ROUTES.login, { replace: true });
+    };
+
     window.addEventListener('storage', handleStorage);
+    window.addEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
 
     return () => {
       controller.abort();
       window.removeEventListener('storage', handleStorage);
+      window.removeEventListener(SESSION_EXPIRED_EVENT, handleSessionExpired);
     };
   }, [checkUserAuth]);
 

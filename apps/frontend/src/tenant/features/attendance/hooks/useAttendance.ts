@@ -9,7 +9,7 @@ import {
   ATTENDANCE_MODULE_MANIFEST,
   normalizeAttendanceReportComparisonQuery,
 } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { tsrClient } from '@/lib/api';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -21,6 +21,23 @@ export const ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY = [
   ATTENDANCE_MODULE_MANIFEST.collectionKey,
   'report-aggregates',
 ] as const;
+
+export function attendanceCommandMetricsQueryOptions(selectedDate: string) {
+  return serverMetricsQueryOptions<AttendanceCommandMetricsSnapshot>({
+    moduleId: ATTENDANCE_MODULE_MANIFEST.moduleId,
+    apiPath: ATTENDANCE_MODULE_MANIFEST.restBasePath,
+    extraParam: selectedDate,
+  });
+}
+
+export function useAttendanceMetrics(selectedDate: string, options?: { enabled?: boolean }) {
+  return useServerMetrics<AttendanceCommandMetricsSnapshot>({
+    moduleId: ATTENDANCE_MODULE_MANIFEST.moduleId,
+    apiPath: ATTENDANCE_MODULE_MANIFEST.restBasePath,
+    extraParam: selectedDate,
+    enabled: options?.enabled,
+  });
+}
 
 const ATTENDANCE_API = ATTENDANCE_MODULE_MANIFEST.restBasePath;
 
@@ -189,13 +206,4 @@ export function useAttendanceReportAggregates(
       ? query.data.body as AttendanceReportAggregates
       : undefined,
   };
-}
-
-export function useAttendanceMetrics(selectedDate: string, options?: { enabled?: boolean }) {
-  return useServerMetrics<AttendanceCommandMetricsSnapshot>({
-    moduleId: ATTENDANCE_MODULE_MANIFEST.moduleId,
-    apiPath: ATTENDANCE_MODULE_MANIFEST.restBasePath,
-    extraParam: selectedDate,
-    enabled: options?.enabled,
-  });
 }

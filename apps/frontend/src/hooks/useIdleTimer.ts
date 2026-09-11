@@ -37,17 +37,23 @@ export function useIdleTimer({
   const deadlineRef = useRef<number>(Date.now() + timeoutMs);
   const warnedRef = useRef(false);
   const timeoutFiredRef = useRef(false);
+  const lastResetRef = useRef<number>(Date.now());
 
   const onTimeoutRef = useRef(onTimeout);
   const onWarnRef = useRef(onWarn);
   onTimeoutRef.current = onTimeout;
   onWarnRef.current = onWarn;
 
+  const remainingMs = enabled ? Math.max(0, deadlineRef.current - now) : timeoutMs;
+  const isWarning = enabled && remainingMs <= warnBeforeMs && warnBeforeMs > 0;
+
   const reset = (): void => {
-    deadlineRef.current = Date.now() + timeoutMs;
+    const currentNow = Date.now();
+    deadlineRef.current = currentNow + timeoutMs;
     warnedRef.current = false;
     timeoutFiredRef.current = false;
-    setNow(Date.now());
+    lastResetRef.current = currentNow;
+    setNow(currentNow);
   };
 
   useEffect(() => {
@@ -57,23 +63,26 @@ export function useIdleTimer({
       timeoutFiredRef.current = false;
       return;
     }
-    const handleEvent = (): void => reset();
+
+    const handleEvent = (): void => {
+      const currentNow = Date.now();
+      if (deadlineRef.current - currentNow <= warnBeforeMs || currentNow - lastResetRef.current >= 2000) {
+        reset();
+      }
+    };
+
     IDLE_EVENTS.forEach((ev) => window.addEventListener(ev, handleEvent, { passive: true }));
     reset();
 
-    const tick = window.setInterval(() => setNow(Date.now()), 1000);
     return () => {
-      window.clearInterval(tick);
       IDLE_EVENTS.forEach((ev) => window.removeEventListener(ev, handleEvent));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, timeoutMs]);
-
-  const remainingMs = enabled ? Math.max(0, deadlineRef.current - now) : timeoutMs;
-  const isWarning = enabled && remainingMs <= warnBeforeMs && warnBeforeMs > 0;
+  }, [enabled, timeoutMs, warnBeforeMs]);
 
   useEffect(() => {
     if (!enabled) return;
+
     if (remainingMs <= 0) {
       if (!timeoutFiredRef.current) {
         timeoutFiredRef.current = true;
@@ -81,11 +90,32 @@ export function useIdleTimer({
       }
       return;
     }
-    if (isWarning && !warnedRef.current && onWarnRef.current) {
-      warnedRef.current = true;
-      onWarnRef.current();
+
+    if (isWarning) {
+      if (!warnedRef.current && onWarnRef.current) {
+        warnedRef.current = true;
+        onWarnRef.current();
+      }
+      const intervalId = window.setInterval(() => {
+        setNow(Date.now());
+      }, 1000);
+      return () => {
+        window.clearInterval(intervalId);
+      };
     }
-  }, [enabled, remainingMs, isWarning]);
+
+    const timeUntilWarn = warnBeforeMs > 0
+      ? Math.max(0, deadlineRef.current - warnBeforeMs - Date.now())
+      : Math.max(0, deadlineRef.current - Date.now());
+
+    const timerId = window.setTimeout(() => {
+      setNow(Date.now());
+    }, timeUntilWarn);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [enabled, remainingMs, isWarning, warnBeforeMs]);
 
   return { remainingMs, isWarning, reset };
 }

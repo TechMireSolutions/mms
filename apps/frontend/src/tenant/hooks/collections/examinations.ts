@@ -7,12 +7,14 @@ export {
   useExaminationsExamsCollection,
   useExaminationsResults,
   useExaminationsResultsCollection,
+  examinationsCommandMetricsQueryOptions,
   useExaminationsMetrics,
   useExaminationsMutations,
 } from "@/tenant/features/examinations/hooks/useExaminationsApi";
 export { invalidateExaminationsQueries } from '@/tenant/features/examinations/hooks/invalidateExaminationsQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  examinationsExamsListQueryOptions,
   useExaminationsContractList,
   useExaminationsContractResults,
   useExaminationsContractBulkDelete,

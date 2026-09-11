@@ -148,7 +148,7 @@ export const USERS_MODULE_MANIFEST = {
     bulkActions: ['whatsapp', 'sms', 'email', 'delete'] as const,
   },
   defaultPageSize: 50,
-  maxPageSize: 500,
+  maxPageSize: 100,
   defaultExportFilename: 'users.csv',
   exportChunkSize: 100,
 } as const;

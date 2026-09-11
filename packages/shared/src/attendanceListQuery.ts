@@ -1,4 +1,5 @@
 import type { AttendanceRecord } from './attendanceModuleManifest.js';
+import { LIST_PAGE_MAX_LIMIT } from './apiSchemas.js';
 import { compareByField, paginateArray } from './utils.js';
 
 /** Supported attendance list filters and pagination options. */
@@ -72,7 +73,7 @@ export function paginateAttendance(
       compareByField(left, right, query.sortField!, query.sortDir === 'desc' ? 'desc' : 'asc'),
     );
   }
-  const result = paginateArray(rows, query.page ?? 1, query.limit ?? 15, 500);
+  const result = paginateArray(rows, query.page ?? 1, query.limit ?? 15, LIST_PAGE_MAX_LIMIT);
   return {
     records: result.items,
     total: result.total,

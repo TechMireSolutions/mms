@@ -27,7 +27,7 @@ describe('CONTACTS_MODULE_MANIFEST', () => {
 
   it('configures server pagination defaults', () => {
     expect(CONTACTS_MODULE_MANIFEST.defaultPageSize).toBe(50);
-    expect(CONTACTS_MODULE_MANIFEST.maxPageSize).toBe(500);
+    expect(CONTACTS_MODULE_MANIFEST.maxPageSize).toBe(100);
   });
 
   it('captures soft-delete deletion reasons', () => {

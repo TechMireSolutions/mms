@@ -2,11 +2,42 @@
  * Phase 7: Contract-driven query/mutation hooks for the Students module.
  * Uses tsrClient (@ts-rest/react-query v5) for full contract schema enforcement.
  */
-import { tsrClient } from '@/lib/api';
-import { useQueryClient } from '@tanstack/react-query';
+import { apiContract, tsrClient } from '@/lib/api';
+import { queryOptions, useQueryClient } from '@tanstack/react-query';
 import { STUDENTS_QUERY_KEY } from '@/tenant/features/students/hooks/studentsQueryKeys';
 import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
 import { SESSIONS_QUERY_KEY } from '@/tenant/hooks/collections/sessions';
+
+export function studentsListQueryOptions(
+  query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sessionId?: string;
+    className?: string;
+    relatedContactIds?: string;
+    fatherName?: string;
+    excludeId?: string;
+    [key: string]: unknown;
+  } = {},
+) {
+  return queryOptions({
+    queryKey: [...STUDENTS_QUERY_KEY, 'contract', query] as const,
+    queryFn: async ({ signal }) => {
+      const response = await apiContract.students.list({
+        query: query as Record<string, string>,
+        signal,
+        fetchOptions: { signal },
+      });
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch students');
+      }
+      return response.body;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 15_000,
+  });
+}
 
 export function useStudentsContractList(
   query: {

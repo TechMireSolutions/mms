@@ -83,5 +83,5 @@ export const STUDENTS_MODULE_MANIFEST = {
   exportChunkSize: 100,
   /** Default Work directory page size when using server pagination. */
   defaultPageSize: 50,
-  maxPageSize: 500,
+  maxPageSize: 100,
 } as const;

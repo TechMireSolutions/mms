@@ -10,8 +10,17 @@ import {
   upsertWorkspaceGlobalSettings as upsertWorkspaceGlobalSettingsRepo,
 } from '../db/repositories/workspaceRepository.js';
 import { saveObject } from '../db/database.js';
+import { redisGet, redisSet, redisDel, redisKeys } from '../lib/redis.js';
 
 const MASK_PREFIX = '****';
+const GLOBAL_SETTINGS_CACHE_TTL_SECONDS = 300;
+const globalSettingsCacheKey = (t: string) => redisKeys.globalSettings(t);
+
+export async function invalidateGlobalSettingsCache(tenant: string): Promise<void> {
+  const cleanTenant = tenant.trim().toLowerCase();
+  if (!cleanTenant) return;
+  await redisDel(globalSettingsCacheKey(cleanTenant));
+}
 
 /**
  * Masks a secret for client responses, showing only the last 4 characters.
@@ -50,9 +59,22 @@ export async function loadGlobalSettings(subdomain?: string): Promise<GlobalSett
   if (!tenant) {
     return mergeGlobalSettings(null);
   }
+  const cleanTenant = tenant.trim().toLowerCase();
+  const key = globalSettingsCacheKey(cleanTenant);
+  const cached = await redisGet(key);
+  if (cached) {
+    try {
+      return JSON.parse(cached) as GlobalSettings;
+    } catch {
+      // Fall through
+    }
+  }
+
   try {
-    const settings = await getWorkspaceGlobalSettings(tenant);
-    return settings ?? mergeGlobalSettings(null);
+    const settings = await getWorkspaceGlobalSettings(cleanTenant);
+    const resolved = settings ?? mergeGlobalSettings(null);
+    await redisSet(key, JSON.stringify(resolved), GLOBAL_SETTINGS_CACHE_TTL_SECONDS);
+    return resolved;
   } catch {
     return mergeGlobalSettings(null);
   }
@@ -87,6 +109,7 @@ export async function saveGlobalSettings(
   settings = { ...settings, llmConfigs };
   await upsertWorkspaceGlobalSettingsRepo(tenant, settings);
   await saveObject('global_settings', settings);
+  await invalidateGlobalSettingsCache(tenant);
 }
 
 /** JWT `expiresIn` string from session timeout preference. */

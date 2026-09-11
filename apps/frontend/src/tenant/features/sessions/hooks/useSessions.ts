@@ -4,11 +4,18 @@ import type {
   SessionsCommandMetricsSnapshot,
 } from '@mms/shared';
 import { SESSIONS_MODULE_MANIFEST, sessionsWidgetQueryFromWidget } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient, apiContract } from '@/lib/api';
 import type { Session } from '@/lib/data/sessionsData';
 import { invalidateSessionsQueries } from '@/tenant/features/sessions/hooks/invalidateSessionsQueries';
+
+export function sessionsCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<SessionsCommandMetricsSnapshot>({
+    moduleId: SESSIONS_MODULE_MANIFEST.moduleId,
+    apiPath: SESSIONS_MODULE_MANIFEST.restBasePath,
+  });
+}
 
 export const SESSIONS_QUERY_KEY = ['sessions', 'list'] as const;
 export const SESSIONS_METRICS_QUERY_KEY = ['sessions', 'metrics'] as const;

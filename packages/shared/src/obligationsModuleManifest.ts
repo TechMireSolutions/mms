@@ -232,6 +232,7 @@ export const OBLIGATIONS_MODULE_MANIFEST = {
     bulkActions: ['delete'] as const,
   },
   defaultPageSize: 12,
+  maxPageSize: 100,
 } as const;
 
 export type ObligationsModuleTier = (typeof OBLIGATIONS_MODULE_MANIFEST.tiers)[number];

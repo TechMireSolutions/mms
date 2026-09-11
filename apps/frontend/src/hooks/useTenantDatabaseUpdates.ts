@@ -9,6 +9,18 @@ import {
 } from '@/lib/backgroundJobs/backgroundJobStore';
 import { fetchBackgroundJob } from '@/lib/backgroundJobs/pollBackgroundJob';
 
+let invalidateModulePromise: Promise<typeof import('@/lib/tenant/invalidateModuleQueries')> | null = null;
+
+function getInvalidateModuleQueries() {
+  if (!invalidateModulePromise) {
+    invalidateModulePromise = import('@/lib/tenant/invalidateModuleQueries').catch((err) => {
+      invalidateModulePromise = null;
+      throw err;
+    });
+  }
+  return invalidateModulePromise;
+}
+
 /**
  * Subscribes to tenant `/api/ws` and invalidates Query keys for live collection updates.
  * Also handles job-progress/completed/failed events from the BullMQ worker pipeline,
@@ -20,7 +32,7 @@ export function useTenantDatabaseUpdates(): void {
   const queryClient = useQueryClient();
 
   const handleInvalidate = useCallback((key: string) => {
-    void import('@/lib/tenant/invalidateModuleQueries')
+    void getInvalidateModuleQueries()
       .then(({ invalidateModuleQueries }) => {
         invalidateModuleQueries(queryClient, key);
       })

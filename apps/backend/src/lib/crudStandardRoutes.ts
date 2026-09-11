@@ -22,18 +22,15 @@ export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
   errorMessagePrefix: string;
   nameSingular: string;
   loadPageFn?: (query: TQuery & { includeDeleted: boolean }) => Promise<unknown>;
-  /** Optional — omit when SQL `loadCountFn` / `loadMetricsFn` / paginated list cover HTTP reads. */
-  loadAllFn?: (options?: { includeDeleted?: boolean }) => Promise<TRecord[]>;
   /** Prefer SQL count — avoids hydrate-all for `/count`. */
   loadCountFn?: () => Promise<number>;
-  computeMetricsFn?: (records: TRecord[], request: FastifyRequest) => Promise<unknown> | unknown;
   /** Prefer SQL aggregates — avoids hydrate-all for `/metrics`. */
   loadMetricsFn?: (request: FastifyRequest) => Promise<unknown>;
   loadWidgetAggregatesFn?: (queries: unknown[]) => Promise<unknown>;
   loadByIdsFn?: (ids: string[], request: FastifyRequest) => Promise<TRecord[]>;
   loadLinkedContactIdsFn?: (excludeId?: string) => Promise<(string | number)[]>;
   canWriteDeletedCheck?: (user: User) => boolean;
-  /** Post-load transform for paginated/`loadAllFn` reads (e.g. viewer-role sanitization). */
+  /** Post-load transform for paginated reads (e.g. viewer-role sanitization). */
   responseTransform?: (result: unknown, user: User) => Promise<unknown> | unknown;
 }
 
@@ -55,9 +52,7 @@ export function registerStandardExtendedRoutes<
     errorMessagePrefix,
     nameSingular,
     loadPageFn,
-    loadAllFn,
     loadCountFn,
-    computeMetricsFn,
     loadMetricsFn,
     loadWidgetAggregatesFn,
     loadByIdsFn,
@@ -79,31 +74,20 @@ export function registerStandardExtendedRoutes<
     });
   }
 
-  registerCountRoute(fastify, {
-    path: prefix ? `${prefix}/count` : '/count',
-    collection,
-    loadCountFn,
-    loadAllFn: loadCountFn || !loadAllFn ? undefined : () => loadAllFn(),
-    errorMessagePrefix,
-  });
+  if (loadCountFn) {
+    registerCountRoute(fastify, {
+      path: prefix ? `${prefix}/count` : '/count',
+      collection,
+      loadCountFn,
+      errorMessagePrefix,
+    });
+  }
 
   if (loadMetricsFn) {
     registerMetricsRoute(fastify, {
       path: prefix ? `${prefix}/metrics` : '/metrics',
       collection,
       loadMetricsFn,
-      errorMessagePrefix: nameSingular,
-    });
-  } else if (computeMetricsFn && loadAllFn) {
-    const loadAll = loadAllFn;
-    const computeMetrics = computeMetricsFn;
-    registerMetricsRoute(fastify, {
-      path: prefix ? `${prefix}/metrics` : '/metrics',
-      collection,
-      loadMetricsFn: async (request) => {
-        const records = await loadAll();
-        return computeMetrics(records, request);
-      },
       errorMessagePrefix: nameSingular,
     });
   }
@@ -186,9 +170,7 @@ export function registerStandardTenantRoutes<
     nameSingular,
     namePlural,
     loadPageFn,
-    loadAllFn,
     loadCountFn,
-    computeMetricsFn,
     loadMetricsFn,
     loadWidgetAggregatesFn,
     loadByIdsFn,
@@ -222,9 +204,7 @@ export function registerStandardTenantRoutes<
     errorMessagePrefix,
     nameSingular,
     loadPageFn,
-    loadAllFn,
     loadCountFn,
-    computeMetricsFn,
     loadMetricsFn,
     loadWidgetAggregatesFn,
     loadByIdsFn,
@@ -233,16 +213,12 @@ export function registerStandardTenantRoutes<
     responseTransform,
   });
 
-  const hasPaginatedListRoute = !!(listQuerySchema && loadPageFn);
-
   registerResourceRoutes(fastify, {
     prefix,
-    customGetRoute: hasPaginatedListRoute,
     customPostRoute,
     customPutRoute,
     collection,
     schema,
-    loadAllFn,
     loadByIdFn,
     createFn,
     updateFn,

@@ -267,6 +267,7 @@ export const QUESTION_BANK_MODULE_MANIFEST = {
     bulkActions: ['delete'] as const,
   },
   defaultPageSize: 15,
+  maxPageSize: 100,
 } as const;
 
 export type QuestionBankModuleTier = (typeof QUESTION_BANK_MODULE_MANIFEST.tiers)[number];

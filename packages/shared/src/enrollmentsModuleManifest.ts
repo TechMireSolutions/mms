@@ -126,7 +126,7 @@ export const ENROLLMENTS_MODULE_MANIFEST = {
     retentionDays: null,
   },
   defaultPageSize: 12,
-  maxPageSize: 500,
+  maxPageSize: 100,
 } as const;
 
 export type EnrollmentsModuleTier = (typeof ENROLLMENTS_MODULE_MANIFEST.tiers)[number];

@@ -1,10 +1,13 @@
-import { eq, inArray } from 'drizzle-orm';
+import { eq, inArray, getTableName } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { getRootDb } from '../database.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
+import { redisGet, redisSet, redisDel, redisKeys } from '../../lib/redis.js';
 
 type WorkspaceCol = PgColumn;
 type UpdatedAtCol = PgColumn;
+
+const SETUP_SINGLETON_CACHE_TTL_SECONDS = 300;
 
 /**
  * Workspace-scoped singleton JSONB row (field-config / module-preferences).
@@ -19,12 +22,24 @@ export function createWorkspaceSingletonJsonRepo(options: {
   jsonColumn: 'config' | 'preferences';
 }) {
   const { table, jsonColumn } = options;
+  const tableName = getTableName(table);
+  const cacheKey = (sub: string) => redisKeys.setupSingleton(sub, tableName, jsonColumn);
 
   async function getByWorkspace(
     workspaceSubdomain: string,
   ): Promise<Record<string, unknown> | null> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    return withTenant(subdomain, async (tx) => {
+    const key = cacheKey(subdomain);
+    const cached = await redisGet(key);
+    if (cached) {
+      try {
+        return JSON.parse(cached) as Record<string, unknown>;
+      } catch {
+        // Fall through on JSON parse error
+      }
+    }
+
+    const result = await withTenantRead(subdomain, async (tx) => {
       const rows = await tx
         .select({
           [jsonColumn]: table[jsonColumn],
@@ -38,6 +53,11 @@ export function createWorkspaceSingletonJsonRepo(options: {
         ? (value as Record<string, unknown>)
         : null;
     });
+
+    if (result) {
+      await redisSet(key, JSON.stringify(result), SETUP_SINGLETON_CACHE_TTL_SECONDS);
+    }
+    return result;
   }
 
   async function getByWorkspaces(
@@ -94,6 +114,7 @@ export function createWorkspaceSingletonJsonRepo(options: {
           set: { [jsonColumn]: json, updatedAt: now } as never,
         });
     });
+    await redisDel(cacheKey(subdomain));
   }
 
   async function listAllByWorkspace(workspaceSubdomain: string) {
@@ -131,6 +152,7 @@ export function createWorkspaceSingletonJsonRepo(options: {
         updatedAt: now,
       } as never);
     });
+    await redisDel(cacheKey(subdomain));
   }
 
   return { getByWorkspace, getByWorkspaces, upsert, listAllByWorkspace, replaceForWorkspace };

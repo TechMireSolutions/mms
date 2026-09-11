@@ -1,118 +1,54 @@
 import { randomBytes } from 'node:crypto';
 import {
   type Workspace,
-  type PublicWorkspaceSummary,
-  type PlatformWorkspaceRow,
-  type BrandingSettings,
-  DEFAULT_USERS_SETTINGS,
   SYSTEM_MODULES,
-  mergeBrandingSettings,
   normalizeUserModulePreferences,
   slugifySubdomain,
   isValidSubdomain,
-  isInstitutionSetupComplete,
   isWorkspaceEnabled,
-  toPublicBranding,
 } from '@mms/shared';
 import {
   purgeTenantDataBySubdomain,
   runInTransaction,
 } from '../db/database.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
+import { redisGet, redisSet, redisDel, redisKeys } from '../lib/redis.js';
 import {
   deleteWorkspaceRow,
   findWorkspaceRowBySubdomain,
-  getWorkspaceBranding,
-  getWorkspaceWithBranding,
   getWorkspaceGlobalSettings,
   getWorkspaceGrantedModulesRepo,
   insertWorkspaceRow,
-  listWorkspaceRowsWithBranding,
-  updateWorkspaceBrandingRow,
   updateWorkspaceEnabledRow,
   updateWorkspaceGrantedAndEnabledModulesRepo,
-  upsertWorkspaceBranding as upsertWorkspaceBrandingRepo,
   workspaceSubdomainExists,
 } from '../db/repositories/workspaceRepository.js';
 import {
   getUserModulePreferencesByWorkspace,
-  getUserModulePreferencesByWorkspaces,
   upsertUserModulePreferences,
 } from '../db/repositories/userModulePreferencesRepository.js';
 
-/** Public branding for a workspace subdomain (login shell, registry cards). */
-export async function fetchPublicBrandingForSubdomain(subdomain: string) {
-  const branding = await getWorkspaceBranding(subdomain);
-  return toPublicBranding(branding ? branding : mergeBrandingSettings(null));
-}
+export {
+  fetchPublicBrandingForSubdomain,
+  getWorkspaceWithPublicBranding,
+  getWorkspaceInstitutionSetupStatus,
+  listPublicWorkspaces,
+  listPlatformWorkspaces,
+  syncWorkspaceFromBranding,
+  upsertWorkspaceBranding,
+} from './workspacePresentationService.js';
 
-/** Fetch workspace summary and public branding together in a single DB query. */
-export async function getWorkspaceWithPublicBranding(subdomain: string) {
-  const normalized = normalizeSubdomainInput(subdomain);
-  const data = await getWorkspaceWithBranding(normalized);
-  if (!data) return null;
-  const branding = toPublicBranding(data.branding ? data.branding : mergeBrandingSettings(null));
-  return {
-    workspace: {
-      subdomain: data.workspace.subdomain,
-      madrasaName: branding.madrasaName || data.workspace.madrasaName,
-      tagline: branding.tagline || data.workspace.tagline,
-      enabled: isWorkspaceEnabled(data.workspace),
-    },
-    branding,
-  };
-}
-
-/** Workspace-wide setup state derived from authoritative persisted branding. */
-export async function getWorkspaceInstitutionSetupStatus(subdomain: string): Promise<boolean> {
-  const branding = await getWorkspaceBranding(normalizeSubdomainInput(subdomain));
-  return isInstitutionSetupComplete(branding);
-}
+const WORKSPACE_CACHE_TTL_SECONDS = 300;
+const workspaceCacheKey = (sub: string) => redisKeys.workspace(sub);
 
 export function normalizeSubdomainInput(value: string): string {
   return slugifySubdomain(value);
 }
 
-/** All registered workspaces for apex picker (active only; public name from branding). */
-export async function listPublicWorkspaces(): Promise<PublicWorkspaceSummary[]> {
-  const rows = await listWorkspaceRowsWithBranding();
-  const active = rows.filter(({ workspace }) => isWorkspaceEnabled(workspace));
-  return active
-    .map(({ workspace, branding }) => {
-      const publicBranding = toPublicBranding(branding);
-      const logoUrl = publicBranding.logoUrl?.trim();
-      return {
-        subdomain: workspace.subdomain,
-        madrasaName: publicBranding.madrasaName || workspace.madrasaName,
-        tagline: publicBranding.tagline || workspace.tagline,
-        logoUrl: logoUrl || undefined,
-      };
-    })
-    .sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
-}
-
-/** All workspaces for platform super-user console (includes disabled). */
-export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> {
-  const rows = await listWorkspaceRowsWithBranding();
-  const subdomains = rows.map(({ workspace }) => workspace.subdomain);
-  const prefsBySubdomain = await getUserModulePreferencesByWorkspaces(subdomains);
-
-  const summaries = rows.map(({ workspace, branding }) => {
-    const publicBranding = toPublicBranding(branding);
-    const rawPrefs = prefsBySubdomain.get(workspace.subdomain.toLowerCase()) ?? null;
-    const prefs = normalizeUserModulePreferences(rawPrefs);
-    const logoUrl = publicBranding.logoUrl?.trim();
-    return {
-      subdomain: workspace.subdomain,
-      madrasaName: publicBranding.madrasaName || workspace.madrasaName,
-      tagline: publicBranding.tagline || workspace.tagline,
-      logoUrl: logoUrl || undefined,
-      enabled: isWorkspaceEnabled(workspace),
-      createdAt: workspace.createdAt,
-      requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
-    };
-  });
-  return summaries.sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
+export async function invalidateWorkspaceCache(subdomain: string): Promise<void> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  if (!normalized) return;
+  await redisDel(workspaceCacheKey(normalized));
 }
 
 /** Permanently removes a workspace registry entry and all tenant-scoped data. */
@@ -132,12 +68,14 @@ export async function setWorkspaceEnabled(
   enabled: boolean,
 ): Promise<Workspace | null> {
   const normalized = normalizeSubdomainInput(subdomain);
-  return runInTransaction(async () => {
+  const result = await runInTransaction(async () => {
     const ws = await getWorkspaceBySubdomain(normalized);
     if (!ws) return null;
     await updateWorkspaceEnabledRow(normalized, enabled);
     return { ...ws, enabled };
   });
+  await invalidateWorkspaceCache(normalized);
+  return result;
 }
 
 export async function setWorkspaceEmailVerification(
@@ -174,7 +112,22 @@ export async function assertWorkspaceActive(subdomain: string): Promise<Workspac
 
 export async function getWorkspaceBySubdomain(subdomain: string): Promise<Workspace | null> {
   const normalized = normalizeSubdomainInput(subdomain);
-  return findWorkspaceRowBySubdomain(normalized);
+  if (!normalized) return null;
+  const key = workspaceCacheKey(normalized);
+  const cached = await redisGet(key);
+  if (cached) {
+    try {
+      return JSON.parse(cached) as Workspace;
+    } catch {
+      // Fall through on JSON parse error
+    }
+  }
+
+  const workspace = await findWorkspaceRowBySubdomain(normalized);
+  if (workspace) {
+    await redisSet(key, JSON.stringify(workspace), WORKSPACE_CACHE_TTL_SECONDS);
+  }
+  return workspace;
 }
 
 /** Resolves workspace for the active request tenant only — never falls back on apex. */
@@ -201,24 +154,6 @@ export async function assertSubdomainAvailable(subdomain: string): Promise<void>
       statusCode: 409,
     });
   }
-}
-
-/** Keeps the global workspace registry in sync with saved branding name/tagline. */
-export async function syncWorkspaceFromBranding(
-  subdomain: string,
-  branding: Pick<BrandingSettings, 'madrasaName' | 'tagline'>,
-): Promise<void> {
-  const normalized = normalizeSubdomainInput(subdomain);
-  await updateWorkspaceBrandingRow(normalized, branding);
-}
-
-/** Write the full BrandingSettings into the workspaces typed columns. */
-export async function upsertWorkspaceBranding(
-  subdomain: string,
-  branding: BrandingSettings,
-): Promise<void> {
-  const normalized = normalizeSubdomainInput(subdomain);
-  await upsertWorkspaceBrandingRepo(normalized, branding);
 }
 
 export async function createWorkspace(workspaceInput: {
@@ -313,5 +248,6 @@ export async function updateWorkspaceModules(
   }
 
   await updateWorkspaceGrantedAndEnabledModulesRepo(normalized, grantedModules, enabledModules);
+  await invalidateWorkspaceCache(normalized);
   return { modules };
 }

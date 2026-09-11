@@ -13,10 +13,17 @@ import {
   enrollmentsWidgetQueryFromWidget,
   normalizeEnrollmentsReportComparisonQuery,
 } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient, apiContract } from '@/lib/api';
 import { invalidateEnrollmentsQueries } from '@/tenant/features/enrollments/hooks/invalidateEnrollmentsQueries';
+
+export function enrollmentsCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<EnrollmentsCommandMetricsSnapshot>({
+    moduleId: ENROLLMENTS_MODULE_MANIFEST.moduleId,
+    apiPath: ENROLLMENTS_MODULE_MANIFEST.restBasePath,
+  });
+}
 
 export const ENROLLMENTS_QUERY_KEY = ['enrollments', 'list'] as const;
 export const ENROLLMENTS_METRICS_QUERY_KEY = ['enrollments', 'metrics'] as const;

@@ -23,13 +23,15 @@ export {
   useObligationsDistributionsCollection,
   useObligationsCollections,
   useObligationsCollectionsCollection,
+  obligationsCommandMetricsQueryOptions,
   useObligationsMetrics,
   useObligationsReportAggregates,
   useObligationsMutations,
 } from '@/tenant/features/obligations/hooks/useObligationsApi';
 export { invalidateObligationsQueries } from '@/tenant/features/obligations/hooks/invalidateObligationsQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  obligationsCollectionsListQueryOptions,
   useObligationsContractCollections,
   useObligationsContractTypes,
   useObligationsContractMujtahids,

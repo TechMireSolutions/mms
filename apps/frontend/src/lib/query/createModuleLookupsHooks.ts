@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { STATIC_LOOKUP_STALE_TIME } from "@/lib/queryClient";
 
 export interface CreateModuleLookupsHooksOptions<
   TMap extends object,
@@ -32,8 +33,8 @@ export function createModuleLookupsHooks<
       // TanStack Query NonFunctionGuard cannot be proven for generic TMap (plain object at runtime).
       // @ts-expect-error generic placeholderData vs NonFunctionGuard<TMap>
       placeholderData: defaults(),
-      staleTime: 5 * 60_000,
-      gcTime: 10 * 60_000,
+      staleTime: STATIC_LOOKUP_STALE_TIME,
+      gcTime: 60 * 60_000,
     });
   }
 

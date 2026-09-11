@@ -203,7 +203,7 @@ export const FINANCE_MODULE_MANIFEST = {
     bulkActions: ['delete', 'status', 'receipts', 'export'] as const,
   },
   defaultPageSize: 10,
-  maxPageSize: 500,
+  maxPageSize: 100,
 } as const;
 
 export type FinanceModuleTier = (typeof FINANCE_MODULE_MANIFEST.tiers)[number];

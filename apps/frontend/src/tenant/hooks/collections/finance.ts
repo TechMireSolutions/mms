@@ -12,10 +12,15 @@ export {
   useFinanceReportAggregates,
   useFinanceMutations,
 } from "@/tenant/features/finance/hooks/useFinanceApi";
-export { useFinanceMetrics } from "@/tenant/features/finance/hooks/useFinanceMetrics";
-export { invalidateFinanceQueries } from '@/tenant/features/finance/hooks/invalidateFinanceQueries';
-// Phase 7: contract-driven tsrClient hooks
 export {
+  financeCommandMetricsQueryOptions,
+  useFinanceMetrics,
+} from "@/tenant/features/finance/hooks/useFinanceMetrics";
+export { invalidateFinanceQueries } from '@/tenant/features/finance/hooks/invalidateFinanceQueries';
+// Phase 7: contract-driven tsrClient hooks & query factories
+export {
+  financeInvoicesListQueryOptions,
+  financePaymentsListQueryOptions,
   useFinanceContractInvoices,
   useFinanceContractPayments,
   useFinanceContractMetrics,

@@ -3,7 +3,7 @@ import type { MutateOptions } from '@tanstack/react-query';
 import type { WorkspaceUser, ActivityLog, UsersCommandMetricsSnapshot } from '@mms/shared';
 import { USERS_MODULE_MANIFEST, normalizeWorkspaceUser, type SystemUser } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import {
   ACTIVITY_LOGS_QUERY_KEY,
   USERS_LIST_QUERY_KEY,
@@ -15,6 +15,13 @@ import { tsrClient } from '@/lib/api';
 const USERS_API = USERS_MODULE_MANIFEST.restBasePath;
 
 export { USERS_LIST_QUERY_KEY, USERS_METRICS_QUERY_KEY, ACTIVITY_LOGS_QUERY_KEY };
+
+export function usersCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<UsersCommandMetricsSnapshot>({
+    moduleId: USERS_MODULE_MANIFEST.moduleId,
+    apiPath: USERS_API,
+  });
+}
 
 /** Resolve only the users referenced by another collection. */
 export function useUsersByIds(

@@ -8,6 +8,7 @@ export {
   TEACHERS_METRICS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
   fetchAllTeachersForQuery,
+  teachersCommandMetricsQueryOptions,
   useTeacherMutations,
   useTeachersByIds,
   useTeachersMetrics,
@@ -30,8 +31,9 @@ export {
 } from '@/tenant/features/teachers/hooks/teacherSetupConfigApi';
 export { applyTeachersWorkDrillDown } from '@/tenant/features/teachers/hooks/teachersWorkDrillDown';
 export { invalidateTeachersQueries } from '@/tenant/features/teachers/hooks/invalidateTeachersQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  teachersListQueryOptions,
   useTeachersContractList,
   useTeachersContractGet,
   useTeachersContractCreate,

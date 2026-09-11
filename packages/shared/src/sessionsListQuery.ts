@@ -1,4 +1,5 @@
 import type { Session } from './sessionTypes.js';
+import { LIST_PAGE_MAX_LIMIT } from './apiSchemas.js';
 import { paginateArray } from './utils.js';
 
 export interface SessionsListQuery {
@@ -68,7 +69,7 @@ export function paginateSessions(sessions: Session[], query: SessionsListQuery):
       return leftValue.localeCompare(rightValue) * dir;
     });
   }
-  const result = paginateArray(rows, query.page ?? 1, query.limit ?? 12, 500);
+  const result = paginateArray(rows, query.page ?? 1, query.limit ?? 12, LIST_PAGE_MAX_LIMIT);
   return {
     sessions: result.items,
     total: result.total,

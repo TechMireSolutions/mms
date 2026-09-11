@@ -6,6 +6,8 @@ import type { User } from '@mms/shared';
 import { canReadCollection, canWriteCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
+import { getRequestTenant } from './tenantContext.js';
+import { redisGet, redisSet, redisKeys } from './redis.js';
 import {
   entityResolveBodySchema,
   widgetAggregatesBodySchema,
@@ -13,6 +15,8 @@ import {
 } from '../validation/commonSchemas.js';
 
 type WidgetQuery = z.infer<typeof widgetQuerySchema>;
+
+const METRICS_CACHE_TTL_SECONDS = 60;
 
 export interface MetricsRouteOptions {
   path?: string; // defaults to '/metrics'
@@ -22,7 +26,7 @@ export interface MetricsRouteOptions {
 }
 
 /**
- * Registers a standard metrics endpoint with RBAC checks and error handling.
+ * Registers a standard metrics endpoint with RBAC checks, Redis caching, and error handling.
  */
 export function registerMetricsRoute(
   fastify: FastifyInstance,
@@ -33,8 +37,25 @@ export function registerMetricsRoute(
   fastify.get(path, async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, collection)) return sendForbidden(reply);
+
+    const tenant = getRequestTenant()?.trim().toLowerCase();
+    const cacheKey = tenant ? redisKeys.metrics(tenant, collection) : null;
+    if (cacheKey) {
+      const cached = await redisGet(cacheKey);
+      if (cached) {
+        try {
+          return reply.send({ metrics: JSON.parse(cached) });
+        } catch {
+          // Recompute on JSON parse failure
+        }
+      }
+    }
+
     try {
       const metrics = await loadMetricsFn(request);
+      if (cacheKey && metrics) {
+        await redisSet(cacheKey, JSON.stringify(metrics), METRICS_CACHE_TTL_SECONDS);
+      }
       return reply.send({ metrics });
     } catch {
       return sendDatabaseError(reply, `Failed to load ${errorMessagePrefix} metrics`);
@@ -46,9 +67,7 @@ export interface CountRouteOptions {
   path?: string;
   collection: string;
   /** Prefer SQL/count helpers — avoids loading every row. */
-  loadCountFn?: () => Promise<number>;
-  /** Fallback when loadCountFn is omitted (loads full list). */
-  loadAllFn?: () => Promise<unknown[]>;
+  loadCountFn: () => Promise<number>;
   errorMessagePrefix: string;
 }
 
@@ -59,7 +78,7 @@ export function registerCountRoute(
   fastify: FastifyInstance,
   options: CountRouteOptions,
 ): void {
-  const { path = '/count', collection, loadCountFn, loadAllFn, errorMessagePrefix } = options;
+  const { path = '/count', collection, loadCountFn, errorMessagePrefix } = options;
 
   fastify.get(
     path,
@@ -74,15 +93,8 @@ export function registerCountRoute(
       const user = request.user as User;
       if (!canReadCollection(user, collection)) return sendForbidden(reply);
       try {
-        if (loadCountFn) {
-          const count = await loadCountFn();
-          return reply.send({ count });
-        }
-        if (!loadAllFn) {
-          return sendDatabaseError(reply, `Failed to count ${errorMessagePrefix}`);
-        }
-        const items = await loadAllFn();
-        return reply.send({ count: items.length });
+        const count = await loadCountFn();
+        return reply.send({ count });
       } catch {
         return sendDatabaseError(reply, `Failed to count ${errorMessagePrefix}`);
       }

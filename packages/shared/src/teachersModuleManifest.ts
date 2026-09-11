@@ -108,7 +108,7 @@ export const TEACHERS_MODULE_MANIFEST = {
   exportChunkSize: 100,
   /** Default Work directory page size when using server pagination (globle1 §10). */
   defaultPageSize: 50,
-  maxPageSize: 500,
+  maxPageSize: 100,
 } as const;
 
 export type TeachersModuleTier = (typeof TEACHERS_MODULE_MANIFEST.tiers)[number];

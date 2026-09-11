@@ -111,7 +111,7 @@ export const CONTACTS_MODULE_MANIFEST = {
   exportChunkSize: 100,
   /** Default Work directory page size when using server pagination. */
   defaultPageSize: 50,
-  maxPageSize: 500,
+  maxPageSize: 100,
   /** Contact count above which duplicate scan runs as a background job. */
   duplicateScanAsyncMinContacts: 500,
 } as const;

@@ -15,6 +15,7 @@ export {
   fetchAllTeachersForQuery,
   useTeacherLinkedContactIds,
   useTeacherNextEmployeeId,
+  teachersCommandMetricsQueryOptions,
   useTeachersMetrics,
   useTeachersByIds,
   useTeachersWidgetAggregates,

@@ -9,12 +9,12 @@ describe('enrollmentsListQuery', () => {
   it('retains session and class filters in the API query schema', () => {
     expect(enrollmentsListQuerySchema.parse({
       page: '1',
-      limit: '500',
+      limit: '100',
       sessionId: 'ses-1',
       classId: 'cls-1',
     })).toEqual({
       page: 1,
-      limit: 500,
+      limit: 100,
       sessionId: 'ses-1',
       classId: 'cls-1',
     });

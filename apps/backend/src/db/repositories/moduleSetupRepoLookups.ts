@@ -1,8 +1,11 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, getTableName } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
+import { redisGet, redisSet, redisDelPattern, redisKeys } from '../../lib/redis.js';
 
 type WorkspaceCol = PgColumn;
+
+const SETUP_LOOKUPS_CACHE_TTL_SECONDS = 300;
 
 export interface ModuleLookupRowInput {
   id: string;
@@ -16,8 +19,8 @@ export interface ModuleLookupRowInput {
 export function createModuleLookupsRepo(options: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   table: PgTable & Record<string, any> & {
-    workspaceSubdomain: WorkspaceCol;
     id: PgColumn;
+    workspaceSubdomain: WorkspaceCol;
     kind: PgColumn;
     label: PgColumn;
     meta: PgColumn;
@@ -26,10 +29,23 @@ export function createModuleLookupsRepo(options: {
   };
 }) {
   const { table } = options;
+  const tableName = getTableName(table);
+  const allCacheKey = (sub: string) => redisKeys.setupLookupsAll(sub, tableName);
+  const kindCacheKey = (sub: string, kind: string) => redisKeys.setupLookupsKind(sub, tableName, kind);
 
   async function listByWorkspace(workspaceSubdomain: string) {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    return withTenant(subdomain, async (tx) => {
+    const key = allCacheKey(subdomain);
+    const cached = await redisGet(key);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // Fall through on JSON parse error
+      }
+    }
+
+    const rows = await withTenantRead(subdomain, async (tx) => {
       return tx
         .select({
           id: table.id,
@@ -44,11 +60,26 @@ export function createModuleLookupsRepo(options: {
         .where(eq(table.workspaceSubdomain, subdomain))
         .orderBy(asc(table.kind), asc(table.sortOrder));
     });
+
+    if (rows) {
+      await redisSet(key, JSON.stringify(rows), SETUP_LOOKUPS_CACHE_TTL_SECONDS);
+    }
+    return rows;
   }
 
   async function listByKind(workspaceSubdomain: string, kind: string) {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
-    return withTenant(subdomain, async (tx) => {
+    const key = kindCacheKey(subdomain, kind);
+    const cached = await redisGet(key);
+    if (cached) {
+      try {
+        return JSON.parse(cached);
+      } catch {
+        // Fall through on JSON parse error
+      }
+    }
+
+    const rows = await withTenantRead(subdomain, async (tx) => {
       return tx
         .select({
           id: table.id,
@@ -68,6 +99,11 @@ export function createModuleLookupsRepo(options: {
         )
         .orderBy(asc(table.sortOrder));
     });
+
+    if (rows) {
+      await redisSet(key, JSON.stringify(rows), SETUP_LOOKUPS_CACHE_TTL_SECONDS);
+    }
+    return rows;
   }
 
   async function replaceForKind(
@@ -99,6 +135,7 @@ export function createModuleLookupsRepo(options: {
         })) as never,
       );
     });
+    await redisDelPattern(redisKeys.setupPattern(subdomain, tableName));
   }
 
   async function listAllByWorkspace(workspaceSubdomain: string) {
@@ -126,6 +163,7 @@ export function createModuleLookupsRepo(options: {
         })) as never,
       );
     });
+    await redisDelPattern(redisKeys.setupPattern(subdomain, tableName));
   }
 
   return {

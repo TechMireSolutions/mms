@@ -4,6 +4,8 @@ import {
   buildBucketedSeries,
   type Account,
   type JournalEntry,
+  FINANCE_MODULE_MANIFEST,
+  ACCOUNTING_MODULE_MANIFEST,
 } from "@mms/shared";
 import { useFinanceInvoicesPaginated } from "@/tenant/hooks/collections/finance";
 import { useAccountingEntriesPaginated, useAccountingAccountsPaginated } from "@/tenant/hooks/collections/accounting";
@@ -15,9 +17,9 @@ export interface RevenuePoint {
 }
 
 export function useRevenueChartData() {
-  const invoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
-  const entriesQueryResult = useAccountingEntriesPaginated({ page: 1, limit: 500 }).data;
-  const accountsQueryResult = useAccountingAccountsPaginated({ page: 1, limit: 500 }).data;
+  const invoices = useFinanceInvoicesPaginated({ page: 1, limit: FINANCE_MODULE_MANIFEST.maxPageSize }).data?.invoices ?? [];
+  const entriesQueryResult = useAccountingEntriesPaginated({ page: 1, limit: ACCOUNTING_MODULE_MANIFEST.maxPageSize }).data;
+  const accountsQueryResult = useAccountingAccountsPaginated({ page: 1, limit: ACCOUNTING_MODULE_MANIFEST.maxPageSize }).data;
   const entriesEnvelope = entriesQueryResult as { body?: { entries?: JournalEntry[] }; entries?: JournalEntry[] } | null;
   const accountsEnvelope = accountsQueryResult as { body?: { accounts?: Account[] }; accounts?: Account[] } | null;
   const entries: JournalEntry[] = entriesEnvelope?.body?.entries ?? entriesEnvelope?.entries ?? [];

@@ -10,13 +10,20 @@ import type {
   FiscalYear,
 } from '@mms/shared';
 import { ACCOUNTING_MODULE_MANIFEST } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient } from '@/lib/api';
 import { apiJson } from '@/lib/apiClient';
 
 export const ACCOUNTING_METRICS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'metrics'] as const;
 export const ACCOUNTING_REPORT_AGGREGATES_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'report-aggregates'] as const;
+
+export function accountingCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<AccountingCommandMetricsSnapshot>({
+    moduleId: ACCOUNTING_MODULE_MANIFEST.moduleId,
+    apiPath: ACCOUNTING_MODULE_MANIFEST.restBasePath,
+  });
+}
 
 export const ACCOUNTING_ACCOUNTS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'accounts', 'list'] as const;
 export const ACCOUNTING_ENTRIES_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'entries', 'list'] as const;

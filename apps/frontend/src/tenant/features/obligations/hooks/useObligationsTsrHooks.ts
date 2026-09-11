@@ -3,8 +3,8 @@
  * Uses tsrClient (@ts-rest/react-query v5) for full contract schema enforcement.
  * Mutations are also available via useObligationsMutations (tsrClient-based).
  */
-import { tsrClient } from '@/lib/api';
-import { useQueryClient } from '@tanstack/react-query';
+import { apiContract, tsrClient } from '@/lib/api';
+import { queryOptions, useQueryClient } from '@tanstack/react-query';
 import { invalidateObligationsQueries } from '@/tenant/features/obligations/hooks/invalidateObligationsQueries';
 import {
   OBLIGATIONS_TYPES_QUERY_KEY,
@@ -14,6 +14,25 @@ import {
   OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
   OBLIGATIONS_COLLECTIONS_QUERY_KEY,
 } from '@/tenant/features/obligations/hooks/obligationsQueryKeys';
+
+export function obligationsCollectionsListQueryOptions(query: Record<string, unknown> = {}) {
+  return queryOptions({
+    queryKey: [...OBLIGATIONS_COLLECTIONS_QUERY_KEY, 'contract', query] as const,
+    queryFn: async ({ signal }) => {
+      const response = await apiContract.obligations.listCollections({
+        query: query as Record<string, string>,
+        signal,
+        fetchOptions: { signal },
+      });
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch obligations collections');
+      }
+      return response.body;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 15_000,
+  });
+}
 
 export function useObligationsContractCollections(query: Record<string, unknown>, enabled = true) {
   // @ts-expect-error - TS union discrimination limit with ts-rest

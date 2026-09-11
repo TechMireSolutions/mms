@@ -1,10 +1,29 @@
 /**
  * Phase 7: Contract-driven query/mutation hooks for the Teachers module.
  */
-import { tsrClient } from '@/lib/api';
-import { useQueryClient } from '@tanstack/react-query';
+import { apiContract, tsrClient } from '@/lib/api';
+import { queryOptions, useQueryClient } from '@tanstack/react-query';
 import { TEACHERS_QUERY_KEY } from '@/tenant/features/teachers/hooks/teachersQueryKeys';
 import { invalidateTeachersQueries } from '@/tenant/features/teachers/hooks/invalidateTeachersQueries';
+
+export function teachersListQueryOptions(query: Record<string, unknown> = {}) {
+  return queryOptions({
+    queryKey: [...TEACHERS_QUERY_KEY, 'contract-list', query] as const,
+    queryFn: async ({ signal }) => {
+      const response = await apiContract.teachers.list({
+        query: query as Record<string, string>,
+        signal,
+        fetchOptions: { signal },
+      });
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch teachers');
+      }
+      return response.body;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 15_000,
+  });
+}
 
 /** Contract-backed paginated list. */
 export function useTeachersContractList(query: Record<string, unknown>, enabled = true) {

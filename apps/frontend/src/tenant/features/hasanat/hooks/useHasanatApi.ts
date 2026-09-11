@@ -9,9 +9,16 @@ import type {
   HasanatReportComparisonQuery,
 } from '@mms/shared';
 import { HASANAT_MODULE_MANIFEST, normalizeHasanatReportComparisonQuery } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient } from '@/lib/api';
+
+export function hasanatCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<HasanatCommandMetricsSnapshot>({
+    moduleId: HASANAT_MODULE_MANIFEST.moduleId,
+    apiPath: HASANAT_MODULE_MANIFEST.restBasePath,
+  });
+}
 
 
 

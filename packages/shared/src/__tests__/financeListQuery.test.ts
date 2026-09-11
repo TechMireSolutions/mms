@@ -38,6 +38,6 @@ describe('finance list pagination', () => {
   it('filters payments and clamps page size', () => {
     const result = paginateFinancePayments([payment], { search: 'installment', limit: 999 });
     expect(result.payments).toEqual([payment]);
-    expect(result.limit).toBe(500);
+    expect(result.limit).toBe(100);
   });
 });

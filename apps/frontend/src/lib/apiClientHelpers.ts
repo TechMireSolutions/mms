@@ -96,6 +96,24 @@ export function sanitizeColumnPreferencesBody(path: string, init: RequestInit): 
 
 export async function executeFetchWithTimeout(targetPath: string, baseInit: RequestInit): Promise<Response> {
   const timeoutMs = (baseInit as { timeout?: number }).timeout ?? 15000;
+
+  if (
+    typeof AbortSignal !== 'undefined' &&
+    typeof AbortSignal.any === 'function' &&
+    typeof AbortSignal.timeout === 'function'
+  ) {
+    const timeoutSignal = AbortSignal.timeout(timeoutMs);
+    const combinedSignal = baseInit.signal
+      ? AbortSignal.any([baseInit.signal, timeoutSignal])
+      : timeoutSignal;
+
+    return fetch(resolveApiUrl(targetPath), {
+      ...baseInit,
+      signal: combinedSignal,
+    });
+  }
+
+  // Fallback for test runners or environments without AbortSignal.any
   const controller = new AbortController();
   const timeoutId = setTimeout(() => {
     controller.abort(new DOMException('Request timeout', 'TimeoutError'));

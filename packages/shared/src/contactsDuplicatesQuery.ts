@@ -1,4 +1,5 @@
 import type { ContactDuplicatePair } from './contactDuplicateUtils.js';
+import { LIST_PAGE_MAX_LIMIT } from './apiSchemas.js';
 import { paginateArray } from './utils.js';
 
 export interface ContactsDuplicatePairsPageResult {
@@ -15,7 +16,7 @@ export function paginateContactDuplicatePairs(
   page = 1,
   limit = 50,
 ): ContactsDuplicatePairsPageResult {
-  const result = paginateArray(pairs, page, limit, 200);
+  const result = paginateArray(pairs, page, limit, LIST_PAGE_MAX_LIMIT);
   return {
     pairs: result.items,
     total: result.total,

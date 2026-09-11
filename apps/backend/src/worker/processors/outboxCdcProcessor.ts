@@ -1,7 +1,7 @@
 import { and, isNull, asc, inArray } from 'drizzle-orm';
 import { activeDb } from '../../db/dbConnection.js';
 import { outboxEvents } from '../../db/schema/outboxEvents.js';
-import { redisGet, redisSet, redisDelPattern } from '../../lib/redis.js';
+import { redisGet, redisSet, redisDelPattern, redisKeys } from '../../lib/redis.js';
 import { logger } from '../../lib/logger.js';
 import type { SearchIndexAdapter } from '../adapters/searchIndexAdapter.js';
 import type { SoftDeletedPayload, RestoredPayload } from '../../services/outboxEventService.js';
@@ -12,7 +12,7 @@ const BATCH_SIZE = 100;
  * Pattern: `mms:{tenantId}:search:version:{entityType}:{entityId}`
  */
 function versionKey(tenantId: string, entityType: string, entityId: string): string {
-  return `mms:${tenantId}:search:version:${entityType}:${entityId}`;
+  return redisKeys.searchVersion(tenantId, entityType, entityId);
 }
 
 /**
@@ -20,7 +20,7 @@ function versionKey(tenantId: string, entityType: string, entityId: string): str
  * Evicts list pages, single-record caches, and KPI aggregates.
  */
 function cacheEvictPattern(tenantId: string, entityType: string): string {
-  return `mms:${tenantId}:${entityType}:*`;
+  return redisKeys.entityPattern(tenantId, entityType);
 }
 
 /**

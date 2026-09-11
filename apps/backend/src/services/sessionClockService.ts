@@ -2,6 +2,7 @@ import { redisDel, redisGet, redisSet } from '../lib/redis.js';
 import { revokeToken } from './session.service.js';
 
 const SESSION_ACTIVITY_PREFIX = 'session:idle:';
+const SESSION_CLOCK_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days: retain clock record across idle windows until explicit logout/expiry
 
 /**
  * In-process touch throttle: avoids a Redis write on every authenticated request.
@@ -78,7 +79,7 @@ export async function touchSession(
     a: now,
     s: existing?.s ?? now, // first activity establishes the session start
   };
-  const ttlSeconds = Math.max(60, Math.ceil(idleMs / 1000));
+  const ttlSeconds = Math.max(SESSION_CLOCK_TTL_SECONDS, Math.ceil(idleMs / 1000));
   await redisSet(activityKey(scope), JSON.stringify(record), ttlSeconds);
 }
 

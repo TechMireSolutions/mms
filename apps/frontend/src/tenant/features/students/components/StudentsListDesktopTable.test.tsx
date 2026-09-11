@@ -91,4 +91,22 @@ describe("StudentsListDesktopTable Component", () => {
     expect(html).toContain("0 Students");
     expect(html).not.toContain("0 selected");
   });
+
+  it("renders virtualized container when paginatedStudents exceed 30 items", () => {
+    const manyStudents = Array.from({ length: 35 }, (_, index) => ({
+      ...mockStudent,
+      id: `student-${index + 1}`,
+      name: `Student ${index + 1}`,
+    }));
+    const html = renderToStaticMarkup(
+      <StudentsListDesktopTable
+        {...defaultProps}
+        paginatedStudents={manyStudents}
+        selectedIds={[]}
+      />,
+    );
+
+    expect(html).toContain("max-h-150 overflow-y-auto");
+    expect(html).toContain("35 Students");
+  });
 });

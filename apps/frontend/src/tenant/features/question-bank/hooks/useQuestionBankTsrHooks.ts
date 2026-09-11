@@ -1,14 +1,41 @@
 /**
  * Phase 7: Contract-driven query/mutation hooks for the Question Bank module.
  */
-import { tsrClient } from '@/lib/api';
-import { useQueryClient } from '@tanstack/react-query';
+import { apiContract, tsrClient } from '@/lib/api';
+import { queryOptions, useQueryClient } from '@tanstack/react-query';
 import {
   QUESTION_BANK_QUESTIONS_QUERY_KEY,
   QUESTION_BANK_TESTS_QUERY_KEY,
   QUESTION_BANK_RESULTS_QUERY_KEY,
 } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
 import { invalidateQuestionBankQueries } from '@/tenant/features/question-bank/hooks/invalidateQuestionBankQueries';
+
+export function questionBankQuestionsListQueryOptions(
+  query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    includeDeleted?: boolean;
+    [key: string]: unknown;
+  } = {},
+) {
+  return queryOptions({
+    queryKey: [...QUESTION_BANK_QUESTIONS_QUERY_KEY, 'contract', query] as const,
+    queryFn: async ({ signal }) => {
+      const response = await apiContract.questionBank.listQuestions({
+        query: query as Record<string, string>,
+        signal,
+        fetchOptions: { signal },
+      });
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch question bank questions');
+      }
+      return response.body;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 15_000,
+  });
+}
 
 export function useQuestionBankContractList(query: Record<string, unknown> = {}, enabled = true) {
   // @ts-expect-error - TS union discrimination limit with ts-rest

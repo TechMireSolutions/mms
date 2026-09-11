@@ -1,6 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, beforeEach } from 'vitest';
+import { resetSessionRefreshStateForTests } from '@/lib/apiClient';
 
 describe('apiClient', () => {
+  beforeEach(() => {
+    resetSessionRefreshStateForTests();
+  });
   it('uses credentials include on fetch wrapper', async () => {
     const original = globalThis.fetch;
     let seenInit: RequestInit | undefined;

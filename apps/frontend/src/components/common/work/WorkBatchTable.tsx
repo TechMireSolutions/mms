@@ -1,12 +1,12 @@
 import React, { type JSX } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Table, TableBody, TableCell } from "@/components/ui/table";
+import { AnimatePresence } from "framer-motion";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { Table, TableBody } from "@/components/ui/table";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
-import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
+import { WorkBatchTableRow } from "./WorkBatchTableRow";
 
 import { useListRowMotion } from "@/hooks/useListRowMotion";
-import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import { cn } from "@/lib/utils";
 
 export interface WorkBatchTableColumn<TData> {
@@ -77,6 +77,9 @@ export interface WorkBatchTableProps<TData extends { id: string | number }> {
   isLoading?: boolean;
 
   onRowClick?: (row: TData) => void;
+  onRowHover?: (row: TData) => void;
+  virtualize?: boolean;
+  maxHeightClassName?: string;
   rowClassName?: (row: TData) => string | undefined;
   className?: string;
   tableBodyClassName?: string;
@@ -105,12 +108,16 @@ export function WorkBatchTable<TData extends { id: string | number }>({
   emptyState,
   isLoading,
   onRowClick,
+  onRowHover,
+  virtualize,
+  maxHeightClassName = "max-h-150",
   rowClassName,
   className,
   tableBodyClassName,
   containerClassName,
 }: WorkBatchTableProps<TData>): JSX.Element {
   const rowMotion = useListRowMotion({ layout: "position", fade: true, duration: 0.1 });
+  const containerRef = React.useRef<HTMLDivElement>(null);
 
   const selectedSet = React.useMemo(() => {
     if (!selection) return new Set<string | number>();
@@ -123,6 +130,19 @@ export function WorkBatchTable<TData extends { id: string | number }>({
     if (!optimisticDeletedIds || optimisticDeletedIds.size === 0) return data;
     return data.filter((row) => !optimisticDeletedIds.has(row.id));
   }, [data, optimisticDeletedIds]);
+
+  const isVirtualized = Boolean(virtualize ?? (activeRows.length > 30));
+
+  const rowVirtualizer = useVirtualizer({
+    count: activeRows.length,
+    getScrollElement: () => containerRef.current,
+    estimateSize: () => 52,
+    overscan: 10,
+    enabled: isVirtualized,
+  });
+
+  const virtualItems = isVirtualized ? rowVirtualizer.getVirtualItems() : [];
+  const totalColSpan = columns.length + (selection ? 1 : 0) + (renderRowActions ? 1 : 0);
 
   if (!isLoading && activeRows.length === 0 && emptyState) {
     return <>{emptyState}</>;
@@ -138,7 +158,14 @@ export function WorkBatchTable<TData extends { id: string | number }>({
 
   return (
     <div className={cn("space-y-2", containerClassName)}>
-      <div className={cn("overflow-x-auto", bordered && "rounded-lg border border-border/60 bg-card")}>
+      <div
+        ref={containerRef}
+        className={cn(
+          "overflow-x-auto",
+          isVirtualized && cn(maxHeightClassName, "overflow-y-auto"),
+          bordered && "rounded-lg border border-border/60 bg-card",
+        )}
+      >
         <Table className={cn("table-fixed w-full", className)}>
           {caption ? <caption className="sr-only">{caption}</caption> : null}
           <ModuleWorkTableHeader
@@ -163,73 +190,75 @@ export function WorkBatchTable<TData extends { id: string | number }>({
           />
 
           <TableBody className={cn("divide-y divide-border/50", tableBodyClassName)}>
-            <AnimatePresence initial={false}>
-              {activeRows.map((row, rowIndex) => {
-                const idStr = String(row.id);
-                const isSelected = selectedSet.has(row.id) || selectedSet.has(idStr);
-                const rowAriaLabel = selection?.selectRowAriaLabel
-                  ? selection.selectRowAriaLabel(row)
-                  : `Select row ${idStr}`;
-
-                return (
-                  <motion.tr
-                    key={idStr}
-                    {...rowMotion}
-                    onClick={() => onRowClick?.(row)}
-                    className={cn(
-                      "group border-b border-border/40 transition-colors hover:bg-muted/40",
-                      isSelected && "bg-accent/15",
-                      onRowClick && "cursor-pointer",
-                      rowClassName?.(row),
-                    )}
+            {isVirtualized ? (
+              <>
+                {virtualItems.length > 0 && (
+                  <tr style={{ height: `${virtualItems[0].start}px` }}>
+                    <td colSpan={totalColSpan} className="p-0 border-0" />
+                  </tr>
+                )}
+                {virtualItems.map((virtualRow) => {
+                  const row = activeRows[virtualRow.index];
+                  const isSelected = selectedSet.has(row.id) || selectedSet.has(String(row.id));
+                  return (
+                    <WorkBatchTableRow
+                      key={String(row.id)}
+                      row={row}
+                      rowIndex={virtualRow.index}
+                      isMotion={false}
+                      isSelected={isSelected}
+                      rowMotion={rowMotion}
+                      onRowClick={onRowClick}
+                      onRowHover={onRowHover}
+                      rowClassName={rowClassName}
+                      hasSelection={Boolean(selection)}
+                      onSelectOne={selection?.onSelectOne}
+                      selectRowAriaLabel={selection?.selectRowAriaLabel}
+                      columns={columns}
+                      stickyColumnId={stickyColumnId}
+                      renderRowActions={renderRowActions}
+                    />
+                  );
+                })}
+                {virtualItems.length > 0 && (
+                  <tr
+                    style={{
+                      height: `${
+                        rowVirtualizer.getTotalSize() -
+                        virtualItems[virtualItems.length - 1].end
+                      }px`,
+                    }}
                   >
-                    {/* Selectable Row Checkbox */}
-                    {selection && (
-                      <ModuleTableSelectionCell
-                        checked={isSelected}
-                        onCheckedChange={() => selection.onSelectOne(idStr)}
-                        ariaLabel={rowAriaLabel}
-                        stopPropagation={Boolean(onRowClick)}
-                      />
-                    )}
-
-                    {/* Columns */}
-                    {columns.map((col) => {
-                      const isSticky = stickyColumnId === col.id;
-                      const customCellClass =
-                        typeof col.cellClassName === "function"
-                          ? col.cellClassName(row)
-                          : col.cellClassName;
-
-                      return (
-                        <TableCell
-                          key={col.id}
-                          className={cn(
-                            "px-4 py-3 text-sm text-foreground transition-colors",
-                            isSticky &&
-                              "sticky start-12 z-10 border-e border-border/30",
-                            isSticky ? workTableStickyCellBg(isSelected) : undefined,
-                            customCellClass,
-                          )}
-                        >
-                          {col.render(row, rowIndex)}
-                        </TableCell>
-                      );
-                    })}
-
-                    {/* Actions Menu */}
-                    {renderRowActions && (
-                      <TableCell
-                        className="w-12 min-w-12 px-2 py-3 text-end"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {renderRowActions(row, rowIndex)}
-                      </TableCell>
-                    )}
-                  </motion.tr>
-                );
-              })}
-            </AnimatePresence>
+                    <td colSpan={totalColSpan} className="p-0 border-0" />
+                  </tr>
+                )}
+              </>
+            ) : (
+              <AnimatePresence initial={false}>
+                {activeRows.map((row, rowIndex) => {
+                  const isSelected = selectedSet.has(row.id) || selectedSet.has(String(row.id));
+                  return (
+                    <WorkBatchTableRow
+                      key={String(row.id)}
+                      row={row}
+                      rowIndex={rowIndex}
+                      isMotion={true}
+                      isSelected={isSelected}
+                      rowMotion={rowMotion}
+                      onRowClick={onRowClick}
+                      onRowHover={onRowHover}
+                      rowClassName={rowClassName}
+                      hasSelection={Boolean(selection)}
+                      onSelectOne={selection?.onSelectOne}
+                      selectRowAriaLabel={selection?.selectRowAriaLabel}
+                      columns={columns}
+                      stickyColumnId={stickyColumnId}
+                      renderRowActions={renderRowActions}
+                    />
+                  );
+                })}
+              </AnimatePresence>
+            )}
           </TableBody>
           {tableFooter}
         </Table>

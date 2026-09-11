@@ -6,7 +6,7 @@ import {
   type StudentsCommandMetricsSnapshot,
   studentsWidgetQueryFromWidget,
 } from "@mms/shared";
-import { useServerMetrics } from "@/hooks/useServerMetrics";
+import { serverMetricsQueryOptions, useServerMetrics } from "@/hooks/useServerMetrics";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -15,6 +15,13 @@ import {
   type StudentNextGrNumberParams,
   type StudentsWidgetAggregateWidgetInput,
 } from "@/tenant/features/students/hooks/studentsQueryKeys";
+
+export function studentsCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<StudentsCommandMetricsSnapshot>({
+    moduleId: STUDENTS_MODULE_MANIFEST.moduleId,
+    apiPath: STUDENTS_MODULE_MANIFEST.restBasePath,
+  });
+}
 
 /** Fetches next sequential GR Number based on tenant settings and registration date. */
 export function useStudentNextGrNumber(params: StudentNextGrNumberParams) {

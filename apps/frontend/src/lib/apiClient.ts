@@ -1,6 +1,21 @@
 const JSON_CONTENT_TYPE = 'application/json';
 
 let refreshPromise: Promise<boolean> | null = null;
+let lastRefreshedAt = 0;
+const REFRESH_GRACE_PERIOD_MS = 5000;
+
+export const SESSION_EXPIRED_EVENT = 'mms:session-expired';
+
+export function notifySessionExpired(reason?: string): void {
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent(SESSION_EXPIRED_EVENT, { detail: { reason } }));
+  }
+}
+
+export function resetSessionRefreshStateForTests(): void {
+  refreshPromise = null;
+  lastRefreshedAt = 0;
+}
 
 export interface ApiErrorBody {
   type?: string;
@@ -59,7 +74,6 @@ import {
   API_REFRESH_PATH,
   executeFetchWithTimeout,
   isTenantSessionRequest,
-  resolveApiUrl,
   sanitizeColumnPreferencesBody,
 } from '@/lib/apiClientHelpers';
 
@@ -75,13 +89,24 @@ async function refreshSession(): Promise<boolean> {
       : Math.random().toString(36).substring(2, 15);
     headers.set('X-Request-Id', reqId);
 
-    refreshPromise = fetch(resolveApiUrl(API_REFRESH_PATH), {
+    refreshPromise = executeFetchWithTimeout(API_REFRESH_PATH, {
       method: 'POST',
       credentials: 'include',
       headers,
-    })
-      .then((response) => response.ok)
-      .catch(() => false)
+      timeout: 10000,
+    } as RequestInit)
+      .then((response) => {
+        if (response.ok) {
+          lastRefreshedAt = Date.now();
+          return true;
+        }
+        notifySessionExpired('refresh_failed');
+        return false;
+      })
+      .catch(() => {
+        notifySessionExpired('refresh_failed');
+        return false;
+      })
       .finally(() => {
         refreshPromise = null;
       });
@@ -93,7 +118,11 @@ async function refreshSession(): Promise<boolean> {
 async function isAuthenticationRequired(response: Response): Promise<boolean> {
   if (response.status !== 401) return false;
   const body = await response.clone().json().catch(() => null) as ApiErrorBody | null;
-  return body?.type === 'auth_required';
+  if (body?.type === 'session_idle_expired' || body?.type === 'session_absolute_expired') {
+    notifySessionExpired(body.type);
+    return false;
+  }
+  return true;
 }
 
 function getCsrfCookieValue(): string | null {
@@ -135,8 +164,20 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 
   const response = await executeFetchWithTimeout(path, requestInit);
 
-  if (isTenantSessionRequest(path) && await isAuthenticationRequired(response) && await refreshSession()) {
-    return executeFetchWithTimeout(path, requestInit);
+  if (isTenantSessionRequest(path) && await isAuthenticationRequired(response)) {
+    // If a refresh succeeded moments ago, retry the request immediately without re-refreshing
+    if (Date.now() - lastRefreshedAt < REFRESH_GRACE_PERIOD_MS) {
+      if (requestInit.signal?.aborted) {
+        throw requestInit.signal.reason || new DOMException('The user aborted a request.', 'AbortError');
+      }
+      return executeFetchWithTimeout(path, requestInit);
+    }
+    if (await refreshSession()) {
+      if (requestInit.signal?.aborted) {
+        throw requestInit.signal.reason || new DOMException('The user aborted a request.', 'AbortError');
+      }
+      return executeFetchWithTimeout(path, requestInit);
+    }
   }
 
   return response;

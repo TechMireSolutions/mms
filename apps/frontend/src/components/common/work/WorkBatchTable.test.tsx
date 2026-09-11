@@ -112,4 +112,23 @@ describe("WorkBatchTable", () => {
 
     expect(html).toContain("bg-warning/10");
   });
+
+  it("handles datasets larger than 30 rows with virtualization container styling", () => {
+    const largeDataset: SampleRow[] = Array.from({ length: 40 }, (_, i) => ({
+      id: String(i + 1),
+      name: `Person ${i + 1}`,
+      status: "Active",
+    }));
+
+    const html = renderToStaticMarkup(
+      <TestWrapper>
+        <WorkBatchTable data={largeDataset} columns={columns} />
+      </TestWrapper>,
+    );
+
+    // Container should include max-h-150 and overflow-y-auto when virtualized
+    expect(html).toContain("max-h-150");
+    expect(html).toContain("overflow-y-auto");
+  });
 });
+

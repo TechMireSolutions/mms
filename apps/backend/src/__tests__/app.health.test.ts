@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../db/database.js", () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
   pingDatabase: vi.fn().mockResolvedValue(true),
+  getPoolMetrics: vi.fn().mockReturnValue({ totalCount: 5, idleCount: 4, waitingCount: 0 }),
 }));
 
 import { pingDatabase } from "../db/database.js";
@@ -17,11 +18,14 @@ describe("health routes", () => {
     vi.mocked(pingDatabase).mockResolvedValue(true);
   });
 
-  it("GET /health returns OK", async () => {
+  it("GET /health returns OK and pool metrics", async () => {
     const app = await buildApp();
     const res = await app.inject({ method: "GET", url: "/health" });
     expect(res.statusCode).toBe(200);
-    expect(res.json()).toMatchObject({ status: "OK" });
+    expect(res.json()).toMatchObject({
+      status: "OK",
+      pool: { totalCount: 5, idleCount: 4, waitingCount: 0 },
+    });
     await app.close();
   });
 

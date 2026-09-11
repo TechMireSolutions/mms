@@ -18,9 +18,9 @@ import {
 import { processBackgroundJob } from './processors/jobProcessor.js';
 import { registerDefaultBackgroundJobRunners } from '../services/backgroundJobRunnerService.js';
 import { logger } from '../lib/logger.js';
-import { processOutboxCdcBatch } from './processors/outboxCdcProcessor.js';
 import { defaultSearchAdapter } from './adapters/searchIndexAdapter.js';
 import { purgeExpiredArchivedRecords } from './purgeArchivedRecordsJob.js';
+import { startOutboxCdcListener, type OutboxCdcHandle } from './outboxCdcListener.js';
 
 /** A 'pending' job older than this is assumed to have never been dispatched. */
 const STALE_PENDING_MS = 10 * 60 * 1000;
@@ -71,12 +71,10 @@ export async function cleanupOrphanedJobs(): Promise<void> {
 
 let isRunning = true;
 const activeWorkers: Worker<EnqueuedJobData>[] = [];
-/** NodeJS timer handle for the CDC outbox poller — cleared on shutdown. */
-let cdcPollerTimer: ReturnType<typeof setInterval> | null = null;
+/** Handle for the event-driven outbox CDC listener — closed on shutdown. */
+let cdcListenerHandle: OutboxCdcHandle | null = null;
 /** NodeJS timer handle for the daily retention purge scheduler — cleared on shutdown. */
 let purgeSchedulerTimer: ReturnType<typeof setTimeout> | null = null;
-
-const CDC_POLL_INTERVAL_MS = 5_000;
 
 /**
  * Computes millisecond delay until the next specified UTC hour (default: 02:00 UTC).
@@ -198,14 +196,10 @@ export async function startWorkerDaemon(): Promise<void> {
 
   logger.info('All workers started and listening.');
 
-  // Start the CDC outbox poller (5-second interval, no-op when DB has no rows)
-  cdcPollerTimer = setInterval(() => {
-    processOutboxCdcBatch(defaultSearchAdapter).catch((err) => {
-      logger.error({ err }, '[OutboxCdc] Poll cycle error');
-    });
-  }, CDC_POLL_INTERVAL_MS);
-  cdcPollerTimer.unref?.();
-  logger.info({ intervalMs: CDC_POLL_INTERVAL_MS }, '[OutboxCdc] CDC poller started');
+  // Start the event-driven CDC outbox listener (with 30s fallback poll)
+  cdcListenerHandle = await startOutboxCdcListener(defaultSearchAdapter, {
+    fallbackPollIntervalMs: 30_000,
+  });
 
   // Register the daily retention purge schedule to run at 02:00 UTC
   scheduleNextDailyPurge(activeDb(), 2);
@@ -225,10 +219,10 @@ export async function startWorkerDaemon(): Promise<void> {
     forceExitTimer.unref?.();
 
     try {
-      // Stop CDC poller first so it doesn't fire mid-shutdown
-      if (cdcPollerTimer !== null) {
-        clearInterval(cdcPollerTimer);
-        cdcPollerTimer = null;
+      // Stop CDC listener first so it doesn't process mid-shutdown
+      if (cdcListenerHandle !== null) {
+        await cdcListenerHandle.stop();
+        cdcListenerHandle = null;
       }
 
       // Stop retention purge scheduler

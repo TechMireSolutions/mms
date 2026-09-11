@@ -1,31 +1,22 @@
-import React from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import React, { useRef } from "react";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { AnimatePresence } from "framer-motion";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
-import { ModuleTableSelectionCell } from "@/components/ui/ModuleTableSelectionCell";
-import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
-import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import {
   Table,
   TableBody,
-  TableCell,
 } from "@/components/ui/table";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
-import { UserAvatar } from "@/components/ui/UserAvatar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
-import { cn } from "@/lib/utils";
-import { TeachersListRowActions } from "@/tenant/features/teachers/components/TeachersListRowActions";
+import { TeachersListDesktopTableRow } from "@/tenant/features/teachers/components/TeachersListDesktopTableRow";
 import type { TeacherSortField } from "@/tenant/features/teachers/components/teachersListTypes";
 import type { TeacherListContentProps } from "@/tenant/features/teachers/components/teacherListContentShared";
 import {
   getTeacherVisibleWorkColumns,
-  teacherWorkColumnCellClass,
   teacherWorkColumnHeadClass,
 } from "@/tenant/features/teachers/components/teacherListVisibleColumns";
-import { teacherRowIdentity } from "@/tenant/features/teachers/components/teacherFieldDisplay";
-import { renderTeacherWorkColumnValue } from "@/tenant/features/teachers/components/teacherWorkColumnCell";
 
 export type TeachersListDesktopTableProps = TeacherListContentProps;
 
@@ -58,6 +49,7 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
     onEmail,
   } = props;
   const { t } = useTranslation();
+  const parentRef = useRef<HTMLDivElement>(null);
   const rowMotion = useListRowMotion({ layout: "position", fade: true, duration: 0.1 });
   const emptyDash = t("teachers.table.emptyDash");
 
@@ -70,123 +62,124 @@ export function TeachersListDesktopTable(props: TeachersListDesktopTableProps): 
     plural: "teachers.table.teachers",
   });
   const selectedSet = new Set(selectedIds);
+  const isVirtualized = teachers.length > 30;
+
+  const rowVirtualizer = useVirtualizer({
+    count: teachers.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 52,
+    overscan: 10,
+    enabled: isVirtualized,
+  });
 
   return (
     <>
-      <Table className="table-fixed">
-        <ModuleWorkTableHeader
-          columns={visibleColumns.map((col) => ({
-            id: col.key,
-            label: col.label,
-            headerClassName: col.key !== "name" ? teacherWorkColumnHeadClass(col.key) : undefined,
-          }))}
-          sortField={sortField ?? undefined}
-          sortDir={sortDir}
-          onSort={handleSort}
-          getColumnWidth={(key) => getColumnWidth?.(key) ?? visibleColumns.find((c) => c.key === key)?.width}
-          setColumnWidth={onColumnResize ?? (() => {})}
-          selection={{
-            allSelected,
-            someSelected,
-            onSelectAll,
-            ariaLabel: allSelected ? t("common.deselect") : t("teachers.table.selectAll"),
-          }}
-          actionsLabel={t("teachers.table.actions")}
-          stickyColumnId="name"
-        />
-        <TableBody className="divide-y divide-border/50">
-          <AnimatePresence>
-            {teachers.map((teacher, rowIndex) => {
-              const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedSet, t);
-              return (
-                <motion.tr
-                  key={teacher.id}
-                  {...rowMotion(Math.min(rowIndex * 0.03, 0.2))}
-                  className={cn("hover:bg-muted/20 transition-colors group", isSelected && "bg-primary/5")}
-                >
-                  <ModuleTableSelectionCell
-                    checked={isSelected}
-                    onCheckedChange={() => onSelectOne(teacherIdStr)}
-                    ariaLabel={t("teachers.table.selectTeacher", { name: displayName })}
-                  />
-                  {visibleColumns.map((col) => (
-                    <TableCell
-                      key={col.key}
-                      className={cn(
-                        "px-4 py-3",
-                        col.key === "name" &&
-                          "sticky start-12 z-10 transition-colors border-e border-border/30",
-                        col.key === "name" && workTableStickyCellBg(isSelected),
-                        col.key !== "name" && teacherWorkColumnCellClass(col.key),
-                      )}
-                    >
-                      {col.key === "name" ? (
-                        <div className="flex min-w-0 items-center gap-3">
-                          <UserAvatar
-                            id={teacher.id}
-                            name={displayName}
-                            avatar={teacher.avatar}
-                            gender={teacher.gender}
-                            size="md"
-                            className="shrink-0"
-                          />
-                          <div className="min-w-0">
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              onClick={() => onView(teacher)}
-                              className="min-h-11 h-auto max-w-full p-0 text-sm font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
-                              title={displayName}
-                            >
-                              <span className="block truncate">{displayName}</span>
-                            </Button>
-                            {teacher.employeeId ? (
-                              <p className="text-xs text-muted-foreground truncate" title={teacher.employeeId}>
-                                {teacher.employeeId}
-                              </p>
-                            ) : null}
-                            {showDeleted && teacher.deletionReason ? (
-                              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2" title={teacher.deletionReason}>
-                                {t("teachers.deletionReasonLabel")}: {teacher.deletionReason}
-                              </p>
-                            ) : null}
-                          </div>
-                        </div>
-                      ) : (
-                        renderTeacherWorkColumnValue(teacher, col.key, {
-                          t,
-                          statusConfig,
-                          customFieldsById,
-                          emptyFallback: (
-                            <span className="text-sm text-muted-foreground">{emptyDash}</span>
-                          ),
-                        })
-                      )}
-                    </TableCell>
-                  ))}
-                  <TableCell className="px-4 py-3">
-                    <TeachersListRowActions
+      <div
+        ref={parentRef}
+        className={isVirtualized ? "w-full overflow-x-auto max-h-150 overflow-y-auto" : "w-full overflow-x-auto"}
+      >
+        <Table className="table-fixed">
+          <ModuleWorkTableHeader
+            columns={visibleColumns.map((col) => ({
+              id: col.key,
+              label: col.label,
+              headerClassName: col.key !== "name" ? teacherWorkColumnHeadClass(col.key) : undefined,
+            }))}
+            sortField={sortField ?? undefined}
+            sortDir={sortDir}
+            onSort={handleSort}
+            getColumnWidth={(key) => getColumnWidth?.(key) ?? visibleColumns.find((c) => c.key === key)?.width}
+            setColumnWidth={onColumnResize ?? (() => {})}
+            selection={{
+              allSelected,
+              someSelected,
+              onSelectAll,
+              ariaLabel: allSelected ? t("common.deselect") : t("teachers.table.selectAll"),
+            }}
+            actionsLabel={t("teachers.table.actions")}
+            stickyColumnId="name"
+          />
+          <TableBody className="divide-y divide-border/50">
+            {isVirtualized ? (
+              <>
+                {rowVirtualizer.getVirtualItems().length > 0 && (
+                  <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }}>
+                    <td colSpan={visibleColumns.length + 2} />
+                  </tr>
+                )}
+                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                  const teacher = teachers[virtualRow.index];
+                  return (
+                    <TeachersListDesktopTableRow
+                      key={teacher.id}
                       teacher={teacher}
-                      teacherId={teacherIdStr}
+                      rowIndex={virtualRow.index}
+                      selectedSet={selectedSet}
+                      visibleColumns={visibleColumns}
                       showDeleted={showDeleted}
                       canWrite={canWrite}
                       canDelete={canDelete}
-                      triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+                      statusConfig={statusConfig}
+                      customFieldsById={customFieldsById}
+                      emptyDash={emptyDash}
+                      rowMotion={rowMotion}
+                      t={t}
+                      onSelectOne={onSelectOne}
+                      onView={onView}
                       onEdit={onEdit}
                       onRequestDelete={onRequestDelete}
-                      onView={onView}
                       onRestore={onRestore}
                       onSms={onSms}
                       onWhatsApp={onWhatsApp}
                       onEmail={onEmail}
                     />
-                  </TableCell>
-                </motion.tr>
-              );
-            })}
-          </AnimatePresence>
-        </TableBody>
-      </Table>
+                  );
+                })}
+                {rowVirtualizer.getVirtualItems().length > 0 && (
+                  <tr
+                    style={{
+                      height: `${
+                        rowVirtualizer.getTotalSize() -
+                        rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end
+                      }px`,
+                    }}
+                  >
+                    <td colSpan={visibleColumns.length + 2} />
+                  </tr>
+                )}
+              </>
+            ) : (
+              <AnimatePresence>
+                {teachers.map((teacher, rowIndex) => (
+                  <TeachersListDesktopTableRow
+                    key={teacher.id}
+                    teacher={teacher}
+                    rowIndex={rowIndex}
+                    selectedSet={selectedSet}
+                    visibleColumns={visibleColumns}
+                    showDeleted={showDeleted}
+                    canWrite={canWrite}
+                    canDelete={canDelete}
+                    statusConfig={statusConfig}
+                    customFieldsById={customFieldsById}
+                    emptyDash={emptyDash}
+                    rowMotion={rowMotion}
+                    t={t}
+                    onSelectOne={onSelectOne}
+                    onView={onView}
+                    onEdit={onEdit}
+                    onRequestDelete={onRequestDelete}
+                    onRestore={onRestore}
+                    onSms={onSms}
+                    onWhatsApp={onWhatsApp}
+                    onEmail={onEmail}
+                  />
+                ))}
+              </AnimatePresence>
+            )}
+          </TableBody>
+        </Table>
+      </div>
       <ModuleTableFooterCount
         selectedCount={selectedIds.length}
         selectedCountLabel={t("teachers.selectedCount", { count: selectedIds.length })}

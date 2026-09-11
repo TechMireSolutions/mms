@@ -6,7 +6,7 @@ import { withTenant } from '../tenant-context.js';
 import { logRowToRecord } from './messagingLogsRepository.js';
 
 /** Matches messagingLogsQuerySchema pageSize max — defensive for direct callers. */
-const MESSAGE_LOGS_MAX_PAGE_SIZE = 500;
+const MESSAGE_LOGS_MAX_PAGE_SIZE = 100;
 
 export interface MessageLogsFilterQuery {
   channel?: string;

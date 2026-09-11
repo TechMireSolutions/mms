@@ -21,27 +21,44 @@ export function initializeDatabaseConnection(): void {
   if (pool) return;
 
   const config = loadServerConfig();
-  pool = new pg.Pool({
-    connectionString: config.databaseUrl,
+  const poolConfig: pg.PoolConfig = {
     max: config.pgPoolMax,
     connectionTimeoutMillis: 10_000,
+    idleTimeoutMillis: 30_000,
+    maxUses: 7_500,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10_000,
+    allowExitOnIdle: false,
+  };
+
+  pool = new pg.Pool({
+    connectionString: config.databaseUrl,
+    ...poolConfig,
   });
   pool.on('error', (error) => {
     // Idle clients can be terminated during platform DB reset; log and continue.
     logger.error({ err: error }, 'Unexpected database pool client error');
   });
 
-  readReplicaPool = new pg.Pool({
-    connectionString: config.readReplicaDatabaseUrl,
-    max: config.pgPoolMax,
-    connectionTimeoutMillis: 10_000,
-  });
-  readReplicaPool.on('error', (error) => {
-    logger.error({ err: error }, 'Unexpected read-replica database pool client error');
-  });
+  const hasDistinctReplica = Boolean(
+    config.readReplicaDatabaseUrl &&
+    config.readReplicaDatabaseUrl !== config.databaseUrl,
+  );
+
+  if (hasDistinctReplica) {
+    readReplicaPool = new pg.Pool({
+      connectionString: config.readReplicaDatabaseUrl,
+      ...poolConfig,
+    });
+    readReplicaPool.on('error', (error) => {
+      logger.error({ err: error }, 'Unexpected read-replica database pool client error');
+    });
+  } else {
+    readReplicaPool = pool;
+  }
 
   rootDb = drizzle(pool, { schema });
-  readReplicaDb = drizzle(readReplicaPool, { schema });
+  readReplicaDb = hasDistinctReplica ? drizzle(readReplicaPool, { schema }) : rootDb;
   setDb(rootDb);
 }
 
@@ -73,16 +90,29 @@ export interface PoolMetrics {
   totalCount: number;
   idleCount: number;
   waitingCount: number;
+  replica?: {
+    totalCount: number;
+    idleCount: number;
+    waitingCount: number;
+  };
 }
 
 /** Returns connection count telemetry for database health checks. */
 export function getPoolMetrics(): PoolMetrics | null {
   if (!pool) return null;
-  return {
+  const metrics: PoolMetrics = {
     totalCount: pool.totalCount,
     idleCount: pool.idleCount,
     waitingCount: pool.waitingCount,
   };
+  if (readReplicaPool && readReplicaPool !== pool) {
+    metrics.replica = {
+      totalCount: readReplicaPool.totalCount,
+      idleCount: readReplicaPool.idleCount,
+      waitingCount: readReplicaPool.waitingCount,
+    };
+  }
+  return metrics;
 }
 
 /** Lightweight DB connectivity check for `/ready`. */
@@ -99,7 +129,7 @@ export async function pingDatabase(): Promise<boolean> {
 export async function closeDatabase(): Promise<void> {
   if (!pool) return;
   const ending = pool;
-  const endingReplica = readReplicaPool;
+  const endingReplica = readReplicaPool && readReplicaPool !== pool ? readReplicaPool : null;
   pool = null;
   readReplicaPool = null;
   rootDb = null;
@@ -149,6 +179,14 @@ export async function withActiveTransaction<T>(
  */
 export function enterActiveTransaction(tx: DbClient): void {
   txStorage.enterWith(tx);
+}
+
+/**
+ * Clears any active transaction bound via `enterActiveTransaction`, preventing
+ * released pooled clients from lingering in the async execution context.
+ */
+export function clearActiveTransaction(): void {
+  txStorage.enterWith(undefined as unknown as DbClient);
 }
 
 /**

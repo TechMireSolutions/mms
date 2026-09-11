@@ -24,6 +24,7 @@ import {
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import {
   beginLongLivedTenantTransaction,
+  clearActiveTransaction,
   enterActiveTransaction,
   type LongLivedTenantTransaction,
 } from '../../../db/dbConnection.js';
@@ -44,6 +45,7 @@ async function* streamSnapshotRoute(
     yield* stream(txn, tenant);
     completed = true;
   } finally {
+    clearActiveTransaction();
     if (completed) {
       await txn.commit().catch(() => undefined);
     } else {
@@ -67,6 +69,7 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
       reply.header('Content-Type', 'application/json; charset=utf-8');
       return reply.send(Readable.from(streamSnapshotRoute(txn, tenant, streamSyncSnapshot)));
     } catch (error: unknown) {
+      clearActiveTransaction();
       if (txn) await txn.rollback().catch(() => undefined);
       return sendDatabaseError(reply, 'Failed to retrieve database snapshot', error);
     }
@@ -85,6 +88,7 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
       reply.header('Content-Type', 'application/json; charset=utf-8');
       return reply.send(Readable.from(streamSnapshotRoute(txn, tenant, streamBackupSnapshot)));
     } catch (error: unknown) {
+      clearActiveTransaction();
       if (txn) await txn.rollback().catch(() => undefined);
       return sendDatabaseError(reply, 'Failed to build workspace backup snapshot', error);
     }

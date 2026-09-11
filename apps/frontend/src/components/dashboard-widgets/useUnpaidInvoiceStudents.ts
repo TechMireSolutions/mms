@@ -1,4 +1,4 @@
-import { isOpenInvoiceStatus } from "@mms/shared";
+import { isOpenInvoiceStatus, FINANCE_MODULE_MANIFEST } from "@mms/shared";
 import { useFinanceInvoicesPaginated } from "@/tenant/features/finance/hooks/useFinanceApi";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
@@ -10,7 +10,7 @@ import { uniqueRegistryIds } from "@/lib/registryResolve";
  * and overdue-obligations widgets.
  */
 export function useUnpaidInvoiceStudents() {
-  const invoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
+  const invoices = useFinanceInvoicesPaginated({ page: 1, limit: FINANCE_MODULE_MANIFEST.maxPageSize }).data?.invoices ?? [];
   const unpaidInvoices = (() => invoices.filter((invoice) => isOpenInvoiceStatus(invoice.status)))();
   const studentIds = (() => uniqueRegistryIds(unpaidInvoices.map((invoice) => invoice.studentId)))();
   const { data: students = [] } = useStudentsByIds(studentIds);

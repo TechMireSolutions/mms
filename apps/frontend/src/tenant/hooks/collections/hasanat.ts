@@ -18,6 +18,7 @@ export {
   useHasanatReportAggregates,
   useHasanatRedemptions,
   useHasanatRedemptionsCollection,
+  hasanatCommandMetricsQueryOptions,
   useHasanatMetrics,
   useHasanatMutations,
 } from "@/tenant/features/hasanat/hooks/useHasanatApi";
@@ -28,8 +29,9 @@ export {
   useHasanatPreferencesQuery,
   useHasanatPreferencesMutation,
 } from '@/tenant/features/hasanat/hooks/useHasanatSetupConfig';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  hasanatListQueryOptions,
   useHasanatContractList,
   useHasanatContractDenoms,
   useHasanatContractBatches,

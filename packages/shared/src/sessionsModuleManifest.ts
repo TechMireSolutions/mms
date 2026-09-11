@@ -49,7 +49,7 @@ export const SESSIONS_MODULE_MANIFEST = {
     retentionDays: null,
   },
   defaultPageSize: 12,
-  maxPageSize: 500,
+  maxPageSize: 100,
 } as const;
 
 export type SessionsModuleTier = (typeof SESSIONS_MODULE_MANIFEST.tiers)[number];

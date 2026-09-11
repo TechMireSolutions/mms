@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import type { AppDb } from '../db/tenant-context.js';
 import { activeDb } from '../db/dbConnection.js';
 import { outboxEvents } from '../db/schema/outboxEvents.js';
@@ -103,5 +104,13 @@ export async function emitOutboxEvent(
       entityId: payload.entityId,
       payload: payload as unknown as Record<string, unknown>,
     });
+
+  if ('execute' in executor && typeof executor.execute === 'function') {
+    try {
+      await executor.execute(sql`NOTIFY mms_outbox_events, 'new_event'`);
+    } catch {
+      // Non-blocking fallback if NOTIFY is unsupported in testing or mock transactions
+    }
+  }
 }
 

@@ -1,6 +1,6 @@
 import type { Enrollment } from './enrollmentsModuleManifest.js';
 import { paginateArray } from './utils.js';
-import { baseListQuerySchema } from './apiSchemas.js';
+import { baseListQuerySchema, LIST_PAGE_MAX_LIMIT } from './apiSchemas.js';
 import { z } from 'zod';
 
 export const enrollmentsListQuerySchema = baseListQuerySchema.extend({
@@ -72,7 +72,7 @@ export function paginateEnrollments(
       return leftValue.localeCompare(rightValue) * dir;
     });
   }
-  const result = paginateArray(rows, query.page ?? 1, query.limit ?? 12, 500);
+  const result = paginateArray(rows, query.page ?? 1, query.limit ?? 12, LIST_PAGE_MAX_LIMIT);
   return {
     enrollments: result.items,
     total: result.total,

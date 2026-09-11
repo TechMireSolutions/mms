@@ -17,6 +17,11 @@ export {
 } from "./WorkBatchTable";
 
 export {
+  WorkBatchTableRow,
+  type WorkBatchTableRowProps,
+} from "./WorkBatchTableRow";
+
+export {
   WorkQueue,
   type WorkQueueProps,
   type WorkQueuePriority,

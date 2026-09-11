@@ -6,6 +6,7 @@ export {
   ATTENDANCE_QUERY_KEY,
   ATTENDANCE_METRICS_QUERY_KEY,
   ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY,
+  attendanceCommandMetricsQueryOptions,
   useAttendancePaginated,
   useAttendanceRecords,
   useAttendanceRecordsCollection,
@@ -14,8 +15,9 @@ export {
   useAttendanceMetrics,
 } from '@/tenant/features/attendance/hooks/useAttendance';
 export { invalidateAttendanceQueries } from '@/tenant/features/attendance/hooks/invalidateAttendanceQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  attendanceListQueryOptions,
   useAttendanceContractList,
   useAttendanceContractCreate,
   useAttendanceContractBulk,

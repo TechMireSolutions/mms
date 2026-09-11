@@ -1,10 +1,48 @@
 /**
  * Phase 7: Contract-driven query/mutation hooks for the Finance module.
  */
-import { tsrClient } from '@/lib/api';
-import { useQueryClient } from '@tanstack/react-query';
+import { apiContract, tsrClient } from '@/lib/api';
+import { queryOptions, useQueryClient } from '@tanstack/react-query';
 import { FINANCE_INVOICES_QUERY_KEY, FINANCE_PAYMENTS_QUERY_KEY } from '@/tenant/features/finance/hooks/useFinanceApi';
 import { invalidateFinanceQueries } from '@/tenant/features/finance/hooks/invalidateFinanceQueries';
+
+export function financeInvoicesListQueryOptions(query: Record<string, unknown> = {}) {
+  return queryOptions({
+    queryKey: [...FINANCE_INVOICES_QUERY_KEY, 'contract', query] as const,
+    queryFn: async ({ signal }) => {
+      const response = await apiContract.finance.listInvoices({
+        query: query as Record<string, string>,
+        signal,
+        fetchOptions: { signal },
+      });
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch finance invoices');
+      }
+      return response.body;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 15_000,
+  });
+}
+
+export function financePaymentsListQueryOptions(query: Record<string, unknown> = {}) {
+  return queryOptions({
+    queryKey: [...FINANCE_PAYMENTS_QUERY_KEY, 'contract', query] as const,
+    queryFn: async ({ signal }) => {
+      const response = await apiContract.finance.listPayments({
+        query: query as Record<string, string>,
+        signal,
+        fetchOptions: { signal },
+      });
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch finance payments');
+      }
+      return response.body;
+    },
+    placeholderData: (prev) => prev,
+    staleTime: 15_000,
+  });
+}
 
 export function useFinanceContractInvoices(query: Record<string, unknown>, enabled = true) {
   // @ts-expect-error - TS union discrimination limit with ts-rest

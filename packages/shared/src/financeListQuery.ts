@@ -1,4 +1,5 @@
 import type { Invoice, Payment } from './financeModuleManifest.js';
+import { LIST_PAGE_MAX_LIMIT } from './apiSchemas.js';
 import { paginateArray } from './utils.js';
 
 /** Query accepted by finance invoice and payment list endpoints. */
@@ -54,7 +55,7 @@ export function paginateFinanceInvoices(
         [invoice.id, invoice.studentName, invoice.studentId, invoice.class, invoice.session]
           .some((value) => value.toLowerCase().includes(search)))
     : invoices;
-  const result = paginateArray(sortRows(filtered, query), query.page ?? 1, query.limit ?? 10, 500);
+  const result = paginateArray(sortRows(filtered, query), query.page ?? 1, query.limit ?? 10, LIST_PAGE_MAX_LIMIT);
   return { invoices: result.items, total: result.total, page: result.page, limit: result.limit, hasMore: result.hasMore };
 }
 
@@ -69,6 +70,6 @@ export function paginateFinancePayments(
         [payment.id, payment.invoiceId, payment.studentId, payment.studentName, payment.method, payment.note]
           .some((value) => String(value ?? '').toLowerCase().includes(search)))
     : payments;
-  const result = paginateArray(sortRows(filtered, query), query.page ?? 1, query.limit ?? 10, 500);
+  const result = paginateArray(sortRows(filtered, query), query.page ?? 1, query.limit ?? 10, LIST_PAGE_MAX_LIMIT);
   return { payments: result.items, total: result.total, page: result.page, limit: result.limit, hasMore: result.hasMore };
 }

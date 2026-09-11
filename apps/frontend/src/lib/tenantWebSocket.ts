@@ -1,4 +1,5 @@
 import { resolveApiUrl } from '@/lib/apiClientHelpers';
+import { notifySessionExpired } from '@/lib/apiClient';
 import type { BackgroundJobEventMessage } from '@mms/shared';
 
 export type TenantDatabaseUpdateMessage = {
@@ -135,6 +136,9 @@ export function connectTenantDatabaseSocket(handlers: TenantWebSocketHandlers): 
       if (socket) {
         cleanupSocket(socket);
         socket = null;
+      }
+      if (!closedByCaller && event.code === 4001) {
+        notifySessionExpired('websocket_unauthorized');
       }
       // Do not auto-reconnect if closed due to auth, missing token, or subdomain mismatch (4000-4009)
       if (!closedByCaller && (event.code < 4000 || event.code > 4009)) {

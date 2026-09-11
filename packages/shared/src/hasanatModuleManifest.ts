@@ -196,6 +196,7 @@ export const HASANAT_MODULE_MANIFEST = {
     bulkActions: ['delete'] as const,
   },
   defaultPageSize: 15,
+  maxPageSize: 100,
 } as const;
 
 export type HasanatModuleTier = (typeof HASANAT_MODULE_MANIFEST.tiers)[number];

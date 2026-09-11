@@ -9,6 +9,7 @@ export {
   extractActivityLogs,
   useUsersByIds,
   useUsersMetrics,
+  usersCommandMetricsQueryOptions,
   useActivityLogs,
   useUsersMutations,
 } from '@/tenant/features/users/hooks/useUsersApi';
@@ -22,8 +23,9 @@ export {
   setUserPreferencesMemory,
 } from '@/tenant/features/users/hooks/userSetupConfigApi';
 export { invalidateUsersQueries } from '@/tenant/features/users/hooks/invalidateUsersQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  usersListQueryOptions,
   useUsersContractList,
   useUsersContractCreate,
   useUsersContractUpdate,

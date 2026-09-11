@@ -1,3 +1,5 @@
+import { LIST_PAGE_MAX_LIMIT } from './apiSchemas.js';
+
 /** Pagination result container metadata interface. */
 export interface PageResult<T> {
   items: T[];
@@ -29,10 +31,10 @@ export function compareByField<T>(left: T, right: T, field: keyof T | string, di
  * @param items Array of elements to paginate.
  * @param page Target page index (1-based, defaults to 1).
  * @param limit Maximum items per page (defaults to 50).
- * @param maxLimit Upper cap on limit to prevent memory spikes (defaults to 500).
+ * @param maxLimit Upper cap on limit to prevent memory spikes (defaults to 100).
  * @returns PageResult container with sliced items, total count, page, limit, and hasMore status.
  */
-export function paginateArray<T>(items: T[], page = 1, limit = 50, maxLimit = 500): PageResult<T> {
+export function paginateArray<T>(items: T[], page = 1, limit = 50, maxLimit = LIST_PAGE_MAX_LIMIT): PageResult<T> {
   const safePage = Math.max(1, page);
   const safeLimit = Math.min(Math.max(1, limit), maxLimit);
   const total = items.length;

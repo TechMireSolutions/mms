@@ -83,20 +83,36 @@ export async function withTenant<T>(
       'db.read_only': options.readOnly ?? false,
     },
     async () => {
-      return pool.transaction(async (tx) => {
-        // Single source of truth for tenant RLS GUCs + statement/idle budgets.
-        await applyTenantTransactionGuards(tx as unknown as AppDb, resolvedTenantId, {
-          statementTimeoutMs: options.statementTimeoutMs,
-        });
+      return pool.transaction(
+        async (tx) => {
+          // Single source of truth for tenant RLS GUCs + statement/idle budgets.
+          await applyTenantTransactionGuards(tx as unknown as AppDb, resolvedTenantId, {
+            statementTimeoutMs: options.statementTimeoutMs,
+          });
 
-        // Register this transaction as the active one for the callback's async
-        // scope so nested runInTransaction()/activeDb() consumers join it rather
-        // than opening a second pool client and a second transaction.
-        return withActiveTransaction(tx as unknown as DbClient, () =>
-          callback(tx as unknown as TenantTransaction)
-        );
-      });
+          // Register this transaction as the active one for the callback's async
+          // scope so nested runInTransaction()/activeDb() consumers join it rather
+          // than opening a second pool client and a second transaction.
+          return withActiveTransaction(tx as unknown as DbClient, () =>
+            callback(tx as unknown as TenantTransaction)
+          );
+        },
+        options.readOnly ? { accessMode: 'read only' } : undefined,
+      );
     },
   );
+}
+
+/**
+ * Ergonomic read-only wrapper around `withTenant`.
+ * Automatically routes queries to the read replica pool and configures explicit
+ * PostgreSQL `read only` transaction access mode.
+ */
+export async function withTenantRead<T>(
+  tenantId: string | null | undefined,
+  callback: (tx: TenantTransaction) => Promise<T>,
+  options: { statementTimeoutMs?: number } = {},
+): Promise<T> {
+  return withTenant(tenantId, callback, { ...options, readOnly: true });
 }
 

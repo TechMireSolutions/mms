@@ -3,6 +3,7 @@ export {
   CONTACTS_METRICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
   CONTACTS_DUPLICATES_QUERY_KEY,
+  contactsCommandMetricsQueryOptions,
   useContactsMetrics,
   useContactsReportAnalytics,
   useContactsWidgetAggregates,

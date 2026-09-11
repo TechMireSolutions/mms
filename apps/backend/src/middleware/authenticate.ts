@@ -1,5 +1,5 @@
 import type { FastifyReply, FastifyRequest } from 'fastify';
-import type { User } from '@mms/shared';
+import type { GlobalSettings, User, Workspace } from '@mms/shared';
 import { isWorkspaceEnabled, parseSessionTimeoutMinutes } from '@mms/shared';
 import { tenantSessionScope } from '../services/sessionClockService.js';
 import { enforceTenantSessionClock, SESSION_EXPIRY_RESPONSE } from '../services/sessionGuardService.js';
@@ -9,7 +9,8 @@ import { formatTraceParent } from '../config/telemetry.js';
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
 import { loadGlobalSettings } from '../services/globalSettingsService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
-import { checkSessionRevocationBatch } from '../services/session.service.js';
+import { redisSet, redisKeys } from '../lib/redis.js';
+import { checkTenantAuthPipelineBatch } from '../services/session.service.js';
 import { markRequestDiagnosticStage } from '../lib/requestDiagnostics.js';
 
 export interface AuthenticatedRequest extends FastifyRequest {
@@ -55,13 +56,21 @@ export async function authenticateTenant(
     return;
   }
 
-  // Fast-path Redis tenant blocklist + token/session revocation checks, batched
-  // into a single pipelined round-trip (was three sequential round-trips).
+  // Fast-path Redis tenant blocklist, token/session revocation, user active status,
+  // global settings, and workspace lookup batched into a single pipelined round-trip.
   markRequestDiagnosticStage(request, 'authentication_tenant_blocklist');
-  const { tenantBlocked, tokenRevoked, userSessionRevoked } = await checkSessionRevocationBatch({
+  const {
+    tenantBlocked,
+    tokenRevoked,
+    userSessionRevoked,
+    userActiveCached,
+    globalSettingsCached,
+    workspaceCached,
+  } = await checkTenantAuthPipelineBatch({
     tenant,
     jti: user.jti,
-    userId: user.id,
+    userId: user.id ? String(user.id) : undefined,
+    role: user.role,
     issuedAtMs: user.iat ? user.iat * 1000 : undefined,
   });
   if (tenantBlocked) {
@@ -93,31 +102,47 @@ export async function authenticateTenant(
   }
 
   if (user.id) {
-    try {
-      const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepositoryHydrate.js');
-      const userRow = await findTenantUserRowById(String(user.id));
-      if (userRow?.deletedAt || (userRow as { deleted_at?: unknown })?.deleted_at) {
-        await sendUnauthorized(reply, 'Session revoked');
-        return;
-      }
-      if (user.role === 'teacher') {
-        const { teachersRepository } = await import('../teachers/repository/teachersRepositoryAdapter.js');
-        const teacherRow = await teachersRepository.findById(tenant, String(user.id));
-        if (teacherRow?.deletedAt || (teacherRow as { deleted_at?: unknown })?.deleted_at) {
+    const activeKey = redisKeys.userActive(tenant, String(user.id), user.role ?? 'user');
+    if (userActiveCached !== 'active') {
+      try {
+        const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepositoryHydrate.js');
+        const userRow = await findTenantUserRowById(String(user.id));
+        if (userRow?.deletedAt || (userRow as { deleted_at?: unknown })?.deleted_at) {
           await sendUnauthorized(reply, 'Session revoked');
           return;
         }
+        if (user.role === 'teacher') {
+          const { teachersRepository } = await import('../teachers/repository/teachersRepositoryAdapter.js');
+          const teacherRow = await teachersRepository.findById(tenant, String(user.id));
+          if (teacherRow?.deletedAt || (teacherRow as { deleted_at?: unknown })?.deleted_at) {
+            await sendUnauthorized(reply, 'Session revoked');
+            return;
+          }
+        }
+        await redisSet(activeKey, 'active', 60);
+      } catch {
+        // Fall through for tests without DB context
       }
-    } catch {
-      // Fall through for tests without DB context
     }
   }
 
   // Server-authoritative inactivity + absolute lifetime enforcement via the Redis
   // session clock for this request.
   markRequestDiagnosticStage(request, 'authentication_idle_clock');
+  let globalSettings: GlobalSettings | null = null;
+  if (globalSettingsCached) {
+    try {
+      globalSettings = JSON.parse(globalSettingsCached) as GlobalSettings;
+    } catch {
+      // Fall through on parse failure
+    }
+  }
+  if (!globalSettings) {
+    globalSettings = await loadGlobalSettings(tenant);
+  }
+
   const sessionPolicy = tenantSessionPolicy(
-    parseSessionTimeoutMinutes((await loadGlobalSettings(tenant)).sessionTimeout),
+    parseSessionTimeoutMinutes(globalSettings.sessionTimeout),
   );
   const idleScope = user.id ? tenantSessionScope(tenant, String(user.id)) : '';
 
@@ -134,7 +159,17 @@ export async function authenticateTenant(
   }
 
   markRequestDiagnosticStage(request, 'authentication_workspace_lookup');
-  const workspace = await getWorkspaceBySubdomain(tenant);
+  let workspace: Workspace | null = null;
+  if (workspaceCached) {
+    try {
+      workspace = JSON.parse(workspaceCached) as Workspace;
+    } catch {
+      // Fall through on parse failure
+    }
+  }
+  if (!workspace) {
+    workspace = await getWorkspaceBySubdomain(tenant);
+  }
   if (!workspace || !isWorkspaceEnabled(workspace)) {
     await reply.status(403).send({
       type: 'workspace_disabled',

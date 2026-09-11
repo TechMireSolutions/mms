@@ -13,6 +13,7 @@ export {
   useStudentLinkedContactIds,
   useStudentNextGrNumber,
   checkStudentRegistrationDuplicate,
+  studentsCommandMetricsQueryOptions,
   useStudentsMetrics,
   useStudentsByIds,
   useStudentsWidgetAggregates,

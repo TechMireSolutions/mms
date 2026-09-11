@@ -244,7 +244,7 @@ describe('enrollments REST routes integration', () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
-      url: '/api/enrollments?page=1&limit=500&sessionId=ses-1&classId=cls-1',
+      url: '/api/enrollments?page=1&limit=100&sessionId=ses-1&classId=cls-1',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app, { name: 'Admin User' })}`,
@@ -255,7 +255,7 @@ describe('enrollments REST routes integration', () => {
     expect(mockLoadEnrollmentsPage).toHaveBeenCalledWith(
       expect.objectContaining({
         page: 1,
-        limit: 500,
+        limit: 100,
         sessionId: 'ses-1',
         classId: 'cls-1',
       }),

@@ -8,6 +8,7 @@ export {
   STUDENTS_METRICS_QUERY_KEY,
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
   fetchAllStudentsForQuery,
+  studentsCommandMetricsQueryOptions,
   useStudentMutations,
   useStudentsByIds,
   useStudentsMetrics,
@@ -30,8 +31,9 @@ export {
 } from '@/tenant/features/students/hooks/studentSetupConfigApi';
 export { applyStudentsWorkDrillDown } from '@/tenant/features/students/hooks/studentsWorkDrillDown';
 export { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  studentsListQueryOptions,
   useStudentsContractList,
   useStudentsContractCreate,
   useStudentsContractUpdate,

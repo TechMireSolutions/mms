@@ -179,6 +179,7 @@ export const ACCOUNTING_MODULE_MANIFEST = {
     bulkActions: ['delete'] as const,
   },
   defaultPageSize: 15,
+  maxPageSize: 100,
 } as const;
 
 export type AccountingModuleTier = (typeof ACCOUNTING_MODULE_MANIFEST.tiers)[number];

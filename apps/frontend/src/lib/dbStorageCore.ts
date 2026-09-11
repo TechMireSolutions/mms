@@ -62,21 +62,28 @@ export interface ServerSyncResult {
   errorKey?: string;
 }
 
-export async function syncToServer(url: string, body: unknown, method: string = "POST"): Promise<ServerSyncResult> {
+export async function syncToServer(
+  url: string,
+  body: unknown,
+  method: string = "POST",
+  options?: { signal?: AbortSignal }
+): Promise<ServerSyncResult> {
   try {
     setSyncStatus('syncing');
     const response = await apiFetch(url, {
       method,
       headers: getHeaders(),
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: options?.signal,
     });
     if (!response.ok) {
+      const isAuthFailure = response.status === 401 || response.status === 403;
       const expectedPreAuth =
         response.status === 401 && localStorage.getItem('mms_user') === null;
-      if (!expectedPreAuth) {
+      if (!expectedPreAuth && !isAuthFailure) {
         reportClientWarn(new Error(`Sync to server failed for ${url} (status: ${response.status})`), { context: 'db.syncToServer', url, status: response.status });
       }
-      setSyncStatus(expectedPreAuth ? 'idle' : 'error');
+      setSyncStatus(expectedPreAuth || isAuthFailure ? 'idle' : 'error');
       let errorKey: string | undefined;
       try {
         const payload = (await response.json()) as { message?: unknown; error?: unknown };
@@ -93,6 +100,10 @@ export async function syncToServer(url: string, body: unknown, method: string = 
     setSyncStatus('idle');
     return { ok: true };
   } catch (error) {
+    if ((error as { name?: string })?.name === 'AbortError') {
+      setSyncStatus('idle');
+      return { ok: false };
+    }
     reportClientError(error, { context: 'db.syncToServer', url });
     setSyncStatus('error');
     return { ok: false };

@@ -2,9 +2,16 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { MutateOptions } from '@tanstack/react-query';
 import type { Exam, ExamResult, ExaminationsCommandMetricsSnapshot } from '@mms/shared';
 import { EXAMINATIONS_MODULE_MANIFEST } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient } from '@/lib/api';
+
+export function examinationsCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<ExaminationsCommandMetricsSnapshot>({
+    moduleId: EXAMINATIONS_MODULE_MANIFEST.moduleId,
+    apiPath: EXAMINATIONS_MODULE_MANIFEST.restBasePath,
+  });
+}
 
 
 

@@ -8,12 +8,16 @@ export {
   useAccountingFiscalYearsPaginated,
   useAccountingReportAggregates,
   useAccountingMutations,
+  accountingCommandMetricsQueryOptions,
   useAccountingMetrics,
   ACCOUNTING_REPORT_AGGREGATES_QUERY_KEY,
 } from "@/tenant/features/accounting/hooks/useAccountingApi";
 export { invalidateAccountingQueries } from '@/tenant/features/accounting/hooks/invalidateAccountingQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  accountingAccountsListQueryOptions,
+  accountingEntriesListQueryOptions,
+  accountingFiscalYearsListQueryOptions,
   useAccountingContractAccounts,
   useAccountingContractEntries,
   useAccountingContractFiscalYears,

@@ -1,36 +1,22 @@
 import { getRequestTenant } from './tenantContext.js';
 import { logger } from './logger.js';
+import { redisDel, redisDelPattern, redisKeys } from './redis.js';
+import {
+  type MinimalWebSocket,
+  MAX_WS_BUFFERED_AMOUNT,
+  getTenantConnections,
+  registerConnection,
+  closeAllConnections,
+  getActiveConnectionsCount,
+} from './livePushConnections.js';
 
-export interface MinimalWebSocket {
-  close(code?: number, reason?: string): void;
-  terminate(): void;
-  ping(): void;
-  send(data: string): void;
-  bufferedAmount?: number;
-  on(event: 'pong', listener: () => void): void;
-  on(event: 'close', listener: () => void): void;
-  on(event: 'error', listener: (err: Error) => void): void;
-  off?(event: string, listener: (...args: any[]) => void): void;
-  removeListener?(event: string, listener: (...args: any[]) => void): void;
-}
-
-export const MAX_WS_BUFFERED_AMOUNT = 512 * 1024; // 512 KB backpressure threshold
-
-interface ActiveConnection {
-  subdomain: string;
-  socket: MinimalWebSocket;
-  userId: string;
-}
-
-const connectionsByTenant = new Map<string, Set<ActiveConnection>>();
-
-function getActiveConnectionsCount(): number {
-  let count = 0;
-  for (const set of connectionsByTenant.values()) {
-    count += set.size;
-  }
-  return count;
-}
+export {
+  type MinimalWebSocket,
+  MAX_WS_BUFFERED_AMOUNT,
+  registerConnection,
+  closeAllConnections,
+  getActiveConnectionsCount,
+};
 
 // Redis Pub/Sub adapter for horizontal multi-node cluster scaling
 let redisPublisher: { publish: (channel: string, message: string) => Promise<unknown> } | null = null;
@@ -39,8 +25,8 @@ let redisSubscriber: {
   on: (event: string, listener: (...args: any[]) => void) => void;
 } | null = null;
 
-const WS_INVALIDATION_CHANNEL = 'mms:ws-invalidation';
-const JOB_EVENT_CHANNEL = 'mms:job-event';
+const WS_INVALIDATION_CHANNEL = redisKeys.wsInvalidationChannel;
+const JOB_EVENT_CHANNEL = redisKeys.jobEventChannel;
 
 export function configureRedisPubSub(
   publisher: { publish: (channel: string, message: string) => Promise<unknown> },
@@ -102,84 +88,6 @@ export function configureRedisPubSub(
 }
 
 /**
- * Registers an active WebSocket connection for a given tenant subdomain and user ID.
- * Returns an unregister function to call when the connection closes.
- */
-export function registerConnection(subdomain: string, socket: MinimalWebSocket, userId: string): () => void {
-  const normSubdomain = subdomain.trim().toLowerCase();
-  const connection: ActiveConnection = { subdomain: normSubdomain, socket, userId };
-
-  let tenantSet = connectionsByTenant.get(normSubdomain);
-  if (!tenantSet) {
-    tenantSet = new Set<ActiveConnection>();
-    connectionsByTenant.set(normSubdomain, tenantSet);
-  }
-  tenantSet.add(connection);
-
-  // Setup heartbeat ping intervals to proactively detect dead sockets
-  let isAlive = true;
-  const onPong = () => {
-    isAlive = true;
-  };
-  socket.on('pong', onPong);
-
-  let cleanedUp = false;
-  const cleanup = () => {
-    if (cleanedUp) return;
-    cleanedUp = true;
-
-    clearInterval(pingInterval);
-
-    const currentSet = connectionsByTenant.get(normSubdomain);
-    if (currentSet) {
-      currentSet.delete(connection);
-      if (currentSet.size === 0) {
-        connectionsByTenant.delete(normSubdomain);
-      }
-    }
-
-    if (typeof socket.off === 'function') {
-      socket.off('pong', onPong);
-      socket.off('close', cleanup);
-      socket.off('error', onError);
-    } else if (typeof socket.removeListener === 'function') {
-      socket.removeListener('pong', onPong);
-      socket.removeListener('close', cleanup);
-      socket.removeListener('error', onError);
-    }
-
-    logger.info({ userId, subdomain: normSubdomain }, 'WS connection closed');
-  };
-
-  const onError = (err: Error) => {
-    logger.error({ userId, subdomain: normSubdomain, err }, 'WS connection error');
-    cleanup();
-  };
-
-  socket.on('close', cleanup);
-  socket.on('error', onError);
-
-  const pingInterval = setInterval(() => {
-    if (!isAlive) {
-      cleanup();
-      socket.terminate();
-      return;
-    }
-    isAlive = false;
-    socket.ping();
-  }, 30000);
-  if (typeof pingInterval.unref === 'function') {
-    pingInterval.unref();
-  }
-
-  logger.info(
-    { userId, subdomain: normSubdomain, active: getActiveConnectionsCount() },
-    'WS connection registered',
-  );
-  return cleanup;
-}
-
-/**
  * Broadcasts a real-time data update notification locally to connected sockets on this process node.
  */
 export function broadcastLocalTenantUpdate(
@@ -188,7 +96,7 @@ export function broadcastLocalTenantUpdate(
   key: string
 ): void {
   const normSubdomain = subdomain.trim().toLowerCase();
-  const tenantSet = connectionsByTenant.get(normSubdomain);
+  const tenantSet = getTenantConnections(normSubdomain);
   if (!tenantSet || tenantSet.size === 0) return;
 
   const message = JSON.stringify({
@@ -235,10 +143,17 @@ export function broadcastTenantUpdate(
   // Always emit locally on current node
   broadcastLocalTenantUpdate(subdomain, type, key);
 
+  // Invalidate Redis domain metrics and dashboard cache for this tenant/collection
+  const cleanTenant = subdomain?.trim().toLowerCase();
+  if (cleanTenant && type === 'collection') {
+    void redisDel(redisKeys.metrics(cleanTenant, key));
+    void redisDelPattern(redisKeys.dashboardSummaryPattern(cleanTenant));
+  }
+
   // If Redis Pub/Sub is configured, publish to cluster
   if (redisPublisher) {
     const payload = JSON.stringify({ subdomain, type, key });
-    redisPublisher.publish('mms:ws-invalidation', payload).catch((err) => {
+    redisPublisher.publish(WS_INVALIDATION_CHANNEL, payload).catch((err) => {
       logger.error({ err }, 'Failed to publish WS invalidation to Redis');
     });
   }
@@ -260,7 +175,7 @@ export function broadcastLocalJobEvent(jobEvent: {
   error?: string;
 }): void {
   const normSubdomain = jobEvent.tenantId.trim().toLowerCase();
-  const tenantSet = connectionsByTenant.get(normSubdomain);
+  const tenantSet = getTenantConnections(normSubdomain);
   if (!tenantSet || tenantSet.size === 0) return;
 
   const message = JSON.stringify(jobEvent);
@@ -300,20 +215,4 @@ export function broadcastLocalJobEvent(jobEvent: {
 export async function broadcastCollection(key: string): Promise<void> {
   const tenant = getRequestTenant();
   if (tenant) broadcastTenantUpdate(tenant, 'collection', key);
-}
-
-/**
- * Closes all active WebSocket connections across all tenants and clears the map.
- */
-export function closeAllConnections(): void {
-  for (const set of connectionsByTenant.values()) {
-    for (const connection of set) {
-      try {
-        connection.socket.terminate();
-      } catch {
-        // ignore errors on close
-      }
-    }
-  }
-  connectionsByTenant.clear();
 }

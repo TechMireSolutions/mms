@@ -97,7 +97,7 @@ export const messagingLogsQuerySchema = z.object({
   startDate: z.string().optional(),
   endDate: z.string().optional(),
   page: z.coerce.number().int().positive().optional().default(1),
-  pageSize: z.coerce.number().int().positive().max(500).optional().default(MESSAGE_LOGS_DEFAULT_PAGE_SIZE),
+  pageSize: z.coerce.number().int().positive().max(100).optional().default(MESSAGE_LOGS_DEFAULT_PAGE_SIZE),
   includeDeleted: z
     .union([z.boolean(), z.enum(['true', 'false'])])
     .optional()

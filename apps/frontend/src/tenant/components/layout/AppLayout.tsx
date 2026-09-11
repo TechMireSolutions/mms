@@ -30,7 +30,7 @@ export default function AppLayout(): React.JSX.Element {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(false);
   const branding = useBranding();
   const { t } = useTranslation();
-  {useSessionTimeout()}
+  const sessionTimeoutModal = useSessionTimeout();
   useInitializeUiState();
 
   useGlobalShortcut("k", () => setCommandPaletteOpen((prev) => !prev));
@@ -107,6 +107,9 @@ export default function AppLayout(): React.JSX.Element {
           <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
         </Suspense>
       ) : null}
+
+      {/* Session Timeout Modal */}
+      {sessionTimeoutModal}
 
       {/* Main Content */}
       <main

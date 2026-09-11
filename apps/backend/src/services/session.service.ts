@@ -1,4 +1,4 @@
-import { redisBatch, redisDel, redisDelPattern, redisExists, redisGet, redisSet, type RedisBatchOp } from '../lib/redis.js';
+import { redisBatch, redisDel, redisDelPattern, redisExists, redisGet, redisSet, redisKeys, type RedisBatchOp } from '../lib/redis.js';
 
 const REVOKED_TOKEN_PREFIX = 'session:revoked:';
 const USER_REVOKED_AT_PREFIX = 'user:revoked_at:';
@@ -11,7 +11,8 @@ const DEFAULT_ACCESS_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
  */
 export async function revokeUserSessionKeys(userId: string): Promise<void> {
   if (!userId) return;
-  await redisDelPattern(`mms:session:${userId}:*`);
+  await redisDelPattern(redisKeys.sessionPattern(userId));
+  await redisDelPattern(redisKeys.userActivePattern(userId));
 }
 
 /**
@@ -97,6 +98,15 @@ export interface SessionRevocationCheck {
   userSessionRevoked: boolean;
 }
 
+export interface TenantAuthPipelineBatch {
+  tenantBlocked: boolean;
+  tokenRevoked: boolean;
+  userSessionRevoked: boolean;
+  userActiveCached: string | null;
+  globalSettingsCached: string | null;
+  workspaceCached: string | null;
+}
+
 /**
  * Runs the three independent Redis revocation/blocklist reads used by the auth
  * hot path (tenant blocklist, token revocation, whole-user session revocation)
@@ -135,3 +145,57 @@ export async function checkSessionRevocationBatch(params: {
 
   return { tenantBlocked, tokenRevoked, userSessionRevoked };
 }
+
+/**
+ * High-performance auth pipeline: batches revocation/blocklist reads along with
+ * active user status, global settings, and workspace cache lookups into a single
+ * Redis pipeline, collapsing up to 5 sequential network round-trips into 1.
+ */
+export async function checkTenantAuthPipelineBatch(params: {
+  tenant?: string;
+  jti?: string;
+  userId?: string;
+  role?: string;
+  issuedAtMs?: number;
+}): Promise<TenantAuthPipelineBatch> {
+  const ops: RedisBatchOp[] = [];
+  const tenantClean = params.tenant ? params.tenant.toLowerCase() : null;
+  const tenantKey = tenantClean ? `${TENANT_BLOCKED_PREFIX}${tenantClean}` : null;
+  const jtiKey = params.jti ? `${REVOKED_TOKEN_PREFIX}${params.jti}` : null;
+  const userKey = params.userId ? `${USER_REVOKED_AT_PREFIX}${params.userId}` : null;
+  const activeKey = tenantClean && params.userId ? redisKeys.userActive(tenantClean, params.userId, params.role ?? 'user') : null;
+  const settingsKey = tenantClean ? redisKeys.globalSettings(tenantClean) : null;
+  const workspaceKey = tenantClean ? redisKeys.workspace(tenantClean) : null;
+
+  if (tenantKey) ops.push({ key: tenantKey, type: 'exists' });
+  if (jtiKey) ops.push({ key: jtiKey, type: 'exists' });
+  if (userKey) ops.push({ key: userKey, type: 'get' });
+  if (activeKey) ops.push({ key: activeKey, type: 'get' });
+  if (settingsKey) ops.push({ key: settingsKey, type: 'get' });
+  if (workspaceKey) ops.push({ key: workspaceKey, type: 'get' });
+
+  const results = await redisBatch(ops);
+  let i = 0;
+  const tenantBlocked = tenantKey ? (results[i++] as boolean) : false;
+  const tokenRevoked = jtiKey ? (results[i++] as boolean) : false;
+  const userRevokedAtStr = userKey ? (results[i++] as string | null) : null;
+  const userActiveCached = activeKey ? (results[i++] as string | null) : null;
+  const globalSettingsCached = settingsKey ? (results[i++] as string | null) : null;
+  const workspaceCached = workspaceKey ? (results[i] as string | null) : null;
+
+  let userSessionRevoked = false;
+  if (userRevokedAtStr) {
+    const revokedAt = Number.parseInt(userRevokedAtStr, 10);
+    userSessionRevoked = !Number.isNaN(revokedAt) && (params.issuedAtMs ?? 0) <= revokedAt;
+  }
+
+  return {
+    tenantBlocked,
+    tokenRevoked,
+    userSessionRevoked,
+    userActiveCached,
+    globalSettingsCached,
+    workspaceCached,
+  };
+}
+

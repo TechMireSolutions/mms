@@ -8,9 +8,16 @@ import type {
   QuestionBankReportQuery,
 } from '@mms/shared';
 import { QUESTION_BANK_MODULE_MANIFEST } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient } from '@/lib/api';
+
+export function questionBankCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<QuestionBankCommandMetricsSnapshot>({
+    moduleId: QUESTION_BANK_MODULE_MANIFEST.moduleId,
+    apiPath: QUESTION_BANK_MODULE_MANIFEST.restBasePath,
+  });
+}
 
 
 

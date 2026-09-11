@@ -12,10 +12,11 @@ import {
   normalizeLinkedCollection,
 } from "@/lib/dbLinkHydration.js";
 
-const BUSINESS_COLLECTIONS = new Set([
+export const DOCUMENT_STORE_COLLECTIONS = new Set([
   "currencies",
   "backups",
 ]);
+const BUSINESS_COLLECTIONS = DOCUMENT_STORE_COLLECTIONS;
 
 /**
  * Checks if a collection key exists in local storage.
@@ -96,9 +97,11 @@ export function getCollection<T = unknown>(key: string, defaultData: T[] = [] as
     safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
 
     // Defer so reads during render (e.g. useLiveCollection init) don't update other components synchronously
-    queueMicrotask(() => {
-      void syncToServer(`/api/db/collections/${key}`, dataToSave);
-    });
+    if (DOCUMENT_STORE_COLLECTIONS.has(key)) {
+      queueMicrotask(() => {
+        void syncToServer(`/api/db/collections/${key}`, dataToSave);
+      });
+    }
 
     let seedData = hydrateLinkedCollection(key, dataToSave);
     if (key === "sessions") {
@@ -131,8 +134,10 @@ export function saveCollection<T>(key: string, collectionItems: T[]): void {
     safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
     dispatchLocalDatabaseUpdate();
 
-    // Sync to backend asynchronously
-    void syncToServer(`/api/db/collections/${key}`, dataToSave);
+    // Sync to backend asynchronously only for supported document-store collections
+    if (DOCUMENT_STORE_COLLECTIONS.has(key)) {
+      void syncToServer(`/api/db/collections/${key}`, dataToSave);
+    }
   } catch (error) {
     reportClientError(error, { context: 'db.saveCollection', key });
   }
@@ -152,9 +157,11 @@ export async function saveCollectionAsync<T>(key: string, collectionItems: T[]):
   safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
   dispatchLocalDatabaseUpdate();
 
-  const result = await syncToServer(`/api/db/collections/${key}`, dataToSave);
-  if (!result.ok) {
-    throw new Error(`Failed to sync collection "${key}"`);
+  if (DOCUMENT_STORE_COLLECTIONS.has(key)) {
+    const result = await syncToServer(`/api/db/collections/${key}`, dataToSave);
+    if (!result.ok) {
+      throw new Error(`Failed to sync collection "${key}"`);
+    }
   }
 }
 

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { SETUP_STALE_TIME } from "@/lib/queryClient";
 
 function resolveValue<T>(value: T | (() => T)): T {
   return typeof value === "function" ? (value as () => T)() : value;
@@ -37,7 +38,7 @@ export function createModuleSetupConfigHooks<
       // TanStack Query NonFunctionGuard cannot be proven for generic TPreferences.
       // @ts-expect-error generic placeholderData vs NonFunctionGuard<TPreferences>
       placeholderData: resolveValue(preferencesPlaceholder),
-      staleTime: 5 * 60_000,
+      staleTime: SETUP_STALE_TIME,
       gcTime: 10 * 60_000,
     });
   }

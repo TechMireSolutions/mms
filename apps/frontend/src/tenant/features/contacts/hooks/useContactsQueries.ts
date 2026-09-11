@@ -13,6 +13,7 @@ export {
 } from '@/tenant/features/contacts/hooks/useContactsListQueries';
 
 export {
+  contactsCommandMetricsQueryOptions,
   useContactsMetrics,
   useContactsReportAnalytics,
   useContactsWidgetAggregates,

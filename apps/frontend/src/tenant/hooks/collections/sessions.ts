@@ -7,6 +7,7 @@ export {
   SESSIONS_METRICS_QUERY_KEY,
   SESSIONS_WIDGET_AGGREGATES_QUERY_KEY,
   SESSIONS_REPORT_AGGREGATES_QUERY_KEY,
+  sessionsCommandMetricsQueryOptions,
   useSessions,
   useSessionsPaginated,
   useSessionsCollection,
@@ -16,8 +17,9 @@ export {
   useSessionsMetrics,
 } from '@/tenant/features/sessions/hooks/useSessions';
 export { invalidateSessionsQueries } from '@/tenant/features/sessions/hooks/invalidateSessionsQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  sessionsListQueryOptions,
   useSessionsContractList,
   useSessionsContractCreate,
   useSessionsContractBulkDelete,

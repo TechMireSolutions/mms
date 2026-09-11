@@ -126,6 +126,7 @@ export const EXAMINATIONS_MODULE_MANIFEST = {
     bulkActions: ['delete'] as const,
   },
   defaultPageSize: 12,
+  maxPageSize: 100,
 } as const;
 
 export type ExaminationsModuleManifest = typeof EXAMINATIONS_MODULE_MANIFEST;

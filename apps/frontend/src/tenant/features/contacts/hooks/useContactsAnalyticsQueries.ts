@@ -5,7 +5,7 @@ import {
   type ContactsWidgetAggregateResult,
   contactsWidgetQueryFromWidget,
 } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiContract, tsrClient } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
@@ -14,6 +14,13 @@ import {
   CONTACTS_REPORT_ANALYTICS_QUERY_KEY,
   CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
 } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
+
+export function contactsCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<ContactsCommandMetricsSnapshot>({
+    moduleId: CONTACTS_MODULE_MANIFEST.moduleId,
+    apiPath: CONTACTS_MODULE_MANIFEST.restBasePath,
+  });
+}
 
 export function useContactsMetrics(options?: { enabled?: boolean }) {
   return useServerMetrics<ContactsCommandMetricsSnapshot>({

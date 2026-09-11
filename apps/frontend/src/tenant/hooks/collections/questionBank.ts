@@ -15,13 +15,15 @@ export {
   useQuestionBankResults,
   useQuestionBankResultsCollection,
   useQuestionBankMutations,
+  questionBankCommandMetricsQueryOptions,
   useQuestionBankMetrics,
   useQuestionBankReportAggregates,
 } from "@/tenant/features/question-bank/hooks/useQuestionBankApi";
 export { useQuestionBankConfig } from "@/tenant/features/question-bank/hooks/useQuestionBankConfig";
 export { invalidateQuestionBankQueries } from '@/tenant/features/question-bank/hooks/invalidateQuestionBankQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  questionBankQuestionsListQueryOptions,
   useQuestionBankContractList,
   useQuestionBankContractTests,
   useQuestionBankContractResults,
@@ -30,3 +32,4 @@ export {
   useQuestionBankContractDeleteQuestion,
   useQuestionBankContractRestoreQuestion,
 } from '@/tenant/features/question-bank/hooks/useQuestionBankTsrHooks';
+

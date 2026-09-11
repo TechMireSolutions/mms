@@ -125,7 +125,7 @@ export const ATTENDANCE_MODULE_MANIFEST = {
     retentionDays: null,
   },
   defaultPageSize: 15,
-  maxPageSize: 500,
+  maxPageSize: 100,
 } as const;
 
 export type AttendanceModuleTier = (typeof ATTENDANCE_MODULE_MANIFEST.tiers)[number];

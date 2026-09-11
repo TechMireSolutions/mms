@@ -7,6 +7,7 @@ export {
   ENROLLMENTS_METRICS_QUERY_KEY,
   ENROLLMENTS_REPORT_AGGREGATES_QUERY_KEY,
   ENROLLMENTS_WIDGET_AGGREGATES_QUERY_KEY,
+  enrollmentsCommandMetricsQueryOptions,
   useEnrollments,
   useEnrollmentsPaginated,
   useEnrollmentsCollection,
@@ -16,8 +17,9 @@ export {
   useEnrollmentsWidgetAggregates,
 } from '@/tenant/features/enrollments/hooks/useEnrollmentsApi';
 export { invalidateEnrollmentsQueries } from '@/tenant/features/enrollments/hooks/invalidateEnrollmentsQueries';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  enrollmentsListQueryOptions,
   useEnrollmentsContractList,
   useEnrollmentsContractGet,
   useEnrollmentsContractCreate,

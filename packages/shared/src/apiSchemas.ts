@@ -1,10 +1,13 @@
 import { z } from 'zod';
 import { type softDeleteBodySchema, type bulkIdsBodySchema } from './schemas/api.dto.js';
 
+/** Hard upper bound for interactive REST list `limit` (mms-performance / api-interface §6). */
+export const LIST_PAGE_MAX_LIMIT = 100;
+
 /** Shared page/search/sort query fields used by REST list endpoints. */
 export const baseListQueryFields = {
   page: z.coerce.number().int().min(1).optional(),
-  limit: z.coerce.number().int().min(1).max(500).optional(),
+  limit: z.coerce.number().int().min(1).max(LIST_PAGE_MAX_LIMIT).optional(),
   search: z.string().max(500).optional(),
   sortField: z.string().optional(),
   sortDir: z.union([z.enum(['asc', 'desc']), z.literal('')]).optional(),

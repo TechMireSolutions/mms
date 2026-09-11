@@ -6,6 +6,7 @@ export {
 } from "@/tenant/features/students/hooks/useStudentsListQueries";
 
 export {
+  studentsCommandMetricsQueryOptions,
   useStudentNextGrNumber,
   checkStudentRegistrationDuplicate,
   useStudentsMetrics,

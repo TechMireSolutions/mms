@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiJson } from '@/lib/apiClient';
 import { reportClientError } from '@/lib/clientErrorReporting';
+import { SUMMARY_STALE_TIME } from '@/lib/queryClient';
 import type { WidgetQuery, WidgetAggregateResult } from '@mms/shared';
 
 export interface DynamicWidgetInput {
@@ -100,7 +101,7 @@ export function useModuleWidgetAggregates(
       return results;
     },
     enabled: isAuthenticated && enabled && widgets.length > 0,
-    staleTime: 30_000,
+    staleTime: SUMMARY_STALE_TIME,
   });
 
   return { ...query, data: query.data ?? {} };

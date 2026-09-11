@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { WorkspaceUser } from './userEntityTypes.js';
-import { baseListQuerySchema } from './apiSchemas.js';
+import { baseListQuerySchema, LIST_PAGE_MAX_LIMIT } from './apiSchemas.js';
 import { compareByField, paginateArray } from './utils.js';
 
 export interface UsersListQuery {
@@ -80,7 +80,7 @@ export function paginateUsers(users: WorkspaceUser[], query: UsersListQuery): Us
     );
   }
 
-  const result = paginateArray(rows, query.page ?? 1, query.limit ?? 50, 500);
+  const result = paginateArray(rows, query.page ?? 1, query.limit ?? 50, LIST_PAGE_MAX_LIMIT);
   return {
     users: result.items,
     total: result.total,

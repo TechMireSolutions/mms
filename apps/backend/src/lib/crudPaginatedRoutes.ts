@@ -6,7 +6,7 @@ import { canReadCollection, canWriteCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 
-export interface PaginatedListRouteOptions<TQuery, TPageResult, TAllResult = unknown[]> {
+export interface PaginatedListRouteOptions<TQuery, TPageResult> {
   path?: string;
   collection: string;
   schema: ZodType<TQuery>;
@@ -14,17 +14,15 @@ export interface PaginatedListRouteOptions<TQuery, TPageResult, TAllResult = unk
   defaultPageSize: number;
   errorMessagePrefix: string;
   canWriteDeletedCheck?: (user: User) => boolean;
-  responseTransform?: (result: TPageResult | TAllResult, user: User) => Promise<unknown> | unknown;
-  loadAllFn?: (options: { includeDeleted: boolean }) => Promise<TAllResult>;
+  responseTransform?: (result: TPageResult, user: User) => Promise<unknown> | unknown;
 }
 
 export function registerPaginatedListRoute<
   TQuery extends { page?: number; limit?: number; includeDeleted?: string | boolean },
   TPageResult,
-  TAllResult = unknown[],
 >(
   fastify: FastifyInstance,
-  options: PaginatedListRouteOptions<TQuery, TPageResult, TAllResult>,
+  options: PaginatedListRouteOptions<TQuery, TPageResult>,
 ): void {
   const {
     path,
@@ -35,7 +33,6 @@ export function registerPaginatedListRoute<
     errorMessagePrefix,
     canWriteDeletedCheck,
     responseTransform,
-    loadAllFn,
   } = options;
 
   fastify.get(path || '/', async (request, reply) => {
@@ -55,12 +52,6 @@ export function registerPaginatedListRoute<
           ? canWriteDeletedCheck(user)
           : canWriteCollection(user, collection);
         if (!allowed) return sendForbidden(reply);
-      }
-
-      if (query.page == null && loadAllFn) {
-        const all = await loadAllFn({ includeDeleted });
-        const responseData = responseTransform ? await responseTransform(all, user) : all;
-        return reply.send({ [errorMessagePrefix]: responseData });
       }
 
       const page = await loadPageFn({

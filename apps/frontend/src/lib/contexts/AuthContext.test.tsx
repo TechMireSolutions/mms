@@ -21,11 +21,15 @@ const { mockUser } = vi.hoisted(() => ({
   } as User,
 }));
 
-vi.mock('@/lib/apiClient', () => ({
-  apiFetch: vi.fn(),
-  apiJson: vi.fn(),
-  isApiError: (err: any) => Boolean(err?.status),
-}));
+vi.mock('@/lib/apiClient', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/apiClient')>();
+  return {
+    ...actual,
+    apiFetch: vi.fn(),
+    apiJson: vi.fn(),
+    isApiError: (err: unknown) => Boolean((err as { status?: number })?.status),
+  };
+});
 
 vi.mock('@/lib/queryClient', () => ({
   queryClientInstance: {
@@ -235,6 +239,41 @@ describe('AuthContext', () => {
     // Should only call /api/auth/me once on initial mount
     const authMeCalls = vi.mocked(apiJson).mock.calls.filter(([url]) => url === '/api/auth/me');
     expect(authMeCalls.length).toBe(1);
+
+    act(() => {
+      root.unmount();
+    });
+  });
+
+  it('clears state on SESSION_EXPIRED_EVENT', async () => {
+    localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(mockUser));
+    let capturedAuth!: ReturnType<typeof useAuth>;
+    function Consumer() {
+      capturedAuth = useAuth();
+      return <div>{capturedAuth.user?.name}</div>;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <AuthProvider>
+          <Consumer />
+        </AuthProvider>,
+      );
+    });
+
+    expect(capturedAuth.isAuthenticated).toBe(true);
+
+    act(() => {
+      window.dispatchEvent(new CustomEvent('mms:session-expired', { detail: { reason: 'session_idle_expired' } }));
+    });
+
+    expect(queryClientInstance.clear).toHaveBeenCalled();
+    expect(localStorage.getItem(AUTH_USER_STORAGE_KEY)).toBeNull();
+    expect(capturedAuth.isAuthenticated).toBe(false);
+    expect(capturedAuth.user).toBeNull();
+    expect(appNavigate).toHaveBeenCalledWith('/login', { replace: true });
 
     act(() => {
       root.unmount();

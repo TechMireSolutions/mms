@@ -19,7 +19,7 @@ vi.mock('../lib/httpErrors.js', () => ({
   sendForbidden: (...args: unknown[]) => mockSendForbidden(...args),
 }));
 
-import { requireTenantModule } from '../middleware/requireTenantModule.js';
+import { requireTenantModule, clearModuleAccessCacheForTenant } from '../middleware/requireTenantModule.js';
 
 describe('requireTenantModule middleware', () => {
   const dummyRequest = {
@@ -30,6 +30,7 @@ describe('requireTenantModule middleware', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    clearModuleAccessCacheForTenant();
   });
 
   it('no-ops when there is no tenant in request context', async () => {

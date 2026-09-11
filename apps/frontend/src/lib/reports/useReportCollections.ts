@@ -5,6 +5,7 @@ import {
   type QuestionBankResult,
   type QuestionBankTest,
   type Teacher,
+  FINANCE_MODULE_MANIFEST,
 } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -64,7 +65,7 @@ export function useWidgetCollections(options?: {
   const teachers: Teacher[] = [];
   const sessions: Session[] = [];
   const enrollments: Enrollment[] = [];
-  const financeInvoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }, { enabled: needs('finance_invoices') }).data?.invoices ?? [];
+  const financeInvoices = useFinanceInvoicesPaginated({ page: 1, limit: FINANCE_MODULE_MANIFEST.maxPageSize }, { enabled: needs('finance_invoices') }).data?.invoices ?? [];
   const attendanceRecords = useAttendanceRecordsCollection({ enabled: needs('attendance_records') });
   const hasanatDistributions = useHasanatDistributionsCollection({
     enabled: needs('hasanat_distributions'),
@@ -114,7 +115,7 @@ export function useReportCollectionRows(
   const sessions: Session[] = [];
   const enrollments: Enrollment[] = [];
   const financeInvoices = useFinanceInvoicesPaginated(
-    { page: 1, limit: 500 },
+    { page: 1, limit: FINANCE_MODULE_MANIFEST.maxPageSize },
     { enabled: isAuthenticated && key === 'finance_invoices' }
   ).data?.invoices ?? [];
   const attendanceRecords = useAttendanceRecordsCollection({

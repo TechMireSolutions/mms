@@ -9,10 +9,17 @@ import type {
   ObligationsReportQuery,
 } from '@mms/shared';
 import { OBLIGATIONS_MODULE_MANIFEST } from '@mms/shared';
-import { useServerMetrics } from '@/hooks/useServerMetrics';
+import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 import { tsrClient } from '@/lib/api';
+
+export function obligationsCommandMetricsQueryOptions() {
+  return serverMetricsQueryOptions<ObligationsCommandMetricsSnapshot>({
+    moduleId: OBLIGATIONS_MODULE_MANIFEST.moduleId,
+    apiPath: OBLIGATIONS_MODULE_MANIFEST.restBasePath,
+  });
+}
 import {
   OBLIGATIONS_TYPES_QUERY_KEY,
   OBLIGATIONS_MUJTAHIDS_QUERY_KEY,

@@ -19,7 +19,7 @@ import type { TeachersRepository } from '../teachers/repository/teachersReposito
 import type { StudentsRepository } from '../students/repository/studentsRepository.js';
 import type { EnrollmentsRepository } from '../enrollments/repository/enrollmentsRepository.js';
 import { runWithTenant } from '../lib/tenantContext.js';
-import { withTenant } from '../db/tenant-context.js';
+import { withTenant, withTenantRead } from '../db/tenant-context.js';
 import { z } from 'zod';
 
 vi.mock('../db/database.js', () => ({
@@ -28,6 +28,15 @@ vi.mock('../db/database.js', () => ({
 
 vi.mock('../lib/livePush.js', () => ({
   broadcastCollection: vi.fn().mockResolvedValue(undefined),
+  broadcastTenantUpdate: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('../lib/logger.js', () => ({
+  logger: {
+    warn: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+  },
 }));
 
 vi.mock('../services/websocketService.js', () => ({
@@ -48,13 +57,25 @@ vi.mock('../contacts/use-cases/contactDuplicateScanUseCases.js', () => ({
 }));
 
 
+const defaultReadTx = {
+  select: vi.fn().mockReturnValue({
+    from: vi.fn().mockReturnValue({
+      where: vi.fn().mockReturnValue({
+        limit: vi.fn().mockResolvedValue([]),
+      }),
+    }),
+  }),
+};
+
 vi.mock('../db/tenant-context.js', () => ({
   withTenant: vi.fn(),
+  withTenantRead: vi.fn((_subdomain, cb) => cb?.(defaultReadTx as any)),
 }));
 
 describe('Soft-Delete Data Layer & Relational Guardrails', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(defaultReadTx as any));
   });
 
   describe('1. Relational Query Guardrails (wrapDbWithRelationalGuardrails)', () => {

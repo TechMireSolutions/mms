@@ -6,7 +6,7 @@ import { LegendChip } from "@/components/ui/LegendChip";
 import { TrendingUp, TrendingDown } from "lucide-react";
 import { useFinanceInvoicesPaginated } from "@/tenant/hooks/collections/finance";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatMonthYear, formatMonthName, getCollectedAmountForMonth, getOutstandingAmountForMonth } from "@mms/shared";
+import { formatMonthYear, formatMonthName, getCollectedAmountForMonth, getOutstandingAmountForMonth, FINANCE_MODULE_MANIFEST } from "@mms/shared";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { percentChange } from "@/tenant/features/dashboard/hooks/dashboardMetricTrends";
 
@@ -20,7 +20,7 @@ import { percentChange } from "@/tenant/features/dashboard/hooks/dashboardMetric
  */
 export default function FeeCollectionSummary({ title }: { title?: string }) {
   const { t } = useTranslation();
-  const invoices = useFinanceInvoicesPaginated({ page: 1, limit: 500 }).data?.invoices ?? [];
+  const invoices = useFinanceInvoicesPaginated({ page: 1, limit: FINANCE_MODULE_MANIFEST.maxPageSize }).data?.invoices ?? [];
   const { formatCurrency } = useFinanceCurrency();
 
   const {

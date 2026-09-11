@@ -95,4 +95,22 @@ describe("TeachersListDesktopTable Component", () => {
     expect(html).toContain("0 teachers.table.teachers");
     expect(html).not.toContain("0 selected");
   });
+
+  it("renders virtualized container when teachers exceed 30 items", () => {
+    const manyTeachers = Array.from({ length: 35 }, (_, index) => ({
+      ...mockTeacher,
+      id: `teacher-${index + 1}`,
+      name: `Teacher ${index + 1}`,
+    }));
+    const html = renderToStaticMarkup(
+      <TeachersListDesktopTable
+        {...defaultProps}
+        teachers={manyTeachers}
+        selectedIds={[]}
+      />,
+    );
+
+    expect(html).toContain("max-h-150 overflow-y-auto");
+    expect(html).toContain("35 teachers.table.teachers");
+  });
 });

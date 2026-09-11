@@ -14,8 +14,10 @@ export {
   useMessagingMetrics,
   useMessagingMutations,
 } from '@/tenant/features/messaging/hooks/useMessaging';
-// Phase 7: contract-driven tsrClient hooks
+// Phase 7: contract-driven tsrClient hooks & query factories
 export {
+  messagingLogsListQueryOptions,
+  messagingCommandMetricsQueryOptions,
   useMessagingContractListLogs,
   useMessagingContractListTemplates,
   useMessagingContractListRecipients,

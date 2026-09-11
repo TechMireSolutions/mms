@@ -27,7 +27,7 @@ describe('STUDENTS_MODULE_MANIFEST', () => {
 
   it('configures server pagination defaults', () => {
     expect(STUDENTS_MODULE_MANIFEST.defaultPageSize).toBe(50);
-    expect(STUDENTS_MODULE_MANIFEST.maxPageSize).toBe(500);
+    expect(STUDENTS_MODULE_MANIFEST.maxPageSize).toBe(100);
   });
 
   it('captures soft-delete deletion reasons', () => {

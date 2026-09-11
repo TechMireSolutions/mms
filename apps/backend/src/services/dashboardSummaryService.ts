@@ -11,7 +11,7 @@ import type {
 } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { withTenant } from '../db/tenant-context.js';
-import { redisGet, redisSet } from '../lib/redis.js';
+import { redisGet, redisSet, redisKeys } from '../lib/redis.js';
 import { studentUseCases } from '../students/use-cases/studentUseCases.js';
 import { teacherUseCases } from '../teachers/use-cases/teacherUseCases.js';
 import { contactUseCases } from '../contacts/use-cases/contactUseCases.js';
@@ -52,7 +52,7 @@ export async function loadDashboardSummary(
   if (!tenant) return {};
 
   const cleanTenant = tenant.trim().toLowerCase();
-  const cacheKey = `mms:${cleanTenant}:dashboard:summary:${date ?? 'today'}`;
+  const cacheKey = redisKeys.dashboardSummary(cleanTenant, date);
 
   const cached = await redisGet(cacheKey);
   if (cached) {

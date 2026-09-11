@@ -32,7 +32,7 @@ import {
   type aiContract,
   type platformContract,
 } from '@mms/shared';
-import { apiFetch, resolveApiUrl } from '@/lib/apiClient';
+import { apiFetch, resolveApiUrl, ApiError } from '@/lib/apiClient';
 
 type TsrFetcherArgs = {
   path: string;
@@ -74,6 +74,17 @@ async function tsrApiFetcher(args: TsrFetcherArgs): Promise<{
     parsed = await res.json().catch(() => null);
   } else {
     parsed = await res.text().catch(() => '');
+  }
+
+  if (res.status === 401 || res.status === 403) {
+    const isCredentialEndpoint = path.includes('/auth/change-password') || path.includes('/auth/login-email');
+    if (!isCredentialEndpoint) {
+      const errorBody = parsed && typeof parsed === 'object' ? (parsed as Record<string, unknown>) : {};
+      const message = typeof errorBody.message === 'string' ? errorBody.message : `Authentication error (${res.status})`;
+      const type = typeof errorBody.type === 'string' ? errorBody.type : undefined;
+      const requestId = res.headers.get('x-request-id') ?? undefined;
+      throw new ApiError(res.status, message, type, requestId, errorBody.errors);
+    }
   }
 
   return { status: res.status, body: parsed, headers: res.headers };

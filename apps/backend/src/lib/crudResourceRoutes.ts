@@ -23,7 +23,6 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   schema: ZodType<T>;
   /** Tenant-aware strict write schema (system keys ∪ Setup custom keys). POST/PUT use it when set. */
   buildWriteSchema?: () => Promise<ZodType<T>>;
-  loadAllFn?: () => Promise<unknown[]>;
   loadByIdFn?: (id: string, includeDeleted?: boolean) => Promise<unknown | null>;
   createFn?: (data: T) => Promise<unknown>;
   updateFn?: (id: string, data: T) => Promise<unknown | null>;
@@ -32,6 +31,7 @@ export interface ResourceRoutesOptions<T extends ResourceRecord> {
   restoreFn?: (id: string, userId: string) => Promise<unknown | null>;
   nameSingular: string;
   namePlural: string;
+  /** Deprecated: unpaged GET routes have been eliminated; all lists are paginated. */
   customGetRoute?: boolean;
   customGetSingleRoute?: boolean;
   customPostRoute?: boolean;
@@ -78,7 +78,6 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     collection,
     schema,
     buildWriteSchema,
-    loadAllFn,
     loadByIdFn,
     createFn,
     updateFn,
@@ -86,7 +85,6 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     restoreFn,
     nameSingular,
     namePlural,
-    customGetRoute = false,
     customGetSingleRoute = false,
     customPostRoute = false,
     customPutRoute = false,
@@ -102,20 +100,6 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     mapDeleteError,
     mapRestoreError,
   } = options;
-
-  // GET / or GET /prefix
-  if (!customGetRoute && loadAllFn) {
-    fastify.get(prefix || '/', async (request, reply) => {
-      const user = request.user as User;
-      if (!canReadCollection(user, collection)) return sendForbidden(reply);
-      try {
-        const data = await loadAllFn();
-        return reply.send({ [namePlural]: data });
-      } catch {
-        return sendDatabaseError(reply, `Failed to list ${namePlural}`);
-      }
-    });
-  }
 
   // GET /:id or GET /prefix/:id
   if (!customGetSingleRoute && loadByIdFn) {
