@@ -13,6 +13,7 @@ import { validateStudentDynamic } from '../../../services/studentValidationServi
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
+import { replyValidationError } from '../../../lib/zodRequest.js';
 import { StudentPermissionError } from '../../../students/use-cases/studentNormalizeUseCases.js';
 import {
   auditStudent,
@@ -199,20 +200,19 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
     bulkStatus: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkStatus']>): Promise<unknown> => {
       const user = request.user as User;
-      const { ids, status } = body as { ids: (string | number)[]; status: string };
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           studentUseCases.bulkUpdateStudentStatus(
-            ids.map(String),
-            status,
+            body.ids.map(String),
+            body.status,
           ), { readOnly: false });
         await auditStudent(
           user,
           'student.bulk_status',
-          `Updated status to ${status} for ${result.succeeded} student(s); ${result.failed} failed`,
+          `Updated status to ${body.status} for ${result.succeeded} student(s); ${result.failed} failed`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -222,21 +222,20 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
     bulkEnroll: async ({ body, request }: ContractRouteArgs<typeof studentContract['bulkEnroll']>): Promise<unknown> => {
       const user = request.user as User;
-      const { studentIds, sessionIds, mode } = body as { studentIds: (string | number)[]; sessionIds: (string | number)[]; mode: string };
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           studentUseCases.bulkEnrollStudents({
-            studentIds: studentIds.map(String),
-            sessionIds: sessionIds.map(String),
-            mode: mode as 'add' | 'remove' | 'replace',
+            studentIds: body.studentIds.map(String),
+            sessionIds: body.sessionIds.map(String),
+            mode: body.mode,
           }), { readOnly: false });
         await auditStudent(
           user,
           'student.bulk_enroll',
-          `Updated session enrollments (${mode}) for ${result.succeeded} student(s)`,
+          `Updated session enrollments (${body.mode}) for ${result.succeeded} student(s)`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -254,7 +253,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
           studentUseCases.computeNextGrNumberForDate(query.registeredDate, {
             grNumberTemplate: query.template ?? '{seq}-{year}',
             grNumberDigits: query.digits ?? 4,
-            grNumberRestartAnnually: query.restartAnnually === 'true' ? true : (query.restartAnnually === 'false' ? false : true),
+            grNumberRestartAnnually: query.restartAnnually ?? true,
           }), { readOnly: true });
         return { status: 200 as const, body: { grNumber } };
       } catch {
@@ -292,5 +291,11 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
     },
   } as unknown as Parameters<typeof s.router>[1]);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: (err, _request, reply) => {
+      const zErr = err.body ?? err.query ?? err.pathParams ?? err.headers;
+      const message = zErr instanceof Error ? zErr.message : err.message;
+      void replyValidationError(reply, message);
+    },
+  });
 };

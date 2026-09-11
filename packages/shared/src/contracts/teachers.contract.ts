@@ -1,8 +1,14 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { teacherRecordSchema } from '../teachersModuleManifest.js';
+import {
+  teacherRecordSchema,
+  teachersBulkStatusSchema,
+  teachersBulkSpecializationSchema,
+  teachersNextEmployeeIdQuerySchema,
+} from '../teachersModuleManifest.js';
+import { teachersListQuerySchema } from '../teachersListQuery.js';
 import { teacherLookupsMapSchema } from '../teacherLookupTypes.js';
-import { baseListQuerySchema } from '../apiSchemas.js';
+import { teacherWriteSchema, teachersDuplicateCheckBodySchema } from '../schemas/teachers.dto.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
@@ -47,7 +53,7 @@ export const teacherContract = c.router({
   list: {
     method: 'GET',
     path: '/api/teachers',
-    query: baseListQuerySchema,
+    query: teachersListQuerySchema,
     responses: { 200: teacherListPageResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'List teachers',
   },
@@ -61,14 +67,14 @@ export const teacherContract = c.router({
   create: {
     method: 'POST',
     path: '/api/teachers',
-    body: z.unknown(),
+    body: teacherWriteSchema,
     responses: { 200: teacherWrappedResponseSchema, 201: teacherWrappedResponseSchema, 403: errorResponse, 400: errorResponse, 500: errorResponse },
     summary: 'Create a teacher',
   },
   update: {
     method: 'PUT',
     path: '/api/teachers/:id',
-    body: z.unknown(),
+    body: teacherWriteSchema,
     responses: { 200: teacherWrappedResponseSchema, 403: errorResponse, 404: errorResponse, 400: errorResponse, 500: errorResponse },
     summary: 'Update a teacher',
   },
@@ -82,21 +88,21 @@ export const teacherContract = c.router({
   bulkStatus: {
     method: 'POST',
     path: '/api/teachers/bulk-status',
-    body: z.unknown(),
+    body: teachersBulkStatusSchema,
     responses: { 200: teacherBulkResultResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk update teacher status',
   },
   bulkSpecialization: {
     method: 'POST',
     path: '/api/teachers/bulk-specialization',
-    body: z.unknown(),
+    body: teachersBulkSpecializationSchema,
     responses: { 200: teacherBulkResultResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk update teacher specialization',
   },
   duplicateCheck: {
     method: 'POST',
     path: '/api/teachers/duplicate-check',
-    body: z.unknown(),
+    body: teachersDuplicateCheckBodySchema,
     responses: {
       200: z.object({ reason: z.enum(['contact', 'employeeId']).nullable() }),
       400: errorResponse,
@@ -108,9 +114,7 @@ export const teacherContract = c.router({
   nextEmployeeId: {
     method: 'GET',
     path: '/api/teachers/next-employee-id',
-    query: z.object({
-      prefix: z.string().optional(),
-    }),
+    query: teachersNextEmployeeIdQuerySchema,
     responses: { 200: z.object({ employeeId: z.string() }), 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'Get next available employee ID',
   },

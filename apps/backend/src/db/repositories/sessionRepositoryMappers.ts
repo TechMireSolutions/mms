@@ -18,6 +18,7 @@ import {
   type sessionEvents,
   type sessionTabarruk,
 } from '../schema.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type SessionRow = typeof sessions.$inferSelect;
 type ClassRow = typeof sessionClasses.$inferSelect;
@@ -120,7 +121,7 @@ export function sessionRowToRecord(
     return item;
   });
 
-  const session: Session = {
+  return {
     id: row.id,
     name: row.name,
     type: row.type,
@@ -129,6 +130,7 @@ export function sessionRowToRecord(
     endDate: row.endDate,
     baseFee: Number(row.baseFee) || 0,
     currency: row.currency,
+    description: row.description ?? undefined,
     classes: mappedClasses,
     timetable: mappedTimetable,
     discounts: mappedDiscounts,
@@ -140,16 +142,6 @@ export function sessionRowToRecord(
     },
     events: mappedEvents,
     tabarruk: mappedTabarruk,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-  };
-
-  if (row.description) session.description = row.description;
-  if (row.deletedAt) session.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) session.deletedBy = row.deletedBy;
-  if (row.deletionReason) session.deletionReason = row.deletionReason;
-  if (row.restoredAt) session.restoredAt = row.restoredAt.toISOString();
-  if (row.restoredBy) session.restoredBy = row.restoredBy;
-
-  return session;
+    ...mapAuditTimestamps(row),
+  } satisfies Session;
 }

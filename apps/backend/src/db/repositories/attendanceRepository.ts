@@ -4,59 +4,10 @@ import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { attendance, attendanceLeaves } from '../schema.js';
 import { dedupeTrimmedIds, type AttendanceRecord } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
-
-type AttendanceRow = typeof attendance.$inferSelect;
-type AttendanceInsert = typeof attendance.$inferInsert;
-
-/** Row shape returned by explicit select projections (purgeAfter is DB-only generated column). */
-type AttendanceSelectRow = Omit<AttendanceRow, 'purgeAfter'>;
-
-function rowToRecord(row: AttendanceSelectRow): AttendanceRecord {
-  return {
-    id: row.id,
-    classId: row.classId,
-    studentId: row.studentId,
-    studentName: row.studentName,
-    rollNo: row.rollNo,
-    date: row.date,
-    status: row.status as AttendanceRecord['status'],
-    timeIn: row.timeIn,
-    timeOut: row.timeOut,
-    notes: row.notes,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
-    deletedBy: row.deletedBy ?? null,
-    deletionReason: row.deletionReason ?? null,
-  };
-}
-
-function recordToInsert(tenant: string, record: AttendanceRecord): AttendanceInsert {
-  const resolvedId =
-    typeof record.id === 'string' && record.id.trim() !== ''
-      ? record.id.trim()
-      : typeof (record as any).id === 'number' && Number.isFinite((record as any).id)
-        ? String((record as any).id)
-        : `att-${randomUUID()}`;
-
-  return {
-    id: resolvedId,
-    workspaceSubdomain: tenant.trim().toLowerCase(),
-    classId: String(record.classId || ''),
-    studentId: String(record.studentId || ''),
-    studentName: String(record.studentName || ''),
-    rollNo: String(record.rollNo || ''),
-    date: String(record.date || ''),
-    status: String(record.status || 'present'),
-    timeIn: String(record.timeIn || ''),
-    timeOut: String(record.timeOut || ''),
-    notes: String(record.notes || ''),
-    deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-    deletedBy: record.deletedBy ?? null,
-    deletionReason: record.deletionReason ?? null,
-    updatedAt: new Date(),
-  };
-}
+import {
+  attendanceRowToRecord as rowToRecord,
+  attendanceRecordToInsert as recordToInsert,
+} from './attendanceRepositoryMappers.js';
 
 export async function listAttendanceRecordsByWorkspace(
   tenant: string,

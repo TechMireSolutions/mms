@@ -1,17 +1,14 @@
+import { z } from 'zod';
 import type { Session } from './sessionTypes.js';
-import { LIST_PAGE_MAX_LIMIT } from './apiSchemas.js';
+import { baseListQuerySchema, LIST_PAGE_MAX_LIMIT } from './apiSchemas.js';
 import { paginateArray } from './utils.js';
 
-export interface SessionsListQuery {
-  page?: number;
-  limit?: number;
-  search?: string;
-  status?: string;
-  type?: string;
-  sortField?: string;
-  sortDir?: 'asc' | 'desc';
-  includeDeleted?: boolean;
-}
+export const sessionsListQuerySchema = baseListQuerySchema.extend({
+  status: z.string().max(200).optional(),
+  type: z.string().max(200).optional(),
+});
+
+export type SessionsListQuery = z.infer<typeof sessionsListQuerySchema>;
 
 export interface SessionsListPageResult {
   sessions: Session[];

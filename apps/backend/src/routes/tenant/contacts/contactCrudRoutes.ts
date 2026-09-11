@@ -1,12 +1,11 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { contactWriteSchema, isQueryFlagTrue, type Contact, type User } from '@mms/shared';
+import { isQueryFlagTrue, type Contact, type User } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import { getLinkedContactId } from '../../../services/auth/userService.js';
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
 import { canWriteContacts, canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
-
-import { parseRequest } from '../../../lib/zodRequest.js';
+import { replyValidationError } from '../../../lib/zodRequest.js';
 
 import {
   auditContact,
@@ -91,15 +90,10 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canWriteContacts(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const parsed = parseRequest(contactWriteSchema, body);
-      if (!parsed.ok) {
-        return { status: 400 as const, body: { type: 'validation_error', message: parsed.message } };
-      }
-      const parsedBody = parsed.data;
       const lang = ((request.headers?.['accept-language'] as string | undefined) || 'en');
       
       try {
-        const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(parsedBody as Contact, { user, language: lang });
+        const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(body as Contact, { user, language: lang });
         if (restoredFromDelete) {
           await auditContact(user, 'contact.restore', `Restored contact ${String(contact.id)} via upsert`, String(contact.id));
         } else {
@@ -121,15 +115,10 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!isOwnContact && !canWriteContacts(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const parsed = parseRequest(contactWriteSchema, body);
-      if (!parsed.ok) {
-        return { status: 400 as const, body: { type: 'validation_error', message: parsed.message } };
-      }
-      const parsedBody = parsed.data;
       const lang = ((request.headers?.['accept-language'] as string | undefined) || 'en');
       
       try {
-        const updatePayload = { ...(parsedBody && typeof parsedBody === 'object' ? parsedBody : {}), id } as Contact;
+        const updatePayload = { ...(body && typeof body === 'object' ? body : {}), id } as Contact;
         const updated = await contactUseCases.updateContactById(id, updatePayload, { language: lang, applyRelationshipInference: canWriteContacts(user) });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
         await auditContact(user, 'contact.update', `Updated contact ${id}`, id);
@@ -178,5 +167,11 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
     },
   });
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: (err, _request, reply) => {
+      const zErr = err.body ?? err.query ?? err.pathParams ?? err.headers;
+      const message = zErr instanceof Error ? zErr.message : err.message;
+      void replyValidationError(reply, message);
+    },
+  });
 };

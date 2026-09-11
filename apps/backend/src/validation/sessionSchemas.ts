@@ -1,12 +1,13 @@
 import { z } from 'zod';
-import { baseListQuerySchema } from './commonSchemas.js';
 import { csvExportBodySchema } from './csvExportBodySchema.js';
 import {
   SessionSchema,
   sessionCreateBodySchema,
   sessionsBulkIdsSchema,
   sessionsBulkStatusSchema,
+  sessionsListQuerySchema,
   type SessionsBulkStatusBody,
+  type SessionsListQuery,
 } from '@mms/shared';
 
 export const sessionRecordSchema = SessionSchema.strict();
@@ -15,15 +16,12 @@ export {
   sessionCreateBodySchema,
   sessionsBulkIdsSchema,
   sessionsBulkStatusSchema,
+  sessionsListQuerySchema,
   type SessionsBulkStatusBody,
+  type SessionsListQuery,
 };
 
 export const sessionListSchema = z.array(sessionRecordSchema);
-
-export const sessionsListQuerySchema = baseListQuerySchema.extend({
-  status: z.string().max(200).optional(),
-  type: z.string().max(200).optional(),
-});
 
 export const sessionsCsvExportBodySchema = csvExportBodySchema(sessionsListQuerySchema);
 

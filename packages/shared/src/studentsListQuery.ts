@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { AppTranslationKey } from './appTranslations.js';
 import type { Student } from './studentTypes.js';
 import { baseListQuerySchema } from './apiSchemas.js';
+import { isQueryFlagTrue } from './paginationUtils.js';
 
 export interface StudentsListQuery {
   page?: number;
@@ -87,3 +88,15 @@ export interface StudentsListPageResult {
   limit: number;
   hasMore: boolean;
 }
+
+export const studentsNextGrNumberQuerySchema = z.object({
+  registeredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  template: z.string().max(64).optional(),
+  digits: z.coerce.number().int().min(1).max(12).optional(),
+  restartAnnually: z
+    .enum(['true', 'false'])
+    .optional()
+    .transform((v) => (v === undefined ? undefined : isQueryFlagTrue(v))),
+});
+
+export type StudentsNextGrNumberQuery = z.infer<typeof studentsNextGrNumberQuerySchema>;

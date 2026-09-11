@@ -1,23 +1,20 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { studentWriteSchema } from '../schemas/students.dto.js';
+import {
+  studentWriteSchema,
+  studentsBulkEnrollBodySchema,
+  studentsDuplicateCheckBodySchema,
+  studentsBulkStatusSchema,
+} from '../schemas/students.dto.js';
 import { studentRecordSchema } from '../studentsModuleManifest.js';
-import { baseListQuerySchema } from '../apiSchemas.js';
+import {
+  studentsListQuerySchema,
+  studentsNextGrNumberQuerySchema,
+} from '../studentsListQuery.js';
 
 const c = initContract();
 
 const errorResponse = z.unknown();
-
-export const studentListQuerySchema = baseListQuerySchema.extend({
-  sessionId: z.string().optional(),
-  className: z.string().optional(),
-  status: z.string().optional(),
-  gender: z.string().optional(),
-  quickFilter: z.string().optional(),
-  relatedContactIds: z.string().optional(),
-  fatherName: z.string().optional(),
-  excludeId: z.string().optional(),
-}).passthrough();
 
 /** Envelope for paginated student list responses (`StudentsListPageResult`). */
 export const studentListPageResponseSchema = z.object({
@@ -63,7 +60,7 @@ export const studentContract = c.router({
   list: {
     method: 'GET',
     path: '/api/students',
-    query: studentListQuerySchema,
+    query: studentsListQuerySchema,
     responses: {
       200: studentListPageResponseSchema,
       403: errorResponse,
@@ -78,6 +75,7 @@ export const studentContract = c.router({
     responses: {
       200: z.object({ student: studentRecordSchema }),
       201: z.object({ student: studentRecordSchema }),
+      400: errorResponse,
       403: errorResponse,
       500: errorResponse,
     },
@@ -100,6 +98,7 @@ export const studentContract = c.router({
     body: studentWriteSchema,
     responses: {
       200: z.object({ student: studentRecordSchema }),
+      400: errorResponse,
       403: errorResponse,
       404: errorResponse,
       500: errorResponse,
@@ -121,9 +120,10 @@ export const studentContract = c.router({
   bulkStatus: {
     method: 'POST',
     path: '/api/students/bulk-status',
-    body: z.unknown(),
+    body: studentsBulkStatusSchema,
     responses: {
       200: studentBulkResultResponseSchema,
+      400: errorResponse,
       403: errorResponse,
       500: errorResponse,
     },
@@ -132,9 +132,10 @@ export const studentContract = c.router({
   bulkEnroll: {
     method: 'POST',
     path: '/api/students/bulk-enroll',
-    body: z.unknown(),
+    body: studentsBulkEnrollBodySchema,
     responses: {
       200: studentBulkResultResponseSchema,
+      400: errorResponse,
       403: errorResponse,
       500: errorResponse,
     },
@@ -143,12 +144,7 @@ export const studentContract = c.router({
   nextGrNumber: {
     method: 'GET',
     path: '/api/students/next-gr-number',
-    query: z.object({
-      registeredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-      template: z.string().max(64).optional(),
-      digits: z.coerce.number().int().min(1).max(12).optional(),
-      restartAnnually: z.enum(['true', 'false']).optional(),
-    }),
+    query: studentsNextGrNumberQuerySchema,
     responses: {
       200: z.object({ grNumber: z.string() }),
       400: errorResponse,
@@ -160,7 +156,7 @@ export const studentContract = c.router({
   duplicateCheck: {
     method: 'POST',
     path: '/api/students/duplicate-check',
-    body: z.unknown(),
+    body: studentsDuplicateCheckBodySchema,
     responses: {
       200: z.object({
         reason: z.enum(['contact', 'email', 'nameDob', 'grNumber']).nullable(),

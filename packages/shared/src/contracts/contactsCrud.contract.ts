@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { contactRecordSchema } from '../contactsModuleManifest.js';
 import { contactIdentityMatchResultSchema } from '../contactIdentityMatch.js';
 import { baseListQuerySchema } from '../apiSchemas.js';
+import { contactWriteSchema } from '../schemas/contacts.dto.js';
 import {
   contactListPageResponseSchema,
   contactBulkResultResponseSchema,
@@ -41,7 +42,7 @@ export const contactsCrudRoutes = {
   create: {
     method: 'POST',
     path: '/api/contacts',
-    body: z.unknown(),
+    body: contactWriteSchema,
     responses: {
       200: responseWrapper,
       201: responseWrapper,
@@ -62,7 +63,7 @@ export const contactsCrudRoutes = {
     method: 'PUT',
     path: '/api/contacts/:id',
     pathParams: z.object({ id: z.string() }),
-    body: z.unknown(),
+    body: contactWriteSchema,
     responses: {
       200: responseWrapper,
       400: z.unknown(),

@@ -1,5 +1,6 @@
 import { type Student, type StudentStatus } from '@mms/shared';
 import { type students } from '../schema.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 export function studentRowToRecord(
   row: typeof students.$inferSelect,
@@ -10,7 +11,7 @@ export function studentRowToRecord(
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map((s) => s.sessionId);
 
-  const student: Student = {
+  return {
     id: row.id,
     contactId: row.contactId ?? '',
     fatherContactId: row.fatherContactId ?? null,
@@ -18,28 +19,17 @@ export function studentRowToRecord(
     guardianContactId: row.guardianContactId ?? null,
     status: (row.status as StudentStatus) ?? 'active',
     enrolledSessions,
-  };
-
-  if (row.fatherName) student.fatherName = row.fatherName;
-  if (row.motherName) student.motherName = row.motherName;
-  if (row.guardianName) student.guardianName = row.guardianName;
-  if (row.grNumber) student.grNumber = row.grNumber;
-  if (row.studentId) student.studentId = row.studentId;
-  if (row.registeredDate) student.registeredDate = row.registeredDate;
-  if (row.enrollmentDate) student.enrollmentDate = row.enrollmentDate;
-  if (row.discountType) student.discountType = row.discountType;
-  if (row.discountPct != null) student.discountPct = Number(row.discountPct);
-  if (row.registrationType) student.registrationType = row.registrationType;
-  if (row.notes) student.notes = row.notes;
-  if (row.deletedAt) student.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) student.deletedBy = row.deletedBy;
-  if (row.deletionReason) student.deletionReason = row.deletionReason;
-  if (row.restoredAt) student.restoredAt = row.restoredAt.toISOString();
-  if (row.restoredBy) student.restoredBy = row.restoredBy;
-  if (row.createdAt) student.createdAt = row.createdAt.toISOString();
-  if (row.updatedAt) student.updatedAt = row.updatedAt.toISOString();
-  if (row.createdBy) student.createdBy = row.createdBy;
-  if (row.updatedBy) student.updatedBy = row.updatedBy;
-
-  return student;
+    fatherName: row.fatherName ?? undefined,
+    motherName: row.motherName ?? undefined,
+    guardianName: row.guardianName ?? undefined,
+    grNumber: row.grNumber ?? undefined,
+    studentId: row.studentId ?? undefined,
+    registeredDate: row.registeredDate ?? undefined,
+    enrollmentDate: row.enrollmentDate ?? undefined,
+    discountType: row.discountType ?? undefined,
+    discountPct: row.discountPct != null ? Number(row.discountPct) : undefined,
+    registrationType: row.registrationType ?? undefined,
+    notes: row.notes ?? undefined,
+    ...mapAuditTimestamps(row),
+  } satisfies Student;
 }

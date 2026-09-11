@@ -4,12 +4,15 @@ import {
   isQueryFlagTrue,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type AttendanceCommandMetricsSnapshot,
-  type AttendanceRecord,
   type AttendanceListQuery,
   type AttendanceListPageResult,
 } from '@mms/shared';
 import { attendance, sessionClasses, sessions } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import {
+  attendanceRowToRecord as rowToRecord,
+  type AttendanceRow,
+} from './attendanceRepositoryMappers.js';
 
 function buildAttendanceListConditions(subdomain: string, query: AttendanceListQuery): SQL[] {
   const conditions: SQL[] = [eq(attendance.workspaceSubdomain, subdomain)];
@@ -108,27 +111,6 @@ function buildAttendanceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): S
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
 
-type AttendanceRow = typeof attendance.$inferSelect;
-
-function rowToRecord(row: AttendanceRow): AttendanceRecord {
-  return {
-    id: row.id,
-    classId: row.classId,
-    studentId: row.studentId,
-    studentName: row.studentName,
-    rollNo: row.rollNo,
-    date: row.date,
-    status: row.status as AttendanceRecord['status'],
-    timeIn: row.timeIn,
-    timeOut: row.timeOut,
-    notes: row.notes,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
-    deletedBy: row.deletedBy ?? null,
-    deletionReason: row.deletionReason ?? null,
-  };
-}
 
 export async function listAttendancePage(
   tenant: string,

@@ -5,7 +5,6 @@ import {
   TEACHERS_MODULE_MANIFEST,
   roleHasPermission,
   DEFAULT_TEACHERS_SETTINGS,
-  teacherRecordSchema,
   isQueryFlagTrue,
   type Teacher,
   type User,
@@ -13,6 +12,7 @@ import {
 } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
+import { replyValidationError } from '../../../lib/zodRequest.js';
 import { teacherUseCases } from '../../../teachers/use-cases/teacherUseCases.js';
 import { validateTeacherDynamic } from '../../../services/teacherValidationService.js';
 import {
@@ -73,20 +73,11 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canWriteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      let coreParsed: Record<string, unknown>;
-      try {
-        coreParsed = teacherRecordSchema.parse(body) as unknown as Record<string, unknown>;
-      } catch (err) {
-        return {
-          status: 400 as const,
-          body: { type: 'validation_error', message: err instanceof Error ? err.message : String(err) },
-        };
-      }
       const lang = (request.headers['accept-language'] as string) || 'en';
       const tenant = request.tenant?.id;
       if (tenant) {
         try {
-          await validateTeacherDynamic(tenant, coreParsed, lang);
+          await validateTeacherDynamic(tenant, body as Record<string, unknown>, lang);
         } catch (error) {
           return {
             status: 400 as const,
@@ -98,7 +89,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         // (typed as User & { workspaceId? } because the legacy JWT payload may carry workspaceId;
         //  it is not on the shared User type)
         const result = await withTenant(String(tenant), () => teacherUseCases.createTeacher(
-          { ...coreParsed, workspaceId: (user as User & { workspaceId?: string }).workspaceId } as never), { readOnly: false });
+          { ...(body as Record<string, unknown>), workspaceId: (user as User & { workspaceId?: string }).workspaceId } as never), { readOnly: false });
         await auditTeacher(user, 'teacher.create', `Created teacher ${result.record.id}`, String(result.record.id));
         return {
           status: (result.restored ? 200 : 201) as 200 | 201,
@@ -114,20 +105,12 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canWriteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      let coreParsed: Record<string, unknown>;
-      try {
-        coreParsed = teacherRecordSchema.parse({ ...(body as Record<string, unknown>), id }) as unknown as Record<string, unknown>;
-      } catch (err) {
-        return {
-          status: 400 as const,
-          body: { type: 'validation_error', message: err instanceof Error ? err.message : String(err) },
-        };
-      }
+      const payload = { ...(body as Record<string, unknown>), id };
       const lang = (request.headers['accept-language'] as string) || 'en';
       const tenant = request.tenant?.id;
       if (tenant) {
         try {
-          await validateTeacherDynamic(tenant, coreParsed, lang);
+          await validateTeacherDynamic(tenant, payload, lang);
         } catch (error) {
           return {
             status: 400 as const,
@@ -136,7 +119,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
       try {
-        const updated = await withTenant(String(tenant), () => teacherUseCases.updateTeacherById(id, { ...coreParsed, id } as never), { readOnly: false });
+        const updated = await withTenant(String(tenant), () => teacherUseCases.updateTeacherById(id, payload as never), { readOnly: false });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Teacher not found' } };
         await auditTeacher(user, 'teacher.update', `Updated teacher ${id}`, id);
         return { status: 200 as const, body: { success: true, teacher: await sanitizeOneTeacherForUser(updated as Teacher, user) } };
@@ -164,20 +147,19 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
     bulkStatus: async ({ body, request }: ContractRouteArgs<typeof teacherContract['bulkStatus']>): Promise<unknown> => {
       const user = request.user as User;
-      const { ids, status } = body as { ids: (string | number)[]; status: string };
       if (!canWriteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           teacherUseCases.bulkUpdateTeacherStatus(
-            ids.map(String),
-            status,
+            body.ids.map(String),
+            body.status,
           ), { readOnly: false });
         await auditTeacher(
           user,
           'teacher.bulk_status',
-          `Updated status to ${status} for ${result.succeeded} teacher(s); ${result.failed} failed`,
+          `Updated status to ${body.status} for ${result.succeeded} teacher(s); ${result.failed} failed`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -187,20 +169,19 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
     bulkSpecialization: async ({ body, request }: ContractRouteArgs<typeof teacherContract['bulkSpecialization']>): Promise<unknown> => {
       const user = request.user as User;
-      const { ids, specialization } = body as { ids: (string | number)[]; specialization: string };
       if (!canWriteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
           teacherUseCases.bulkUpdateTeacherSpecialization(
-            ids.map(String),
-            specialization,
+            body.ids.map(String),
+            body.specialization,
           ), { readOnly: false });
         await auditTeacher(
           user,
           'teacher.bulk_specialization',
-          `Updated specialization to ${specialization} for ${result.succeeded} teacher(s); ${result.failed} failed`,
+          `Updated specialization to ${body.specialization} for ${result.succeeded} teacher(s); ${result.failed} failed`,
         );
         return { status: 200 as const, body: { success: true, ...result } };
       } catch {
@@ -253,5 +234,11 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
     },
   } as unknown as Parameters<typeof s.router>[1]);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: (err, _request, reply) => {
+      const zErr = err.body ?? err.query ?? err.pathParams ?? err.headers;
+      const message = zErr instanceof Error ? zErr.message : err.message;
+      void replyValidationError(reply, message);
+    },
+  });
 };

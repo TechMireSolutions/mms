@@ -6,9 +6,6 @@ import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { usersUseCases } from '../../../users/use-cases/usersUseCases.js';
 import { AUTH_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
-
-import { parseRequest } from '../../../lib/zodRequest.js';
-import { usersListQuerySchema } from '../../../validation/userSchemas.js';
 import {
   dependencyForDiagnosticStage,
   getRequestDiagnosticContext,
@@ -90,13 +87,9 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
       if (includeDeleted && !canDeleteCollection(user, 'users')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const parsedQuery = parseRequest(usersListQuerySchema, query);
-      if (!parsedQuery.ok) {
-        return { status: 400 as const, body: { type: 'validation_error', message: parsedQuery.message } };
-      }
       try {
         const result = await usersUseCases.loadUsersPage({
-          ...(parsedQuery.data as UsersListQuery),
+          ...(query as unknown as UsersListQuery),
           includeDeleted,
         });
         return { status: 200 as const, body: result };

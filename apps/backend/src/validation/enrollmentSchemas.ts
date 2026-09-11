@@ -1,21 +1,20 @@
-import { z } from 'zod';
-import { baseListQuerySchema } from './commonSchemas.js';
 import { csvExportBodySchema } from './csvExportBodySchema.js';
 import {
-  enrollmentRecordSchema as sharedEnrollmentRecordSchema,
+  enrollmentRecordSchema,
+  enrollmentsListQuerySchema,
   enrollmentsBulkIdsSchema,
   type Enrollment,
+  type EnrollmentsListQuery,
 } from '@mms/shared';
 
-export const enrollmentRecordSchema = sharedEnrollmentRecordSchema.passthrough();
+export {
+  enrollmentRecordSchema,
+  enrollmentsListQuerySchema,
+  enrollmentsBulkIdsSchema,
+  type Enrollment,
+  type EnrollmentsListQuery,
+};
+
 export type EnrollmentRecord = Enrollment;
-
-export { enrollmentsBulkIdsSchema };
-
-export const enrollmentsListQuerySchema = baseListQuerySchema.extend({
-  status: z.string().max(200).optional(),
-  sessionId: z.string().max(100).optional(),
-  classId: z.string().max(100).optional(),
-});
 
 export const enrollmentsCsvExportBodySchema = csvExportBodySchema(enrollmentsListQuerySchema);

@@ -10,7 +10,7 @@ import {
   listTeacherSystemFormFieldKeys,
 } from '../teacherFormCustomFields.js';
 import type { TeachersSettings } from '../teachersModuleSettings.js';
-import { TEACHER_STATUS_WRITE_MAX } from '../teachersModuleManifest.js';
+import { TEACHER_STATUS_WRITE_MAX, teacherCoreSchema } from '../teachersModuleManifest.js';
 import { stripTeacherWriteNoise } from '../teacherUtils.js';
 import { deepSanitizeStrings } from './sanitize.js';
 
@@ -173,3 +173,11 @@ export const teachersDuplicateCheckBodySchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   return deepSanitizeStrings(raw);
 }, teachersDuplicateCheckBodyBaseSchema);
+
+export const teacherWriteSchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const stripped = stripTeacherWriteNoise(raw as Record<string, unknown>);
+  return deepSanitizeStrings(stripped);
+}, teacherCoreSchema);
+
+export type TeacherWrite = z.infer<typeof teacherWriteSchema>;

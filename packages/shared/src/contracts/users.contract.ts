@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { baseListQuerySchema } from '../apiSchemas.js';
+import { usersListQuerySchema } from '../usersListQuery.js';
 import {
   activityLogRecordSchema,
   createWorkspaceUserSchema,
@@ -33,7 +33,7 @@ export const userContract = c.router({
   list: {
     method: 'GET',
     path: '/api/users',
-    query: baseListQuerySchema,
+    query: usersListQuerySchema,
     responses: { 200: userListPageResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'List workspace users',
   },
