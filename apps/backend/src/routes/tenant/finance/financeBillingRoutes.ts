@@ -6,9 +6,8 @@ import {
   resourceIdParamsSchema,
   type User,
 } from '@mms/shared';
-import { ZodError } from 'zod';
 import { canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
-import { sendBadRequest, sendForbidden, sendIfHttpDomainError, sendDatabaseError } from '../../../lib/httpErrors.js';
+import { sendForbidden, sendIfHttpDomainError, sendDatabaseError } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import {
@@ -55,16 +54,14 @@ export const financeBillingRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/invoices/generate', async (request, reply) => {
     const user = request.user as User;
     if (!canWriteCollection(user, COLLECTION)) return sendForbidden(reply);
+    const parsed = parseRequest(generateInvoicesBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
-      const body = generateInvoicesBodySchema.parse(request.body);
-      const result = await withTenant(String(request.tenant?.id), () => generateInvoices(body), {
+      const result = await withTenant(String(request.tenant?.id), () => generateInvoices(parsed.data), {
         readOnly: false,
       });
       return reply.send(result);
     } catch (error) {
-      if (error instanceof ZodError) {
-        return sendBadRequest(reply, error.issues[0]?.message ?? 'Invalid generate request');
-      }
       return sendIfHttpDomainError(reply, error) ?? sendDatabaseError(reply, 'Failed to generate invoices', error);
     }
   });

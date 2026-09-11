@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
-import { dedupeTrimmedIds, type Distribution } from '@mms/shared';
+import { dedupeTrimmedIds, type Distribution, type RepositoryListOptions } from '@mms/shared';
+import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { hasanatDistributions } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -30,12 +31,7 @@ export function distributionRowToRecord(row: DistRow): Distribution {
   return dist;
 }
 
-export interface ListDistributionsOptions {
-  limit?: number;
-  offset?: number;
-  deleted?: 'active' | 'deleted' | 'all';
-  includeDeleted?: boolean;
-}
+export type ListDistributionsOptions = RepositoryListOptions;
 
 export async function listDistributionsByWorkspace(
   tenant: string,
@@ -44,13 +40,9 @@ export async function listDistributionsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 1000, 1), 10000);
   const offset = Math.max(options?.offset ?? 0, 0);
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(hasanatDistributions.workspaceSubdomain, subdomain)];
-    if (options?.deleted === 'deleted') {
-      conditions.push(isNotNull(hasanatDistributions.deletedAt));
-    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
-      conditions.push(isNull(hasanatDistributions.deletedAt));
-    }
+    const conditions = buildTenantSoftDeleteConditions(hasanatDistributions, subdomain, deletedFilter);
     const rows = await tx
       .select({
         id: hasanatDistributions.id,

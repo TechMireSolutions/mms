@@ -3,14 +3,11 @@ import {
   canApplyLateFee,
   canCancelInvoice,
   canCreditInvoice,
-  collectInvoicesBodySchema,
   computeLateFee,
-  creditNoteInsertSchema,
   DEFAULT_FINANCE_SETTINGS,
   getOutstandingAmountForInvoice,
   invoiceOpenBalance,
   isInvoiceDueForReminder,
-  remindInvoicesBodySchema,
   todayISO,
   toMessagingRecipient,
   wasRemindedRecently,
@@ -47,7 +44,7 @@ function domainError(message: string, statusCode: number, type: string): Error {
 
 export async function collectOverdueInvoices(input: CollectInvoicesBody = {}): Promise<CollectInvoicesResult> {
   const tenant = requireTenant();
-  const body = collectInvoicesBodySchema.parse(input);
+  const body = input;
   const today = todayISO();
   const prefs = await loadFinanceModulePreferences();
   const lateFeePercent = Number.parseFloat(prefs?.lateFeePercent ?? DEFAULT_FINANCE_SETTINGS.lateFeePercent) || 0;
@@ -71,7 +68,7 @@ export async function collectOverdueInvoices(input: CollectInvoicesBody = {}): P
 
 export async function remindOpenInvoices(input: RemindInvoicesBody = {}): Promise<RemindInvoicesResult> {
   const tenant = requireTenant();
-  const body = remindInvoicesBodySchema.parse(input);
+  const body = input;
   const prefs = await loadFinanceModulePreferences();
   if (prefs && !prefs.overdueReminder && !prefs.feeReminders) {
     return { reminded: 0, skipped: 0, recipients: [] };
@@ -131,7 +128,7 @@ export async function cancelInvoice(invoiceId: string): Promise<Invoice> {
 
 export async function createCreditNote(input: CreditNoteInsert): Promise<CreditNote> {
   const tenant = requireTenant();
-  const parsed = creditNoteInsertSchema.parse(input);
+  const parsed = input;
   const invoice = await financeUseCases.getInvoiceById(parsed.invoiceId);
   if (!invoice || invoice.deletedAt) throw domainError('Invoice not found', 404, 'not_found');
   if (!canCreditInvoice(invoice, parsed.amount)) {

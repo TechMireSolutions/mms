@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync, FastifyRequest } from 'fastify';
 import { desc, eq, and, sql } from 'drizzle-orm';
-import { listAuditEventsQuerySchema, roleHasPermission } from '@mms/shared';
+import { listAuditEventsQuerySchema, roleHasPermission, type User } from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendForbidden } from '../../../lib/httpErrors.js';
 import { activeDb } from '../../../db/dbConnection.js';
@@ -35,8 +35,8 @@ export const auditEventRoutes: FastifyPluginAsync = async (fastify) => {
    * Auditing the auditor: viewing audit records logs an immutable VIEW audit event.
    */
   fastify.get('/api/audit/events', async (request, reply) => {
-    const user = request.user as { id?: string; role?: string };
-    if (!roleHasPermission(user.role ?? '', 'analytics.view')) {
+    const user = request.user as User | undefined;
+    if (!roleHasPermission(user?.role ?? '', 'analytics.view')) {
       return sendForbidden(reply);
     }
     const tenant = getRequestTenant();
@@ -94,7 +94,7 @@ export const auditEventRoutes: FastifyPluginAsync = async (fastify) => {
     ]);
 
     // Auditing the auditor: log inspection of audit records (fire-and-forget — must not block the read path).
-    const userId = (request.user as { id?: string })?.id || 'anonymous';
+    const userId = (request.user as User | undefined)?.id || 'anonymous';
     void recordModernAuditEvent(db, {
       workspaceSubdomain: tenant,
       tableName: 'audit_trail_events',
@@ -121,8 +121,8 @@ export const auditEventRoutes: FastifyPluginAsync = async (fastify) => {
    * Includes cryptographic shard chain hashes and latest verification status in metadata.
    */
   fastify.get('/api/audit/export', async (request, reply) => {
-    const user = request.user as { id?: string; role?: string };
-    if (!roleHasPermission(user.role ?? '', 'analytics.view')) {
+    const user = request.user as User | undefined;
+    if (!roleHasPermission(user?.role ?? '', 'analytics.view')) {
       return sendForbidden(reply);
     }
     const tenant = getRequestTenant();
@@ -173,7 +173,7 @@ export const auditEventRoutes: FastifyPluginAsync = async (fastify) => {
         .limit(1),
     ]);
 
-    const userId = (request.user as { id?: string })?.id || 'anonymous';
+    const userId = (request.user as User | undefined)?.id || 'anonymous';
     // Auditing the auditor: export is an auditable event (fire-and-forget — must not block the response).
     void recordModernAuditEvent(db, {
       workspaceSubdomain: tenant,

@@ -1,7 +1,8 @@
 import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
-import { dedupeTrimmedIds, type Invoice } from '@mms/shared';
+import { dedupeTrimmedIds, type Invoice, type RepositoryListOptions } from '@mms/shared';
 import { financeInvoiceLines, financeInvoices, financePayments } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { ValidationError } from '../../lib/httpErrors.js';
 import { invoiceWriteValues } from './financeInvoiceValues.js';
 import { invoiceLineRowToRecord, replaceInvoiceLines } from './financeBillingRepository.js';
@@ -42,12 +43,7 @@ export function invoiceRowToRecord(row: InvoiceRow): Invoice {
   return invoice;
 }
 
-export interface ListInvoicesOptions {
-  limit?: number;
-  offset?: number;
-  deleted?: 'active' | 'deleted' | 'all';
-  includeDeleted?: boolean;
-}
+export type ListInvoicesOptions = RepositoryListOptions;
 
 export async function listInvoicesByWorkspace(
   tenant: string,
@@ -56,13 +52,9 @@ export async function listInvoicesByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(financeInvoices.workspaceSubdomain, subdomain)];
-    if (options?.deleted === 'deleted') {
-      conditions.push(isNotNull(financeInvoices.deletedAt));
-    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
-      conditions.push(isNull(financeInvoices.deletedAt));
-    }
+    const conditions = buildTenantSoftDeleteConditions(financeInvoices, subdomain, deletedFilter);
     const rows = await tx
       .select({
         id: financeInvoices.id,

@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
-import { dedupeTrimmedIds, type QuestionBankQuestion } from '@mms/shared';
+import { dedupeTrimmedIds, type QuestionBankQuestion, type RepositoryListOptions } from '@mms/shared';
+import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import {
   questions,
   questionCategories,
@@ -12,12 +13,7 @@ import { questionRowToRecord, syncQuestionChildren } from './questionBankQuestio
 
 export { questionRowToRecord } from './questionBankQuestionsSync.js';
 
-export interface ListQuestionsOptions {
-  limit?: number;
-  offset?: number;
-  deleted?: 'active' | 'deleted' | 'all';
-  includeDeleted?: boolean;
-}
+export type ListQuestionsOptions = RepositoryListOptions;
 
 export async function listQuestionsByWorkspace(
   tenant: string,
@@ -26,13 +22,9 @@ export async function listQuestionsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(questions.workspaceSubdomain, subdomain)];
-    if (options?.deleted === 'deleted') {
-      conditions.push(isNotNull(questions.deletedAt));
-    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
-      conditions.push(isNull(questions.deletedAt));
-    }
+    const conditions = buildTenantSoftDeleteConditions(questions, subdomain, deletedFilter);
     const rows = await tx
       .select({
         id: questions.id,

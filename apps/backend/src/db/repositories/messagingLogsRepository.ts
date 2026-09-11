@@ -1,6 +1,6 @@
 import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { messageTemplates, messageLogs } from '../schema.js';
-import { dedupeTrimmedIds, type Message } from '@mms/shared';
+import { dedupeTrimmedIds, type Message, type RepositoryListOptions } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
 
 type LogRow = typeof messageLogs.$inferSelect;
@@ -30,10 +30,7 @@ export function logRowToRecord(row: LogSelectRow): Message {
   return message;
 }
 
-export interface ListMessageLogsOptions {
-  limit?: number;
-  offset?: number;
-}
+export type ListMessageLogsOptions = RepositoryListOptions;
 
 export async function listMessageLogsByWorkspace(
   tenant: string,

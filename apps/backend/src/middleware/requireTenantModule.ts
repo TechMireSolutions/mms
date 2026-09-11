@@ -5,7 +5,7 @@ import {
   getWorkspaceGlobalSettings,
   getWorkspaceGrantedModulesRepo,
 } from '../db/repositories/workspaceRepository.js';
-import { normalizeEnabledModules } from '@mms/shared';
+import { normalizeEnabledModules, type User } from '@mms/shared';
 import { markRequestDiagnosticStage } from '../lib/requestDiagnostics.js';
 import { logger } from '../lib/logger.js';
 
@@ -60,7 +60,7 @@ export function requireTenantModule(moduleId: string) {
       const tenant =
         getRequestTenant() ??
         (request as unknown as { tenant?: { subdomain?: string; id?: string } }).tenant?.subdomain ??
-        (request.user as { workspaceSubdomain?: string } | undefined)?.workspaceSubdomain;
+        (request.user as User | undefined)?.workspaceSubdomain;
       if (!tenant) {
         return;
       }

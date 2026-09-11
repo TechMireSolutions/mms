@@ -3,6 +3,45 @@ import { type Student } from '@mms/shared';
 import { students, studentEnrolledSessions } from '../schema.js';
 import { withTenant, type AppDb } from '../tenant-context.js';
 
+export type StudentInsert = typeof students.$inferInsert;
+
+export function studentWriteValues(subdomain: string, student: Student): StudentInsert {
+  return {
+    id: String(student.id),
+    workspaceSubdomain: subdomain,
+    contactId: student.contactId ? String(student.contactId) : null,
+    fatherContactId: student.fatherContactId ? String(student.fatherContactId) : null,
+    motherContactId: student.motherContactId ? String(student.motherContactId) : null,
+    guardianContactId: student.guardianContactId ? String(student.guardianContactId) : null,
+    fatherName: student.fatherName ?? null,
+    motherName: student.motherName ?? null,
+    guardianName: student.guardianName ?? null,
+    grNumber: student.grNumber ?? null,
+    studentId: student.studentId ?? null,
+    status: student.status ?? 'active',
+    registeredDate: student.registeredDate ?? null,
+    enrollmentDate: student.enrollmentDate ?? null,
+    discountType: student.discountType ?? null,
+    discountPct: student.discountPct != null ? String(student.discountPct) : null,
+    registrationType: student.registrationType ?? null,
+    notes: student.notes ?? null,
+    deletedAt: student.deletedAt ? new Date(student.deletedAt) : null,
+    deletedBy: student.deletedBy ?? null,
+    deletionReason: student.deletionReason ?? null,
+    restoredAt: student.restoredAt ? new Date(student.restoredAt) : null,
+    restoredBy: student.restoredBy ?? null,
+    createdAt: student.createdAt ? new Date(student.createdAt) : new Date(),
+    updatedAt: new Date(),
+    createdBy: student.createdBy ?? null,
+    updatedBy: student.updatedBy ?? null,
+  } satisfies StudentInsert;
+}
+
+export function studentUpdateSetValues(subdomain: string, student: Student) {
+  const { id: _id, workspaceSubdomain: _subdomain, createdAt: _createdAt, createdBy: _createdBy, ...setFields } = studentWriteValues(subdomain, student);
+  return setFields;
+}
+
 export async function persistStudentTx(
   tx: AppDb,
   subdomain: string,
@@ -12,62 +51,10 @@ export async function persistStudentTx(
 
   await tx
     .insert(students)
-    .values({
-      id: studentId,
-      workspaceSubdomain: subdomain,
-      contactId: student.contactId ? String(student.contactId) : null,
-      fatherContactId: student.fatherContactId ? String(student.fatherContactId) : null,
-      motherContactId: student.motherContactId ? String(student.motherContactId) : null,
-      guardianContactId: student.guardianContactId ? String(student.guardianContactId) : null,
-      fatherName: student.fatherName ?? null,
-      motherName: student.motherName ?? null,
-      guardianName: student.guardianName ?? null,
-      grNumber: student.grNumber ?? null,
-      studentId: student.studentId ?? null,
-      status: student.status ?? 'active',
-      registeredDate: student.registeredDate ?? null,
-      enrollmentDate: student.enrollmentDate ?? null,
-      discountType: student.discountType ?? null,
-      discountPct: student.discountPct != null ? String(student.discountPct) : null,
-      registrationType: student.registrationType ?? null,
-      notes: student.notes ?? null,
-      deletedAt: student.deletedAt ? new Date(student.deletedAt) : null,
-      deletedBy: student.deletedBy ?? null,
-      deletionReason: student.deletionReason ?? null,
-      restoredAt: student.restoredAt ? new Date(student.restoredAt) : null,
-      restoredBy: student.restoredBy ?? null,
-      createdAt: student.createdAt ? new Date(student.createdAt) : new Date(),
-      updatedAt: new Date(),
-      createdBy: student.createdBy ?? null,
-      updatedBy: student.updatedBy ?? null,
-    })
+    .values(studentWriteValues(subdomain, student))
     .onConflictDoUpdate({
       target: [students.workspaceSubdomain, students.id],
-      set: {
-        contactId: student.contactId ? String(student.contactId) : null,
-        fatherContactId: student.fatherContactId ? String(student.fatherContactId) : null,
-        motherContactId: student.motherContactId ? String(student.motherContactId) : null,
-        guardianContactId: student.guardianContactId ? String(student.guardianContactId) : null,
-        fatherName: student.fatherName ?? null,
-        motherName: student.motherName ?? null,
-        guardianName: student.guardianName ?? null,
-        grNumber: student.grNumber ?? null,
-        studentId: student.studentId ?? null,
-        status: student.status ?? 'active',
-        registeredDate: student.registeredDate ?? null,
-        enrollmentDate: student.enrollmentDate ?? null,
-        discountType: student.discountType ?? null,
-        discountPct: student.discountPct != null ? String(student.discountPct) : null,
-        registrationType: student.registrationType ?? null,
-        notes: student.notes ?? null,
-        deletedAt: student.deletedAt ? new Date(student.deletedAt) : null,
-        deletedBy: student.deletedBy ?? null,
-        deletionReason: student.deletionReason ?? null,
-        restoredAt: student.restoredAt ? new Date(student.restoredAt) : null,
-        restoredBy: student.restoredBy ?? null,
-        updatedAt: new Date(),
-        updatedBy: student.updatedBy ?? null,
-      },
+      set: studentUpdateSetValues(subdomain, student),
     });
 
   await tx
@@ -202,35 +189,7 @@ export async function replaceStudentsForWorkspace(tenant: string, items: Student
     if (items.length === 0) return;
 
     await tx.insert(students).values(
-      items.map((student) => ({
-        id: student.id,
-        workspaceSubdomain: subdomain,
-        contactId: student.contactId ? String(student.contactId) : null,
-        fatherContactId: student.fatherContactId ? String(student.fatherContactId) : null,
-        motherContactId: student.motherContactId ? String(student.motherContactId) : null,
-        guardianContactId: student.guardianContactId ? String(student.guardianContactId) : null,
-        fatherName: student.fatherName ?? null,
-        motherName: student.motherName ?? null,
-        guardianName: student.guardianName ?? null,
-        grNumber: student.grNumber ?? null,
-        studentId: student.studentId ?? null,
-        status: student.status ?? 'active',
-        registeredDate: student.registeredDate ?? null,
-        enrollmentDate: student.enrollmentDate ?? null,
-        discountType: student.discountType ?? null,
-        discountPct: student.discountPct != null ? String(student.discountPct) : null,
-        registrationType: student.registrationType ?? null,
-        notes: student.notes ?? null,
-        deletedAt: student.deletedAt ? new Date(student.deletedAt) : null,
-        deletedBy: student.deletedBy ?? null,
-        deletionReason: student.deletionReason ?? null,
-        restoredAt: student.restoredAt ? new Date(student.restoredAt) : null,
-        restoredBy: student.restoredBy ?? null,
-        createdAt: student.createdAt ? new Date(student.createdAt) : new Date(),
-        updatedAt: new Date(),
-        createdBy: student.createdBy ?? null,
-        updatedBy: student.updatedBy ?? null,
-      })),
+      items.map((student) => studentWriteValues(subdomain, student)),
     );
 
     const allSessions = items.flatMap((student) => {

@@ -1,5 +1,5 @@
 import { and, eq, inArray, desc, sql } from 'drizzle-orm';
-import { dedupeTrimmedIds, type ActivityLog } from '@mms/shared';
+import { dedupeTrimmedIds, type ActivityLog, type RepositoryListOptions } from '@mms/shared';
 import { userActivityLogs } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 
@@ -17,10 +17,7 @@ function activityLogRowToRecord(row: ActivityLogRow): ActivityLog {
   };
 }
 
-export interface ListLogsOptions {
-  limit?: number;
-  offset?: number;
-}
+export type ListLogsOptions = RepositoryListOptions;
 
 export async function listActivityLogsByWorkspace(
   tenant: string,

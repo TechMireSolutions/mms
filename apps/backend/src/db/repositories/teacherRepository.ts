@@ -1,7 +1,8 @@
-import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
-import { type Teacher } from '@mms/shared';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import { type Teacher, type RepositoryListOptions } from '@mms/shared';
 import { teachers } from '../schema.js';
 import { withTenant, type AppDb } from '../tenant-context.js';
+import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
 export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
@@ -79,32 +80,16 @@ export async function persistTeacherTx(
     });
 }
 
-export interface ListTeachersOptions {
-  includeDeleted?: boolean;
-  deleted?: 'active' | 'deleted' | 'all';
-  limit?: number;
-  offset?: number;
-}
-
-function resolveDeletedCondition(options?: ListTeachersOptions) {
-  if (options?.deleted === 'deleted') {
-    return isNotNull(teachers.deletedAt);
-  }
-  if (options?.deleted === 'all' || options?.includeDeleted) {
-    return undefined;
-  }
-  return isNull(teachers.deletedAt);
-}
+export type ListTeachersOptions = RepositoryListOptions;
 
 export async function listTeachersByWorkspace(
   tenant: string,
   options?: ListTeachersOptions,
 ): Promise<Teacher[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(teachers.workspaceSubdomain, subdomain)];
-    const deletedCond = resolveDeletedCondition(options);
-    if (deletedCond) conditions.push(deletedCond);
+    const conditions = buildTenantSoftDeleteConditions(teachers, subdomain, deletedFilter);
 
     const baseQuery = tx
       .select({
@@ -306,10 +291,9 @@ export async function countTeachersByWorkspace(
   options?: ListTeachersOptions,
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(teachers.workspaceSubdomain, subdomain)];
-    const deletedCond = resolveDeletedCondition(options);
-    if (deletedCond) conditions.push(deletedCond);
+    const conditions = buildTenantSoftDeleteConditions(teachers, subdomain, deletedFilter);
 
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })

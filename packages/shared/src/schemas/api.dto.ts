@@ -47,11 +47,34 @@ export const resourceIdParamsSchema = z.object({ id: z.string().min(1) }).strict
 export const resourceNameParamsSchema = z.object({ name: z.string().min(1) }).strict();
 export const resourceKeyParamsSchema = z.object({ key: z.string().min(1) }).strict();
 export const subdomainParamsSchema = z.object({ subdomain: z.string().min(1) }).strict();
+export const subdomainUserIdParamsSchema = z.object({
+  subdomain: z.string().min(1),
+  userId: z.string().min(1),
+}).strict();
 
 export type ResourceIdParams = z.infer<typeof resourceIdParamsSchema>;
 export type ResourceNameParams = z.infer<typeof resourceNameParamsSchema>;
 export type ResourceKeyParams = z.infer<typeof resourceKeyParamsSchema>;
 export type SubdomainParams = z.infer<typeof subdomainParamsSchema>;
+export type SubdomainUserIdParams = z.infer<typeof subdomainUserIdParamsSchema>;
+
+/** Query schema for linked contact ids endpoint */
+export const linkedContactIdsQuerySchema = z.object({
+  excludeId: z.string().optional(),
+}).strict();
+
+export type LinkedContactIdsQuery = z.infer<typeof linkedContactIdsQuerySchema>;
+
+/** Authoritative repository list and pagination options */
+export interface RepositoryListOptions {
+  limit?: number;
+  offset?: number;
+  deleted?: 'active' | 'deleted' | 'all';
+  includeDeleted?: boolean;
+  search?: string;
+  sortField?: string;
+  sortDir?: 'asc' | 'desc' | '';
+}
 
 /** Contacts duplicate scan query schema with strict 100 limit budget */
 export const contactsDuplicatesQuerySchema = z.object({

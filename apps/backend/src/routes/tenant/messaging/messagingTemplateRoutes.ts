@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { FastifyPluginAsync } from 'fastify';
 import type { MessageTemplate, User } from '@mms/shared';
-import { messageTemplateInputSchema } from '@mms/shared';
+import { messageTemplateInputSchema, resourceIdParamsSchema } from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden, sendNotFound } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
@@ -65,7 +65,9 @@ export const messagingTemplateRoutes: FastifyPluginAsync = async (fastify) => {
     if (!tenantSubdomain) {
       return reply.status(400).send({ type: 'validation_error', message: 'Tenant context required' });
     }
-    const { id } = req.params as { id: string };
+    const params = parseRequest(resourceIdParamsSchema, req.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    const { id } = params.data;
     if (!id.startsWith('custom_')) {
       return reply.status(400).send({
         type: 'validation_error',

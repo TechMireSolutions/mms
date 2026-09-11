@@ -3,7 +3,6 @@ import {
   billingPeriodFromDate,
   buildInvoiceDraftFromEnrollment,
   DEFAULT_FINANCE_SETTINGS,
-  generateInvoicesBodySchema,
   isEnrollmentBillable,
   shouldSkipGeneratedInvoice,
   resolveFamilyContactId,
@@ -64,14 +63,13 @@ async function persistGeneratedInvoices(
 
 export async function generateInvoices(input: GenerateInvoicesBody): Promise<GenerateInvoicesResult> {
   const tenant = requireTenant();
-  const body = generateInvoicesBodySchema.parse(input);
   const [prefs, structures, enrollments] = await Promise.all([
     loadFinanceModulePreferences(),
     listFeeStructures(tenant),
     listBillableEnrollments(tenant, {
-      sessionId: body.sessionId,
-      classId: body.classId,
-      enrollmentIds: body.enrollmentIds,
+      sessionId: input.sessionId,
+      classId: input.classId,
+      enrollmentIds: input.enrollmentIds,
     }),
   ]);
   const dueDays = Math.max(1, Number.parseInt(prefs?.dueDays ?? DEFAULT_FINANCE_SETTINGS.dueDays, 10) || 30);
@@ -81,7 +79,7 @@ export async function generateInvoices(input: GenerateInvoicesBody): Promise<Gen
     enrollments.map((enrollment) => enrollment.id),
   );
   const billedThisPeriod = new Set(
-    marks.filter((mark) => mark.billingPeriod === body.billingPeriod).map((mark) => mark.enrollmentId),
+    marks.filter((mark) => mark.billingPeriod === input.billingPeriod).map((mark) => mark.enrollmentId),
   );
   const billedAny = new Set(marks.map((mark) => mark.enrollmentId));
   const drafts = enrollments
@@ -94,7 +92,7 @@ export async function generateInvoices(input: GenerateInvoicesBody): Promise<Gen
           enrollmentHasAnyInvoice: billedAny.has(enrollment.id),
         }),
     )
-    .map((enrollment) => buildInvoiceDraftFromEnrollment(enrollment, body.billingPeriod, dueDays));
+    .map((enrollment) => buildInvoiceDraftFromEnrollment(enrollment, input.billingPeriod, dueDays));
   const { findStudentsByIds } = await import('../../db/repositories/studentRepository.js');
   const students = await findStudentsByIds(tenant, [...new Set(drafts.map((draft) => draft.studentId))]);
   const familyByStudent = new Map(students.map((student) => [student.id, resolveFamilyContactId(student)]));

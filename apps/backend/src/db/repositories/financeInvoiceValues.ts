@@ -1,6 +1,12 @@
 import { type Invoice } from '@mms/shared';
+import type { financeInvoices } from '../schema.js';
 
-export function invoiceWriteValues(subdomain: string, record: Invoice) {
+export type FinanceInvoiceInsert = typeof financeInvoices.$inferInsert;
+
+export function invoiceWriteValues(
+  subdomain: string,
+  record: Invoice,
+): FinanceInvoiceInsert {
   return {
     id: record.id,
     workspaceSubdomain: subdomain,
@@ -31,5 +37,5 @@ export function invoiceWriteValues(subdomain: string, record: Invoice) {
     deletedBy: record.deletedBy ?? null,
     deletionReason: record.deletionReason ?? null,
     updatedAt: new Date(),
-  };
+  } satisfies FinanceInvoiceInsert;
 }

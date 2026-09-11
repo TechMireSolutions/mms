@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
-import { dedupeTrimmedIds, type Payment } from '@mms/shared';
+import { dedupeTrimmedIds, type Payment, type RepositoryListOptions } from '@mms/shared';
 import {
   financeFeeItems,
   financeFeeStructures,
@@ -9,6 +9,7 @@ import {
   financePayments,
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type PaymentRow = typeof financePayments.$inferSelect;
@@ -32,12 +33,7 @@ export function paymentRowToRecord(row: PaymentRow): Payment {
   return payment;
 }
 
-export interface ListPaymentsOptions {
-  limit?: number;
-  offset?: number;
-  deleted?: 'active' | 'deleted' | 'all';
-  includeDeleted?: boolean;
-}
+export type ListPaymentsOptions = RepositoryListOptions;
 
 export async function listPaymentsByWorkspace(
   tenant: string,
@@ -46,13 +42,9 @@ export async function listPaymentsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(financePayments.workspaceSubdomain, subdomain)];
-    if (options?.deleted === 'deleted') {
-      conditions.push(isNotNull(financePayments.deletedAt));
-    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
-      conditions.push(isNull(financePayments.deletedAt));
-    }
+    const conditions = buildTenantSoftDeleteConditions(financePayments, subdomain, deletedFilter);
     const rows = await tx
       .select({
         id: financePayments.id,

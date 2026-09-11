@@ -3,16 +3,17 @@ import { z } from 'zod';
 import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
+import {
+  entityResolveBodySchema,
+  widgetAggregatesBodySchema,
+  type widgetQuerySchema,
+  linkedContactIdsQuerySchema,
+} from '@mms/shared';
 import { canReadCollection, canWriteCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 import { getRequestTenant } from './tenantContext.js';
 import { redisGet, redisSet, redisKeys } from './redis.js';
-import {
-  entityResolveBodySchema,
-  widgetAggregatesBodySchema,
-  type widgetQuerySchema,
-} from '../validation/commonSchemas.js';
 
 type WidgetQuery = z.infer<typeof widgetQuerySchema>;
 
@@ -170,10 +171,6 @@ export interface LinkedContactIdsRouteOptions {
   loadLinkedContactIdsFn: (excludeId?: string) => Promise<(string | number)[]>;
   errorMessagePrefix: string;
 }
-
-const linkedContactIdsQuerySchema = z.object({
-  excludeId: z.string().optional(),
-});
 
 /**
  * Registers a standard linked contact IDs endpoint with RBAC checks.

@@ -17,6 +17,7 @@ import {
 import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
 import {
   subdomainParamsSchema,
+  subdomainUserIdParamsSchema,
   workspaceDeleteBodySchema,
   workspaceEnabledPatchBodySchema,
   platformWorkspaceModulesPatchBodySchema,
@@ -138,8 +139,9 @@ export default async function platformWorkspaceRoutes(
 
   fastify.post('/:subdomain/users/:userId/verify-email', async (request, reply) => {
     const { platformUser } = request as PlatformAuthenticatedRequest;
-    const { subdomain, userId } = request.params as { subdomain: string; userId: string };
-    if (!subdomain || !userId) return replyValidationError(reply, 'Invalid parameters');
+    const params = parseRequest(subdomainUserIdParamsSchema, request.params);
+    if (!params.ok) return replyValidationError(reply, params.message);
+    const { subdomain, userId } = params.data;
 
     const {
       verifyTenantUserEmailRow,

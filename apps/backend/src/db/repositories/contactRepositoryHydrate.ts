@@ -1,8 +1,10 @@
-import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
   hydrateContactRelationshipFields,
   type Contact,
+  type RepositoryListOptions,
 } from '@mms/shared';
+import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { contacts } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import { loadContactChildMaps, loadContactSummaryChildMaps } from './contactRepositoryHydrateChildren.js';
@@ -71,22 +73,7 @@ export async function hydrateContactsSummaryList(
   );
 }
 
-export interface ListByWorkspaceOptions {
-  includeDeleted?: boolean;
-  deleted?: 'active' | 'deleted' | 'all';
-  limit?: number;
-  offset?: number;
-}
-
-function resolveDeletedFilter(options?: ListByWorkspaceOptions) {
-  if (options?.deleted === 'deleted') {
-    return isNotNull(contacts.deletedAt);
-  }
-  if (options?.deleted === 'all' || options?.includeDeleted) {
-    return null;
-  }
-  return isNull(contacts.deletedAt);
-}
+export type ListByWorkspaceOptions = RepositoryListOptions;
 
 export async function listContactsByWorkspace(
   tenant: string,
@@ -95,10 +82,9 @@ export async function listContactsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(contacts.workspaceSubdomain, subdomain)];
-    const deletedCond = resolveDeletedFilter(options);
-    if (deletedCond) conditions.push(deletedCond);
+    const conditions = buildTenantSoftDeleteConditions(contacts, subdomain, deletedFilter);
 
     const rows = await tx
       .select({
@@ -141,10 +127,9 @@ export async function countContactsByWorkspace(
   options?: ListByWorkspaceOptions,
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(contacts.workspaceSubdomain, subdomain)];
-    const deletedCond = resolveDeletedFilter(options);
-    if (deletedCond) conditions.push(deletedCond);
+    const conditions = buildTenantSoftDeleteConditions(contacts, subdomain, deletedFilter);
 
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })

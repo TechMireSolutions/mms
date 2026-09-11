@@ -3,6 +3,7 @@ import {
   executeErasureBodySchema,
   retentionEvaluateBodySchema,
   roleHasPermission,
+  type User,
 } from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendForbidden } from '../../../lib/httpErrors.js';
@@ -18,8 +19,8 @@ export const auditPrivacyRoutes: FastifyPluginAsync = async (fastify) => {
    * POST /api/audit/erasure - Privacy / right-to-erasure GDPR execution.
    */
   fastify.post('/api/audit/erasure', async (request, reply) => {
-    const user = request.user as { id?: string; role?: string };
-    if (!roleHasPermission(user.role ?? '', 'analytics.view')) {
+    const user = request.user as User | undefined;
+    if (!roleHasPermission(user?.role ?? '', 'analytics.view')) {
       return sendForbidden(reply);
     }
     const tenant = getRequestTenant();
@@ -32,7 +33,7 @@ export const auditPrivacyRoutes: FastifyPluginAsync = async (fastify) => {
       return replyValidationError(reply, parsedBody.message);
     }
     const body = parsedBody.data;
-    const userId = (request.user as { id?: string })?.id || 'system';
+    const userId = (request.user as User | undefined)?.id || 'system';
 
     const result = await executeSubjectErasure({
       subjectId: body.subjectId,
@@ -50,8 +51,8 @@ export const auditPrivacyRoutes: FastifyPluginAsync = async (fastify) => {
    * POST /api/audit/retention/evaluate - Section 4: Regulatory regime retention evaluation & automated purge.
    */
   fastify.post('/api/audit/retention/evaluate', async (request, reply) => {
-    const user = request.user as { id?: string; role?: string };
-    if (!roleHasPermission(user.role ?? '', 'analytics.view')) {
+    const user = request.user as User | undefined;
+    if (!roleHasPermission(user?.role ?? '', 'analytics.view')) {
       return sendForbidden(reply);
     }
     const tenant = getRequestTenant();

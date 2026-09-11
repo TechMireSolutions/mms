@@ -1,4 +1,5 @@
 import type { FastifyInstance } from 'fastify';
+import type { User } from '@mms/shared';
 import { bindRequestTenant, resolveSubdomainFromRequest } from '../lib/tenantContext.js';
 import { attachAccessTokenFromCookie } from '../services/auth/authCookieService.js';
 import { attachPlatformTokenFromCookie } from '../services/platform/platformCookieService.js';
@@ -34,7 +35,7 @@ export function registerRequestHooks(app: FastifyInstance): void {
 
   app.addHook('onResponse', (request, reply, done) => {
     if (reply.statusCode >= 400) {
-      const user = request.user as { id?: string } | undefined;
+      const user = request.user as User | undefined;
       const tenant = resolveSubdomainFromRequest(
         request.headers.host,
         request.headers['x-forwarded-host'] as string | string[] | undefined,

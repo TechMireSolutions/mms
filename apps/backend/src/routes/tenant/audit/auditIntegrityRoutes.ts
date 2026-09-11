@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { desc } from 'drizzle-orm';
-import { auditAnomaliesQuerySchema, roleHasPermission } from '@mms/shared';
+import { auditAnomaliesQuerySchema, roleHasPermission, type User } from '@mms/shared';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendForbidden } from '../../../lib/httpErrors.js';
 import { activeDb } from '../../../db/dbConnection.js';
@@ -17,8 +17,8 @@ export const auditIntegrityRoutes: FastifyPluginAsync = async (fastify) => {
    * POST /api/audit/verify - Run automated cryptographic chain verification for this tenant shard.
    */
   fastify.post('/api/audit/verify', async (request, reply) => {
-    const user = request.user as { id?: string; role?: string };
-    if (!roleHasPermission(user.role ?? '', 'analytics.view')) {
+    const user = request.user as User | undefined;
+    if (!roleHasPermission(user?.role ?? '', 'analytics.view')) {
       return sendForbidden(reply);
     }
     const tenant = getRequestTenant();
@@ -55,8 +55,8 @@ export const auditIntegrityRoutes: FastifyPluginAsync = async (fastify) => {
    * POST /api/audit/merkle-roots - Trigger Merkle tree rollup across shard heads.
    */
   fastify.post('/api/audit/merkle-roots', async (request, reply) => {
-    const user = request.user as { id?: string; role?: string };
-    if (!roleHasPermission(user.role ?? '', 'analytics.view')) {
+    const user = request.user as User | undefined;
+    if (!roleHasPermission(user?.role ?? '', 'analytics.view')) {
       return sendForbidden(reply);
     }
     const rollup = await computeAndPublishMerkleCheckpoint();
@@ -67,8 +67,8 @@ export const auditIntegrityRoutes: FastifyPluginAsync = async (fastify) => {
    * GET /api/audit/anomalies - Section 6: Rule-based anomaly detection.
    */
   fastify.get('/api/audit/anomalies', async (request, reply) => {
-    const user = request.user as { id?: string; role?: string };
-    if (!roleHasPermission(user.role ?? '', 'analytics.view')) {
+    const user = request.user as User | undefined;
+    if (!roleHasPermission(user?.role ?? '', 'analytics.view')) {
       return sendForbidden(reply);
     }
     const tenant = getRequestTenant();

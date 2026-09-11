@@ -1,7 +1,8 @@
-import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
-import { type Student } from '@mms/shared';
+import { and, eq, inArray, sql } from 'drizzle-orm';
+import { type Student, type RepositoryListOptions } from '@mms/shared';
 import { students, studentEnrolledSessions } from '../schema.js';
 import { withTenant, type AppDb } from '../tenant-context.js';
+import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { studentRowToRecord } from './studentRepositoryMappers.js';
 
 export async function hydrateStudentsList(
@@ -13,59 +14,40 @@ export async function hydrateStudentsList(
   const ids = rows.map((r) => r.id);
 
   const sessionsByStudentId = new Map<string, Array<{ sessionId: string; sortOrder: number }>>();
-  const CHUNK_SIZE = 250;
-  for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
-    const chunkIds = ids.slice(i, i + CHUNK_SIZE);
-    const sessionRows = await tx
-      .select({
-        studentId: studentEnrolledSessions.studentId,
-        sessionId: studentEnrolledSessions.sessionId,
-        sortOrder: studentEnrolledSessions.sortOrder,
-      })
-      .from(studentEnrolledSessions)
-      .where(
-        and(
-          eq(studentEnrolledSessions.workspaceSubdomain, subdomain),
-          inArray(studentEnrolledSessions.studentId, chunkIds),
-        ),
-      );
+  for (const id of ids) sessionsByStudentId.set(id, []);
 
-    for (const s of sessionRows) {
-      const list = sessionsByStudentId.get(s.studentId) ?? [];
-      list.push(s);
-      sessionsByStudentId.set(s.studentId, list);
-    }
+  const sessionRows = await tx
+    .select({
+      studentId: studentEnrolledSessions.studentId,
+      sessionId: studentEnrolledSessions.sessionId,
+      sortOrder: studentEnrolledSessions.sortOrder,
+    })
+    .from(studentEnrolledSessions)
+    .where(
+      and(
+        eq(studentEnrolledSessions.workspaceSubdomain, subdomain),
+        inArray(studentEnrolledSessions.studentId, ids),
+      ),
+    );
+
+  for (const row of sessionRows) {
+    const list = sessionsByStudentId.get(row.studentId);
+    if (list) list.push({ sessionId: row.sessionId, sortOrder: row.sortOrder });
   }
 
   return rows.map((row) => studentRowToRecord(row, sessionsByStudentId.get(row.id) ?? []));
 }
 
-export interface ListStudentsOptions {
-  includeDeleted?: boolean;
-  deleted?: 'active' | 'deleted' | 'all';
-  limit?: number;
-  offset?: number;
-}
-
-function resolveDeletedCondition(options?: ListStudentsOptions) {
-  if (options?.deleted === 'deleted') {
-    return isNotNull(students.deletedAt);
-  }
-  if (options?.deleted === 'all' || options?.includeDeleted) {
-    return undefined;
-  }
-  return isNull(students.deletedAt);
-}
+export type ListStudentsOptions = RepositoryListOptions;
 
 export async function listStudentsByWorkspace(
   tenant: string,
   options?: ListStudentsOptions,
 ): Promise<Student[]> {
   const subdomain = tenant.trim().toLowerCase();
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(students.workspaceSubdomain, subdomain)];
-    const deletedCond = resolveDeletedCondition(options);
-    if (deletedCond) conditions.push(deletedCond);
+    const conditions = buildTenantSoftDeleteConditions(students, subdomain, deletedFilter);
 
     const baseQuery = tx
       .select({
@@ -202,10 +184,9 @@ export async function countStudentsByWorkspace(
   options?: ListStudentsOptions,
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(students.workspaceSubdomain, subdomain)];
-    const deletedCond = resolveDeletedCondition(options);
-    if (deletedCond) conditions.push(deletedCond);
+    const conditions = buildTenantSoftDeleteConditions(students, subdomain, deletedFilter);
 
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })

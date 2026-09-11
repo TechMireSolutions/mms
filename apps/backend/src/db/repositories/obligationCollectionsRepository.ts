@@ -1,5 +1,6 @@
 import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
-import { dedupeTrimmedIds, type ObligationCollection } from '@mms/shared';
+import { dedupeTrimmedIds, type ObligationCollection, type RepositoryListOptions } from '@mms/shared';
+import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import {
   obligationCollections,
   obligationDistributions,
@@ -34,12 +35,7 @@ export function obligationCollectionRowToRecord(row: ObligationCollectionRow): O
   return collection;
 }
 
-export interface ListObligationCollectionsOptions {
-  limit?: number;
-  offset?: number;
-  deleted?: 'active' | 'deleted' | 'all';
-  includeDeleted?: boolean;
-}
+export type ListObligationCollectionsOptions = RepositoryListOptions;
 
 export async function listObligationCollectionsByWorkspace(
   tenant: string,
@@ -48,13 +44,9 @@ export async function listObligationCollectionsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 2000, 1), 10000);
   const offset = Math.max(options?.offset ?? 0, 0);
+  const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
   return withTenant(subdomain, async (tx) => {
-    const conditions = [eq(obligationCollections.workspaceSubdomain, subdomain)];
-    if (options?.deleted === 'deleted') {
-      conditions.push(isNotNull(obligationCollections.deletedAt));
-    } else if (options?.deleted !== 'all' && !options?.includeDeleted) {
-      conditions.push(isNull(obligationCollections.deletedAt));
-    }
+    const conditions = buildTenantSoftDeleteConditions(obligationCollections, subdomain, deletedFilter);
     const rows = await tx
       .select({
         id: obligationCollections.id,
