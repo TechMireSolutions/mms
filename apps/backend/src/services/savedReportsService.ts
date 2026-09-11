@@ -2,19 +2,13 @@ import type {
   GenericSavedReportCategory,
   GenericSavedReportCreateInput,
 } from '@mms/shared';
-import { getRequestTenant } from '../lib/tenantContext.js';
+import { requireTenant } from '../lib/tenantContext.js';
 import {
   createSavedReportForOwner,
   deleteSavedReportByOwner,
   listSavedReportsByOwner,
   touchSavedReportRunByOwner,
 } from '../db/repositories/savedReportsRepository.js';
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant;
-}
 
 export function listSavedReports(category: GenericSavedReportCategory, createdBy: string) {
   return listSavedReportsByOwner(requireTenant(), category, createdBy);

@@ -7,7 +7,7 @@ import {
   type ContactsWorkDrillDown,
   type GenericSavedReport,
 } from '@mms/shared';
-import { getRequestTenant } from '../../lib/tenantContext.js';
+import { requireTenant } from '../../lib/tenantContext.js';
 import {
   createPersistedSavedReport,
   deleteSavedReportById,
@@ -15,12 +15,6 @@ import {
   listSavedReportsByCategory,
   touchSavedReportRunById,
 } from '../../db/repositories/savedReportsRepository.js';
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant.trim().toLowerCase();
-}
 
 function asStringArray(value: unknown): string[] | undefined {
   if (!Array.isArray(value)) return undefined;

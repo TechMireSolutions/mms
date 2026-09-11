@@ -9,33 +9,21 @@ import {
   type SessionsListQuery,
   type SessionsSettings,
 } from '@mms/shared';
-import { createModuleCsvExportService } from '../lib/createModuleCsvExportService.js';
+import {
+  createModuleCsvExportService,
+  type ModuleExportQueryInput,
+  type ModuleCsvExportOptions,
+  type ModuleCsvExportResult,
+} from '../lib/createModuleCsvExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadSessionsSettingsCombined } from './sessionConfigService.js';
 import { loadSessionsByIds, loadSessionsPage } from './sessionService.js';
 
 const DEFAULT_EXPORT_COLUMNS = DEFAULT_SESSION_EXPORT_COLUMNS as SessionExportColumn[];
 
-type SessionsExportQueryInput = Omit<SessionsListQuery, 'includeDeleted'> & {
-  includeDeleted?: SessionsListQuery['includeDeleted'] | 'true' | 'false';
-  includeIds?: Array<string | number>;
-};
-
-export type { SessionsExportQueryInput };
-
-export interface SessionsCsvExportOptions {
-  columns?: SessionExportColumn[];
-  filename?: string;
-  viewerRole: string;
-  chunkSize?: number;
-  allowDeleted?: boolean;
-}
-
-export interface SessionsCsvExportResult {
-  csv: string;
-  filename: string;
-  count: number;
-}
+export type SessionsExportQueryInput = ModuleExportQueryInput<SessionsListQuery>;
+export type SessionsCsvExportOptions = ModuleCsvExportOptions<SessionExportColumn>;
+export type SessionsCsvExportResult = ModuleCsvExportResult;
 
 async function loadSessionsFieldSettings(): Promise<SessionsSettings | null> {
   try {

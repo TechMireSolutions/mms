@@ -1,22 +1,17 @@
 import { randomBytes } from 'node:crypto';
 import type { UsersRepository } from '../repository/usersRepository.js';
 import { usersRepository } from '../repository/usersRepositoryAdapter.js';
-import { getRequestTenant } from '../../lib/tenantContext.js';
-import { withTenant } from '../../db/tenant-context.js';
-import { defineTenantBulkCollectionService } from '../../services/tenantBulkService.js';
+import { getRequestTenant, requireTenant } from '../../lib/tenantContext.js';
 import { broadcastCollection } from '../../services/websocketService.js';
 import { getHydratedUsers, saveUsers } from '../../services/auth/userService.js';
 import { getRawUsers, type PersistedUser } from '../../services/auth/userServiceShared.js';
 import { deleteRefreshTokensForUser } from '../../services/auth/authArtifactService.js';
 import { hashPassword } from '../../services/auth/passwordService.js';
 import { assertPasswordMeetsPolicy } from '../../services/globalSettingsService.js';
-import { revokeAllUserSessions } from '../../services/session.service.js';
-import { recordModernAuditEvent, mapActionStringToAuditType } from '../../services/auditTrailService.js';
-import { logger } from '../../lib/logger.js';
 import { loadContactsByIds } from '../../services/contactService.js';
+import { HttpDomainError } from '../../lib/httpErrors.js';
 import {
   type WorkspaceUser,
-  type ActivityLog,
   type Contact,
   type ContactLike,
   type UsersListQuery,
@@ -26,8 +21,6 @@ import {
   type InviteWorkspaceUserInput,
   normalizeWorkspaceUser,
   workspaceUserListSchema,
-  activityLogListSchema,
-  activityLogRecordSchema,
   canAssignRole,
   canManageTargetUser,
   getDisplayName,
@@ -39,67 +32,26 @@ import {
   hydrateWorkspaceUserProfile,
   dedupeTrimmedIds,
 } from '@mms/shared';
+import {
+  createUserActivityLogService,
+  recordUserActivityLog,
+} from './userActivityLogUseCases.js';
+import {
+  executeUserPasswordReset,
+  type UserPasswordResetFailureStage,
+  type UserPasswordResetAuxiliaryStage,
+  type UserPasswordResetAuxiliaryErrorHandler,
+  UserPasswordResetError,
+  runPasswordResetStage,
+  runPasswordResetAuxiliaryStep,
+} from './userPasswordUseCases.js';
 
-function createHttpError(statusCode: number, type: string, message: string): Error & { statusCode: number; type: string } {
-  const err = new Error(message) as Error & { statusCode: number; type: string };
-  err.statusCode = statusCode;
-  err.type = type;
-  return err;
-}
-
-export type UserPasswordResetFailureStage =
-  | 'load_user'
-  | 'password_policy'
-  | 'password_hash'
-  | 'credential_transaction'
-  | 'credential_update'
-  | 'refresh_token_revocation'
-  | 'session_revocation';
-
-export type UserPasswordResetAuxiliaryStage = 'users_broadcast' | 'activity_log';
-
-type UserPasswordResetAuxiliaryErrorHandler = (
-  stage: UserPasswordResetAuxiliaryStage,
-  error: unknown,
-) => void;
-
-class UserPasswordResetError extends Error {
-  readonly type = 'password_reset_failed';
-
-  constructor(
-    readonly passwordResetStage: UserPasswordResetFailureStage,
-    cause: unknown,
-  ) {
-    super(`Password reset failed during ${passwordResetStage}`, { cause });
-    this.name = 'UserPasswordResetError';
-  }
-}
-
-async function runPasswordResetStage<T>(
-  stage: UserPasswordResetFailureStage,
-  operation: () => Promise<T>,
-): Promise<T> {
-  try {
-    return await operation();
-  } catch (error: unknown) {
-    if (error instanceof UserPasswordResetError) throw error;
-    const statusCode = (error as { statusCode?: number })?.statusCode;
-    if (typeof statusCode === 'number' && statusCode < 500) throw error;
-    throw new UserPasswordResetError(stage, error);
-  }
-}
-
-async function runPasswordResetAuxiliaryStep(
-  stage: UserPasswordResetAuxiliaryStage,
-  operation: () => Promise<void>,
-  onError?: UserPasswordResetAuxiliaryErrorHandler,
-): Promise<void> {
-  try {
-    await operation();
-  } catch (error: unknown) {
-    onError?.(stage, error);
-  }
-}
+export type {
+  UserPasswordResetFailureStage,
+  UserPasswordResetAuxiliaryStage,
+  UserPasswordResetAuxiliaryErrorHandler,
+};
+export { UserPasswordResetError, runPasswordResetStage, runPasswordResetAuxiliaryStep };
 
 /**
  * Users use-cases — composition root binding a {@link UsersRepository} to every
@@ -107,51 +59,11 @@ async function runPasswordResetAuxiliaryStep(
  * can pass a fake repository to exercise orchestration in isolation.
  */
 export function createUsersUseCases(repo: UsersRepository = usersRepository) {
-  const logService = defineTenantBulkCollectionService<ActivityLog>(
-    { listByWorkspace: repo.listActivityLogsByWorkspace, replaceForWorkspace: repo.replaceActivityLogsForWorkspace },
-    activityLogListSchema,
-    'user_activity_logs',
-  );
+  const logService = createUserActivityLogService(repo);
 
-  async function recordUserActivityLog(
-    tenant: string,
-    userId: string,
-    action: ActivityLog['action'],
-    detail: string,
-    ip = '127.0.0.1',
-  ): Promise<void> {
-    const log: ActivityLog = {
-      id: `log_${randomBytes(8).toString('hex')}`,
-      userId,
-      action,
-      module: 'users',
-      detail,
-      ts: new Date().toISOString(),
-      ip,
-    };
-    await repo.bulkSaveActivityLogs(tenant, [log]);
-    await broadcastCollection('user_activity_logs');
-
-    // Bridge: also emit to tamper-evident audit_trail_events so LOGIN/LOGOUT/session
-    // events appear in the 5-dimension chain (best-practices §1 & §2, action_type LOGIN).
-    // Non-blocking: never throw into the caller on audit failure.
-    recordModernAuditEvent({
-      workspaceSubdomain: tenant,
-      tableName: 'users',
-      recordId: userId,
-      actionType: mapActionStringToAuditType(action),
-      realUserId: userId,
-      ipAddress: ip,
-      newState: { action, detail, module: 'users' },
-    }).catch((err: unknown) =>
-      logger.error(
-        { err: err instanceof Error ? err.message : String(err) },
-        'audit_trail_events bridge failed for user activity log',
-      ),
-    );
-  }
-
-  async function hydrateUserRows(rows: Awaited<ReturnType<UsersRepository['listTenantUsersByIds']>>): Promise<WorkspaceUser[]> {
+  async function hydrateUserRows(
+    rows: Awaited<ReturnType<UsersRepository['listTenantUsersByIds']>>,
+  ): Promise<WorkspaceUser[]> {
     const contactIds = [
       ...new Set(
         rows
@@ -181,11 +93,10 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     actorRole?: string,
     ip = '127.0.0.1',
   ): Promise<WorkspaceUser> => {
-    const tenant = getRequestTenant();
-    if (!tenant) throw new Error('Tenant context required');
+    const tenant = requireTenant();
 
     if (actorRole && !canAssignRole(actorRole, input.role)) {
-      throw createHttpError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
+      throw new HttpDomainError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
     }
 
     let name = String(input.name || '').trim();
@@ -204,12 +115,12 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     }
 
     if (!email) {
-      throw createHttpError(400, 'validation_error', 'User email is required');
+      throw new HttpDomainError(400, 'validation_error', 'User email is required');
     }
 
     const existing = await getHydratedUsers();
     if (existing.some((u) => u.loginEmail?.toLowerCase() === email || u.email?.toLowerCase() === email)) {
-      throw createHttpError(400, 'duplicate_user_email', `User with email "${email}" already exists`);
+      throw new HttpDomainError(400, 'duplicate_user_email', `User with email "${email}" already exists`);
     }
 
     let passwordHash = '';
@@ -252,6 +163,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     await broadcastCollection('users');
 
     await recordUserActivityLog(
+      repo,
       tenant,
       actorId,
       'create',
@@ -271,14 +183,14 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     ip = '127.0.0.1',
   ): Promise<boolean> => {
     if (id === deletedBy) {
-      throw createHttpError(400, 'self_delete', 'Cannot delete your own account');
+      throw new HttpDomainError(400, 'self_delete', 'Cannot delete your own account');
     }
 
     const existing = await repo.findTenantUserRowById(id);
     if (!existing || existing.deletedAt) return false;
 
     if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
-      throw createHttpError(403, 'forbidden_super_admin_deletion', 'Cannot delete a Super Admin user account');
+      throw new HttpDomainError(403, 'forbidden_super_admin_deletion', 'Cannot delete a Super Admin user account');
     }
 
     const ok = await repo.softDeleteTenantUserRow(id, deletedBy);
@@ -289,6 +201,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       const tenant = getRequestTenant();
       if (tenant) {
         await recordUserActivityLog(
+          repo,
           tenant,
           deletedBy,
           'delete',
@@ -310,7 +223,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     if (!existing) return false;
 
     if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
-      throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot restore a Super Admin user account');
+      throw new HttpDomainError(403, 'forbidden_super_admin_mutation', 'Cannot restore a Super Admin user account');
     }
 
     const ok = await repo.restoreTenantUserRow(id);
@@ -320,6 +233,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       const tenant = getRequestTenant();
       if (tenant) {
         await recordUserActivityLog(
+          repo,
           tenant,
           actorId,
           'update',
@@ -411,10 +325,10 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
         for (const update of parsed) {
           const existingUser = existingById.get(String(update.id));
           if (existingUser && !canManageTargetUser(actorRole, existingUser.role)) {
-            throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
+            throw new HttpDomainError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
           }
           if (update.role && !canAssignRole(actorRole, update.role)) {
-            throw createHttpError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
+            throw new HttpDomainError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
           }
         }
       }
@@ -440,26 +354,25 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       actorRole?: string,
       ip = '127.0.0.1',
     ): Promise<WorkspaceUser> => {
-      const tenant = getRequestTenant();
-      if (!tenant) throw new Error('Tenant context required');
+      const tenant = requireTenant();
 
       const existingRow = await repo.findTenantUserRowById(id);
       if (!existingRow || existingRow.deletedAt) {
-        throw createHttpError(404, 'not_found', 'User not found');
+        throw new HttpDomainError(404, 'not_found', 'User not found');
       }
 
       if (actorRole && !canManageTargetUser(actorRole, existingRow.role)) {
-        throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
+        throw new HttpDomainError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
       }
 
       if (input.role && actorRole && !canAssignRole(actorRole, input.role)) {
-        throw createHttpError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
+        throw new HttpDomainError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
       }
 
       const rawUsers = await getRawUsers();
       const target = rawUsers.find((u) => String(u.id) === id);
       if (!target) {
-        throw createHttpError(404, 'not_found', 'User not found');
+        throw new HttpDomainError(404, 'not_found', 'User not found');
       }
 
       if (input.contactId !== undefined) {
@@ -479,6 +392,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       await broadcastCollection('users');
 
       await recordUserActivityLog(
+        repo,
         tenant,
         actorId,
         'update',
@@ -519,7 +433,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       if (!existing) return false;
 
       if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
-        throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
+        throw new HttpDomainError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
       }
 
       const ok = await repo.verifyTenantUserEmailRow(id);
@@ -535,65 +449,14 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       ip = '127.0.0.1',
       onAuxiliaryError?: UserPasswordResetAuxiliaryErrorHandler,
     ): Promise<boolean> => {
-      const tenant = getRequestTenant()?.trim().toLowerCase();
-      if (!tenant) {
-        throw createHttpError(400, 'tenant_context_required', 'Tenant context required');
-      }
-
-      const existing = await runPasswordResetStage('load_user', () => repo.findTenantUserRowById(id));
-      if (
-        !existing ||
-        existing.deletedAt ||
-        String(existing.workspaceSubdomain).trim().toLowerCase() !== tenant
-      ) {
-        return false;
-      }
-
-      if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
-        throw createHttpError(403, 'forbidden_super_admin_mutation', 'Cannot reset password of a Super Admin user account');
-      }
-
-      await runPasswordResetStage('password_policy', () =>
-        assertPasswordMeetsPolicy(temporaryPassword),
-      );
-      const passwordHash = await runPasswordResetStage('password_hash', () =>
-        hashPassword(temporaryPassword),
-      );
-      const updated = await runPasswordResetStage('credential_transaction', () =>
-        withTenant(tenant, async () => {
-          const passwordUpdated = await runPasswordResetStage('credential_update', () =>
-            repo.resetTenantUserPasswordRow(id, passwordHash),
-          );
-          if (!passwordUpdated) return false;
-
-          // Keep the credential update and persistent refresh-token revocation atomic.
-          await runPasswordResetStage('refresh_token_revocation', () =>
-            deleteRefreshTokensForUser(id),
-          );
-          return true;
-        }),
-      );
-      if (!updated) return false;
-
-      await runPasswordResetStage('session_revocation', () => revokeAllUserSessions(id));
-      await runPasswordResetAuxiliaryStep(
-        'users_broadcast',
-        () => broadcastCollection('users'),
+      return executeUserPasswordReset(repo, {
+        id,
+        temporaryPassword,
+        actorRole,
+        actorId,
+        ip,
         onAuxiliaryError,
-      );
-
-      await runPasswordResetAuxiliaryStep(
-        'activity_log',
-        () => recordUserActivityLog(
-          tenant,
-          actorId,
-          'update',
-          `Reset password for user ${existing.name || id}`,
-          ip,
-        ),
-        onAuxiliaryError,
-      );
-      return true;
+      });
     },
 
     bulkSoftDeleteUsers: async (
@@ -636,39 +499,11 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     },
 
     // --- Activity Logs ---
-    loadLogs: logService.load,
-
-    loadLogById: async (id: string): Promise<ActivityLog | null> => {
-      const tenant = getRequestTenant();
-      const cleanId = id?.trim();
-      if (!tenant || !cleanId) return null;
-      return repo.findActivityLogById(tenant, cleanId);
-    },
-
-    loadLogsByIds: async (ids: string[]): Promise<ActivityLog[]> => {
-      const tenant = getRequestTenant();
-      if (!tenant) return [];
-      const cleanIds = dedupeTrimmedIds(ids);
-      if (cleanIds.length === 0) return [];
-      return repo.findActivityLogsByIds(tenant, cleanIds);
-    },
-
-    saveLog: async (record: ActivityLog): Promise<void> => {
-      const tenant = getRequestTenant();
-      if (!tenant) return;
-      const parsed = activityLogRecordSchema.parse(record);
-      await repo.saveActivityLog(tenant, parsed);
-      await broadcastCollection('user_activity_logs');
-    },
-
-    upsertLogs: async (records: ActivityLog[]): Promise<ActivityLog[]> => {
-      const tenant = getRequestTenant();
-      if (!tenant) throw new Error('Tenant context required');
-      const parsed = activityLogListSchema.parse(records);
-      await repo.bulkSaveActivityLogs(tenant, parsed);
-      await broadcastCollection('user_activity_logs');
-      return parsed;
-    },
+    loadLogs: logService.loadLogs,
+    loadLogById: logService.loadLogById,
+    loadLogsByIds: logService.loadLogsByIds,
+    saveLog: logService.saveLog,
+    upsertLogs: logService.upsertLogs,
   };
 }
 

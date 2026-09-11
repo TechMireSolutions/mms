@@ -9,31 +9,19 @@ import {
   type TeachersListQuery,
   type TeachersSettings,
 } from '@mms/shared';
-import { createModuleCsvExportService } from '../lib/createModuleCsvExportService.js';
+import {
+  createModuleCsvExportService,
+  type ModuleExportQueryInput,
+  type ModuleCsvExportOptions,
+  type ModuleCsvExportResult,
+} from '../lib/createModuleCsvExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadTeacherFieldConfig } from './teacherConfigService.js';
 import { loadTeachersByIds, loadTeachersPage } from './teacherService.js';
 
-type TeachersExportQueryInput = Omit<TeachersListQuery, 'includeDeleted'> & {
-  includeDeleted?: boolean | 'true' | 'false';
-  includeIds?: Array<string | number>;
-};
-
-export type { TeachersExportQueryInput };
-
-export interface TeachersCsvExportOptions {
-  columns?: TeacherExportColumn[];
-  filename?: string;
-  viewerRole: string;
-  chunkSize?: number;
-  allowDeleted?: boolean;
-}
-
-export interface TeachersCsvExportResult {
-  csv: string;
-  filename: string;
-  count: number;
-}
+export type TeachersExportQueryInput = ModuleExportQueryInput<TeachersListQuery>;
+export type TeachersCsvExportOptions = ModuleCsvExportOptions<TeacherExportColumn>;
+export type TeachersCsvExportResult = ModuleCsvExportResult;
 
 async function prepareTeachersExport(
   options: TeachersCsvExportOptions,

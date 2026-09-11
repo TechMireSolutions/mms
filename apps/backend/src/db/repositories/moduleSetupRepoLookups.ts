@@ -15,6 +15,16 @@ export interface ModuleLookupRowInput {
   sortOrder: number;
 }
 
+export interface ModuleLookupDbRow {
+  id: string;
+  workspaceSubdomain: string;
+  kind: string;
+  label: string;
+  meta: Record<string, unknown> | null;
+  sortOrder: number;
+  updatedAt: Date;
+}
+
 /** Module Setup lookup option lists (contact_lookups / student_lookups). */
 export function createModuleLookupsRepo(options: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -33,13 +43,13 @@ export function createModuleLookupsRepo(options: {
   const allCacheKey = (sub: string) => redisKeys.setupLookupsAll(sub, tableName);
   const kindCacheKey = (sub: string, kind: string) => redisKeys.setupLookupsKind(sub, tableName, kind);
 
-  async function listByWorkspace(workspaceSubdomain: string) {
+  async function listByWorkspace(workspaceSubdomain: string): Promise<ModuleLookupDbRow[]> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const key = allCacheKey(subdomain);
     const cached = await redisGet(key);
     if (cached) {
       try {
-        return JSON.parse(cached);
+        return JSON.parse(cached) as ModuleLookupDbRow[];
       } catch {
         // Fall through on JSON parse error
       }
@@ -64,16 +74,16 @@ export function createModuleLookupsRepo(options: {
     if (rows) {
       await redisSet(key, JSON.stringify(rows), SETUP_LOOKUPS_CACHE_TTL_SECONDS);
     }
-    return rows;
+    return rows as ModuleLookupDbRow[];
   }
 
-  async function listByKind(workspaceSubdomain: string, kind: string) {
+  async function listByKind(workspaceSubdomain: string, kind: string): Promise<ModuleLookupDbRow[]> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const key = kindCacheKey(subdomain, kind);
     const cached = await redisGet(key);
     if (cached) {
       try {
-        return JSON.parse(cached);
+        return JSON.parse(cached) as ModuleLookupDbRow[];
       } catch {
         // Fall through on JSON parse error
       }
@@ -103,7 +113,7 @@ export function createModuleLookupsRepo(options: {
     if (rows) {
       await redisSet(key, JSON.stringify(rows), SETUP_LOOKUPS_CACHE_TTL_SECONDS);
     }
-    return rows;
+    return rows as ModuleLookupDbRow[];
   }
 
   async function replaceForKind(
@@ -138,7 +148,7 @@ export function createModuleLookupsRepo(options: {
     await redisDelPattern(redisKeys.setupPattern(subdomain, tableName));
   }
 
-  async function listAllByWorkspace(workspaceSubdomain: string) {
+  async function listAllByWorkspace(workspaceSubdomain: string): Promise<ModuleLookupDbRow[]> {
     return listByWorkspace(workspaceSubdomain);
   }
 

@@ -4,19 +4,13 @@ import {
   type ContactPreferences,
   type RelationshipPair,
 } from '@mms/shared';
-import { getRequestTenant } from '../../lib/tenantContext.js';
+import { requireTenant } from '../../lib/tenantContext.js';
 import {
   getContactModulePreferencesByWorkspace,
   upsertContactModulePreferences,
 } from '../../db/repositories/contactModulePreferencesRepository.js';
 import { createModulePreferencesService } from '../../lib/createModulePreferencesService.js';
 import { syncRelationshipMirrorsFromPairs } from '../../lib/contactRelationshipMirrorService.js';
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant.trim().toLowerCase();
-}
 
 const preferencesStore = createModulePreferencesService<ContactPreferences>({
   broadcastKey: 'contacts',

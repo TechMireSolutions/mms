@@ -22,22 +22,7 @@ interface StudentBulkRestoreResult {
   conflicts: StudentBulkRestoreConflict[];
 }
 
-function nowIso(): string {
-  return new Date().toISOString();
-}
-
-/** Clears soft-delete metadata on a stored student row (restore). */
-function restoredRow(existing: Student, userId?: string): Student {
-  return {
-    ...existing,
-    deletedAt: undefined,
-    deletedBy: undefined,
-    deletionReason: undefined,
-    restoredAt: nowIso(),
-    restoredBy: userId,
-    updatedAt: nowIso(),
-  };
-}
+import { buildRestoredRecord, nowIso } from '../../lib/softDeleteHelpers.js';
 
 export async function restoreStudentById(
   id: string,
@@ -59,7 +44,7 @@ export async function restoreStudentById(
       throw new StudentRestoreConflictError();
     }
 
-    const next = restoredRow(existing, userId);
+    const next = buildRestoredRecord(existing, userId);
     try {
       await repo.save(tenant, next);
     } catch (err: unknown) {
@@ -141,7 +126,7 @@ export async function bulkRestoreStudents(
         });
         continue;
       }
-      const restored = restoredRow(existing, userId);
+      const restored = buildRestoredRecord(existing, userId);
       toSave.push(restored);
       if (normalizedGr) acceptedGrNumbers.add(normalizedGr);
       succeeded += 1;

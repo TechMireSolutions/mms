@@ -8,32 +8,20 @@ import {
   type EnrollmentExportColumn,
   type EnrollmentsListQuery,
 } from '@mms/shared';
-import { createModuleCsvExportService } from '../lib/createModuleCsvExportService.js';
+import {
+  createModuleCsvExportService,
+  type ModuleExportQueryInput,
+  type ModuleCsvExportOptions,
+  type ModuleCsvExportResult,
+} from '../lib/createModuleCsvExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadEnrollmentsByIds, loadEnrollmentsPage } from './enrollmentService.js';
 
 const DEFAULT_EXPORT_COLUMNS = DEFAULT_ENROLLMENT_EXPORT_COLUMNS as EnrollmentExportColumn[];
 
-type EnrollmentsExportQueryInput = Omit<EnrollmentsListQuery, 'includeDeleted'> & {
-  includeDeleted?: boolean | 'true' | 'false';
-  includeIds?: Array<string | number>;
-};
-
-export type { EnrollmentsExportQueryInput };
-
-export interface EnrollmentsCsvExportOptions {
-  columns?: EnrollmentExportColumn[];
-  filename?: string;
-  viewerRole: string;
-  chunkSize?: number;
-  allowDeleted?: boolean;
-}
-
-export interface EnrollmentsCsvExportResult {
-  csv: string;
-  filename: string;
-  count: number;
-}
+export type EnrollmentsExportQueryInput = ModuleExportQueryInput<EnrollmentsListQuery>;
+export type EnrollmentsCsvExportOptions = ModuleCsvExportOptions<EnrollmentExportColumn>;
+export type EnrollmentsCsvExportResult = ModuleCsvExportResult;
 
 async function prepareEnrollmentsExport(
   options: EnrollmentsCsvExportOptions,

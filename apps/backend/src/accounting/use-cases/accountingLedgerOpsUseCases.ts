@@ -9,7 +9,7 @@ import {
   type OpeningBalance,
   type PostingRules,
 } from '@mms/shared';
-import { getRequestTenant } from '../../lib/tenantContext.js';
+import { requireTenant } from '../../lib/tenantContext.js';
 import {
   getPostingRules,
   listBankStatements,
@@ -21,12 +21,6 @@ import {
 } from '../../db/repositories/accountingLedgerOpsRepository.js';
 import { closeFiscalYearForTenant } from './accountingPeriodClose.js';
 import { tryPostOpeningJournal } from '../ledgerPosting/ledgerPostingService.js';
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant;
-}
 
 async function broadcast(tenant: string, collection: string): Promise<void> {
   const { broadcastTenantUpdate } = await import('../../services/websocketService.js');

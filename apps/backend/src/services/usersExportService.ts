@@ -8,32 +8,20 @@ import {
   type UsersListQuery,
   type WorkspaceUser,
 } from '@mms/shared';
-import { createModuleCsvExportService } from '../lib/createModuleCsvExportService.js';
+import {
+  createModuleCsvExportService,
+  type ModuleExportQueryInput,
+  type ModuleCsvExportOptions,
+  type ModuleCsvExportResult,
+} from '../lib/createModuleCsvExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadUsersByIds, loadUsersPage } from './usersService.js';
 
 const DEFAULT_EXPORT_COLUMNS = DEFAULT_USER_EXPORT_COLUMNS as UserExportColumn[];
 
-type UsersExportQueryInput = Omit<UsersListQuery, 'includeDeleted'> & {
-  includeDeleted?: boolean | 'true' | 'false';
-  includeIds?: Array<string | number>;
-};
-
-export type { UsersExportQueryInput };
-
-export interface UsersCsvExportOptions {
-  columns?: UserExportColumn[];
-  filename?: string;
-  viewerRole: string;
-  chunkSize?: number;
-  allowDeleted?: boolean;
-}
-
-export interface UsersCsvExportResult {
-  csv: string;
-  filename: string;
-  count: number;
-}
+export type UsersExportQueryInput = ModuleExportQueryInput<UsersListQuery>;
+export type UsersCsvExportOptions = ModuleCsvExportOptions<UserExportColumn>;
+export type UsersCsvExportResult = ModuleCsvExportResult;
 
 async function prepareUsersExport(
   options: UsersCsvExportOptions,

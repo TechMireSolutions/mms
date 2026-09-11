@@ -11,8 +11,13 @@ export type ModuleCsvExportManifestBits = {
   exportChunkSize: number;
 };
 
-export type ModuleCsvExportOptions = {
-  columns?: ModuleCsvExportColumn[];
+export type ModuleExportQueryInput<TQuery> = Omit<TQuery, 'includeDeleted'> & {
+  includeDeleted?: boolean | 'true' | 'false' | string;
+  includeIds?: Array<string | number>;
+};
+
+export type ModuleCsvExportOptions<TCol extends ModuleCsvExportColumn = ModuleCsvExportColumn> = {
+  columns?: TCol[];
   filename?: string;
   viewerRole: string;
   chunkSize?: number;

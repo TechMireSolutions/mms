@@ -1,4 +1,5 @@
 import {
+  DEFAULT_STUDENT_EXPORT_COLUMNS,
   STUDENTS_MODULE_MANIFEST,
   buildCsvContent,
   buildStudentsExportRows,
@@ -8,39 +9,21 @@ import {
   type StudentsListQuery,
   type StudentsSettings,
 } from '@mms/shared';
-import { createModuleCsvExportService } from '../lib/createModuleCsvExportService.js';
+import {
+  createModuleCsvExportService,
+  type ModuleExportQueryInput,
+  type ModuleCsvExportOptions,
+  type ModuleCsvExportResult,
+} from '../lib/createModuleCsvExportService.js';
 import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadStudentFieldConfig } from './studentConfigService.js';
 import { loadStudentsByIds, loadStudentsPage } from '../students/use-cases/studentUseCases.js';
 
-const DEFAULT_EXPORT_COLUMNS: StudentExportColumn[] = [
-  { id: 'name', label: 'Name' },
-  { id: 'grNumber', label: 'GR Number' },
-  { id: 'gender', label: 'Gender' },
-  { id: 'status', label: 'Status' },
-  { id: 'parents', label: 'Parents' },
-];
+const DEFAULT_EXPORT_COLUMNS = DEFAULT_STUDENT_EXPORT_COLUMNS as StudentExportColumn[];
 
-type StudentsExportQueryInput = Omit<StudentsListQuery, 'includeDeleted'> & {
-  includeDeleted?: StudentsListQuery['includeDeleted'] | 'true' | 'false';
-  includeIds?: Array<string | number>;
-};
-
-export type { StudentsExportQueryInput };
-
-interface StudentsCsvExportOptions {
-  columns?: StudentExportColumn[];
-  filename?: string;
-  viewerRole: string;
-  chunkSize?: number;
-  allowDeleted?: boolean;
-}
-
-interface StudentsCsvExportResult {
-  csv: string;
-  filename: string;
-  count: number;
-}
+export type StudentsExportQueryInput = ModuleExportQueryInput<StudentsListQuery>;
+export type StudentsCsvExportOptions = ModuleCsvExportOptions<StudentExportColumn>;
+export type StudentsCsvExportResult = ModuleCsvExportResult;
 
 async function prepareStudentsExport(
   options: StudentsCsvExportOptions,

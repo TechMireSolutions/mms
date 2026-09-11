@@ -3,17 +3,10 @@ import { teacherLookups } from '../schema.js';
 import {
   createModuleLookupsRepo,
   type ModuleLookupRowInput,
+  type ModuleLookupDbRow,
 } from './moduleSetupRepoFactories.js';
 
-type LookupDbRow = {
-  id: string;
-  workspaceSubdomain: string;
-  kind: string;
-  label: string;
-  meta: Record<string, unknown> | null;
-  sortOrder: number;
-  updatedAt: Date;
-};
+export type { ModuleLookupDbRow as LookupDbRow };
 
 export interface TeacherLookupRowInput extends Omit<ModuleLookupRowInput, 'kind'> {
   kind: TeacherLookupKind;
@@ -21,14 +14,12 @@ export interface TeacherLookupRowInput extends Omit<ModuleLookupRowInput, 'kind'
 
 const repo = createModuleLookupsRepo({ table: teacherLookups });
 
-export const listTeacherLookupsByWorkspace = ((ws: string) => repo.listByWorkspace(ws)) as (
-  ws: string,
-) => Promise<LookupDbRow[]>;
+export const listTeacherLookupsByWorkspace = (ws: string): Promise<ModuleLookupDbRow[]> =>
+  repo.listByWorkspace(ws);
 export const listTeacherLookupsByKind = (
   workspaceSubdomain: string,
   kind: TeacherLookupKind,
-): Promise<LookupDbRow[]> =>
-  repo.listByKind(workspaceSubdomain, kind) as Promise<LookupDbRow[]>;
+): Promise<ModuleLookupDbRow[]> => repo.listByKind(workspaceSubdomain, kind);
 export const replaceTeacherLookupsForKind = (
   workspaceSubdomain: string,
   kind: TeacherLookupKind,

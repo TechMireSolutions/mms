@@ -16,7 +16,7 @@ import {
   type GenerateInvoicesResult,
   type Invoice,
 } from '@mms/shared';
-import { getRequestTenant } from '../../lib/tenantContext.js';
+import { getRequestTenant, requireTenant } from '../../lib/tenantContext.js';
 import { loadFinanceModulePreferences } from '../../services/financePreferencesService.js';
 import { allocateInvoiceNumberBatch, listFeeStructures } from '../../db/repositories/financeBillingRepository.js';
 import { bulkSaveInvoices } from '../../db/repositories/financeInvoicesRepository.js';
@@ -27,12 +27,6 @@ import {
 } from '../../db/repositories/financeInvoiceGenerationRepository.js';
 import { financeUseCases } from './financeUseCases.js';
 import { logger } from '../../lib/logger.js';
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant;
-}
 
 function resolveFrequency(enrollment: EnrollmentBillingSource, structures: FeeStructure[]): FeeFrequency {
   const exact = structures.find(

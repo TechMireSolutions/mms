@@ -11,6 +11,11 @@ const mockInvalidateDuplicateScanCache = vi.fn();
 
 vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
+  requireTenant: () => {
+    const t = mockGetRequestTenant();
+    if (!t) throw new Error('Tenant context required');
+    return t;
+  },
 }));
 
 vi.mock('../db/repositories/contactGoogleSyncRepository.js', () => ({

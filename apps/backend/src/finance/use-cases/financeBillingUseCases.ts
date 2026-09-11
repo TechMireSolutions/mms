@@ -4,18 +4,12 @@ import {
   type FeeStructure,
   type FeeStructureInsert,
 } from '@mms/shared';
-import { getRequestTenant } from '../../lib/tenantContext.js';
+import { requireTenant } from '../../lib/tenantContext.js';
 import {
   deleteFeeStructure,
   listFeeStructures,
   saveFeeStructure,
 } from '../../db/repositories/financeBillingRepository.js';
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant;
-}
 
 export async function loadFeeStructures(): Promise<FeeStructure[]> {
   return listFeeStructures(requireTenant());

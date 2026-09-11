@@ -22,7 +22,7 @@ import {
   type RemindInvoicesBody,
   type RemindInvoicesResult,
 } from '@mms/shared';
-import { getRequestTenant } from '../../lib/tenantContext.js';
+import { requireTenant } from '../../lib/tenantContext.js';
 import { loadFinanceModulePreferences } from '../../services/financePreferencesService.js';
 import { loadContactsByIdsForTenant } from '../../services/contactService.js';
 import { financeUseCases } from './financeUseCases.js';
@@ -40,12 +40,6 @@ import {
   tryPostInvoiceReversalJournal,
   tryPostLateFeeJournals,
 } from '../../accounting/ledgerPosting/ledgerPostingService.js';
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant;
-}
 
 function domainError(message: string, statusCode: number, type: string): Error {
   return Object.assign(new Error(message), { statusCode, type });

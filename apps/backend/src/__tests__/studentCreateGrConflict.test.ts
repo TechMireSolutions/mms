@@ -8,6 +8,7 @@ const mockBroadcast = vi.fn();
 
 vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
+  requireTenant: () => mockGetRequestTenant(),
 }));
 
 vi.mock('../db/database.js', () => ({

@@ -7,22 +7,7 @@ import { teachersRepository } from '../repository/teachersRepositoryAdapter.js';
 import { ConflictError } from '../../lib/httpErrors.js';
 import { isUniqueViolation } from '../../lib/pgErrors.js';
 
-function nowIso(): string {
-  return new Date().toISOString();
-}
-
-/** Clears soft-delete metadata on a stored teacher row (restore). */
-function restoredRow(existing: Teacher, userId?: string): Teacher {
-  return {
-    ...existing,
-    deletedAt: undefined,
-    deletedBy: undefined,
-    deletionReason: undefined,
-    restoredAt: nowIso(),
-    restoredBy: userId,
-    updatedAt: nowIso(),
-  };
-}
+import { buildRestoredRecord, nowIso } from '../../lib/softDeleteHelpers.js';
 
 export async function restoreTeacherById(
   id: string,
@@ -48,7 +33,7 @@ export async function restoreTeacherById(
       }
     }
 
-    const next = restoredRow(existing, userId);
+    const next = buildRestoredRecord(existing, userId);
     try {
       await repo.save(tenant, next);
     } catch (err: unknown) {
@@ -91,7 +76,7 @@ export async function bulkRestoreTeachers(
         failed += 1;
         continue;
       }
-      toSave.push(restoredRow(existing, userId));
+      toSave.push(buildRestoredRecord(existing, userId));
       succeeded += 1;
     }
 

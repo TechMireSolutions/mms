@@ -1,11 +1,5 @@
-import { getRequestTenant } from './tenantContext.js';
+import { requireTenant } from './tenantContext.js';
 import { broadcastCollection } from './livePush.js';
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant.trim().toLowerCase();
-}
 
 /**
  * Shared field-config load/save: tenant → load → strip on save → reload → broadcast.

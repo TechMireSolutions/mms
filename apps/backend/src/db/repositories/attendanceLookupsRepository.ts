@@ -3,17 +3,10 @@ import { attendanceLookups } from '../schema.js';
 import {
   createModuleLookupsRepo,
   type ModuleLookupRowInput,
+  type ModuleLookupDbRow,
 } from './moduleSetupRepoFactories.js';
 
-type LookupDbRow = {
-  id: string;
-  workspaceSubdomain: string;
-  kind: string;
-  label: string;
-  meta: Record<string, unknown> | null;
-  sortOrder: number;
-  updatedAt: Date;
-};
+export type { ModuleLookupDbRow as LookupDbRow };
 
 export interface AttendanceLookupRowInput extends Omit<ModuleLookupRowInput, 'kind'> {
   kind: AttendanceLookupKind;
@@ -21,14 +14,12 @@ export interface AttendanceLookupRowInput extends Omit<ModuleLookupRowInput, 'ki
 
 const repo = createModuleLookupsRepo({ table: attendanceLookups });
 
-export const listAttendanceLookupsByWorkspace = ((ws: string) => repo.listByWorkspace(ws)) as (
-  ws: string,
-) => Promise<LookupDbRow[]>;
+export const listAttendanceLookupsByWorkspace = (ws: string): Promise<ModuleLookupDbRow[]> =>
+  repo.listByWorkspace(ws);
 export const listAttendanceLookupsByKind = (
   workspaceSubdomain: string,
   kind: AttendanceLookupKind,
-): Promise<LookupDbRow[]> =>
-  repo.listByKind(workspaceSubdomain, kind) as Promise<LookupDbRow[]>;
+): Promise<ModuleLookupDbRow[]> => repo.listByKind(workspaceSubdomain, kind);
 export const replaceAttendanceLookupsForKind = (
   workspaceSubdomain: string,
   kind: AttendanceLookupKind,

@@ -1,4 +1,4 @@
-import { getRequestTenant } from '../../lib/tenantContext.js';
+import { requireTenant } from '../../lib/tenantContext.js';
 import {
   deleteContactGoogleSyncCredentials,
   findContactGoogleSyncCredentials,
@@ -34,12 +34,6 @@ export class GoogleSyncError extends Error {
     this.name = 'GoogleSyncError';
     this.code = code;
   }
-}
-
-function requireTenant(): string {
-  const tenant = getRequestTenant();
-  if (!tenant) throw new Error('Tenant context required');
-  return tenant;
 }
 
 export async function getContactGoogleSyncConfig(userId: string): Promise<ContactGoogleSyncConfig> {
