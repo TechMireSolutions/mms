@@ -1,5 +1,7 @@
-import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import rateLimit from '@fastify/rate-limit';
+import type { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
+import { initServer } from '@ts-rest/fastify';
+import { platformAdminsContract } from '@mms/shared';
+import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
 import {
   authenticatePlatform,
   requirePlatformPermission,
@@ -17,176 +19,210 @@ import {
   verifyPlatformUserEmail,
 } from '../../services/platform/platformUserService.js';
 import { hashPassword } from '../../services/auth/passwordService.js';
-import {
-  resourceIdParamsSchema,
-  platformAdminDisabledBodySchema,
-  platformCreateAdminBodySchema,
-  platformDeleteAdminBodySchema,
-  platformUpdateAdminPermissionsBodySchema,
-} from '@mms/shared';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
-import { sendForbidden, sendInvalidCurrentPassword } from '../../lib/httpErrors.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
+
+const s = initServer();
 
 export default async function platformUsersRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
+  const authRateLimit = fastify.rateLimit(AUTH_RATE_LIMIT);
+
   fastify.addHook('preHandler', authenticatePlatform);
   fastify.addHook('preHandler', requirePlatformPermission('admins'));
 
-  fastify.get('/', async (_request, reply) => {
-    const storedUsers = await listPlatformUsers();
-    const users = storedUsers.map(toPlatformUserProfile);
-    return reply.send({ users });
-  });
-
-  fastify.post(
-    '/',
-    { preHandler: requirePlatformSuperUser() },
-    async (request, reply) => {
-      const { platformUser } = request as PlatformAuthenticatedRequest;
-      const parsed = parseRequest(platformCreateAdminBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const { name, email, password, permissions } = parsed.data;
-
-      const passwordHash = await hashPassword(password);
-      const stored = await createVerifiedPlatformUser({
-        name: name.trim(),
-        email,
-        passwordHash,
-        role: 'admin',
-        permissions,
-      });
-
-      await insertPlatformActivityLog({
-        userId: platformUser.id,
-        userEmail: platformUser.email,
-        action: 'create_admin',
-        targetResource: 'admin',
-        targetId: stored.id,
-        metadataMessage: `Created admin ${email}`,
-        ipAddress: request.ip,
-      });
-
-      return reply.send({ user: toPlatformUserProfile(stored) });
+  const router = s.router(platformAdminsContract, {
+    listAdmins: async (): Promise<unknown> => {
+      const storedUsers = await listPlatformUsers();
+      const users = storedUsers.map(toPlatformUserProfile);
+      return { status: 200 as const, body: { users } };
     },
-  );
 
-  fastify.patch(
-    '/:id/permissions',
-    { preHandler: requirePlatformSuperUser() },
-    async (request, reply) => {
-      const { platformUser } = request as PlatformAuthenticatedRequest;
-      const params = parseRequest(resourceIdParamsSchema, request.params);
-      if (!params.ok) return replyValidationError(reply, params.message);
-      const parsed = parseRequest(platformUpdateAdminPermissionsBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    createAdmin: {
+      hooks: {
+        preHandler: requirePlatformSuperUser(),
+      },
+      handler: async ({
+        body,
+        request,
+      }: ContractRouteArgs<typeof platformAdminsContract['createAdmin']>): Promise<unknown> => {
+        const { platformUser } = request as PlatformAuthenticatedRequest;
+        const { name, email, password, permissions } = body;
 
-      // Prevent an admin from escalating their own permissions.
-      if (params.data.id === platformUser.id) {
-        return sendForbidden(reply, 'Cannot change your own permissions');
-      }
+        const passwordHash = await hashPassword(password);
+        const stored = await createVerifiedPlatformUser({
+          name: name.trim(),
+          email,
+          passwordHash,
+          role: 'admin',
+          permissions,
+        });
 
-      const user = await setPlatformAdminPermissions(params.data.id, parsed.data.permissions);
+        await insertPlatformActivityLog({
+          userId: platformUser.id,
+          userEmail: platformUser.email,
+          action: 'create_admin',
+          targetResource: 'admin',
+          targetId: stored.id,
+          metadataMessage: `Created admin ${email}`,
+          ipAddress: request.ip,
+        });
 
-      await insertPlatformActivityLog({
-        userId: platformUser.id,
-        userEmail: platformUser.email,
-        action: 'update_admin_permissions',
-        targetResource: 'admin',
-        targetId: params.data.id,
-        metadataMessage: `Updated permissions for ${user.email}`,
-        ipAddress: request.ip,
-      });
-
-      return reply.send({ user });
+        return { status: 200 as const, body: { user: toPlatformUserProfile(stored) } };
+      },
     },
-  );
 
-  fastify.post('/:id/verify-email', async (request, reply) => {
-    const { platformUser } = request as PlatformAuthenticatedRequest;
-    const params = parseRequest(resourceIdParamsSchema, request.params);
-    if (!params.ok) return replyValidationError(reply, params.message);
+    updateAdminPermissions: {
+      hooks: {
+        preHandler: requirePlatformSuperUser(),
+      },
+      handler: async ({
+        params,
+        body,
+        request,
+      }: ContractRouteArgs<typeof platformAdminsContract['updateAdminPermissions']>): Promise<unknown> => {
+        const { platformUser } = request as PlatformAuthenticatedRequest;
 
-    const user = await verifyPlatformUserEmail(params.data.id);
+        // Prevent an admin from escalating their own permissions.
+        if (params.adminId === platformUser.id) {
+          return {
+            status: 403 as const,
+            body: { type: 'forbidden', message: 'Cannot change your own permissions' },
+          };
+        }
 
-    await insertPlatformActivityLog({
-      userId: platformUser.id,
-      userEmail: platformUser.email,
-      action: 'verify_admin_email',
-      targetResource: 'admin',
-      targetId: params.data.id,
-      metadataMessage: `Verified email for ${user.email}`,
-      ipAddress: request.ip,
-    });
+        const user = await setPlatformAdminPermissions(params.adminId, body.permissions);
 
-    return reply.send({ user, success: true });
-  });
+        await insertPlatformActivityLog({
+          userId: platformUser.id,
+          userEmail: platformUser.email,
+          action: 'update_admin_permissions',
+          targetResource: 'admin',
+          targetId: params.adminId,
+          metadataMessage: `Updated permissions for ${user.email}`,
+          ipAddress: request.ip,
+        });
 
-  await fastify.register(async function platformAdminDestructiveRateLimited(inner) {
-    await inner.register(rateLimit, AUTH_RATE_LIMIT);
+        return { status: 200 as const, body: { user } };
+      },
+    },
 
-    inner.patch('/:id/disabled', async (request, reply) => {
+    verifyAdminEmail: async ({
+      params,
+      request,
+    }: ContractRouteArgs<typeof platformAdminsContract['verifyAdminEmail']>): Promise<unknown> => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
-      const params = parseRequest(resourceIdParamsSchema, request.params);
-      if (!params.ok) return replyValidationError(reply, params.message);
-      const parsed = parseRequest(platformAdminDisabledBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-      if (params.data.id === platformUser.id) {
-        return sendForbidden(reply, 'Cannot disable your own platform account');
-      }
-
-      const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
-      if (!passwordOk) {
-        return sendInvalidCurrentPassword(reply);
-      }
-
-      const user = await setPlatformAdminDisabled(params.data.id, parsed.data.disabled);
+      const user = await verifyPlatformUserEmail(params.adminId);
 
       await insertPlatformActivityLog({
         userId: platformUser.id,
         userEmail: platformUser.email,
-        action: parsed.data.disabled ? 'disable_admin' : 'enable_admin',
+        action: 'verify_admin_email',
         targetResource: 'admin',
-        targetId: params.data.id,
-        metadataMessage: `${parsed.data.disabled ? 'Disabled' : 'Enabled'} admin ${user.email}`,
+        targetId: params.adminId,
+        metadataMessage: `Verified email for ${user.email}`,
         ipAddress: request.ip,
       });
 
-      return reply.send({ user });
-    });
+      return { status: 200 as const, body: { user, success: true as const } };
+    },
 
-    inner.delete('/:id', async (request, reply) => {
-      const { platformUser } = request as PlatformAuthenticatedRequest;
-      const params = parseRequest(resourceIdParamsSchema, request.params);
-      if (!params.ok) return replyValidationError(reply, params.message);
-      const parsed = parseRequest(platformDeleteAdminBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
+    setAdminDisabled: {
+      hooks: {
+        preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+          await authRateLimit.call(fastify, request, reply);
+        },
+      },
+      handler: async ({
+        params,
+        body,
+        request,
+      }: ContractRouteArgs<typeof platformAdminsContract['setAdminDisabled']>): Promise<unknown> => {
+        const { platformUser } = request as PlatformAuthenticatedRequest;
 
-      if (params.data.id === platformUser.id) {
-        return sendForbidden(reply, 'Cannot delete your own platform account');
-      }
+        if (params.adminId === platformUser.id) {
+          return {
+            status: 403 as const,
+            body: { type: 'forbidden', message: 'Cannot disable your own platform account' },
+          };
+        }
 
-      const passwordOk = await verifyPlatformUserPassword(platformUser.id, parsed.data.password);
-      if (!passwordOk) {
-        return sendInvalidCurrentPassword(reply);
-      }
+        const passwordOk = await verifyPlatformUserPassword(platformUser.id, body.password);
+        if (!passwordOk) {
+          return {
+            status: 401 as const,
+            body: { type: 'invalid_current_password', message: 'Current password is incorrect' },
+          };
+        }
 
-      await deletePlatformAdmin(params.data.id);
+        const user = await setPlatformAdminDisabled(params.adminId, body.disabled);
 
-      await insertPlatformActivityLog({
-        userId: platformUser.id,
-        userEmail: platformUser.email,
-        action: 'delete_admin',
-        targetResource: 'admin',
-        targetId: params.data.id,
-        ipAddress: request.ip,
-      });
+        await insertPlatformActivityLog({
+          userId: platformUser.id,
+          userEmail: platformUser.email,
+          action: body.disabled ? 'disable_admin' : 'enable_admin',
+          targetResource: 'admin',
+          targetId: params.adminId,
+          metadataMessage: `${body.disabled ? 'Disabled' : 'Enabled'} admin ${user.email}`,
+          ipAddress: request.ip,
+        });
 
-      return reply.send({ deleted: true, id: params.data.id });
-    });
+        return { status: 200 as const, body: { user } };
+      },
+    },
+
+    deleteAdmin: {
+      hooks: {
+        preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
+          await authRateLimit.call(fastify, request, reply);
+        },
+      },
+      handler: async ({
+        params,
+        body,
+        request,
+      }: ContractRouteArgs<typeof platformAdminsContract['deleteAdmin']>): Promise<unknown> => {
+        const { platformUser } = request as PlatformAuthenticatedRequest;
+
+        if (params.adminId === platformUser.id) {
+          return {
+            status: 403 as const,
+            body: { type: 'forbidden', message: 'Cannot delete your own platform account' },
+          };
+        }
+
+        const passwordOk = await verifyPlatformUserPassword(platformUser.id, body.password);
+        if (!passwordOk) {
+          return {
+            status: 401 as const,
+            body: { type: 'invalid_current_password', message: 'Current password is incorrect' },
+          };
+        }
+
+        await deletePlatformAdmin(params.adminId);
+
+        await insertPlatformActivityLog({
+          userId: platformUser.id,
+          userEmail: platformUser.email,
+          action: 'delete_admin',
+          targetResource: 'admin',
+          targetId: params.adminId,
+          ipAddress: request.ip,
+        });
+
+        return { status: 200 as const, body: { deleted: true as const, id: params.adminId } };
+      },
+    },
+  } as unknown as Parameters<typeof s.router>[1]);
+
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: (err, _request, reply) => {
+      const zErr = err.body ?? err.query ?? err.pathParams ?? err.headers;
+      const message = zErr instanceof Error ? zErr.message : err.message;
+      void replyValidationError(reply, message);
+    },
   });
 }

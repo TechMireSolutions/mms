@@ -5,6 +5,7 @@ import { contactListPageResponseSchema } from './contacts.contract.js';
 import {
   messageRecordSchema,
   messagingRecipientsMatchResponseSchema,
+  messagingRecipientsQuerySchema,
   messagingMetricsSchema,
 } from '../schemas/messaging.dto.js';
 import { messageTemplateSchema } from '../messagingTemplateSchemas.js';
@@ -46,7 +47,7 @@ export const messagingContract = c.router({
   listRecipients: {
     method: 'GET',
     path: '/api/messaging/recipients',
-    query: baseListQuerySchema,
+    query: messagingRecipientsQuerySchema,
     responses: { 200: contactListPageResponseSchema, 403: ok, 500: ok },
     summary: 'List message recipients',
   },

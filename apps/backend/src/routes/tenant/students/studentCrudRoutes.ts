@@ -101,9 +101,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const result = await withTenant(String(tenant), () => studentUseCases.createStudent(
-          // (typed as User & { workspaceId? } because the legacy JWT payload may carry workspaceId;
-          //  it is not on the shared User type)
-          { ...(body as Record<string, unknown>), workspaceId: (user as User & { workspaceId?: string }).workspaceId } as unknown as Parameters<typeof studentUseCases.createStudent>[0],
+          body as Record<string, unknown>,
           user,
         ), { readOnly: false });
 
@@ -164,7 +162,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         const updated = await withTenant(String(tenant), () => studentUseCases.updateStudentById(id, {
           ...(body as Record<string, unknown>),
           id,
-        } as unknown as Parameters<typeof studentUseCases.updateStudentById>[1]), { readOnly: false });
+        }), { readOnly: false });
 
         if (!updated) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Student not found' } };

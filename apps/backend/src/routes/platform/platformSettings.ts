@@ -1,5 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { platformSettingsUpdateSchema } from '@mms/shared';
+import { initServer } from '@ts-rest/fastify';
+import { platformSettingsContract } from '@mms/shared';
+import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
 import {
   authenticatePlatform,
   requirePlatformPermission,
@@ -9,31 +11,29 @@ import {
   getPlatformSettings,
   updatePlatformSettings,
 } from '../../services/platform/platformSettingsService.js';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+import { replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
+
+const s = initServer();
 
 export default async function platformSettingsRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
+  fastify.addHook('preHandler', authenticatePlatform);
+  fastify.addHook('preHandler', requirePlatformPermission('settings'));
 
-  fastify.get(
-    '/',
-    { preHandler: [authenticatePlatform, requirePlatformPermission('settings')] },
-    async (_request, reply) => {
+  const router = s.router(platformSettingsContract, {
+    getSettings: async (): Promise<unknown> => {
       const settings = getPlatformSettings();
-      return reply.send({ settings });
+      return { status: 200 as const, body: { settings } };
     },
-  );
 
-  fastify.put(
-    '/',
-    { preHandler: [authenticatePlatform, requirePlatformPermission('settings')] },
-    async (request, reply) => {
-      const parsed = parseRequest(platformSettingsUpdateSchema, request.body ?? {});
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-      const settings = await updatePlatformSettings(parsed.data);
+    updateSettings: async ({
+      body,
+      request,
+    }: ContractRouteArgs<typeof platformSettingsContract['updateSettings']>): Promise<unknown> => {
+      const settings = await updatePlatformSettings(body);
       const { platformUser } = request as PlatformAuthenticatedRequest;
       await insertPlatformActivityLog({
         userId: platformUser.id,
@@ -43,7 +43,15 @@ export default async function platformSettingsRoutes(
         ipAddress: request.ip,
       });
 
-      return reply.send({ settings, success: true });
+      return { status: 200 as const, body: { settings, success: true as const } };
     },
-  );
+  } as unknown as Parameters<typeof s.router>[1]);
+
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: (err, _request, reply) => {
+      const zErr = err.body ?? err.query ?? err.pathParams ?? err.headers;
+      const message = zErr instanceof Error ? zErr.message : err.message;
+      void replyValidationError(reply, message);
+    },
+  });
 }

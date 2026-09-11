@@ -1,4 +1,4 @@
-import type { TeacherRecord } from '@mms/shared';
+import type { TeacherRecord, TeacherWrite } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
 import { broadcastCollection } from '../../lib/livePush.js';
@@ -19,7 +19,7 @@ export interface CreateTeacherResult {
  * overlaid (Contacts/Students restore-on-create parity).
  */
 export async function createTeacher(
-  record: TeacherRecord,
+  record: TeacherRecord | TeacherWrite | Record<string, unknown>,
   repo: TeachersRepository = teachersRepository,
 ): Promise<CreateTeacherResult> {
   const result = await runInTransaction(async () => {
@@ -50,7 +50,7 @@ export async function createTeacher(
 
 export async function updateTeacherById(
   id: string,
-  record: TeacherRecord,
+  record: TeacherRecord | TeacherWrite | Record<string, unknown>,
   repo: TeachersRepository = teachersRepository,
 ): Promise<TeacherRecord | null> {
   const saved = await runInTransaction(async () => {

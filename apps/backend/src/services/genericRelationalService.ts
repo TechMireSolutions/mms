@@ -12,17 +12,17 @@ export interface ListByWorkspaceOptions {
   includeDeleted?: boolean;
 }
 
+export interface TenantSoftDeleteTable {
+  workspaceSubdomain: any;
+  deletedAt: any;
+}
+
 /**
  * Builds mandatory tenant and soft-delete SQL conditions with dynamic AST construction.
  * Enforces mandatory tenant predicate `eq(table.workspaceSubdomain, tenant)`.
  * Matches Category B partial index for 'active', Category C for 'deleted'.
  */
-export function buildTenantSoftDeleteConditions<
-  TTable extends {
-    workspaceSubdomain: any;
-    deletedAt: any;
-  },
->(
+export function buildTenantSoftDeleteConditions<TTable extends TenantSoftDeleteTable>(
   table: TTable,
   tenant: string,
   filter: SoftDeleteListFilter = 'active',
@@ -91,7 +91,7 @@ export interface GenericServiceOptions<T> {
       userId?: string,
     ) => Promise<{ succeeded: number; failed: number }>;
   };
-  schema: ZodType<T>;
+  schema?: ZodType<T>;
   websocketCollection: string;
   idPrefix: string;
   normalizeFn?: (record: T) => T;
@@ -134,7 +134,8 @@ export function createGenericRelationalService<
         : typeof record.id === 'number' && Number.isFinite(record.id)
           ? String(record.id)
           : `${idPrefix}-${randomUUID()}`;
-    const parsed = schema.parse({ ...record, id: resolvedId }) as T;
+    const prepared = { ...record, id: resolvedId } as T;
+    const parsed = schema ? (schema.parse(prepared) as T) : prepared;
     const normalized = normalizeFn ? normalizeFn(parsed) : parsed;
     await repo.save(tenant, normalized);
     const { broadcastTenantUpdate } = await import('./websocketService.js');
@@ -151,7 +152,8 @@ export function createGenericRelationalService<
     for (const [key, value] of Object.entries(record)) {
       if (value !== undefined) (merged as Record<string, unknown>)[key] = value;
     }
-    const parsed = schema.parse({ ...merged, id }) as T;
+    const withId = { ...merged, id } as T;
+    const parsed = schema ? (schema.parse(withId) as T) : withId;
     const normalized = normalizeFn ? normalizeFn(parsed) : parsed;
     await repo.save(tenant, normalized);
     const { broadcastTenantUpdate } = await import('./websocketService.js');

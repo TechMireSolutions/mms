@@ -51,20 +51,21 @@ const platformSetupStatusSchema = z.object({
 const platformSettingsSchema = z.object({
   id: z.string(),
   syncTlsOnCreate: z.boolean(),
-  tlsExtraSans: z.string(),
+  tlsExtraSans: z.string().optional(),
   certbotEmail: z.string(),
   updatedAt: z.string().optional(),
-});
+}).passthrough();
 
 const platformWorkspaceRowSchema = z.object({
   subdomain: z.string(),
-  madrasaName: z.string(),
+  madrasaName: z.string().optional(),
+  name: z.string().optional(),
   tagline: z.string().optional(),
   logoUrl: z.string().optional(),
   enabled: z.boolean(),
   createdAt: z.string(),
   requireEmailVerification: z.boolean().optional(),
-});
+}).passthrough();
 
 const platformActivityLogSchema = z.object({
   id: z.string(),
@@ -90,6 +91,217 @@ const platformErrorSchema = z.object({
   type: z.string(),
   message: z.string(),
 });
+
+// Workspaces
+export const platformWorkspacesRoutes = {
+  listWorkspaces: {
+    method: 'GET',
+    path: '/api/platform/workspaces',
+    responses: {
+      200: z.object({ workspaces: z.array(platformWorkspaceRowSchema) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary: 'List all workspaces',
+  },
+  patchWorkspace: {
+    method: 'PATCH',
+    path: '/api/platform/workspaces/:subdomain',
+    pathParams: z.object({ subdomain: z.string() }),
+    body: workspaceEnabledPatchBodySchema,
+    responses: {
+      200: z.object({ workspace: platformWorkspaceRowSchema }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Enable or disable a workspace',
+  },
+  deleteWorkspace: {
+    method: 'DELETE',
+    path: '/api/platform/workspaces/:subdomain',
+    pathParams: z.object({ subdomain: z.string() }),
+    body: workspaceDeleteBodySchema,
+    responses: {
+      200: z.object({ deleted: z.literal(true), subdomain: z.string() }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Delete a workspace',
+  },
+  getWorkspaceModules: {
+    method: 'GET',
+    path: '/api/platform/workspaces/:subdomain/modules',
+    pathParams: z.object({ subdomain: z.string() }),
+    responses: {
+      200: z.object({ modules: z.array(z.string()) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Get enabled modules for workspace',
+  },
+  updateWorkspaceModules: {
+    method: 'PATCH',
+    path: '/api/platform/workspaces/:subdomain/modules',
+    pathParams: z.object({ subdomain: z.string() }),
+    body: platformWorkspaceModulesPatchBodySchema,
+    responses: {
+      200: z.object({ success: z.literal(true), modules: z.array(z.string()) }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary: 'Update enabled modules for workspace',
+  },
+  patchWorkspaceEmailVerification: {
+    method: 'PATCH',
+    path: '/api/platform/workspaces/:subdomain/email-verification',
+    pathParams: z.object({ subdomain: z.string() }),
+    body: workspaceEmailVerificationPatchBodySchema,
+    responses: {
+      200: z.object({ success: z.literal(true), subdomain: z.string(), requireEmailVerification: z.boolean() }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Toggle email verification requirement for a workspace',
+  },
+  verifyTenantUserEmail: {
+    method: 'POST',
+    path: '/api/platform/workspaces/:subdomain/users/:userId/verify-email',
+    pathParams: z.object({ subdomain: z.string(), userId: z.string() }),
+    body: z.unknown().optional(),
+    responses: {
+      200: z.object({ success: z.literal(true) }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Manually verify tenant user email from platform apex',
+  },
+} as const;
+
+export const platformWorkspacesContract = c.router(platformWorkspacesRoutes);
+
+// Settings
+export const platformSettingsRoutes = {
+  getSettings: {
+    method: 'GET',
+    path: '/api/platform/settings',
+    responses: {
+      200: z.object({ settings: platformSettingsSchema }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary: 'Get global platform settings',
+  },
+  updateSettings: {
+    method: 'PUT',
+    path: '/api/platform/settings',
+    body: platformSettingsUpdateSchema,
+    responses: {
+      200: z.object({ settings: platformSettingsSchema, success: z.literal(true) }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary: 'Update global platform settings',
+  },
+} as const;
+
+export const platformSettingsContract = c.router(platformSettingsRoutes);
+
+// Admins (users)
+export const platformAdminsRoutes = {
+  listAdmins: {
+    method: 'GET',
+    path: '/api/platform/users',
+    responses: {
+      200: z.object({ users: z.array(platformUserProfileSchema) }),
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+    },
+    summary: 'List platform admins',
+  },
+  createAdmin: {
+    method: 'POST',
+    path: '/api/platform/users',
+    body: platformCreateAdminBodySchema,
+    responses: {
+      200: z.object({ user: platformUserProfileSchema }),
+      201: z.object({ user: platformUserProfileSchema }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+    summary: 'Create a new platform admin',
+  },
+  updateAdminPermissions: {
+    method: 'PATCH',
+    path: '/api/platform/users/:adminId/permissions',
+    pathParams: z.object({ adminId: z.string() }),
+    body: platformUpdateAdminPermissionsBodySchema,
+    responses: {
+      200: z.object({ user: platformUserProfileSchema }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Update admin permissions',
+  },
+  verifyAdminEmail: {
+    method: 'POST',
+    path: '/api/platform/users/:adminId/verify-email',
+    pathParams: z.object({ adminId: z.string() }),
+    body: z.unknown().optional(),
+    responses: {
+      200: z.object({ user: platformUserProfileSchema, success: z.literal(true) }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Verify platform admin email',
+  },
+  setAdminDisabled: {
+    method: 'PATCH',
+    path: '/api/platform/users/:adminId/disabled',
+    pathParams: z.object({ adminId: z.string() }),
+    body: platformAdminDisabledBodySchema,
+    responses: {
+      200: z.object({ user: platformUserProfileSchema }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Enable or disable a platform admin',
+  },
+  deleteAdmin: {
+    method: 'DELETE',
+    path: '/api/platform/users/:adminId',
+    pathParams: z.object({ adminId: z.string() }),
+    body: platformDeleteAdminBodySchema,
+    responses: {
+      200: z.object({ deleted: z.literal(true), id: z.string() }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Delete a platform admin',
+  },
+} as const;
+
+export const platformAdminsContract = c.router(platformAdminsRoutes);
 
 export const platformContract = c.router({
   // Auth
@@ -177,27 +389,7 @@ export const platformContract = c.router({
     summary: 'Change platform user password',
   },
   // Settings
-  getSettings: {
-    method: 'GET',
-    path: '/api/platform/settings',
-    responses: {
-      200: z.object({ settings: platformSettingsSchema }),
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'Get global platform settings',
-  },
-  updateSettings: {
-    method: 'PUT',
-    path: '/api/platform/settings',
-    body: platformSettingsUpdateSchema,
-    responses: {
-      200: z.object({ settings: platformSettingsSchema, success: z.literal(true) }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'Update global platform settings',
-  },
+  ...platformSettingsRoutes,
   // System admin
   migrateAndRestart: {
     method: 'POST',
@@ -222,135 +414,7 @@ export const platformContract = c.router({
     summary: 'Get super-user activity logs',
   },
   // Workspaces
-  listWorkspaces: {
-    method: 'GET',
-    path: '/api/platform/workspaces',
-    responses: {
-      200: z.object({ workspaces: z.array(platformWorkspaceRowSchema) }),
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'List all workspaces',
-  },
-  patchWorkspace: {
-    method: 'PATCH',
-    path: '/api/platform/workspaces/:subdomain',
-    pathParams: z.object({ subdomain: z.string() }),
-    body: workspaceEnabledPatchBodySchema,
-    responses: {
-      200: z.object({ workspace: platformWorkspaceRowSchema }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-    summary: 'Enable or disable a workspace',
-  },
-  deleteWorkspace: {
-    method: 'DELETE',
-    path: '/api/platform/workspaces/:subdomain',
-    pathParams: z.object({ subdomain: z.string() }),
-    body: workspaceDeleteBodySchema,
-    responses: {
-      200: z.object({ deleted: z.literal(true), subdomain: z.string() }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-    summary: 'Delete a workspace',
-  },
-  getWorkspaceModules: {
-    method: 'GET',
-    path: '/api/platform/workspaces/:subdomain/modules',
-    pathParams: z.object({ subdomain: z.string() }),
-    responses: {
-      200: z.object({ modules: z.array(z.string()) }),
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-    summary: 'Get enabled modules for workspace',
-  },
-  updateWorkspaceModules: {
-    method: 'PATCH',
-    path: '/api/platform/workspaces/:subdomain/modules',
-    pathParams: z.object({ subdomain: z.string() }),
-    body: platformWorkspaceModulesPatchBodySchema,
-    responses: {
-      200: z.object({ success: z.literal(true), modules: z.array(z.string()) }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'Update enabled modules for workspace',
-  },
-  patchWorkspaceEmailVerification: {
-    method: 'PATCH',
-    path: '/api/platform/workspaces/:subdomain/email-verification',
-    pathParams: z.object({ subdomain: z.string() }),
-    body: workspaceEmailVerificationPatchBodySchema,
-    responses: {
-      200: z.object({ success: z.literal(true), subdomain: z.string(), requireEmailVerification: z.boolean() }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-      404: platformErrorSchema,
-    },
-    summary: 'Toggle email verification requirement for a workspace',
-  },
+  ...platformWorkspacesRoutes,
   // Admins (users)
-  listAdmins: {
-    method: 'GET',
-    path: '/api/platform/users',
-    responses: {
-      200: z.object({ users: z.array(platformUserProfileSchema) }),
-      401: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'List platform admins',
-  },
-  createAdmin: {
-    method: 'POST',
-    path: '/api/platform/users',
-    body: platformCreateAdminBodySchema,
-    responses: {
-      200: z.object({ user: platformUserProfileSchema }),
-      201: z.object({ user: platformUserProfileSchema }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'Create a new platform admin',
-  },
-  updateAdminPermissions: {
-    method: 'PATCH',
-    path: '/api/platform/users/:adminId/permissions',
-    pathParams: z.object({ adminId: z.string() }),
-    body: platformUpdateAdminPermissionsBodySchema,
-    responses: {
-      200: z.object({ user: platformUserProfileSchema }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'Update admin permissions',
-  },
-  setAdminDisabled: {
-    method: 'PATCH',
-    path: '/api/platform/users/:adminId/disabled',
-    pathParams: z.object({ adminId: z.string() }),
-    body: platformAdminDisabledBodySchema,
-    responses: {
-      200: z.object({ user: platformUserProfileSchema }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'Enable or disable a platform admin',
-  },
-  deleteAdmin: {
-    method: 'DELETE',
-    path: '/api/platform/users/:adminId',
-    pathParams: z.object({ adminId: z.string() }),
-    body: platformDeleteAdminBodySchema,
-    responses: {
-      200: z.object({ deleted: z.literal(true), id: z.string() }),
-      400: platformErrorSchema,
-      403: platformErrorSchema,
-    },
-    summary: 'Delete a platform admin',
-  },
+  ...platformAdminsRoutes,
 });

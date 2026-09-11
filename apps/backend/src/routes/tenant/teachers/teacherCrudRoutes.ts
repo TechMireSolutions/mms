@@ -86,10 +86,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
       try {
-        // (typed as User & { workspaceId? } because the legacy JWT payload may carry workspaceId;
-        //  it is not on the shared User type)
-        const result = await withTenant(String(tenant), () => teacherUseCases.createTeacher(
-          { ...(body as Record<string, unknown>), workspaceId: (user as User & { workspaceId?: string }).workspaceId } as never), { readOnly: false });
+        const result = await withTenant(String(tenant), () => teacherUseCases.createTeacher(body), { readOnly: false });
         await auditTeacher(user, 'teacher.create', `Created teacher ${result.record.id}`, String(result.record.id));
         const teacher = await sanitizeOneTeacherForUser(result.record as Teacher, user);
         return result.restored
@@ -125,7 +122,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
       try {
-        const updated = await withTenant(String(tenant), () => teacherUseCases.updateTeacherById(id, payload as never), { readOnly: false });
+        const updated = await withTenant(String(tenant), () => teacherUseCases.updateTeacherById(id, payload), { readOnly: false });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Teacher not found' } };
         await auditTeacher(user, 'teacher.update', `Updated teacher ${id}`, id);
         return { status: 200 as const, body: { success: true as const, teacher: await sanitizeOneTeacherForUser(updated as Teacher, user) } };

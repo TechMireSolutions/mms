@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { User } from '@mms/shared';
-import { messagingContract, messagingRecipientsQuerySchema } from '@mms/shared';
+import { messagingContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
 import { canReadMessaging } from '../../../services/rbacService.js';
@@ -55,11 +55,9 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const parsed = messagingRecipientsQuerySchema.safeParse(query);
-        const effectiveQuery = parsed.success ? parsed.data : query;
         const tenant = requireMessagingTenant(request);
         const result = await withTenant(tenant.id, () =>
-          messagingUseCases.loadMessagingRecipients(tenant.subdomain, effectiveQuery as Parameters<typeof messagingUseCases.loadMessagingRecipients>[1]),
+          messagingUseCases.loadMessagingRecipients(tenant.subdomain, query),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };

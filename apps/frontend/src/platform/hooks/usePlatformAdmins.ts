@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformAdminPermissions, PlatformCreateAdminInput, PlatformUserProfile } from '@mms/shared';
 import { apiContract } from '@/lib/api';
-import { apiJson } from '@/lib/apiClient';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -51,10 +50,13 @@ export function usePlatformAdmins(): {
   const query = useQuery({
     queryKey: PLATFORM_ADMINS_QUERY_KEY,
     queryFn: async ({ signal }) => {
-      const res = await apiJson<{ users: PlatformUserProfile[] }>('/api/platform/users', {
-        signal,
+      const res = await apiContract.platform.listAdmins({
+        fetchOptions: { signal },
       });
-      return res.users;
+      if (res.status !== 200) {
+        throw new Error((res.body as { message?: string })?.message ?? 'Failed to list admins');
+      }
+      return (res.body as { users: PlatformUserProfile[] }).users;
     },
     enabled: canAdmins,
     staleTime: 60_000,
@@ -224,10 +226,13 @@ export function useVerifyPlatformAdminEmail() {
 
   return useMutation({
     mutationFn: async (adminId: string) => {
-      return apiJson<{ user: PlatformUserProfile; success: boolean }>(
-        `/api/platform/users/${adminId}/verify-email`,
-        { method: 'POST' },
-      );
+      const res = await apiContract.platform.verifyAdminEmail({
+        params: { adminId },
+      });
+      if (res.status !== 200) {
+        throw new Error((res.body as { message?: string })?.message ?? 'Failed to verify admin email');
+      }
+      return res.body as { user: PlatformUserProfile; success: boolean };
     },
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: PLATFORM_ADMINS_QUERY_KEY });

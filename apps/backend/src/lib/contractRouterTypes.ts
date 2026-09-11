@@ -15,10 +15,20 @@ import type { z } from 'zod';
  * (params / query / body) without restructuring the contracts.
  */
 export type ContractRouteArgs<T> = {
-  params: T extends { params: infer P } ? z.infer<P> : never;
-  query: T extends { query: infer Q } ? z.infer<Q> : never;
-  body: T extends { body: infer B } ? z.infer<B> : never;
-  headers: T extends { headers: infer H } ? z.infer<H> : never;
+  params: T extends { pathParams: infer PP }
+    ? (PP extends z.ZodTypeAny ? z.infer<PP> : Record<string, string>)
+    : T extends { params: infer P }
+      ? (P extends z.ZodTypeAny ? z.infer<P> : Record<string, string>)
+      : Record<string, string>;
+  query: T extends { query: infer Q }
+    ? (Q extends z.ZodTypeAny ? z.infer<Q> : Record<string, string>)
+    : Record<string, string>;
+  body: T extends { body: infer B }
+    ? (B extends z.ZodTypeAny ? z.infer<B> : unknown)
+    : unknown;
+  headers: T extends { headers: infer H }
+    ? (H extends z.ZodTypeAny ? z.infer<H> : Record<string, string>)
+    : Record<string, string>;
   request: FastifyRequest & { user?: User; tenant?: { id: string } };
 };
 

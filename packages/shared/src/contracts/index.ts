@@ -21,7 +21,7 @@ import { profileContract } from './profile.contract.js';
 import { publicContract } from './public.contract.js';
 import { aiContract } from './ai.contract.js';
 import { healthContract } from './health.contract.js';
-import { platformContract } from './platform.contract.js';
+import { platformContract, platformWorkspacesContract, platformSettingsContract, platformAdminsContract } from './platform.contract.js';
 
 const c = initContract();
 
@@ -83,6 +83,9 @@ export {
   aiContract,
   healthContract,
   platformContract,
+  platformWorkspacesContract,
+  platformSettingsContract,
+  platformAdminsContract,
 };
 export type DomainContracts = {
   students: typeof studentContract;

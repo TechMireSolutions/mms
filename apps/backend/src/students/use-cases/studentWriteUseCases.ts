@@ -31,7 +31,7 @@ interface CreateStudentOptions {
  * permission (Contacts parity).
  */
 export async function createStudent(
-  record: StudentRecord,
+  record: StudentRecord | Record<string, unknown>,
   options: CreateStudentOptions | User = {},
   repo: StudentsRepository = studentsRepository,
 ): Promise<CreateStudentResult> {
@@ -78,7 +78,7 @@ export async function createStudent(
 
 export async function updateStudentById(
   id: string,
-  record: StudentRecord,
+  record: StudentRecord | Record<string, unknown>,
   repo: StudentsRepository = studentsRepository,
 ): Promise<StudentRecord | null> {
   const saved = await runInTransaction(async () => {

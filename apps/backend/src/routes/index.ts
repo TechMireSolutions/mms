@@ -40,9 +40,9 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(publicRoutes, { prefix: '/api/public' });
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(platformAuthRoutes, { prefix: '/api/platform/auth' });
-  await app.register(platformWorkspaceRoutes, { prefix: '/api/platform/workspaces' });
-  await app.register(platformUsersRoutes, { prefix: '/api/platform/users' });
-  await app.register(platformSettingsRoutes, { prefix: '/api/platform/settings' });
+  await app.register(platformWorkspaceRoutes);
+  await app.register(platformUsersRoutes);
+  await app.register(platformSettingsRoutes);
   await app.register(platformAdminSystemRoutes, { prefix: '/api/platform/admin/system' });
   await app.register(platformSchemaRoutes, { prefix: '/api/platform/schema' });
   await app.register(workspaceRoutes, { prefix: '/api/workspace' });

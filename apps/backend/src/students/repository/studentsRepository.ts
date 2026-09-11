@@ -1,5 +1,7 @@
 import type {
   Student,
+  StudentDuplicateCheckInput,
+  StudentDuplicateReason,
   StudentRecord,
   StudentsCommandMetricsSnapshot,
   StudentsListPageResult,
@@ -20,22 +22,6 @@ interface StudentGrSequenceInput {
   regDate: string;
   restartAnnually: boolean;
 }
-
-interface StudentRegistrationConflictInput {
-  excludeId?: string;
-  contactId?: string | number;
-  email?: string;
-  name?: string;
-  dob?: string;
-  grNumber?: string;
-}
-
-type StudentRegistrationConflictReason =
-  | 'contact'
-  | 'email'
-  | 'nameDob'
-  | 'grNumber'
-  | null;
 
 /**
  * Sole gateway to student storage.
@@ -68,8 +54,8 @@ export interface StudentsRepository {
   ): Promise<number>;
   findRegistrationConflict(
     tenant: string,
-    input: StudentRegistrationConflictInput,
-  ): Promise<StudentRegistrationConflictReason>;
+    input: StudentDuplicateCheckInput,
+  ): Promise<StudentDuplicateReason | null>;
   /** Soft-deleted student sharing `contactId` (restore-on-create probe). */
   findSoftDeletedByContactId(tenant: string, contactId: string): Promise<Student | null>;
   listActiveMissingGrNumber(tenant: string): Promise<Student[]>;
