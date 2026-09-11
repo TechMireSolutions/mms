@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Enrollment } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type EnrollmentRow = typeof enrollments.$inferSelect;
 type TimelineEventRow = typeof enrollmentTimelineEvents.$inferSelect;
@@ -35,15 +36,8 @@ export function enrollmentRowToRecord(
       event: t.event,
       by: t.by,
     })),
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    ...mapAuditTimestamps(row),
   };
-
-  if (row.deletedAt) enrollment.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) enrollment.deletedBy = row.deletedBy;
-  if (row.deletionReason) enrollment.deletionReason = row.deletionReason;
-  if (row.restoredAt) enrollment.restoredAt = row.restoredAt.toISOString();
-  if (row.restoredBy) enrollment.restoredBy = row.restoredBy;
 
   return enrollment;
 }

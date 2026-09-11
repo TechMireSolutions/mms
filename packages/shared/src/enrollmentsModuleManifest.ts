@@ -77,6 +77,7 @@ export const enrollmentRecordInsertSchema = z
 export const enrollmentRecordUpdateSchema = enrollmentRecordInsertSchema.partial().strict();
 
 export type Enrollment = z.infer<typeof enrollmentRecordSchema>;
+export type EnrollmentRecord = Enrollment;
 export type EnrollmentInsert = z.infer<typeof enrollmentRecordInsertSchema>;
 export type EnrollmentUpdate = z.infer<typeof enrollmentRecordUpdateSchema>;
 export const enrollmentListSchema = z.array(enrollmentRecordSchema);

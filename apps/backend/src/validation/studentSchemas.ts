@@ -4,12 +4,10 @@ import {
   studentsDuplicateCheckBodySchema,
   studentsBulkStatusSchema,
   studentsNextGrNumberQuerySchema,
-} from '@mms/shared';
-import {
-  csvExportBodySchema,
+  studentsCsvExportBodySchema,
+  bulkIdsBodySchema,
   moduleFieldsPrefsAuditBodySchema,
-} from './csvExportBodySchema.js';
-import { bulkIdsBodySchema } from './commonSchemas.js';
+} from '@mms/shared';
 
 export {
   studentsListQuerySchema,
@@ -17,10 +15,9 @@ export {
   studentsDuplicateCheckBodySchema,
   studentsBulkStatusSchema,
   studentsNextGrNumberQuerySchema,
+  studentsCsvExportBodySchema,
 };
 
 export const studentsBulkIdsSchema = bulkIdsBodySchema;
-
 export const studentSetupAuditSchema = moduleFieldsPrefsAuditBodySchema;
 
-export const studentsCsvExportBodySchema = csvExportBodySchema(studentsListQuerySchema);

@@ -1,11 +1,11 @@
-import { usersListQuerySchema, usersBulkBodySchema } from '@mms/shared';
 import {
-  csvExportBodySchema,
+  usersListQuerySchema,
+  usersBulkBodySchema,
+  usersCsvExportBodySchema,
   moduleExportAuditBodySchema,
-} from './csvExportBodySchema.js';
+} from '@mms/shared';
 
-export { usersListQuerySchema, usersBulkBodySchema };
-
-export const usersCsvExportBodySchema = csvExportBodySchema(usersListQuerySchema);
+export { usersListQuerySchema, usersBulkBodySchema, usersCsvExportBodySchema };
 
 export const userExportAuditSchema = moduleExportAuditBodySchema;
+

@@ -18,12 +18,12 @@ import {
 } from '../../services/platform/platformUserService.js';
 import { hashPassword } from '../../services/auth/passwordService.js';
 import {
+  resourceIdParamsSchema,
   platformAdminDisabledBodySchema,
   platformCreateAdminBodySchema,
   platformDeleteAdminBodySchema,
   platformUpdateAdminPermissionsBodySchema,
-} from '../../validation/platformSchemas.js';
-import { resourceIdParamsSchema } from '../../validation/commonSchemas.js';
+} from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { sendForbidden, sendInvalidCurrentPassword } from '../../lib/httpErrors.js';

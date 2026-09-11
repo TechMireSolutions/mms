@@ -5,6 +5,7 @@ import { withTenant } from '../tenant-context.js';
 import { ValidationError } from '../../lib/httpErrors.js';
 import { invoiceWriteValues } from './financeInvoiceValues.js';
 import { invoiceLineRowToRecord, replaceInvoiceLines } from './financeBillingRepository.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type InvoiceRow = typeof financeInvoices.$inferSelect;
 
@@ -24,8 +25,7 @@ export function invoiceRowToRecord(row: InvoiceRow): Invoice {
     dueDate: row.dueDate,
     paidDate: row.paidDate,
     method: row.method,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    ...mapAuditTimestamps(row),
   };
 
   if (row.paidAmt != null) invoice.paidAmt = Number(row.paidAmt);
@@ -38,9 +38,6 @@ export function invoiceRowToRecord(row: InvoiceRow): Invoice {
   if (row.creditedAmt != null) invoice.creditedAmt = Number(row.creditedAmt);
   if (row.lastRemindedAt) invoice.lastRemindedAt = row.lastRemindedAt.toISOString();
   if (row.reminderCount != null) invoice.reminderCount = row.reminderCount;
-  if (row.deletedAt) invoice.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) invoice.deletedBy = row.deletedBy;
-  if (row.deletionReason) invoice.deletionReason = row.deletionReason;
 
   return invoice;
 }

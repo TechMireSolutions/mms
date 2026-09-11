@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { platformSettingsUpdateSchema } from '../../validation/platformSchemas.js';
+import { platformSettingsUpdateSchema } from '@mms/shared';
 import {
   authenticatePlatform,
   requirePlatformPermission,

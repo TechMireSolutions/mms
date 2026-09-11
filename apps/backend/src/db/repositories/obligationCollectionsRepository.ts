@@ -9,6 +9,7 @@ import {
   mujtahids,
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type ObligationCollectionRow = typeof obligationCollections.$inferSelect;
 
@@ -27,11 +28,8 @@ export function obligationCollectionRowToRecord(row: ObligationCollectionRow): O
     received_by: row.receivedBy,
     created_at: row.createdAt.toISOString(),
     updated_at: row.updatedAt.toISOString(),
+    ...mapAuditTimestamps(row),
   };
-
-  if (row.deletedAt) collection.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) collection.deletedBy = row.deletedBy;
-  if (row.deletionReason) collection.deletionReason = row.deletionReason;
 
   return collection;
 }

@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Exam } from '@mms/shared';
 import { exams, examClasses } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type ExamRow = typeof exams.$inferSelect;
 
@@ -17,11 +18,8 @@ export function examRowToRecord(row: ExamRow, classIds: string[] = []): Exam {
     classIds,
     status: row.status as Exam['status'],
     description: row.description,
+    ...mapAuditTimestamps(row),
   };
-
-  if (row.deletedAt) exam.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) exam.deletedBy = row.deletedBy;
-  if (row.deletionReason) exam.deletionReason = row.deletionReason;
 
   return exam;
 }

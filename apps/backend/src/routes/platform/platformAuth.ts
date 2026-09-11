@@ -42,9 +42,10 @@ import {
   platformPasswordResetBodySchema,
   platformProfilePatchBodySchema,
   platformSetupRegisterBodySchema,
-} from '../../validation/platformSchemas.js';
-import { loginBodySchema as platformLoginBodySchema } from '../../validation/commonSchemas.js';
-import { challengeCodeBodySchema, challengeIdBodySchema } from '../../validation/commonSchemas.js';
+  loginBodySchema as platformLoginBodySchema,
+  challengeCodeBodySchema,
+  challengeIdBodySchema,
+} from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
 export default async function platformAuthRoutes(

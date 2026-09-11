@@ -2,6 +2,8 @@ import { randomUUID } from 'node:crypto';
 import type { AttendanceRecord } from '@mms/shared';
 import type { attendance } from '../schema.js';
 
+import { mapAuditTimestamps } from './repositoryMappers.js';
+
 export type AttendanceRow = typeof attendance.$inferSelect;
 export type AttendanceInsert = typeof attendance.$inferInsert;
 
@@ -24,11 +26,7 @@ export function attendanceRowToRecord(row: AttendanceSelectRow | AttendanceRow):
     timeIn: row.timeIn,
     timeOut: row.timeOut,
     notes: row.notes,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
-    deletedAt: row.deletedAt ? row.deletedAt.toISOString() : null,
-    deletedBy: row.deletedBy ?? null,
-    deletionReason: row.deletionReason ?? null,
+    ...mapAuditTimestamps(row),
   } satisfies AttendanceRecord;
 }
 

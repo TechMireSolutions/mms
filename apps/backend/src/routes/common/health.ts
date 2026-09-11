@@ -1,43 +1,11 @@
 import type { FastifyInstance } from 'fastify';
-import { z } from 'zod';
+import {
+  healthResponseSchema,
+  readyResponseSchema,
+  readyErrorResponseSchema,
+} from '@mms/shared';
 import { getPoolMetrics, pingDatabase } from '../../db/database.js';
 import { checkIsRedisConnected } from '../../lib/redis.js';
-
-const poolSubMetricsSchema = z.object({
-  totalCount: z.number(),
-  idleCount: z.number(),
-  waitingCount: z.number(),
-});
-
-const redisStatusSchema = z.object({
-  connected: z.boolean(),
-});
-
-const healthResponseSchema = z.object({
-  status: z.string(),
-  timestamp: z.string(),
-  pool: poolSubMetricsSchema
-    .extend({
-      replica: poolSubMetricsSchema.optional(),
-    })
-    .nullable()
-    .optional(),
-  redis: redisStatusSchema.optional(),
-});
-
-const readyResponseSchema = z.object({
-  status: z.string(),
-  database: z.string(),
-  redis: z.string().optional(),
-  timestamp: z.string(),
-});
-
-const readyErrorResponseSchema = z.object({
-  type: z.string(),
-  status: z.string(),
-  database: z.string(),
-  redis: z.string().optional(),
-});
 
 function safeGetPoolMetrics() {
   try {

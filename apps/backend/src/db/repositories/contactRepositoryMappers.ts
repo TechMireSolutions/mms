@@ -28,6 +28,7 @@ import {
   type contactAttachments,
   type contactBankDetails,
 } from '../schema.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type ContactRow = typeof contacts.$inferSelect;
 type PhoneRow = typeof contactPhones.$inferSelect;
@@ -201,8 +202,7 @@ export function contactRowToRecord(
     relationshipContacts: mappedRelationships,
     activities: mappedActivities,
     attachments: mappedAttachments,
-    createdAt: row.createdAt ? new Date(row.createdAt).toISOString() : new Date().toISOString(),
-    updatedAt: row.updatedAt ? new Date(row.updatedAt).toISOString() : new Date().toISOString(),
+    ...mapAuditTimestamps(row),
   };
 
   if (row.lastName) contact.lastName = row.lastName;
@@ -213,13 +213,6 @@ export function contactRowToRecord(
   if (row.notes) contact.notes = row.notes;
   if (row.lastCheckedAt) contact.lastCheckedAt = row.lastCheckedAt instanceof Date ? row.lastCheckedAt.toISOString() : String(row.lastCheckedAt);
   if (row.aiSummary) contact.aiSummary = row.aiSummary;
-  if (row.deletedAt) contact.deletedAt = new Date(row.deletedAt).toISOString();
-  if (row.deletedBy) contact.deletedBy = row.deletedBy;
-  if (row.deletionReason) contact.deletionReason = row.deletionReason;
-  if (row.restoredAt) contact.restoredAt = new Date(row.restoredAt).toISOString();
-  if (row.restoredBy) contact.restoredBy = row.restoredBy;
-  if (row.createdBy) contact.createdBy = row.createdBy;
-  if (row.updatedBy) contact.updatedBy = row.updatedBy;
 
   return hydrateContactRelationshipFields(contact);
 }

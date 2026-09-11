@@ -5,10 +5,10 @@ import {
   invoicesBulkStatusSchema as sharedInvoicesBulkStatusSchema,
   paymentRecordSchema as sharedPaymentRecordSchema,
   paymentCreateSchema as sharedPaymentCreateSchema,
+  baseListQuerySchema,
   type Invoice,
   type Payment,
 } from '@mms/shared';
-import { baseListQuerySchema } from './commonSchemas.js';
 
 export const invoiceRecordSchema = sharedInvoiceRecordSchema;
 export const invoiceCreateBodySchema = sharedInvoiceCreateSchema;

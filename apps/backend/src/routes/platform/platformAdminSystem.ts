@@ -1,10 +1,10 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import rateLimit from '@fastify/rate-limit';
-import { type MigrateAndRestartAccepted } from '@mms/shared';
 import {
+  type MigrateAndRestartAccepted,
   migrateAndRestartSchema,
   platformActivityLogsQuerySchema,
-} from '../../validation/platformSchemas.js';
+} from '@mms/shared';
 import {
   authenticatePlatform,
   requirePlatformPermission,

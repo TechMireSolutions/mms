@@ -251,6 +251,11 @@ export type SessionInsert = z.infer<typeof SessionInsertSchema>;
 export const SessionUpdateSchema = SessionInsertSchema.partial();
 export type SessionUpdate = z.infer<typeof SessionUpdateSchema>;
 
+/** Canonical record schema matching {entity}RecordSchema standard naming */
+export const sessionRecordSchema = SessionSchema;
+export const sessionListSchema = z.array(sessionRecordSchema);
+export type SessionRecord = Session;
+
 /** Whether a session record is soft-deleted. */
 export function isSessionDeleted(session: { deletedAt?: string | null }): boolean {
   return Boolean(session.deletedAt);

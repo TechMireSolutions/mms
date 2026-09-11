@@ -9,6 +9,7 @@ import {
   financePayments,
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type PaymentRow = typeof financePayments.$inferSelect;
 
@@ -20,17 +21,13 @@ export function paymentRowToRecord(row: PaymentRow): Payment {
     date: row.date,
     method: row.method,
     note: row.note,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    ...mapAuditTimestamps(row),
   };
 
   if (row.studentId) payment.studentId = row.studentId;
   if (row.studentName) payment.studentName = row.studentName;
   if (row.receivedByUserId) payment.receivedByUserId = row.receivedByUserId;
   if (row.receivedBy) payment.receivedBy = row.receivedBy;
-  if (row.deletedAt) payment.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) payment.deletedBy = row.deletedBy;
-  if (row.deletionReason) payment.deletionReason = row.deletionReason;
 
   return payment;
 }

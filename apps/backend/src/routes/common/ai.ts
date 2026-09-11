@@ -1,43 +1,17 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { z } from 'zod';
 import { generateCompletion } from '../../services/llmService.js';
 import { loadGlobalSettings } from '../../services/globalSettingsService.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { sendForbidden } from '../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
-import { getLlmProviderModelsUrl, LLM_PROVIDER_KEYS, type User, type LlmTestResult } from '@mms/shared';
+import {
+  getLlmProviderModelsUrl,
+  aiModelsBodySchema as modelsBodySchema,
+  aiTestBodySchema as testBodySchema,
+  type User,
+  type LlmTestResult,
+} from '@mms/shared';
 import { fetchSafeExternal, safeOptionalExternalHttpUrl } from '../../lib/outboundUrl.js';
-
-const modelsBodySchema = z.object({
-  provider: z.enum(LLM_PROVIDER_KEYS),
-  apiKey: z.string().optional(),
-  configId: z.string().optional(),
-  baseUrl: z.string().optional(),
-});
-
-const messageSchema = z.object({
-  role: z.enum(['user', 'assistant', 'system']),
-  content: z.string(),
-});
-
-const testBodySchema = z.object({
-  prompt: z.string().optional(),
-  systemInstruction: z.string().optional(),
-  configId: z.string().optional(),
-  customConfig: z.object({
-    id: z.string(),
-    name: z.string(),
-    provider: z.enum(LLM_PROVIDER_KEYS),
-    apiKey: z.string(),
-    model: z.string(),
-    baseUrl: z.string().optional(),
-    isDefaultText: z.boolean(),
-    temperature: z.number().optional(),
-    maxTokens: z.number().optional(),
-    topP: z.number().optional(),
-  }).optional(),
-  messages: z.array(messageSchema).optional(),
-});
 
 interface GeminiModelsResponse {
   models?: Array<{ name: string }>;

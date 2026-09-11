@@ -15,13 +15,14 @@ import {
   updateWorkspaceModules,
 } from '../../services/workspaceService.js';
 import { verifyPlatformUserPassword } from '../../services/platform/platformUserService.js';
-import { subdomainParamsSchema } from '../../validation/commonSchemas.js';
 import {
+  subdomainParamsSchema,
   workspaceDeleteBodySchema,
   workspaceEnabledPatchBodySchema,
   platformWorkspaceModulesPatchBodySchema,
   workspaceEmailVerificationPatchBodySchema,
-} from '../../validation/platformSchemas.js';
+} from '@mms/shared';
+
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendInvalidCurrentPassword, sendNotFound } from '../../lib/httpErrors.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';

@@ -20,6 +20,7 @@ import { authContract } from './auth.contract.js';
 import { profileContract } from './profile.contract.js';
 import { publicContract } from './public.contract.js';
 import { aiContract } from './ai.contract.js';
+import { healthContract } from './health.contract.js';
 import { platformContract } from './platform.contract.js';
 
 const c = initContract();
@@ -46,6 +47,7 @@ export const rootContract = c.router({
   profile: profileContract,
   public: publicContract,
   ai: aiContract,
+  health: healthContract,
   platform: platformContract,
 });
 
@@ -79,6 +81,7 @@ export {
   profileContract,
   publicContract,
   aiContract,
+  healthContract,
   platformContract,
 };
 export type DomainContracts = {
@@ -103,5 +106,6 @@ export type DomainContracts = {
   profile: typeof profileContract;
   public: typeof publicContract;
   ai: typeof aiContract;
+  health: typeof healthContract;
   platform: typeof platformContract;
 };

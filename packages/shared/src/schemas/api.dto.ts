@@ -41,3 +41,22 @@ export type BulkIdsBody = z.infer<typeof bulkIdsBodySchema>;
 
 /** Inferred type for bulkStringIdsBodySchema. */
 export type BulkStringIdsBody = z.infer<typeof bulkStringIdsBodySchema>;
+
+/** Common route path parameter schemas */
+export const resourceIdParamsSchema = z.object({ id: z.string().min(1) }).strict();
+export const resourceNameParamsSchema = z.object({ name: z.string().min(1) }).strict();
+export const resourceKeyParamsSchema = z.object({ key: z.string().min(1) }).strict();
+export const subdomainParamsSchema = z.object({ subdomain: z.string().min(1) }).strict();
+
+export type ResourceIdParams = z.infer<typeof resourceIdParamsSchema>;
+export type ResourceNameParams = z.infer<typeof resourceNameParamsSchema>;
+export type ResourceKeyParams = z.infer<typeof resourceKeyParamsSchema>;
+export type SubdomainParams = z.infer<typeof subdomainParamsSchema>;
+
+/** Contacts duplicate scan query schema with strict 100 limit budget */
+export const contactsDuplicatesQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).optional(),
+  limit: z.coerce.number().int().min(1).max(100).optional(),
+}).strict();
+
+export type ContactsDuplicatesQuery = z.infer<typeof contactsDuplicatesQuerySchema>;

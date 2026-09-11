@@ -7,13 +7,11 @@ import {
   teachersBulkSpecializationSchema,
   teachersNextEmployeeIdQuerySchema,
   teachersDuplicateCheckBodySchema,
+  teachersCsvExportBodySchema,
+  bulkIdsBodySchema,
+  moduleFieldsPrefsAuditBodySchema,
   type TeacherRecord,
 } from '@mms/shared';
-import { bulkIdsBodySchema } from './commonSchemas.js';
-import {
-  csvExportBodySchema,
-  moduleFieldsPrefsAuditBodySchema,
-} from './csvExportBodySchema.js';
 
 export {
   teacherCoreSchema,
@@ -24,12 +22,12 @@ export {
   teachersBulkSpecializationSchema,
   teachersNextEmployeeIdQuerySchema,
   teachersDuplicateCheckBodySchema,
+  teachersCsvExportBodySchema,
   type TeacherRecord,
 };
 
 export const teachersBulkIdsSchema = bulkIdsBodySchema;
 
-export const teachersCsvExportBodySchema = csvExportBodySchema(teachersListQuerySchema);
-
 /** Teachers Setup audit — fields/preferences only (Students parity). */
 export const teacherSetupAuditSchema = moduleFieldsPrefsAuditBodySchema;
+
