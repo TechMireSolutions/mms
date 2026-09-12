@@ -39,6 +39,11 @@ export function initializeDatabaseConnection(): void {
     // Idle clients can be terminated during platform DB reset; log and continue.
     logger.error({ err: error }, 'Unexpected database pool client error');
   });
+  pool.on('connect', (client) => {
+    client.on('error', (err) => {
+      logger.warn({ err }, 'Unexpected error on checked-out database client');
+    });
+  });
 
   const hasDistinctReplica = Boolean(
     config.readReplicaDatabaseUrl &&
@@ -56,6 +61,11 @@ export function initializeDatabaseConnection(): void {
   } else {
     readReplicaPool = pool;
   }
+  readReplicaPool.on('connect', (client) => {
+    client.on('error', (err) => {
+      logger.warn({ err }, 'Unexpected error on checked-out read-replica database client');
+    });
+  });
 
   rootDb = drizzle(pool, { schema });
   readReplicaDb = hasDistinctReplica ? drizzle(readReplicaPool, { schema }) : rootDb;
