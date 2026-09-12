@@ -161,7 +161,7 @@ export function formatAmountInWords(
   const integerPart = Math.floor(fixed);
   const decimalPart = Math.round((fixed - integerPart) * 100);
 
-  let words = "";
+  let words: string;
   if (integerPart === 0) {
     words = "Zero";
   } else {
