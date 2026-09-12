@@ -15,7 +15,7 @@ import {
   ATTENDANCE_LOOKUP_KINDS,
   type AttendanceLookupKind,
 } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
@@ -385,8 +385,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance lookup kind' } };
       }
     },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof attendanceContract>);
 
   await fastify.register(s.plugin(router));
 };

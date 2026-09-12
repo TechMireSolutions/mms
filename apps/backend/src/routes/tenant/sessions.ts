@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
 import {
@@ -300,8 +300,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session lookup kind' } };
       }
     },
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof sessionContract>);
 
   await fastify.register(s.plugin(router));
 }
