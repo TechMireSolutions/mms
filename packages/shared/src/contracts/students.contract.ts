@@ -11,6 +11,7 @@ import {
   studentsListQuerySchema,
   studentsNextGrNumberQuerySchema,
 } from '../studentsListQuery.js';
+import { includeDeletedQuerySchema } from '../apiSchemas.js';
 
 const c = initContract();
 
@@ -84,6 +85,7 @@ export const studentContract = c.router({
   get: {
     method: 'GET',
     path: '/api/students/:id',
+    query: includeDeletedQuerySchema.optional(),
     responses: {
       200: z.object({ student: studentRecordSchema }),
       403: errorResponse,

@@ -38,6 +38,7 @@ export const platformSetupRegisterBodySchema = z.preprocess((raw) => {
 }, platformSetupRegisterBodyBaseSchema);
 
 export type PlatformSetupRegisterInput = z.infer<typeof platformSetupRegisterBodyBaseSchema>;
+export type PlatformSetupRegisterBody = PlatformSetupRegisterInput;
 
 const platformSetupVerifyBodyBaseSchema = z.object({
   setupId: z.string().min(8),
@@ -90,6 +91,7 @@ export const platformPasswordResetBodySchema = z.preprocess((raw) => {
 }, platformPasswordResetBodyBaseSchema);
 
 export type PlatformPasswordResetInput = z.infer<typeof platformPasswordResetBodyBaseSchema>;
+export type PlatformPasswordResetBody = PlatformPasswordResetInput;
 
 const platformPasswordResendBodyBaseSchema = z.object({
   resetId: z.string().min(8),

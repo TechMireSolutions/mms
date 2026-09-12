@@ -24,6 +24,16 @@ export interface SoftDeleteFields {
   deletedWithCascade?: boolean | null;
 }
 
+/** Serialized soft-delete metadata fields in JSON contract responses. */
+export interface SerializedSoftDeleteFields {
+  deletedAt?: string;
+  deletedBy?: string;
+  deletionReason?: string;
+  restoredAt?: string;
+  restoredBy?: string;
+  deletedWithCascade?: boolean;
+}
+
 /** Soft-delete audit payload provided by caller when archiving a record. */
 export interface SoftDeleteAuditPayload {
   deletedBy?: string | null;

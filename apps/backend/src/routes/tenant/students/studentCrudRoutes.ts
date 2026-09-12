@@ -60,7 +60,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const includeDeleted = isQueryFlagTrue((query as { includeDeleted?: unknown })?.includeDeleted);
+        const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
         if (includeDeleted && !canDeleteCollection(user, 'students')) {
           return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
         }

@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { dedupeTrimmedIds } from '@mms/shared';
-import { eq, isNull, isNotNull, type SQL } from 'drizzle-orm';
+import { dedupeTrimmedIds, type SoftDeleteFields } from '@mms/shared';
+import { eq, isNull, isNotNull, type Column, type SQL } from 'drizzle-orm';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { ConflictError, NotFoundError } from '../lib/httpErrors.js';
 import type { ZodType } from 'zod';
@@ -13,8 +13,8 @@ export interface ListByWorkspaceOptions {
 }
 
 export interface TenantSoftDeleteTable {
-  workspaceSubdomain: any;
-  deletedAt: any;
+  workspaceSubdomain: Column;
+  deletedAt: Column;
 }
 
 /**
@@ -53,14 +53,6 @@ export function filterInMemorySoftDeleted<T extends { deletedAt?: string | Date 
     return records.filter((r) => !r.deletedAt);
   }
   return records;
-}
-
-interface SoftDeleteFields {
-  deletedAt?: string | Date | null;
-  deletedBy?: string | null;
-  deletionReason?: string | null;
-  restoredAt?: string | Date | null;
-  restoredBy?: string | null;
 }
 
 export interface GenericServiceOptions<T> {

@@ -4,6 +4,7 @@ import {
   buildTenantSoftDeleteConditions,
   createGenericRelationalService,
   filterInMemorySoftDeleted,
+  type TenantSoftDeleteTable,
 } from '../services/genericRelationalService.js';
 import { ConflictError, NotFoundError, ValidationError } from '../lib/httpErrors.js';
 import { restoreContactById, bulkRestoreContacts } from '../contacts/use-cases/contactSoftDeleteUseCases.js';
@@ -704,7 +705,7 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
     const fakeTable = {
       workspaceSubdomain: 'subdomain_col',
       deletedAt: 'deleted_at_col',
-    };
+    } as unknown as TenantSoftDeleteTable;
 
     it('constructs Category B partial index predicate for active records', () => {
       const conditions = buildTenantSoftDeleteConditions(fakeTable, 'Demo', 'active');

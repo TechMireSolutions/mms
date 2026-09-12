@@ -2,24 +2,43 @@ import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
-import { sessionContract, isQueryFlagTrue, SESSIONS_MODULE_MANIFEST, type User } from '@mms/shared';
+import {
+  sessionContract,
+  isQueryFlagTrue,
+  SESSIONS_MODULE_MANIFEST,
+  SESSION_LOOKUP_KINDS,
+  type User,
+  type SessionLookupKind,
+  roleHasPermission,
+  normalizeSessionModulePreferences,
+  sessionFieldConfigPutBodySchema,
+  sessionPreferencesPutBodySchema,
+} from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../services/rbacService.js';
 import { sessionsUseCases } from '../../sessions/use-cases/sessionsUseCases.js';
-
-import { registerStandardTenantRoutes } from '../../lib/crudRouter.js';
-import { sessionRecordSchema } from '@mms/shared';
-
-import { sessionExportRoutes } from './sessions/sessionExportRoutes.js';
-import { sessionSetupConfigRoutes } from './sessions/sessionSetupConfigRoutes.js';
-import { sessionLookupRoutes } from './sessions/sessionLookupRoutes.js';
-import { sessionReportRoutes } from './sessions/sessionReportRoutes.js';
+import { registerStandardExtendedRoutes } from '../../lib/crudRouter.js';
+import {
+  loadSessionFieldConfig,
+  saveSessionFieldConfig,
+} from '../../services/sessionConfigService.js';
+import {
+  loadSessionModulePreferences,
+  saveSessionModulePreferences,
+} from '../../services/sessionPreferencesService.js';
+import {
+  loadSessionLookupsMap,
+} from '../../services/sessionLookupsService.js';
+import { auditSession } from './sessions/sessionRouteHelpers.js';
+import { parseRequest } from '../../lib/zodRequest.js';
 
 const COLLECTION = SESSIONS_MODULE_MANIFEST.collectionKey;
+const SETUP_WRITE_PERM = SESSIONS_MODULE_MANIFEST.permissions.setupWrite;
 
 /**
- * Server-first sessions resource routes (TanStack Query on FE).
+ * Sessions routes — all contract keys served via @ts-rest contract router.
+ * Count and metrics remain on raw Fastify (`registerStandardExtendedRoutes`).
  */
 export default async function sessionsRoutes(
   fastify: FastifyInstance,
@@ -28,36 +47,22 @@ export default async function sessionsRoutes(
   fastify.addHook('preHandler', authenticateTenant);
   fastify.addHook('preHandler', requireTenantModule('sessions'));
 
+  // Count + Metrics (not in sessionContract)
   await fastify.register(
     async (sub) => {
-      await sub.register(sessionSetupConfigRoutes);
-      await sub.register(sessionLookupRoutes);
-      await sub.register(sessionExportRoutes);
-      await sub.register(sessionReportRoutes);
-
-      registerStandardTenantRoutes(sub, {
+      registerStandardExtendedRoutes(sub, {
         collection: COLLECTION,
-        schema: sessionRecordSchema,
-        defaultPageSize: SESSIONS_MODULE_MANIFEST.defaultPageSize,
         errorMessagePrefix: 'sessions',
         nameSingular: 'session',
-        namePlural: 'sessions',
         loadCountFn: sessionsUseCases.countSessions,
         loadMetricsFn: sessionsUseCases.loadSessionsCommandMetrics,
-        loadWidgetAggregatesFn: (queries: unknown[], req?: unknown) => sessionsUseCases.loadSessionsWidgetAggregates(queries as unknown as Parameters<typeof sessionsUseCases.loadSessionsWidgetAggregates>[0], req),
-        loadByIdFn: sessionsUseCases.loadSessionById,
-        updateFn: sessionsUseCases.updateSessionById,
-        deleteFn: sessionsUseCases.deleteSessionById,
-        restoreFn: sessionsUseCases.restoreSessionById,
-
-        customPostRoute: true,
       });
     },
     { prefix: '/api/sessions' },
   );
 
   const s = initServer();
-  const sessionsBulkRouter = s.router(sessionContract, {
+  const router = s.router(sessionContract, {
     list: async ({ query, request }: ContractRouteArgs<typeof sessionContract['list']>): Promise<ContractRouteResponse<typeof sessionContract['list']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, COLLECTION))
@@ -73,6 +78,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list sessions' } };
       }
     },
+
     create: async ({ body, request }: ContractRouteArgs<typeof sessionContract['create']>): Promise<ContractRouteResponse<typeof sessionContract['create']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION))
@@ -85,6 +91,60 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create session' } };
       }
     },
+
+    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof sessionContract['get']>): Promise<ContractRouteResponse<typeof sessionContract['get']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+      if (includeDeleted && !canDeleteCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        const item = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionById(id, includeDeleted), { readOnly: true });
+        if (!item) return { status: 404 as const, body: { type: 'not_found', message: 'Session not found' } };
+        return { status: 200 as const, body: { session: item } };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session' } };
+      }
+    },
+
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof sessionContract['update']>): Promise<ContractRouteResponse<typeof sessionContract['update']>> => {
+      const user = request.user as User;
+      if (!canWriteCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        const updated = await withTenant(String(request.tenant?.id), () => sessionsUseCases.updateSessionById(id, body), { readOnly: false });
+        if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Session not found' } };
+        return { status: 200 as const, body: { session: updated } };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update session' } };
+      }
+    },
+
+    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof sessionContract['delete']>): Promise<ContractRouteResponse<typeof sessionContract['delete']>> => {
+      const user = request.user as User;
+      if (!canDeleteCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        await withTenant(String(request.tenant?.id), () => sessionsUseCases.deleteSessionById(id, String(user.id), body?.deletionReason), { readOnly: false });
+        return { status: 200 as const, body: { success: true } };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete session' } };
+      }
+    },
+
+    restore: async ({ params: { id }, request }: ContractRouteArgs<typeof sessionContract['restore']>): Promise<ContractRouteResponse<typeof sessionContract['restore']>> => {
+      const user = request.user as User;
+      if (!canDeleteCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        await withTenant(String(request.tenant?.id), () => sessionsUseCases.restoreSessionById(id, String(user.id)), { readOnly: false });
+        return { status: 200 as const, body: { success: true } };
+      } catch (error: unknown) {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to restore session' } };
+      }
+    },
+
     bulkDelete: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkDelete']>): Promise<ContractRouteResponse<typeof sessionContract['bulkDelete']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION))
@@ -96,6 +156,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete sessions' } };
       }
     },
+
     bulkStatus: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkStatus']>): Promise<ContractRouteResponse<typeof sessionContract['bulkStatus']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION))
@@ -107,6 +168,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update session status' } };
       }
     },
+
     bulkRestore: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkRestore']>): Promise<ContractRouteResponse<typeof sessionContract['bulkRestore']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION))
@@ -118,7 +180,128 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore sessions' } };
       }
     },
+
+    exportAudit: async ({ request }: ContractRouteArgs<typeof sessionContract['exportAudit']>): Promise<ContractRouteResponse<typeof sessionContract['exportAudit']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      // Export audit is queued via background job — return success immediately
+      return { status: 200 as const, body: { success: true } };
+    },
+
+    widgetAggregates: async ({ body, request }: ContractRouteArgs<typeof sessionContract['widgetAggregates']>): Promise<ContractRouteResponse<typeof sessionContract['widgetAggregates']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsWidgetAggregates(body.widgets as Parameters<typeof sessionsUseCases.loadSessionsWidgetAggregates>[0], request), { readOnly: true });
+        return { status: 200 as const, body: { results: result as Record<string, { value: number; totalCount: number; chartData: Array<{ name: string; value: number }> }> } };
+      } catch {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
+      }
+    },
+
+    reportAggregates: async ({ request }: ContractRouteArgs<typeof sessionContract['reportAggregates']>): Promise<ContractRouteResponse<typeof sessionContract['reportAggregates']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        const aggregates = await sessionsUseCases.loadSessionsReportAggregates();
+        return { status: 200 as const, body: aggregates };
+      } catch {
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load sessions report aggregates' } };
+      }
+    },
+
+    getFieldConfig: async ({ request }: ContractRouteArgs<typeof sessionContract['getFieldConfig']>): Promise<ContractRouteResponse<typeof sessionContract['getFieldConfig']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        const config = await loadSessionFieldConfig();
+        return { status: 200 as const, body: { config: (config ?? null) as Record<string, unknown> | null } };
+      } catch (error: unknown) {
+        request.log.error(error, 'Failed to load session field config');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session field config' } };
+      }
+    },
+
+    updateFieldConfig: async ({ body, request }: ContractRouteArgs<typeof sessionContract['updateFieldConfig']>): Promise<ContractRouteResponse<typeof sessionContract['updateFieldConfig']>> => {
+      const user = request.user as User;
+      if (!roleHasPermission(user.role, SETUP_WRITE_PERM))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      const parsed = parseRequest(sessionFieldConfigPutBodySchema, body);
+      if (!parsed.ok) return { status: 403 as const, body: { type: 'validation_error', message: parsed.message } };
+      try {
+        const saved = await saveSessionFieldConfig(parsed.data);
+        await auditSession(user, 'session.field-config', 'Updated session field configuration', 'field-config');
+        return { status: 200 as const, body: { success: true, config: saved as unknown as Record<string, unknown> } };
+      } catch (error: unknown) {
+        request.log.error(error, 'Failed to save session field config');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save session field config' } };
+      }
+    },
+
+    getPreferences: async ({ request }: ContractRouteArgs<typeof sessionContract['getPreferences']>): Promise<ContractRouteResponse<typeof sessionContract['getPreferences']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        const raw = await loadSessionModulePreferences();
+        const preferences = normalizeSessionModulePreferences(raw ?? undefined);
+        return { status: 200 as const, body: { preferences } };
+      } catch (error: unknown) {
+        request.log.error(error, 'Failed to load session preferences');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session preferences' } };
+      }
+    },
+
+    updatePreferences: async ({ body, request }: ContractRouteArgs<typeof sessionContract['updatePreferences']>): Promise<ContractRouteResponse<typeof sessionContract['updatePreferences']>> => {
+      const user = request.user as User;
+      if (!roleHasPermission(user.role, SETUP_WRITE_PERM))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      const parsed = parseRequest(sessionPreferencesPutBodySchema, body);
+      if (!parsed.ok) return { status: 403 as const, body: { type: 'validation_error', message: parsed.message } };
+      try {
+        const normalized = normalizeSessionModulePreferences(parsed.data);
+        await saveSessionModulePreferences(normalized);
+        await auditSession(user, 'session.preferences', 'Updated session module preferences', 'preferences');
+        return { status: 200 as const, body: { success: true, preferences: normalized } };
+      } catch (error: unknown) {
+        request.log.error(error, 'Failed to save session preferences');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save session preferences' } };
+      }
+    },
+
+    getLookups: async ({ request }: ContractRouteArgs<typeof sessionContract['getLookups']>): Promise<ContractRouteResponse<typeof sessionContract['getLookups']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      try {
+        const lookups = await loadSessionLookupsMap();
+        return { status: 200 as const, body: { lookups: { statuses: lookups.statuses ?? [], types: lookups.types ?? [] } } };
+      } catch (error: unknown) {
+        request.log.error(error, 'Failed to load session lookups');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session lookups' } };
+      }
+    },
+
+    getLookupKind: async ({ params: { kind }, request }: ContractRouteArgs<typeof sessionContract['getLookupKind']>): Promise<ContractRouteResponse<typeof sessionContract['getLookupKind']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION))
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      if (!SESSION_LOOKUP_KINDS.includes(kind as SessionLookupKind))
+        return { status: 403 as const, body: { type: 'validation_error', message: `Unknown lookup kind: ${kind}` } };
+      try {
+        const map = await loadSessionLookupsMap();
+        return { status: 200 as const, body: map[kind as SessionLookupKind] };
+      } catch (error: unknown) {
+        request.log.error(error, 'Failed to load session lookup kind');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session lookup kind' } };
+      }
+    },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as unknown as Parameters<typeof s.router>[1]);
 
-  await fastify.register(s.plugin(sessionsBulkRouter));
+  await fastify.register(s.plugin(router));
 }

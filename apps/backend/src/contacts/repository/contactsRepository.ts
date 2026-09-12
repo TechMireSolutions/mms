@@ -14,11 +14,13 @@ import type {
   ContactUniqueLookupValues,
 } from '../../db/repositories/contactRepository.js';
 
+import type { SoftDeleteListFilter } from '../../services/genericRelationalService.js';
+
 /** Duplicate-scan key shape — re-exported from the module interface so use cases never import the db layer. */
 export type { ContactDuplicateCandidateKeys, ContactUniqueLookupValues };
 
 /** Soft-delete visibility filter shared by list/count repository reads. */
-export type ContactDeletedFilter = 'active' | 'deleted' | 'all';
+export type ContactDeletedFilter = SoftDeleteListFilter;
 
 export interface ListContactsOptions {
   deleted?: ContactDeletedFilter;

@@ -27,8 +27,6 @@ import {
   updatePlatformUserPassword,
 } from './platformUserService.js';
 import {
-  enforcePlatformEmail,
-  enforcePlatformPassword,
   buildDevForgotResult,
 } from './platformValidationService.js';
 
@@ -82,7 +80,6 @@ function assertPlatformSmtpReady(): void {
 
 /** Always returns accepted for unknown emails — does not reveal whether the email is registered. */
 export async function requestPlatformPasswordReset(emailInput: string): Promise<PlatformPasswordForgotResult> {
-  enforcePlatformEmail(emailInput);
   assertPlatformSmtpReady();
 
   const email = normalizePlatformEmail(emailInput);
@@ -148,8 +145,6 @@ export async function completePlatformPasswordReset(
   code: string,
   password: string,
 ): Promise<StoredPlatformUser> {
-  enforcePlatformPassword(password);
-
   const entry = await getAuthArtifact<PlatformPasswordResetPayload>(resetId, 'platform_password_reset');
   if (!entry) {
     throw new PlatformError('invalid_reset', 'Password reset session expired or not found');

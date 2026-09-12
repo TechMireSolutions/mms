@@ -1,6 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { baseListQuerySchema, softDeleteBodySchema } from '../apiSchemas.js';
+import { baseListQuerySchema, softDeleteBodySchema, includeDeletedQuerySchema } from '../apiSchemas.js';
 import { sessionCreateBodySchema, sessionUpdateBodySchema, sessionsBulkIdsSchema } from '../schemas/sessions.dto.js';
 import { widgetAggregatesBodySchema } from '../schemas/common.dto.js';
 import { sessionsBulkStatusSchema } from '../sessionsModuleManifest.js';
@@ -96,6 +96,14 @@ export const sessionContract = c.router({
     },
     summary: 'Bulk restore sessions',
   },
+  get: {
+    method: 'GET',
+    path: '/api/sessions/:id',
+    pathParams: z.object({ id: z.string() }),
+    query: includeDeletedQuerySchema.optional(),
+    responses: { 200: z.object({ session: SessionSchema }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    summary: 'Get a single session',
+  },
   update: {
     method: 'PUT',
     path: '/api/sessions/:id',
@@ -159,7 +167,7 @@ export const sessionContract = c.router({
   updateFieldConfig: {
     method: 'PUT',
     path: '/api/sessions/field-config',
-    body: z.unknown(),
+    body: z.record(z.string(), z.unknown()),
     responses: { 200: z.object({ success: z.literal(true), config: z.record(z.string(), z.unknown()) }), 403: errorResponse, 500: errorResponse },
     summary: 'Update field config',
   },
@@ -172,7 +180,7 @@ export const sessionContract = c.router({
   updatePreferences: {
     method: 'PUT',
     path: '/api/sessions/preferences',
-    body: z.unknown(),
+    body: z.record(z.string(), z.unknown()),
     responses: { 200: z.object({ success: z.literal(true), preferences: sessionPreferencesResponseSchema }), 403: errorResponse, 500: errorResponse },
     summary: 'Update preferences',
   },
@@ -185,7 +193,8 @@ export const sessionContract = c.router({
   getLookupKind: {
     method: 'GET',
     path: '/api/sessions/lookups/:kind',
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    pathParams: z.object({ kind: z.string() }),
+    responses: { 200: z.array(z.string()), 403: errorResponse, 500: errorResponse },
     summary: 'Get a specific lookup kind',
   },
 });

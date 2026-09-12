@@ -1,31 +1,21 @@
+import type { SerializedSoftDeleteFields, SoftDeleteFields } from '@mms/shared';
+
 /**
  * Standard audit columns selected from Drizzle tables containing
  * timestamp mode: 'date' and softDeleteColumns mixin.
  */
-export interface DrizzleAuditSelectRow {
+export interface DrizzleAuditSelectRow extends SoftDeleteFields {
   createdAt?: Date | string | null;
   updatedAt?: Date | string | null;
-  deletedAt?: Date | string | null;
-  deletedBy?: string | null;
-  deletionReason?: string | null;
-  restoredAt?: Date | string | null;
-  restoredBy?: string | null;
-  deletedWithCascade?: boolean | null;
   createdBy?: string | null;
   updatedBy?: string | null;
 }
 
 export type DbAuditRow = DrizzleAuditSelectRow;
 
-export interface ContractAuditFields {
+export interface ContractAuditFields extends SerializedSoftDeleteFields {
   createdAt?: string;
   updatedAt?: string;
-  deletedAt?: string;
-  deletedBy?: string;
-  deletionReason?: string;
-  restoredAt?: string;
-  restoredBy?: string;
-  deletedWithCascade?: boolean;
   createdBy?: string;
   updatedBy?: string;
 }
@@ -82,15 +72,9 @@ export interface DrizzleAuditInsertFields {
   updatedBy?: string | null;
 }
 
-export interface ContractAuditInput {
+export interface ContractAuditInput extends SoftDeleteFields {
   createdAt?: string | Date | null;
   updatedAt?: string | Date | null;
-  deletedAt?: string | Date | null;
-  deletedBy?: string | null;
-  deletionReason?: string | null;
-  restoredAt?: string | Date | null;
-  restoredBy?: string | null;
-  deletedWithCascade?: boolean | null;
   createdBy?: string | null;
   updatedBy?: string | null;
 }

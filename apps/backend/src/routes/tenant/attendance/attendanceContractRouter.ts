@@ -1,14 +1,44 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { isQueryFlagTrue, type User, type WidgetQuery, ATTENDANCE_MODULE_MANIFEST, attendanceContract } from '@mms/shared';
+import {
+  isQueryFlagTrue,
+  type User,
+  type WidgetQuery,
+  ATTENDANCE_MODULE_MANIFEST,
+  attendanceContract,
+  roleHasPermission,
+  normalizeAttendanceModulePreferences,
+  normalizeAttendanceReportComparisonQuery,
+  parseComparisonQueryParams,
+  attendanceReportAggregatesHttpQuerySchema,
+  attendanceFieldConfigPutBodySchema,
+  attendancePreferencesPutBodySchema,
+  ATTENDANCE_LOOKUP_KINDS,
+  type AttendanceLookupKind,
+} from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { attendanceUseCases } from '../../../attendance/use-cases/attendanceUseCases.js';
+import {
+  getAttendanceFieldConfigService,
+  updateAttendanceFieldConfigService,
+} from '../../../services/attendanceConfigService.js';
+import {
+  getAttendancePreferencesService,
+  updateAttendancePreferencesService,
+} from '../../../services/attendancePreferencesService.js';
+import {
+  loadAttendanceLookupsMap,
+} from '../../../services/attendanceLookupsService.js';
+import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
+import { parseRequest } from '../../../lib/zodRequest.js';
 
 const COLLECTION = ATTENDANCE_MODULE_MANIFEST.collectionKey;
+const SETUP_WRITE_PERM = ATTENDANCE_MODULE_MANIFEST.permissions.setupWrite;
 const s = initServer();
+const auditAttendance = createCollectionAuditHelper('attendance_records');
 
 function getTenantId(request: { tenant?: { id: string } }): string | null {
   return request.tenant?.id || getRequestTenant() || null;
@@ -240,6 +270,122 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
+
+    reportAggregates: async ({ query, request }: ContractRouteArgs<typeof attendanceContract['reportAggregates']>): Promise<ContractRouteResponse<typeof attendanceContract['reportAggregates']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const parsed = parseRequest(attendanceReportAggregatesHttpQuerySchema, query);
+        if (!parsed.ok) return { status: 400 as const, body: { type: 'validation_error', message: parsed.message } };
+        const comparisonQuery = normalizeAttendanceReportComparisonQuery(parseComparisonQueryParams(parsed.data));
+        const aggregates = await attendanceUseCases.loadAttendanceReportAggregates({
+          ...comparisonQuery,
+          ...(parsed.data.classId?.trim() ? { classId: parsed.data.classId.trim() } : {}),
+        });
+        return { status: 200 as const, body: aggregates };
+      } catch (error: unknown) {
+        request.log?.error(error, 'Failed to load attendance report aggregates');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance report aggregates' } };
+      }
+    },
+
+    getFieldConfig: async ({ request }: ContractRouteArgs<typeof attendanceContract['getFieldConfig']>): Promise<ContractRouteResponse<typeof attendanceContract['getFieldConfig']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const config = await getAttendanceFieldConfigService();
+        return { status: 200 as const, body: { config: (config ?? null) as Record<string, unknown> | null } };
+      } catch (error: unknown) {
+        request.log?.error(error, 'Failed to load attendance field config');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance field config' } };
+      }
+    },
+
+    updateFieldConfig: async ({ body, request }: ContractRouteArgs<typeof attendanceContract['updateFieldConfig']>): Promise<ContractRouteResponse<typeof attendanceContract['updateFieldConfig']>> => {
+      const user = request.user as User;
+      if (!roleHasPermission(user.role, SETUP_WRITE_PERM)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      const parsed = parseRequest(attendanceFieldConfigPutBodySchema, body);
+      if (!parsed.ok) return { status: 403 as const, body: { type: 'validation_error', message: parsed.message } };
+      try {
+        const saved = await updateAttendanceFieldConfigService(parsed.data);
+        await auditAttendance(user, 'UPDATE_ATTENDANCE_CONFIG', 'Updated attendance field configuration', 'field-config');
+        return { status: 200 as const, body: { success: true, config: saved as unknown as Record<string, unknown> } };
+      } catch (error: unknown) {
+        request.log?.error(error, 'Failed to save attendance field config');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save attendance field config' } };
+      }
+    },
+
+    getPreferences: async ({ request }: ContractRouteArgs<typeof attendanceContract['getPreferences']>): Promise<ContractRouteResponse<typeof attendanceContract['getPreferences']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const raw = await getAttendancePreferencesService();
+        const preferences = normalizeAttendanceModulePreferences(raw ?? undefined);
+        return { status: 200 as const, body: { preferences } };
+      } catch (error: unknown) {
+        request.log?.error(error, 'Failed to load attendance preferences');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance preferences' } };
+      }
+    },
+
+    updatePreferences: async ({ body, request }: ContractRouteArgs<typeof attendanceContract['updatePreferences']>): Promise<ContractRouteResponse<typeof attendanceContract['updatePreferences']>> => {
+      const user = request.user as User;
+      if (!roleHasPermission(user.role, SETUP_WRITE_PERM)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      const parsed = parseRequest(attendancePreferencesPutBodySchema, body);
+      if (!parsed.ok) return { status: 403 as const, body: { type: 'validation_error', message: parsed.message } };
+      try {
+        const normalized = normalizeAttendanceModulePreferences(parsed.data);
+        await updateAttendancePreferencesService(normalized);
+        await auditAttendance(user, 'UPDATE_ATTENDANCE_PREFERENCES', 'Updated attendance module preferences', 'preferences');
+        return { status: 200 as const, body: { success: true, preferences: normalized } };
+      } catch (error: unknown) {
+        request.log?.error(error, 'Failed to save attendance preferences');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save attendance preferences' } };
+      }
+    },
+
+    getLookups: async ({ request }: ContractRouteArgs<typeof attendanceContract['getLookups']>): Promise<ContractRouteResponse<typeof attendanceContract['getLookups']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const lookups = await loadAttendanceLookupsMap();
+        return { status: 200 as const, body: { lookups } };
+      } catch (error: unknown) {
+        request.log?.error(error, 'Failed to load attendance lookups');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance lookups' } };
+      }
+    },
+
+    getLookupKind: async ({ params: { kind }, request }: ContractRouteArgs<typeof attendanceContract['getLookupKind']>): Promise<ContractRouteResponse<typeof attendanceContract['getLookupKind']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, COLLECTION)) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      if (!ATTENDANCE_LOOKUP_KINDS.includes(kind as AttendanceLookupKind)) {
+        return { status: 403 as const, body: { type: 'validation_error', message: `Unknown lookup kind: ${kind}` } };
+      }
+      try {
+        const map = await loadAttendanceLookupsMap();
+        return { status: 200 as const, body: map[kind as AttendanceLookupKind] };
+      } catch (error: unknown) {
+        request.log?.error(error, 'Failed to load attendance lookup kind');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance lookup kind' } };
+      }
+    },
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } as unknown as Parameters<typeof s.router>[1]);
 
   await fastify.register(s.plugin(router));
