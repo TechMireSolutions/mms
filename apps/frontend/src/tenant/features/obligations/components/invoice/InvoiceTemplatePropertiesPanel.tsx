@@ -1,5 +1,5 @@
 import type React from "react";
-import { AlignCenter, AlignLeft, AlignRight, Bold, Copy, Italic, Move, Trash2 } from "lucide-react";
+import { AlignCenter, AlignLeft, AlignRight, ArrowDown, ArrowUp, Bold, Copy, Italic, Layers, Move, MoveVertical, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -7,28 +7,134 @@ import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import type { ElementStyle, TemplateElement } from "@/lib/invoiceTemplateStore";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { StyleBtn, StyleInput } from "./InvoiceTemplateStyleControls";
-import { snap, SNAP } from "./invoiceTemplateEditorUtils";
+import { snap, SNAP, type AlignmentType } from "./invoiceTemplateEditorUtils";
 
 interface InvoiceTemplatePropertiesPanelProps {
   selectedElement: TemplateElement | undefined;
+  selectedElements?: TemplateElement[];
   onPatchElement: (elementId: string, patch: Partial<TemplateElement>) => void;
   onPatchStyle: (elementId: string, stylePatch: Partial<ElementStyle>) => void;
   onDuplicateElement: (elementId: string) => void;
   onDeleteElement: (elementId: string) => void;
+  onDuplicateSelected?: () => void;
+  onDeleteSelected?: () => void;
+  onAlignSelected?: (alignType: AlignmentType) => void;
   t: TranslationFunction;
 }
 
 export function InvoiceTemplatePropertiesPanel({
   selectedElement,
+  selectedElements = [],
   onPatchElement,
   onPatchStyle,
   onDuplicateElement,
   onDeleteElement,
+  onDuplicateSelected,
+  onDeleteSelected,
+  onAlignSelected,
   t,
 }: InvoiceTemplatePropertiesPanelProps): React.JSX.Element {
+  const isMultiSelect = selectedElements.length > 1;
+
   return (
     <aside className="max-h-64 w-full shrink-0 space-y-4 overflow-y-auto border-t border-border bg-card p-3 lg:max-h-none lg:w-60 lg:border-t-0 lg:border-s">
-      {!selectedElement ? (
+      {isMultiSelect ? (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 pb-2 border-b border-border">
+            <Layers className="w-4 h-4 text-primary" aria-hidden="true" />
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground m-0">
+              {selectedElements.length} {t("obligations.invoiceTemplate.multipleSelected")}
+            </p>
+          </div>
+
+          <div>
+            <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">
+              {t("obligations.invoiceTemplate.alignment")}
+            </p>
+            <div className="grid grid-cols-3 gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onAlignSelected?.("left")}
+                title={t("obligations.invoiceTemplate.alignItemsLeft")}
+                className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              >
+                <AlignLeft className="w-4 h-4" aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onAlignSelected?.("centerH")}
+                title={t("obligations.invoiceTemplate.alignItemsCenterH")}
+                className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              >
+                <AlignCenter className="w-4 h-4" aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onAlignSelected?.("right")}
+                title={t("obligations.invoiceTemplate.alignItemsRight")}
+                className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              >
+                <AlignRight className="w-4 h-4" aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onAlignSelected?.("top")}
+                title={t("obligations.invoiceTemplate.alignItemsTop")}
+                className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              >
+                <ArrowUp className="w-4 h-4" aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onAlignSelected?.("centerV")}
+                title={t("obligations.invoiceTemplate.alignItemsCenterV")}
+                className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              >
+                <MoveVertical className="w-4 h-4" aria-hidden="true" />
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onAlignSelected?.("bottom")}
+                title={t("obligations.invoiceTemplate.alignItemsBottom")}
+                className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              >
+                <ArrowDown className="w-4 h-4" aria-hidden="true" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="pt-2 border-t border-border flex flex-col gap-2">
+            <Button
+              type="button"
+              onClick={() => onDuplicateSelected?.()}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-1.5 min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none"
+            >
+              <Copy className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.invoiceTemplate.duplicateAll")}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => onDeleteSelected?.()}
+              variant="outline"
+              className="w-full flex items-center justify-center gap-1.5 min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-destructive/30 text-destructive hover:bg-destructive/10 transition-colors shadow-none"
+            >
+              <Trash2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("obligations.invoiceTemplate.deleteAll")}
+            </Button>
+          </div>
+        </div>
+      ) : !selectedElement ? (
         <div className="text-xs text-muted-foreground text-center pt-10 space-y-1">
           <Move className="w-6 h-6 mx-auto opacity-30" aria-hidden="true" />
           <p className="m-0">{t("obligations.invoiceTemplate.emptyHint")}</p>

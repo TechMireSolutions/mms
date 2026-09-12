@@ -2,12 +2,16 @@ import { useCallback, useEffect, type Dispatch, type RefObject, type SetStateAct
 import type { InvoiceTemplate, TemplateElement } from "@/lib/invoiceTemplateStore";
 import { snap } from "./invoiceTemplateEditorUtils";
 
-export interface DragStateInfo {
+export interface DragItem {
   id: string;
-  startX: number;
-  startY: number;
   origX: number;
   origY: number;
+}
+
+export interface DragStateInfo {
+  items: DragItem[];
+  startX: number;
+  startY: number;
   initialTemplate: InvoiceTemplate;
   hasMoved?: boolean;
 }
@@ -49,11 +53,18 @@ export function useInvoiceTemplateEditorInteractions({
       currentDrag.hasMoved = true;
       const deltaX = (event.clientX - currentDrag.startX) / canvasScale;
       const deltaY = (event.clientY - currentDrag.startY) / canvasScale;
+      const itemMap = new Map(currentDrag.items.map((item) => [item.id, item]));
+
       updateElements((templateElements) =>
-        templateElements.map((templateElement) => templateElement.id === currentDrag.id
-          ? { ...templateElement, x: snap(Math.max(0, currentDrag.origX + deltaX)), y: snap(Math.max(0, currentDrag.origY + deltaY)) }
-          : templateElement
-        )
+        templateElements.map((templateElement) => {
+          const orig = itemMap.get(templateElement.id);
+          if (!orig) return templateElement;
+          return {
+            ...templateElement,
+            x: snap(Math.max(0, orig.origX + deltaX)),
+            y: snap(Math.max(0, orig.origY + deltaY)),
+          };
+        })
       );
     }
 

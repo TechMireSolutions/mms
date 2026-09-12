@@ -3,13 +3,13 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { getPageDimensions, getDefaultTemplate, getAvailablePresets, loadTemplate, saveTemplate, type ElementStyle, type InvoiceTemplate, type TemplateElement, type TemplateOrientation } from "@/lib/invoiceTemplateStore";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import type { InvoiceTemplateFieldOption } from "./InvoiceTemplateElementPalette";
-import { newId } from "./invoiceTemplateEditorUtils";
+import { alignElements, newId, type AlignmentType } from "./invoiceTemplateEditorUtils";
 import { useInvoiceTemplateEditorInteractions, type DragStateInfo, type ResizeStateInfo } from "./useInvoiceTemplateEditorInteractions";
 
 export function useInvoiceTemplateEditor() {
   const { t } = useTranslation();
   const [template, setTemplate] = useState<InvoiceTemplate>(() => loadTemplate());
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showGuides, setShowGuides] = useState(true);
   const [saved, setSaved] = useState(false);
   const [history, setHistory] = useState<InvoiceTemplate[]>([]);
@@ -22,7 +22,21 @@ export function useInvoiceTemplateEditor() {
 
   const orientation = template.orientation || "portrait";
   const size = getPageDimensions(template.pageSize, orientation);
+  const selectedId = selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null;
+  const selectedElements = template.elements.filter((el) => selectedIds.includes(el.id));
   const selectedElement = template.elements.find((templateElement) => templateElement.id === selectedId);
+
+  const setSelectedId = (id: string | null) => {
+    setSelectedIds(id ? [id] : []);
+  };
+
+  const deselectAll = () => {
+    setSelectedIds([]);
+  };
+
+  const selectAll = () => {
+    setSelectedIds(template.elements.map((el) => el.id));
+  };
 
   useEffect(() => {
     const viewport = canvasViewportRef.current;
@@ -100,7 +114,14 @@ export function useInvoiceTemplateEditor() {
 
   const deleteElement = (elementId: string) => {
     commitUpdate((templateElements) => templateElements.filter((templateElement) => templateElement.id !== elementId));
-    setSelectedId(null);
+    setSelectedIds((prev) => prev.filter((id) => id !== elementId));
+  };
+
+  const deleteSelected = () => {
+    if (selectedIds.length === 0) return;
+    const idSet = new Set(selectedIds);
+    commitUpdate((templateElements) => templateElements.filter((templateElement) => !idSet.has(templateElement.id)));
+    setSelectedIds([]);
   };
 
   const duplicateElement = (elementId: string) => {
@@ -108,25 +129,45 @@ export function useInvoiceTemplateEditor() {
     if (!templateElement) return;
     const duplicatedElement: TemplateElement = { ...templateElement, id: newId(), x: templateElement.x + 12, y: templateElement.y + 12, style: { ...templateElement.style } };
     commitUpdate((elements) => [...elements, duplicatedElement]);
-    setSelectedId(duplicatedElement.id);
+    setSelectedIds([duplicatedElement.id]);
+  };
+
+  const duplicateSelected = () => {
+    if (selectedIds.length === 0) return;
+    const idSet = new Set(selectedIds);
+    const targets = template.elements.filter((el) => idSet.has(el.id));
+    if (targets.length === 0) return;
+    const newElements: TemplateElement[] = targets.map((el) => ({
+      ...el,
+      id: newId(),
+      x: el.x + 12,
+      y: el.y + 12,
+      style: { ...el.style },
+    }));
+    commitUpdate((elements) => [...elements, ...newElements]);
+    setSelectedIds(newElements.map((el) => el.id));
+  };
+
+  const handleAlignSelected = (alignType: AlignmentType) => {
+    commitUpdate((elements) => alignElements(elements, selectedIds, alignType));
   };
 
   const addStaticText = () => {
     const templateElement: TemplateElement = { id: newId(), type: "static", label: t("obligations.invoiceTemplate.newText"), x: 20, y: 20, w: 200, h: 18, style: { fontSize: 11, color: PRINT_NEUTRAL.text } };
     commitUpdate((elements) => [...elements, templateElement]);
-    setSelectedId(templateElement.id);
+    setSelectedIds([templateElement.id]);
   };
 
   const addDivider = () => {
     const templateElement: TemplateElement = { id: newId(), type: "divider", label: "", x: 20, y: 20, w: size.width - 40, h: 1, style: { color: PRINT_NEUTRAL.border } };
     commitUpdate((elements) => [...elements, templateElement]);
-    setSelectedId(templateElement.id);
+    setSelectedIds([templateElement.id]);
   };
 
   const addField = (fieldDef: InvoiceTemplateFieldOption) => {
     const templateElement: TemplateElement = { id: newId(), type: "field", label: fieldDef.label, field: fieldDef.field, x: 20, y: 20, w: 160, h: 16, style: { fontSize: 10, color: PRINT_NEUTRAL.text } };
     commitUpdate((elements) => [...elements, templateElement]);
-    setSelectedId(templateElement.id);
+    setSelectedIds([templateElement.id]);
   };
 
   const addQrCode = () => {
@@ -140,7 +181,7 @@ export function useInvoiceTemplateEditor() {
       h: 64,
     };
     commitUpdate((elements) => [...elements, templateElement]);
-    setSelectedId(templateElement.id);
+    setSelectedIds([templateElement.id]);
   };
 
   const applyPreset = (presetKey: string) => {
@@ -149,23 +190,40 @@ export function useInvoiceTemplateEditor() {
     if (!match) return;
     pushHistory(template);
     setTemplate(match.template);
-    setSelectedId(null);
+    setSelectedIds([]);
   };
 
   const onMouseDownElement = (event: ReactMouseEvent, elementId: string) => {
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
-    setSelectedId(elementId);
-    const templateElement = template.elements.find((element) => element.id === elementId);
-    if (!templateElement) return;
     if (!canvasRef.current) return;
+
+    const isMulti = event.shiftKey || event.metaKey || event.ctrlKey;
+    let activeIds = selectedIds;
+
+    if (isMulti) {
+      if (selectedIds.includes(elementId)) {
+        activeIds = selectedIds.filter((id) => id !== elementId);
+      } else {
+        activeIds = [...selectedIds, elementId];
+      }
+      setSelectedIds(activeIds);
+    } else {
+      if (!selectedIds.includes(elementId)) {
+        activeIds = [elementId];
+        setSelectedIds(activeIds);
+      }
+    }
+
+    const itemsToDrag = template.elements
+      .filter((el) => activeIds.includes(el.id))
+      .map((el) => ({ id: el.id, origX: el.x, origY: el.y }));
+
     dragState.current = {
-      id: elementId,
+      items: itemsToDrag.length > 0 ? itemsToDrag : [{ id: elementId, origX: 0, origY: 0 }],
       startX: event.clientX,
       startY: event.clientY,
-      origX: templateElement.x,
-      origY: templateElement.y,
       initialTemplate: template,
       hasMoved: false,
     };
@@ -207,7 +265,7 @@ export function useInvoiceTemplateEditor() {
   const resetToDefault = () => {
     pushHistory(template);
     setTemplate(getDefaultTemplate());
-    setSelectedId(null);
+    setSelectedIds([]);
   };
 
   useEffect(() => {
@@ -235,43 +293,57 @@ export function useInvoiceTemplateEditor() {
         handleSave();
         return;
       }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "a") {
+        if (!isInput) {
+          event.preventDefault();
+          selectAll();
+          return;
+        }
+      }
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "d") {
         event.preventDefault();
-        if (selectedId) duplicateElement(selectedId);
+        duplicateSelected();
         return;
       }
       if (!isInput && (event.key === "Delete" || event.key === "Backspace")) {
-        if (selectedId) {
+        if (selectedIds.length > 0) {
           event.preventDefault();
-          deleteElement(selectedId);
+          deleteSelected();
         }
         return;
       }
-      if (!isInput && selectedId && (event.key === "ArrowUp" || event.key === "ArrowDown" || event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+      if (!isInput && selectedIds.length > 0 && (event.key === "ArrowUp" || event.key === "ArrowDown" || event.key === "ArrowLeft" || event.key === "ArrowRight")) {
         event.preventDefault();
         const step = event.shiftKey ? 4 : 1;
         const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
         const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
+        const idSet = new Set(selectedIds);
         commitUpdate((templateElements) =>
           templateElements.map((templateElement) =>
-            templateElement.id === selectedId
+            idSet.has(templateElement.id)
               ? { ...templateElement, x: Math.max(0, templateElement.x + dx), y: Math.max(0, templateElement.y + dy) }
               : templateElement
           )
         );
         return;
       }
-      if (event.key === "Escape") setSelectedId(null);
+      if (event.key === "Escape") deselectAll();
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [selectedId, template, history, future]);
+  }, [selectedIds, template, history, future]);
 
   return {
     t,
     template,
     selectedId,
+    selectedIds,
     setSelectedId,
+    setSelectedIds,
+    selectAll,
+    deselectAll,
+    selectedElement,
+    selectedElements,
     showGuides,
     setShowGuides,
     saved,
@@ -282,13 +354,15 @@ export function useInvoiceTemplateEditor() {
     canvasRef,
     size,
     orientation,
-    selectedElement,
     undo,
     redo,
     patchElement,
     patchStyle,
     deleteElement,
+    deleteSelected,
     duplicateElement,
+    duplicateSelected,
+    alignSelected: handleAlignSelected,
     addStaticText,
     addDivider,
     addField,
@@ -302,3 +376,4 @@ export function useInvoiceTemplateEditor() {
     resetToDefault,
   };
 }
+

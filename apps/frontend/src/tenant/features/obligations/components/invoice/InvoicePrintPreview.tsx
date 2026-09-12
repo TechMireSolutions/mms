@@ -42,6 +42,8 @@ export function InvoicePrintPreview({
     const isSelected = selectedId === templateElement.id;
     const elementStyle = templateElement.style || {};
 
+    const isTextElement = templateElement.type === "static" || templateElement.type === "field";
+
     const baseStyle: React.CSSProperties = {
       position: "absolute",
       left: templateElement.x,
@@ -50,17 +52,19 @@ export function InvoicePrintPreview({
       height: templateElement.h,
       fontSize: elementStyle.fontSize || 10,
       fontWeight: elementStyle.fontWeight || "normal",
-      fontFamily: elementStyle.fontFamily || "inherit",
+      fontFamily: elementStyle.fontFamily || "'Inter', 'Amiri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       fontStyle: elementStyle.fontStyle || "normal",
       textAlign: elementStyle.textAlign || "left",
       color: elementStyle.color || PRINT_NEUTRAL.text,
       direction: elementStyle.direction || "ltr",
-      overflow: "hidden",
+      overflow: isTextElement ? "visible" : "hidden",
+      lineHeight: isTextElement ? 1.25 : undefined,
       cursor: onSelect ? "pointer" : "default",
       boxSizing: "border-box",
-      userSelect: "none",
+      userSelect: onSelect ? "none" : "auto",
       outline: isSelected ? `2px solid ${printTokens.primary}` : "none",
       outlineOffset: "1px",
+      wordBreak: isTextElement ? "break-word" : undefined,
     };
 
     const handleClick = onSelect
@@ -72,7 +76,12 @@ export function InvoicePrintPreview({
       return (
         <div key={templateElement.id} style={baseStyle} onClick={handleClick}>
           {branding.logoUrl ? (
-            <img src={branding.logoUrl} alt="logo" style={{ width: "100%", height: "100%", objectFit: elementStyle.objectFit || "contain" }} />
+            <img
+              src={branding.logoUrl}
+              alt="logo"
+              crossOrigin="anonymous"
+              style={{ width: "100%", height: "100%", objectFit: elementStyle.objectFit || "contain" }}
+            />
           ) : (
             <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", background: printTokens.logoPlaceholderBg, borderRadius: 8, border: `2px dashed ${printTokens.logoPlaceholderBorder}` }}>
               <span style={{ fontSize: 28, fontWeight: "bold", color: printTokens.primary }}>م</span>
@@ -150,7 +159,7 @@ export function InvoicePrintPreview({
         transform: `scale(${scale})`,
         transformOrigin: "top left",
         overflow: "hidden",
-        fontFamily: "Inter, Arial, sans-serif",
+        fontFamily: "'Inter', 'Amiri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       }}
     >
       {template.elements.map(renderElement)}

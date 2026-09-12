@@ -1,14 +1,16 @@
-import type React from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { generateQrSvgUri, PAGE_SIZES, type InvoiceTemplate, type PageSizeInfo, type TemplateElement } from "@/lib/invoiceTemplateStore";
 import { PRINT_NEUTRAL, type getPrintBrandingTokens } from "@/lib/printBrandingTokens";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { boxesIntersect } from "./invoiceTemplateEditorUtils";
 
 type PrintBrandingTokens = ReturnType<typeof getPrintBrandingTokens>;
 
 interface InvoiceTemplateCanvasProps {
   template: InvoiceTemplate;
-  selectedId: string | null;
+  selectedId?: string | null;
+  selectedIds: string[];
   size: PageSizeInfo;
   canvasScale: number;
   showGuides: boolean;
@@ -23,12 +25,14 @@ interface InvoiceTemplateCanvasProps {
   onMouseDownResize: (event: React.MouseEvent, elementId: string) => void;
   onDuplicateElement: (elementId: string) => void;
   onDeleteElement: (elementId: string) => void;
+  onSelectElements?: (elementIds: string[]) => void;
   t: TranslationFunction;
 }
 
 export function InvoiceTemplateCanvas({
   template,
   selectedId,
+  selectedIds,
   size,
   canvasScale,
   showGuides,
@@ -41,10 +45,72 @@ export function InvoiceTemplateCanvas({
   onMouseDownResize,
   onDuplicateElement,
   onDeleteElement,
+  onSelectElements,
   t,
 }: InvoiceTemplateCanvasProps): React.JSX.Element {
+  const [marquee, setMarquee] = React.useState<{ startX: number; startY: number; currentX: number; currentY: number } | null>(null);
+  const marqueeMovedRef = React.useRef(false);
+  const isShiftRef = React.useRef(false);
+
+  const onMouseDownBackground = (event: React.MouseEvent) => {
+    if (event.button !== 0) return;
+    if (!canvasRef.current) return;
+    const rect = canvasRef.current.getBoundingClientRect();
+    const startX = (event.clientX - rect.left) / canvasScale;
+    const startY = (event.clientY - rect.top) / canvasScale;
+    marqueeMovedRef.current = false;
+    isShiftRef.current = event.shiftKey || event.metaKey || event.ctrlKey;
+    setMarquee({ startX, startY, currentX: startX, currentY: startY });
+  };
+
+  React.useEffect(() => {
+    if (!marquee) return;
+
+    const onMouseMove = (event: MouseEvent) => {
+      if (!canvasRef.current) return;
+      const rect = canvasRef.current.getBoundingClientRect();
+      const currentX = (event.clientX - rect.left) / canvasScale;
+      const currentY = (event.clientY - rect.top) / canvasScale;
+      if (Math.abs(currentX - marquee.startX) > 4 || Math.abs(currentY - marquee.startY) > 4) {
+        marqueeMovedRef.current = true;
+      }
+      setMarquee((prev) => prev ? { ...prev, currentX, currentY } : null);
+    };
+
+    const onMouseUp = () => {
+      if (marqueeMovedRef.current) {
+        const box = {
+          x: Math.min(marquee.startX, marquee.currentX),
+          y: Math.min(marquee.startY, marquee.currentY),
+          w: Math.abs(marquee.currentX - marquee.startX),
+          h: Math.abs(marquee.currentY - marquee.startY),
+        };
+        const hitIds = template.elements
+          .filter((el) => boxesIntersect(box, { x: el.x, y: el.y, w: el.w, h: el.h }))
+          .map((el) => el.id);
+
+        if (onSelectElements) {
+          onSelectElements(
+            isShiftRef.current ? Array.from(new Set([...selectedIds, ...hitIds])) : hitIds
+          );
+        }
+      } else {
+        onDeselect();
+      }
+      setMarquee(null);
+    };
+
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [marquee, canvasScale, template.elements, selectedIds, onSelectElements, onDeselect]);
+
   const renderElement = (templateElement: TemplateElement) => {
-    const isSelected = selectedId === templateElement.id;
+    const isSelected = selectedIds.includes(templateElement.id);
+    const isPrimarySelected = isSelected && (selectedId === templateElement.id || selectedIds[selectedIds.length - 1] === templateElement.id);
     const elementStyle = templateElement.style || {};
 
     const baseStyle: React.CSSProperties = {
@@ -114,7 +180,7 @@ export function InvoiceTemplateCanvas({
         onClick={(event) => event.stopPropagation()}
       >
         {content()}
-        {isSelected && (
+        {isPrimarySelected && (
           <div
             onMouseDown={(event) => onMouseDownResize(event, templateElement.id)}
             onClick={(event) => event.stopPropagation()}
@@ -127,7 +193,7 @@ export function InvoiceTemplateCanvas({
             aria-hidden
           />
         )}
-        {isSelected && (
+        {isPrimarySelected && selectedIds.length === 1 && (
           <div
             className="absolute start-0 z-20 flex gap-1 items-center"
             style={{ top: showToolbarBelow ? templateElement.h + 4 : -30 }}
@@ -169,8 +235,8 @@ export function InvoiceTemplateCanvas({
   return (
     <main
       ref={canvasViewportRef}
-      className="flex min-h-0 min-w-0 flex-1 items-start justify-center overflow-auto bg-muted/40 p-4 sm:p-8"
-      onClick={onDeselect}
+      className="flex min-h-0 min-w-0 flex-1 items-start justify-center overflow-auto bg-muted/40 p-4 sm:p-8 select-none"
+      onMouseDown={onMouseDownBackground}
     >
       <div
         className="relative mx-auto shrink-0"
@@ -201,6 +267,21 @@ export function InvoiceTemplateCanvas({
             </div>
           )}
           {template.elements.map(renderElement)}
+          {marquee && (
+            <div
+              style={{
+                position: "absolute",
+                left: Math.min(marquee.startX, marquee.currentX),
+                top: Math.min(marquee.startY, marquee.currentY),
+                width: Math.abs(marquee.currentX - marquee.startX),
+                height: Math.abs(marquee.currentY - marquee.startY),
+                border: `1.5px dashed ${printTokens.primary}`,
+                backgroundColor: "rgba(5, 150, 105, 0.12)",
+                pointerEvents: "none",
+                zIndex: 50,
+              }}
+            />
+          )}
         </div>
       </div>
     </main>

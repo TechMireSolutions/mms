@@ -60,6 +60,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         <InvoiceTemplateCanvas
           template={editor.template}
           selectedId={editor.selectedId}
+          selectedIds={editor.selectedIds}
           size={editor.size}
           canvasScale={editor.canvasScale}
           showGuides={editor.showGuides}
@@ -67,19 +68,24 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
           canvasRef={editor.canvasRef}
           branding={branding}
           printTokens={printTokens}
-          onDeselect={() => editor.setSelectedId(null)}
+          onDeselect={editor.deselectAll}
           onMouseDownElement={editor.onMouseDownElement}
           onMouseDownResize={editor.onMouseDownResize}
           onDuplicateElement={editor.duplicateElement}
           onDeleteElement={editor.deleteElement}
+          onSelectElements={(ids) => editor.setSelectedIds(ids)}
           t={editor.t}
         />
         <InvoiceTemplatePropertiesPanel
           selectedElement={editor.selectedElement}
+          selectedElements={editor.selectedElements}
           onPatchElement={editor.patchElement}
           onPatchStyle={editor.patchStyle}
           onDuplicateElement={editor.duplicateElement}
           onDeleteElement={editor.deleteElement}
+          onDuplicateSelected={editor.duplicateSelected}
+          onDeleteSelected={editor.deleteSelected}
+          onAlignSelected={editor.alignSelected}
           t={editor.t}
         />
       </div>

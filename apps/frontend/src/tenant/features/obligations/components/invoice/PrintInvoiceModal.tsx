@@ -38,6 +38,7 @@ export function PrintInvoiceModal({
   const template: InvoiceTemplate = loadTemplate();
   const size = getPageDimensions(template.pageSize, template.orientation);
   const printRef = useRef<HTMLDivElement>(null);
+  const exportRef = useRef<HTMLDivElement>(null);
 
   const contactIds = (() => [collection.sender_id, collection.reference_id])();
   const liveContacts = useMergedObligationContacts(contactIds);
@@ -103,11 +104,33 @@ export function PrintInvoiceModal({
   };
 
   const handleExportPDF = async () => {
-    const content = printRef.current;
-    if (!content || isGeneratingPdf) return;
+    const target = exportRef.current || printRef.current;
+    if (!target || isGeneratingPdf) return;
 
     try {
       setIsGeneratingPdf(true);
+
+      // Pre-load web fonts so text glyphs render with exact metrics
+      if (document.fonts?.ready) {
+        await document.fonts.ready;
+      }
+
+      // Ensure any images (branding logo, QR code) are fully loaded
+      const images = Array.from(target.querySelectorAll("img"));
+      await Promise.all(
+        images.map(
+          (img) =>
+            new Promise<void>((resolve) => {
+              if (img.complete && img.naturalWidth > 0) {
+                resolve();
+              } else {
+                img.onload = () => resolve();
+                img.onerror = () => resolve();
+              }
+            })
+        )
+      );
+
       const [html2canvasModule, jsPDFModule] = await Promise.all([
         import("html2canvas"),
         import("jspdf"),
@@ -115,15 +138,19 @@ export function PrintInvoiceModal({
       const html2canvas = html2canvasModule.default;
       const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
 
-      const canvas = await html2canvas(content, {
-        scale: 2,
+      const canvas = await html2canvas(target, {
+        scale: 2.5,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
-        windowWidth: size.width,
-        windowHeight: size.height,
+        width: size.width,
+        height: size.height,
+        x: 0,
+        y: 0,
         scrollX: 0,
         scrollY: 0,
+        windowWidth: size.width,
+        windowHeight: size.height,
       });
 
       const imgData = canvas.toDataURL("image/png");
@@ -137,7 +164,7 @@ export function PrintInvoiceModal({
         format: [pdfWidth, pdfHeight],
       });
 
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
       pdf.save(`Receipt-${collection.receipt_no || "obligation"}.pdf`);
     } catch {
       // Fallback to print dialog if canvas capture fails
@@ -213,6 +240,41 @@ export function PrintInvoiceModal({
         </div>
       }
     >
+      {/* Offscreen unscaled container for clean, high-fidelity PDF rasterization */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          width: size.width,
+          height: size.height,
+          zIndex: -9999,
+          pointerEvents: "none",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          ref={exportRef}
+          style={{
+            width: size.width,
+            height: size.height,
+            backgroundColor: "#ffffff",
+            position: "relative",
+            lineHeight: 1.25,
+            direction: "ltr",
+          }}
+        >
+          <InvoicePrintPreview
+            template={template}
+            collection={collection}
+            lookups={lookups}
+            showBoundary={false}
+            scale={1}
+          />
+        </div>
+      </div>
+
       <div className="flex min-h-preview-tall justify-center overflow-x-auto rounded-xl border border-dashed border-border bg-muted/20 p-4">
         <div className="origin-top scale-preview-sm sm:scale-preview-md md:scale-preview-lg lg:scale-preview-xl" style={{ direction: "ltr" }}>
           <div

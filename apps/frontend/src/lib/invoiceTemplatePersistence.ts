@@ -44,7 +44,13 @@ export const AVAILABLE_FIELDS = [
 ];
 
 const findItem = (arr?: LookupItem[], id?: unknown): LookupItem | undefined => {
-  return (arr || []).find((item) => String(item.id) === String(id));
+  if (!arr || id == null) return undefined;
+  const target = String(id).trim().toLowerCase();
+  return arr.find(
+    (item) =>
+      String(item.id).trim().toLowerCase() === target ||
+      (item.code && String(item.code).trim().toLowerCase() === target)
+  );
 };
 
 /**
@@ -66,13 +72,13 @@ export function resolveField(
   switch (field) {
     case "receipt_no":       return String(collection.receipt_no || "");
     case "received_date":    return collection.received_date ? formatDate(collection.received_date as string) : "";
-    case "sender":           return String(findItem(contacts, collection.sender_id)?.name || "");
+    case "sender":           return String(findItem(contacts, collection.sender_id)?.name || collection.sender_id || "");
     case "sender_phone":     return String(findItem(contacts, collection.sender_id)?.phone || "");
     case "sender_email":     return String(findItem(contacts, collection.sender_id)?.email || "");
-    case "reference":        return String(findItem(contacts, collection.reference_id)?.name || "");
+    case "reference":        return String(findItem(contacts, collection.reference_id)?.name || collection.reference_id || "");
     case "reference_phone":  return String(findItem(contacts, collection.reference_id)?.phone || "");
     case "reference_email":  return String(findItem(contacts, collection.reference_id)?.email || "");
-    case "obligation_type":  return String(findItem(obligationTypes, collection.obligation_type_id)?.name || "");
+    case "obligation_type":  return String(findItem(obligationTypes, collection.obligation_type_id)?.name || collection.obligation_type_id || "");
     case "mujtahid": {
       const rep = findItem(reps, collection.mujtahid_representative_id);
       return rep ? String(findItem(mujtahids, rep.mujtahid_id)?.name || "") : "";
@@ -80,15 +86,15 @@ export function resolveField(
     case "representative":   return String(findItem(reps, collection.mujtahid_representative_id)?.name || "");
     case "amount": {
       const currency = findItem(currencies, collection.currency_id);
-      return formatMoney(collection.amount as number | string | null | undefined, currency?.code || undefined);
+      return formatMoney(collection.amount as number | string | null | undefined, currency?.code || String(collection.currency_id || "PKR"));
     }
     case "amount_in_words": {
       const currency = findItem(currencies, collection.currency_id);
-      return formatAmountInWords(collection.amount as number | string | null | undefined, currency?.code || undefined);
+      return formatAmountInWords(collection.amount as number | string | null | undefined, currency?.code || String(collection.currency_id || "PKR"));
     }
-    case "currency":         return String(findItem(currencies, collection.currency_id)?.code || "");
+    case "currency":         return String(findItem(currencies, collection.currency_id)?.code || collection.currency_id || "");
     case "payment_mode":     return String(collection.payment_mode || "");
-    case "received_by":      return String(findItem(users, collection.received_by)?.name || "");
+    case "received_by":      return String(findItem(users, collection.received_by)?.name || collection.received_by || "");
     default:                 return String(collection[field] || "");
   }
 }
