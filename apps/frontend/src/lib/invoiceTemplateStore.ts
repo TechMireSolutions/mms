@@ -4,11 +4,12 @@ export type {
   ElementStyle,
   TemplateElement,
   InvoiceTemplate,
+  TemplateOrientation,
   BrandingInfo,
   LookupItem,
   FieldLookupInfo,
 } from "./invoiceTemplateTypes.js";
-export { PAGE_SIZES } from "./invoiceTemplateTypes.js";
+export { PAGE_SIZES, getPageDimensions } from "./invoiceTemplateTypes.js";
 export { getDefaultTemplate } from "./invoiceTemplateDefaults.js";
 export {
   loadTemplate,
@@ -16,3 +17,8 @@ export {
   AVAILABLE_FIELDS,
   resolveField,
 } from "./invoiceTemplatePersistence.js";
+export {
+  getAvailablePresets,
+  type InvoiceTemplatePreset,
+} from "./invoiceTemplatePresets.js";
+export { generateQrSvgUri, generateQrMatrix } from "./qrCodeGenerator.js";

@@ -2,9 +2,29 @@ import { useCallback, useEffect, type Dispatch, type RefObject, type SetStateAct
 import type { InvoiceTemplate, TemplateElement } from "@/lib/invoiceTemplateStore";
 import { snap } from "./invoiceTemplateEditorUtils";
 
+export interface DragStateInfo {
+  id: string;
+  startX: number;
+  startY: number;
+  origX: number;
+  origY: number;
+  initialTemplate: InvoiceTemplate;
+  hasMoved?: boolean;
+}
+
+export interface ResizeStateInfo {
+  id: string;
+  startX: number;
+  startY: number;
+  origW: number;
+  origH: number;
+  initialTemplate: InvoiceTemplate;
+  hasMoved?: boolean;
+}
+
 interface DragResizeRefs {
-  dragState: RefObject<{ id: string; startX: number; startY: number; origX: number; origY: number } | null>;
-  resizeState: RefObject<{ id: string; startX: number; startY: number; origW: number; origH: number } | null>;
+  dragState: RefObject<DragStateInfo | null>;
+  resizeState: RefObject<ResizeStateInfo | null>;
 }
 
 interface UseInvoiceTemplateEditorInteractionsOptions extends DragResizeRefs {
@@ -20,13 +40,13 @@ export function useInvoiceTemplateEditorInteractions({
   dragState,
   resizeState,
   updateElements,
-  setTemplate,
   setHistory,
   setFuture,
 }: UseInvoiceTemplateEditorInteractionsOptions) {
   const onMouseMove = useCallback((event: MouseEvent) => {
     const currentDrag = dragState.current;
     if (currentDrag) {
+      currentDrag.hasMoved = true;
       const deltaX = (event.clientX - currentDrag.startX) / canvasScale;
       const deltaY = (event.clientY - currentDrag.startY) / canvasScale;
       updateElements((templateElements) =>
@@ -39,11 +59,12 @@ export function useInvoiceTemplateEditorInteractions({
 
     const currentResize = resizeState.current;
     if (currentResize) {
+      currentResize.hasMoved = true;
       const deltaX = (event.clientX - currentResize.startX) / canvasScale;
       const deltaY = (event.clientY - currentResize.startY) / canvasScale;
       updateElements((templateElements) =>
         templateElements.map((templateElement) => templateElement.id === currentResize.id
-          ? { ...templateElement, w: snap(Math.max(20, currentResize.origW + deltaX)), h: snap(Math.max(8, currentResize.origH + deltaY)) }
+          ? { ...templateElement, w: snap(Math.max(20, currentResize.origW + deltaX)), h: snap(Math.max(4, currentResize.origH + deltaY)) }
           : templateElement
         )
       );
@@ -51,16 +72,18 @@ export function useInvoiceTemplateEditorInteractions({
   }, [canvasScale, dragState, resizeState, updateElements]);
 
   const onMouseUp = useCallback(() => {
-    if (dragState.current || resizeState.current) {
-      setTemplate((currentTemplate) => {
-        setHistory((historyStack) => [...historyStack.slice(-30), currentTemplate]);
-        setFuture([]);
-        return currentTemplate;
-      });
+    if (dragState.current?.hasMoved) {
+      const initial = dragState.current.initialTemplate;
+      setHistory((historyStack) => [...historyStack.slice(-30), initial]);
+      setFuture([]);
+    } else if (resizeState.current?.hasMoved) {
+      const initial = resizeState.current.initialTemplate;
+      setHistory((historyStack) => [...historyStack.slice(-30), initial]);
+      setFuture([]);
     }
     dragState.current = null;
     resizeState.current = null;
-  }, [dragState, resizeState, setFuture, setHistory, setTemplate]);
+  }, [dragState, resizeState, setFuture, setHistory]);
 
   useEffect(() => {
     window.addEventListener("mousemove", onMouseMove);

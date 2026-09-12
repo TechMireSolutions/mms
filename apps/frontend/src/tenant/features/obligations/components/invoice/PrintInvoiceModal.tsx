@@ -1,6 +1,6 @@
-import React, { useRef } from "react";
-import { Printer, FileDown, Settings } from "lucide-react";
-import { loadTemplate, PAGE_SIZES, type InvoiceTemplate } from "@/lib/invoiceTemplateStore";
+import React, { useRef, useState } from "react";
+import { Printer, FileDown, Loader2, Settings } from "lucide-react";
+import { getPageDimensions, loadTemplate, type InvoiceTemplate } from "@/lib/invoiceTemplateStore";
 import { type ObligationCollection, type ObligationType, type MujtahidRep, type Mujtahid } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES } from '@mms/shared';
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
@@ -34,8 +34,9 @@ export function PrintInvoiceModal({
   onOpenEditor = undefined,
 }: PrintInvoiceModalProps) {
   const { t } = useTranslation();
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const template: InvoiceTemplate = loadTemplate();
-  const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
+  const size = getPageDimensions(template.pageSize, template.orientation);
   const printRef = useRef<HTMLDivElement>(null);
 
   const contactIds = (() => [collection.sender_id, collection.reference_id])();
@@ -67,23 +68,83 @@ export function PrintInvoiceModal({
         <style>
           * { margin: 0; padding: 0; box-sizing: border-box; }
           body { background: white; }
-          @page { size: ${size.width}px ${size.height}px; margin: 0; }
-          @media print { body { width: ${size.width}px; } }
+          @page { size: ${size.width}px ${size.height}px ${template.orientation || "portrait"}; margin: 0; }
+          @media print {
+            body {
+              width: ${size.width}px;
+              print-color-adjust: exact;
+              -webkit-print-color-adjust: exact;
+            }
+          }
         </style>
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" />
       </head>
       <body>
         ${content.innerHTML}
-        <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 500); }</script>
+        <script>
+          window.addEventListener('load', function() {
+            window.focus();
+            window.print();
+          });
+        </script>
       </body>
       </html>
     `);
     printWindow.document.close();
+
+    setTimeout(() => {
+      try {
+        printWindow.focus();
+        printWindow.print();
+      } catch {
+        // Window already handled or closed
+      }
+    }, 300);
   };
 
-  const handleExportPDF = () => {
-    // Use print dialog with PDF destination — works across browsers
-    handlePrint();
+  const handleExportPDF = async () => {
+    const content = printRef.current;
+    if (!content || isGeneratingPdf) return;
+
+    try {
+      setIsGeneratingPdf(true);
+      const [html2canvasModule, jsPDFModule] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
+      const html2canvas = html2canvasModule.default;
+      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
+
+      const canvas = await html2canvas(content, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: "#ffffff",
+        windowWidth: size.width,
+        windowHeight: size.height,
+        scrollX: 0,
+        scrollY: 0,
+      });
+
+      const imgData = canvas.toDataURL("image/png");
+      const orientation = size.width > size.height ? "landscape" : "portrait";
+      const pdfWidth = size.width * 0.264583;
+      const pdfHeight = size.height * 0.264583;
+
+      const pdf = new jsPDF({
+        orientation,
+        unit: "mm",
+        format: [pdfWidth, pdfHeight],
+      });
+
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Receipt-${collection.receipt_no || "obligation"}.pdf`);
+    } catch {
+      // Fallback to print dialog if canvas capture fails
+      handlePrint();
+    } finally {
+      setIsGeneratingPdf(false);
+    }
   };
 
   return (
@@ -127,10 +188,19 @@ export function PrintInvoiceModal({
             <Button
               type="button"
               onClick={handleExportPDF}
+              disabled={isGeneratingPdf}
               variant="outline"
-              className="flex min-h-11 items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors shadow-none"
+              className="flex min-h-11 items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors shadow-none disabled:opacity-50"
             >
-              <FileDown className="w-4 h-4" aria-hidden="true" /> {t("reports.export.pdf")}
+              {isGeneratingPdf ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> {t("obligations.invoiceTemplate.exportingPdf")}
+                </>
+              ) : (
+                <>
+                  <FileDown className="w-4 h-4" aria-hidden="true" /> {t("reports.export.pdf")}
+                </>
+              )}
             </Button>
             <Button
               type="button"
@@ -144,7 +214,7 @@ export function PrintInvoiceModal({
       }
     >
       <div className="flex min-h-preview-tall justify-center overflow-x-auto rounded-xl border border-dashed border-border bg-muted/20 p-4">
-        <div className="origin-top-left scale-preview-sm sm:scale-preview-md md:scale-preview-lg lg:scale-preview-xl" style={{ direction: "ltr" }}>
+        <div className="origin-top scale-preview-sm sm:scale-preview-md md:scale-preview-lg lg:scale-preview-xl" style={{ direction: "ltr" }}>
           <div
             ref={printRef}
             style={{ lineHeight: 1.4, width: size.width, height: size.height }}

@@ -11,6 +11,8 @@ export const PAGE_SIZES: Record<string, PageSizeInfo> = {
   A5: { width: 559, height: 794, label: "A5 (148×210mm)" },
   A4: { width: 794, height: 1123, label: "A4 (210×297mm)" },
   Letter: { width: 816, height: 1056, label: "Letter (8.5×11in)" },
+  "80mm": { width: 302, height: 580, label: "Thermal 80mm" },
+  "58mm": { width: 220, height: 460, label: "Thermal 58mm" },
 };
 
 export interface ElementStyle {
@@ -36,9 +38,34 @@ export interface TemplateElement {
   field?: string;
 }
 
+export type TemplateOrientation = "portrait" | "landscape";
+
 export interface InvoiceTemplate {
   pageSize: string;
+  orientation?: TemplateOrientation;
   elements: TemplateElement[];
+}
+
+/**
+ * Resolves width, height, and display label for a page size given an orientation.
+ */
+export function getPageDimensions(
+  pageSizeKey: string,
+  orientation: TemplateOrientation = "portrait"
+): PageSizeInfo {
+  const base = PAGE_SIZES[pageSizeKey] || PAGE_SIZES.A6;
+  if (orientation === "landscape") {
+    return {
+      width: Math.max(base.width, base.height),
+      height: Math.min(base.width, base.height),
+      label: `${base.label} (Landscape)`,
+    };
+  }
+  return {
+    width: Math.min(base.width, base.height),
+    height: Math.max(base.width, base.height),
+    label: `${base.label} (Portrait)`,
+  };
 }
 
 export type BrandingInfo = BrandingSettings;
@@ -48,6 +75,8 @@ export interface LookupItem {
   name?: string;
   code?: string;
   mujtahid_id?: string | number;
+  phone?: string | null;
+  email?: string | null;
 }
 
 export interface FieldLookupInfo {

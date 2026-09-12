@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { PAGE_SIZES, loadTemplate, saveTemplate, type ElementStyle, type InvoiceTemplate, type TemplateElement } from "@/lib/invoiceTemplateStore";
+import { getPageDimensions, getDefaultTemplate, getAvailablePresets, loadTemplate, saveTemplate, type ElementStyle, type InvoiceTemplate, type TemplateElement, type TemplateOrientation } from "@/lib/invoiceTemplateStore";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import type { InvoiceTemplateFieldOption } from "./InvoiceTemplateElementPalette";
 import { newId } from "./invoiceTemplateEditorUtils";
-import { useInvoiceTemplateEditorInteractions } from "./useInvoiceTemplateEditorInteractions";
+import { useInvoiceTemplateEditorInteractions, type DragStateInfo, type ResizeStateInfo } from "./useInvoiceTemplateEditorInteractions";
 
 export function useInvoiceTemplateEditor() {
   const { t } = useTranslation();
@@ -17,10 +17,11 @@ export function useInvoiceTemplateEditor() {
   const [canvasScale, setCanvasScale] = useState(1);
   const canvasViewportRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
-  const dragState = useRef<{ id: string, startX: number, startY: number, origX: number, origY: number } | null>(null);
-  const resizeState = useRef<{ id: string, startX: number, startY: number, origW: number, origH: number } | null>(null);
+  const dragState = useRef<DragStateInfo | null>(null);
+  const resizeState = useRef<ResizeStateInfo | null>(null);
 
-  const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
+  const orientation = template.orientation || "portrait";
+  const size = getPageDimensions(template.pageSize, orientation);
   const selectedElement = template.elements.find((templateElement) => templateElement.id === selectedId);
 
   useEffect(() => {
@@ -128,6 +129,29 @@ export function useInvoiceTemplateEditor() {
     setSelectedId(templateElement.id);
   };
 
+  const addQrCode = () => {
+    const templateElement: TemplateElement = {
+      id: newId(),
+      type: "qrcode",
+      label: t("obligations.invoiceTemplate.qrCode"),
+      x: 20,
+      y: 20,
+      w: 64,
+      h: 64,
+    };
+    commitUpdate((elements) => [...elements, templateElement]);
+    setSelectedId(templateElement.id);
+  };
+
+  const applyPreset = (presetKey: string) => {
+    const presets = getAvailablePresets();
+    const match = presets.find((p) => p.key === presetKey);
+    if (!match) return;
+    pushHistory(template);
+    setTemplate(match.template);
+    setSelectedId(null);
+  };
+
   const onMouseDownElement = (event: ReactMouseEvent, elementId: string) => {
     if (event.button !== 0) return;
     event.preventDefault();
@@ -142,15 +166,26 @@ export function useInvoiceTemplateEditor() {
       startY: event.clientY,
       origX: templateElement.x,
       origY: templateElement.y,
+      initialTemplate: template,
+      hasMoved: false,
     };
   };
 
   const onMouseDownResize = (event: ReactMouseEvent, elementId: string) => {
+    if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
     const templateElement = template.elements.find((element) => element.id === elementId);
     if (!templateElement) return;
-    resizeState.current = { id: elementId, startX: event.clientX, startY: event.clientY, origW: templateElement.w, origH: templateElement.h };
+    resizeState.current = {
+      id: elementId,
+      startX: event.clientX,
+      startY: event.clientY,
+      origW: templateElement.w,
+      origH: templateElement.h,
+      initialTemplate: template,
+      hasMoved: false,
+    };
   };
 
   const handleSave = () => {
@@ -164,21 +199,73 @@ export function useInvoiceTemplateEditor() {
     setTemplate((currentTemplate) => ({ ...currentTemplate, pageSize: pageSizeKey }));
   };
 
+  const handleOrientationChange = (nextOrientation: TemplateOrientation) => {
+    pushHistory(template);
+    setTemplate((currentTemplate) => ({ ...currentTemplate, orientation: nextOrientation }));
+  };
+
+  const resetToDefault = () => {
+    pushHistory(template);
+    setTemplate(getDefaultTemplate());
+    setSelectedId(null);
+  };
+
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
-      if ((event.metaKey || event.ctrlKey) && event.key === "z") { event.preventDefault(); undo(); }
-      if ((event.metaKey || event.ctrlKey) && event.key === "y") { event.preventDefault(); redo(); }
-      if ((event.metaKey || event.ctrlKey) && event.key === "d") { event.preventDefault(); if (selectedId) duplicateElement(selectedId); }
-      if (event.key === "Delete" || event.key === "Backspace") {
-        const tag = document.activeElement?.tagName;
-        if (tag === "INPUT" || tag === "TEXTAREA") return;
-        if (selectedId) deleteElement(selectedId);
+      const activeEl = document.activeElement as HTMLElement | null;
+      const tag = activeEl?.tagName;
+      const isInput = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || Boolean(activeEl?.isContentEditable);
+
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        if (event.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "y") {
+        event.preventDefault();
+        redo();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "s") {
+        event.preventDefault();
+        handleSave();
+        return;
+      }
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "d") {
+        event.preventDefault();
+        if (selectedId) duplicateElement(selectedId);
+        return;
+      }
+      if (!isInput && (event.key === "Delete" || event.key === "Backspace")) {
+        if (selectedId) {
+          event.preventDefault();
+          deleteElement(selectedId);
+        }
+        return;
+      }
+      if (!isInput && selectedId && (event.key === "ArrowUp" || event.key === "ArrowDown" || event.key === "ArrowLeft" || event.key === "ArrowRight")) {
+        event.preventDefault();
+        const step = event.shiftKey ? 4 : 1;
+        const dx = event.key === "ArrowLeft" ? -step : event.key === "ArrowRight" ? step : 0;
+        const dy = event.key === "ArrowUp" ? -step : event.key === "ArrowDown" ? step : 0;
+        commitUpdate((templateElements) =>
+          templateElements.map((templateElement) =>
+            templateElement.id === selectedId
+              ? { ...templateElement, x: Math.max(0, templateElement.x + dx), y: Math.max(0, templateElement.y + dy) }
+              : templateElement
+          )
+        );
+        return;
       }
       if (event.key === "Escape") setSelectedId(null);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  });
+  }, [selectedId, template, history, future]);
 
   return {
     t,
@@ -194,6 +281,7 @@ export function useInvoiceTemplateEditor() {
     canvasViewportRef,
     canvasRef,
     size,
+    orientation,
     selectedElement,
     undo,
     redo,
@@ -204,9 +292,13 @@ export function useInvoiceTemplateEditor() {
     addStaticText,
     addDivider,
     addField,
+    addQrCode,
+    applyPreset,
     onMouseDownElement,
     onMouseDownResize,
     handleSave,
     handlePageSize,
+    handleOrientationChange,
+    resetToDefault,
   };
 }

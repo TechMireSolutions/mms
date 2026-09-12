@@ -1,5 +1,5 @@
 import type React from "react";
-import { Minus, Type } from "lucide-react";
+import { Minus, QrCode, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AVAILABLE_FIELDS } from "@/lib/invoiceTemplateStore";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -9,6 +9,7 @@ export type InvoiceTemplateFieldOption = (typeof AVAILABLE_FIELDS)[number];
 interface InvoiceTemplateElementPaletteProps {
   onAddStaticText: () => void;
   onAddDivider: () => void;
+  onAddQrCode: () => void;
   onAddField: (fieldOption: InvoiceTemplateFieldOption) => void;
   t: TranslationFunction;
 }
@@ -16,6 +17,7 @@ interface InvoiceTemplateElementPaletteProps {
 export function InvoiceTemplateElementPalette({
   onAddStaticText,
   onAddDivider,
+  onAddQrCode,
   onAddField,
   t,
 }: InvoiceTemplateElementPaletteProps): React.JSX.Element {
@@ -39,6 +41,14 @@ export function InvoiceTemplateElementPalette({
             className="w-full text-start min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start"
           >
             <Minus className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" /> {t("obligations.invoiceTemplate.dividerLine")}
+          </Button>
+          <Button
+            type="button"
+            onClick={onAddQrCode}
+            variant="outline"
+            className="w-full text-start min-h-11 px-2.5 py-2 text-xs font-semibold rounded-lg border border-border hover:bg-primary/5 hover:border-primary/30 transition-colors flex items-center gap-2 shadow-none justify-start"
+          >
+            <QrCode className="w-3.5 h-3.5 text-primary" aria-hidden="true" /> {t("obligations.invoiceTemplate.qrCode")}
           </Button>
         </div>
       </div>

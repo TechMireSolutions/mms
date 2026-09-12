@@ -9,10 +9,12 @@ export function InvoiceTemplateKeyboardHints({ t }: InvoiceTemplateKeyboardHints
   return (
     <footer className="flex-shrink-0 border-t border-border bg-card px-4 py-1.5 flex items-center gap-4 flex-wrap">
       {[
+        ["Ctrl+S", t("obligations.invoiceTemplate.save")],
         ["Ctrl+Z", t("obligations.invoiceTemplate.hintUndo")],
         ["Ctrl+Y", t("obligations.invoiceTemplate.hintRedo")],
         ["Ctrl+D", t("obligations.invoiceTemplate.hintDuplicate")],
         ["Del", t("obligations.invoiceTemplate.hintDelete")],
+        ["↑↓←→", t("obligations.invoiceTemplate.hintNudge")],
         ["Esc", t("obligations.invoiceTemplate.hintDeselect")],
       ].map(([shortcutKey, shortcutLabel]) => (
         <span key={shortcutKey} className="text-xs text-muted-foreground">

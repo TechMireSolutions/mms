@@ -4,7 +4,7 @@
  * Used both in the editor (live preview) and in the print/PDF modal.
  */
 import React from "react";
-import { PAGE_SIZES, resolveField, type InvoiceTemplate, type TemplateElement, type FieldLookupInfo } from "@/lib/invoiceTemplateStore";
+import { generateQrSvgUri, getPageDimensions, resolveField, type InvoiceTemplate, type TemplateElement, type FieldLookupInfo } from "@/lib/invoiceTemplateStore";
 import { type ObligationCollection } from '@/lib/data/obligationsData';
 import { useBranding } from "@/tenant/hooks/useBranding";
 import { getPrintBrandingTokens, PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
@@ -36,7 +36,7 @@ export function InvoicePrintPreview({
 }: InvoicePrintPreviewProps) {
   const branding = useBranding();
   const printTokens = getPrintBrandingTokens();
-  const size = PAGE_SIZES[template.pageSize] || PAGE_SIZES.A6;
+  const size = getPageDimensions(template.pageSize, template.orientation);
 
   const renderElement = (templateElement: TemplateElement) => {
     const isSelected = selectedId === templateElement.id;
@@ -84,7 +84,31 @@ export function InvoicePrintPreview({
 
     if (templateElement.type === "divider") {
       return (
-        <div key={templateElement.id} style={{ ...baseStyle, borderTop: `${templateElement.h || 1}px solid ${elementStyle.color || printTokens.border}`, height: undefined }} onClick={handleClick} />
+        <div
+          key={templateElement.id}
+          style={{
+            ...baseStyle,
+            height: Math.max(templateElement.h, 1),
+            backgroundColor: elementStyle.color || printTokens.border,
+            border: "none",
+          }}
+          onClick={handleClick}
+        />
+      );
+    }
+
+    if (templateElement.type === "qrcode") {
+      const payload = collection
+        ? `${typeof window !== "undefined" ? window.location.origin : ""}/verify/receipt?no=${encodeURIComponent(collection.receipt_no)}&amount=${collection.amount}&date=${collection.received_date}`
+        : "MMS-RECEIPT-VERIFICATION";
+      return (
+        <div key={templateElement.id} style={{ ...baseStyle, display: "flex", alignItems: "center", justifyContent: "center" }} onClick={handleClick}>
+          <img
+            src={generateQrSvgUri(payload, elementStyle.color || "#000000")}
+            alt="Receipt Verification QR"
+            style={{ width: "100%", height: "100%", objectFit: "contain" }}
+          />
+        </div>
       );
     }
 

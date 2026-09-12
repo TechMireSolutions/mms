@@ -14,25 +14,38 @@ export interface InvoiceTemplateEditorProps {
 }
 
 export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTemplateEditorProps): React.JSX.Element {
+  const [isFullscreen, setIsFullscreen] = React.useState(fullscreen);
   const branding = useBranding();
   const printTokens = getPrintBrandingTokens();
   const editor = useInvoiceTemplateEditor();
 
+  const handleClose = () => {
+    if (isFullscreen && !fullscreen) {
+      setIsFullscreen(false);
+    } else {
+      onClose();
+    }
+  };
+
   return (
-    <div className={fullscreen ? "fixed inset-0 z-modal flex flex-col bg-background" : "flex flex-col bg-background rounded-xl border border-border overflow-hidden h-max-h-modal max-h-modal min-h-preview-2xl"}>
+    <div className={isFullscreen ? "fixed inset-0 z-modal flex flex-col bg-background" : "flex flex-col bg-background rounded-xl border border-border overflow-hidden h-max-h-modal max-h-modal min-h-preview-2xl"}>
       <InvoiceTemplateToolbar
         template={editor.template}
         historyLength={editor.history.length}
         futureLength={editor.future.length}
         saved={editor.saved}
         showGuides={editor.showGuides}
-        fullscreen={fullscreen}
+        fullscreen={isFullscreen}
         onUndo={editor.undo}
         onRedo={editor.redo}
         onPageSizeChange={editor.handlePageSize}
+        onOrientationChange={editor.handleOrientationChange}
         onToggleGuides={() => editor.setShowGuides(!editor.showGuides)}
+        onResetDefault={editor.resetToDefault}
+        onApplyPreset={editor.applyPreset}
+        onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
         onSave={editor.handleSave}
-        onClose={onClose}
+        onClose={handleClose}
         t={editor.t}
       />
 
@@ -40,6 +53,7 @@ export function InvoiceTemplateEditor({ onClose, fullscreen = true }: InvoiceTem
         <InvoiceTemplateElementPalette
           onAddStaticText={editor.addStaticText}
           onAddDivider={editor.addDivider}
+          onAddQrCode={editor.addQrCode}
           onAddField={editor.addField}
           t={editor.t}
         />

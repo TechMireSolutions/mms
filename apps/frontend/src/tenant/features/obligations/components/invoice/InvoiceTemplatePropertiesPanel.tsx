@@ -44,6 +44,8 @@ export function InvoiceTemplatePropertiesPanel({
                 ? t("obligations.invoiceTemplate.propsLogo")
                 : selectedElement.type === "divider"
                 ? t("obligations.invoiceTemplate.propsDivider")
+                : selectedElement.type === "qrcode"
+                ? t("obligations.invoiceTemplate.propsQrCode")
                 : t("obligations.invoiceTemplate.propsText")}
             </p>
 
@@ -73,7 +75,7 @@ export function InvoiceTemplatePropertiesPanel({
             </div>
           </div>
 
-          {selectedElement.type !== "logo" && selectedElement.type !== "divider" && (
+          {selectedElement.type !== "logo" && selectedElement.type !== "divider" && selectedElement.type !== "qrcode" && (
             <div>
               <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.typography")}</p>
               <div className="space-y-2">
@@ -172,6 +174,18 @@ export function InvoiceTemplatePropertiesPanel({
                 label={t("obligations.invoiceTemplate.color")}
                 type="color"
                 value={selectedElement.style?.color || PRINT_NEUTRAL.border}
+                onChange={(nextValue) => onPatchStyle(selectedElement.id, { color: String(nextValue) })}
+              />
+            </div>
+          )}
+
+          {selectedElement.type === "qrcode" && (
+            <div>
+              <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-2 m-0">{t("obligations.invoiceTemplate.propsQrCode")}</p>
+              <StyleInput
+                label={t("obligations.invoiceTemplate.color")}
+                type="color"
+                value={selectedElement.style?.color || "#000000"}
                 onChange={(nextValue) => onPatchStyle(selectedElement.id, { color: String(nextValue) })}
               />
             </div>

@@ -1,6 +1,6 @@
 import type React from "react";
 import { Button } from "@/components/ui/button";
-import { PAGE_SIZES, type InvoiceTemplate, type PageSizeInfo, type TemplateElement } from "@/lib/invoiceTemplateStore";
+import { generateQrSvgUri, PAGE_SIZES, type InvoiceTemplate, type PageSizeInfo, type TemplateElement } from "@/lib/invoiceTemplateStore";
 import { PRINT_NEUTRAL, type getPrintBrandingTokens } from "@/lib/printBrandingTokens";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -80,7 +80,23 @@ export function InvoiceTemplateCanvas({
             );
       }
       if (templateElement.type === "divider") {
-        return <div style={{ borderTop: `${templateElement.h || 1}px solid ${elementStyle.color || printTokens.border}`, width: "100%", marginTop: (templateElement.h || 1) / 2 }} />;
+        return (
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              minHeight: 1,
+              backgroundColor: elementStyle.color || printTokens.border,
+            }}
+          />
+        );
+      }
+      if (templateElement.type === "qrcode") {
+        return (
+          <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", border: `1px solid ${printTokens.border}`, borderRadius: 4, background: "#ffffff", padding: 2 }}>
+            <img src={generateQrSvgUri("MMS-SAMPLE-VERIFICATION", elementStyle.color || "#000000")} alt="QR" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
+          </div>
+        );
       }
       if (templateElement.type === "field") {
         return <span style={{ opacity: 0.7, fontStyle: "italic" }}>{templateElement.label}</span>;
@@ -88,39 +104,43 @@ export function InvoiceTemplateCanvas({
       return <span>{templateElement.label}</span>;
     };
 
+    const showToolbarBelow = templateElement.y < 36;
+
     return (
       <div
         key={templateElement.id}
         style={baseStyle}
         onMouseDown={(event) => onMouseDownElement(event, templateElement.id)}
+        onClick={(event) => event.stopPropagation()}
       >
         {content()}
         {isSelected && (
           <div
             onMouseDown={(event) => onMouseDownResize(event, templateElement.id)}
-            className="absolute -bottom-2 -end-2 z-10 cursor-se-resize rounded-md"
+            onClick={(event) => event.stopPropagation()}
+            className="absolute -bottom-1.5 -end-1.5 z-10 cursor-se-resize rounded-sm shadow-sm"
             style={{
               background: printTokens.primary,
-              height: 44 / canvasScale,
-              width: 44 / canvasScale,
+              height: 10,
+              width: 10,
             }}
             aria-hidden
           />
         )}
         {isSelected && (
           <div
-            className="absolute start-0 z-20 flex gap-1"
-            style={{ top: -48 / canvasScale }}
+            className="absolute start-0 z-20 flex gap-1 items-center"
+            style={{ top: showToolbarBelow ? templateElement.h + 4 : -30 }}
           >
             <Button
               type="button"
               onClick={(event) => { event.stopPropagation(); onDuplicateElement(templateElement.id); }}
-              className="rounded-md p-0 text-xs font-bold shadow-none"
+              className="rounded p-0 text-xs font-bold shadow-sm flex items-center justify-center"
               style={{
                 background: printTokens.primary,
                 color: printTokens.onPrimary,
-                minHeight: 44 / canvasScale,
-                minWidth: 44 / canvasScale,
+                height: 24,
+                width: 24,
               }}
               aria-label={t("obligations.invoiceTemplate.duplicate")}
             >
@@ -129,12 +149,12 @@ export function InvoiceTemplateCanvas({
             <Button
               type="button"
               onClick={(event) => { event.stopPropagation(); onDeleteElement(templateElement.id); }}
-              className="rounded-md p-0 text-xs font-bold shadow-none"
+              className="rounded p-0 text-xs font-bold shadow-sm flex items-center justify-center"
               style={{
                 background: printTokens.destructive,
                 color: printTokens.onPrimary,
-                minHeight: 44 / canvasScale,
-                minWidth: 44 / canvasScale,
+                height: 24,
+                width: 24,
               }}
               aria-label={t("common.delete")}
             >
@@ -177,7 +197,7 @@ export function InvoiceTemplateCanvas({
               position: "absolute", top: -20, insetInlineStart: 0,
               fontSize: 10, color: PRINT_NEUTRAL.muted, fontFamily: "monospace",
             }}>
-              {PAGE_SIZES[template.pageSize]?.label} — {size.width}×{size.height}px
+              {size.label || PAGE_SIZES[template.pageSize]?.label} — {size.width}×{size.height}px
             </div>
           )}
           {template.elements.map(renderElement)}

@@ -15,6 +15,7 @@ import { ObligationsBulkActionBar } from "@/tenant/features/obligations/componen
 import { useObligationSelection } from "@/tenant/features/obligations/hooks/useObligationSelection";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
+const InvoiceTemplateEditor = lazy(() => import("@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor").then((module) => ({ default: module.InvoiceTemplateEditor })));
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
@@ -69,6 +70,7 @@ export function ObligationCollectionsList({
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [printCollection, setPrintCollection] = useState<ObligationCollection | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
   const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
@@ -239,7 +241,17 @@ export function ObligationCollectionsList({
             reps={reps}
             mujtahids={mujtahids}
             onClose={() => setPrintCollection(null)}
+            onOpenEditor={() => {
+              setPrintCollection(null);
+              setShowEditor(true);
+            }}
           />
+        </Suspense>
+      )}
+
+      {showEditor && (
+        <Suspense fallback={null}>
+          <InvoiceTemplateEditor onClose={() => setShowEditor(false)} />
         </Suspense>
       )}
 
