@@ -78,8 +78,8 @@ describe('sessionRepositoryHydrate', () => {
       createdAt: new Date('2026-01-01T00:00:00Z'),
     };
 
-    // 1 select for session row, then 7 selects for children in hydrateSessionsList
-    const tx = createMockTx([[sessionRow], [classRow], [], [], [], [], [], []]);
+    // 1 select for session row, 2 selects for faculty and classes, then 7 selects for class children
+    const tx = createMockTx([[sessionRow], [], [classRow], [], [], [], [], [], [], []]);
     mockWithTenant.mockImplementation(async (cb) => cb(tx));
 
     const result = await findSessionById('test-tenant', 'sess-1');

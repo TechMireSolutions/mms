@@ -428,6 +428,13 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
       let enrollmentsRestored = false;
 
       const fakeTx = {
+        select: vi.fn(() => ({
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              for: vi.fn().mockResolvedValue([{ id: 'sess-1' }]),
+            })),
+          })),
+        })),
         update: vi.fn(() => {
           return {
             set: vi.fn((data: any) => ({
