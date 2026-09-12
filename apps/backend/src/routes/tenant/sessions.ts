@@ -44,7 +44,7 @@ export default async function sessionsRoutes(
         namePlural: 'sessions',
         loadCountFn: sessionsUseCases.countSessions,
         loadMetricsFn: sessionsUseCases.loadSessionsCommandMetrics,
-        loadWidgetAggregatesFn: sessionsUseCases.loadSessionsWidgetAggregates as unknown as (queries: unknown[]) => Promise<unknown>,
+        loadWidgetAggregatesFn: (queries: unknown[], req?: unknown) => sessionsUseCases.loadSessionsWidgetAggregates(queries as unknown as Parameters<typeof sessionsUseCases.loadSessionsWidgetAggregates>[0], req),
         loadByIdFn: sessionsUseCases.loadSessionById,
         updateFn: sessionsUseCases.updateSessionById,
         deleteFn: sessionsUseCases.deleteSessionById,

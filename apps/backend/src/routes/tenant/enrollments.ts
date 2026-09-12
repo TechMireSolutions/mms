@@ -49,9 +49,7 @@ export default async function enrollmentsRoutes(
 
       registerWidgetAggregatesRoute(sub, {
         collection: ENROLLMENTS_COLLECTION,
-        loadAggregatesFn: enrollmentsUseCases.loadEnrollmentsWidgetAggregates as unknown as (
-          queries: unknown[],
-        ) => Promise<unknown>,
+        loadAggregatesFn: (queries, req) => enrollmentsUseCases.loadEnrollmentsWidgetAggregates(queries as unknown as Parameters<typeof enrollmentsUseCases.loadEnrollmentsWidgetAggregates>[0], req),
         errorMessagePrefix: 'enrollment',
       });
 

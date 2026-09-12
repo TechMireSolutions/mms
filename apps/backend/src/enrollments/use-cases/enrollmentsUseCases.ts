@@ -180,6 +180,7 @@ export function createEnrollmentsUseCases(
 
     loadEnrollmentsWidgetAggregates: async (
       queries: EnrollmentsWidgetQuery[],
+      _request?: unknown,
     ): Promise<Record<string, import('@mms/shared').EnrollmentsWidgetAggregateResult>> => {
       const tenant = getRequestTenant();
       if (!tenant) return {};

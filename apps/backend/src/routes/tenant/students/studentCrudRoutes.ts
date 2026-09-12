@@ -9,7 +9,6 @@ import {
   type Student,
   studentContract,
 } from '@mms/shared';
-import { validateStudentDynamic } from '../../../services/studentValidationService.js';
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
@@ -82,22 +81,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
 
-      const lang = (request.headers['accept-language'] as string) || 'en';
       const tenant = request.tenant?.id;
-
-      if (tenant) {
-        try {
-          await validateStudentDynamic(tenant, body, lang);
-        } catch (error) {
-          return {
-            status: 400 as const,
-            body: {
-              type: 'validation_error',
-              message: error instanceof Error ? error.message : String(error),
-            },
-          };
-        }
-      }
 
       try {
         const result = await withTenant(String(tenant), () => studentUseCases.createStudent(
@@ -142,21 +126,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
 
-      const lang = (request.headers['accept-language'] as string) || 'en';
       const tenant = request.tenant?.id;
-      if (tenant) {
-        try {
-          await validateStudentDynamic(tenant, body, lang);
-        } catch (error) {
-          return {
-            status: 400 as const,
-            body: {
-              type: 'validation_error',
-              message: error instanceof Error ? error.message : String(error),
-            },
-          };
-        }
-      }
 
       try {
         const updated = await withTenant(String(tenant), () => studentUseCases.updateStudentById(id, {

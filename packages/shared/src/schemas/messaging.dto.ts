@@ -46,6 +46,8 @@ export const messageRecordSchema = z
   })
   .strict();
 
+export const messageLogListSchema = z.array(messageRecordSchema);
+
 const messageInsertBaseSchema = z
   .object({
     id: z.string().optional(),

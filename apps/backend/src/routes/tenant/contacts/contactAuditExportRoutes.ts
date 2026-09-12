@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { Contact, User } from '@mms/shared';
 import { CONTACTS_MODULE_MANIFEST, getDisplayName } from '@mms/shared';
-import { z } from 'zod';
 import { registerModuleCsvExportRoutes } from '../../../lib/registerModuleCsvExportRoutes.js';
 import { registerModuleSetupAuditRoute } from '../../../lib/registerModuleSetupAuditRoute.js';
 import { sendDatabaseError, sendNotFound } from '../../../lib/httpErrors.js';
@@ -75,7 +74,7 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/merge', {
     bodyLimit: 1048576,
-    schema: { body: z.record(z.string(), z.unknown()) },
+    schema: { body: buildContactMergeBodySchema() },
   }, async (request, reply) => {
     const user = request.user as User;
     if (!requireContactPermission(reply, user, ['write', 'delete'])) return;

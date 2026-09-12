@@ -218,6 +218,7 @@ export function createSessionsUseCases(
 
     loadSessionsWidgetAggregates: async (
       queries: SessionsWidgetQuery[],
+      _request?: unknown,
     ): Promise<Record<string, import('@mms/shared').SessionsWidgetAggregateResult>> => {
       const tenant = getRequestTenant();
       if (!tenant) return {};

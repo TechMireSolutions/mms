@@ -26,7 +26,7 @@ export interface StandardExtendedRoutesOptions<TQuery, TRecord> {
   loadCountFn?: () => Promise<number>;
   /** Prefer SQL aggregates — avoids hydrate-all for `/metrics`. */
   loadMetricsFn?: (request: FastifyRequest) => Promise<unknown>;
-  loadWidgetAggregatesFn?: (queries: unknown[]) => Promise<unknown>;
+  loadWidgetAggregatesFn?: (queries: unknown[], request?: unknown) => Promise<unknown>;
   loadByIdsFn?: (ids: string[], request: FastifyRequest) => Promise<TRecord[]>;
   loadLinkedContactIdsFn?: (excludeId?: string) => Promise<(string | number)[]>;
   canWriteDeletedCheck?: (user: User) => boolean;

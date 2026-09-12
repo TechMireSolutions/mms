@@ -90,7 +90,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const lang = ((request.headers?.['accept-language'] as string | undefined) || 'en');
       
       try {
-        const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(body as unknown as Contact, { user, language: lang });
+        const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(body as Contact, { user, language: lang });
         if (restoredFromDelete) {
           await auditContact(user, 'contact.restore', `Restored contact ${String(contact.id)} via upsert`, String(contact.id));
         } else {
@@ -114,7 +114,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const lang = ((request.headers?.['accept-language'] as string | undefined) || 'en');
       
       try {
-        const updatePayload = { ...(body && typeof body === 'object' ? body : {}), id } as unknown as Contact;
+        const updatePayload = { ...(body && typeof body === 'object' ? body : {}), id } as Contact;
         const updated = await contactUseCases.updateContactById(id, updatePayload, { language: lang, applyRelationshipInference: canWriteContacts(user) });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
         await auditContact(user, 'contact.update', `Updated contact ${id}`, id);

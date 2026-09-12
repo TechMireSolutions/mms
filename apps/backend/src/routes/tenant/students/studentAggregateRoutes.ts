@@ -1,5 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { type StudentsWidgetQuery, type User } from '@mms/shared';
+import type { User } from '@mms/shared';
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
 import {
   registerMetricsRoute,
@@ -27,8 +27,7 @@ export const studentAggregateRoutes: FastifyPluginAsync = async (sub) => {
 
   registerWidgetAggregatesRoute(sub, {
     collection: 'students',
-    loadAggregatesFn: (queries) =>
-      studentUseCases.loadStudentsWidgetAggregates(queries as unknown as StudentsWidgetQuery[]),
+    loadAggregatesFn: (queries) => studentUseCases.loadStudentsWidgetAggregates(queries as unknown as Parameters<typeof studentUseCases.loadStudentsWidgetAggregates>[0]),
     errorMessagePrefix: 'student',
   });
 
