@@ -55,4 +55,29 @@ describe("TemplateEditor Component", () => {
     expect(html).toContain("Typst");
     expect(html).toContain("Zoho");
   });
+
+  it("renders zoom controls, preview button, and JSON export", () => {
+    const html = renderToStaticMarkup(
+      <TemplateEditor
+        template={sampleTemplate}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(html).toContain("Preview");
+    expect(html).toContain("JSON");
+    expect(html).toContain("100%");
+  });
+
+  it("renders populated sample data inside field elements", () => {
+    const html = renderToStaticMarkup(
+      <TemplateEditor
+        template={sampleTemplate}
+        sampleData={{ studentName: "Muhammad Ali" }}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(html).toContain("Muhammad Ali");
+  });
 });

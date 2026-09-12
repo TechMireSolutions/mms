@@ -47,12 +47,15 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState<DocumentTemplate<TPayload>[]>([]);
   const [future, setFuture] = useState<DocumentTemplate<TPayload>[]>([]);
-  const [canvasScale, setCanvasScale] = useState(1);
+  const [autoScale, setAutoScale] = useState(1);
+  const [customZoom, setCustomZoom] = useState<number | null>(null);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
   const canvasViewportRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<DragStateInfo<TPayload> | null>(null);
   const resizeState = useRef<ResizeStateInfo<TPayload> | null>(null);
 
+  const canvasScale = customZoom ?? autoScale;
   const orientation = template.orientation || "portrait";
   const size = getPageDimensions(template.pageSize, orientation);
   const selectedId = selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null;
@@ -63,12 +66,17 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
   const deselectAll = () => setSelectedIds([]);
   const selectAll = () => setSelectedIds(template.elements.map((el) => el.id));
 
+  const zoomIn = () => setCustomZoom((prev) => Math.min(2.5, Number(((prev ?? canvasScale) + 0.1).toFixed(2))));
+  const zoomOut = () => setCustomZoom((prev) => Math.max(0.3, Number(((prev ?? canvasScale) - 0.1).toFixed(2))));
+  const zoomReset = () => setCustomZoom(1);
+  const zoomFit = () => setCustomZoom(null);
+
   useEffect(() => {
     const viewport = canvasViewportRef.current;
     if (!viewport) return;
     const updateCanvasScale = () => {
       const availableWidth = Math.max(0, viewport.clientWidth - 32);
-      if (availableWidth > 0) setCanvasScale(Math.min(1, availableWidth / size.width));
+      if (availableWidth > 0) setAutoScale(Math.min(1, availableWidth / size.width));
     };
     const observer = new ResizeObserver(updateCanvasScale);
     observer.observe(viewport);
@@ -140,6 +148,108 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     const idSet = new Set(selectedIds);
     commitUpdate((elements) => elements.filter((el) => !idSet.has(el.id)));
     setSelectedIds([]);
+  };
+
+  const nudgeSelected = (dx: number, dy: number) => {
+    if (selectedIds.length === 0) return;
+    const idSet = new Set(selectedIds);
+    commitUpdate((elements) =>
+      elements.map((el) =>
+        idSet.has(el.id)
+          ? {
+              ...el,
+              x: Math.max(0, el.x + dx),
+              y: Math.max(0, el.y + dy),
+            }
+          : el
+      )
+    );
+  };
+
+  const bringToFront = (elementId?: string) => {
+    const targetId = elementId || selectedId;
+    if (!targetId) return;
+    commitUpdate((elements) => {
+      const idx = elements.findIndex((el) => el.id === targetId);
+      if (idx === -1 || idx === elements.length - 1) return elements;
+      const copy = [...elements];
+      const [item] = copy.splice(idx, 1);
+      if (item) copy.push(item);
+      return copy;
+    });
+  };
+
+  const sendToBack = (elementId?: string) => {
+    const targetId = elementId || selectedId;
+    if (!targetId) return;
+    commitUpdate((elements) => {
+      const idx = elements.findIndex((el) => el.id === targetId);
+      if (idx <= 0) return elements;
+      const copy = [...elements];
+      const [item] = copy.splice(idx, 1);
+      if (item) copy.unshift(item);
+      return copy;
+    });
+  };
+
+  const moveForward = (elementId?: string) => {
+    const targetId = elementId || selectedId;
+    if (!targetId) return;
+    commitUpdate((elements) => {
+      const idx = elements.findIndex((el) => el.id === targetId);
+      if (idx === -1 || idx === elements.length - 1) return elements;
+      const copy = [...elements];
+      const temp = copy[idx]!;
+      copy[idx] = copy[idx + 1]!;
+      copy[idx + 1] = temp;
+      return copy;
+    });
+  };
+
+  const moveBackward = (elementId?: string) => {
+    const targetId = elementId || selectedId;
+    if (!targetId) return;
+    commitUpdate((elements) => {
+      const idx = elements.findIndex((el) => el.id === targetId);
+      if (idx <= 0) return elements;
+      const copy = [...elements];
+      const temp = copy[idx]!;
+      copy[idx] = copy[idx - 1]!;
+      copy[idx - 1] = temp;
+      return copy;
+    });
+  };
+
+  const exportTemplateJson = () => {
+    const blob = new Blob([JSON.stringify(template, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `document-template-${template.pageSize.toLowerCase()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const importTemplateJson = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const parsed = JSON.parse(text) as DocumentTemplate<TPayload>;
+        if (parsed && typeof parsed.pageSize === "string" && Array.isArray(parsed.elements)) {
+          commitUpdate(() => parsed.elements);
+          if (parsed.orientation) {
+            handleOrientationChange(parsed.orientation);
+          }
+          if (parsed.pageSize) {
+            handlePageSize(parsed.pageSize);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to parse template JSON:", err);
+      }
+    };
+    reader.readAsText(file);
   };
 
   const duplicateElement = (elementId: string) => {
@@ -310,6 +420,81 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     setSelectedIds([]);
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable ||
+          target.tagName === "SELECT")
+      ) {
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "y") {
+        e.preventDefault();
+        redo();
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a") {
+        e.preventDefault();
+        selectAll();
+        return;
+      }
+
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "d") {
+        e.preventDefault();
+        duplicateSelected();
+        return;
+      }
+
+      if (e.key === "Escape") {
+        e.preventDefault();
+        deselectAll();
+        return;
+      }
+
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedIds.length > 0) {
+          e.preventDefault();
+          deleteSelected();
+        }
+        return;
+      }
+
+      const step = e.shiftKey ? 8 : 1;
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        nudgeSelected(-step, 0);
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        nudgeSelected(step, 0);
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        nudgeSelected(0, -step);
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        nudgeSelected(0, step);
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedIds, history.length, future.length, template]);
+
   return {
     t,
     template,
@@ -323,11 +508,17 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     selectedElements,
     showGuides,
     setShowGuides,
+    isPreviewMode,
+    setIsPreviewMode,
     saved,
     saving,
     history,
     future,
     canvasScale,
+    zoomIn,
+    zoomOut,
+    zoomReset,
+    zoomFit,
     canvasViewportRef,
     canvasRef,
     size,
@@ -341,6 +532,13 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     duplicateElement,
     duplicateSelected,
     alignSelected,
+    bringToFront,
+    sendToBack,
+    moveForward,
+    moveBackward,
+    nudgeSelected,
+    exportTemplateJson,
+    importTemplateJson,
     addStaticText,
     addDivider,
     addField,

@@ -1,8 +1,3 @@
-/**
- * @file TemplateEditorPropertiesPanel.tsx
- * @description Inspector panel for element properties (geometry, typography, colors, alignment, actions).
- */
-
 import React from "react";
 import {
   AlignCenter,
@@ -13,9 +8,14 @@ import {
   Italic,
   Layers,
   Trash2,
+  ArrowUpToLine,
+  ArrowDownToLine,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { FormSelect } from "@/components/ui/FormSelect";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import type { ElementStyle, TemplateElement } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -32,6 +32,12 @@ export interface TemplateEditorPropertiesPanelProps<TPayload = Record<string, un
   onDuplicateSelected?: () => void;
   onDeleteSelected?: () => void;
   onAlignSelected?: (alignType: AlignmentType) => void;
+  onBringToFront?: (elementId?: string) => void;
+  onSendToBack?: (elementId?: string) => void;
+  onMoveForward?: (elementId?: string) => void;
+  onMoveBackward?: (elementId?: string) => void;
+  primaryColor?: string;
+  secondaryColor?: string;
   t: TranslationFunction;
 }
 
@@ -45,6 +51,12 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
   onDuplicateSelected,
   onDeleteSelected,
   onAlignSelected,
+  onBringToFront,
+  onSendToBack,
+  onMoveForward,
+  onMoveBackward,
+  primaryColor,
+  secondaryColor,
   t,
 }: TemplateEditorPropertiesPanelProps<TPayload>): React.JSX.Element {
   const isMultiSelect = selectedElements.length > 1;
@@ -96,6 +108,38 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
             </Button>
           </div>
         </div>
+
+        {onBringToFront && onSendToBack && (
+          <div className="pt-2 border-t border-border">
+            <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-1.5 m-0">
+              Layer Ordering
+            </p>
+            <div className="grid grid-cols-2 gap-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onBringToFront()}
+                className="text-xs border-border hover:bg-muted flex items-center justify-center gap-1"
+                title="Bring to Front"
+              >
+                <ArrowUpToLine className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>To Front</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => onSendToBack()}
+                className="text-xs border-border hover:bg-muted flex items-center justify-center gap-1"
+                title="Send to Back"
+              >
+                <ArrowDownToLine className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>To Back</span>
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="flex gap-2 pt-2 border-t border-border">
           <Button
@@ -213,11 +257,81 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
         </div>
       </div>
 
+      {onBringToFront && (
+        <div className="pt-2 border-t border-border">
+          <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-1.5 m-0">
+            Layer Stacking
+          </p>
+          <div className="grid grid-cols-4 gap-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onBringToFront(selectedElement.id)}
+              className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              title="Bring to Front"
+            >
+              <ArrowUpToLine className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onMoveForward?.(selectedElement.id)}
+              className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              title="Move Forward"
+            >
+              <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onMoveBackward?.(selectedElement.id)}
+              className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              title="Move Backward"
+            >
+              <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => onSendToBack?.(selectedElement.id)}
+              className="h-8 p-0 flex items-center justify-center border border-border hover:bg-muted"
+              title="Send to Back"
+            >
+              <ArrowDownToLine className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {isTextLike && (
         <div className="space-y-3 pt-2 border-t border-border">
           <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest m-0">
             {t("templateEditor.typography")}
           </p>
+
+          <div className="space-y-1">
+            <label className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
+              Font Family
+            </label>
+            <FormSelect
+              aria-label="Font Family"
+              value={elStyle.fontFamily || "Inter, sans-serif"}
+              onChange={(val) => onPatchStyle(selectedElement.id, { fontFamily: val })}
+              options={[
+                { value: "Inter, sans-serif", label: "Inter (Modern Sans)" },
+                { value: "'Amiri', serif", label: "Amiri (Arabic Serif)" },
+                { value: "'Cairo', sans-serif", label: "Cairo (Arabic Modern)" },
+                { value: "'Noto Nastaliq Urdu', serif", label: "Nastaliq (Urdu)" },
+                { value: "monospace", label: "Monospace (Numbers)" },
+              ]}
+              className="h-8 text-xs py-0 w-full"
+            />
+          </div>
+
           <div className="grid grid-cols-2 gap-2">
             <StyleInput
               label={t("templateEditor.fontSize")}
@@ -237,6 +351,30 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
                 onChange={(e) => onPatchStyle(selectedElement.id, { color: e.target.value })}
                 className="w-full min-h-11 h-11 p-1 border border-border rounded bg-background cursor-pointer"
               />
+            </div>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[11px] text-muted-foreground font-semibold">Presets:</span>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {[
+                { label: "Primary", color: primaryColor || "#059669" },
+                { label: "Secondary", color: secondaryColor || "#047857" },
+                { label: "Dark", color: "#0f172a" },
+                { label: "Muted", color: "#64748b" },
+                { label: "Emerald", color: "#10b981" },
+                { label: "Amber", color: "#f59e0b" },
+                { label: "Red", color: "#ef4444" },
+              ].map((swatch) => (
+                <button
+                  key={swatch.color}
+                  type="button"
+                  title={swatch.label}
+                  onClick={() => onPatchStyle(selectedElement.id, { color: swatch.color })}
+                  style={{ backgroundColor: swatch.color }}
+                  className="w-5 h-5 rounded-full border border-border hover:scale-110 transition-transform cursor-pointer shadow-xs"
+                />
+              ))}
             </div>
           </div>
 

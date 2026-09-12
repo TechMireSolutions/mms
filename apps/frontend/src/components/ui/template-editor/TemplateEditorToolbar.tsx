@@ -1,9 +1,4 @@
-/**
- * @file TemplateEditorToolbar.tsx
- * @description Top command toolbar providing undo/redo, page geometry, preset selection, Typst/Zoho export, and save actions.
- */
-
-import React from "react";
+import React, { useRef } from "react";
 import {
   Eye,
   EyeOff,
@@ -18,6 +13,11 @@ import {
   Undo2,
   FileCode2,
   CloudUpload,
+  Download,
+  Upload,
+  ZoomIn,
+  ZoomOut,
+  Scan,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -39,11 +39,20 @@ export interface TemplateEditorToolbarProps<TPayload = Record<string, unknown>> 
   showGuides: boolean;
   fullscreen?: boolean;
   presets?: DocumentTemplatePreset<TPayload>[];
+  canvasScale?: number;
+  isPreviewMode?: boolean;
   onUndo: () => void;
   onRedo: () => void;
   onPageSizeChange: (pageSizeKey: string) => void;
   onOrientationChange: (orientation: TemplateOrientation) => void;
   onToggleGuides: () => void;
+  onTogglePreview?: () => void;
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onZoomReset?: () => void;
+  onZoomFit?: () => void;
+  onExportJson?: () => void;
+  onImportJson?: (file: File) => void;
   onResetDefault: () => void;
   onApplyPreset: (presetKey: string) => void;
   onToggleFullscreen?: () => void;
@@ -64,11 +73,20 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   showGuides,
   fullscreen = false,
   presets = [],
+  canvasScale,
+  isPreviewMode = false,
   onUndo,
   onRedo,
   onPageSizeChange,
   onOrientationChange,
   onToggleGuides,
+  onTogglePreview,
+  onZoomIn,
+  onZoomOut,
+  onZoomReset,
+  onZoomFit,
+  onExportJson,
+  onImportJson,
   onResetDefault,
   onApplyPreset,
   onToggleFullscreen,
@@ -78,6 +96,8 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   onExportZoho,
   t,
 }: TemplateEditorToolbarProps<TPayload>): React.JSX.Element {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   return (
     <header className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-card flex-shrink-0 flex-wrap">
       <h2 className="font-bold text-sm text-foreground m-0">
@@ -180,6 +200,69 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         </Button>
       </div>
 
+      {onTogglePreview && (
+        <Button
+          type="button"
+          onClick={onTogglePreview}
+          variant={isPreviewMode ? "default" : "outline"}
+          className={`min-h-11 px-2.5 text-xs font-semibold rounded border transition-colors shadow-none flex items-center gap-1.5 ms-2 ${
+            isPreviewMode
+              ? "bg-primary text-primary-foreground border-primary"
+              : "border-border hover:bg-muted"
+          }`}
+          title="Toggle Live Preview"
+        >
+          <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+          <span>{isPreviewMode ? "Edit Mode" : "Preview"}</span>
+        </Button>
+      )}
+
+      {onZoomIn && onZoomOut && (
+        <div className="flex items-center gap-0.5 ms-2 border border-border rounded px-1 py-0.5">
+          <Button
+            type="button"
+            onClick={onZoomOut}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 rounded hover:bg-muted"
+            title="Zoom Out"
+          >
+            <ZoomOut className="w-3.5 h-3.5" aria-hidden="true" />
+          </Button>
+          <Button
+            type="button"
+            onClick={onZoomReset}
+            variant="ghost"
+            className="h-7 px-1.5 text-[11px] font-mono hover:bg-muted"
+            title="Reset Zoom to 100%"
+          >
+            {canvasScale ? `${Math.round(canvasScale * 100)}%` : "100%"}
+          </Button>
+          <Button
+            type="button"
+            onClick={onZoomIn}
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 rounded hover:bg-muted"
+            title="Zoom In"
+          >
+            <ZoomIn className="w-3.5 h-3.5" aria-hidden="true" />
+          </Button>
+          {onZoomFit && (
+            <Button
+              type="button"
+              onClick={onZoomFit}
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 rounded hover:bg-muted"
+              title="Fit to Width"
+            >
+              <Scan className="w-3.5 h-3.5" aria-hidden="true" />
+            </Button>
+          )}
+        </div>
+      )}
+
       {presets.length > 0 && (
         <div className="flex items-center gap-1 ms-2">
           <LayoutTemplate className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
@@ -196,6 +279,47 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
             className="h-8 text-xs py-0 min-w-[130px]"
           />
         </div>
+      )}
+
+      {onExportJson && (
+        <Button
+          type="button"
+          onClick={onExportJson}
+          variant="outline"
+          className="min-h-11 px-2.5 text-xs font-semibold rounded border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5 ms-2"
+          title="Export Template JSON"
+        >
+          <Download className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
+          <span>JSON</span>
+        </Button>
+      )}
+
+      {onImportJson && (
+        <>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                onImportJson(file);
+                e.target.value = "";
+              }
+            }}
+          />
+          <Button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            variant="outline"
+            className="min-h-11 px-2.5 text-xs font-semibold rounded border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
+            title="Import Template JSON"
+          >
+            <Upload className="w-3.5 h-3.5 text-purple-600" aria-hidden="true" />
+            <span>Import</span>
+          </Button>
+        </>
       )}
 
       {onExportTypst && (

@@ -22,6 +22,7 @@ export interface TemplateEditorCanvasProps<TPayload = Record<string, unknown>> {
   size: PageSizeInfo;
   canvasScale: number;
   showGuides: boolean;
+  isPreviewMode?: boolean;
   canvasViewportRef: React.RefObject<HTMLElement | null>;
   canvasRef: React.RefObject<HTMLDivElement | null>;
   branding: {
@@ -45,6 +46,7 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
   size,
   canvasScale,
   showGuides,
+  isPreviewMode = false,
   canvasViewportRef,
   canvasRef,
   branding,
@@ -134,12 +136,12 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
         }}
         className="relative bg-white text-black select-none transition-shadow rounded-sm border border-border flex-shrink-0"
       >
-        {showGuides && (
+        {!isPreviewMode && showGuides && (
           <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:16px_16px]" />
         )}
 
         {template.elements.map((el) => {
-          const isSelected = selectedIds.includes(el.id) || selectedId === el.id;
+          const isSelected = !isPreviewMode && (selectedIds.includes(el.id) || selectedId === el.id);
           const st = el.style || {};
 
           let content = el.label;
@@ -151,7 +153,13 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
           return (
             <div
               key={el.id}
-              onMouseDown={(e) => onMouseDownElement(e, el.id)}
+              role="button"
+              tabIndex={isPreviewMode ? -1 : 0}
+              aria-label={`${el.label || el.type} element`}
+              aria-selected={isSelected}
+              onMouseDown={(e) => {
+                if (!isPreviewMode) onMouseDownElement(e, el.id);
+              }}
               style={{
                 position: "absolute",
                 left: el.x,
@@ -160,14 +168,16 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
                 height: el.h,
                 fontSize: st.fontSize || 10,
                 fontWeight: st.fontWeight || "normal",
+                fontStyle: st.fontStyle || "normal",
+                fontFamily: st.fontFamily || "inherit",
                 color: st.color || PRINT_NEUTRAL.text,
                 textAlign: st.textAlign || "left",
                 direction: st.direction || "ltr",
                 border: isSelected ? "1.5px solid #0284c7" : "1px dashed transparent",
                 backgroundColor: isSelected ? "rgba(2, 132, 199, 0.05)" : "transparent",
-                cursor: "move",
+                cursor: isPreviewMode ? "default" : "move",
               }}
-              className="group flex items-center overflow-hidden px-1"
+              className="group flex items-center overflow-hidden px-1 focus-visible:outline-2 focus-visible:outline-sky-600"
             >
               {el.type === "divider" ? (
                 <hr className="w-full border-t border-slate-300" />
@@ -199,7 +209,7 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
           );
         })}
 
-        {marquee && (
+        {!isPreviewMode && marquee && (
           <div
             style={{
               position: "absolute",

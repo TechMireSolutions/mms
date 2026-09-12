@@ -104,11 +104,20 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
         showGuides={editor.showGuides}
         fullscreen={isFullscreen}
         presets={presets}
+        canvasScale={editor.canvasScale}
+        isPreviewMode={editor.isPreviewMode}
         onUndo={editor.undo}
         onRedo={editor.redo}
         onPageSizeChange={editor.handlePageSize}
         onOrientationChange={editor.handleOrientationChange}
         onToggleGuides={() => editor.setShowGuides(!editor.showGuides)}
+        onTogglePreview={() => editor.setIsPreviewMode(!editor.isPreviewMode)}
+        onZoomIn={editor.zoomIn}
+        onZoomOut={editor.zoomOut}
+        onZoomReset={editor.zoomReset}
+        onZoomFit={editor.zoomFit}
+        onExportJson={editor.exportTemplateJson}
+        onImportJson={editor.importTemplateJson}
         onResetDefault={editor.resetToDefault}
         onApplyPreset={editor.applyPreset}
         onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
@@ -120,14 +129,16 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
       />
 
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
-        <TemplateEditorElementPalette
-          availableFields={availableFields}
-          onAddStaticText={editor.addStaticText}
-          onAddDivider={editor.addDivider}
-          onAddQrCode={editor.addQrCode}
-          onAddField={editor.addField}
-          t={editor.t}
-        />
+        {!editor.isPreviewMode && (
+          <TemplateEditorElementPalette
+            availableFields={availableFields}
+            onAddStaticText={editor.addStaticText}
+            onAddDivider={editor.addDivider}
+            onAddQrCode={editor.addQrCode}
+            onAddField={editor.addField}
+            t={editor.t}
+          />
+        )}
         <TemplateEditorCanvas
           template={editor.template}
           selectedId={editor.selectedId}
@@ -135,6 +146,7 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
           size={editor.size}
           canvasScale={editor.canvasScale}
           showGuides={editor.showGuides}
+          isPreviewMode={editor.isPreviewMode}
           canvasViewportRef={editor.canvasViewportRef}
           canvasRef={editor.canvasRef}
           branding={branding}
@@ -148,18 +160,26 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
           sampleData={sampleData}
           t={editor.t}
         />
-        <TemplateEditorPropertiesPanel
-          selectedElement={editor.selectedElement}
-          selectedElements={editor.selectedElements}
-          onPatchElement={editor.patchElement}
-          onPatchStyle={editor.patchStyle}
-          onDuplicateElement={editor.duplicateElement}
-          onDeleteElement={editor.deleteElement}
-          onDuplicateSelected={editor.duplicateSelected}
-          onDeleteSelected={editor.deleteSelected}
-          onAlignSelected={editor.alignSelected}
-          t={editor.t}
-        />
+        {!editor.isPreviewMode && (
+          <TemplateEditorPropertiesPanel
+            selectedElement={editor.selectedElement}
+            selectedElements={editor.selectedElements}
+            onPatchElement={editor.patchElement}
+            onPatchStyle={editor.patchStyle}
+            onDuplicateElement={editor.duplicateElement}
+            onDeleteElement={editor.deleteElement}
+            onDuplicateSelected={editor.duplicateSelected}
+            onDeleteSelected={editor.deleteSelected}
+            onAlignSelected={editor.alignSelected}
+            onBringToFront={editor.bringToFront}
+            onSendToBack={editor.sendToBack}
+            onMoveForward={editor.moveForward}
+            onMoveBackward={editor.moveBackward}
+            primaryColor={branding.primaryColor}
+            secondaryColor={branding.secondaryColor}
+            t={editor.t}
+          />
+        )}
       </div>
 
       <TemplateEditorKeyboardHints t={editor.t} />
