@@ -1,4 +1,9 @@
-import type React from "react";
+/**
+ * @file TemplateEditorStyleControls.tsx
+ * @description Reusable style button and style input controls with strict 44x44px minimum touch targets.
+ */
+
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -16,7 +21,11 @@ export function StyleBtn({ active, onClick, children, title }: StyleBtnProps): R
       title={title}
       onClick={onClick}
       variant="ghost"
-      className={`min-h-11 min-w-11 flex items-center justify-center p-0 rounded text-xs transition-colors border shadow-none ${active ? "bg-primary text-primary-foreground border-primary hover:bg-primary/95" : "border-border hover:bg-muted text-foreground"}`}
+      className={`min-h-11 min-w-11 flex items-center justify-center p-0 rounded text-xs transition-colors border shadow-none ${
+        active
+          ? "bg-primary text-primary-foreground border-primary hover:bg-primary/95"
+          : "border-border hover:bg-muted text-foreground"
+      }`}
     >
       {children}
     </Button>
@@ -47,7 +56,9 @@ export function StyleInput({
   const inputId = `style-input-${label.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
   return (
     <div className={`flex flex-col gap-0.5 ${className}`}>
-      <label htmlFor={inputId} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">{label}</label>
+      <label htmlFor={inputId} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
+        {label}
+      </label>
       <Input
         id={inputId}
         name={inputId}

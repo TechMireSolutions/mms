@@ -1,6 +1,11 @@
+/**
+ * @file useTemplateEditorInteractions.ts
+ * @description Drag, resize, and mouse interaction handling for the visual template canvas.
+ */
+
 import { useCallback, useEffect, type Dispatch, type RefObject, type SetStateAction } from "react";
-import type { InvoiceTemplate, TemplateElement } from "@/lib/invoiceTemplateStore";
-import { snap } from "./invoiceTemplateEditorUtils";
+import type { DocumentTemplate, TemplateElement } from "@mms/shared";
+import { snap } from "./templateEditorUtils";
 
 export interface DragItem {
   id: string;
@@ -8,45 +13,45 @@ export interface DragItem {
   origY: number;
 }
 
-export interface DragStateInfo {
+export interface DragStateInfo<TPayload = Record<string, unknown>> {
   items: DragItem[];
   startX: number;
   startY: number;
-  initialTemplate: InvoiceTemplate;
+  initialTemplate: DocumentTemplate<TPayload>;
   hasMoved?: boolean;
 }
 
-export interface ResizeStateInfo {
+export interface ResizeStateInfo<TPayload = Record<string, unknown>> {
   id: string;
   startX: number;
   startY: number;
   origW: number;
   origH: number;
-  initialTemplate: InvoiceTemplate;
+  initialTemplate: DocumentTemplate<TPayload>;
   hasMoved?: boolean;
 }
 
-interface DragResizeRefs {
-  dragState: RefObject<DragStateInfo | null>;
-  resizeState: RefObject<ResizeStateInfo | null>;
+interface DragResizeRefs<TPayload = Record<string, unknown>> {
+  dragState: RefObject<DragStateInfo<TPayload> | null>;
+  resizeState: RefObject<ResizeStateInfo<TPayload> | null>;
 }
 
-interface UseInvoiceTemplateEditorInteractionsOptions extends DragResizeRefs {
+interface UseTemplateEditorInteractionsOptions<TPayload = Record<string, unknown>> extends DragResizeRefs<TPayload> {
   canvasScale: number;
-  updateElements: (updateFn: (templateElements: TemplateElement[]) => TemplateElement[]) => void;
-  setTemplate: Dispatch<SetStateAction<InvoiceTemplate>>;
-  setHistory: Dispatch<SetStateAction<InvoiceTemplate[]>>;
-  setFuture: Dispatch<SetStateAction<InvoiceTemplate[]>>;
+  updateElements: (updateFn: (templateElements: TemplateElement<keyof TPayload & string>[]) => TemplateElement<keyof TPayload & string>[]) => void;
+  setTemplate: Dispatch<SetStateAction<DocumentTemplate<TPayload>>>;
+  setHistory: Dispatch<SetStateAction<DocumentTemplate<TPayload>[]>>;
+  setFuture: Dispatch<SetStateAction<DocumentTemplate<TPayload>[]>>;
 }
 
-export function useInvoiceTemplateEditorInteractions({
+export function useTemplateEditorInteractions<TPayload = Record<string, unknown>>({
   canvasScale,
   dragState,
   resizeState,
   updateElements,
   setHistory,
   setFuture,
-}: UseInvoiceTemplateEditorInteractionsOptions) {
+}: UseTemplateEditorInteractionsOptions<TPayload>) {
   const onMouseMove = useCallback((event: MouseEvent) => {
     const currentDrag = dragState.current;
     if (currentDrag) {
@@ -74,9 +79,10 @@ export function useInvoiceTemplateEditorInteractions({
       const deltaX = (event.clientX - currentResize.startX) / canvasScale;
       const deltaY = (event.clientY - currentResize.startY) / canvasScale;
       updateElements((templateElements) =>
-        templateElements.map((templateElement) => templateElement.id === currentResize.id
-          ? { ...templateElement, w: snap(Math.max(20, currentResize.origW + deltaX)), h: snap(Math.max(4, currentResize.origH + deltaY)) }
-          : templateElement
+        templateElements.map((templateElement) =>
+          templateElement.id === currentResize.id
+            ? { ...templateElement, w: snap(Math.max(20, currentResize.origW + deltaX)), h: snap(Math.max(4, currentResize.origH + deltaY)) }
+            : templateElement
         )
       );
     }

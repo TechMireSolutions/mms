@@ -1,3 +1,8 @@
+/**
+ * @file templateEditorUtils.ts
+ * @description Coordinate snapping, unique ID generation, and multi-element alignment utilities.
+ */
+
 export const SNAP = 4;
 
 export function snap(value: number): number {
@@ -84,4 +89,3 @@ export function alignElements<T extends BoundingBox & { id: string }>(
     }
   });
 }
-

@@ -104,7 +104,7 @@ export const EXAMINATIONS_MODULE_MANIFEST = {
   restBasePath: '/api/examinations',
   analyticsCategory: 'examinations',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['preferences'] as const,
+  setupSubTabs: ['preferences', 'templates'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,

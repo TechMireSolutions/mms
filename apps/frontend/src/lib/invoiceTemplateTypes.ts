@@ -1,73 +1,17 @@
 import type { BrandingSettings } from "@mms/shared";
+import {
+  PAGE_SIZES,
+  getPageDimensions,
+  type PageSizeInfo,
+  type ElementStyle,
+  type TemplateElement,
+  type TemplateOrientation,
+  type DocumentTemplate,
+} from "@mms/shared";
 
-export interface PageSizeInfo {
-  width: number;
-  height: number;
-  label: string;
-}
-
-export const PAGE_SIZES: Record<string, PageSizeInfo> = {
-  A6: { width: 397, height: 559, label: "A6 (105×148mm)" },
-  A5: { width: 559, height: 794, label: "A5 (148×210mm)" },
-  A4: { width: 794, height: 1123, label: "A4 (210×297mm)" },
-  Letter: { width: 816, height: 1056, label: "Letter (8.5×11in)" },
-  "80mm": { width: 302, height: 580, label: "Thermal 80mm" },
-  "58mm": { width: 220, height: 460, label: "Thermal 58mm" },
-};
-
-export interface ElementStyle {
-  objectFit?: "contain" | "cover" | "fill" | "none" | "scale-down";
-  fontSize?: number;
-  fontWeight?: string;
-  textAlign?: "left" | "right" | "center" | "justify";
-  color?: string;
-  fontFamily?: string;
-  direction?: "ltr" | "rtl";
-  fontStyle?: "normal" | "italic";
-}
-
-export interface TemplateElement {
-  id: string;
-  type: string;
-  label: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  style?: ElementStyle;
-  field?: string;
-}
-
-export type TemplateOrientation = "portrait" | "landscape";
-
-export interface InvoiceTemplate {
-  pageSize: string;
-  orientation?: TemplateOrientation;
-  elements: TemplateElement[];
-}
-
-/**
- * Resolves width, height, and display label for a page size given an orientation.
- */
-export function getPageDimensions(
-  pageSizeKey: string,
-  orientation: TemplateOrientation = "portrait"
-): PageSizeInfo {
-  const base = PAGE_SIZES[pageSizeKey] || PAGE_SIZES.A6;
-  if (orientation === "landscape") {
-    return {
-      width: Math.max(base.width, base.height),
-      height: Math.min(base.width, base.height),
-      label: `${base.label} (Landscape)`,
-    };
-  }
-  return {
-    width: Math.min(base.width, base.height),
-    height: Math.max(base.width, base.height),
-    label: `${base.label} (Portrait)`,
-  };
-}
-
+export { PAGE_SIZES, getPageDimensions };
+export type { PageSizeInfo, ElementStyle, TemplateElement, TemplateOrientation };
+export type InvoiceTemplate = DocumentTemplate<Record<string, unknown>>;
 export type BrandingInfo = BrandingSettings;
 
 export interface LookupItem {

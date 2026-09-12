@@ -355,3 +355,4 @@ export * from './examinationsReportAggregates.js';
 export * from './reportComparisonQuery.js';
 export * from './widgetAggregateTypes.js';
 export * from './types/moduleManifest.js';
+export * from './documentTemplateTypes.js';

@@ -1,0 +1,170 @@
+/**
+ * @file TemplateEditor.tsx
+ * @description Global DRY Single Source of Truth (SSOT) Document Template Editor.
+ * Parametric over document payload schemas with native Typst and Zoho sync integrations.
+ */
+
+import React, { useState } from "react";
+import { useBranding } from "@/tenant/hooks/useBranding";
+import { getPrintBrandingTokens } from "@/lib/printBrandingTokens";
+import type {
+  DocumentTemplate,
+  DocumentTemplatePreset,
+  TemplateFieldDefinition,
+  ZohoInvoicePayload,
+} from "@mms/shared";
+import { useTemplateEditor } from "./template-editor/useTemplateEditor";
+import { TemplateEditorToolbar } from "./template-editor/TemplateEditorToolbar";
+import { TemplateEditorElementPalette } from "./template-editor/TemplateEditorElementPalette";
+import { TemplateEditorCanvas } from "./template-editor/TemplateEditorCanvas";
+import { TemplateEditorPropertiesPanel } from "./template-editor/TemplateEditorPropertiesPanel";
+import { TemplateEditorKeyboardHints } from "./template-editor/TemplateEditorKeyboardHints";
+import { mapToZohoInvoice } from "./template-editor/templatePayloadMappers";
+
+export interface TemplateEditorProps<TPayload = Record<string, unknown>> {
+  title?: string;
+  template?: DocumentTemplate<TPayload>;
+  defaultTemplate?: DocumentTemplate<TPayload>;
+  availableFields?: TemplateFieldDefinition<TPayload>[];
+  presets?: DocumentTemplatePreset<TPayload>[];
+  documentType?: "invoice" | "receipt" | "report-card" | "ledger" | "certificate" | "voucher" | string;
+  sampleData?: TPayload;
+  fullscreen?: boolean;
+  onSave?: (template: DocumentTemplate<TPayload>) => void | Promise<void>;
+  onClose: () => void;
+  onExportTypst?: (payload: TPayload) => void | Promise<void>;
+  onExportZoho?: (payload: ZohoInvoicePayload) => void | Promise<void>;
+}
+
+export function TemplateEditor<TPayload = Record<string, unknown>>({
+  title,
+  template: initialTemplate,
+  defaultTemplate,
+  availableFields = [],
+  presets = [],
+  sampleData,
+  fullscreen = true,
+  onSave,
+  onClose,
+  onExportTypst,
+  onExportZoho,
+}: TemplateEditorProps<TPayload>): React.JSX.Element {
+  const [isFullscreen, setIsFullscreen] = useState(fullscreen);
+  const branding = useBranding();
+  const printTokens = getPrintBrandingTokens();
+
+  const editor = useTemplateEditor<TPayload>({
+    initialTemplate,
+    defaultTemplate,
+    availableFields,
+    presets,
+    onSave,
+  });
+
+  const handleClose = () => {
+    if (isFullscreen && !fullscreen) {
+      setIsFullscreen(false);
+    } else {
+      onClose();
+    }
+  };
+
+  const handleExportTypst = onExportTypst
+    ? () => {
+        const payload = (sampleData || {}) as TPayload;
+        void onExportTypst(payload);
+      }
+    : undefined;
+
+  const handleExportZoho = onExportZoho
+    ? () => {
+        const zohoPayload = mapToZohoInvoice(
+          (sampleData || {}) as Record<string, unknown>,
+          editor.template as DocumentTemplate
+        );
+        void onExportZoho(zohoPayload);
+      }
+    : undefined;
+
+  return (
+    <div
+      className={
+        isFullscreen
+          ? "fixed inset-0 z-modal flex flex-col bg-background"
+          : "flex flex-col bg-background rounded-xl border border-border overflow-hidden h-max-h-modal max-h-modal min-h-preview-2xl"
+      }
+    >
+      <TemplateEditorToolbar
+        title={title}
+        template={editor.template}
+        historyLength={editor.history.length}
+        futureLength={editor.future.length}
+        saved={editor.saved}
+        saving={editor.saving}
+        showGuides={editor.showGuides}
+        fullscreen={isFullscreen}
+        presets={presets}
+        onUndo={editor.undo}
+        onRedo={editor.redo}
+        onPageSizeChange={editor.handlePageSize}
+        onOrientationChange={editor.handleOrientationChange}
+        onToggleGuides={() => editor.setShowGuides(!editor.showGuides)}
+        onResetDefault={editor.resetToDefault}
+        onApplyPreset={editor.applyPreset}
+        onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
+        onSave={editor.handleSave}
+        onClose={handleClose}
+        onExportTypst={handleExportTypst}
+        onExportZoho={handleExportZoho}
+        t={editor.t}
+      />
+
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
+        <TemplateEditorElementPalette
+          availableFields={availableFields}
+          onAddStaticText={editor.addStaticText}
+          onAddDivider={editor.addDivider}
+          onAddQrCode={editor.addQrCode}
+          onAddField={editor.addField}
+          t={editor.t}
+        />
+        <TemplateEditorCanvas
+          template={editor.template}
+          selectedId={editor.selectedId}
+          selectedIds={editor.selectedIds}
+          size={editor.size}
+          canvasScale={editor.canvasScale}
+          showGuides={editor.showGuides}
+          canvasViewportRef={editor.canvasViewportRef}
+          canvasRef={editor.canvasRef}
+          branding={branding}
+          printTokens={printTokens}
+          onDeselect={editor.deselectAll}
+          onMouseDownElement={editor.onMouseDownElement}
+          onMouseDownResize={editor.onMouseDownResize}
+          onDuplicateElement={editor.duplicateElement}
+          onDeleteElement={editor.deleteElement}
+          onSelectElements={(ids) => editor.setSelectedIds(ids)}
+          sampleData={sampleData}
+          t={editor.t}
+        />
+        <TemplateEditorPropertiesPanel
+          selectedElement={editor.selectedElement}
+          selectedElements={editor.selectedElements}
+          onPatchElement={editor.patchElement}
+          onPatchStyle={editor.patchStyle}
+          onDuplicateElement={editor.duplicateElement}
+          onDeleteElement={editor.deleteElement}
+          onDuplicateSelected={editor.duplicateSelected}
+          onDeleteSelected={editor.deleteSelected}
+          onAlignSelected={editor.alignSelected}
+          t={editor.t}
+        />
+      </div>
+
+      <TemplateEditorKeyboardHints t={editor.t} />
+    </div>
+  );
+}
+
+export default TemplateEditor;

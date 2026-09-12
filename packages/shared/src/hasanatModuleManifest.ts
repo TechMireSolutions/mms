@@ -174,7 +174,7 @@ export const HASANAT_MODULE_MANIFEST = {
   restBasePath: '/api/hasanat',
   analyticsCategory: 'hasanat',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['denominations', 'preferences'] as const,
+  setupSubTabs: ['denominations', 'preferences', 'templates'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,

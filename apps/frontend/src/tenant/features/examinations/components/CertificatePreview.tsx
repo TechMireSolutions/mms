@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { Printer } from "lucide-react";
+import { Printer, FileCode2 } from "lucide-react";
 import { getRankSuffix } from "@/tenant/features/examinations/components/gradeUtils";
 import { type StudentResultItem } from "@/tenant/features/examinations/components/StudentResultCard";
 import { type Exam } from '@/lib/data/examinationData';
@@ -9,6 +9,8 @@ import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { useTranslation } from "@/hooks/useTranslation";
+import { mapToTypstReportCard } from "@/components/ui/template-editor/templatePayloadMappers";
+import { notify } from "@/lib/notify";
 
 export interface CertificatePreviewProps {
   result: StudentResultItem;
@@ -60,6 +62,38 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
     }, 500);
   };
 
+  const handleExportTypst = () => {
+    const gradeLabel = typeof result.grade === "string" ? result.grade : (result.grade?.label ?? "A");
+    const payload = mapToTypstReportCard({
+      studentName: result.student?.name,
+      rollNumber: result.student?.rollNo,
+      className: exam.subject,
+      term: exam.name,
+      totalMarks: exam.totalMarks,
+      obtainedMarks: result.marksObtained,
+      percentage: `${Math.round(result.pct)}%`,
+      grade: gradeLabel,
+      remarks: rankLabel,
+      subjects: [
+        {
+          name: exam.subject,
+          maxMarks: exam.totalMarks,
+          obtainedMarks: result.marksObtained,
+          grade: gradeLabel,
+          remarks: rankLabel,
+        },
+      ],
+    });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `typst-report-card-${payload.rollNumber || "exam"}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    notify.success("Typst report card payload exported");
+  };
+
   const rankLabel = getRankSuffix(result.rank);
   const date = formatDate(exam.date, true);
 
@@ -70,13 +104,25 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
       title={t("examinations.certificatePreview.title")}
       size="lg"
       headerActions={
-        <Button
-          type="button"
-          onClick={handlePrint}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90"
-        >
-          <Printer className="w-3.5 h-3.5" aria-hidden="true" /> {t("examinations.certificatePreview.printDownload")}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleExportTypst}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
+            title="Export Typst Compiler JSON"
+          >
+            <FileCode2 className="w-3.5 h-3.5 text-sky-600" aria-hidden="true" />
+            <span>Typst</span>
+          </Button>
+          <Button
+            type="button"
+            onClick={handlePrint}
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90"
+          >
+            <Printer className="w-3.5 h-3.5" aria-hidden="true" /> {t("examinations.certificatePreview.printDownload")}
+          </Button>
+        </div>
       }
     >
       <div ref={certRef}>
