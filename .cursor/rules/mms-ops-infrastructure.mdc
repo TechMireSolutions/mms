@@ -1,6 +1,6 @@
 ---
 description: Local dev setup, environment variables, Docker, backend ports, health endpoints, Linux compatibility, and CI expectations.
-globs: package.json,pnpm-workspace.yaml,turbo.json,apps/backend/Dockerfile,restart_servers.sh,apps/backend/.env.example,scripts/**/*.sh,scripts/apache/**,apps/backend/src/index.ts,.github/workflows/**
+globs: package.json,pnpm-workspace.yaml,turbo.json,apps/backend/Dockerfile,restart_servers.sh,apps/backend/.env.example,scripts/**/*.sh,scripts/apache/**,apps/backend/src/index.ts,.github/workflows/**,ecosystem.config.js,scripts/pm2/**,docker-compose*.yml
 alwaysApply: false
 ---
 
@@ -65,16 +65,7 @@ pnpm test             # Run Vitest / node:test suites for all workspaces
 
 **Client bundle hygiene:** Only `VITE_*` (and Vite-injected `import.meta.env`) may ship in the frontend bundle. **Ban** leaking `JWT_SECRET`, `DATABASE_URL`, or other server secrets into FE code / Vite `define` — bumps/env layout → `mms-dependencies.mdc` when touching tooling.
 
-### Graceful Process Lifecycle
-Catch termination signals and drain connections cleanly:
-```ts
-const shutdown = async () => {
-  server.close(() => process.exit(0));
-  setTimeout(() => process.exit(1), 10000).unref();
-};
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
-```
+- **Graceful Shutdown:** Catch `SIGTERM` and `SIGINT`, call `server.close()`, and unref a fallback timeout (10s) before forced process exit.
 
 ### Data wipe / purge (do not invent new wipe APIs)
 - **Tenant workspace delete**: `deleteWorkspace` → `purgeTenantDataBySubdomain` then remove workspace row (platform workspaces API).

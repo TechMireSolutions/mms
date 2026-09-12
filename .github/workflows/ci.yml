@@ -6,17 +6,11 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-      - '.agent/**'
-      - '.cursor/**'
-      - '.claude/**'
   pull_request:
     branches: [main]
     paths-ignore:
       - '**.md'
       - 'docs/**'
-      - '.agent/**'
-      - '.cursor/**'
-      - '.claude/**'
   workflow_dispatch:
 
 permissions:
@@ -82,6 +76,12 @@ jobs:
       # @mms/shared, e2e) via turbo — shared/e2e were previously unlinted.
       - name: Lint (all packages)
         run: pnpm lint
+
+      - name: Verify Agent & Rule Mirrors Sync
+        run: |
+          bash .agent/scripts/sync-all.sh
+          git diff --exit-code || (echo "Agent rule/skill mirrors out of sync! Run 'bash .agent/scripts/sync-all.sh'" && exit 1)
+          node scripts/verify-rules-integrity.mjs
 
   test-frontend:
     name: Frontend Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})

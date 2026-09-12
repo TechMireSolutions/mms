@@ -15,16 +15,7 @@ Authoritative performance and resource constraints across **tenant workspaces an
 - **Zero Queries in Loops (N+1 Elimination):** NEVER execute database queries inside iterative loops (`for`, `forEach`, `map`, `Promise.all`).
   - Batch iterations using Drizzle relational `with: { ... }` queries, `inArray(table.column, ids)` predicates (bounded to $\le 500$ IDs via shared `bulkIdsBodySchema`), SQL `JOIN`s, or batch resolution endpoints (`/resolve`).
 - **Zero Wildcard Projections (`SELECT *` Strict Ban):** NEVER emit `SELECT *` or bare Drizzle `db.select().from(table)` without column selection across network boundaries.
-  - Explicitly specify only the columns required by the immediate consumer using typed projection objects:
-    ```ts
-    // ✅ Explicit Drizzle column projection
-    await db.select({ id: students.id, firstName: students.firstName, lastName: students.lastName }).from(students);
-    // ✅ Drizzle relational explicit columns
-    await db.query.students.findMany({ columns: { id: true, firstName: true, lastName: true } });
-    // ❌ Banned wildcard projection
-    await db.select().from(students);
-    ```
-  - Strip heavy text, notes, full payloads, and internal audit blobs from list queries; load heavy attributes only on individual detail reads (`GET /:id`). Projections must align 1:1 with `@mms/shared` Response DTOs.
+  - Explicit typed column projection required (e.g. `db.select({ id: table.id }).from(table)` or `db.query.findMany({ columns: { id: true } })`). Strip heavy text, notes, and audit blobs from list queries; load only on `GET /:id`. Align projections 1:1 with `@mms/shared` Response DTOs.
 - **Mandatory Indexing for Query Predicates:**
   - ALWAYS back columns used in `where()` filters, `leftJoin() ... on()` foreign key links, and `orderBy()` sorting with explicit indexes in Drizzle schema definitions.
   - Multi-tenant indexing standard: prefix compound indexes with tenant scope (e.g. `(tenant_id, status, created_at DESC)`) and define partial indexes `WHERE deleted_at IS NULL` for active queries on soft-deleted tables (`mms-data-layer.md`).
@@ -37,13 +28,11 @@ Authoritative performance and resource constraints across **tenant workspaces an
   - NEVER open ad-hoc, unpooled database connections (`new Pool()` or `new Client()` per request).
   - Use Node.js 24 Explicit Resource Management (`using` / `await using`) for automatic cleanup and checkout release back to the pool without boilerplate `finally` blocks.
 - **Audit Hash Chain Sharding & Partition Detachment (`mms-audit-trail`):**
-  - NEVER serialize all system writes through a single global cryptographic hash chain. Global sequential chaining forces every write to wait on the previous row's hash, causing severe transaction lock contention under concurrent load.
-  - Shard hash chains per logical partition (per tenant workspace or per aggregate domain) and periodically roll shard heads up into a Merkle tree, publishing the Merkle root at fixed intervals (certificate-transparency scaling model).
-  - Archive hot audit partitions (0–30 days) by detaching PostgreSQL date partitions (`ALTER TABLE audit_trail_events DETACH PARTITION ...`) rather than running `DELETE` queries, preventing massive WAL churn, table locks, and index bloat.
+  - NEVER serialize system writes through a single global cryptographic hash chain. Shard hash chains per logical partition (tenant or aggregate domain) and roll up into periodic Merkle roots.
+  - Archive hot audit partitions by detaching date partitions (`ALTER TABLE ... DETACH PARTITION`) instead of running `DELETE` — details `mms-data-layer.md` §5.
 - **Soft-Delete Indexing & Storage Engine Efficiency:**
-  - Active list queries must hit Category B partial indexes (`WHERE deleted_at IS NULL`), while trash views hit Category C partial indexes (`WHERE deleted_at IS NOT NULL`). Tables with both partial indexes outperform single-predicate indexes by up to 276× on skewed-status datasets.
-  - While soft-delete `UPDATE` statements cannot execute Heap-Only Tuple (HOT) updates, PostgreSQL immediately evicts dead tuples from Category B partial indexes upon archival, keeping hot active-record indexes compact and cache-resident.
-  - Autovacuum tuning: High-churn soft-deleted tables (`message_logs`, `attendance_records`) must declare aggressive vacuum thresholds in DDL (`autovacuum_vacuum_scale_factor = 0.05, autovacuum_vacuum_cost_limit = 1000`) to prevent dead-tuple table and index bloat.
+  - Active list queries must hit Category B partial indexes (`WHERE deleted_at IS NULL`), trash queries hit Category C (`WHERE deleted_at IS NOT NULL`).
+  - High-churn soft-deleted tables (`message_logs`, `attendance_records`) must configure aggressive autovacuum thresholds in DDL (`autovacuum_vacuum_scale_factor = 0.05`) — details `mms-data-layer.md` §6.10.
 
 ---
 
@@ -63,83 +52,40 @@ Authoritative performance and resource constraints across **tenant workspaces an
   - Keep payloads minimal: serialize only required DTO fields, strip `null`/`undefined` keys where practical, and ensure Fastify `@fastify/compress` (gzip/Brotli) is active on responses.
   - Never serialize internal database attributes (`tenantId`, password hashes, salts, internal flags) to client consumers. Format money as exact decimal strings (`/^\d+(\.\d{1,2})?$/`).
 - **Audit Payload Minimization & Canonical Hashing (`mms-audit-trail`):**
-  - Minimize audit payloads at capture time: never log full raw PII payloads, redundant blobs, or secrets into `old_state`/`new_state`. Only record fields required for point-in-time state reconstruction; every unneeded personal field captured increases storage overhead and future Right to Erasure cryptographic shredding / redaction processing.
-  - State hashing and delta comparisons must strictly use RFC 8785 (JSON Canonicalization Scheme - JCS) for deterministic representation across environments, avoiding CPU-heavy custom recursive key-sorting algorithms on hot write paths.
+  - Minimize audit payloads at capture time: never log full raw PII or secrets into `old_state`/`new_state`.
+  - State hashing and delta comparisons must strictly use RFC 8785 (JSON Canonicalization Scheme - JCS) for deterministic representation, avoiding CPU-heavy custom recursive sorting on hot write paths — `mms-data-layer.md` §5.1.
 - **Batched Single-Statement Bulk Updates:**
-  - `bulkDeleteFn` and `bulkRestoreFn` must execute a single batched SQL `UPDATE` statement scoped via `inArray(table.id, ids)`. Iterating through ID arrays sequentially with individual row updates ($N+1$ query loops) is strictly banned.
+  - `bulkDeleteFn` and `bulkRestoreFn` must execute a single batched SQL `UPDATE` statement scoped via `inArray(table.id, ids)`. Sequential row update loops ($N+1$) are strictly banned — `mms-data-layer.md` §6.9.
 - **Chunked Lock-Free Background Purge Processing:**
-  - Hard-purge workers (`purgeExpiredArchivedRecords`) must execute deletions in bounded chunks of 500 rows using `LIMIT 500 FOR UPDATE SKIP LOCKED` with brief inter-chunk pauses (50ms). Purging thousands of rows in an unbounded single transaction is banned because it causes severe WAL spikes, extended exclusive row locks, and blocks concurrent tenant transactions.
+  - Hard-purge workers (`purgeExpiredArchivedRecords`) must execute deletions in bounded chunks of 500 rows using `LIMIT 500 FOR UPDATE SKIP LOCKED` with brief pauses (50ms) to eliminate WAL spikes and transaction lock contention — `mms-data-layer.md` §6.11.
 
 ---
 
 ## 3. Caching Architecture (Redis & In-Memory)
-
-- **Multi-Tier Caching with Explicit TTLs:**
-  - Cache read-heavy, low-churn query results using the backend Redis client (`apps/backend/src/lib/redis.ts`) or bounded in-memory LRU stores.
-  - Standard TTLs:
-    - `60s` for aggregate metrics, KPI dashboard strips, and report counts.
-    - `300s` for static module configurations, field registries, lookups, and branding.
-  - Use Stale-While-Revalidate (SWR) patterns on high-traffic read paths to serve instant responses while refreshing data in the background.
-- **Multi-Tenant Key Namespacing (Zero Data Contamination):**
-  - All cache keys MUST strictly isolate by tenant and context:
-    `mms:{tenantId}:{module}:{resource}:{hash(queryParams)}`
-  - Include user role/permissions scope in the cache key whenever the response shape or content varies by viewer permissions. Global un-namespaced keys for tenant data are strictly forbidden.
-- **Mandatory Write Invalidation:**
-  - Pair every mutation operation (`POST`, `PUT`, `PATCH`, `DELETE`) with an explicit cache eviction trigger targeting affected Redis keys.
-  - Broadcast real-time invalidations to connected clients via `/api/ws` (`broadcastTenantUpdate`) to trigger TanStack Query cache invalidations.
-- **HTTP Caching Headers:**
-  - Emit standard caching headers (`ETag`, `Cache-Control: private, no-cache`) on idempotent `GET` endpoints.
-  - Return `304 Not Modified` on matching `If-None-Match` headers to eliminate redundant payload transmission.
+- **Multi-Tier TTLs:** Cache read-heavy queries via Redis (`apps/backend/src/lib/redis.ts`) / LRU. Standard TTLs: `60s` for aggregate metrics/KPIs; `300s` for static config/lookups/branding. SWR on high-traffic read paths.
+- **Tenant Isolation:** Cache keys MUST isolate by tenant and context: `mms:{tenantId}:{module}:{resource}:{hash(queryParams)}`. Include role/permission scope when payload varies by viewer. Global keys for tenant data are strictly banned.
+- **Write Invalidation:** Every mutation (`POST`/`PUT`/`PATCH`/`DELETE`) must evict affected keys and broadcast real-time invalidation via `/api/ws` (`broadcastTenantUpdate`).
+- **HTTP Caching:** Emit `ETag` and `Cache-Control: private, no-cache` on idempotent `GET`s. Return `304 Not Modified` on matching `If-None-Match`.
 
 ---
 
 ## 4. Client Bundle & Asset Optimization
-
-- **Modular Imports Over Monolithic Bundles:**
-  - NEVER import full utility libraries if modular or native runtime equivalents exist:
-    - Ban `lodash`, `moment`, `date-fns` (full), `ramda`.
-    - Use native modern JavaScript (`Array.prototype.toSorted`, `Object.groupBy`, `Intl.DateTimeFormat`, `Intl.NumberFormat`) and pure `@mms/shared` utilities (`formatDate`, `formatMoney`).
-    - Import icons modularly from `lucide-react` (`import { Plus } from 'lucide-react'`), never `import * as Icons`.
-- **Dynamic Imports & Route Code-Splitting:**
-  - All feature routes in `AppRoutes.tsx` and `PlatformRoutes.tsx` must use React `lazy(() => import(...))` with `Suspense`.
-  - Heavy client libraries (Recharts, `jspdf`, `xlsx`, rich text editors) must be loaded dynamically on demand via dynamic `await import(...)` within action handlers or isolated route chunks (`mms-reports.md`).
-- **Tree-Shaking & Package Discipline:**
-  - Verify tree-shaking compatibility before introducing any new third-party dependency.
-  - Ban CommonJS-only packages that break Vite tree-shaking or bloat the vendor chunk.
-- **Asset Optimization & Zero CLS:**
-  - Serve images in modern formats (WebP/AVIF) with explicit `width` and `height` dimensions (or fixed aspect-ratio containers) to guarantee Cumulative Layout Shift (CLS) = 0.
-  - Use native `loading="lazy"` and `decoding="async"` on all non-hero images.
+- **Modular Imports:** Ban `lodash`, `moment`, `date-fns` (full), `ramda`. Use native modern JS (`toSorted`, `Object.groupBy`, `Intl.*`), pure `@mms/shared` (`formatDate`, `formatMoney`), and named icon imports (`import { Plus } from 'lucide-react'`).
+- **Dynamic Imports & Splitting:** Route code-splitting with React `lazy` + `Suspense` across all feature routes. Dynamically import heavy libraries (Recharts, `jspdf`, `xlsx`, editors) on demand in action handlers (`mms-reports.md`).
+- **Tree-Shaking:** Ban CommonJS-only packages that bloat the vendor chunk.
+- **Zero CLS:** Serve images in WebP/AVIF with explicit `width`/`height` or aspect-ratio containers. Native `loading="lazy"` on non-hero images.
 
 ---
 
 ## 5. Client Rendering & Interaction Performance
-
-- **Subtree Re-Render Isolation:**
-  - Prevent full-subtree re-renders: colocate transient state (search input text, form drafts, toggle states, dropdown open flags) to the leaf-most component.
-  - Avoid storing keystroke-by-keystroke input state in top-level page controllers.
-- **Targeted Memoization & React 19 Patterns:**
-  - Memoize non-trivial calculations (`useMemo`) such as sorting large arrays, multi-field filtering, regex matches, and summary reductions to prevent render churn.
-  - Memoize function handlers and object/array references (`useCallback`, `useMemo`) passed as props to memoized child components (`React.memo`) or into hook dependency arrays.
-  - Avoid premature memoization on trivial primitive operations (e.g. simple string concatenations or basic additions).
-  - Complement memoization with React 19 concurrent capabilities: `startTransition` for non-urgent filter/tab transitions, `useDeferredValue` for high-frequency search inputs, and `useEffectEvent` for stable event callbacks that read latest props/state.
-- **Mandatory Virtualization for Lists & Tables (> 30 Items):**
-  - ALWAYS virtualize DOM lists, tables, cards grids, and feeds containing more than 30 concurrent items using `@tanstack/react-virtual` (`useVirtualizer`).
-  - Reference: `ContactsListDesktopTable.tsx` for table virtualization with fixed/estimated row height, container scrolling, and bounded overscan. Never render hundreds of DOM table rows simultaneously.
-- **TanStack Query State Deduplication:**
-  - Deduplicate inflight network requests and cache query states using TanStack Query v5 tuple keys (`queryOptions` factories in `mms-query-factories`).
-  - Strict ban on manual `useEffect(() => { fetch(...) }, [])` calls for server state.
-  - Use `placeholderData: (prev) => prev` for smooth pagination without layout flickers.
+- **Subtree Isolation:** Colocate transient input/toggle state to leaf components; never store keystroke state in page controllers.
+- **Targeted Memoization:** Memoize non-trivial calculations (`useMemo` for sorting/filtering/aggregates) and callbacks/objects passed to memoized children (`useCallback`, `React.memo`) or dependency arrays. Complement with React 19 `startTransition`, `useDeferredValue`, and `useEffectEvent`.
+- **Mandatory Virtualization (> 30 Items):** ALWAYS virtualize lists, tables, and card grids > 30 items via `@tanstack/react-virtual` (`useVirtualizer` as in `ContactsListDesktopTable.tsx`).
+- **TanStack Query State:** Deduplicate network requests using tuple keys (`queryOptions` factories). Strict ban on `useEffect` fetch loops. Use `placeholderData: (prev) => prev` for smooth pagination.
 
 ---
 
 ## 6. Safety, Verification & Documentation Standards
-
-- **Strict Backward Compatibility:**
-  - Maintain 100% backward compatibility for all existing API contracts, database schemas, and consumer-facing props during performance refactors.
-  - Never break existing caller contracts in the name of optimization.
-- **Verification Gate:**
-  - Run unit, integration, and typecheck tests after every performance refactor to guarantee zero behavioral regressions (`pnpm typecheck && pnpm test`).
-- **Mandatory Bottleneck & Savings Documentation:**
-  - For every performance refactor, explicitly document in the PR / commit description / completion review:
-    1. **Baseline Bottleneck:** The root cause of the inefficiency (e.g., N+1 query loop, unvirtualized 200-row DOM, missing composite index, unmemoized render cascade).
-    2. **Quantified Resource Saved:** The exact resource gain achieved (e.g., DB queries reduced from 50 to 1, DOM node count reduced by 90%, response time cut by 300ms, memory allocation reduced by 70%, bundle size reduced by 85KB).
+- **Backward Compatibility:** Maintain 100% contract and schema compatibility during performance refactors.
+- **Verification Gate:** Run `pnpm typecheck && pnpm test` after all performance edits.
+- **Document Bottlenecks:** Document Baseline Bottleneck and Quantified Resource Saved (CPU, RAM, DB queries, bundle size) in PR / completion reviews.

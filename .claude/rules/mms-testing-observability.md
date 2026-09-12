@@ -6,6 +6,9 @@ paths:
   - "apps/frontend/src/**/*.test.ts"
   - "**/*.spec.ts"
   - "apps/frontend/src/components/ui/ErrorBoundary.tsx"
+  - "vitest.config.ts"
+  - "vitest.*.ts"
+  - "playwright.config.ts"
 ---
 
 # MMS Testing & Observability

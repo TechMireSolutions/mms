@@ -63,16 +63,7 @@ pnpm test             # Run Vitest / node:test suites for all workspaces
 
 **Client bundle hygiene:** Only `VITE_*` (and Vite-injected `import.meta.env`) may ship in the frontend bundle. **Ban** leaking `JWT_SECRET`, `DATABASE_URL`, or other server secrets into FE code / Vite `define` — bumps/env layout → `mms-dependencies.md` when touching tooling.
 
-### Graceful Process Lifecycle
-Catch termination signals and drain connections cleanly:
-```ts
-const shutdown = async () => {
-  server.close(() => process.exit(0));
-  setTimeout(() => process.exit(1), 10000).unref();
-};
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
-```
+- **Graceful Shutdown:** Catch `SIGTERM` and `SIGINT`, call `server.close()`, and unref a fallback timeout (10s) before forced process exit.
 
 ### Data wipe / purge (do not invent new wipe APIs)
 - **Tenant workspace delete**: `deleteWorkspace` → `purgeTenantDataBySubdomain` then remove workspace row (platform workspaces API).

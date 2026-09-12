@@ -81,9 +81,15 @@ Developing with Node.js 24 leverages native runtime capabilities to eliminate th
 
 Enable Dependabot (or Renovate) + GitHub `dependency-review` on PRs for high/critical advisories; keep `pnpm audit` in upgrade PRs. Prefer `onlyBuiltDependencies` (pnpm) so only reviewed packages may run install scripts — do not silently enable every postinstall. Do not require SBOM/provenance until an ops task adds them — `mms-ops-infrastructure.md`.
 
-## 8. TypeScript Strictness (Dedicated PR)
+## 8. TypeScript Strictness & Type Stripping (Dedicated PR)
 
-Target: `noUncheckedIndexedAccess`; prefer `import type` / `verbatimModuleSyntax` (and `erasableSyntaxOnly` when on TS 5.8+). `exactOptionalPropertyTypes` is opt-in only — high churn; do not enable mid-feature. Strict mode + ban `any` already always-on (`antigravity-global.md`).
+Target: `noUncheckedIndexedAccess`; prefer `import type` / `verbatimModuleSyntax` and `erasableSyntaxOnly` (TS 5.8+). `exactOptionalPropertyTypes` is opt-in only — high churn; do not enable mid-feature. Strict mode + ban `any` already always-on (`antigravity-global.md`).
+
+- **Node 24 `--experimental-strip-types` Standard**: Ensure all TypeScript code is compatible with native type-stripping runtimes:
+  - ❌ Banned: `enum` — use string literal unions (`type Status = 'active' | 'archived'`) or `as const` object maps.
+  - ❌ Banned: `namespace` / `module` declarations.
+  - ❌ Banned: Constructor parameter properties (`constructor(public name: string)`).
+  - ✅ Required: Explicit field declarations on classes and standard JS idioms so `.ts` files can execute directly without compilation steps.
 
 ## 9. React Compiler (When Enabling)
 

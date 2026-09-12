@@ -1,6 +1,6 @@
 ---
 description: Testing strategies (unit, API, E2E), logging hygiene, ErrorBoundary/Sentry, and frontend resilience. Health endpoints → mms-ops-infrastructure.
-globs: packages/shared/**/*.test.ts,apps/backend/src/**/*.test.ts,apps/frontend/src/**/*.test.ts,**/*.spec.ts,apps/frontend/src/components/ui/ErrorBoundary.tsx
+globs: packages/shared/**/*.test.ts,apps/backend/src/**/*.test.ts,apps/frontend/src/**/*.test.ts,**/*.spec.ts,apps/frontend/src/components/ui/ErrorBoundary.tsx,vitest.config.ts,vitest.*.ts,playwright.config.ts
 alwaysApply: false
 ---
 

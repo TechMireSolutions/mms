@@ -63,7 +63,7 @@ Raw HTML controls (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, c
 | **RTL Layout** | CSS logical properties only (`text-start`, `ms-*`, `ps-*`, `border-s-*`, `inset-inline-start`). Flip directional arrows (`rtl:rotate-180`), preserve brand icons. |
 | **Semantics** | Use semantic landmarks (`<main>`, `<nav>`, `<section>`, `<header>`, `<footer>`). |
 
-## 4. §7 Mobile-First Responsiveness & Breakpoints
+## 4. Mobile-First Responsiveness & Breakpoints (§7 Layout)
 
 | Breakpoint | Range | Prefix | Shell Layout Standards |
 |---|---|---|---|

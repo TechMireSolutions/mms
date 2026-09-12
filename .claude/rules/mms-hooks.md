@@ -20,7 +20,7 @@ Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), o
 
 ## 1. Server State (TanStack Query)
 
-**Policy owner:** `mms-data-layer.md` §3 · factories → skill **`mms-query-factories`**. This section is recipes only (facades, call-site toast, live-collection ban).
+**Policy owner:** `mms-data-layer.md` §4 · factories → skill **`mms-query-factories`**. This section is recipes only (facades, call-site toast, live-collection ban).
 
 - Wrap colocated `queryOptions` / `mutationOptions`; toast via `notify.*` + `t()` at call site after `mutateAsync` — no global `MutationCache` toast bus.
 - Prefer the shared query factories in `apps/frontend/src/lib/query/` before hand-rolling CRUD factories per module: `createModuleQueryInvalidator` (mutation invalidation wiring), `createModuleSetupConfigApi` (setup REST query/mutation factory), `createModuleSetupConfigHooks`, `createModuleLookupsHooks`. Thin module facades wrap these (`@/tenant/hooks/collections/*`). Note: mutation flows are typed through the per-module `*TsrHooks` files — do not invent a generic CRUD-mutation factory here.

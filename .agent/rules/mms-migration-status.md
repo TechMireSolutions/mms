@@ -6,20 +6,25 @@ trigger: always_on
 
 **Workflow skill:** `mms-migration-fixes` — prioritized gap list and recipes. Rules describe **target architecture**. Fix open gaps only when in task scope.
 
-## Open Gaps Register
+## Open Gaps Register (Active Debt)
+
+Only address these residual gaps when explicitly within task scope.
 
 | Area | Scope & Current Status | Target Standard |
 |---|---|---|
 | **Copy & a11y** | Residual hardcoded strings; niche a11y/RTL checks. | Full `t()` en/ar/ur/fa; WCAG 2.1 AA (`mms-settings-i18n.md`, `mms-ui-ux-design.md`). |
-| **RBAC** | Closed: `role ===` write gates replaced by `useModulePermissions`. | Contract `can()` via `useModulePermissions(manifest)` (`mms-auth-security.md`). |
-| **Setup & Prefs** | Closed: All module prefs/lookups migrated to typed tables. | Migrate remaining module prefs/lookups to typed tables (`mms-fields.md`, `mms-data-layer.md`). |
-| **Live Push & Aggregates** | Closed: Contacts/Students/Teachers/Sessions/Enrollments WS invalidate + SQL aggregates. Residual: other module emit/subscribe, comparison mode dumps. | WS `/api/ws` invalidate + SQL `GROUP BY` aggregates (`mms-core.md`, `mms-reports.md`). |
-| **PG Statement Budgets** | Closed: Route-level budgets on hot paths via `statementTimeoutMs`. | Route-level tighter budgets for hot paths (`mms-data-layer.md`). |
-| **Contacts Full Loads** | Closed: SQL metrics, candidate match, blocked duplicate scans. Residual: niche chart dumps. | SQL aggregates across all visualizers (`mms-data-layer.md`, `mms-reports.md`). |
-| **CSRF / Origin Gate** | Closed: `registerCsrfOriginGuard` enforces `Sec-Fetch-Site: same-origin|same-site|none`, origin validation, and `application/json` mutation media types. | Strict Origin / `Sec-Fetch-Site` header checks on all cookie writes (`mms-auth-security.md`). |
-| **SQL Pagination** | Closed: All paged lists migrated to server SQL `LIMIT`/`OFFSET`. | Server SQL `LIMIT`/`OFFSET` via `contactsListQuerySchema` (`mms-data-layer.md`). |
-| **Soft-Delete Indexes & Gaps** | Closed: Migration `0104` added Category B/C partial indexes across all entity tables, partial unique indexes (`WHERE deleted_at IS NULL`), `deleted_with_cascade` on enrollments, `forbid_hard_delete()` trigger, session revocation, and restore attribution. | Category B/C partial indexes, partial unique indexes (`WHERE deleted_at IS NULL`), atomic cascades (`mms-data-layer.md` §6). |
-| **Retention Hard-Purge** | Closed: Scheduled background worker (`purgeExpiredArchivedRecords`) in bounded chunks of 500 rows with lock-free `SKIP LOCKED` processing per manifest `retentionDays`. | Scheduled background worker (`purgeExpiredArchivedRecords`) in bounded chunks (`mms-data-layer.md` §6, `mms-background-jobs`). |
+| **Live Push & Aggregates** | Closed for primary modules (Contacts/Students/Teachers/Sessions/Enrollments). Residual: secondary module WS emit/subscribe and comparison mode dumps. | WS `/api/ws` invalidate + SQL `GROUP BY` aggregates (`mms-core.md`, `mms-reports.md`). |
+| **Contacts Full Loads** | Closed for core SQL metrics, candidate match, duplicate scans. Residual: niche chart dumps. | SQL aggregates across all visualizers (`mms-data-layer.md`, `mms-reports.md`). |
+
+## Completed Architectural Milestones (Closed)
+
+- **RBAC**: Replaced legacy `role ===` write gates with contract `can()` via `useModulePermissions(manifest)` (`mms-auth-security.md`).
+- **Setup & Prefs**: Migrated all module preferences and lookups to typed relational tables (`mms-fields.md`, `mms-data-layer.md`).
+- **PG Statement Budgets**: Enforced route-level query budgets on hot paths via `statementTimeoutMs` (`mms-data-layer.md`).
+- **CSRF / Origin Gate**: Enforced strict `Sec-Fetch-Site` and origin validation on all mutation routes (`mms-auth-security.md`).
+- **SQL Pagination**: Migrated all collection lists to server SQL `LIMIT`/`OFFSET` (`mms-data-layer.md`).
+- **Soft-Delete System**: Added Category B/C partial indexes, partial unique indexes (`WHERE deleted_at IS NULL`), cascades, and session revocation (`mms-data-layer.md` §6).
+- **Retention Hard-Purge**: Implemented background purge worker in bounded chunks of 500 rows with lock-free `SKIP LOCKED` (`mms-data-layer.md` §6).
 
 ## Regressions: Do Not Reintroduce
 

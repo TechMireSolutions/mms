@@ -4,7 +4,7 @@ trigger: model_decision
 
 # MMS Data Layer & Caching System
 
-**Workflow skills:** REST Query factories → `mms-query-factories` · Drizzle DDL/RLS/Schema → `mms-schema-migrate` · backend API → `mms-backend-api` · shared package → `mms-shared-package` · legacy `/api/db` → `mms-data-sync` · backup wipe → `mms-backup-restore` · audit trail → `mms-audit-trail`.
+**Workflow skills:** REST Query factories → `mms-query-factories` · Drizzle DDL/RLS/Schema → `mms-schema-migrate` · backend API → `mms-backend-api` · shared package → `mms-shared-package` · legacy `/api/db` → `mms-data-sync` · backup wipe → `mms-backup-restore` · audit trail → `mms-audit-trail` · soft-delete → `mms-soft-delete`.
 
 Authoritative standards for backend databases, Drizzle ORM, transactions, shared Zod contracts, and TanStack Query across **tenant and platform** boundaries.
 
@@ -53,7 +53,7 @@ When generating code for any feature or entity, provide:
 
 | Concern | Standard & Constraint |
 |---|---|
-| **Pool Sizing & Timeouts** | Size pool via `PG_POOL_MAX` (default 20). `withTenantTransaction` applies `PG_STATEMENT_TIMEOUT_MS` (30s) and `PG_IDLE_IN_TX_TIMEOUT_MS` (15s). |
+| **Pool Sizing & Timeouts** | Size pool via `PG_POOL_MAX` (default 20). `withTenantTransaction` applies `PG_STATEMENT_TIMEOUT_MS` (30s) and `PG_IDLE_IN_TX_TIMEOUT_MS` (15s), with support for tighter route-level budgets on hot paths via `statementTimeoutMs` (e.g. 5000ms). |
 | **Explicit Resource Management** | Use `using` / `await using` for database connections, file handles, and stream resources to auto-dispose and return clients to pool on scope exit without boilerplate `finally` blocks. |
 | **Zero Queries in Loops** | Strict ban on queries in `for`, `forEach`, `map`, or `Promise.all`. Batch via Drizzle relational `with`, `inArray` (bounded $\le 500$ via `bulkIdsBodySchema`), SQL joins, or batch `/resolve`. |
 | **Zero Wildcard Projections** | Strict ban on `SELECT *` and bare `db.select().from(table)`. Explicit column projections matching Response DTOs (`db.select({ id: table.id, ... })` or `columns: { id: true, ... }`). |
@@ -154,14 +154,8 @@ Authoritative standards for audit trail architecture, tamper-evident hash chains
 - **Anomaly Detection Baselining:** Baseline normal write volume and access patterns per actor. Alert on write spikes (>300% of baseline), off-hours administrative access, and geographically implausible sessions. Reserve ML-based anomaly detection for when rule-based baselining stops catching real incidents — it is a scaling step, not a starting point.
 - **Compliance Reporting & Auditing the Auditor:** Automate report generation and tamper-evident export (include chain/Merkle verification in the export itself). Access to the audit trail is itself an auditable event: all search queries, view sessions, and exports targeting audit tables must emit an immutable audit event (`action_type: 'VIEW'`, `table_name: 'audit_trail_events'`).
 
-### 7. Implementation Roadmap & Blockchain Scoping
-- **Five-Phase Implementation Roadmap:**
-  1. **Phase 1 (Foundation):** Payload schema with RFC 8785 canonical JSON, append-only privilege model (`INSERT`-only), monthly date partitioning.
-  2. **Phase 2 (Core Capture):** Transactional outbox or CDC deployment, W3C `traceparent` correlation-ID propagation, initial monitoring.
-  3. **Phase 3 (Integrity):** Sharded hash chaining, Merkle tree rollups, scheduled automated verification job, alerting.
-  4. **Phase 4 (Privacy):** Crypto-shredding key management or redact-and-append erasure workflows, automated policy-driven retention purging.
-  5. **Phase 5 (Advanced):** Tiered storage lifecycle with WORM S3 Object Lock, rule-to-ML anomaly detection baselining, external anchoring only if a stated requirement exists.
-- **Blockchain / Decentralized Anchoring Scope:** Scope blockchain/decentralized anchoring correctly. It solves one specific problem: proving integrity to an external party without that party trusting your database administrators. Most systems don't have that requirement. Treat it as an optional addition for cases with an explicit external-evidentiary need (e.g. a regulator or court requires proof independent of your own infrastructure) — not a default "layer" every audit system should build.
+### 7. Implementation Roadmap & Extended Guidelines
+- Implementation roadmap (Phases 1–5), verification checklists, anomaly baselines, and external anchoring scoping are operational guidance maintained in skill **`mms-audit-trail`**.
 
 ---
 
@@ -177,114 +171,49 @@ SSOT standards governing soft-deletion, indexing, referential integrity, and har
 - **Platform Workspace Teardown:** `purgeTenantDataBySubdomain` executes physical `DELETE` with explicit privilege escalation (`SET LOCAL app.allow_hard_purge = 'true'`).
 
 ### 2. Column Sextuple Standard & Drizzle Mixin
-Every soft-deletable entity table standardizes on the `softDeleteColumns` mixin:
-```ts
-export const softDeleteColumns = {
-  deletedAt: timestamp('deleted_at', { withTimezone: true, mode: 'date' }),
-  deletedBy: text('deleted_by'),
-  deletionReason: varchar('deletion_reason', { length: 500 }), // Capped at DB & Zod layer
-  restoredAt: timestamp('restored_at', { withTimezone: true, mode: 'date' }),
-  restoredBy: text('restored_by'),
-  deletedWithCascade: boolean('deleted_with_cascade').default(false),
-};
-```
+Every soft-deletable entity table standardizes on `softDeleteColumns`: `deletedAt` (timestamptz Date), `deletedBy` (text), `deletionReason` (varchar 500), `restoredAt` (timestamptz Date), `restoredBy` (text), `deletedWithCascade` (boolean default false).
 - **Type Contract:** Assign `Date` objects (`new Date()`) to `deletedAt` / `restoredAt` — never ISO strings. Drizzle `mode: 'date'` expects `Date | null`.
 - **Restore Reset:** On restore, set `deleted_at = NULL`, `deleted_by = NULL`, `deletion_reason = NULL`, and populate `restored_at = NOW()`, `restored_by = userId`.
 
 ### 3. Three-Tier Index Strategy
 Every soft-deletable table requires three categories of indexes:
-- **Category A (Non-Partial Trash Index):** `index('table_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt)`. Covers `includeDeleted = true` queries.
-- **Category B (Active-Record Partial Index):** `index('table_workspace_active_idx').on(table.workspaceSubdomain).where(sql`${table.deletedAt} is null`)`. Covers hot active list reads (`includeDeleted = false`). Include compound variants for sorted/filtered paths: `(workspaceSubdomain, status, updatedAt) WHERE deleted_at IS NULL`.
-- **Category C (Archived-Record Partial Index):** `index('table_workspace_deleted_records_idx').on(table.workspaceSubdomain, table.deletedAt).where(sql`${table.deletedAt} is not null`)`. Covers trash-browser filtered/paginated queries. Eliminates full table scans in trash views.
+- **Category A (Non-Partial Trash Index):** `(workspaceSubdomain, deletedAt)`. Covers `includeDeleted = true` queries.
+- **Category B (Active-Record Partial Index):** `(workspaceSubdomain)` scoped `WHERE deleted_at IS NULL`. Include compound variants for sorted/filtered paths: `(workspaceSubdomain, status, updatedAt) WHERE deleted_at IS NULL`.
+- **Category C (Archived-Record Partial Index):** `(workspaceSubdomain, deletedAt)` scoped `WHERE deleted_at IS NOT NULL`. Covers trash-browser filtered/paginated queries, eliminating table scans.
 
 ### 4. Partial Unique Indexes vs PostgreSQL 15+ `NULLS NOT DISTINCT`
-- **Partial Unique Indexes Mandatory:** Unique constraints on recyclable identifiers (`email`, `phone`, `employee_id`, `student_id`, slug) MUST use partial unique indexes scoped to `WHERE deleted_at IS NULL`:
-  ```ts
-  uniqueIndex('contacts_email_active_unique')
-    .on(table.workspaceSubdomain, table.email)
-    .where(sql`${table.deletedAt} is null`)
-  ```
-  Prevents archived rows from permanently blocking re-registration of the same email/phone.
-- **`UNIQUE NULLS NOT DISTINCT` Strict Ban:** PostgreSQL 15 `UNIQUE NULLS NOT DISTINCT` does NOT work for soft-delete. It treats NULLs as identical, permitting only *one* active row (`deleted_at = NULL`), but strictly forbidding subsequent soft-deleted rows with `NULL` timestamps.
+- **Partial Unique Indexes Mandatory:** Unique constraints on recyclable identifiers (`email`, `phone`, `employee_id`, `student_id`, slug) MUST use partial unique indexes scoped to `WHERE deleted_at IS NULL` (e.g. `uniqueIndex('contacts_email_active_unique').on(table.workspaceSubdomain, table.email).where(sql`${table.deletedAt} is null`)`). Prevents archived rows from permanently blocking re-registration.
+- **`UNIQUE NULLS NOT DISTINCT` Strict Ban:** Banned for soft-delete — treats NULLs as identical, forbidding subsequent soft-deleted rows with `NULL` timestamps.
 
 ### 5. Schema-Level Hard-Delete Guard (`BEFORE DELETE` Trigger)
-PostgreSQL `BEFORE DELETE` triggers forbid physical row deletion across soft-deletable entity tables:
-```sql
-CREATE OR REPLACE FUNCTION forbid_hard_delete() RETURNS TRIGGER AS $$
-BEGIN
-  IF current_setting('app.allow_hard_purge', true) = 'true' THEN RETURN OLD; END IF;
-  RAISE EXCEPTION 'Hard delete forbidden on table "%", use soft-delete (UPDATE ... SET deleted_at = NOW())', TG_TABLE_NAME
-    USING ERRCODE = 'check_violation';
-END; $$ LANGUAGE plpgsql;
-```
-Direct `DELETE` queries fail with `check_violation`. Bypass is permitted only when authorized retention workers or workspace teardown routines execute `SET LOCAL app.allow_hard_purge = 'true'` inside their transaction.
+Schema `BEFORE DELETE` triggers execute `forbid_hard_delete()` to raise `check_violation` on direct SQL `DELETE`. Bypass is permitted only when authorized retention purge workers or workspace teardown routines execute `SET LOCAL app.allow_hard_purge = 'true'` inside their transaction.
 
 ### 6. Row-Level Security (RLS) Defense-in-Depth
-In addition to application query predicates, PostgreSQL RLS automatically filters soft-deleted rows from tenant queries:
-```sql
-CREATE POLICY tenant_soft_delete_isolation ON students FOR ALL
-  USING (
-    workspace_subdomain = current_setting('app.current_tenant', true)
-    AND (deleted_at IS NULL OR current_setting('app.include_deleted', true) = 'true')
-  );
-```
-Trash-browsing route handlers execute `SET LOCAL app.include_deleted = 'true'` inside the request transaction boundary after validating caller permissions.
+Tenant RLS policies automatically filter soft-deleted rows (`workspace_subdomain = current_setting('app.current_tenant', true) AND (deleted_at IS NULL OR current_setting('app.include_deleted', true) = 'true')`). Trash-browsing handlers execute `SET LOCAL app.include_deleted = 'true'` after validating permissions.
 
 ### 7. Query Planner Optimization: Dynamic AST vs Parameterized Booleans
-- **Strict Ban on Parameterized Boolean Predicates:**
-  `SELECT * FROM students WHERE workspace_subdomain = $1 AND ($2::boolean IS TRUE OR deleted_at IS NULL)`
-  PostgreSQL cannot evaluate `$2` at plan compilation time and refuses to use the Category B partial index, causing catastrophic table scans.
-- **Mandatory Dynamic AST Construction:** In Drizzle ORM, construct query AST branches dynamically:
-  ```ts
-  const conditions = [eq(table.workspaceSubdomain, tenant)];
-  if (!includeDeleted) {
-    conditions.push(isNull(table.deletedAt));   // Directly emits "deleted_at IS NULL" -> Category B index hit
-  } else {
-    conditions.push(isNotNull(table.deletedAt)); // Directly emits "deleted_at IS NOT NULL" -> Category C index hit
-  }
-  ```
+- **Strict Ban on Parameterized Boolean Predicates:** Never write `WHERE ($2::boolean IS TRUE OR deleted_at IS NULL)` — PostgreSQL refuses to use the Category B partial index, causing catastrophic table scans.
+- **Mandatory Dynamic AST Construction:** In Drizzle, conditionally append `isNull(table.deletedAt)` (active reads hitting Category B index) or `isNotNull(table.deletedAt)` (trash reads hitting Category C index).
 
 ### 8. Drizzle Relational Query Guardrails (`db.query.*`)
-Drizzle ORM relational queries (`db.query.table.findMany`) do **not** automatically apply soft-delete filters to nested relations in `with: { ... }`. Without explicit filters, soft-deleted child records silently leak into parent payloads:
-```ts
-// ✅ MANDATORY PATTERN: Explicit relational where filter on all child relations
-const session = await db.query.sessions.findFirst({
-  where: and(eq(sessions.id, sessionId), isNull(sessions.deletedAt)),
-  with: {
-    enrollments: {
-      where: (enrollments, { isNull }) => isNull(enrollments.deletedAt),
-    },
-  },
-});
-```
+Relational queries (`db.query.table.findMany`) do **not** auto-filter relations. Child relations in `with: { ... }` must declare explicit `where: (c, { isNull }) => isNull(c.deletedAt)` to prevent archived records leaking into parent payloads.
 
 ### 9. Referential Integrity, Concurrency & Active FK Guarding
 - **Policy A: Restrict Guard (Default for Financial & Academic Records):** Block soft-delete if active dependent children exist (`activeEntriesCount > 0` -> 409 Conflict).
-- **Policy B: Programmatic Atomic Cascade (`deleted_with_cascade`):** Soft-delete parent and children in one transaction, marking children `deletedWithCascade = true`. On parent restore, restore ONLY children marked `deletedWithCascade = true` (preserving independently archived children).
-- **Parent Deletion vs Child Insertion Race (Orphan Guard):** When executing an atomic cascade, lock the parent row (`tx.select().from(parent).where(...).for('update')`) before cascading to prevent concurrent child insertions.
-- **Active Foreign Key Guarding (Dangling Reference Prevention):** Standard SQL FKs validate physical row presence, not logical lifecycle state. Application write services and Zod validation must actively verify that referenced foreign keys point to active entities (`deleted_at IS NULL`), preventing the creation of ghost relationships.
-- **Atomic Conditional Latch:** Soft-delete updates must use atomic conditional clauses (`UPDATE table SET deleted_at = NOW(), ... WHERE id = :id AND deleted_at IS NULL RETURNING id`) to prevent TOCTOU concurrent delete races.
-- **Batched Bulk Updates:** `bulkDeleteFn` and `bulkRestoreFn` execute a single batched SQL `UPDATE ... WHERE id IN (...) AND deleted_at IS NULL` — per-row iteration loops are strictly banned (`mms-performance.md` §1).
+- **Policy B: Programmatic Atomic Cascade (`deleted_with_cascade`):** Soft-delete parent and children in one transaction, marking children `deletedWithCascade = true`. On parent restore, restore ONLY children marked `deletedWithCascade = true`.
+- **Parent Deletion vs Child Insertion Race (Orphan Guard):** When cascading, lock parent row (`FOR UPDATE`) before cascading to prevent concurrent child insertions.
+- **Active Foreign Key Guarding:** Validate foreign keys point to active entities (`deleted_at IS NULL`) on write, preventing ghost relationships.
+- **Atomic Conditional Latch:** Updates must use atomic conditional clauses (`UPDATE table SET deleted_at = NOW(), ... WHERE id = :id AND deleted_at IS NULL RETURNING id`) to prevent TOCTOU concurrent delete races.
+- **Batched Bulk Updates:** `bulkDeleteFn` and `bulkRestoreFn` execute a single batched SQL `UPDATE ... WHERE id IN (...) AND deleted_at IS NULL` — sequential row update loops ($N+1$) are strictly banned (`mms-performance.md` §1).
 - **Single-Record Read Semantics (`GET /:id`):** Standard reads append `isNull(table.deletedAt)` and return `404 Not Found` for archived records. Inspection with `?includeDeleted=true` requires `canDeleteCollection` check and sets `SET LOCAL app.include_deleted = 'true'`.
 - **Uniqueness-on-Restore & Error 23505 Trap:** Pre-check active conflicts before restore and trap PostgreSQL error `23505` (`unique_violation`), mapping cleanly to `409 Conflict`.
-- **Transactional Outbox CDC Events:** Soft-delete and restore emit `entity.soft_deleted` and `entity.restored` outbox events with monotonic versioning (`version: Date.now()`) for external search index eviction (Meilisearch) and Redis cache clearing. External consumers must discard stale events.
+- **Transactional Outbox CDC Events:** Soft-delete and restore emit `entity.soft_deleted` and `entity.restored` outbox events with monotonic versioning (`version: Date.now()`) for external search index eviction (Meilisearch) and Redis cache clearing.
 
 ### 10. Storage Engine Mechanics: HOT Updates, Index Eviction & Autovacuum
-- **HOT Update Ineligibility:** Because `deleted_at` is indexed across Category A and Category C indexes, setting `deleted_at = NOW()` cannot execute a Heap-Only Tuple (HOT) update. PostgreSQL must register new index pointers.
+- **HOT Update Ineligibility:** Setting `deleted_at = NOW()` cannot execute a Heap-Only Tuple (HOT) update because `deleted_at` is indexed across Category A and Category C indexes.
 - **Category B Partial Index Eviction:** The moment a row is soft-deleted, PostgreSQL removes its pointer from the `WHERE deleted_at IS NULL` Category B index, keeping hot active-record indexes compact and cache-resident.
-- **Autovacuum Tuning on High-Churn Tables:** High-churn tables (`message_logs`, `attendance_records`) must be tuned in DDL to prevent table bloat:
-  ```sql
-  ALTER TABLE message_logs SET (autovacuum_vacuum_scale_factor = 0.05, autovacuum_vacuum_cost_limit = 1000);
-  ```
+- **Autovacuum Tuning on High-Churn Tables:** High-churn tables (`message_logs`, `attendance_records`) must declare aggressive vacuum thresholds in DDL (`autovacuum_vacuum_scale_factor = 0.05, autovacuum_vacuum_cost_limit = 1000`) to prevent dead-tuple bloat.
 
 ### 11. Retention, Hard-Purge & GDPR Article 17 Erasure
-- **GDPR Boundary:** Soft-delete alone does NOT satisfy GDPR Article 17 (Right to Erasure) because personal data remains stored. Physical hard delete is also banned because it breaks ledger and certification integrity.
-- **Dual-Track Erasure Protocol:**
-  1. **Cryptographic Shredding:** Destroy per-subject encryption key in KMS/Vault, permanently rendering encrypted `custom_data` unrecoverable mathematical noise.
-  2. **In-Place Pseudonymization / Scrubbing:** Overwrite plain PII attributes (`first_name = 'Anonymized'`, `email = 'erased-' || id || '@deleted.local'`, `phone = NULL`) while preserving the primary key for relational continuity.
-- **Background Purge Worker Architecture (`purgeExpiredArchivedRecords`):**
-  - Runs off-peak (daily at 02:00 UTC) as an isolated background task (`mms-background-jobs`) — never in HTTP request paths.
-  - Chunked lock-free execution in bounded chunks of 500 rows using `LIMIT 500 FOR UPDATE SKIP LOCKED` with 50ms pause between chunks.
-  - Emits `entity.hard_purge` audit event inside transaction before physical `DELETE`.
-  - Executes `SET LOCAL app.allow_hard_purge = 'true'` inside transaction to bypass `BEFORE DELETE` trigger.
-  - All purge queries strictly tenant-scoped (`workspaceSubdomain = tenant`). Global cross-tenant purges are strictly banned.
+- **Dual-Track Erasure Protocol:** 1. **Cryptographic Shredding:** Destroy per-subject encryption key in KMS/Vault, permanently rendering encrypted `custom_data` unrecoverable mathematical noise. 2. **In-Place Pseudonymization:** Overwrite plain PII attributes while preserving primary key for relational continuity.
+- **Background Purge Worker Architecture (`purgeExpiredArchivedRecords`):** Runs off-peak as isolated background task (`mms-background-jobs`). Executes deletions in bounded chunks of 500 rows using `LIMIT 500 FOR UPDATE SKIP LOCKED` with 50ms pauses. Emits `entity.hard_purge` audit event, executes `SET LOCAL app.allow_hard_purge = 'true'` inside transaction, and scopes strictly by tenant (`workspaceSubdomain = tenant`).

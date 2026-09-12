@@ -416,7 +416,8 @@
       "rules/antigravity-global.md",
       "rules/mms-core.md",
       "rules/mms-migration-status.md",
-      "rules/mms-completion-review.md"
+      "rules/mms-completion-review.md",
+      "rules/mms-performance.md"
     ],
     "directory": "rules/"
   },

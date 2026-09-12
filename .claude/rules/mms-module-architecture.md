@@ -72,15 +72,10 @@ Operations that exceed direct interaction limits or process massive records must
 ## 6. Security Boundaries & Isolation
 - **RLS**: Transaction-scoped SET LOCAL — **`mms-data-layer.md`** (do not restate recipes here).
 - **RBAC**: Apply `can('module.action')` checks globally. Omit forbidden actions from the DOM (never disabled placeholders).
-- **Soft Deletion Architecture (Work UX & API Lifecycle)**: Prefer soft-delete over hard `DELETE`. API/FE camelCase `deletedAt` / `deletedBy`; SQL `deleted_at` / `deleted_by` (typed columns mandatory). Schema strip / partial indexes / RLS / triggers → `mms-data-layer.md` §6 · complete operational checklist → skill **`mms-soft-delete`**.
-  - **Module Manifest Contract**: Declare `softDelete` block in `@mms/shared` manifests (`workExcludesDeleted`, `reportsIncludeDeleted`, `exportsIncludeDeleted`, `duplicatesIncludeDeleted`, `captureDeletionReason`, `retentionDays`). When `captureDeletionReason: false`, suppress deletion reason prompts in UI.
-  - **Single-Record Read Semantics**: `GET /:id` returns `404 Not Found` for archived records on standard active browses. Trash inspection via `GET /:id?includeDeleted=true` requires `canDeleteCollection(user, collection)` and sets `app.include_deleted = 'true'`.
-  - **Atomic Conditional Latch**: Soft-delete updates must use atomic conditional clauses (`UPDATE table SET deleted_at = NOW(), ... WHERE id = :id AND deleted_at IS NULL RETURNING id`) to prevent TOCTOU concurrent delete races.
-  - **Batched Bulk Operations**: `bulkDeleteFn` and `bulkRestoreFn` must execute a single batched SQL `UPDATE ... WHERE id IN (...) AND deleted_at IS NULL` — per-row iteration loops are strictly banned (`mms-performance.md` §1).
-  - **Uniqueness-on-Restore & Error 23505 Trap**: Handlers restoring records with unique fields (`email`, `phone`, `employee_id`) must pre-check active conflicts and trap PostgreSQL error `23505` (`unique_violation`), mapping to `409 Conflict`.
-  - **Outbox CDC & Cache Eviction**: Emit `entity.soft_deleted` and `entity.restored` transactional outbox events with monotonic versioning (`version: Date.now()`) to drive Meilisearch tombstone eviction and Redis cache clearing. External consumers must drop stale/out-of-order events.
-  - **Forensic Content Snapshotting**: Capture full snapshots of text/note content in audit event payloads upon archival to ensure survival after hard purges.
-  - **Frontend UX Standard**:
+- **Soft Deletion Architecture (Work UX & API Lifecycle)**: Prefer soft-delete over hard `DELETE`. Schema strip / partial indexes / triggers / RLS / CDC outbox / atomic latches → **`mms-data-layer.md` §6** · operational checklist → skill **`mms-soft-delete`**.
+  - **Module Manifest Contract**: Declare `softDelete` block in `@mms/shared` manifests (`workExcludesDeleted`, `reportsIncludeDeleted`, `exportsIncludeDeleted`, `duplicatesIncludeDeleted`, `captureDeletionReason`, `retentionDays`). Suppress reason prompts when `captureDeletionReason: false`.
+  - **Single-Record Read Semantics**: `GET /:id` returns `404 Not Found` for archived records on standard active browses; `?includeDeleted=true` requires `canDeleteCollection`.
+  - **Frontend Work UX Standard**:
     - **URL State Synchronization**: Synchronize `viewingDeleted` with URL search params (`?view=trash` via `useSearchParams`).
     - **Filter State Preservation**: Toggling `ModuleTrashToggle` must preserve active search terms and faceted filter selections.
     - **Controls & CTAs**: Mount `ModuleTrashToggle` in `ModuleWorkToolbar` (not in filter dropdowns). Hide Add/Create CTA and export buttons when `viewingDeleted = true`. Guard `Cmd/Ctrl+N` to check `!viewingDeleted && canWrite`.
@@ -88,16 +83,14 @@ Operations that exceed direct interaction limits or process massive records must
     - **Detail Drawer Precedence**: When an archived record drawer is opened, render `ArchivedBanner` (`WarningCallout` tone="warning"). Hide Edit, Call, SMS, WhatsApp, and Email buttons. Drawer takes precedence over bulk selections, and restore acts strictly on the drawer entity.
     - **Optimistic Undo Toast**: Single-record deletions trigger an instant TanStack Query cache hide with a 5–10s Undo toast triggering `POST /:id/restore`.
     - **Retention Expiry Countdown**: Display countdown badges in trash views and drawers (`Purges in N days` / `Archived indefinitely`).
-  - **Referential Integrity Contract**: Modules define either Restrict Guard (`activeEntriesCount > 0` → 409 Conflict) or Programmatic Atomic Cascade (`deleted_with_cascade = true`). When cascading, lock parent row (`FOR UPDATE`) to prevent child insertion races (`docs/soft-delete.md` §2.2 & §4.6).
-  - **Active Foreign Key Guarding**: Reject writes attempting to assign foreign keys pointing to soft-deleted entities (`deleted_at IS NOT NULL`), preventing ghost relationships (`docs/soft-delete.md` §1.8).
   - **Documented variants**: Messaging admin clear soft-archives logs (not a row trash browser); Question Bank tests/papers and assessment_results remain upsert-only by design.
-  - **When adding REST CRUD**: Ship `DELETE` soft-delete + `POST :id/restore`, list `includeDeleted`, and Work trash UI (or document intentional hard-delete / variant in manifest `softDelete`).
+  - **When adding REST CRUD**: Ship `DELETE` soft-delete + `POST :id/restore`, list `includeDeleted`, and Work trash UI (or document intentional variant in manifest).
 
 ---
 
 ## 7. Gold-standard parity (REST tenant modules and platform pages)
 
-Align new or refactored modules with **Contacts, Students, and Teachers** as the gold-standard bar for person-directory Work/Setup (shared `Module*` / `createModule*` / `registerModule*` factories; module config via `createStandardModuleConfigHook` + `useStandardModuleConfig` — `mms-hooks.md`). **Users / Sessions** Work REST and typed Setup REST are closed; residual document-store Setup is other modules per `mms-migration-status.md` P3. Checklist:
+Align new or refactored modules with **Contacts, Students, and Teachers** as the gold-standard bar for person-directory Work/Setup (shared `Module*` / `createModule*` / `registerModule*` factories; module config via `createStandardModuleConfigHook` + `useStandardModuleConfig` — `mms-hooks.md`). **Users / Sessions** Work REST and typed Setup REST are closed; all module prefs/lookups are migrated to typed tables (`mms-migration-status.md`). Checklist:
 
 | Requirement | Standard |
 |-------------|----------|

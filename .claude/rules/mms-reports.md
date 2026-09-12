@@ -12,6 +12,7 @@ paths:
   - "apps/frontend/src/components/ui/ExportToolbarCompact.tsx"
   - "apps/frontend/src/components/ui/exportToolbarUtils.ts"
   - "apps/frontend/src/components/ui/SafeResponsiveContainer.tsx"
+  - "packages/shared/src/*Report*.ts"
 ---
 
 # MMS Reports & Analytics
