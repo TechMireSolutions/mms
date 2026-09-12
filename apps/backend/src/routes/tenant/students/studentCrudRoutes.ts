@@ -101,7 +101,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const result = await withTenant(String(tenant), () => studentUseCases.createStudent(
-          body as Record<string, unknown>,
+          body,
           user,
         ), { readOnly: false });
 
@@ -160,7 +160,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const updated = await withTenant(String(tenant), () => studentUseCases.updateStudentById(id, {
-          ...(body as Record<string, unknown>),
+          ...body,
           id,
         }), { readOnly: false });
 

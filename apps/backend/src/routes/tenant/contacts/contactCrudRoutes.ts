@@ -1,6 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { isQueryFlagTrue, type Contact, type User } from '@mms/shared';
-import { rootContract } from '@mms/shared';
+import { isQueryFlagTrue, type Contact, type User, contactsContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { getLinkedContactId } from '../../../services/auth/userService.js';
@@ -33,8 +32,8 @@ const RESERVED_CONTACT_ROUTE_IDS = new Set([
 ]);
 
 export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
-  const router = s.router(rootContract.contacts, {
-    list: async ({ query, request }: ContractRouteArgs<typeof rootContract['contacts']['list']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['list']>> => {
+  const router = s.router(contactsContract, {
+    list: async ({ query, request }: ContractRouteArgs<typeof contactsContract['list']>): Promise<ContractRouteResponse<typeof contactsContract['list']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -61,7 +60,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list contacts' } };
       }
     },
-    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof rootContract['contacts']['get']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['get']>> => {
+    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof contactsContract['get']>): Promise<ContractRouteResponse<typeof contactsContract['get']>> => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
@@ -83,7 +82,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load contact' } };
       }
     },
-    create: async ({ body, request }: ContractRouteArgs<typeof rootContract['contacts']['create']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['create']>> => {
+    create: async ({ body, request }: ContractRouteArgs<typeof contactsContract['create']>): Promise<ContractRouteResponse<typeof contactsContract['create']>> => {
       const user = request.user as User;
       if (!canWriteContacts(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -102,7 +101,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return formatContactWriteError(error, 'Failed to save contact record');
       }
     },
-    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof rootContract['contacts']['update']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['update']>> => {
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof contactsContract['update']>): Promise<ContractRouteResponse<typeof contactsContract['update']>> => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
@@ -124,7 +123,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return formatContactWriteError(error, 'Failed to update contact');
       }
     },
-    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof rootContract['contacts']['delete']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['delete']>> => {
+    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof contactsContract['delete']>): Promise<ContractRouteResponse<typeof contactsContract['delete']>> => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
@@ -145,7 +144,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete contact' } };
       }
     },
-    reportAnalytics: async ({ query, request }: ContractRouteArgs<typeof rootContract['contacts']['reportAnalytics']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['reportAnalytics']>> => {
+    reportAnalytics: async ({ query, request }: ContractRouteArgs<typeof contactsContract['reportAnalytics']>): Promise<ContractRouteResponse<typeof contactsContract['reportAnalytics']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };

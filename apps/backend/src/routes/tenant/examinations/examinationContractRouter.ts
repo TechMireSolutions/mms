@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { isQueryFlagTrue, type User, type WidgetQuery } from '@mms/shared';
 import { examinationContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import { examinationsUseCases } from '../../../examinations/use-cases/examinationsUseCases.js';
@@ -11,7 +11,7 @@ const s = initServer();
 
 export const examinationContractRouter: FastifyPluginAsync = async (fastify) => {
   const router = s.router(examinationContract, {
-    listExams: async ({ query, request }: ContractRouteArgs<typeof examinationContract['listExams']>): Promise<unknown> => {
+    listExams: async ({ query, request }: ContractRouteArgs<typeof examinationContract['listExams']>): Promise<ContractRouteResponse<typeof examinationContract['listExams']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'exams')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -31,7 +31,7 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list exams' } };
       }
     },
-    bulkDeleteExams: async ({ body, request }: ContractRouteArgs<typeof examinationContract['bulkDeleteExams']>): Promise<unknown> => {
+    bulkDeleteExams: async ({ body, request }: ContractRouteArgs<typeof examinationContract['bulkDeleteExams']>): Promise<ContractRouteResponse<typeof examinationContract['bulkDeleteExams']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'exams')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -46,7 +46,7 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete exams' } };
       }
     },
-    bulkRestoreExams: async ({ body, request }: ContractRouteArgs<typeof examinationContract['bulkRestoreExams']>): Promise<unknown> => {
+    bulkRestoreExams: async ({ body, request }: ContractRouteArgs<typeof examinationContract['bulkRestoreExams']>): Promise<ContractRouteResponse<typeof examinationContract['bulkRestoreExams']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'exams')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -61,7 +61,7 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore exams' } };
       }
     },
-    listResults: async ({ request }: ContractRouteArgs<typeof examinationContract['listResults']>): Promise<unknown> => {
+    listResults: async ({ request }: ContractRouteArgs<typeof examinationContract['listResults']>): Promise<ContractRouteResponse<typeof examinationContract['listResults']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'exam_results')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -73,7 +73,7 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list exam results' } };
       }
     },
-    widgetAggregates: async ({ body, request }: ContractRouteArgs<typeof examinationContract['widgetAggregates']>): Promise<unknown> => {
+    widgetAggregates: async ({ body, request }: ContractRouteArgs<typeof examinationContract['widgetAggregates']>): Promise<ContractRouteResponse<typeof examinationContract['widgetAggregates']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'exams')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };

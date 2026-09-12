@@ -90,24 +90,7 @@ export async function saveEntry(tenant: string, record: JournalEntry): Promise<v
       .values(entryInsertValues(subdomain, record))
       .onConflictDoUpdate({
         target: [accountingEntries.workspaceSubdomain, accountingEntries.id],
-        set: {
-          date: record.date,
-          ref: record.ref ?? '',
-          description: record.description ?? '',
-          status: record.status ?? 'posted',
-          createdBy: record.created_by ?? '',
-          fiscalYear: record.fiscal_year ?? '',
-          fiscalYearId: record.fiscal_year_id || null,
-          sourceType: record.source_type ?? null,
-          sourceId: record.source_id || null,
-          transactionType: record.transaction_type ?? null,
-          reversedRef: record.reversed_ref ?? null,
-          simpleMode: record.simple_mode ?? false,
-          deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-          deletedBy: record.deletedBy ?? null,
-          deletionReason: record.deletionReason ?? null,
-          updatedAt: new Date(),
-        },
+        set: entryUpdateSetValues(record),
       });
 
     await syncEntryChildren(tx, subdomain, record);
@@ -115,7 +98,7 @@ export async function saveEntry(tenant: string, record: JournalEntry): Promise<v
 }
 
 /** Maps a JournalEntry to the accountingEntries insert/upsert value shape. */
-function entryInsertValues(subdomain: string, record: JournalEntry) {
+function entryInsertValues(subdomain: string, record: JournalEntry): typeof accountingEntries.$inferInsert {
   return {
     id: record.id,
     workspaceSubdomain: subdomain,
@@ -136,6 +119,11 @@ function entryInsertValues(subdomain: string, record: JournalEntry) {
     deletionReason: record.deletionReason ?? null,
     updatedAt: new Date(),
   };
+}
+
+function entryUpdateSetValues(record: JournalEntry) {
+  const { id: _id, workspaceSubdomain: _subdomain, ...setFields } = entryInsertValues('', record);
+  return setFields;
 }
 
 export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): Promise<void> {

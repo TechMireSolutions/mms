@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { isQueryFlagTrue, type User, type WidgetQuery, ATTENDANCE_MODULE_MANIFEST, rootContract } from '@mms/shared';
+import { isQueryFlagTrue, type User, type WidgetQuery, ATTENDANCE_MODULE_MANIFEST, attendanceContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
@@ -14,9 +15,8 @@ function getTenantId(request: { tenant?: { id: string } }): string | null {
 }
 
 export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
-  const router = s.router(rootContract.attendance, {
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    list: async ({ query, request }) => {
+  const router = s.router(attendanceContract, {
+    list: async ({ query, request }: ContractRouteArgs<typeof attendanceContract['list']>): Promise<ContractRouteResponse<typeof attendanceContract['list']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -36,7 +36,11 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(
           tenantId,
-          () => attendanceUseCases.loadAttendancePage({ ...query, includeDeleted }),
+          () => attendanceUseCases.loadAttendancePage({
+            ...query,
+            sortDir: (query?.sortDir || undefined) as 'asc' | 'desc' | undefined,
+            includeDeleted,
+          }),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };
@@ -46,8 +50,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    create: async ({ body, request }) => {
+    create: async ({ body, request }: ContractRouteArgs<typeof attendanceContract['create']>): Promise<ContractRouteResponse<typeof attendanceContract['create']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -59,7 +62,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const item = await withTenant(tenantId, () => attendanceUseCases.createAttendanceRecord(body), { readOnly: false });
+        const item = await withTenant(tenantId, () => attendanceUseCases.createAttendanceRecord(body as Parameters<typeof attendanceUseCases.createAttendanceRecord>[0]), { readOnly: false });
         return { status: 201 as const, body: item };
       } catch (error: unknown) {
         request.log?.error(error, 'Failed to create attendance record');
@@ -67,8 +70,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    bulk: async ({ body, request }) => {
+    bulk: async ({ body, request }: ContractRouteArgs<typeof attendanceContract['bulk']>): Promise<ContractRouteResponse<typeof attendanceContract['bulk']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -80,7 +82,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const records = await withTenant(tenantId, () => attendanceUseCases.upsertAttendanceRecords(body.records), { readOnly: false });
+        const records = await withTenant(tenantId, () => attendanceUseCases.upsertAttendanceRecords(body.records as Parameters<typeof attendanceUseCases.upsertAttendanceRecords>[0]), { readOnly: false });
         return { status: 200 as const, body: { records } };
       } catch (error: unknown) {
         request.log?.error(error, 'Failed to update attendance records');
@@ -88,8 +90,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    bulkDelete: async ({ body, request }) => {
+    bulkDelete: async ({ body, request }: ContractRouteArgs<typeof attendanceContract['bulkDelete']>): Promise<ContractRouteResponse<typeof attendanceContract['bulkDelete']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -113,8 +114,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    bulkRestore: async ({ body, request }) => {
+    bulkRestore: async ({ body, request }: ContractRouteArgs<typeof attendanceContract['bulkRestore']>): Promise<ContractRouteResponse<typeof attendanceContract['bulkRestore']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -134,8 +134,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    update: async ({ params: { id }, body, request }) => {
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof attendanceContract['update']>): Promise<ContractRouteResponse<typeof attendanceContract['update']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -147,9 +146,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
+        const bodyRecord = (body && typeof body === 'object') ? (body as Record<string, unknown>) : {};
         const updated = await withTenant(
           tenantId,
-          () => attendanceUseCases.updateAttendanceRecordById(id, { ...body, id: body?.id ?? id }),
+          () => attendanceUseCases.updateAttendanceRecordById(id, { ...bodyRecord, id: (bodyRecord.id as string) ?? id } as Parameters<typeof attendanceUseCases.updateAttendanceRecordById>[1]),
           { readOnly: false },
         );
         if (!updated) {
@@ -162,8 +162,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    delete: async ({ params: { id }, body, request }) => {
+    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof attendanceContract['delete']>): Promise<ContractRouteResponse<typeof attendanceContract['delete']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -175,9 +174,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
+        const deletionReason = body && typeof body === 'object' && 'deletionReason' in body ? (body as { deletionReason?: string }).deletionReason : undefined;
         const deleted = await withTenant(
           tenantId,
-          () => attendanceUseCases.deleteAttendanceRecordById(id, String(user.id), body?.deletionReason),
+          () => attendanceUseCases.deleteAttendanceRecordById(id, String(user.id), deletionReason),
           { readOnly: false },
         );
         if (!deleted) {
@@ -190,8 +190,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    restore: async ({ params: { id }, request }) => {
+    restore: async ({ params: { id }, request }: ContractRouteArgs<typeof attendanceContract['restore']>): Promise<ContractRouteResponse<typeof attendanceContract['restore']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -218,8 +217,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    widgetAggregates: async ({ body, request }) => {
+    widgetAggregates: async ({ body, request }: ContractRouteArgs<typeof attendanceContract['widgetAggregates']>): Promise<ContractRouteResponse<typeof attendanceContract['widgetAggregates']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, COLLECTION)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -242,7 +240,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
-  });
+  } as unknown as Parameters<typeof s.router>[1]);
 
   await fastify.register(s.plugin(router));
 };

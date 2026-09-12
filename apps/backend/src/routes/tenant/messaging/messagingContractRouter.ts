@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { User } from '@mms/shared';
 import { messagingContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadMessaging } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
@@ -21,7 +21,7 @@ function requireMessagingTenant(request: any): { id: string; subdomain: string }
 
 export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
   const router = s.router(messagingContract, {
-    listLogs: async ({ query, request }: ContractRouteArgs<typeof messagingContract['listLogs']>): Promise<unknown> => {
+    listLogs: async ({ query, request }: ContractRouteArgs<typeof messagingContract['listLogs']>): Promise<ContractRouteResponse<typeof messagingContract['listLogs']>> => {
       const user = request.user as User;
       if (!canReadMessaging(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -37,7 +37,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list message logs' } };
       }
     },
-    listTemplates: async ({ request }: ContractRouteArgs<typeof messagingContract['listTemplates']>): Promise<unknown> => {
+    listTemplates: async ({ request }: ContractRouteArgs<typeof messagingContract['listTemplates']>): Promise<ContractRouteResponse<typeof messagingContract['listTemplates']>> => {
       const user = request.user as User;
       if (!canReadMessaging(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -49,7 +49,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list messaging templates' } };
       }
     },
-    listRecipients: async ({ query, request }: ContractRouteArgs<typeof messagingContract['listRecipients']>): Promise<unknown> => {
+    listRecipients: async ({ query, request }: ContractRouteArgs<typeof messagingContract['listRecipients']>): Promise<ContractRouteResponse<typeof messagingContract['listRecipients']>> => {
       const user = request.user as User;
       if (!canReadMessaging(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };

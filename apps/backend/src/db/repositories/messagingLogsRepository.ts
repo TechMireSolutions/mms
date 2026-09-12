@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { messageTemplates, messageLogs } from '../schema.js';
 import { dedupeTrimmedIds, type Message, type RepositoryListOptions } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditToInsert } from './repositoryMappers.js';
 
 type LogRow = typeof messageLogs.$inferSelect;
 /** Row shape accepted by logRowToRecord — purgeAfter is DB-only generated column, not surfaced to app layer. */
@@ -147,29 +148,37 @@ export async function findMessageLogsByIds(
   });
 }
 
+export function messageLogWriteValues(
+  subdomain: string,
+  record: Message,
+): typeof messageLogs.$inferInsert {
+  const audit = mapAuditToInsert(record);
+  return {
+    id: String(record.id),
+    workspaceSubdomain: subdomain,
+    userId: record.userId ?? '',
+    contactId: String(record.contactId),
+    channel: record.channel,
+    body: record.body,
+    sentAt: record.sentAt,
+    status: record.status ?? 'sent',
+    subject: record.subject ?? null,
+    category: record.category ?? 'general',
+    errorMessage: record.errorMessage ?? null,
+    deletedAt: audit.deletedAt,
+    deletedBy: audit.deletedBy,
+    deletionReason: audit.deletionReason,
+    createdAt: audit.createdAt ?? new Date(),
+    updatedAt: audit.updatedAt,
+  };
+}
+
 export async function saveMessageLog(tenant: string, record: Message): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(messageLogs)
-      .values({
-        id: String(record.id),
-        workspaceSubdomain: subdomain,
-        userId: record.userId ?? '',
-        contactId: String(record.contactId),
-        channel: record.channel,
-        body: record.body,
-        sentAt: record.sentAt,
-        status: record.status ?? 'sent',
-        subject: record.subject ?? null,
-        category: record.category ?? 'general',
-        errorMessage: record.errorMessage ?? null,
-        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-        deletedBy: record.deletedBy ?? null,
-        deletionReason: record.deletionReason ?? null,
-        createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-        updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-      })
+      .values(messageLogWriteValues(subdomain, record))
       .onConflictDoUpdate({
         target: [messageLogs.workspaceSubdomain, messageLogs.id],
         set: {
@@ -204,24 +213,7 @@ export async function replaceMessageLogsForWorkspace(tenant: string, records: Me
     await tx.delete(messageLogs).where(eq(messageLogs.workspaceSubdomain, subdomain));
     if (uniqueRecords.length > 0) {
       await tx.insert(messageLogs).values(
-        uniqueRecords.map((record) => ({
-          id: String(record.id),
-          workspaceSubdomain: subdomain,
-          userId: record.userId ?? '',
-          contactId: String(record.contactId),
-          channel: record.channel,
-          body: record.body,
-          sentAt: record.sentAt,
-          status: record.status ?? 'sent',
-          subject: record.subject ?? null,
-          category: record.category ?? 'general',
-          errorMessage: record.errorMessage ?? null,
-          deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-          deletedBy: record.deletedBy ?? null,
-          deletionReason: record.deletionReason ?? null,
-          createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-          updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-        })),
+        uniqueRecords.map((record) => messageLogWriteValues(subdomain, record)),
       );
     }
   });
@@ -240,26 +232,7 @@ export async function bulkSaveMessageLogs(tenant: string, records: Message[]): P
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(messageLogs)
-      .values(
-        uniqueRecords.map((record) => ({
-          id: String(record.id),
-          workspaceSubdomain: subdomain,
-          userId: record.userId ?? '',
-          contactId: String(record.contactId),
-          channel: record.channel,
-          body: record.body,
-          sentAt: record.sentAt,
-          status: record.status ?? 'sent',
-          subject: record.subject ?? null,
-          category: record.category ?? 'general',
-          errorMessage: record.errorMessage ?? null,
-          deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-          deletedBy: record.deletedBy ?? null,
-          deletionReason: record.deletionReason ?? null,
-          createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-          updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-        })),
-      )
+      .values(uniqueRecords.map((record) => messageLogWriteValues(subdomain, record)))
       .onConflictDoUpdate({
         target: [messageLogs.workspaceSubdomain, messageLogs.id],
         set: {

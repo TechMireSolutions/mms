@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { isQueryFlagTrue, type User, accountingContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { handleContractError } from '../../../lib/contractError.js';
 import { withTenant } from '../../../db/tenant-context.js';
@@ -11,7 +11,7 @@ const s = initServer();
 
 export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
   const router = s.router(accountingContract, {
-    listAccounts: async ({ query, request }: ContractRouteArgs<typeof accountingContract['listAccounts']>): Promise<unknown> => {
+    listAccounts: async ({ query, request }: ContractRouteArgs<typeof accountingContract['listAccounts']>): Promise<ContractRouteResponse<typeof accountingContract['listAccounts']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'accounts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -43,7 +43,7 @@ export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to list accounts' } });
       }
     },
-    listEntries: async ({ query, request }: ContractRouteArgs<typeof accountingContract['listEntries']>): Promise<unknown> => {
+    listEntries: async ({ query, request }: ContractRouteArgs<typeof accountingContract['listEntries']>): Promise<ContractRouteResponse<typeof accountingContract['listEntries']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'accounting_entries')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -75,7 +75,7 @@ export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
         return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to list journal entries' } });
       }
     },
-    listFiscalYears: async ({ query, request }: ContractRouteArgs<typeof accountingContract['listFiscalYears']>): Promise<unknown> => {
+    listFiscalYears: async ({ query, request }: ContractRouteArgs<typeof accountingContract['listFiscalYears']>): Promise<ContractRouteResponse<typeof accountingContract['listFiscalYears']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'fiscal_years')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };

@@ -68,6 +68,8 @@ export const attendanceContract = c.router({
     }),
     responses: {
       200: attendanceListPageResponseSchema,
+      403: errorResponse,
+      500: errorResponse,
     },
     summary: 'List attendance records',
   },
@@ -78,6 +80,9 @@ export const attendanceContract = c.router({
     responses: {
       200: attendanceRecordSchema,
       201: attendanceRecordSchema,
+      400: errorResponse,
+      403: errorResponse,
+      500: errorResponse,
     },
     summary: 'Create a new attendance record',
   },

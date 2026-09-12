@@ -67,6 +67,16 @@ export function buildStudentWriteSchema(extraFieldKeys: string[] = []): z.ZodTyp
 /** System-keys-only write schema (no Setup custom keys). Prefer `buildStudentWriteSchema` on tenant writes. */
 export const studentWriteSchema = buildStudentWriteSchema();
 
+/**
+ * Wire-level student write DTO allowing custom setup fields to pass through to tenant dynamic validation.
+ * Used at the @ts-rest contract gateway boundary.
+ */
+export const studentWireWriteSchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const stripped = stripStudentClientSoftDeleteFields(raw as Record<string, unknown>);
+  return deepSanitizeStrings(stripped);
+}, studentWriteBaseObjectSchema.passthrough());
+
 export const studentsBulkEnrollBodySchema = z
   .object({
     studentIds: z.array(z.union([z.string(), z.number()])).min(1).max(500),

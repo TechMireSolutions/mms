@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { deepSanitizeStrings } from './sanitize.js';
 import { SessionSchema } from '../sessionTypes.js';
 import { stripSessionClientSoftDeleteFields } from '../sessionUtils.js';
+import { bulkIdsBodySchema, type BulkIdsBody } from './api.dto.js';
 
 const sessionCreateBodyBaseSchema = SessionSchema.omit({
   deletedAt: true,
@@ -28,16 +29,8 @@ export const sessionUpdateBodySchema = z.preprocess((raw) => {
   return deepSanitizeStrings(stripped);
 }, sessionUpdateBodyBaseSchema);
 
-const sessionsBulkIdsBaseSchema = z.object({
-  ids: z.array(z.union([z.string(), z.number()])).min(1).max(500),
-  deletionReason: z.string().max(500).optional(),
-}).strict();
-
-export const sessionsBulkIdsSchema = z.preprocess((raw) => {
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
-  return deepSanitizeStrings(raw);
-}, sessionsBulkIdsBaseSchema);
+export const sessionsBulkIdsSchema = bulkIdsBodySchema;
 
 export type SessionCreateBody = z.infer<typeof sessionCreateBodySchema>;
 export type SessionUpdateBody = z.infer<typeof sessionUpdateBodySchema>;
-export type SessionsBulkIdsBody = z.infer<typeof sessionsBulkIdsSchema>;
+export type SessionsBulkIdsBody = BulkIdsBody;

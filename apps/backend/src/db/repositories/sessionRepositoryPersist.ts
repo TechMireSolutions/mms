@@ -12,8 +12,40 @@ import {
   sessionTabarruk,
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditToInsert } from './repositoryMappers.js';
 
 type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+
+export function sessionWriteValues(
+  subdomain: string,
+  record: Session,
+): typeof sessions.$inferInsert {
+  const totalRevenue = record.budget?.totalRevenue ?? 0;
+  const collected = record.budget?.collected ?? 0;
+  return {
+    id: String(record.id),
+    workspaceSubdomain: subdomain,
+    name: record.name,
+    type: record.type,
+    status: record.status,
+    startDate: record.startDate,
+    endDate: record.endDate,
+    baseFee: String(record.baseFee ?? 0),
+    currency: record.currency ?? 'PKR',
+    description: record.description ?? null,
+    budgetTotalRevenue: String(totalRevenue),
+    budgetCollected: String(collected),
+    ...mapAuditToInsert(record),
+  };
+}
+
+export function sessionUpdateSetValues(
+  subdomain: string,
+  record: Session,
+) {
+  const { id: _id, workspaceSubdomain: _subdomain, createdAt: _createdAt, ...setFields } = sessionWriteValues(subdomain, record);
+  return setFields;
+}
 
 async function persistSessionTx(
   tx: Transaction,
@@ -21,52 +53,13 @@ async function persistSessionTx(
   record: Session,
 ): Promise<void> {
   const sessionId = String(record.id);
-  const totalRevenue = record.budget?.totalRevenue ?? 0;
-  const collected = record.budget?.collected ?? 0;
 
   await tx
     .insert(sessions)
-    .values({
-      id: sessionId,
-      workspaceSubdomain: subdomain,
-      name: record.name,
-      type: record.type,
-      status: record.status,
-      startDate: record.startDate,
-      endDate: record.endDate,
-      baseFee: String(record.baseFee ?? 0),
-      currency: record.currency ?? 'PKR',
-      description: record.description ?? null,
-      budgetTotalRevenue: String(totalRevenue),
-      budgetCollected: String(collected),
-      deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-      deletedBy: record.deletedBy ?? null,
-      deletionReason: record.deletionReason ?? null,
-      restoredAt: record.restoredAt ? new Date(record.restoredAt) : null,
-      restoredBy: record.restoredBy ?? null,
-      createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-      updatedAt: new Date(),
-    })
+    .values(sessionWriteValues(subdomain, record))
     .onConflictDoUpdate({
       target: [sessions.workspaceSubdomain, sessions.id],
-      set: {
-        name: record.name,
-        type: record.type,
-        status: record.status,
-        startDate: record.startDate,
-        endDate: record.endDate,
-        baseFee: String(record.baseFee ?? 0),
-        currency: record.currency ?? 'PKR',
-        description: record.description ?? null,
-        budgetTotalRevenue: String(totalRevenue),
-        budgetCollected: String(collected),
-        deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-        deletedBy: record.deletedBy ?? null,
-        deletionReason: record.deletionReason ?? null,
-        restoredAt: record.restoredAt ? new Date(record.restoredAt) : null,
-        restoredBy: record.restoredBy ?? null,
-        updatedAt: new Date(),
-      },
+      set: sessionUpdateSetValues(subdomain, record),
     });
 
   await tx
@@ -358,31 +351,7 @@ export async function bulkSaveSessions(tenant: string, records: Session[]): Prom
 
     await tx
       .insert(sessions)
-      .values(
-        records.map((record) => {
-          const totalRevenue = record.budget?.totalRevenue ?? 0;
-          const collected = record.budget?.collected ?? 0;
-          return {
-            id: String(record.id),
-            workspaceSubdomain: subdomain,
-            name: record.name,
-            type: record.type,
-            status: record.status,
-            startDate: record.startDate,
-            endDate: record.endDate,
-            baseFee: String(record.baseFee ?? 0),
-            currency: record.currency ?? 'PKR',
-            description: record.description ?? null,
-            budgetTotalRevenue: String(totalRevenue),
-            budgetCollected: String(collected),
-            deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-            deletedBy: record.deletedBy ?? null,
-            deletionReason: record.deletionReason ?? null,
-            createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-            updatedAt: new Date(),
-          };
-        }),
-      )
+      .values(records.map((record) => sessionWriteValues(subdomain, record)))
       .onConflictDoUpdate({
         target: [sessions.workspaceSubdomain, sessions.id],
         set: {
@@ -424,29 +393,7 @@ export async function replaceSessionsForWorkspace(tenant: string, records: Sessi
     if (records.length === 0) return;
 
     await tx.insert(sessions).values(
-      records.map((record) => {
-        const totalRevenue = record.budget?.totalRevenue ?? 0;
-        const collected = record.budget?.collected ?? 0;
-        return {
-          id: String(record.id),
-          workspaceSubdomain: subdomain,
-          name: record.name,
-          type: record.type,
-          status: record.status,
-          startDate: record.startDate,
-          endDate: record.endDate,
-          baseFee: String(record.baseFee ?? 0),
-          currency: record.currency ?? 'PKR',
-          description: record.description ?? null,
-          budgetTotalRevenue: String(totalRevenue),
-          budgetCollected: String(collected),
-          deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-          deletedBy: record.deletedBy ?? null,
-          deletionReason: record.deletionReason ?? null,
-          createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-          updatedAt: new Date(),
-        };
-      }),
+      records.map((record) => sessionWriteValues(subdomain, record)),
     );
 
     await insertSessionChildrenTx(tx, subdomain, records);

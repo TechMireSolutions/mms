@@ -1,5 +1,6 @@
 import { type Invoice } from '@mms/shared';
 import type { financeInvoices } from '../schema.js';
+import { mapAuditToInsert } from './repositoryMappers.js';
 
 export type FinanceInvoiceInsert = typeof financeInvoices.$inferInsert;
 
@@ -33,9 +34,6 @@ export function invoiceWriteValues(
     creditedAmt: String(record.creditedAmt ?? 0),
     lastRemindedAt: record.lastRemindedAt ? new Date(record.lastRemindedAt) : null,
     reminderCount: record.reminderCount ?? 0,
-    deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-    deletedBy: record.deletedBy ?? null,
-    deletionReason: record.deletionReason ?? null,
-    updatedAt: new Date(),
+    ...mapAuditToInsert(record),
   } satisfies FinanceInvoiceInsert;
 }

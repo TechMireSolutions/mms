@@ -74,6 +74,7 @@ export const dashboardContract = c.router({
   deleteWidget: {
     method: 'DELETE',
     path: '/api/dashboard/widgets/:id',
+    pathParams: z.object({ id: z.string() }),
     body: z.any().optional(),
     responses: {
       200: dashboardSuccessResponseSchema,

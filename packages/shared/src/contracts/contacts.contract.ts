@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { contactRecordSchema } from '../contactsModuleManifest.js';
 import { contactIdentityMatchResultSchema } from '../contactIdentityMatch.js';
 import { baseListQuerySchema } from '../apiSchemas.js';
-import { contactWriteSchema } from '../schemas/contacts.dto.js';
+import { contactWireWriteSchema } from '../schemas/contacts.dto.js';
 
 const c = initContract();
 
@@ -114,7 +114,7 @@ export const contactsContract = c.router({
   create: {
     method: 'POST',
     path: '/api/contacts',
-    body: contactWriteSchema,
+    body: contactWireWriteSchema,
     responses: {
       200: contactWrappedResponseSchema,
       201: contactWrappedResponseSchema,
@@ -135,7 +135,7 @@ export const contactsContract = c.router({
     method: 'PUT',
     path: '/api/contacts/:id',
     pathParams: z.object({ id: z.string() }),
-    body: contactWriteSchema,
+    body: contactWireWriteSchema,
     responses: {
       200: contactWrappedResponseSchema,
       400: z.unknown(),

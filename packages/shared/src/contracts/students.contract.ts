@@ -1,7 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import {
-  studentWriteSchema,
+  studentWireWriteSchema,
   studentsBulkEnrollBodySchema,
   studentsDuplicateCheckBodySchema,
   studentsBulkStatusSchema,
@@ -71,7 +71,7 @@ export const studentContract = c.router({
   create: {
     method: 'POST',
     path: '/api/students',
-    body: studentWriteSchema,
+    body: studentWireWriteSchema,
     responses: {
       200: z.object({ student: studentRecordSchema }),
       201: z.object({ student: studentRecordSchema }),
@@ -95,7 +95,7 @@ export const studentContract = c.router({
   update: {
     method: 'PUT',
     path: '/api/students/:id',
-    body: studentWriteSchema,
+    body: studentWireWriteSchema,
     responses: {
       200: z.object({ student: studentRecordSchema }),
       400: errorResponse,

@@ -2,6 +2,7 @@ import { and, eq, inArray, sql } from 'drizzle-orm';
 import { type Student } from '@mms/shared';
 import { students, studentEnrolledSessions } from '../schema.js';
 import { withTenant, type AppDb } from '../tenant-context.js';
+import { mapAuditToInsert } from './repositoryMappers.js';
 
 export type StudentInsert = typeof students.$inferInsert;
 
@@ -25,15 +26,7 @@ export function studentWriteValues(subdomain: string, student: Student): Student
     discountPct: student.discountPct != null ? String(student.discountPct) : null,
     registrationType: student.registrationType ?? null,
     notes: student.notes ?? null,
-    deletedAt: student.deletedAt ? new Date(student.deletedAt) : null,
-    deletedBy: student.deletedBy ?? null,
-    deletionReason: student.deletionReason ?? null,
-    restoredAt: student.restoredAt ? new Date(student.restoredAt) : null,
-    restoredBy: student.restoredBy ?? null,
-    createdAt: student.createdAt ? new Date(student.createdAt) : new Date(),
-    updatedAt: new Date(),
-    createdBy: student.createdBy ?? null,
-    updatedBy: student.updatedBy ?? null,
+    ...mapAuditToInsert(student),
   } satisfies StudentInsert;
 }
 
@@ -95,37 +88,7 @@ export async function bulkSaveStudents(tenant: string, items: Student[]): Promis
 
     await tx
       .insert(students)
-      .values(
-        items.map((student) => ({
-          id: String(student.id),
-          workspaceSubdomain: subdomain,
-          contactId: student.contactId ? String(student.contactId) : null,
-          fatherContactId: student.fatherContactId ? String(student.fatherContactId) : null,
-          motherContactId: student.motherContactId ? String(student.motherContactId) : null,
-          guardianContactId: student.guardianContactId ? String(student.guardianContactId) : null,
-          fatherName: student.fatherName ?? null,
-          motherName: student.motherName ?? null,
-          guardianName: student.guardianName ?? null,
-          grNumber: student.grNumber ?? null,
-          studentId: student.studentId ?? null,
-          status: student.status ?? 'active',
-          registeredDate: student.registeredDate ?? null,
-          enrollmentDate: student.enrollmentDate ?? null,
-          discountType: student.discountType ?? null,
-          discountPct: student.discountPct != null ? String(student.discountPct) : null,
-          registrationType: student.registrationType ?? null,
-          notes: student.notes ?? null,
-          deletedAt: student.deletedAt ? new Date(student.deletedAt) : null,
-          deletedBy: student.deletedBy ?? null,
-          deletionReason: student.deletionReason ?? null,
-          restoredAt: student.restoredAt ? new Date(student.restoredAt) : null,
-          restoredBy: student.restoredBy ?? null,
-          createdAt: student.createdAt ? new Date(student.createdAt) : new Date(),
-          updatedAt: new Date(),
-          createdBy: student.createdBy ?? null,
-          updatedBy: student.updatedBy ?? null,
-        })),
-      )
+      .values(items.map((student) => studentWriteValues(subdomain, student)))
       .onConflictDoUpdate({
         target: [students.workspaceSubdomain, students.id],
         set: {

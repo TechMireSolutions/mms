@@ -9,7 +9,7 @@ import {
   type User,
 } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
 import { withTenant } from '../../db/tenant-context.js';
@@ -83,7 +83,7 @@ async function handleDashboardWrite<T>(
 }
 
 const dashboardRouter = s.router(dashboardContract, {
-  getPreferences: async () =>
+  getPreferences: async (): Promise<ContractRouteResponse<typeof dashboardContract['getPreferences']>> =>
     handleDashboardRead(
       async () => {
         const preferences = await loadDashboardPreferences();
@@ -92,7 +92,7 @@ const dashboardRouter = s.router(dashboardContract, {
       'Failed to load dashboard preferences',
     ),
 
-  putPreferences: async ({ body, request }: ContractRouteArgs<typeof dashboardContract['putPreferences']>): Promise<unknown> => {
+  putPreferences: async ({ body, request }: ContractRouteArgs<typeof dashboardContract['putPreferences']>): Promise<ContractRouteResponse<typeof dashboardContract['putPreferences']>> => {
     try {
       const result = await handleDashboardWrite(request, async (user) => {
         const saved = await saveDashboardPreferences(
@@ -113,7 +113,7 @@ const dashboardRouter = s.router(dashboardContract, {
     }
   },
 
-  getWidgets: async () =>
+  getWidgets: async (): Promise<ContractRouteResponse<typeof dashboardContract['getWidgets']>> =>
     handleDashboardRead(
       async () => {
         const widgets = await loadDashboardWidgets();
@@ -122,7 +122,7 @@ const dashboardRouter = s.router(dashboardContract, {
       'Failed to load dashboard widgets',
     ),
 
-  putWidgets: async ({ body, request }: ContractRouteArgs<typeof dashboardContract['putWidgets']>): Promise<unknown> => {
+  putWidgets: async ({ body, request }: ContractRouteArgs<typeof dashboardContract['putWidgets']>): Promise<ContractRouteResponse<typeof dashboardContract['putWidgets']>> => {
     try {
       const result = await handleDashboardWrite(request, async (user) => {
         const widgets = await upsertDashboardWidgets(body as DashboardWidgetDto[]);
@@ -141,8 +141,8 @@ const dashboardRouter = s.router(dashboardContract, {
     }
   },
 
-  deleteWidget: async ({ params: { id }, request }: ContractRouteArgs<typeof dashboardContract['deleteWidget']>): Promise<unknown> => {
-    if (!(id as string)?.trim()) {
+  deleteWidget: async ({ params: { id }, request }: ContractRouteArgs<typeof dashboardContract['deleteWidget']>): Promise<ContractRouteResponse<typeof dashboardContract['deleteWidget']>> => {
+    if (!id?.trim()) {
       return {
         status: 400 as const,
         body: { type: 'validation_error', message: 'Widget id is required' },
@@ -165,7 +165,7 @@ const dashboardRouter = s.router(dashboardContract, {
     }
   },
 
-  reorderWidgets: async ({ body, request }: ContractRouteArgs<typeof dashboardContract['reorderWidgets']>): Promise<unknown> => {
+  reorderWidgets: async ({ body, request }: ContractRouteArgs<typeof dashboardContract['reorderWidgets']>): Promise<ContractRouteResponse<typeof dashboardContract['reorderWidgets']>> => {
     try {
       const result = await handleDashboardWrite(request, async () => {
         await reorderDashboardWidgets(body.order);
@@ -180,7 +180,7 @@ const dashboardRouter = s.router(dashboardContract, {
     }
   },
 
-  getSummary: async ({ query }: ContractRouteArgs<typeof dashboardContract['getSummary']>) =>
+  getSummary: async ({ query }: ContractRouteArgs<typeof dashboardContract['getSummary']>): Promise<ContractRouteResponse<typeof dashboardContract['getSummary']>> =>
     handleDashboardRead(
       async () => {
         const summary = await loadDashboardSummary(query?.date, query?.role);

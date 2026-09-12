@@ -4,14 +4,10 @@ import { enrollmentRecordSchema } from '../enrollmentsModuleManifest.js';
 import { enrollmentsListQuerySchema } from '../enrollmentsListQuery.js';
 import { enrollmentsReportAggregatesSchema } from '../enrollmentsReportAggregates.js';
 import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
+import { bulkStringIdsBodySchema } from '../apiSchemas.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
-
-const bulkIdsBody = z.object({
-  ids: z.array(z.string()),
-  deletionReason: z.string().optional(),
-});
 
 /** Envelope for paginated enrollment list responses (`EnrollmentsListPageResult`). */
 export const enrollmentListPageResponseSchema = z.object({
@@ -87,14 +83,14 @@ export const enrollmentContract = c.router({
   bulkDelete: {
     method: 'POST',
     path: '/api/enrollments/bulk-delete',
-    body: bulkIdsBody,
+    body: bulkStringIdsBodySchema,
     responses: { 200: enrollmentBulkResultResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk soft-delete enrollments',
   },
   bulkRestore: {
     method: 'POST',
     path: '/api/enrollments/bulk-restore',
-    body: bulkIdsBody,
+    body: bulkStringIdsBodySchema,
     responses: { 200: enrollmentBulkResultResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'Bulk restore enrollments',
   },

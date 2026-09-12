@@ -20,18 +20,23 @@ export function scopeDeleted<T extends { deletedAt?: string | null }>(
   return rows.filter((row) => !row.deletedAt);
 }
 
+export interface BulkOperationOptions {
+  skipValidation?: boolean;
+}
+
 /**
  * Parses, bulk-saves, and broadcasts a tenant collection upsert.
  */
 export async function upsertWithBroadcast<T>(
-  schema: { parse: (data: unknown) => T[] },
+  schema: { parse: (data: unknown) => T[] } | null | undefined,
   records: T[],
   bulkSave: (tenant: string, list: T[]) => Promise<void>,
   collection: string,
+  options?: BulkOperationOptions,
 ): Promise<T[]> {
   const tenant = getRequestTenant();
   if (!tenant) throw new Error('Tenant context required');
-  const parsed = schema.parse(records);
+  const parsed = schema && !options?.skipValidation ? schema.parse(records) : records;
   await bulkSave(tenant, parsed);
   await broadcastCollection(collection);
   return parsed;
@@ -45,7 +50,7 @@ export async function upsertWithBroadcast<T>(
  */
 export function defineTenantBulkCollectionService<T>(
   repo: TenantBulkRepo<T>,
-  schema: ZodType<T[]>,
+  schema: ZodType<T[]> | null | undefined,
   broadcastKey: string,
 ) {
   async function load(): Promise<T[]> {
@@ -54,10 +59,10 @@ export function defineTenantBulkCollectionService<T>(
     return repo.listByWorkspace(tenant);
   }
 
-  async function replace(records: T[]): Promise<T[]> {
+  async function replace(records: T[], options?: BulkOperationOptions): Promise<T[]> {
     const tenant = getRequestTenant();
     if (!tenant) throw new Error('Tenant context required');
-    const parsed = schema.parse(records);
+    const parsed = schema && !options?.skipValidation ? schema.parse(records) : records;
     await repo.replaceForWorkspace(tenant, parsed);
     await broadcastCollection(broadcastKey);
     return parsed;

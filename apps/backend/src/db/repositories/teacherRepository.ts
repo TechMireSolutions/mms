@@ -3,7 +3,27 @@ import { type Teacher, type RepositoryListOptions } from '@mms/shared';
 import { teachers } from '../schema.js';
 import { withTenant, type AppDb } from '../tenant-context.js';
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
-import { mapAuditTimestamps } from './repositoryMappers.js';
+import { mapAuditTimestamps, mapAuditToInsert } from './repositoryMappers.js';
+
+export type TeacherInsert = typeof teachers.$inferInsert;
+
+export function teacherWriteValues(subdomain: string, teacher: Teacher): TeacherInsert {
+  const audit = mapAuditToInsert(teacher);
+  return {
+    id: String(teacher.id),
+    workspaceSubdomain: subdomain,
+    contactId: teacher.contactId ? String(teacher.contactId) : null,
+    userId: teacher.userId ? String(teacher.userId) : null,
+    employeeId: teacher.employeeId ?? null,
+    status: teacher.status ?? 'active',
+    specialization: teacher.specialization ?? null,
+    qualification: teacher.qualification ?? null,
+    joinDate: teacher.joinDate ?? null,
+    notes: teacher.notes ?? null,
+    ...audit,
+    createdAt: audit.createdAt ?? new Date(),
+  } satisfies TeacherInsert;
+}
 
 export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
   return {
@@ -28,55 +48,22 @@ export async function hydrateTeachersList(
   return rows.map(teacherRowToRecord);
 }
 
+export function teacherUpdateSetValues(subdomain: string, teacher: Teacher) {
+  const { id: _id, workspaceSubdomain: _subdomain, createdAt: _createdAt, createdBy: _createdBy, ...setFields } = teacherWriteValues(subdomain, teacher);
+  return setFields;
+}
+
 export async function persistTeacherTx(
   tx: AppDb,
   subdomain: string,
   teacher: Teacher,
 ): Promise<void> {
-  const teacherId = String(teacher.id);
-
   await tx
     .insert(teachers)
-    .values({
-      id: teacherId,
-      workspaceSubdomain: subdomain,
-      contactId: teacher.contactId ? String(teacher.contactId) : null,
-      userId: teacher.userId ? String(teacher.userId) : null,
-      employeeId: teacher.employeeId ?? null,
-      status: teacher.status ?? 'active',
-      specialization: teacher.specialization ?? null,
-      qualification: teacher.qualification ?? null,
-      joinDate: teacher.joinDate ?? null,
-      notes: teacher.notes ?? null,
-      deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
-      deletedBy: teacher.deletedBy ?? null,
-      deletionReason: teacher.deletionReason ?? null,
-      restoredAt: teacher.restoredAt ? new Date(teacher.restoredAt) : null,
-      restoredBy: teacher.restoredBy ?? null,
-      createdAt: teacher.createdAt ? new Date(teacher.createdAt) : new Date(),
-      updatedAt: new Date(),
-      createdBy: teacher.createdBy ?? null,
-      updatedBy: teacher.updatedBy ?? null,
-    })
+    .values(teacherWriteValues(subdomain, teacher))
     .onConflictDoUpdate({
       target: [teachers.workspaceSubdomain, teachers.id],
-      set: {
-        contactId: teacher.contactId ? String(teacher.contactId) : null,
-        userId: teacher.userId ? String(teacher.userId) : null,
-        employeeId: teacher.employeeId ?? null,
-        status: teacher.status ?? 'active',
-        specialization: teacher.specialization ?? null,
-        qualification: teacher.qualification ?? null,
-        joinDate: teacher.joinDate ?? null,
-        notes: teacher.notes ?? null,
-        deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
-        deletedBy: teacher.deletedBy ?? null,
-        deletionReason: teacher.deletionReason ?? null,
-        restoredAt: teacher.restoredAt ? new Date(teacher.restoredAt) : null,
-        restoredBy: teacher.restoredBy ?? null,
-        updatedAt: new Date(),
-        updatedBy: teacher.updatedBy ?? null,
-      },
+      set: teacherUpdateSetValues(subdomain, teacher),
     });
 }
 
@@ -208,29 +195,7 @@ export async function bulkSaveTeachers(tenant: string, items: Teacher[]): Promis
   return withTenant(subdomain, async (tx) => {
     await tx
       .insert(teachers)
-      .values(
-        items.map((teacher) => ({
-          id: String(teacher.id),
-          workspaceSubdomain: subdomain,
-          contactId: teacher.contactId ? String(teacher.contactId) : null,
-          userId: teacher.userId ? String(teacher.userId) : null,
-          employeeId: teacher.employeeId ?? null,
-          status: teacher.status ?? 'active',
-          specialization: teacher.specialization ?? null,
-          qualification: teacher.qualification ?? null,
-          joinDate: teacher.joinDate ?? null,
-          notes: teacher.notes ?? null,
-          deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
-          deletedBy: teacher.deletedBy ?? null,
-          deletionReason: teacher.deletionReason ?? null,
-          restoredAt: teacher.restoredAt ? new Date(teacher.restoredAt) : null,
-          restoredBy: teacher.restoredBy ?? null,
-          createdAt: teacher.createdAt ? new Date(teacher.createdAt) : new Date(),
-          updatedAt: new Date(),
-          createdBy: teacher.createdBy ?? null,
-          updatedBy: teacher.updatedBy ?? null,
-        })),
-      )
+      .values(items.map((teacher) => teacherWriteValues(subdomain, teacher)))
       .onConflictDoUpdate({
         target: [teachers.workspaceSubdomain, teachers.id],
         set: {
@@ -260,27 +225,7 @@ export async function replaceTeachersForWorkspace(tenant: string, items: Teacher
     await tx.delete(teachers).where(eq(teachers.workspaceSubdomain, subdomain));
     if (items.length > 0) {
       await tx.insert(teachers).values(
-        items.map((teacher) => ({
-          id: String(teacher.id),
-          workspaceSubdomain: subdomain,
-          contactId: teacher.contactId ? String(teacher.contactId) : null,
-          userId: teacher.userId ? String(teacher.userId) : null,
-          employeeId: teacher.employeeId ?? null,
-          status: teacher.status ?? 'active',
-          specialization: teacher.specialization ?? null,
-          qualification: teacher.qualification ?? null,
-          joinDate: teacher.joinDate ?? null,
-          notes: teacher.notes ?? null,
-          deletedAt: teacher.deletedAt ? new Date(teacher.deletedAt) : null,
-          deletedBy: teacher.deletedBy ?? null,
-          deletionReason: teacher.deletionReason ?? null,
-          restoredAt: teacher.restoredAt ? new Date(teacher.restoredAt) : null,
-          restoredBy: teacher.restoredBy ?? null,
-          createdAt: teacher.createdAt ? new Date(teacher.createdAt) : new Date(),
-          updatedAt: new Date(),
-          createdBy: teacher.createdBy ?? null,
-          updatedBy: teacher.updatedBy ?? null,
-        })),
+        items.map((teacher) => teacherWriteValues(subdomain, teacher)),
       );
     }
   });

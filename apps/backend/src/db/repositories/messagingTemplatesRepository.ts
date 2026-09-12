@@ -94,22 +94,29 @@ export async function findMessageTemplatesByIds(tenant: string, ids: string[]): 
   });
 }
 
+export function messageTemplateWriteValues(
+  subdomain: string,
+  record: MessageTemplate,
+): typeof messageTemplates.$inferInsert {
+  return {
+    id: record.id,
+    workspaceSubdomain: subdomain,
+    label: record.label,
+    labelKey: record.labelKey ?? null,
+    body: record.body,
+    category: record.category ?? 'general',
+    channel: record.channel ?? 'all',
+    createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
+    updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
+  };
+}
+
 export async function saveMessageTemplate(tenant: string, record: MessageTemplate): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(messageTemplates)
-      .values({
-        id: record.id,
-        workspaceSubdomain: subdomain,
-        label: record.label,
-        labelKey: record.labelKey ?? null,
-        body: record.body,
-        category: record.category ?? 'general',
-        channel: record.channel ?? 'all',
-        createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-        updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-      })
+      .values(messageTemplateWriteValues(subdomain, record))
       .onConflictDoUpdate({
         target: [messageTemplates.workspaceSubdomain, messageTemplates.id],
         set: {
@@ -137,19 +144,7 @@ export async function bulkSaveMessageTemplates(tenant: string, records: MessageT
   await withTenant(subdomain, async (tx) => {
     await tx
       .insert(messageTemplates)
-      .values(
-        uniqueRecords.map((record) => ({
-          id: record.id,
-          workspaceSubdomain: subdomain,
-          label: record.label,
-          labelKey: record.labelKey ?? null,
-          body: record.body,
-          category: record.category ?? 'general',
-          channel: record.channel ?? 'all',
-          createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-          updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-        })),
-      )
+      .values(uniqueRecords.map((record) => messageTemplateWriteValues(subdomain, record)))
       .onConflictDoUpdate({
         target: [messageTemplates.workspaceSubdomain, messageTemplates.id],
         set: {
@@ -180,17 +175,7 @@ export async function replaceMessageTemplatesForWorkspace(
     await tx.delete(messageTemplates).where(eq(messageTemplates.workspaceSubdomain, subdomain));
     if (uniqueRecords.length > 0) {
       await tx.insert(messageTemplates).values(
-        uniqueRecords.map((record) => ({
-          id: record.id,
-          workspaceSubdomain: subdomain,
-          label: record.label,
-          labelKey: record.labelKey ?? null,
-          body: record.body,
-          category: record.category ?? 'general',
-          channel: record.channel ?? 'all',
-          createdAt: record.createdAt ? new Date(record.createdAt) : new Date(),
-          updatedAt: record.updatedAt ? new Date(record.updatedAt) : new Date(),
-        })),
+        uniqueRecords.map((record) => messageTemplateWriteValues(subdomain, record)),
       );
     }
   });

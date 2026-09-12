@@ -30,8 +30,39 @@ import {
   listContactsByWorkspace,
 } from './contactRepositoryHydrate.js';
 import { syncContactChildrenTx, bulkInsertContactChildrenTx } from './contactRepositoryPersistChildren.js';
+import { mapAuditToInsert } from './repositoryMappers.js';
 
 type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+
+export type ContactInsert = typeof contacts.$inferInsert;
+
+export function contactWriteValues(subdomain: string, contact: Contact): ContactInsert {
+  const fullName = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed';
+  const audit = mapAuditToInsert(contact);
+  return {
+    id: String(contact.id),
+    workspaceSubdomain: subdomain,
+    firstName: contact.firstName || fullName,
+    lastName: contact.lastName ?? null,
+    name: fullName,
+    gender: contact.gender ?? null,
+    dob: contact.dob ? String(contact.dob).trim() || null : null,
+    cnic: contact.cnic ?? null,
+    isSyed: contact.isSyed ?? false,
+    avatar: contact.avatar ?? null,
+    notes: contact.notes ?? null,
+    whatsappStatus: contact.whatsappStatus ?? 'unknown',
+    lastCheckedAt: contact.lastCheckedAt ? new Date(contact.lastCheckedAt) : null,
+    aiSummary: contact.aiSummary ?? null,
+    ...audit,
+    createdAt: audit.createdAt ?? new Date(),
+  } satisfies ContactInsert;
+}
+
+export function contactUpdateSetValues(subdomain: string, contact: Contact) {
+  const { id: _id, workspaceSubdomain: _subdomain, createdAt: _createdAt, createdBy: _createdBy, ...setFields } = contactWriteValues(subdomain, contact);
+  return setFields;
+}
 
 export async function persistContactTx(
   tx: Transaction,
@@ -39,58 +70,16 @@ export async function persistContactTx(
   rawContact: Contact,
 ): Promise<void> {
   const contact = hydrateContactRelationshipFields(rawContact);
-  const contactId = String(contact.id);
-  const fullName = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed';
 
   await tx
     .insert(contacts)
-    .values({
-      id: contactId,
-      workspaceSubdomain: subdomain,
-      firstName: contact.firstName || fullName,
-      lastName: contact.lastName ?? null,
-      name: fullName,
-      gender: contact.gender ?? null,
-      dob: contact.dob ? String(contact.dob).trim() || null : null,
-      cnic: contact.cnic ?? null,
-      isSyed: contact.isSyed ?? false,
-      avatar: contact.avatar ?? null,
-      notes: contact.notes ?? null,
-      whatsappStatus: contact.whatsappStatus ?? 'unknown',
-      lastCheckedAt: contact.lastCheckedAt ? new Date(contact.lastCheckedAt) : null,
-      aiSummary: contact.aiSummary ?? null,
-      deletedAt: contact.deletedAt ? new Date(contact.deletedAt) : null,
-      deletedBy: contact.deletedBy ?? null,
-      deletionReason: contact.deletionReason ?? null,
-      createdAt: contact.createdAt ? new Date(contact.createdAt) : new Date(),
-      updatedAt: new Date(),
-      createdBy: contact.createdBy ?? null,
-      updatedBy: contact.updatedBy ?? null,
-    })
+    .values(contactWriteValues(subdomain, contact))
     .onConflictDoUpdate({
       target: [contacts.workspaceSubdomain, contacts.id],
-      set: {
-        firstName: contact.firstName || fullName,
-        lastName: contact.lastName ?? null,
-        name: fullName,
-        gender: contact.gender ?? null,
-        dob: contact.dob ? String(contact.dob).trim() || null : null,
-        cnic: contact.cnic ?? null,
-        isSyed: contact.isSyed ?? false,
-        avatar: contact.avatar ?? null,
-        notes: contact.notes ?? null,
-        whatsappStatus: contact.whatsappStatus ?? 'unknown',
-        lastCheckedAt: contact.lastCheckedAt ? new Date(contact.lastCheckedAt) : null,
-        aiSummary: contact.aiSummary ?? null,
-        deletedAt: contact.deletedAt ? new Date(contact.deletedAt) : null,
-        deletedBy: contact.deletedBy ?? null,
-        deletionReason: contact.deletionReason ?? null,
-        updatedAt: new Date(),
-        updatedBy: contact.updatedBy ?? null,
-      },
+      set: contactUpdateSetValues(subdomain, contact),
     });
 
-  await syncContactChildrenTx(tx, subdomain, contactId, contact);
+  await syncContactChildrenTx(tx, subdomain, String(contact.id), contact);
 }
 
 export async function saveContact(tenant: string, contact: Contact): Promise<void> {
@@ -117,34 +106,7 @@ export async function bulkSaveContacts(tenant: string, records: Contact[]): Prom
 
     await tx
       .insert(contacts)
-      .values(
-        hydratedRecords.map((contact) => {
-          const fullName = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed';
-          return {
-            id: String(contact.id),
-            workspaceSubdomain: subdomain,
-            firstName: contact.firstName || fullName,
-            lastName: contact.lastName ?? null,
-            name: fullName,
-            gender: contact.gender ?? null,
-            dob: contact.dob ? String(contact.dob).trim() || null : null,
-            cnic: contact.cnic ?? null,
-            isSyed: contact.isSyed ?? false,
-            avatar: contact.avatar ?? null,
-            notes: contact.notes ?? null,
-            whatsappStatus: contact.whatsappStatus ?? 'unknown',
-            lastCheckedAt: contact.lastCheckedAt ? new Date(contact.lastCheckedAt) : null,
-            aiSummary: contact.aiSummary ?? null,
-            deletedAt: contact.deletedAt ? new Date(contact.deletedAt) : null,
-            deletedBy: contact.deletedBy ?? null,
-            deletionReason: contact.deletionReason ?? null,
-            createdAt: contact.createdAt ? new Date(contact.createdAt) : new Date(),
-            updatedAt: new Date(),
-            createdBy: contact.createdBy ?? null,
-            updatedBy: contact.updatedBy ?? null,
-          };
-        }),
-      )
+      .values(hydratedRecords.map((contact) => contactWriteValues(subdomain, contact)))
       .onConflictDoUpdate({
         target: [contacts.workspaceSubdomain, contacts.id],
         set: {
@@ -208,32 +170,7 @@ export async function replaceContactsForWorkspace(tenant: string, records: Conta
 
     const hydratedRecords = uniqueRecords.map(hydrateContactRelationshipFields);
     await tx.insert(contacts).values(
-      hydratedRecords.map((contact) => {
-        const fullName = contact.name || `${contact.firstName || ''} ${contact.lastName || ''}`.trim() || 'Unnamed';
-        return {
-          id: String(contact.id),
-          workspaceSubdomain: subdomain,
-          firstName: contact.firstName || fullName,
-          lastName: contact.lastName ?? null,
-          name: fullName,
-          gender: contact.gender ?? null,
-          dob: contact.dob ? String(contact.dob).trim() || null : null,
-          cnic: contact.cnic ?? null,
-          isSyed: contact.isSyed ?? false,
-          avatar: contact.avatar ?? null,
-          notes: contact.notes ?? null,
-          whatsappStatus: contact.whatsappStatus ?? 'unknown',
-          lastCheckedAt: contact.lastCheckedAt ? new Date(contact.lastCheckedAt) : null,
-          aiSummary: contact.aiSummary ?? null,
-          deletedAt: contact.deletedAt ? new Date(contact.deletedAt) : null,
-          deletedBy: contact.deletedBy ?? null,
-          deletionReason: contact.deletionReason ?? null,
-          createdAt: contact.createdAt ? new Date(contact.createdAt) : new Date(),
-          updatedAt: new Date(),
-          createdBy: contact.createdBy ?? null,
-          updatedBy: contact.updatedBy ?? null,
-        };
-      }),
+      hydratedRecords.map((contact) => contactWriteValues(subdomain, contact)),
     );
 
     await bulkInsertContactChildrenTx(tx, subdomain, hydratedRecords);

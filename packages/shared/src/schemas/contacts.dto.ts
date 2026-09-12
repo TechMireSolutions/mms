@@ -108,7 +108,7 @@ export function collectContactWriteExtraFieldKeys(
   return [...keys];
 }
 
-const contactWriteBaseObjectSchema = z
+const contactWriteRawObjectSchema = z
   .object({
     id: z.union([z.string(), z.number()]).optional(),
     _blueprintId: z.union([z.string(), z.number()]).optional(),
@@ -151,8 +151,9 @@ const contactWriteBaseObjectSchema = z
     city: z.string().optional(),
     state: z.string().optional(),
     country: z.string().optional(),
-  })
-  .strict();
+  });
+
+const contactWriteBaseObjectSchema = contactWriteRawObjectSchema.strict();
 
 /**
  * Contact write DTO: soft-delete strip + relationship hydrate, then strict allowlist
@@ -178,6 +179,17 @@ export function buildContactWriteSchema(extraFieldKeys: string[] = []): z.ZodTyp
 
 /** System-keys-only write schema (no Setup custom keys). Prefer `buildContactWriteSchema` on tenant writes. */
 export const contactWriteSchema = buildContactWriteSchema();
+
+/**
+ * Wire-level contact write DTO allowing custom setup fields to pass through to tenant dynamic validation.
+ * Used at the @ts-rest contract gateway boundary.
+ */
+export const contactWireWriteSchema = z.preprocess((raw) => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const stripped = stripContactClientSoftDeleteFields(raw as Record<string, unknown>);
+  const hydrated = hydrateContactRelationshipFields(stripped);
+  return deepSanitizeStrings(hydrated);
+}, contactWriteRawObjectSchema.passthrough());
 
 export function buildContactMergeBodySchema(extraFieldKeys: string[] = []) {
   const base = z.object({

@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { isQueryFlagTrue, type User, type WidgetQuery } from '@mms/shared';
 import { hasanatContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
 import { hasanatUseCases } from '../../../hasanat/use-cases/hasanatUseCases.js';
@@ -11,7 +11,7 @@ const s = initServer();
 
 export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
   const router = s.router(hasanatContract, {
-    listDistributions: async ({ query, request }: ContractRouteArgs<typeof hasanatContract['listDistributions']>): Promise<unknown> => {
+    listDistributions: async ({ query, request }: ContractRouteArgs<typeof hasanatContract['listDistributions']>): Promise<ContractRouteResponse<typeof hasanatContract['listDistributions']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'hasanat_distributions')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -27,7 +27,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list distributions' } };
       }
     },
-    createDistribution: async ({ body, request }: ContractRouteArgs<typeof hasanatContract['createDistribution']>): Promise<unknown> => {
+    createDistribution: async ({ body, request }: ContractRouteArgs<typeof hasanatContract['createDistribution']>): Promise<ContractRouteResponse<typeof hasanatContract['createDistribution']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'hasanat_distributions')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -43,7 +43,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create distribution' } };
       }
     },
-    updateDistribution: async ({ params: { id }, body, request }: ContractRouteArgs<typeof hasanatContract['updateDistribution']>): Promise<unknown> => {
+    updateDistribution: async ({ params: { id }, body, request }: ContractRouteArgs<typeof hasanatContract['updateDistribution']>): Promise<ContractRouteResponse<typeof hasanatContract['updateDistribution']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, 'hasanat_distributions')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -62,7 +62,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update distribution' } };
       }
     },
-    bulkDeleteDistributions: async ({ body, request }: ContractRouteArgs<typeof hasanatContract['bulkDeleteDistributions']>): Promise<unknown> => {
+    bulkDeleteDistributions: async ({ body, request }: ContractRouteArgs<typeof hasanatContract['bulkDeleteDistributions']>): Promise<ContractRouteResponse<typeof hasanatContract['bulkDeleteDistributions']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'hasanat_distributions')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -77,7 +77,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete distributions' } };
       }
     },
-    bulkRestoreDistributions: async ({ body, request }: ContractRouteArgs<typeof hasanatContract['bulkRestoreDistributions']>): Promise<unknown> => {
+    bulkRestoreDistributions: async ({ body, request }: ContractRouteArgs<typeof hasanatContract['bulkRestoreDistributions']>): Promise<ContractRouteResponse<typeof hasanatContract['bulkRestoreDistributions']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, 'hasanat_distributions')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -92,7 +92,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore distributions' } };
       }
     },
-    listDenoms: async ({ request }: ContractRouteArgs<typeof hasanatContract['listDenoms']>): Promise<unknown> => {
+    listDenoms: async ({ request }: ContractRouteArgs<typeof hasanatContract['listDenoms']>): Promise<ContractRouteResponse<typeof hasanatContract['listDenoms']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'hasanat_denoms')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -104,7 +104,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list denominations' } };
       }
     },
-    listBatches: async ({ request }: ContractRouteArgs<typeof hasanatContract['listBatches']>): Promise<unknown> => {
+    listBatches: async ({ request }: ContractRouteArgs<typeof hasanatContract['listBatches']>): Promise<ContractRouteResponse<typeof hasanatContract['listBatches']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'hasanat_batches')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -116,7 +116,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list batches' } };
       }
     },
-    listRedemptions: async ({ request }: ContractRouteArgs<typeof hasanatContract['listRedemptions']>): Promise<unknown> => {
+    listRedemptions: async ({ request }: ContractRouteArgs<typeof hasanatContract['listRedemptions']>): Promise<ContractRouteResponse<typeof hasanatContract['listRedemptions']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'hasanat_redemptions')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -128,7 +128,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list redemptions' } };
       }
     },
-    widgetAggregates: async ({ body, request }: ContractRouteArgs<typeof hasanatContract['widgetAggregates']>): Promise<unknown> => {
+    widgetAggregates: async ({ body, request }: ContractRouteArgs<typeof hasanatContract['widgetAggregates']>): Promise<ContractRouteResponse<typeof hasanatContract['widgetAggregates']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'hasanat_distributions')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
