@@ -764,6 +764,20 @@
       "when": 1787097600000,
       "tag": "0108_soft_delete_schema_rls_and_triggers",
       "breakpoints": true
+    },
+    {
+      "idx": 109,
+      "version": "7",
+      "when": 1787184000000,
+      "tag": "0109_outbox_events",
+      "breakpoints": true
+    },
+    {
+      "idx": 110,
+      "version": "7",
+      "when": 1787270400000,
+      "tag": "0110_academic_sessions_model6",
+      "breakpoints": true
     }
   ]
 }
