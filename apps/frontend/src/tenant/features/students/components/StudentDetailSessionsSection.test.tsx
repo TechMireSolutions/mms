@@ -24,7 +24,9 @@ const mockSession: Session = {
   endDate: "2024-12-31",
   baseFee: 100,
   currency: "USD",
+  faculty: [],
   classes: [
+
     {
       id: "cls-1",
       name: "Class A",
@@ -33,16 +35,13 @@ const mockSession: Session = {
       room: "Room 101",
       ageMin: 5,
       ageMax: 15,
-      gender: "any",
-      capacity: 20,
+      gender: "mixed",
+      maxStudents: 20,
       enrolled: 15,
-    },
+    } as any,
   ],
-  timetable: [],
-  discounts: [],
-  events: [],
-  tabarruk: [],
   createdAt: "2024-01-01T00:00:00Z",
+
   updatedAt: "2024-01-01T00:00:00Z",
 };
 

@@ -1,48 +1,59 @@
 import {
   ClassSchema,
-  TimetableItemSchema,
-  DiscountSchema,
-  BudgetExpenseSchema,
-  BudgetIncomeSchema,
-  SessionBudgetSchema,
-  SessionEventSchema,
-  TabarrukItemSchema,
+  SessionFacultySchema,
+  SessionClassFeeSchema,
+  SessionClassScheduleSchema,
+  SessionClassBudgetSchema,
+  SessionClassDiscountSchema,
+  SessionClassTimetableSchema,
+  SessionClassTimetablePeriodSchema,
+  SessionClassRefreshmentSchema,
+  ScholarshipEligibilitySchema,
+  SessionClassScholarshipSchema,
   SessionSchema,
   type Class,
-  type TimetableItem,
-  type Discount,
-  type BudgetExpense,
-  type BudgetIncome,
-  type SessionBudget,
-  type SessionEvent,
-  type TabarrukItem,
+  type SessionFaculty,
+  type SessionClassFee,
+  type SessionClassSchedule,
+  type SessionClassBudget,
+  type SessionClassDiscount,
+  type SessionClassTimetable,
+  type SessionClassTimetablePeriod,
+  type SessionClassRefreshment,
+  type ScholarshipEligibility,
+  type SessionClassScholarship,
   type Session,
 } from "@mms/shared";
 
 export {
   ClassSchema,
-  TimetableItemSchema,
-  DiscountSchema,
-  BudgetExpenseSchema,
-  BudgetIncomeSchema,
-  SessionBudgetSchema,
-  SessionEventSchema,
-  TabarrukItemSchema,
+  SessionFacultySchema,
+  SessionClassFeeSchema,
+  SessionClassScheduleSchema,
+  SessionClassBudgetSchema,
+  SessionClassDiscountSchema,
+  SessionClassTimetableSchema,
+  SessionClassTimetablePeriodSchema,
+  SessionClassRefreshmentSchema,
+  ScholarshipEligibilitySchema,
+  SessionClassScholarshipSchema,
   SessionSchema,
 };
 
 export type {
   Class,
-  TimetableItem,
-  Discount,
-  BudgetExpense,
-  BudgetIncome,
-  SessionBudget,
-  SessionEvent,
-  TabarrukItem,
+  SessionFaculty,
+  SessionClassFee,
+  SessionClassSchedule,
+  SessionClassBudget,
+  SessionClassDiscount,
+  SessionClassTimetable,
+  SessionClassTimetablePeriod,
+  SessionClassRefreshment,
+  ScholarshipEligibility,
+  SessionClassScholarship,
   Session,
 };
-
 
 export const SESSION_TYPES = ["Hifz", "Qaidah", "Tajweed", "Islamic Studies", "Arabic", "Other"] as const;
 
@@ -56,8 +67,4 @@ export function validateSessions(sessionInput: unknown): Session[] {
   return valid;
 }
 
-export const EVENT_TYPES = ["ceremony", "assessment", "meeting", "trip", "other"] as const;
 export const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-export const ACTIVITY_TYPES = ["class", "lecture", "assessment", "spiritual", "activity", "break"] as const;
-export const INCOME_CATEGORIES = ["Fee Collection", "Donation", "Grant", "Other"] as const;
-export const EXPENSE_CATEGORIES = ["Teacher Salaries", "Stationery", "Utilities", "Rent", "Maintenance", "Other"] as const;

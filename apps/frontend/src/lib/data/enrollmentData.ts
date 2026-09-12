@@ -1,5 +1,6 @@
 import { type Student } from "@/lib/data/studentsData";
-import { type Session, type Class, type Discount } from "@/lib/data/sessionsData";
+import { type Session, type Class } from "@/lib/data/sessionsData";
+
 import { normalizeGenderKey } from "@/lib/genderUi";
 
 import type { Enrollment, EnrollmentTimelineItem } from '@mms/shared';
@@ -62,14 +63,16 @@ function studentMatchesClassGender(
   classGender: string,
 ): boolean {
   const requirement = classGender.trim().toLowerCase();
-  return requirement === "any" || normalizeGenderKey(studentGender) === requirement;
+  return requirement === "any" || requirement === "mixed" || normalizeGenderKey(studentGender) === requirement;
 }
 
 export function suggestClass(student: Partial<Student>, session: Session): Class | null {
   if (!student.dob) return null;
   const age = calculateAgeFromDob(student.dob);
   for (const sessionClass of session.classes) {
-    if (age >= sessionClass.ageMin && age <= sessionClass.ageMax) {
+    const minAge = (sessionClass as any).minAge ?? (sessionClass as any).ageMin ?? 0;
+    const maxAge = (sessionClass as any).maxAge ?? (sessionClass as any).ageMax ?? 100;
+    if (age >= minAge && age <= maxAge) {
       if (studentMatchesClassGender(student.gender, sessionClass.gender)) {
         return sessionClass;
       }
@@ -90,8 +93,8 @@ export function runFullEligibility(
     checks.push({ id: "age", label: "Age Eligibility", status: "warn", detail: "Date of birth not set — cannot verify age." });
   } else {
     const age = calculateAgeFromDob(student.dob);
-    const minAge = targetClass ? targetClass.ageMin : 5;
-    const maxAge = targetClass ? targetClass.ageMax : 25;
+    const minAge = targetClass ? ((targetClass as any).minAge ?? (targetClass as any).ageMin ?? 5) : 5;
+    const maxAge = targetClass ? ((targetClass as any).maxAge ?? (targetClass as any).ageMax ?? 25) : 25;
     if (age < minAge || age > maxAge) {
       checks.push({ id: "age", label: "Age Eligibility", status: "fail", detail: `Student is ${age} yrs old. Class requires age ${minAge}–${maxAge}.` });
     } else {
@@ -106,13 +109,15 @@ export function runFullEligibility(
   }
 
   if (targetClass) {
-    const spotsLeft = targetClass.capacity - targetClass.enrolled;
+    const maxCapacity = (targetClass as any).maxStudents ?? (targetClass as any).capacity ?? 30;
+    const enrolled = targetClass.enrolled ?? 0;
+    const spotsLeft = maxCapacity - enrolled;
     if (spotsLeft <= 0) {
-      checks.push({ id: "capacity", label: "Class Capacity", status: "fail", detail: `Class is full (${targetClass.enrolled}/${targetClass.capacity} students).` });
+      checks.push({ id: "capacity", label: "Class Capacity", status: "fail", detail: `Class is full (${enrolled}/${maxCapacity} students).` });
     } else if (spotsLeft <= 3) {
       checks.push({ id: "capacity", label: "Class Capacity", status: "warn", detail: `Only ${spotsLeft} spots remaining.` });
     } else {
-      checks.push({ id: "capacity", label: "Class Capacity", status: "pass", detail: `${spotsLeft} of ${targetClass.capacity} spots available.` });
+      checks.push({ id: "capacity", label: "Class Capacity", status: "pass", detail: `${spotsLeft} of ${maxCapacity} spots available.` });
     }
   } else {
     checks.push({ id: "capacity", label: "Class Capacity", status: "fail", detail: "No class assigned/available." });
@@ -139,8 +144,9 @@ export function calcFee(
   baseFee: number,
   student: Partial<Student>,
   _students: Student[],
-  sessionDiscounts: Discount[] = []
+  sessionDiscounts: any[] = []
 ): CalculatedFee {
+
   const discountType = student.discountType || "none";
   let pct = student.discountPct ?? 0;
   let label = "No Discount";

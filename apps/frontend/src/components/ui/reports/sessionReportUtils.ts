@@ -32,8 +32,9 @@ export function buildSessionCapacityData(sessions: Session[]): SessionCapacityIt
   for (const session of sessions) {
     for (const cls of session.classes || []) {
       const enrolled = cls.enrolled ?? 0;
-      const capacity = cls.capacity || 0;
+      const capacity = cls.maxStudents ?? (cls as any).capacity ?? 0;
       const rate = capacity > 0 ? Math.round((enrolled / capacity) * 100) : 0;
+
       result.push({
         sessionId: session.id,
         classId: cls.id,
@@ -75,7 +76,8 @@ export function buildEnrollmentTrends(sessions: Session[]): EnrollmentTrendItem[
 export function buildTodaysSessions(sessions: Session[]): TodaySessionItem[] {
   const result: TodaySessionItem[] = [];
   for (const session of sessions) {
-    const timetableList = session.timetable || [];
+    const timetableList = (session.classes || []).flatMap((c) => c.timetables || []);
+
     if (timetableList.length === 0) {
       for (const cls of session.classes || []) {
         result.push({
@@ -90,15 +92,17 @@ export function buildTodaysSessions(sessions: Session[]): TodaySessionItem[] {
       }
     } else {
       for (const timetable of timetableList) {
-        result.push({
-          id: `${session.id}-${timetable.id || timetable.day}`,
-          name: `${timetable.activity} (${session.name})`,
-          teacher: session.name,
-          time: `${timetable.startTime} - ${timetable.endTime}`,
-          room: timetable.location || "Room 1",
-          students: (session.classes || []).reduce((acc, c) => acc + (c.enrolled ?? 0), 0),
-          status: "upcoming",
-        });
+        for (const period of timetable.periods || []) {
+          result.push({
+            id: `${session.id}-${period.id}`,
+            name: `${period.subject} (${session.name})`,
+            teacher: period.teacherName || session.name,
+            time: `${period.startTime} - ${period.endTime}`,
+            room: "Room 1",
+            students: (session.classes || []).reduce((acc, c) => acc + (c.enrolled ?? 0), 0),
+            status: "upcoming",
+          });
+        }
       }
     }
   }

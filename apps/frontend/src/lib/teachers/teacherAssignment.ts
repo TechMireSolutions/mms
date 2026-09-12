@@ -62,11 +62,12 @@ export function getTeacherAssignedClasses(teacherId: string | number, sessions: 
           classId: cls.id,
           className: cls.name,
           room: cls.room,
-          capacity: cls.capacity,
-          enrolled: cls.enrolled,
+          capacity: (cls as any).maxStudents ?? (cls as any).capacity ?? 30,
+          enrolled: cls.enrolled ?? 0,
           gender: cls.gender,
-          ageMin: cls.ageMin,
-          ageMax: cls.ageMax,
+          ageMin: (cls as any).minAge ?? (cls as any).ageMin ?? 5,
+          ageMax: (cls as any).maxAge ?? (cls as any).ageMax ?? 18,
+
         });
       }
     }

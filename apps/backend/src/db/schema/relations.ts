@@ -6,7 +6,20 @@ import { auditTrailEvents, auditVerificationRuns } from "./auditTrail.js";
 import { contacts, contactTags, contactPhones, contactEmails, contactAddresses, contactSocials, contactEducations, contactExperiences, contactSkills, contactRelationships, contactActivities, contactAttachments, contactBankDetails, tenantUsers } from "./contacts.js";
 import { students, studentEnrolledSessions } from "./students.js";
 import { teachers } from "./teachers.js";
-import { sessions, sessionClasses, sessionTimetable, sessionDiscounts, sessionBudgetExpenses, sessionBudgetIncomes, sessionEvents, sessionTabarruk } from "./sessions.js";
+import {
+  sessions,
+  sessionFaculty,
+  sessionClasses,
+  sessionClassFees,
+  sessionClassSchedules,
+  sessionClassBudgets,
+  sessionClassDiscounts,
+  sessionClassTimetables,
+  sessionClassTimetablePeriods,
+  sessionClassRefreshments,
+  scholarshipEligibilities,
+  sessionClassScholarships,
+} from "./sessions.js";
 import { attendance, attendanceLeaves } from "./attendance.js";
 import { enrollments, enrollmentTimelineEvents } from "./enrollments.js";
 import { financeInvoices, financePayments } from "./finance.js";
@@ -831,14 +844,16 @@ export const sessionsRelations = relations(sessions, ({ one, many }) => ({
     fields: [sessions.workspaceSubdomain],
     references: [workspaces.subdomain],
   }),
+  faculty: many(sessionFaculty),
   classes: many(sessionClasses),
-  timetable: many(sessionTimetable),
-  discounts: many(sessionDiscounts),
-  budgetExpenses: many(sessionBudgetExpenses),
-  budgetIncomes: many(sessionBudgetIncomes),
-  events: many(sessionEvents),
-  tabarruk: many(sessionTabarruk),
   enrollments: many(enrollments),
+}));
+
+export const sessionFacultyRelations = relations(sessionFaculty, ({ one }) => ({
+  session: one(sessions, {
+    fields: [sessionFaculty.workspaceSubdomain, sessionFaculty.sessionId],
+    references: [sessions.workspaceSubdomain, sessions.id],
+  }),
 }));
 
 export const sessionClassesRelations = relations(sessionClasses, ({ one, many }) => ({
@@ -846,48 +861,78 @@ export const sessionClassesRelations = relations(sessionClasses, ({ one, many })
     fields: [sessionClasses.workspaceSubdomain, sessionClasses.sessionId],
     references: [sessions.workspaceSubdomain, sessions.id],
   }),
+  fees: many(sessionClassFees),
+  schedules: many(sessionClassSchedules),
+  budgets: many(sessionClassBudgets),
+  discounts: many(sessionClassDiscounts),
+  timetables: many(sessionClassTimetables),
+  refreshments: many(sessionClassRefreshments),
+  scholarships: many(sessionClassScholarships),
   enrollments: many(enrollments),
 }));
 
-export const sessionTimetableRelations = relations(sessionTimetable, ({ one }) => ({
-  session: one(sessions, {
-    fields: [sessionTimetable.workspaceSubdomain, sessionTimetable.sessionId],
-    references: [sessions.workspaceSubdomain, sessions.id],
+export const sessionClassFeesRelations = relations(sessionClassFees, ({ one }) => ({
+  class: one(sessionClasses, {
+    fields: [sessionClassFees.workspaceSubdomain, sessionClassFees.sessionClassId],
+    references: [sessionClasses.workspaceSubdomain, sessionClasses.id],
   }),
 }));
 
-export const sessionDiscountsRelations = relations(sessionDiscounts, ({ one }) => ({
-  session: one(sessions, {
-    fields: [sessionDiscounts.workspaceSubdomain, sessionDiscounts.sessionId],
-    references: [sessions.workspaceSubdomain, sessions.id],
+export const sessionClassSchedulesRelations = relations(sessionClassSchedules, ({ one }) => ({
+  class: one(sessionClasses, {
+    fields: [sessionClassSchedules.workspaceSubdomain, sessionClassSchedules.sessionClassId],
+    references: [sessionClasses.workspaceSubdomain, sessionClasses.id],
   }),
 }));
 
-export const sessionBudgetExpensesRelations = relations(sessionBudgetExpenses, ({ one }) => ({
-  session: one(sessions, {
-    fields: [sessionBudgetExpenses.workspaceSubdomain, sessionBudgetExpenses.sessionId],
-    references: [sessions.workspaceSubdomain, sessions.id],
+export const sessionClassBudgetsRelations = relations(sessionClassBudgets, ({ one }) => ({
+  class: one(sessionClasses, {
+    fields: [sessionClassBudgets.workspaceSubdomain, sessionClassBudgets.sessionClassId],
+    references: [sessionClasses.workspaceSubdomain, sessionClasses.id],
   }),
 }));
 
-export const sessionBudgetIncomesRelations = relations(sessionBudgetIncomes, ({ one }) => ({
-  session: one(sessions, {
-    fields: [sessionBudgetIncomes.workspaceSubdomain, sessionBudgetIncomes.sessionId],
-    references: [sessions.workspaceSubdomain, sessions.id],
+export const sessionClassDiscountsRelations = relations(sessionClassDiscounts, ({ one }) => ({
+  class: one(sessionClasses, {
+    fields: [sessionClassDiscounts.workspaceSubdomain, sessionClassDiscounts.sessionClassId],
+    references: [sessionClasses.workspaceSubdomain, sessionClasses.id],
   }),
 }));
 
-export const sessionEventsRelations = relations(sessionEvents, ({ one }) => ({
-  session: one(sessions, {
-    fields: [sessionEvents.workspaceSubdomain, sessionEvents.sessionId],
-    references: [sessions.workspaceSubdomain, sessions.id],
+export const sessionClassTimetablesRelations = relations(sessionClassTimetables, ({ one, many }) => ({
+  class: one(sessionClasses, {
+    fields: [sessionClassTimetables.workspaceSubdomain, sessionClassTimetables.sessionClassId],
+    references: [sessionClasses.workspaceSubdomain, sessionClasses.id],
+  }),
+  periods: many(sessionClassTimetablePeriods),
+}));
+
+export const sessionClassTimetablePeriodsRelations = relations(sessionClassTimetablePeriods, ({ one }) => ({
+  timetable: one(sessionClassTimetables, {
+    fields: [sessionClassTimetablePeriods.workspaceSubdomain, sessionClassTimetablePeriods.timetableId],
+    references: [sessionClassTimetables.workspaceSubdomain, sessionClassTimetables.id],
   }),
 }));
 
-export const sessionTabarrukRelations = relations(sessionTabarruk, ({ one }) => ({
-  session: one(sessions, {
-    fields: [sessionTabarruk.workspaceSubdomain, sessionTabarruk.sessionId],
-    references: [sessions.workspaceSubdomain, sessions.id],
+export const sessionClassRefreshmentsRelations = relations(sessionClassRefreshments, ({ one }) => ({
+  class: one(sessionClasses, {
+    fields: [sessionClassRefreshments.workspaceSubdomain, sessionClassRefreshments.sessionClassId],
+    references: [sessionClasses.workspaceSubdomain, sessionClasses.id],
+  }),
+}));
+
+export const scholarshipEligibilitiesRelations = relations(scholarshipEligibilities, ({ many }) => ({
+  scholarships: many(sessionClassScholarships),
+}));
+
+export const sessionClassScholarshipsRelations = relations(sessionClassScholarships, ({ one }) => ({
+  class: one(sessionClasses, {
+    fields: [sessionClassScholarships.workspaceSubdomain, sessionClassScholarships.sessionClassId],
+    references: [sessionClasses.workspaceSubdomain, sessionClasses.id],
+  }),
+  eligibility: one(scholarshipEligibilities, {
+    fields: [sessionClassScholarships.workspaceSubdomain, sessionClassScholarships.scholarshipEligibilityId],
+    references: [scholarshipEligibilities.workspaceSubdomain, scholarshipEligibilities.id],
   }),
 }));
 

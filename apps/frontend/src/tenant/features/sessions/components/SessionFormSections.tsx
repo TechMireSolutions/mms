@@ -1,5 +1,5 @@
 import type React from "react";
-import { Calendar, DollarSign } from "lucide-react";
+import { Calendar, Wallet } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -9,7 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { Session } from "@/lib/data/sessionsData";
 import type { SessionFormDraft } from "@/tenant/features/sessions/components/sessionFormShared";
+
 
 export interface SessionSelectOption {
   value: string;
@@ -78,7 +80,7 @@ export function SessionDetailsSection({
               id="session-status"
               name="status"
               value={sessionDraft.status || "active"}
-              onChange={(val) => onDraftChange({ status: val })}
+              onChange={(val) => onDraftChange({ status: val as Session['status'] })}
               options={statusOptions}
             />
           </Field>
@@ -141,13 +143,13 @@ export function SessionFinancialSection({
     <div className="space-y-4 text-start">
       <SectionCard
         accentColor="primary"
-        icon={DollarSign}
+        icon={Wallet}
         title={t("sessions.form.sectionFinancial")}
         className="shadow-sm text-start"
       >
         <Field label={t("sessions.form.baseFee")} id="session-baseFee" error={errors.baseFee}>
           <div className="relative flex items-center group/input">
-            <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
+            <Wallet className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
             <Input
               id="session-baseFee"
               name="baseFee"

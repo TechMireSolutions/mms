@@ -19,12 +19,9 @@ const mockSession: Session = {
   baseFee: 200,
   currency: 'USD',
   classes: [],
-  timetable: [],
-  discounts: [],
-  budget: { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
-  events: [],
-  tabarruk: [],
+  faculty: [],
 };
+
 
 describe('useSessionsDialogs Hook', () => {
   let container: HTMLDivElement;

@@ -2,13 +2,17 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { type Session } from '@mms/shared';
 import {
   sessions,
+  sessionFaculty,
   sessionClasses,
-  sessionTimetable,
-  sessionDiscounts,
-  sessionBudgetExpenses,
-  sessionBudgetIncomes,
-  sessionEvents,
-  sessionTabarruk,
+  sessionClassFees,
+  sessionClassSchedules,
+  sessionClassBudgets,
+  sessionClassDiscounts,
+  sessionClassTimetables,
+  sessionClassTimetablePeriods,
+  sessionClassRefreshments,
+  scholarshipEligibilities,
+  sessionClassScholarships,
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import { sessionRowToRecord } from './sessionRepositoryMappers.js';
@@ -16,13 +20,6 @@ import { sessionRowToRecord } from './sessionRepositoryMappers.js';
 type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
 
 type SessionRow = typeof sessions.$inferSelect;
-type ClassRow = typeof sessionClasses.$inferSelect;
-type TimetableRow = typeof sessionTimetable.$inferSelect;
-type DiscountRow = typeof sessionDiscounts.$inferSelect;
-type ExpenseRow = typeof sessionBudgetExpenses.$inferSelect;
-type IncomeRow = typeof sessionBudgetIncomes.$inferSelect;
-type EventRow = typeof sessionEvents.$inferSelect;
-type TabarrukRow = typeof sessionTabarruk.$inferSelect;
 
 async function hydrateSessionsList(
   tx: Transaction,
@@ -32,32 +29,19 @@ async function hydrateSessionsList(
   if (sessionRows.length === 0) return [];
   const sessionIds = sessionRows.map((s) => s.id);
 
-  const [
-    classesRows,
-    timetableRows,
-    discountsRows,
-    expensesRows,
-    incomesRows,
-    eventsRows,
-    tabarrukRows,
-  ] = await Promise.all([
+  // 1. Batch load Session Faculty and Session Classes
+  const [facultyRows, classesRows] = await Promise.all([
     tx
-      .select({
-        id: sessionClasses.id,
-        workspaceSubdomain: sessionClasses.workspaceSubdomain,
-        sessionId: sessionClasses.sessionId,
-        name: sessionClasses.name,
-        ageMin: sessionClasses.ageMin,
-        ageMax: sessionClasses.ageMax,
-        gender: sessionClasses.gender,
-        teacherId: sessionClasses.teacherId,
-        teacherName: sessionClasses.teacherName,
-        capacity: sessionClasses.capacity,
-        enrolled: sessionClasses.enrolled,
-        room: sessionClasses.room,
-        sortOrder: sessionClasses.sortOrder,
-        createdAt: sessionClasses.createdAt,
-      })
+      .select()
+      .from(sessionFaculty)
+      .where(
+        and(
+          eq(sessionFaculty.workspaceSubdomain, subdomain),
+          inArray(sessionFaculty.sessionId, sessionIds),
+        ),
+      ),
+    tx
+      .select()
       .from(sessionClasses)
       .where(
         and(
@@ -66,204 +50,164 @@ async function hydrateSessionsList(
         ),
       )
       .orderBy(sessionClasses.sortOrder),
-    tx
-      .select({
-        id: sessionTimetable.id,
-        workspaceSubdomain: sessionTimetable.workspaceSubdomain,
-        sessionId: sessionTimetable.sessionId,
-        day: sessionTimetable.day,
-        activity: sessionTimetable.activity,
-        startTime: sessionTimetable.startTime,
-        endTime: sessionTimetable.endTime,
-        location: sessionTimetable.location,
-        type: sessionTimetable.type,
-        sortOrder: sessionTimetable.sortOrder,
-        createdAt: sessionTimetable.createdAt,
-      })
-      .from(sessionTimetable)
-      .where(
-        and(
-          eq(sessionTimetable.workspaceSubdomain, subdomain),
-          inArray(sessionTimetable.sessionId, sessionIds),
-        ),
-      )
-      .orderBy(sessionTimetable.sortOrder),
-    tx
-      .select({
-        id: sessionDiscounts.id,
-        workspaceSubdomain: sessionDiscounts.workspaceSubdomain,
-        sessionId: sessionDiscounts.sessionId,
-        name: sessionDiscounts.name,
-        type: sessionDiscounts.type,
-        value: sessionDiscounts.value,
-        conditions: sessionDiscounts.conditions,
-        active: sessionDiscounts.active,
-        sortOrder: sessionDiscounts.sortOrder,
-        createdAt: sessionDiscounts.createdAt,
-      })
-      .from(sessionDiscounts)
-      .where(
-        and(
-          eq(sessionDiscounts.workspaceSubdomain, subdomain),
-          inArray(sessionDiscounts.sessionId, sessionIds),
-        ),
-      )
-      .orderBy(sessionDiscounts.sortOrder),
-    tx
-      .select({
-        id: sessionBudgetExpenses.id,
-        workspaceSubdomain: sessionBudgetExpenses.workspaceSubdomain,
-        sessionId: sessionBudgetExpenses.sessionId,
-        category: sessionBudgetExpenses.category,
-        amount: sessionBudgetExpenses.amount,
-        date: sessionBudgetExpenses.date,
-        note: sessionBudgetExpenses.note,
-        sortOrder: sessionBudgetExpenses.sortOrder,
-        createdAt: sessionBudgetExpenses.createdAt,
-      })
-      .from(sessionBudgetExpenses)
-      .where(
-        and(
-          eq(sessionBudgetExpenses.workspaceSubdomain, subdomain),
-          inArray(sessionBudgetExpenses.sessionId, sessionIds),
-        ),
-      )
-      .orderBy(sessionBudgetExpenses.sortOrder),
-    tx
-      .select({
-        id: sessionBudgetIncomes.id,
-        workspaceSubdomain: sessionBudgetIncomes.workspaceSubdomain,
-        sessionId: sessionBudgetIncomes.sessionId,
-        category: sessionBudgetIncomes.category,
-        amount: sessionBudgetIncomes.amount,
-        date: sessionBudgetIncomes.date,
-        note: sessionBudgetIncomes.note,
-        sortOrder: sessionBudgetIncomes.sortOrder,
-        createdAt: sessionBudgetIncomes.createdAt,
-      })
-      .from(sessionBudgetIncomes)
-      .where(
-        and(
-          eq(sessionBudgetIncomes.workspaceSubdomain, subdomain),
-          inArray(sessionBudgetIncomes.sessionId, sessionIds),
-        ),
-      )
-      .orderBy(sessionBudgetIncomes.sortOrder),
-    tx
-      .select({
-        id: sessionEvents.id,
-        workspaceSubdomain: sessionEvents.workspaceSubdomain,
-        sessionId: sessionEvents.sessionId,
-        title: sessionEvents.title,
-        date: sessionEvents.date,
-        time: sessionEvents.time,
-        location: sessionEvents.location,
-        description: sessionEvents.description,
-        type: sessionEvents.type,
-        sortOrder: sessionEvents.sortOrder,
-        createdAt: sessionEvents.createdAt,
-      })
-      .from(sessionEvents)
-      .where(
-        and(
-          eq(sessionEvents.workspaceSubdomain, subdomain),
-          inArray(sessionEvents.sessionId, sessionIds),
-        ),
-      )
-      .orderBy(sessionEvents.sortOrder),
-    tx
-      .select({
-        id: sessionTabarruk.id,
-        workspaceSubdomain: sessionTabarruk.workspaceSubdomain,
-        sessionId: sessionTabarruk.sessionId,
-        item: sessionTabarruk.item,
-        quantity: sessionTabarruk.quantity,
-        occasion: sessionTabarruk.occasion,
-        date: sessionTabarruk.date,
-        note: sessionTabarruk.note,
-        sortOrder: sessionTabarruk.sortOrder,
-        createdAt: sessionTabarruk.createdAt,
-      })
-      .from(sessionTabarruk)
-      .where(
-        and(
-          eq(sessionTabarruk.workspaceSubdomain, subdomain),
-          inArray(sessionTabarruk.sessionId, sessionIds),
-        ),
-      )
-      .orderBy(sessionTabarruk.sortOrder),
   ]);
 
-  const classesMap = new Map<string, ClassRow[]>();
+  const classIds = classesRows.map((c) => c.id);
+
+  // If no classes exist, map sessions with faculty only
+  if (classIds.length === 0) {
+    const facultyMap = new Map<string, typeof facultyRows>();
+    for (const f of facultyRows) {
+      const list = facultyMap.get(f.sessionId) ?? [];
+      list.push(f);
+      facultyMap.set(f.sessionId, list);
+    }
+    return sessionRows.map((row) =>
+      sessionRowToRecord(row, facultyMap.get(row.id) ?? [], []),
+    );
+  }
+
+  // 2. Batch load Class-level children
+  const [
+    feeRows,
+    scheduleRows,
+    budgetRows,
+    discountRows,
+    timetableRows,
+    refreshmentRows,
+    scholarshipRows,
+  ] = await Promise.all([
+    tx
+      .select()
+      .from(sessionClassFees)
+      .where(
+        and(
+          eq(sessionClassFees.workspaceSubdomain, subdomain),
+          inArray(sessionClassFees.sessionClassId, classIds),
+        ),
+      ),
+    tx
+      .select()
+      .from(sessionClassSchedules)
+      .where(
+        and(
+          eq(sessionClassSchedules.workspaceSubdomain, subdomain),
+          inArray(sessionClassSchedules.sessionClassId, classIds),
+        ),
+      ),
+    tx
+      .select()
+      .from(sessionClassBudgets)
+      .where(
+        and(
+          eq(sessionClassBudgets.workspaceSubdomain, subdomain),
+          inArray(sessionClassBudgets.sessionClassId, classIds),
+        ),
+      ),
+    tx
+      .select()
+      .from(sessionClassDiscounts)
+      .where(
+        and(
+          eq(sessionClassDiscounts.workspaceSubdomain, subdomain),
+          inArray(sessionClassDiscounts.sessionClassId, classIds),
+        ),
+      ),
+    tx
+      .select()
+      .from(sessionClassTimetables)
+      .where(
+        and(
+          eq(sessionClassTimetables.workspaceSubdomain, subdomain),
+          inArray(sessionClassTimetables.sessionClassId, classIds),
+        ),
+      ),
+    tx
+      .select()
+      .from(sessionClassRefreshments)
+      .where(
+        and(
+          eq(sessionClassRefreshments.workspaceSubdomain, subdomain),
+          inArray(sessionClassRefreshments.sessionClassId, classIds),
+        ),
+      ),
+    tx
+      .select()
+      .from(sessionClassScholarships)
+      .where(
+        and(
+          eq(sessionClassScholarships.workspaceSubdomain, subdomain),
+          inArray(sessionClassScholarships.sessionClassId, classIds),
+        ),
+      ),
+  ]);
+
+  // 3. Batch load Timetable periods and Scholarship eligibilities
+  const timetableIds = timetableRows.map((t) => t.id);
+  const eligibilityIds = scholarshipRows
+    .map((s) => s.scholarshipEligibilityId)
+    .filter((id): id is string => Boolean(id));
+
+  const [periodRows, eligibilityRows] = await Promise.all([
+    timetableIds.length > 0
+      ? tx
+          .select()
+          .from(sessionClassTimetablePeriods)
+          .where(
+            and(
+              eq(sessionClassTimetablePeriods.workspaceSubdomain, subdomain),
+              inArray(sessionClassTimetablePeriods.timetableId, timetableIds),
+            ),
+          )
+      : Promise.resolve([]),
+    eligibilityIds.length > 0
+      ? tx
+          .select()
+          .from(scholarshipEligibilities)
+          .where(
+            and(
+              eq(scholarshipEligibilities.workspaceSubdomain, subdomain),
+              inArray(scholarshipEligibilities.id, eligibilityIds),
+            ),
+          )
+      : Promise.resolve([]),
+  ]);
+
+  // Group by session and class
+  const facultyBySession = new Map<string, typeof facultyRows>();
+  for (const f of facultyRows) {
+    const list = facultyBySession.get(f.sessionId) ?? [];
+    list.push(f);
+    facultyBySession.set(f.sessionId, list);
+  }
+
+  const classesBySession = new Map<string, typeof classesRows>();
   for (const c of classesRows) {
-    const list = classesMap.get(c.sessionId) ?? [];
+    const list = classesBySession.get(c.sessionId) ?? [];
     list.push(c);
-    classesMap.set(c.sessionId, list);
-  }
-
-  const timetableMap = new Map<string, TimetableRow[]>();
-  for (const t of timetableRows) {
-    const list = timetableMap.get(t.sessionId) ?? [];
-    list.push(t);
-    timetableMap.set(t.sessionId, list);
-  }
-
-  const discountsMap = new Map<string, DiscountRow[]>();
-  for (const d of discountsRows) {
-    const list = discountsMap.get(d.sessionId) ?? [];
-    list.push(d);
-    discountsMap.set(d.sessionId, list);
-  }
-
-  const expensesMap = new Map<string, ExpenseRow[]>();
-  for (const e of expensesRows) {
-    const list = expensesMap.get(e.sessionId) ?? [];
-    list.push(e);
-    expensesMap.set(e.sessionId, list);
-  }
-
-  const incomesMap = new Map<string, IncomeRow[]>();
-  for (const i of incomesRows) {
-    const list = incomesMap.get(i.sessionId) ?? [];
-    list.push(i);
-    incomesMap.set(i.sessionId, list);
-  }
-
-  const eventsMap = new Map<string, EventRow[]>();
-  for (const ev of eventsRows) {
-    const list = eventsMap.get(ev.sessionId) ?? [];
-    list.push(ev);
-    eventsMap.set(ev.sessionId, list);
-  }
-
-  const tabarrukMap = new Map<string, TabarrukRow[]>();
-  for (const tab of tabarrukRows) {
-    const list = tabarrukMap.get(tab.sessionId) ?? [];
-    list.push(tab);
-    tabarrukMap.set(tab.sessionId, list);
+    classesBySession.set(c.sessionId, list);
   }
 
   return sessionRows.map((row) =>
     sessionRowToRecord(
       row,
-      classesMap.get(row.id) ?? [],
-      timetableMap.get(row.id) ?? [],
-      discountsMap.get(row.id) ?? [],
-      expensesMap.get(row.id) ?? [],
-      incomesMap.get(row.id) ?? [],
-      eventsMap.get(row.id) ?? [],
-      tabarrukMap.get(row.id) ?? [],
+      facultyBySession.get(row.id) ?? [],
+      classesBySession.get(row.id) ?? [],
+      feeRows,
+      scheduleRows,
+      budgetRows,
+      discountRows,
+      timetableRows,
+      periodRows,
+      refreshmentRows,
+      scholarshipRows,
+      eligibilityRows,
     ),
   );
 }
 
 /**
- * Lean hydration for the Work list: loads only `classes` (the list UI reads
- * enrolled/capacity/class-count). The remaining child graphs (timetable,
- * discounts, budget expenses/incomes, events, tabarruk) are intentionally left
- * empty — the response schema's `.default([])` fills them — so a Work page runs
- * one child query instead of seven. Detail reads (findSessionById) still
- * hydrate the full graph via `hydrateSessionsList`.
+ * Lean hydration for the Work list: loads `classes` & `faculty` counts for the directory cards/table.
  */
 async function hydrateSessionsListSummary(
   tx: Transaction,
@@ -273,50 +217,47 @@ async function hydrateSessionsListSummary(
   if (sessionRows.length === 0) return [];
   const sessionIds = sessionRows.map((s) => s.id);
 
-  const classesRows = await tx
-    .select({
-      id: sessionClasses.id,
-      workspaceSubdomain: sessionClasses.workspaceSubdomain,
-      sessionId: sessionClasses.sessionId,
-      name: sessionClasses.name,
-      ageMin: sessionClasses.ageMin,
-      ageMax: sessionClasses.ageMax,
-      gender: sessionClasses.gender,
-      teacherId: sessionClasses.teacherId,
-      teacherName: sessionClasses.teacherName,
-      capacity: sessionClasses.capacity,
-      enrolled: sessionClasses.enrolled,
-      room: sessionClasses.room,
-      sortOrder: sessionClasses.sortOrder,
-      createdAt: sessionClasses.createdAt,
-    })
-    .from(sessionClasses)
-    .where(
-      and(
-        eq(sessionClasses.workspaceSubdomain, subdomain),
-        inArray(sessionClasses.sessionId, sessionIds),
+  const [facultyRows, classesRows] = await Promise.all([
+    tx
+      .select()
+      .from(sessionFaculty)
+      .where(
+        and(
+          eq(sessionFaculty.workspaceSubdomain, subdomain),
+          inArray(sessionFaculty.sessionId, sessionIds),
+        ),
       ),
-    )
-    .orderBy(sessionClasses.sortOrder);
+    tx
+      .select()
+      .from(sessionClasses)
+      .where(
+        and(
+          eq(sessionClasses.workspaceSubdomain, subdomain),
+          inArray(sessionClasses.sessionId, sessionIds),
+        ),
+      )
+      .orderBy(sessionClasses.sortOrder),
+  ]);
 
-  const classesMap = new Map<string, ClassRow[]>();
+  const facultyBySession = new Map<string, typeof facultyRows>();
+  for (const f of facultyRows) {
+    const list = facultyBySession.get(f.sessionId) ?? [];
+    list.push(f);
+    facultyBySession.set(f.sessionId, list);
+  }
+
+  const classesBySession = new Map<string, typeof classesRows>();
   for (const c of classesRows) {
-    const list = classesMap.get(c.sessionId) ?? [];
+    const list = classesBySession.get(c.sessionId) ?? [];
     list.push(c);
-    classesMap.set(c.sessionId, list);
+    classesBySession.set(c.sessionId, list);
   }
 
   return sessionRows.map((row) =>
     sessionRowToRecord(
       row,
-      classesMap.get(row.id) ?? [],
-      // Remaining child graphs intentionally empty on the Work list.
-      [],
-      [],
-      [],
-      [],
-      [],
-      [],
+      facultyBySession.get(row.id) ?? [],
+      classesBySession.get(row.id) ?? [],
     ),
   );
 }
@@ -327,30 +268,8 @@ export async function listSessionsByWorkspace(
 ): Promise<Session[]> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
-    const cols = {
-      id: sessions.id,
-      workspaceSubdomain: sessions.workspaceSubdomain,
-      name: sessions.name,
-      type: sessions.type,
-      status: sessions.status,
-      startDate: sessions.startDate,
-      endDate: sessions.endDate,
-      baseFee: sessions.baseFee,
-      currency: sessions.currency,
-      description: sessions.description,
-      budgetTotalRevenue: sessions.budgetTotalRevenue,
-      budgetCollected: sessions.budgetCollected,
-      deletedAt: sessions.deletedAt,
-      deletedBy: sessions.deletedBy,
-      deletionReason: sessions.deletionReason,
-      restoredAt: sessions.restoredAt,
-      restoredBy: sessions.restoredBy,
-      deletedWithCascade: sessions.deletedWithCascade,
-      createdAt: sessions.createdAt,
-      updatedAt: sessions.updatedAt,
-    };
     const baseQuery = tx
-      .select(cols)
+      .select()
       .from(sessions)
       .where(and(eq(sessions.workspaceSubdomain, subdomain), isNull(sessions.deletedAt)))
       .orderBy(sessions.startDate);
@@ -369,28 +288,7 @@ export async function findSessionById(tenant: string, id: string): Promise<Sessi
   return withTenant(subdomain, async (tx) => {
     if (!tx || typeof (tx as any).select !== 'function') return null;
     const rows = await tx
-      .select({
-        id: sessions.id,
-        workspaceSubdomain: sessions.workspaceSubdomain,
-        name: sessions.name,
-        type: sessions.type,
-        status: sessions.status,
-        startDate: sessions.startDate,
-        endDate: sessions.endDate,
-        baseFee: sessions.baseFee,
-        currency: sessions.currency,
-        description: sessions.description,
-        budgetTotalRevenue: sessions.budgetTotalRevenue,
-        budgetCollected: sessions.budgetCollected,
-        deletedAt: sessions.deletedAt,
-        deletedBy: sessions.deletedBy,
-        deletionReason: sessions.deletionReason,
-        restoredAt: sessions.restoredAt,
-        restoredBy: sessions.restoredBy,
-        deletedWithCascade: sessions.deletedWithCascade,
-        createdAt: sessions.createdAt,
-        updatedAt: sessions.updatedAt,
-      })
+      .select()
       .from(sessions)
       .where(and(eq(sessions.workspaceSubdomain, subdomain), eq(sessions.id, id)));
     const row = rows[0];
@@ -406,38 +304,13 @@ export async function findSessionsByIds(tenant: string, ids: string[]): Promise<
   return withTenant(subdomain, async (tx) => {
     if (!tx || typeof (tx as any).select !== 'function') return [];
     const rows = await tx
-      .select({
-        id: sessions.id,
-        workspaceSubdomain: sessions.workspaceSubdomain,
-        name: sessions.name,
-        type: sessions.type,
-        status: sessions.status,
-        startDate: sessions.startDate,
-        endDate: sessions.endDate,
-        baseFee: sessions.baseFee,
-        currency: sessions.currency,
-        description: sessions.description,
-        budgetTotalRevenue: sessions.budgetTotalRevenue,
-        budgetCollected: sessions.budgetCollected,
-        deletedAt: sessions.deletedAt,
-        deletedBy: sessions.deletedBy,
-        deletionReason: sessions.deletionReason,
-        restoredAt: sessions.restoredAt,
-        restoredBy: sessions.restoredBy,
-        deletedWithCascade: sessions.deletedWithCascade,
-        createdAt: sessions.createdAt,
-        updatedAt: sessions.updatedAt,
-      })
+      .select()
       .from(sessions)
       .where(and(eq(sessions.workspaceSubdomain, subdomain), inArray(sessions.id, ids)));
     return hydrateSessionsList(tx, subdomain, rows);
   });
 }
 
-/**
- * Lean batch read for the Work list — hydrates only `classes` and fills the
- * other child graphs with empty arrays. See `hydrateSessionsListSummary`.
- */
 export async function findSessionsSummaryByIds(
   tenant: string,
   ids: string[],
@@ -446,28 +319,7 @@ export async function findSessionsSummaryByIds(
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
     const rows = await tx
-      .select({
-        id: sessions.id,
-        workspaceSubdomain: sessions.workspaceSubdomain,
-        name: sessions.name,
-        type: sessions.type,
-        status: sessions.status,
-        startDate: sessions.startDate,
-        endDate: sessions.endDate,
-        baseFee: sessions.baseFee,
-        currency: sessions.currency,
-        description: sessions.description,
-        budgetTotalRevenue: sessions.budgetTotalRevenue,
-        budgetCollected: sessions.budgetCollected,
-        deletedAt: sessions.deletedAt,
-        deletedBy: sessions.deletedBy,
-        deletionReason: sessions.deletionReason,
-        restoredAt: sessions.restoredAt,
-        restoredBy: sessions.restoredBy,
-        deletedWithCascade: sessions.deletedWithCascade,
-        createdAt: sessions.createdAt,
-        updatedAt: sessions.updatedAt,
-      })
+      .select()
       .from(sessions)
       .where(and(eq(sessions.workspaceSubdomain, subdomain), inArray(sessions.id, ids)));
     return hydrateSessionsListSummary(tx, subdomain, rows);

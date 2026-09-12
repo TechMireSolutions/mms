@@ -1,7 +1,7 @@
 import { type AppTranslationKey, DEFAULT_CURRENCIES, todayISO } from '@mms/shared';
 import type { Session } from '@/lib/data/sessionsData';
 
-export const SESSION_STATUSES = ['active', 'upcoming', 'completed', 'cancelled'] as const;
+export const SESSION_STATUSES = ['active', 'inactive'] as const;
 export const SESSION_CURRENCIES = DEFAULT_CURRENCIES.map((currency) => currency.code);
 
 export type SessionFormDraft = Omit<Partial<Session>, 'baseFee'> & {
@@ -27,12 +27,8 @@ export function buildEmptySessionDraft(defaultType: string, defaultCurrency: str
     baseFee: '',
     currency: defaultCurrency,
     description: '',
+    faculty: [],
     classes: [],
-    timetable: [],
-    discounts: [],
-    budget: { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
-    events: [],
-    tabarruk: [],
   };
 }
 
@@ -50,12 +46,8 @@ export function buildSessionDraftFromRecord(
     baseFee: session?.baseFee == null ? '' : String(session.baseFee),
     currency: session?.currency ?? defaultCurrency,
     description: session?.description ?? '',
+    faculty: session?.faculty ?? [],
     classes: session?.classes ?? [],
-    timetable: session?.timetable ?? [],
-    discounts: session?.discounts ?? [],
-    budget: session?.budget ?? { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
-    events: session?.events ?? [],
-    tabarruk: session?.tabarruk ?? [],
   };
 }
 

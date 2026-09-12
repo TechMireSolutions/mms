@@ -91,14 +91,26 @@ describe("ClassModal Component", () => {
           sessionClass={{
             id: "c1",
             name: "Hifz 1",
-            ageMin: 15,
-            ageMax: 10,
-            gender: "any",
+            minAge: 15,
+            maxAge: 10,
+            gender: "mixed",
             teacherId: "",
-            capacity: 20,
+            teacherName: "",
+            maxStudents: 20,
             enrolled: 0,
             room: "Room 101",
+            fees: [],
+            schedules: [],
+            budgets: [],
+            discounts: [],
+            timetables: [],
+            refreshments: [],
+            scholarships: [],
+            ageCalculationDate: "",
+            enrollmentDeadline: "",
+            status: "active",
           }}
+
           onClose={vi.fn()}
           onSave={onSave}
           saving={false}

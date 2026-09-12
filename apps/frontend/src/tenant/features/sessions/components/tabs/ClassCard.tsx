@@ -1,4 +1,4 @@
-import { Edit2, MessageCircle, MessageSquare, Trash2, Users } from "lucide-react";
+import { Edit2, MessageCircle, MessageSquare, Trash2, Users, DollarSign, Clock } from "lucide-react";
 import type { Teacher } from "@mms/shared";
 
 import { Button } from "@/components/ui/button";
@@ -23,13 +23,21 @@ interface ClassCardProps {
 
 export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWrite }: ClassCardProps) {
   const { t } = useTranslation();
-  const capacityPercent = Math.round((sessionClass.enrolled / sessionClass.capacity) * 100);
+  const maxCapacity = sessionClass.maxStudents ?? (sessionClass as any).capacity ?? 30;
+  const enrolledCount = sessionClass.enrolled ?? 0;
+  const capacityPercent = Math.round((enrolledCount / Math.max(1, maxCapacity)) * 100);
   const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
   const teacherLabel = teacherNameById(teachers, sessionClass.teacherId) || sessionClass.teacherName || t("sessions.classes.unassigned");
   const genderConfig: Record<string, StatusBadgeConfigItem> = genderStatusBadgeConfig(t, { includeAny: true });
 
+  const minAge = sessionClass.minAge ?? (sessionClass as any).ageMin ?? 5;
+  const maxAge = sessionClass.maxAge ?? (sessionClass as any).ageMax ?? 18;
+
+  const feeCount = sessionClass.fees?.length ?? 0;
+  const scheduleCount = sessionClass.schedules?.length ?? 0;
+
   return (
-    <DirectoryEntityCard className="group p-4 flex flex-col justify-between">
+    <DirectoryEntityCard className="group p-4 flex flex-col justify-between cursor-pointer hover:border-primary/50 transition-all" onClick={() => onEdit(sessionClass)}>
       <div>
         <DirectoryCardHeader
           id={sessionClass.id}
@@ -49,12 +57,12 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
           <div className="rounded-lg bg-muted/40 px-3 py-2">
             <p className="m-0 text-xs font-medium text-muted-foreground">{t("sessions.classes.ageRange")}</p>
             <p className="m-0 text-sm font-semibold text-foreground">
-              {t("sessions.classes.ageYears", { min: sessionClass.ageMin, max: sessionClass.ageMax })}
+              {t("sessions.classes.ageYears", { min: minAge, max: maxAge })}
             </p>
           </div>
           <div className="rounded-lg bg-muted/40 px-3 py-2">
             <p className="m-0 text-xs font-medium text-muted-foreground">{t("sessions.classes.form.gender")}</p>
-            <StatusBadge status={sessionClass.gender || "any"} config={genderConfig} size="sm" />
+            <StatusBadge status={sessionClass.gender || "mixed"} config={genderConfig} size="sm" />
           </div>
         </div>
 
@@ -65,11 +73,28 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
           </span>
         </div>
 
-        <div aria-label={t("sessions.classes.enrolledCapacity", { enrolled: sessionClass.enrolled, capacity: sessionClass.capacity })}>
+        {/* Model 6 badges strip */}
+        <div className="mb-3 flex items-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+            <DollarSign className="h-3 w-3" />
+            {feeCount > 0 ? `${feeCount} Fees` : 'No Fees set'}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            {(sessionClass.timetables?.[0]?.periods?.length ?? 0)} Periods
+          </span>
+          {sessionClass.scholarships && sessionClass.scholarships.length > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/10 text-purple-600 px-2 py-0.5 text-[11px] font-medium">
+              Scholarship: {sessionClass.scholarships[0]?.percentage}%
+            </span>
+          )}
+        </div>
+
+        <div aria-label={t("sessions.classes.enrolledCapacity", { enrolled: enrolledCount, capacity: maxCapacity })}>
           <div className="mb-1 flex items-center justify-between" aria-hidden="true">
             <span className="text-xs text-muted-foreground">{t("sessions.classes.form.capacity")}</span>
             <span className="text-xs font-semibold text-foreground">
-              {sessionClass.enrolled}/{sessionClass.capacity}
+              {enrolledCount}/{maxCapacity}
             </span>
           </div>
           <ProgressBar
@@ -84,7 +109,7 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
       {canWrite && (
         <DirectoryCardFooter
           trailing={
-            <>
+            <div onClick={(e) => e.stopPropagation()}>
               <Button
                 variant="ghost"
                 size="icon"
@@ -123,7 +148,7 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
               >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
               </Button>
-            </>
+            </div>
           }
         />
       )}

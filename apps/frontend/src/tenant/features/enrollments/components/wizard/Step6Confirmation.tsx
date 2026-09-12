@@ -61,7 +61,8 @@ export function Step6Confirmation({
           <Step6ConfirmationRow label={t('enrollments.detail.class')} value={classInfo?.name} />
           <Step6ConfirmationRow label={t('enrollments.wizard.step6RowTeacher')} value={classInfo?.teacherName} />
           {classInfo?.room && <Step6ConfirmationRow label={t('enrollments.wizard.step6RowRoom')} value={classInfo.room} />}
-          <Step6ConfirmationRow label={t('enrollments.wizard.step6RowAgeRange')} value={classInfo ? t('enrollments.wizard.step6AgeRangeValue', { min: classInfo.ageMin, max: classInfo.ageMax }) : '—'} />
+          <Step6ConfirmationRow label={t('enrollments.wizard.step6RowAgeRange')} value={classInfo ? t('enrollments.wizard.step6AgeRangeValue', { min: classInfo.minAge ?? (classInfo as any).ageMin, max: classInfo.maxAge ?? (classInfo as any).ageMax }) : '—'} />
+
         </Step6ConfirmationSection>
 
         <Step6ConfirmationSection icon={DollarSign} title={t('enrollments.wizard.step6SectionFee')}>

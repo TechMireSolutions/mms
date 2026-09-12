@@ -92,8 +92,12 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
         {classes.map((sessionClass) => {
           const selected   = value?.id === sessionClass.id;
           const isSuggested = suggestedClass?.id === sessionClass.id;
-          const spotsLeft  = sessionClass.capacity - sessionClass.enrolled;
-          const full       = spotsLeft <= 0;
+          const maxCapacity = sessionClass.maxStudents ?? (sessionClass as any).capacity ?? 30;
+          const enrolled = sessionClass.enrolled ?? 0;
+          const spotsLeft = maxCapacity - enrolled;
+          const full = spotsLeft <= 0;
+          const minAge = sessionClass.minAge ?? (sessionClass as any).ageMin ?? 5;
+          const maxAge = sessionClass.maxAge ?? (sessionClass as any).ageMax ?? 18;
 
           return (
             <Button
@@ -119,7 +123,7 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                       {full && <Badge pill tone="destructive" className="px-1.5 font-bold bg-destructive/15">{t("enrollment.session.full")}</Badge>}
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
-                      <span>{t("enrollments.wizard.step4AgeRange", { min: sessionClass.ageMin, max: sessionClass.ageMax })}</span>
+                      <span>{t("enrollments.wizard.step4AgeRange", { min: minAge, max: maxAge })}</span>
                       <span className="capitalize">{sessionClass.gender}</span>
                       <span>{sessionClass.teacherName}</span>
                       {sessionClass.room && <span>{sessionClass.room}</span>}
@@ -129,11 +133,11 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                 <div className="text-end flex-shrink-0" aria-hidden="true">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Users className="w-3.5 h-3.5" />
-                    <span>{sessionClass.enrolled}/{sessionClass.capacity}</span>
+                    <span>{enrolled}/{maxCapacity}</span>
                   </div>
                   <ProgressBar
                     className="mt-1"
-                    value={(sessionClass.enrolled / sessionClass.capacity) * 100}
+                    value={(enrolled / maxCapacity) * 100}
                     fillClassName={spotsLeft <= 3 ? "bg-destructive" : spotsLeft <= 7 ? "bg-warning" : "bg-success"}
                     trackClassName="w-20 flex-none"
                     aria-hidden="true"
@@ -143,6 +147,7 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
               </div>
             </Button>
           );
+
         })}
       </div>
     </section>
