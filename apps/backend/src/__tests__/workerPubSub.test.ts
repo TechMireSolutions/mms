@@ -116,8 +116,7 @@ describe('Worker Redis Pub/Sub & WebSocket Hub Integration (Phase 5)', () => {
 
     configureRedisPubSub(mockPublisher, mockSubscriber);
 
-    expect(mockSubscriber.subscribe).toHaveBeenCalledWith('mms:ws-invalidation');
-    expect(mockSubscriber.subscribe).toHaveBeenCalledWith('mms:job-event');
+    expect(mockSubscriber.subscribe).toHaveBeenCalledWith('mms:ws-invalidation', 'mms:job-event');
     expect(typeof messageListener).toBe('function');
 
     const socketMessages: string[] = [];

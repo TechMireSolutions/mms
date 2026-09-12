@@ -50,22 +50,19 @@ export function configureRedisPubSub(
     const subscribeChannels = (): void => {
       if (subscribed || !redisSubscriber) return;
       subscribed = true;
-      redisSubscriber.subscribe(WS_INVALIDATION_CHANNEL).catch((err) => {
+      redisSubscriber.subscribe(WS_INVALIDATION_CHANNEL, JOB_EVENT_CHANNEL).catch((err) => {
         subscribed = false; // allow a later retry (e.g. on `ready`)
         if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
-          logger.warn({ err }, 'Failed to subscribe to mms:ws-invalidation');
-        }
-      });
-      redisSubscriber.subscribe(JOB_EVENT_CHANNEL).catch((err) => {
-        subscribed = false; // allow a later retry (e.g. on `ready`)
-        if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
-          logger.warn({ err }, 'Failed to subscribe to mms:job-event');
+          logger.warn({ err }, 'Failed to subscribe to Redis PubSub channels');
         }
       });
     };
 
     subscriber.on('ready', subscribeChannels);
-    subscribeChannels();
+    const status = (subscriber as { status?: string }).status;
+    if (status === undefined || status === 'ready') {
+      subscribeChannels();
+    }
 
     redisSubscriber.on('message', (channel: string, message: string) => {
       try {
