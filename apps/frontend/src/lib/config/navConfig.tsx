@@ -158,7 +158,7 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: "nav.obligations",
     icon: Scale,
     path: ROUTES.obligations,
-    moduleId: "finance",
+    moduleId: "obligations",
     requiredPermission: OBLIGATIONS_MODULE_MANIFEST.permissions.read,
   },
   {

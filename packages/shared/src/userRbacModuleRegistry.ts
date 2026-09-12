@@ -69,7 +69,6 @@ export function isValidRbacModuleId(id: unknown): id is RbacModuleId {
 export const RBAC_SYSTEM_MODULE_ID: Readonly<Record<string, string>> = Object.freeze({
   enrollments: 'enrollment',
   examinations: 'examination',
-  obligations: 'finance',
 });
 
 /** Resolves the system-modules settings key for an RBAC permission row. */

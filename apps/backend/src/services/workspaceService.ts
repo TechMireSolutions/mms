@@ -27,6 +27,7 @@ import {
   getUserModulePreferencesByWorkspace,
   upsertUserModulePreferences,
 } from '../db/repositories/userModulePreferencesRepository.js';
+import { clearModuleAccessCacheForTenant } from '../middleware/requireTenantModule.js';
 
 export {
   fetchPublicBrandingForSubdomain,
@@ -50,6 +51,7 @@ export async function invalidateWorkspaceCache(subdomain: string): Promise<void>
   const normalized = normalizeSubdomainInput(subdomain);
   if (!normalized) return;
   await redisDel(workspaceCacheKey(normalized));
+  clearModuleAccessCacheForTenant(normalized);
 }
 
 /** Permanently removes a workspace registry entry and all tenant-scoped data. */

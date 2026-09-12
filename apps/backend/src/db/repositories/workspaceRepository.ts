@@ -436,6 +436,11 @@ export async function getWorkspaceGrantedModulesRepo(subdomain: string): Promise
       grantedIds.push(id);
     }
   }
+  for (const mod of SYSTEM_MODULES) {
+    if (!Object.prototype.hasOwnProperty.call(granted, mod.id)) {
+      grantedIds.push(mod.id);
+    }
+  }
   return grantedIds;
 }
 

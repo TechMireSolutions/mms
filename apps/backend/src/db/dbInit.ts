@@ -86,6 +86,7 @@ const dataMigrationsToRun = [
   { id: '082', load: async () => (await import('./migrations/082_migrate_email_integration_to_table.js')).runMigration082 },
   { id: '083', load: async () => (await import('./migrations/083_clear_legacy_email_integration_objects.js')).runMigration083 },
   { id: '084', load: async () => (await import('./migrations/084_sync_platform_superuser_to_tenants.js')).runMigration084 },
+  { id: '085', load: async () => (await import('./migrations/085_grant_obligations_to_existing_workspaces.js')).runMigration085 },
 ];
 
 /** Resolve Drizzle SQL migrations folder (src in node --strip-types, dist in production). */

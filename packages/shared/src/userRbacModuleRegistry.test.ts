@@ -23,7 +23,7 @@ describe('userRbacModuleRegistry', () => {
   it('resolves system module IDs correctly', () => {
     expect(rbacModuleSystemId('enrollments')).toBe('enrollment');
     expect(rbacModuleSystemId('examinations')).toBe('examination');
-    expect(rbacModuleSystemId('obligations')).toBe('finance');
+    expect(rbacModuleSystemId('obligations')).toBe('obligations');
     expect(rbacModuleSystemId('students')).toBe('students');
     expect(rbacModuleSystemId('finance')).toBe('finance');
     expect(rbacModuleSystemId('unknown_mod')).toBe('unknown_mod');
