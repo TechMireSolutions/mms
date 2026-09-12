@@ -38,7 +38,7 @@ export const questionBankContractRouter: FastifyPluginAsync = async (fastify) =>
       }
       try {
         if (query?.page !== undefined || query?.limit !== undefined || query?.search !== undefined || query?.categoryId !== undefined || query?.difficulty !== undefined) {
-          const result = await withTenant(String(request.tenant?.id), () => questionBankUseCases.loadQuestionsPage({ ...query, includeDeleted } as Parameters<typeof questionBankUseCases.loadQuestionsPage>[0]), { readOnly: true });
+          const result = await withTenant(String(request.tenant?.id), () => questionBankUseCases.loadQuestionsPage({ ...query, includeDeleted }), { readOnly: true });
           return { status: 200 as const, body: result };
         }
         const questions = await withTenant(String(request.tenant?.id), () => questionBankUseCases.loadQuestions({ includeDeleted }), { readOnly: true });

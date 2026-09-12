@@ -19,7 +19,7 @@ import { auditStudent, sanitizeOneStudentForUser } from './studentRouteHelpers.j
 export const studentSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
   registerResourceRoutes(fastify, {
     collection: 'students',
-    schema: studentRecordSchema as never,
+    schema: studentRecordSchema,
     nameSingular: 'student',
     namePlural: 'students',
     customGetRoute: true,

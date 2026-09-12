@@ -13,7 +13,7 @@ export async function getQuestionBankPreferences(
 
 export async function updateQuestionBankPreferences(
   workspaceSubdomain: string,
-  preferences: Partial<QuestionBankModulePreferences>
+  preferences: Partial<QuestionBankModulePreferences> | Record<string, unknown>
 ): Promise<void> {
-  await replaceQuestionBankModulePreferencesForWorkspace(workspaceSubdomain, preferences);
+  await replaceQuestionBankModulePreferencesForWorkspace(workspaceSubdomain, preferences as Partial<QuestionBankModulePreferences>);
 }

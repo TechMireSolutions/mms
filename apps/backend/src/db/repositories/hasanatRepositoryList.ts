@@ -66,7 +66,7 @@ const DISTRIBUTION_SORT_FIELDS = new Set([
   'updatedAt',
 ]);
 
-function buildDistributionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+function buildDistributionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
   let column: SQL;
   if (field && DISTRIBUTION_SORT_FIELDS.has(field)) {

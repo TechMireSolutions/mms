@@ -85,7 +85,7 @@ function buildSearchSql(search: string): SQL | null {
   )`;
 }
 
-export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
+export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | '' | undefined): SQL {
   const dir = sortDir === 'desc' ? 'desc' : 'asc';
   const field = sortField?.trim();
   if (!field || !STUDENT_SORT_FIELDS.has(field)) {

@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { HasanatSettings } from '@mms/shared';
 import {
   HASANAT_MODULE_MANIFEST,
   hasanatFieldConfigPutBodySchema,
@@ -28,12 +27,12 @@ export const hasanatSetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
     
     fieldConfigSchema: hasanatFieldConfigPutBodySchema,
     loadFieldConfig: getHasanatFieldConfigService,
-    saveFieldConfig: (body) => updateHasanatFieldConfigService(body as HasanatSettings),
+    saveFieldConfig: (body) => updateHasanatFieldConfigService(body),
     
     preferencesSchema: hasanatPreferencesPutBodySchema,
     loadPreferences: getHasanatPreferencesService,
     normalizePreferences: normalizeHasanatModulePreferences,
-    savePreferences: (normalized) => updateHasanatPreferencesService(normalized as never),
+    savePreferences: (normalized) => updateHasanatPreferencesService(normalized),
     
     audit: auditHasanat,
     fieldConfigAuditAction: 'UPDATE_HASANAT_CONFIG',

@@ -29,7 +29,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const tenant = requireMessagingTenant(request);
         const result = await withTenant(tenant.id, () =>
-          messagingUseCases.loadFilteredMessageLogs(tenant.subdomain, query as Parameters<typeof messagingUseCases.loadFilteredMessageLogs>[1]),
+          messagingUseCases.loadFilteredMessageLogs(tenant.subdomain, query),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };

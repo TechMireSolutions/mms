@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { initServer } from '@ts-rest/fastify';
 import { platformAdminsContract } from '@mms/shared';
-import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import {
   authenticatePlatform,
   requirePlatformPermission,
@@ -35,7 +35,7 @@ export default async function platformUsersRoutes(
   fastify.addHook('preHandler', requirePlatformPermission('admins'));
 
   const router = s.router(platformAdminsContract, {
-    listAdmins: async (): Promise<unknown> => {
+    listAdmins: async (): Promise<ContractRouteResponse<typeof platformAdminsContract['listAdmins']>> => {
       const storedUsers = await listPlatformUsers();
       const users = storedUsers.map(toPlatformUserProfile);
       return { status: 200 as const, body: { users } };
@@ -48,7 +48,7 @@ export default async function platformUsersRoutes(
       handler: async ({
         body,
         request,
-      }: ContractRouteArgs<typeof platformAdminsContract['createAdmin']>): Promise<unknown> => {
+      }: ContractRouteArgs<typeof platformAdminsContract['createAdmin']>): Promise<ContractRouteResponse<typeof platformAdminsContract['createAdmin']>> => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
         const { name, email, password, permissions } = body;
 
@@ -83,7 +83,7 @@ export default async function platformUsersRoutes(
         params,
         body,
         request,
-      }: ContractRouteArgs<typeof platformAdminsContract['updateAdminPermissions']>): Promise<unknown> => {
+      }: ContractRouteArgs<typeof platformAdminsContract['updateAdminPermissions']>): Promise<ContractRouteResponse<typeof platformAdminsContract['updateAdminPermissions']>> => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
 
         // Prevent an admin from escalating their own permissions.
@@ -113,7 +113,7 @@ export default async function platformUsersRoutes(
     verifyAdminEmail: async ({
       params,
       request,
-    }: ContractRouteArgs<typeof platformAdminsContract['verifyAdminEmail']>): Promise<unknown> => {
+    }: ContractRouteArgs<typeof platformAdminsContract['verifyAdminEmail']>): Promise<ContractRouteResponse<typeof platformAdminsContract['verifyAdminEmail']>> => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
       const user = await verifyPlatformUserEmail(params.adminId);
 
@@ -140,7 +140,7 @@ export default async function platformUsersRoutes(
         params,
         body,
         request,
-      }: ContractRouteArgs<typeof platformAdminsContract['setAdminDisabled']>): Promise<unknown> => {
+      }: ContractRouteArgs<typeof platformAdminsContract['setAdminDisabled']>): Promise<ContractRouteResponse<typeof platformAdminsContract['setAdminDisabled']>> => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
 
         if (params.adminId === platformUser.id) {
@@ -184,7 +184,7 @@ export default async function platformUsersRoutes(
         params,
         body,
         request,
-      }: ContractRouteArgs<typeof platformAdminsContract['deleteAdmin']>): Promise<unknown> => {
+      }: ContractRouteArgs<typeof platformAdminsContract['deleteAdmin']>): Promise<ContractRouteResponse<typeof platformAdminsContract['deleteAdmin']>> => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
 
         if (params.adminId === platformUser.id) {

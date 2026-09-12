@@ -36,12 +36,10 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted teachers requires delete permissions' } };
       }
       try {
-        const rawQuery = (request.query || query) as Record<string, unknown>;
-        const result = await withTenant(String(request.tenant?.id), () => teacherUseCases.loadTeachersPage({ ...rawQuery, ...query, includeDeleted } as Parameters<typeof teacherUseCases.loadTeachersPage>[0]), { readOnly: true });
-        const page = result as { teachers: Teacher[] };
+        const result = await withTenant(String(request.tenant?.id), () => teacherUseCases.loadTeachersPage({ ...query, includeDeleted }), { readOnly: true });
         return {
           status: 200 as const,
-          body: { ...page, teachers: await sanitizeTeachersForUser(page.teachers, user) },
+          body: { ...result, teachers: await sanitizeTeachersForUser(result.teachers, user) },
         };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list teachers' } };
@@ -199,7 +197,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          teacherUseCases.checkTeacherRegistrationDuplicate(body as never), { readOnly: false });
+          teacherUseCases.checkTeacherRegistrationDuplicate(body), { readOnly: false });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to check duplicate' } };

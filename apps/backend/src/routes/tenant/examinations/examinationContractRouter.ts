@@ -22,7 +22,7 @@ export const examinationContractRouter: FastifyPluginAsync = async (fastify) => 
       }
       try {
         if (query?.page !== undefined || query?.limit !== undefined || query?.search !== undefined || query?.status !== undefined) {
-          const result = await withTenant(String(request.tenant?.id), () => examinationsUseCases.loadExamsPage({ ...query, includeDeleted } as Parameters<typeof examinationsUseCases.loadExamsPage>[0]), { readOnly: true });
+          const result = await withTenant(String(request.tenant?.id), () => examinationsUseCases.loadExamsPage({ ...query, includeDeleted }), { readOnly: true });
           return { status: 200 as const, body: result };
         }
         const exams = await withTenant(String(request.tenant?.id), () => examinationsUseCases.loadExams({ includeDeleted }), { readOnly: true });

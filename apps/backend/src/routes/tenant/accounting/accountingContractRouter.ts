@@ -24,18 +24,14 @@ export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
         if (query?.page !== undefined) {
           const result = await withTenant(
             String(request.tenant?.id),
-            () =>
-              accountingUseCases.loadAccountsPage({
-                ...(query as Record<string, unknown>),
-                includeDeleted,
-              } as Parameters<typeof accountingUseCases.loadAccountsPage>[0]),
+            () => accountingUseCases.loadAccountsPage({ ...query, includeDeleted }),
             { readOnly: true },
           );
           return { status: 200 as const, body: result };
         }
         const accounts = await withTenant(
           String(request.tenant?.id),
-          () => accountingUseCases.loadAccounts({ ...(query as Record<string, unknown>), includeDeleted }),
+          () => accountingUseCases.loadAccounts({ includeDeleted }),
           { readOnly: true },
         );
         return { status: 200 as const, body: { accounts } };
@@ -56,18 +52,14 @@ export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
         if (query?.page !== undefined) {
           const result = await withTenant(
             String(request.tenant?.id),
-            () =>
-              accountingUseCases.loadEntriesPage({
-                ...(query as Record<string, unknown>),
-                includeDeleted,
-              } as Parameters<typeof accountingUseCases.loadEntriesPage>[0]),
+            () => accountingUseCases.loadEntriesPage({ ...query, includeDeleted }),
             { readOnly: true },
           );
           return { status: 200 as const, body: result };
         }
         const entries = await withTenant(
           String(request.tenant?.id),
-          () => accountingUseCases.loadEntries({ ...(query as Record<string, unknown>), includeDeleted }),
+          () => accountingUseCases.loadEntries({ includeDeleted }),
           { readOnly: true },
         );
         return { status: 200 as const, body: { entries } };
@@ -88,11 +80,7 @@ export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
         if (query?.page !== undefined) {
           const result = await withTenant(
             String(request.tenant?.id),
-            () =>
-              accountingUseCases.loadFiscalYearsPage({
-                ...(query as Record<string, unknown>),
-                includeDeleted,
-              } as Parameters<typeof accountingUseCases.loadFiscalYearsPage>[0]),
+            () => accountingUseCases.loadFiscalYearsPage({ ...query, includeDeleted }),
             { readOnly: true },
           );
           return { status: 200 as const, body: result };

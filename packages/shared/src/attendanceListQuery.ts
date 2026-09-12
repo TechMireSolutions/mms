@@ -15,7 +15,7 @@ export interface AttendanceListQuery {
   dateTo?: string;
   status?: string;
   sortField?: string;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: 'asc' | 'desc' | '';
   includeDeleted?: boolean;
 }
 

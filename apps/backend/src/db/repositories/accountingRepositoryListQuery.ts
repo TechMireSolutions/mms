@@ -80,7 +80,7 @@ export function buildFiscalYearListConditions(subdomain: string, query: Accounti
   return conditions;
 }
 
-export function buildAccountOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+export function buildAccountOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
   let column: SQL;
   switch (field) {
@@ -105,7 +105,7 @@ export function buildAccountOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
 
-export function buildEntryOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+export function buildEntryOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
   let column: SQL;
   switch (field) {
@@ -131,7 +131,7 @@ export function buildEntryOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'):
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
 
-export function buildFiscalYearOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+export function buildFiscalYearOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
   let column: SQL;
   switch (field) {

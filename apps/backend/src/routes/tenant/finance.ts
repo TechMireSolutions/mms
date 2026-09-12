@@ -76,7 +76,7 @@ export default async function financeRoutes(
       const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadInvoicesPage({ ...query, ...(includeDeleted ? { includeDeleted } : {}) } as Parameters<typeof financeUseCases.loadInvoicesPage>[0]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadInvoicesPage({ ...query, includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list invoices' } };
@@ -111,7 +111,7 @@ export default async function financeRoutes(
       const user = request.user as User;
       if (!canWriteCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.updateInvoiceById(id, body as Parameters<typeof financeUseCases.updateInvoiceById>[1]), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.updateInvoiceById(id, body), { readOnly: false });
         if (!result) return { status: 404 as const, body: { type: 'not_found', message: 'Invoice not found' } };
         return { status: 200 as const, body: { invoice: result } };
       } catch (error) {
@@ -135,7 +135,7 @@ export default async function financeRoutes(
       const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadPaymentsPage({ ...query, ...(includeDeleted ? { includeDeleted } : {}) } as Parameters<typeof financeUseCases.loadPaymentsPage>[0]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadPaymentsPage({ ...query, includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list payments' } };
@@ -170,7 +170,7 @@ export default async function financeRoutes(
       const user = request.user as User;
       if (!canWriteCollection(user, PAYMENT_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.updatePaymentById(id, body as Parameters<typeof financeUseCases.updatePaymentById>[1]), { readOnly: false });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.updatePaymentById(id, body), { readOnly: false });
         if (!result) return { status: 404 as const, body: { type: 'not_found', message: 'Payment not found' } };
         return { status: 200 as const, body: { payment: result } };
       } catch (error) {

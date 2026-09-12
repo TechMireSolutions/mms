@@ -4,7 +4,6 @@ import {
   contactFieldConfigPutBodySchema,
   contactPreferencesPutBodySchema,
   normalizeContactPreferences,
-  type FieldConfig,
 } from '@mms/shared';
 import { registerModuleSetupConfigRoutes } from '../../../lib/registerModuleSetupConfigRoutes.js';
 import { canReadContacts } from '../../../services/rbacService.js';
@@ -26,12 +25,10 @@ export const contactSetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
     fieldConfigSchema: contactFieldConfigPutBodySchema,
     preferencesSchema: contactPreferencesPutBodySchema,
     loadFieldConfig: loadContactFieldConfig,
-    saveFieldConfig: (body) => saveContactFieldConfig(body as unknown as FieldConfig),
+    saveFieldConfig: (body) => saveContactFieldConfig(body),
     loadPreferences: loadContactPreferences,
-    normalizePreferences: (partial) =>
-      normalizeContactPreferences(partial as never),
-    savePreferences: (normalized) =>
-      saveContactPreferences(normalized as never),
+    normalizePreferences: normalizeContactPreferences,
+    savePreferences: saveContactPreferences,
     audit: (user, action, summary, entityId) =>
       auditContact(user, action, summary, entityId),
     fieldConfigAuditAction: 'contact.field-config',

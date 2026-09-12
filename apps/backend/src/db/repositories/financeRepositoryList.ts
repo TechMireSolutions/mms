@@ -64,7 +64,7 @@ function buildPaymentListConditions(subdomain: string, query: FinanceListQuery):
   return conditions;
 }
 
-function buildInvoiceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+function buildInvoiceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
   let column: SQL;
   switch (field) {
@@ -95,7 +95,7 @@ function buildInvoiceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL 
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
 
-function buildPaymentOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+function buildPaymentOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
   let column: SQL;
   switch (field) {

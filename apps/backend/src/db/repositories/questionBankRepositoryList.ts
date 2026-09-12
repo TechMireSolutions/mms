@@ -73,7 +73,7 @@ const QUESTION_SORT_FIELDS = new Set([
   'createdAt',
 ]);
 
-function buildQuestionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+function buildQuestionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
   let column: SQL;
   if (field && QUESTION_SORT_FIELDS.has(field)) {

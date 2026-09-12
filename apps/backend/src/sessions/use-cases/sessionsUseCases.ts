@@ -7,6 +7,8 @@ import { NotFoundError } from '../../lib/httpErrors.js';
 import {
   sessionRecordSchema,
   type SessionRecord,
+  type SessionCreateBody,
+  type SessionUpdateBody,
 } from '@mms/shared';
 import {
   dedupeTrimmedIds,
@@ -73,20 +75,20 @@ export function createSessionsUseCases(
   return {
     loadSessions: crud.loadAll,
     loadSessionById: crud.loadById,
-    createSession: async (record: SessionRecord): Promise<SessionRecord> => {
+    createSession: async (record: SessionCreateBody | SessionRecord): Promise<SessionRecord> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       await validateActiveTeacherForeignKeys(tenant, record);
-      return crud.create(record);
+      return crud.create(record as SessionRecord);
     },
     updateSessionById: async (
       id: string,
-      record: SessionRecord,
+      record: SessionUpdateBody | Partial<SessionRecord>,
     ): Promise<SessionRecord | null> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       await validateActiveTeacherForeignKeys(tenant, record);
-      return crud.updateById(id, record);
+      return crud.updateById(id, record as SessionRecord);
     },
     deleteSessionById: async (
       id: string,

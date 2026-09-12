@@ -82,7 +82,7 @@ function buildAttendanceListConditions(subdomain: string, query: AttendanceListQ
 
 const ATTENDANCE_SORT_FIELDS = new Set(['date', 'studentName', 'rollNo', 'status', 'updatedAt']);
 
-function buildAttendanceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+function buildAttendanceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
   let column: SQL;
   if (field && ATTENDANCE_SORT_FIELDS.has(field)) {

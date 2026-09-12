@@ -20,7 +20,7 @@ import {
   USERS_MODULE_MANIFEST,
 } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { withTenant } from '../../db/tenant-context.js';
 import {
@@ -79,7 +79,7 @@ async function auditSavedReport(
 }
 
 const savedReportsRouter = s.router(savedReportsContract, {
-  list: async ({ query, request }: ContractRouteArgs<typeof savedReportsContract['list']>): Promise<unknown> => {
+  list: async ({ query, request }: ContractRouteArgs<typeof savedReportsContract['list']>): Promise<ContractRouteResponse<typeof savedReportsContract['list']>> => {
     const user = request.user as User;
     if (!canUseSavedReports(user, query.category)) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -91,7 +91,7 @@ const savedReportsRouter = s.router(savedReportsContract, {
       return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list saved reports' } };
     }
   },
-  create: async ({ body, request }: ContractRouteArgs<typeof savedReportsContract['create']>): Promise<unknown> => {
+  create: async ({ body, request }: ContractRouteArgs<typeof savedReportsContract['create']>): Promise<ContractRouteResponse<typeof savedReportsContract['create']>> => {
     const user = request.user as User;
     if (!canUseSavedReports(user, body.category)) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -108,7 +108,7 @@ const savedReportsRouter = s.router(savedReportsContract, {
       return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save report' } };
     }
   },
-  delete: async ({ params: { id }, query, request }: ContractRouteArgs<typeof savedReportsContract['delete']>): Promise<unknown> => {
+  delete: async ({ params: { id }, query, request }: ContractRouteArgs<typeof savedReportsContract['delete']>): Promise<ContractRouteResponse<typeof savedReportsContract['delete']>> => {
     const user = request.user as User;
     if (!canUseSavedReports(user, query.category)) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -122,7 +122,7 @@ const savedReportsRouter = s.router(savedReportsContract, {
       return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete saved report' } };
     }
   },
-  run: async ({ params: { id }, query, request }: ContractRouteArgs<typeof savedReportsContract['run']>): Promise<unknown> => {
+  run: async ({ params: { id }, query, request }: ContractRouteArgs<typeof savedReportsContract['run']>): Promise<ContractRouteResponse<typeof savedReportsContract['run']>> => {
     const user = request.user as User;
     if (!canUseSavedReports(user, query.category)) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };

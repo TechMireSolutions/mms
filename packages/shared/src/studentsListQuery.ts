@@ -12,7 +12,7 @@ export interface StudentsListQuery {
   status?: string;
   gender?: string;
   sortField?: string;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: 'asc' | 'desc' | '';
   /** When true, SQL list returns deleted-only rows (Work trash). */
   includeDeleted?: boolean;
   /** Work-directory preset filter; omit or `all` means no preset. */

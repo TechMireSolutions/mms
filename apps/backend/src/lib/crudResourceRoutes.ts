@@ -17,10 +17,10 @@ import { shouldCaptureDeletionReason } from './crudBulkRouteHelpers.js';
 import type { ResourceRecord } from './crudRouterTypes.js';
 import type { SoftDeleteRouteErrorMapper } from './crudBulkRoutes.js';
 
-export interface ResourceRoutesOptions<T extends ResourceRecord> {
+export interface ResourceRoutesOptions<T extends ResourceRecord = ResourceRecord> {
   prefix?: string;
   collection: string;
-  schema: ZodType<T>;
+  schema?: ZodType<any>;
   /** Tenant-aware strict write schema (system keys ∪ Setup custom keys). POST/PUT use it when set. */
   buildWriteSchema?: () => Promise<ZodType<T>>;
   loadByIdFn?: (id: string, includeDeleted?: boolean) => Promise<unknown | null>;
@@ -151,6 +151,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
       const user = request.user as User;
       if (!canWriteCollection(user, collection)) return sendForbidden(reply);
       const writeSchema = buildWriteSchema ? await buildWriteSchema() : schema;
+      if (!writeSchema) return sendDatabaseError(reply, `Schema required to create ${nameSingular}`, new Error('Missing schema'));
       const parsed = parseRequest(writeSchema, request.body);
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
@@ -191,6 +192,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
       if (!canWriteCollection(user, collection)) return sendForbidden(reply);
       const params = parseRequest(resourceIdParamsSchema, request.params);
       const writeSchema = buildWriteSchema ? await buildWriteSchema() : schema;
+      if (!writeSchema) return sendDatabaseError(reply, `Schema required to update ${nameSingular}`, new Error('Missing schema'));
       const body = parseRequest(writeSchema, request.body);
       if (!params.ok) return replyValidationError(reply, params.message);
       if (!body.ok) return replyValidationError(reply, body.message);

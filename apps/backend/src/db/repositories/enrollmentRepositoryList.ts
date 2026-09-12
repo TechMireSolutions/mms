@@ -22,7 +22,7 @@ const ENROLLMENT_SORT_FIELDS = new Set([
   'updatedAt',
 ]);
 
-function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
+function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | '' | undefined): SQL {
   const dir = sortDir === 'desc' ? 'desc' : 'asc';
   const field = sortField?.trim();
   if (!field || !ENROLLMENT_SORT_FIELDS.has(field)) {

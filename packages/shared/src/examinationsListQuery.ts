@@ -8,7 +8,7 @@ export interface ExaminationsListQuery {
   /** Comma-separated exam statuses (`upcoming|ongoing|completed|scheduled|cancelled`). */
   status?: string;
   sortField?: string;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: 'asc' | 'desc' | '';
   includeDeleted?: boolean;
 }
 

@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
 import { initServer } from '@ts-rest/fastify';
 import { platformWorkspacesContract } from '@mms/shared';
-import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import {
   authenticatePlatform,
   requirePlatformPermission,
@@ -33,7 +33,7 @@ export default async function platformWorkspaceRoutes(
   fastify.addHook('preHandler', requirePlatformPermission('workspaces'));
 
   const router = s.router(platformWorkspacesContract, {
-    listWorkspaces: async (): Promise<unknown> => {
+    listWorkspaces: async (): Promise<ContractRouteResponse<typeof platformWorkspacesContract['listWorkspaces']>> => {
       const workspaces = await listPlatformWorkspaces();
       return { status: 200 as const, body: { workspaces } };
     },
@@ -42,7 +42,7 @@ export default async function platformWorkspaceRoutes(
       params,
       body,
       request,
-    }: ContractRouteArgs<typeof platformWorkspacesContract['patchWorkspace']>): Promise<unknown> => {
+    }: ContractRouteArgs<typeof platformWorkspacesContract['patchWorkspace']>): Promise<ContractRouteResponse<typeof platformWorkspacesContract['patchWorkspace']>> => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
       const updated = await setWorkspaceEnabled(params.subdomain, body.enabled);
       if (!updated) {
@@ -72,7 +72,7 @@ export default async function platformWorkspaceRoutes(
 
     getWorkspaceModules: async ({
       params,
-    }: ContractRouteArgs<typeof platformWorkspacesContract['getWorkspaceModules']>): Promise<unknown> => {
+    }: ContractRouteArgs<typeof platformWorkspacesContract['getWorkspaceModules']>): Promise<ContractRouteResponse<typeof platformWorkspacesContract['getWorkspaceModules']>> => {
       const modules = await getWorkspaceGrantedModules(params.subdomain);
       return { status: 200 as const, body: { modules } };
     },
@@ -81,7 +81,7 @@ export default async function platformWorkspaceRoutes(
       params,
       body,
       request,
-    }: ContractRouteArgs<typeof platformWorkspacesContract['updateWorkspaceModules']>): Promise<unknown> => {
+    }: ContractRouteArgs<typeof platformWorkspacesContract['updateWorkspaceModules']>): Promise<ContractRouteResponse<typeof platformWorkspacesContract['updateWorkspaceModules']>> => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
       const result = await updateWorkspaceModules(params.subdomain, body.modules);
 
@@ -102,7 +102,7 @@ export default async function platformWorkspaceRoutes(
       params,
       body,
       request,
-    }: ContractRouteArgs<typeof platformWorkspacesContract['patchWorkspaceEmailVerification']>): Promise<unknown> => {
+    }: ContractRouteArgs<typeof platformWorkspacesContract['patchWorkspaceEmailVerification']>): Promise<ContractRouteResponse<typeof platformWorkspacesContract['patchWorkspaceEmailVerification']>> => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
       const result = await setWorkspaceEmailVerification(
         params.subdomain,
@@ -135,7 +135,7 @@ export default async function platformWorkspaceRoutes(
     verifyTenantUserEmail: async ({
       params,
       request,
-    }: ContractRouteArgs<typeof platformWorkspacesContract['verifyTenantUserEmail']>): Promise<unknown> => {
+    }: ContractRouteArgs<typeof platformWorkspacesContract['verifyTenantUserEmail']>): Promise<ContractRouteResponse<typeof platformWorkspacesContract['verifyTenantUserEmail']>> => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
       const { subdomain, userId } = params;
 
@@ -143,10 +143,8 @@ export default async function platformWorkspaceRoutes(
         verifyTenantUserEmailRow,
         findTenantUserRowById,
       } = await import('../../db/repositories/tenantUserRepository.js');
-
-      // Validate the user actually belongs to the given workspace subdomain.
-      const existing = await findTenantUserRowById(userId);
-      if (!existing || existing.workspaceSubdomain !== subdomain) {
+      const user = await findTenantUserRowById(userId);
+      if (!user || user.workspaceSubdomain !== subdomain) {
         return { status: 404 as const, body: { type: 'not_found', message: 'User not found in workspace' } };
       }
 
@@ -183,7 +181,7 @@ export default async function platformWorkspaceRoutes(
         params,
         body,
         request,
-      }: ContractRouteArgs<typeof platformWorkspacesContract['deleteWorkspace']>): Promise<unknown> => {
+      }: ContractRouteArgs<typeof platformWorkspacesContract['deleteWorkspace']>): Promise<ContractRouteResponse<typeof platformWorkspacesContract['deleteWorkspace']>> => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
         if (platformUser.role !== 'super_user') {
           return { status: 403 as const, body: { type: 'forbidden', message: 'Super-user privilege required' } };

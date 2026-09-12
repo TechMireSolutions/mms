@@ -4,7 +4,6 @@ import {
   teacherFieldConfigPutBodySchema,
   teacherPreferencesPutBodySchema,
   normalizeTeacherModulePreferences,
-  type TeachersSettings,
 } from '@mms/shared';
 import { registerModuleSetupConfigRoutes } from '../../../lib/registerModuleSetupConfigRoutes.js';
 import { canReadCollection } from '../../../services/rbacService.js';
@@ -26,13 +25,10 @@ export const teacherSetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
     fieldConfigSchema: teacherFieldConfigPutBodySchema,
     preferencesSchema: teacherPreferencesPutBodySchema,
     loadFieldConfig: loadTeacherFieldConfig,
-    saveFieldConfig: (body) =>
-      saveTeacherFieldConfig(body as unknown as TeachersSettings),
+    saveFieldConfig: (body) => saveTeacherFieldConfig(body),
     loadPreferences: loadTeacherModulePreferences,
-    normalizePreferences: (partial) =>
-      normalizeTeacherModulePreferences(partial as never),
-    savePreferences: (normalized) =>
-      saveTeacherModulePreferences(normalized as never),
+    normalizePreferences: normalizeTeacherModulePreferences,
+    savePreferences: saveTeacherModulePreferences,
     audit: auditTeacher,
     fieldConfigAuditAction: 'teacher.field-config',
     fieldConfigAuditSummary: 'Updated teacher field configuration',

@@ -125,7 +125,7 @@ export const obligationContract = c.router({
   restoreCollection: {
     method: 'POST',
     path: '/api/obligations/collections/:id/restore',
-    body: z.object({}).passthrough().optional(),
+    body: z.object({}).optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: ok, 404: ok, 500: ok },
     summary: 'Restore obligation collection',
   },

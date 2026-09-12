@@ -21,7 +21,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => hasanatUseCases.loadDistributionsPage({ ...query, includeDeleted } as Parameters<typeof hasanatUseCases.loadDistributionsPage>[0]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => hasanatUseCases.loadDistributionsPage({ ...query, includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list distributions' } };
@@ -51,7 +51,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const distribution = await withTenant(
           String(request.tenant?.id),
-          () => hasanatUseCases.updateDistributionById(id, body as Parameters<typeof hasanatUseCases.updateDistributionById>[1]),
+          () => hasanatUseCases.updateDistributionById(id, body),
           { readOnly: false },
         );
         if (!distribution) {

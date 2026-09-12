@@ -10,9 +10,13 @@ import {
   accountingReportAggregatesSchema,
   accountingReportQuerySchema,
 } from '../accountingReportAggregates.js';
+import {
+  accountingFieldConfigPutBodySchema,
+  accountingPreferencesPutBodySchema,
+} from '../accountingSetupConfigTypes.js';
 
 const c = initContract();
-const errorResponse = z.unknown();
+const errorResponse = z.object({ type: z.string(), message: z.string() }).passthrough();
 const ok = z.unknown();
 
 /** Envelope for paginated chart-of-accounts responses. */
@@ -168,7 +172,7 @@ export const accountingContract = c.router({
   updateFieldConfig: {
     method: 'PUT',
     path: '/api/accounting/field-config',
-    body: z.unknown(),
+    body: accountingFieldConfigPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), config: z.record(z.string(), z.unknown()) }), 403: errorResponse, 500: errorResponse },
     summary: 'Update field config',
   },
@@ -181,7 +185,7 @@ export const accountingContract = c.router({
   updatePreferences: {
     method: 'PUT',
     path: '/api/accounting/preferences',
-    body: z.unknown(),
+    body: accountingPreferencesPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), preferences: accountingPreferencesResponseSchema }), 403: errorResponse, 500: errorResponse },
     summary: 'Update preferences',
   },

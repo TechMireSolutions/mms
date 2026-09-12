@@ -4,7 +4,6 @@ import {
   sessionFieldConfigPutBodySchema,
   sessionPreferencesPutBodySchema,
   normalizeSessionModulePreferences,
-  type SessionsSettings,
 } from '@mms/shared';
 import { registerModuleSetupConfigRoutes } from '../../../lib/registerModuleSetupConfigRoutes.js';
 import { canReadCollection } from '../../../services/rbacService.js';
@@ -26,13 +25,10 @@ export const sessionSetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
     fieldConfigSchema: sessionFieldConfigPutBodySchema,
     preferencesSchema: sessionPreferencesPutBodySchema,
     loadFieldConfig: loadSessionFieldConfig,
-    saveFieldConfig: (body) =>
-      saveSessionFieldConfig(body as unknown as SessionsSettings),
+    saveFieldConfig: (body) => saveSessionFieldConfig(body),
     loadPreferences: loadSessionModulePreferences,
-    normalizePreferences: (partial) =>
-      normalizeSessionModulePreferences(partial as never),
-    savePreferences: (normalized) =>
-      saveSessionModulePreferences(normalized as never),
+    normalizePreferences: normalizeSessionModulePreferences,
+    savePreferences: saveSessionModulePreferences,
     audit: auditSession,
     fieldConfigAuditAction: 'session.field-config',
     fieldConfigAuditSummary: 'Updated session field configuration',

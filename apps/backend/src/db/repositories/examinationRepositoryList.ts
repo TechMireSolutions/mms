@@ -55,7 +55,7 @@ function buildExamsListConditions(subdomain: string, query: ExaminationsListQuer
 
 const EXAM_SORT_FIELDS = new Set(['name', 'subject', 'status', 'date', 'updatedAt']);
 
-function buildExamsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+function buildExamsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
   let column: SQL;
   if (field && EXAM_SORT_FIELDS.has(field)) {

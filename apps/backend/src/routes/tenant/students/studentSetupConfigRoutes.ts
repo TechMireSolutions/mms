@@ -4,7 +4,6 @@ import {
   studentFieldConfigPutBodySchema,
   studentPreferencesPutBodySchema,
   normalizeStudentModulePreferences,
-  type StudentsSettings,
 } from '@mms/shared';
 import { registerModuleSetupConfigRoutes } from '../../../lib/registerModuleSetupConfigRoutes.js';
 import { canReadCollection } from '../../../services/rbacService.js';
@@ -26,13 +25,10 @@ export const studentSetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
     fieldConfigSchema: studentFieldConfigPutBodySchema,
     preferencesSchema: studentPreferencesPutBodySchema,
     loadFieldConfig: loadStudentFieldConfig,
-    saveFieldConfig: (body) =>
-      saveStudentFieldConfig(body as unknown as StudentsSettings),
+    saveFieldConfig: (body) => saveStudentFieldConfig(body),
     loadPreferences: loadStudentModulePreferences,
-    normalizePreferences: (partial) =>
-      normalizeStudentModulePreferences(partial as never),
-    savePreferences: (normalized) =>
-      saveStudentModulePreferences(normalized as never),
+    normalizePreferences: normalizeStudentModulePreferences,
+    savePreferences: saveStudentModulePreferences,
     audit: auditStudent,
     fieldConfigAuditAction: 'student.field-config',
     fieldConfigAuditSummary: 'Updated student field configuration',

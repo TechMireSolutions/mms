@@ -4,7 +4,6 @@ import {
   enrollmentFieldConfigPutBodySchema,
   enrollmentPreferencesPutBodySchema,
   normalizeEnrollmentModulePreferences,
-  type EnrollmentsSettings,
 } from '@mms/shared';
 import { registerModuleSetupConfigRoutes } from '../../../lib/registerModuleSetupConfigRoutes.js';
 import { canReadCollection } from '../../../services/rbacService.js';
@@ -26,13 +25,10 @@ export const enrollmentSetupConfigRoutes: FastifyPluginAsync = async (fastify) =
     fieldConfigSchema: enrollmentFieldConfigPutBodySchema,
     preferencesSchema: enrollmentPreferencesPutBodySchema,
     loadFieldConfig: loadEnrollmentFieldConfig,
-    saveFieldConfig: (body) =>
-      saveEnrollmentFieldConfig(body as unknown as EnrollmentsSettings),
+    saveFieldConfig: (body) => saveEnrollmentFieldConfig(body),
     loadPreferences: loadEnrollmentModulePreferences,
-    normalizePreferences: (partial) =>
-      normalizeEnrollmentModulePreferences(partial as never),
-    savePreferences: (normalized) =>
-      saveEnrollmentModulePreferences(normalized as never),
+    normalizePreferences: normalizeEnrollmentModulePreferences,
+    savePreferences: saveEnrollmentModulePreferences,
     audit: auditEnrollment,
     fieldConfigAuditAction: 'enrollment.field-config',
     fieldConfigAuditSummary: 'Updated enrollment field configuration',

@@ -100,7 +100,7 @@ export default async function enrollmentsRoutes(
       if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const item = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.createEnrollment(body as Parameters<typeof enrollmentsUseCases.createEnrollment>[0]), { readOnly: false });
+        const item = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.createEnrollment(body), { readOnly: false });
         return { status: 201 as const, body: item };
       } catch (error: unknown) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create enrollment' } };
@@ -111,7 +111,7 @@ export default async function enrollmentsRoutes(
       if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const updated = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.updateEnrollmentById(id, body as Parameters<typeof enrollmentsUseCases.updateEnrollmentById>[1]), { readOnly: false });
+        const updated = await withTenant(String(request.tenant?.id), () => enrollmentsUseCases.updateEnrollmentById(id, body), { readOnly: false });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Enrollment not found' } };
         return { status: 200 as const, body: updated };
       } catch (error: unknown) {

@@ -169,7 +169,9 @@ const teachersDuplicateCheckBodyBaseSchema = z.object({
   employeeId: z.string().max(64).optional(),
 }).strict();
 
-export const teachersDuplicateCheckBodySchema = z.preprocess((raw) => {
+export type TeachersDuplicateCheckBody = z.infer<typeof teachersDuplicateCheckBodyBaseSchema>;
+
+export const teachersDuplicateCheckBodySchema: z.ZodType<TeachersDuplicateCheckBody> = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   return deepSanitizeStrings(raw);
 }, teachersDuplicateCheckBodyBaseSchema);

@@ -143,7 +143,7 @@ export function createGenericRelationalService<
     return normalized;
   }
 
-  async function updateById(id: string, record: T): Promise<T | null> {
+  async function updateById(id: string, record: Partial<T>): Promise<T | null> {
     const tenant = getRequestTenant();
     if (!tenant) return null;
     const existing = await repo.findById(tenant, id);

@@ -53,7 +53,7 @@ export const questionBankSetupConfigRoutes: FastifyPluginAsync = async (
     const parsed = parseRequest(questionBankFieldConfigPutBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    await updateQuestionBankFieldConfig(tenant, parsed.data as Record<string, unknown>);
+    await updateQuestionBankFieldConfig(tenant, parsed.data);
     await auditQuestionBank(user, 'questionBank.field-config', 'Updated question bank field configuration', 'field-config');
 
     const updatedFields = await getQuestionBankFieldConfig(tenant);
@@ -79,7 +79,7 @@ export const questionBankSetupConfigRoutes: FastifyPluginAsync = async (
     const parsed = parseRequest(questionBankPreferencesPutBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
-    await updateQuestionBankPreferences(tenant, parsed.data as Record<string, unknown>);
+    await updateQuestionBankPreferences(tenant, parsed.data);
     await auditQuestionBank(user, 'questionBank.preferences', 'Updated question bank module preferences', 'preferences');
 
     const updatedPrefs = await getQuestionBankPreferences(tenant);

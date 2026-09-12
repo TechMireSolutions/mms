@@ -10,7 +10,7 @@ export interface QuestionBankListQuery {
   /** Comma-separated difficulties (`easy|medium|hard`). */
   difficulty?: string;
   sortField?: string;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: 'asc' | 'desc' | '';
   includeDeleted?: boolean;
 }
 

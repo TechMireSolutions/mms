@@ -2,8 +2,11 @@ import type { EnrollmentsRepository } from '../repository/enrollmentsRepository.
 import { enrollmentsRepository } from '../repository/enrollmentsRepositoryAdapter.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { createGenericRelationalService } from '../../services/genericRelationalService.js';
-import { enrollmentRecordSchema, type EnrollmentRecord } from '@mms/shared';
 import {
+  enrollmentRecordSchema,
+  type EnrollmentRecord,
+  type EnrollmentInsert,
+  type EnrollmentUpdate,
   dedupeTrimmedIds,
   EMPTY_ENROLLMENTS_REPORT_AGGREGATES,
   normalizeEnrollmentsReportComparisonQuery,
@@ -69,27 +72,27 @@ export function createEnrollmentsUseCases(
   };
 
   return {
-    createEnrollment: async (record: EnrollmentRecord) => {
+    createEnrollment: async (record: EnrollmentInsert | EnrollmentRecord) => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
 
       // Active Foreign Key Guarding (§1.8)
       await validateActiveForeignKeys(tenant, record);
 
-      const created = await crud.create(record);
+      const created = await crud.create(record as EnrollmentRecord);
       const { maybeGenerateInvoiceForEnrollment } = await import(
         '../../finance/use-cases/financeInvoiceGenerationUseCases.js'
       );
       return maybeGenerateInvoiceForEnrollment(created);
     },
-    updateEnrollmentById: async (id: string, record: EnrollmentRecord) => {
+    updateEnrollmentById: async (id: string, record: EnrollmentUpdate | Partial<EnrollmentRecord>) => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
 
       // Active Foreign Key Guarding (§1.8)
       await validateActiveForeignKeys(tenant, record);
 
-      return crud.updateById(id, record);
+      return crud.updateById(id, record as EnrollmentRecord);
     },
     deleteEnrollmentById: crud.deleteById,
     restoreEnrollmentById: async (id: string, userId?: string) => {

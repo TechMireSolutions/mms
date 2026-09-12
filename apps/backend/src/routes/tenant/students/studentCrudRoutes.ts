@@ -41,7 +41,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const result = await withTenant(String(request.tenant?.id), () => studentUseCases.loadStudentsPage({
         ...query,
         includeDeleted,
-      } as Parameters<typeof studentUseCases.loadStudentsPage>[0]), { readOnly: true });
+      }), { readOnly: true });
 
       return {
         status: 200 as const,
@@ -238,7 +238,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          studentUseCases.checkStudentRegistrationDuplicate(body as Parameters<typeof studentUseCases.checkStudentRegistrationDuplicate>[0]), { readOnly: false });
+          studentUseCases.checkStudentRegistrationDuplicate(body), { readOnly: false });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
         request.log.error(error, 'Failed to check student duplicate');

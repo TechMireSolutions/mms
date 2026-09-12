@@ -15,8 +15,10 @@ import {
   type FinanceReportComparisonQuery,
   type Invoice,
   type InvoiceCreateInput,
+  type InvoiceUpdate,
   type Payment,
   type PaymentCreateInput,
+  type PaymentUpdate,
 } from '@mms/shared';
 import { allocateNextInvoiceNumber, replacePaymentAllocations } from '../../db/repositories/financeBillingRepository.js';
 import { tryPostInvoiceJournal, tryPostPaymentJournal } from '../../accounting/ledgerPosting/ledgerPostingService.js';
@@ -108,7 +110,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       await tryPostInvoiceJournal(tenant, created);
       return created;
     },
-    updateInvoiceById: async (id: string, record: Invoice): Promise<Invoice | null> => {
+    updateInvoiceById: async (id: string, record: InvoiceUpdate): Promise<Invoice | null> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       if (record.studentId) {
@@ -120,7 +122,17 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
           throw err;
         }
       }
-      return invoiceCrud.updateById(id, record);
+      const { lines: rawLines, ...rest } = record;
+      const lines = rawLines
+        ? (rawLines.map((line, index) => ({
+            ...line,
+            id: line.id ?? `il-${index + 1}`,
+          })) as Invoice['lines'])
+        : undefined;
+      return invoiceCrud.updateById(id, {
+        ...rest,
+        ...(lines ? { lines } : {}),
+      });
     },
     deleteInvoiceById: invoiceCrud.deleteById,
     restoreInvoiceById: invoiceCrud.restoreById,
@@ -177,7 +189,21 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
 
     // --- Payments ---
     loadPayments: paymentCrud.loadAll,
-    updatePaymentById: paymentCrud.updateById,
+    updatePaymentById: async (id: string, record: PaymentUpdate): Promise<Payment | null> => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      const { allocations: rawAllocations, ...rest } = record;
+      const allocations = rawAllocations
+        ? (rawAllocations.map((alloc, index) => ({
+            ...alloc,
+            id: alloc.id ?? `pa-${index + 1}`,
+          })) as Payment['allocations'])
+        : undefined;
+      return paymentCrud.updateById(id, {
+        ...rest,
+        ...(allocations ? { allocations } : {}),
+      });
+    },
     deletePaymentById: paymentCrud.deleteById,
     restorePaymentById: paymentCrud.restoreById,
     bulkSoftDeletePayments: paymentCrud.bulkDeleteByIds,

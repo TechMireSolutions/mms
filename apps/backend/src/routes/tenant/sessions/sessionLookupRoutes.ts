@@ -3,6 +3,7 @@ import {
   SESSIONS_MODULE_MANIFEST,
   sessionLookupKindParamsSchema,
   sessionLookupPutBodySchema,
+  type SessionLookupKind,
 } from '@mms/shared';
 import { registerModuleLookupRoutes } from '../../../lib/registerModuleLookupRoutes.js';
 import { canReadCollection } from '../../../services/rbacService.js';
@@ -13,14 +14,13 @@ import {
 import { auditSession } from './sessionRouteHelpers.js';
 
 export const sessionLookupRoutes: FastifyPluginAsync = async (fastify) => {
-  registerModuleLookupRoutes(fastify, {
+  registerModuleLookupRoutes<SessionLookupKind>(fastify, {
     canRead: (user) => canReadCollection(user, 'sessions'),
     setupWritePermission: SESSIONS_MODULE_MANIFEST.permissions.setupWrite,
     kindParamsSchema: sessionLookupKindParamsSchema,
     putBodySchema: sessionLookupPutBodySchema,
     loadMap: loadSessionLookupsMap,
-    replaceKind: (kind, items) =>
-      replaceSessionLookupKind(kind as never, items as never) as Promise<unknown>,
+    replaceKind: (kind, items) => replaceSessionLookupKind(kind, items),
     audit: auditSession,
     auditAction: 'session.lookups',
     loadError: 'Failed to load session lookups',

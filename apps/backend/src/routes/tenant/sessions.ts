@@ -78,7 +78,7 @@ export default async function sessionsRoutes(
       if (!canWriteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const item = await withTenant(String(request.tenant?.id), () => sessionsUseCases.createSession(body as Parameters<typeof sessionsUseCases.createSession>[0]), { readOnly: false });
+        const item = await withTenant(String(request.tenant?.id), () => sessionsUseCases.createSession(body), { readOnly: false });
         return { status: 201 as const, body: { session: item } };
       } catch (error: unknown) {
         request.log.error(error, 'Failed to create session');

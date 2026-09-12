@@ -17,7 +17,10 @@ export interface MessageLogsFilterQuery {
   endDate?: string;
   page?: number;
   pageSize?: number;
-  includeDeleted?: boolean;
+  limit?: number;
+  sortField?: string;
+  sortDir?: 'asc' | 'desc' | '';
+  includeDeleted?: boolean | string;
 }
 
 export interface MessageLogsPageResult {
@@ -34,8 +37,8 @@ export async function queryFilteredMessageLogs(
   query: MessageLogsFilterQuery = {},
 ): Promise<MessageLogsPageResult> {
   const subdomain = workspaceSubdomain?.trim().toLowerCase();
-  const rawPageSize = query.pageSize && query.pageSize > 0 ? query.pageSize : MESSAGE_LOGS_DEFAULT_PAGE_SIZE;
-  const pageSize = Math.min(rawPageSize, MESSAGE_LOGS_MAX_PAGE_SIZE);
+  const effectivePageSize = query.pageSize && query.pageSize > 0 ? query.pageSize : (query.limit && query.limit > 0 ? query.limit : MESSAGE_LOGS_DEFAULT_PAGE_SIZE);
+  const pageSize = Math.min(effectivePageSize, MESSAGE_LOGS_MAX_PAGE_SIZE);
 
   if (!subdomain) {
     return {

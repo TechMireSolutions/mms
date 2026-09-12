@@ -4,7 +4,6 @@ import {
   financeFieldConfigPutBodySchema,
   financePreferencesPutBodySchema,
   normalizeFinanceModulePreferences,
-  type FinanceModulePreferences,
 } from '@mms/shared';
 import { registerModuleSetupConfigRoutes } from '../../../lib/registerModuleSetupConfigRoutes.js';
 import { canReadCollection } from '../../../services/rbacService.js';
@@ -22,20 +21,17 @@ const auditFinance = createCollectionAuditHelper('finance');
 
 /** Finance Setup field-config + preferences (typed FORCE-RLS tables). */
 export const financeSetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
-  registerModuleSetupConfigRoutes<Record<string, unknown>, FinanceModulePreferences>(
-    fastify,
-    {
-      canRead: (user) =>
-        canReadCollection(user, FINANCE_MODULE_MANIFEST.collectionKey),
-      setupWritePermission: FINANCE_MODULE_MANIFEST.permissions.setupWrite,
-      fieldConfigSchema: financeFieldConfigPutBodySchema,
-      preferencesSchema: financePreferencesPutBodySchema,
-      loadFieldConfig: loadFinanceFieldConfig,
-      saveFieldConfig: saveFinanceFieldConfig,
-      loadPreferences: loadFinanceModulePreferences,
-      normalizePreferences: (partial) =>
-        normalizeFinanceModulePreferences(partial as Record<string, unknown> | null),
-      savePreferences: saveFinanceModulePreferences,
+  registerModuleSetupConfigRoutes(fastify, {
+    canRead: (user) =>
+      canReadCollection(user, FINANCE_MODULE_MANIFEST.collectionKey),
+    setupWritePermission: FINANCE_MODULE_MANIFEST.permissions.setupWrite,
+    fieldConfigSchema: financeFieldConfigPutBodySchema,
+    preferencesSchema: financePreferencesPutBodySchema,
+    loadFieldConfig: loadFinanceFieldConfig,
+    saveFieldConfig: saveFinanceFieldConfig,
+    loadPreferences: loadFinanceModulePreferences,
+    normalizePreferences: normalizeFinanceModulePreferences,
+    savePreferences: saveFinanceModulePreferences,
       audit: auditFinance,
       fieldConfigAuditAction: 'finance.field-config',
       fieldConfigAuditSummary: 'Updated finance field configuration',

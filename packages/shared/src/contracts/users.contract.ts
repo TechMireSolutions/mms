@@ -48,7 +48,7 @@ export const userContract = c.router({
     method: 'PATCH',
     path: '/api/users/:id',
     pathParams: z.object({ id: z.string().min(1) }),
-    body: editWorkspaceUserSchema.partial().passthrough(),
+    body: editWorkspaceUserSchema.partial(),
     responses: { 200: z.object({ user: workspaceUserRecordSchema }), 400: errorResponse, 403: errorResponse, 404: errorResponse, 409: errorResponse, 500: errorResponse },
     summary: 'Update a single workspace user',
   },

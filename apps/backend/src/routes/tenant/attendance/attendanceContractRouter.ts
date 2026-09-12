@@ -62,7 +62,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const item = await withTenant(tenantId, () => attendanceUseCases.createAttendanceRecord(body as Parameters<typeof attendanceUseCases.createAttendanceRecord>[0]), { readOnly: false });
+        const item = await withTenant(tenantId, () => attendanceUseCases.createAttendanceRecord(body), { readOnly: false });
         return { status: 201 as const, body: item };
       } catch (error: unknown) {
         request.log?.error(error, 'Failed to create attendance record');
@@ -82,7 +82,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const records = await withTenant(tenantId, () => attendanceUseCases.upsertAttendanceRecords(body.records as Parameters<typeof attendanceUseCases.upsertAttendanceRecords>[0]), { readOnly: false });
+        const records = await withTenant(tenantId, () => attendanceUseCases.upsertAttendanceRecords(body.records), { readOnly: false });
         return { status: 200 as const, body: { records } };
       } catch (error: unknown) {
         request.log?.error(error, 'Failed to update attendance records');
@@ -149,7 +149,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         const bodyRecord = (body && typeof body === 'object') ? (body as Record<string, unknown>) : {};
         const updated = await withTenant(
           tenantId,
-          () => attendanceUseCases.updateAttendanceRecordById(id, { ...bodyRecord, id: (bodyRecord.id as string) ?? id } as Parameters<typeof attendanceUseCases.updateAttendanceRecordById>[1]),
+          () => attendanceUseCases.updateAttendanceRecordById(id, { ...bodyRecord, id: (bodyRecord.id as string) ?? id }),
           { readOnly: false },
         );
         if (!updated) {
