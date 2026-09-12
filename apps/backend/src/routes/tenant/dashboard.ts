@@ -8,7 +8,7 @@ import {
   type DashboardWidgetDto,
   type User,
 } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
@@ -188,7 +188,7 @@ const dashboardRouter = s.router(dashboardContract, {
       },
       'Failed to load dashboard summary',
     ),
-} as unknown as Parameters<typeof s.router>[1]);
+} as unknown as RouterImplementation<typeof dashboardContract>);
 
 /**
  * Server-authoritative dashboard layout/preferences + pinned widgets REST.

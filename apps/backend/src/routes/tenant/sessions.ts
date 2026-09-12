@@ -69,7 +69,7 @@ export default async function sessionsRoutes(
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsPage({ ...query, ...(includeDeleted ? { includeDeleted } : {}) } as Parameters<typeof sessionsUseCases.loadSessionsPage>[0]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsPage({ ...query, includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list sessions' } };
@@ -191,8 +191,8 @@ export default async function sessionsRoutes(
       if (!canReadCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsWidgetAggregates(body.widgets as Parameters<typeof sessionsUseCases.loadSessionsWidgetAggregates>[0], request), { readOnly: true });
-        return { status: 200 as const, body: { results: result as Record<string, { value: number; totalCount: number; chartData: Array<{ name: string; value: number }> }> } };
+        const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsWidgetAggregates(body.widgets, request), { readOnly: true });
+        return { status: 200 as const, body: { results: result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }

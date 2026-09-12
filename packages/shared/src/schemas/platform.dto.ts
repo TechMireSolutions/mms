@@ -244,3 +244,72 @@ export const platformActivityLogsQuerySchema = z.object({
 }).strict();
 
 export type PlatformActivityLogsQueryInput = z.infer<typeof platformActivityLogsQuerySchema>;
+
+export const platformUserDtoSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  name: z.string(),
+  role: z.enum(['super_user', 'admin']),
+  permissions: platformAdminPermissionsSchema,
+}).strict();
+
+export type PlatformUserDto = z.infer<typeof platformUserDtoSchema>;
+
+export const platformUserProfileDtoSchema = platformUserDtoSchema.extend({
+  createdAt: z.string().optional(),
+  emailVerifiedAt: z.string().optional(),
+  disabledAt: z.string().nullable().optional(),
+}).strict();
+
+export type PlatformUserProfileDto = z.infer<typeof platformUserProfileDtoSchema>;
+
+export const platformSetupStatusDtoSchema = z.object({
+  needsSetup: z.boolean(),
+  smtpConfigured: z.boolean(),
+}).strict();
+
+export type PlatformSetupStatusDto = z.infer<typeof platformSetupStatusDtoSchema>;
+
+export const platformSettingsDtoSchema = z.object({
+  id: z.string(),
+  syncTlsOnCreate: z.boolean(),
+  tlsExtraSans: z.string().optional(),
+  certbotEmail: z.string(),
+  updatedAt: z.string().optional(),
+});
+
+export type PlatformSettingsDto = z.infer<typeof platformSettingsDtoSchema>;
+
+export const platformWorkspaceRowDtoSchema = z.object({
+  subdomain: z.string(),
+  madrasaName: z.string().optional(),
+  name: z.string().optional(),
+  tagline: z.string().optional(),
+  logoUrl: z.string().optional(),
+  enabled: z.boolean(),
+  createdAt: z.string(),
+  requireEmailVerification: z.boolean().optional(),
+});
+
+export type PlatformWorkspaceRowDto = z.infer<typeof platformWorkspaceRowDtoSchema>;
+
+export const platformActivityLogDtoSchema = z.object({
+  id: z.string(),
+  userId: z.string().nullable(),
+  userEmail: z.string(),
+  action: z.string(),
+  targetResource: z.string().nullable(),
+  targetId: z.string().nullable(),
+  ipAddress: z.string().nullable(),
+  metadataMessage: z.string().nullable(),
+  createdAt: z.string(),
+}).strict();
+
+export type PlatformActivityLogDto = z.infer<typeof platformActivityLogDtoSchema>;
+
+export const platformErrorDtoSchema = z.object({
+  type: z.string(),
+  message: z.string(),
+}).strict();
+
+export type PlatformErrorDto = z.infer<typeof platformErrorDtoSchema>;

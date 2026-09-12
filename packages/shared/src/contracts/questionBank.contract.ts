@@ -1,6 +1,7 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
+import { widgetAggregatesBodySchema, widgetAggregateResultSchema } from '../schemas/common.dto.js';
 import {
   questionBankQuestionRecordSchema,
   questionBankTestRecordSchema,
@@ -122,16 +123,9 @@ export const questionBankContract = c.router({
   widgetAggregates: {
     method: 'POST',
     path: '/api/question-bank/widget-aggregates',
-    body: z.object({ widgets: z.array(z.unknown()) }),
+    body: widgetAggregatesBodySchema,
     responses: {
-      200: z.record(
-        z.string(),
-        z.object({
-          value: z.number(),
-          totalCount: z.number(),
-          chartData: z.array(z.object({ name: z.string(), value: z.number() })),
-        }),
-      ),
+      200: z.record(z.string(), widgetAggregateResultSchema),
       403: z.unknown(),
       500: z.unknown(),
     },

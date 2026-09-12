@@ -2,6 +2,7 @@ import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema, bulkIdsBodySchema, softDeleteBodySchema } from '../apiSchemas.js';
 import { invoiceCreateSchema, paymentCreateSchema } from '../schemas/finance.dto.js';
+import { widgetAggregatesBodySchema } from '../schemas/common.dto.js';
 import {
   invoiceRecordSchema,
   paymentRecordSchema,
@@ -216,7 +217,7 @@ export const financeContract = c.router({
   widgetAggregates: {
     method: 'POST',
     path: '/api/finance/widget-aggregates',
-    body: z.object({ widgets: z.array(z.unknown()) }),
+    body: widgetAggregatesBodySchema,
     responses: {
       200: z.record(z.string(), financeWidgetAggregateResultSchema),
       403: errorResponse,

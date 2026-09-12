@@ -2,6 +2,7 @@ import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type FiscalYear } from '@mms/shared';
 import { accountingFiscalYears } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type FiscalYearRow = typeof accountingFiscalYears.$inferSelect;
 
@@ -12,15 +13,11 @@ export function fiscalYearRowToRecord(row: FiscalYearRow): FiscalYear {
     startDate: row.startDate,
     endDate: row.endDate,
     status: row.status as FiscalYear['status'],
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    ...mapAuditTimestamps(row),
   };
 
   if (row.closedAt) fiscalYear.closedAt = row.closedAt.toISOString();
   if (row.closedBy) fiscalYear.closedBy = row.closedBy;
-  if (row.deletedAt) fiscalYear.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) fiscalYear.deletedBy = row.deletedBy;
-  if (row.deletionReason) fiscalYear.deletionReason = row.deletionReason;
 
   return fiscalYear;
 }

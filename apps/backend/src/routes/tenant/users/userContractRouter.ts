@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
 import type { User, WorkspaceUser } from '@mms/shared';
 import { isQueryFlagTrue, userContract } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { usersUseCases } from '../../../users/use-cases/usersUseCases.js';
@@ -270,7 +270,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         }
       },
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof userContract>);
 
   await fastify.register(s.plugin(router));
 };

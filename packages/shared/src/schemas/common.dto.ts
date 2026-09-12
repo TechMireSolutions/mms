@@ -52,3 +52,12 @@ export const countResponseSchema = z.object({
 
 export type CountResponse = z.infer<typeof countResponseSchema>;
 
+/** Standard widget aggregate result schema across all module dashboards. */
+export const widgetAggregateResultSchema = z.object({
+  value: z.number(),
+  totalCount: z.number(),
+  chartData: z.array(z.object({ name: z.string(), value: z.number() })),
+});
+
+export type WidgetAggregateResult = z.infer<typeof widgetAggregateResultSchema>;
+

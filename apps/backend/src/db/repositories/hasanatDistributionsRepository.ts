@@ -3,6 +3,7 @@ import { dedupeTrimmedIds, type Distribution, type RepositoryListOptions } from 
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { hasanatDistributions } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type DistRow = typeof hasanatDistributions.$inferSelect;
 export function distributionRowToRecord(row: DistRow): Distribution {
@@ -18,15 +19,13 @@ export function distributionRowToRecord(row: DistRow): Distribution {
     reason: row.reason,
     issuedDate: row.issuedDate,
     status: row.status as Distribution['status'],
+    ...mapAuditTimestamps(row),
   };
 
   if (row.recipientStudentId) dist.recipientStudentId = row.recipientStudentId;
   if (row.recipientTeacherId) dist.recipientTeacherId = row.recipientTeacherId;
   if (row.issuedByUserId) dist.issuedByUserId = row.issuedByUserId;
   if (row.issuedBy) dist.issuedBy = row.issuedBy;
-  if (row.deletedAt) dist.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) dist.deletedBy = row.deletedBy;
-  if (row.deletionReason) dist.deletionReason = row.deletionReason;
 
   return dist;
 }

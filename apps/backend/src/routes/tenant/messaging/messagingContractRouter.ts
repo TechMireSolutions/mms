@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { User } from '@mms/shared';
 import { messagingContract } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadMessaging } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
@@ -65,7 +65,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list recipients' } };
       }
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof messagingContract>);
 
   await fastify.register(s.plugin(router));
 };

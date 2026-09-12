@@ -2,7 +2,7 @@ import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { messageTemplates, messageLogs } from '../schema.js';
 import { dedupeTrimmedIds, type Message, type RepositoryListOptions } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
-import { mapAuditToInsert } from './repositoryMappers.js';
+import { mapAuditTimestamps, mapAuditToInsert } from './repositoryMappers.js';
 
 type LogRow = typeof messageLogs.$inferSelect;
 /** Row shape accepted by logRowToRecord — purgeAfter is DB-only generated column, not surfaced to app layer. */
@@ -18,15 +18,11 @@ export function logRowToRecord(row: LogSelectRow): Message {
     sentAt: row.sentAt,
     status: row.status as Message['status'],
     category: row.category as Message['category'],
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    ...mapAuditTimestamps(row),
   };
 
   if (row.subject) message.subject = row.subject;
   if (row.errorMessage) message.errorMessage = row.errorMessage;
-  if (row.deletedAt) message.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) message.deletedBy = row.deletedBy;
-  if (row.deletionReason) message.deletionReason = row.deletionReason;
 
   return message;
 }

@@ -7,6 +7,7 @@ import {
   testSectionQuestions,
 } from '../schema.js';
 import { type withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type TestRow = typeof tests.$inferSelect;
 type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
@@ -16,6 +17,7 @@ export function testRowToRecord(
   questionIds: string[] = [],
   sections: Array<{ id: string; title: string; instructions: string; questionIds: string[] }> = [],
 ): QuestionBankTest {
+  const audit = mapAuditTimestamps(row);
   const test: QuestionBankTest = {
     id: row.id,
     name: row.name,
@@ -23,16 +25,16 @@ export function testRowToRecord(
     questionIds,
     difficulty: row.difficulty as QuestionBankTest['difficulty'],
     duration: row.duration,
-    createdAt: row.createdAt.toISOString(),
+    createdAt: audit.createdAt ?? (row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt)),
+    deletedAt: audit.deletedAt ?? null,
+    deletedBy: audit.deletedBy ?? null,
+    deletionReason: audit.deletionReason ?? null,
   };
 
   if (row.examClass) test.examClass = row.examClass;
   if (row.totalMarks != null) test.totalMarks = row.totalMarks;
   if (row.instructions) test.instructions = row.instructions;
   if (sections.length > 0) test.sections = sections;
-  if (row.deletedAt) test.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) test.deletedBy = row.deletedBy;
-  if (row.deletionReason) test.deletionReason = row.deletionReason;
 
   return test;
 }

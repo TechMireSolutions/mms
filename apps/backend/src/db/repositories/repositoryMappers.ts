@@ -15,7 +15,7 @@ export type DbAuditRow = DrizzleAuditSelectRow;
 
 export type ContractAuditFields = SerializedEntityAuditFields;
 
-function toIsoString(val: Date | string | null | undefined): string | undefined {
+export function toIsoString(val: Date | string | null | undefined): string | undefined {
   if (!val) return undefined;
   if (val instanceof Date) return val.toISOString();
   return String(val);

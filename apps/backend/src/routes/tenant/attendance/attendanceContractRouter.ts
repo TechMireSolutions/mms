@@ -2,7 +2,6 @@ import type { FastifyPluginAsync } from 'fastify';
 import {
   isQueryFlagTrue,
   type User,
-  type WidgetQuery,
   ATTENDANCE_MODULE_MANIFEST,
   attendanceContract,
   roleHasPermission,
@@ -257,7 +256,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(
           tenantId,
-          () => attendanceUseCases.loadAttendanceWidgetAggregates(body.widgets as WidgetQuery[]),
+          () => attendanceUseCases.loadAttendanceWidgetAggregates(body.widgets),
           { readOnly: true },
         );
         return { status: 200 as const, body: result };

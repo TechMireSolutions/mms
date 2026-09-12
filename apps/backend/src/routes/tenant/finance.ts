@@ -1,7 +1,7 @@
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
-import { FINANCE_MODULE_MANIFEST, type User, type WidgetQuery, financeContract, isQueryFlagTrue } from '@mms/shared';
+import { FINANCE_MODULE_MANIFEST, type User, financeContract, isQueryFlagTrue } from '@mms/shared';
 import { registerStandardExtendedRoutes } from '../../lib/crudStandardRoutes.js';
 import { registerSingleRestoreRoute } from '../../lib/crudResourceRoutes.js';
 
@@ -11,7 +11,7 @@ import { financeReportRoutes } from './finance/financeReportRoutes.js';
 import { financeSetupConfigRoutes } from './finance/financeSetupConfigRoutes.js';
 import { financeBillingRoutes } from './finance/financeBillingRoutes.js';
 import { financeCollectRoutes } from './finance/financeCollectRoutes.js';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
 
@@ -262,14 +262,13 @@ export default async function financeRoutes(
       const user = request.user as User;
       if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
-        // (typed as WidgetQuery[] because the contract body is passthrough)
-        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadFinanceWidgetAggregates(body.widgets as WidgetQuery[]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadFinanceWidgetAggregates(body.widgets), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof financeContract>);
 
   await fastify.register(s.plugin(router));
 }

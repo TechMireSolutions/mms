@@ -1,11 +1,12 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { baseListQuerySchema, softDeleteBodySchema, includeDeletedQuerySchema } from '../apiSchemas.js';
+import { softDeleteBodySchema, includeDeletedQuerySchema } from '../apiSchemas.js';
 import { sessionCreateBodySchema, sessionUpdateBodySchema, sessionsBulkIdsSchema } from '../schemas/sessions.dto.js';
 import { widgetAggregatesBodySchema } from '../schemas/common.dto.js';
 import { sessionsBulkStatusSchema } from '../sessionsModuleManifest.js';
 import { sessionsReportAggregatesSchema } from '../sessionsReportAggregates.js';
 import { SessionSchema } from '../sessionTypes.js';
+import { sessionsListQuerySchema } from '../sessionsListQuery.js';
 
 const c = initContract();
 const errorResponse = z.object({ type: z.string(), message: z.string() }).passthrough();
@@ -44,7 +45,7 @@ export const sessionContract = c.router({
   list: {
     method: 'GET',
     path: '/api/sessions',
-    query: baseListQuerySchema,
+    query: sessionsListQuerySchema,
     responses: { 200: sessionListPageResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'List sessions',
   },

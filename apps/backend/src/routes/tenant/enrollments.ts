@@ -7,7 +7,7 @@ import { registerCountRoute, registerMetricsRoute, registerWidgetAggregatesRoute
 
 
 import { enrollmentContract } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
 import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
@@ -49,7 +49,7 @@ export default async function enrollmentsRoutes(
 
       registerWidgetAggregatesRoute(sub, {
         collection: ENROLLMENTS_COLLECTION,
-        loadAggregatesFn: (queries, req) => enrollmentsUseCases.loadEnrollmentsWidgetAggregates(queries as unknown as Parameters<typeof enrollmentsUseCases.loadEnrollmentsWidgetAggregates>[0], req),
+        loadAggregatesFn: (queries, req) => enrollmentsUseCases.loadEnrollmentsWidgetAggregates(queries, req),
         errorMessagePrefix: 'enrollment',
       });
 
@@ -152,7 +152,7 @@ export default async function enrollmentsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore enrollments' } };
       }
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof enrollmentContract>);
 
   await fastify.register(s.plugin(router));
 }

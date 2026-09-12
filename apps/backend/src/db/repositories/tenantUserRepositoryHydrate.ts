@@ -2,10 +2,12 @@ import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type StoredTenantUser } from '@mms/shared';
 import { withTenant } from '../tenant-context.js';
 import { tenantUsers } from '../schema.js';
+import { mapAuditTimestamps, toIsoString } from './repositoryMappers.js';
 
 export type TenantUserRow = StoredTenantUser & Record<string, unknown>;
 
 export function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
+  const audit = mapAuditTimestamps(row);
   const base: TenantUserRow = {
     id: row.id,
     workspaceSubdomain: row.workspaceSubdomain,
@@ -15,14 +17,14 @@ export function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUse
     passwordHash: row.passwordHash,
     name: row.name,
     role: row.role,
-    createdAt: row.createdAt.toISOString(),
+    createdAt: audit.createdAt ?? (row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt)),
     mustChangePassword: row.mustChangePassword,
-    deletedAt: row.deletedAt?.toISOString() ?? null,
-    deletedBy: row.deletedBy ?? null,
+    deletedAt: audit.deletedAt ?? null,
+    deletedBy: audit.deletedBy ?? null,
   };
 
   if (row.contactId) base.contactId = row.contactId;
-  if (row.emailVerifiedAt) base.emailVerifiedAt = row.emailVerifiedAt.toISOString();
+  if (row.emailVerifiedAt) base.emailVerifiedAt = toIsoString(row.emailVerifiedAt);
   if (row.pendingLoginEmail) base.pendingLoginEmail = row.pendingLoginEmail;
 
   if (row.profileJson) {

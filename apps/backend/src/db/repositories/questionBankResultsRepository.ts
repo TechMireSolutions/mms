@@ -14,6 +14,7 @@ import {
   assessmentAnswers,
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type ResultRow = typeof assessmentResults.$inferSelect;
 
@@ -22,6 +23,7 @@ export function resultRowToRecord(
   answers: Record<string, string> = {},
   scores: Record<string, number> = {},
 ): QuestionBankResult {
+  const audit = mapAuditTimestamps(row);
   const result: QuestionBankResult = {
     id: row.id,
     testId: row.testId,
@@ -30,11 +32,10 @@ export function resultRowToRecord(
     submittedAt: row.submittedAt,
     answers,
     scores,
+    deletedAt: audit.deletedAt ?? null,
+    deletedBy: audit.deletedBy ?? null,
+    deletionReason: audit.deletionReason ?? null,
   };
-
-  if (row.deletedAt) result.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) result.deletedBy = row.deletedBy;
-  if (row.deletionReason) result.deletionReason = row.deletionReason;
 
   return result;
 }

@@ -8,6 +8,7 @@ import {
   questionCitations,
 } from '../schema.js';
 import { type withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type QuestionRow = typeof questions.$inferSelect;
 type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
@@ -19,6 +20,7 @@ export function questionRowToRecord(
   tags: string[] = [],
   citations: Array<{ bookId: string; citation: Record<string, unknown> }> = [],
 ): QuestionBankQuestion {
+  const audit = mapAuditTimestamps(row);
   const question: QuestionBankQuestion = {
     id: row.id,
     categoryIds: categories,
@@ -29,14 +31,14 @@ export function questionRowToRecord(
     options,
     answer: row.answer,
     marks: row.marks,
+    deletedAt: audit.deletedAt ?? null,
+    deletedBy: audit.deletedBy ?? null,
+    deletionReason: audit.deletionReason ?? null,
   };
 
   if (categories[0]) question.categoryId = categories[0];
   if (tags.length > 0) question.tags = tags;
   if (citations.length > 0) question.sourceCitations = citations;
-  if (row.deletedAt) question.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) question.deletedBy = row.deletedBy;
-  if (row.deletionReason) question.deletionReason = row.deletionReason;
 
   return question;
 }

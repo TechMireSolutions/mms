@@ -27,7 +27,7 @@ export const teacherAggregateRoutes: FastifyPluginAsync = async (sub) => {
 
   registerWidgetAggregatesRoute(sub, {
     collection: 'teachers',
-    loadAggregatesFn: (queries) => teacherUseCases.loadTeachersWidgetAggregates(queries as unknown as Parameters<typeof teacherUseCases.loadTeachersWidgetAggregates>[0]),
+    loadAggregatesFn: (queries) => teacherUseCases.loadTeachersWidgetAggregates(queries),
     errorMessagePrefix: 'teacher',
   });
 

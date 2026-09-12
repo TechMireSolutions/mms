@@ -10,7 +10,7 @@ import {
   type User,
   teacherContract,
 } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { replyValidationError } from '../../../lib/zodRequest.js';
 import { teacherUseCases } from '../../../teachers/use-cases/teacherUseCases.js';
@@ -233,7 +233,7 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate employee IDs' } };
       }
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof teacherContract>);
 
   await fastify.register(s.plugin(router), {
     requestValidationErrorHandler: (err, _request, reply) => {

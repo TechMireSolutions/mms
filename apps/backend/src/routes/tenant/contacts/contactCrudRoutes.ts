@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { isQueryFlagTrue, type Contact, type User, contactsContract } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { getLinkedContactId } from '../../../services/auth/userService.js';
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
@@ -159,7 +159,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load contact report analytics' } };
       }
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof contactsContract>);
 
   await fastify.register(s.plugin(router), {
     requestValidationErrorHandler: (err, _request, reply) => {

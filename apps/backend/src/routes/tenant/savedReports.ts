@@ -19,7 +19,7 @@ import {
   TEACHERS_MODULE_MANIFEST,
   USERS_MODULE_MANIFEST,
 } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { withTenant } from '../../db/tenant-context.js';
@@ -136,7 +136,7 @@ const savedReportsRouter = s.router(savedReportsContract, {
       return { status: 500 as const, body: { type: 'database_error', message: 'Failed to run saved report' } };
     }
   },
-} as unknown as Parameters<typeof s.router>[1]);
+} as unknown as RouterImplementation<typeof savedReportsContract>);
 
 /**
  * Generic saved-report preset routes — migrated to @ts-rest contract router (Phase 3).

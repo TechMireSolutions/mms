@@ -7,12 +7,14 @@ import {
   accountingEntryAttachments,
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type EntryRow = typeof accountingEntries.$inferSelect;
 
-export type JournalLineRow = {
-  id: string;
-  accountId: string;
+export type JournalLineRow = Pick<
+  typeof accountingJournalLines.$inferSelect,
+  'id' | 'accountId'
+> & {
   debit?: string | number | null;
   credit?: string | number | null;
   description?: string | null;
@@ -42,8 +44,7 @@ export function entryRowToRecord(
     })),
     tags,
     attachments,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    ...mapAuditTimestamps(row),
   };
 
   if (row.fiscalYearId) entry.fiscal_year_id = row.fiscalYearId;
@@ -51,9 +52,6 @@ export function entryRowToRecord(
   if (row.sourceId) entry.source_id = row.sourceId;
   if (row.transactionType) entry.transaction_type = row.transactionType;
   if (row.reversedRef) entry.reversed_ref = row.reversedRef;
-  if (row.deletedAt) entry.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) entry.deletedBy = row.deletedBy;
-  if (row.deletionReason) entry.deletionReason = row.deletionReason;
 
   return entry;
 }

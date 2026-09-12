@@ -1,31 +1,12 @@
 import { matchesWidgetFilter } from './utils.js';
+import type { WidgetQuery, WidgetAggregateResult, WidgetFilter } from './widgetAggregateTypes.js';
 
 export type TeachersWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
-export type TeachersWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
+export type TeachersWidgetFilterOperator = 'equals' | 'contains' | 'startsWith' | 'gt' | 'lt';
+export type TeachersWidgetFilter = WidgetFilter;
 
-export interface TeachersWidgetFilter {
-  field: string;
-  operator?: TeachersWidgetFilterOperator;
-  value?: string;
-}
-
-export interface TeachersWidgetQuery {
-  id: string;
-  operation: TeachersWidgetOperation;
-  targetField?: string;
-  filterField?: string;
-  filterOperator?: TeachersWidgetFilterOperator;
-  filterValue?: string;
-  xAxisField?: string;
-  filters?: TeachersWidgetFilter[];
-  chartLimit?: number;
-}
-
-export interface TeachersWidgetAggregateResult {
-  value: number;
-  totalCount: number;
-  chartData: { name: string; value: number }[];
-}
+export type TeachersWidgetQuery = WidgetQuery;
+export type TeachersWidgetAggregateResult = WidgetAggregateResult;
 
 type TeacherRow = Record<string, unknown>;
 
