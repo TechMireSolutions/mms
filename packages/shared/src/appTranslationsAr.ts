@@ -3987,6 +3987,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "obligations.print.windowTitle": "إيصال - {number}",
   "obligations.saveFailed": "فشل حفظ سجلات الالتزامات",
   "obligations.searchPlaceholder": "ابحث عن إيصال أو مرسل…",
+  "obligations.setup.tabs.invoiceTemplate": "Invoice Template",
   "obligations.setup.readOnly": "يمكنك عرض إعدادات الالتزامات، لكن ليس لديك صلاحية تعديلها.",
   "obligations.summary": "الملخص",
   "obligations.summary.charts.aria": "الرسوم البيانية",

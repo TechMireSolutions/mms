@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type WakalaType } from '@mms/shared';
 import { wakalaTypes } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -140,20 +140,36 @@ export async function replaceWakalaTypesForWorkspace(tenant: string, records: Wa
     if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
   }
   const uniqueRecords = Array.from(uniqueMap.values());
+  const keepIds = uniqueRecords.map((r) => r.id);
 
   await withTenant(subdomain, async (tx) => {
-    await tx.delete(wakalaTypes).where(eq(wakalaTypes.workspaceSubdomain, subdomain));
-    if (uniqueRecords.length > 0) {
-      await tx.insert(wakalaTypes).values(
-        uniqueRecords.map((record) => ({
-          id: record.id,
-          workspaceSubdomain: subdomain,
-          mujtahidRepresentativeId: record.mujtahid_representative_id,
-          obligationTypeId: record.obligation_type_id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })),
-      );
+    if (keepIds.length === 0) {
+      await tx.delete(wakalaTypes).where(eq(wakalaTypes.workspaceSubdomain, subdomain));
+    } else {
+      await tx
+        .delete(wakalaTypes)
+        .where(and(eq(wakalaTypes.workspaceSubdomain, subdomain), notInArray(wakalaTypes.id, keepIds)));
+
+      await tx
+        .insert(wakalaTypes)
+        .values(
+          uniqueRecords.map((record) => ({
+            id: record.id,
+            workspaceSubdomain: subdomain,
+            mujtahidRepresentativeId: record.mujtahid_representative_id,
+            obligationTypeId: record.obligation_type_id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [wakalaTypes.workspaceSubdomain, wakalaTypes.id],
+          set: {
+            mujtahidRepresentativeId: sql`excluded.mujtahid_representative_id`,
+            obligationTypeId: sql`excluded.obligation_type_id`,
+            updatedAt: new Date(),
+          },
+        });
     }
   });
 }

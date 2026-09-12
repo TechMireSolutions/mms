@@ -13,11 +13,11 @@ import {
   type ObligationCollection,
 } from '@mms/shared';
 import {
-  useObligationsTypes,
-  useObligationsMujtahids,
-  useObligationsReps,
-  useObligationsWakala,
-  useObligationsDistributions,
+  useObligationsTypesCollection,
+  useObligationsMujtahidsCollection,
+  useObligationsRepsCollection,
+  useObligationsWakalaCollection,
+  useObligationsDistributionsCollection,
   useObligationsCollections,
   useObligationsCollectionsCollection,
   useObligationsMutations,
@@ -32,6 +32,7 @@ const SETUP_TAB_LABEL_KEYS: Record<(typeof OBLIGATIONS_MODULE_MANIFEST.setupSubT
   types: 'obligations.types',
   mujtahids: 'obligations.mujtahids',
   wakala: 'obligations.wakala',
+  invoice_template: 'obligations.setup.tabs.invoiceTemplate',
 };
 
 export function useObligationsPageController() {
@@ -52,28 +53,13 @@ export function useObligationsPageController() {
   const [activeConfigTab, setActiveConfigTab] = useState('types');
   const [showDeleted, setShowDeleted] = useTrashMode();
 
-  const typesResult = useObligationsTypes();
-  const mujtahidsResult = useObligationsMujtahids();
-  const repsResult = useObligationsReps();
-  const wakalaResult = useObligationsWakala();
-  const distributionsResult = useObligationsDistributions();
+  const obligationTypes = useObligationsTypesCollection();
+  const mujtahids = useObligationsMujtahidsCollection();
+  const reps = useObligationsRepsCollection();
+  const wakalaTypes = useObligationsWakalaCollection();
+  const distributions = useObligationsDistributionsCollection();
   const collectionsResult = useObligationsCollections({ includeDeleted: showDeleted });
   const collections = useObligationsCollectionsCollection({ includeDeleted: showDeleted });
-
-  const rawTypes = typesResult.data?.status === 200 ? typesResult.data.body : null;
-  const obligationTypes = Array.isArray(rawTypes) ? rawTypes : [];
-  
-  const rawMujtahids = mujtahidsResult.data?.status === 200 ? mujtahidsResult.data.body : null;
-  const mujtahids = Array.isArray(rawMujtahids) ? rawMujtahids : [];
-  
-  const rawReps = repsResult.data?.status === 200 ? repsResult.data.body : null;
-  const reps = Array.isArray(rawReps) ? rawReps : [];
-  
-  const rawWakala = wakalaResult.data?.status === 200 ? wakalaResult.data.body : null;
-  const wakalaTypes = Array.isArray(rawWakala) ? rawWakala : [];
-  
-  const rawDist = distributionsResult.data?.status === 200 ? distributionsResult.data.body : null;
-  const distributions = Array.isArray(rawDist) ? rawDist : [];
 
   const {
     replaceTypes,

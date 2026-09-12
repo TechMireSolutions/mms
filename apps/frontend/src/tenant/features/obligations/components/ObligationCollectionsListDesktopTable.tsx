@@ -1,5 +1,7 @@
 import React from "react";
+import { Printer } from "lucide-react";
 import { formatDate } from "@mms/shared";
+import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Badge } from "@/components/ui/badge";
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
@@ -160,17 +162,31 @@ export function ObligationCollectionsListDesktopTable(props: ObligationCollectio
         onColumnResize,
       }}
       renderRowActions={(collection) => (
-        <ObligationCollectionRowActions
-          collection={collection}
-          canWrite={canWrite}
-          canDelete={canDelete}
-          showDeleted={showDeleted}
-          onView={onView}
-          onPrint={onPrint}
-          onMessage={onMessage}
-          onTrashAction={onTrashAction}
-          triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
-        />
+        <div className="flex items-center gap-1 justify-end">
+          {!showDeleted && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onPrint(collection)}
+              aria-label={t("obligations.actions.printShort")}
+              title={t("obligations.actions.printShort")}
+            >
+              <Printer className="w-4 h-4" />
+            </Button>
+          )}
+          <ObligationCollectionRowActions
+            collection={collection}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            showDeleted={showDeleted}
+            onView={onView}
+            onPrint={onPrint}
+            onMessage={onMessage}
+            onTrashAction={onTrashAction}
+            triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+          />
+        </div>
       )}
       actionsLabel={t("obligations.table.actions")}
     />

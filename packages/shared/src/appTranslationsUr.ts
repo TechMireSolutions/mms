@@ -3987,6 +3987,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "obligations.print.windowTitle": "رسید - {number}",
   "obligations.saveFailed": "الزامی ریکارڈ محفوظ نہیں ہو سکے",
   "obligations.searchPlaceholder": "رسید یا بھیجنے والے کو تلاش کریں…",
+  "obligations.setup.tabs.invoiceTemplate": "Invoice Template",
   "obligations.setup.readOnly": "آپ الزامات سیٹ اپ دیکھ سکتے ہیں، لیکن اسے ترمیم کرنے کی اجازت نہیں ہے۔",
   "obligations.summary": "خلاصہ",
   "obligations.summary.charts.aria": "چارٹس",

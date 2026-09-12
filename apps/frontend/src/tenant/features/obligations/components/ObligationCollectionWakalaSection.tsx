@@ -92,6 +92,7 @@ export function ObligationCollectionWakalaSection({
             required
             value={form.received_by}
             onChange={(value) => setForm({ ...form, received_by: value })}
+            disabled
           />
         </div>
       </fieldset>

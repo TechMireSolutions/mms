@@ -35,6 +35,13 @@ const WakalaTypeManager = lazy(
     ).then((m) => ({ default: m.WakalaTypeManager })),
 );
 
+const InvoiceTemplateEditor = lazy(
+  () =>
+    import(
+      "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor"
+    ).then((m) => ({ default: m.InvoiceTemplateEditor })),
+);
+
 export interface SetupTab {
   id: string;
   label: string;
@@ -121,6 +128,13 @@ export const ObligationsSetupTier = (function ObligationsSetupTier({
                   mujtahids={mujtahids}
                   onChangeWakala={onChangeWakala}
                   onChangeDistributions={onChangeDistributions}
+                />
+              )}
+
+              {subTabs.sub === "invoice_template" && (
+                <InvoiceTemplateEditor 
+                  fullscreen={false} 
+                  onClose={() => {}} 
                 />
               )}
             </Suspense>

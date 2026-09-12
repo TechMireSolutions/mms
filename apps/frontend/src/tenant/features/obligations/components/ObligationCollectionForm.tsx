@@ -7,6 +7,7 @@ import {
 import { todayISO, type AppTranslationKey } from "@mms/shared";
 import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from "@/lib/contexts/AuthContext";
 import { calculateKeyedUnitsCompleteness } from "@/lib/formCompleteness";
 import {
   ObligationCollectionFormFields,
@@ -38,7 +39,12 @@ export interface ObligationCollectionFormProps {
 
 export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
   const { t } = useTranslation();
-  const [form, setForm] = useState<ObligationCollectionFormState>({ ...EMPTY, receipt_no: generateReceiptNo(existingCollections) });
+  const { user: authUser } = useAuth();
+  const [form, setForm] = useState<ObligationCollectionFormState>({ 
+    ...EMPTY, 
+    receipt_no: generateReceiptNo(existingCollections),
+    received_by: authUser?.id || "",
+  });
   const [errors, setErrors] = useState<Partial<Record<keyof ObligationCollectionFormState, AppTranslationKey>>>({});
   const [submitting, setSubmitting] = useState(false);
 
@@ -120,6 +126,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
       saveLabel={t("obligations.form.save")}
       onSave={handleSave}
       saving={submitting}
+      saveDisabled={Object.keys(validate()).length > 0}
       error={errorMessages}
     >
       <ObligationCollectionFormFields

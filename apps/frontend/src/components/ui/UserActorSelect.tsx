@@ -14,6 +14,7 @@ export interface UserActorSelectProps {
   required?: boolean;
   id?: string;
   allowEmpty?: boolean;
+  disabled?: boolean;
 }
 
 export function UserActorSelect({
@@ -23,6 +24,7 @@ export function UserActorSelect({
   required = false,
   id,
   allowEmpty = false,
+  disabled = false,
 }: UserActorSelectProps): React.JSX.Element {
   const generatedId = React.useId();
   const selectId = id || generatedId;
@@ -51,13 +53,15 @@ export function UserActorSelect({
       <label htmlFor={selectId} className={FORM_LABEL}>
         {label}{required ? ' *' : ''}
       </label>
-      <SearchBar
-        id={`${selectId}-search`}
-        name={`${selectId}-search`}
-        value={search}
-        onChange={setSearch}
-        placeholder={t('registryPerson.searchPlaceholder')}
-      />
+      {!disabled && (
+        <SearchBar
+          id={`${selectId}-search`}
+          name={`${selectId}-search`}
+          value={search}
+          onChange={setSearch}
+          placeholder={t('registryPerson.searchPlaceholder')}
+        />
+      )}
       <FormSelect
         id={selectId}
         name={selectId}
@@ -68,8 +72,9 @@ export function UserActorSelect({
         }}
         options={selectOptions}
         placeholder={placeholder}
+        disabled={disabled}
       />
-      {usersQuery.data?.hasMore && (
+      {usersQuery.data?.hasMore && !disabled && (
         <p className="text-xs text-muted-foreground">{t('registryPerson.refineSearch')}</p>
       )}
     </div>

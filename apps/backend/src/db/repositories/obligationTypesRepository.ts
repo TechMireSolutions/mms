@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type ObligationType } from '@mms/shared';
 import { obligationTypes } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
@@ -153,21 +153,38 @@ export async function replaceObligationTypesForWorkspace(
     if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
   }
   const uniqueRecords = Array.from(uniqueMap.values());
+  const keepIds = uniqueRecords.map((r) => r.id);
 
   await withTenant(subdomain, async (tx) => {
-    await tx.delete(obligationTypes).where(eq(obligationTypes.workspaceSubdomain, subdomain));
-    if (uniqueRecords.length > 0) {
-      await tx.insert(obligationTypes).values(
-        uniqueRecords.map((record) => ({
-          id: record.id,
-          workspaceSubdomain: subdomain,
-          name: record.name,
-          quantityBased: Boolean(record.quantity_based),
-          designatedFor: record.designated_for ?? 'Both',
-          createdAt: record.created_at ? new Date(record.created_at) : new Date(),
-          updatedAt: record.updated_at ? new Date(record.updated_at) : new Date(),
-        })),
-      );
+    if (keepIds.length === 0) {
+      await tx.delete(obligationTypes).where(eq(obligationTypes.workspaceSubdomain, subdomain));
+    } else {
+      await tx
+        .delete(obligationTypes)
+        .where(and(eq(obligationTypes.workspaceSubdomain, subdomain), notInArray(obligationTypes.id, keepIds)));
+
+      await tx
+        .insert(obligationTypes)
+        .values(
+          uniqueRecords.map((record) => ({
+            id: record.id,
+            workspaceSubdomain: subdomain,
+            name: record.name,
+            quantityBased: Boolean(record.quantity_based),
+            designatedFor: record.designated_for ?? 'Both',
+            createdAt: record.created_at ? new Date(record.created_at) : new Date(),
+            updatedAt: record.updated_at ? new Date(record.updated_at) : new Date(),
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [obligationTypes.workspaceSubdomain, obligationTypes.id],
+          set: {
+            name: sql`excluded.name`,
+            quantityBased: sql`excluded.quantity_based`,
+            designatedFor: sql`excluded.designated_for`,
+            updatedAt: new Date(),
+          },
+        });
     }
   });
 }

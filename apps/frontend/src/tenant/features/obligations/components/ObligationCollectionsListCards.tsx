@@ -1,5 +1,7 @@
 import React from "react";
+import { Printer } from "lucide-react";
 import { formatDate } from "@mms/shared";
+import { Button } from "@/components/ui/button";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
@@ -138,6 +140,18 @@ export function ObligationCollectionsListCards(props: ObligationCollectionListCa
                     ariaLabel={t("obligations.actions.view", { receipt: collection.receipt_no })}
                     onClick={() => onView(collection)}
                   />
+                  {!showDeleted && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={() => onPrint(collection)}
+                      aria-label={t("obligations.actions.printShort")}
+                      title={t("obligations.actions.printShort")}
+                    >
+                      <Printer className="w-4 h-4" />
+                    </Button>
+                  )}
                   <ObligationCollectionRowActions
                     collection={collection}
                     canWrite={canWrite}

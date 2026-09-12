@@ -102,7 +102,11 @@ export function useObligationsReps(options?: { enabled?: boolean }) {
 export function useObligationsRepsCollection(options?: { enabled?: boolean }): MujtahidRep[] {
   const query = useObligationsReps(options);
   if (!query.data || query.data.status !== 200) return [];
-  return query.data.body.reps;
+  const body: unknown = query.data.body;
+  if (Array.isArray(body)) return body as MujtahidRep[];
+  return Array.isArray((body as { reps?: MujtahidRep[] } | null)?.reps)
+    ? (body as { reps: MujtahidRep[] }).reps
+    : [];
 }
 
 export function useObligationsWakala(options?: { enabled?: boolean }) {
@@ -119,7 +123,11 @@ export function useObligationsWakala(options?: { enabled?: boolean }) {
 export function useObligationsWakalaCollection(options?: { enabled?: boolean }): WakalaType[] {
   const query = useObligationsWakala(options);
   if (!query.data || query.data.status !== 200) return [];
-  return query.data.body.wakalaTypes;
+  const body: unknown = query.data.body;
+  if (Array.isArray(body)) return body as WakalaType[];
+  return Array.isArray((body as { wakalaTypes?: WakalaType[] } | null)?.wakalaTypes)
+    ? (body as { wakalaTypes: WakalaType[] }).wakalaTypes
+    : [];
 }
 
 export function useObligationsDistributions(options?: { enabled?: boolean }) {

@@ -14,7 +14,7 @@ import { DESIGNATED_LABEL_KEYS, type DesignatedFor } from "@/tenant/features/obl
 interface ObligationTypeFormModalProps {
   title: string;
   initial: Partial<ObligationType>;
-  onSave: (form: Partial<ObligationType>) => void;
+  onSave: (form: Partial<ObligationType>) => Promise<unknown> | void;
   onClose: () => void;
 }
 
@@ -22,6 +22,8 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
   const { t } = useTranslation();
   const [form, setForm] = useState({ ...initial });
   const [errors, setErrors] = useState<Partial<Record<"name", AppTranslationKey>>>({});
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const designatedOptions = (() => DESIGNATED_FOR_OPTIONS.map((option) => ({
       value: option,
@@ -34,14 +36,27 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
     return nextErrors;
   };
 
-  const handleSave = (): void => {
+  const handleSave = async (): Promise<void> => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) {
       setErrors(validationErrors);
       return;
     }
-    onSave(form);
+    setSubmitError("");
+    setSaving(true);
+    try {
+      await onSave(form);
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : t("obligations.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const errorMessages = [
+    ...Object.values(errors).map((key) => t(key)),
+    ...(submitError ? [submitError] : []),
+  ];
 
   return (
     <FormModal
@@ -51,7 +66,9 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={handleSave}
-      error={Object.values(errors).map((key) => t(key))}
+      saving={saving}
+      saveDisabled={saving}
+      error={errorMessages.length > 0 ? errorMessages : undefined}
     >
       <div className="space-y-4">
         <div>

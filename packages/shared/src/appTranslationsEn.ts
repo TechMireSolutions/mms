@@ -3986,6 +3986,7 @@ export const APP_TRANSLATIONS_EN = {
   "obligations.print.windowTitle": "Receipt - {number}",
   "obligations.saveFailed": "Failed to save obligation records",
   "obligations.searchPlaceholder": "Search receipt or sender…",
+  "obligations.setup.tabs.invoiceTemplate": "Invoice Template",
   "obligations.setup.readOnly": "You can view Obligations setup, but you do not have permission to edit it.",
   "obligations.summary": "Summary",
   "obligations.summary.charts.aria": "Charts",

@@ -25,6 +25,13 @@ export type { Mujtahid, MujtahidRep, MujtahidManagerProps } from "@/tenant/featu
  * @param {MujtahidManagerProps} props
  * @returns {React.ReactElement}
  */
+function generateEntityId(prefix: string): string {
+  const uuid = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+    ? crypto.randomUUID()
+    : Math.random().toString(36).substring(2, 11);
+  return `${prefix}${uuid}`;
+}
+
 export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeReps }: MujtahidManagerProps) {
   const { t } = useTranslation();
   const [modal, setModal] = useState<ModalState | null>(null);
@@ -34,7 +41,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
 
   const handleSaveMujtahid = async (form: Partial<Mujtahid>) => {
     if (modal?.mode === "add") {
-      await onChangeMujtahids([...mujtahids, { ...form, id: `m${crypto.randomUUID()}` } as Mujtahid]);
+      await onChangeMujtahids([...mujtahids, { ...form, id: generateEntityId("m") } as Mujtahid]);
     } else if (modal?.mode === "edit") {
       await onChangeMujtahids(mujtahids.map((mujtahid) => mujtahid.id === form.id ? (form as Mujtahid) : mujtahid));
     }
@@ -51,7 +58,7 @@ export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeRe
 
   const handleSaveRep = async (form: Partial<MujtahidRep>) => {
     if (modal?.mode === "add-rep") {
-      await onChangeReps([...reps, { ...form, id: `mr${crypto.randomUUID()}` } as MujtahidRep]);
+      await onChangeReps([...reps, { ...form, id: generateEntityId("mr") } as MujtahidRep]);
     } else if (modal?.mode === "edit-rep") {
       await onChangeReps(reps.map((representative) => representative.id === form.id ? (form as MujtahidRep) : representative));
     }

@@ -25,6 +25,7 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
 
 const mockLoadObligationsCommandMetrics = vi.fn();
 const mockLoadObligationCollections = vi.fn();
+const mockReplaceMujtahidReps = vi.fn();
 
 vi.mock('../obligations/use-cases/obligationsUseCases.js', () => ({
   obligationsUseCases: {
@@ -48,7 +49,7 @@ vi.mock('../obligations/use-cases/obligationsUseCases.js', () => ({
     loadObligationsReportAggregates: vi.fn().mockResolvedValue({}),
     replaceObligationTypes: vi.fn(),
     replaceMujtahids: vi.fn(),
-    replaceMujtahidReps: vi.fn(),
+    replaceMujtahidReps: (...args: unknown[]) => mockReplaceMujtahidReps(...args),
     replaceWakalaTypes: vi.fn(),
     replaceObligationDistributions: vi.fn(),
     replaceObligationCollections: vi.fn(),
@@ -176,6 +177,54 @@ describe('obligations collections contract REST', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(mockLoadObligationCollections).not.toHaveBeenCalled();
+    await app.close();
+  });
+});
+
+describe('obligations reps bulk replace REST', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+    mockReplaceMujtahidReps.mockReset();
+    mockReplaceMujtahidReps.mockImplementation(async (reps) => reps);
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('PUT /api/obligations/reps/bulk invokes replaceMujtahidReps and returns updated reps', async () => {
+    const app = await buildApp();
+    const payload = [
+      { id: 'mr1', name: 'Remaining Rep', mujtahid_id: 'm1' },
+    ];
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/api/obligations/reps/bulk',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload,
+    });
+    expect(res.statusCode).toBe(200);
+    expect(mockReplaceMujtahidReps).toHaveBeenCalledWith(payload);
+    expect(res.json()).toEqual({ reps: payload });
+    await app.close();
+  });
+
+  it('PUT /api/obligations/reps/bulk returns 403 for unauthorized roles', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'PUT',
+      url: '/api/obligations/reps/bulk',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+      payload: [],
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockReplaceMujtahidReps).not.toHaveBeenCalled();
     await app.close();
   });
 });

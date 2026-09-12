@@ -12,7 +12,7 @@ interface WakalaFormModalProps {
   reps: MujtahidRep[];
   mujtahids: Mujtahid[];
   obligationTypes: ObligationType[];
-  onSave: (form: Partial<WakalaType>) => void;
+  onSave: (form: Partial<WakalaType>) => Promise<unknown> | void;
   onClose: () => void;
 }
 
@@ -20,6 +20,8 @@ export function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onS
   const { t } = useTranslation();
   const [form, setForm] = useState({ ...initial });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const getMujtahidForRep = (repId: string) => {
     const rep = reps.find((candidateRep) => candidateRep.id === repId);
@@ -33,14 +35,27 @@ export function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onS
     return nextErrors;
   };
 
-  const handleSave = (): void => {
+  const handleSave = async (): Promise<void> => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) {
       setErrors(validationErrors);
       return;
     }
-    onSave(form);
+    setSubmitError("");
+    setSaving(true);
+    try {
+      await onSave(form);
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : t("obligations.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const errorMessages = [
+    ...Object.values(errors),
+    ...(submitError ? [submitError] : []),
+  ];
 
   return (
     <FormModal
@@ -50,7 +65,9 @@ export function WakalaFormModal({ initial, reps, mujtahids, obligationTypes, onS
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={handleSave}
-      error={Object.values(errors)}
+      saving={saving}
+      saveDisabled={saving}
+      error={errorMessages.length > 0 ? errorMessages : undefined}
     >
       <div className="space-y-4">
         <div>
