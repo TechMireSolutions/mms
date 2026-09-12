@@ -1,4 +1,4 @@
-import type { SerializedSoftDeleteFields, SoftDeleteFields } from '@mms/shared';
+import type { SerializedEntityAuditFields, SoftDeleteFields } from '@mms/shared';
 
 /**
  * Standard audit columns selected from Drizzle tables containing
@@ -13,12 +13,7 @@ export interface DrizzleAuditSelectRow extends SoftDeleteFields {
 
 export type DbAuditRow = DrizzleAuditSelectRow;
 
-export interface ContractAuditFields extends SerializedSoftDeleteFields {
-  createdAt?: string;
-  updatedAt?: string;
-  createdBy?: string;
-  updatedBy?: string;
-}
+export type ContractAuditFields = SerializedEntityAuditFields;
 
 function toIsoString(val: Date | string | null | undefined): string | undefined {
   if (!val) return undefined;
@@ -57,6 +52,19 @@ export function nullsToUndefined<T extends Record<string, unknown>>(row: T): Nul
     result[key] = value === null ? undefined : value;
   }
   return result as NullToUndefined<T>;
+}
+
+/**
+ * Safely parses Drizzle SQL numeric columns (returned as strings) to numbers.
+ * Returns undefined if null, undefined, or empty/whitespace string.
+ */
+export function parseNumericColumn(val: string | number | null | undefined): number | undefined {
+  if (val == null) return undefined;
+  if (typeof val === 'number') return Number.isFinite(val) ? val : undefined;
+  const trimmed = val.trim();
+  if (trimmed === '') return undefined;
+  const num = Number(trimmed);
+  return Number.isFinite(num) ? num : undefined;
 }
 
 export interface DrizzleAuditInsertFields {

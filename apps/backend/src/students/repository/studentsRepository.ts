@@ -8,14 +8,10 @@ import type {
   StudentsListQuery,
   StudentsWidgetAggregateResult,
   StudentsWidgetQuery,
+  RepositoryListOptions,
 } from '@mms/shared';
 
-/** Soft-delete visibility filter shared by list/count repository reads. */
-type StudentDeletedFilter = 'active' | 'deleted' | 'all';
-
-interface ListStudentsOptions {
-  deleted?: StudentDeletedFilter;
-}
+export type ListStudentsOptions = RepositoryListOptions;
 
 /** GR sequence count + conflict probe inputs mirror the typed Drizzle queries. */
 interface StudentGrSequenceInput {

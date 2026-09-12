@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { dedupeTrimmedIds, type SoftDeleteFields } from '@mms/shared';
+import { dedupeTrimmedIds, type SoftDeleteFields, type SoftDeleteListFilter } from '@mms/shared';
 import { eq, isNull, isNotNull, type Column, type SQL } from 'drizzle-orm';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { ConflictError, NotFoundError } from '../lib/httpErrors.js';
 import type { ZodType } from 'zod';
 
-export type SoftDeleteListFilter = 'active' | 'deleted' | 'all';
+export type { SoftDeleteListFilter };
 
 export interface ListByWorkspaceOptions {
   deleted?: SoftDeleteListFilter;

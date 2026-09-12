@@ -11,8 +11,6 @@ import {
   type SessionLookupKind,
   roleHasPermission,
   normalizeSessionModulePreferences,
-  sessionFieldConfigPutBodySchema,
-  sessionPreferencesPutBodySchema,
 } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { requireTenantModule } from '../../middleware/requireTenantModule.js';
@@ -31,7 +29,6 @@ import {
   loadSessionLookupsMap,
 } from '../../services/sessionLookupsService.js';
 import { auditSession } from './sessions/sessionRouteHelpers.js';
-import { parseRequest } from '../../lib/zodRequest.js';
 
 const COLLECTION = SESSIONS_MODULE_MANIFEST.collectionKey;
 const SETUP_WRITE_PERM = SESSIONS_MODULE_MANIFEST.permissions.setupWrite;
@@ -230,10 +227,8 @@ export default async function sessionsRoutes(
       const user = request.user as User;
       if (!roleHasPermission(user.role, SETUP_WRITE_PERM))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      const parsed = parseRequest(sessionFieldConfigPutBodySchema, body);
-      if (!parsed.ok) return { status: 403 as const, body: { type: 'validation_error', message: parsed.message } };
       try {
-        const saved = await saveSessionFieldConfig(parsed.data);
+        const saved = await saveSessionFieldConfig(body);
         await auditSession(user, 'session.field-config', 'Updated session field configuration', 'field-config');
         return { status: 200 as const, body: { success: true, config: saved as unknown as Record<string, unknown> } };
       } catch (error: unknown) {
@@ -260,10 +255,8 @@ export default async function sessionsRoutes(
       const user = request.user as User;
       if (!roleHasPermission(user.role, SETUP_WRITE_PERM))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      const parsed = parseRequest(sessionPreferencesPutBodySchema, body);
-      if (!parsed.ok) return { status: 403 as const, body: { type: 'validation_error', message: parsed.message } };
       try {
-        const normalized = normalizeSessionModulePreferences(parsed.data);
+        const normalized = normalizeSessionModulePreferences(body);
         await saveSessionModulePreferences(normalized);
         await auditSession(user, 'session.preferences', 'Updated session module preferences', 'preferences');
         return { status: 200 as const, body: { success: true, preferences: normalized } };

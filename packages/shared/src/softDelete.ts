@@ -14,6 +14,9 @@ export const SOFT_DELETE_KEYS = [
 
 export type SoftDeleteKey = (typeof SOFT_DELETE_KEYS)[number];
 
+/** Visibility filter for soft-delete queries (active rows, archived/deleted rows, or all rows). */
+export type SoftDeleteListFilter = 'active' | 'deleted' | 'all';
+
 /** Metadata fields representing soft-delete state across all entity records. */
 export interface SoftDeleteFields {
   deletedAt?: Date | string | null;
@@ -33,6 +36,19 @@ export interface SerializedSoftDeleteFields {
   restoredBy?: string;
   deletedWithCascade?: boolean;
 }
+
+/** Serialized audit timestamp and actor fields in JSON contract responses. */
+export interface SerializedAuditFields {
+  createdAt?: string;
+  updatedAt?: string;
+  createdBy?: string;
+  updatedBy?: string;
+}
+
+/** Complete contract audit mixin combining soft-delete and timestamp/actor metadata. */
+export interface SerializedEntityAuditFields
+  extends SerializedSoftDeleteFields,
+    SerializedAuditFields {}
 
 /** Soft-delete audit payload provided by caller when archiving a record. */
 export interface SoftDeleteAuditPayload {

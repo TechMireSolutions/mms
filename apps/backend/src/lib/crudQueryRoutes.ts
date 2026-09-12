@@ -4,6 +4,7 @@ import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
 import {
+  countResponseSchema,
   entityResolveBodySchema,
   widgetAggregatesBodySchema,
   type widgetQuerySchema,
@@ -86,7 +87,7 @@ export function registerCountRoute(
     {
       schema: {
         response: {
-          200: z.object({ count: z.number() }),
+          200: countResponseSchema,
         },
       },
     },

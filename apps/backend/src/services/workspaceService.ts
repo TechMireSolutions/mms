@@ -34,6 +34,7 @@ export {
   getWorkspaceInstitutionSetupStatus,
   listPublicWorkspaces,
   listPlatformWorkspaces,
+  getPlatformWorkspaceSummary,
   syncWorkspaceFromBranding,
   upsertWorkspaceBranding,
 } from './workspacePresentationService.js';

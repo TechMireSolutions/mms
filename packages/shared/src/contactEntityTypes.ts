@@ -1,5 +1,5 @@
-/** Contact domain entity types (person model + related value objects). */
 import { z } from 'zod';
+import type { SerializedEntityAuditFields } from './softDelete.js';
 
 /** Status of WhatsApp registration checks for phone numbers. */
 export const WHATSAPP_STATUS_VALUES = ['PENDING', 'REGISTERED', 'NOT_REGISTERED', 'FAILED'] as const;
@@ -157,7 +157,7 @@ export interface ContactAttachment {
 }
 
 /** Primary domain model representing a Contact entity across the monorepo. */
-export interface Contact {
+export interface Contact extends SerializedEntityAuditFields {
   id: string | number;
   name: string;
   firstName: string;
@@ -170,16 +170,6 @@ export interface Contact {
   tags?: string[];
   avatar?: string | null;
   notes?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  createdBy?: string;
-  updatedBy?: string;
-  deletedAt?: string;
-  deletedBy?: string;
-  deletionReason?: string;
-  restoredAt?: string;
-  restoredBy?: string;
-  deletedWithCascade?: boolean;
 
   // Status & Scalar Extensions
   whatsappStatus?: WhatsAppStatus | 'unknown';

@@ -44,3 +44,11 @@ export const widgetAggregatesBodySchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   return deepSanitizeStrings(raw);
 }, widgetAggregatesBodyBaseSchema);
+
+/** Standard count endpoint response schema. */
+export const countResponseSchema = z.object({
+  count: z.number(),
+}).strict();
+
+export type CountResponse = z.infer<typeof countResponseSchema>;
+

@@ -1,5 +1,5 @@
 import type { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import { platformWorkspacesContract } from '@mms/shared';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import {
@@ -11,6 +11,7 @@ import {
   deleteWorkspace,
   getWorkspaceGrantedModules,
   listPlatformWorkspaces,
+  getPlatformWorkspaceSummary,
   setWorkspaceEmailVerification,
   setWorkspaceEnabled,
   updateWorkspaceModules,
@@ -65,9 +66,8 @@ export default async function platformWorkspaceRoutes(
         ipAddress: request.ip,
       });
 
-      const workspaces = await listPlatformWorkspaces();
-      const row = workspaces.find((ws) => ws.subdomain === updated.subdomain);
-      return { status: 200 as const, body: { workspace: row } };
+      const row = await getPlatformWorkspaceSummary(updated.subdomain);
+      return { status: 200 as const, body: { workspace: row ?? undefined } };
     },
 
     getWorkspaceModules: async ({
@@ -224,7 +224,7 @@ export default async function platformWorkspaceRoutes(
         return { status: 200 as const, body: { deleted: true as const, subdomain: removed.subdomain } };
       },
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof platformWorkspacesContract>);
 
   await fastify.register(s.plugin(router), {
     requestValidationErrorHandler: (err, _request, reply) => {

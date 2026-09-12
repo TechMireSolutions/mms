@@ -9,9 +9,6 @@ import {
   normalizeAttendanceModulePreferences,
   normalizeAttendanceReportComparisonQuery,
   parseComparisonQueryParams,
-  attendanceReportAggregatesHttpQuerySchema,
-  attendanceFieldConfigPutBodySchema,
-  attendancePreferencesPutBodySchema,
   ATTENDANCE_LOOKUP_KINDS,
   type AttendanceLookupKind,
 } from '@mms/shared';
@@ -33,7 +30,6 @@ import {
   loadAttendanceLookupsMap,
 } from '../../../services/attendanceLookupsService.js';
 import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
-import { parseRequest } from '../../../lib/zodRequest.js';
 
 const COLLECTION = ATTENDANCE_MODULE_MANIFEST.collectionKey;
 const SETUP_WRITE_PERM = ATTENDANCE_MODULE_MANIFEST.permissions.setupWrite;
@@ -277,12 +273,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const parsed = parseRequest(attendanceReportAggregatesHttpQuerySchema, query);
-        if (!parsed.ok) return { status: 400 as const, body: { type: 'validation_error', message: parsed.message } };
-        const comparisonQuery = normalizeAttendanceReportComparisonQuery(parseComparisonQueryParams(parsed.data));
+        const comparisonQuery = normalizeAttendanceReportComparisonQuery(parseComparisonQueryParams(query));
         const aggregates = await attendanceUseCases.loadAttendanceReportAggregates({
           ...comparisonQuery,
-          ...(parsed.data.classId?.trim() ? { classId: parsed.data.classId.trim() } : {}),
+          ...(query.classId?.trim() ? { classId: query.classId.trim() } : {}),
         });
         return { status: 200 as const, body: aggregates };
       } catch (error: unknown) {
@@ -310,10 +304,8 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       if (!roleHasPermission(user.role, SETUP_WRITE_PERM)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const parsed = parseRequest(attendanceFieldConfigPutBodySchema, body);
-      if (!parsed.ok) return { status: 403 as const, body: { type: 'validation_error', message: parsed.message } };
       try {
-        const saved = await updateAttendanceFieldConfigService(parsed.data);
+        const saved = await updateAttendanceFieldConfigService(body);
         await auditAttendance(user, 'UPDATE_ATTENDANCE_CONFIG', 'Updated attendance field configuration', 'field-config');
         return { status: 200 as const, body: { success: true, config: saved as unknown as Record<string, unknown> } };
       } catch (error: unknown) {
@@ -342,10 +334,8 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       if (!roleHasPermission(user.role, SETUP_WRITE_PERM)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const parsed = parseRequest(attendancePreferencesPutBodySchema, body);
-      if (!parsed.ok) return { status: 403 as const, body: { type: 'validation_error', message: parsed.message } };
       try {
-        const normalized = normalizeAttendanceModulePreferences(parsed.data);
+        const normalized = normalizeAttendanceModulePreferences(body);
         await updateAttendancePreferencesService(normalized);
         await auditAttendance(user, 'UPDATE_ATTENDANCE_PREFERENCES', 'Updated attendance module preferences', 'preferences');
         return { status: 200 as const, body: { success: true, preferences: normalized } };

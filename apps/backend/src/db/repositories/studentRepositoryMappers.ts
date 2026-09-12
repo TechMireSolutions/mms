@@ -1,6 +1,6 @@
 import { type Student, type StudentStatus } from '@mms/shared';
 import { type students } from '../schema.js';
-import { mapAuditTimestamps, nullsToUndefined } from './repositoryMappers.js';
+import { mapAuditTimestamps, nullsToUndefined, parseNumericColumn } from './repositoryMappers.js';
 
 export function studentRowToRecord(
   row: typeof students.$inferSelect,
@@ -23,6 +23,7 @@ export function studentRowToRecord(
     createdBy: _createdBy,
     updatedBy: _updatedBy,
     workspaceSubdomain: _workspaceSubdomain,
+    discountPct: _discountPct,
     ...restRow
   } = nullsToUndefined(row);
 
@@ -34,9 +35,8 @@ export function studentRowToRecord(
     guardianContactId: row.guardianContactId ?? null,
     status: (restRow.status as StudentStatus) ?? 'active',
     enrolledSessions,
-    discountPct: restRow.discountPct != null ? Number(restRow.discountPct) : undefined,
+    discountPct: parseNumericColumn(row.discountPct),
     ...mapAuditTimestamps(row),
   } satisfies Student;
-
 }
 
