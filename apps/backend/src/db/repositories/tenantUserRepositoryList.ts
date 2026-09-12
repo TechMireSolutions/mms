@@ -56,7 +56,7 @@ function buildSearchSql(search: string): SQL | null {
   )`;
 }
 
-function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
+function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | '' | undefined): SQL {
   const dir = sortDir === 'desc' ? 'desc' : 'asc';
   const field = sortField?.trim();
   if (!field || !USER_SORT_FIELDS.has(field)) {

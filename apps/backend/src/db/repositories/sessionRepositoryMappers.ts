@@ -18,7 +18,7 @@ import {
   type sessionEvents,
   type sessionTabarruk,
 } from '../schema.js';
-import { mapAuditTimestamps } from './repositoryMappers.js';
+import { mapAuditTimestamps, nullsToUndefined } from './repositoryMappers.js';
 
 type SessionRow = typeof sessions.$inferSelect;
 type ClassRow = typeof sessionClasses.$inferSelect;
@@ -40,19 +40,19 @@ export function sessionRowToRecord(
   tabarruk: TabarrukRow[] = [],
 ): Session {
   const mappedClasses: Class[] = classes.map((c) => {
-    const item: Class = {
-      id: c.id,
-      name: c.name,
-      ageMin: c.ageMin,
-      ageMax: c.ageMax,
-      gender: c.gender as Class['gender'],
-      teacherId: c.teacherId,
-      capacity: c.capacity,
-      enrolled: c.enrolled,
+    const raw = nullsToUndefined(c);
+    return {
+      id: raw.id,
+      name: raw.name,
+      ageMin: raw.ageMin,
+      ageMax: raw.ageMax,
+      gender: raw.gender as Class['gender'],
+      teacherId: raw.teacherId,
+      teacherName: raw.teacherName,
+      capacity: raw.capacity,
+      enrolled: raw.enrolled,
+      room: raw.room,
     };
-    if (c.teacherName) item.teacherName = c.teacherName;
-    if (c.room) item.room = c.room;
-    return item;
   });
 
   const mappedTimetable: TimetableItem[] = timetable.map((t) => ({
@@ -75,68 +75,69 @@ export function sessionRowToRecord(
   }));
 
   const mappedExpenses: BudgetExpense[] = expenses.map((e) => {
-    const item: BudgetExpense = {
-      id: e.id,
-      category: e.category,
-      amount: Number(e.amount) || 0,
-      date: e.date,
+    const raw = nullsToUndefined(e);
+    return {
+      id: raw.id,
+      category: raw.category,
+      amount: Number(raw.amount) || 0,
+      date: raw.date,
+      note: raw.note,
     };
-    if (e.note) item.note = e.note;
-    return item;
   });
 
   const mappedIncomes: BudgetIncome[] = incomes.map((i) => {
-    const item: BudgetIncome = {
-      id: i.id,
-      category: i.category,
-      amount: Number(i.amount) || 0,
-      date: i.date,
+    const raw = nullsToUndefined(i);
+    return {
+      id: raw.id,
+      category: raw.category,
+      amount: Number(raw.amount) || 0,
+      date: raw.date,
+      note: raw.note,
     };
-    if (i.note) item.note = i.note;
-    return item;
   });
 
   const mappedEvents: SessionEvent[] = events.map((ev) => {
-    const item: SessionEvent = {
-      id: ev.id,
-      title: ev.title,
-      date: ev.date,
-      time: ev.time,
-      location: ev.location,
-      type: ev.type as SessionEvent['type'],
+    const raw = nullsToUndefined(ev);
+    return {
+      id: raw.id,
+      title: raw.title,
+      date: raw.date,
+      time: raw.time,
+      location: raw.location,
+      type: raw.type as SessionEvent['type'],
+      description: raw.description,
     };
-    if (ev.description) item.description = ev.description;
-    return item;
   });
 
   const mappedTabarruk: TabarrukItem[] = tabarruk.map((tab) => {
-    const item: TabarrukItem = {
-      id: tab.id,
-      item: tab.item,
-      quantity: tab.quantity,
-      occasion: tab.occasion,
-      date: tab.date,
+    const raw = nullsToUndefined(tab);
+    return {
+      id: raw.id,
+      item: raw.item,
+      quantity: raw.quantity,
+      occasion: raw.occasion,
+      date: raw.date,
+      note: raw.note,
     };
-    if (tab.note) item.note = tab.note;
-    return item;
   });
 
+  const rowNorm = nullsToUndefined(row);
   return {
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    status: row.status,
-    startDate: row.startDate,
-    endDate: row.endDate,
-    baseFee: Number(row.baseFee) || 0,
-    currency: row.currency,
-    description: row.description ?? undefined,
+    id: rowNorm.id,
+    name: rowNorm.name,
+    type: rowNorm.type,
+    status: rowNorm.status,
+    startDate: rowNorm.startDate,
+    endDate: rowNorm.endDate,
+    baseFee: Number(rowNorm.baseFee) || 0,
+    currency: rowNorm.currency,
+    description: rowNorm.description,
     classes: mappedClasses,
     timetable: mappedTimetable,
     discounts: mappedDiscounts,
     budget: {
-      totalRevenue: Number(row.budgetTotalRevenue) || 0,
-      collected: Number(row.budgetCollected) || 0,
+      totalRevenue: Number(rowNorm.budgetTotalRevenue) || 0,
+      collected: Number(rowNorm.budgetCollected) || 0,
       expenses: mappedExpenses,
       incomes: mappedIncomes,
     },
@@ -145,3 +146,4 @@ export function sessionRowToRecord(
     ...mapAuditTimestamps(row),
   } satisfies Session;
 }
+

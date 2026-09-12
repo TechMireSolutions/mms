@@ -12,7 +12,7 @@ export interface UsersListQuery {
   /** Workspace role id filter. */
   role?: string;
   sortField?: string;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: 'asc' | 'desc' | '';
   /** When true, SQL list returns deleted-only rows (Work trash). */
   includeDeleted?: boolean;
   /** Comma-separated ids for bounded relationship/actor resolution. */

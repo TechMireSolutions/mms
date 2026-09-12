@@ -60,7 +60,7 @@ export const enrollmentContract = c.router({
     method: 'GET',
     path: '/api/enrollments/:id',
     query: z.object({ includeDeleted: z.union([z.boolean(), z.literal('true'), z.literal('false')]).optional() }).optional(),
-    responses: { 200: z.unknown(), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    responses: { 200: enrollmentRecordSchema, 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Get a single enrollment',
   },
   create: {

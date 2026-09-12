@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { isQueryFlagTrue, type Contact, type User } from '@mms/shared';
 import { rootContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { getLinkedContactId } from '../../../services/auth/userService.js';
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
 import { canWriteContacts, canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
@@ -33,8 +34,7 @@ const RESERVED_CONTACT_ROUTE_IDS = new Set([
 
 export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
   const router = s.router(rootContract.contacts, {
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    list: async ({ query, request }) => {
+    list: async ({ query, request }: ContractRouteArgs<typeof rootContract['contacts']['list']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['list']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -51,18 +51,17 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
           includeDeleted,
         };
         const result = await contactUseCases.loadContactsPage(effectiveQuery);
-        const contacts = Array.isArray(result) ? result : result.contacts;
+        const contacts = result.contacts;
         const sanitized = await sanitizeForUser(contacts, user);
         return {
           status: 200 as const,
-          body: Array.isArray(result) ? sanitized : { ...result, contacts: sanitized },
+          body: { ...result, contacts: sanitized },
         };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list contacts' } };
       }
     },
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    get: async ({ params: { id }, query, request }) => {
+    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof rootContract['contacts']['get']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['get']>> => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
@@ -70,13 +69,13 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
-      const includeDeleted = isQueryFlagTrue((query as { includeDeleted?: unknown })?.includeDeleted);
+      const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
       if (includeDeleted && !canDeleteCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted contacts requires delete permissions' } };
       }
       try {
         const contact = await contactUseCases.getContactById(id, includeDeleted);
-        if (!contact || (!includeDeleted && (contact as { deletedAt?: unknown }).deletedAt != null)) {
+        if (!contact || (!includeDeleted && contact.deletedAt != null)) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
         }
         return { status: 200 as const, body: { contact: await sanitizeOneForUser(contact, user) } };
@@ -84,8 +83,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load contact' } };
       }
     },
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    create: async ({ body, request }) => {
+    create: async ({ body, request }: ContractRouteArgs<typeof rootContract['contacts']['create']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['create']>> => {
       const user = request.user as User;
       if (!canWriteContacts(user)) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -93,7 +91,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const lang = ((request.headers?.['accept-language'] as string | undefined) || 'en');
       
       try {
-        const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(body as Contact, { user, language: lang });
+        const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(body as unknown as Contact, { user, language: lang });
         if (restoredFromDelete) {
           await auditContact(user, 'contact.restore', `Restored contact ${String(contact.id)} via upsert`, String(contact.id));
         } else {
@@ -104,8 +102,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return formatContactWriteError(error, 'Failed to save contact record');
       }
     },
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    update: async ({ params: { id }, body, request }) => {
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof rootContract['contacts']['update']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['update']>> => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
@@ -118,7 +115,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const lang = ((request.headers?.['accept-language'] as string | undefined) || 'en');
       
       try {
-        const updatePayload = { ...(body && typeof body === 'object' ? body : {}), id } as Contact;
+        const updatePayload = { ...(body && typeof body === 'object' ? body : {}), id } as unknown as Contact;
         const updated = await contactUseCases.updateContactById(id, updatePayload, { language: lang, applyRelationshipInference: canWriteContacts(user) });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
         await auditContact(user, 'contact.update', `Updated contact ${id}`, id);
@@ -127,8 +124,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return formatContactWriteError(error, 'Failed to update contact');
       }
     },
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    delete: async ({ params: { id }, body, request }) => {
+    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof rootContract['contacts']['delete']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['delete']>> => {
       if (RESERVED_CONTACT_ROUTE_IDS.has(id)) {
         return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
       }
@@ -149,8 +145,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete contact' } };
       }
     },
-    // @ts-expect-error - TS union discrimination limit with ts-rest
-    reportAnalytics: async ({ query, request }) => {
+    reportAnalytics: async ({ query, request }: ContractRouteArgs<typeof rootContract['contacts']['reportAnalytics']>): Promise<ContractRouteResponse<typeof rootContract['contacts']['reportAnalytics']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -165,7 +160,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load contact report analytics' } };
       }
     },
-  });
+  } as unknown as Parameters<typeof s.router>[1]);
 
   await fastify.register(s.plugin(router), {
     requestValidationErrorHandler: (err, _request, reply) => {

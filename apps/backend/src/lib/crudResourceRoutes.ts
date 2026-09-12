@@ -143,7 +143,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     const routeOptions = validateDynamicFn
       ? {
           bodyLimit: 1048576,
-          schema: { body: z.record(z.string(), z.any()) },
+          schema: { body: z.record(z.string(), z.unknown()) },
         }
       : {};
 
@@ -182,7 +182,7 @@ export function registerResourceRoutes<T extends ResourceRecord>(
     const routeOptions = validateDynamicFn
       ? {
           bodyLimit: 1048576,
-          schema: { body: z.record(z.string(), z.any()), params: resourceIdParamsSchema },
+          schema: { body: z.record(z.string(), z.unknown()), params: resourceIdParamsSchema },
         }
       : {};
 

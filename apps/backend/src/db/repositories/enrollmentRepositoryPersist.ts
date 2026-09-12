@@ -2,6 +2,7 @@ import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Enrollment, type EnrollmentTimelineItem } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
+import { mapAuditToInsert } from './repositoryMappers.js';
 
 type EnrollmentInsert = typeof enrollments.$inferInsert;
 
@@ -26,11 +27,8 @@ function recordToInsert(tenant: string, record: Enrollment): EnrollmentInsert {
     invoiceId: record.invoiceId ? String(record.invoiceId) : null,
     paymentStatus: String(record.paymentStatus || 'none'),
     notes: String(record.notes || ''),
-    deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-    deletedBy: record.deletedBy ?? null,
-    deletionReason: record.deletionReason ?? null,
-    updatedAt: new Date(),
-  };
+    ...mapAuditToInsert(record),
+  } satisfies EnrollmentInsert;
 }
 
 async function writeTimelineEvents(
@@ -93,6 +91,9 @@ export async function saveEnrollment(
           deletedAt: values.deletedAt,
           deletedBy: values.deletedBy,
           deletionReason: values.deletionReason,
+          restoredAt: values.restoredAt,
+          restoredBy: values.restoredBy,
+          deletedWithCascade: values.deletedWithCascade,
           updatedAt: new Date(),
         },
       });
@@ -135,9 +136,13 @@ export async function bulkSaveEnrollments(
           deletedAt: sql`excluded.deleted_at`,
           deletedBy: sql`excluded.deleted_by`,
           deletionReason: sql`excluded.deletion_reason`,
+          restoredAt: sql`excluded.restored_at`,
+          restoredBy: sql`excluded.restored_by`,
+          deletedWithCascade: sql`excluded.deleted_with_cascade`,
           updatedAt: new Date(),
         },
       });
+
 
     await tx
       .delete(enrollmentTimelineEvents)

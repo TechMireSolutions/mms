@@ -8,7 +8,7 @@ import { registerCountRoute, registerMetricsRoute, registerWidgetAggregatesRoute
 
 import { enrollmentContract } from '@mms/shared';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
 import { canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 
@@ -66,7 +66,7 @@ export default async function enrollmentsRoutes(
 
   const s = initServer();
   const router = s.router(enrollmentContract, {
-    list: async ({ query, request }: ContractRouteArgs<typeof enrollmentContract['list']>): Promise<unknown> => {
+    list: async ({ query, request }: ContractRouteArgs<typeof enrollmentContract['list']>): Promise<ContractRouteResponse<typeof enrollmentContract['list']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -81,7 +81,7 @@ export default async function enrollmentsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list enrollments' } };
       }
     },
-    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof enrollmentContract['get']>): Promise<unknown> => {
+    get: async ({ params: { id }, query, request }: ContractRouteArgs<typeof enrollmentContract['get']>): Promise<ContractRouteResponse<typeof enrollmentContract['get']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -97,7 +97,7 @@ export default async function enrollmentsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load enrollment' } };
       }
     },
-    create: async ({ body, request }: ContractRouteArgs<typeof enrollmentContract['create']>): Promise<unknown> => {
+    create: async ({ body, request }: ContractRouteArgs<typeof enrollmentContract['create']>): Promise<ContractRouteResponse<typeof enrollmentContract['create']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -108,7 +108,7 @@ export default async function enrollmentsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create enrollment' } };
       }
     },
-    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof enrollmentContract['update']>): Promise<unknown> => {
+    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof enrollmentContract['update']>): Promise<ContractRouteResponse<typeof enrollmentContract['update']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -120,7 +120,7 @@ export default async function enrollmentsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update enrollment' } };
       }
     },
-    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof enrollmentContract['delete']>): Promise<unknown> => {
+    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof enrollmentContract['delete']>): Promise<ContractRouteResponse<typeof enrollmentContract['delete']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -132,7 +132,7 @@ export default async function enrollmentsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete enrollment' } };
       }
     },
-    bulkDelete: async ({ body, request }: ContractRouteArgs<typeof enrollmentContract['bulkDelete']>): Promise<unknown> => {
+    bulkDelete: async ({ body, request }: ContractRouteArgs<typeof enrollmentContract['bulkDelete']>): Promise<ContractRouteResponse<typeof enrollmentContract['bulkDelete']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -143,7 +143,7 @@ export default async function enrollmentsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete enrollments' } };
       }
     },
-    bulkRestore: async ({ body, request }: ContractRouteArgs<typeof enrollmentContract['bulkRestore']>): Promise<unknown> => {
+    bulkRestore: async ({ body, request }: ContractRouteArgs<typeof enrollmentContract['bulkRestore']>): Promise<ContractRouteResponse<typeof enrollmentContract['bulkRestore']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, ENROLLMENTS_COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };

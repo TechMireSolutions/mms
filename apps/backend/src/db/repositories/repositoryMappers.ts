@@ -69,4 +69,57 @@ export function nullsToUndefined<T extends Record<string, unknown>>(row: T): Nul
   return result as NullToUndefined<T>;
 }
 
+export interface DrizzleAuditInsertFields {
+  createdAt?: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+  deletedBy: string | null;
+  deletionReason: string | null;
+  restoredAt: Date | null;
+  restoredBy: string | null;
+  deletedWithCascade: boolean;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+}
+
+export interface ContractAuditInput {
+  createdAt?: string | Date | null;
+  updatedAt?: string | Date | null;
+  deletedAt?: string | Date | null;
+  deletedBy?: string | null;
+  deletionReason?: string | null;
+  restoredAt?: string | Date | null;
+  restoredBy?: string | null;
+  deletedWithCascade?: boolean | null;
+  createdBy?: string | null;
+  updatedBy?: string | null;
+}
+
+/**
+ * Maps contract-compliant audit fields to Drizzle SQL insert/update values.
+ */
+export function mapAuditToInsert(contract: ContractAuditInput): DrizzleAuditInsertFields {
+  const result: DrizzleAuditInsertFields = {
+    updatedAt: new Date(),
+    deletedAt: contract.deletedAt ? new Date(contract.deletedAt) : null,
+    deletedBy: contract.deletedBy ?? null,
+    deletionReason: contract.deletionReason ?? null,
+    restoredAt: contract.restoredAt ? new Date(contract.restoredAt) : null,
+    restoredBy: contract.restoredBy ?? null,
+    deletedWithCascade: Boolean(contract.deletedWithCascade),
+  };
+  if (contract.createdAt) {
+    result.createdAt = new Date(contract.createdAt);
+  }
+  if (contract.createdBy !== undefined) {
+    result.createdBy = contract.createdBy;
+  }
+  if (contract.updatedBy !== undefined) {
+    result.updatedBy = contract.updatedBy;
+  }
+  return result;
+}
+
+
+
 

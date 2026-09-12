@@ -36,6 +36,8 @@ export const contactsCrudRoutes = {
     query: baseListQuerySchema,
     responses: {
       200: contactListPageResponseSchema,
+      403: z.unknown(),
+      500: z.unknown(),
     },
     summary: 'List contacts',
   },
@@ -46,6 +48,9 @@ export const contactsCrudRoutes = {
     responses: {
       200: responseWrapper,
       201: responseWrapper,
+      400: z.unknown(),
+      403: z.unknown(),
+      500: z.unknown(),
     },
     summary: 'Create a new contact',
   },
@@ -55,7 +60,9 @@ export const contactsCrudRoutes = {
     pathParams: z.object({ id: z.string() }),
     responses: {
       200: z.object({ contact: contactRecordSchema }),
+      403: z.unknown(),
       404: z.unknown(),
+      500: z.unknown(),
     },
     summary: 'Get a contact by ID',
   },
@@ -67,7 +74,9 @@ export const contactsCrudRoutes = {
     responses: {
       200: responseWrapper,
       400: z.unknown(),
+      403: z.unknown(),
       404: z.unknown(),
+      500: z.unknown(),
     },
     summary: 'Update a contact',
   },
@@ -78,7 +87,9 @@ export const contactsCrudRoutes = {
     body: z.unknown(),
     responses: {
       200: z.object({ success: z.literal(true) }),
+      403: z.unknown(),
       404: z.unknown(),
+      500: z.unknown(),
     },
     summary: 'Delete a contact',
   },

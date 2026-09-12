@@ -90,7 +90,7 @@ export interface ContactsListQuery {
   gender?: string;
   includeDeleted?: boolean;
   sortField?: string;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: 'asc' | 'desc' | '';
   hasPhone?: boolean;
   /** Primary email present — messaging “select all with email”. */
   hasEmail?: boolean;

@@ -1,6 +1,6 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { initServer } from '@ts-rest/fastify';
-import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
 import { sessionContract, isQueryFlagTrue, SESSIONS_MODULE_MANIFEST, type User } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
@@ -58,7 +58,7 @@ export default async function sessionsRoutes(
 
   const s = initServer();
   const sessionsBulkRouter = s.router(sessionContract, {
-    list: async ({ query, request }: ContractRouteArgs<typeof sessionContract['list']>): Promise<unknown> => {
+    list: async ({ query, request }: ContractRouteArgs<typeof sessionContract['list']>): Promise<ContractRouteResponse<typeof sessionContract['list']>> => {
       const user = request.user as User;
       if (!canReadCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -73,7 +73,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list sessions' } };
       }
     },
-    create: async ({ body, request }: ContractRouteArgs<typeof sessionContract['create']>): Promise<unknown> => {
+    create: async ({ body, request }: ContractRouteArgs<typeof sessionContract['create']>): Promise<ContractRouteResponse<typeof sessionContract['create']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -85,7 +85,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create session' } };
       }
     },
-    bulkDelete: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkDelete']>): Promise<unknown> => {
+    bulkDelete: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkDelete']>): Promise<ContractRouteResponse<typeof sessionContract['bulkDelete']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -96,7 +96,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete sessions' } };
       }
     },
-    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkStatus']>): Promise<unknown> => {
+    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkStatus']>): Promise<ContractRouteResponse<typeof sessionContract['bulkStatus']>> => {
       const user = request.user as User;
       if (!canWriteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
@@ -107,7 +107,7 @@ export default async function sessionsRoutes(
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update session status' } };
       }
     },
-    bulkRestore: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkRestore']>): Promise<unknown> => {
+    bulkRestore: async ({ body, request }: ContractRouteArgs<typeof sessionContract['bulkRestore']>): Promise<ContractRouteResponse<typeof sessionContract['bulkRestore']>> => {
       const user = request.user as User;
       if (!canDeleteCollection(user, COLLECTION))
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };

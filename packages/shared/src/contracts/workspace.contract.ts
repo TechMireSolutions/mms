@@ -3,6 +3,23 @@ import { z } from 'zod';
 
 const c = initContract();
 
+export const workspaceSummarySchema = z.object({
+  id: z.string(),
+  subdomain: z.string(),
+  madrasaName: z.string(),
+  tagline: z.string().optional(),
+  country: z.string().optional(),
+  createdAt: z.string(),
+  enabled: z.boolean().optional(),
+});
+
+export const publicWorkspaceSummarySchema = z.object({
+  subdomain: z.string(),
+  madrasaName: z.string(),
+  tagline: z.string().optional(),
+  logoUrl: z.string().optional(),
+});
+
 export const workspaceContract = c.router({
   bySubdomain: {
     method: 'GET',
@@ -12,8 +29,8 @@ export const workspaceContract = c.router({
     }),
     responses: {
       200: z.object({
-        workspace: z.any(),
-        branding: z.any().optional(),
+        workspace: workspaceSummarySchema,
+        branding: z.record(z.string(), z.unknown()).optional(),
       }),
       404: z.object({
         error: z.string(),
@@ -27,7 +44,7 @@ export const workspaceContract = c.router({
     path: '/api/workspace/public-branding',
     responses: {
       200: z.object({
-        branding: z.any().optional(),
+        branding: z.record(z.string(), z.unknown()).optional(),
       }),
       404: z.object({
         error: z.string(),
@@ -40,10 +57,13 @@ export const workspaceContract = c.router({
     method: 'GET',
     path: '/api/workspace/registry',
     responses: {
-      200: z.any(),
-      401: z.any(),
-      403: z.any(),
+      200: z.object({
+        workspaces: z.array(publicWorkspaceSummarySchema),
+      }),
+      401: z.unknown(),
+      403: z.unknown(),
     },
     summary: 'Get apex workspace registry (apex-only)',
   },
 });
+
